@@ -1,0 +1,176 @@
+/* One operator declaration, two parsing algorithms and one semantic projection. */
+options levell
+import rxfnsb
+import llcore
+import llpratt
+import lllr
+import llproject
+import llcheck
+import llcap
+main: procedure = .int expose failures generated
+  failures = 0; generated = 0
+  ops = .llpratt..operators(1,40,41)
+  ok = ops.infix(43,10,0,'add'); ok = ops.infix(45,10,0,'subtract')
+  ok = ops.infix(42,20,0,'multiply'); ok = ops.infix(94,30,1,'power')
+  ok = ops.prefix(45,'negate')
+  graph = ops.grammar()
+  tables = .lllr..tables(graph,1,'lr1')
+  if tables.status() <> 0 then do
+    say 'TABLE ERROR:' tables.error(); return 1
+  end
+  schema = .llproject..schema()
+  ok = schema.keep('atom',1,0); ok = schema.keep('group',4,1)
+  ok = schema.keep('add',2,2); ok = schema.keep('subtract',2,2)
+  ok = schema.keep('multiply',2,2); ok = schema.keep('power',2,2); ok = schema.keep('negate',3,1)
+  call probe ops,tables,schema,' 12 + 3 *4 ',24
+  call probe ops,tables,schema,'10-3-2',5
+  call probe ops,tables,schema,'2^3^2',512
+  call probe ops,tables,schema,'(2+3)*4',20
+  call probe ops,tables,schema,'-2^2',4
+  call probe ops,tables,schema,'1--2',3
+  call probe ops,tables,schema,'2^-0',1
+  /* This visitor's domain is integer arithmetic with nonnegative exponents. */
+  call invalid ops,tables,'1+*2'
+  call invalid ops,tables,'(1+2'
+  call invalid ops,tables,'1 2'
+  call invalid ops,tables,''
+  do n = 0 to 4
+    call enumerate ops,tables,schema,'1+-()','',n
+  end
+  input = tokenize('1+2')
+  p = .llpratt..parser(ops,input,1)
+  if p.run() <> 2 then failures = failures + 1
+  backend = .llcap..backend
+  backend = .llpratt..engine(ops)
+  facts = .llcheck..analysis(graph,1)
+  decision = llcap..admit(facts,backend,'linear-input')
+  if decision.status() <> 0 then failures = failures + 1
+  altered = graph
+  extra = altered.add(1,0,0,'unrelated',99)
+  changed = .llcheck..analysis(altered,1)
+  decision = llcap..admit(changed,backend)
+  if decision.status() <> 2 then failures = failures + 1
+  badops = .llpratt..operators(1,40,41)
+  ok = badops.infix(43,10,0,'add'); ok = badops.infix(94,10,1,'power')
+  if badops.build() <> 0 then failures = failures + 1
+  say 'operator admission diagnostic:' badops.error()
+  say 'pratt_generated_tree_cases='generated
+  say 'pratt_failures='failures
+  if failures > 0 then return 1
+  return 0
+enumerate: procedure = .void expose failures generated
+  arg ops = .llpratt..operators, tables = .lllr..tables, schema = .llproject..schema, alphabet = .string, text = .string, remaining = .int
+  if remaining > 0 then do
+    do i = 1 to length(alphabet)
+      call enumerate ops,tables,schema,alphabet,text || substr(alphabet,i,1),remaining - 1
+    end
+    return
+  end
+  generated = generated + 1; input = tokenize(text)
+  pratt = .llpratt..parser(ops,input); lr = .lllr..parser(tables,input)
+  ps = pratt.run(); ls = lr.run()
+  if ps <> ls then do
+    say 'GENERATED ACCEPTANCE DIFFERENCE:' text ps ls; failures = failures + 1; return
+  end
+  if ps = 0 then do
+    a = pratt.tree(); raw = lr.tree(); projection = .llproject..projection(raw,lr.root(),schema)
+    if projection.run() <> 0 then do
+      say 'GENERATED PROJECTION ERROR:' text projection.error(); failures = failures + 1; return
+    end
+    b = projection.tree()
+    if canonical(a,pratt.root()) \== canonical(b,projection.root()) then do
+      say 'GENERATED TREE DIFFERENCE:' text; failures = failures + 1
+    end
+  end
+  return
+tokenize: procedure = .llcore..stream
+  arg text = .string
+  bytes = text as .binary; extent = <blen>(bytes); out = .llcore..stream.tokens(bytes)
+  at = 0
+  do while at < extent
+    symbol = <at..u8>(at) bytes
+    if symbol = 32 then at = at + 1
+    else do
+      start = at; at = at + 1; kind = symbol
+      if symbol >= 48 & symbol <= 57 then do
+        kind = 1
+        do while at < extent
+          symbol = <at..u8>(at) bytes
+          if symbol < 48 | symbol > 57 then leave
+          at = at + 1
+        end
+      end
+      ok = out.append(kind,start,at)
+    end
+  end
+  return out
+probe: procedure = .void expose failures
+  arg ops = .llpratt..operators, tables = .lllr..tables, schema = .llproject..schema, source = .string, expected = .int
+  input = tokenize(source)
+  pratt = .llpratt..parser(ops,input); lr = .lllr..parser(tables,input)
+  ps = pratt.run(); ls = lr.run()
+  if ps <> 0 | ls <> 0 then do
+    say 'PARSE ERROR:' source pratt.error() lr.error(); failures = failures + 1; return
+  end
+  a = pratt.tree(); raw = lr.tree()
+  projection = .llproject..projection(raw,lr.root(),schema)
+  if projection.run() <> 0 then do
+    say 'PROJECTION ERROR:' source projection.error(); failures = failures + 1; return
+  end
+  b = projection.tree()
+  ac = canonical(a,pratt.root()); bc = canonical(b,projection.root())
+  av = evaluate_tree(a,pratt.root()); bv = evaluate_tree(b,projection.root())
+  if ac \== bc | av <> expected | bv <> expected | a.validate() = 0 | b.validate() = 0 then do
+    say 'DIFFERENCE:' source av bv 'expected' expected
+    say ac; say bc; failures = failures + 1
+  end
+  else say 'PASS: Pratt/LR projected tree and value:' source '=' av
+  origin = projection.origin(projection.root())
+  if raw.start(origin) <> b.start(projection.root()) | raw.finish(origin) <> b.finish(projection.root()) then failures = failures + 1
+  /* Owned copy mutation invalidates/rechecks its structural proof. */
+  certified = b.certified()
+  ok = b.relocate(projection.root(),0,input.bytes() + 1)
+  if certified = 0 | b.certified() | b.validate() then failures = failures + 1
+  limited = .llproject..projection(raw,lr.root(),schema,1)
+  if limited.run() <> 2 then failures = failures + 1
+  wrong = .llproject..schema(); ok = wrong.keep('atom',1,1)
+  rejected = .llproject..projection(raw,lr.root(),wrong)
+  if rejected.run() <> 3 then failures = failures + 1
+  return
+invalid: procedure = .void expose failures
+  arg ops = .llpratt..operators, tables = .lllr..tables, source = .string
+  input = tokenize(source)
+  a = .llpratt..parser(ops,input); b = .lllr..parser(tables,input)
+  if a.run() <> 1 | b.run() <> 1 then failures = failures + 1
+  say 'input diagnostic:' source a.error()
+  return
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return '-'
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || canonical(tree,tree.left(node)) || canonical(tree,tree.right(node)) || ')'
+evaluate_tree: procedure = .int
+  arg tree = .llcore..tree, node = .int
+  if tree.kind(node) = 1 then do
+    bytes = tree.source(); start = tree.start(node); length = tree.finish(node) - start
+    text = <at..string>(start,length) bytes
+    return text as .int
+  end
+  a = evaluate_tree(tree,tree.left(node))
+  if tree.kind(node) = 4 then return a
+  if tree.kind(node) = 3 then return -a
+  b = evaluate_tree(tree,tree.right(node))
+  select tree.label(node)
+    when 'add' then return a + b
+    when 'subtract' then return a - b
+    when 'multiply' then return a * b
+    when 'power' then do
+      if b < 0 then return 0
+      result = 1
+      do i = 1 to b
+        result = result * a
+      end
+      return result
+    end
+    otherwise return 0
+  end
+  return 0

@@ -1,0 +1,2 @@
+1 // (* not a block
+2 /* (* not nested */ 3 (*a(*b*)c*)

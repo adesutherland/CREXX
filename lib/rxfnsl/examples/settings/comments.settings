@@ -1,0 +1,5 @@
+# Shared comments coexist with Unicode, captures and the Pratt region.
+café = [2 + 3 /* arithmetic notes */ * 4] // /* this is line-comment text
+greeting = "# /* quoted text */"
+first = 1 (* newline separates records
+*) second = 2

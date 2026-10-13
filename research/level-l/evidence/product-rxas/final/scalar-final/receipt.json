@@ -1,0 +1,14 @@
+{
+  "runtime_overlap": 28,
+  "compiler_modes": 2,
+  "compiler_vms": 2,
+  "optimizer_disagreements": [
+    {
+      "line": 15,
+      "source": "say 0.1+0.2=0.3",
+      "runtime": "0",
+      "folded": "1"
+    }
+  ],
+  "unexpected_failures": 0
+}

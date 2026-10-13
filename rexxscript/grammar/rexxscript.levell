@@ -1,0 +1,199 @@
+/* RexxScript 1: modern scalar Level G NUMERIC_COMMON; review implementation. */
+options levell
+namespace rexxscriptgrammar
+
+identifier: token = 1
+number: token = 2
+string: token = 3
+separator: token = 4
+assign: token = 5
+plus: token = 6
+minus: token = 7
+times: token = 8
+divide: token = 9
+remainder: token = 10
+power: token = 11
+concat: token = 12
+blank: token = 13
+abut: token = 14
+open: token = 15
+close: token = 16
+comma: token = 17
+lt: token = 18
+gt: token = 19
+le: token = 20
+ge: token = 21
+ne: token = 22
+strict: token = 23
+strictne: token = 24
+strictlt: token = 25
+strictgt: token = 26
+strictle: token = 27
+strictge: token = 28
+and: token = 29
+or: token = 30
+xor: token = 31
+not: token = 32
+bitand: token = 33
+bitor: token = 34
+bitxor: token = 35
+bitnot: token = 36
+idiv: token = 37
+shl: token = 38
+shr: token = 39
+has: token = 40
+set: token = 41
+clear: token = 42
+ifword: token = 43
+thenword: token = 44
+elseword: token = 45
+doword: token = 46
+endword: token = 47
+whileword: token = 48
+untilword: token = 49
+foreverword: token = 50
+toword: token = 51
+byword: token = 52
+leaveword: token = 53
+iterateword: token = 54
+returnword: token = 55
+sayword: token = 56
+collectword: token = 57
+callword: token = 58
+nopword: token = 59
+
+controlvariable: token = 60
+imod: token = 61
+
+comment: comments nested "/*" "*/"
+scan: lexer input utf8bytes
+  digit: charset = U+0030 to U+0039
+  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  hex: charset = U+0030 to U+0039 | U+0041 to U+0046 | U+0061 to U+0066
+  hspace: charset = U+0009 | U+0020
+  newline: charset = U+000A | U+000D
+  squote.body: charset = U+0020 to U+0026 | U+0028 to U+00FF | U+0009
+  dquote.body: charset = U+0020 to U+0021 | U+0023 to U+00FF | U+0009
+  numeric: pattern = (digit+ ("." digit*)? | "." digit+) (("e" | "E") ("+" | "-")? digit+)?
+  name: pattern = letter (letter | digit)*
+  whitespace: rule = hspace+ then skip
+  numeric.literal: rule = (numeric ("d" | "D")? | "0" ("x" | "X") hex+) then emit number
+  name.literal: rule = name then emit identifier
+  single.literal: rule = "'" (squote.body | "''")* "'" then emit string
+  double.literal: rule = '"' (dquote.body | '""')* '"' then emit string
+  terminator: rule = (newline | ";") then emit separator
+  op.0: rule = "=" then emit assign
+  op.1: rule = "+" then emit plus
+  op.2: rule = "-" then emit minus
+  op.3: rule = "*" then emit times
+  op.4: rule = "/" then emit divide
+  op.5: rule = "%" then emit remainder
+  op.6: rule = "//" then emit remainder
+  op.7: rule = "**" then emit power
+  op.8: rule = "||" then emit concat
+  op.9: rule = "(" then emit open
+  op.10: rule = ")" then emit close
+  op.11: rule = "," then emit comma
+  op.12: rule = "<" then emit lt
+  op.13: rule = ">" then emit gt
+  op.14: rule = "<=" then emit le
+  op.15: rule = ">=" then emit ge
+  op.16: rule = "<>" then emit ne
+  op.17: rule = "><" then emit ne
+  op.18: rule = "\=" then emit ne
+  op.19: rule = "/=" then emit ne
+  op.20: rule = "==" then emit strict
+  op.21: rule = "\==" then emit strictne
+  op.22: rule = "/==" then emit strictne
+  op.23: rule = "<<" then emit strictlt
+  op.24: rule = ">>" then emit strictgt
+  op.25: rule = "<<=" then emit strictle
+  op.26: rule = ">>=" then emit strictge
+  op.27: rule = "&" then emit and
+  op.28: rule = "|" then emit or
+  op.29: rule = "&&" then emit xor
+  op.30: rule = "\" then emit not
+  op.31: rule = "<" ("a" | "A") ("n" | "N") ("d" | "D") ">" then emit bitand
+  op.32: rule = "<" ("o" | "O") ("r" | "R") ">" then emit bitor
+  op.33: rule = "<" ("x" | "X") ("o" | "O") ("r" | "R") ">" then emit bitxor
+  op.34: rule = "<" ("n" | "N") ("o" | "O") ("t" | "T") ">" then emit bitnot
+  op.35: rule = "<" ("i" | "I") ("d" | "D") ("i" | "I") ("v" | "V") ">" then emit idiv
+  op.36: rule = "<" ("m" | "M") ("o" | "O") ("d" | "D") ">" then emit imod
+  op.37: rule = "<" ("r" | "R") ("e" | "E") ("m" | "M") ">" then emit imod
+  op.38: rule = "<" ("s" | "S") ("h" | "H") ("l" | "L") ">" then emit shl
+  op.39: rule = "<" ("s" | "S") ("h" | "H") ("r" | "R") ">" then emit shr
+  op.40: rule = "<" ("h" | "H") ("a" | "A") ("s" | "S") ">" then emit has
+  op.41: rule = "<" ("s" | "S") ("e" | "E") ("t" | "T") ">" then emit set
+  op.42: rule = "<" ("c" | "C") ("l" | "L") ("e" | "E") ("a" | "A") ("r" | "R") ">" then emit clear
+
+parse: parser semantics contextfree input tokens start program
+  program: rule = statements
+  statements: rule = separator* (statement (separator statement?)*)?
+  statement: rule = closed.statement | open.statement
+  closed.statement: rule = simple | block | if.closed
+  open.statement: rule = if.open | if.continued
+  if.closed: rule = ifword expression thenword closed.statement elseword closed.statement
+  if.open: rule = ifword expression thenword statement
+  if.continued: rule = ifword expression thenword closed.statement elseword open.statement
+  simple: rule = assignment | say.statement | collect.statement | call.statement | return.statement | leave.statement | iterate.statement | nop.statement
+  assignment: rule = name.value assign expression
+  say.statement: rule = sayword expression
+  collect.statement: rule = collectword expression
+  call.statement: rule = callword call.value
+  return.statement: rule = returnword expression?
+  leave.statement: rule = leaveword
+  iterate.statement: rule = iterateword
+  nop.statement: rule = nopword
+  block: rule = do.group | do.while | do.until | do.forever | do.count | do.control
+  do.group: rule = doword separator statements endword
+  do.while: rule = doword whileword expression separator statements endword
+  do.until: rule = doword untilword expression separator statements endword
+  do.forever: rule = doword foreverword separator statements endword
+  do.count: rule = doword expression separator statements endword
+  control.name: rule = controlvariable
+  do.control: rule = doword control.name expression toword expression (byword expression)? separator statements endword
+
+  expression: rule = logical.or
+  logical.or: rule = logical.and ((or | xor) logical.and)*
+  logical.and: rule = comparison (and comparison)*
+  comparison: rule = concatenation ((assign | ne | lt | gt | le | ge | strict | strictne | strictlt | strictgt | strictle | strictge) concatenation)*
+  concatenation: rule = integer.or ((concat | blank | abut) integer.or)*
+  integer.or: rule = integer.xor ((bitor | set) integer.xor)*
+  integer.xor: rule = integer.and (bitxor integer.and)*
+  integer.and: rule = shift ((bitand | has | clear) shift)*
+  shift: rule = additive ((shl | shr) additive)*
+  additive: rule = multiplicative ((plus | minus) multiplicative)*
+  multiplicative: rule = unary ((times | divide | remainder | idiv | imod) unary)*
+  unary: rule = prefix | exponential
+  prefix: rule = (plus | minus | not | bitnot) unary
+  exponential: rule = primary (power exponential)?
+  primary: rule = number.value | string.value | name.value | call.value | group.value
+  number.value: rule = number
+  string.value: rule = string
+  name.value: rule = identifier
+  group.value: rule = open expression close
+  call.value: rule = identifier open arguments close
+  arguments: rule = argument (comma argument)*
+  argument: rule = expression?
+
+classify: tokenstage start 1
+word.if: transform stage classify state 1 take identifier text "IF" unless next assign emit ifword next 2
+word.do: transform stage classify state 1 take identifier text "DO" unless next assign emit doword next 3
+word.leave: transform stage classify state 1 take identifier text "LEAVE" unless next assign emit leaveword next 2
+word.iterate: transform stage classify state 1 take identifier text "ITERATE" unless next assign emit iterateword next 2
+word.return: transform stage classify state 1 take identifier text "RETURN" unless next assign emit returnword next 2
+word.say: transform stage classify state 1 take identifier text "SAY" unless next assign emit sayword next 2
+word.collect: transform stage classify state 1 take identifier text "COLLECT" unless next assign emit collectword next 2
+word.call: transform stage classify state 1 take identifier text "CALL" unless next assign emit callword next 2
+word.nop: transform stage classify state 1 take identifier text "NOP" unless next assign emit nopword next 2
+word.then: transform stage classify state 0 take identifier text "THEN" emit thenword next 1
+word.else: transform stage classify state 0 take identifier text "ELSE" emit elseword next 1
+word.end: transform stage classify state 0 take identifier text "END" unless next assign emit endword next 2
+word.while: transform stage classify state 0 take identifier text "WHILE" unless next assign emit whileword next 2
+word.until: transform stage classify state 0 take identifier text "UNTIL" unless next assign emit untilword next 2
+word.forever: transform stage classify state 0 take identifier text "FOREVER" unless next assign emit foreverword next 2
+word.to: transform stage classify state 0 take identifier text "TO" unless next assign emit toword next 2
+word.by: transform stage classify state 0 take identifier text "BY" unless next assign emit byword next 2
+word.control: transform stage classify state 3 take identifier assign emit controlvariable next 2
+word.separator: transform stage classify state 0 take separator emit copy next 1
+word.other: transform stage classify state 1 take any emit copy next 2

@@ -1,0 +1,174 @@
+diff --git a/cmake/CrexxBuildStages.cmake b/cmake/CrexxBuildStages.cmake
+index 2d3a1f47b..8314a47b2 100644
+--- a/cmake/CrexxBuildStages.cmake
++++ b/cmake/CrexxBuildStages.cmake
+@@ -71,8 +71,8 @@ crexx_add_build_stage(stage-g-library
+         OPTIONAL_TARGETS ui_gtk)
+ 
+ crexx_add_build_stage(stage-l-libraries
+-        DESCRIPTION "L Level L libraries"
+-        REQUIRED_TARGETS rxfnsl)
++        DESCRIPTION "L Level L language tools and libraries"
++        REQUIRED_TARGETS rxfnsl levell_cli)
+ 
+ crexx_add_build_stage(stage-product
+         DESCRIPTION "Assembled cREXX product"
+@@ -83,6 +83,7 @@ crexx_add_build_stage(stage-product
+             stage-l-libraries
+             crexx
+             rexxscript_cli
++            rexxscript1_cli
+             rxvme
+             rxbvme
+             rxvml
+diff --git a/lib/rxfnsl/rexx/CMakeLists.txt b/lib/rxfnsl/rexx/CMakeLists.txt
+index 134ff69f0..f5d76e097 100644
+--- a/lib/rxfnsl/rexx/CMakeLists.txt
++++ b/lib/rxfnsl/rexx/CMakeLists.txt
+@@ -131,6 +131,8 @@ add_test(
+   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+ )
+ set_tests_properties(rxfnsl_tinyexpr_binary_surface_smoke PROPERTIES LABELS "library;level-l")
++crexx_register_test_prep_targets(
++  TESTS rxfnsl_tinyexpr_binary_surface_smoke TARGETS rxfnsl rxdas)
+ 
+ crexx_finalize_directory_qa_tiers()
+ 
+diff --git a/lib/rxfnsl/tests_functional/CMakeLists.txt b/lib/rxfnsl/tests_functional/CMakeLists.txt
+index b93351ac7..b0e6da591 100644
+--- a/lib/rxfnsl/tests_functional/CMakeLists.txt
++++ b/lib/rxfnsl/tests_functional/CMakeLists.txt
+@@ -77,5 +77,9 @@ foreach(_vm rxtvm rxbvm)
+       COMMAND $<TARGET_FILE:${_vm}> "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin" -a "${_generated_spec}")
+     set_tests_properties(levell_generated_${_vm} PROPERTIES
+       PASS_REGULAR_EXPRESSION "generated_failures=0" TIMEOUT 300 LABELS "library;level-l")
++    crexx_label_smoke_tests(levell_generated_${_vm}
++      PREP_TARGETS testlevell_generated ${_vm})
+   endif()
+ endforeach()
++
++crexx_finalize_directory_qa_tiers()
+diff --git a/rexxscript/modern.cmake b/rexxscript/modern.cmake
+index f21bebdad..9d419a037 100644
+--- a/rexxscript/modern.cmake
++++ b/rexxscript/modern.cmake
+@@ -107,6 +107,7 @@ configure_linker_for_static_lib(rexxscript1_cli fs)
+ add_dependencies(rexxscript1_cli rxvme rxvml rxpa avl_tree platform)
+ 
+ # Prebuilt functional program: CTest launches one VM, never a nested build.
++include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+ add_custom_command(OUTPUT "${_rs1_root}/testRexxScript1-linked.rxbin"
+   COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_rs1_root}/imports;${_rs1_root}/driver-imports"
+     -o testRexxScript1 "${CMAKE_CURRENT_SOURCE_DIR}/tests_functional/testRexxScript1.crexx"
+@@ -124,5 +125,8 @@ foreach(_vm rxtvm rxbvm)
+     set_tests_properties(rexxscript1_${_vm} PROPERTIES
+       PASS_REGULAR_EXPRESSION "rexxscript1_failures=0" TIMEOUT 600
+       RESOURCE_LOCK rexxscript1_functional LABELS "rexxscript;level-l")
++    crexx_label_smoke_tests(rexxscript1_${_vm}
++      PREP_TARGETS testrexxscript1 ${_vm})
+   endif()
+ endforeach()
++crexx_finalize_directory_qa_tiers()
+diff --git a/scripts/package-core-release.py b/scripts/package-core-release.py
+index 4d1830967..bb530a33b 100644
+--- a/scripts/package-core-release.py
++++ b/scripts/package-core-release.py
+@@ -64,6 +64,53 @@ def windows_execution_environment(env):
+     return runtime
+ 
+ 
++def smoke_level_l(prefix, source, work, run, extension):
++    """Exercise the installed generator, library and modern script command."""
++    binary = prefix / 'bin'
++    grammar = work / 'settings.levell'
++    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.levell', grammar)
++    generated = work / 'levell_settings'
++    run('levell-generate', [binary / ('levell' + extension), grammar, '--rxas'],
++        stdout_path=generated.with_suffix('.rxas'))
++    run('levell-assemble', [binary / ('rxas' + extension), generated])
++    imports = work / 'levell-imports'
++    imports.mkdir()
++    for path in (binary / 'library.rxbin', binary / 'rxfnsl.rxbin',
++                 generated.with_suffix('.rxbin')):
++        shutil.copy2(path, imports / path.name)
++    reader_source = work / 'settings-reader.crexx'
++    shutil.copy2(source / 'lib/rxfnsl/examples/settings-reader.crexx', reader_source)
++    settings = work / 'settings.txt'
++    shutil.copy2(source / 'lib/rxfnsl/examples/settings.txt', settings)
++    reader = work / 'settings-reader'
++    run('levell-consumer-compile', [binary / ('rxc' + extension), '-x',
++        '--no-exe-import', '-i', imports, '-o', reader, reader_source])
++    run('levell-consumer-assemble', [binary / ('rxas' + extension), reader])
++    linked = work / 'settings-linked'
++    run('levell-consumer-link', [binary / ('rxlink' + extension), '-o', linked,
++        reader, generated, binary / 'rxfnsl', binary / 'library'])
++    for vm in ('rxbvm', 'rxtvm'):
++        executable = binary / (vm + extension)
++        if executable.exists():
++            output = run('levell-consumer-' + vm, [executable, linked, '-a', settings],
++                'retries -> 3')
++            if 'greeting -> "café"' not in output or 'note -> "say ""hello"""' not in output:
++                raise RuntimeError('Installed Level L consumer lost Unicode or quoted text')
++    grammar.write_text('options levell\nnamespace bad\nunknown declaration\n', encoding='utf-8')
++    run('levell-invalid-grammar', [binary / ('levell' + extension), grammar, '--rxas'],
++        'LL_GRAMMAR', expected_returncode=1)
++    script = work / 'modern.rxs'
++    script.write_text("say 1+2*3; say 0.1d+0.2d; say length('café')\n", encoding='utf-8')
++    output = run('rexxscript1-installed', [binary / ('rexxscript1' + extension), script])
++    if not output.endswith('7\n0.3\n4\n'):
++        raise RuntimeError('Installed modern RexxScript produced unexpected values: ' + output)
++    script.write_text("say 'MUST_NOT_RUN'; x=(2+\n", encoding='utf-8')
++    output = run('rexxscript1-invalid', [binary / ('rexxscript1' + extension), script],
++        'RS_PARSE', expected_returncode=1)
++    if 'MUST_NOT_RUN\n' in output:
++        raise RuntimeError('Modern RexxScript executed a syntactically invalid script')
++
++
+ def smoke(prefix, source, preferred_vm, logs):
+     work = Path(tempfile.mkdtemp(prefix='crexx-core-consumer-'))
+     extension = '.exe' if os.name == 'nt' else ''
+@@ -78,19 +125,27 @@ def smoke(prefix, source, preferred_vm, logs):
+     started = time.monotonic()
+     outcome = 'failed'
+ 
+-    def run(label, args, marker=None, native_build=False):
++    def run(label, args, marker=None, native_build=False, expected_returncode=0,
++            stdout_path=None):
+         args = list(map(str, args))
+-        with (logs / (label + '.log')).open('w') as log:
++        with (logs / (label + '.log')).open('w', encoding='utf-8') as log:
+             log.write('argv=' + repr(args) + '\n'); log.flush()
+-            result = subprocess.run(args, cwd=work,
+-                env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
+-                stdout=log, stderr=log, timeout=1800)
+-        output = (logs / (label + '.log')).read_text(errors='replace')
+-        records.append(dict(label=label, returncode=result.returncode))
+-        if result.returncode or any(x in output for x in ('PANIC:', 'FAIL:', 'ERROR: AddressSanitizer')):
++            generated = stdout_path.open('wb') if stdout_path else None
++            try:
++                result = subprocess.run(args, cwd=work,
++                    env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
++                    stdout=generated if generated else log, stderr=log, timeout=1800)
++            finally:
++                if generated:
++                    generated.close()
++        output = (logs / (label + '.log')).read_text(encoding='utf-8', errors='replace')
++        records.append(dict(label=label, returncode=result.returncode,
++            expected_returncode=expected_returncode))
++        if result.returncode != expected_returncode or any(x in output for x in ('PANIC:', 'FAIL:', 'ERROR: AddressSanitizer')):
+             raise RuntimeError(label + ': ' + output[-2500:])
+         if marker and marker not in output:
+             raise RuntimeError(label + ': missing expected output ' + repr(marker))
++        return output
+ 
+     try:
+         assert not list(prefix.rglob('*llama*')), 'llama component leaked into core'
+@@ -118,6 +173,8 @@ def smoke(prefix, source, preferred_vm, logs):
+                 if binary.exists():
+                     run(mode + '-' + vm, [binary, linked], 'hello CREXX world!')
+                     assert '4711' in (logs / (mode + '-' + vm + '.log')).read_text()
++        smoke_level_l(prefix, source, work, run, extension)
++
+         native = work / 'native' / 'hello'
+         native.parent.mkdir()
+         run('native-build', [prefix / ('bin/crexx' + extension), '--program', native,

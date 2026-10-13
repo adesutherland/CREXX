@@ -1,0 +1,221 @@
+{
+  "correctness": "four cells identical; counters identical to pre-boundary-correction fixture",
+  "negative_and_summary": [
+    {
+      "kind": "summary_fixture",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "exit": 0,
+      "groups": 19,
+      "expected": "min10 q1=10 median20 q3=30 max30 MAD10 noise1"
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "args": [
+        "bogus"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "args": [
+        "measure",
+        "2"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "args": [
+        "measure",
+        "31"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "args": [],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/tranche-18/empty.txt"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "summary_fixture",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "exit": 0,
+      "groups": 19,
+      "expected": "min10 q1=10 median20 q3=30 max30 MAD10 noise1"
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "args": [
+        "bogus"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "args": [
+        "measure",
+        "2"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "args": [
+        "measure",
+        "31"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "args": [],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/tranche-18/empty.txt"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "summary_fixture",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "exit": 0,
+      "groups": 19,
+      "expected": "min10 q1=10 median20 q3=30 max30 MAD10 noise1"
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "args": [
+        "bogus"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "args": [
+        "measure",
+        "2"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "args": [
+        "measure",
+        "31"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "args": [],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/tranche-18/empty.txt"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "summary_fixture",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "exit": 0,
+      "groups": 19,
+      "expected": "min10 q1=10 median20 q3=30 max30 MAD10 noise1"
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "args": [
+        "bogus"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "args": [
+        "measure",
+        "2"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_mode_or_budget",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "args": [
+        "measure",
+        "31"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "args": [],
+      "exit": 2
+    },
+    {
+      "kind": "negative_summary_input",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/tranche-18/empty.txt"
+      ],
+      "exit": 2
+    },
+    {
+      "kind": "negative_build_mode",
+      "exit": 2
+    }
+  ]
+}

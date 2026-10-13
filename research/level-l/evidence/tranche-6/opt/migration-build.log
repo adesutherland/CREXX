@@ -1,0 +1,23 @@
+Warning in llcheck.crexx @ 146:15 - #NOT_IN_SAME_SCOPE line="97" column="13", "text"
+1 warning(s) in source file
+Warning in lllr.crexx @ 43:8 - #NOT_IN_SAME_SCOPE line="39" column="8", "i"
+Warning in lllr.crexx @ 52:8 - #NOT_IN_SAME_SCOPE line="39" column="8", "i"
+Warning in lllr.crexx @ 160:49 - #NOT_IN_SAME_SCOPE line="151" column="14", "terminal"
+3 warning(s) in source file
+Warning in llmunch.crexx @ 38:8 - #NOT_IN_SAME_SCOPE line="24" column="8", "byte"
+1 warning(s) in source file
+Warning in llc14cost.crexx @ 123:8 - #NOT_IN_SAME_SCOPE line="115" column="8", "i"
+1 warning(s) in source file
+Warning in llproject.crexx @ 99:12 - #NOT_IN_SAME_SCOPE line="96" column="12", "i"
+1 warning(s) in source file
+Warning in llpratt.crexx @ 4:8 - #UNUSED_IMPORT, "rxfnsb"
+Warning in llpratt.crexx @ 85:8 - #NOT_IN_SAME_SCOPE line="59" column="8", "symbol"
+Warning in llpratt.crexx @ 93:8 - #NOT_IN_SAME_SCOPE line="76" column="8", "i"
+Warning in llpratt.crexx @ 95:10 - #NOT_IN_SAME_SCOPE line="59" column="8", "symbol"
+Warning in llpratt.crexx @ 101:11 - #NOT_IN_SAME_SCOPE line="87" column="9", "token"
+Warning in llpratt.crexx @ 103:11 - #NOT_IN_SAME_SCOPE line="88" column="9", "node"
+6 warning(s) in source file
+Warning in llgroup.crexx @ 112:7 - #NOT_IN_SAME_SCOPE line="95" column="11", "group"
+1 warning(s) in source file
+Warning in migration.crexx @ 34:8 - #NOT_IN_SAME_SCOPE line="15" column="10", "i"
+1 warning(s) in source file

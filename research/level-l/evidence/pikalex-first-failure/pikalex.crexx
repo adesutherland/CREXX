@@ -1,0 +1,116 @@
+/* Faithful Pika: scannerless/token ingress, source spans and whole-pipeline counters. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llpika
+import llpikalower
+import llpikatree
+import llmunch
+import glcommon
+main: procedure = .int expose failures cases byteLower tokenLower dfa
+  failures = 0; cases = 0
+  bytespec = readfile('research/level-l/specs/pika-assignment-bytes.levell')
+  tokenspec = readfile('research/level-l/specs/pika-assignment-tokens.levell')
+  byteDoc = .llfront..document(bytespec); tokenDoc = .llfront..document(tokenspec)
+  sa = byteDoc.run(); sb = tokenDoc.run()
+  byteLower = .llpikalower..lowering(byteDoc.grammar(),byteDoc.root())
+  tokenLower = .llpikalower..lowering(tokenDoc.grammar(),tokenDoc.root())
+  la = byteLower.run(); lb = tokenLower.run()
+  if sa <> 0 | sb <> 0 | la <> 0 | lb <> 0 then do
+    say byteDoc.error() tokenDoc.error() byteLower.error() tokenLower.error()
+    return 1
+  end
+  dfa = .llmunch..automaton.legacy(glcommon..tabledata())
+  call compare 'a=1;',0,1
+  call compare '  abc  =  123  ;  ',0,1
+  call compare '/* intro */ a /* name */ = /* rhs */ 10 ; // tail' || '0a'x || 'b_2=2;',0,1
+  call compare 'a=1;/***/b=2;/* one /* two */ c=3;',0,1
+  call compare '// only trivia' || '0a'x,1,1
+  call compare '',1,1
+  call compare 'a=1',1,1
+  call compare 'a=1;b=;',1,1
+  call compare 'a=1;/* unfinished',1,1
+  call compare 'a=1; */',1,1
+  call compare 'a=1; 2=3;',1,1
+  call compare 'a=1x;',1,1
+  call compare 'a=1+2;',1,1
+  /* Exhaustive local damage is selected before examining any result. */
+  base = 'a=1;b=2;'
+  do at = 1 to length(base)
+    call compare delstr(base,at,1),1,0
+    call compare overlay('@',base,at,1),1,0
+  end
+  do at = 0 to length(base)
+    call compare insert(' ',base,at),0,0
+  end
+  do n = 16 to 256 by 16
+    if n = 16 | n = 64 | n = 256 then do
+      call compare copies('a',n) || '=' || copies('1',n) || ';',0,1
+      call compare '/*' || copies('x',n) || '*/ a=1; // ' || copies('x',n),0,1
+    end
+  end
+  /* Outside the common ASCII domain: raw bytes remain owned; reject explicitly. */
+  call compare 'a=1;/*' || '00'x || '*/',0,0
+  call compare 'a=1;/*' || 'c3a9'x || '*/',0,0
+  say 'pikalex_cases='cases
+  say 'pikalex_failures='failures
+  if failures > 0 then return 1
+  return 0
+compare: procedure = .void expose failures cases byteLower tokenLower dfa
+  arg text = .string, expected = .int, assertExpected = .int
+  cases = cases + 1
+  source = text as .binary
+  byteInput = .llcore..stream(source)
+  scan = .llmunch..scanner(dfa,source,'reverse')
+  lexStatus = scan.run(); tokenInput = scan.tokens()
+  a = .llpika..parser(byteLower.graph(),byteLower.root(),byteInput,5000000,8000000,'reachable-reference')
+  b = .llpika..parser(tokenLower.graph(),tokenLower.root(),tokenInput,5000000,8000000,'reachable-reference')
+  sa = a.run(); sb = 1
+  if lexStatus = 0 then sb = b.run()
+  common = 1
+  do at = 0 to <blen>(source) - 1
+    byte = <at..u8>(at) source
+    if byte = 0 | byte > 127 then common = 0
+  end
+  if common then do
+    if sa <> sb | (assertExpected & sa <> expected) then do
+      failures = failures + 1
+      say 'FAIL acceptance' bin2x(source) 'want='expected 'byte='sa 'token='sb 'lex='lexStatus
+    end
+  end
+  else call check lexStatus = 1 & bincompare(tokenInput.source(),source) = 0,'ASCII ingress refuses out-of-domain bytes with source retained'
+  if sa = 0 & sb = 0 then do
+    ap = .llpikatree..projection(byteLower,a); bp = .llpikatree..projection(tokenLower,b)
+    sap = ap.run(); sbp = bp.run(); atree = ap.tree(); btree = bp.tree()
+    call check sap = 0 & sbp = 0 & atree.validate() & btree.validate(),'owned selected trees validate'
+    if sap = 0 & sbp = 0 then do
+      ax = named(atree,ap.root()); bx = named(btree,bp.root())
+      if ax \== bx then do
+        failures = failures + 1; say 'FAIL named spans' bin2x(source) ax bx
+      end
+      call check bincompare(atree.source(),source) = 0 & bincompare(btree.source(),source) = 0,'original source including trivia retained'
+    end
+  end
+  if assertExpected then say 'PIKALEX bytes='byteInput.size() 'tokens='tokenInput.size() 'q='dfa.states() 'lexSteps='scan.steps() 'byteSteps='a.work() 'tokenSteps='b.work() 'byteObjects='a.created() 'tokenObjects='b.created() 'byteActive='a.active() 'tokenActive='b.active()
+  return
+named: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return ''
+  label = tree.label(node); out = ''
+  if label = 'name' | label = 'integer' | label = 'assignment' then out = label || ':' || tree.start(node) || ':' || tree.finish(node) || ';'
+  return out || named(tree,tree.left(node)) || named(tree,tree.right(node))
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    failures = failures + 1; say 'FAIL:' message
+  end
+  return

@@ -1,0 +1,50 @@
+/* PDOS's bounded CMS command personality supplies QUERY TIME, not QUERY
+   DISK/Pipelines. Keep that rejection observable; use real supported commands
+   for success/recovery rather than inventing a CMS minidisk response. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 1 then return 2
+  path=args.1||".DATA"; mode="rb"
+  handle=.int; first=.string; padding=.string; last=.string
+  guard=.int; guard=4294967317
+  assembler fopen handle,path,mode
+  if handle=0 then return 3
+  assembler freadline first,handle
+  if first<>"ALPHA" then return 4
+  env=addressenv("CMS")
+  if env.environment_name()<>"CMS" | env.environment_id()<>"CMS" then return 5
+  i=.int
+  do i=1 to 3
+    address cms "QUERY TIME"
+    if rc<>0 then return 6
+  end
+  address system "QUERY TIME"
+  if rc<>0 then return 7
+  response=_address_dispatch_request(.addressrequest("CMS","QUERY DISK",.addressredirect.none(),.addressredirect.none(),.addressredirect.none()))
+  if response.get_rc()<>24 | response.get_condition_name()<>"ERROR" then return 8
+  say "UNSUPPORTED CMS QUERY DISK AND ERROR PASS"
+  out=.string[]
+  address cms "QUERY TIME" output out
+  if rc<>-3 | out.0<>0 then return 9
+  response=_address_dispatch_request(.addressrequest("CMS",'780079'x,.addressredirect.none(),.addressredirect.none(),.addressredirect.none()))
+  if response.get_rc()<>-3 | response.get_condition_name()<>"FAILURE" then return 10
+  response=_address_dispatch_request(.addressrequest("ZZNOENV","QUERY TIME",.addressredirect.none(),.addressredirect.none(),.addressredirect.none()))
+  if response.get_rc()<>-3 | response.get_condition_name()<>"FAILURE" then return 11
+  response=_address_dispatch_request(.addressrequest("PDOS","ENVCHILD HELLO",.addressredirect.none(),.addressredirect.none(),.addressredirect.none()))
+  if response.get_rc()<>7 | response.get_condition_name()<>"ERROR" then return 12
+  response=_address_dispatch_request(.addressrequest("PDOS","ENVFAULT",.addressredirect.none(),.addressredirect.none(),.addressredirect.none()))
+  if response.get_rc()>=0 | response.get_condition_name()<>"FAILURE" then return 13
+  address pdos "VERSION"
+  if rc<>0 then return 14
+  address cms "QUERY TIME"
+  if rc<>0 | guard<>4294967317 then return 15
+  say "NONZERO AND RECOVERY PASS PDOS"
+  assembler freadline padding,handle
+  assembler freadline last,handle
+  assembler fclose rc,handle
+  if padding<>copies("X",65536) | last<>"OMEGA" | rc<>0 then return 16
+  say "CALLER FILE AND STORAGE PASS"
+  say "PASS: native ADDRESS Level B CMS"
+  return 0

@@ -1,0 +1,192 @@
+/* cREXX License (MIT). Selected RexxScript tree consumer, not a runtime replacement. */
+options levell
+namespace llscriptdemo expose evaluator
+import rxfnsb
+import llcore
+
+/** Execute the frozen assignment/SAY and integer/string/LENGTH/SUBSTR subset.
+ * Parsing has already selected a tree. No consumer effects run speculatively.
+ */
+evaluator: class
+  _tree = .llcore..tree
+  _names = .string[]
+  _values = .string[]
+  _out = .string[]
+  _code = .string
+  _at = .int
+  *: factory
+    arg tree = .llcore..tree
+    _tree = tree; _code = ''; _at = 0
+    _names[1] = 'X'; _values[1] = '7'; _names[2] = 'TEXT'; _values[2] = 'abc'
+    return
+  run: method = .int
+    arg root = .int
+    if _tree.validate() = 0 then do
+      _code = 'invalid_tree'; return 3
+    end
+    nodes = .int[]; call selectnodes(root,' assignment say.statement ',nodes)
+    do i = 1 to nodes[0]
+      node = nodes[i]; expr = find(node,'expression'); value = expression(expr)
+      if _code <> '' then return 1
+      if _tree.label(node) = 'assignment' then call assign(spelling(find(node,'name')),value)
+      else call arrayappend _out,value
+    end
+    return 0
+  assign: method = .void
+    arg name = .string, value = .string
+    key = upper(strip(name))
+    do i = 1 to _names[0]
+      if _names[i] = key then do
+        _values[i] = value; return
+      end
+    end
+    call arrayappend _names,key
+    call arrayappend _values,value
+    return
+  value: method = .string
+    arg name = .string
+    key = upper(strip(name))
+    do i = 1 to _names[0]
+      if _names[i] = key then return _values[i]
+    end
+    return ''
+  expression: method = .string
+    arg node = .int
+    parts = .int[]; call selectnodes(node,' term operator abut ',parts)
+    value = ''; operator = ''; first = 1; right = ''
+    do i = 1 to parts[0]
+      part = parts[i]; label = _tree.label(part)
+      if label = 'operator' then operator = strip(spelling(part))
+      else do
+        right = term(part)
+        if _code <> '' then return ''
+        if first then do
+          value = right; first = 0
+        end
+        else if operator = '' | operator = '||' then value = value || right
+        else do
+          if datatype(value,'W') <> '1' | datatype(right,'W') <> '1' then do
+            call fail('type_mismatch',part); return ''
+          end
+          a = value as .int; b = right as .int; result = 0
+          select operator
+            when '+' then result = a + b
+            when '-' then result = a - b
+            when '*' then result = a * b
+            when '/' then do
+              if b = 0 then do
+                call fail('divide_by_zero',part); return ''
+              end
+              result = a <idiv> b
+            end
+            otherwise do
+              call fail('unsupported_operator',part); return ''
+            end
+          end
+          value = result || ''
+        end
+        operator = ''
+      end
+    end
+    return value
+  term: method = .string
+    arg node = .int
+    if node = 0 then return ''
+    label = _tree.label(node)
+    if label = 'number' then return strip(spelling(node))
+    if label = 'string' then do
+      text = spelling(node); return substr(text,2,length(text) - 2)
+    end
+    if label = 'name' then do
+      key = upper(strip(spelling(node)))
+      do i = 1 to _names[0]
+        if _names[i] = key then return _values[i]
+      end
+      call fail('undefined_variable',node); return ''
+    end
+    if label = 'negative' then do
+      child = find(_tree.left(node),'term')
+      if child = 0 then child = find(_tree.right(node),'term')
+      value = term(child)
+      if _code <> '' then return ''
+      if datatype(value,'W') <> '1' then do
+        call fail('type_mismatch',node); return ''
+      end
+      number = value as .int
+      return (0 - number) || ''
+    end
+    if label = 'call' then return builtin(node)
+    chosen = .int[]; call selectnodes(node,' negative call name number string ',chosen)
+    if chosen[0] <> 1 then do
+      call fail('invalid_term_tree',node); return ''
+    end
+    return term(chosen[1])
+  builtin: method = .string
+    arg node = .int
+    name = upper(strip(spelling(find(node,'name'))))
+    arguments = .int[]; call selectnodes(node,' argument ',arguments)
+    values = .string[]; present = .int[]
+    do i = 1 to arguments[0]
+      expr = find(arguments[i],'expression'); present[i] = expr > 0
+      values[i] = ''
+      if expr > 0 then values[i] = expression(expr)
+      if _code <> '' then return ''
+    end
+    if name = 'LENGTH' then do
+      if arguments[0] <> 1 | present[1] = 0 then do
+        call fail('RXC-LC-40.3',node); return ''
+      end
+      return length(values[1]) || ''
+    end
+    if name = 'SUBSTR' then do
+      if arguments[0] < 2 | arguments[0] > 3 then do
+        call fail('unsupported_arity',node); return ''
+      end
+      if present[2] = 0 then do
+        call fail('RXC-LC-40.5',node); return ''
+      end
+      start = values[2] as .int
+      if start < 1 then do
+        call fail('RXC-LC-40.14',node); return ''
+      end
+      if arguments[0] = 2 then return substr(values[1],start)
+      if present[3] = 0 then return substr(values[1],start)
+      return substr(values[1],start,values[3] as .int)
+    end
+    call fail('unsupported_builtin',node); return ''
+  find: method = .int
+    arg node = .int, wanted = .string
+    if node = 0 then return 0
+    if _tree.label(node) = wanted then return node
+    first = find(_tree.left(node),wanted)
+    if first <> 0 then return first
+    return find(_tree.right(node),wanted)
+  selectnodes: method = .void
+    arg node = .int, wanted = .string, expose selected = .int[]
+    if node = 0 then return
+    if pos(' ' || _tree.label(node) || ' ',wanted) > 0 then do
+      count = selected[0] + 1; selected[count] = node; return
+    end
+    call selectnodes(_tree.left(node),wanted,selected)
+    call selectnodes(_tree.right(node),wanted,selected)
+    return
+  spelling: method = .string
+    arg node = .int
+    source = _tree.source()
+    return binsubstr(source,_tree.start(node) + 1,_tree.finish(node) - _tree.start(node)) as .string
+  fail: method = .void
+    arg code = .string, node = .int
+    if _code = '' then do
+      _code = code; _at = _tree.start(node)
+    end
+    return
+  code: method = .string
+    return _code
+  offset: method = .int
+    return _at
+  output: method = .string
+    result = ''
+    do i = 1 to _out[0]
+      result = result || bin2x(_out[i] as .binary) || ';'
+    end
+    return result

@@ -1,0 +1,160 @@
+/* cREXX License (MIT). Declared finite-state, bounded-lookahead token passes. */
+options levelb
+namespace llstage expose rules transducer
+import rxfnsb
+import llcore
+import lllimits
+
+/** First matching declaration wins. State 0 is a wildcard; tokens are 0..255.
+ * @param initial Initial positive finite context.
+ */
+rules: class
+  _limit = .int
+  _initial = .int
+  _count = .int
+  _state = .int[]
+  _first = .int[]
+  _second = .int[]
+  _take = .int[]
+  _unless = .int[]
+  _word = .string[]
+  _emit = .int[]
+  _next = .int[]
+  _label = .string[]
+  _error = .string
+  *: factory
+    arg initial = 1, limit = 2147483647
+    _limit = limit
+    _initial = initial; _count = 0; _error = ''
+    if initial < 1 then _error = 'initial context must be a positive integer'
+    return
+  add: method = .int
+    arg name = .string, state = .int, first = .int, second = .int, take = .int, unless = .int, word = .string, emit = .int, next = .int
+    if _count >= _limit then do
+      _error = lllimits..describe('stage.rules',_limit,_count + 1); return 0
+    end
+    if state < 0 | first < -1 | first > 255 | second < -1 | second > 255 | take < 1 | take > 2 | unless < -1 | unless > 255 | emit < -2 | emit > 255 | next < 1 then do
+      _error = 'invalid finite-state token declaration ' || name; return 0
+    end
+    _count = _count + 1; _label[_count] = name; _state[_count] = state
+    _first[_count] = first; _second[_count] = second; _take[_count] = take
+    _unless[_count] = unless; _word[_count] = upper(word); _emit[_count] = emit; _next[_count] = next
+    return 1
+  choose: method = .int
+    arg state = .int, first = .int, second = .int, text = .string, remaining = .int
+    folded = upper(text)
+    do i = 1 to _count
+      if _state[i] <> 0 & _state[i] <> state then iterate
+      if _first[i] <> -1 & _first[i] <> first then iterate
+      if _second[i] <> -1 & _second[i] <> second then iterate
+      if _unless[i] <> -1 & _unless[i] = second then iterate
+      if _take[i] > remaining then iterate
+      if _word[i] <> '' & _word[i] <> folded then iterate
+      return i
+    end
+    return 0
+  initial: method = .int
+    return _initial
+  count: method = .int
+    return _count
+  take: method = .int
+    arg rule = .int
+    return _take[rule]
+  emit: method = .int
+    arg rule = .int
+    return _emit[rule]
+  next: method = .int
+    arg rule = .int
+    return _next[rule]
+  label: method = .string
+    arg rule = .int
+    return _label[rule]
+  error: method = .string
+    return _error
+
+  field: method = .int
+    arg rule = .int, field = .string
+    select field
+      when 'state' then return _state[rule]
+      when 'first' then return _first[rule]
+      when 'second' then return _second[rule]
+      when 'unless' then return _unless[rule]
+      otherwise return 0
+    end
+    return 0
+  word: method = .string
+    arg rule = .int
+    return _word[rule]
+
+/** Output spans refer to original source, even when two tokens are merged.
+ * Deleted trivia remains available in source(). Origins are input token indexes.
+ * A context is request-owned; no memo can leak between differently staged input.
+ */
+transducer: class
+  _rules = .rules
+  _input = .llcore..stream
+  _out = .llcore..stream
+  _first = .int[]
+  _last = .int[]
+  _selected = .int[]
+  _fuel = .int
+  _work = .int
+  _ran = .int
+  _status = .int
+  _error = .string
+  *: factory
+    arg declarations = .rules, input = .llcore..stream, fuel = 1000000
+    _rules = declarations; _input = input; _out = .llcore..stream.tokens(input.source())
+    _fuel = fuel; _work = 0; _ran = 0; _status = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _rules.error() <> '' | _input.error() <> '' then do
+      _status = 3; _error = _rules.error() || _input.error(); return _status
+    end
+    at = 0; state = _rules.initial(); source = _input.source(); token = .binary
+    do while at < _input.size()
+      _work = _work + _rules.count() + _input.finish(at + 1) - _input.start(at)
+      if _work > _fuel then do
+        _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+      end
+      token = binsubstr(source,_input.start(at) + 1,_input.finish(at + 1) - _input.start(at))
+      /* Keyword comparison is deliberately ASCII-only. Other bytes copy through. */
+      ascii = 1
+      do i = 0 to <blen>(token) - 1
+        if <at..u8>(i) token > 127 then ascii = 0
+      end
+      text = ''
+      if ascii then text = token as .string
+      selected = _rules.choose(state,_input.symbol(at),_input.symbol(at + 1),text,_input.size() - at)
+      take = 1; emit = -1
+      if selected > 0 then do
+        take = _rules.take(selected); emit = _rules.emit(selected); state = _rules.next(selected)
+      end
+      if emit <> -2 then do
+        if emit = -1 then emit = _input.symbol(at)
+        ok = _out.append(emit,_input.start(at),_input.finish(at + take))
+        if ok = 0 then do
+          _status = 3; _error = _out.error(); return _status
+        end
+        n = _out.size(); _first[n] = at; _last[n] = at + take; _selected[n] = selected
+      end
+      at = at + take
+    end
+    return _status
+  output: method = .llcore..stream
+    return _out
+  first: method = .int
+    arg position = .int
+    return _first[position + 1]
+  last: method = .int
+    arg position = .int
+    return _last[position + 1]
+  selected: method = .int
+    arg position = .int
+    return _selected[position + 1]
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error

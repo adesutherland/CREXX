@@ -1,0 +1,7 @@
+options levell
+namespace tokenlist
+read: parser semantics contextfree input tokens start document
+item: token = 1
+comma: token = 2
+document: rule = item (comma item)*
+document.shape: tree rule document kind 10 arity 0

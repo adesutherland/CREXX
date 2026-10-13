@@ -1,0 +1,125 @@
+/* PDOS TSO personality fixture: use the qualified VERSION command.
+   Original native CMS/TSO campaign source remains unchanged. */
+/* Same script is compiled for the selected native profile and run on the
+   actual OS and corresponding PDOS personality. Console output is retained
+   independently by the operator. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 1 then return 2
+  target = translate(args.1)
+  if target <> "CMS" & target <> "TSO" then return 3
+  i = .int
+  handle = .int
+  first = .string
+  second = .string
+  padding = .string
+  guard = .int
+  guard = 4294967317
+  if args.0 > 3 then do
+    path = args.4
+    if target = "CMS" then path = path || ".DATA"
+    mode = "rb"
+    assembler fopen handle,path,mode
+    if handle = 0 then return 16
+    assembler freadline first,handle
+    if first <> "ALPHA" then return 17
+  end
+  command = "TIME"
+  if target = "CMS" then command = "QUERY DISK"
+  env = addressenv(target)
+  if env.environment_name() <> target | env.environment_id() <> target then return 4
+  address value target
+  do i = 1 to 3
+    address "" || command
+    if rc <> 0 then return 5
+  end
+  address system command
+  if rc <> 0 then return 6
+  response = _address_dispatch_request(.addressrequest(target, "BAD@CMD", .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+  if response.get_rc() = 0 | response.get_condition_name() = "" then return 7
+  address value target
+  address "" || command
+  if rc <> 0 then return 8
+  out = .string[]
+  address "" || command output out
+  if args.0 > 1 then do
+    if translate(args.2) = "CAPTURE" then do
+      if rc <> 0 | out.0 = 0 then return 9
+      say "CAPTURE:" out.0
+      do i = 1 to out.0
+        say "RECORD:" out[i]
+      end
+    end
+    else if rc <> -3 | out.0 <> 0 then return 10
+  end
+  else if rc <> -3 | out.0 <> 0 then return 10
+  address "" || command
+  if rc <> 0 then return 11
+  response = _address_dispatch_request(.addressrequest(target, '780079'x, .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+  if response.get_rc() <> -3 | response.get_condition_name() <> "FAILURE" then return 12
+  response = _address_dispatch_request(.addressrequest("ZZNOENV",command, .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+  if response.get_rc() <> -3 | response.get_condition_name() <> "FAILURE" then return 13
+  address "" || command
+  if rc <> 0 then return 14
+  if args.0 > 2 then do
+    if translate(args.3) = "PDOS" then do
+      address pdos "VERSION"
+      if rc <> 0 then return 15
+    end
+  end
+  if target = "CMS" then do
+    if args.0 > 1 then if translate(args.2) = "CAPTURE" then do
+      selected = .string[]
+      address cms "QUERY DISK A" output selected
+      if rc <> 0 | selected.0 = 0 then return 21
+    end
+    rejected = .string[]
+    address cms "QUERY TIME" output rejected
+    if rc <> -3 | rejected.0 <> 0 then return 20
+  end
+  if args.0 > 4 then if translate(args.5) = "QUALIFY" then do
+    positive = "STATE MFN404 DATA A"
+    if target = "TSO" then positive = "LISTDS 'MFADDR.NOEXIST.DATA'"
+    route = target
+    if translate(args.3) = "PDOS" then do
+      route = "PDOS"
+      positive = "ENVCHILD HELLO"
+    end
+    response = _address_dispatch_request(.addressrequest(route,positive, .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+    if response.get_rc() <= 0 | response.get_condition_name() <> "ERROR" then return 22
+    if route = "PDOS" then do
+      if response.get_rc() <> 7 then return 23
+      response = _address_dispatch_request(.addressrequest(route,"ENVFAULT", .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+      if response.get_rc() >= 0 | response.get_condition_name() <> "FAILURE" then return 24
+      address pdos "VERSION"
+      if rc <> 0 then return 25
+    end
+    else if target = "TSO" & args.0 > 5 then if args.6 <> "-" then do
+      fault = "CALL '" || args.6 || "(MFFLT31)'"
+      response = _address_dispatch_request(.addressrequest(route,fault, .addressredirect.none(), .addressredirect.none(), .addressredirect.none()))
+      if response.get_rc() >= 0 | response.get_condition_name() <> "FAILURE" then return 27
+      say "NATIVE TSO FAULT RECOVERY PASS"
+    end
+    address value target
+    address "" || command
+    if rc <> 0 then return 26
+    say "NONZERO AND RECOVERY PASS" route
+  end
+  if guard <> 4294967317 then return 18
+  if args.0 > 3 then do
+    assembler freadline padding,handle
+    assembler freadline second,handle
+    assembler fclose rc,handle
+    if padding <> copies("X",65536) | second <> "OMEGA" | rc <> 0 then return 19
+    say "CALLER FILE AND STORAGE PASS"
+  end
+  say "PASS: native ADDRESS Level B" target
+  return 0
+
+probe: procedure = .int
+  arg target = .string
+  address value target
+  address "QUERY DISK A"
+  return rc

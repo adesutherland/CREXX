@@ -1,0 +1,20 @@
+[1/5] Building C object CMakeFiles/copy_root_partial.dir/root.c.o
+[2/5] Building C object CMakeFiles/copy_branch.dir/branch.c.o
+[3/5] Linking C shared library a/libcopy_branch.dylib
+[4/5] Linking C shared module partial/libcopy_root_partial.rxplugin
+[5/5] cd /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug && /opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14 /Users/adrian/CLionProjects/CREXX-hotfix/tests/rxpa/provider-package-copy/check-partial.py /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/partial-Debug.cmake /Users/adrian/CLionProjects/CREXX-hotfix/rxpa/WriteProviderPackage.cmake /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/partial-proof
+FAILED: [code=1] CMakeFiles/provider_package_partial_measure /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/CMakeFiles/provider_package_partial_measure 
+cd /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug && /opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14 /Users/adrian/CLionProjects/CREXX-hotfix/tests/rxpa/provider-package-copy/check-partial.py /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/partial-Debug.cmake /Users/adrian/CLionProjects/CREXX-hotfix/rxpa/WriteProviderPackage.cmake /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/partial-proof
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/tests/rxpa/provider-package-copy/check-partial.py", line 39, in <module>
+    assert result.returncode == 0, log_text
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CMake Error at /Users/adrian/CLionProjects/CREXX-hotfix/rxpa/WriteProviderPackage.cmake:39 (file):
+  file Multiple conflicting paths found for libcopy-dependency.dylib:
+
+    /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/a/libcopy-dependency.dylib
+    /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug/partial-proof/complete/libcopy-dependency.dylib
+
+
+
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,257 @@
+/* cREXX License (MIT). Regular graph to Thompson NFA to byte-class DFA. */
+options levelb
+namespace llregular expose builder
+import rxfnsb
+import llcore
+import llmunch
+import lllimits
+
+/** Bounded construction; recursive lexical definitions and nullable tokens fail.
+ * UTF-8 is validated by the source stage; this machine consumes exact bytes.
+ * Rule order resolves equal-length matches. No lexical host actions run here.
+ */
+builder: class
+  _graph = .llcore..grammar
+  _nfa = .binary
+  _count = .int
+  _root = .int
+  _visiting = .int[]
+  _depth = .int
+  _error = .string
+  _roots = .int[]
+  _kinds = .int[]
+  _built = .int
+  _dfa = .llmunch..automaton
+  _limits = .lllimits..policy
+  *: factory
+    arg graph = .llcore..grammar, roots = .int[], kinds = .int[], ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    _graph = graph; _count = 0; _root = 0; _depth = 0; _error = ''
+    _dfa = .llmunch..automaton(0,0)
+    _roots = roots; _kinds = kinds; _built = 0
+    return
+  build: method = .void
+    if _built then return
+    _built = 1; roots = _roots; kinds = _kinds
+    if _limits.error() <> '' then do
+      _error = _limits.error(); return
+    end
+    do i = 1 to roots[0] while _error = ''
+      part = fragment(roots[i]); accept = node(2,0,roots[i],kinds[i],'')
+      call patch(part[2],accept)
+      if _root = 0 then _root = part[1]
+      else do
+        combined = node(0,_root,part[1],0,''); _root = combined
+      end
+    end
+    if _root = 0 & _error = '' then _error = 'no lexical rules'
+    if _error = '' then call determinize()
+    return
+  node: method = .int
+    arg type = .int, a = .int, b = .int, kind = .int, mask = .string
+    if _count >= _limits.limit('nfa.states') then do
+      _error = _limits.exhausted('nfa.states',_count + 1); return 0
+    end
+    _count = _count + 1; base = (_count - 1) * 272
+    call binresize _nfa,base + 272
+    <at..i32>(base) _nfa = type; <at..i32>(base + 4) _nfa = a
+    <at..i32>(base + 8) _nfa = b; <at..i32>(base + 12) _nfa = kind
+    if type = 1 then do byte = 0 to 255
+      if substr(mask,byte + 1,1) = '1' then <at..u8>(base + 16 + byte) _nfa = 1
+    end
+    return _count
+  patch: method = .void
+    arg state = .int, target = .int
+    if state > 0 then <at..i32>((state - 1) * 272 + 4) _nfa = target
+    return
+  fragment: method = .int[]
+    arg id = .int
+    result = .int[]; result[1] = 0; result[2] = 0
+    if _error <> '' then return result
+    if id < 1 | id > _graph.size() then do
+      _error = 'LL_BAD_GRAMMAR: invalid lexical reference'; return result
+    end
+    if _depth >= 128 then do
+      _error = 'LL_IMPLEMENTATION_LIMIT: lexical depth exceeds 128 in ' || _graph.label(id) || ' at line ' || _graph.line(id); return result
+    end
+    if _visiting[id] then do
+      _error = 'LL_LEX_RECURSION: unsupported recursive lexical rule ' || _graph.label(id) || ' at line ' || _graph.line(id) || '. DFA generation requires acyclic regular definitions; use a declared counter stage for nesting.'; return result
+    end
+    _visiting[id] = 1; _depth = _depth + 1
+    op = _graph.op(id); a = _graph.left(id); b = _graph.right(id)
+    select
+      when op = 1 | op = 11 | op = 12 | op = 16 then do
+        mask = copies('0',256)
+        do byte = 0 to 255
+          selected = 0
+          if op = 1 then selected = byte = a
+          if op = 11 then selected = byte >= a & byte <= b
+          if op = 12 then selected = 1
+          if op = 16 then selected = _graph.contains(id,byte)
+          if selected then mask = overlay('1',mask,byte + 1)
+        end
+        finish = node(0,0,0,0,''); start = node(1,finish,0,0,mask)
+        result[1] = start; result[2] = finish
+      end
+      when op = 2 then do
+        left = fragment(a); right = fragment(b); call patch(left[2],right[1])
+        result[1] = left[1]; result[2] = right[2]
+      end
+      when op = 4 then do
+        left = fragment(a); right = fragment(b); finish = node(0,0,0,0,'')
+        call patch(left[2],finish); call patch(right[2],finish)
+        start = node(0,left[1],right[1],0,''); result[1] = start; result[2] = finish
+      end
+      when op = 5 then result = fragment(a)
+      when op = 6 then do
+        finish = node(0,0,0,0,''); result[1] = finish; result[2] = finish
+      end
+      when op = 7 | op = 14 | op = 15 then do
+        child = fragment(a); finish = node(0,0,0,0,'')
+        start = node(0,child[1],finish,0,'')
+        if op = 15 then call patch(child[2],finish)
+        else call patch(child[2],start)
+        result[1] = start; result[2] = finish
+        if op = 14 then result[1] = child[1]
+      end
+      otherwise _error = 'LL_LEX_UNSUPPORTED: unsupported clause in ' || _graph.label(id)
+    end
+    _visiting[id] = 0; _depth = _depth - 1
+    return result
+  /** Each epsilon-reachable state enters the queue once. Membership is a
+   * binary vector, so setting a bit does not rebuild a Unicode string. */
+  closure: method = .binary
+    arg active = .binary, pending = .int[]
+    at = 1; state = .int
+    do while at <= pending[0]
+      state = pending[at]; at = at + 1; base = (state - 1) * 272
+      if <at..i32>(base) _nfa <> 0 then iterate
+      do edge = 1 to 2
+        target = <at..i32>(base + edge * 4) _nfa
+        if target > 0 then do
+          if <at..u8>(target - 1) active = 0 then do
+            <at..u8>(target - 1) active = 1
+            pending[pending[0] + 1] = target
+          end
+        end
+      end
+    end
+    return subsetkey(pending)
+  /** Canonical sparse membership: byte equality iff the state sets agree. */
+  subsetkey: method = .binary
+    arg keys = .int[]
+    width = 1; size = keys[0]; scratch = .int[]
+    first = .int; middle = .int; last = .int; a = .int; b = .int; out = .int
+    do while width < size
+      do first = 1 to size by width * 2
+        middle = min(first + width,size + 1); last = min(first + width * 2,size + 1)
+        a = first; b = middle
+        do out = first to last - 1
+          if a < middle then do
+            if b >= last then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else if keys[a] <= keys[b] then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else do
+              scratch[out] = keys[b]; b = b + 1
+            end
+          end
+          else do
+            scratch[out] = keys[b]; b = b + 1
+          end
+        end
+      end
+      keys = scratch; width = width * 2
+    end
+    result = .binary; call binresize result,size * 4
+    do out = 1 to size
+      <at..i32>((out - 1) * 4) result = keys[out]
+    end
+    return result
+  determinize: method = .void
+    byte = .int; state = .int; base = .int; cls = .int; i = .int; member = .int; ok = .int; seeds = .int[]; emptyseeds = .int[]
+    signatures = .binary[]; representatives = .int[]; mapping = .int[]; classes = 0
+    do byte = 0 to 255
+      signature = .binary; call binresize signature,_count
+      do state = 1 to _count
+        base = (state - 1) * 272
+        if <at..i32>(base) _nfa = 1 then <at..u8>(state - 1) signature = <at..u8>(base + 16 + byte) _nfa
+      end
+      cls = 0
+      do i = 1 to classes
+        if signatures[i] = signature then cls = i
+      end
+      if cls = 0 then do
+        classes = classes + 1; cls = classes; signatures[cls] = signature; representatives[cls] = byte
+      end
+      mapping[byte + 1] = cls - 1
+    end
+    sets = .binary[]; kinds = .int[]; edges = .int[]; owner = 0
+    initial = .binary; call binresize initial,_count
+    <at..u8>(_root - 1) initial = 1
+    seeds[1] = _root
+    sets[1] = closure(initial,seeds); total = 1; next = 1
+    do while next <= total
+      active = sets[next]; kind = 0
+      do member = 0 to <blen>(active) - 1 by 4
+        state = <at..i32>(member) active; base = (state - 1) * 272
+        if <at..i32>(base) _nfa = 2 then do
+          kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; leave
+        end
+      end
+      kinds[next] = kind
+      if next = 1 & kind <> 0 then do
+        _error = 'LL_NULLABLE_TOKEN: ' || _graph.label(owner) || ' (line ' || _graph.line(owner) || ') accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.'; return
+      end
+      do cls = 1 to classes
+        byte = representatives[cls]; following = .binary; call binresize following,_count; live = 0
+        seeds = emptyseeds
+        do member = 0 to <blen>(active) - 1 by 4
+          state = <at..i32>(member) active; base = (state - 1) * 272
+          if <at..i32>(base) _nfa = 1 & <at..u8>(base + 16 + byte) _nfa = 1 then do
+            target = <at..i32>(base + 4) _nfa
+            if <at..u8>(target - 1) following = 0 then do
+              <at..u8>(target - 1) following = 1; live = 1
+              seeds[seeds[0] + 1] = target
+            end
+          end
+        end
+        target = 0
+        if live then do
+          following = closure(following,seeds)
+          do i = 1 to total
+            if sets[i] = following then target = i
+          end
+          if target = 0 then do
+            if total >= _limits.limit('dfa.states') then do
+              _error = _limits.exhausted('dfa.states',total + 1); return
+            end
+            total = total + 1; target = total; sets[target] = following
+          end
+        end
+        edges[(next - 1) * classes + cls] = target
+      end
+      next = next + 1
+    end
+    _dfa = .llmunch..automaton(total,classes)
+    do byte = 0 to 255
+      ok = _dfa.mapping(byte,mapping[byte + 1])
+    end
+    do state = 1 to total
+      ok = _dfa.accepting(state,kinds[state])
+      do cls = 1 to classes
+        ok = _dfa.transition(state,cls - 1,edges[(state - 1) * classes + cls])
+      end
+    end
+    if _dfa.verify() = 0 then _error = _dfa.error()
+    return
+  nfastates: method = .int
+    return _count
+  automaton: method = .llmunch..automaton
+    return _dfa
+  error: method = .string
+    call build()
+    return _error

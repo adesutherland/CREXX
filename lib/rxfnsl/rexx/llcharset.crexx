@@ -1,0 +1,183 @@
+/* cREXX License (MIT). Scalar interval algebra and UTF-8 byte-DFA lowering. */
+options levelb
+namespace llcharset expose ranges lower
+import rxfnsb
+import llcore
+
+/** Sorted disjoint inclusive intervals. No Unicode property database is needed
+ * for the scalar domain. Surrogates are excluded by the caller's domain. */
+ranges: class
+  _low = .int[]
+  _high = .int[]
+  _count = .int
+  _error = .string
+  *: factory
+    _count = 0
+    return
+  packed: factory
+    arg image = .binary
+    _count = 0; _error = ''
+    if <blen>(image) % 8 <> 0 then do
+      _error = 'LL_UNICODE_DATA: malformed property intervals'; return
+    end
+    previous = -1
+    do at = 0 to <blen>(image) - 1 by 8
+      low = <at..i32>(at) image; high = <at..i32>(at + 4) image
+      if low <= previous | low > high | high > 1114111 | (low <= 57343 & high >= 55296) then do
+        _count = 0; _error = 'LL_UNICODE_DATA: invalid scalar property interval'; return
+      end
+      _count = _count + 1; _low[_count] = low; _high[_count] = high; previous = high
+    end
+    return
+  error: method = .string
+    return _error
+  add: method = .void
+    arg low = .int, high = .int
+    if low > high then return
+    lows = .int[]; highs = .int[]; count = 0; placed = 0
+    do i = 1 to _count
+      if _high[i] + 1 < low then do
+        count = count + 1; lows[count] = _low[i]; highs[count] = _high[i]
+      end
+      else if high + 1 < _low[i] then do
+        if placed = 0 then do
+          count = count + 1; lows[count] = low; highs[count] = high; placed = 1
+        end
+        count = count + 1; lows[count] = _low[i]; highs[count] = _high[i]
+      end
+      else do
+        low = min(low,_low[i]); high = max(high,_high[i])
+      end
+    end
+    if placed = 0 then do
+      count = count + 1; lows[count] = low; highs[count] = high
+    end
+    _low = lows; _high = highs; _count = count
+    return
+  unite: method = .void
+    arg other = .ranges
+    do i = 1 to other.count()
+      call add(other.low(i),other.high(i))
+    end
+    return
+  subtract: method = .void
+    arg other = .ranges
+    do j = 1 to other.count()
+      low = other.low(j); high = other.high(j)
+      lows = .int[]; highs = .int[]; count = 0
+      do i = 1 to _count
+        if _high[i] < low | _low[i] > high then do
+          count = count + 1; lows[count] = _low[i]; highs[count] = _high[i]
+        end
+        else do
+          if _low[i] < low then do
+            count = count + 1; lows[count] = _low[i]; highs[count] = low - 1
+          end
+          if _high[i] > high then do
+            count = count + 1; lows[count] = high + 1; highs[count] = _high[i]
+          end
+        end
+      end
+      _low = lows; _high = highs; _count = count
+    end
+    return
+  count: method = .int
+    return _count
+  low: method = .int
+    arg i = .int
+    return _low[i]
+  high: method = .int
+    arg i = .int
+    return _high[i]
+
+/** UTF-8 is lexicographically monotone within each encoding length. Split at
+ * length and surrogate boundaries, then split an interval into disjoint byte
+ * boxes: lower suffix, unrestricted middle, upper suffix. This represents all
+ * and only the original scalars, with O(width) boxes per scalar interval.
+ * The result uses ordinary byte clauses and the existing DFA runtime. */
+lower: procedure = .int
+  arg expose graph = .llcore..grammar, ranges = .ranges, scalar = .int, line = .int
+  result = 0; node = .int; i = .int; nodes = .int[]
+  do i = 1 to ranges.count()
+    low = ranges.low(i); high = ranges.high(i)
+    if scalar = 0 then do
+      node = graph.add(11,low,high,'byte range',line)
+      nodes[nodes[0] + 1] = node
+    end
+    else do
+      boundaries = .int[]; boundaries[1] = 0; boundaries[2] = 128
+      boundaries[3] = 2048; boundaries[4] = 55296; boundaries[5] = 57344
+      boundaries[6] = 65536; boundaries[7] = 1114112
+      do k = 1 to 6
+        if k = 4 then iterate
+        first = max(low,boundaries[k]); last = min(high,boundaries[k + 1] - 1)
+        if first > last then iterate
+        a = encoded(first); b = encoded(last)
+        node = box(graph,a,b,1,line)
+        nodes[nodes[0] + 1] = node
+      end
+    end
+  end
+  do while nodes[0] > 1
+    next = .int[]
+    do i = 1 to nodes[0] by 2
+      node = nodes[i]
+      if i < nodes[0] then node = unionnode(graph,node,nodes[i + 1],line)
+      next[next[0] + 1] = node
+    end
+    nodes = next
+  end
+  if nodes[0] > 0 then result = nodes[1]
+  /* An empty character set recognizes no word, including the empty word. */
+  if result = 0 then result = graph.characters('' as .binary,0,'empty charset',line)
+  return result
+
+encoded: procedure = .int[]
+  arg scalar = .int
+  result = .int[]; width = 1
+  if scalar >= 128 then width = 2
+  if scalar >= 2048 then width = 3
+  if scalar >= 65536 then width = 4
+  do i = width to 2 by -1
+    result[i] = 128 + scalar % 64; scalar = scalar / 64
+  end
+  prefix = 0
+  if width = 2 then prefix = 192
+  if width = 3 then prefix = 224
+  if width = 4 then prefix = 240
+  result[1] = prefix + scalar
+  return result
+
+unionnode: procedure = .int
+  arg expose graph = .llcore..grammar, a = .int, b = .int, line = .int
+  if a = 0 then return b
+  return graph.add(4,a,b,'scalar union',line)
+
+box: procedure = .int
+  arg expose graph = .llcore..grammar, low = .int[], high = .int[], at = .int, line = .int
+  head = .int; tail = .int; i = .int
+  if at = low[0] then return graph.add(11,low[at],high[at],'UTF8 byte',line)
+  if low[at] = high[at] then do
+    head = graph.add(1,low[at],0,'UTF8 byte',line)
+    tail = box(graph,low,high,at + 1,line)
+    return graph.add(2,head,tail,'UTF8 scalar',line)
+  end
+  upper = low; lower = high
+  do i = at + 1 to low[0]
+    upper[i] = 191; lower[i] = 128
+  end
+  head = graph.add(1,low[at],0,'UTF8 byte',line)
+  tail = box(graph,low,upper,at + 1,line)
+  result = graph.add(2,head,tail,'UTF8 scalar',line)
+  if high[at] > low[at] + 1 then do
+    middle = graph.add(11,low[at] + 1,high[at] - 1,'UTF8 byte',line)
+    do i = at + 1 to low[0]
+      byte = graph.add(11,128,191,'UTF8 continuation',line)
+      middle = graph.add(2,middle,byte,'UTF8 scalar',line)
+    end
+    result = unionnode(graph,result,middle,line)
+  end
+  head = graph.add(1,high[at],0,'UTF8 byte',line)
+  tail = box(graph,lower,high,at + 1,line)
+  last = graph.add(2,head,tail,'UTF8 scalar',line)
+  return unionnode(graph,result,last,line)

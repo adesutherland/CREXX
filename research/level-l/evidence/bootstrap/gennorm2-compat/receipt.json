@@ -1,0 +1,7 @@
+{
+  "cases": 17,
+  "cells": 8,
+  "identical_record_token_error_observations_except_documented_NUL_correction": true,
+  "NUL_correction": "Legacy accepted truncated comment; native rejects NUL at byte 8",
+  "output_sha256": "7757c8365f9901d3796ec5c068009f77d609cc0746eaf85ae963fcd18debbce6"
+}

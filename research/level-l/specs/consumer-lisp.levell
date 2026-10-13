@@ -1,0 +1,17 @@
+options levell
+namespace consumerlisp
+read: parser semantics contextfree input tokens start document
+symbol: token = 1
+number: token = 2
+string: token = 3
+open: token = 4
+close: token = 5
+quote: token = 6
+dot: token = 7
+bar.symbol: token = 8
+atom: rule = symbol | number | string | bar.symbol
+quoted.form: rule = quote form
+list: rule = open (form+ (dot form)?)? close
+form: rule = quoted.form | list | atom
+document: rule = form*
+classify: tokenstage start 1

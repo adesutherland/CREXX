@@ -1,0 +1,1 @@
+Before any recovery comparison: corrected fixed-panel [] ; [a] (without spaces) later-array zero-based start from4 to3. Initial JSON SHA256 12d711eae43c40c3df0734ad07fc377aac21ba5ab1ff979a2d93ce18a776bcbe. No source, partition, expected recognition or edit cost changed.

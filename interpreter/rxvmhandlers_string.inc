@@ -3014,13 +3014,13 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
 
             // If the filename is "stdout", "stderr", or "stdin" we use the C runtime's handle
             if (strcmp(filename, "stdout") == 0) {
-                op1R->int_value = (rxinteger)stdout;
+                op1R->int_value = (rxinteger)(uintptr_t)stdout;
             } else if (strcmp(filename, "stderr") == 0) {
-                op1R->int_value = (rxinteger)stderr;
+                op1R->int_value = (rxinteger)(uintptr_t)stderr;
             } else if (strcmp(filename, "stdin") == 0) {
-                op1R->int_value = (rxinteger)stdin;
+                op1R->int_value = (rxinteger)(uintptr_t)stdin;
             } else {
-                op1R->int_value = (rxinteger)rxvm_private_fopen(filename, mode);
+                op1R->int_value = (rxinteger)(uintptr_t)rxvm_private_fopen(filename, mode);
             }
             free(filename);
             free(mode);
@@ -3033,7 +3033,7 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
 
 RXVM_HANDLER(FCLOSE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fclose((FILE*)op2R->int_value);
+        op1R->int_value = fclose((FILE*)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* fflush - op1 rc(int) = fflush op2 file*(int) */
@@ -3042,7 +3042,7 @@ RXVM_HANDLER(FCLOSE_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FFLUSH_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FFLUSH R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fflush((FILE*)op2R->int_value);
+        op1R->int_value = fflush((FILE*)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* freadb - op1(binary) = fread op2 file*(int) op3 bytes(int) */
@@ -3062,7 +3062,7 @@ RXVM_HANDLER(FREADB_REG_REG_REG, VM_ADVANCE(3);
                 SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
             }
             else {
-                op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
+                op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) (uintptr_t)op2R->int_value);
                 clear_vm_private_flags(op1R);
             }
         }
@@ -3076,7 +3076,7 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FREADLINE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     {
         int ch;
-        FILE *stream = (FILE*)op2R->int_value;
+        FILE *stream = (FILE*)(uintptr_t)op2R->int_value;
 
         rxvm_value_set_string_length_known(op1R, 0u);
         string_cache_reset(op1R);
@@ -3155,7 +3155,7 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FREADBYTE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FREADBYTE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fgetc((FILE *)op2R->int_value);
+        op1R->int_value = fgetc((FILE *)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* freadcdpt - op1 (string and int) = read codepoint op2 file*(int) */

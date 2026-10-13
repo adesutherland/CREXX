@@ -6,6 +6,12 @@ RexxScript borrows familiar syntax from REXX but implements only the subset
 described in this guide; it is not a full REXX interpreter.
 It is a RexxScript product, not the Level C compiler path.
 
+**Two explicit versions:** the command/API described first here is legacy
+`rexxscript`, including the `REXXSCRIPT` compiler exit. The unreleased
+[modern `rexxscript1` review implementation](#rexxscript-1-modern-level-l-review-implementation)
+is selected separately and uses the generated Level L tree. Neither command
+automatically tries the other dialect.
+
 RexxScript is delivered as:
 
 - `bin/rexxscript.rxbin`: runtime image used by CREXX programs.
@@ -57,6 +63,19 @@ end
 `EXPOSE` copies named host variables into the RexxScript sandbox before
 execution and copies them back afterwards. Variables not listed in `EXPOSE`
 remain local to the script.
+
+For array sharing, declare the host variable as `.string[]` before the call
+and expose only its name:
+
+```rexx
+measurements = .string[]
+REXXSCRIPT script EXPOSE measurements
+```
+
+The array is transferred as `measurements.0`, `measurements.1`, and so on.
+Other host array types, such as `.int[]`, are rejected by the compiler exit
+with a clear diagnostic that exposed arrays must be `.string[]`. A scalar
+declaration such as `.string` remains a scalar expose.
 
 `OUTPUT` receives a `.string[]` array containing captured `SAY` output.
 
@@ -201,6 +220,7 @@ VERIFY
 WORD
 WORDS
 WORDPOS
+VALUE
 LINEIN
 LINEOUT
 LINES
@@ -210,6 +230,40 @@ ERASEFILE
 Function names are matched case-insensitively. RexxScript owns the sandbox-safe
 name controller, which routes each allowed intrinsic to its specific shared
 `rxfnsc` `RexxClassicBifs` implementation.
+
+`VALUE(name)` is a RexxScript-specific, read-only intrinsic. It evaluates its
+argument to a variable name and returns that variable's value from the current
+RexxScript variable pool. Names are case-insensitive. It is useful for reading
+RXPP-generated scalar names such as `MEASUREMENTS_1`; dynamic assignment is not
+supported.
+
+```rexx
+do i = 1 to MEASUREMENTS_COUNT
+  say VALUE('MEASUREMENTS_' || i)
+end
+```
+
+### One-dimensional string arrays
+
+RexxScript supports script-local one-dimensional string arrays using dotted
+names. The `.0` element conventionally stores the element count:
+
+```rexx
+words.0 = 3
+words.1 = 'red'
+words.2 = 'green'
+words.3 = 'blue'
+
+do i = 1 to words.0
+  say words.i
+end
+```
+
+The suffix may be a literal non-negative integer or the name of an integer
+variable. Missing elements remain undefined variables. Host cREXX array
+Host cREXX arrays can be exposed by declaring the host variable as `.string[]`
+and using `EXPOSE name`; the compiler exit transfers the elements through this
+dotted representation.
 
 The embedded `REXXSCRIPT` statement supports `VALUES array` for collecting
 values produced by `COLLECT expression`. The target is a `.string[]`, and values
@@ -264,3 +318,78 @@ The current RexxScript slice is intentionally small:
 These limits keep the sandbox and runtime behavior predictable while the
 Release 1 beta work establishes the shared Rexx value, variable-pool, and BIF
 foundation.
+
+## RexxScript 1: modern Level L review implementation
+
+For an explanation of how source becomes tokens and trees, how the IF rules
+attach ELSE, and how the interpreter walks the result, read the
+[Level L process overview](../../lib/rxfnsl/doc/user-guide.md#overview-from-a-language-description-to-a-useful-program).
+It also distinguishes generated token stages from RexxScript's handwritten
+layout and concatenation passes.
+
+The local `levell` branch adds an explicitly selected modern implementation:
+`rexxscript1`, `rexxscript1.rxbin`, namespaces `rexxscript1` and `rexxscript1run`.
+It uses a [Level L grammar](../grammar/rexxscript.levell), Level G
+NUMERIC_COMMON expressions and typed RexxValue values. It is for review and has
+not been released. The `rexxscript` command and APIs described above continue to
+select the legacy evaluator; the implementation never guesses a dialect from
+whether parsing succeeds.
+
+```sh
+cmake --build cmake-build-levell-product --target rexxscript1_cli
+cmake-build-levell-product/bin/rexxscript1 rexxscript/examples/modern.rexx
+```
+
+The example prints `total: 46`, `café`, `ok` and returns a typed result of46
+through the reusable API. The CLI exit code is execution status, not the script
+RETURN value. It prints captured SAY output and a located diagnostic on failure.
+
+| Area | Modern review contract |
+|---|---|
+| Values/names | Scalar integer, float, explicit `d` decimal, string and shared-BIF RexxValue results. Assignment creates a case-insensitive local name. Undefined reads fail. |
+| Expressions | Level G NUMERIC_COMMON precedence; right-associative power binds more tightly than prefix minus. Integer `/` divides as integer; floating operands select floating arithmetic. Comparisons, blank/abuttal/explicit concatenation, short-circuit AND/OR and named integer operators are implemented. Named operators are case-insensitive. |
+| Literals | Decimal integers, ordinary dotted/exponent floats, decimal `d` suffix, `0x` integers and single/double quoted strings with doubled quote escaping. UTF-8 string contents are preserved. |
+| Statements | Assignment, IF/THEN/ELSE, simple/count/WHILE/UNTIL/FOREVER/controlled DO, LEAVE, ITERATE, CALL of a BIF, RETURN, SAY, COLLECT, NOP. ELSE binds to the closest unmatched IF. Controlled DO supports `TO` and optional `BY`. |
+| Layout | Newlines/semicolons terminate clauses. A comma before a physical newline continues a clause; commas in calls are argument separators. Parenthesized newlines and THEN/ELSE layout are normalized. A semicolon is never a continuation. Nested `/* */` comments preserve original byte offsets. |
+| Functions | Existing Level C BIF bodies and RexxBifCallContext, including omitted-argument flags and the per-run RexxVariablePool/configuration. This is the existing rxfnsc connection; Level G expression rules do not change Classic BIF contracts. |
+| Output | SAY collects printable lines; COLLECT appends typed values available through the API. RETURN terminates the run and stores a typed result. |
+| Exclusions | Declarations, classes, collections/indexing, script-defined procedures, imports, SIGNAL, GOTO and INTERPRET. No host registration, exposed inputs/outputs or write-back contract is selected yet. |
+
+This is a specified scalar subset, not complete Level G. Identifiers are ASCII
+letters/underscore plus digits. Named integer operators are contiguous angle
+bracket tokens. Type constructors/casts, binary/hex quoted literals, Unicode
+operator aliases, and the wider compiler's identifier and contextual-keyword
+rules are outside this first surface. A leading statement word can be assigned
+(e.g. `say=7; say say`); THEN/ELSE and DO-header words have the particular finite
+classification rules shown in the grammar, rather than a promise that every
+keyword is soft in every position. The grammar and these examples are intended
+for language review.
+
+Numeric comparisons preserve the runtime operand types. In particular,
+`0.1+0.2=0.3` is false for ordinary binary floats, while
+`0.1d+0.2d=0.3d` is true for decimals. The integrated Level G compiler now
+preserves the first result during constant folding. Optimized/unoptimized
+compiler runs and RexxScript agree on the 28-case scalar overlap panel; the
+earlier RS-F01 discrepancy and its repair remain in the review evidence.
+
+The dispatch module lists the available Level C functions. File, stream,
+activation/context and clock services such as LINEIN, STREAM, ARG, DATE and TIME
+return `RS_CAPABILITY` until the host contract is selected. Unknown names return
+`RS_FUNCTION`; BIF argument errors retain their existing Level C codes. RANDOM
+and QUEUED retain their shared library behavior; no independent replacement or
+host-wide isolation claim is made for those services.
+
+A script is parsed and structurally validated before its first statement runs.
+Syntax recovery never produces an executable program. Runtime failure preserves
+already captured output in the result; it does not roll back BIF effects.
+Diagnostics include a stable code, line/column, byte offset and source excerpt;
+malformed UTF-8 uses a safe byte excerpt. Resource exhaustion is distinct from
+invalid syntax (`RS_PARSE_LIMIT`, `RS_FUEL`, `RS_DEPTH`, `RS_VALUE_LIMIT`,
+`RS_OUTPUT_LIMIT`); cancellation is `RS_CANCELLED`.
+
+Default limits are1MiB source,1,000,000 parser actions, nesting128,100,000
+execution ticks,1MiB output/value extent and10,000 output lines. Selected
+expanding BIF requests are checked before allocation; this is not a hard bound
+on every allocation or arbitrary shared/host library work. Cancellation is
+currently a synchronous run flag, tested before running. An asynchronous
+cross-worker cancellation/host API has not been selected or qualified.

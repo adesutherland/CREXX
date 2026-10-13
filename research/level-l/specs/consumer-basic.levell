@@ -1,0 +1,38 @@
+options levell
+namespace consumerbasic
+read: parser semantics contextfree input tokens start document
+identifier: token = 1
+number: token = 2
+quoted: token = 3
+assign: token = 4
+semi: token = 5
+plus: token = 6
+star: token = 7
+open: token = 8
+close: token = 9
+name: rule = identifier
+literal: rule = number | quoted
+atom: rule = literal | name | open expression close
+product: rule = atom (star atom)*
+expression: rule = product (plus product)*
+assignment: rule = name assign expression
+newline: token = 10
+let: token = 20
+print: token = 21
+for: token = 22
+to: token = 23
+next: token = 24
+classify: tokenstage start 1
+line.number: transform stage classify state 1 take number emit skip next 2
+line.end: transform stage classify state 0 take newline emit copy next 1
+kw.let: transform stage classify state 0 take identifier text 'LET' emit let next 2
+kw.print: transform stage classify state 0 take identifier text 'PRINT' emit print next 2
+kw.for: transform stage classify state 0 take identifier text 'FOR' emit for next 2
+kw.to: transform stage classify state 0 take identifier text 'TO' emit to next 2
+kw.next: transform stage classify state 0 take identifier text 'NEXT' emit next next 2
+line.body: transform stage classify state 1 take any emit copy next 2
+print.statement: rule = print expression (semi expression)*
+loop: rule = for name assign expression to expression newline line* next name newline
+statement: rule = let? assignment newline | print.statement newline | loop
+line: rule = statement | newline
+document: rule = line*

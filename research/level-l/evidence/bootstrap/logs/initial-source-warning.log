@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-source-emission.py", line 45, in <module>
+    run(name + '-' + mode + '-' + module + '-compile', [bin_dir / 'rxc', *flags,
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        '-x', '--no-exe-import', '-i', f'{work};{bin_dir}', '-o', work / module, path])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-source-emission.py", line 30, in run
+    assert b'Warning in ' not in result.stdout + result.stderr, name
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: bounded-unicode-opt-probe_language-compile

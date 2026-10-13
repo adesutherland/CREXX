@@ -1,0 +1,15 @@
+{
+  "base_commit": "ba62fbe7fd21bcfe93a3f047322fdd8d8fa5c57d",
+  "failed_ci_candidate": "cf98b71b10794d5f214aa07bba18c23cd6370d73",
+  "build_run": 38402040395,
+  "sha256": {
+    "scripts/package-llama-release.py": "4a9149850dbf7402ef6ddd71d280d79641cfa0fdd6a473b3a675a9f5f04d486e",
+    "scripts/tests/test_split_release.py": "c5cc0ac40923e77e2065b8899873a6cf5c78893f15f14150524f2fee3bc54917",
+    "tests/rxpa/provider-package-copy/CMakeLists.txt": "bb01f6571ef8d938a62ad7f07af3c435e5ea26684bdd9bb763eea35b327366b1",
+    "tests/rxpa/provider-package-copy/check-partial.py": "754dee0b4df82e84a8177a28f9492e4c295fcb6dbc88c048c1495a557f39ec0a",
+    "rxpa/WriteProviderPackage.cmake": "57d331d7f2513711a03952930058637b9d6be29afc4d3fc2b0cd3ab5d1164b02"
+  },
+  "native_linux_followup": "normal automatic Build after develop publication",
+  "native_windows_followup": "Windows owner PR integration and matching full Build",
+  "signing": "held; old dev-snapshot inputs are not the UI candidate"
+}

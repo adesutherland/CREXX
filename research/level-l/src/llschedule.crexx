@@ -1,0 +1,188 @@
+/* cREXX License (MIT). Generated schedules for pure Boolean join equations. */
+options levell
+namespace llschedule expose network
+
+/** x_i = seed_i OR OR(x_j for each declared dependency j -> i).
+ * This restricted finite-height law is explicit: no arbitrary callback or
+ * negation is accepted. DAG evaluation and cyclic least-fixed-point worklists
+ * are two implementations of the same declared equations.
+ */
+network: class
+  _n = .int
+  _edges = .int
+  _revision = .int
+  _checked = .int
+  _name = .string[]
+  _seed = .int[]
+  _firstout = .int[]
+  _firstin = .int[]
+  _nextout = .int[]
+  _nextin = .int[]
+  _from = .int[]
+  _to = .int[]
+  _value = .int[]
+  _order = .int[]
+  _ordercount = .int
+  _work = .int
+  _fuel = .int
+  _status = .int
+  _error = .string
+  _cycle = .string
+  _selected = .string
+  *: factory
+    _n = 0; _edges = 0; _revision = 1; _checked = 0; _status = 0
+    _work = 0; _fuel = 0; _error = ''; _cycle = ''; _selected = ''; _ordercount = 0
+    return
+  variable: method = .int
+    arg name = .string, seed = 0
+    if name = '' | seed < 0 | seed > 1 then do
+      _status = 3; _error = 'Boolean equation needs a name and seed 0 or 1'; return 0
+    end
+    if _n >= 4096 then do
+      _status = 4; _error = 'equation variable construction limit'; return 0
+    end
+    _n = _n + 1; _revision = _revision + 1; _checked = 0
+    _name[_n] = name; _seed[_n] = seed; _value[_n] = 0
+    return _n
+  depends: method = .int
+    arg target = .int, source = .int, operation = 'join'
+    if operation <> 'join' then do
+      _status = 3; _error = 'unproved equation operation: ' || operation || '; only monotone Boolean join is admitted'; return 0
+    end
+    if target < 1 | target > _n | source < 1 | source > _n then do
+      _status = 3; _error = 'equation dependency names an unknown variable'; return 0
+    end
+    if _edges >= 100000 then do
+      _status = 4; _error = 'equation edge construction limit'; return 0
+    end
+    _edges = _edges + 1; _revision = _revision + 1; _checked = 0
+    _from[_edges] = source; _to[_edges] = target
+    _nextout[_edges] = _firstout[source]; _firstout[source] = _edges
+    _nextin[_edges] = _firstin[target]; _firstin[target] = _edges
+    return 1
+  tick: method = .int
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = 'equation evaluation work budget exhausted'; return 0
+    end
+    return 1
+  /** Generated DAG order; retain an actual dependency cycle when it fails. */
+  order: method = .int
+    counts = .int[]; agenda = .int[]; head = 1; tail = 0
+    i = .int; edge = .int; node = .int
+    do i = 1 to _n
+      if tick() = 0 then return 0
+      counts[i] = 0; edge = _firstin[i]
+      do while edge > 0
+        if tick() = 0 then return 0
+        counts[i] = counts[i] + 1; edge = _nextin[edge]
+      end
+      if counts[i] = 0 then do
+        tail = tail + 1; agenda[tail] = i
+      end
+    end
+    _ordercount = 0
+    do while head <= tail
+      node = agenda[head]; head = head + 1
+      _ordercount = _ordercount + 1; _order[_ordercount] = node
+      edge = _firstout[node]
+      do while edge > 0
+        if tick() = 0 then return 0
+        target = _to[edge]; counts[target] = counts[target] - 1
+        if counts[target] = 0 then do
+          tail = tail + 1; agenda[tail] = target
+        end
+        edge = _nextout[edge]
+      end
+    end
+    if _ordercount = _n then return 1
+    /* Follow remaining incoming edges; finite repetition gives a real cycle. */
+    seen = .int[]; path = .int[]; node = 1
+    do while counts[node] = 0
+      node = node + 1
+    end
+    do while seen[node] = 0
+      if tick() = 0 then return 0
+      path[path[0] + 1] = node; seen[node] = path[0]
+      edge = _firstin[node]
+      do while edge > 0
+        if tick() = 0 then return 0
+        if counts[_from[edge]] > 0 then leave
+        edge = _nextin[edge]
+      end
+      node = _from[edge]
+    end
+    _cycle = ''
+    do i = seen[node] to path[0]
+      _cycle = _cycle || _name[path[i]] || ' needs '
+    end
+    _cycle = _cycle || _name[node]
+    return 0
+  evaluate: method = .int
+    arg mode = 'auto', fuel = 1000000
+    if _status = 3 | _status = 4 then return _status
+    _status = 0; _error = ''; _work = 0; _fuel = fuel; _checked = 0; _cycle = ''
+    if mode <> 'auto' & mode <> 'dag' & mode <> 'join' then do
+      _status = 3; _error = 'unknown equation engine'; return _status
+    end
+    _selected = mode; i = .int; node = .int; edge = .int
+    do i = 1 to _n
+      if tick() = 0 then return _status
+      _value[i] = 0
+    end
+    if mode <> 'join' then do
+      acyclic = order()
+      if _status <> 0 then return _status
+      if acyclic then _selected = 'dag'
+      else if mode = 'dag' then do
+        _status = 1; _error = 'acyclic schedule unavailable: ' || _cycle; return _status
+      end
+      else _selected = 'join'
+    end
+    if _selected = 'dag' then do i = 1 to _ordercount
+      if tick() = 0 then return _status
+      node = _order[i]; _value[node] = _seed[node]; edge = _firstin[node]
+      do while edge > 0
+        if tick() = 0 then return _status
+        if _value[_from[edge]] then _value[node] = 1
+        edge = _nextin[edge]
+      end
+    end
+    else do
+      agenda = .int[]; head = 1; tail = 0
+      do i = 1 to _n
+        if tick() = 0 then return _status
+        if _seed[i] then do
+          _value[i] = 1; tail = tail + 1; agenda[tail] = i
+        end
+      end
+      do while head <= tail
+        node = agenda[head]; head = head + 1; edge = _firstout[node]
+        do while edge > 0
+          if tick() = 0 then return _status
+          target = _to[edge]
+          if _value[target] = 0 then do
+            _value[target] = 1; tail = tail + 1; agenda[tail] = target
+          end
+          edge = _nextout[edge]
+        end
+      end
+    end
+    _checked = _revision
+    return 0
+  value: method = .int
+    arg node = .int
+    if _checked <> _revision | node < 1 | node > _n then return -1
+    return _value[node]
+  certified: method = .int
+    return _checked = _revision
+  selected: method = .string
+    return _selected
+  cycle: method = .string
+    return _cycle
+  work: method = .int
+    return _work
+  size: method = .int
+    return _n
+  error: method = .string
+    return _error

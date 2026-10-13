@@ -1,0 +1,4 @@
+START: grammar caps_grammar
+BUILT: grammar caps_grammar
+BARRIER: link library
+PUBLISHED: library /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/caps.rxbin

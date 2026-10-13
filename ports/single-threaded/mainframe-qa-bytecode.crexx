@@ -1,0 +1,71 @@
+/* Produce a separately frozen host-compiled Classic runtime control.
+   This proves native RXVM execution when delivered; it does not qualify
+   native RXC/RXAS/RXLINK. Keep the original campaign pack unchanged. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 4 then return 2
+  root=args.1; host=args.2; pack=args.3; out=args.4
+  address crexx "run test ! -e :out"
+  if rc <> 0 then return 2
+  address crexx "mkdir -p :out"
+  if rc <> 0 then return rc
+  rxc=host||"/bin/rxc_mainframe_address"
+  rxas=host||"/bin/rxas"; rxlink=host||"/bin/rxlink"
+  source=pack||"/shared/MFADDC.REXX"
+  recipe=root||"/ports/single-threaded/mainframe-qa-bytecode.crexx"
+  inputs=.string[]; hashes=.string[]
+  call arrayappend inputs,recipe
+  call arrayappend inputs,source
+  call arrayappend inputs,rxc
+  call arrayappend inputs,rxas
+  call arrayappend inputs,rxlink
+  libraries="library rxfnsc rxfnsg rxcexits"
+  i=.int
+  do i=1 to words(libraries)
+    call arrayappend inputs,pack||"/shared/"||word(libraries,i)||".rxbin"
+  end
+  before=out||"/inputs-before.sha256"; after=out||"/inputs-after.sha256"
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc <> 0 then return rc
+  do i=1 to hashes.0
+    call lineout before,hashes[i]
+  end
+  call lineout before
+  base=out||"/MFADHC"; object=out||"/MFADCO"
+  imports=pack||"/shared"
+  address crexx "run :rxc --no-exe-import -n -i :imports -l :imports -o :object :source"
+  if rc <> 0 then return rc
+  address crexx "run :rxas -o :object :object"
+  if rc <> 0 then return rc
+  library=imports||"/library.rxbin"
+  classic=imports||"/rxfnsc.rxbin"; general=imports||"/rxfnsg.rxbin"
+  address crexx "run :rxlink -o :base :object :library :classic :general"
+  if rc <> 0 then return rc
+  call arraydrop hashes
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc <> 0 then return rc
+  do i=1 to hashes.0
+    call lineout after,hashes[i]
+  end
+  call lineout after
+  address crexx "run cmp :before :after"
+  if rc <> 0 then return rc
+  call arrayappend inputs,base||".rxbin"
+  call arrayappend inputs,object||".rxas"
+  call arrayappend inputs,object||".rxbin"
+  call arrayappend inputs,before
+  call arrayappend inputs,after
+  call arraydrop hashes
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc <> 0 then return rc
+  manifest=out||"/frozen-bytecode.sha256"
+  do i=1 to hashes.0
+    call lineout manifest,hashes[i]
+  end
+  call lineout manifest
+  address crexx "run shasum -a 256 --strict -c :manifest"
+  if rc <> 0 then return rc
+  say "MAINFRAME CLASSIC HOST BYTECODE PASS" out
+  return 0

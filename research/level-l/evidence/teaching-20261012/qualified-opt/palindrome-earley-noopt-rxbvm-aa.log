@@ -1,0 +1,5 @@
+STATUS|0
+NODE|palindrome|0|2
+NODE|a|0|1
+NODE|palindrome|1|1
+NODE|a|1|2

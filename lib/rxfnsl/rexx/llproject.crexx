@@ -1,0 +1,136 @@
+/* cREXX License (MIT). Declarative source-tree to semantic-tree projection. */
+options levelb
+namespace llproject expose schema projection
+import llcore
+import lllimits
+
+/** Named productions to retain; unlisted structural wrappers are transparent.
+ * Arity checks are obligations, not permission to truncate extra children.
+ */
+schema: class
+  _size = .int
+  _name = .string[]
+  _kind = .int[]
+  _arity = .int[]
+  _error = .string
+  *: factory
+    _size = 0; _error = ''
+    return
+  keep: method = .int
+    arg name = .string, kind = .int, arity = .int
+    if name = '' | kind < 1 | arity < 0 | arity > 2 | index(name) > 0 then do
+      _error = 'invalid or duplicate tree projection declaration: ' || name; return 0
+    end
+    _size = _size + 1; _name[_size] = name; _kind[_size] = kind; _arity[_size] = arity
+    return 1
+  index: method = .int
+    arg name = .string
+    do i = 1 to _size
+      if _name[i] = name then return i
+    end
+    return 0
+  size: method = .int
+    return _size
+  name: method = .string
+    arg rule = .int
+    return _name[rule]
+  kind: method = .int
+    arg rule = .int
+    return _kind[rule]
+  arity: method = .int
+    arg rule = .int
+    return _arity[rule]
+  error: method = .string
+    return _error
+
+/** Owned, bottom-up projection. Preserve source and origin for every kept node.
+ * The map-entry budget is explicit; arbitrary transparent trees need not have
+ * a linear-size map, even though termination follows from earlier-child IDs.
+ */
+projection: class
+  _source = .llcore..tree
+  _schema = .schema
+  _out = .llcore..tree
+  _wanted = .int
+  _limit = .int
+  _ran = .int
+  _status = .int
+  _root = .int
+  _entries = .int
+  _origin = .int[]
+  _head = .int[]
+  _count = .int[]
+  _flat = .int[]
+  _error = .string
+  *: factory
+    arg source = .llcore..tree, root = .int, rules = .schema, limit = 1000000
+    _source = source; _wanted = root; _schema = rules; _limit = limit
+    _out = .llcore..tree.from_source(source.source())
+    _ran = 0; _status = 0; _root = 0; _entries = 0; _error = ''
+    return
+  run: method = .int
+    i = .int
+    if _ran then return _status
+    _ran = 1
+    if _schema.error() <> '' | _source.owns_source() = 0 | _source.validate() = 0 | _wanted < 1 | _wanted > _source.size() then do
+      _status = 3; _error = 'invalid projection input: ' || _schema.error() || _source.error(); return _status
+    end
+    do node = 1 to _source.size()
+      rule = _schema.index(_source.label(node))
+      a = _source.left(node); b = _source.right(node)
+      ca = 0; cb = 0
+      if a > 0 then ca = _count[a]
+      if b > 0 then cb = _count[b]
+      arity = ca + cb
+      _head[node] = _entries + 1
+      if rule > 0 then do
+        if arity <> _schema.arity(rule) then do
+          _status = 3; _error = 'projection arity for ' || _source.label(node) || ': expected ' || _schema.arity(rule) || ', found ' || arity; return _status
+        end
+        first = 0; second = 0
+        if ca > 0 then first = _flat[_head[a]]
+        if ca > 1 then second = _flat[_head[a] + 1]
+        if cb > 0 then do
+          if first = 0 then first = _flat[_head[b]]
+          else second = _flat[_head[b]]
+          if cb > 1 then second = _flat[_head[b] + 1]
+        end
+        created = _out.add(_schema.kind(rule),_source.label(node),_source.start(node),_source.finish(node),first,second)
+        _origin[created] = node
+        call append(created); _count[node] = 1
+      end
+      else do
+        do i = 0 to ca - 1
+          call append(_flat[_head[a] + i])
+        end
+        do i = 0 to cb - 1
+          call append(_flat[_head[b] + i])
+        end
+        _count[node] = arity
+      end
+      if _status > 0 then return _status
+    end
+    if _count[_wanted] <> 1 then do
+      _status = 3; _error = 'projection requires exactly one selected root'; return _status
+    end
+    _root = _flat[_head[_wanted]]
+    if _out.validate() = 0 then do
+      _status = 3; _error = _out.error()
+    end
+    return _status
+  append: method = .void
+    arg value = .int
+    if _entries >= _limit then do
+      _status = 2; _error = lllimits..describe('tree.entries',_limit,_entries + 1); return
+    end
+    _entries = _entries + 1; _flat[_entries] = value
+    return
+  tree: method = .llcore..tree
+    return _out
+  root: method = .int
+    return _root
+  origin: method = .int
+    arg node = .int
+    return _origin[node]
+  error: method = .string
+    return _error

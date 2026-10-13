@@ -94,6 +94,10 @@ def main():
         core.extract(args.core_archive, output / 'base')
     base = output / 'base' / base_name
     manifest = verify_core(base, args.commit, args.platform, args.toolchain)
+    extension = '.exe' if args.platform.startswith('windows-') else ''
+    helper = Path('bin') / ('crexx-provider-package' + extension)
+    if helper.as_posix() not in manifest['files'] or not (base / helper).is_file():
+        raise ValueError('Core package is missing its provider helper: ' + str(helper))
     if args.check_msvc_runtime_only:
         if args.toolchain != 'msvc':
             raise ValueError('MSVC runtime check requires the MSVC core')
@@ -108,9 +112,9 @@ def main():
         for file in sorted(providers.rglob('*')):
             if file.is_file() or file.is_symlink():
                 add_file(file, Path('bin/providers') / file.relative_to(providers), plugin, base)
-        extension = '.exe' if args.platform.startswith('windows-') else ''
-        for name in ['rxllama.rxplugin', 'crexx-provider-package' + extension]:
-            add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+        # The generic helper belongs to the manifest-verified core. Independent
+        # plugin-lane rebuilds need not be byte-identical and must not replace it.
+        add_file(build / 'bin/rxllama.rxplugin', Path('bin/rxllama.rxplugin'), plugin, base)
         if extension:
             inventory = build / 'lib/plugins/llama/tests/release-smoke-bootstrap-files.txt'
             for name in inventory.read_text().splitlines():

@@ -1,0 +1,44 @@
+{
+  "scope": "Documentation overview and bounded new tree inspection; no product implementation changes",
+  "build_warnings": 0,
+  "rxtvm_exit": 0,
+  "rxbvm_exit": 0,
+  "vm_tree_outputs_identical": true,
+  "observations": [
+    "three settings tokens with original spans",
+    "exact named settings tree including empty tail",
+    "outer if.open with inner if.closed",
+    "outer if.continued with inner if.open"
+  ],
+  "local_links_and_anchors_checked": 35,
+  "unchanged_prior_product_source_entries": 58,
+  "input_sha256": {
+    "lib/rxfnsl/doc/user-guide.md": "347d698d1880aff419551eeff9b76c7f68dd76fc871676c84a04fab915cebcff",
+    "rexxscript/doc/user-guide.md": "0502480337dd918f74c674b02aa3c721609ac686304117f8a9ca97b6b8563282",
+    "research/level-l/PLAN.md": "53f154ae8a5bd93252c85b61b6eccc63ed36be0f6405a51c58ef92a510db5e99",
+    "research/level-l/cases/overview-inspect.crexx": "659c7762c09d6f5f187fc2a5fea209c29254b9faecb60dda80fae50b37500c06",
+    "lib/rxfnsl/examples/settings.levell": "1e4c76278da261c72172b1d22238baac92421d97cc7bc8090c0dac647b2c9c37",
+    "lib/rxfnsl/rexx/lllanguage.crexx": "916af0173e77f14a6538e46b3a2e217739c59e3a495a92753160f7cbc2eb7956",
+    "lib/rxfnsl/rexx/lltree.crexx": "b8e3b68e9729986ea1660976f9715b658d4cc35b0028cf39a6c0d5309924b02d",
+    "rexxscript/grammar/rexxscript.levell": "ef808603964ff7fbc2c1643b757f3903d8d7ca74a541c48191bec9ddf7cb3d1d",
+    "rexxscript/RexxScriptProgram.crexx": "22641df9c843559ace68fa388e0b2f5d15233870b0a4136f20778f31b2913651",
+    "rexxscript/RexxScriptExecution.crexx": "33ed493160edc16633db33beb235cb4365309a9a46e1278d6f499d5b68a85ada",
+    "research/level-l/build/overview-guide/overview-linked.rxbin": "cb6ef7527a34ce833f53dc271e6e68b0dac34684f0ae8581d88363d39130e1b9",
+    "research/level-l/build/user-guide/levell_settings.rxbin": "0bc9f0d07d8858bb0d9f27f9d366707ccd9981690fad363b3873da17edd37f9f",
+    "cmake-build-levell-product/bin/rxc": "e4e4ab20c35ffc389670a048429c7c6db2b7f0c370520793521f9aba8c3eed5c",
+    "cmake-build-levell-product/bin/rxas": "ec458879859cd1add170573aa9749f43de1a0ae9ce860425fcddffb31138c2ba",
+    "cmake-build-levell-product/bin/rxlink": "c70e73b09b84adf2c30db353834d7faf2059a9de52376ce84fa3a877af6c1b08",
+    "cmake-build-levell-product/bin/rxtvm": "5af0f27cc0ea28083b75add7cf84c140e71de5491198db6be9da9578bc5b2588",
+    "cmake-build-levell-product/bin/rxbvm": "6467aa287f16cb3578027a30cd0d4246d5900e54638d354c7477c20bd00adbfa",
+    "cmake-build-levell-product/bin/rxfnsl.rxbin": "e98c73e79766f4474b53fe63a6f8d4e55484503ed5ccbadd4c723fd16bbf898c",
+    "cmake-build-levell-product/bin/rexxscript1.rxbin": "a1ddd119aa6f21c6216b00104208b767240a2120205ed81ce3d55a084ea81f15",
+    "cmake-build-levell-product/bin/rxfnsc.rxbin": "ab125aaf86e0cb2ed71bebc18265fa2479668c7535744655039639d10c1588fa",
+    "cmake-build-levell-product/bin/classlib.rxbin": "15c5d239330fcbcd7b6921495744a5436451e97d71fc9baf59a2374f110aca8e",
+    "cmake-build-levell-product/bin/library.rxbin": "2a30ba8ed10df31fe3e39c9522e1b3fa911778fb978a5d4c12a24df43f30c49c"
+  },
+  "output_sha256": {
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "trees-rxtvm.log": "fb8a56be08113e3a8a2eb335e60868953510003c7c669d88bf23ea912f15822a",
+    "trees-rxbvm.log": "fb8a56be08113e3a8a2eb335e60868953510003c7c669d88bf23ea912f15822a"
+  }
+}

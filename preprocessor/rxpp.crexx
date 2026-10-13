@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -212,7 +212,7 @@ return 0
  * 3. Determine Pre-Processor Statements
  * ------------------------------------------------------------------
  */
-RXPPPassOne: procedure = .int
+RXPPPassOne: procedure = .int expose fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at
   arg expose infile=.string, outfile=.string,maclib=.string, macsys=.string
 
   /* Locals */
@@ -332,7 +332,42 @@ RXPPPassOne: procedure = .int
 
 /* ---- 3. Pre-Compile source file,  */
   maclibm=macros_mname.0
+  fortran_bind_count=0
+  fortran_bind_target=.string[]
+  fortran_bind_host=.string[]
+  fortran_bindings_declared=0
+  fortran_export_count=0
+  fortran_export_target=.string[]
+  fortran_export_host=.string[]
+  fortran_exports_declared=0
+  fortran_call_insert_at=source.0+1
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
+  fortran_block_seen=0
+  do scan_line=1 to source.0
+     if source.scan_line='fortran_source = .string[]' then fortran_block_seen=1
+  end
+  if fortran_block_seen=1 then do
+     if fortran_exports_declared=1 & fortran_bindings_declared=0 then do
+        fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'fortran_bindings = .string[]')
+        fortran_bindings_declared=1
+     end
+     if fortran_exports_declared=1 then fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'fortran_results = fortran_run(fortran_source, fortran_bindings, fortran_exports)')
+     else if fortran_bindings_declared=1 then fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'call fortran_run fortran_source, fortran_bindings')
+     else fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'call fortran_run fortran_source')
+     if fortran_exports_declared=1 then do
+        fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_pos = 1')
+        do export_index=1 to fortran_export_count
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_count = fortran_results[__fortran_export_pos]')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_pos = __fortran_export_pos + 1')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_i_'export_index' = 1')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'do while __fortran_export_i_'export_index' <= __fortran_export_count')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,fortran_export_host[export_index]'[__fortran_export_i_'export_index'] = fortran_results[__fortran_export_pos]')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_pos = __fortran_export_pos + 1')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'__fortran_export_i_'export_index' = __fortran_export_i_'export_index' + 1')
+           fortran_call_insert_at=RXPP_fortran_emit(fortran_call_insert_at,'end')
+        end
+     end
+  end
   if verbose then say 'CRX0150I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
   call sort_bylen macros_mname,macros_margs,macros_mbody,macros_mspace ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
   if verbose then say 'CRX0160I ['time('l')'] Macros arranged:    'macros_mname.0
@@ -611,6 +646,19 @@ GetPrecomp: procedure
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       else if ucmd = 'FOR'    then call cmd_for lineNo,line
+      else if ucmd = 'REXXSCRIPT' then do
+         if words(line) >= 2 & upper(word(line,2)) = 'RUN' then call cmd_rexxscript_run lineNo,line
+      end
+      else if ucmd = 'FORTRAN' then do
+         if words(line) >= 2 then do
+            if upper(word(line,2)) = 'RUN' then call cmd_fortran_run lineNo,line,'RUN'
+            else if upper(word(line,2)) = 'PROCEDURES' then call cmd_fortran_run lineNo,line,'PROCEDURES'
+         end
+      end
+      else if pos('<'ucmd,dalias'>') > 0 then do
+         call cmd_data_alias lineNo,line
+         iterate
+      end
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##MACRO'  then lineno=cmd_macro(lineNo,line)
@@ -634,10 +682,185 @@ GetPrecomp: procedure
       else if ucmd = '##DALIAS'  then call cmd_dalias  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-      else if pos('<'ucmd,dalias'>') > 0 then call cmd_data lineNo,line
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
+return
+
+/* Insert one generated RexxScript source line at a precise position. */
+RXPP_rexxscript_emit: procedure = .int expose source stype
+  arg at=.int,text=.string
+  call insert_source at,1,'D',0
+  source.at=text
+  stype.at=' '
+return at+1
+
+/* ------------------------------------------------------------------
+ * CMD_rexxscript_run: Package a multiline RexxScript body as one ordinary
+ * REXXSCRIPT expression.  The runtime/compiler-exit semantics remain the
+ * existing ones; this command only removes the need to quote/concatenate
+ * every source line manually.
+ * ------------------------------------------------------------------
+ */
+CMD_rexxscript_run: procedure
+  arg line_no=.int,line=.string
+  opening_line=line
+  stype.line_no='D'
+  script_lines=.string[]
+  script_count=0
+  found=0
+  i=.int
+  do i=line_no+1 to source.0
+     line=source.i
+     if upper(strip(line))='END REXXSCRIPT' then do
+        found=1
+        leave
+     end
+     script_count=script_count+1
+     script_lines[script_count]=line
+     source.i=''
+     stype.i=' '
+  end
+  if found=0 then do
+     say 'RXPP error: REXXSCRIPT RUN requires END REXXSCRIPT'
+     exit 8
+  end
+
+  source.line_no=''
+  source.i=''
+  stype.i=' '
+  insert_at=i+1
+  insert_at=RXPP_rexxscript_emit(insert_at,"__rexxscript_source = ''")
+  do script_index=1 to script_count
+     insert_at=RXPP_rexxscript_emit(insert_at,'__rexxscript_source = __rexxscript_source || 'safe_quote(script_lines[script_index])' || ";"')
+  end
+  clauses=''
+  if opening_line \= '' then clauses=subword(opening_line,3)
+  generated='REXXSCRIPT __rexxscript_source'
+  if clauses \= '' then generated=generated' 'clauses
+  insert_at=RXPP_rexxscript_emit(insert_at,generated)
+return
+
+/* Insert one generated ordinary source line at a precise position. */
+RXPP_fortran_emit: procedure = .int expose source stype
+  arg at=.int,text=.string
+  call insert_source at,1,'D',0
+  source.at=text
+  stype.at=' '
+return at+1
+
+/* ------------------------------------------------------------------
+ * CMD_fortran_run: Capture a free-form FORTRAN source block as part of the
+ * combined fortran_source array used by the FORTRAN interpreter examples.
+ *
+ * The block deliberately has one fixed array name for the first version;
+ * this keeps the RXPP syntax small while preserving the existing ##DATA
+ * contract. The terminator is END FORTRAN.
+ * ------------------------------------------------------------------
+ */
+CMD_fortran_run: procedure expose fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at
+  arg line_no=.int,line=.string,block_kind=.string
+  stype.line_no='D'
+  j=0
+  do scan_line=1 to line_no-1
+     if pos('fortran_source.', source.scan_line)=1 then j=j+1
+  end
+  if j = 0 then source.line_no='fortran_source = .string[]'
+  else source.line_no=''
+  found=0
+  bind_start=fortran_bind_count
+  export_start=fortran_export_count
+  i=.int
+  do i=line_no+1 to source.0
+     line=source.i
+     if upper(strip(line))='END FORTRAN' then do
+        found=1
+        leave
+     end
+     if pos('BIND', upper(line)) > 0 then do
+        bind_line=strip(substr(line,pos('BIND',upper(line))+4))
+        bind_body=bind_line
+        bind_equals=pos('=',bind_body)
+        bind_target=''
+        bind_host=''
+        if bind_equals > 1 then do
+           bind_target=strip(left(bind_body,bind_equals-1))
+           bind_host=strip(substr(bind_body,bind_equals+1))
+        end
+        if bind_target='' | bind_host='' then do
+           say 'RXPP error: malformed C$RX BIND; expected C$RX BIND target = host'
+           exit 8
+        end
+        fortran_bind_count=fortran_bind_count+1
+        fortran_bind_target[fortran_bind_count]=bind_target
+        fortran_bind_host[fortran_bind_count]=bind_host
+     end
+     if pos('EXPORT', upper(line)) > 0 then do
+        export_line=strip(substr(line,pos('EXPORT',upper(line))+6))
+        export_equals=pos('=',export_line)
+        export_target=''
+        export_host=''
+        if export_equals > 1 then do
+           export_target=strip(left(export_line,export_equals-1))
+           export_host=strip(substr(export_line,export_equals+1))
+        end
+        if export_target='' | export_host='' then do
+           say 'RXPP error: malformed C$RX EXPORT; expected C$RX EXPORT target = host'
+           exit 8
+        end
+        fortran_export_count=fortran_export_count+1
+        fortran_export_target[fortran_export_count]=export_target
+        fortran_export_host[fortran_export_count]=export_host
+     end
+     j=j+1
+     source.i='fortran_source.'j'='safe_quote(line)
+  end
+  if found=1 then do
+     source.i=''
+     stype.i=' '
+     /* Keep the deferred call after the last FORTRAN block.  A later
+      * FORTRAN PROCEDURES block may shift this position, so each block
+      * refreshes it while RXPP is collecting the source. */
+     fortran_call_insert_at=i+1
+     if block_kind='RUN' & (fortran_bind_count > bind_start | fortran_export_count > export_start) then do
+        insert_at=i+1
+        if fortran_bind_count > bind_start then do
+           if fortran_bindings_declared=0 then do
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_bindings = .string[]')
+              fortran_bindings_declared=1
+           end
+           insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_pos = 1')
+           do binding_index=bind_start+1 to fortran_bind_count
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_bindings[__fortran_bind_pos] = 'safe_quote(fortran_bind_target[binding_index]))
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_pos = __fortran_bind_pos + 1')
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_bindings[__fortran_bind_pos] = 'fortran_bind_host[binding_index]'[0]')
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_pos = __fortran_bind_pos + 1')
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_i_'binding_index' = 1')
+              insert_at=RXPP_fortran_emit(insert_at,'do while __fortran_bind_i_'binding_index' <= 'fortran_bind_host[binding_index]'[0]')
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_bindings[__fortran_bind_pos] = 'fortran_bind_host[binding_index]'[__fortran_bind_i_'binding_index']')
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_pos = __fortran_bind_pos + 1')
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_bind_i_'binding_index' = __fortran_bind_i_'binding_index' + 1')
+              insert_at=RXPP_fortran_emit(insert_at,'end')
+           end
+        end
+        if fortran_export_count > export_start then do
+           if fortran_exports_declared=0 then do
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_exports = .string[]')
+              fortran_exports_declared=1
+           end
+           insert_at=RXPP_fortran_emit(insert_at,'__fortran_export_pos = 1')
+           do export_index=export_start+1 to fortran_export_count
+              insert_at=RXPP_fortran_emit(insert_at,'fortran_exports[__fortran_export_pos] = 'safe_quote(fortran_export_target[export_index]))
+              insert_at=RXPP_fortran_emit(insert_at,'__fortran_export_pos = __fortran_export_pos + 1')
+           end
+        end
+        fortran_call_insert_at=insert_at
+     end
+  end
+  else do
+     say 'RXPP error: FORTRAN' block_kind 'requires END FORTRAN'
+     exit 8
+  end
 return
 /* ------------------------------------------------------------------
  * CMD_loadMacro: Register .rxpm names from an additional directory.
@@ -1527,10 +1750,44 @@ CMD_dalias: procedure
    line=translate(line,,',')
    line=DropComment(line,3)
 
+   alias_count=0
    do i=2 to words(line)
-      dalias= dalias '<##'upper(word(line,i))'>'
-   end
+      alias=upper(word(line,i))
+      if left(alias,2)='##' then alias=substr(alias,3)
 
+      if alias='' then do
+         say 'RXPP error: empty DALIAS name at line' line_no
+         exit 8
+      end
+      if verify(left(alias,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZ_','N') \= 0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
+         exit 8
+      end
+      if verify(alias,'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_','N') \= 0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
+         exit 8
+      end
+
+      reserved = ' ADDRESS ARG BY CALL DO ELSE END EXIT IF IMPORT INTERPRET ITERATE LEAVE NOP NUMERIC OPTIONS OTHERWISE PARSE PROCEDURE PULL PUSH RETURN SAY SELECT SIGNAL THEN TRACE WHEN WHILE '
+      rxpp_reserved = ' ARRAY BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE SET SYS USE UNSET '
+      if pos(' 'alias' ',reserved)>0 | pos(' 'alias' ',rxpp_reserved)>0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- reserved keyword'
+         exit 8
+      end
+
+      if pos('<##'alias'>',dalias)>0 | pos('<'alias'>',dalias)>0 then do
+         say 'RXPP error: duplicate DALIAS name' alias
+         exit 8
+      end
+
+      dalias= dalias '<##'alias'>'
+      dalias= dalias '<'alias'>'
+      alias_count=alias_count+1
+   end
+   if alias_count=0 then do
+      say 'RXPP error: ##DALIAS requires at least one alias name'
+      exit 8
+   end
 return
 /* ------------------------------------------------------------------
  * Load macro names from PATH, Content will loaded if used
@@ -1748,6 +2005,142 @@ CMD_data: procedure
      /* Replace the suppressed ##END with a call after all array entries. */
      source.i='call 'callback' 'array
      stype.i=' '
+  end
+return
+
+/* ------------------------------------------------------------------
+ * CMD_data_alias: Implements ##DATA blocks: converts lines into array assignments
+ * until ##END, then optionally calls a callback with the array name.
+ * ------------------------------------------------------------------
+ */
+/*
+ * Collect a named data block.
+ *
+ * Supported forms:
+ *
+ *     ##PYTHON program
+ *       print("Hello")
+ *     ##END PYTHON
+ *
+ *     PYTHON program pythonRule
+ *       print("Hello")
+ *     END PYTHON
+ *
+ * The first word identifies the registered data alias.
+ * The second word names the receiving array.
+ * The optional third word names a callback procedure.
+ */
+CMD_data_alias: procedure
+  arg line_no=.int,line=.string
+  /*
+   * Mark the opening line as an RXPP data directive.
+   */
+  stype.line_no = 'D'
+
+  /*
+   * Remove comments from the opening directive before
+   * interpreting its parameters.
+   */
+  line = qstripcomment('/*','*/',line)
+  directive_form = left(strip(line),2)
+
+  wi = wordindex(line,2)
+  if wi>0 then do
+     qpi = qpos('##',line,wi)
+     if qpi = 0 then qpi = qpos('--',line,wi)
+     if qpi > 1 then line = substr(line,1,qpi-1)
+  end
+  /*
+   * Determine the alias from the first word.
+   *
+   * Both forms are accepted:
+   *
+   *     ##PYTHON
+   *     PYTHON
+   */
+  alias = upper(word(line,1))
+
+  if left(alias,2) = '##' then alias = substr(alias,3)
+  if alias = '' then do
+     say 'RXPP error: missing data-block alias'
+     return
+  end
+
+  /*
+   * Confirm that the alias has been registered by ##DALIAS.
+   *
+   * dalias contains entries such as:
+   *
+   *     <##FORTRAN> <FORTRAN> <##PYTHON> <PYTHON>
+   */
+  aliasToken = '<'alias'>'
+   /*
+   * The second word is the receiving array.
+   * The third word is an optional callback procedure.
+   */
+  array = word(line,2)
+  if array = '' then array=alias
+  callback = word(line,3)
+  /*
+   * Only an array name and an optional callback are allowed.
+   */
+  if word(line,4) <> '' then do
+     say 'RXPP error: too many parameters on' alias 'block'
+     return
+  end
+
+  /*
+   * The end marker must match the opening alias.
+   *
+   * Both forms are accepted:
+   *
+   *     ##END PYTHON
+   *     END PYTHON
+   */
+  endMarker1 = '##END 'alias
+  endMarker2 = 'END 'alias
+  endMarker3 = '##END'
+  j = 0
+  foundEnd = 0
+  i = .int
+  /*
+   * Read source lines until the matching named end marker.
+   */
+  do i = line_no + 1 to source.0
+     line = source.i
+     testLine = upper(strip(line))
+     if testLine = endMarker1 | testLine = endMarker2 | (directive_form = '##' & testLine = endMarker3) then do
+        foundEnd = 1
+        leave
+     end
+     /*
+      * Store the original source line as an array element.
+      */
+     j = j + 1
+     source.i = array'.'j'='safe_quote(line)
+  end
+  /*
+   * Protect against an unterminated data block. Without this
+   * check, the procedure could accidentally continue past the
+   * end of the source buffer.
+   */
+  if foundEnd = 0 then do
+     say 'RXPP error: missing' endMarker1
+     return
+  end
+
+  /*
+   * Without a callback, suppress the end marker as an RXPP
+   * directive.
+   */
+  if callback = '' then stype.i = 'D'
+  /*
+   * With a callback, replace the end marker by a call that
+   * receives the populated array.
+   */
+  else do
+     source.i = 'call 'callback' 'array
+     stype.i = ' '
   end
 return
 /* ------------------------------------------------------------------

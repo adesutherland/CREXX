@@ -1,0 +1,31 @@
+2026-10-12T19:46:57.0306962Z [810/813] Linking C executable bin/crexx
+2026-10-12T19:47:01.0621005Z [811/813] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+2026-10-12T19:47:01.1388245Z [812/813] Linking C executable bin/rexxscript1
+2026-10-12T19:47:01.1388782Z FAILED: [code=1] bin/rexxscript1
+2026-10-12T19:47:01.1393821Z : && /usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=rexxscript/CMakeFiles/rexxscript1_cli.dir/link.d rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o -o bin/rexxscript1  bin/librxvml.a  bin/librxpashim.a  -Wl,--whole-archive "/home/runner/work/_temp/build/bin/rxcstream_static.a" -Wl,--no-whole-archive  -Wl,--whole-archive "/home/runner/work/_temp/build/bin/rxfs_static.a" -Wl,--no-whole-archive  bin/librxvmplugin.a  bin/rxvm_mc_decimal_manual.a  bin/libplatform.a  bin/libdecnumber.a  -lm  bin/libavl_tree.a  bin/librxpa.a  bin/librxvmref.a  bin/librxvmmemory.a  bin/librxbin.a  /usr/lib/x86_64-linux-gnu/libssl.so  /usr/lib/x86_64-linux-gnu/libcrypto.so && :
+2026-10-12T19:47:01.1396613Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_load':
+2026-10-12T19:47:01.1397257Z rxcstream.c:(.text+0x58a): undefined reference to `rxpa_isinitialized'
+2026-10-12T19:47:01.1397876Z /usr/bin/ld: rxcstream.c:(.text+0x5b9): undefined reference to `rxpa_getnativepayload'
+2026-10-12T19:47:01.1398433Z /usr/bin/ld: rxcstream.c:(.text+0x5d7): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1398936Z /usr/bin/ld: rxcstream.c:(.text+0x619): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1399430Z /usr/bin/ld: rxcstream.c:(.text+0x649): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1399916Z /usr/bin/ld: rxcstream.c:(.text+0x791): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1400426Z /usr/bin/ld: rxcstream.c:(.text+0x7db): undefined reference to `rxpa_setstring'
+2026-10-12T19:47:01.1400967Z /usr/bin/ld: rxcstream.c:(.text+0x7e5): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1401857Z /usr/bin/ld: rxcstream.c:(.text+0x819): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1402373Z /usr/bin/ld: rxcstream.c:(.text+0x847): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1402863Z /usr/bin/ld: rxcstream.c:(.text+0x878): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1403460Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_copy':
+2026-10-12T19:47:01.1404073Z rxcstream.c:(.text+0x972): undefined reference to `rxpa_getnativepayload'
+2026-10-12T19:47:01.1404866Z /usr/bin/ld: rxcstream.c:(.text+0x9cf): undefined reference to `rxpa_setnativepayload'
+2026-10-12T19:47:01.1406065Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_open':
+2026-10-12T19:47:01.1407067Z rxcstream.c:(.text+0xaa9): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1407564Z /usr/bin/ld: rxcstream.c:(.text+0xab8): undefined reference to `rxpa_setstring'
+2026-10-12T19:47:01.1408116Z /usr/bin/ld: rxcstream.c:(.text+0xcbb): undefined reference to `rxpa_setnativepayload'
+2026-10-12T19:47:01.1408655Z /usr/bin/ld: rxcstream.c:(.text+0xcf1): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1409164Z /usr/bin/ld: rxcstream.c:(.text+0xd00): undefined reference to `rxpa_setstring'
+2026-10-12T19:47:01.1409669Z /usr/bin/ld: rxcstream.c:(.text+0xd9e): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1410163Z /usr/bin/ld: rxcstream.c:(.text+0xdad): undefined reference to `rxpa_setstring'
+2026-10-12T19:47:01.1410664Z /usr/bin/ld: rxcstream.c:(.text+0xef8): undefined reference to `rxpa_setint'
+2026-10-12T19:47:01.1418883Z /usr/bin/ld: rxcstream.c:(.text+0xf07): undefined reference to `rxpa_setstring'
+2026-10-12T19:47:01.1419739Z /usr/bin/ld: rxcstream.c:(.text+0xf52): undefined reference to `rxpa_setint'

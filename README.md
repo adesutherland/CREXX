@@ -25,6 +25,11 @@ for package selection, installers, and a first program, and the
 The [Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
 tracks ongoing `develop` work and is replaced after each successful publication.
 
+Current `develop` also includes the [Level L language toolkit](lib/rxfnsl/doc/user-guide.md):
+the `levell` grammar generator, its runtime library, and the separately selected
+modern `rexxscript1` interpreter. These are development additions after Beta 3;
+the existing `rexxscript` command and `REXXSCRIPT` compiler exit keep their dialect.
+
 ## What Is Included
 
 The core toolchain is:

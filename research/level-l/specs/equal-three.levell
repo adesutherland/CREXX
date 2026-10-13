@@ -1,0 +1,7 @@
+/* The non-context-free language a^n b^n c^n, n >= 1. */
+options levell
+namespace equalthree
+read: parser semantics ordered input bytes start document
+document: rule = &(balanced.ab 'c') 'a'+ balanced.bc
+balanced.ab: rule = 'a' balanced.ab? 'b'
+balanced.bc: rule = 'b' balanced.bc? 'c'

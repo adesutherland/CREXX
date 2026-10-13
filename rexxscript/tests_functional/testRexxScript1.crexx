@@ -1,0 +1,113 @@
+/* cREXX License (MIT). Modern grammar/interpreter functional acceptance. */
+options levelb
+import rxfnsb
+import rexxscript1
+import rexxscript1run
+
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  call check('precedence','say 1+2*3; say -2**2; say 2**3**2','7|-4|512','')
+  call check('division','say 5/2; say 5.0/2; say 7%3; say 7.5%2','2|2.5|1|1.5','')
+  call check('numeric strings',"say '2'+3; say '2'/3",'5|0.666666666666667','')
+  call check('strings',"x='world'; say 'hello' x; say 'a'||'b'; say 'a'x",'hello world|ab|aworld','')
+  call check('bifs',"say length('café'); say substr('abcdef',2,3); say substr('abcd',2,,'.'); say reverse(upper('ab'))",'4|bcd|bcd|BA','')
+  call check('nested bifs',"say substr(copies('ab',3),length('ab'),3)",'bab','')
+  call check('value pool',"x=1; call value('x',4); say x",'4','')
+  call check('count loop','x=0; do 3; x=x+2; end; say x','6','')
+  call check('controlled loop','x=0; do i=1 to 5; if i=3 then iterate; x=x+i; end; say x','12','')
+  call check('descending loop','x=0; do i=3 to 1 by -1; x=x+i; end; say x','6','')
+  call check('while','x=0; do while x<3; x=x+1; end; say x','3','')
+  call check('until','x=0; do until x=3; x=x+1; end; say x','3','')
+  call check('leave','do forever; say 1; leave; say 2; end; say 3','1|3','')
+  call check('nested if','if 1 then if 0 then say 1 else say 2 else say 3','2','')
+  call check('block if','if 1 then do; say 1; say 2; end else say 3','1|2','')
+  call check('return','say 1; return 42; say 2','1','')
+  call check('comments',"say 1 /* outer /* nested */ */ + 2; say '/* text */'",'3|/* text */','')
+  call check('comment newline',"say 1 /*" || '0a'x || "*/ +2",'3','')
+  call check('continuation',"say 1 + ," || '0a'x || '2','3','')
+  call check('unicode',"say 'naïve café'; say length('😀')",'naïve café|1','')
+  call check('decimal','say 0.1d + 0.2d; say 0x10 <or> 1','0.3|17','')
+  call check('named integers','say 0x10 <OR> 1; say 7 <mOd> 3; say 7 <REM> 3; say <NOT> 0','17|1|1|-1','')
+  call check('dotted literals','say .5 + 1.; say 1.e2','1.5|100','')
+  call check('empty program','','','')
+  call check('soft statement word','say=7; say say','7','')
+  call check('continued keyword',"say=7; say 1 + ," || '0a'x || 'say','8','')
+  call check('multiline call',"say substr('abc'," || '0a'x || "2)",'bc','')
+  call check('semicolon is not continuation','say 1+,;2','','RS_PARSE')
+  call check('if layout','if 1' || '0a'x || 'then' || '0a'x || 'say 4','4','')
+  call check('comparisons',"say '02' = 2; say '02' == 2; say 0.1+0.2=0.3; say 9007199254740993=9007199254740992",'1|0|0|0','')
+  call check('typed comparisons',"say 0.1+0.2>0.3; say 0.1+0.2<=0.3; say 0.1d+0.2d=0.3d; say 'a'>1; say 'a'='a '; say 'a'=='a '",'1|0|1|1|1|0','')
+  call check('logical short circuit',"x=0; say 0 & value('x',1); say x; say 1 | unknown; say 1 && 1",'0|0|1|0','')
+  call check('left to right',"x=1; say value('x',2) + value('x',3); say x",'3|3','')
+  call check('invalid truth',"if 'abc' then say 1",'','RS_VALUE')
+  call check('overflow','say 9223372036854775807+1','','RS_VALUE')
+  call check('signed minimum','say -9223372036854775808','-9223372036854775808','')
+  call check('zero divisor','say 1/0','','RS_VALUE')
+  call check('unterminated string',"say 'abc",'','RS_PARSE')
+  call checkbytes('malformed UTF8','73617920ff'x as .binary,'','RS_PARSE')
+  call check('no goto','goto target','','RS_PARSE')
+  call check('no classes','x: class','','RS_PARSE')
+  call check('nested loop leave','x=0; do 2; do forever; x=x+1; leave; end; end; say x','2','')
+  call check('long flat source',copies('nop;',3000) || 'say 7','7','')
+  call check('source nesting', 'say ' || copies('(',130) || '1' || copies(')',130),'','RS_DEPTH')
+  call check('source byte limit',copies(' ',1048577),'','RS_PARSE_LIMIT')
+  call check('undefined','say unknown','','RS_UNDEFINED')
+  call check('syntax prevents execution','say 1; x=(2+','','RS_PARSE')
+  call check('unclosed comment','say 1 /*','','RS_PARSE')
+  call check('no declaration','x = .int','','RS_PARSE')
+  call check('no signal','signal target','','RS_PARSE')
+  call check('no interpret',"interpret 'say 1'",'','RS_PARSE')
+  call check('outside leave','say 1; leave','','RS_CONTROL')
+  call check('unknown function','say noSuchFunction()','','RS_FUNCTION')
+  call check('bad bif','say substr()','','RXC-LC-40.3')
+  call check('host capability',"say linein('somefile')",'','RS_CAPABILITY')
+  program = .rexxscript1..program('x=1; x=x+1; say x; return x' as .binary)
+  compiled = program.compile()
+  first = .rexxscript1run..execution(program); second = .rexxscript1run..execution(program)
+  a = first.run(); b = second.run(); av = first.result(); bv = second.result()
+  cases = cases + 1
+  if a <> 0 | b <> 0 | av.asInt() <> 2 | bv.asInt() <> 2 | av.hasInt() = 0 | first.error() <> '' | program.error() <> '' then do
+    say 'FAIL owned reuse'; failures = failures + 1
+  end
+  endless = .rexxscript1..program('do forever; nop; end' as .binary)
+  limited = .rexxscript1run..execution(endless,50); a = limited.run(); cases = cases + 1
+  if a <> 2 | limited.code() <> 'RS_FUEL' then do
+    say 'FAIL fuel' limited.error(); failures = failures + 1
+  end
+  cancelled = .rexxscript1run..execution(program); call cancelled.cancel(); a = cancelled.run(); cases = cases + 1
+  if a <> 3 | cancelled.code() <> 'RS_CANCELLED' then do
+    say 'FAIL cancellation'; failures = failures + 1
+  end
+  bounded_program = rexxscript1..compile("say copies('a',100)" as .binary)
+  bounded = .rexxscript1run..execution(bounded_program,1000,32); a = bounded.run(); cases = cases + 1
+  if a <> 2 | bounded.code() <> 'RS_VALUE_LIMIT' then do
+    say 'FAIL allocation bound' bounded.error(); failures = failures + 1
+  end
+  bounded_program = rexxscript1..compile("do 20; say 'a'; end" as .binary)
+  bounded = .rexxscript1run..execution(bounded_program,1000,10); a = bounded.run(); cases = cases + 1
+  if a <> 2 | bounded.code() <> 'RS_OUTPUT_LIMIT' then do
+    say 'FAIL output bound' bounded.error(); failures = failures + 1
+  end
+  say 'rexxscript1_cases=' || cases
+  say 'rexxscript1_failures=' || failures
+  return failures
+check: procedure = .void
+  arg name = .string, source = .string, expected = .string, code = .string
+  call checkbytes(name,source as .binary,expected,code)
+  return
+checkbytes: procedure = .void expose failures cases
+  arg name = .string, source = .binary, expected = .string, code = .string
+  cases = cases + 1
+  program = .rexxscript1..program(source as .binary)
+  run = .rexxscript1run..execution(program)
+  rc = run.run(); out = run.output(); text = ''
+  do i = 1 to out[0]
+    if i > 1 then text = text || '|'
+    text = text || out[i]
+  end
+  if text <> expected | run.code() <> code then do
+    say 'FAIL' name 'rc='rc 'out=['text'] code='run.code()
+    if rc <> 0 then say run.error()
+    failures = failures + 1
+  end
+  return

@@ -1,0 +1,287 @@
+/* cREXX License (MIT). Earley recognition with binary shared packed forests. */
+options levelb
+namespace llearley expose parser engine
+import llcore
+import lllimits
+import llcfg
+import llcheck
+import llcap
+import llforest
+import rxfnsb
+
+parser: class
+  _cfg = .llcfg..productions
+  _input = .llcore..stream
+  _forest = .llforest..arena
+  _width = .int
+  _base = .int
+  _fuel = .int
+  _cells = .int
+  _work = .int
+  _ran = .int
+  _status = .int
+  _root = .int
+  _error = .string
+  _far = .int
+  _expected = .string
+  _tree = .llcore..tree
+  _treeroot = .int
+  _selected = .int
+  _projected = .int[]
+  _contexts = .binary
+  _contextseen = .int[]
+  _items = .int
+  _offset = .int[]
+  _head = .int[]
+  _tail = .int[]
+  _next = .int[]
+  _seen = .int[]
+  _p = .int[]
+  _dot = .int[]
+  _start = .int[]
+  _end = .int[]
+  _prefix = .int[]
+  *: factory
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000, cells = 8000000, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _cfg = .llcfg..productions(graph,root,limits); _input = input; _width = input.size() + 1
+    _fuel = fuel; _cells = cells; _work = 0; _ran = 0; _status = 0; _root = 0; _items = 0; _error = ''
+    _far = 0; _expected = ''; _treeroot = 0; _selected = 0
+    _tree = .llcore..tree.from_source(input.source())
+    call binresize _contexts,graph.size()
+    return
+  run: method = .int
+    symbol = .int
+    if _ran then return _status
+    _ran = 1
+    if _cfg.status() <> 0 | _input.error() <> '' then do
+      _status = 3; _error = _cfg.error() || _input.error()
+      if _cfg.status() = 4 then _status = 2
+      return _status
+    end
+    stride = _cfg.count() + 1
+    if _width > stride then stride = _width
+    _forest = .llforest..arena(_input.size(),stride,_cells)
+    _base = 256 + _cfg.nonterminals(); offset = 1
+    do p = 1 to _cfg.count()
+      _offset[p] = offset; offset = offset + _cfg.length(p) + 1
+    end
+    if _cells < 1 | _base + offset > ((_cells <idiv> _width) <idiv> _width) then do
+      _status = 2; _error = lllimits..describe('earley.cells',_cells,0) || ' Earley dense index needs ' || (_base + offset) || ' * ' || _width || '^2 cells.'; return _status
+    end
+    ignored = insert(1,0,0,0,0,0,0)
+    position = .int; item = .int; p = .int; dot = .int; start = .int
+    do position = 0 to _input.size()
+      item = _head[position + 1]
+      do while item > 0
+        _work = _work + 1
+        if _work > _fuel then do
+          _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+        end
+        if _forest.exhausted() then do
+          _status = 2; _error = lllimits..describe('earley.cells',_cells,0) || ' Earley forest index.'; return _status
+        end
+        p = _p[item]; dot = _dot[item]; start = _start[item]
+        if dot = _cfg.length(p) then do
+          nt = _cfg.lhs(p); cell = key(256 + nt,start,position)
+          existed = _forest.find(cell)
+          completed = _forest.node(cell,nt,start,position,0)
+          ignored = _forest.pack(completed,p,_prefix[item],0)
+          if existed = 0 then do
+            waiting = _head[start + 1]
+            do while waiting > 0
+              _work = _work + 1
+              if _cfg.rhs(_p[waiting],_dot[waiting]) = nt then do
+                ignored = insert(_p[waiting],_dot[waiting] + 1,_start[waiting],position,_prefix[waiting],completed,start)
+              end
+              waiting = _next[waiting]
+            end
+          end
+        end
+        else do
+          symbol = _cfg.rhs(p,dot)
+          if symbol > 0 then do
+            do candidate = 1 to _cfg.count()
+              _work = _work + 1
+              if _cfg.lhs(candidate) = symbol then ignored = insert(candidate,0,position,position,0,0,position)
+            end
+            nullable = _forest.find(key(256 + symbol,position,position))
+            if nullable > 0 then ignored = insert(p,dot + 1,start,position,_prefix[item],nullable,position)
+          end
+          else if _input.symbol(position) = -symbol - 1 then do
+            terminal = _forest.node(key(-symbol,position,position + 1),symbol,position,position + 1,1)
+            ignored = insert(p,dot + 1,start,position + 1,_prefix[item],terminal,position)
+          end
+        end
+        item = _next[item]
+      end
+    end
+    if _work > _fuel then do
+      _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+    end
+    if _forest.exhausted() then do
+      _status = 2; _error = lllimits..describe('earley.cells',_cells,0) || ' Earley forest index.'; return _status
+    end
+    _root = _forest.find(key(256 + _cfg.nonterminals(),0,_input.size()))
+    if _root = 0 then do
+      _status = 1; far = 0
+      do position = 0 to _input.size()
+        if _head[position + 1] then far = position
+      end
+      _far = far; wanted = .int[]; item = _head[far + 1]
+      do while item > 0
+        symbol = _cfg.rhs(_p[item],_dot[item])
+        if symbol < 0 then do
+          wanted[-symbol] = 1
+          call context(_cfg.lhs(_p[item]),_start[item],0)
+          if _status = 2 then return _status
+        end
+        if _p[item] = 1 & _dot[item] = _cfg.length(1) then wanted[257] = 1
+        item = _next[item]
+      end
+      graph = _cfg.source()
+      do symbol = 0 to 256
+        if wanted[symbol + 1] then do
+          name = 'end of input'
+          if symbol < 256 then do
+            name = 'token ' || symbol
+            do node = 1 to graph.size()
+              if graph.op(node) = 1 & graph.left(node) = symbol then do
+                name = graph.label(node); leave
+              end
+            end
+          end
+          if _expected <> '' then _expected = _expected || ', '
+          _expected = _expected || name
+        end
+      end
+      _error = 'no complete derivation; unexpected input at byte ' || _input.start(far) || '; expected ' || _expected
+    end
+    return _status
+  key: method = .int
+    arg kind = .int, start = .int, finish = .int
+    return ((kind - 1) * _width + start) * _width + finish + 1
+  insert: method = .int
+    arg p = .int, dot = .int, start = .int, finish = .int, left = .int, right = .int, pivot = .int
+    cell = key(_base + _offset[p] + dot,start,finish)
+    prefix = _forest.node(cell,-p,start,finish,dot = 0)
+    if dot > 0 then ignored = _forest.pack(prefix,pivot + 1,left,right)
+    if _seen[cell] then return _seen[cell]
+    _items = _items + 1; _seen[cell] = _items
+    _p[_items] = p; _dot[_items] = dot; _start[_items] = start; _end[_items] = finish; _prefix[_items] = prefix
+    if _head[finish + 1] = 0 then _head[finish + 1] = _items
+    else _next[_tail[finish + 1]] = _items
+    _tail[finish + 1] = _items
+    return _items
+  forest: method = .llforest..arena
+    return _forest
+  root: method = .int
+    return _root
+  offset: method = .int
+    return _input.start(_far)
+  position: method = .int
+    return _far
+  expected: method = .string
+    return _expected
+  contexts: method = .binary
+    return _contexts
+  /** Trace actual chart callers of a failed terminal to the nearest named
+   * rule. Alternative callers remain separate candidates. */
+  context: method = .void
+    arg nonterminal = .int, start = .int, depth = .int
+    graph = _cfg.source()
+    if nonterminal <= graph.size() then do
+      if graph.op(nonterminal) = 5 & left(graph.label(nonterminal),7) <> '@field.' then do
+        <at..u8>(nonterminal - 1) _contexts = 1; return
+      end
+    end
+    if depth >= 512 then do
+      _status = 2; _error = 'LL_IMPLEMENTATION_LIMIT: Earley diagnostic depth exceeds 512; a larger work budget cannot raise this implementation bound'; return
+    end
+    item = _head[start + 1]
+    do while item > 0
+      _work = _work + 1
+      if _work > _fuel then do
+        _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return
+      end
+      if _contextseen[item] = 0 & _cfg.rhs(_p[item],_dot[item]) = nonterminal then do
+        _contextseen[item] = 1
+        call context(_cfg.lhs(_p[item]),_start[item],depth + 1)
+      end
+      item = _next[item]
+    end
+    return
+  /** Only a unique finite derivation can become a tree automatically. */
+  treeroot: method = .int
+    if _selected then return _treeroot
+    _selected = 1
+    if _status <> 0 | _root = 0 then return 0
+    count = _forest.derivations(_root,2)
+    if count = -2 then do
+      _status = 2; _error = 'LL_IMPLEMENTATION_LIMIT: Earley forest traversal depth exceeds 512; a larger work budget cannot raise this implementation bound'; return 0
+    end
+    if count <> 1 then return 0
+    _treeroot = project(_root,0)
+    return _treeroot
+  tree: method = .llcore..tree
+    return _tree
+  status: method = .int
+    return _status
+  project: method = .int
+    arg node = .int, depth = .int
+    if node = 0 then return 0
+    if depth >= 512 then do
+      _status = 2; _error = 'LL_IMPLEMENTATION_LIMIT: Earley tree depth exceeds 512; a larger work budget cannot raise this implementation bound'; return 0
+    end
+    if _projected[node] then return _projected[node]
+    label = _forest.label(node); first = _input.start(_forest.start(node)); finish = first
+    if _forest.finish(node) > _forest.start(node) then finish = _input.finish(_forest.finish(node))
+    a = 0; b = 0; kind = 6; name = 'empty'; graph = _cfg.source()
+    if _forest.leaf(node) = 0 then do
+      family = _forest.first(node)
+      if _forest.next(family) <> 0 then do
+        _status = 3; _error = 'ambiguous forest requires explicit selection'; return 0
+      end
+      a = project(_forest.left(family),depth + 1)
+      b = project(_forest.right(family),depth + 1)
+      kind = 2; name = '<production children>'
+      if label > 0 then do
+        if label > graph.size() then return a
+        kind = graph.op(label); name = graph.label(label)
+      end
+    end
+    else if _forest.finish(node) > _forest.start(node) then do
+      kind = 1; name = 'symbol.' || (-label - 1)
+    end
+    if _status <> 0 then return 0
+    /* Empty derivations sit at the next token (or fragment EOF). After trivia
+     * or recovery gaps that can be beyond the last consumed token's end.
+     * Keep the parent hull consistent with those original-source children. */
+    if a > 0 then do
+      first = min(first,_tree.start(a)); finish = max(finish,_tree.finish(a))
+    end
+    if b > 0 then do
+      first = min(first,_tree.start(b)); finish = max(finish,_tree.finish(b))
+    end
+    _projected[node] = _tree.add(kind,name,first,finish,a,b)
+    return _projected[node]
+  work: method = .int
+    return _work
+  items: method = .int
+    return _items
+  error: method = .string
+    return _error
+
+engine: class implements .llcap..backend
+  *: factory
+    return
+  name: method = .string
+    return 'earley'
+  version: method = .string
+    return 'research-earley-1'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    cfg = .llcfg..productions(facts.grammar(),facts.root())
+    bound = 'unknown'
+    if cfg.status() = 0 then bound = 'cubic-input'
+    return .llcap..decision(cfg.status(),cfg.error(),0,bound,'O(g^2*(t+1)^3+a); indexed items/families; forest not tree enumeration; completed runs',facts,name(),version())

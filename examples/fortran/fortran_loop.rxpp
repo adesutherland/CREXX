@@ -1,0 +1,33 @@
+/*
+ * cREXX FORTRAN matrix multiplication sample
+ * -------------------------------------------
+ *
+ * This example keeps the original FORTRAN 66 fixed-format layout visible:
+ * columns 1-5 hold statement labels, column 6 marks continuation lines, and
+ * comments begin with C in column 1. RXPP captures the block and the
+ * imported fortran module executes it automatically.
+ */
+options levelg
+##cflag nosrcmap
+import fortran
+##external fortran
+
+/* The following block is FORTRAN source, not cREXX source. */
+FORTRAN RUN
+      PROGRAM MATMUL
+      INTEGER I,SUM
+
+      SUM = 0
+      DO 100 I = 1,1000000
+         SUM = SUM + 1
+  100 CONTINUE
+
+      WRITE (*,300) I
+      WRITE (*,301) SUM
+
+   300 FORMAT (I10)
+   301 FORMAT (I15)
+
+      STOP
+      END
+END FORTRAN

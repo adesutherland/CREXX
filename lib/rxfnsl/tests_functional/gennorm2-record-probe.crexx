@@ -1,0 +1,21 @@
+/* cREXX License (MIT). Owning Unicode parser compatibility control. */
+options levelb
+import rxfnsb
+import level_l_gennorm2
+import unicode_gennorm2
+
+main: procedure = .int
+  arg argv = .string[]
+  data = readbinary(argv[1]); count = <at..u32>(0) data; at = 4
+  do i = 1 to count
+    extent = <at..u32>(at) data; at = at + 4
+    source = binsubstr(data,at + 1,extent) as .string; at = at + extent
+    tokens = level_l_gennorm2_lex(source); status = level_l_gennorm2_status()
+    say 'CASE|' || i || '|' || status || '|' || level_l_gennorm2_error_offset()
+    if status <> 0 then iterate
+    say 'TOKENS|' || bin2x(tokens)
+    result = unicode_gennorm2_parse(source,tokens)
+    say 'PARSE|' || result.status() || '|' || result.error_line() || '|' || result.error()
+    if result.status() = 0 then say 'RECORDS|' || bin2x(unicode_gennorm2_record_dump(result) as .binary)
+  end
+  return 0

@@ -1,0 +1,49 @@
+[
+  {
+    "case": "example.levell",
+    "sha256": "eda5e3ab196455771b97380bdba0aa031cfb62a18f3a0803071aed52f421a970",
+    "deterministic": true
+  },
+  {
+    "case": "rexxscript.levell",
+    "sha256": "70841a6e85bb3a8e4887a442e85c26270031633b85b280d25d3ebfbbba02d316",
+    "deterministic": true
+  },
+  {
+    "case": "nullable",
+    "diagnostic": "LL_NULLABLE_TOKEN",
+    "nonzero_exit": true,
+    "previous_artifact_preserved": true
+  },
+  {
+    "case": "recursive-lexer",
+    "diagnostic": "LL_LEX_RECURSION",
+    "nonzero_exit": true,
+    "previous_artifact_preserved": true
+  },
+  {
+    "case": "conflict",
+    "diagnostic": "LL_LR_CONFLICT",
+    "nonzero_exit": true,
+    "previous_artifact_preserved": true
+  },
+  {
+    "case": "ordered",
+    "diagnostic": "LL_BACKEND_CAPABILITY",
+    "nonzero_exit": true,
+    "previous_artifact_preserved": true
+  },
+  {
+    "case": "construction exhaustion",
+    "nonzero_exit": true,
+    "message": "LL_GRAMMAR: grammar construction budget exceeded at line 5"
+  },
+  {
+    "case": "UTF8",
+    "nonzero_exit": true
+  },
+  {
+    "case": "missing file",
+    "nonzero_exit": true
+  }
+]

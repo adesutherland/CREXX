@@ -1,0 +1,68 @@
+[
+  {
+    "name": "teaching-examples",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-teaching-examples.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/teaching-examples"
+    ],
+    "status": 0,
+    "seconds": 73.59
+  },
+  {
+    "name": "diagnostic-regressions",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-diagnostic-regressions.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/diagnostic-regressions"
+    ],
+    "status": 0,
+    "seconds": 21.88
+  },
+  {
+    "name": "recovery-surface",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-recovery-surface.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/recovery-surface"
+    ],
+    "status": 0,
+    "seconds": 47.1
+  },
+  {
+    "name": "comments",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-comments.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comments"
+    ],
+    "status": 0,
+    "seconds": 92.89
+  },
+  {
+    "name": "comment-lexer",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-comment-lexer.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer"
+    ],
+    "status": 0,
+    "seconds": 16.03
+  },
+  {
+    "name": "gennorm2-compat",
+    "argv": [
+      "python3",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-gennorm2-compat.py",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/gennorm2-compat"
+    ],
+    "status": 0,
+    "seconds": 7.3
+  }
+]

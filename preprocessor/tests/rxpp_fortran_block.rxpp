@@ -1,0 +1,15 @@
+##CFLAG nosrcmap
+
+FORTRAN RUN
+      PROGRAM DEMO
+C keep this fixed-format comment
+  100 PRINT *, 'hello'
+      END
+END FORTRAN
+
+FORTRAN PROCEDURES
+      SUBROUTINE SCALE(A,N)
+      END
+END FORTRAN
+
+say 'After FORTRAN blocks'

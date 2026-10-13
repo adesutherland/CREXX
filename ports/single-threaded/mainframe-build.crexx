@@ -1,0 +1,277 @@
+/* SDK consumer orchestration. Compile actual source against the selected
+   verified SDK overlay; no source rewriting or mixed platform personality.
+   CMS receives MODULEs; TSO receives XMIT load members. Guest execution is
+   separate, and all inputs/outputs are hashed for the candidate freeze. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 7 then do
+    say "usage: mainframe-build.crexx SDK CMS|TSO HOST_BUILD SINGLE_BUILD SOURCE_ROOT NEW_OUTPUT RXVM|RXAS|RXLINK|RXC"
+    return 2
+  end
+  sdk=args.1; personality=translate(args.2); host=args.3; single=args.4
+  source=args.5; out=args.6; tool=translate(args.7)
+  if personality <> "CMS" & personality <> "TSO" then return 2
+  if wordpos(tool,"RXVM RXAS RXLINK RXC") = 0 then return 2
+  address crexx "run test ! -e :out"
+  if rc <> 0 then return 2
+  address crexx "mkdir -p :out"
+  if rc <> 0 then return rc
+  profile="cms20-esa31-v1"
+  if personality="TSO" then profile="tso-zos31-v1"
+  include=sdk||"/sysroots/"||profile||"/include"
+  lib=sdk||"/sysroots/"||profile||"/lib"
+  cc=sdk||"/host/gcc/bin/s390-linux-gnu-gcc"
+  checker=sdk||"/host/bin/s370_check"
+  as_tool=sdk||"/host/binutils/bin/s390-linux-gnu-as"
+  linker=sdk||"/host/binutils/bin/s390-linux-gnu-ld"
+  flags=.string[]
+  native=.string; item=.string; writer=.string; product=.string
+  manifest=.string[]
+  dirs="platform interpreter interpreter/rxvmplugin assembler binutils/include avl_tree utf8 inc rxpa compiler interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber"
+  i=.int; j=.int
+  do i=1 to words(dirs)
+    call arrayappend flags,"-I"||source||"/"||word(dirs,i)
+  end
+  call arrayappend flags,"-I"||host||"/generated"
+  call arrayappend flags,"-I"||host||"/assembler"
+  call arrayappend flags,"-I"||host||"/compiler"
+  if personality="CMS" then call arrayappend flags,"-I"||include||"/cms"
+  call arrayappend flags,"-I"||include
+  call arrayappend flags,"-I"||sdk||"/adapters"
+  call arrayappend flags,"-I"||sdk||"/adapters/cms"
+  call arrayappend flags,"-I"||sdk||"/adapters/tso"
+  call arrayappend flags,"-DCREXX_"||personality||"_ELF=1"
+  call arrayappend flags,"-DNDEBUG=1"
+  if personality="CMS" then do
+    call arrayappend flags,"-ms370-profile="||profile
+    call arrayappend flags,"-DCREXX_CMS_TEXT_IO=1"
+    call arrayappend flags,"-DCREXX_CMS_DIRENT=1"
+    call arrayappend flags,"-D__MAINFRAME_LAB_CMS20_ESA31__=1"
+  end
+  else do
+    machine="-mexperimental-s370 -m31 -mesa -msoft-float -mno-mvcle"
+    do i=1 to words(machine)
+      call arrayappend flags,word(machine,i)
+    end
+    call arrayappend flags,"-D__MAINFRAME_LAB_TSO31__=1"
+  end
+  units=.string[]
+  if tool="RXVM" | tool="RXC" then do
+    units=readlines(single||"/vm_sources.txt")
+    defs="CREXX_VM_SINGLE_THREADED NTHREADED MANUAL_PLUGIN_LINK CREXX_VM_STATIC_ONLY CREXX_VM_NO_SOCKETS CREXX_VM_NO_CLOCK CREXX_VM_PORTABLE_ALLOC CREXX_VM_COMPACT CREXX_MAINFRAME_ADDRESS"
+    do i=1 to words(defs)
+      call arrayappend flags,"-D"||word(defs,i)||"=1"
+    end
+    call arrayappend flags,"-DCREXX_VM_HANDLER_PANEL=20"
+    call arrayappend flags,"-DRXVM_MEMORY_SLAB_SIZE=4096"
+    call arrayappend flags,"-DRXVM_MEMORY_MAX_STANDARD_SIZE=2048"
+    native="lib/plugins/mainframe_address/mainframe_address.c"
+    if tool="RXVM" then do
+      native="platform/mainframe_command.c platform/mainframe_command_"||translate(personality,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")||".c lib/plugins/cstream/rxcstream.c ports/single-threaded/mainframe_fs.c "||native
+      call arrayappend flags,"-DCREXX_VM_CLASSIC_PROVIDERS=1"
+    end
+    do i=1 to words(native)
+      call arrayappend units,source||"/"||word(native,i)
+    end
+    if tool="RXVM" then call arrayappend units,source||"/interpreter/rxvmmain.c"
+    else do
+      call arrayappend units,source||"/interpreter/rxvml.c"
+      call arrayappend units,source||"/compiler/rxc_main.c"
+      manifest=readlines(host||"/mainframe/compiler_sources.txt")
+      do i=1 to manifest.0
+        if right(manifest[i],2)<>".c" then iterate
+        item=manifest[i]
+        if left(item,1)<>"/" then item=source||"/compiler/"||item
+        call arrayappend units,item
+      end
+    end
+  end
+  else do
+    native="platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c avl_tree/avl_tree.c binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c binutils/rxcontract.c binutils/rxsha256.c binutils/rxgraph.c"
+    do i=1 to words(native)
+      call arrayappend units,source||"/"||word(native,i)
+    end
+  end
+  if tool="RXAS" | tool="RXC" then do
+    manifest=readlines(host||"/mainframe/assembler_sources.txt")
+    do i=1 to manifest.0
+      if right(manifest[i],2)<>".c" then iterate
+      item=manifest[i]
+      if left(item,1)<>"/" then item=source||"/assembler/"||item
+      call arrayappend units,item
+    end
+    if tool="RXAS" then call arrayappend units,source||"/assembler/rxasmain.c"
+  end
+  if tool="RXLINK" then call arrayappend units,source||"/linker/rxlinkmain.c"
+  if personality="TSO" then do
+    native="tso/application.c tso/io.c tso/signals.c tso/native-path.c tso/directory.c cms/text-codec.c cms/arithmetic.c"
+    if tool="RXVM" then native=native||" tso/command.c command-text.c"
+    do i=1 to words(native)
+      call arrayappend units,sdk||"/adapters/"||word(native,i)
+    end
+    call arrayappend flags,"-DLAB_TSO_HEAP_SIZE=201326592"
+  end
+  unique=.string[]; found=.int
+  do i=1 to units.0
+    if tool="RXC" & right(units[i],10)="rxpashim.c" then iterate
+    found=0
+    do j=1 to unique.0
+      if units[i]=unique[j] then found=1
+    end
+    if found=0 then call arrayappend unique,units[i]
+  end
+  units=unique
+  /* Freeze textual includes and generated parsers as well as translation
+     units. Verify again after linking so concurrent edits cannot masquerade
+     as one reviewed source snapshot. */
+  dependencies=.string[]; roots=.string[]; patterns=.string[]
+  do i=1 to words(dirs)
+    call arrayappend roots,source||"/"||word(dirs,i)
+  end
+  call arrayappend roots,host||"/generated"
+  call arrayappend roots,host||"/assembler"
+  call arrayappend roots,host||"/compiler"
+  call arrayappend roots,include
+  call arrayappend roots,sdk||"/adapters"
+  patterns.1="*.h"; patterns.2="*.inc"
+  do i=1 to patterns.0
+    pattern=patterns[i]; foundfiles=.string[]
+    address crexx "run find :roots[] -type f -name :pattern" output foundfiles
+    if rc<>0 then return rc
+    do j=1 to foundfiles.0
+      call arrayappend dependencies,foundfiles[j]
+    end
+  end
+  do i=1 to units.0
+    call arrayappend dependencies,units[i]
+  end
+  names="libnewlib.a libextra.a libm-extra.a libgcc-wide.a libgcc-soft.a"
+  if personality="CMS" then names="libcms.a "||names
+  do i=1 to words(names)
+    call arrayappend dependencies,lib||"/"||word(names,i)
+  end
+  call arrayappend dependencies,sdk||"/SDK-MANIFEST.json"
+  call arrayappend dependencies,sdk||"/contracts/tso/image.ld"
+  call arrayappend dependencies,sdk||"/contracts/profiles/image.ld"
+  call arrayappend dependencies,host||"/mainframe/compiler_sources.txt"
+  call arrayappend dependencies,host||"/mainframe/assembler_sources.txt"
+  call arrayappend dependencies,single||"/vm_sources.txt"
+  call arrayappend dependencies,source||"/ports/single-threaded/mainframe-build.crexx"
+  call arrayappend dependencies,cc
+  call arrayappend dependencies,as_tool
+  call arrayappend dependencies,linker
+  call arrayappend dependencies,checker
+  if personality="CMS" then do
+    call arrayappend dependencies,sdk||"/sysroots/"||profile||"/startup.o"
+    call arrayappend dependencies,sdk||"/host/bin/elf_to_cms_module31"
+  end
+  else do
+    call arrayappend dependencies,sdk||"/native/source/tso31-any-entry.obj"
+    call arrayappend dependencies,sdk||"/native/source/mvssupa.obj"
+    call arrayappend dependencies,sdk||"/host/bin/elf_to_mvs"
+    call arrayappend dependencies,sdk||"/host/classic/bin/mf-classic-ld"
+    call arrayappend dependencies,sdk||"/tools/pdos64_xmit_unload.py"
+  end
+  before=out||"/source-before.sha256"; after=out||"/source-after.sha256"
+  address system "shasum -a 256 "||quoted(dependencies)||" > "||quote(before)
+  if rc<>0 then return rc
+  call lineout out||"/build-profile.txt",tool||" "||profile
+  do i=1 to flags.0
+    call lineout out||"/build-profile.txt",flags[i]
+  end
+  call lineout out||"/build-profile.txt"
+  objects=.string[]
+  do i=1 to units.0
+    unit=units[i]; obj=out||"/part"||i||".o"; assembly=obj||".s"; checked=obj||".checked.s"
+    extra=.string[]
+    if right(unit,19)="mainframe_address.c" then do
+      extra.1="-DPLUGIN_ID=rxmainframe_address"
+      if tool="RXC" then extra.2="-DDECL_ONLY=1"
+    end
+    if right(unit,11)="rxcstream.c" then extra.1="-DPLUGIN_ID=rxcstream"
+    if right(unit,14)="mainframe_fs.c" then extra.1="-DPLUGIN_ID=rxfs"
+    prefix="-B"||sdk||"/host/binutils/bin/"
+    address crexx "run :cc :prefix -S -Os -std=gnu99 -fno-pic -fno-pie -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector -fno-merge-constants -ffreestanding -ffunction-sections -fdata-sections -funsigned-char :flags[] :extra[] :unit -o :assembly"
+    if rc <> 0 then return rc
+    address crexx "run :checker annotate :profile :assembly :checked"
+    if rc <> 0 then return rc
+    address crexx "run :as_tool -L -m31 -mesa :checked -o :obj"
+    if rc <> 0 then return rc
+    address crexx "run :checker input :profile :obj"
+    if rc <> 0 then return rc
+    call arrayappend objects,obj
+    say tool personality i||"/"||units.0 unit
+  end
+  libs=.string[]
+  if personality="CMS" then libs.1=lib||"/libcms.a"
+  names="libnewlib.a libextra.a libm-extra.a libgcc-wide.a libgcc-soft.a"
+  do i=1 to words(names)
+    call arrayappend libs,lib||"/"||word(names,i)
+  end
+  elf=out||"/"||tool||".elf"; map=out||"/"||tool||".map"
+  entry=.string[]; extra=.string[]
+  layout=sdk||"/contracts/tso/image.ld"
+  if personality="CMS" then do
+    entry.1=sdk||"/sysroots/"||profile||"/startup.o"
+    layout=sdk||"/contracts/profiles/image.ld"
+  end
+  else extra.1="--wrap=fopen"
+  address crexx "run :linker -m elf_s390 -static --gc-sections --emit-relocs --orphan-handling=error :extra[] -T :layout -Map :map -o :elf --start-group :entry[] :objects[] :libs[] --end-group"
+  if rc <> 0 then return rc
+  address crexx "run :checker image :profile :elf"
+  if rc <> 0 then return rc
+  if personality="CMS" then do
+    writer=sdk||"/host/bin/elf_to_cms_module31"; product=out||"/"||tool||".MODULE"
+    address crexx "run :writer :elf :product 2200000"
+    if rc <> 0 then return rc
+    address crexx "run :writer --verify :elf :product 2200000"
+    if rc <> 0 then return rc
+  end
+  else do
+    writer=sdk||"/host/bin/elf_to_mvs"; deck=out||"/"||tool||".obj"
+    address crexx "run :writer :elf :deck"
+    if rc <> 0 then return rc
+    native_linker=sdk||"/host/classic/bin/mf-classic-ld"
+    native_entry=sdk||"/native/source/tso31-any-entry.obj"; service=sdk||"/native/source/mvssupa.obj"
+    product=out||"/"||tool||".XMI"
+    /* Classic-ld derives the directory member from its output argument.
+       Supply a basename, then independently check member and mode metadata. */
+    member_file=tool||".XMI"
+    address system "cd "||quote(out)||" && "||quote(native_linker)||" --oformat xmit --amode 31 --rmode 31 -e LABTSO -o "||quote(member_file)||" "||quote(native_entry)||" "||quote(service)||" "||quote(deck)
+    if rc <> 0 then return rc
+    reader=sdk||"/tools/pdos64_xmit_unload.py"
+    readback=out||"/"||tool||".rdw"
+    address crexx "run python3 :reader :product :readback --member :tool --amode 31 --rmode ANY"
+    if rc <> 0 then return rc
+  end
+  hashes=.string[]
+  call arrayappend units,host||"/generated/crexx_version.h"
+  call arrayappend units,sdk||"/SDK-MANIFEST.json"
+  address crexx "run shasum -a 256 :units[] :libs[] :elf :product" output hashes
+  if rc <> 0 then return rc
+  do j=1 to hashes.0
+    call lineout out||"/inputs-outputs.sha256",hashes[j]
+  end
+  call lineout out||"/inputs-outputs.sha256"
+  address system "shasum -a 256 "||quoted(dependencies)||" > "||quote(after)
+  if rc<>0 then return rc
+  address crexx "run cmp :before :after"
+  if rc<>0 then do
+    say "Native build inputs changed during compilation; candidate is not frozen"
+    return 1
+  end
+  say "MAINFRAME BUILD PASS:" tool personality product
+  return 0
+
+quote: procedure = .string
+  arg value=.string
+  return "'"||changestr("'",value,"'\''")||"'"
+quoted: procedure = .string
+  arg values=.string[]
+  result=.string
+  do i=1 to values.0
+    result=result||" "||quote(values[i])
+  end
+  return result

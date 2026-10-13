@@ -205,13 +205,8 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} "-DINPUT=${_bootstrap_input}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/WindowsBootstrap.cmake" VERBATIM)
 endif()
-add_executable(crexx-provider-package provider_package.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
-target_compile_features(crexx-provider-package PRIVATE cxx_std_17)
-target_include_directories(crexx-provider-package PRIVATE
-    "${crexx_llama_source_SOURCE_DIR}/vendor" "${CMAKE_SOURCE_DIR}/binutils/include")
-target_compile_definitions(crexx-provider-package PRIVATE
-    CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}" CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
-set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# crexx-provider-package is owned by core RXPA. The loader and that generic
+# helper continue to share package.hpp validation/fingerprint semantics.
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
     add_executable(rxllama_model_geometry ${CMAKE_SOURCE_DIR}/tests/native-inference/model_geometry.cpp)

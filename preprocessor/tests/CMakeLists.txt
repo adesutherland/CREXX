@@ -18,6 +18,27 @@ add_test(NAME rxpp_smoke
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_smoke.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(NAME rxpp_fortran_block
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_fortran_block.rxpp
+             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_fortran_block.out.crexx
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_fortran_block.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_fortran_block PROPERTIES LABELS "preprocessor;fortran;regression")
+
+add_test(NAME rxpp_rexxscript_block
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DRXC_BIN=$<TARGET_FILE:rxc>
+             -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_rexxscript_block.rxpp
+             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_rexxscript_block.out.crexx
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_rexxscript_block.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_rexxscript_block PROPERTIES LABELS "preprocessor;rexxscript;regression")
+
 add_test(NAME rxpp_srcmap
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
@@ -159,6 +180,8 @@ set_tests_properties(rxpp_diagnostic_catalogs PROPERTIES LABELS "preprocessor;di
 
 crexx_label_smoke_tests(
         rxpp_smoke
+        rxpp_fortran_block
+        rxpp_rexxscript_block
         rxpp_srcmap
         rxpp_relative_include
         rxpp_script_macro_exact_match

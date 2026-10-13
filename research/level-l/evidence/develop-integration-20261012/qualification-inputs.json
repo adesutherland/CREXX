@@ -1,0 +1,25 @@
+{
+  "base_commit": "2121969ce0cc0163ae6eb91f515dc5b5761af8e0",
+  "integration_sources": {
+    "cmake/CrexxBuildStages.cmake": "fb6bf8c6dcc8463653d12c1079d24f1206b904a51d3d9f19039eb463c40f3e9d",
+    "lib/rxfnsl/rexx/CMakeLists.txt": "f07bbd28294348e59c0667266e9d0edf1de9476bf8aff674e76bb4dd866cd871",
+    "lib/rxfnsl/tests_functional/CMakeLists.txt": "e26afe68a04e489c651c1894d90079b2140a80c304a60f3e19943dd1dc36a8bc",
+    "rexxscript/modern.cmake": "1290be8475336292fd6ae677b935175c5a15dd8904205ff415ae372af34dcdcd",
+    "scripts/package-core-release.py": "ff201cb370bf09a816ccc646fcf7b20ebe3d5133183eb8f6f95f50d4e5dbcb28"
+  },
+  "artifacts": {
+    "cmake-build-levell-integration/bin/levell": "5301ec02aac743e794b9d00f224b1757e969275c58a89e7238a8f96b95fc171c",
+    "cmake-build-levell-integration/bin/rexxscript1": "83e7c11de19eb41c0386fe98f0e62caa93c8f741e967030f902cec25036502de",
+    "cmake-build-levell-integration/bin/rxc": "f178b5d0c3d1e4242e210cc53b629952ed9777f8c87c9d6d4bc05367e234f3f4",
+    "cmake-build-levell-integration/bin/rxas": "342b08e50700d6e54b850b368f6fe120f453b5e61cbc24efcae9368aaa3c3393",
+    "cmake-build-levell-integration/bin/rxlink": "1606ac66593ae8e50b0d7c12fcabf77b9d1ce6dd00012bd4d22635bd72cb44b2",
+    "cmake-build-levell-integration/bin/rxbvm": "4b1a15e2049ddd75166a75f417ef18dfbe4735be3c53b015bfc43772e6db1a4e",
+    "cmake-build-levell-integration/bin/rxtvm": "31c3f64c5f99892b9765538b13624b98dd76ea6e583751780b1092d111001b4d",
+    "cmake-build-levell-integration/bin/library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "cmake-build-levell-integration/bin/rxfnsl.rxbin": "393c19d2cb1f16a26d28c24d10495eec566a3752b1b58b81a11877c76b1a58e5",
+    "cmake-build-levell-integration/bin/rexxscript1.rxbin": "f5c2a1ae3162a127667d2abd0e9cc9d340a1c761e7307d46402f74968549eb28",
+    "cmake-build-levell-integration/bin/rxfnsg.rxbin": "99077f35d6fee5683c47ac6f9efb515a80be287b4d124b129aa7a29b34ed6228",
+    "cmake-build-levell-integration/bin/gennorm2_language.rxbin": "e503907ad8ceb4e00be09ab14db1c813e3c418aeec40aac32891dc7e23c6cc57"
+  },
+  "host_scope": "native macOS ARM64 Debug; AppleClang; Ninja; optional inference and GTK disabled"
+}

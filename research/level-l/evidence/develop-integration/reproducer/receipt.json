@@ -1,0 +1,117 @@
+{
+  "cells": 4,
+  "expected": "0",
+  "commands": [
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/tests_functional/float-comparison-reproducer.rexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt-linked.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/opt-linked.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/tests_functional/float-comparison-reproducer.rexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt-linked.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/develop-integration/reproducer/noopt-linked.rxbin"
+      ],
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    }
+  ],
+  "source_sha256": "91a7fc73fc847954b4d24ff97b2b5dc85f56b69c206775fd2edb6002907978c2"
+}

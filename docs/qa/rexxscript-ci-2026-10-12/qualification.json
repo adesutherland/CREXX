@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-12",
+  "base_commit": "9548714f9b5c964ee5a7b2e040562cbae0f3ebcb",
+  "working_branch": "hotfix2",
+  "platform": "Darwin 25.6.0 arm64",
+  "cmake_version": "4.3.2",
+  "qualified_changed_inputs_sha256": {
+    "rexxscript/tests_functional/CMakeLists.txt": "1740b5dbdb4126f906d478026943e46a39b1337d68be8bfb34de27003176c3db",
+    "compiler/exits/rexxscript/RexxScript.crexx": "d1773d93a5d314cf7b39a4897f55229f76c1cfc4482106c5b10c071e5b6a1d35",
+    "compiler/exits/rexxscript/test_rexxscript_direct.crexx": "6ce2971345bf96dcddd35e4cbed5d8c29a273beda4ece09d5bba4ec8cb70d3b0"
+  },
+  "results": {
+    "release-focused": {
+      "passed": 11,
+      "failed": 0,
+      "full_log_sha256": "e6a25694835ea2eafb08e7531a2ef1a4fba5ffa0db6ff5fdd2064111ac71330e",
+      "test_seconds": 0.81
+    },
+    "debug-focused": {
+      "passed": 11,
+      "failed": 0,
+      "full_log_sha256": "255b94d6f3f57182f5ed3945b4c257e92b3db6a2f057040f8bb29434386d0dbf",
+      "test_seconds": 2.5
+    },
+    "release-product-smoke": {
+      "passed": 186,
+      "failed": 0,
+      "full_log_sha256": "4ac2b1d693b32e0ea5a8f00159e151c71616989a31bca2443b82d37a4210d19c",
+      "test_seconds": 102.9
+    },
+    "debug-optimizer-parity": {
+      "passed": 802,
+      "failed": 0,
+      "full_log_sha256": "8079ab574bac05a83dced2b7bbc9cd536c64b4237e3a0339fd2d88d45d968bda",
+      "test_seconds": 136.7
+    }
+  },
+  "built_tools_sha256": {
+    "cmake-build-release/bin/rxc": "ddfafdfab6bdd674258f66f8b979bd4bed322eba8d16edc798f0601cdff882ca",
+    "cmake-build-release/bin/rxas": "e3667cb2d5a7046e48035aeb661c7287bb33c5ae9d15c8f71e887491044b3378",
+    "cmake-build-release/bin/rxlink": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a",
+    "cmake-build-release/bin/rxvm": "eeffaa86029fd21a4d33de7778dd3f42286ab5b54fff3bfce8098770dbcd7918",
+    "cmake-build-release/bin/rxcexits.rxbin": "0a76cef1bdc0a9e6f36f100b41e150a756082fa57bacf8dc821be42d439bad13",
+    "cmake-build-debug/bin/rxc": "9fc42bcd4282c0e066a42d211e6a0447491c5d71b7294cafc8763728bb264bd2",
+    "cmake-build-debug/bin/rxas": "8b0d745b70bf2ba4088c83f975da8390017528410554efddb440d67b6a975e41",
+    "cmake-build-debug/bin/rxlink": "a0ac33484dbf4cb0c5323a8b74cc4acf2713ecadd4f0fc40c1b34a0cd35da2b0",
+    "cmake-build-debug/bin/rxvm": "6f5fa70b74daa22e7fb5440a5ee2fc06c4038337c47ba26f7e8c80bc5d61c7d2",
+    "cmake-build-debug/bin/rxcexits.rxbin": "0a76cef1bdc0a9e6f36f100b41e150a756082fa57bacf8dc821be42d439bad13"
+  }
+}

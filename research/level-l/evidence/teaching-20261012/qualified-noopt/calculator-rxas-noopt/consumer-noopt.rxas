@@ -1,0 +1,1300 @@
+/*
+ * SOURCE                 : calculator.crexx
+ */
+
+.globals=0
+
+main() .locals=59
+   .meta "calculator.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 161 161 17 "calculator.crexx" 16 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "calculator.crexx" 17 7 21 "  arg argv = .string[]"
+   .meta "calculator.main.argv"="b" ".string[*]" a1
+   .meta "calculator.main.a"="b" ".decimal" r14
+   .srcstep 2 2 17 "calculator.crexx" 41 3 15 "  a = .decimal; b = .decimal; value = .decimal"
+   null r14
+   .meta "calculator.main.b"="b" ".decimal" r16
+   .srcstep 3 3 17 "calculator.crexx" 41 17 29 "  a = .decimal; b = .decimal; value = .decimal"
+   null r16
+   .meta "calculator.main.child"="b" ".int" r17
+   .srcstep 4 4 17 "calculator.crexx" 40 16 28 "  node = .int; child = .int; count = .int; name = .string"
+   null r17
+   .meta "calculator.main.count"="b" ".int" r18
+   .srcstep 5 5 17 "calculator.crexx" 40 30 42 "  node = .int; child = .int; count = .int; name = .string"
+   null r18
+   .meta "calculator.main.expanded"="b" ".int[*]" r19
+   .srcstep 6 6 17 "calculator.crexx" 38 21 36 "  pending = .int[]; expanded = .int[]; values = .decimal[]"
+   null r19
+   .meta "calculator.main.name"="b" ".string" r11
+   .srcstep 7 7 17 "calculator.crexx" 40 44 58 "  node = .int; child = .int; count = .int; name = .string"
+   .meta "calculator.main.node"="b" ".int" r8
+   .srcstep 8 8 17 "calculator.crexx" 40 3 14 "  node = .int; child = .int; count = .int; name = .string"
+   null r8
+   .meta "calculator.main.pending"="b" ".int[*]" r20
+   .srcstep 9 9 17 "calculator.crexx" 38 3 17 "  pending = .int[]; expanded = .int[]; values = .decimal[]"
+   null r20
+   .meta "calculator.main.source"="b" ".binary" r2
+   .srcstep 10 10 17 "calculator.crexx" 21 3 19 "  source = .binary"
+   null r2
+   .meta "calculator.main.value"="b" ".decimal" r23
+   .srcstep 11 11 17 "calculator.crexx" 41 31 47 "  a = .decimal; b = .decimal; value = .decimal"
+   null r23
+   .meta "calculator.main.values"="b" ".decimal[*]" r24
+   .srcstep 12 12 17 "calculator.crexx" 38 40 57 "  pending = .int[]; expanded = .int[]; values = .decimal[]"
+   null r24
+   .srcstep 15 15 17 "calculator.crexx" 18 3 18 "  if argv[0] <> 1 then do"
+   .traceevent "C" 4 "R" "V" "r" 13 15 15 0 "argv" ""
+   getattrs r12,a1,0
+   .traceevent "V" 6 "R" "I" "r" 12 15 15 0 "argv" ""
+   ine r12,r12,1
+   .traceevent "O" 4 "R" "B" "r" 12 15 15 0 "" ""
+   brf l34iffalse,r12
+   .srcstep 16 16 17 "calculator.crexx" 18 19 23 "  if argv[0] <> 1 then do"
+   .srcstep 13 13 17 "calculator.crexx" 19 5 44 "    say 'usage: calculator expression.calc'; return 3"
+   say "usage: calculator expression.calc"
+   .srcstep 14 14 17 "calculator.crexx" 19 46 54 "    say 'usage: calculator expression.calc'; return 3"
+   ret 3
+l34iffalse:
+   .srcstep 20 20 17 "calculator.crexx" 22 3 5 "  do"
+   sigpush "FAILURE"
+   sigpush "ERROR"
+   sigpush "OVERFLOW_UNDERFLOW"
+   sigpush "DIVISION_BY_ZERO"
+   sigpush "CONVERSION_ERROR"
+   sigpush "INVALID_ARGUMENTS"
+   sigpush "OUT_OF_RANGE"
+   sigpush "UNICODE_ERROR"
+   sigpush "REFERENCE_INVALID"
+   sigpush "OBJECT_NOT_INITIALIZED"
+   sigpush "RXBIN_CORRUPTION"
+   sigpush "UNKNOWN_INSTRUCTION"
+   sigpush "FUNCTION_NOT_FOUND"
+   sigpush "NOT_IMPLEMENTED"
+   sigpush "INVALID_SIGNAL_CODE"
+   sigpush "NOTREADY"
+   sigpush "QUIT"
+   sigpush "TERM"
+   sigpush "POSIX_INT"
+   sigpush "POSIX_HUP"
+   sigpush "POSIX_USR1"
+   sigpush "POSIX_USR2"
+   sigpush "POSIX_CHLD"
+   sigpush "CHANNEL_ERROR"
+   sigpush "TASK_FAILURE"
+   sigpush "OTHER"
+   sigbr l55signalhandler0,"FAILURE"
+   sigbr l55signalhandler0,"ERROR"
+   sigbr l55signalhandler0,"OVERFLOW_UNDERFLOW"
+   sigbr l55signalhandler0,"DIVISION_BY_ZERO"
+   sigbr l55signalhandler0,"CONVERSION_ERROR"
+   sigbr l55signalhandler0,"INVALID_ARGUMENTS"
+   sigbr l55signalhandler0,"OUT_OF_RANGE"
+   sigbr l55signalhandler0,"UNICODE_ERROR"
+   sigbr l55signalhandler0,"REFERENCE_INVALID"
+   sigbr l55signalhandler0,"OBJECT_NOT_INITIALIZED"
+   sigbr l55signalhandler0,"RXBIN_CORRUPTION"
+   sigbr l55signalhandler0,"UNKNOWN_INSTRUCTION"
+   sigbr l55signalhandler0,"FUNCTION_NOT_FOUND"
+   sigbr l55signalhandler0,"NOT_IMPLEMENTED"
+   sigbr l55signalhandler0,"INVALID_SIGNAL_CODE"
+   sigbr l55signalhandler0,"NOTREADY"
+   sigbr l55signalhandler0,"QUIT"
+   sigbr l55signalhandler0,"TERM"
+   sigbr l55signalhandler0,"POSIX_INT"
+   sigbr l55signalhandler0,"POSIX_HUP"
+   sigbr l55signalhandler0,"POSIX_USR1"
+   sigbr l55signalhandler0,"POSIX_USR2"
+   sigbr l55signalhandler0,"POSIX_CHLD"
+   sigbr l55signalhandler0,"CHANNEL_ERROR"
+   sigbr l55signalhandler0,"TASK_FAILURE"
+   sigbr l55signalhandler0,"OTHER"
+   .srcstep 17 17 17 "calculator.crexx" 23 5 31 "    source = readbinary(argv[1])"
+   minlinkattr1 r10,a1,1
+   .traceevent "V" 6 "R" "S" "r" 10 17 17 0 "argv" ""
+   load r12,1
+   settpswapcall r2,rxfnsb.readbinary(),r12,r10,256,r13
+   swap r10,r13
+   unlink r10
+   .traceevent "F" 4 "R" "X" "r" 2 17 17 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 2 17 17 0 "source" ""
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   br l55signalend
+l55signalhandler0:
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   unlink r10
+   .srcstep 18 18 17 "calculator.crexx" 25 5 42 "    say 'CALC_IO: cannot read ' || argv[1]; return 3"
+   minlinkattr1 r13,a1,1
+   .traceevent "V" 6 "R" "S" "r" 13 18 18 0 "argv" ""
+   concat r12,"CALC_IO: cannot read ",r13
+   unlink r13
+   .traceevent "O" 4 "R" "S" "r" 12 18 18 0 "" ""
+   say r12
+   .srcstep 19 19 17 "calculator.crexx" 25 45 53 "    say 'CALC_IO: cannot read ' || argv[1]; return 3"
+   ret 3
+   br l55signalend
+l55signalend:
+   .srcstep 21 21 17 "calculator.crexx" 27 3 41 "  language = levell_calculator..language()"
+   .meta "calculator.main.language"="b" ".lllanguage..definition" r1
+   load r13,0
+   call r1,levell_calculator.language(),r13
+   .traceevent "F" 4 "R" "O" "r" 1 21 21 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 21 21 0 "language" ""
+   .srcstep 22 22 17 "calculator.crexx" 28 3 49 "  request = .lllanguage..request(language,source)"
+   .meta "calculator.main.request"="b" ".lllanguage..request" r5
+   .traceevent "V" 6 "R" "O" "r" 1 22 22 0 "language" ""
+   .traceevent "V" 6 "R" "X" "r" 2 22 22 0 "source" ""
+   load r0,3
+   settp r1,256
+   settp r2,256
+   settpcall r5,§lllanguage.request.§factory(),r0,r3,512
+   .traceevent "F" 4 "R" "O" "r" 5 22 22 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "request" ""
+   .srcstep 23 23 17 "calculator.crexx" 29 3 25 "  status = request.parse()"
+   .meta "calculator.main.status"="b" ".int" r21
+   .traceevent "V" 6 "R" "O" "r" 5 23 23 0 "request" ""
+   load r4,1
+   settpcall r21,§lllanguage.request.parse(),r4,r5,256
+   .traceevent "F" 4 "R" "I" "r" 21 23 23 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 21 23 23 0 "status" ""
+   .srcstep 33 33 17 "calculator.crexx" 30 3 17 "  if status <> 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 21 33 33 0 "status" ""
+   ine r13,r21,0
+   .traceevent "O" 4 "R" "B" "r" 13 33 33 0 "" ""
+   brf l94iffalse,r13
+   .srcstep 34 34 17 "calculator.crexx" 30 18 22 "  if status <> 0 then do"
+   .srcstep 31 31 17 "calculator.crexx" 31 5 99 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   minlinkattr1 r12,a1,1
+   .traceevent "V" 6 "R" "S" "r" 12 31 31 0 "argv" ""
+   concat r10,r12,": "
+   unlink r12
+   .traceevent "O" 4 "R" "S" "r" 10 31 31 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 2 31 31 0 "source" ""
+   .srcstep 26 26 17 "calculator.crexx" 31 56 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   .srcstep 24 24 33 "calculator.crexx" 31 56 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 24 24 0 "§this" ""
+   .srcstep 25 25 25 "lllanguage.crexx" 362 5 19 "    return _offset"
+   linkattr1 r9,r5,7
+   .traceevent "V" 6 "R" "I" "r" 9 31 31 0 "_offset" ""
+   igetunlink r6,r9
+l9134bexprend:
+   load r28,"CALC_PARSE"
+   .traceevent "L" 4 "R" "S" "r" 28 31 31 0 "" ""
+   .srcstep 30 30 17 "calculator.crexx" 31 86 93 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   .srcstep 27 27 33 "calculator.crexx" 31 86 93 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 27 27 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 27 27 0 "§this" ""
+   .srcstep 28 28 6 "lllanguage@rxfnsl.rxbin" 31 93 93 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 31 31 0 "§this" ""
+   assertinitialized r5
+   .srcstep 29 29 25 "lllanguage.crexx" 364 5 18 "    return _error"
+   linkattr1 r4,r5,1
+   .traceevent "V" 6 "R" "S" "r" 4 31 31 0 "_error" ""
+   scopy r3,r4
+   unlink r4
+l9288bexprend:
+   load r25,5
+   settp r2,256
+   swap r26,r2
+   swap r27,r6
+   settp r28,768
+   settp r3,768
+   swap r29,r3
+   settpcall r0,llsource.diagnostic(),r25,r30,512
+   swap r2,r26
+   swap r6,r27
+   swap r3,r29
+   .traceevent "F" 4 "R" "S" "r" 0 31 31 0 "diagnostic" ""
+   concat r30,r10,r0
+   .traceevent "O" 4 "R" "S" "r" 30 31 31 0 "" ""
+   say r30
+   .srcstep 32 32 17 "calculator.crexx" 32 5 18 "    return status"
+   .traceevent "V" 6 "R" "I" "r" 21 32 32 0 "status" ""
+   ret r21
+l94iffalse:
+   .srcstep 38 38 17 "calculator.crexx" 34 3 51 "  tree = .lltree..view(request.tree(),request.root())"
+   .meta "calculator.main.tree"="b" ".lltree..view" r7
+   .traceevent "V" 6 "R" "O" "r" 5 38 38 0 "request" ""
+   load r4,1
+   settpcall r28,§lllanguage.request.tree(),r4,r5,256
+   .traceevent "F" 4 "R" "O" "r" 28 38 38 0 "tree" ""
+   .srcstep 37 37 17 "calculator.crexx" 34 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .srcstep 35 35 33 "calculator.crexx" 34 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .traceevent "V" 6 "R" "O" "r" 5 35 35 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 35 35 0 "§this" ""
+   .srcstep 36 36 25 "lllanguage.crexx" 350 5 17 "    return _root"
+   linkattr1 r26,r5,8
+   .traceevent "V" 6 "R" "I" "r" 26 38 38 0 "_root" ""
+   igetunlink r25,r26
+l9141bexprend:
+   load r27,3
+   settp r28,256
+   swap r29,r25
+   settpcall r7,§lltree.view.§factory(),r27,r30,0
+   swap r25,r29
+   .traceevent "F" 4 "R" "O" "r" 7 38 38 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 7 38 38 0 "tree" ""
+   .srcstep 49 49 17 "calculator.crexx" 35 3 24 "  if tree.error() <> '' then do"
+   .srcstep 42 42 17 "calculator.crexx" 35 6 10 "  if tree.error() <> '' then do"
+   .srcstep 39 39 33 "calculator.crexx" 35 6 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 39 39 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 39 39 0 "§this" ""
+   .srcstep 40 40 6 "lltree@rxfnsl.rxbin" 35 10 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 49 49 0 "§this" ""
+   assertinitialized r7
+   .srcstep 41 41 25 "lltree.crexx" 104 5 18 "    return _error"
+   linkattr1 r30,r7,3
+   .traceevent "V" 6 "R" "S" "r" 30 49 49 0 "_error" ""
+   scopy r29,r30
+   unlink r30
+l9297bexprend:
+   rne r29,r29,""
+   .traceevent "O" 4 "R" "B" "r" 29 49 49 0 "" ""
+   brf l122iffalse,r29
+   .srcstep 50 50 17 "calculator.crexx" 35 25 29 "  if tree.error() <> '' then do"
+   .srcstep 47 47 17 "calculator.crexx" 36 5 36 "    say 'CALC_TREE: ' || tree.error(); return 3"
+   .srcstep 46 46 17 "calculator.crexx" 36 26 30 "    say 'CALC_TREE: ' || tree.error(); return 3"
+   .srcstep 43 43 33 "calculator.crexx" 36 26 30 "    say 'CALC_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 7 43 43 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 43 43 0 "§this" ""
+   .srcstep 44 44 6 "lltree@rxfnsl.rxbin" 36 30 30 "    say 'CALC_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 7 47 47 0 "§this" ""
+   assertinitialized r7
+   .srcstep 45 45 25 "lltree.crexx" 104 5 18 "    return _error"
+   linkattr1 r28,r7,3
+   .traceevent "V" 6 "R" "S" "r" 28 47 47 0 "_error" ""
+   scopy r27,r28
+   unlink r28
+l9306bexprend:
+   concat r27,"CALC_TREE: ",r27
+   .traceevent "O" 4 "R" "S" "r" 27 47 47 0 "" ""
+   say r27
+   .srcstep 48 48 17 "calculator.crexx" 36 40 48 "    say 'CALC_TREE: ' || tree.error(); return 3"
+   ret 3
+l122iffalse:
+   .srcstep 51 51 17 "calculator.crexx" 39 3 10 "  top = 1; pending[top] = tree.root(); expanded[top] = 0"
+   .meta "calculator.main.top"="b" ".int" r22
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 51 51 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 51 51 0 "top" ""
+   .srcstep 55 55 17 "calculator.crexx" 39 12 36 "  top = 1; pending[top] = tree.root(); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 22 55 55 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 55 55 0 "pending" ""
+   minlinkattr1 r30,r20,r22,0
+   .srcstep 54 54 17 "calculator.crexx" 39 27 31 "  top = 1; pending[top] = tree.root(); expanded[top] = 0"
+   .srcstep 52 52 33 "calculator.crexx" 39 27 31 "  top = 1; pending[top] = tree.root(); expanded[top] = 0"
+   .traceevent "V" 6 "R" "O" "r" 7 52 52 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 52 52 0 "§this" ""
+   .srcstep 53 53 25 "lltree.crexx" 60 5 17 "    return _root"
+   linkattr1 r29,r7,5
+   .traceevent "V" 6 "R" "I" "r" 29 55 55 0 "_root" ""
+   igetunlink r28,r29
+l9148bexprend:
+   isetunlink r30,r28
+   .traceevent "A" 6 "R" "I" "r" 28 55 55 0 "pending" ""
+   .srcstep 56 56 17 "calculator.crexx" 39 40 57 "  top = 1; pending[top] = tree.root(); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 22 56 56 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 56 56 0 "expanded" ""
+   minlinkattr1 r30,r19,r22,0
+   load r29,0
+   .traceevent "L" 4 "R" "I" "r" 29 56 56 0 "" ""
+   isetunlink r30,r29
+   .traceevent "A" 6 "R" "I" "r" 29 56 56 0 "expanded" ""
+   .srcstep 158 158 17 "calculator.crexx" 42 3 5 "  do"
+   sigpush "FAILURE"
+   sigpush "ERROR"
+   sigpush "OVERFLOW_UNDERFLOW"
+   sigpush "DIVISION_BY_ZERO"
+   sigpush "CONVERSION_ERROR"
+   sigpush "INVALID_ARGUMENTS"
+   sigpush "OUT_OF_RANGE"
+   sigpush "UNICODE_ERROR"
+   sigpush "REFERENCE_INVALID"
+   sigpush "OBJECT_NOT_INITIALIZED"
+   sigpush "RXBIN_CORRUPTION"
+   sigpush "UNKNOWN_INSTRUCTION"
+   sigpush "FUNCTION_NOT_FOUND"
+   sigpush "NOT_IMPLEMENTED"
+   sigpush "INVALID_SIGNAL_CODE"
+   sigpush "NOTREADY"
+   sigpush "QUIT"
+   sigpush "TERM"
+   sigpush "POSIX_INT"
+   sigpush "POSIX_HUP"
+   sigpush "POSIX_USR1"
+   sigpush "POSIX_USR2"
+   sigpush "POSIX_CHLD"
+   sigpush "CHANNEL_ERROR"
+   sigpush "TASK_FAILURE"
+   sigpush "OTHER"
+   sigbr l415signalhandler0,"FAILURE"
+   sigbr l415signalhandler0,"ERROR"
+   sigbr l415signalhandler0,"OVERFLOW_UNDERFLOW"
+   sigbr l415signalhandler0,"DIVISION_BY_ZERO"
+   sigbr l415signalhandler0,"CONVERSION_ERROR"
+   sigbr l415signalhandler0,"INVALID_ARGUMENTS"
+   sigbr l415signalhandler0,"OUT_OF_RANGE"
+   sigbr l415signalhandler0,"UNICODE_ERROR"
+   sigbr l415signalhandler0,"REFERENCE_INVALID"
+   sigbr l415signalhandler0,"OBJECT_NOT_INITIALIZED"
+   sigbr l415signalhandler0,"RXBIN_CORRUPTION"
+   sigbr l415signalhandler0,"UNKNOWN_INSTRUCTION"
+   sigbr l415signalhandler0,"FUNCTION_NOT_FOUND"
+   sigbr l415signalhandler0,"NOT_IMPLEMENTED"
+   sigbr l415signalhandler0,"INVALID_SIGNAL_CODE"
+   sigbr l415signalhandler0,"NOTREADY"
+   sigbr l415signalhandler0,"QUIT"
+   sigbr l415signalhandler0,"TERM"
+   sigbr l415signalhandler0,"POSIX_INT"
+   sigbr l415signalhandler0,"POSIX_HUP"
+   sigbr l415signalhandler0,"POSIX_USR1"
+   sigbr l415signalhandler0,"POSIX_USR2"
+   sigbr l415signalhandler0,"POSIX_CHLD"
+   sigbr l415signalhandler0,"CHANNEL_ERROR"
+   sigbr l415signalhandler0,"TASK_FAILURE"
+   sigbr l415signalhandler0,"OTHER"
+   .srcstep 149 149 17 "calculator.crexx" 43 5 7 "    do while top > 0"
+l176dostart:
+   .srcstep 57 57 17 "calculator.crexx" 43 8 21 "    do while top > 0"
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "top" ""
+   igt r30,r22,0
+   .traceevent "O" 4 "R" "B" "r" 30 0 0 0 "" ""
+   brf l176doend,r30
+   .srcstep 58 58 17 "calculator.crexx" 44 7 25 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "I" "r" 22 58 58 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 58 58 0 "pending" ""
+   minlinkattr1 r29,r20,r22,0
+   .traceevent "V" 6 "R" "I" "r" 29 58 58 0 "pending" ""
+   igetunlink r8,r29
+   .traceevent "A" 6 "R" "I" "r" 8 58 58 0 "node" ""
+   .srcstep 63 63 17 "calculator.crexx" 44 28 52 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .srcstep 59 59 33 "calculator.crexx" 44 36 40 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "O" "r" 7 59 59 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 59 59 0 "§this" ""
+   .srcstep 60 60 33 "calculator.crexx" 44 40 40 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "I" "r" 8 60 60 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 60 60 0 "node" ""
+   .srcstep 61 61 6 "lltree@rxfnsl.rxbin" 44 40 40 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "O" "r" 7 0 0 0 "§this" ""
+   assertinitialized r7
+   .srcstep 62 62 33 "calculator.crexx" 44 40 40 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   linkattr1 r28,r7,2
+   .traceevent "V" 6 "R" "I" "r" 8 62 62 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 62 62 0 "_counts" ""
+   minlinkattr1 r29,r28,r8,0
+   .traceevent "V" 6 "R" "I" "r" 29 62 62 0 "_counts" ""
+   copy r18,r29
+   .traceevent "A" 6 "R" "I" "r" 18 62 62 0 "count" ""
+   unlinkn r29,r28
+   .srcstep 70 70 17 "calculator.crexx" 44 54 76 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .srcstep 64 64 33 "calculator.crexx" 44 61 65 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "O" "r" 7 64 64 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 64 64 0 "§this" ""
+   .srcstep 65 65 33 "calculator.crexx" 44 65 65 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "I" "r" 8 65 65 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 65 65 0 "node" ""
+   .srcstep 66 66 6 "lltree@rxfnsl.rxbin" 44 65 65 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .traceevent "V" 6 "R" "O" "r" 7 0 0 0 "§this" ""
+   assertinitialized r7
+   .srcstep 69 69 17 "calculator.crexx" 44 54 76 "      node = pending[top]; count = tree.count(node); name = tree.name(node)"
+   .srcstep 67 67 14 "lltree.crexx" 63 12 19 "    return _source.label(node)"
+   .traceevent "V" 6 "R" "O" "r" 7 0 0 0 "§this" ""
+   linkattr1 r29,r7,6
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 0 0 0 "node" ""
+   .traceevent "V" 6 "R" "O" "r" 29 0 0 0 "§this" ""
+   assertinitialized r29
+   linkattr1 r27,r29,6
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 0 0 0 "_label" ""
+   minlinkattr1 r28,r27,r8,0
+   .traceevent "V" 6 "R" "S" "r" 28 0 0 0 "_label" ""
+   scopy r31,r28
+   .traceevent "A" 6 "R" "S" "r" 31 0 0 0 "__inline_ret_1562_1561" ""
+   unlinkn r28,r27
+   .srcstep 68 68 14 "lltree.crexx" 63 12 31 "    return _source.label(node)"
+   unlink r29
+   .traceevent "V" 6 "R" "S" "r" 31 0 0 0 "__inline_ret_1562_1561" ""
+   copy r11,r31
+   .traceevent "A" 6 "R" "S" "r" 11 0 0 0 "name" ""
+   .srcstep 88 88 17 "calculator.crexx" 45 7 27 "      if expanded[top] = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 22 88 88 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 88 88 0 "expanded" ""
+   minlinkattr1 r29,r19,r22,0
+   .traceevent "V" 6 "R" "I" "r" 29 88 88 0 "expanded" ""
+   ieq r28,r29,0
+   unlink r29
+   .traceevent "O" 4 "R" "B" "r" 28 88 88 0 "" ""
+   brf l236iffalse,r28
+   .srcstep 89 89 17 "calculator.crexx" 45 28 32 "      if expanded[top] = 0 then do"
+   .srcstep 71 71 17 "calculator.crexx" 46 9 26 "        expanded[top] = 1"
+   .traceevent "V" 6 "R" "I" "r" 22 71 71 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 71 71 0 "expanded" ""
+   minlinkattr1 r27,r19,r22,0
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 71 71 0 "" ""
+   isetunlink r27,r26
+   .traceevent "A" 6 "R" "I" "r" 26 71 71 0 "expanded" ""
+   .srcstep 85 85 17 "calculator.crexx" 47 9 11 "        do child = count to 1 by -1"
+   .srcstep 72 72 17 "calculator.crexx" 47 12 25 "        do child = count to 1 by -1"
+   .traceevent "V" 6 "R" "I" "r" 18 72 72 0 "count" ""
+   icopy r17,r18
+   .traceevent "A" 6 "R" "I" "r" 17 72 72 0 "child" ""
+   .srcstep 73 73 17 "calculator.crexx" 47 26 30 "        do child = count to 1 by -1"
+   load r27,1
+   .traceevent "L" 4 "R" "I" "r" 27 0 0 0 "" ""
+   .srcstep 74 74 17 "calculator.crexx" 47 31 36 "        do child = count to 1 by -1"
+   load r25,-1
+   .traceevent "L" 4 "R" "I" "r" 25 0 0 0 "" ""
+l207dostart:
+   .srcstep 73 73 17 "calculator.crexx" 47 26 30 "        do child = count to 1 by -1"
+   ilt r26,r17,r27
+   brt l207doend,r26
+   .srcstep 75 75 17 "calculator.crexx" 48 11 24 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 22 75 75 0 "top" ""
+   iadd r22,r22,1
+   .traceevent "O" 4 "R" "I" "r" 22 75 75 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 75 75 0 "top" ""
+   .srcstep 83 83 17 "calculator.crexx" 48 26 62 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 22 83 83 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 83 83 0 "pending" ""
+   minlinkattr1 r13,r20,r22,0
+   .srcstep 82 82 17 "calculator.crexx" 48 41 45 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .srcstep 76 76 33 "calculator.crexx" 48 41 45 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "O" "r" 7 76 76 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 76 76 0 "§this" ""
+   .srcstep 77 77 33 "calculator.crexx" 48 45 45 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 8 77 77 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 77 77 0 "node" ""
+   .srcstep 78 78 33 "calculator.crexx" 48 45 45 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 17 78 78 0 "child" ""
+   .traceevent "A" 6 "R" "I" "r" 17 78 78 0 "index" ""
+   .srcstep 79 79 6 "lltree@rxfnsl.rxbin" 48 45 45 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "O" "r" 7 83 83 0 "§this" ""
+   assertinitialized r7
+   .traceevent "V" 6 "R" "I" "r" 17 83 83 0 "index" ""
+   ilt r6,r17,1
+   .traceevent "O" 4 "R" "B" "r" 6 83 83 0 "" ""
+   brt l9655orend,r6
+   .traceevent "V" 6 "R" "I" "r" 17 83 83 0 "index" ""
+   linkattr1 r10,r7,2
+   .traceevent "V" 6 "R" "I" "r" 8 83 83 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 83 83 0 "_counts" ""
+   minlinkattr1 r12,r10,r8,0
+   .traceevent "V" 6 "R" "I" "r" 12 83 83 0 "_counts" ""
+   igt r9,r17,r12
+   unlinkn r12,r10
+   .traceevent "O" 4 "R" "B" "r" 9 83 83 0 "" ""
+   icopy r6,r9
+l9655orend:
+   .traceevent "O" 4 "R" "B" "r" 6 83 83 0 "" ""
+   brf l9654iffalse,r6
+   .srcstep 80 80 25 "lltree.crexx" 69 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 83 83 0 "" ""
+   icopy r0,r4
+   br l9641bexprend
+l9654iffalse:
+   .srcstep 81 81 25 "lltree.crexx" 70 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r3,r7,1
+   linkattr1 r10,r7,4
+   .traceevent "V" 6 "R" "I" "r" 8 83 83 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 83 83 0 "_first" ""
+   minlinkattr1 r12,r10,r8,0
+   .traceevent "V" 6 "R" "I" "r" 12 83 83 0 "_first" ""
+   .traceevent "V" 6 "R" "I" "r" 17 83 83 0 "index" ""
+   iadd r6,r12,r17
+   unlinkn r12,r10
+   .traceevent "O" 4 "R" "I" "r" 6 83 83 0 "" ""
+   isub r6,r6,1
+   .traceevent "O" 4 "R" "I" "r" 6 83 83 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 6 83 83 0 "_children" ""
+   minlinkattr1 r4,r3,r6,0
+   .traceevent "V" 6 "R" "I" "r" 4 83 83 0 "_children" ""
+   igetunlink r0,r4
+   unlink r3
+l9641bexprend:
+   isetunlink r13,r0
+   .traceevent "A" 6 "R" "I" "r" 0 83 83 0 "pending" ""
+   .srcstep 84 84 17 "calculator.crexx" 48 65 82 "          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0"
+   .traceevent "V" 6 "R" "I" "r" 22 84 84 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 22 84 84 0 "expanded" ""
+   minlinkattr1 r13,r19,r22,0
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 84 84 0 "" ""
+   isetunlink r13,r12
+   .traceevent "A" 6 "R" "I" "r" 12 84 84 0 "expanded" ""
+l207doinc:
+   .srcstep 74 74 17 "calculator.crexx" 47 31 36 "        do child = count to 1 by -1"
+ iadd r17,r25,r17
+   .srcstep 86 86 17 "calculator.crexx" 49 9 12 "        end"
+   br l207dostart
+l207doend:
+   .srcstep 87 87 17 "calculator.crexx" 50 9 16 "        iterate"
+   br l176doinc
+l236iffalse:
+   .srcstep 90 90 17 "calculator.crexx" 52 7 20 "      top = top - 1"
+   .traceevent "V" 6 "R" "I" "r" 22 90 90 0 "top" ""
+   isub r22,r22,1
+   .traceevent "O" 4 "R" "I" "r" 22 90 90 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 90 90 0 "top" ""
+   .srcstep 145 145 17 "calculator.crexx" 53 7 37 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .traceevent "V" 6 "R" "S" "r" 11 145 145 0 "name" ""
+   req r29,r11,"number"
+   .traceevent "O" 4 "R" "B" "r" 29 145 145 0 "" ""
+   brf l248andend,r29
+   .traceevent "V" 6 "R" "I" "r" 18 145 145 0 "count" ""
+   ieq r29,r18,0
+   .traceevent "O" 4 "R" "B" "r" 29 145 145 0 "" ""
+l248andend:
+   .traceevent "O" 4 "R" "B" "r" 29 145 145 0 "" ""
+   brf l388iffalse,r29
+   .srcstep 146 146 17 "calculator.crexx" 53 38 42 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .srcstep 106 106 17 "calculator.crexx" 53 43 78 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .srcstep 105 105 17 "calculator.crexx" 53 51 55 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .srcstep 91 91 33 "calculator.crexx" 53 51 55 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .traceevent "V" 6 "R" "O" "r" 7 91 91 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 91 91 0 "§this" ""
+   .srcstep 92 92 33 "calculator.crexx" 53 55 55 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .traceevent "V" 6 "R" "I" "r" 8 92 92 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 92 92 0 "node" ""
+   .srcstep 93 93 6 "lltree@rxfnsl.rxbin" 53 55 55 "      if name = 'number' & count = 0 then value = tree.text(node) as .decimal"
+   .traceevent "V" 6 "R" "O" "r" 7 106 106 0 "§this" ""
+   assertinitialized r7
+   linkattr1 r10,r7,6
+   .traceevent "V" 6 "R" "O" "r" 10 106 106 0 "_source" ""
+   load r12,1
+   settpswapcall r26,§llcore.tree.source(),r12,r10,256,r13
+   swap r10,r13
+   unlink r10
+   .traceevent "F" 4 "R" "X" "r" 26 106 106 0 "source" ""
+   .srcstep 94 94 14 "lltree.crexx" 100 39 46 "    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string"
+   .traceevent "V" 6 "R" "O" "r" 7 106 106 0 "§this" ""
+   linkattr1 r13,r7,6
+   .traceevent "V" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "V" 6 "R" "O" "r" 13 106 106 0 "§this" ""
+   assertinitialized r13
+   linkattr1 r6,r13,13
+   .traceevent "V" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 106 106 0 "_start" ""
+   minlinkattr1 r12,r6,r8,0
+   .traceevent "V" 6 "R" "I" "r" 12 106 106 0 "_start" ""
+   igetunlink r33,r12
+   .traceevent "A" 6 "R" "I" "r" 33 106 106 0 "__inline_leave_9938_9937" ""
+   unlink r6
+   .srcstep 95 95 14 "llcore.crexx" 320 5 23 "    return _start[node]"
+   unlink r13
+   .srcstep 96 96 25 "llcore.crexx" 320 5 23 "    return _start[node]"
+   .traceevent "V" 6 "R" "I" "r" 33 106 106 0 "__inline_leave_9938_9937" ""
+   br l9926bexprend
+l9926bexprend:
+   iadd r27,r33,1
+   .traceevent "O" 4 "R" "I" "r" 27 106 106 0 "" ""
+   .srcstep 97 97 14 "lltree.crexx" 100 63 70 "    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string"
+   .traceevent "V" 6 "R" "O" "r" 7 106 106 0 "§this" ""
+   linkattr1 r13,r7,6
+   .traceevent "V" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   icopy r33,r8
+   .traceevent "A" 6 "R" "I" "r" 33 106 106 0 "node" ""
+   .traceevent "V" 6 "R" "O" "r" 13 106 106 0 "§this" ""
+   assertinitialized r13
+   linkattr1 r6,r13,3
+   .traceevent "V" 6 "R" "I" "r" 33 106 106 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 33 106 106 0 "_end" ""
+   minlinkattr1 r12,r6,r33,0
+   .traceevent "V" 6 "R" "I" "r" 12 106 106 0 "_end" ""
+   igetunlink r35,r12
+   .traceevent "A" 6 "R" "I" "r" 35 106 106 0 "__inline_leave_9958_9957" ""
+   unlink r6
+   .srcstep 98 98 14 "llcore.crexx" 323 5 21 "    return _end[node]"
+   unlink r13
+   .srcstep 99 99 25 "llcore.crexx" 323 5 21 "    return _end[node]"
+   .traceevent "V" 6 "R" "I" "r" 35 106 106 0 "__inline_leave_9958_9957" ""
+   icopy r34,r35
+   br l9968bexprend
+l9968bexprend:
+   .traceevent "A" 6 "R" "I" "r" 34 106 106 0 "__inline_lhs_9946_9693" ""
+   .traceevent "V" 6 "R" "I" "r" 34 106 106 0 "__inline_lhs_9946_9693" ""
+   .srcstep 100 100 14 "lltree.crexx" 100 86 93 "    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string"
+   .traceevent "V" 6 "R" "O" "r" 7 106 106 0 "§this" ""
+   linkattr1 r33,r7,6
+   .traceevent "V" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "V" 6 "R" "O" "r" 33 106 106 0 "§this" ""
+   assertinitialized r33
+   linkattr1 r12,r33,13
+   .traceevent "V" 6 "R" "I" "r" 8 106 106 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 106 106 0 "_start" ""
+   minlinkattr1 r13,r12,r8,0
+   .traceevent "V" 6 "R" "I" "r" 13 106 106 0 "_start" ""
+   igetunlink r36,r13
+   .traceevent "A" 6 "R" "I" "r" 36 106 106 0 "__inline_leave_10252_10251" ""
+   unlink r12
+   .srcstep 101 101 14 "llcore.crexx" 320 5 23 "    return _start[node]"
+   unlink r33
+   .srcstep 102 102 25 "llcore.crexx" 320 5 23 "    return _start[node]"
+   .traceevent "V" 6 "R" "I" "r" 36 106 106 0 "__inline_leave_10252_10251" ""
+   br l10240bexprend
+l10240bexprend:
+   isub r36,r34,r36
+   .traceevent "O" 4 "R" "I" "r" 36 106 106 0 "" ""
+   icopy r33,r36
+l9966bexprend:
+   load r25,3
+   settp r26,256
+   settpswapcall r13,rxfnsb.binsubstr(),r25,r33,256,r28
+   swap r33,r28
+   .traceevent "F" 4 "R" "X" "r" 13 106 106 0 "binsubstr" ""
+   bcopy r32,r13
+   bintos r32
+   .traceevent "A" 6 "R" "S" "r" 32 106 106 0 "__inline_leave_9684_9683" ""
+   .srcstep 103 103 14 "lltree.crexx" 100 5 117 "    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string"
+   .traceevent "V" 6 "R" "O" "r" 7 106 106 0 "§this" ""
+   .srcstep 104 104 25 "lltree.crexx" 100 5 117 "    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string"
+   .traceevent "V" 6 "R" "S" "r" 32 106 106 0 "__inline_leave_9684_9683" ""
+   br l9673bexprend
+l9673bexprend:
+   scopy r23,r32
+   stod r23
+   .traceevent "A" 6 "R" "D" "r" 23 106 106 0 "value" ""
+   br l388ifend
+   .srcstep 147 147 17 "calculator.crexx" 54 7 11 "      else if (name = 'arithmetic' | name = 'group' | name = 'negative') & count = 1 then do"
+l388iffalse:
+   .srcstep 142 142 17 "calculator.crexx" 54 12 85 "      else if (name = 'arithmetic' | name = 'group' | name = 'negative') & count = 1 then do"
+   .traceevent "V" 6 "R" "S" "r" 11 142 142 0 "name" ""
+   req r36,r11,"arithmetic"
+   .traceevent "O" 4 "R" "B" "r" 36 142 142 0 "" ""
+   brt l263orend,r36
+   .traceevent "V" 6 "R" "S" "r" 11 142 142 0 "name" ""
+   req r36,r11,"group"
+   .traceevent "O" 4 "R" "B" "r" 36 142 142 0 "" ""
+l263orend:
+   .traceevent "O" 4 "R" "B" "r" 36 142 142 0 "" ""
+   brt l267ortrue,r36
+   .traceevent "V" 6 "R" "S" "r" 11 142 142 0 "name" ""
+   req r33,r11,"negative"
+   .traceevent "O" 4 "R" "B" "r" 33 142 142 0 "" ""
+   br l267orend
+l267ortrue:
+   load r33,1
+l267orend:
+   .traceevent "O" 4 "R" "B" "r" 33 142 142 0 "" ""
+   brf l271andfalse,r33
+   .traceevent "V" 6 "R" "I" "r" 18 142 142 0 "count" ""
+   ieq r28,r18,1
+   .traceevent "O" 4 "R" "B" "r" 28 142 142 0 "" ""
+   br l271andend
+l271andfalse:
+   load r28,0
+l271andend:
+   .traceevent "O" 4 "R" "B" "r" 28 142 142 0 "" ""
+   brf l387iffalse,r28
+   .srcstep 143 143 17 "calculator.crexx" 54 86 90 "      else if (name = 'arithmetic' | name = 'group' | name = 'negative') & count = 1 then do"
+   .srcstep 107 107 17 "calculator.crexx" 55 9 41 "        value = values[tree.child(node,1)]"
+   .traceevent "V" 6 "R" "O" "r" 7 107 107 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 107 107 0 "node" ""
+   load r40,1
+   .traceevent "L" 4 "R" "I" "r" 40 107 107 0 "" ""
+   load r37,3
+   settp r7,256
+   swap r38,r7
+   swap r39,r8
+   call r27,§lltree.view.child(),r37
+   swap r7,r38
+   swap r8,r39
+   .traceevent "F" 4 "R" "I" "r" 27 107 107 0 "child" ""
+   .traceevent "C" 4 "R" "I" "r" 27 107 107 0 "values" ""
+   minlinkattr1 r40,r24,r27,0
+   .traceevent "V" 6 "R" "D" "r" 40 107 107 0 "values" ""
+   dcopy r23,r40
+   .traceevent "A" 6 "R" "D" "r" 23 107 107 0 "value" ""
+   unlink r40
+   .srcstep 109 109 17 "calculator.crexx" 56 9 29 "        if name = 'negative' then value = -value"
+   .traceevent "V" 6 "R" "S" "r" 11 109 109 0 "name" ""
+   req r40,r11,"negative"
+   .traceevent "O" 4 "R" "B" "r" 40 109 109 0 "" ""
+   brf l288iffalse,r40
+   .srcstep 110 110 17 "calculator.crexx" 56 30 34 "        if name = 'negative' then value = -value"
+   .srcstep 108 108 17 "calculator.crexx" 56 35 49 "        if name = 'negative' then value = -value"
+   .traceevent "V" 6 "R" "D" "r" 23 108 108 0 "value" ""
+   dsub r23,0d,r23
+   .traceevent "P" 4 "R" "D" "r" 23 108 108 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 23 108 108 0 "value" ""
+l288iffalse:
+   br l387ifend
+   .srcstep 144 144 17 "calculator.crexx" 57 7 10 "      end"
+l387iffalse:
+   .srcstep 139 139 17 "calculator.crexx" 58 12 78 "      else if wordpos(name,'sum difference product quotient') > 0 & count = 2 then do"
+   .traceevent "V" 6 "R" "S" "r" 11 139 139 0 "name" ""
+   load r12,"sum difference product quotient"
+   .traceevent "L" 4 "R" "S" "r" 12 139 139 0 "" ""
+   load r10,3
+   settp r11,256
+   settp r12,768
+   settpcall r40,rxfnsb.wordpos(),r10,r13,0
+   .traceevent "F" 4 "R" "I" "r" 40 139 139 0 "wordpos" ""
+   igt r40,r40,0
+   .traceevent "O" 4 "R" "B" "r" 40 139 139 0 "" ""
+   brf l297andend,r40
+   .traceevent "V" 6 "R" "I" "r" 18 139 139 0 "count" ""
+   ieq r40,r18,2
+   .traceevent "O" 4 "R" "B" "r" 40 139 139 0 "" ""
+l297andend:
+   .traceevent "O" 4 "R" "B" "r" 40 139 139 0 "" ""
+   brf l386iffalse,r40
+   .srcstep 140 140 17 "calculator.crexx" 58 79 83 "      else if wordpos(name,'sum difference product quotient') > 0 & count = 2 then do"
+   .srcstep 111 111 17 "calculator.crexx" 59 9 37 "        a = values[tree.child(node,1)]; b = values[tree.child(node,2)]"
+   .traceevent "V" 6 "R" "O" "r" 7 111 111 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 111 111 0 "node" ""
+   load r44,1
+   .traceevent "L" 4 "R" "I" "r" 44 111 111 0 "" ""
+   load r41,3
+   settp r7,256
+   swap r42,r7
+   swap r43,r8
+   call r39,§lltree.view.child(),r41
+   swap r7,r42
+   swap r8,r43
+   .traceevent "F" 4 "R" "I" "r" 39 111 111 0 "child" ""
+   .traceevent "C" 4 "R" "I" "r" 39 111 111 0 "values" ""
+   minlinkattr1 r44,r24,r39,0
+   .traceevent "V" 6 "R" "D" "r" 44 111 111 0 "values" ""
+   dcopy r14,r44
+   .traceevent "A" 6 "R" "D" "r" 14 111 111 0 "a" ""
+   unlink r44
+   .srcstep 112 112 17 "calculator.crexx" 59 41 69 "        a = values[tree.child(node,1)]; b = values[tree.child(node,2)]"
+   .traceevent "V" 6 "R" "O" "r" 7 112 112 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 112 112 0 "node" ""
+   load r44,2
+   .traceevent "L" 4 "R" "I" "r" 44 112 112 0 "" ""
+   load r41,3
+   settp r7,256
+   swap r42,r7
+   swap r43,r8
+   call r39,§lltree.view.child(),r41
+   swap r7,r42
+   swap r8,r43
+   .traceevent "F" 4 "R" "I" "r" 39 112 112 0 "child" ""
+   .traceevent "C" 4 "R" "I" "r" 39 112 112 0 "values" ""
+   minlinkattr1 r44,r24,r39,0
+   .traceevent "V" 6 "R" "D" "r" 44 112 112 0 "values" ""
+   dcopy r16,r44
+   .traceevent "A" 6 "R" "D" "r" 16 112 112 0 "b" ""
+   unlink r44
+   .meta "calculator.main.select_tmp"="b" ".string" r45
+   .srcstep 113 113 6 "calculator.crexx" 60 9 20 "        select name"
+   null r45
+   .srcstep 114 114 6 "calculator.crexx" 60 9 20 "        select name"
+   .traceevent "V" 6 "R" "S" "r" 11 114 114 0 "name" ""
+   scopy r45,r11
+   .traceevent "A" 6 "R" "S" "r" 45 114 114 0 "select_tmp" ""
+   .srcstep 136 136 6 "calculator.crexx" 60 9 20 "        select name"
+   .jtable jtable10649 auto
+   jumpr r45,jtable10649
+   br l10649dispatchdefault
+l10649dispatchcase0: .jcase jtable10649 "sum"
+   .srcstep 115 115 17 "calculator.crexx" 61 27 40 "          when 'sum' then value = a + b"
+   .traceevent "V" 6 "R" "D" "r" 14 115 115 0 "a" ""
+   .traceevent "V" 6 "R" "D" "r" 16 115 115 0 "b" ""
+   dadd r23,r14,r16
+   .traceevent "O" 4 "R" "D" "r" 23 115 115 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 23 115 115 0 "value" ""
+   br l10649dispatchend
+l10649dispatchcase1: .jcase jtable10649 "difference"
+   .srcstep 116 116 17 "calculator.crexx" 62 34 47 "          when 'difference' then value = a - b"
+   .traceevent "V" 6 "R" "D" "r" 14 116 116 0 "a" ""
+   .traceevent "V" 6 "R" "D" "r" 16 116 116 0 "b" ""
+   dsub r23,r14,r16
+   .traceevent "O" 4 "R" "D" "r" 23 116 116 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 23 116 116 0 "value" ""
+   br l10649dispatchend
+l10649dispatchcase2: .jcase jtable10649 "product"
+   .srcstep 117 117 17 "calculator.crexx" 63 31 44 "          when 'product' then value = a * b"
+   .traceevent "V" 6 "R" "D" "r" 14 117 117 0 "a" ""
+   .traceevent "V" 6 "R" "D" "r" 16 117 117 0 "b" ""
+   dmult r23,r14,r16
+   .traceevent "O" 4 "R" "D" "r" 23 117 117 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 23 117 117 0 "value" ""
+   br l10649dispatchend
+l10649dispatchcase3: .jcase jtable10649 "quotient"
+   .srcstep 133 133 17 "calculator.crexx" 65 13 21 "            if b = 0 then do"
+   .traceevent "V" 6 "R" "D" "r" 16 133 133 0 "b" ""
+   deq r44,r16,0d
+   .traceevent "O" 4 "R" "B" "r" 44 133 133 0 "" ""
+   brf l363iffalse,r44
+   .srcstep 134 134 17 "calculator.crexx" 65 22 26 "            if b = 0 then do"
+   .srcstep 131 131 17 "calculator.crexx" 66 15 156 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   minlinkattr1 r43,a1,1
+   .traceevent "V" 6 "R" "S" "r" 43 131 131 0 "argv" ""
+   concat r42,r43,": "
+   unlink r43
+   .traceevent "O" 4 "R" "S" "r" 42 131 131 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 2 131 131 0 "source" ""
+   .srcstep 130 130 17 "calculator.crexx" 66 66 70 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .srcstep 118 118 33 "calculator.crexx" 66 66 70 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "O" "r" 7 118 118 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 118 118 0 "§this" ""
+   .srcstep 125 125 33 "calculator.crexx" 66 82 87 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .srcstep 124 124 17 "calculator.crexx" 66 76 77 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .srcstep 119 119 33 "calculator.crexx" 66 77 81 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "O" "r" 7 119 119 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 119 119 0 "§this" ""
+   .srcstep 120 120 33 "calculator.crexx" 66 81 81 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "I" "r" 8 120 120 0 "node" ""
+   icopy r39,r8
+   .traceevent "A" 6 "R" "I" "r" 39 120 120 0 "node" ""
+   .srcstep 121 121 6 "lltree@rxfnsl.rxbin" 66 81 81 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "O" "r" 7 125 125 0 "§this" ""
+   assertinitialized r7
+   linkattr1 r37,r7,2
+   .traceevent "V" 6 "R" "I" "r" 39 125 125 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 39 125 125 0 "_counts" ""
+   minlinkattr1 r38,r37,r39,0
+   .traceevent "V" 6 "R" "I" "r" 38 125 125 0 "_counts" ""
+   igt r27,2,r38
+   unlinkn r38,r37
+   .traceevent "O" 4 "R" "B" "r" 27 125 125 0 "" ""
+   brf l9762iffalse,r27
+   .srcstep 122 122 25 "lltree.crexx" 69 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 125 125 0 "" ""
+   icopy r46,r26
+   br l9749bexprend
+l9762iffalse:
+   .srcstep 123 123 25 "lltree.crexx" 70 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r25,r7,1
+   linkattr1 r37,r7,4
+   .traceevent "V" 6 "R" "I" "r" 39 125 125 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 39 125 125 0 "_first" ""
+   minlinkattr1 r38,r37,r39,0
+   .traceevent "V" 6 "R" "I" "r" 38 125 125 0 "_first" ""
+   iadd r27,r38,2
+   unlinkn r38,r37
+   .traceevent "O" 4 "R" "I" "r" 27 125 125 0 "" ""
+   isub r27,r27,1
+   .traceevent "O" 4 "R" "I" "r" 27 125 125 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 27 125 125 0 "_children" ""
+   minlinkattr1 r26,r25,r27,0
+   .traceevent "V" 6 "R" "I" "r" 26 125 125 0 "_children" ""
+   igetunlink r46,r26
+   unlink r25
+l9749bexprend:
+   .traceevent "A" 6 "R" "I" "r" 46 125 125 0 "__inline_scoped_arg_9710_0" ""
+   .srcstep 126 126 33 "calculator.crexx" 66 66 70 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "O" "r" 7 126 126 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 7 126 126 0 "§this" ""
+   .srcstep 127 127 33 "calculator.crexx" 66 70 70 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "I" "r" 46 127 127 0 "__inline_scoped_arg_9710_0" ""
+   icopy r41,r46
+   .traceevent "A" 6 "R" "I" "r" 41 127 127 0 "node" ""
+   .srcstep 128 128 6 "lltree@rxfnsl.rxbin" 66 70 70 "              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')"
+   .traceevent "V" 6 "R" "O" "r" 7 131 131 0 "§this" ""
+   assertinitialized r7
+   .srcstep 129 129 25 "lltree.crexx" 94 5 31 "    return _source.start(node)"
+   linkattr1 r27,r7,6
+   .traceevent "V" 6 "R" "O" "r" 27 131 131 0 "_source" ""
+   .traceevent "V" 6 "R" "I" "r" 41 131 131 0 "node" ""
+   load r37,2
+   settp r27,256
+   swap r38,r27
+   swapcall r26,§llcore.tree.start(),r37,r41,r39
+   swap r27,r38
+   unlink r27
+   swap r41,r39
+   .traceevent "F" 4 "R" "I" "r" 26 131 131 0 "start" ""
+   icopy r39,r26
+l9742bexprend:
+   load r50,"CALC_DIVIDE_BY_ZERO"
+   .traceevent "L" 4 "R" "S" "r" 50 131 131 0 "" ""
+   load r51,"The denominator evaluates to zero."
+   .traceevent "L" 4 "R" "S" "r" 51 131 131 0 "" ""
+   load r47,5
+   settp r2,256
+   swap r48,r2
+   swap r49,r39
+   settp r50,768
+   settp r51,768
+   settpcall r41,llsource.diagnostic(),r47,r52,512
+   swap r2,r48
+   swap r39,r49
+   .traceevent "F" 4 "R" "S" "r" 41 131 131 0 "diagnostic" ""
+   concat r52,r42,r41
+   .traceevent "O" 4 "R" "S" "r" 52 131 131 0 "" ""
+   say r52
+   .srcstep 132 132 17 "calculator.crexx" 67 15 23 "              return 3"
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   ret 3
+l363iffalse:
+   .srcstep 135 135 17 "calculator.crexx" 69 13 26 "            value = a / b"
+   .traceevent "V" 6 "R" "D" "r" 14 135 135 0 "a" ""
+   .traceevent "V" 6 "R" "D" "r" 16 135 135 0 "b" ""
+   ddiv r23,r14,r16
+   .traceevent "O" 4 "R" "D" "r" 23 135 135 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 23 135 135 0 "value" ""
+   br l10649dispatchend
+l10649dispatchdefault:
+l10649dispatchend:
+   br l386ifend
+   .srcstep 141 141 17 "calculator.crexx" 72 9 12 "        end"
+l386iffalse:
+   .srcstep 137 137 17 "calculator.crexx" 75 9 84 "        say 'CALC_TREE: unexpected node or child count: ' || name || ' / ' || count"
+   .traceevent "V" 6 "R" "S" "r" 11 137 137 0 "name" ""
+   concat r52,"CALC_TREE: unexpected node or child count: ",r11
+   .traceevent "O" 4 "R" "S" "r" 52 137 137 0 "" ""
+   concat r52,r52," / "
+   .traceevent "O" 4 "R" "S" "r" 52 137 137 0 "" ""
+   itos r18
+   .traceevent "V" 6 "R" "S" "r" 18 137 137 0 "count" ""
+   concat r52,r52,r18
+   .traceevent "O" 4 "R" "S" "r" 52 137 137 0 "" ""
+   say r52
+   .srcstep 138 138 17 "calculator.crexx" 76 9 17 "        return 3"
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   ret 3
+l386ifend:
+l387ifend:
+l388ifend:
+   .srcstep 148 148 17 "calculator.crexx" 78 7 27 "      values[node] = value"
+   .traceevent "V" 6 "R" "I" "r" 8 148 148 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 8 148 148 0 "values" ""
+   minlinkattr1 r52,r24,r8,0
+   .traceevent "V" 6 "R" "D" "r" 23 148 148 0 "value" ""
+   dcopy r52,r23
+   .traceevent "A" 6 "R" "D" "r" 52 148 148 0 "values" ""
+   unlink r52
+l176doinc:
+   .srcstep 150 150 17 "calculator.crexx" 79 5 8 "    end"
+   br l176dostart
+l176doend:
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   br l415signalend
+l415signalhandler0:
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   unlinkn r29,r29
+   unlinkn r28,r29
+   unlinkn r28,r27
+   unlinkn r29,r27
+   unlinkn r13,r12
+   unlinkn r10,r4
+   unlinkn r3,r12
+   unlinkn r10,r13
+   unlinkn r10,r13
+   unlinkn r12,r6
+   unlinkn r13,r12
+   unlinkn r6,r33
+   unlinkn r13,r12
+   unlinkn r40,r44
+   unlinkn r44,r43
+   unlinkn r38,r37
+   unlinkn r26,r25
+   unlinkn r38,r37
+   unlinkn r27,r52
+   .srcstep 156 156 17 "calculator.crexx" 81 5 129 "    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')"
+   minlinkattr1 r52,a1,1
+   .traceevent "V" 6 "R" "S" "r" 52 156 156 0 "argv" ""
+   concat r51,r52,": "
+   unlink r52
+   .traceevent "O" 4 "R" "S" "r" 51 156 156 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 2 156 156 0 "source" ""
+   .srcstep 155 155 17 "calculator.crexx" 81 56 60 "    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')"
+   .srcstep 151 151 33 "calculator.crexx" 81 56 60 "    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')"
+   .traceevent "V" 6 "R" "O" "r" 7 151 151 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 151 151 0 "§this" ""
+   .srcstep 152 152 33 "calculator.crexx" 81 60 60 "    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')"
+   .traceevent "V" 6 "R" "I" "r" 8 152 152 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 8 152 152 0 "node" ""
+   .srcstep 153 153 6 "lltree@rxfnsl.rxbin" 81 60 60 "    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')"
+   .traceevent "V" 6 "R" "O" "r" 7 156 156 0 "§this" ""
+   assertinitialized r7
+   .srcstep 154 154 25 "lltree.crexx" 94 5 31 "    return _source.start(node)"
+   linkattr1 r47,r7,6
+   .traceevent "V" 6 "R" "O" "r" 47 156 156 0 "_source" ""
+   .traceevent "V" 6 "R" "I" "r" 8 156 156 0 "node" ""
+   load r48,2
+   settp r47,256
+   swap r49,r47
+   swapcall r44,§llcore.tree.start(),r48,r8,r50
+   swap r47,r49
+   unlink r47
+   swap r8,r50
+   .traceevent "F" 4 "R" "I" "r" 44 156 156 0 "start" ""
+   icopy r50,r44
+l9328bexprend:
+   load r56,"CALC_VALUE"
+   .traceevent "L" 4 "R" "S" "r" 56 156 156 0 "" ""
+   load r57,"Decimal conversion or arithmetic failed."
+   .traceevent "L" 4 "R" "S" "r" 57 156 156 0 "" ""
+   load r53,5
+   settp r2,256
+   swap r54,r2
+   swap r55,r50
+   settp r56,768
+   settp r57,768
+   settpcall r49,llsource.diagnostic(),r53,r58,512
+   swap r2,r54
+   swap r50,r55
+   .traceevent "F" 4 "R" "S" "r" 49 156 156 0 "diagnostic" ""
+   concat r58,r51,r49
+   .traceevent "O" 4 "R" "S" "r" 58 156 156 0 "" ""
+   say r58
+   .srcstep 157 157 17 "calculator.crexx" 82 5 13 "    return 3"
+   ret 3
+   br l415signalend
+l415signalend:
+   .srcstep 159 159 17 "calculator.crexx" 84 3 36 "  say 'RESULT|' || values[tree.root()]"
+   .traceevent "V" 6 "R" "O" "r" 7 159 159 0 "tree" ""
+   load r6,1
+   settpcall r58,§lltree.view.root(),r6,r7,256
+   .traceevent "F" 4 "R" "I" "r" 58 159 159 0 "root" ""
+   .traceevent "C" 4 "R" "I" "r" 58 159 159 0 "values" ""
+   minlinkattr1 r57,r24,r58,0
+   dtos r57
+   .traceevent "V" 6 "R" "S" "r" 57 159 159 0 "values" ""
+   concat r56,"RESULT|",r57
+   unlink r57
+   .traceevent "O" 4 "R" "S" "r" 56 159 159 0 "" ""
+   say r56
+   .srcstep 160 160 17 "calculator.crexx" 85 3 11 "  return 0"
+   ret 0
+   .meta "calculator.main.a"
+   .meta "calculator.main.argv"
+   .meta "calculator.main.b"
+   .meta "calculator.main.child"
+   .meta "calculator.main.count"
+   .meta "calculator.main.expanded"
+   .meta "calculator.main.language"
+   .meta "calculator.main.name"
+   .meta "calculator.main.node"
+   .meta "calculator.main.pending"
+   .meta "calculator.main.request"
+   .meta "calculator.main.source"
+   .meta "calculator.main.status"
+   .meta "calculator.main.top"
+   .meta "calculator.main.tree"
+   .meta "calculator.main.value"
+   .meta "calculator.main.values"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/teaching-20261012/qualified-noopt/calculator-rxas-noopt/levell_calculator@levell_calculator.rxbin */
+
+levell_calculator.language() .expose=levell_calculator.language
+   .meta "levell_calculator.language"="b" ".lllanguage..definition" levell_calculator.language() ""
+   .meta "levell_calculator.language"=".autoload" "levell_calculator"
+
+/* Imported Declaration from file: llsource@rxfnsl.rxbin */
+
+llsource.diagnostic() .expose=llsource.diagnostic
+   .meta "llsource.diagnostic"="b" ".string" llsource.diagnostic() "source=.binary,offset=.int,code=.string,message=.string,?display=.string"
+   .meta "llsource.diagnostic"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl"
+
+§lllanguage.request.tree() .expose=lllanguage.request.tree
+   .meta "lllanguage.request.tree"="b" ".llcore..tree" §lllanguage.request.tree() ""
+   .meta "lllanguage.request.tree"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lltree@rxfnsl.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl"
+
+§lltree.view.root() .expose=lltree.view.root
+   .meta "lltree.view.root"="b" ".int" §lltree.view.root() ""
+   .meta "lltree.view.root"=".autoload" "rxfnsl"
+
+§lltree.view.child() .expose=lltree.view.child
+   .meta "lltree.view.child"="b" ".int" §lltree.view.child() "node=.int,index=.int"
+   .meta "lltree.view.child"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.tree.source() .expose=llcore.tree.source
+   .meta "llcore.tree.source"="b" ".binary" §llcore.tree.source() ""
+   .meta "llcore.tree.source"=".autoload" "rxfnsl"
+
+§llcore.tree.start() .expose=llcore.tree.start
+   .meta "llcore.tree.start"="b" ".int" §llcore.tree.start() "node=.int"
+   .meta "llcore.tree.start"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.binsubstr() .expose=rxfnsb.binsubstr
+   .meta "rxfnsb.binsubstr"="b" ".binary" rxfnsb.binsubstr() "data=.binary,start=.int,?count=.int"
+   .meta "rxfnsb.binsubstr"=".autoload" "library"

@@ -1,0 +1,19 @@
+POLICY|hash.notes|KEEP|0
+POLICY|slash.notes|KEEP|0
+POLICY|c.notes|KEEP|0
+POLICY|rexx.notes|KEEP|0
+POLICY|angle.notes|KEEP|1
+POLICY|long.hash|KEEP|0
+COMMENTS|6|SHIELDED|6
+STATUS|1|BYTE|21
+MESSAGE|value.error: Expected a number or quoted string; found 'many'.
+TOKEN|identifier|0|4|706F7274
+TOKEN|equals|4|5|3D
+TOKEN|number|5|6|31
+TOKEN|separator|14|16|0D0A
+TOKEN|identifier|16|20|6E657874
+TOKEN|equals|20|21|3D
+TOKEN|identifier|21|25|6D616E79
+COMMENT_TARGET at line 2, column 6 (byte 21): value.error: Expected a number or quoted string; found 'many'.
+  next=many
+       ^

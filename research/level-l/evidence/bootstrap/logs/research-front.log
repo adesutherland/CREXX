@@ -1,0 +1,9 @@
+Build log: /tmp/crexx-levell-toolkit.6v4k82
+PASS: missing forward reference rejected
+PASS: lexical source failure distinguished
+front_cases=125
+front_failures=0
+PASS: missing forward reference rejected
+PASS: lexical source failure distinguished
+front_cases=125
+front_failures=0

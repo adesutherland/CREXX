@@ -1,0 +1,77 @@
+/* Legacy AST adapter -> shared builder/traversal/declarative structural rewrite. */
+options levell
+import rxfnsb
+import llcore
+import llgroup
+main: procedure = .int expose failures
+  failures = 0; names = .string[]
+  names[1] = 'procedures-b'; names[2] = 'procedures-g'; names[3] = 'implicit-b'
+  do fixture = 1 to names[0]
+    prefix = 'research/level-l/evidence/migration/' || names[fixture]
+    path = prefix || '.tree'; bytes = x2bin(linein(path)); root = linein(path) as .int
+    tree = .llcore..tree.from_source(bytes)
+    do while lines(path)
+      row = linein(path); fields = .string[]; at = 1
+      do i = 1 to 5
+        split = pos('|',row,at); fields[i] = substr(row,at,split - at); at = split + 1
+      end
+      fields[6] = substr(row,at)
+      node = tree.add(fields[1] as .int,fields[2],fields[3] as .int,fields[4] as .int,fields[5] as .int,fields[6] as .int)
+    end
+    call check tree.validate() & tree.certified(),'builder checks raw ' || names[fixture]
+    rules = .llgroup..declaration(10,99,30,'PROCEDURE:main:','INSTRUCTIONS:')
+    ok = rules.member(20); ok = rules.member(21)
+    rewrite = .llgroup..rewrite(tree,root,rules)
+    if rewrite.run() <> 0 then do
+      failures = failures + 1; say 'GROUP FAILURE:' rewrite.error(); iterate
+    end
+    result = rewrite.tree(); actual = canonical(result,rewrite.root())
+    expected = linein(prefix || '.expected')
+    call check actual == expected,'generic grouping agrees with compiler fixup ' || names[fixture]
+    call check result.validate() & result.certified() & bincompare(bytes,result.source()) = 0,'source ownership and result certificate'
+    say 'MIGRATION_TREE='names[fixture] actual
+    preserved = 0
+    do i = 1 to result.size()
+      origin = rewrite.origin(i)
+      if origin = 0 then do
+        if rewrite.provenance(i) <> 'synthetic' then failures = failures + 1
+        iterate
+      end
+      if result.kind(i) = 10 & rewrite.provenance(i) <> 'composite' then failures = failures + 1
+      if result.kind(i) <> 10 then do
+        call check result.start(i) = tree.start(origin) & result.finish(i) = tree.finish(origin),'retained subtree source origin'
+        preserved = preserved + 1
+      end
+    end
+    call check preserved > 0,'nontrivial origin map'
+    /* Runtime certificates must not outlive mutation. */
+    mutated = result; ok = mutated.relocate(rewrite.root(),0,0)
+    call check mutated.certified() = 0 & mutated.validate() = 0,'mutation invalidates and violates old span proof'
+    call check result.certified(),'independent original result stays certified'
+    restored = mutated; ok = restored.relocate(rewrite.root(),result.start(rewrite.root()),result.finish(rewrite.root()))
+    call check restored.certified() = 0 & restored.validate() & restored.certified(),'restored structure requires and passes fresh certification'
+    invalid = .llgroup..rewrite(mutated,rewrite.root(),rules)
+    call check invalid.run() = 3,'invalid input rejected before rewrite'
+    forbidden = .llgroup..declaration(10,99,30,'PROCEDURE:main:','INSTRUCTIONS:')
+    ok = forbidden.member(21)
+    bad = .llgroup..rewrite(tree,root,forbidden)
+    call check bad.run() = 3 & pos('ASSIGN',bad.error()) > 0,'undeclared member diagnosed by source label'
+    limited = .llgroup..rewrite(tree,root,rules,1)
+    call check limited.run() = 2,'rewrite fuel exhaustion is distinct'
+  end
+  say 'migration_failures='failures
+  if failures then return 1
+  return 0
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return ''
+  children = canonical(tree,tree.left(node)) || canonical(tree,tree.right(node))
+  if tree.kind(node) = 99 then return children
+  return '(' || tree.label(node) || children || ')'
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

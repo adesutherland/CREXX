@@ -77,6 +77,13 @@ CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
 AddressSanitizer or LeakSanitizer diagnostic appears in either retained
 artifact.
 
+## Mainframe ADDRESS qualification — 11 October 2026
+
+SAN-013 is closed on 12 October after focused repair and the full supported
+platform gates. Its trigger, repair and exact evidence are retained under
+[Closed campaign findings](#closed-campaign-findings). Native-provider and
+PDOS guest qualification remains separately recorded.
+
 ## Current overnight regression — 10 October 2026
 
 ### SAN-012 — detached source anchors retain semantic annotation allocations
@@ -1406,6 +1413,79 @@ complete supported Linux sanitizer gate pass on `e3de72939`.
   GitHub Sanitizer QA pass on `e3de72939`.
 
 ## Closed campaign findings
+
+### SAN-013 — native command test mock reads past short commands
+
+Status: **closed, 12 October 2026**. Owner: Codex. Affected inputs: the new
+opt-in mainframe ADDRESS test harness on `develop`, based on
+`54f736804de08684852c63eb7673435157ef1e30`.
+
+- Original trigger: maintained Apple ASan
+  `tools/asan-run.sh --phase ctest --regex '^mainframe_address_' --leaks off
+  --test-jobs 1 --no-live-tail`, run `20261011-204239-ctest`. Five of eight
+  tests report heap-buffer-overflow in `tests/native_boundary.c`.
+  Full diagnostic: `cmake-build-debugasan/asan-logs/20261011-204239-ctest/ctest.log`.
+  Apple LSan is unsupported; this is an ASan memory finding.
+- Cause: the CMS and TSO native boundary mocks compare seven bytes against
+  `BAD@CMD` without checking the supplied native command length. The ordinary
+  four-byte `TIME` command exposes the read past its allocation. The mock is
+  first-party test code; production command adapters are not implicated by
+  this diagnostic.
+- Repair: check the native command extent/length before the exact comparison.
+  The existing policy and real-script fixtures retain the short-command
+  original trigger; no sanitizer suppression or test exclusion is introduced.
+- Required proof: focused Debug and maintained ASan original-trigger replay,
+  followed by supported Linux ASan/LSan and the applicable full platform gates
+  on the final reviewed inputs. Local focused success alone does not close
+  this finding or establish release qualification.
+- Focused repair evidence: eight of eight Debug tests pass at
+  `/tmp/crexx-mainframe-short-command-tests.log`; the identical original-trigger
+  panel passes eight of eight in maintained Apple ASan run
+  `20261011-204858-ctest`. The repaired build is `20261011-204821-build`.
+  The strengthened final panel passes eight of eight in fresh Linux ASan/LSan
+  run `20261011-205056-ctest`, after regenerating stale bytecode whose preserved
+  source timestamp had prevented a rebuild. That stale fixture returned its
+  file-content mismatch code without a sanitizer diagnostic. The full normal
+  macOS gate passes 3,151 of 3,151 tests in
+  `/tmp/crexx-mainframe-normal-full-tests.log` (3,539.72 seconds). Full macOS
+  ASan `20261011-212216-full` completes 3,137/3,139; two B fixtures return 19
+  without a memory diagnostic because their bytecode predates the strengthened
+  source. Missing directory QA tier finalization prevented qa-prep from
+  rebuilding those prerequisites. That wiring is repaired, and the completed
+  fresh preparation followed by `20261011-234830-ctest` passes all 11 current
+  ADDRESS/allocation checks. The fixtures retain all four guest libraries.
+  Earlier full Linux ASan/LSan `20261011-205105-full` passes 3,133/3,133.
+  After the RXPA exhaustion and fixture preparation delta, focused Linux
+  ASan/LSan `20261011-232037-ctest` passes all 11 allocation/ADDRESS checks.
+  Full final normal macOS passes all 3,338 checks in
+  `/tmp/crexx-mainframe-normal-final-full-tests.log` (3,786.04 seconds).
+  Final macOS ASan `20261012-002213-full` passes 3,140/3,140 in
+  6,593.15 seconds; the maintained driver completes at RC 0. Apple build/test
+  leak detection is explicitly off. Final Linux ASan/LSan passes 3,134/3,134
+  in 6,563.10 seconds; its maintained driver completes at RC 0.
+  The first macOS final build tried unsupported build-phase leak detection;
+  its replay explicitly uses both `--build-leaks off` and `--leaks off`.
+  Linux `20261011-232133-full` stopped after 51 executed checks (50 pass)
+  because macOS AppleDouble `._*.c` metadata entered the diagnostic-catalogue
+  source glob. Its UNICODE_ERROR is not an ASan finding. Eight individually
+  verified transfer sidecars were removed; all 10,484 intended source hashes
+  still match. Reconfigured catalogue replay passes with leak checks in
+  `20261012-001728-ctest`. Full Linux replay `20261012-002225-full` completes
+  with all selected checks passing. After completion, all 10,484 source files
+  still match the allocation-final snapshot, SHA-256
+  `4dd9c46480685dbbedc6ae88e91c248db9a67a81de2a94276e9c42ed0872de3f`.
+  The original short-command/allocator inputs are unchanged by the separately
+  reviewed native-provider amendment. Native and PDOS guest qualification
+  remains a separate boundary; closure here is the host mock memory finding.
+- Final sanitizer commands: Apple uses `tools/asan-run.sh --phase full
+  --build-dir cmake-build-debugasan --leaks off --build-leaks off --build-jobs 4
+  --test-jobs 8 --exclude-label performance-measurement --no-live-tail`. Linux
+  uses the same full phase with `--build-dir build-asan-clang --leaks on
+  --build-leaks on --build-jobs 4 --test-jobs 8 --keep-going
+  --exclude-label performance-measurement --no-live-tail`.
+  Logs and run environments are retained under the named run directories;
+  Linux copies are in `output/mainframe-address-linux/final-full-20261012`.
+  No sanitizer suppression or new product-test exclusion closes this item.
 
 ### SAN-005 — linked-list test exits with owned nodes
 

@@ -1,0 +1,51 @@
+Warning in llcheck.crexx @ 146:15 - #NOT_IN_SAME_SCOPE line="97" column="13", "text"
+1 warning(s) in source file
+Warning in lllr.crexx @ 43:8 - #NOT_IN_SAME_SCOPE line="39" column="8", "i"
+Warning in lllr.crexx @ 52:8 - #NOT_IN_SAME_SCOPE line="39" column="8", "i"
+Warning in lllr.crexx @ 160:49 - #NOT_IN_SAME_SCOPE line="151" column="14", "terminal"
+3 warning(s) in source file
+Warning in llmunch.crexx @ 38:8 - #NOT_IN_SAME_SCOPE line="24" column="8", "byte"
+1 warning(s) in source file
+Warning in llc14cost.crexx @ 123:8 - #NOT_IN_SAME_SCOPE line="115" column="8", "i"
+1 warning(s) in source file
+Warning in llproject.crexx @ 99:12 - #NOT_IN_SAME_SCOPE line="96" column="12", "i"
+1 warning(s) in source file
+Warning in llpratt.crexx @ 4:8 - #UNUSED_IMPORT, "rxfnsb"
+Warning in llpratt.crexx @ 85:8 - #NOT_IN_SAME_SCOPE line="59" column="8", "symbol"
+Warning in llpratt.crexx @ 93:8 - #NOT_IN_SAME_SCOPE line="76" column="8", "i"
+Warning in llpratt.crexx @ 95:10 - #NOT_IN_SAME_SCOPE line="59" column="8", "symbol"
+Warning in llpratt.crexx @ 101:11 - #NOT_IN_SAME_SCOPE line="87" column="9", "token"
+Warning in llpratt.crexx @ 103:11 - #NOT_IN_SAME_SCOPE line="88" column="9", "node"
+6 warning(s) in source file
+Warning in llgroup.crexx @ 112:7 - #NOT_IN_SAME_SCOPE line="95" column="11", "group"
+1 warning(s) in source file
+Warning in llpika.crexx @ 78:10 - #NOT_IN_SAME_SCOPE line="50" column="8", "c"
+Warning in llpika.crexx @ 79:25 - #NOT_IN_SAME_SCOPE line="52" column="7", "op"
+Warning in llpika.crexx @ 87:16 - #NOT_IN_SAME_SCOPE line="68" column="10", "j"
+Warning in llpika.crexx @ 91:31 - #NOT_IN_SAME_SCOPE line="68" column="10", "j"
+Warning in llpika.crexx @ 112:8 - #NOT_IN_SAME_SCOPE line="63" column="28", "i"
+Warning in llpika.crexx @ 116:10 - #NOT_IN_SAME_SCOPE line="68" column="10", "j"
+Warning in llpika.crexx @ 117:9 - #NOT_IN_SAME_SCOPE line="69" column="9", "sub"
+Warning in llpika.crexx @ 172:10 - #NOT_IN_SAME_SCOPE line="156" column="8", "c"
+Warning in llpika.crexx @ 180:10 - #NOT_IN_SAME_SCOPE line="158" column="10", "parent"
+Warning in llpika.crexx @ 256:9 - #NOT_IN_SAME_SCOPE line="251" column="10", "c"
+Warning in llpika.crexx @ 322:23 - #NOT_IN_SAME_SCOPE line="314" column="12", "i"
+Warning in llpika.crexx @ 335:12 - #NOT_IN_SAME_SCOPE line="314" column="12", "i"
+Warning in llpika.crexx @ 343:27 - #NOT_IN_SAME_SCOPE line="314" column="12", "i"
+Warning in llpika.crexx @ 344:9 - #NOT_IN_SAME_SCOPE line="336" column="11", "node"
+Warning in llpika.crexx @ 353:9 - #NOT_IN_SAME_SCOPE line="336" column="11", "node"
+15 warning(s) in source file
+Warning in llpikalower.crexx @ 115:12 - #NOT_IN_SAME_SCOPE line="87" column="12", "byte"
+Warning in llpikalower.crexx @ 167:9 - #NOT_IN_SAME_SCOPE line="164" column="9", "child"
+Warning in llpikalower.crexx @ 170:8 - #NOT_IN_SAME_SCOPE line="157" column="8", "source"
+Warning in llpikalower.crexx @ 171:7 - #NOT_IN_SAME_SCOPE line="164" column="9", "child"
+Warning in llpikalower.crexx @ 176:8 - #NOT_IN_SAME_SCOPE line="161" column="8", "node"
+Warning in llpikalower.crexx @ 180:8 - #NOT_IN_SAME_SCOPE line="157" column="8", "source"
+Warning in llpikalower.crexx @ 184:7 - #NOT_IN_SAME_SCOPE line="161" column="8", "node"
+Warning in llpikalower.crexx @ 190:8 - #NOT_IN_SAME_SCOPE line="157" column="8", "source"
+Warning in llpikalower.crexx @ 191:7 - #NOT_IN_SAME_SCOPE line="187" column="7", "id"
+9 warning(s) in source file
+Warning in llpikatree.crexx @ 4:8 - #UNUSED_IMPORT, "rxfnsb"
+1 warning(s) in source file
+Warning in tabpeg.crexx @ 33:6 - #NOT_IN_SAME_SCOPE line="19" column="6", "n"
+1 warning(s) in source file

@@ -1,0 +1,258 @@
+/* cREXX License (MIT). Explicit operator-grammar specialization and CFG lowering. */
+options levelb
+namespace llpratt expose operators parser engine
+import llcore
+import lllimits
+import llcheck
+import llcap
+
+/** Operator declaration shared by a Pratt evaluator and canonical CFG lowering.
+ * This research profile permits infix levels with uniform associativity per
+ * level and prefix operators tighter than every infix. Tokens are supplied
+ * independently; source values are interpreted only by a later visitor.
+ */
+operators: class
+  _atom = .int
+  _atomname = .string
+  _open = .int
+  _close = .int
+  _error = .string
+  _ready = .int
+  _g = .llcore..grammar
+  _bp = .int[]
+  _right = .int[]
+  _prefix = .int[]
+  _name = .string[]
+  _pname = .string[]
+  *: factory
+    arg atom = .int, open = .int, close = .int, atomname = 'atom'
+    _atom = atom; _open = open; _close = close; _error = ''; _ready = 0
+    _atomname = atomname
+    _g = .llcore..grammar('contextfree')
+    return
+  infix: method = .int
+    arg symbol = .int, power = .int, right = .int, name = .string
+    if symbol < 0 | symbol > 255 then do
+      _error = 'operator token outside byte/token domain'; return 0
+    end
+    if power < 1 | power > 1000 | right < 0 | right > 1 | name = '' | _bp[symbol + 1] > 0 | _ready then do
+      _error = 'invalid, duplicate or frozen infix declaration'; return 0
+    end
+    _bp[symbol + 1] = power; _right[symbol + 1] = right; _name[symbol + 1] = name
+    return 1
+  prefix: method = .int
+    arg symbol = .int, name = .string
+    if symbol < 0 | symbol > 255 then do
+      _error = 'prefix token outside byte/token domain'; return 0
+    end
+    if name = '' | _prefix[symbol + 1] | _ready then do
+      _error = 'invalid, duplicate or frozen prefix declaration'; return 0
+    end
+    _prefix[symbol + 1] = 1; _pname[symbol + 1] = name
+    return 1
+  build: method = .int
+    symbol = .int; i = .int; token = .int; node = .int
+    if _ready then return _error = ''
+    _ready = 1
+    if _error <> '' then return 0
+    if _atom < 0 | _atom > 255 | _open < 0 | _open > 255 | _close < 0 | _close > 255 | _atom = _open | _atom = _close | _open = _close then do
+      _error = 'atom and delimiters must be distinct tokens'; return 0
+    end
+    powers = .int[]; associations = .int[]; used = .int[]; levels = .int[]
+    do symbol = 0 to 255
+      if _bp[symbol + 1] | _prefix[symbol + 1] then do
+        if symbol = _atom | symbol = _open | symbol = _close then do
+          _error = 'operator collides with atom or delimiter token'; return 0
+        end
+      end
+      bp = _bp[symbol + 1]
+      if bp > 0 then do
+        if used[bp] & associations[bp] <> _right[symbol + 1] then do
+          _error = 'mixed associativity at precedence ' || bp || ' is outside this operator profile'; return 0
+        end
+        used[bp] = 1; associations[bp] = _right[symbol + 1]
+      end
+    end
+    do power = 1 to 1000
+      if used[power] then powers[powers[0] + 1] = power
+    end
+    do i = 1 to powers[0] + 1
+      levels[i] = _g.add(5,0,0,'level.' || i,i)
+    end
+    primary = levels[powers[0] + 1]
+    atom = _g.add(1,_atom,0,_atomname,1)
+    open = _g.add(1,_open,0,'<open>',1); close = _g.add(1,_close,0,'<close>',1)
+    head = _g.add(2,open,levels[1],'<group.head>',1)
+    group = _g.add(2,head,close,'group',1)
+    choice = _g.add(4,atom,group,'<primary>',1)
+    do symbol = 0 to 255
+      if _prefix[symbol + 1] then do
+        token = _g.add(1,symbol,0,'<prefix.token>',1)
+        node = _g.add(2,token,primary,_pname[symbol + 1],1)
+        choice = _g.add(4,choice,node,'<primary>',1)
+      end
+    end
+    ok = _g.body(primary,choice)
+    do i = 1 to powers[0]
+      choice = levels[i + 1]
+      do symbol = 0 to 255
+        if _bp[symbol + 1] = powers[i] then do
+          a = levels[i]; b = levels[i + 1]
+          if _right[symbol + 1] then do
+            a = levels[i + 1]; b = levels[i]
+          end
+          token = _g.add(1,symbol,0,'<operator.token>',1)
+          head = _g.add(2,a,token,'<operator.head>',1)
+          node = _g.add(2,head,b,_name[symbol + 1],1)
+          choice = _g.add(4,choice,node,'<level.choice>',1)
+        end
+      end
+      ok = _g.body(levels[i],choice)
+    end
+    return 1
+  grammar: method = .llcore..grammar
+    ok = build()
+    return _g
+  atom: method = .int
+    return _atom
+  atomname: method = .string
+    return _atomname
+  open: method = .int
+    return _open
+  close: method = .int
+    return _close
+  power: method = .int
+    arg symbol = .int
+    if symbol < 0 | symbol > 255 then return 0
+    return _bp[symbol + 1]
+  right: method = .int
+    arg symbol = .int
+    return _right[symbol + 1]
+  prefixpower: method = .int
+    arg symbol = .int
+    if symbol < 0 | symbol > 255 then return 0
+    if _prefix[symbol + 1] then return 1001
+    return 0
+  name: method = .string
+    arg symbol = .int
+    return _name[symbol + 1]
+  prefixname: method = .string
+    arg symbol = .int
+    return _pname[symbol + 1]
+  error: method = .string
+    return _error
+
+parser: class
+  _ops = .operators
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _at = .int
+  _work = .int
+  _fuel = .int
+  _depth = .int
+  _root = .int
+  _status = .int
+  _ran = .int
+  _error = .string
+  *: factory
+    arg declarations = .operators, input = .llcore..stream, fuel = 1000000
+    _ops = declarations; _input = input; _tree = .llcore..tree.from_source(input.source())
+    _fuel = fuel; _at = 0; _work = 0; _depth = 0; _root = 0; _status = 0; _ran = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _ops.build() = 0 | _input.error() <> '' then do
+      _status = 3; _error = _ops.error() || _input.error(); return _status
+    end
+    _root = expression(1)
+    if _status = 0 & _at <> _input.size() then call fail('operator or end of expression')
+    return _status
+  expression: method = .int
+    arg minimum = .int
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return 0
+    end
+    if _depth >= 512 then do
+      _status = 2; _error = 'LL_IMPLEMENTATION_LIMIT: recursive Pratt depth exceeds 512; a larger work budget cannot raise this implementation bound'; return 0
+    end
+    _depth = _depth + 1
+    symbol = _input.symbol(_at); start = _input.start(_at); node = 0
+    select
+      when symbol = _ops.atom() then do
+        _at = _at + 1; node = _tree.add(1,_ops.atomname(),start,_input.finish(_at),0,0)
+      end
+      when symbol = _ops.open() then do
+        _at = _at + 1; inner = expression(1)
+        if _status = 0 then do
+          if _input.symbol(_at) <> _ops.close() then call fail('closing delimiter for byte ' || start)
+          else do
+            _at = _at + 1; node = _tree.add(4,'group',start,_input.finish(_at),inner,0)
+          end
+        end
+      end
+      when _ops.prefixpower(symbol) > 0 then do
+        _at = _at + 1; inner = expression(_ops.prefixpower(symbol))
+        if _status = 0 then node = _tree.add(3,_ops.prefixname(symbol),start,_input.finish(_at),inner,0)
+      end
+      otherwise call fail('atom, prefix operator or opening delimiter')
+    end
+    do while _status = 0
+      symbol = _input.symbol(_at); power = _ops.power(symbol)
+      if power < minimum then leave
+      _work = _work + 1
+      if _work > _fuel then do
+        _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); leave
+      end
+      _at = _at + 1; nextpower = power + 1
+      if _ops.right(symbol) then nextpower = power
+      right = expression(nextpower)
+      if _status = 0 then node = _tree.add(2,_ops.name(symbol),start,_input.finish(_at),node,right)
+    end
+    _depth = _depth - 1
+    return node
+  fail: method = .void
+    arg expectation = .string
+    if _status > 0 then return
+    _status = 1; _error = 'unexpected input at byte ' || _input.start(_at) || '; expected ' || expectation
+    return
+  tree: method = .llcore..tree
+    return _tree
+  /** Product named view, preserving the older raw operator arena contract. */
+  namedtree: method = .llcore..tree
+    result = .llcore..tree.from_source(_input.source())
+    do node = 1 to _tree.size()
+      kind = _tree.kind(node)
+      if kind = 2 | kind = 3 | kind = 4 then kind = 5
+      id = result.add(kind,_tree.label(node),_tree.start(node),_tree.finish(node),_tree.left(node),_tree.right(node))
+    end
+    return result
+  root: method = .int
+    return _root
+  error: method = .string
+    return _error
+  work: method = .int
+    return _work
+  offset: method = .int
+    return _input.start(_at)
+
+/** This specialization is admitted only for the exact CFG generated by the
+ * operator declaration; an arbitrary changed grammar cannot reuse its proof.
+ */
+engine: class implements .llcap..backend
+  _ops = .operators
+  *: factory
+    arg declarations = .operators
+    _ops = declarations
+    return
+  name: method = .string
+    return 'pratt-operators'
+  version: method = .string
+    return 'research-1'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    if _ops.build() = 0 then return .llcap..decision(3,_ops.error(),0,'unknown','',facts,name(),version())
+    graph = _ops.grammar()
+    if facts.root() <> 1 | facts.signature() \== graph.signature() then return .llcap..decision(2,'operator lowering identity does not match grammar; specialization not proved',0,'unknown','',facts,name(),version())
+    return .llcap..decision(0,'',0,'linear-input','O(t+a); explicit operator profile; token array; bounded work per consumed token; declaration/CFG projection equivalence',facts,name(),version())

@@ -1,0 +1,64 @@
+/* Level B summary of serial research samples; no aggregate product score. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  keys = .string[]; counts = .int[]; data = .int[]; groups = 0
+  do while lines(argv[1])
+    row = translate(linein(argv[1]),' ','|')
+    if word(row,1) <> 'ROW' then iterate
+    if word(row,2) = '0' then iterate
+    key = word(row,3) || '/' || word(row,4) || '/' || word(row,5)
+    slot = 0
+    do j = 1 to groups
+      if keys[j] == key then slot = j
+    end
+    if slot = 0 then do
+      groups = groups + 1; slot = groups; keys[slot] = key
+    end
+    counts[slot] = counts[slot] + 1; sample = counts[slot]
+    if sample > 100 then return 2
+    do metric = 1 to 9
+      field = 16 + metric
+      if metric = 9 then field = 7
+      data[(slot - 1) * 900 + (metric - 1) * 100 + sample] = word(row,field) as .int
+    end
+  end
+  say 'case/engine/route,phase,n,min,q1,median,q3,max,mad,noise'
+  do slot = 1 to groups
+    do metric = 1 to 9
+      values = .int[]
+      do sample = 1 to counts[slot]
+        values[sample] = data[(slot - 1) * 900 + (metric - 1) * 100 + sample]
+      end
+      sorted = sort(values); count = sorted[0]; middle = med(sorted)
+      deviations = .int[]
+      do sample = 1 to count
+        deviations[sample] = abs(sorted[sample] - middle)
+      end
+      ordered = sort(deviations); mad = med(ordered); noisy = 0
+      if middle > 0 then noisy = mad * 100 > middle * 3 | (sorted[count] - sorted[1]) * 100 > middle * 10
+      else if sorted[count] > 0 then noisy = 1
+      q1 = sorted[max(1,(count + 3) <idiv> 4)]; q3 = sorted[min(count,(3 * count + 3) <idiv> 4)]
+      phase = word('decode lex stage initialize parse_and_internal_tree extraction visitor total_with_checks call_with_result_transfer',metric)
+      say keys[slot] || ',' || phase || ',' || count || ',' || sorted[1] || ',' || q1 || ',' || middle || ',' || q3 || ',' || sorted[count] || ',' || mad || ',' || noisy
+    end
+  end
+  return 0
+sort: procedure = .int[]
+  arg values = .int[]
+  do j = 2 to values[0]
+    item = values[j]; k = j - 1
+    do while k > 0
+      if values[k] <= item then leave
+      values[k + 1] = values[k]; k = k - 1
+    end
+    values[k + 1] = item
+  end
+  return values
+med: procedure = .int
+  arg values = .int[]
+  n = values[0]
+  if n <mod> 2 then return values[(n + 1) <idiv> 2]
+  return (values[n <idiv> 2] + values[n <idiv> 2 + 1]) <idiv> 2

@@ -1,0 +1,7 @@
+{
+  "contract": "byte-identical generated RXAS, per lib/rxfnsl/doc/bootstrap.md",
+  "sha256": {
+    "L2/llsyntax.rxas": "f25ca33f991e29cd87781f7fd268c174f417dc71ef32e64e1b1f78e781b2f882",
+    "L1/llsyntax.rxas": "f25ca33f991e29cd87781f7fd268c174f417dc71ef32e64e1b1f78e781b2f882"
+  }
+}

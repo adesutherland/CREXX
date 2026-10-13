@@ -1,0 +1,329 @@
+/* cREXX License (MIT). General language-tooling research infrastructure. */
+options levelb
+namespace llcore expose grammar stream tree
+import rxfnsb
+
+/** A revisioned grammar graph, independent of a parsing engine.
+ * @param profile Declared recognition semantics: ordered, contextfree, pika or squirrel.
+ */
+grammar: class
+  _profile = .string
+  _size = .int
+  _revision = .int
+  _op = .int[]
+  _a = .int[]
+  _b = .int[]
+  _label = .string[]
+  _line = .int[]
+  _text = .binary[]
+
+  *: factory
+    arg profile = .string
+    _profile = profile; _size = 0; _revision = 1
+    return
+
+  /** Append a clause. Handles are stable, one based; mutations invalidate analyses. */
+  add: method = .int
+    arg op = .int, a = .int, b = .int, label = .string, line = .int
+    _size = _size + 1
+    _op[_size] = op; _a[_size] = a; _b[_size] = b
+    _label[_size] = label; _line[_size] = line
+    _revision = _revision + 1
+    return _size
+
+  /** Resolve a rule wrapper after forward references have been constructed. */
+  body: method = .int
+    arg rule = .int, target = .int
+    if rule < 1 | rule > _size then return 0
+    if _op[rule] <> 5 then return 0
+    if target < 1 | target > _size then return 0
+    _a[rule] = target; _revision = _revision + 1
+    return 1
+
+  literal: method = .int
+    arg text = .binary, label = .string, line = .int
+    node = add(13,0,0,label,line)
+    _text[node] = text
+    return node
+  characters: method = .int
+    arg members = .binary, inverted = .int, label = .string, line = .int
+    node = add(16,inverted,0,label,line)
+    _text[node] = members
+    return node
+  text: method = .binary
+    arg node = .int
+    return _text[node]
+  contains: method = .int
+    arg node = .int, symbol = .int
+    if symbol < 0 | symbol > 255 then return 0
+    text = _text[node]; found = 0
+    do i = 0 to <blen>(text) - 1
+      if <at..u8>(i) text = symbol then found = 1
+    end
+    if _a[node] then return found = 0
+    return found
+
+  size: method = .int
+    return _size
+  revision: method = .int
+    return _revision
+  profile: method = .string
+    return _profile
+  /** Reachability is structural, independent of parser implementation. */
+  reachable: method = .int[]
+    arg root = .int
+    seen = .int[]; pending = .int[]; pending[1] = root; count = 1
+    do while count > 0
+      node = pending[count]; count = count - 1
+      if node < 1 | node > _size then iterate
+      if seen[node] then iterate
+      seen[node] = 1; op = _op[node]
+      if op = 2 | op = 3 | op = 4 then do
+        count = count + 1; pending[count] = _b[node]
+      end
+      if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then do
+        count = count + 1; pending[count] = _a[node]
+      end
+    end
+    return seen
+  /** Exact canonical description for research certificate identity. */
+  signature: method = .string
+    out = length(_profile) || ':' || _profile || ';'
+    do i = 1 to _size
+      out = out || _op[i] || ',' || _a[i] || ',' || _b[i] || ',' || _line[i] || ',' || length(_label[i]) || ':' || _label[i] || ';'
+      text = _text[i]
+      do j = 0 to <blen>(text) - 1
+        byte = <at..u8>(j) text
+        out = out || byte || ','
+      end
+      out = out || ';'
+    end
+    return out
+  op: method = .int
+    arg node = .int
+    return _op[node]
+  left: method = .int
+    arg node = .int
+    return _a[node]
+  right: method = .int
+    arg node = .int
+    return _b[node]
+  label: method = .string
+    arg node = .int
+    if _label[node] == '' then return 'clause.' || node
+    return _label[node]
+  line: method = .int
+    arg node = .int
+    return _line[node]
+
+/** Original bytes plus a sequence of symbols and original byte spans.
+ * The default factory supplies every byte, including NUL, as one symbol.
+ * The tokens factory starts an empty stream for an independent lexer.
+ */
+stream: class
+  _source = .binary
+  _size = .int
+  _kind = .int[]
+  _start = .int[]
+  _end = .int[]
+  _error = .string
+  _boundary = .int
+
+  *: factory
+    arg source = .binary
+    _source = source; _size = <blen>(source); _error = ''
+    _boundary = <blen>(source)
+    do i = 1 to _size
+      _kind[i] = <at..u8>(i - 1) source
+      _start[i] = i - 1; _end[i] = i
+    end
+    return
+
+  tokens: factory
+    arg source = .binary
+    _source = source; _size = 0; _error = ''
+    _boundary = <blen>(source)
+    return
+  /** A fragment retains original source ownership and a truthful local EOF. */
+  boundary: method = .int
+    arg finish = .int
+    extent = <blen>(_source)
+    if finish < 0 | finish > extent then do
+      _error = 'fragment boundary outside source'; return 0
+    end
+    if _size > 0 then do
+      if _end[_size] > finish then do
+        _error = 'fragment boundary precedes a token'; return 0
+      end
+    end
+    _boundary = finish
+    return 1
+
+  /** Append a nonempty token. Gaps retain trivia in the original source. */
+  append: method = .int
+    arg kind = .int, start = .int, finish = .int
+    extent = _boundary
+    if kind < 0 | kind > 255 then do
+      _error = 'symbol outside the admitted 0..255 alphabet'; return 0
+    end
+    if start < 0 | finish <= start | finish > extent then do
+      _error = 'token span outside source or empty'; return 0
+    end
+    if _size > 0 then do
+      if start < _end[_size] then do
+        _error = 'token overlaps its predecessor'; return 0
+      end
+    end
+    _size = _size + 1
+    _kind[_size] = kind; _start[_size] = start; _end[_size] = finish
+    return 1
+
+  /** Insert an explicit virtual token at a source boundary. Token count still
+   * progresses; the zero-width span never invents or consumes source bytes. */
+  synthetic: method = .int
+    arg kind = .int, offset = .int
+    extent = _boundary
+    if kind < 0 | kind > 255 | offset < 0 | offset > extent then do
+      _error = 'invalid synthetic token'; return 0
+    end
+    if _size > 0 then do
+      if offset < _end[_size] then do
+        _error = 'synthetic token overlaps predecessor'; return 0
+      end
+    end
+    _size = _size + 1; _kind[_size] = kind; _start[_size] = offset; _end[_size] = offset
+    return 1
+
+  size: method = .int
+    return _size
+  bytes: method = .int
+    return <blen>(_source)
+  source: method = .binary
+    return _source
+  error: method = .string
+    return _error
+  symbol: method = .int
+    arg position = .int
+    if position < 0 | position >= _size then return -1
+    return _kind[position + 1]
+  start: method = .int
+    arg position = .int
+    if position >= _size then return _boundary
+    if position < 0 then return -1
+    return _start[position + 1]
+  finish: method = .int
+    arg position = .int
+    if position < 1 then return 0
+    if position > _size then return _boundary
+    return _end[position]
+
+/** Source-tree DAG arena with revision-bound structural certification.
+ * @param source_bytes Size of the immutable source represented by this arena.
+ * Child handles must precede their parent. Sharing is explicit and permitted.
+ */
+tree: class
+  _bytes = .int
+  _source = .binary
+  _owns = .int
+  _size = .int
+  _revision = .int
+  _checked = .int
+  _kind = .int[]
+  _start = .int[]
+  _end = .int[]
+  _left = .int[]
+  _right = .int[]
+  _label = .string[]
+  _error = .string
+
+  *: factory
+    arg source_bytes = .int
+    _bytes = source_bytes; _size = 0; _revision = 1; _checked = 0
+    _error = ''; _owns = 0
+    return
+
+  /** Retain original bytes with the arena, independent of the parse request. */
+  from_source: factory
+    arg source = .binary
+    _source = source; _bytes = <blen>(source); _owns = 1
+    _size = 0; _revision = 1; _checked = 0; _error = ''
+    return
+
+  /** Construct a node; validate() establishes the structural postcondition. */
+  add: method = .int
+    arg kind = .int, label = .string, start = .int, finish = .int, a = .int, b = .int
+    _size = _size + 1; _revision = _revision + 1
+    _kind[_size] = kind; _label[_size] = label
+    _start[_size] = start; _end[_size] = finish
+    _left[_size] = a; _right[_size] = b
+    return _size
+
+  /** Explicit research mutation; every change invalidates a previous check. */
+  relocate: method = .int
+    arg node = .int, start = .int, finish = .int
+    if node < 1 | node > _size then return 0
+    _start[node] = start; _end[node] = finish
+    _revision = _revision + 1
+    return 1
+
+  /** Check the entire arena, including nonselected speculative nodes. */
+  validate: method = .int
+    _checked = 0; _error = ''
+    if _bytes < 0 then do
+      _error = 'negative source extent'; return 0
+    end
+    do i = 1 to _size
+      if _start[i] < 0 | _end[i] < _start[i] | _end[i] > _bytes then do
+        _error = 'source span invalid at ' || _label[i]; return 0
+      end
+      do slot = 1 to 2
+        child = _left[i]
+        if slot = 2 then child = _right[i]
+        if child < 0 | child >= i then do
+          _error = 'child must precede parent at ' || _label[i]; return 0
+        end
+        if child > 0 then do
+          if _start[child] < _start[i] | _end[child] > _end[i] then do
+            _error = 'child span escapes parent at ' || _label[i]; return 0
+          end
+        end
+      end
+      if _left[i] > 0 & _right[i] > 0 then do
+        if _end[_left[i]] > _start[_right[i]] then do
+          _error = 'ordered children overlap at ' || _label[i]; return 0
+        end
+      end
+    end
+    _checked = _revision
+    return 1
+
+  certified: method = .int
+    return _checked = _revision
+  revision: method = .int
+    return _revision
+  size: method = .int
+    return _size
+  owns_source: method = .int
+    return _owns
+  source: method = .binary
+    return _source
+  error: method = .string
+    return _error
+  kind: method = .int
+    arg node = .int
+    return _kind[node]
+  label: method = .string
+    arg node = .int
+    return _label[node]
+  start: method = .int
+    arg node = .int
+    return _start[node]
+  finish: method = .int
+    arg node = .int
+    return _end[node]
+  left: method = .int
+    arg node = .int
+    return _left[node]
+  right: method = .int
+    arg node = .int
+    return _right[node]

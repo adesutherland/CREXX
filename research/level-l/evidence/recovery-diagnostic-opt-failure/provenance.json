@@ -1,0 +1,29 @@
+{
+  "source": {
+    "cases/diagnostic-call-repro.crexx": "131f7dab24234fd1c32511082f3f44dd02417307644f6e53ffcbe6bb3ef31c27"
+  },
+  "tools": {
+    "rxc": "4966d232a029594b4d01189bf60bc76ca3545571fdd19d3247ea26e337bf96fa",
+    "rxas": "fa7039950b5e00ba7b39ab0abcd6ec0a5a3bbbc3a8d15d5c50e973ca206fc68f",
+    "rxlink": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a",
+    "rxtvm": "4a5f9d96af98d97dbc78d5438190331cd232b540cfbadab4b766750d15b41309",
+    "rxbvm": "7a3a9cc8406d63203445d251f61b3012e9a499ded6075bf171b606770cbf8931",
+    "library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003"
+  },
+  "modules": {
+    "build/recovery-opt/llcore.rxbin": "0acf5da0c5317b99c62f773ea4a143f3e21b22ff1d049066c5edf87c401e5415",
+    "build/recovery-opt/llcheck.rxbin": "81aa02c4e198f3027de00155a94e00663c77e296a885a875aaf857242d1dd788",
+    "build/recovery-opt/lllabel.rxbin": "02a4765ea99f0811f6564425148514aa13da2102a82881792860047557892ea5",
+    "build/recovery-noopt/llcore.rxbin": "b7c608656310334bbda46c5ac91f9812f771cfa758bced7875ac736c879070c9",
+    "build/recovery-noopt/llcheck.rxbin": "5e6771ad88d9bee209d075d1ec9dcdf09893b78ef0b70603f7579c760b18f813",
+    "build/recovery-noopt/lllabel.rxbin": "88386336695bb4c7a41430b7c84aa52786aee981d95f5c68c241e3bb414274be"
+  },
+  "outputs": {
+    "reproducer-opt-rxtvm.out": "e1948c0f689d78de5c78aae78a9bf172081b6cefb2dbd085e49f3876bd0898b0",
+    "reproducer-opt-rxbvm.out": "e1948c0f689d78de5c78aae78a9bf172081b6cefb2dbd085e49f3876bd0898b0",
+    "reproducer-noopt-rxtvm.out": "24bd039ece7eff92485e8e3045a278f5648bfc2bf9b9ada2a93be5d9e2378475",
+    "reproducer-noopt-rxbvm.out": "24bd039ece7eff92485e8e3045a278f5648bfc2bf9b9ada2a93be5d9e2378475"
+  },
+  "mode_disagreement": true,
+  "status": "open frozen-tool finding; no production repair or current-develop reproduction claimed"
+}

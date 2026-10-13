@@ -1,0 +1,517 @@
+{
+  "scope": "Passed LR records retained from interrupted first panel; no claim that the interrupted whole panel passed.",
+  "outputs": [
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxbvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxbvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxbvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxbvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxtvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxtvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxtvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-noopt-rxtvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxbvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxbvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxbvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxbvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxtvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxtvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxtvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-rxas-opt-rxtvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxbvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxbvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxbvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxbvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxtvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxtvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxtvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-noopt-rxtvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxbvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxbvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxbvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxbvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxtvm-after-value.log",
+      "sha256": "8476fe7d225efa77e4fb475413bfead5e4f628d145d8fbad821e51ddcb83f4bc"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxtvm-bad-key.log",
+      "sha256": "9c01ea400479b760870144889692b11c4fb385ac47fc3102201342b93213701a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxtvm-bad-value.log",
+      "sha256": "e344fc3872586db77b6af6bd42db3e8ab4030f0a713ecfbb1276f26d5468320b"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-01-basic-source-opt-rxtvm-missing-value.log",
+      "sha256": "4d7cd29583481973581171c48beecd2d372677e52681e8a90f6d985ecee19d3e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxbvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxbvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxbvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxbvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxtvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxtvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxtvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-noopt-rxtvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxbvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxbvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxbvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxbvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxtvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxtvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxtvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-rxas-opt-rxtvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxbvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxbvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxbvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxbvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxtvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxtvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxtvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-noopt-rxtvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxbvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxbvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxbvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxbvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxtvm-after-value.log",
+      "sha256": "3e5f15e74a95798ab2d661eef265080f28669219732f03c0338c8aad1934cf30"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxtvm-bad-key.log",
+      "sha256": "7b99fa08a4eb852bff025d842267762239d89d786714c8a672052e68e779e83e"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxtvm-bad-value.log",
+      "sha256": "41c0d647efd2c1fc642978943e8feb5b7ce50c23d0fc82422ed9d1483370a565"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-02-messages-source-opt-rxtvm-missing-value.log",
+      "sha256": "a9a33efdf929095e150bd888c7d53a68d1247504b1437aecca759bd4bba79fc6"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxbvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-noopt-rxtvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxbvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-rxas-opt-rxtvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxbvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-noopt-rxtvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxbvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-after-value.log",
+      "sha256": "e8992461be058714cce14f6f33f73e543c7f8b24ce9740018e173cfff9c6c472"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-bad-key.log",
+      "sha256": "b9b9c66777375912657cbfe7ef06b858aa60fc8e4761812a61ed3631941c6aab"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-bad-value.log",
+      "sha256": "4e3c7b22a13c9d8c364401b9fe663e0469a77f973a5da97d712b636d3779e0ee"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-good.log",
+      "sha256": "e0af92a587f591e62ed3f4c31b63900fb9580062fa7ddc547deb388b3cfb8b2a"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-missing-value.log",
+      "sha256": "07eacac982cd77d1c51f2ebb1fc7afbfd3f956fd61c427a11bc7ba6350cc2873"
+    },
+    {
+      "path": "first-panel/lr1-03-unicode-source-opt-rxtvm-unicode-names.log",
+      "sha256": "aeca7709041a1c9a0739ff3a6882712fae3a42355854f5bf35bfdaa41b5adba5"
+    }
+  ]
+}

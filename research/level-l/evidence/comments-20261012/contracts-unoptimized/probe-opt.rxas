@@ -1,0 +1,945 @@
+/*
+ * SOURCE                 : comment-contract-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=26
+   .meta "comment-contract-probe.main"="b" ".int" main() ""
+   .srcstep 123 123 17 "comment-contract-probe.crexx" 7 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "comment-contract-probe.crexx" 8 3 32 "  policies = .llcomments..rules()"
+   .meta "comment-contract-probe.main.policies"="b" ".llcomments..rules" r1
+   load r9,0
+   call r1,§llcomments.rules.§factory(),r9
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "policies" ""
+   .srcstep 3 3 17 "comment-contract-probe.crexx" 9 3 50 "  if policies.add('prefix','nested','ab','a') = 0 then return 1"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "policies" ""
+   load r2,"prefix"
+   .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 3 3 0 "" ""
+   load r4,"ab"
+   .traceevent "L" 4 "R" "S" "r" 4 3 3 0 "" ""
+   load r5,"a"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r9,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 9 3 3 0 "add" ""
+   ieq r9,r9,0
+   .traceevent "O" 4 "R" "B" "r" 9 3 3 0 "" ""
+   brf l27iffalse,r9
+   .srcstep 4 4 17 "comment-contract-probe.crexx" 9 51 55 "  if policies.add('prefix','nested','ab','a') = 0 then return 1"
+   .srcstep 2 2 17 "comment-contract-probe.crexx" 9 56 64 "  if policies.add('prefix','nested','ab','a') = 0 then return 1"
+   ret 1
+l27iffalse:
+   .srcstep 5 5 17 "comment-contract-probe.crexx" 10 3 79 "  request = .llsource..prepared('ababa' as .binary,'utf8','','',100,0,policies)"
+   .meta "comment-contract-probe.main.request"="b" ".llsource..prepared" r10
+   load r12,0x6162616261
+   .traceevent "L" 4 "R" "X" "r" 12 5 5 0 "" ""
+   load r13,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 13 5 5 0 "" ""
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 5 5 0 "" ""
+   load r15,""
+   .traceevent "L" 4 "R" "S" "r" 15 5 5 0 "" ""
+   load r16,100
+   .traceevent "L" 4 "R" "I" "r" 16 5 5 0 "" ""
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 5 5 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "policies" ""
+   load r11,8
+   settp r12,768
+   settp r13,768
+   settp r14,768
+   settp r15,768
+   settp r16,256
+   settp r17,256
+   settp r1,256
+   swap r18,r1
+   settpcall r10,§llsource.prepared.§factory(),r11,r19,0
+   swap r1,r18
+   .traceevent "F" 4 "R" "O" "r" 10 5 5 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 5 5 0 "request" ""
+   .srcstep 13 13 17 "comment-contract-probe.crexx" 11 3 67 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   .srcstep 11 11 17 "comment-contract-probe.crexx" 11 6 13 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   .srcstep 6 6 33 "comment-contract-probe.crexx" 11 6 13 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   .traceevent "V" 6 "R" "O" "r" 10 6 6 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 6 6 0 "§this" ""
+   .srcstep 7 7 6 "llsource@rxfnsl.rxbin" 11 13 13 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   .traceevent "V" 6 "R" "O" "r" 10 13 13 0 "§this" ""
+   assertinitialized r10
+   .srcstep 8 8 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 8 8 0 "§this" ""
+   load r9,1
+   settpcall r19,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 19 8 8 0 "run" ""
+   linkattr1 r19,r10,15
+   .traceevent "V" 6 "R" "I" "r" 19 13 13 0 "_status" ""
+   igetunlink r20,r19
+   .traceevent "A" 6 "R" "I" "r" 20 13 13 0 "__inline_leave_2095_2094" ""
+   .srcstep 9 9 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 13 13 0 "§this" ""
+   .srcstep 10 10 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 20 13 13 0 "__inline_leave_2095_2094" ""
+   br l2084bexprend
+l2084bexprend:
+   ine r20,r20,0
+   .traceevent "O" 4 "R" "B" "r" 20 13 13 0 "" ""
+   brt l54orend,r20
+   .traceevent "V" 6 "R" "O" "r" 10 13 13 0 "request" ""
+   load r9,1
+   settpcall r20,§llsource.prepared.bytes(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 20 13 13 0 "bytes" ""
+   binne r20,r20,0x2020206261
+   .traceevent "O" 4 "R" "B" "r" 20 13 13 0 "" ""
+l54orend:
+   .traceevent "O" 4 "R" "B" "r" 20 13 13 0 "" ""
+   brf l57iffalse,r20
+   .srcstep 14 14 17 "comment-contract-probe.crexx" 11 68 72 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   .srcstep 12 12 17 "comment-contract-probe.crexx" 11 73 81 "  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2"
+   ret 2
+l57iffalse:
+   .srcstep 15 15 17 "comment-contract-probe.crexx" 12 3 78 "  request = .llsource..prepared('(*a(*b*)c*)tail' as .binary,'utf8','(*','*)')"
+   load r13,0x282a61282a622a29632a297461696c
+   .traceevent "L" 4 "R" "X" "r" 13 15 15 0 "" ""
+   load r14,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 14 15 15 0 "" ""
+   load r15,"(*"
+   .traceevent "L" 4 "R" "S" "r" 15 15 15 0 "" ""
+   load r16,"*)"
+   .traceevent "L" 4 "R" "S" "r" 16 15 15 0 "" ""
+   load r12,8
+   settp r13,768
+   settp r14,768
+   settp r15,768
+   settp r16,768
+   settp r17,0
+   settp r18,0
+   settp r19,512
+   settpcall r10,§llsource.prepared.§factory(),r12,r20,0
+   .traceevent "F" 4 "R" "O" "r" 10 15 15 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 15 15 0 "request" ""
+   .srcstep 23 23 17 "comment-contract-probe.crexx" 13 3 86 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   .srcstep 21 21 17 "comment-contract-probe.crexx" 13 6 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   .srcstep 16 16 33 "comment-contract-probe.crexx" 13 6 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   .traceevent "V" 6 "R" "O" "r" 10 16 16 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 16 16 0 "§this" ""
+   .srcstep 17 17 6 "llsource@rxfnsl.rxbin" 13 13 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   .traceevent "V" 6 "R" "O" "r" 10 23 23 0 "§this" ""
+   assertinitialized r10
+   .srcstep 18 18 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 18 18 0 "§this" ""
+   load r9,1
+   settpcall r20,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 20 18 18 0 "run" ""
+   linkattr1 r20,r10,15
+   .traceevent "V" 6 "R" "I" "r" 20 23 23 0 "_status" ""
+   igetunlink r21,r20
+   .traceevent "A" 6 "R" "I" "r" 21 23 23 0 "__inline_leave_2116_2115" ""
+   .srcstep 19 19 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 23 23 0 "§this" ""
+   .srcstep 20 20 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 21 23 23 0 "__inline_leave_2116_2115" ""
+   br l2105bexprend
+l2105bexprend:
+   ine r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 23 23 0 "" ""
+   brt l85orend,r21
+   .traceevent "V" 6 "R" "O" "r" 10 23 23 0 "request" ""
+   load r9,1
+   settpcall r21,§llsource.prepared.bytes(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 21 23 23 0 "bytes" ""
+   load r19," "
+   .traceevent "L" 4 "R" "S" "r" 19 23 23 0 "" ""
+   load r20,11
+   .traceevent "L" 4 "R" "I" "r" 20 23 23 0 "" ""
+   load r18,2
+   settp r19,768
+   call r17,rxfnsb.copies(),r18
+   .traceevent "F" 4 "R" "S" "r" 17 23 23 0 "copies" ""
+   concat r20,r17,"tail"
+   .traceevent "O" 4 "R" "S" "r" 20 23 23 0 "" ""
+   scopy r19,r20
+   stobin r19
+   binne r21,r21,r19
+   .traceevent "O" 4 "R" "B" "r" 21 23 23 0 "" ""
+l85orend:
+   .traceevent "O" 4 "R" "B" "r" 21 23 23 0 "" ""
+   brf l88iffalse,r21
+   .srcstep 24 24 17 "comment-contract-probe.crexx" 13 87 91 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   .srcstep 22 22 17 "comment-contract-probe.crexx" 13 92 100 "  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3"
+   ret 3
+l88iffalse:
+   .srcstep 25 25 17 "comment-contract-probe.crexx" 14 3 32 "  policies = .llcomments..rules()"
+   load r21,0
+   call r1,§llcomments.rules.§factory(),r21
+   .traceevent "F" 4 "R" "O" "r" 1 25 25 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 25 25 0 "policies" ""
+   .srcstep 27 27 17 "comment-contract-probe.crexx" 15 3 51 "  if policies.add('first','line','#','',0,4,7) = 0 then return 4"
+   .traceevent "V" 6 "R" "O" "r" 1 27 27 0 "policies" ""
+   load r2,"first"
+   .traceevent "L" 4 "R" "S" "r" 2 27 27 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 27 27 0 "" ""
+   load r4,"#"
+   .traceevent "L" 4 "R" "S" "r" 4 27 27 0 "" ""
+   load r5,""
+   .traceevent "L" 4 "R" "S" "r" 5 27 27 0 "" ""
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 27 27 0 "" ""
+   load r7,4
+   .traceevent "L" 4 "R" "I" "r" 7 27 27 0 "" ""
+   load r8,7
+   .traceevent "L" 4 "R" "I" "r" 8 27 27 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,256
+   settp r7,256
+   settpcall r21,§llcomments.rules.add(),r0,r8,256
+   .traceevent "F" 4 "R" "I" "r" 21 27 27 0 "add" ""
+   ieq r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 27 27 0 "" ""
+   brf l107iffalse,r21
+   .srcstep 28 28 17 "comment-contract-probe.crexx" 15 52 56 "  if policies.add('first','line','#','',0,4,7) = 0 then return 4"
+   .srcstep 26 26 17 "comment-contract-probe.crexx" 15 57 65 "  if policies.add('first','line','#','',0,4,7) = 0 then return 4"
+   ret 4
+l107iffalse:
+   .srcstep 30 30 17 "comment-contract-probe.crexx" 16 3 58 "  if policies.add('second','nested','#','!',0,12,30) <> 0 then return 5"
+   .traceevent "V" 6 "R" "O" "r" 1 30 30 0 "policies" ""
+   load r2,"second"
+   .traceevent "L" 4 "R" "S" "r" 2 30 30 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 30 30 0 "" ""
+   load r4,"#"
+   .traceevent "L" 4 "R" "S" "r" 4 30 30 0 "" ""
+   load r5,"!"
+   .traceevent "L" 4 "R" "S" "r" 5 30 30 0 "" ""
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 30 30 0 "" ""
+   load r7,12
+   .traceevent "L" 4 "R" "I" "r" 7 30 30 0 "" ""
+   load r8,30
+   .traceevent "L" 4 "R" "I" "r" 8 30 30 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,256
+   settp r7,256
+   settpcall r21,§llcomments.rules.add(),r0,r8,256
+   .traceevent "F" 4 "R" "I" "r" 21 30 30 0 "add" ""
+   ine r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 30 30 0 "" ""
+   brf l122iffalse,r21
+   .srcstep 31 31 17 "comment-contract-probe.crexx" 16 59 63 "  if policies.add('second','nested','#','!',0,12,30) <> 0 then return 5"
+   .srcstep 29 29 17 "comment-contract-probe.crexx" 16 64 72 "  if policies.add('second','nested','#','!',0,12,30) <> 0 then return 5"
+   ret 5
+l122iffalse:
+   .srcstep 37 37 17 "comment-contract-probe.crexx" 17 3 57 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   load r19,"first at line 4, byte 7"
+   .traceevent "L" 4 "R" "S" "r" 19 37 37 0 "" ""
+   .srcstep 35 35 17 "comment-contract-probe.crexx" 17 36 44 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   .srcstep 32 32 33 "comment-contract-probe.crexx" 17 36 44 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   .traceevent "V" 6 "R" "O" "r" 1 32 32 0 "policies" ""
+   .traceevent "A" 6 "R" "O" "r" 1 32 32 0 "§this" ""
+   .srcstep 33 33 6 "llcomments@rxfnsl.rxbin" 17 44 44 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   .traceevent "V" 6 "R" "O" "r" 1 37 37 0 "§this" ""
+   assertinitialized r1
+   .srcstep 34 34 25 "llcomments.crexx" 129 5 18 "    return _error"
+   linkattr1 r17,r1,4
+   .traceevent "V" 6 "R" "S" "r" 17 37 37 0 "_error" ""
+   scopy r16,r17
+   unlink r17
+l2214bexprend:
+   load r18,3
+   settp r19,768
+   settp r16,768
+   swap r20,r16
+   settpcall r15,rxfnsb.pos(),r18,r21,0
+   swap r16,r20
+   .traceevent "F" 4 "R" "I" "r" 15 37 37 0 "pos" ""
+   ieq r21,r15,0
+   .traceevent "O" 4 "R" "B" "r" 21 37 37 0 "" ""
+   brf l133iffalse,r21
+   .srcstep 38 38 17 "comment-contract-probe.crexx" 17 58 62 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   .srcstep 36 36 17 "comment-contract-probe.crexx" 17 63 71 "  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6"
+   ret 6
+l133iffalse:
+   .srcstep 39 39 17 "comment-contract-probe.crexx" 18 3 32 "  policies = .llcomments..rules()"
+   load r21,0
+   call r1,§llcomments.rules.§factory(),r21
+   .traceevent "F" 4 "R" "O" "r" 1 39 39 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 39 39 0 "policies" ""
+   .srcstep 41 41 17 "comment-contract-probe.crexx" 19 3 47 "  if policies.add('empty','block','','!') <> 0 then return 7"
+   .traceevent "V" 6 "R" "O" "r" 1 41 41 0 "policies" ""
+   load r2,"empty"
+   .traceevent "L" 4 "R" "S" "r" 2 41 41 0 "" ""
+   load r3,"block"
+   .traceevent "L" 4 "R" "S" "r" 3 41 41 0 "" ""
+   load r4,""
+   .traceevent "L" 4 "R" "S" "r" 4 41 41 0 "" ""
+   load r5,"!"
+   .traceevent "L" 4 "R" "S" "r" 5 41 41 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r21,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 21 41 41 0 "add" ""
+   ine r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 41 41 0 "" ""
+   brf l149iffalse,r21
+   .srcstep 42 42 17 "comment-contract-probe.crexx" 19 48 52 "  if policies.add('empty','block','','!') <> 0 then return 7"
+   .srcstep 40 40 17 "comment-contract-probe.crexx" 19 53 61 "  if policies.add('empty','block','','!') <> 0 then return 7"
+   ret 7
+l149iffalse:
+   .srcstep 43 43 17 "comment-contract-probe.crexx" 20 3 32 "  policies = .llcomments..rules()"
+   load r21,0
+   call r1,§llcomments.rules.§factory(),r21
+   .traceevent "F" 4 "R" "O" "r" 1 43 43 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 43 43 0 "policies" ""
+   .srcstep 45 45 17 "comment-contract-probe.crexx" 21 3 48 "  if policies.add('same','nested','!','!') <> 0 then return 8"
+   .traceevent "V" 6 "R" "O" "r" 1 45 45 0 "policies" ""
+   load r2,"same"
+   .traceevent "L" 4 "R" "S" "r" 2 45 45 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 45 45 0 "" ""
+   load r4,"!"
+   .traceevent "L" 4 "R" "S" "r" 4 45 45 0 "" ""
+   load r5,"!"
+   .traceevent "L" 4 "R" "S" "r" 5 45 45 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r21,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 21 45 45 0 "add" ""
+   ine r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 45 45 0 "" ""
+   brf l165iffalse,r21
+   .srcstep 46 46 17 "comment-contract-probe.crexx" 21 49 53 "  if policies.add('same','nested','!','!') <> 0 then return 8"
+   .srcstep 44 44 17 "comment-contract-probe.crexx" 21 54 62 "  if policies.add('same','nested','!','!') <> 0 then return 8"
+   ret 8
+l165iffalse:
+   .srcstep 47 47 17 "comment-contract-probe.crexx" 22 3 32 "  policies = .llcomments..rules()"
+   load r21,0
+   call r1,§llcomments.rules.§factory(),r21
+   .traceevent "F" 4 "R" "O" "r" 1 47 47 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 47 47 0 "policies" ""
+   .srcstep 49 49 17 "comment-contract-probe.crexx" 23 3 43 "  if policies.add('quoted','line','\"') = 0 then return 9"
+   .traceevent "V" 6 "R" "O" "r" 1 49 49 0 "policies" ""
+   load r2,"quoted"
+   .traceevent "L" 4 "R" "S" "r" 2 49 49 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 49 49 0 "" ""
+   load r4,"\""
+   .traceevent "L" 4 "R" "S" "r" 4 49 49 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,512
+   settp r6,0
+   settp r7,0
+   settpcall r21,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 21 49 49 0 "add" ""
+   ieq r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 49 49 0 "" ""
+   brf l180iffalse,r21
+   .srcstep 50 50 17 "comment-contract-probe.crexx" 23 44 48 "  if policies.add('quoted','line','\"') = 0 then return 9"
+   .srcstep 48 48 17 "comment-contract-probe.crexx" 23 49 57 "  if policies.add('quoted','line','\"') = 0 then return 9"
+   ret 9
+l180iffalse:
+   .srcstep 52 52 17 "comment-contract-probe.crexx" 24 3 30 "  if policies.validate() <> 0 then return 10"
+   .traceevent "V" 6 "R" "O" "r" 1 52 52 0 "policies" ""
+   load r0,1
+   settpcall r21,§llcomments.rules.validate(),r0,r1,256
+   .traceevent "F" 4 "R" "I" "r" 21 52 52 0 "validate" ""
+   ine r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 52 52 0 "" ""
+   brf l189iffalse,r21
+   .srcstep 53 53 17 "comment-contract-probe.crexx" 24 31 35 "  if policies.validate() <> 0 then return 10"
+   .srcstep 51 51 17 "comment-contract-probe.crexx" 24 36 45 "  if policies.validate() <> 0 then return 10"
+   ret 10
+l189iffalse:
+   .srcstep 54 54 17 "comment-contract-probe.crexx" 25 3 79 "  request = .llsource..prepared('\"text' as .binary,'utf8','','',100,0,policies)"
+   load r14,0x2274657874
+   .traceevent "L" 4 "R" "X" "r" 14 54 54 0 "" ""
+   load r15,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 15 54 54 0 "" ""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 54 54 0 "" ""
+   load r17,""
+   .traceevent "L" 4 "R" "S" "r" 17 54 54 0 "" ""
+   load r18,100
+   .traceevent "L" 4 "R" "I" "r" 18 54 54 0 "" ""
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 54 54 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 54 54 0 "policies" ""
+   load r13,8
+   settp r14,768
+   settp r15,768
+   settp r16,768
+   settp r17,768
+   settp r18,256
+   settp r19,256
+   settp r1,256
+   swap r20,r1
+   settpcall r10,§llsource.prepared.§factory(),r13,r21,0
+   swap r1,r20
+   .traceevent "F" 4 "R" "O" "r" 10 54 54 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 54 54 0 "request" ""
+   .srcstep 66 66 17 "comment-contract-probe.crexx" 26 3 76 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .srcstep 60 60 17 "comment-contract-probe.crexx" 26 6 13 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .srcstep 55 55 33 "comment-contract-probe.crexx" 26 6 13 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .traceevent "V" 6 "R" "O" "r" 10 55 55 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 55 55 0 "§this" ""
+   .srcstep 56 56 6 "llsource@rxfnsl.rxbin" 26 13 13 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .traceevent "V" 6 "R" "O" "r" 10 66 66 0 "§this" ""
+   assertinitialized r10
+   .srcstep 57 57 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 57 57 0 "§this" ""
+   load r9,1
+   settpcall r21,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 21 57 57 0 "run" ""
+   linkattr1 r21,r10,15
+   .traceevent "V" 6 "R" "I" "r" 21 66 66 0 "_status" ""
+   igetunlink r22,r21
+   .traceevent "A" 6 "R" "I" "r" 22 66 66 0 "__inline_leave_2282_2281" ""
+   .srcstep 58 58 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 66 66 0 "§this" ""
+   .srcstep 59 59 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 22 66 66 0 "__inline_leave_2282_2281" ""
+   br l2271bexprend
+l2271bexprend:
+   ine r22,r22,3
+   .traceevent "O" 4 "R" "B" "r" 22 66 66 0 "" ""
+   brt l216orend,r22
+   load r20,"LL_COMMENT_CONTRACT"
+   .traceevent "L" 4 "R" "S" "r" 20 66 66 0 "" ""
+   .srcstep 64 64 17 "comment-contract-probe.crexx" 26 56 63 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .srcstep 61 61 33 "comment-contract-probe.crexx" 26 56 63 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .traceevent "V" 6 "R" "O" "r" 10 61 61 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 61 61 0 "§this" ""
+   .srcstep 62 62 6 "llsource@rxfnsl.rxbin" 26 63 63 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .traceevent "V" 6 "R" "O" "r" 10 66 66 0 "§this" ""
+   assertinitialized r10
+   .srcstep 63 63 25 "llsource.crexx" 140 5 18 "    return _error"
+   linkattr1 r18,r10,7
+   .traceevent "V" 6 "R" "S" "r" 18 66 66 0 "_error" ""
+   scopy r17,r18
+   unlink r18
+l2292bexprend:
+   load r19,3
+   settp r20,768
+   settp r17,768
+   swap r21,r17
+   settpcall r16,rxfnsb.pos(),r19,r22,0
+   swap r17,r21
+   .traceevent "F" 4 "R" "I" "r" 16 66 66 0 "pos" ""
+   ieq r22,r16,0
+   .traceevent "O" 4 "R" "B" "r" 22 66 66 0 "" ""
+l216orend:
+   .traceevent "O" 4 "R" "B" "r" 22 66 66 0 "" ""
+   brf l219iffalse,r22
+   .srcstep 67 67 17 "comment-contract-probe.crexx" 26 77 81 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   .srcstep 65 65 17 "comment-contract-probe.crexx" 26 82 91 "  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11"
+   ret 11
+l219iffalse:
+   .srcstep 68 68 17 "comment-contract-probe.crexx" 27 3 32 "  policies = .llcomments..rules()"
+   load r22,0
+   call r1,§llcomments.rules.§factory(),r22
+   .traceevent "F" 4 "R" "O" "r" 1 68 68 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 68 68 0 "policies" ""
+   .srcstep 70 70 17 "comment-contract-probe.crexx" 28 3 67 "  if policies.add('once','line','#') = 0 | policies.validate() = 0 then return 12"
+   .traceevent "V" 6 "R" "O" "r" 1 70 70 0 "policies" ""
+   load r2,"once"
+   .traceevent "L" 4 "R" "S" "r" 2 70 70 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 70 70 0 "" ""
+   load r4,"#"
+   .traceevent "L" 4 "R" "S" "r" 4 70 70 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,512
+   settp r6,0
+   settp r7,0
+   settpcall r22,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 22 70 70 0 "add" ""
+   ieq r22,r22,0
+   .traceevent "O" 4 "R" "B" "r" 22 70 70 0 "" ""
+   brt l238orend,r22
+   .traceevent "V" 6 "R" "O" "r" 1 70 70 0 "policies" ""
+   load r0,1
+   settpcall r22,§llcomments.rules.validate(),r0,r1,256
+   .traceevent "F" 4 "R" "I" "r" 22 70 70 0 "validate" ""
+   ieq r22,r22,0
+   .traceevent "O" 4 "R" "B" "r" 22 70 70 0 "" ""
+l238orend:
+   .traceevent "O" 4 "R" "B" "r" 22 70 70 0 "" ""
+   brf l241iffalse,r22
+   .srcstep 71 71 17 "comment-contract-probe.crexx" 28 68 72 "  if policies.add('once','line','#') = 0 | policies.validate() = 0 then return 12"
+   .srcstep 69 69 17 "comment-contract-probe.crexx" 28 73 82 "  if policies.add('once','line','#') = 0 | policies.validate() = 0 then return 12"
+   ret 12
+l241iffalse:
+   .srcstep 77 77 17 "comment-contract-probe.crexx" 29 3 81 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   .traceevent "V" 6 "R" "O" "r" 1 77 77 0 "policies" ""
+   load r2,"later"
+   .traceevent "L" 4 "R" "S" "r" 2 77 77 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 77 77 0 "" ""
+   load r4,"//"
+   .traceevent "L" 4 "R" "S" "r" 4 77 77 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,512
+   settp r6,0
+   settp r7,0
+   settpcall r22,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 22 77 77 0 "add" ""
+   ine r22,r22,0
+   .traceevent "O" 4 "R" "B" "r" 22 77 77 0 "" ""
+   brt l258orend,r22
+   load r20,"frozen"
+   .traceevent "L" 4 "R" "S" "r" 20 77 77 0 "" ""
+   .srcstep 75 75 17 "comment-contract-probe.crexx" 29 60 68 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   .srcstep 72 72 33 "comment-contract-probe.crexx" 29 60 68 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   .traceevent "V" 6 "R" "O" "r" 1 72 72 0 "policies" ""
+   .traceevent "A" 6 "R" "O" "r" 1 72 72 0 "§this" ""
+   .srcstep 73 73 6 "llcomments@rxfnsl.rxbin" 29 68 68 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   .traceevent "V" 6 "R" "O" "r" 1 77 77 0 "§this" ""
+   assertinitialized r1
+   .srcstep 74 74 25 "llcomments.crexx" 129 5 18 "    return _error"
+   linkattr1 r18,r1,4
+   .traceevent "V" 6 "R" "S" "r" 18 77 77 0 "_error" ""
+   scopy r17,r18
+   unlink r18
+l2349bexprend:
+   load r19,3
+   settp r20,768
+   settp r17,768
+   swap r21,r17
+   settpcall r16,rxfnsb.pos(),r19,r22,0
+   swap r17,r21
+   .traceevent "F" 4 "R" "I" "r" 16 77 77 0 "pos" ""
+   ieq r22,r16,0
+   .traceevent "O" 4 "R" "B" "r" 22 77 77 0 "" ""
+l258orend:
+   .traceevent "O" 4 "R" "B" "r" 22 77 77 0 "" ""
+   brf l261iffalse,r22
+   .srcstep 78 78 17 "comment-contract-probe.crexx" 29 82 86 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   .srcstep 76 76 17 "comment-contract-probe.crexx" 29 87 96 "  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13"
+   ret 13
+l261iffalse:
+   .srcstep 79 79 17 "comment-contract-probe.crexx" 31 3 32 "  policies = .llcomments..rules()"
+   .meta "comment-contract-probe.main.nul"="b" ".string" "\0"
+   load r22,0
+   call r1,§llcomments.rules.§factory(),r22
+   .traceevent "F" 4 "R" "O" "r" 1 79 79 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 79 79 0 "policies" ""
+   .srcstep 81 81 17 "comment-contract-probe.crexx" 32 3 59 "  if policies.add('nul','block','|' || nul,nul || '|') = 0 then return 14"
+   .traceevent "V" 6 "R" "O" "r" 1 81 81 0 "policies" ""
+   load r2,"nul"
+   .traceevent "L" 4 "R" "S" "r" 2 81 81 0 "" ""
+   load r3,"block"
+   .traceevent "L" 4 "R" "S" "r" 3 81 81 0 "" ""
+   load r4,"|\0"
+   .traceevent "L" 4 "R" "S" "r" 4 81 81 0 "" ""
+   load r5,"\0|"
+   .traceevent "L" 4 "R" "S" "r" 5 81 81 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r22,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 22 81 81 0 "add" ""
+   ieq r22,r22,0
+   .traceevent "O" 4 "R" "B" "r" 22 81 81 0 "" ""
+   brf l286iffalse,r22
+   .srcstep 82 82 17 "comment-contract-probe.crexx" 32 60 64 "  if policies.add('nul','block','|' || nul,nul || '|') = 0 then return 14"
+   .srcstep 80 80 17 "comment-contract-probe.crexx" 32 65 74 "  if policies.add('nul','block','|' || nul,nul || '|') = 0 then return 14"
+   ret 14
+l286iffalse:
+   .srcstep 83 83 17 "comment-contract-probe.crexx" 33 3 110 "  request = .llsource..prepared(('1|' || nul || 'body' || nul || '|2') as .binary,'utf8','','',100,0,policies)"
+   load r15,0x317c00626f6479007c32
+   .traceevent "L" 4 "R" "X" "r" 15 83 83 0 "" ""
+   load r16,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 16 83 83 0 "" ""
+   load r17,""
+   .traceevent "L" 4 "R" "S" "r" 17 83 83 0 "" ""
+   load r18,""
+   .traceevent "L" 4 "R" "S" "r" 18 83 83 0 "" ""
+   load r19,100
+   .traceevent "L" 4 "R" "I" "r" 19 83 83 0 "" ""
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 83 83 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 83 83 0 "policies" ""
+   load r14,8
+   settp r15,768
+   settp r16,768
+   settp r17,768
+   settp r18,768
+   settp r19,256
+   settp r20,256
+   settp r1,256
+   swap r21,r1
+   settpcall r10,§llsource.prepared.§factory(),r14,r22,0
+   swap r1,r21
+   .traceevent "F" 4 "R" "O" "r" 10 83 83 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 83 83 0 "request" ""
+   .srcstep 91 91 17 "comment-contract-probe.crexx" 34 3 89 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   .srcstep 89 89 17 "comment-contract-probe.crexx" 34 6 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   .srcstep 84 84 33 "comment-contract-probe.crexx" 34 6 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   .traceevent "V" 6 "R" "O" "r" 10 84 84 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 84 84 0 "§this" ""
+   .srcstep 85 85 6 "llsource@rxfnsl.rxbin" 34 13 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   .traceevent "V" 6 "R" "O" "r" 10 91 91 0 "§this" ""
+   assertinitialized r10
+   .srcstep 86 86 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 86 86 0 "§this" ""
+   load r9,1
+   settpcall r22,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 22 86 86 0 "run" ""
+   linkattr1 r22,r10,15
+   .traceevent "V" 6 "R" "I" "r" 22 91 91 0 "_status" ""
+   igetunlink r23,r22
+   .traceevent "A" 6 "R" "I" "r" 23 91 91 0 "__inline_leave_2417_2416" ""
+   .srcstep 87 87 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 91 91 0 "§this" ""
+   .srcstep 88 88 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 23 91 91 0 "__inline_leave_2417_2416" ""
+   br l2406bexprend
+l2406bexprend:
+   ine r23,r23,0
+   .traceevent "O" 4 "R" "B" "r" 23 91 91 0 "" ""
+   brt l327orend,r23
+   .traceevent "V" 6 "R" "O" "r" 10 91 91 0 "request" ""
+   load r9,1
+   settpcall r23,§llsource.prepared.bytes(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 23 91 91 0 "bytes" ""
+   load r21," "
+   .traceevent "L" 4 "R" "S" "r" 21 91 91 0 "" ""
+   load r22,8
+   .traceevent "L" 4 "R" "I" "r" 22 91 91 0 "" ""
+   load r20,2
+   settp r21,768
+   call r19,rxfnsb.copies(),r20
+   .traceevent "F" 4 "R" "S" "r" 19 91 91 0 "copies" ""
+   concat r22,"1",r19
+   .traceevent "O" 4 "R" "S" "r" 22 91 91 0 "" ""
+   concat r22,r22,"2"
+   .traceevent "O" 4 "R" "S" "r" 22 91 91 0 "" ""
+   scopy r21,r22
+   stobin r21
+   binne r23,r23,r21
+   .traceevent "O" 4 "R" "B" "r" 23 91 91 0 "" ""
+l327orend:
+   .traceevent "O" 4 "R" "B" "r" 23 91 91 0 "" ""
+   brf l330iffalse,r23
+   .srcstep 92 92 17 "comment-contract-probe.crexx" 34 90 94 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   .srcstep 90 90 17 "comment-contract-probe.crexx" 34 95 104 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15"
+   ret 15
+l330iffalse:
+   .srcstep 93 93 17 "comment-contract-probe.crexx" 35 3 32 "  policies = .llcomments..rules()"
+   load r23,0
+   call r1,§llcomments.rules.§factory(),r23
+   .traceevent "F" 4 "R" "O" "r" 1 93 93 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 93 93 0 "policies" ""
+   .srcstep 95 95 17 "comment-contract-probe.crexx" 36 3 52 "  if policies.add('unicode','nested','«','»') = 0 then return 16"
+   .traceevent "V" 6 "R" "O" "r" 1 95 95 0 "policies" ""
+   load r2,"unicode"
+   .traceevent "L" 4 "R" "S" "r" 2 95 95 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 95 95 0 "" ""
+   load r4,"\xc2\xab"
+   .traceevent "L" 4 "R" "S" "r" 4 95 95 0 "" ""
+   load r5,"\xc2\xbb"
+   .traceevent "L" 4 "R" "S" "r" 5 95 95 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r23,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 23 95 95 0 "add" ""
+   ieq r23,r23,0
+   .traceevent "O" 4 "R" "B" "r" 23 95 95 0 "" ""
+   brf l346iffalse,r23
+   .srcstep 96 96 17 "comment-contract-probe.crexx" 36 53 57 "  if policies.add('unicode','nested','«','»') = 0 then return 16"
+   .srcstep 94 94 17 "comment-contract-probe.crexx" 36 58 67 "  if policies.add('unicode','nested','«','»') = 0 then return 16"
+   ret 16
+l346iffalse:
+   .srcstep 97 97 17 "comment-contract-probe.crexx" 37 3 87 "  request = .llsource..prepared('1«a«b»c»2' as .binary,'utf8','','',100,0,policies)"
+   load r16,0x31c2ab61c2ab62c2bb63c2bb32
+   .traceevent "L" 4 "R" "X" "r" 16 97 97 0 "" ""
+   load r17,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 17 97 97 0 "" ""
+   load r18,""
+   .traceevent "L" 4 "R" "S" "r" 18 97 97 0 "" ""
+   load r19,""
+   .traceevent "L" 4 "R" "S" "r" 19 97 97 0 "" ""
+   load r20,100
+   .traceevent "L" 4 "R" "I" "r" 20 97 97 0 "" ""
+   load r21,0
+   .traceevent "L" 4 "R" "I" "r" 21 97 97 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 97 97 0 "policies" ""
+   load r15,8
+   settp r16,768
+   settp r17,768
+   settp r18,768
+   settp r19,768
+   settp r20,256
+   settp r21,256
+   settp r1,256
+   swap r22,r1
+   settpcall r10,§llsource.prepared.§factory(),r15,r23,0
+   swap r1,r22
+   .traceevent "F" 4 "R" "O" "r" 10 97 97 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 97 97 0 "request" ""
+   .srcstep 105 105 17 "comment-contract-probe.crexx" 38 3 90 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   .srcstep 103 103 17 "comment-contract-probe.crexx" 38 6 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   .srcstep 98 98 33 "comment-contract-probe.crexx" 38 6 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   .traceevent "V" 6 "R" "O" "r" 10 98 98 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 98 98 0 "§this" ""
+   .srcstep 99 99 6 "llsource@rxfnsl.rxbin" 38 13 13 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   .traceevent "V" 6 "R" "O" "r" 10 105 105 0 "§this" ""
+   assertinitialized r10
+   .srcstep 100 100 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 100 100 0 "§this" ""
+   load r9,1
+   settpcall r23,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 23 100 100 0 "run" ""
+   linkattr1 r23,r10,15
+   .traceevent "V" 6 "R" "I" "r" 23 105 105 0 "_status" ""
+   igetunlink r24,r23
+   .traceevent "A" 6 "R" "I" "r" 24 105 105 0 "__inline_leave_2526_2525" ""
+   .srcstep 101 101 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 105 105 0 "§this" ""
+   .srcstep 102 102 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 24 105 105 0 "__inline_leave_2526_2525" ""
+   br l2515bexprend
+l2515bexprend:
+   ine r24,r24,0
+   .traceevent "O" 4 "R" "B" "r" 24 105 105 0 "" ""
+   brt l379orend,r24
+   .traceevent "V" 6 "R" "O" "r" 10 105 105 0 "request" ""
+   load r9,1
+   settpcall r24,§llsource.prepared.bytes(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 24 105 105 0 "bytes" ""
+   load r22," "
+   .traceevent "L" 4 "R" "S" "r" 22 105 105 0 "" ""
+   load r23,11
+   .traceevent "L" 4 "R" "I" "r" 23 105 105 0 "" ""
+   load r21,2
+   settp r22,768
+   call r20,rxfnsb.copies(),r21
+   .traceevent "F" 4 "R" "S" "r" 20 105 105 0 "copies" ""
+   concat r23,"1",r20
+   .traceevent "O" 4 "R" "S" "r" 23 105 105 0 "" ""
+   concat r23,r23,"2"
+   .traceevent "O" 4 "R" "S" "r" 23 105 105 0 "" ""
+   scopy r22,r23
+   stobin r22
+   binne r24,r24,r22
+   .traceevent "O" 4 "R" "B" "r" 24 105 105 0 "" ""
+l379orend:
+   .traceevent "O" 4 "R" "B" "r" 24 105 105 0 "" ""
+   brf l382iffalse,r24
+   .srcstep 106 106 17 "comment-contract-probe.crexx" 38 91 95 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   .srcstep 104 104 17 "comment-contract-probe.crexx" 38 96 105 "  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17"
+   ret 17
+l382iffalse:
+   .srcstep 107 107 17 "comment-contract-probe.crexx" 39 3 32 "  policies = .llcomments..rules()"
+   load r24,0
+   call r1,§llcomments.rules.§factory(),r24
+   .traceevent "F" 4 "R" "O" "r" 1 107 107 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 107 107 0 "policies" ""
+   .srcstep 109 109 17 "comment-contract-probe.crexx" 40 3 50 "  if policies.add('numeric','block','01','1') = 0 then return 18"
+   .traceevent "V" 6 "R" "O" "r" 1 109 109 0 "policies" ""
+   load r2,"numeric"
+   .traceevent "L" 4 "R" "S" "r" 2 109 109 0 "" ""
+   load r3,"block"
+   .traceevent "L" 4 "R" "S" "r" 3 109 109 0 "" ""
+   load r4,"01"
+   .traceevent "L" 4 "R" "S" "r" 4 109 109 0 "" ""
+   load r5,"1"
+   .traceevent "L" 4 "R" "S" "r" 5 109 109 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r24,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 24 109 109 0 "add" ""
+   ieq r24,r24,0
+   .traceevent "O" 4 "R" "B" "r" 24 109 109 0 "" ""
+   brf l398iffalse,r24
+   .srcstep 110 110 17 "comment-contract-probe.crexx" 40 51 55 "  if policies.add('numeric','block','01','1') = 0 then return 18"
+   .srcstep 108 108 17 "comment-contract-probe.crexx" 40 56 65 "  if policies.add('numeric','block','01','1') = 0 then return 18"
+   ret 18
+l398iffalse:
+   .srcstep 111 111 17 "comment-contract-probe.crexx" 41 3 85 "  request = .llsource..prepared('01body1tail' as .binary,'utf8','','',100,0,policies)"
+   load r17,0x3031626f6479317461696c
+   .traceevent "L" 4 "R" "X" "r" 17 111 111 0 "" ""
+   load r18,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 18 111 111 0 "" ""
+   load r19,""
+   .traceevent "L" 4 "R" "S" "r" 19 111 111 0 "" ""
+   load r20,""
+   .traceevent "L" 4 "R" "S" "r" 20 111 111 0 "" ""
+   load r21,100
+   .traceevent "L" 4 "R" "I" "r" 21 111 111 0 "" ""
+   load r22,0
+   .traceevent "L" 4 "R" "I" "r" 22 111 111 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 111 111 0 "policies" ""
+   load r16,8
+   settp r17,768
+   settp r18,768
+   settp r19,768
+   settp r20,768
+   settp r21,256
+   settp r22,256
+   settp r1,256
+   swap r23,r1
+   settpcall r10,§llsource.prepared.§factory(),r16,r24,0
+   swap r1,r23
+   .traceevent "F" 4 "R" "O" "r" 10 111 111 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 111 111 0 "request" ""
+   .srcstep 119 119 17 "comment-contract-probe.crexx" 42 3 85 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   .srcstep 117 117 17 "comment-contract-probe.crexx" 42 6 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   .srcstep 112 112 33 "comment-contract-probe.crexx" 42 6 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   .traceevent "V" 6 "R" "O" "r" 10 112 112 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 10 112 112 0 "§this" ""
+   .srcstep 113 113 6 "llsource@rxfnsl.rxbin" 42 13 13 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   .traceevent "V" 6 "R" "O" "r" 10 119 119 0 "§this" ""
+   assertinitialized r10
+   .srcstep 114 114 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 10 114 114 0 "§this" ""
+   load r9,1
+   settpcall r24,§llsource.prepared.run(),r9,r10,256
+   .traceevent "F" 4 "R" "V" "r" 24 114 114 0 "run" ""
+   linkattr1 r24,r10,15
+   .traceevent "V" 6 "R" "I" "r" 24 119 119 0 "_status" ""
+   igetunlink r25,r24
+   .traceevent "A" 6 "R" "I" "r" 25 119 119 0 "__inline_leave_2635_2634" ""
+   .srcstep 115 115 14 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "O" "r" 10 119 119 0 "§this" ""
+   .srcstep 116 116 25 "llsource.crexx" 136 5 19 "    return _status"
+   .traceevent "V" 6 "R" "I" "r" 25 119 119 0 "__inline_leave_2635_2634" ""
+   br l2624bexprend
+l2624bexprend:
+   ine r25,r25,0
+   .traceevent "O" 4 "R" "B" "r" 25 119 119 0 "" ""
+   brt l429orend,r25
+   .traceevent "V" 6 "R" "O" "r" 10 119 119 0 "request" ""
+   load r9,1
+   settpcall r25,§llsource.prepared.bytes(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 25 119 119 0 "bytes" ""
+   load r23," "
+   .traceevent "L" 4 "R" "S" "r" 23 119 119 0 "" ""
+   load r24,7
+   .traceevent "L" 4 "R" "I" "r" 24 119 119 0 "" ""
+   load r22,2
+   settp r23,768
+   call r21,rxfnsb.copies(),r22
+   .traceevent "F" 4 "R" "S" "r" 21 119 119 0 "copies" ""
+   concat r24,r21,"tail"
+   .traceevent "O" 4 "R" "S" "r" 24 119 119 0 "" ""
+   scopy r23,r24
+   stobin r23
+   binne r25,r25,r23
+   .traceevent "O" 4 "R" "B" "r" 25 119 119 0 "" ""
+l429orend:
+   .traceevent "O" 4 "R" "B" "r" 25 119 119 0 "" ""
+   brf l432iffalse,r25
+   .srcstep 120 120 17 "comment-contract-probe.crexx" 42 86 90 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   .srcstep 118 118 17 "comment-contract-probe.crexx" 42 91 100 "  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19"
+   ret 19
+l432iffalse:
+   .srcstep 121 121 17 "comment-contract-probe.crexx" 43 3 47 "  say 'comment_contract_checks=19; failures=0'"
+   say "comment_contract_checks=19; failures=0"
+   .srcstep 122 122 17 "comment-contract-probe.crexx" 44 3 11 "  return 0"
+   ret 0
+   .meta "comment-contract-probe.main.nul"
+   .meta "comment-contract-probe.main.policies"
+   .meta "comment-contract-probe.main.request"
+
+/* Imported Declaration from file: copies@library.rxbin */
+
+rxfnsb.copies() .expose=rxfnsb.copies
+   .meta "rxfnsb.copies"="b" ".string" rxfnsb.copies() "string=.string,count=.int"
+   .meta "rxfnsb.copies"=".autoload" "library"
+
+/* Imported Declaration from file: pos@library.rxbin */
+
+rxfnsb.pos() .expose=rxfnsb.pos
+   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"=".autoload" "library"
+
+/* Imported Declaration from file: llcomments@rxfnsl.rxbin */
+
+§llcomments.rules.§factory() .expose=llcomments.rules.§factory
+   .meta "llcomments.rules.§factory"="b" ".llcomments..rules" §llcomments.rules.§factory() ""
+   .meta "llcomments.rules.§factory"=".autoload" "rxfnsl"
+
+§llcomments.rules.add() .expose=llcomments.rules.add
+   .meta "llcomments.rules.add"="b" ".int" §llcomments.rules.add() "name=.string,form=.string,opening=.string,?closing=.string,?keep=.int,?line=.int,?byte=.int"
+   .meta "llcomments.rules.add"=".autoload" "rxfnsl"
+
+§llcomments.rules.validate() .expose=llcomments.rules.validate
+   .meta "llcomments.rules.validate"="b" ".int" §llcomments.rules.validate() ""
+   .meta "llcomments.rules.validate"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llsource@rxfnsl.rxbin */
+
+§llsource.prepared.§factory() .expose=llsource.prepared.§factory
+   .meta "llsource.prepared.§factory"="b" ".llsource..prepared" §llsource.prepared.§factory() "source=.binary,?encoding=.string,?opening=.string,?closing=.string,?limit=.int,?recover=.int,?policies=.llcomments..rules,?work=.int"
+   .meta "llsource.prepared.§factory"=".autoload" "rxfnsl"
+
+§llsource.prepared.run() .expose=llsource.prepared.run
+   .meta "llsource.prepared.run"="b" ".void" §llsource.prepared.run() ""
+   .meta "llsource.prepared.run"=".autoload" "rxfnsl"
+
+§llsource.prepared.bytes() .expose=llsource.prepared.bytes
+   .meta "llsource.prepared.bytes"="b" ".binary" §llsource.prepared.bytes() ""
+   .meta "llsource.prepared.bytes"=".autoload" "rxfnsl"

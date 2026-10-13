@@ -1,0 +1,9 @@
+STATUS|0
+NODE|list|0|5
+NODE|list|0|3
+NODE|list|0|1
+NODE|identifier|0|1
+NODE|comma|1|2
+NODE|identifier|2|3
+NODE|comma|3|4
+NODE|identifier|4|5

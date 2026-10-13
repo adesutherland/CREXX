@@ -1,0 +1,4 @@
+Parse status: 1; errors: 1
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/ll1/utf8-truncated.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): LL_UTF8: malformed UTF-8; original bytes E282
+  source bytes: 6669727374203D20E2820A7468697264203D2033
+third -> 3

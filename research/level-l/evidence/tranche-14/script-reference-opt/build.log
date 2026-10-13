@@ -1,0 +1,3 @@
+Warning in RexxScriptProbeCore.crexx @ 266:10 - #NOT_IN_SAME_SCOPE line="249" column="8", "i"
+Warning in RexxScriptProbeCore.crexx @ 608:7 - #NOT_IN_SAME_SCOPE line="600" column="7", "expr"
+2 warning(s) in source file

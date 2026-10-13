@@ -1,0 +1,32 @@
+[
+  {
+    "case": "example",
+    "exit": 0,
+    "pass": true
+  },
+  {
+    "case": "missing-file",
+    "exit": 1,
+    "pass": true
+  },
+  {
+    "case": "parse",
+    "exit": 1,
+    "pass": true
+  },
+  {
+    "case": "capability",
+    "exit": 1,
+    "pass": true
+  },
+  {
+    "case": "undefined",
+    "exit": 1,
+    "pass": true
+  },
+  {
+    "case": "utf8",
+    "exit": 1,
+    "pass": true
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "cmake-build-levell-product/bin/rxc": {
+    "bytes": 5699296,
+    "sha256": "e4e4ab20c35ffc389670a048429c7c6db2b7f0c370520793521f9aba8c3eed5c"
+  },
+  "cmake-build-levell-product/bin/rxas": {
+    "bytes": 1166888,
+    "sha256": "ec458879859cd1add170573aa9749f43de1a0ae9ce860425fcddffb31138c2ba"
+  },
+  "cmake-build-levell-product/bin/rxlink": {
+    "bytes": 280744,
+    "sha256": "c70e73b09b84adf2c30db353834d7faf2059a9de52376ce84fa3a877af6c1b08"
+  },
+  "cmake-build-levell-product/bin/rxcpack": {
+    "bytes": 75848,
+    "sha256": "88c2c2f4ce055b84ca2f7cfbeea0154609e2cf0d037e845c6d62c9d03523de36"
+  },
+  "cmake-build-levell-product/bin/rxtvm": {
+    "bytes": 1712920,
+    "sha256": "5af0f27cc0ea28083b75add7cf84c140e71de5491198db6be9da9578bc5b2588"
+  },
+  "cmake-build-levell-product/bin/rxbvm": {
+    "bytes": 1696264,
+    "sha256": "6467aa287f16cb3578027a30cd0d4246d5900e54638d354c7477c20bd00adbfa"
+  },
+  "cmake-build-levell-product/bin/rxvm": {
+    "bytes": 1696264,
+    "sha256": "6467aa287f16cb3578027a30cd0d4246d5900e54638d354c7477c20bd00adbfa"
+  },
+  "cmake-build-levell-product/bin/levell": {
+    "bytes": 1959544,
+    "sha256": "24e9d0e0de7ed4adc7ce9967f18a57b46dcc58a3bc1c7eaf59bd5b331bf2304b"
+  },
+  "cmake-build-levell-product/bin/rexxscript1": {
+    "bytes": 8727288,
+    "sha256": "b3aaf3dca3d977cf6e67f4e7f295cd0991d0536ac7ae5b9099cbeaf8064a12ba"
+  },
+  "cmake-build-levell-product/bin/library.rxbin": {
+    "bytes": 1948690,
+    "sha256": "2a30ba8ed10df31fe3e39c9522e1b3fa911778fb978a5d4c12a24df43f30c49c"
+  },
+  "cmake-build-levell-product/bin/classlib.rxbin": {
+    "bytes": 1100730,
+    "sha256": "15c5d239330fcbcd7b6921495744a5436451e97d71fc9baf59a2374f110aca8e"
+  },
+  "cmake-build-levell-product/bin/rxfnsc.rxbin": {
+    "bytes": 1794416,
+    "sha256": "ab125aaf86e0cb2ed71bebc18265fa2479668c7535744655039639d10c1588fa"
+  },
+  "cmake-build-levell-product/bin/rxfnsg.rxbin": {
+    "bytes": 6410787,
+    "sha256": "fba5ecd5a9c7a64db4b8fd7ddcafaffaa5831f2cc55a05a1a286b775e2d2d0f4"
+  },
+  "cmake-build-levell-product/bin/rxfnsl.rxbin": {
+    "bytes": 731473,
+    "sha256": "e98c73e79766f4474b53fe63a6f8d4e55484503ed5ccbadd4c723fd16bbf898c"
+  },
+  "cmake-build-levell-product/bin/rexxscript1.rxbin": {
+    "bytes": 341680,
+    "sha256": "a1ddd119aa6f21c6216b00104208b767240a2120205ed81ce3d55a084ea81f15"
+  }
+}

@@ -311,8 +311,31 @@ Detected in `GetPreComp()` and dispatched via `CMD_*` handlers:
 or with an optional callback keyword, for example `##DATA name CALL callback`. 
 After the complete data array has been generated, RXPP invokes the callback once as `call callback`.
 
+`REXXSCRIPT RUN` and `END REXXSCRIPT` collect a multiline RexxScript body,
+package it as one generated script string, and emit the existing ordinary
+`REXXSCRIPT` statement. Optional `EXPOSE`, `OUTPUT`, `VALUES`, `RESULT`, and
+`DEBUG` clauses may remain on the opening line. This is source packaging only;
+RexxScript runtime semantics are unchanged.
+
 `##RELATION name`, `##PROGRAM name`, `##RULE name` and `##LIBRARY name` are thin aliases for `##DATA name` and
 support the same optional callback forms. Their names have no semantic effect.
+
+`FORTRAN RUN` and `FORTRAN PROCEDURES` are plain (non-`##`) source blocks for
+the FORTRAN interpreter integration. They append their lines to one ordered
+`fortran_source` string array using the same contract as `##DATA
+fortran_source`. The block contents are free-form text and are not parsed by
+RXPP. RXPP emits one deferred `call fortran_run fortran_source` after all
+FORTRAN blocks have been collected; procedure dispatch remains a runtime
+concern.
+
+The blocks also accept `C$RX BIND target = host`. This binds a typed cREXX
+array, using `host[0]` as its read-only cardinality and `host[1..host[0]]` as
+the values copied into the declared FORTRAN target array. Dot-indexed stems are
+not used by this interface.
+
+`C$RX EXPORT target = host` performs the reverse operation after FORTRAN
+execution. RXPP returns the selected FORTRAN array values and copies them into
+the caller's typed cREXX array; several export directives may be used.
 
 `##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
 `##DATA` handler. Registration is order-sensitive: an alias must be declared

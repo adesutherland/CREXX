@@ -1057,6 +1057,69 @@ Notable flags:
 
 `##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into a cREXX string array.
 
+### `REXXSCRIPT RUN` and `END REXXSCRIPT`
+
+RXPP also accepts a multiline RexxScript body without requiring every line to
+be manually quoted and concatenated:
+
+```rexx
+REXXSCRIPT RUN
+  say 'hello'
+  total = 1 + 2
+  say total
+END REXXSCRIPT
+```
+
+RXPP packages the body as one script string and emits the ordinary
+`REXXSCRIPT` statement. Existing clauses may remain on the opening line, for
+example `REXXSCRIPT RUN EXPOSE total OUTPUT output RESULT raw`. The block is a
+source convenience only; RexxScript execution and its existing clause
+semantics are unchanged.
+
+### `FORTRAN RUN` and `END FORTRAN`
+
+The FORTRAN interpreter can use a plain free-form text block without RXPP's
+`##DATA` syntax:
+
+```rexx
+FORTRAN RUN
+       PROGRAM DEMO
+       END
+END FORTRAN
+```
+
+RXPP stores the lines between the markers in the ordered `fortran_source`
+array. The block contents are preserved as text, including fixed-format
+spacing, labels, and comments. `END FORTRAN` is consumed by RXPP and does not
+appear in the generated cREXX source; it emits
+`call fortran_run fortran_source` after the source array.
+
+Additional source units can be collected with a procedures block:
+
+```rexx
+FORTRAN PROCEDURES
+       SUBROUTINE SCALE(A,N)
+       ...
+       END
+END FORTRAN
+```
+
+`FORTRAN RUN` and `FORTRAN PROCEDURES` blocks are appended to the same
+`fortran_source` array. RXPP emits one deferred `call fortran_run
+fortran_source` after all blocks, allowing the procedure block to appear
+before or after the main program. Procedure execution and `CALL` dispatch are
+runtime features planned separately.
+
+Inside either block, `C$RX BIND target = host` imports a typed cREXX array from
+the surrounding REXX program. `host[0]` is the read-only typed-array count and
+`host[1]` through `host[host[0]]` are copied into the declared FORTRAN target
+array. This uses bracket-indexed typed arrays and does not treat a stem's
+`.0` value as the count.
+
+Use `C$RX EXPORT target = host` to copy FORTRAN arrays back to typed cREXX
+arrays after the run. Multiple export directives are supported; the host
+arrays receive values at `[1..count]`.
+
 For example:
 
 ```rexx
@@ -1150,6 +1213,37 @@ process_settings settings
 The alias declaration must appear before the aliased directive.
 
 `##DALIAS` aliases the **directive name**. It does not define an alias for the generated stem or its contents.
+
+##### Planned bare-block aliases
+
+The current `##DALIAS` form requires the `##` prefix when the alias is used.
+RXPP is planned to support an opt-in bare-block form with an alias-specific
+terminator:
+
+```rexx
+##DALIAS FORTH
+
+forth trace_input
+  3 4 + .
+  bye
+end Forth
+```
+
+Only aliases previously declared by `##DALIAS` would be recognized as bare
+block starters. Alias matching would be case-insensitive, so `forth`, `Forth`,
+and `FORTH` would refer to the same registered block. `END FORTH` would
+terminate the block, while existing `##FORTH ... ##END` syntax would remain
+valid. A plain `END` would not be used, avoiding ambiguity with ordinary REXX
+source.
+
+Aliases are validated when `##DALIAS` is read. They must be ordinary RXPP
+identifiers beginning with a letter or underscore and continuing with letters,
+digits, or underscores. Empty names, malformed names, duplicates, RXPP
+directive names, and reserved REXX words such as `DO`, `IF`, and `END` are
+rejected immediately.
+
+This is a planned extension and is not implemented in the current RXPP
+preprocessor.
 
 For example, a program can be described as:
 

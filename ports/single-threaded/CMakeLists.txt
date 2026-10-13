@@ -16,7 +16,7 @@ set(CREXX_VM_SLAB_SIZE 4096 CACHE STRING "Bytes per aligned VM allocator slab")
 set(CREXX_VM_MAX_POOLED_SIZE 2048 CACHE STRING "Maximum pooled byte/value allocation")
 
 set(vm_sources
-    interpreter/rxvmintp.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
+    interpreter/rxvmintp.c interpreter/rxvmlinkindex.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
     interpreter/rxvmactive.c interpreter/rxvmload.c interpreter/interrupt_single.c
     interpreter/rxenv.c interpreter/exitfunc.c interpreter/rxpacallmethod.c interpreter/rxpafuncs.c
     interpreter/rxvml/rxvm_run.c
@@ -29,6 +29,8 @@ set(vm_sources
     binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c binutils/rxcontract.c
     binutils/rxsha256.c binutils/rxgraph.c)
 list(TRANSFORM vm_sources PREPEND "${CREXX_SOURCE}/")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/vm_sources.txt"
+    CONTENT "$<JOIN:${vm_sources},\n>\n")
 add_library(rxvm_single_core STATIC ${vm_sources})
 target_include_directories(rxvm_single_core PUBLIC
     "${CREXX_GENERATED_DIR}" "${CREXX_SOURCE}/interpreter"
@@ -43,10 +45,42 @@ target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1
     RXVM_MEMORY_SLAB_SIZE=${CREXX_VM_SLAB_SIZE}
     RXVM_MEMORY_MAX_STANDARD_SIZE=${CREXX_VM_MAX_POOLED_SIZE})
+option(CREXX_MAINFRAME_ADDRESS "Link the selected CMS31/TSO31 native ADDRESS provider" OFF)
+option(CREXX_VM_CLASSIC_PROVIDERS "Link portable Classic stream and native logical-file bindings" OFF)
+if(CREXX_VM_CLASSIC_PROVIDERS)
+    target_sources(rxvm_single_core PRIVATE
+        "${CREXX_SOURCE}/lib/plugins/cstream/rxcstream.c"
+        "${CMAKE_CURRENT_LIST_DIR}/mainframe_fs.c")
+    target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_CLASSIC_PROVIDERS=1)
+    set_source_files_properties("${CREXX_SOURCE}/lib/plugins/cstream/rxcstream.c"
+        PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxcstream")
+    set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/mainframe_fs.c"
+        PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxfs")
+endif()
+set(CREXX_COMMAND_INCLUDE "" CACHE PATH "Verified selected SDK include directory with command.h")
+set(CREXX_COMMAND_LIBRARIES "" CACHE STRING "Selected SDK command adapter libraries/objects")
+option(CREXX_BUILD_COMPILER "Build RXC against the constrained embedded VM" OFF)
+if(CREXX_MAINFRAME_ADDRESS)
+    if(CREXX_BUILD_COMPILER)
+        message(FATAL_ERROR "Native RXC needs declaration metadata separate from the runtime provider; use mainframe-build.crexx")
+    endif()
+    if(NOT EXISTS "${CREXX_COMMAND_INCLUDE}/command.h")
+        message(FATAL_ERROR "Native ADDRESS requires the current selected SDK command.h")
+    endif()
+    target_sources(rxvm_single_core PRIVATE
+        "${CREXX_SOURCE}/platform/mainframe_command.c"
+        "${CREXX_SOURCE}/platform/mainframe_command_cms.c"
+        "${CREXX_SOURCE}/platform/mainframe_command_tso.c"
+        "${CREXX_SOURCE}/lib/plugins/mainframe_address/mainframe_address.c")
+    target_include_directories(rxvm_single_core PRIVATE "${CREXX_COMMAND_INCLUDE}")
+    target_compile_definitions(rxvm_single_core PUBLIC CREXX_MAINFRAME_ADDRESS=1)
+    set_source_files_properties("${CREXX_SOURCE}/lib/plugins/mainframe_address/mainframe_address.c"
+        PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxmainframe_address")
+    target_link_libraries(rxvm_single_core PUBLIC ${CREXX_COMMAND_LIBRARIES})
+endif()
 # RXC calls the public embedding API; this does not include a VM CLI main.
 add_library(rxvm_single_embed STATIC "${CREXX_SOURCE}/interpreter/rxvml.c")
 target_link_libraries(rxvm_single_embed PUBLIC rxvm_single_core)
-option(CREXX_BUILD_COMPILER "Build RXC against the constrained embedded VM" OFF)
 if(CREXX_BUILD_COMPILER)
     include("${CMAKE_CURRENT_LIST_DIR}/compiler.cmake")
 endif()
@@ -55,6 +89,12 @@ add_executable(rxbvm_single "${CREXX_SOURCE}/interpreter/rxvmmain.c")
 target_link_libraries(rxbvm_single PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
 
 include(CTest)
+set(CREXX_CLASSIC_PROVIDER_FIXTURE "" CACHE FILEPATH "Linked canonical Classic/G provider smoke bytecode")
+if(BUILD_TESTING AND CREXX_VM_CLASSIC_PROVIDERS AND CREXX_CLASSIC_PROVIDER_FIXTURE)
+    add_test(NAME single_vm_classic_providers COMMAND rxbvm_single ${CREXX_CLASSIC_PROVIDER_FIXTURE})
+    set_tests_properties(single_vm_classic_providers PROPERTIES
+        PASS_REGULAR_EXPRESSION "NATIVE CLASSIC PROVIDERS PASS")
+endif()
 if(BUILD_TESTING)
     add_executable(test_single_state test_state.c)
     target_link_libraries(test_single_state PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)

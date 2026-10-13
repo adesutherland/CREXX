@@ -1,0 +1,38 @@
+/* cREXX License (MIT). Loader and exact construction-boundary regressions. */
+options levelb
+import rxfnsb
+import llmunch
+import lllr
+import lllimits
+import lllanguage
+import llstage
+import levell_settings
+
+main: procedure = .int
+  limits = .lllimits..policy()
+  if limits.set('lr.items',134217727) <> 0 then return 1
+  if pos('representation ceiling',limits.error()) = 0 then return 2
+  items = .lllr..items(2)
+  if items.add(1,0,1) <> 1 then return 3
+  if items.add(1,0,1) <> 0 then return 4
+  if items.add(2,0,1) <> 1 then return 5
+  if items.add(3,0,1) <> -1 then return 6
+  if items.add(2,0,1) <> 0 then return 7
+  dfa = .llmunch..automaton(4097,1)
+  ok = dfa.mapping(97,0)
+  ok = dfa.accepting(2,1)
+  ok = dfa.transition(1,0,2)
+  if dfa.verify() = 0 then return 8
+  loaded = .llmunch..automaton.loaded(dfa.image())
+  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9
+  stage = .llstage..rules(100)
+  do i = 1 to 129
+    if stage.add('rule.' || i,100,1,-1,1,-1,'',-1,100) = 0 then return 10
+  end
+  if stage.choose(100,1,-1,'',1) <> 1 then return 11
+  request = .lllanguage..request(levell_settings..language(),'port = 42' as .binary)
+  if request.parse() <> 0 then do
+    say request.error(); return 12
+  end
+  say 'loader_and_boundary_checks=12; failures=0'
+  return 0

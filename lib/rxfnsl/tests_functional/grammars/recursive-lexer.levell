@@ -1,0 +1,8 @@
+options levell
+namespace recursive_example
+number: token = 1
+scan: lexer input bytes
+  recursive: pattern = 'a' recursive | 'b'
+  number.rule: rule = recursive then emit number
+parse: parser semantics contextfree input tokens start document
+  document: rule = number

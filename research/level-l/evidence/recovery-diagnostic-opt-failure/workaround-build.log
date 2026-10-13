@@ -1,0 +1,6 @@
+Warning in workaround-probe.crexx @ 30:6 - #NOT_IN_SAME_SCOPE line="18" column="6", "i"
+Warning in workaround-probe.crexx @ 31:5 - #NOT_IN_SAME_SCOPE line="19" column="5", "byte"
+2 warning(s) in source file
+Warning in workaround-probe.crexx @ 30:6 - #NOT_IN_SAME_SCOPE line="18" column="6", "i"
+Warning in workaround-probe.crexx @ 31:5 - #NOT_IN_SAME_SCOPE line="19" column="5", "byte"
+2 warning(s) in source file

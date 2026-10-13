@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+    Start 3307: crexx_project_build_contract
+1/1 Test #3307: crexx_project_build_contract .....   Passed   84.27 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+autoload       =  84.27 sec*proc (1 test)
+build          =  84.27 sec*proc (1 test)
+driver         =  84.27 sec*proc (1 test)
+incremental    =  84.27 sec*proc (1 test)
+parallel       =  84.27 sec*proc (1 test)
+regression     =  84.27 sec*proc (1 test)
+smoke          =  84.27 sec*proc (1 test)
+
+Total Test time (real) =  84.34 sec

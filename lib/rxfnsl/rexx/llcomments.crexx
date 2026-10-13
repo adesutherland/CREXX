@@ -1,0 +1,276 @@
+/* cREXX License (MIT). Checked source-preserving comment coordination. */
+options levelb
+namespace llcomments expose rules processor
+import rxfnsb
+import llmunch
+import lllimits
+
+/** Named lexical policies. A selected regular shielding pattern belongs to
+ * that comment form; default shielding is Rexx single/double doubled quotes.
+ * Tables are retained once, and transitions use the stored object directly.
+ */
+rules: class
+  _names = .string[]
+  _forms = .string[]
+  _open = .binary[]
+  _close = .binary[]
+  _keep = .int[]
+  _lines = .int[]
+  _bytes = .int[]
+  _custom = .int[]
+  _shield = .llmunch..automaton[]
+  _error = .string
+  _ready = .int
+  *: factory
+    _ready = 0
+    _error = ''
+    return
+  /** @return 1 when admitted; 0 with a stable contract explanation otherwise. */
+  add: method = .int
+    arg name = .string, form = .string, opening = .string, closing = '', keep = 0, line = 0, byte = 0
+    i = .int
+    if _error <> '' then return 0
+    if _ready then do
+      _error = 'LL_COMMENT_CONTRACT: comment policies are frozen'; return 0
+    end
+    if name = '' | wordpos(form,'line block nested') = 0 | opening = '' | (keep <> 0 & keep <> 1) then do
+      _error = 'LL_COMMENT_CONTRACT: require a named line/block/nested form, nonempty opener and keep flag 0 or 1'; return 0
+    end
+    if form <> 'line' & (closing = '' | opening == closing) then do
+      _error = 'LL_COMMENT_CONTRACT: block/nested delimiters must be nonempty and distinct'; return 0
+    end
+    if form = 'line' & (closing <> '' | pos('0A'x,opening) > 0 | pos('0D'x,opening) > 0) then do
+      _error = 'LL_COMMENT_CONTRACT: line comments have one opener without CR/LF and no closer'; return 0
+    end
+    do i = 1 to _names[0]
+      if _open[i] = opening as .binary then do
+        _error = 'LL_COMMENT_CONTRACT: duplicate opener for ' || name || '; already owned by ' || _names[i] || ' at line ' || _lines[i] || ', byte ' || _bytes[i]
+        return 0
+      end
+    end
+    i = _names[0] + 1
+    _names[i] = name; _forms[i] = form; _open[i] = opening as .binary; _close[i] = closing as .binary
+    _keep[i] = keep; _lines[i] = line; _bytes[i] = byte; _custom[i] = 0
+    return 1
+  shielding: method = .int
+    arg entry = .int, dfa = .llmunch..automaton
+    if _error <> '' then return 0
+    if _ready then do
+      _error = 'LL_COMMENT_CONTRACT: comment policies are frozen'; return 0
+    end
+    if entry < 1 | entry > _names[0] | dfa.verify() = 0 then do
+      _error = 'LL_COMMENT_CONTRACT: invalid regular shielding image'; return 0
+    end
+    _custom[entry] = 1; _shield[entry] = dfa
+    return 1
+  /** Reject ambiguous prefix ownership at construction/load time. A completed
+   * shielding prefix or an opener still inside a shielding prefix competes
+   * at the same position. Markers inside a completed string remain permitted.
+   */
+  validate: method = .int
+    if _error <> '' then return 0
+    if _ready then return 1
+    _ready = 1
+    do i = 1 to _names[0]
+      if _custom[i] = 0 then do
+        c = <at..u8>(0) _open[i]
+        if c = 34 | c = 39 then do
+          _error = 'LL_COMMENT_CONTRACT: ' || _names[i] || ' opener overlaps default quote shielding; declare an unambiguous outside pattern'; return 0
+        end
+      end
+      else do j = 1 to _names[0]
+        state = 1; marker = _open[j]
+        do at = 0 to <blen>(marker) - 1
+          state = step(i,state,<at..u8>(at) marker)
+          if state = 0 then leave
+          if accepting(i,state) then do
+            _error = 'LL_COMMENT_CONTRACT: outside pattern for ' || _names[i] || ' overlaps opener of ' || _names[j]; return 0
+          end
+        end
+        if state > 0 then do
+          _error = 'LL_COMMENT_CONTRACT: outside pattern for ' || _names[i] || ' shares an opener prefix with ' || _names[j]; return 0
+        end
+      end
+    end
+    return 1
+  size: method = .int
+    return _names[0]
+  name: method = .string
+    arg entry = .int
+    return _names[entry]
+  form: method = .string
+    arg entry = .int
+    return _forms[entry]
+  opening: method = .binary
+    arg entry = .int
+    return _open[entry]
+  closing: method = .binary
+    arg entry = .int
+    return _close[entry]
+  keep: method = .int
+    arg entry = .int
+    return _keep[entry]
+  line: method = .int
+    arg entry = .int
+    return _lines[entry]
+  byte: method = .int
+    arg entry = .int
+    return _bytes[entry]
+  custom: method = .int
+    arg entry = .int
+    return _custom[entry]
+  step: method = .int
+    arg entry = .int, state = .int, byte = .int
+    return _shield[entry].target(state,_shield[entry].classof(byte))
+  accepting: method = .int
+    arg entry = .int, state = .int
+    return _shield[entry].kind(state) <> 0
+  error: method = .string
+    return _error
+
+/** A request owns scanning bytes while original source remains elsewhere.
+ * Work charges dispatch/byte comparisons, masking and shielding transitions;
+ * finite work is a safeguard, not a grammar-specific successful-time proof.
+ */
+processor: class
+  _input = .binary
+  _masked = .binary
+  _rules = .rules
+  _fuel = .int
+  _work = .int
+  _status = .int
+  _offset = .int
+  _openingend = .int
+  _error = .string
+  _ran = .int
+  *: factory
+    arg input = .binary, policies = .rules, fuel = 10000000
+    _input = input; _masked = input; _rules = policies; _fuel = fuel
+    _work = 0; _status = 0; _offset = 0; _openingend = 0; _error = ''; _ran = 0
+    return
+  tick: method = .int
+    arg at = .int
+    if _status <> 0 then return 0
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _offset = at; _error = lllimits..describe('scan.work',_fuel,_work); return 0
+    end
+    return 1
+  matches: method = .int
+    arg at = .int, marker = .binary
+    extent = <blen>(_input); length = <blen>(marker)
+    if length = 0 | at > extent - length then return 0
+    do i = 0 to <blen>(marker) - 1
+      if tick(at + i) = 0 then return 0
+      if <at..u8>(at + i) _input <> <at..u8>(i) marker then return 0
+    end
+    return 1
+  mask: method = .void
+    arg first = .int, last = .int, keep = .int
+    do i = first to last - 1 while _status = 0
+      if tick(i) = 0 then return
+      c = <at..u8>(i) _input
+      if keep = 0 | (c <> 10 & c <> 13) then <at..u8>(i) _masked = 32
+    end
+    return
+  shieldend: method = .int
+    arg entry = .int, at = .int
+    next = .int
+    extent = <blen>(_input)
+    if _rules.custom(entry) then do
+      state = 1; next = at; best = at
+      do while next < extent & _status = 0
+        if tick(next) = 0 then return at
+        state = _rules.step(entry,state,<at..u8>(next) _input)
+        if state = 0 then leave
+        next = next + 1
+        if _rules.accepting(entry,state) then best = next
+      end
+      return best
+    end
+    quote = <at..u8>(at) _input
+    if quote <> 34 & quote <> 39 then return at
+    next = at + 1
+    do while next < extent & _status = 0
+      if tick(next) = 0 then return at
+      c = <at..u8>(next) _input; next = next + 1
+      if c = quote then do
+        if next < extent then do
+          if <at..u8>(next) _input = quote then do
+            if tick(next) = 0 then return at
+            next = next + 1; iterate
+          end
+        end
+        return next
+      end
+    end
+    /* A broken default quote stays opaque through EOF. Its string lexer owns
+     * the eventual missing-quote error; no comment opener is fabricated. */
+    return extent
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _rules.validate() = 0 then do
+      _status = 3; _error = _rules.error(); return _status
+    end
+    if _rules.size() = 0 then return 0
+    ends = .int[]; at = 0; extent = <blen>(_input)
+    selected = .int; entry = .int; depth = .int; take = .int; form = .string
+    opener = .binary; closer = .binary
+    do while at < extent & _status = 0
+      selected = 0; longest = 0
+      do entry = 1 to _rules.size() while _status = 0
+        if tick(at) = 0 then leave
+        if at >= ends[entry] then ends[entry] = shieldend(entry,at)
+        if _status <> 0 then return _status
+        if at < ends[entry] then iterate
+        opener = _rules.opening(entry)
+        if <blen>(opener) > longest then do
+          if matches(at,opener) then do
+            selected = entry; longest = <blen>(opener)
+          end
+        end
+      end
+      if _status <> 0 then return _status
+      if selected = 0 then do
+        at = at + 1; iterate
+      end
+      opener = _rules.opening(selected); closer = _rules.closing(selected); form = _rules.form(selected)
+      origin = at; depth = 1
+      call mask(at,at + longest,_rules.keep(selected)); at = at + longest
+      if form = 'line' then do
+        do while at < extent & _status = 0
+          c = <at..u8>(at) _input
+          if c = 10 | c = 13 then leave
+          call mask(at,at + 1,0); at = at + 1
+        end
+        iterate
+      end
+      do while at < extent & depth > 0 & _status = 0
+        take = 1
+        if matches(at,closer) then do
+          depth = depth - 1; take = <blen>(closer)
+        end
+        else if form = 'nested' then do
+          if matches(at,opener) then do
+            depth = depth + 1; take = <blen>(opener)
+          end
+        end
+        call mask(at,at + take,_rules.keep(selected)); at = at + take
+      end
+      if _status = 0 & depth > 0 then do
+        _status = 1; _offset = origin; _openingend = origin + longest
+        _error = 'LL_COMMENT: unclosed ' || form || ' comment ' || _rules.name(selected) || '; opening bytes [' || origin || ',' || _openingend || ')'
+      end
+    end
+    return _status
+  bytes: method = .binary
+    return _masked
+  offset: method = .int
+    return _offset
+  openingend: method = .int
+    return _openingend
+  error: method = .string
+    return _error
+  work: method = .int
+    return _work

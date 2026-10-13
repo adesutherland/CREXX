@@ -1,0 +1,87 @@
+/* Real RexxScript observations versus a delayed, owned-tree consumer. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llstage
+import llpeg
+import lltabpeg
+import lllr
+import llmunch
+import llscriptdemo
+import gcscript
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  text = readfile('research/level-l/specs/script-fragment.levell')
+  doc = .llfront..document(text)
+  cfg = .llfront..document(changestr('semantics ordered',text,'semantics contextfree'))
+  sa = doc.run(); sb = cfg.run()
+  if sa <> 0 | sb <> 0 then do
+    say doc.error() cfg.error(); return 1
+  end
+  table = .lllr..tables(cfg.grammar(),cfg.root(),'lr1')
+  if table.status() <> 0 then do
+    say table.error(); return 1
+  end
+  dfa = .llmunch..automaton.legacy(gcscript..tabledata())
+  path = 'research/level-l/evidence/script-expected.txt'
+  do while lines(path)
+    row = linein(path); id = field(row,1)
+    if id = 'S003' | id = 'S004' then do
+      say 'SCRIPT_REFERENCE_ONLY|'id'|control flow outside this consumer'; iterate
+    end
+    bytes = x2bin(field(row,2)); expected = field(row,3); value = field(row,4)
+    code = field(row,5); output = field(row,8)
+    syntax = code = 'syntax_error' | code = 'missing_expression' | code = 'host_signal'
+    scanner = .llmunch..scanner(dfa,bytes,'reverse'); lexed = scanner.run()
+    stage = .llstage..transducer(doc.stage('classify'),scanner.tokens()); staged = stage.run()
+    input = stage.output()
+    a = .llpeg..parser(doc.grammar(),doc.root(),input,'packrat')
+    b = .lltabpeg..parser(doc.grammar(),doc.root(),input)
+    c = .lllr..parser(table,input)
+    sa = 1; sb = 1; sc = 1
+    if lexed = 0 & staged = 0 then do
+      sa = a.run(); sb = b.run(); sc = c.run()
+    end
+    cases = cases + 1
+    if sa <> syntax | sb <> syntax | sc <> syntax then do
+      failures = failures + 1; say 'FAIL script recognition:' id syntax sa sb sc a.error() b.error() c.error()
+    end
+    if syntax = 0 & sa = 0 & sb = 0 & sc = 0 then do
+      call evaluated id,a.arena(),a.root(),value,code,output
+      call evaluated id,b.tree(),b.root(),value,code,output
+      call evaluated id,c.tree(),c.root(),value,code,output
+    end
+    if syntax then say 'SCRIPT_DIAGNOSTIC|'id'|reference='code'|statement='field(row,6)'|expression-column='field(row,7)'|lex-byte='scanner.offset()'|PEG='a.error()'|LR='c.error()
+  end
+  say 'script_cases='cases
+  say 'script_failures='failures
+  if failures then return 1
+  return 0
+evaluated: procedure = .void expose failures
+  arg id = .string, tree = .llcore..tree, root = .int, value = .string, code = .string, output = .string
+  if tree.validate() = 0 then do
+    failures = failures + 1; say 'FAIL script tree:' id tree.error(); return
+  end
+  consumer = .llscriptdemo..evaluator(tree); status = consumer.run(root)
+  if consumer.code() \== code | (status = 0 & (bin2x(consumer.value('result') as .binary) \== value | consumer.output() \== output)) then do
+    failures = failures + 1
+    say 'FAIL script value:' id 'want='code value output 'got='consumer.code() bin2x(consumer.value('result') as .binary) consumer.output()
+  end
+  return
+field: procedure = .string
+  arg row = .string, wanted = .int
+  start = 1
+  do i = 1 to wanted - 1
+    start = pos('|',row,start) + 1
+  end
+  finish = pos('|',row,start)
+  if finish = 0 then return substr(row,start)
+  return substr(row,start,finish - start)
+readfile: procedure = .string
+  arg path = .string
+  text = ''
+  do while lines(path)
+    text = text || linein(path) || '0a'x
+  end
+  return text

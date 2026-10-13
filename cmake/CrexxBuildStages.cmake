@@ -43,7 +43,7 @@ crexx_add_build_stage(stage-c0-native
 
 crexx_add_build_stage(stage-c1-toolchain
         DESCRIPTION "C1 core C toolchain"
-        REQUIRED_TARGETS rxc rxc-c rxas rxlink rxdas rxbvm rxvm rxseq rxcpack crexx-contract
+        REQUIRED_TARGETS rxc rxc-c rxas rxlink rxdas rxbvm rxvm rxseq rxcpack crexx-contract crexx-provider-package
         OPTIONAL_TARGETS rxtvm)
 
 crexx_add_build_stage(stage-b0-bootstrap
@@ -67,22 +67,26 @@ crexx_add_build_stage(stage-c-rexx-tools
 
 crexx_add_build_stage(stage-g-library
         DESCRIPTION "G Level G library"
-        REQUIRED_TARGETS rxfnsg ui_tui ui_contract ui_ansi
+        # The ANSI host imports the dynamic console provider; native consumers
+        # also need its static archive in a fresh core distribution.
+        REQUIRED_TARGETS rxfnsg ui_tui ui_contract ui_ansi console_static
         OPTIONAL_TARGETS ui_gtk)
 
 crexx_add_build_stage(stage-l-libraries
-        DESCRIPTION "L Level L libraries"
-        REQUIRED_TARGETS rxfnsl)
+        DESCRIPTION "L Level L language tools and libraries"
+        REQUIRED_TARGETS rxfnsl levell_cli)
 
 crexx_add_build_stage(stage-product
         DESCRIPTION "Assembled cREXX product"
         REQUIRED_TARGETS
             rxc-c
+            crexx-provider-package
             stage-c-rexx-tools
             stage-g-library
             stage-l-libraries
             crexx
             rexxscript_cli
+            rexxscript1_cli
             rxvme
             rxbvme
             rxvml

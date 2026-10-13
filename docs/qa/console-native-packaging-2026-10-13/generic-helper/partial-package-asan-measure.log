@@ -1,0 +1,17 @@
+ASan run directory: cmake-build-console-package-fixture-asan/asan-logs/20261013-113428-build
+==> build
+    log: cmake-build-console-package-fixture-asan/asan-logs/20261013-113428-build/build.log
+==> build passed
+Command: cmake --build cmake-build-console-package-fixture-asan --target provider_package_partial_measure --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[1/5] Building C object CMakeFiles/copy_root_partial.dir/root.c.o
+[2/5] Building C object CMakeFiles/copy_branch.dir/branch.c.o
+[3/5] Linking C shared library a/libcopy_branch.dylib
+[4/5] Linking C shared module partial/libcopy_root_partial.rxplugin
+[5/5] cd /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-asan && /opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14 /Users/adrian/CLionProjects/CREXX-hotfix/tests/rxpa/provider-package-copy/check-partial.py /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-asan/partial-Debug.cmake /Users/adrian/CLionProjects/CREXX-hotfix/rxpa/WriteProviderPackage.cmake /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-asan/partial-proof
+PASS: partial package complete
+PASS: partial package different
+PASS: partial package missing
+Partial package controls seconds=0.207
+ASan run complete: cmake-build-console-package-fixture-asan/asan-logs/20261013-113428-build

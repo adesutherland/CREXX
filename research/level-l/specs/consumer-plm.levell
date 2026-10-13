@@ -1,0 +1,31 @@
+options levell
+namespace consumerplm
+read: parser semantics contextfree input tokens start document
+identifier: token = 1
+number: token = 2
+quoted: token = 3
+assign: token = 4
+semi: token = 5
+plus: token = 6
+star: token = 7
+open: token = 8
+close: token = 9
+name: rule = identifier
+literal: rule = number | quoted
+atom: rule = literal | name | open expression close
+product: rule = atom (star atom)*
+expression: rule = product (plus product)*
+assignment: rule = name assign expression
+do.word: token = 20
+end: token = 21
+declare: token = 22
+byte: token = 23
+classify: tokenstage start 1
+kw.do: transform stage classify state 0 take identifier text 'DO' emit do.word next 1
+kw.end: transform stage classify state 0 take identifier text 'END' emit end next 1
+kw.declare: transform stage classify state 0 take identifier text 'DECLARE' emit declare next 1
+kw.byte: transform stage classify state 0 take identifier text 'BYTE' emit byte next 1
+declaration: rule = declare name byte semi
+statement: rule = assignment semi | declaration | block
+block: rule = do.word semi statement* end semi
+document: rule = block

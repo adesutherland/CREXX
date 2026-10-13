@@ -1,0 +1,55 @@
+/* Packed ambiguity, nullable completions and cyclic derivations. */
+options levell
+import rxfnsb
+import llcore
+import llearley
+import llforest
+main: procedure = .int expose failures
+  failures = 0
+  g = .llcore..grammar('contextfree')
+  s = g.add(5,0,0,'S',1); a = g.add(1,97,0,'a',2)
+  seq = g.add(2,s,s,'S S',3); choice = g.add(4,seq,a,'alternatives',4); ok = g.body(s,choice)
+  input = .llcore..stream('aaa' as .binary); p = .llearley..parser(g,s,input)
+  call check p.run() = 0, 'Earley accepts ambiguous concatenation'
+  forest = p.forest()
+  say 'aaa validate='forest.validate() 'derivations='forest.derivations(p.root()) 'root='p.root()
+  call check forest.validate() & forest.derivations(p.root()) = 2, 'packed forest retains both aaa derivations'
+  say 'Earley aaa items='p.items() 'nodes='forest.nodes() 'families='forest.families()
+  input = .llcore..stream('aaaaa' as .binary); p = .llearley..parser(g,s,input)
+  ok = p.run(); forest = p.forest()
+  say 'aaaaa validate='forest.validate() 'derivations='forest.derivations(p.root())
+  call check ok = 0 & forest.derivations(p.root()) = 14, 'shared forest counts Catalan ambiguity without enumerating trees'
+  input = .llcore..stream('aab' as .binary); p = .llearley..parser(g,s,input)
+  call check p.run() = 1, 'Earley rejects input without a complete derivation'
+  g = .llcore..grammar('contextfree')
+  a = g.add(5,0,0,'A',1); letter = g.add(1,97,0,'a',2); empty = g.add(6,0,0,'empty',3)
+  choice = g.add(4,letter,empty,'optional A',4); ok = g.body(a,choice)
+  root = g.add(2,a,a,'A A',5)
+  input = .llcore..stream('a' as .binary); p = .llearley..parser(g,root,input)
+  ok = p.run(); forest = p.forest()
+  say 'nullable a validate='forest.validate() 'derivations='forest.derivations(p.root())
+  call check ok = 0 & forest.validate() & forest.derivations(p.root()) = 2, 'nullable completion order retains both placements of a'
+  input = .llcore..stream('' as .binary); p = .llearley..parser(g,root,input)
+  ok = p.run(); forest = p.forest()
+  say 'nullable empty validate='forest.validate() 'derivations='forest.derivations(p.root())
+  call check ok = 0 & forest.derivations(p.root()) = 1, 'empty input nullable derivation is retained'
+  g = .llcore..grammar('contextfree')
+  a = g.add(5,0,0,'cyclic A',1); empty = g.add(6,0,0,'empty',2)
+  root = g.add(4,a,empty,'A or empty',3); ok = g.body(a,root)
+  input = .llcore..stream('' as .binary); p = .llearley..parser(g,a,input)
+  ok = p.run(); forest = p.forest()
+  call check ok = 0 & forest.validate() & forest.derivations(p.root()) = -1, 'infinite derivation family is a finite cyclic forest'
+  input = .llcore..stream('' as .binary); p = .llearley..parser(g,a,input,1)
+  call check p.run() = 2, 'Earley work exhaustion is distinct from syntax failure'
+  p = .llearley..parser(g,a,input,1000000,8)
+  call check p.run() = 2, 'Earley index budget rejects before large allocation'
+  say 'earley_failures='failures
+  if failures > 0 then return 1
+  return 0
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

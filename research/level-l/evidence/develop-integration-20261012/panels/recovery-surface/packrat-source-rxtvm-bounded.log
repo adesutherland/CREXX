@@ -1,0 +1,5 @@
+Parse status: 2; errors: 1
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/recovery-surface/packrat/bounded.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): value.error: Expected a number or quoted string; found 'many'.
+  first = many
+          ^
+LL_RESOURCE_LIMIT: recovery.errors budget 1, required at least 2. Increase the host budget or reduce the workload.

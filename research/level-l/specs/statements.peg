@@ -1,0 +1,5 @@
+Program <- Statement*
+Statement <- @1 @8 Expr @9
+Expr <- Expr @4 Term / Term
+Term <- Term @5 Atom / Atom
+Atom <- @2 / @1 / @3 / @6 Expr @7

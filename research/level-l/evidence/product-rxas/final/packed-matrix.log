@@ -1,0 +1,16 @@
+Warning in testGenerated.crexx @ 40:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 35, column 6. Declare this binding explicitly if intentional., "byte"
+1 warning(s) in source file
+noopt rxtvm
+generated_checks=4725
+generated_failures=0
+noopt rxbvm
+generated_checks=4725
+generated_failures=0
+Warning in testGenerated.crexx @ 40:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 35, column 6. Declare this binding explicitly if intentional., "byte"
+1 warning(s) in source file
+opt rxtvm
+generated_checks=4725
+generated_failures=0
+opt rxbvm
+generated_checks=4725
+generated_failures=0

@@ -16,6 +16,51 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**LEVEL-L-PARSER-01 — experimental language-tooling research (10 October).**
+The [local research plan](../research/level-l/PLAN.md) owns the wide source audit,
+native Thompson-NFA/DFA and grammar-generator PoCs, re2c wrapping, actual Pika
+reference probes, diagnostics and lex-first equivalence/cost analysis. Hypothesis:
+token-boundary seeding and byte-alphabet compression reduce structural parser
+work for long identifiers and opaque strings/comments. Risks: PEG priority,
+contextual keywords, lost trivia/locations, left-recursive semantics, unbounded
+lexer rollback and quadratic fixed-point updates. Required evidence: identical
+recognition/token spans on declared fixtures, adversarial counterexamples,
+operation counts, retained serial raw samples including lexing cost, and source
+and binary provenance. This is a non-representative, single-mechanism research
+screen; RexxCPS cannot measure this parser mechanism and is intentionally absent.
+No production compiler/VM change or performance verdict is selected.
+The research proof is now executed: the established Rexx-like `.levell` AST
+feeds native DFA and retained direct re2c/cREXX backends, with four opt/no-opt/VM
+surface comparisons passing. Native token-first counts and raw paired screens
+are retained, alongside actual Pika mixed-recursion and quadratic live-object
+counterexamples and a quadratic maximal-munch rollback witness. Production
+backend selection, full parser-maker syntax, AST projection, Unicode breadth
+and owned parse-context lifecycle remain separate acceptance work.
+The expanded native portfolio and representative owned source-tree/composite
+consumers now execute. The [lifecycle review](../research/level-l/COST.md)
+retains passing opt/no-opt checks on both VMs, but the first timing block is
+inconclusive: its outer timer charged previous-context release and the host had
+concurrent compiler activity. The corrected boundary is qualified; uncontended
+measurements and final interpretation remain open. No speed ranking, per-engine
+live-memory result or production selection follows from that block.
+
+**LEVEL-L-PARSER-01 continuation, 12 October.** Pinned XID classes expose
+expensive string-mask copying and repeated whole-NFA scans in the provisional
+regular constructor. Hypothesis: binary membership masks plus a work-queue
+for epsilon closure preserve the exact subset construction while making large
+property classes usable. Semantic risks: missing epsilon edges, changed
+alphabet equivalence, lexical priority and nullable-token admission. Required
+checks: generated DFA recognition/spans against raw Unicode membership, byte/
+scalar controls, both VMs and opt/no-opt, plus unchanged simple-language
+artifacts where representation permits. This remains an experimental,
+non-representative Level L mechanism repair, with no production compiler/VM
+edit or formal speed verdict. The first full-XID attempt was stopped during
+concurrent functional build work; it is not a timing comparison. The binary-mask,
+queue and sparse-key implementation now passes independent XID membership/span
+checks over 12,523 inputs in eight cells, legacy Unicode workload parity and
+32 byte-identical artifact regenerations after warning cleanup. No speed ratio
+or representative performance verdict is selected.
+
 **RXJSON-ACCESS-01 — published and normal hosted checks green
 (18 September).** Five read-only JSON helpers borrow existing immutable binary
 buffers, preserving public ownership and representation. Combined with RAG
@@ -100,6 +145,22 @@ cross-platform qualification visible. Freeze optimization implementation at
 Beta 6; April provides exact-candidate verification and defect repair.
 
 ## Activity Register
+
+`VM-STARTUP-01`: repaired, validated and approved for publication through hotfix
+to develop in this change, 2026-10-12. Adrian accepted
+the first Release verdict and requested integration of remote develop's fixes;
+final base is `b1b2a7423`. Optional rebuild indexes use explicit context scope,
+owned-worker cleanup and ordered metadata fallback on allocation failure.
+Focused Release and Debug pass 78 checks each; all 3,129 normal Release checks
+are verified, including focused replay of two repaired upstream RXPP fixtures.
+Current matched startup observations retain about 79% extended and 63–65% bare
+elapsed reduction. Fine-grained contributor cost remains noisy as disclosed in
+the accepted first verdict. The [final review/receipts](evidence/2026-10-12-vm-startup-repair/README.md)
+and [scope record](VM-STARTUP-REVIEW-WORKLIST.md) cover the findings, ownership
+repair, architecture review and limits. No public layout, RXBIN, graph or dispatch
+change. Normal automatic publication workflows are expected to succeed; their
+live run records provide hosted results. No release is cut. These are local, non-representative startup
+observations, not general throughput or release-wide claims.
 
 Native-inference qualification is owned by the
 [parent plan](../docs/planning/native-inference-backlog.md) and

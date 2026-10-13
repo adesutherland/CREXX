@@ -1,0 +1,10 @@
+options levell
+namespace probe_language
+identifier: token = 1
+other: token = 2
+scan: lexer input bytes
+first: charset = unicode.XID_Start | '_'
+rest: charset = unicode.XID_Continue | '_'
+all.characters: charset = scalar
+name.lex: rule = first rest* then emit identifier
+other.lex: rule = all.characters then emit other

@@ -1,0 +1,206 @@
+[
+  {
+    "backtrace": 1849,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "-DIMPORT_DIR=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-DLIBRARY=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/rexx_src/iterate_condition_cleanup.crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests/iterate_condition_cleanup_opt_opt_ws",
+      "-DCOMPILER_NOOPT=0",
+      "-DASSEMBLER_NOOPT=0",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/run_iterate_condition_cleanup.cmake"
+    ],
+    "name": "iterate_condition_cleanup_opt_opt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "correctness",
+          "flow",
+          "inlining",
+          "optimizer-parity",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library"
+      }
+    ]
+  },
+  {
+    "backtrace": 1851,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "-DIMPORT_DIR=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-DLIBRARY=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/rexx_src/iterate_condition_cleanup.crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests/iterate_condition_cleanup_opt_noopt_ws",
+      "-DCOMPILER_NOOPT=0",
+      "-DASSEMBLER_NOOPT=1",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/run_iterate_condition_cleanup.cmake"
+    ],
+    "name": "iterate_condition_cleanup_opt_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "correctness",
+          "flow",
+          "inlining",
+          "optimizer-parity",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library"
+      }
+    ]
+  },
+  {
+    "backtrace": 1853,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "-DIMPORT_DIR=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-DLIBRARY=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/rexx_src/iterate_condition_cleanup.crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests/iterate_condition_cleanup_noopt_opt_ws",
+      "-DCOMPILER_NOOPT=1",
+      "-DASSEMBLER_NOOPT=0",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/run_iterate_condition_cleanup.cmake"
+    ],
+    "name": "iterate_condition_cleanup_noopt_opt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "correctness",
+          "flow",
+          "inlining",
+          "optimizer-parity",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library"
+      }
+    ]
+  },
+  {
+    "backtrace": 1855,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "-DIMPORT_DIR=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-DLIBRARY=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/rexx_src/iterate_condition_cleanup.crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests/iterate_condition_cleanup_noopt_noopt_ws",
+      "-DCOMPILER_NOOPT=1",
+      "-DASSEMBLER_NOOPT=1",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/run_iterate_condition_cleanup.cmake"
+    ],
+    "name": "iterate_condition_cleanup_noopt_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "correctness",
+          "flow",
+          "inlining",
+          "optimizer-parity",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library"
+      }
+    ]
+  }
+]

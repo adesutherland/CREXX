@@ -1,0 +1,162 @@
+/* Five explicitly bounded, source-derived language consumers. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llstage
+import llpeg
+import lltabpeg
+import lllr
+import llmunch
+import gcPascal
+import gcPlm
+import gcBasic
+import gcLisp
+import gcProlog
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  call consumer 'pascal',gcPascal..tabledata()
+  call consumer 'plm',gcPlm..tabledata()
+  call consumer 'basic',gcBasic..tabledata()
+  call consumer 'lisp',gcLisp..tabledata()
+  call consumer 'prolog',gcProlog..tabledata()
+  say 'consumers_cases='cases
+  say 'consumers_failures='failures
+  if failures then return 1
+  return 0
+consumer: procedure = .void expose failures cases
+  arg language = .string, data = .binary
+  text = readfile('research/level-l/specs/consumer-' || language || '.levell')
+  doc = .llfront..document(text)
+  ordered = .llfront..document(changestr('semantics contextfree',text,'semantics ordered'))
+  sa = doc.run(); sb = ordered.run()
+  if sa <> 0 | sb <> 0 then do
+    failures = failures + 1; say 'FAIL frontend:' language doc.error() ordered.error(); return
+  end
+  table = .lllr..tables(doc.grammar(),doc.root(),'lr1')
+  if table.status() <> 0 then do
+    failures = failures + 1; say 'FAIL LR build:' language table.error(); return
+  end
+  dfa = .llmunch..automaton.legacy(data)
+  path = 'research/level-l/evidence/consumers-' || language || '.txt'; count = 0
+  do while lines(path)
+    row = linein(path)
+    if field(row,1) <> language then iterate
+    id = field(row,2); bytes = x2bin(field(row,4)); lexwant = field(row,5) as .int
+    want = field(row,6) as .int; selected = field(row,9)
+    scan = .llmunch..scanner(dfa,bytes,'reverse'); ls = scan.run(); raw = scan.tokens()
+    if ls = 0 & language = 'prolog' then ls = boundary(raw)
+    count = count + 1; cases = cases + 1
+    if ls <> lexwant then do
+      failures = failures + 1; say 'FAIL lexer:' id 'want='lexwant 'got='ls scan.error()
+    end
+    if ls <> 0 then iterate
+    stage = .llstage..transducer(doc.stage('classify'),raw); ss = stage.run(); input = stage.output()
+    if ss <> 0 | canonical(raw) \== field(row,7) | canonical(input) \== field(row,8) then do
+      failures = failures + 1; say 'FAIL token contract:' id canonical(raw) canonical(input) stage.error()
+    end
+    a = .llpeg..parser(ordered.grammar(),ordered.root(),input,'packrat')
+    b = .lltabpeg..parser(ordered.grammar(),ordered.root(),input)
+    c = .lllr..parser(table,input)
+    sa = a.run(); sb = b.run(); sc = c.run()
+    if sa <> want | sb <> want | sc <> want then do
+      failures = failures + 1; say 'FAIL acceptance:' id 'want='want sa sb sc a.error() b.error() c.error()
+    end
+    if sa = 0 & sb = 0 & sc = 0 then do
+      ta = a.arena(); tb = b.tree(); tc = c.tree()
+      if ta.validate() = 0 | tb.validate() = 0 | tc.validate() = 0 then do
+        failures = failures + 1; say 'FAIL tree invariant:' id ta.error() tb.error() tc.error()
+      end
+      va = named(ta,a.root(),language); vb = named(tb,b.root(),language); vc = named(tc,c.root(),language)
+      if va \== selected | vb \== selected | vc \== selected then do
+        failures = failures + 1; say 'FAIL selected spans:' id 'want='selected 'packrat='va 'tab='vb 'lr='vc
+      end
+      if bincompare(ta.source(),bytes) <> 0 | bincompare(tb.source(),bytes) <> 0 | bincompare(tc.source(),bytes) <> 0 then do
+        failures = failures + 1; say 'FAIL source ownership:' id
+      end
+    end
+    if count <= 3 then say 'CONSUMER|'id'|'sa'|'sb'|'sc'|'c.error()
+  end
+  say 'CONSUMER_SUMMARY|'language'|'count'|states='table.states()'|lexer='dfa.states()
+  return
+boundary: procedure = .int
+  arg input = .llcore..stream
+  source = input.source(); extent = <blen>(source)
+  do at = 0 to input.size() - 1
+    if input.symbol(at) <> 12 then iterate
+    finish = input.finish(at + 1)
+    if finish = extent then iterate
+    byte = <at..u8>(finish) source
+    if byte <> 32 & byte <> 9 & byte <> 10 & byte <> 13 & byte <> 37 then return 1
+  end
+  return 0
+canonical: procedure = .string
+  arg input = .llcore..stream
+  out = ''
+  do i = 0 to input.size() - 1
+    out = out || input.symbol(i) || '@' || input.start(i) || ':' || input.finish(i + 1) || ';'
+  end
+  return out
+named: procedure = .string
+  arg tree = .llcore..tree, root = .int, language = .string
+  entries = .string[]; call collect tree,root,language,entries
+  do i = 2 to entries[0]
+    value = entries[i]; j = i - 1
+    do while j > 0
+      if entries[j] <= value then leave
+      entries[j + 1] = entries[j]; j = j - 1
+    end
+    entries[j + 1] = value
+  end
+  out = ''
+  do i = 1 to entries[0]
+    out = out || entries[i]
+  end
+  return out
+collect: procedure = .void
+  arg tree = .llcore..tree, node = .int, language = .string, expose entries = .string[]
+  if node = 0 then return
+  label = tree.label(node); keep = 0
+  if language = 'lisp' then keep = label = 'atom' | label = 'list' | label = 'quoted.form'
+  else if language = 'prolog' then keep = label = 'name' | label = 'list' | label = 'compound' | label = 'clause'
+  else keep = label = 'name' | label = 'literal' | label = 'assignment' | label = 'block' | label = 'declaration' | label = 'loop' | label = 'print.statement'
+  /* Raw nullable wrappers can sit at the next token's start. The selected
+   * syntax extent is explicitly the hull of consuming terminal leaves. */
+  if keep then call arrayappend entries,label || '@' || edge(tree,node,0) || ':' || edge(tree,node,1) || ';'
+  call collect tree,tree.left(node),language,entries
+  call collect tree,tree.right(node),language,entries
+  return
+edge: procedure = .int
+  arg tree = .llcore..tree, node = .int, last = .int
+  if node = 0 then return -1
+  a = tree.left(node); b = tree.right(node); value = -1
+  if a = 0 & b = 0 then do
+    if tree.start(node) = tree.finish(node) then return -1
+    if last then return tree.finish(node)
+    return tree.start(node)
+  end
+  if last then do
+    value = edge(tree,b,last)
+    if value < 0 then value = edge(tree,a,last)
+  end
+  else do
+    value = edge(tree,a,last)
+    if value < 0 then value = edge(tree,b,last)
+  end
+  return value
+field: procedure = .string
+  arg row = .string, wanted = .int
+  start = 1
+  do i = 1 to wanted - 1
+    start = pos('|',row,start) + 1
+  end
+  finish = pos('|',row,start)
+  if finish = 0 then return substr(row,start)
+  return substr(row,start,finish - start)
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out

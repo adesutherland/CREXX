@@ -1,0 +1,59 @@
+/* Freeze the PDOS-only fixture vocabulary correction. The original native
+   CMS/TSO campaign pack and its compiler outputs remain unchanged. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args=.string[]
+  if args.0<>4 then return 2
+  root=args.1; host=args.2; runtime=args.3; out=args.4
+  address crexx "run test ! -e :out"
+  if rc<>0 then return 2
+  manifest=runtime||"/classic-runtime-delta.sha256"
+  address crexx "run shasum -a 256 --strict -c :manifest"
+  if rc<>0 then return rc
+  directories=.string[]
+  call arrayappend directories,out||"/cms"
+  call arrayappend directories,out||"/tso"
+  address crexx "run mkdir -p :directories[]"
+  if rc<>0 then return rc
+  inputs=.string[]; hashes=.string[]; profiles="cms tso"
+  i=.int; j=.int; source=.string; destination=.string
+  rxc=host||"/bin/rxc_mainframe_address"; rxas=host||"/bin/rxas"
+  imports=runtime||"/shared"
+  do i=1 to words(profiles)
+    profile=word(profiles,i)
+    do j=1 to 2
+      filename="pdos_"||profile||"_address.crexx"; member="MFADDB"
+      if j=2 then do
+        filename="pdos_"||profile||"_address_classic.rexx"; member="MFADDC"
+      end
+      source=root||"/lib/plugins/mainframe_address/tests/"||filename
+      destination=out||"/"||profile||"/"||member||".REXX"
+      address crexx "run cmake -E copy :source :destination"
+      if rc<>0 then return rc
+      base=out||"/"||profile||"/"||member
+      address crexx "run :rxc --no-exe-import -n -i :imports -l :imports -o :base :destination"
+      if rc<>0 then return rc
+      address crexx "run :rxas -o :base :base"
+      if rc<>0 then return rc
+      call arrayappend inputs,source; call arrayappend inputs,destination
+      call arrayappend inputs,base||".rxas"; call arrayappend inputs,base||".rxbin"
+    end
+  end
+  call arrayappend inputs,manifest
+  call arrayappend inputs,root||"/ports/single-threaded/mainframe-pdos-qa-pack.crexx"
+  call arrayappend inputs,root||"/docs/qa/mainframe-address-2026-10-12-pdos-fixture-review.md"
+  call arrayappend inputs,root||"/lib/plugins/mainframe_address/tests/native_address.crexx"
+  call arrayappend inputs,root||"/lib/plugins/mainframe_address/tests/native_address_classic.rexx"
+  call arrayappend inputs,rxc; call arrayappend inputs,rxas
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc<>0 then return rc
+  manifest=out||"/pdos-fixture-delta.sha256"
+  do i=1 to hashes.0
+    call lineout manifest,hashes[i]
+  end
+  call lineout manifest
+  address crexx "run shasum -a 256 --strict -c :manifest"
+  if rc<>0 then return rc
+  say "MAINFRAME PDOS FIXTURE DELTA PASS" out
+  return 0

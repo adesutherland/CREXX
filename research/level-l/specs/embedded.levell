@@ -1,0 +1,13 @@
+options levell
+namespace embedded
+read: parser semantics contextfree input tokens start document
+ident: token = 2
+assign: token = 61
+semi: token = 59
+expression: token = 250
+name: rule = ident
+embedded: rule = expression
+document: rule = name assign embedded semi
+name.shape: tree rule name kind 10 arity 0
+region.shape: tree rule embedded kind 11 arity 1
+document.shape: tree rule document kind 12 arity 2

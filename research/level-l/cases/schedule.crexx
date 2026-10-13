@@ -1,0 +1,80 @@
+/* Independent reachability oracle for generated dependency schedules. */
+options levell
+import rxfnsb
+import llschedule
+import llcore
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  /* All 512 directed graphs on three vertices, eight independent seed sets. */
+  do bits = 0 to 511
+    do seeds = 0 to 7
+      graph = .llschedule..network(); ids = .int[]; expected = .int[]; arcs = .int[]
+      do i = 1 to 3
+        seed = (seeds <idiv> (2 ** (i - 1))) <mod> 2
+        ids[i] = graph.variable('v' || i,seed); expected[i] = seed
+      end
+      do source = 1 to 3
+        do target = 1 to 3
+          slot = (source - 1) * 3 + target
+          arcs[slot] = (bits <idiv> (2 ** (slot - 1))) <mod> 2
+          if arcs[slot] then ok = graph.depends(ids[target],ids[source])
+        end
+      end
+      /* Independent repeated relational closure, fixed three rounds suffice. */
+      do round = 1 to 3
+        do source = 1 to 3
+          do target = 1 to 3
+            if arcs[(source - 1) * 3 + target] & expected[source] then expected[target] = 1
+          end
+        end
+      end
+      status = graph.evaluate('auto'); cases = cases + 1
+      if status <> 0 | graph.certified() = 0 then do
+        failures = failures + 1; say graph.error()
+      end
+      do i = 1 to 3
+        if graph.value(ids[i]) <> expected[i] then failures = failures + 1
+      end
+      status = graph.evaluate('join')
+      if status <> 0 then failures = failures + 1
+      do i = 1 to 3
+        if graph.value(ids[i]) <> expected[i] then failures = failures + 1
+      end
+      if graph.work() > 6 + 9 then failures = failures + 1
+    end
+  end
+  g = .llschedule..network(); a = g.variable('type.a'); b = g.variable('type.b',1)
+  ok = g.depends(a,b); ok = g.depends(b,a)
+  call check g.evaluate('dag') = 1 & pos('needs',g.error()) > 0,'acyclic request explains a real dependency cycle'
+  say g.error()
+  call check g.evaluate('auto') = 0 & g.selected() = 'join' & g.value(a) = 1,'monotone cycle selects finite-height worklist'
+  added = g.variable('new.fact')
+  call check g.certified() = 0 & g.value(a) = -1,'mutation invalidates attribute results'
+  ok = g.depends(added,a)
+  call check g.evaluate() = 0 & g.value(added) = 1,'fresh schedule propagates new dependency'
+  call check g.evaluate('join',1) = 2 & g.certified() = 0,'partial evaluation has no certificate'
+  bad = .llschedule..network(); a = bad.variable('negated'); b = bad.variable('source')
+  ok = bad.depends(a,b,'not')
+  call check bad.evaluate() = 3 & pos('unproved',bad.error()) > 0,'nonmonotone equation rejected rather than loop capped'
+  /* Synthesized tree property: contains a node of declared kind 21 (RETURN). */
+  tree = .llcore..tree.from_source('return 1' as .binary)
+  leaf = tree.add(24,'INTEGER',7,8,0,0); ret = tree.add(21,'RETURN',0,8,leaf,0)
+  root = tree.add(10,'PROCEDURE',0,8,ret,0)
+  facts = .llschedule..network(); variables = .int[]
+  do i = 1 to tree.size()
+    variables[i] = facts.variable('has.return.' || i,tree.kind(i) = 21)
+    if tree.left(i) then ok = facts.depends(variables[i],variables[tree.left(i)])
+    if tree.right(i) then ok = facts.depends(variables[i],variables[tree.right(i)])
+  end
+  call check facts.evaluate('dag') = 0 & facts.value(variables[root]) = 1 & facts.value(variables[leaf]) = 0,'generated bottom-up source-tree attribute'
+  say 'schedule_cases='cases
+  say 'schedule_failures='failures
+  if failures then return 1
+  return 0
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

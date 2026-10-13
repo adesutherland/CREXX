@@ -1,0 +1,6 @@
+options levelb
+import rxcore_package
+main: procedure = .int
+  actual = rxcore_package..value()
+  say "core native package value="actual
+  return actual <> 7

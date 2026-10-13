@@ -1,0 +1,27 @@
+test_changed_qualified_binary_is_rejected (test_split_release.SplitPackageTests.test_changed_qualified_binary_is_rejected) ... ok
+test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu (test_split_release.SplitPackageTests.test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu) ... ok
+test_finalization_rejects_accidental_core_overlap_after_staging (test_split_release.SplitPackageTests.test_finalization_rejects_accidental_core_overlap_after_staging) ... ok
+test_finalization_rejects_changed_provider_without_refreshed_hashes (test_split_release.SplitPackageTests.test_finalization_rejects_changed_provider_without_refreshed_hashes) ... ok
+test_matching_core_passes_but_other_commit_or_toolchain_does_not (test_split_release.SplitPackageTests.test_matching_core_passes_but_other_commit_or_toolchain_does_not) ... ok
+test_msvc_runtime_preflight_accepts_shared_bytes_and_rejects_missing_or_changed (test_split_release.SplitPackageTests.test_msvc_runtime_preflight_accepts_shared_bytes_and_rejects_missing_or_changed) ... ok
+test_nonlocal_archive_entries_are_rejected (test_split_release.SplitPackageTests.test_nonlocal_archive_entries_are_rejected) ... ok
+test_plugin_cannot_replace_core_with_different_bytes (test_split_release.SplitPackageTests.test_plugin_cannot_replace_core_with_different_bytes) ... ok
+test_selected_msvc_redist_uses_actual_crt_name_and_rejects_ambiguity (test_split_release.SplitPackageTests.test_selected_msvc_redist_uses_actual_crt_name_and_rejects_ambiguity) ... ok
+test_shared_identical_runtime_is_not_duplicated (test_split_release.SplitPackageTests.test_shared_identical_runtime_is_not_duplicated) ... ok
+test_signed_plugin_finalization_verifies_both_actual_archives (test_split_release.SplitPackageTests.test_signed_plugin_finalization_verifies_both_actual_archives) ... ok
+test_windows_restricted_path_handles_environment_key_casing (test_split_release.SplitPackageTests.test_windows_restricted_path_handles_environment_key_casing) ... ok
+test_zip_preserves_public_vm_link_and_execute_permission (test_split_release.SplitPackageTests.test_zip_preserves_public_vm_link_and_execute_permission) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.043s
+
+OK
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp_3f1q3ko/output/plugin-stage/CREXX-windows-x64
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp_3f1q3ko/output/plugin-stage/CREXX-windows-x64/bin/providers/rxllama.native.json
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp4b5cf6gu/output/plugin-stage/CREXX-windows-x64
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmps3wyi1s3/output/plugin-stage/CREXX-windows-x64
+SHARED_RUNTIME: concrt140.dll b14c396b93a92b7ae6b202be13980530fd2a9a1302d9944c8786d19804bcc45d
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpm0_skuxz/output/plugin-stage/CREXX-windows-x64
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpm0_skuxz/output/plugin-stage/CREXX-windows-x64/bin/providers/rxllama.native.json
+PACKAGED: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpm0_skuxz/output/assets/llama.rexx-user-test-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-windows-x64-vulkan.zip
+CONSUMER_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpm0_skuxz/output/combined/CREXX-windows-x64

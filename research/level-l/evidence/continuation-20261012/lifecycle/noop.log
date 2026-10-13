@@ -1,0 +1,20 @@
+[  2%] Built target library
+[  4%] Built target rxfnsl_imports
+[ 57%] Built target rxfnsl_base
+[ 59%] Built target levell_base_imports
+[ 65%] Built target levell_driver_imports_0
+[ 73%] Built target levell_syntax_imports_1
+[ 79%] Built target levell_driver_imports_1
+[ 87%] Built target levell_syntax_imports_2
+[ 93%] Built target levell_driver_imports_2
+[100%] Built target rxfnsl
+[  2%] Built target library
+[  4%] Built target rxfnsl_imports
+[ 56%] Built target rxfnsl_base
+[ 58%] Built target levell_base_imports
+[ 64%] Built target levell_driver_imports_0
+[ 72%] Built target levell_syntax_imports_1
+[ 78%] Built target levell_driver_imports_1
+[ 86%] Built target levell_syntax_imports_2
+[ 92%] Built target levell_driver_imports_2
+[100%] Built target levell_unicode_lexer

@@ -1,0 +1,55 @@
+options levelg
+import rxfnsb
+
+/* An ITERATE must detach its IF condition before the next turn reuses the
+ * register for a scalar accessor result. Test with and without inlining. */
+main: procedure = .int
+  owner = .modal_loop()
+  result = owner.run()
+  say "modal on second turn=" || result
+  return result \= 1
+
+modal_loop: class
+  _modal = .int
+  _running = .int
+  _error = .string
+  _turn = .int
+  _session = .counter
+  *: factory
+    _modal = 0
+    _turn = 0
+    _session = .counter()
+    return
+  run: method = .int
+    _running = 1
+    _modal = 0
+    _error = ""
+    do while _running & _error = ""
+      call service()
+      if \_running | _error \= "" then leave
+      if _session.queued() > 0 | _session.pending() > 0 then iterate
+      if _turn = 2 then return _modal
+      if _modal then do
+        call selected()
+        iterate
+      end
+    end
+    return -1
+  service: method = .void
+    _turn = _turn + 1
+    _modal = 1
+    if _turn > 2 then _running = 0
+    return
+  selected: method = .void
+    _modal = 0
+    return
+
+counter: class
+  _queued = .int
+  *: factory
+    _queued = 0
+    return
+  queued: method = .int
+    return _queued
+  pending: method = .int
+    return _queued

@@ -7,6 +7,8 @@ set(CREXX_ARRAY_FORMATTING_MODULE
 add_subdirectory(functions/array-formatting)
 add_subdirectory(exits/pprint)
 add_subdirectory(ui/text-inspector)
+add_subdirectory(fortran)
+add_subdirectory(forth)
 
 add_custom_target(crexx-examples)
 add_dependencies(crexx-examples

@@ -1,0 +1,17 @@
+ASan run directory: cmake-build-console-package-fixture-asan/asan-logs/20261013-150018-build
+==> build
+    log: cmake-build-console-package-fixture-asan/asan-logs/20261013-150018-build/build.log
+==> build passed
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-asan
+[1/11] Building C object CMakeFiles/copy_root_a.dir/root.c.o
+[2/11] Building C object CMakeFiles/copy_provider.dir/root.c.o
+[3/11] Building C object CMakeFiles/copy_provider_static.dir/root.c.o
+[4/11] Building C object CMakeFiles/copy_root_b.dir/root.c.o
+[5/11] Linking C shared module a/libcopy_root_a.rxplugin
+[6/11] Linking C shared library b/libcopy_root_b.dylib
+[7/11] Linking C shared module bin/rxcopy_provider.rxplugin
+[8/11] Linking C static library rxcopy_provider_static.a
+[9/11] Linking C shared module partial/libcopy_root_partial.rxplugin
+[10/11] Generating rxcopy_provider provider package metadata
+ASan run complete: cmake-build-console-package-fixture-asan/asan-logs/20261013-150018-build

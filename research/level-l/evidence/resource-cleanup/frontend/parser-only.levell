@@ -1,0 +1,5 @@
+options levell
+namespace probe
+item: token=1
+parse: parser semantics contextfree input tokens start root
+root: rule = item

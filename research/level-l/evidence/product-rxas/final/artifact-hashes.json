@@ -1,0 +1,42 @@
+{
+  "research/level-l/build/rexxscript1-opt/testRexxScript1-linked.rxbin": {
+    "bytes": 10819272,
+    "sha256": "8a0bcbaaa6fb5b22258fb365c2292ffa870df0bd724cac0e5053768b0c98973a"
+  },
+  "research/level-l/build/generated-opt/testGenerated-linked.rxbin": {
+    "bytes": 919337,
+    "sha256": "502af67cb7ac4241e2370d4e9fb97314dfc53c85c5846548321674abe18748d5"
+  },
+  "research/level-l/build/product-opt/levell.rxbin": {
+    "bytes": 935762,
+    "sha256": "9e1b8df09e1b4bc199659e4e54b4689798d53fe1f4107f922fd8e1cea673e558"
+  },
+  "research/level-l/build/rexxscript1-noopt/testRexxScript1-linked.rxbin": {
+    "bytes": 10733636,
+    "sha256": "df5fa40f636428f264d456eb24f15a3ff96e93d9aad1297f1bde2d2980897369"
+  },
+  "research/level-l/build/generated-noopt/testGenerated-linked.rxbin": {
+    "bytes": 882076,
+    "sha256": "a5e443cb9f228a7a1daa22da424092f2d11898d7ba6dd4ba5b42db0ff63201d2"
+  },
+  "research/level-l/build/product-noopt/levell.rxbin": {
+    "bytes": 881403,
+    "sha256": "998dd681cdde0b2a55186e2c26f89f0ca2ed8a6c4ecf9facb67ca8620f031ae1"
+  },
+  "research/level-l/build/generator-final/rexxscript.rxas": {
+    "bytes": 726253,
+    "sha256": "70841a6e85bb3a8e4887a442e85c26270031633b85b280d25d3ebfbbba02d316"
+  },
+  "research/level-l/build/generator-final/rexxscript.crexx": {
+    "bytes": 696308,
+    "sha256": "db8d4e5c3ad2e9148b272c4a361730a0ec1321ad52b0f852a984c072c0d49f39"
+  },
+  "research/level-l/build/generator-final/example.rxas": {
+    "bytes": 5894,
+    "sha256": "eda5e3ab196455771b97380bdba0aa031cfb62a18f3a0803071aed52f421a970"
+  },
+  "research/level-l/build/source-control/test-source.rxbin": {
+    "bytes": 10942371,
+    "sha256": "db245971705516253c7cec7133c1e4683e1a0c7350334c60f45dac0ca2655f55"
+  }
+}

@@ -1,0 +1,90 @@
+/*
+ * Initial FORTRAN SUBROUTINE/CALL regression.
+ * The current call slice supports scalar copy-in/copy-out arguments.
+ */
+options levelg
+##cflag nosrcmap
+import fortran
+##external fortran
+
+/*
+ * FORTRAN statistics sample.
+ *
+ * The main program processes a series of measurements.
+ * ACCUMULATE updates the sum, sum of squares, and count
+ * through scalar copy-in/copy-out arguments.
+ */
+
+measurements = .float[]
+measurements[1]=10.0
+measurements[2]=12.0
+measurements[3]= 9.0
+measurements[4]=11.0
+measurements[5]=13.0
+measurements[6]=8.0
+results = .float[]
+scaled_results = .float[]
+
+FORTRAN RUN
+      PROGRAM STATISTICS
+      INTEGER I,N
+      REAL VALUES(6)
+      REAL SCALED(6)
+      REAL SUM,SUMSQ,MEAN,VARIANCE,STDDEV
+
+      C$RX BIND VALUES = measurements
+      C$RX EXPORT VALUES = results
+      C$RX EXPORT SCALED = scaled_results
+
+      N = 0
+      SUM = 0.0
+      SUMSQ = 0.0
+
+      DO 100 I = 1,6
+      CALL ACCUMULATE(VALUES(I),SUM,SUMSQ,N)
+  100 CONTINUE
+
+      DO 150 I = 1,6
+      SCALED(I) = VALUES(I) * 2.0
+  150 CONTINUE
+
+      MEAN = SUM / N
+      VARIANCE = SUMSQ / N
+      VARIANCE = VARIANCE - MEAN * MEAN
+      STDDEV = SQRT(VARIANCE)
+
+      WRITE (*,*) 'COUNT:',N
+      WRITE (*,300) SUM
+      WRITE (*,310) MEAN
+      WRITE (*,320) VARIANCE
+      WRITE (*,330) STDDEV
+
+  300 FORMAT (1X,'SUM      =',F10.3)
+  310 FORMAT (1X,'MEAN     =',F10.3)
+  320 FORMAT (1X,'VARIANCE =',F10.3)
+  330 FORMAT (1X,'STDDEV   =',F10.3)
+
+      STOP
+      END
+END FORTRAN
+
+FORTRAN PROCEDURES
+      SUBROUTINE ACCUMULATE(X,SUM,SUMSQ,N)
+      REAL X,SUM,SUMSQ
+      INTEGER N
+
+      SUM = SUM + X
+      SUMSQ = SUMSQ + X * X
+      N = N + 1
+
+      RETURN
+      END
+END FORTRAN
+
+do i=1 to scaled_results[0]
+   say 123 i scaled_results[i]
+end
+
+do j=1 to results[0]
+   say 456 j results[j]
+end

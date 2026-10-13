@@ -1,0 +1,127 @@
+/* cREXX License (MIT). RexxScript adapter to the existing Level C services. */
+options levelb
+namespace rexxscriptbifs expose invoke
+import rxfnsb
+import rexxclassicbifs
+import rexxvalue
+import rexxclassicbifabbrev
+import rexxclassicbifabs
+import rexxclassicbifb2x
+import rexxclassicbifc2d
+import rexxclassicbifc2x
+import rexxclassicbifcenter
+import rexxclassicbifchangestr
+import rexxclassicbifcompare
+import rexxclassicbifcopies
+import rexxclassicbifcountstr
+import rexxclassicbifd2c
+import rexxclassicbifd2x
+import rexxclassicbifdatatype
+import rexxclassicbifdelstr
+import rexxclassicbifdelword
+import rexxclassicbiferrortext
+import rexxclassicbifformat
+import rexxclassicbifinsert
+import rexxclassicbiflastpos
+import rexxclassicbifleft
+import rexxclassicbiflength
+import rexxclassicbifmax
+import rexxclassicbifmin
+import rexxclassicbifnumeric
+import rexxclassicbifoverlay
+import rexxclassicbifpos
+import rexxclassicbifqueued
+import rexxclassicbifrandom
+import rexxclassicbifreverse
+import rexxclassicbifright
+import rexxclassicbifsign
+import rexxclassicbifspace
+import rexxclassicbifstrip
+import rexxclassicbifsubstr
+import rexxclassicbifsubword
+import rexxclassicbifsymbol
+import rexxclassicbiftranslate
+import rexxclassicbiftrunc
+import rexxclassicbifunicode
+import rexxclassicbifvalue
+import rexxclassicbifverify
+import rexxclassicbifword
+import rexxclassicbifwordindex
+import rexxclassicbifwordlength
+import rexxclassicbifwordpos
+import rexxclassicbifwords
+import rexxclassicbifx2b
+import rexxclassicbifx2c
+import rexxclassicbifx2d
+import rexxclassicbifxrange
+
+/** No host registration or ambient external-pool access is introduced. */
+invoke: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  name = context.name()
+  select name
+    when "UPPER" then return rexxclassicbifs..rexxclassicbif_upper(context_ref)
+    when "LOWER" then return rexxclassicbifs..rexxclassicbif_lower(context_ref)
+    when "BITAND" then return rexxclassicbifs..rexxclassicbif_bitand(context_ref)
+    when "BITOR" then return rexxclassicbifs..rexxclassicbif_bitor(context_ref)
+    when "BITXOR" then return rexxclassicbifs..rexxclassicbif_bitxor(context_ref)
+    when "FORM" then return rexxclassicbifnumeric..rexxclassicbif_form(context_ref)
+    when "FUZZ" then return rexxclassicbifnumeric..rexxclassicbif_fuzz(context_ref)
+    when "ABBREV" then return rexxclassicbifabbrev..rexxclassicbif_abbrev(context_ref)
+    when "ABS" then return rexxclassicbifabs..rexxclassicbif_abs(context_ref)
+    when "B2X" then return rexxclassicbifb2x..rexxclassicbif_b2x(context_ref)
+    when "C2D" then return rexxclassicbifc2d..rexxclassicbif_c2d(context_ref)
+    when "C2X" then return rexxclassicbifc2x..rexxclassicbif_c2x(context_ref)
+    when "CENTER" then return rexxclassicbifcenter..rexxclassicbif_center(context_ref)
+    when "CHANGESTR" then return rexxclassicbifchangestr..rexxclassicbif_changestr(context_ref)
+    when "COMPARE" then return rexxclassicbifcompare..rexxclassicbif_compare(context_ref)
+    when "COPIES" then return rexxclassicbifcopies..rexxclassicbif_copies(context_ref)
+    when "COUNTSTR" then return rexxclassicbifcountstr..rexxclassicbif_countstr(context_ref)
+    when "D2C" then return rexxclassicbifd2c..rexxclassicbif_d2c(context_ref)
+    when "D2X" then return rexxclassicbifd2x..rexxclassicbif_d2x(context_ref)
+    when "DATATYPE" then return rexxclassicbifdatatype..rexxclassicbif_datatype(context_ref)
+    when "DELSTR" then return rexxclassicbifdelstr..rexxclassicbif_delstr(context_ref)
+    when "DELWORD" then return rexxclassicbifdelword..rexxclassicbif_delword(context_ref)
+    when "ERRORTEXT" then return rexxclassicbiferrortext..rexxclassicbif_errortext(context_ref)
+    when "FORMAT" then return rexxclassicbifformat..rexxclassicbif_format(context_ref)
+    when "INSERT" then return rexxclassicbifinsert..rexxclassicbif_insert(context_ref)
+    when "LASTPOS" then return rexxclassicbiflastpos..rexxclassicbif_lastpos(context_ref)
+    when "LEFT" then return rexxclassicbifleft..rexxclassicbif_left(context_ref)
+    when "LENGTH" then return rexxclassicbiflength..rexxclassicbif_length(context_ref)
+    when "MAX" then return rexxclassicbifmax..rexxclassicbif_max(context_ref)
+    when "MIN" then return rexxclassicbifmin..rexxclassicbif_min(context_ref)
+    when "DIGITS" then return rexxclassicbifnumeric..rexxclassicbif_digits(context_ref)
+    when "OVERLAY" then return rexxclassicbifoverlay..rexxclassicbif_overlay(context_ref)
+    when "POS" then return rexxclassicbifpos..rexxclassicbif_pos(context_ref)
+    when "QUEUED" then return rexxclassicbifqueued..rexxclassicbif_queued(context_ref)
+    when "RANDOM" then return rexxclassicbifrandom..rexxclassicbif_random(context_ref)
+    when "REVERSE" then return rexxclassicbifreverse..rexxclassicbif_reverse(context_ref)
+    when "RIGHT" then return rexxclassicbifright..rexxclassicbif_right(context_ref)
+    when "SIGN" then return rexxclassicbifsign..rexxclassicbif_sign(context_ref)
+    when "SPACE" then return rexxclassicbifspace..rexxclassicbif_space(context_ref)
+    when "STRIP" then return rexxclassicbifstrip..rexxclassicbif_strip(context_ref)
+    when "SUBSTR" then return rexxclassicbifsubstr..rexxclassicbif_substr(context_ref)
+    when "SUBWORD" then return rexxclassicbifsubword..rexxclassicbif_subword(context_ref)
+    when "SYMBOL" then return rexxclassicbifsymbol..rexxclassicbif_symbol(context_ref)
+    when "TRANSLATE" then return rexxclassicbiftranslate..rexxclassicbif_translate(context_ref)
+    when "TRUNC" then return rexxclassicbiftrunc..rexxclassicbif_trunc(context_ref)
+    when "UNICODEVERSION" then return rexxclassicbifunicode..rexxclassicbif_unicodeversion(context_ref)
+    when "VALUE" then return rexxclassicbifvalue..rexxclassicbif_value(context_ref)
+    when "VERIFY" then return rexxclassicbifverify..rexxclassicbif_verify(context_ref)
+    when "WORD" then return rexxclassicbifword..rexxclassicbif_word(context_ref)
+    when "WORDINDEX" then return rexxclassicbifwordindex..rexxclassicbif_wordindex(context_ref)
+    when "WORDLENGTH" then return rexxclassicbifwordlength..rexxclassicbif_wordlength(context_ref)
+    when "WORDPOS" then return rexxclassicbifwordpos..rexxclassicbif_wordpos(context_ref)
+    when "WORDS" then return rexxclassicbifwords..rexxclassicbif_words(context_ref)
+    when "X2B" then return rexxclassicbifx2b..rexxclassicbif_x2b(context_ref)
+    when "X2C" then return rexxclassicbifx2c..rexxclassicbif_x2c(context_ref)
+    when "X2D" then return rexxclassicbifx2d..rexxclassicbif_x2d(context_ref)
+    when "XRANGE" then return rexxclassicbifxrange..rexxclassicbif_xrange(context_ref)
+    when "CENTRE" then return rexxclassicbifcenter..rexxclassicbif_center(context_ref)
+    otherwise do
+      if wordpos(name,"ADDRESS ARG CONDITION DATE TIME CHARIN CHAROUT CHARS LINEIN LINEOUT LINES STREAM SOURCELINE TRACE ERASEFILE") > 0 then call context.setError("RS_CAPABILITY","host/activation service is unavailable: " || name)
+      else call context.setError("RS_FUNCTION","undefined function " || name)
+    end
+  end
+  return .RexxValue("")

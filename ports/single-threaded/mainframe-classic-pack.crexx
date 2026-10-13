@@ -1,0 +1,82 @@
+/* Freeze a runtime-only amendment. Keep the original native compiler,
+   assembler, linker and campaign receipts unchanged. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args=.string[]
+  if args.0<>5 then return 2
+  root=args.1; host=args.2; native=args.3; original=args.4; out=args.5
+  address crexx "run test ! -e :out"
+  if rc<>0 then return 2
+  directories=.string[]
+  call arrayappend directories,out||"/cms"
+  call arrayappend directories,out||"/tso"
+  call arrayappend directories,out||"/shared"
+  call arrayappend directories,out||"/control"
+  address crexx "run mkdir -p :directories[]"
+  if rc<>0 then return rc
+  inputs=.string[]; hashes=.string[]
+  profiles="cms tso"; i=.int; j=.int; source=.string; destination=.string; files=.string
+  do i=1 to words(profiles)
+    profile=word(profiles,i); extension="MODULE"
+    if profile="tso" then extension="XMI"
+    dir=native||"/"||profile||"-rxvm-classic-providers-v2"
+    before=dir||"/source-before.sha256"; after=dir||"/source-after.sha256"
+    address crexx "run cmp :before :after"
+    if rc<>0 then return rc
+    address crexx "run shasum -a 256 --strict -c :before" output hashes
+    if rc<>0 then return rc
+    files="RXVM."||extension||" source-before.sha256 source-after.sha256 inputs-outputs.sha256 build-profile.txt"
+    do j=1 to words(files)
+      source=dir||"/"||word(files,j); destination=out||"/"||profile||"/"||word(files,j)
+      address crexx "run cmake -E copy :source :destination"
+      if rc<>0 then return rc
+      call arrayappend inputs,destination
+    end
+  end
+  libraries="library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin classlib.rxbin"
+  do i=1 to words(libraries)
+    source=host||"/bin/"||word(libraries,i)
+    if word(libraries,i)<>"classlib.rxbin" then do
+      previous=original||"/shared/"||word(libraries,i)
+      address crexx "run cmp :previous :source"
+      if rc<>0 then return rc
+    end
+    destination=out||"/shared/"||word(libraries,i)
+    address crexx "run cmake -E copy :source :destination"
+    if rc<>0 then return rc
+    call arrayappend inputs,destination
+  end
+  files="interpreter/rxvmload.c lib/plugins/cstream/rxcstream.c ports/single-threaded/mainframe_fs.c ports/single-threaded/CMakeLists.txt ports/single-threaded/mainframe-build.crexx ports/single-threaded/mainframe-classic-pack.crexx ports/single-threaded/classic_provider_smoke.rexx docs/qa/mainframe-address-2026-10-12-classic-provider-review.md"
+  do i=1 to words(files)
+    call arrayappend inputs,root||"/"||word(files,i)
+  end
+  call arrayappend inputs,original||"/frozen-inputs.sha256"
+  call arrayappend inputs,original||"/campaign-supplement.sha256"
+  rxc=host||"/bin/rxc_mainframe_address"; rxas=host||"/bin/rxas"; rxlink=host||"/bin/rxlink"
+  call arrayappend inputs,rxc; call arrayappend inputs,rxas; call arrayappend inputs,rxlink
+  object=out||"/control/SMOKE"; linked=out||"/control/SMOKEL"
+  smoke=root||"/ports/single-threaded/classic_provider_smoke.rexx"; imports=out||"/shared"
+  address crexx "run :rxc --no-exe-import -n -i :imports -l :imports -o :object :smoke"
+  if rc<>0 then return rc
+  address crexx "run :rxas -o :object :object"
+  if rc<>0 then return rc
+  library=imports||"/library.rxbin"; classic=imports||"/rxfnsc.rxbin"
+  general=imports||"/rxfnsg.rxbin"; classes=imports||"/classlib.rxbin"
+  requirements=out||"/control/providers.txt"
+  address crexx "run :rxlink -p :requirements -o :linked :object :library :classic :general :classes"
+  if rc<>0 then return rc
+  call arrayappend inputs,object||".rxas"; call arrayappend inputs,object||".rxbin"
+  call arrayappend inputs,linked||".rxbin"; call arrayappend inputs,requirements
+  call arraydrop hashes
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc<>0 then return rc
+  manifest=out||"/classic-runtime-delta.sha256"
+  do i=1 to hashes.0
+    call lineout manifest,hashes[i]
+  end
+  call lineout manifest
+  address crexx "run shasum -a 256 --strict -c :manifest"
+  if rc<>0 then return rc
+  say "MAINFRAME CLASSIC RUNTIME DELTA PASS" out
+  return 0

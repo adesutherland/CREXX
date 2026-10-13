@@ -1,0 +1,10 @@
+{
+  "cmake/CrexxBuildStages.cmake": "f7412bbd127413d0c79bf596c4dc783e6130e3b0daf54ed8a1b9f417ee2a4018",
+  "rxpa/RXPluginFunction.cmake": "08f77c62932c51a069571b6bdb451133bdc326ea82c5302b57468e9a36195065",
+  "rxpa/WriteProviderPackage.cmake": "84ba77df8e240880701fcc5c7364e45d57770cbf467b7e0cc32811d504e140cd",
+  "scripts/package-core-release.py": "233e6efe5ef27817c202d6a10360c7bca0fab8171d8b999688165e776b4002f5",
+  "scripts/package-sdk-release.py": "b785ea7e06f4d57e937a16dc2cf8d682764d26ed610fbbde7a6d0dd3be5b838f",
+  "tests/rxpa/provider-package-copy/CMakeLists.txt": "522aeec0c6e528659c00bb8958da4d5b2ddd416c41c32e564eda73484e52cd00",
+  "tests/rxpa/provider-package-copy/root.c": "1dca7239bb5f9c7cd87b91cef069588d143873c2c39154fe23e9127bbe0a2b65",
+  "tests/rxpa/provider-package-copy/check-file-links.py": "f020aaf1b1ad34da7860584327725ef7143a3f7b4e7dcf6a22aec355f5e84c73"
+}

@@ -1,0 +1,79 @@
+/* Exact weighted byte-edit oracle; independent hand-enumerated finite language. */
+options levell
+import rxfnsb
+import llcore
+import llrepair
+main: procedure = .int expose failures
+  failures = 0; request = .llrepair..oracle
+  g = .llcore..grammar('contextfree')
+  a = g.literal('ab' as .binary,'ab',1); b = g.literal('ba' as .binary,'ba',2)
+  root = g.add(4,a,b,'two accepted words',3)
+  checked = 0
+  do wi = 1 to 2
+    do wd = 1 to 2
+      do ws = 1 to 3
+        do n = 0 to 3
+          total = 3 ** n
+          do index = 0 to total - 1
+            code = index; source = ''
+            do j = 1 to n
+              source = source || substr('abx',code <mod> 3 + 1,1); code = code <idiv> 3
+            end
+            exact = min(distance(source,'ab',wi,wd,ws),distance(source,'ba',wi,wd,ws))
+            request = .llrepair..oracle(g,root,source as .binary,exact,wi,wd,ws)
+            status = request.run(); target = request.repaired()
+            if status <> 0 | request.cost() <> exact | (bin2x(target) <> '6162' & bin2x(target) <> '6261') then do
+              say 'ORACLE DIFFERENCE:' source wi wd ws exact status request.cost() request.error(); failures = failures + 1
+            end
+            checked = checked + 1
+          end
+        end
+      end
+    end
+  end
+  say 'weighted_oracle_independent_cases='checked
+  request = .llrepair..oracle(g,root,'xx' as .binary,1)
+  call check request.run() = 1, 'complete bounded search reports no repair within one edit'
+  request = .llrepair..oracle(g,root,'xx' as .binary,2,1,1,1,1)
+  call check request.run() = 2, 'state exhaustion is distinct from proof of no repair'
+  request = .llrepair..oracle(g,root,'ab' as .binary,2,0)
+  call check request.run() = 3, 'zero cost edits rejected by finite search contract'
+  request = .llrepair..oracle(g,root,'xx' as .binary,2,1,1,1,20000,1)
+  call check request.run() = 2, 'recognition/search work exhaustion is explicit'
+  g = .llcore..grammar('contextfree')
+  s = g.add(5,0,0,'S',1); a = g.add(1,97,0,'a',2); pair = g.add(2,s,s,'S S',3)
+  alternatives = g.add(4,pair,a,'S S or a',4); ok = g.body(s,alternatives)
+  request = .llrepair..oracle(g,s,'aaxa' as .binary,1)
+  call check request.run() = 0 & request.cost() = 1, 'ambiguous CFG repaired without choosing one derivation'
+  forest = request.forest()
+  call check forest.validate() & forest.derivations(request.root()) >= 1, 'accepted repair retains a packed forest'
+  say 'CFG repair='bin2x(request.repaired()) 'edits='request.edits()
+  g = .llcore..grammar('contextfree'); nul = g.add(1,0,0,'NUL',1)
+  request = .llrepair..oracle(g,nul,'' as .binary,1)
+  call check request.run() = 0 & bin2x(request.repaired()) = '00', 'NUL is insertable data, distinct from EOF'
+  say 'repair_failures='failures
+  if failures > 0 then return 1
+  return 0
+/* Wagner-Fischer over exactly two independently listed target words. */
+distance: procedure = .int
+  arg source = .string, target = .string, wi = .int, wd = .int, ws = .int
+  width = length(target) + 1; d = .int[]; j = .int
+  do j = 0 to length(target)
+    d[j + 1] = j * wi
+  end
+  do i = 1 to length(source)
+    d[i * width + 1] = i * wd
+    do j = 1 to length(target)
+      change = 0
+      if substr(source,i,1) <> substr(target,j,1) then change = ws
+      d[i * width + j + 1] = min(d[(i - 1) * width + j + 1] + wd,d[i * width + j] + wi,d[(i - 1) * width + j] + change)
+    end
+  end
+  return d[length(source) * width + length(target) + 1]
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

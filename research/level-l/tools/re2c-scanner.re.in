@@ -1,0 +1,37 @@
+/* Generated control for the Level L regex specification. ASCII, no NUL. */
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+int main(void) {
+    size_t cap = 4096, len = 0;
+    unsigned char *input = malloc(cap + 1);
+    if (!input) return 2;
+    int ch;
+    while ((ch = getchar()) != EOF) {
+        if (len == cap) {
+            cap *= 2;
+            unsigned char *next = realloc(input,cap + 1);
+            if (!next) { free(input); return 2; }
+            input = next;
+        }
+        input[len++] = (unsigned char) ch;
+    }
+    input[len] = 0;
+    const unsigned char *YYCURSOR = input, *YYMARKER;
+    for (;;) {
+        const unsigned char *start = YYCURSOR;
+        int kind;
+/*!re2c
+        re2c:define:YYCTYPE = "unsigned char";
+        re2c:yyfill:enable = 0;
+@@RULES@@
+        "\x00" {
+            if ((size_t)(start-input) == len) { free(input); return 0; }
+            printf("ERR %zu\n",(size_t)(start-input)); free(input); return 1;
+        }
+        * { printf("ERR %zu\n",(size_t)(start-input)); free(input); return 1; }
+*/
+token:
+        printf("%d %zu %zu\n",kind,(size_t)(start-input),(size_t)(YYCURSOR-start));
+    }
+}

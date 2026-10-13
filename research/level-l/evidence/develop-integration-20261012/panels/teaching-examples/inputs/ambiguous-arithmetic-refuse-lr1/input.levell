@@ -1,0 +1,14 @@
+/* Both associations survive; do not execute whichever appears first. */
+options levell
+namespace levell_lesson
+number: token
+plus: token
+times: token
+scan: lexer input utf8
+  digit: charset = '0' to '9'
+  number.lex: rule = digit+ then emit number
+  plus.lex: rule = '+' then emit plus
+  times.lex: rule = '*' then emit times
+  whitespace: rule = ' '+ then skip
+parse: parser start expression backend lr1
+  expression: rule = expression plus expression | expression times expression | number

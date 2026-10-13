@@ -1,0 +1,154 @@
+/* Regional Pratt specialization versus whole-grammar LR, with tree parity. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llregional
+import llpratt
+import lllr
+import llproject
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0; source = ''; path = 'research/level-l/specs/embedded.levell'
+  do while lines(path)
+    source = source || linein(path) || '0a'x
+  end
+  doc = .llfront..document(source)
+  if doc.run() <> 0 then do
+    say doc.error(); return 1
+  end
+  ops = .llpratt..operators(1,40,41)
+  ok = ops.infix(43,10,0,'add'); ok = ops.infix(45,10,0,'subtract')
+  ok = ops.infix(42,20,0,'multiply'); ok = ops.infix(94,30,1,'power'); ok = ops.prefix(45,'negate')
+  graph = doc.grammar(); compiled = .llregional..plan(graph,doc.root(),ops,250,91,93)
+  if compiled.build() <> 0 then do
+    say compiled.error(); return 1
+  end
+  expanded = compiled.expanded(); whole = .lllr..tables(expanded,compiled.root(),'lr1')
+  if whole.status() <> 0 then do
+    say whole.error(); return 1
+  end
+  schema = doc.schema()
+  ok = schema.keep('atom',1,0); ok = schema.keep('group',4,1)
+  ok = schema.keep('add',2,2); ok = schema.keep('subtract',2,2)
+  ok = schema.keep('multiply',2,2); ok = schema.keep('power',2,2); ok = schema.keep('negate',3,1)
+  call probe compiled,whole,schema,'answer = [ 1 + 2 * (3 - 4) ];'
+  call probe compiled,whole,schema,'power=[2^3^2];'
+  call probe compiled,whole,schema,'left=[1-2-3];'
+  call probe compiled,whole,schema,'missing=[1+];'
+  call probe compiled,whole,schema,'missing=[1+2;'
+  call probe compiled,whole,schema,'missing=[(1+2];'
+  call probe compiled,whole,schema,'stray=1+2];'
+  call probe compiled,whole,schema,'nested=[[1]];'
+  do n = 0 to 4
+    call enumerate compiled,whole,schema,'',n
+  end
+  repeated = graph; repeatedroot = repeated.add(7,doc.root(),0,'file',99)
+  multiple = .llregional..plan(repeated,repeatedroot,ops,250,91,93)
+  call check multiple.build() = 0,'planner admits repeated independent regions'
+  expandedmany = multiple.expanded(); manytable = .lllr..tables(expandedmany,repeatedroot,'lr1')
+  manyinput = lex('a=[1+2]; b=[3*(4-5)];')
+  manyp = .llregional..parser(multiple,manyinput); manyq = .lllr..parser(manytable,manyinput)
+  call check manyp.run() = 0 & manyq.run() = 0 & manyp.regions() = 2,'two embedded regions execute with separate owned trees'
+  manya = manyp.tree(); manyb = manyq.tree()
+  call check manya.validate() & manyb.validate() & semantic(manya,manyp.root(),schema) == semantic(manyb,manyq.root(),schema),'multiple-region trees agree with whole CFG'
+  /* Crossing a delimiter/callee alphabet boundary is rejected at build time. */
+  badops = .llpratt..operators(1,91,93)
+  unsafe = .llregional..plan(graph,doc.root(),badops,250,91,93)
+  call check unsafe.build() = 3 & pos('inner grammar',unsafe.error()) > 0,'unsafe delimiter composition rejected'
+  say unsafe.error()
+  changed = graph; unused = changed.add(1,91,0,'outer opener',77)
+  unsafe = .llregional..plan(changed,doc.root(),ops,250,91,93)
+  call check unsafe.build() = 3 & pos('outer grammar',unsafe.error()) > 0,'outer grammar cannot share reserved opener'
+  input = lex('x=[1];'); limited = .llregional..parser(compiled,input,1)
+  call check limited.run() = 2,'composite budget exhaustion distinct'
+  completed = .llregional..parser(compiled,input); status = completed.run()
+  do fuel = 1 to completed.work() - 1
+    limited = .llregional..parser(compiled,input,fuel)
+    if limited.run() <> 2 then do
+      failures = failures + 1; say 'FUEL CONTRACT:' fuel completed.work() limited.error()
+    end
+  end
+  reserved = .llcore..stream.tokens('x' as .binary); ok = reserved.append(250,0,1)
+  bad = .llregional..parser(compiled,reserved)
+  call check bad.run() = 3,'synthetic region tokens forbidden on raw ingress'
+  say 'regional_cases='cases
+  say 'regional_failures='failures
+  if failures then return 1
+  return 0
+probe: procedure = .void expose failures cases
+  arg compiled = .llregional..plan, whole = .lllr..tables, schema = .llproject..schema, text = .string
+  input = lex(text); composite = .llregional..parser(compiled,input); plain = .lllr..parser(whole,input)
+  a = composite.run(); b = plain.run(); cases = cases + 1
+  if a <> b then do
+    failures = failures + 1; say 'REGIONAL STATUS:' text a b composite.error() plain.error(); return
+  end
+  if a = 0 then do
+    ca = composite.tree(); cb = plain.tree()
+    pa = .llproject..projection(ca,composite.root(),schema); pb = .llproject..projection(cb,plain.root(),schema)
+    sa = pa.run(); sb = pb.run()
+    if sa <> 0 | sb <> 0 then do
+      failures = failures + 1; say 'REGIONAL PROJECTION:' text sa sb pa.error() pb.error(); return
+    end
+    ta = pa.tree(); tb = pb.tree()
+    if canonical(ta,pa.root()) \== canonical(tb,pb.root()) | ta.validate() = 0 | tb.validate() = 0 | bincompare(ta.source(),text as .binary) <> 0 then do
+      failures = failures + 1; say 'REGIONAL TREE:' text canonical(ta,pa.root()) canonical(tb,pb.root())
+    end
+    if pos('answer',text) = 1 then say 'EMBEDDED_TREE='canonical(ta,pa.root())
+  end
+  return
+enumerate: procedure = .void
+  arg compiled = .llregional..plan, whole = .lllr..tables, schema = .llproject..schema, text = .string, remaining = .int
+  if remaining = 0 then do
+    call probe compiled,whole,schema,'x=[' || text || '];'; return
+  end
+  alphabet = '1+-()'
+  do i = 1 to length(alphabet)
+    call enumerate compiled,whole,schema,text || substr(alphabet,i,1),remaining - 1
+  end
+  return
+lex: procedure = .llcore..stream
+  arg text = .string
+  bytes = text as .binary; out = .llcore..stream.tokens(bytes); at = 0; extent = <blen>(bytes)
+  do while at < extent
+    c = <at..u8>(at) bytes
+    if c = 32 then at = at + 1
+    else do
+      start = at; at = at + 1; kind = c
+      if c >= 48 & c <= 57 then do
+        kind = 1
+        do while at < extent
+          c = <at..u8>(at) bytes
+          if c < 48 | c > 57 then leave
+          at = at + 1
+        end
+      end
+      else if c >= 97 & c <= 122 then do
+        kind = 2
+        do while at < extent
+          c = <at..u8>(at) bytes
+          if c < 97 | c > 122 then leave
+          at = at + 1
+        end
+      end
+      ok = out.append(kind,start,at)
+    end
+  end
+  return out
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return ''
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || canonical(tree,tree.left(node)) || canonical(tree,tree.right(node)) || ')'
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return
+
+semantic: procedure = .string
+  arg tree = .llcore..tree, node = .int, schema = .llproject..schema
+  if node = 0 then return ''
+  children = semantic(tree,tree.left(node),schema) || semantic(tree,tree.right(node),schema)
+  if schema.index(tree.label(node)) = 0 then return children
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || children || ')'

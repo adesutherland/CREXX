@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building C object rxpa/CMakeFiles/crexx-provider-package.dir/__/binutils/rxsha256.c.o
+[2/4] Building CXX object rxpa/CMakeFiles/crexx-provider-package.dir/__/lib/plugins/llama/provider_package.cpp.o
+[3/4] Linking CXX executable bin/crexx-provider-package

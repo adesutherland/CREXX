@@ -1,0 +1,98 @@
+[
+  {
+    "mode": "opt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/lib/plugins/console/tests/test_console.crexx"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-0.log"
+  },
+  {
+    "mode": "opt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-1.log"
+  },
+  {
+    "mode": "opt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxlink",
+      "-s",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-linked",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/library"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-2.log"
+  },
+  {
+    "mode": "opt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxvm",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-linked"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/opt-3.log"
+  },
+  {
+    "mode": "noopt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin",
+      "-n",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/lib/plugins/console/tests/test_console.crexx"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-0.log"
+  },
+  {
+    "mode": "noopt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-1.log"
+  },
+  {
+    "mode": "noopt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxlink",
+      "-s",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-linked",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/library"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-2.log"
+  },
+  {
+    "mode": "noopt",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package/bin/rxvm",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-linked"
+    ],
+    "exit": 0,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/console-contract/noopt-3.log"
+  }
+]

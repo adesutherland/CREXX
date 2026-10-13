@@ -1,0 +1,523 @@
+{
+  "recorded_utc": "2026-10-12T12:24:48.592770+00:00",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "head": "70e9a48ea934429c43ba6548b55333da8af9d9d9",
+  "branch": "levell",
+  "scope": "Native functional continuation; current dirty implementation identified by source hashes. Original research and full LANG criteria remain open.",
+  "sources": {
+    "lib/rxfnsl/CMakeLists.txt": {
+      "bytes": 120,
+      "sha256": "27abfc47452bbcf78eebc85b2f8ccfef80c49acf89803bdfef97c322a641787b"
+    },
+    "lib/rxfnsl/grammar/levell.levell": {
+      "bytes": 12377,
+      "sha256": "df56f035af85e2220009abbe5d9afdcdd6b3517435c124f343acb1657f75981b"
+    },
+    "lib/rxfnsl/grammar/gennorm2.levell": {
+      "bytes": 1532,
+      "sha256": "93675ea553ab8904c20de068895f6aaa450698607622b524ce158bbe0552aab4"
+    },
+    "lib/rxfnsl/grammar/tinyexpr.levell": {
+      "bytes": 1249,
+      "sha256": "caa9656a16a899f406d0bc5ddd127083c66d431b28894f5ceb21127fbe3ae078"
+    },
+    "lib/rxfnsl/tools/CMakeLists.txt": {
+      "bytes": 7099,
+      "sha256": "9ce919fad9a68f5bb424038961e0fe58ac08d01bce8aacf9c9c73800668f1343"
+    },
+    "lib/rxfnsl/tools/generate.cmake": {
+      "bytes": 864,
+      "sha256": "87c3881b212109db459261c4fb21ef30e421e2c0db5be8287e0b7ddb53dcc86b"
+    },
+    "lib/rxfnsl/tools/build-local.sh": {
+      "bytes": 1733,
+      "sha256": "b47b2dd48eb18999ec5b678b99c69c34cdec41980f077cf518adb6d504d6e759"
+    },
+    "lib/rxfnsl/tools/example.levell": {
+      "bytes": 415,
+      "sha256": "1ec5c2d3569d83d1ca2cae26e82ab69e1c83cd5554ef04339e45de9982c6f136"
+    },
+    "lib/rxfnsl/tools/levell.crexx": {
+      "bytes": 22203,
+      "sha256": "31418188fc5d40affc323a7417c31bb1eeaf476926184dd6b983a700c38df87c"
+    },
+    "lib/rxfnsl/bootstrap/CMakeLists.txt": {
+      "bytes": 1739,
+      "sha256": "c0dc04a31fafe5e6188b14c41e432f0ce1c595a0b6f6d8983fafa9c186401e3b"
+    },
+    "lib/rxfnsl/bootstrap/prepare-front.cmake": {
+      "bytes": 830,
+      "sha256": "77bd4dbd250496d268f313e1299ccbf6827ac61f057a70a87efdd24093b1bbab"
+    },
+    "lib/rxfnsl/bootstrap/seed-reader.inc": {
+      "bytes": 8811,
+      "sha256": "4e93ddcf80fedb0906e7c63e48178f8fabd5640069fdb58ef20b6a1c5af30583"
+    },
+    "lib/rxfnsl/unicode/generate-properties.cmake": {
+      "bytes": 907,
+      "sha256": "9263cdaf2261d7c43d741a772970768ba7fba817bc77555b31ebf844c427f65b"
+    },
+    "lib/rxfnsl/unicode/generate-properties.crexx": {
+      "bytes": 5058,
+      "sha256": "effd19cff3224e1df820ac26784f71968e100445d273ab051e65f8e0b025507d"
+    },
+    "lib/rxfnsl/unicode/Properties.cmake": {
+      "bytes": 1582,
+      "sha256": "2018ccc1edd24d9a97a42b772b42d7ab6eebb82185d88726e6099e99b164b76e"
+    },
+    "lib/rxfnsl/tests_functional/recovery-origin-probe.crexx": {
+      "bytes": 825,
+      "sha256": "5ad0f4304214514cd7fa83104d5a27e63e6349b94d004d58e8969e5465b675f4"
+    },
+    "lib/rxfnsl/tests_functional/check-tree-surface.py": {
+      "bytes": 4084,
+      "sha256": "07095174d586652b5b58edd4219ea457a9f7267c5625334bc521622617a78f44"
+    },
+    "lib/rxfnsl/tests_functional/check-budget-surface.py": {
+      "bytes": 5904,
+      "sha256": "42b47a87083d7bd3a8aa5a686b308a2d0ec9e62a10b622d674d8a5ac413624f2"
+    },
+    "lib/rxfnsl/tests_functional/check-limit-regressions.py": {
+      "bytes": 4349,
+      "sha256": "691ef0a47d50845f9c9e6429feb880f06ff2020afb6762f4a8ede56422bb48e6"
+    },
+    "lib/rxfnsl/tests_functional/check-packed-matrix.sh": {
+      "bytes": 1356,
+      "sha256": "4f93b65551b878ebc34fcc90a28ef010f687315088fb1cc24d4024f7d5e7014f"
+    },
+    "lib/rxfnsl/tests_functional/CMakeLists.txt": {
+      "bytes": 3480,
+      "sha256": "9127093b5fc4fc7e0dcf038f086ada693ac691ce612f5355fdb10f55efd1fd6a"
+    },
+    "lib/rxfnsl/tests_functional/surface-probe.crexx": {
+      "bytes": 1230,
+      "sha256": "8381c75b313f6e04e9f23923fedc49c170372e79962f3b793e5497319af4f92a"
+    },
+    "lib/rxfnsl/tests_functional/check-unicode-lexer.py": {
+      "bytes": 5255,
+      "sha256": "f6ff03dbcd40118123d584d0f5b071d5f48824bd971ec5fbf28703cebe17eda6"
+    },
+    "lib/rxfnsl/tests_functional/check-image-parity.py": {
+      "bytes": 1480,
+      "sha256": "060c9e863adbd0f4d508d957dc201aab0c5494e552834a5ece49742befeae97d"
+    },
+    "lib/rxfnsl/tests_functional/testGenerated.crexx": {
+      "bytes": 4334,
+      "sha256": "3fce245d0aef326a1b6ccd965587c64819fe02214d3d4bd9f749264f49dba33b"
+    },
+    "lib/rxfnsl/tests_functional/check-source-emission.py": {
+      "bytes": 2962,
+      "sha256": "c409ec59b8750a30111f3f1353254c0aa4525780452fca468b82bcccb50b045f"
+    },
+    "lib/rxfnsl/tests_functional/check-front-bootstrap.py": {
+      "bytes": 3508,
+      "sha256": "062f5b0b7d61e41531b05168cb1ba72acb38d25cc7281c40de34189b9be15c60"
+    },
+    "lib/rxfnsl/tests_functional/check-property-data.py": {
+      "bytes": 4601,
+      "sha256": "3d15d99bd67b5cc330f3d04f61bfea86abd07a00e3c611cf4f355e3554480805"
+    },
+    "lib/rxfnsl/tests_functional/prepare-surface-runtime.py": {
+      "bytes": 2206,
+      "sha256": "dfc7e37ddaac9412c4cdaf9071d7c525221fb61ddc82e21e7070215d2a474162"
+    },
+    "lib/rxfnsl/tests_functional/check-common-surface.py": {
+      "bytes": 7446,
+      "sha256": "ce6f4178a0f369cbc6ddb8c9318ddee20328db0dc3bdea53869daa0e48a4262b"
+    },
+    "lib/rxfnsl/tests_functional/check-bootstrap-build.py": {
+      "bytes": 5585,
+      "sha256": "f3063c79a75623fd88db18d94accd2ccd8eb7870cd8b8fb0c771bcd15aabe73c"
+    },
+    "lib/rxfnsl/tests_functional/specification-probe.crexx": {
+      "bytes": 553,
+      "sha256": "563cb8b45f3bfc895f8543b6453c6c34a27508485a89dc301b024900016d98ba"
+    },
+    "lib/rxfnsl/tests_functional/limit-regression-probe.crexx": {
+      "bytes": 1290,
+      "sha256": "f3308d3d1591fbf91dc49dea2b2455853c33af656a5610baf48c3e3ef9f74ae9"
+    },
+    "lib/rxfnsl/tests_functional/bootstrap-probe.crexx": {
+      "bytes": 999,
+      "sha256": "6e6346440bbb1c0c1057e37e48d9ffa7cfc1dd5fd8aa6ab5001ee84373c8661f"
+    },
+    "lib/rxfnsl/tests_functional/check-diagnostic-regressions.py": {
+      "bytes": 5786,
+      "sha256": "78a24c594c3afd4cfa3e48fbecadd39a41b9242f5306d4cc0ab6c988d74e5cdc"
+    },
+    "lib/rxfnsl/tests_functional/check-generator.py": {
+      "bytes": 3214,
+      "sha256": "90112d19e77e38712105b9f468a7561e38a117cc22479ba93a8b50e3ead7029f"
+    },
+    "lib/rxfnsl/tests_functional/check-capture-surface.py": {
+      "bytes": 5944,
+      "sha256": "7b3adf841bf141ee449d404cac6a0bc4a5b7e343cbbc9da64e15c7cd4e2de526"
+    },
+    "lib/rxfnsl/tests_functional/gennorm2-record-probe.crexx": {
+      "bytes": 886,
+      "sha256": "cdc8d684521b4bb3691fca0bb5d179684c56fa3ed17581b26ba47a83c255947b"
+    },
+    "lib/rxfnsl/tests_functional/projection-probe.crexx": {
+      "bytes": 918,
+      "sha256": "5c056246927d203b31282351725c22def0a48c36abf3db3f9f968f138be41823"
+    },
+    "lib/rxfnsl/tests_functional/check-gennorm2-compat.py": {
+      "bytes": 3065,
+      "sha256": "c3a196672fb7a3a5295dd6042144c07967011af3d7326e6cf040547995790b68"
+    },
+    "lib/rxfnsl/tests_functional/diagnostic-probe.crexx": {
+      "bytes": 626,
+      "sha256": "0604a6bb9de61f1b026350cc6c37dcb9d309f39bd6488d7a68f477de4de0d2d3"
+    },
+    "lib/rxfnsl/tests_functional/budget-probe.crexx": {
+      "bytes": 1146,
+      "sha256": "0dfaee4455bb3bf259d2da663900a8f696ef2684e4da6224b09b5da0fb8dc510"
+    },
+    "lib/rxfnsl/tests_functional/check-recovery-surface.py": {
+      "bytes": 5498,
+      "sha256": "2739b86fb76c521090c6403a6accb254ef738c5fa8ccce17226ecb34f68caa9c"
+    },
+    "lib/rxfnsl/tests_functional/capture-probe.crexx": {
+      "bytes": 1238,
+      "sha256": "45edb6b58f06ce861bc11bed608bac51a0f35a3ee93da4c023f7f85dc1c9b17c"
+    },
+    "lib/rxfnsl/tests_functional/ts_tinyexpr.crexx": {
+      "bytes": 2902,
+      "sha256": "6a4a53bf07118bae0ac1ec8a5c4b97b0360b415138f21678b7c8d8605488820a"
+    },
+    "lib/rxfnsl/tests_functional/property-probe.crexx": {
+      "bytes": 818,
+      "sha256": "06a39774fb54a678e55ef331ff7998c541f645672d533794c0197ede1274b4e9"
+    },
+    "lib/rxfnsl/tests_functional/check-bootstrap.py": {
+      "bytes": 7786,
+      "sha256": "86d05ce1ac9efd5d6ad2745578a067e2bd8f5d4483f3b2ab6a9c1b3764ee7083"
+    },
+    "lib/rxfnsl/tests_functional/check-specification-resync.py": {
+      "bytes": 3994,
+      "sha256": "f7e3e7960d73d55e599330e9e31b0e3056c1c9b153693bdf5549bfbbbb4755e5"
+    },
+    "lib/rxfnsl/tests_functional/check-composite-surface.py": {
+      "bytes": 6825,
+      "sha256": "10497e2a2e772a153bc4eb6d3f2be5c39db61edb8563e523323584e97041c85d"
+    },
+    "lib/rxfnsl/rexx/llregular.crexx": {
+      "bytes": 9969,
+      "sha256": "ae89170233761d33fc3da346c6a058ab6b6603cea3ba834da492b868ef808b90"
+    },
+    "lib/rxfnsl/rexx/llpratt.crexx": {
+      "bytes": 9583,
+      "sha256": "4bb1fbc31a94939110f85e5395f4a47819046872d1fa7bead7d845119e104473"
+    },
+    "lib/rxfnsl/rexx/lllr.crexx": {
+      "bytes": 25633,
+      "sha256": "074cd42b21ab2b31732a7d353d82913be11dbb06f858f6c42eedf1d55ff799d0"
+    },
+    "lib/rxfnsl/rexx/CMakeLists.txt": {
+      "bytes": 5063,
+      "sha256": "8f342735ff42fc6bebbd713e9a2c39178fc95ca12865ad3d6a1f7412735fed75"
+    },
+    "lib/rxfnsl/rexx/llearley.crexx": {
+      "bytes": 11160,
+      "sha256": "72b08a21c5c411b76d832854b211c2ac578a94b94bcee3d35154cc41f7c9d811"
+    },
+    "lib/rxfnsl/rexx/llfront.crexx": {
+      "bytes": 46864,
+      "sha256": "989ef1e693195b3b808b8bdfbb57c35b251adadd9981f7e08b0d7e72bf6ca76f"
+    },
+    "lib/rxfnsl/rexx/llproperties.crexx": {
+      "bytes": 530,
+      "sha256": "27288171df1548ff5e729f15b3fa52aab42f5fe0892d0baba7be023358294c29"
+    },
+    "lib/rxfnsl/rexx/tinyexpr.crexx": {
+      "bytes": 12567,
+      "sha256": "05f2a468a25d83d82fa55aa3806070cad59eb9b933b6d84275ffd788270cce01"
+    },
+    "lib/rxfnsl/rexx/llproject.crexx": {
+      "bytes": 4405,
+      "sha256": "261ccb0b5c96b2d7c5d2d3ad527145c3131ab4f7098010ed352b2977fda5b6a2"
+    },
+    "lib/rxfnsl/rexx/llcheck.crexx": {
+      "bytes": 8586,
+      "sha256": "d524ca15c361bc3a2f4ef0b5a5a824bb93c9a10e0313c36c67fa8603bcad5426"
+    },
+    "lib/rxfnsl/rexx/llforest.crexx": {
+      "bytes": 4255,
+      "sha256": "885c5adbca84fdd347245f1ccf76bb0f636d9a0d6459bbbe27dab1a903005cac"
+    },
+    "lib/rxfnsl/rexx/llcore.crexx": {
+      "bytes": 9976,
+      "sha256": "bd1711fced0b9790167d4ffb4c4e168d1bb03cbc7da96ca3d7a17f2eb0d4b52c"
+    },
+    "lib/rxfnsl/rexx/lltree.crexx": {
+      "bytes": 3738,
+      "sha256": "f5aee5997dfa562989a3c26326acd572be937e50a059c05b26c28490f7e113b3"
+    },
+    "lib/rxfnsl/rexx/lllanguage.crexx": {
+      "bytes": 14394,
+      "sha256": "7df69893d9e153691868cafcbb6ca39086225aebc66afeaf79f3cf395dc711c1"
+    },
+    "lib/rxfnsl/rexx/llrecover.crexx": {
+      "bytes": 7337,
+      "sha256": "8d5766c7af22b28a8a2bbf83e502b4a7c9a4f00c9f8cbcd530cc337c62f5dd29"
+    },
+    "lib/rxfnsl/rexx/llstage.crexx": {
+      "bytes": 5500,
+      "sha256": "e2a723d876d23bac7b5b61e996e90d18436645848d10012b2138df31be99577e"
+    },
+    "lib/rxfnsl/rexx/lllimits.crexx": {
+      "bytes": 3378,
+      "sha256": "d1bf2176a38ae3dfb78dc9e438254384c0f0d5ddc6e4cb5807e0a0d3f597b52d"
+    },
+    "lib/rxfnsl/rexx/llcharset.crexx": {
+      "bytes": 6326,
+      "sha256": "291dcbb2fb5a48fdc990d98fff2420e10f9512108a038d650059102d9c0b8b56"
+    },
+    "lib/rxfnsl/rexx/llpeg.crexx": {
+      "bytes": 15781,
+      "sha256": "04fe3a4d8f1266a22bd843bc3399b09d0c98e8c470063eff987f561df3eff429"
+    },
+    "lib/rxfnsl/rexx/llcfg.crexx": {
+      "bytes": 5904,
+      "sha256": "942b2bd4c369f8719cd112dc1f31ecb607a4fd38dda6dcb51be71a66631dcc8b"
+    },
+    "lib/rxfnsl/rexx/llregional.crexx": {
+      "bytes": 11373,
+      "sha256": "05798975274a8cbb571f4e5f5ffb914858b1a80dcfea69e288d53df156c175cf"
+    },
+    "lib/rxfnsl/rexx/llmunch.crexx": {
+      "bytes": 12796,
+      "sha256": "cc566c2a768540a13505c43cd9dbe98e1f0bc9e0c14430a9a5317df62657869d"
+    },
+    "lib/rxfnsl/rexx/llcap.crexx": {
+      "bytes": 2364,
+      "sha256": "1aa1c5bb69e5709feaec127019529b4bf08f36310f0603f820366f5fb812e40f"
+    },
+    "lib/rxfnsl/rexx/llsource.crexx": {
+      "bytes": 9494,
+      "sha256": "e516dcef59ac3c630bc0624b87a0e9fc68b7fbeedc5d58b97cab5437fa36716f"
+    },
+    "lib/rxfnsl/examples/settings.levell": {
+      "bytes": 1096,
+      "sha256": "2b0fa85af74179a07602099a73365da2cac2628efc8b36352144be1320a1bce3"
+    },
+    "lib/rxfnsl/examples/settings.txt": {
+      "bytes": 54,
+      "sha256": "a4026dc55ad1963bbe123236c8ec6f10cbf4807eb0cfc8a58002e931186d21a6"
+    },
+    "lib/rxfnsl/examples/settings-recover.crexx": {
+      "bytes": 1630,
+      "sha256": "bb5e10751cec189b068e6a5e718c4881581c220811b5c0c60b81f001489feb80"
+    },
+    "lib/rxfnsl/examples/settings-reader.crexx": {
+      "bytes": 1351,
+      "sha256": "12d64a4ace5790e1a8009c96b495c769b0e005521646d18ab8f56b2ba2f51bfb"
+    },
+    "lib/rxfnsl/examples/settings-fields.crexx": {
+      "bytes": 1365,
+      "sha256": "288872677d37a22dfdda43df0b98d99c451a02dcdacdce692c6488a51f38f1ab"
+    },
+    "lib/rxfnsl/examples/settings/04-recovery.levell": {
+      "bytes": 1233,
+      "sha256": "940a14f97af156a8b95fd9e8365b70db125fb5060ccdc7028926dfb866e412e5"
+    },
+    "lib/rxfnsl/examples/settings/02-messages.levell": {
+      "bytes": 1025,
+      "sha256": "782007423d3b4951d8a23b7e15b65590d9ed09dd37505f19b36ddbea15701357"
+    },
+    "lib/rxfnsl/examples/settings/07-properties.levell": {
+      "bytes": 2032,
+      "sha256": "200c343e0bcda7820e7cbd6bf6b77f4968bd9b23f350278153746043b3a7990e"
+    },
+    "lib/rxfnsl/examples/settings/03-unicode.levell": {
+      "bytes": 1181,
+      "sha256": "7aa58f7da99a48e4b32aec3ef874906cc5b13acab5a54cf46834f76becc1e8f8"
+    },
+    "lib/rxfnsl/examples/settings/05-composite.levell": {
+      "bytes": 2028,
+      "sha256": "7d981d6f4bb7de582f51949e20dcdffee58141d5e7431bf76ef735b60e789075"
+    },
+    "lib/rxfnsl/examples/settings/01-basic.levell": {
+      "bytes": 946,
+      "sha256": "05282c77ac5ba4d08ee9601c5e93ddbf657b7dcdbef74ff0ff0a81ab131f1cba"
+    },
+    "lib/rxfnsl/examples/settings/06-fields.levell": {
+      "bytes": 2128,
+      "sha256": "e08a29ddd0c9adcb04adb0d9cb6dda8a8c417d13e9863ba70bdc0cbc1abde774"
+    },
+    "lib/rxfnsl/tests_functional/grammars/recursive-lexer.levell": {
+      "bytes": 267,
+      "sha256": "ab8c514c10fdbfff88593415f8a9944e6956491868fdc276147eb292a66c0bbc"
+    },
+    "lib/rxfnsl/tests_functional/grammars/nullable-list.levell": {
+      "bytes": 497,
+      "sha256": "778d811c29f5293e941acfb2c9d86f6ea72e7cf89efc6c7b8c55411d3314ef81"
+    },
+    "lib/rxfnsl/tests_functional/grammars/conflict.levell": {
+      "bytes": 327,
+      "sha256": "9941aff3376609902f64ab2a00e4fb02bdb860d4a33ad2f52da8cacd4f8dc7a3"
+    },
+    "lib/rxfnsl/tests_functional/grammars/ordered.levell": {
+      "bytes": 263,
+      "sha256": "e3f28966165c53697e58cc1a393489d4fe789d91038fed9045708403b1f40954"
+    },
+    "lib/rxfnsl/tests_functional/grammars/budget.levell": {
+      "bytes": 593,
+      "sha256": "df767a438eaea6840e217921a4cac718ca987cc58ddd3fad5ec5197f2968e0ea"
+    },
+    "lib/rxfnsl/tests_functional/grammars/nullable.levell": {
+      "bytes": 216,
+      "sha256": "537a1fd7c6d0659a1673bd9cf1e612d48d6c6159cdb661e6e3c6b95d353d6a29"
+    },
+    "lib/rxfnsl/unicode/data/unicode-17.0.0/DerivedCoreProperties.txt": {
+      "bytes": 1134783,
+      "sha256": "24c7fed1195c482faaefd5c1e7eb821c5ee1fb6de07ecdbaa64b56a99da22c08"
+    },
+    "lib/rxfnsl/unicode/data/unicode-17.0.0/UnicodeData.txt": {
+      "bytes": 2198209,
+      "sha256": "2e1efc1dcb59c575eedf5ccae60f95229f706ee6d031835247d843c11d96470c"
+    },
+    "lib/rxfnsl/unicode/data/unicode-17.0.0/PropList.txt": {
+      "bytes": 145465,
+      "sha256": "130dcddcaadaf071008bdfce1e7743e04fdfbc910886f017d9f9ac931d8c64dd"
+    },
+    "lib/rxfnsl/unicode/data/unicode-17.0.0/SHA256SUMS": {
+      "bytes": 253,
+      "sha256": "54871cea8ea735084857f86fe9b980d00f526c8fdfd40e624b7d8212741a3eed"
+    },
+    "rexxscript/RexxScriptOperators.crexx": {
+      "bytes": 5887,
+      "sha256": "525b6943784aa7a8677f599916ac6fd3814725c87d474ee98f2176ae3e83eaa4"
+    },
+    "rexxscript/CMakeLists.txt": {
+      "bytes": 8206,
+      "sha256": "6a8fb89eb56a8f5b53408d53bd3b74928cae649e232c48af5d2ca9913a7ebcf5"
+    },
+    "rexxscript/RexxScriptBifs.crexx": {
+      "bytes": 7129,
+      "sha256": "70501858c57852746d049f612fbf7a989893391254a0d112ba20277e3013ddaf"
+    },
+    "rexxscript/RexxScriptEvaluateCompat.crexx": {
+      "bytes": 2235,
+      "sha256": "224e34a085702ebc8f4fba664cab153fe8c67ddce51a7e69ae6832f2e43b8087"
+    },
+    "rexxscript/RexxScriptRuntime.crexx": {
+      "bytes": 4870,
+      "sha256": "1e89f461e3c8e2fea5aa5fe751b6917a7361a39bd2ba8c35702d4c5835628ee2"
+    },
+    "rexxscript/modern.cmake": {
+      "bytes": 7504,
+      "sha256": "c3eb6bb323b96b7ce0520edccc74358d74bdb7a61092d1629c2d5b5ff3049382"
+    },
+    "rexxscript/RexxScriptProgram.crexx": {
+      "bytes": 4905,
+      "sha256": "22641df9c843559ace68fa388e0b2f5d15233870b0a4136f20778f31b2913651"
+    },
+    "rexxscript/RexxScriptExecution.crexx": {
+      "bytes": 14521,
+      "sha256": "380d61cf97d9e89696162c07c2bda4e94b53a7c420927441cb1544ae8f23bbe6"
+    },
+    "rexxscript/RexxScriptEvaluator.crexx": {
+      "bytes": 64688,
+      "sha256": "2333d35233274e4ba4039dce163dc289fa3e522bf507a29a575f733b7a7656bd"
+    },
+    "rexxscript/RexxScript1Runner.crexx": {
+      "bytes": 647,
+      "sha256": "2dada74da5510562d78528c663b4d81eb529af4211abc77500ab0024411bd6ce"
+    },
+    "rexxscript/RexxScriptRunner.crexx": {
+      "bytes": 1772,
+      "sha256": "f5a3e59d8e7cd946db9ddbf9c14ddf6f55f03e4e63b582c116de03004fd0f46e"
+    },
+    "rexxscript/grammar/rexxscript.levell": {
+      "bytes": 9360,
+      "sha256": "1294f78a18762417c75d4ace5c526b14690cbd715fe201645001796107cb1c41"
+    },
+    "rexxscript/tests_functional/test_status_4_io.txt": {
+      "bytes": 123,
+      "sha256": "d03d1b2205a9fc0d29908597a5385cb64f6a4188d3d72a038f47b9b6d31e8cf5"
+    },
+    "rexxscript/tests_functional/CMakeLists.txt": {
+      "bytes": 4085,
+      "sha256": "215bea951e2a55922e92dd51279186cdf39fdb2589fd53e6e78ff97616c8bcfa"
+    },
+    "rexxscript/tests_functional/testRexxScriptRuntime.crexx": {
+      "bytes": 10173,
+      "sha256": "24d8ef076279daa57ba47285c7e956b41366d0819076804f0f58addd7ee3be23"
+    },
+    "rexxscript/tests_functional/check-scalar-conformance.py": {
+      "bytes": 2654,
+      "sha256": "cc1eb6e392e9041cb1962b94ba8715c0ac8dae6a776fc3b9814ed82af5f3bb65"
+    },
+    "rexxscript/tests_functional/testRexxScript1.crexx": {
+      "bytes": 6891,
+      "sha256": "7ef8329c4c1fc2aa06bd7964864b03bbb073f4450659ba12c2affcac3487dfaa"
+    },
+    "rexxscript/tests_functional/build-review.sh": {
+      "bytes": 3134,
+      "sha256": "c4f2674d7e810bef9fcca45b3635ed33137e7c98fc9409d07e85630a17873377"
+    },
+    "rexxscript/tests_functional/check-import-isolation.py": {
+      "bytes": 2646,
+      "sha256": "caeabdd52fbca959b5f5183d434d90d88158a5ffcd4c7dfa01effbeabc235fc7"
+    },
+    "rexxscript/tests_functional/check-cli.py": {
+      "bytes": 1892,
+      "sha256": "201a8a4ae4013cdbf689d7cc61639583979dccf8597e6f1715d2f1606c08d569"
+    },
+    "rexxscript/tests_functional/testRexxScriptCompat.crexx": {
+      "bytes": 1641,
+      "sha256": "94992274de5cb020bc7f36cf25024b147ba63fd6976c11896da7dec7357f9d27"
+    },
+    "rexxscript/tests_functional/testRexxScriptIO.crexx": {
+      "bytes": 1010,
+      "sha256": "01c10f7dae7e4f1e8c2644289260b297846c184b15defe2d28bce38310a0ecb5"
+    }
+  },
+  "artifacts": {
+    "cmake-build-levell-product/bin/rxfnsl.rxbin": {
+      "bytes": 1878220,
+      "sha256": "ce2c25ab796be51231fe467577e2353fddeaa797b9e4e4c8e73c164dd0dbb915"
+    },
+    "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin": {
+      "bytes": 852521,
+      "sha256": "8dba71f37d0f18898e03b33b94ff6dc0b5c1c20726434da1683c5d8375f4faf8"
+    },
+    "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L2/llsyntax.rxas": {
+      "bytes": 1539484,
+      "sha256": "3272b25c0fbeea76b057915da275a30fb35283ce3b9de3db9a15af77b2d4163e"
+    },
+    "cmake-build-levell-product/bin/levell": {
+      "bytes": 2554056,
+      "sha256": "07d11492c70a523b761bca361a869ab06d3f2aa8d8fbc80db9196d25aa8b2a0d"
+    },
+    "cmake-build-levell-product/bin/rexxscript1": {
+      "bytes": 9305272,
+      "sha256": "60885076dbb7196fd41ff3db8e949b0504ea3f21aec49a7ff523a0e913a23b0b"
+    },
+    "cmake-build-levell-product/bin/rexxscript1.rxbin": {
+      "bytes": 347974,
+      "sha256": "55074249b524c035a23a6adddfa64d4fc79741d7e0fc941780afbbe872fbe68c"
+    },
+    "cmake-build-levell-product/bin/gennorm2_language.rxbin": {
+      "bytes": 5833,
+      "sha256": "e18c3018f39f119be452c29bc2712a2fee4f218bee88bf2914aaa551e4364e81"
+    },
+    "research/level-l/build/product-noopt/bootstrap-build/bin/rxfnsl.rxbin": {
+      "bytes": 1752080,
+      "sha256": "575bb741f203f4bb1258f4a5a44e03f5f00d9ecd8aa2fbf3bccacbb7347be5ec"
+    },
+    "research/level-l/build/product-noopt/bootstrap-build/tools/bootstrap/L2/levell-linked.rxbin": {
+      "bytes": 863571,
+      "sha256": "055a762ff53bc24915eacbdbc3e1d19780c62e7e86cd7d9bcd471867f98f4685"
+    },
+    "research/level-l/build/product-noopt/bootstrap-build/tools/bootstrap/L2/llsyntax.rxas": {
+      "bytes": 1539484,
+      "sha256": "3272b25c0fbeea76b057915da275a30fb35283ce3b9de3db9a15af77b2d4163e"
+    },
+    "research/level-l/build/product-noopt/bootstrap-build/bin/gennorm2_language.rxbin": {
+      "bytes": 5849,
+      "sha256": "9c2027084a85036431f651b0966243ae33c13edc552f9bbb164cb4452ce31f16"
+    }
+  }
+}

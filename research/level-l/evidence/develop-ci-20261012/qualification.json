@@ -1,0 +1,21 @@
+{
+  "base": "bb973735fd8ccc3d89b5222da80892daf1189e0a",
+  "sources": {
+    "rexxscript/modern.cmake": "187b455e0102d8675f639de30d507f4c19f16466acc1940b00ffeaf120c14c28",
+    "lib/rxfnsl/tests_functional/check-comments.py": "78834feb4de974edc3cf98df991a1345f5320336a4480bd445ee43ab76fb21f0",
+    "scripts/tests/test_windows_checkout.py": "6d4d0776732194a0d2928e42737d266dd58f4a3cc7da118e25929a8485569aa4",
+    "scripts/package-core-release.py": "ff201cb370bf09a816ccc646fcf7b20ebe3d5133183eb8f6f95f50d4e5dbcb28"
+  },
+  "artifacts": {
+    "cmake-build-levell-integration/bin/rexxscript1": "16886531d009f9a1ae1db2bfd5f4e608322426f8e448f3351b1d257d74976ec7",
+    "cmake-build-levell-integration/bin/levell": "4d8c83729799112f9d0a333f402784140462bb392df125319d3605d92b72c610",
+    "cmake-build-levell-integration/bin/rxfnsl.rxbin": "393c19d2cb1f16a26d28c24d10495eec566a3752b1b58b81a11877c76b1a58e5"
+  },
+  "comments": {
+    "observations": 586,
+    "commands": 733,
+    "nul_cases": 32
+  },
+  "retained_panel_files_verified": 3169,
+  "relocations_verified": 48
+}

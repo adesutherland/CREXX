@@ -1,0 +1,78 @@
+/* Grammar-author explanations with exact or explicitly bounded evidence. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llcheck
+import llcap
+import llpeg
+import lllr
+import llwitness
+import lllexplain
+import glshadow
+import glkeyword
+import glpriority
+main: procedure = .int expose failures
+  failures = 0
+  lex = .lllexplain..analysis(glshadow..tabledata())
+  status = lex.search(20,'keyword.if',2)
+  call check status = 1,'exact unreachable lexical rule proof'
+  say lex.message()
+  one = .lllexplain..analysis(glkeyword..tabledata())
+  status = one.search(20,'keyword.if',2); example = one.witness()
+  call check status = 0 & bin2x(example) = '6966' & lex.winner(example) = 1,'shortest shadowed keyword example names earlier winner'
+  say 'At "if", identifier (line 1) wins the equal-length tie over keyword.if (line 2).'
+  repaired = .lllexplain..analysis(glpriority..tabledata())
+  status = repaired.search(20,'keyword.if',1)
+  call check status = 0 & bin2x(repaired.witness()) = '6966','source-order change makes keyword reachable'
+  say 'Moving keyword.if first changes lexical priority. If IF is also a name, use a declared contextual-word stage.'
+  limited = .lllexplain..analysis(glshadow..tabledata())
+  call check limited.search(20,'keyword.if',2,1) = 2,'incomplete reachability never called unreachable'
+  malformed = .lllexplain..analysis('' as .binary)
+  call check malformed.search(1,'bad',1) = 3,'malformed table rejected'
+  source = "options levell namespace amb read: parser semantics contextfree input bytes start sentence sentence: rule = sentence sentence | 'a'"
+  doc = .llfront..document(source); status = doc.run(); graph = doc.grammar(); root = doc.root()
+  search = .llwitness..search(graph,root,'ambiguity','a' as .binary,4)
+  call check search.run() = 0 & bin2x(search.witness()) = '616161','shortest same-input ambiguity witness is aaa'
+  say search.message()
+  shortsearch = .llwitness..search(graph,root,'ambiguity','a' as .binary,2)
+  call check shortsearch.run() = 1 & pos('does not prove',shortsearch.message()) > 0,'short-input failure to find ambiguity is not proof'
+  say shortsearch.message()
+  limitedsearch = .llwitness..search(graph,root,'ambiguity','a' as .binary,4,1)
+  call check limitedsearch.run() = 2,'search budget has distinct result'
+  source = "options levell namespace priority read: parser semantics ordered input bytes start document document: rule = ('a' | 'ab') 'c'"
+  doc = .llfront..document(source); status = doc.run(); graph = doc.grammar(); root = doc.root()
+  search = .llwitness..search(graph,root,'priority','abc' as .binary,4)
+  call check search.run() = 0 & bin2x(search.witness()) = '616263','PEG priority whole-input counterexample'
+  say search.message()
+  say 'On abc the first alternative consumes a; the following c sees b. Successful a prevents trying ab.'
+  say 'Changing the order to ab | a accepts abc. This is an intentional language change; it is not a semantics-preserving fix.'
+  facts = .llcheck..analysis(graph,root); provider = .llcap..backend; provider = .llpeg..engine('ll1')
+  decision = llcap..admit(facts,provider)
+  call check decision.status() = 2 & pos('LL(1)',decision.message()) > 0,'LL conflict uses source location'
+  say decision.message()
+  source = "options levell namespace loop read: parser semantics ordered input bytes start a a: rule = b 'x' | 'a' b: rule = a"
+  doc = .llfront..document(source); status = doc.run(); graph = doc.grammar(); root = doc.root()
+  dependencies = .llwitness..dependencies(graph,root)
+  path = dependencies.explain()
+  call check pos('a (line',path) > 0 & pos('b (line',path) > 0 & pos(' -> ',path) > 0,'actual named recursion path'
+  say path
+  source = "options levell namespace empty read: parser semantics ordered input bytes start document document: rule = ''*"
+  doc = .llfront..document(source); status = doc.run(); graph = doc.grammar(); root = doc.root()
+  facts = .llcheck..analysis(graph,root); provider = .llpeg..engine('packrat'); decision = llcap..admit(facts,provider)
+  call check decision.status() = 2 & pos('without consuming',decision.message()) > 0,'empty repetition explains missing progress'
+  say decision.message()
+  source = "options levell namespace pred read: parser semantics ordered input bytes start document document: rule = !'a' 'b'"
+  doc = .llfront..document(source); status = doc.run()
+  search = .llwitness..search(doc.grammar(),doc.root(),'priority','ab' as .binary,3)
+  call check search.run() = 3,'predicate contrast rejected instead of erased'
+  say 'witness_failures='failures
+  if failures then return 1
+  return 0
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    say 'FAIL:' message; failures = failures + 1
+  end
+  return

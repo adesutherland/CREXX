@@ -1126,7 +1126,7 @@ fixture weights outside the user payload. Rehash declared provider manifests
 only after a trusted staging/signing step has verified signatures, before
 final-payload smoke; runtime consumers must still reject changed hashes.
 
-`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
+`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `LINK_FILES`, `RUNTIME_TARGETS`,
 `BACKEND_TARGETS`, `RUNTIME_FILES`, `RUNTIME_SEARCH_DIRECTORIES` and `ENGINE_ID`.
 Search directories locate redistributable SDK dependencies at build time only;
 they are not runtime search overrides or user manifest paths. Its runtime-package target
@@ -1135,6 +1135,20 @@ driver invokes `crexx-provider-package` only for selected providers carrying
 metadata; the helper validates dependencies before copying or emitting linker
 arguments. Native project caching also revalidates the selected package bytes.
 Providers without this metadata retain the established archive-only delivery.
+The generic `crexx-provider-package` executable is owned by core RXPA and is a
+dependency of the driver/product even with `ENABLE_LLAMA=OFF`. It reuses the
+unchanged shared manifest validator/copier and a local, pinned MIT-licensed
+nlohmann header; core builds do not fetch or build inference to supply it.
+`LINK_FILES` supplies concrete import/archive paths, including generator
+expressions, when an INTERFACE SDK target such as PkgConfig::GTK3 has no
+`TARGET_LINKER_FILE`. Declared runtime `.rxplugin` modules are scanned like
+shared libraries for dependent DLLs/dylibs/so files. Explicit product selections
+must depend on the provider's static target and its `_runtime_package` target;
+the latter's `ALL` membership alone does not put it into `stage-product`.
+When a partially staged runtime closure resolves the same published library
+through package and SDK paths, the writer accepts only identical SHA-256 bytes
+and stages the full discovered closure. Different bytes under the same name or
+an unresolved dependency fail packaging; one published runtime identity remains.
 
 ### `rxsqlite` typed database provider
 

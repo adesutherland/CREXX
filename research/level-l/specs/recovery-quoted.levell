@@ -1,0 +1,14 @@
+options levell
+namespace recoveryquoted
+read: parser semantics ordered input bytes start document
+document: rule = record (';' needed.record)*
+record: rule = 'x=' string comment?
+string: rule = '"' ('a' | 'b')* close.quote
+close.quote: rule = '"'
+comment: rule = '/*' 'a'* close.comment
+close.comment: rule = '*/'
+needed.record: rule = record
+recover.item: rule = (!';' any)*
+recover.close: rule = (!';' any)*
+recover.record: rule = (!';' any)*
+any: charset = U+0000 to U+00FF

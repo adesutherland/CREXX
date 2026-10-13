@@ -150,6 +150,16 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      through cleanup without preventing a computed right operand from receiving
      the shared result register. `short_circuit_linked_left` covers both truth
      paths, skipped side effects, and subsequent attribute reads in opt/noopt.
+   - Structured exits copy the cleanup of already-live ancestor `IF` conditions
+     before branching past their normal end. The crossed child distinguishes
+     an entered THEN/ELSE branch from a condition still being evaluated. This
+     keeps register reuse safe after ITERATE while preserving scalar-accessor
+     inlining. A BLOCK_EXPR return crossing an IF body reserves its result
+     before condition/helper allocation, so the copied value survives unlinking.
+     Direct final packed-load donation remains supported. The target loop/block
+     remains governed by its existing cleanup
+     contract; see `compiler/docs/emitter_architecture.md` and the permanent
+     `iterate_condition_cleanup` RXC/RXAS opt/noopt matrix.
    - The optimiser performs opportunity-based AST inlining before emission. A
      callable may be structurally available for inlining, but each call site is
      still validated against the supported rewrite shapes. The release slice

@@ -1,0 +1,75 @@
+/* Maximal-munch equivalence and the reverse-DFA work bound. */
+options levell
+import rxfnsb
+import llcore
+import llmunch
+import lldfa
+import glcommon
+import glrollback
+import glpriority
+main: procedure = .int expose failures
+  failures = 0
+  common = .llmunch..automaton.legacy(glcommon..tabledata())
+  source = "foo123=12+3; /* opaque + 123 */ bar='it''s'; // skip" || '0a'x
+  call comparecase common,source
+  call comparecase common,"x='broken"
+  call comparecase common,''
+  do byte = 0 to 127
+    call comparecase common,'x=' || d2c(byte) || ';'
+  end
+  call comparecase common,'x=1;' || 'c3a9'x
+  priority = .llmunch..automaton.legacy(glpriority..tabledata())
+  source = 'if;ifx;iff'
+  expected = glpriority..lex(source)
+  p = .llmunch..scanner(priority,source as .binary,'reverse')
+  call check p.run() = 0 & same(p.tokens(),expected), 'longest match and keyword source priority survive reverse evaluation'
+  rollback = .llmunch..automaton.legacy(glrollback..tabledata())
+  call check pos('bound=linear-input',rollback.certificate('reverse')) > 0 & pos('bound=unknown',rollback.certificate('munch')) > 0, 'same DFA has an engine-dependent complexity certificate'
+  do n = 16 to 128 by 16
+    if n = 16 | n = 32 | n = 64 | n = 128 then do
+      source = copies('a',n)
+      ordinary = .llmunch..scanner(rollback,source as .binary,'munch')
+      reverse = .llmunch..scanner(rollback,source as .binary,'reverse')
+      call check ordinary.run() = 0 & reverse.run() = 0, 'rollback adversary accepted by both scanners'
+      tokens = reverse.tokens()
+      call check tokens.size() = n & reverse.steps() = n * rollback.states(), 'reverse DFA has q*n transitions and n emitted tokens'
+      call check ordinary.steps() = n * (n + 1) <idiv> 2, 'ordinary maximal-munch repeats triangular suffix work'
+      say 'MUNCH n='n 'states='rollback.states() 'ordinary='ordinary.steps() 'reverse='reverse.steps()
+    end
+  end
+  binary = .llmunch..automaton(2,1)
+  ok = binary.mapping(0,0); ok = binary.transition(1,0,2); ok = binary.accepting(2,1)
+  call check binary.backupbound() = 0 & pos('bound=linear-input',binary.certificate('munch')) > 0, 'acyclic backup region certifies ordinary scanning'
+  p = .llmunch..scanner(binary,'0000'x as .binary,'reverse')
+  ok = p.run(); tokens = p.tokens()
+  call check ok = 0 & tokens.size() = 2 & tokens.start(1) = 1, 'NUL is a genuine byte in the generic DFA profile'
+  ok = binary.accepting(1,1)
+  p = .llmunch..scanner(binary,'' as .binary,'reverse')
+  call check p.run() = 3 & pos('nullable',p.error()) > 0, 'nullable lexical rule rejected before scanning'
+  limited = .llmunch..scanner(common,'abc' as .binary,'reverse',2)
+  call check limited.run() = 2, 'reverse DFA work budget is a resource outcome'
+  say 'munch_failures='failures
+  if failures > 0 then return 1
+  return 0
+comparecase: procedure = .void
+  arg dfa = .llmunch..automaton, source = .string
+  expected = glcommon..lex(source); status = lldfa..scanstatus(); offset = lldfa..scanoffset()
+  p = .llmunch..scanner(dfa,source as .binary,'reverse')
+  actual = p.run()
+  call check actual = status & p.offset() = offset & same(p.tokens(),expected), 'reverse DFA matches generated control ' || c2x(source)
+  return
+same: procedure = .boolean
+  arg tokens = .llcore..stream, bytes = .binary
+  if tokens.size() <> <blen>(bytes) <idiv> 12 then return 0
+  do i = 0 to tokens.size() - 1
+    kind = <at..i32>(12 * i) bytes; start = <at..i32>(12 * i + 4) bytes; length = <at..i32>(12 * i + 8) bytes
+    if tokens.symbol(i) <> kind | tokens.start(i) <> start | tokens.finish(i + 1) <> start + length then return 0
+  end
+  return 1
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

@@ -1,0 +1,17 @@
+/* Two regular line-comment styles; quoting is handled by the string token. */
+options levell
+namespace levell_lesson
+number: token
+string: token
+scan: lexer input utf8
+  digit: charset = '0' to '9'
+  line.character: charset = scalar except (U+000A | U+000D)
+  string.character: charset = scalar except ('"' | U+000A | U+000D)
+  number.lex: rule = digit+ then emit number
+  string.lex: rule = '"' (string.character | '""')* '"' then emit string
+  hash.notes: rule = '#' line.character* then skip
+  slash.notes: rule = '//' line.character* then skip
+  whitespace: rule = (' ' | U+0009 | U+000A | U+000D)+ then skip
+parse: parser start document backend lr1
+  document: rule = item*
+  item: rule = number | string

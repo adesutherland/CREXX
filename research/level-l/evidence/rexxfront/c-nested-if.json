@@ -1,0 +1,116 @@
+[
+  {
+    "kind": "REXX_UNIVERSE",
+    "value": "",
+    "children": [
+      {
+        "kind": "PROGRAM_FILE",
+        "value": "",
+        "children": [
+          {
+            "kind": "INSTRUCTIONS",
+            "value": "",
+            "children": [
+              {
+                "kind": "REXX_OPTIONS",
+                "value": "options",
+                "children": [
+                  {
+                    "kind": "VAR_SYMBOL",
+                    "value": "levelc",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              },
+              {
+                "kind": "IF",
+                "value": "if",
+                "children": [
+                  {
+                    "kind": "INTEGER",
+                    "value": "1",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  },
+                  {
+                    "kind": "IF",
+                    "value": "if",
+                    "children": [
+                      {
+                        "kind": "INTEGER",
+                        "value": "0",
+                        "children": [],
+                        "line": -1,
+                        "column": -1
+                      },
+                      {
+                        "kind": "SAY",
+                        "value": "say",
+                        "children": [
+                          {
+                            "kind": "STRING",
+                            "value": "a",
+                            "children": [],
+                            "line": -1,
+                            "column": -1
+                          }
+                        ],
+                        "line": -1,
+                        "column": -1
+                      },
+                      {
+                        "kind": "SAY",
+                        "value": "say",
+                        "children": [
+                          {
+                            "kind": "STRING",
+                            "value": "b",
+                            "children": [],
+                            "line": -1,
+                            "column": -1
+                          }
+                        ],
+                        "line": -1,
+                        "column": -1
+                      }
+                    ],
+                    "line": -1,
+                    "column": -1
+                  },
+                  {
+                    "kind": "SAY",
+                    "value": "say",
+                    "children": [
+                      {
+                        "kind": "STRING",
+                        "value": "c",
+                        "children": [],
+                        "line": -1,
+                        "column": -1
+                      }
+                    ],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              }
+            ],
+            "line": -1,
+            "column": -1
+          }
+        ],
+        "line": -1,
+        "column": -1
+      }
+    ],
+    "line": -1,
+    "column": -1
+  }
+]

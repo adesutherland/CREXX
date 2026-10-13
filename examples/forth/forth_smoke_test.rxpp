@@ -1,0 +1,81 @@
+/*
+ * MiniForth smoke test.
+ *
+ * The reusable interpreter is compiled as the `forth` module. This file
+ * contains grouped functional tests and user-defined words.
+ */
+options levelb
+import forth
+##external forth
+
+##cflags nosrcmap
+
+say "MiniForth smoke test"
+
+##data arithmetic
+  3 4 + .
+  10 3 - .
+  6 7 * .
+  20 4 / .
+##end
+
+##data stack_ops
+  5 DUP * .
+  10 20 SWAP - .
+  10 20 OVER + . .
+  1 2 3 DROP . .
+##end
+
+##data expressions
+  2 3 + 4 * .
+  2 3 4 * + .
+  100 20 5 / - .
+  1 2 3 4 . . . .
+##end
+
+##data comparisons
+  0 ISZERO .
+  5 ISZERO .
+  10 10 ISEQUAL .
+  10 20 ISEQUAL .
+  10 20 ISLESS .
+  20 10 ISLESS .
+  20 10 ISGREATER .
+  10 20 ISGREATER .
+##end
+
+##data user_words
+  5 SQUARE .
+  12 SQUARE .
+  3 CUBE .
+  4 CUBE .
+  5 SQUAREIS25 .
+  6 SQUAREIS25 .
+  3 CUBEIS27 .
+  4 CUBEIS27 .
+  bye
+##end
+
+/* User-defined words for this smoke test. */
+##rule rules into forthRule
+  : SQUARE DUP * ;
+  : CUBE DUP SQUARE * ;
+  : ISZERO 0= ;
+  : ISEQUAL = ;
+  : ISLESS < ;
+  : ISGREATER > ;
+  : SQUAREIS25 SQUARE 25 = ;
+  : CUBEIS27 CUBE 27 = ;
+##end
+
+call forth_set_debug 1
+say "Arithmetic: 7 7 42 5"
+call forth_run arithmetic
+say "Stack operations: 25 10 30 10 2 1"
+call forth_run stack_ops
+say "Expressions: 20 14 96 4 3 2 1"
+call forth_run expressions
+say "Comparisons: 1 0 1 0 1 0 1 0"
+call forth_run comparisons
+say "User-defined words: 25 144 27 64 1 0 1 0"
+call forth_run user_words

@@ -1,0 +1,41 @@
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g1031ef530b6e.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261013T105120Z
+-- CREXX Build Commit: 1031ef530b6e
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- Smoke test 'rxc_help_syntaxhighlight' is not present in this configuration; skipping
+-- Smoke test 'syntaxhighlight_trace_keywords' is not present in this configuration; skipping
+-- Smoke test 'source_semantics' is not present in this configuration; skipping
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Smoke test 'rxpp_sh_tokens' is not present in this configuration; skipping
+-- llama.cpp version: 0.4.0
+CMAKE_BUILD_TYPE=Debug
+-- CMAKE_SYSTEM_PROCESSOR: arm64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- Accelerate framework found
+-- ARM detected
+-- Checking for ARM features using flags:
+-- Adding CPU backend variant ggml-cpu:  
+-- Metal framework found
+-- Including METAL backend
+-- ggml version: 0.23.0
+-- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled, skipping subdirectory.
+-- Configuring done (2.0s)
+-- Generating done (0.7s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-core-helper-llama-config

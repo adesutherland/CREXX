@@ -1,0 +1,347 @@
+[
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/ui.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 1.584,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.078,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_contract",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/ui_contract.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 1.053,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_contract-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_contract",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_contract"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.679,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_contract-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_local_resources",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/ui_local_resources.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.725,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_local_resources-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_local_resources",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_local_resources"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.344,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_local_resources-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_tui",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/ui_tui.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.841,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_tui-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_tui",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_tui"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.458,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/ui_tui-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_logic",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/examples/franz-lotto/crexx/lotto_logic.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.458,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_logic-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_logic",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_logic"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.077,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_logic-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/examples/franz-lotto/surface/lotto_surface.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.513,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_surface-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.238,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_surface-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface_tests",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/examples/franz-lotto/surface/lotto_surface_tests.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.572,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_surface_tests-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface_tests",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface_tests"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.132,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/lotto_surface_tests-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_controls",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/tests_functional/test_ui_controls.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.456,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/test_ui_controls-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_controls",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_controls"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.724,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/test_ui_controls-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_write",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/snapshot/overlay/lib/ui/tests_functional/test_ui_write.crexx"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.456,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/test_ui_write-rxc.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_write",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_write"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.187,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/test_ui_write-rxas.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-s",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_controls",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_controls",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.04,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/controls-rxlink.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_controls"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/work_controls",
+    "exit": 0,
+    "seconds": 0.01,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/controls-runtime.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-s",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_writes",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/test_ui_write",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_local_resources",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_contract",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/ui_catalog",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.076,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/writes-rxlink.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_writes"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/work_writes",
+    "exit": 0,
+    "seconds": 0.038,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/writes-runtime.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink",
+      "-s",
+      "-o",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_save_chain",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface_tests",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_surface",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/lotto_logic",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_tui",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_local_resources",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui_contract",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/ui_catalog",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/ui",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt",
+    "exit": 0,
+    "seconds": 0.073,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/save_chain-rxlink.log"
+  },
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvm",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/checks_save_chain"
+    ],
+    "cwd": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/work_save_chain",
+    "exit": 0,
+    "seconds": 0.04,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/runs/hotfix-final-opt/logs/save_chain-runtime.log"
+  }
+]

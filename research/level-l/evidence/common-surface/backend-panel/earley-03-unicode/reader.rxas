@@ -1,0 +1,520 @@
+/*
+ * SOURCE                 : settings-reader.crexx
+ */
+
+.globals=0
+
+main() .locals=22
+   .meta "settings-reader.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 42 42 17 "settings-reader.crexx" 10 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "settings-reader.crexx" 11 7 21 "  arg argv = .string[]"
+   .meta "settings-reader.main.argv"="b" ".string[*]" a1
+   .meta "settings-reader.main.pending"="b" ".int[*]" r2
+   .srcstep 2 2 17 "settings-reader.crexx" 33 3 17 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   null r2
+   .meta "settings-reader.main.source"="b" ".binary" r5
+   .srcstep 3 3 17 "settings-reader.crexx" 15 3 19 "  source = .binary"
+   null r5
+   .srcstep 6 6 17 "settings-reader.crexx" 12 3 18 "  if argv[0] <> 1 then do"
+   .traceevent "C" 4 "R" "V" "r" 8 6 6 0 "argv" ""
+   getattrs r9,a1,0
+   .traceevent "V" 6 "R" "I" "r" 9 6 6 0 "argv" ""
+   ine r9,r9,1
+   .traceevent "O" 4 "R" "B" "r" 9 6 6 0 "" ""
+   brf l34iffalse,r9
+   .srcstep 7 7 17 "settings-reader.crexx" 12 19 23 "  if argv[0] <> 1 then do"
+   .srcstep 4 4 17 "settings-reader.crexx" 13 5 46 "    say 'usage: settings-reader settings.txt'; return 2"
+   say "usage: settings-reader settings.txt"
+   .srcstep 5 5 17 "settings-reader.crexx" 13 48 56 "    say 'usage: settings-reader settings.txt'; return 2"
+   ret 2
+l34iffalse:
+   .srcstep 11 11 17 "settings-reader.crexx" 16 3 5 "  do"
+   sigpush "FAILURE"
+   sigpush "ERROR"
+   sigpush "OVERFLOW_UNDERFLOW"
+   sigpush "DIVISION_BY_ZERO"
+   sigpush "CONVERSION_ERROR"
+   sigpush "INVALID_ARGUMENTS"
+   sigpush "OUT_OF_RANGE"
+   sigpush "UNICODE_ERROR"
+   sigpush "REFERENCE_INVALID"
+   sigpush "OBJECT_NOT_INITIALIZED"
+   sigpush "RXBIN_CORRUPTION"
+   sigpush "UNKNOWN_INSTRUCTION"
+   sigpush "FUNCTION_NOT_FOUND"
+   sigpush "NOT_IMPLEMENTED"
+   sigpush "INVALID_SIGNAL_CODE"
+   sigpush "NOTREADY"
+   sigpush "QUIT"
+   sigpush "TERM"
+   sigpush "POSIX_INT"
+   sigpush "POSIX_HUP"
+   sigpush "POSIX_USR1"
+   sigpush "POSIX_USR2"
+   sigpush "POSIX_CHLD"
+   sigpush "CHANNEL_ERROR"
+   sigpush "TASK_FAILURE"
+   sigpush "OTHER"
+   sigbr l55signalhandler0,"FAILURE"
+   sigbr l55signalhandler0,"ERROR"
+   sigbr l55signalhandler0,"OVERFLOW_UNDERFLOW"
+   sigbr l55signalhandler0,"DIVISION_BY_ZERO"
+   sigbr l55signalhandler0,"CONVERSION_ERROR"
+   sigbr l55signalhandler0,"INVALID_ARGUMENTS"
+   sigbr l55signalhandler0,"OUT_OF_RANGE"
+   sigbr l55signalhandler0,"UNICODE_ERROR"
+   sigbr l55signalhandler0,"REFERENCE_INVALID"
+   sigbr l55signalhandler0,"OBJECT_NOT_INITIALIZED"
+   sigbr l55signalhandler0,"RXBIN_CORRUPTION"
+   sigbr l55signalhandler0,"UNKNOWN_INSTRUCTION"
+   sigbr l55signalhandler0,"FUNCTION_NOT_FOUND"
+   sigbr l55signalhandler0,"NOT_IMPLEMENTED"
+   sigbr l55signalhandler0,"INVALID_SIGNAL_CODE"
+   sigbr l55signalhandler0,"NOTREADY"
+   sigbr l55signalhandler0,"QUIT"
+   sigbr l55signalhandler0,"TERM"
+   sigbr l55signalhandler0,"POSIX_INT"
+   sigbr l55signalhandler0,"POSIX_HUP"
+   sigbr l55signalhandler0,"POSIX_USR1"
+   sigbr l55signalhandler0,"POSIX_USR2"
+   sigbr l55signalhandler0,"POSIX_CHLD"
+   sigbr l55signalhandler0,"CHANNEL_ERROR"
+   sigbr l55signalhandler0,"TASK_FAILURE"
+   sigbr l55signalhandler0,"OTHER"
+   .srcstep 8 8 17 "settings-reader.crexx" 17 5 31 "    source = readbinary(argv[1])"
+   minlinkattr1 r10,a1,1
+   .traceevent "V" 6 "R" "S" "r" 10 8 8 0 "argv" ""
+   load r8,1
+   settpswapcall r5,rxfnsb.readbinary(),r8,r10,256,r9
+   swap r10,r9
+   unlink r10
+   .traceevent "F" 4 "R" "X" "r" 5 8 8 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 5 8 8 0 "source" ""
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   br l55signalend
+l55signalhandler0:
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   unlink r10
+   .srcstep 9 9 17 "settings-reader.crexx" 19 5 46 "    say 'SETTINGS_IO: cannot read ' || argv[1]; return 2"
+   minlinkattr1 r10,a1,1
+   .traceevent "V" 6 "R" "S" "r" 10 9 9 0 "argv" ""
+   concat r9,"SETTINGS_IO: cannot read ",r10
+   unlink r10
+   .traceevent "O" 4 "R" "S" "r" 9 9 9 0 "" ""
+   say r9
+   .srcstep 10 10 17 "settings-reader.crexx" 19 49 57 "    say 'SETTINGS_IO: cannot read ' || argv[1]; return 2"
+   ret 2
+   br l55signalend
+l55signalend:
+   .srcstep 12 12 17 "settings-reader.crexx" 21 3 41 "  definition = levell_settings..language()"
+   .meta "settings-reader.main.definition"="b" ".lllanguage..definition" r1
+   load r10,0
+   call r1,levell_settings.language(),r10
+   .traceevent "F" 4 "R" "O" "r" 1 12 12 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 12 12 0 "definition" ""
+   .srcstep 13 13 17 "settings-reader.crexx" 22 3 51 "  request = .lllanguage..request(definition,source)"
+   .meta "settings-reader.main.request"="b" ".lllanguage..request" r3
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "definition" ""
+   .traceevent "V" 6 "R" "X" "r" 5 13 13 0 "source" ""
+   load r8,2
+   settp r1,256
+   swap r9,r1
+   settpswapcall r3,§lllanguage.request.§factory(),r8,r5,256,r10
+   swap r1,r9
+   swap r5,r10
+   .traceevent "F" 4 "R" "O" "r" 3 13 13 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 3 13 13 0 "request" ""
+   .srcstep 14 14 17 "settings-reader.crexx" 23 3 25 "  status = request.parse()"
+   .meta "settings-reader.main.status"="b" ".int" r6
+   .traceevent "V" 6 "R" "O" "r" 3 14 14 0 "request" ""
+   load r9,1
+   settpswapcall r6,§lllanguage.request.parse(),r9,r3,256,r10
+   swap r3,r10
+   .traceevent "F" 4 "R" "I" "r" 6 14 14 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 6 14 14 0 "status" ""
+   .srcstep 17 17 17 "settings-reader.crexx" 24 3 17 "  if status <> 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 6 17 17 0 "status" ""
+   ine r10,r6,0
+   .traceevent "O" 4 "R" "B" "r" 10 17 17 0 "" ""
+   brf l94iffalse,r10
+   .srcstep 18 18 17 "settings-reader.crexx" 24 18 22 "  if status <> 0 then do"
+   .srcstep 15 15 17 "settings-reader.crexx" 25 5 103 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'SETTINGS_PARSE',request.error())"
+   minlinkattr1 r9,a1,1
+   .traceevent "V" 6 "R" "S" "r" 9 15 15 0 "argv" ""
+   concat r8,r9,": "
+   unlink r9
+   .traceevent "O" 4 "R" "S" "r" 8 15 15 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 5 15 15 0 "source" ""
+   .traceevent "V" 6 "R" "O" "r" 3 15 15 0 "request" ""
+   load r16,1
+   settpswapcall r13,§lllanguage.request.offset(),r16,r3,256,r17
+   swap r3,r17
+   .traceevent "F" 4 "R" "I" "r" 13 15 15 0 "offset" ""
+   load r14,"SETTINGS_PARSE"
+   .traceevent "L" 4 "R" "S" "r" 14 15 15 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 15 15 0 "request" ""
+   load r16,1
+   settpswapcall r15,§lllanguage.request.error(),r16,r3,256,r17
+   swap r3,r17
+   .traceevent "F" 4 "R" "S" "r" 15 15 15 0 "error" ""
+   load r11,4
+   settp r5,256
+   swap r12,r5
+   settp r14,768
+   settpcall r17,llsource.diagnostic(),r11,r15,256
+   swap r5,r12
+   .traceevent "F" 4 "R" "S" "r" 17 15 15 0 "diagnostic" ""
+   concat r17,r8,r17
+   .traceevent "O" 4 "R" "S" "r" 17 15 15 0 "" ""
+   say r17
+   .srcstep 16 16 17 "settings-reader.crexx" 26 5 18 "    return status"
+   .traceevent "V" 6 "R" "I" "r" 6 16 16 0 "status" ""
+   ret r6
+l94iffalse:
+   .srcstep 19 19 17 "settings-reader.crexx" 28 3 51 "  tree = .lltree..view(request.tree(),request.root())"
+   .meta "settings-reader.main.tree"="b" ".lltree..view" r7
+   .traceevent "V" 6 "R" "O" "r" 3 19 19 0 "request" ""
+   load r12,1
+   settpswapcall r15,§lllanguage.request.tree(),r12,r3,256,r13
+   swap r3,r13
+   .traceevent "F" 4 "R" "O" "r" 15 19 19 0 "tree" ""
+   .traceevent "V" 6 "R" "O" "r" 3 19 19 0 "request" ""
+   load r12,1
+   settpswapcall r16,§lllanguage.request.root(),r12,r3,256,r13
+   swap r3,r13
+   .traceevent "F" 4 "R" "I" "r" 16 19 19 0 "root" ""
+   load r14,3
+   settp r15,256
+   settpcall r7,§lltree.view.§factory(),r14,r17,0
+   .traceevent "F" 4 "R" "O" "r" 7 19 19 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 7 19 19 0 "tree" ""
+   .srcstep 22 22 17 "settings-reader.crexx" 29 3 24 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 22 22 0 "tree" ""
+   load r16,1
+   settpswapcall r15,§lltree.view.error(),r16,r7,256,r17
+   swap r7,r17
+   .traceevent "F" 4 "R" "S" "r" 15 22 22 0 "error" ""
+   rne r17,r15,""
+   .traceevent "O" 4 "R" "B" "r" 17 22 22 0 "" ""
+   brf l122iffalse,r17
+   .srcstep 23 23 17 "settings-reader.crexx" 29 25 29 "  if tree.error() <> '' then do"
+   .srcstep 20 20 17 "settings-reader.crexx" 30 5 40 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 7 20 20 0 "tree" ""
+   load r15,1
+   settpswapcall r14,§lltree.view.error(),r15,r7,256,r16
+   swap r7,r16
+   .traceevent "F" 4 "R" "S" "r" 14 20 20 0 "error" ""
+   concat r16,"SETTINGS_TREE: ",r14
+   .traceevent "O" 4 "R" "S" "r" 16 20 20 0 "" ""
+   say r16
+   .srcstep 21 21 17 "settings-reader.crexx" 30 44 52 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   ret 3
+l122iffalse:
+   .srcstep 24 24 17 "settings-reader.crexx" 33 21 29 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .meta "settings-reader.main.size"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 24 24 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 24 24 0 "size" ""
+   .srcstep 25 25 17 "settings-reader.crexx" 33 31 56 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .traceevent "V" 6 "R" "I" "r" 4 25 25 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 4 25 25 0 "pending" ""
+   minlinkattr1 r17,r2,r4,0
+   .traceevent "V" 6 "R" "O" "r" 7 25 25 0 "tree" ""
+   load r15,1
+   settpswapcall r14,§lltree.view.root(),r15,r7,256,r16
+   swap r7,r16
+   .traceevent "F" 4 "R" "I" "r" 14 25 25 0 "root" ""
+   isetunlink r17,r14
+   .traceevent "A" 6 "R" "I" "r" 14 25 25 0 "pending" ""
+   .srcstep 39 39 17 "settings-reader.crexx" 34 3 5 "  do while size > 0"
+l139dostart:
+   .srcstep 26 26 17 "settings-reader.crexx" 34 6 20 "  do while size > 0"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "size" ""
+   igt r16,r4,0
+   .traceevent "O" 4 "R" "B" "r" 16 0 0 0 "" ""
+   brf l139doend,r16
+   .srcstep 27 27 17 "settings-reader.crexx" 35 5 24 "    node = pending[size]; size = size - 1"
+   .meta "settings-reader.main.node"="b" ".int" r17
+   .traceevent "V" 6 "R" "I" "r" 4 27 27 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 4 27 27 0 "pending" ""
+   minlinkattr1 r15,r2,r4,0
+   .traceevent "V" 6 "R" "I" "r" 15 27 27 0 "pending" ""
+   igetunlink r17,r15
+   .traceevent "A" 6 "R" "I" "r" 17 27 27 0 "node" ""
+   .srcstep 28 28 17 "settings-reader.crexx" 35 27 42 "    node = pending[size]; size = size - 1"
+   .traceevent "V" 6 "R" "I" "r" 4 28 28 0 "size" ""
+   isub r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 28 28 0 "size" ""
+   .srcstep 30 30 17 "settings-reader.crexx" 36 5 38 "    if tree.name(node) = 'assignment' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 30 30 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 17 30 30 0 "node" ""
+   load r13,2
+   settp r7,256
+   swap r14,r7
+   swapcall r12,§lltree.view.name(),r13,r17,r15
+   swap r7,r14
+   swap r17,r15
+   .traceevent "F" 4 "R" "S" "r" 12 30 30 0 "name" ""
+   req r15,r12,"assignment"
+   .traceevent "O" 4 "R" "B" "r" 15 30 30 0 "" ""
+   brf l181iffalse,r15
+   .srcstep 31 31 17 "settings-reader.crexx" 36 39 43 "    if tree.name(node) = 'assignment' then do"
+   .srcstep 29 29 17 "settings-reader.crexx" 37 7 82 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 29 29 0 "tree" ""
+   .traceevent "V" 6 "R" "O" "r" 7 29 29 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 17 29 29 0 "node" ""
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 29 29 0 "" ""
+   load r8,3
+   settp r7,256
+   swap r9,r7
+   swap r10,r17
+   call r14,§lltree.view.child(),r8
+   swap r7,r9
+   swap r17,r10
+   .traceevent "F" 4 "R" "I" "r" 14 29 29 0 "child" ""
+   load r12,2
+   settp r7,256
+   swap r13,r7
+   call r11,§lltree.view.text(),r12
+   swap r7,r13
+   .traceevent "F" 4 "R" "S" "r" 11 29 29 0 "text" ""
+   concat r14,r11," -> "
+   .traceevent "O" 4 "R" "S" "r" 14 29 29 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 7 29 29 0 "tree" ""
+   .traceevent "V" 6 "R" "O" "r" 7 29 29 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 17 29 29 0 "node" ""
+   load r21,3
+   .traceevent "L" 4 "R" "I" "r" 21 29 29 0 "" ""
+   load r18,3
+   settp r7,256
+   swap r19,r7
+   swap r20,r17
+   call r13,§lltree.view.child(),r18
+   swap r7,r19
+   swap r17,r20
+   .traceevent "F" 4 "R" "I" "r" 13 29 29 0 "child" ""
+   load r11,2
+   settp r7,256
+   swap r12,r7
+   call r21,§lltree.view.text(),r11
+   swap r7,r12
+   .traceevent "F" 4 "R" "S" "r" 21 29 29 0 "text" ""
+   concat r21,r14,r21
+   .traceevent "O" 4 "R" "S" "r" 21 29 29 0 "" ""
+   say r21
+l181iffalse:
+   .srcstep 37 37 17 "settings-reader.crexx" 39 5 7 "    do child = tree.count(node) to 1 by -1"
+   .srcstep 32 32 17 "settings-reader.crexx" 39 8 32 "    do child = tree.count(node) to 1 by -1"
+   .meta "settings-reader.main.child"="b" ".int" r21
+   .traceevent "V" 6 "R" "O" "r" 7 32 32 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 17 32 32 0 "node" ""
+   load r18,2
+   settp r7,256
+   swap r19,r7
+   swapcall r21,§lltree.view.count(),r18,r17,r20
+   swap r7,r19
+   swap r17,r20
+   .traceevent "F" 4 "R" "I" "r" 21 32 32 0 "count" ""
+   .traceevent "A" 6 "R" "I" "r" 21 32 32 0 "child" ""
+   .srcstep 33 33 17 "settings-reader.crexx" 39 33 37 "    do child = tree.count(node) to 1 by -1"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 0 0 0 "" ""
+   .srcstep 34 34 17 "settings-reader.crexx" 39 38 43 "    do child = tree.count(node) to 1 by -1"
+   load r18,1
+   .traceevent "L" 4 "R" "I" "r" 18 0 0 0 "" ""
+   isub r15,0,r18
+   .traceevent "P" 4 "R" "I" "r" 15 0 0 0 "" ""
+l182dostart:
+   .srcstep 33 33 17 "settings-reader.crexx" 39 33 37 "    do child = tree.count(node) to 1 by -1"
+   ilt r19,r15,0
+   brt l182doneg1,r19
+   igt r19,r21,r20
+   brtf l182doend,l182doneg2,r19
+l182doneg1:
+   ilt r19,r21,r20
+   brt l182doend,r19
+l182doneg2:
+   .srcstep 35 35 17 "settings-reader.crexx" 40 7 22 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 4 35 35 0 "size" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 35 35 0 "size" ""
+   .srcstep 36 36 17 "settings-reader.crexx" 40 24 61 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 4 36 36 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 4 36 36 0 "pending" ""
+   minlinkattr1 r14,r2,r4,0
+   .traceevent "V" 6 "R" "O" "r" 7 36 36 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 17 36 36 0 "node" ""
+   .traceevent "V" 6 "R" "I" "r" 21 36 36 0 "child" ""
+   load r10,3
+   settp r7,256
+   swap r11,r7
+   swap r12,r17
+   swapcall r9,§lltree.view.child(),r10,r21,r13
+   swap r7,r11
+   swap r17,r12
+   swap r21,r13
+   .traceevent "F" 4 "R" "I" "r" 9 36 36 0 "child" ""
+   isetunlink r14,r9
+   .traceevent "A" 6 "R" "I" "r" 9 36 36 0 "pending" ""
+l182doinc:
+   .srcstep 34 34 17 "settings-reader.crexx" 39 38 43 "    do child = tree.count(node) to 1 by -1"
+ iadd r21,r15,r21
+   .srcstep 38 38 17 "settings-reader.crexx" 40 61 62 "      size = size + 1; pending[size] = tree.child(node,child)"
+   br l182dostart
+l182doend:
+   .meta "settings-reader.main.child"
+l139doinc:
+   .srcstep 40 40 17 "settings-reader.crexx" 40 61 62 "      size = size + 1; pending[size] = tree.child(node,child)"
+   br l139dostart
+l139doend:
+   .meta "settings-reader.main.node"
+   .srcstep 41 41 17 "settings-reader.crexx" 43 3 11 "  return 0"
+   ret 0
+   .meta "settings-reader.main.argv"
+   .meta "settings-reader.main.definition"
+   .meta "settings-reader.main.pending"
+   .meta "settings-reader.main.request"
+   .meta "settings-reader.main.size"
+   .meta "settings-reader.main.source"
+   .meta "settings-reader.main.status"
+   .meta "settings-reader.main.tree"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/backend-panel/earley-03-unicode/levell_settings@linked.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "linked"
+
+/* Imported Declaration from file: llsource@rxfnsl-base.rxbin */
+
+llsource.diagnostic() .expose=llsource.diagnostic
+   .meta "llsource.diagnostic"="b" ".string" llsource.diagnostic() "source=.binary,offset=.int,code=.string,message=.string"
+   .meta "llsource.diagnostic"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lllanguage@rxfnsl-base.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.tree() .expose=lllanguage.request.tree
+   .meta "lllanguage.request.tree"="b" ".llcore..tree" §lllanguage.request.tree() ""
+   .meta "lllanguage.request.tree"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.root() .expose=lllanguage.request.root
+   .meta "lllanguage.request.root"="b" ".int" §lllanguage.request.root() ""
+   .meta "lllanguage.request.root"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.offset() .expose=lllanguage.request.offset
+   .meta "lllanguage.request.offset"="b" ".int" §lllanguage.request.offset() ""
+   .meta "lllanguage.request.offset"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.error() .expose=lllanguage.request.error
+   .meta "lllanguage.request.error"="b" ".string" §lllanguage.request.error() ""
+   .meta "lllanguage.request.error"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lltree@rxfnsl-base.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl-base"
+
+§lltree.view.root() .expose=lltree.view.root
+   .meta "lltree.view.root"="b" ".int" §lltree.view.root() ""
+   .meta "lltree.view.root"=".autoload" "rxfnsl-base"
+
+§lltree.view.name() .expose=lltree.view.name
+   .meta "lltree.view.name"="b" ".string" §lltree.view.name() "node=.int"
+   .meta "lltree.view.name"=".autoload" "rxfnsl-base"
+
+§lltree.view.count() .expose=lltree.view.count
+   .meta "lltree.view.count"="b" ".int" §lltree.view.count() "node=.int"
+   .meta "lltree.view.count"=".autoload" "rxfnsl-base"
+
+§lltree.view.child() .expose=lltree.view.child
+   .meta "lltree.view.child"="b" ".int" §lltree.view.child() "node=.int,index=.int"
+   .meta "lltree.view.child"=".autoload" "rxfnsl-base"
+
+§lltree.view.text() .expose=lltree.view.text
+   .meta "lltree.view.text"="b" ".string" §lltree.view.text() "node=.int"
+   .meta "lltree.view.text"=".autoload" "rxfnsl-base"
+
+§lltree.view.error() .expose=lltree.view.error
+   .meta "lltree.view.error"="b" ".string" §lltree.view.error() ""
+   .meta "lltree.view.error"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"

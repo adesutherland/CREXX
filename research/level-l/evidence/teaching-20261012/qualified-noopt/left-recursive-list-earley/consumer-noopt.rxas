@@ -1,0 +1,585 @@
+/*
+ * SOURCE                 : inspect.crexx
+ */
+
+.globals=0
+
+main() .locals=26
+   .meta "inspect.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 105 105 17 "inspect.crexx" 11 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "inspect.crexx" 12 7 21 "  arg argv = .string[]"
+   .meta "inspect.main.argv"="b" ".string[*]" a1
+   .meta "inspect.main.pending"="b" ".int[*]" r7
+   .srcstep 2 2 17 "inspect.crexx" 36 3 17 "  pending = .int[]; top = 1; pending[top] = tree.root()"
+   null r7
+   .srcstep 5 5 17 "inspect.crexx" 13 3 18 "  if argv[0] <> 1 then do"
+   .traceevent "C" 4 "R" "V" "r" 4 5 5 0 "argv" ""
+   getattrs r3,a1,0
+   .traceevent "V" 6 "R" "I" "r" 3 5 5 0 "argv" ""
+   ine r3,r3,1
+   .traceevent "O" 4 "R" "B" "r" 3 5 5 0 "" ""
+   brf l36iffalse,r3
+   .srcstep 6 6 17 "inspect.crexx" 13 19 23 "  if argv[0] <> 1 then do"
+   .srcstep 3 3 17 "inspect.crexx" 14 5 35 "    say 'usage: inspect input.txt'; return 3"
+   say "usage: inspect input.txt"
+   .srcstep 4 4 17 "inspect.crexx" 14 37 45 "    say 'usage: inspect input.txt'; return 3"
+   ret 3
+l36iffalse:
+   .srcstep 7 7 17 "inspect.crexx" 16 3 29 "  source = readbinary(argv[1])"
+   .meta "inspect.main.source"="b" ".binary" r2
+   minlinkattr1 r0,a1,1
+   .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "argv" ""
+   load r3,1
+   settpswapcall r2,rxfnsb.readbinary(),r3,r0,256,r4
+   swap r0,r4
+   unlink r0
+   .traceevent "F" 4 "R" "X" "r" 2 7 7 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 2 7 7 0 "source" ""
+   .srcstep 8 8 17 "inspect.crexx" 17 3 39 "  definition = levell_lesson..language()"
+   .meta "inspect.main.definition"="b" ".lllanguage..definition" r1
+   load r4,0
+   call r1,levell_lesson.language(),r4
+   .traceevent "F" 4 "R" "O" "r" 1 8 8 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 8 8 0 "definition" ""
+   .srcstep 9 9 17 "inspect.crexx" 18 3 51 "  request = .lllanguage..request(definition,source)"
+   .meta "inspect.main.request"="b" ".lllanguage..request" r5
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "definition" ""
+   .traceevent "V" 6 "R" "X" "r" 2 9 9 0 "source" ""
+   load r0,3
+   settp r1,256
+   settp r2,256
+   settpcall r5,§lllanguage.request.§factory(),r0,r3,512
+   .traceevent "F" 4 "R" "O" "r" 5 9 9 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 9 9 0 "request" ""
+   .srcstep 10 10 17 "inspect.crexx" 19 3 25 "  status = request.parse()"
+   .meta "inspect.main.status"="b" ".int" r8
+   .traceevent "V" 6 "R" "O" "r" 5 10 10 0 "request" ""
+   load r4,1
+   settpcall r8,§lllanguage.request.parse(),r4,r5,256
+   .traceevent "F" 4 "R" "I" "r" 8 10 10 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 8 10 10 0 "status" ""
+   .srcstep 11 11 17 "inspect.crexx" 20 3 26 "  say 'STATUS|' || status"
+   itos r8
+   .traceevent "V" 6 "R" "S" "r" 8 11 11 0 "status" ""
+   concat r4,"STATUS|",r8
+   .traceevent "O" 4 "R" "S" "r" 4 11 11 0 "" ""
+   say r4
+   .srcstep 24 24 17 "inspect.crexx" 21 3 16 "  if status = 5 then do"
+   .traceevent "V" 6 "R" "I" "r" 8 24 24 0 "status" ""
+   ieq r4,r8,5
+   .traceevent "O" 4 "R" "B" "r" 4 24 24 0 "" ""
+   brf l96iffalse,r4
+   .srcstep 25 25 17 "inspect.crexx" 21 17 21 "  if status = 5 then do"
+   .srcstep 12 12 17 "inspect.crexx" 22 5 28 "    forest = request.forest()"
+   .meta "inspect.main.forest"="b" ".llforest..arena" r3
+   .traceevent "V" 6 "R" "O" "r" 5 12 12 0 "request" ""
+   load r11,1
+   settpswapcall r3,§lllanguage.request.forest(),r11,r5,256,r12
+   swap r5,r12
+   .traceevent "F" 4 "R" "O" "r" 3 12 12 0 "forest" ""
+   .traceevent "A" 6 "R" "O" "r" 3 12 12 0 "forest" ""
+   .srcstep 16 16 17 "inspect.crexx" 23 5 80 "    say 'DERIVATIONS_CAPPED_AT_2|' || forest.derivations(request.forestroot(),2)"
+   .traceevent "V" 6 "R" "O" "r" 3 16 16 0 "forest" ""
+   .srcstep 15 15 17 "inspect.crexx" 23 58 65 "    say 'DERIVATIONS_CAPPED_AT_2|' || forest.derivations(request.forestroot(),2)"
+   .srcstep 13 13 33 "inspect.crexx" 23 58 65 "    say 'DERIVATIONS_CAPPED_AT_2|' || forest.derivations(request.forestroot(),2)"
+   .traceevent "V" 6 "R" "O" "r" 5 13 13 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 13 13 0 "§this" ""
+   .srcstep 14 14 25 "lllanguage.crexx" 354 5 23 "    return _forestroot"
+   linkattr1 r0,r5,3
+   .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "_forestroot" ""
+   igetunlink r15,r0
+l8911bexprend:
+   load r14,2
+   .traceevent "L" 4 "R" "I" "r" 14 16 16 0 "" ""
+   load r11,3
+   settp r3,256
+   swap r12,r3
+   swap r13,r15
+   settpcall r16,§llforest.arena.derivations(),r11,r14,256
+   swap r3,r12
+   swap r15,r13
+   itos r16
+   .traceevent "F" 4 "R" "S" "r" 16 16 16 0 "derivations" ""
+   concat r16,"DERIVATIONS_CAPPED_AT_2|",r16
+   .traceevent "O" 4 "R" "S" "r" 16 16 16 0 "" ""
+   say r16
+   .srcstep 17 17 17 "inspect.crexx" 24 5 43 "    say 'FOREST_VALID|' || forest.validate()"
+   .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "forest" ""
+   load r15,1
+   settpswapcall r14,§llforest.arena.validate(),r15,r3,256,r16
+   swap r3,r16
+   itos r14
+   .traceevent "F" 4 "R" "S" "r" 14 17 17 0 "validate" ""
+   concat r16,"FOREST_VALID|",r14
+   .traceevent "O" 4 "R" "S" "r" 16 17 17 0 "" ""
+   say r16
+   .srcstep 22 22 17 "inspect.crexx" 25 5 22 "    say request.error()"
+   .srcstep 21 21 17 "inspect.crexx" 25 9 16 "    say request.error()"
+   .srcstep 18 18 33 "inspect.crexx" 25 9 16 "    say request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 18 18 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 18 18 0 "§this" ""
+   .srcstep 19 19 6 "lllanguage@rxfnsl.rxbin" 25 16 16 "    say request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 22 22 0 "§this" ""
+   assertinitialized r5
+   .srcstep 20 20 25 "lllanguage.crexx" 364 5 18 "    return _error"
+   linkattr1 r16,r5,1
+   .traceevent "V" 6 "R" "S" "r" 16 22 22 0 "_error" ""
+   scopy r15,r16
+   unlink r16
+l9268bexprend:
+   say r15
+   .srcstep 23 23 17 "inspect.crexx" 26 5 18 "    return status"
+   .traceevent "V" 6 "R" "I" "r" 8 23 23 0 "status" ""
+   ret r8
+   endlife r3
+   .meta "inspect.main.forest"
+l96iffalse:
+   .srcstep 35 35 17 "inspect.crexx" 28 3 17 "  if status <> 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 8 35 35 0 "status" ""
+   ine r16,r8,0
+   .traceevent "O" 4 "R" "B" "r" 16 35 35 0 "" ""
+   brf l115iffalse,r16
+   .srcstep 36 36 17 "inspect.crexx" 28 18 22 "  if status <> 0 then do"
+   .srcstep 33 33 17 "inspect.crexx" 29 5 82 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .traceevent "V" 6 "R" "X" "r" 2 33 33 0 "source" ""
+   .srcstep 28 28 17 "inspect.crexx" 29 37 44 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .srcstep 26 26 33 "inspect.crexx" 29 37 44 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 26 26 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 26 26 0 "§this" ""
+   .srcstep 27 27 25 "lllanguage.crexx" 362 5 19 "    return _offset"
+   linkattr1 r15,r5,7
+   .traceevent "V" 6 "R" "I" "r" 15 33 33 0 "_offset" ""
+   igetunlink r14,r15
+l8918bexprend:
+   load r20,"LESSON_PARSE"
+   .traceevent "L" 4 "R" "S" "r" 20 33 33 0 "" ""
+   .srcstep 32 32 17 "inspect.crexx" 29 69 76 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .srcstep 29 29 33 "inspect.crexx" 29 69 76 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 29 29 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 29 29 0 "§this" ""
+   .srcstep 30 30 6 "lllanguage@rxfnsl.rxbin" 29 76 76 "    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 5 33 33 0 "§this" ""
+   assertinitialized r5
+   .srcstep 31 31 25 "lllanguage.crexx" 364 5 18 "    return _error"
+   linkattr1 r13,r5,1
+   .traceevent "V" 6 "R" "S" "r" 13 33 33 0 "_error" ""
+   scopy r12,r13
+   unlink r13
+l9277bexprend:
+   load r17,5
+   settp r2,256
+   swap r18,r2
+   swap r19,r14
+   settp r20,768
+   settp r12,768
+   swap r21,r12
+   settpcall r11,llsource.diagnostic(),r17,r22,512
+   swap r2,r18
+   swap r14,r19
+   swap r12,r21
+   .traceevent "F" 4 "R" "S" "r" 11 33 33 0 "diagnostic" ""
+   say r11
+   .srcstep 34 34 17 "inspect.crexx" 30 5 18 "    return status"
+   .traceevent "V" 6 "R" "I" "r" 8 34 34 0 "status" ""
+   ret r8
+l115iffalse:
+   .srcstep 40 40 17 "inspect.crexx" 32 3 51 "  tree = .lltree..view(request.tree(),request.root())"
+   .meta "inspect.main.tree"="b" ".lltree..view" r10
+   .traceevent "V" 6 "R" "O" "r" 5 40 40 0 "request" ""
+   load r4,1
+   settpcall r20,§lllanguage.request.tree(),r4,r5,256
+   .traceevent "F" 4 "R" "O" "r" 20 40 40 0 "tree" ""
+   .srcstep 39 39 17 "inspect.crexx" 32 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .srcstep 37 37 33 "inspect.crexx" 32 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .traceevent "V" 6 "R" "O" "r" 5 37 37 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 37 37 0 "§this" ""
+   .srcstep 38 38 25 "lllanguage.crexx" 350 5 17 "    return _root"
+   linkattr1 r18,r5,8
+   .traceevent "V" 6 "R" "I" "r" 18 40 40 0 "_root" ""
+   igetunlink r17,r18
+l8925bexprend:
+   load r19,3
+   settp r20,256
+   swap r21,r17
+   settpcall r10,§lltree.view.§factory(),r19,r22,0
+   swap r17,r21
+   .traceevent "F" 4 "R" "O" "r" 10 40 40 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 40 40 0 "tree" ""
+   .srcstep 51 51 17 "inspect.crexx" 33 3 24 "  if tree.error() <> '' then do"
+   .srcstep 44 44 17 "inspect.crexx" 33 6 10 "  if tree.error() <> '' then do"
+   .srcstep 41 41 33 "inspect.crexx" 33 6 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 10 41 41 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 41 41 0 "§this" ""
+   .srcstep 42 42 6 "lltree@rxfnsl.rxbin" 33 10 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 10 51 51 0 "§this" ""
+   assertinitialized r10
+   .srcstep 43 43 25 "lltree.crexx" 104 5 18 "    return _error"
+   linkattr1 r22,r10,3
+   .traceevent "V" 6 "R" "S" "r" 22 51 51 0 "_error" ""
+   scopy r21,r22
+   unlink r22
+l9286bexprend:
+   rne r21,r21,""
+   .traceevent "O" 4 "R" "B" "r" 21 51 51 0 "" ""
+   brf l143iffalse,r21
+   .srcstep 52 52 17 "inspect.crexx" 33 25 29 "  if tree.error() <> '' then do"
+   .srcstep 49 49 17 "inspect.crexx" 34 5 38 "    say 'LESSON_TREE: ' || tree.error(); return 3"
+   .srcstep 48 48 17 "inspect.crexx" 34 28 32 "    say 'LESSON_TREE: ' || tree.error(); return 3"
+   .srcstep 45 45 33 "inspect.crexx" 34 28 32 "    say 'LESSON_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 10 45 45 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 45 45 0 "§this" ""
+   .srcstep 46 46 6 "lltree@rxfnsl.rxbin" 34 32 32 "    say 'LESSON_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 10 49 49 0 "§this" ""
+   assertinitialized r10
+   .srcstep 47 47 25 "lltree.crexx" 104 5 18 "    return _error"
+   linkattr1 r20,r10,3
+   .traceevent "V" 6 "R" "S" "r" 20 49 49 0 "_error" ""
+   scopy r19,r20
+   unlink r20
+l9295bexprend:
+   concat r19,"LESSON_TREE: ",r19
+   .traceevent "O" 4 "R" "S" "r" 19 49 49 0 "" ""
+   say r19
+   .srcstep 50 50 17 "inspect.crexx" 34 42 50 "    say 'LESSON_TREE: ' || tree.error(); return 3"
+   ret 3
+l143iffalse:
+   .srcstep 53 53 17 "inspect.crexx" 36 21 28 "  pending = .int[]; top = 1; pending[top] = tree.root()"
+   .meta "inspect.main.top"="b" ".int" r9
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 53 53 0 "top" ""
+   .srcstep 57 57 17 "inspect.crexx" 36 30 54 "  pending = .int[]; top = 1; pending[top] = tree.root()"
+   .traceevent "V" 6 "R" "I" "r" 9 57 57 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 9 57 57 0 "pending" ""
+   minlinkattr1 r22,r7,r9,0
+   .srcstep 56 56 17 "inspect.crexx" 36 45 49 "  pending = .int[]; top = 1; pending[top] = tree.root()"
+   .srcstep 54 54 33 "inspect.crexx" 36 45 49 "  pending = .int[]; top = 1; pending[top] = tree.root()"
+   .traceevent "V" 6 "R" "O" "r" 10 54 54 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 54 54 0 "§this" ""
+   .srcstep 55 55 25 "lltree.crexx" 60 5 17 "    return _root"
+   linkattr1 r21,r10,5
+   .traceevent "V" 6 "R" "I" "r" 21 57 57 0 "_root" ""
+   igetunlink r20,r21
+l8932bexprend:
+   isetunlink r22,r20
+   .traceevent "A" 6 "R" "I" "r" 20 57 57 0 "pending" ""
+   .srcstep 102 102 17 "inspect.crexx" 37 3 5 "  do while top > 0"
+l160dostart:
+   .srcstep 58 58 17 "inspect.crexx" 37 6 19 "  do while top > 0"
+   .traceevent "V" 6 "R" "I" "r" 9 0 0 0 "top" ""
+   igt r21,r9,0
+   .traceevent "O" 4 "R" "B" "r" 21 0 0 0 "" ""
+   brf l160doend,r21
+   .srcstep 59 59 17 "inspect.crexx" 38 5 23 "    node = pending[top]; top = top - 1"
+   .meta "inspect.main.node"="b" ".int" r22
+   .traceevent "V" 6 "R" "I" "r" 9 59 59 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 9 59 59 0 "pending" ""
+   minlinkattr1 r20,r7,r9,0
+   .traceevent "V" 6 "R" "I" "r" 20 59 59 0 "pending" ""
+   igetunlink r22,r20
+   .traceevent "A" 6 "R" "I" "r" 22 59 59 0 "node" ""
+   .srcstep 60 60 17 "inspect.crexx" 38 26 39 "    node = pending[top]; top = top - 1"
+   .traceevent "V" 6 "R" "I" "r" 9 60 60 0 "top" ""
+   isub r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 60 60 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 60 60 0 "top" ""
+   .srcstep 82 82 17 "inspect.crexx" 39 5 90 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 81 81 17 "inspect.crexx" 39 9 16 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 74 74 33 "inspect.crexx" 39 63 65 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 73 73 17 "inspect.crexx" 39 9 16 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 66 66 33 "inspect.crexx" 39 36 38 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 65 65 17 "inspect.crexx" 39 20 24 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 61 61 33 "inspect.crexx" 39 20 24 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 61 61 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 61 61 0 "§this" ""
+   .srcstep 62 62 33 "inspect.crexx" 39 24 24 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "I" "r" 22 62 62 0 "node" ""
+   icopy r20,r22
+   .traceevent "A" 6 "R" "I" "r" 20 62 62 0 "node" ""
+   .srcstep 63 63 6 "lltree@rxfnsl.rxbin" 39 24 24 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 66 66 0 "§this" ""
+   assertinitialized r10
+   .srcstep 64 64 25 "lltree.crexx" 63 5 31 "    return _source.label(node)"
+   linkattr1 r17,r10,6
+   .traceevent "V" 6 "R" "O" "r" 17 66 66 0 "_source" ""
+   .traceevent "V" 6 "R" "I" "r" 20 66 66 0 "node" ""
+   load r18,2
+   settp r17,256
+   swap r19,r17
+   call r16,§llcore.tree.label(),r18
+   swap r17,r19
+   unlink r17
+   .traceevent "F" 4 "R" "S" "r" 16 66 66 0 "label" ""
+   scopy r19,r16
+l9356bexprend:
+   concat r20,"NODE|",r19
+   .traceevent "O" 4 "R" "S" "r" 20 66 66 0 "" ""
+   concat r24,r20,"|"
+   .traceevent "O" 4 "R" "S" "r" 24 66 66 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 24 66 66 0 "__inline_lhs_182_187" ""
+   .srcstep 72 72 33 "inspect.crexx" 39 43 45 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "S" "r" 24 74 74 0 "__inline_lhs_182_187" ""
+   .srcstep 71 71 17 "inspect.crexx" 39 46 50 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 67 67 33 "inspect.crexx" 39 46 50 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 67 67 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 67 67 0 "§this" ""
+   .srcstep 68 68 33 "inspect.crexx" 39 50 50 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "I" "r" 22 68 68 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 22 68 68 0 "node" ""
+   .srcstep 69 69 6 "lltree@rxfnsl.rxbin" 39 50 50 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 74 74 0 "§this" ""
+   assertinitialized r10
+   .srcstep 70 70 25 "lltree.crexx" 94 5 31 "    return _source.start(node)"
+   linkattr1 r17,r10,6
+   .traceevent "V" 6 "R" "O" "r" 17 74 74 0 "_source" ""
+   .traceevent "V" 6 "R" "I" "r" 22 74 74 0 "node" ""
+   load r18,2
+   settp r17,256
+   swap r19,r17
+   swapcall r16,§llcore.tree.start(),r18,r22,r20
+   swap r17,r19
+   unlink r17
+   swap r22,r20
+   .traceevent "F" 4 "R" "I" "r" 16 74 74 0 "start" ""
+   icopy r20,r16
+l9760bexprend:
+   itos r20
+   concat r20,r24,r20
+   .traceevent "O" 4 "R" "S" "r" 20 74 74 0 "" ""
+   scopy r19,r20
+l9349bexprend:
+   concat r23,r19,"|"
+   .traceevent "O" 4 "R" "S" "r" 23 74 74 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 23 74 74 0 "__inline_lhs_189_194" ""
+   .srcstep 80 80 33 "inspect.crexx" 39 70 72 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "S" "r" 23 82 82 0 "__inline_lhs_189_194" ""
+   .srcstep 79 79 17 "inspect.crexx" 39 73 77 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 75 75 33 "inspect.crexx" 39 73 77 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 75 75 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 75 75 0 "§this" ""
+   .srcstep 76 76 33 "inspect.crexx" 39 77 77 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "I" "r" 22 76 76 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 22 76 76 0 "node" ""
+   .srcstep 77 77 6 "lltree@rxfnsl.rxbin" 39 77 77 "    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 10 82 82 0 "§this" ""
+   assertinitialized r10
+   .srcstep 78 78 25 "lltree.crexx" 97 5 32 "    return _source.finish(node)"
+   linkattr1 r17,r10,6
+   .traceevent "V" 6 "R" "O" "r" 17 82 82 0 "_source" ""
+   .traceevent "V" 6 "R" "I" "r" 22 82 82 0 "node" ""
+   load r18,2
+   settp r17,256
+   swap r19,r17
+   swapcall r16,§llcore.tree.finish(),r18,r22,r20
+   swap r17,r19
+   unlink r17
+   swap r22,r20
+   .traceevent "F" 4 "R" "I" "r" 16 82 82 0 "finish" ""
+   icopy r20,r16
+l9774bexprend:
+   itos r20
+   concat r20,r23,r20
+   .traceevent "O" 4 "R" "S" "r" 20 82 82 0 "" ""
+   scopy r19,r20
+l9346bexprend:
+   say r19
+   .srcstep 100 100 17 "inspect.crexx" 40 5 7 "    do i = tree.count(node) to 1 by -1"
+   .srcstep 88 88 17 "inspect.crexx" 40 8 28 "    do i = tree.count(node) to 1 by -1"
+   .meta "inspect.main.i"="b" ".int" r20
+   .srcstep 87 87 17 "inspect.crexx" 40 12 16 "    do i = tree.count(node) to 1 by -1"
+   .srcstep 83 83 33 "inspect.crexx" 40 12 16 "    do i = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "O" "r" 10 83 83 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 83 83 0 "§this" ""
+   .srcstep 84 84 33 "inspect.crexx" 40 16 16 "    do i = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "I" "r" 22 84 84 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 22 84 84 0 "node" ""
+   .srcstep 85 85 6 "lltree@rxfnsl.rxbin" 40 16 16 "    do i = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "O" "r" 10 88 88 0 "§this" ""
+   assertinitialized r10
+   .srcstep 86 86 25 "lltree.crexx" 66 5 24 "    return _counts[node]"
+   linkattr1 r18,r10,2
+   .traceevent "V" 6 "R" "I" "r" 22 88 88 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 22 88 88 0 "_counts" ""
+   minlinkattr1 r19,r18,r22,0
+   .traceevent "V" 6 "R" "I" "r" 19 88 88 0 "_counts" ""
+   igetunlink r20,r19
+   unlink r18
+l9386bexprend:
+   .traceevent "A" 6 "R" "I" "r" 20 88 88 0 "i" ""
+   .srcstep 89 89 17 "inspect.crexx" 40 29 33 "    do i = tree.count(node) to 1 by -1"
+   load r17,1
+   .traceevent "L" 4 "R" "I" "r" 17 0 0 0 "" ""
+   .srcstep 90 90 17 "inspect.crexx" 40 34 39 "    do i = tree.count(node) to 1 by -1"
+   load r15,-1
+   .traceevent "L" 4 "R" "I" "r" 15 0 0 0 "" ""
+l196dostart:
+   .srcstep 89 89 17 "inspect.crexx" 40 29 33 "    do i = tree.count(node) to 1 by -1"
+   ilt r16,r20,r17
+   brt l196doend,r16
+   .srcstep 91 91 17 "inspect.crexx" 41 7 20 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "I" "r" 9 91 91 0 "top" ""
+   iadd r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 91 91 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 91 91 0 "top" ""
+   .srcstep 99 99 17 "inspect.crexx" 41 22 54 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "I" "r" 9 99 99 0 "top" ""
+   .traceevent "C" 4 "R" "I" "r" 9 99 99 0 "pending" ""
+   minlinkattr1 r14,r7,r9,0
+   .srcstep 98 98 17 "inspect.crexx" 41 37 41 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .srcstep 92 92 33 "inspect.crexx" 41 37 41 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "O" "r" 10 92 92 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 10 92 92 0 "§this" ""
+   .srcstep 93 93 33 "inspect.crexx" 41 41 41 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "I" "r" 22 93 93 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 22 93 93 0 "node" ""
+   .srcstep 94 94 33 "inspect.crexx" 41 41 41 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "I" "r" 20 94 94 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 20 94 94 0 "index" ""
+   .srcstep 95 95 6 "lltree@rxfnsl.rxbin" 41 41 41 "      top = top + 1; pending[top] = tree.child(node,i)"
+   .traceevent "V" 6 "R" "O" "r" 10 99 99 0 "§this" ""
+   assertinitialized r10
+   .traceevent "V" 6 "R" "I" "r" 20 99 99 0 "index" ""
+   ilt r4,r20,1
+   .traceevent "O" 4 "R" "B" "r" 4 99 99 0 "" ""
+   brt l9413orend,r4
+   .traceevent "V" 6 "R" "I" "r" 20 99 99 0 "index" ""
+   linkattr1 r12,r10,2
+   .traceevent "V" 6 "R" "I" "r" 22 99 99 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 22 99 99 0 "_counts" ""
+   minlinkattr1 r13,r12,r22,0
+   .traceevent "V" 6 "R" "I" "r" 13 99 99 0 "_counts" ""
+   igt r11,r20,r13
+   unlinkn r13,r12
+   .traceevent "O" 4 "R" "B" "r" 11 99 99 0 "" ""
+   icopy r4,r11
+l9413orend:
+   .traceevent "O" 4 "R" "B" "r" 4 99 99 0 "" ""
+   brf l9412iffalse,r4
+   .srcstep 96 96 25 "lltree.crexx" 69 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 99 99 0 "" ""
+   icopy r25,r3
+   br l9399bexprend
+l9412iffalse:
+   .srcstep 97 97 25 "lltree.crexx" 70 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r0,r10,1
+   linkattr1 r12,r10,4
+   .traceevent "V" 6 "R" "I" "r" 22 99 99 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 22 99 99 0 "_first" ""
+   minlinkattr1 r13,r12,r22,0
+   .traceevent "V" 6 "R" "I" "r" 13 99 99 0 "_first" ""
+   .traceevent "V" 6 "R" "I" "r" 20 99 99 0 "index" ""
+   iadd r4,r13,r20
+   unlinkn r13,r12
+   .traceevent "O" 4 "R" "I" "r" 4 99 99 0 "" ""
+   isub r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 99 99 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 4 99 99 0 "_children" ""
+   minlinkattr1 r3,r0,r4,0
+   .traceevent "V" 6 "R" "I" "r" 3 99 99 0 "_children" ""
+   igetunlink r25,r3
+   unlink r0
+l9399bexprend:
+   isetunlink r14,r25
+   .traceevent "A" 6 "R" "I" "r" 25 99 99 0 "pending" ""
+l196doinc:
+   .srcstep 90 90 17 "inspect.crexx" 40 34 39 "    do i = tree.count(node) to 1 by -1"
+ iadd r20,r15,r20
+   .srcstep 101 101 17 "inspect.crexx" 41 54 55 "      top = top + 1; pending[top] = tree.child(node,i)"
+   br l196dostart
+l196doend:
+   .meta "inspect.main.i"
+l160doinc:
+   .srcstep 103 103 17 "inspect.crexx" 41 54 55 "      top = top + 1; pending[top] = tree.child(node,i)"
+   br l160dostart
+l160doend:
+   .meta "inspect.main.node"
+   .srcstep 104 104 17 "inspect.crexx" 44 3 11 "  return 0"
+   ret 0
+   .meta "inspect.main.argv"
+   .meta "inspect.main.definition"
+   .meta "inspect.main.pending"
+   .meta "inspect.main.request"
+   .meta "inspect.main.source"
+   .meta "inspect.main.status"
+   .meta "inspect.main.top"
+   .meta "inspect.main.tree"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/teaching-20261012/qualified-noopt/left-recursive-list-earley/levell_lesson@levell_lesson.rxbin */
+
+levell_lesson.language() .expose=levell_lesson.language
+   .meta "levell_lesson.language"="b" ".lllanguage..definition" levell_lesson.language() ""
+   .meta "levell_lesson.language"=".autoload" "levell_lesson"
+
+/* Imported Declaration from file: llsource@rxfnsl.rxbin */
+
+llsource.diagnostic() .expose=llsource.diagnostic
+   .meta "llsource.diagnostic"="b" ".string" llsource.diagnostic() "source=.binary,offset=.int,code=.string,message=.string,?display=.string"
+   .meta "llsource.diagnostic"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl"
+
+§lllanguage.request.tree() .expose=lllanguage.request.tree
+   .meta "lllanguage.request.tree"="b" ".llcore..tree" §lllanguage.request.tree() ""
+   .meta "lllanguage.request.tree"=".autoload" "rxfnsl"
+
+§lllanguage.request.forest() .expose=lllanguage.request.forest
+   .meta "lllanguage.request.forest"="b" ".llforest..arena" §lllanguage.request.forest() ""
+   .meta "lllanguage.request.forest"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lltree@rxfnsl.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.tree.label() .expose=llcore.tree.label
+   .meta "llcore.tree.label"="b" ".string" §llcore.tree.label() "node=.int"
+   .meta "llcore.tree.label"=".autoload" "rxfnsl"
+
+§llcore.tree.start() .expose=llcore.tree.start
+   .meta "llcore.tree.start"="b" ".int" §llcore.tree.start() "node=.int"
+   .meta "llcore.tree.start"=".autoload" "rxfnsl"
+
+§llcore.tree.finish() .expose=llcore.tree.finish
+   .meta "llcore.tree.finish"="b" ".int" §llcore.tree.finish() "node=.int"
+   .meta "llcore.tree.finish"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llforest@rxfnsl.rxbin */
+
+§llforest.arena.derivations() .expose=llforest.arena.derivations
+   .meta "llforest.arena.derivations"="b" ".int" §llforest.arena.derivations() "root=.int,?cap=.int"
+   .meta "llforest.arena.derivations"=".autoload" "rxfnsl"
+
+§llforest.arena.validate() .expose=llforest.arena.validate
+   .meta "llforest.arena.validate"="b" ".int" §llforest.arena.validate() ""
+   .meta "llforest.arena.validate"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"

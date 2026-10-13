@@ -1,6 +1,11 @@
 /* MIT licence. Private byte transport for Classic streams. Text semantics,
  * codepage selection and character positions belong to rxfnsc, not the OS. */
 #include "crexxpa.h"
+#include "platform_config.h"
+#if defined(CREXX_VM_SINGLE_THREADED)
+#undef INITIALIZER
+#define INITIALIZER(f) static void f(void) {
+#endif
 #ifndef DECL_ONLY
 #include <errno.h>
 #include <limits.h>
@@ -27,7 +32,13 @@
 #define cs_tell ftello
 #define cs_stat fstat
 #define cs_stat_t struct stat
+#if defined(CREXX_MAINFRAME_ELF)
+/* Record adapters have no qualified in-place truncation contract. */
+static int cs_native_truncate(FILE *fp,size_t n) { (void)fp; (void)n; errno=ENOTSUP; return -1; }
+#define cs_truncate(fp,n) cs_native_truncate(fp,n)
+#else
 #define cs_truncate(fp,n) ftruncate(cs_fileno(fp),(off_t)(n))
+#endif
 #endif
 #include "rxvmfile.h"
 
@@ -55,7 +66,9 @@ typedef struct cs_file {
     FILE *file;
     int borrowed, regular, readable, writable, status, eof;
 } cs_file;
-#ifdef _MSC_VER
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define CS_LOCAL
+#elif defined(_MSC_VER)
 #define CS_LOCAL __declspec(thread)
 #else
 #define CS_LOCAL __thread
@@ -129,7 +142,10 @@ static int cs_return_bytes(rxpa_attribute_value value,const unsigned char *bytes
 }
 #define CS_RECEIVER cs_file *f=cs_resource(ARG0); if(!f) { RETURNSIGNAL(SIGNAL_FAILURE,"Invalid Classic stream owner") }
 PROCEDURE(cs_open) {
-    const char *name_view,*mode_view; char *name,*mode; size_t n,m; cs_file *f; cs_stat_t st;
+    const char *name_view,*mode_view; char *name,*mode; size_t n,m; cs_file *f;
+#if !defined(CREXX_MAINFRAME_ELF)
+    cs_stat_t st;
+#endif
     if(NUM_ARGS!=2 || cs_view(ARG0,&name_view,&n) || cs_view(ARG1,&mode_view,&m) || memchr(name_view,0,n) || memchr(mode_view,0,m) || n==SIZE_MAX || m==SIZE_MAX) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,"Invalid stream path/mode") }
     name=(char *)malloc(n+1); mode=(char *)malloc(m+1);
     if(!name || !mode) { free(name); free(mode); RETURNSIGNAL(SIGNAL_FAILURE,"Stream allocation failed") }
@@ -163,6 +179,12 @@ PROCEDURE(cs_open) {
         else if(!strcmp(mode,"REPLACE")) f->file=cs_open_file(name,"w+b");
         else { f->file=cs_open_file(name,"r+b"); if(!f->file && !strcmp(mode,"AUTO")) { f->file=cs_open_file(name,"rb"); f->writable=0; } else if(!f->file && errno==ENOENT) f->file=cs_open_file(name,"w+b"); }
         if(!f->file) f->status=errno ? errno:EIO;
+#if defined(CREXX_MAINFRAME_ELF)
+        /* Named CMS/TSO record streams can be read sequentially. Their
+         * FILE objects may be cookies without an OS descriptor or seek hook;
+         * neither fileno/fstat nor POSIX positioning can be assumed. */
+        else f->regular=0;
+#else
         else if(cs_stat(cs_fileno(f->file),&st)) { f->status=errno; cs_close(f); }
         else {
 #ifdef _WIN32
@@ -171,6 +193,7 @@ PROCEDURE(cs_open) {
             f->regular=S_ISREG(st.st_mode);
 #endif
         }
+#endif
     }
     free(name); free(mode);
     if(SETNATIVEPAYLOAD(RETURN,&f,sizeof(f),&cs_ops,0)) { cs_release(f); RETURNSIGNAL(SIGNAL_FAILURE,"Cannot own Classic stream") }
@@ -254,3 +277,12 @@ ADDMETHODPROC(cs_record,"_rxcstream.transport","record",".string","delimiter=.st
 ADDMETHODPROC(cs_write,"_rxcstream.transport","write",".int","bytes=.string,offset=.int");
 ADDMETHODPROC(cs_replace,"_rxcstream.transport","replace",".int","bytes=.string");
 ENDLOADFUNCS
+#if defined(CREXX_VM_SINGLE_THREADED)
+void crexx_cstream_init(void) {
+    static int initialized;
+    if(initialized) return;
+    initialized=1;
+    UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)();
+    UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID)();
+}
+#endif

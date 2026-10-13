@@ -239,6 +239,9 @@ add_custom_command(
     ${_stage_g_product_sources}
     ${_stage_g_unicode_tool_sources}
     ${_stage_g_unicode_inputs}
+    levell_unicode_lexer
+    "${CMAKE_BINARY_DIR}/bin/gennorm2_language.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"

@@ -1,0 +1,1211 @@
+/* cREXX License (MIT). Provisional Rexx-style parser declarations.
+ * Lexer and parser declarations share the established Rexx-like surface.
+ */
+options levelb
+namespace llfront expose document
+import rxfnsb
+import llcore
+import llproject
+import llstage
+import llcharset
+import llcomments
+import llproperties
+import llmunch
+import lllimits
+import llpratt
+import lltree
+import llsource
+import lllanguage
+import llsyntax
+
+/** Own an authored specification, its located grammar and tree declarations.
+ * Names are ASCII/case-insensitive; quoted bytes are case-sensitive.
+ * Status: 0 built, 3 malformed/unsupported source, 4 construction budget.
+ */
+document: class
+  _source = .string
+  _bytes = .binary
+  _limit = .int
+  _limits = .lllimits..policy
+  _status = .int
+  _ran = .int
+  _error = .string
+  _at = .int
+  _end = .int
+  _depth = .int
+  _count = .int
+  _text = .string[]
+  _kind = .string[]
+  _line = .int[]
+  _start = .int[]
+  _decls = .int
+  _name = .string[]
+  _type = .string[]
+  _first = .int[]
+  _last = .int[]
+  _handle = .int[]
+  _graph = .llcore..grammar
+  _stages = .llstage..rules[]
+  _schema = .llproject..schema
+  _root = .int
+  _profile = .string
+  _units = .string
+  _module = .string
+  _lexical = .int[]
+  _lexgraph = .llcore..grammar
+  _lexroots = .int[]
+  _lexkinds = .int[]
+  _lexnames = .string[]
+  _encoding = .string
+  _commentopen = .string
+  _commentclose = .string
+  _comments = .llcomments..rules
+  _commentdecl = .int[]
+  _commentoutside = .string[]
+  _commentroots = .int[]
+  _tokenvalue = .int[]
+  _sets = .llcharset..ranges[]
+  _setstate = .int[]
+  _malformed = .string
+  _otherwise = .string
+  _eof = .int
+  _lexmode = .int
+  _syntax = .lltree..view
+  _expressions = .int[]
+  _setexpressions = .int[]
+  _backend = .string
+  _diagnosticrule = .int[]
+  _diagnostictext = .string[]
+  _recovered = .string[]
+  _damagefirst = .int[]
+  _damagelast = .int[]
+  _damagetext = .string[]
+  _lexicalrecovery = .int
+  _sync = .int
+  _operators = .llpratt..operators
+  _operatorname = .string
+  _operatorhandle = .int
+  _regiontoken = .int
+  _regionopen = .int
+  _regionclose = .int
+  _implicitLevel = .int
+
+  *: factory
+    arg source = .string, limit = 0, ?limits = .lllimits..policy, implicitLevel = 0
+    _implicitLevel = implicitLevel
+    _source = source; _bytes = source as .binary; _limit = limit
+    _status = 0; _ran = 0; _error = ''; _at = 1; _end = 0; _depth = 0
+    _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
+    _schema = .llproject..schema()
+    _encoding = ''; _commentopen = ''; _commentclose = ''
+    _comments = .llcomments..rules()
+    _malformed = ''; _otherwise = ''; _eof = -1; _lexmode = 0
+    _backend = ''; _sync = -1
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    _limit = _limits.limit('grammar.clauses')
+    if limit > 0 then _limit = min(_limit,limit)
+    _operatorname = ''; _operatorhandle = 0; _regiontoken = -1; _regionopen = -1; _regionclose = -1
+    return
+  fail: method = .void
+    arg message = .string, token = .int
+    if _status <> 0 then return
+    _status = 3
+    _error = 'line ' || _line[token] || ', byte ' || _start[token] || ': ' || message
+    return
+  emit: method = .void
+    arg kind = .string, text = .string, line = .int, start = .int
+    if _count >= _limits.limit('spec.tokens') then do
+      _status = 4; _error = _limits.exhausted('spec.tokens',_count + 1); return
+    end
+    _count = _count + 1; _kind[_count] = kind; _text[_count] = text
+    _line[_count] = line; _start[_count] = start
+    return
+  index: method = .int
+    arg name = .string
+    do i = 1 to _decls
+      if upper(_name[i]) == upper(name) then return i
+    end
+    return 0
+  wordat: method = .string
+    arg at = .int
+    return lower(_text[at])
+  expect: method = .int
+    arg word = .string
+    if wordat(_at) <> word then do
+      call fail('expected ' || word || ', found ' || _text[_at],_at); return 0
+    end
+    _at = _at + 1; return 1
+  number: method = .int
+    if _kind[_at] <> 'integer' | length(_text[_at]) > 6 then do
+      call fail('expected nonnegative integer',_at); return 0
+    end
+    n = _text[_at] as .int; _at = _at + 1; return n
+  capture: method = .int
+    arg node = .int, token = .int
+    if _lexmode then do
+      call fail('named fields belong to parser rules, not lexical patterns',token); return node
+    end
+    if _kind[token] <> 'symbol' then do
+      call fail('capture requires a field name after as',token); return node
+    end
+    return addnode(5,node,0,'@field.' || lower(_text[token]),_line[token])
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); return _status
+    end
+    if <blen>(_bytes) > _limits.limit('source.bytes') then do
+      _status = 4; _error = _limits.exhausted('source.bytes',<blen>(_bytes)); return _status
+    end
+    call scan()
+    if _status <> 0 then return _status
+    _at = 1; first = .int; named = .int; ok = .int
+    if wordat(_at) = 'options' | _implicitLevel = 0 then do
+      ok = expect('options'); ok = expect('levell')
+    end
+    ok = expect('namespace')
+    if _kind[_at] <> 'symbol' then call fail('expected module name',_at)
+    _module = _text[_at]; _at = _at + 1
+    do while _at < _count & _status = 0
+      first = _at; name = _text[_at]
+      if _kind[_at] <> 'symbol' | _kind[_at + 1] <> ':' then do
+        call fail('expected name: declaration',_at); leave
+      end
+      if index(name) > 0 then do
+        call fail('duplicate declaration ' || name,_at); leave
+      end
+      _decls = _decls + 1; _name[_decls] = name; _type[_decls] = wordat(_at + 2)
+      _first[_decls] = _at; _at = _at + 3
+      do while _at < _count
+        if _kind[_at] = 'symbol' & _kind[_at + 1] = ':' then leave
+        _at = _at + 1
+      end
+      _last[_decls] = _at - 1
+    end
+    lexical = 0
+    do d = 1 to _decls
+      if _type[d] = 'lexer' then lexical = 1
+      if _type[d] = 'parser' then lexical = 0
+      _lexical[d] = lexical & (_type[d] = 'rule' | _type[d] = 'pattern' | _type[d] = 'charset')
+    end
+    startname = ''; parsers = 0; d = .int; name = .string
+    do d = 1 to _decls
+      if _type[d] <> 'parser' then iterate
+      parsers = parsers + 1; _at = _first[d] + 3
+      _profile = 'contextfree'; _units = 'tokens'
+      qualifiers = '|'
+      do while _at <= _last[d] & _status = 0
+        qualifier = wordat(_at); _at = _at + 1
+        if pos('|' || qualifier || '|',qualifiers) > 0 then call fail('duplicate parser qualifier ' || qualifier,_at - 1)
+        qualifiers = qualifiers || qualifier || '|'
+        select qualifier
+          when 'semantics' then _profile = wordat(_at)
+          when 'input' then _units = wordat(_at)
+          when 'start' then startname = _text[_at]
+          when 'backend' then _backend = wordat(_at)
+          otherwise call fail('unknown parser qualifier ' || qualifier,_at - 1)
+        end
+        _at = _at + 1
+      end
+      if startname = '' then call fail('parser requires start rule',_first[d])
+      if _profile <> 'ordered' & _profile <> 'contextfree' & _profile <> 'squirrel' & _profile <> 'pika' then call fail('unknown or unimplemented semantics profile',_first[d])
+      if _units <> 'bytes' & _units <> 'tokens' then call fail('this backend frontend supports bytes or tokens; Unicode/scalar decoding is not implied',_first[d])
+    end
+    if parsers > 1 then call fail('at most one parser declaration is supported',1)
+    if parsers = 0 then do
+      _profile = 'contextfree'; _units = 'tokens'
+    end
+    if _backend = '' then do
+      _backend = 'lr1'
+      if _profile = 'ordered' then _backend = 'packrat'
+    end
+    call tokenvalues()
+    if _status <> 0 then return _status
+    call buildlexer()
+    if _status <> 0 then return _status
+    _graph = .llcore..grammar(_profile)
+    do d = 1 to _decls
+      if _lexical[d] then iterate
+      _at = _first[d] + 3; _end = _last[d]
+      select _type[d]
+        when 'parser' then nop
+        when 'lexer' then nop
+        when 'diagnostic' then nop
+        when 'recovery' then nop
+        when 'operators' then _handle[d] = addnode(5,0,0,_name[d],_line[_first[d]])
+        when 'infix' then nop
+        when 'prefix' then nop
+        when 'region' then nop
+        when 'comments' then nop
+        when 'rule' then do
+          created = addnode(5,0,0,_name[d],_line[_first[d]])
+          _handle[d] = created
+        end
+        when 'token' then do
+          value = _tokenvalue[d]
+          created = addnode(1,value,0,_name[d],_line[_first[d]])
+          _handle[d] = created
+        end
+        when 'charset' then do
+          if _units <> 'bytes' then call fail('byte charsets require input bytes',_first[d])
+          ok = expect('='); value = 0; setnode = 0
+          do while _at <= _end & _status = 0
+            low = codepoint(); high = low
+            if wordat(_at) = 'to' then do
+              _at = _at + 1; high = codepoint()
+            end
+            if high < low then call fail('inverted byte range',_at - 1)
+            range = addnode(11,low,high,_name[d],_line[_first[d]])
+            if setnode = 0 then setnode = range
+            else do
+              choiceop = 3
+              if _profile = 'contextfree' then choiceop = 4
+              setnode = addnode(choiceop,setnode,range,_name[d],_line[_first[d]])
+            end
+            if _at <= _end then ok = expect('|')
+          end
+          _handle[d] = setnode
+        end
+        when 'tokenstage' then do
+          ok = expect('start'); initial = number()
+          declaredstage = .llstage..rules(initial,_limits.limit('stage.rules'))
+          if declaredstage.error() <> '' then call fail(declaredstage.error(),_first[d])
+          _stages[d] = declaredstage
+          if _at <> _end + 1 then call fail('unexpected tokenstage qualifier',_at)
+        end
+        when 'transform' then nop
+        when 'tree' then nop
+        otherwise call fail('unsupported declaration kind ' || _type[d],_first[d] + 2)
+      end
+    end
+    do d = 1 to _decls
+      if _status <> 0 then leave
+      if _lexical[d] then iterate
+      _at = _first[d] + 3; _end = _last[d]
+      if _type[d] = 'rule' then do
+        ok = expect('='); node = alternative()
+        if _at <> _end + 1 then call fail('unexpected rule token ' || _text[_at],_at)
+        ok = _graph.body(_handle[d],node)
+      end
+      else if _type[d] = 'transform' then do
+        ok = expect('stage'); staged = index(_text[_at]); _at = _at + 1
+        if staged = 0 then call fail('unknown tokenstage',_at - 1)
+        else if _type[staged] <> 'tokenstage' then call fail('transform target must be a tokenstage',_at - 1)
+        ok = expect('state'); state = number(); ok = expect('take')
+        first = tokenid(1); second = -1; take = 1; unless = -1; word = ''
+        if wordat(_at) <> 'text' & wordat(_at) <> 'unless' & wordat(_at) <> 'emit' then do
+          second = tokenid(1); take = 2
+        end
+        if wordat(_at) = 'text' then do
+          _at = _at + 1
+          if _kind[_at] <> 'string' | _text[_at] = '' then call fail('text guard requires a nonempty ASCII literal',_at)
+          word = _text[_at]; _at = _at + 1
+        end
+        if wordat(_at) = 'unless' then do
+          _at = _at + 1; ok = expect('next'); unless = tokenid()
+        end
+        ok = expect('emit'); emit = -1
+        select wordat(_at)
+          when 'copy' then _at = _at + 1
+          when 'skip' then do
+            emit = -2; _at = _at + 1
+          end
+          otherwise emit = tokenid()
+        end
+        ok = expect('next'); next = number()
+        if _at <> _end + 1 then call fail('unexpected transform qualifier',_at)
+        if _status = 0 then do
+          stage = _stages[staged]
+          ok = stage.add(_name[d],state,first,second,take,unless,word,emit,next)
+          if ok = 0 then do
+            if left(stage.error(),18) = 'LL_RESOURCE_LIMIT:' then do
+              _status = 4; _error = stage.error()
+            end
+            else call fail(stage.error(),_first[d])
+          end
+          _stages[staged] = stage
+        end
+      end
+      else if _type[d] = 'tree' then do
+        ok = expect('rule'); name = _text[_at]; _at = _at + 1
+        named = index(name)
+        if named = 0 then call fail('unknown tree rule ' || name,_at - 1)
+        else if _type[named] <> 'rule' then call fail('tree target must be a named rule',_at - 1)
+        ok = expect('kind'); kind = number(); ok = expect('arity'); arity = number()
+        if _at <> _end + 1 then call fail('unexpected tree qualifier',_at)
+        if named > 0 then do
+          ok = _schema.keep(_name[named],kind,arity)
+          if ok = 0 then call fail(_schema.error(),_first[d])
+        end
+      end
+      else if _type[d] = 'diagnostic' then do
+        if wordat(_at) = 'rule' then do
+          _at = _at + 1; named = index(_text[_at]); _at = _at + 1
+          if named = 0 then call fail('unknown diagnostic rule',_at - 1)
+          else if _type[named] <> 'rule' | _lexical[named] then call fail('diagnostic rule must name a parser rule',_at - 1)
+          else _diagnosticrule[d] = _handle[named]
+        end
+        ok = expect('=')
+        if _kind[_at] <> 'string' | _at <> _end then call fail('diagnostic requires a quoted message',_at)
+        _diagnostictext[d] = _text[_at]
+        if _diagnosticrule[d] > 0 then call checkmessage(_text[_at],_at)
+      end
+      else if _type[d] = 'recovery' then do
+        if _sync >= 0 then call fail('only one root recovery declaration is supported',_first[d])
+        ok = expect('rule'); name = _text[_at]; _at = _at + 1
+        if upper(name) <> upper(startname) then call fail('this recovery profile requires the parser start rule',_at - 1)
+        ok = expect('sync'); _sync = tokenid()
+        if _at <> _end + 1 then call fail('unexpected recovery qualifier',_at)
+      end
+    end
+    call buildoperators()
+    target = index(startname)
+    if parsers = 0 then nop
+    else if target = 0 then call fail('undefined start rule ' || startname,1)
+    else if _type[target] <> 'rule' & _type[target] <> 'operators' then call fail('start must name a rule or operators declaration',_first[target])
+    else _root = _handle[target]
+    if _graph.size() > _limit then do
+      _status = 4; _error = lllimits..describe('grammar.clauses',_limit,_graph.size())
+    end
+    return _status
+  /** One optional operator component. Its checked CFG lowering is shared with
+   * the Pratt implementation; an outer grammar can instead name a region. */
+  buildoperators: method = .void
+    d = .int; op = .int; a = .int; b = .int; node = .int; named = .int; ok = .int; symbol = .int
+    do d = 1 to _decls while _status = 0
+      if _type[d] <> 'operators' then iterate
+      _at = _first[d] + 3; _end = _last[d]
+      if _operatorname <> '' then do
+        call fail('only one operators component is supported in this profile',_first[d]); return
+      end
+      if _profile <> 'contextfree' then do
+        call fail('operator lowering currently requires contextfree semantics',_first[d]); return
+      end
+      ok = expect('atom'); atomname = _text[_at]; atom = tokenid(); ok = expect('group'); opening = tokenid(); closing = tokenid()
+      if _at <> _end + 1 then call fail('unexpected operators qualifier',_at)
+      _operatorname = _name[d]; _operatorhandle = _handle[d]
+      _operators = .llpratt..operators(atom,opening,closing,atomname)
+    end
+    do d = 1 to _decls while _status = 0
+      if _type[d] <> 'infix' & _type[d] <> 'prefix' & _type[d] <> 'region' then iterate
+      _at = _first[d] + 3; _end = _last[d]
+      if _operatorname = '' then do
+        call fail('declare the operators component used here',_first[d]); return
+      end
+      if _type[d] = 'region' then do
+        if _regiontoken >= 0 then call fail('only one region declaration is supported in this profile',_first[d])
+        ok = expect('token'); _regiontoken = tokenid(); ok = expect('using')
+      end
+      if upper(_text[_at]) <> upper(_operatorname) then call fail('unknown operators component ' || _text[_at],_at)
+      _at = _at + 1
+      select _type[d]
+        when 'infix' then do
+          symbol = tokenid(); ok = expect('precedence'); power = number(); association = wordat(_at); _at = _at + 1
+          if association <> 'left' & association <> 'right' then call fail('associativity must be left or right',_at - 1)
+          ok = _operators.infix(symbol,power,association = 'right',_name[d])
+          if ok = 0 then call fail(_operators.error(),_first[d])
+        end
+        when 'prefix' then do
+          symbol = tokenid(); ok = _operators.prefix(symbol,_name[d])
+          if ok = 0 then call fail(_operators.error(),_first[d])
+        end
+        when 'region' then do
+          ok = expect('open'); _regionopen = tokenid(); ok = expect('close'); _regionclose = tokenid()
+        end
+        otherwise nop
+      end
+      if _at <> _end + 1 then call fail('unexpected operator/region qualifier',_at)
+    end
+    if _status <> 0 | _operatorname = '' then return
+    if _operators.build() = 0 then do
+      named = index(_operatorname); call fail(_operators.error(),_first[named]); return
+    end
+    inner = _operators.grammar(); offset = _graph.size()
+    do c = 1 to inner.size()
+      op = inner.op(c); a = inner.left(c); b = inner.right(c)
+      if op = 2 | op = 4 then do
+        a = a + offset; b = b + offset
+      end
+      else if op = 5 | op = 7 | op = 14 | op = 15 then a = a + offset
+      node = _graph.add(op,a,b,inner.label(c),inner.line(c))
+    end
+    ok = _graph.body(_operatorhandle,offset + 1)
+    return
+  tokenvalues: method = .void
+    used = .int[]; next = 1; d = .int
+    do d = 1 to _decls while _status = 0
+      if _type[d] <> 'token' then iterate
+      _at = _first[d] + 3; _end = _last[d]
+      if _at <= _end then do
+        ok = expect('='); value = number()
+        if value > 255 | _at <> _end + 1 then call fail('token ID must be in 0..255',_first[d])
+        if used[value + 1] then call fail('duplicate token ID ' || value,_first[d])
+        used[value + 1] = 1; _tokenvalue[d] = value
+      end
+      else _tokenvalue[d] = -1
+    end
+    do d = 1 to _decls while _status = 0
+      if _type[d] <> 'token' then iterate
+      if _tokenvalue[d] >= 0 then iterate
+      do while next <= 255 & used[next + 1]
+        next = next + 1
+      end
+      if next > 255 then call fail('more than 255 emitted token IDs',_first[d])
+      _tokenvalue[d] = next; used[next + 1] = 1
+    end
+    return
+  codepoint: method = .int
+    n = 0
+    if _kind[_at] = 'string' & length(_text[_at]) = 1 then do
+      text = _text[_at]; zero = 0
+      assembler strchar n,text,zero
+      _at = _at + 1
+    end
+    else do
+      if _kind[_at] <> 'codepoint' then do
+        call fail('expected a single scalar or U+codepoint',_at); return 0
+      end
+      n = x2d(_text[_at]); _at = _at + 1
+    end
+    if n > 1114111 | (n >= 55296 & n <= 57343) then call fail('invalid Unicode scalar',_at - 1)
+    if _encoding <> 'utf8' & n > 255 then call fail('codepoint outside declared byte domain; use input utf8 for scalar rules',_at - 1)
+    return n
+  charset: method = .llcharset..ranges
+    arg declared = .int
+    if _setstate[declared] = 2 then return _sets[declared]
+    result = .llcharset..ranges()
+    if _setstate[declared] = 1 then do
+      call fail('recursive charset ' || _name[declared],_first[declared]); return result
+    end
+    _setstate[declared] = 1; savedat = _at; savedend = _end
+    _at = _first[declared] + 3; _end = _last[declared]; ok = expect('=')
+    result = setunion()
+    if _at <> _end + 1 then call fail('unexpected charset token',_at)
+    _at = savedat; _end = savedend; _sets[declared] = result; _setstate[declared] = 2
+    return result
+  repeatnode: method = .int
+    arg child = .int, low = .int, high = .int, line = .int
+    result = 0; i = .int; tail = .int
+    if high >= 0 & low > high then do
+      call fail('repetition requires minimum <= maximum',_at - 1); return 0
+    end
+    if max(low,high) > _limits.limit('grammar.repeat') then do
+      _status = 4; _error = _limits.exhausted('grammar.repeat',max(low,high)); return 0
+    end
+    do i = 1 to low
+      if result = 0 then result = child
+      else result = addnode(2,result,child,'repeat required',line)
+    end
+    if high < 0 then do
+      tail = addnode(7,child,0,'repeat *',line)
+      if result = 0 then result = tail
+      else result = addnode(2,result,tail,'repeat unbounded',line)
+    end
+    else do
+      do i = low + 1 to high
+        empty = addnode(6,0,0,'empty',line); op = 3
+        if _profile = 'contextfree' then op = 4
+        tail = addnode(op,child,empty,'optional',line)
+        if result = 0 then result = tail
+        else result = addnode(2,result,tail,'repeat bounded',line)
+      end
+    end
+    if result = 0 then result = addnode(6,0,0,'empty',line)
+    return result
+  addnode: method = .int
+    arg op = .int, a = .int, b = .int, label = .string, line = .int
+    /* Share transparent EBNF clauses. Distinct auxiliary nonterminals for an
+     * identical prefix can introduce conflicts absent from the authored CFG.
+     * Named rule handles are never merged; they retain identity and location. */
+    if op = 2 | op = 4 | op = 6 | op = 7 then do i = 1 to _graph.size()
+      if _graph.op(i) = op & _graph.left(i) = a & _graph.right(i) = b & _graph.label(i) = label then return i
+    end
+    limit = _limit
+    if _lexmode then limit = _limits.limit('lexer.clauses')
+    if _graph.size() >= limit | _status <> 0 then do
+      if _status = 0 then do
+        _status = 4; setting = 'grammar.clauses'
+        if _lexmode then setting = 'lexer.clauses'
+        _error = lllimits..describe(setting,limit,_graph.size() + 1) || ' At line ' || line
+      end
+      return 0
+    end
+    return _graph.add(op,a,b,label,line)
+  tokenid: method = .int
+    arg wildcard = 0
+    if wordat(_at) = 'any' then do
+      if wildcard = 0 then call fail('any is allowed only in take patterns',_at)
+      _at = _at + 1; return -1
+    end
+    named = index(_text[_at]); _at = _at + 1
+    if named = 0 then do
+      call fail('unknown token ' || _text[_at - 1],_at - 1); return 0
+    end
+    if _type[named] <> 'token' then do
+      call fail('stage requires a named token',_at - 1); return 0
+    end
+    return _graph.left(_handle[named])
+  stage: method = .llstage..rules
+    arg name = .string
+    named = index(name)
+    if named > 0 then do
+      if _type[named] = 'tokenstage' then return _stages[named]
+    end
+    return .llstage..rules(0)
+  literal: method = .int
+    arg bytes = .binary, line = .int
+    if _lexmode = 0 & _units = 'tokens' & <blen>(bytes) > 0 then do
+      call fail('quoted spelling in a token rule is unbound; declare a token, emit it in the lexer, and use its name here',_at)
+      return 0
+    end
+    result = 0
+    do i = 0 to <blen>(bytes) - 1 while _status = 0
+      terminal = addnode(1,<at..u8>(i) bytes,0,'literal.byte',line)
+      if result = 0 then result = terminal
+      else result = addnode(2,result,terminal,'literal',line)
+    end
+    if result = 0 then result = addnode(6,0,0,'empty',line)
+    return result
+  grammar: method = .llcore..grammar
+    return _graph
+  schema: method = .llproject..schema
+    return _schema
+  root: method = .int
+    return _root
+  units: method = .string
+    return _units
+  module: method = .string
+    return _module
+  error: method = .string
+    return _error
+  backend: method = .string
+    return _backend
+  diagnosticrule: method = .int
+    arg declaration = .int
+    return _diagnosticrule[declaration]
+  diagnostictext: method = .string
+    arg declaration = .int
+    return _diagnostictext[declaration]
+  recovered: method = .string[]
+    return _recovered
+  sync: method = .int
+    return _sync
+  operators: method = .llpratt..operators
+    return _operators
+  operatorname: method = .string
+    return _operatorname
+  operatorhandle: method = .int
+    return _operatorhandle
+  regiontoken: method = .int
+    return _regiontoken
+  regionopen: method = .int
+    return _regionopen
+  regionclose: method = .int
+    return _regionclose
+  /** Templates are data. Unknown fields fail generation, not error reporting. */
+  checkmessage: method = .void
+    arg text = .string, token = .int
+    at = 1
+    do while at <= length(text)
+      if substr(text,at,2) = '{{' | substr(text,at,2) = '}}' then do
+        at = at + 2; iterate
+      end
+      c = substr(text,at,1)
+      if c = '{' then do
+        finish = pos('}',text,at + 1)
+        if finish = 0 then do
+          call fail('unclosed diagnostic field; use {{ for a literal brace',token); return
+        end
+        field = substr(text,at + 1,finish - at - 1)
+        if field <> 'found' & field <> 'expected' & field <> 'rule' then do
+          call fail('unknown diagnostic field {' || field || '}; available: found, expected, rule',token); return
+        end
+        at = finish + 1
+      end
+      else do
+        if c = '}' then call fail('unmatched diagnostic brace; use }} for a literal brace',token)
+        at = at + 1
+      end
+    end
+    return
+
+  /** Lexical references are acyclic regular expressions; admission is the DFA
+   * builder's responsibility. Lexer rules precede the parser declaration. */
+  buildlexer: method = .void
+    d = .int; ok = .int; created = .int; named = .int
+    saved = _profile; _profile = 'contextfree'; _lexmode = 1; _graph = .llcore..grammar('contextfree')
+    do d = 1 to _decls
+      _at = _first[d] + 3; _end = _last[d]
+      if _type[d] = 'lexer' then do
+        if _encoding <> '' then call fail('only one lexer is supported',_first[d])
+        _encoding = 'utf8'
+        if _at <= _end & wordat(_at) = 'input' then do
+          _at = _at + 1; _encoding = wordat(_at); _at = _at + 1
+        end
+        if _at <= _end & wordat(_at) = 'backend' then do
+          _at = _at + 1
+          if wordat(_at) <> 'dfa' then call fail('lexer backend must be dfa',_at)
+          _at = _at + 1
+        end
+        if (_encoding <> 'utf8' & _encoding <> 'utf8bytes' & _encoding <> 'bytes') | _at <> _end + 1 then call fail('lexer requires input utf8, utf8bytes or bytes',_at)
+      end
+      else if _type[d] = 'comments' then call commentdeclaration(d)
+      if _lexical[d] then do
+        created = addnode(5,0,0,_name[d],_line[_first[d]]); _handle[d] = created
+      end
+    end
+    do d = 1 to _decls while _status = 0
+      if _lexical[d] = 0 then iterate
+      _at = _first[d] + 3; _end = _last[d]; ok = expect('=')
+      if _type[d] = 'charset' then do
+        members = charset(d)
+        created = llcharset..lower(_graph,members,_encoding = 'utf8',_line[_first[d]])
+        ok = _graph.body(_handle[d],created)
+      end
+      else do
+        actionat = 0
+        if _type[d] = 'rule' then do i = _at to _end
+          if _kind[i] = 'symbol' & wordat(i) = 'then' then do
+            actionat = i; leave
+          end
+        end
+        special = ''
+        if actionat > 0 then do
+          if actionat = _at + 1 & _kind[_at] = 'symbol' then do
+            word = wordat(_at)
+            if word = 'eof' | word = 'malformed' | word = 'otherwise' then special = word
+          end
+          _end = actionat - 1
+        end
+        if special = '' then do
+          created = alternative()
+          if _at <> _end + 1 then call fail('unexpected lexical expression',_at)
+          ok = _graph.body(_handle[d],created)
+        end
+        if _type[d] = 'rule' then do
+          if actionat = 0 then do
+            call fail('lexical rule requires then emit/skip/error action',_first[d]); leave
+          end
+          _at = actionat + 1; _end = _last[d]; action = wordat(_at); _at = _at + 1; kind = -1
+          if action = 'emit' then do
+            named = index(_text[_at]); _at = _at + 1
+            if named = 0 then call fail('unknown emitted token',_at - 1)
+            else if _type[named] <> 'token' then call fail('emit requires a token',_at - 1)
+            else do
+              kind = _tokenvalue[named]
+              if kind < 1 | kind > 255 then do
+                if special <> 'eof' | kind <> 0 then call fail('emitted tokens must be in 1..255',_first[d])
+              end
+            end
+          end
+          else if action = 'error' then do
+            named = index(_text[_at]); _at = _at + 1
+            if named = 0 then call fail('unknown diagnostic',_at - 1)
+            else if _type[named] <> 'diagnostic' then call fail('error requires a diagnostic',_at - 1)
+            if special <> 'malformed' & special <> 'otherwise' then call fail('error action only supported for malformed/otherwise',_first[d])
+          end
+          else if action <> 'skip' then call fail('expected emit, skip or error',_at - 1)
+          if special = 'eof' then do
+            if action <> 'emit' | kind <> 0 then call fail('EOF must emit the token with ID 0',_first[d])
+            if _eof >= 0 then call fail('duplicate EOF action',_first[d])
+            _eof = kind
+          end
+          if special = 'malformed' | special = 'otherwise' then do
+            if action <> 'error' then call fail('malformed/otherwise require an error action',_first[d])
+            if named > 0 then do
+              diagnosticat = _first[named] + 3
+              if _text[diagnosticat] <> '=' | _kind[diagnosticat + 1] <> 'string' | _last[named] <> diagnosticat + 1 then call fail('diagnostic requires = quoted message',diagnosticat)
+              message = _name[named] || ': ' || _text[diagnosticat + 1]
+              if special = 'malformed' then do
+                if _malformed <> '' then call fail('duplicate malformed action',_first[d])
+                _malformed = message
+              end
+              else do
+                if _otherwise <> '' then call fail('duplicate otherwise action',_first[d])
+                _otherwise = message
+              end
+            end
+          end
+          if _at <> _end + 1 then call fail('unexpected lexical action qualifier',_at)
+          if special = '' then do
+            slot = _lexroots[0] + 1; _lexroots[slot] = _handle[d]; _lexkinds[slot] = kind; _lexnames[slot] = _name[d]
+          end
+        end
+      end
+    end
+    do entry = 1 to _comments.size() while _status = 0
+      if _commentoutside[entry] = '' then iterate
+      named = index(_commentoutside[entry])
+      if named = 0 then call fail('LL_COMMENT_CONTRACT: unknown outside pattern ' || _commentoutside[entry],_first[_commentdecl[entry]])
+      else if _lexical[named] = 0 | _type[named] <> 'pattern' then call fail('LL_COMMENT_CONTRACT: outside requires a named lexical pattern',_first[_commentdecl[entry]])
+      else _commentroots[entry] = _handle[named]
+    end
+    _lexgraph = _graph; _profile = saved; _lexmode = 0
+    do d = 1 to _decls
+      _handle[d] = 0
+    end
+    return
+  commentdeclaration: method = .void
+    arg declaration = .int
+    form = wordat(_at); _at = _at + 1
+    if wordpos(form,'line block nested') = 0 then do
+      call fail('LL_COMMENT_CONTRACT: comments requires line, block or nested',_at - 1); return
+    end
+    if _kind[_at] <> 'string' then do
+      call fail('LL_COMMENT_CONTRACT: comment opener must be quoted',_at); return
+    end
+    opening = _text[_at]; _at = _at + 1; closing = ''
+    if form <> 'line' then do
+      if _kind[_at] <> 'string' then do
+        call fail('LL_COMMENT_CONTRACT: block/nested closer must be quoted',_at); return
+      end
+      closing = _text[_at]; _at = _at + 1
+    end
+    keep = 0; outside = ''; seen = '|'
+    do while _at <= _end & _status = 0
+      qualifier = wordat(_at); first = _at; _at = _at + 1
+      if pos('|' || qualifier || '|',seen) > 0 then do
+        call fail('LL_COMMENT_CONTRACT: duplicate comment qualifier ' || qualifier,first); return
+      end
+      seen = seen || qualifier || '|'
+      select qualifier
+        when 'outside' then do
+          if _kind[_at] <> 'symbol' then call fail('LL_COMMENT_CONTRACT: outside requires a pattern name',_at)
+          outside = _text[_at]; _at = _at + 1
+        end
+        when 'newlines' then do
+          if wordat(_at) <> 'keep' then call fail('LL_COMMENT_CONTRACT: optional newlines policy is keep',_at)
+          keep = 1; _at = _at + 1
+        end
+        otherwise call fail('LL_COMMENT_CONTRACT: unsupported comment qualifier ' || qualifier || '; cross-style nesting is not supported',first)
+      end
+    end
+    if _status <> 0 then return
+    ok = _comments.add(_name[declaration],form,opening,closing,keep,_line[_first[declaration]],_start[_first[declaration]])
+    if ok = 0 then do
+      call fail(_comments.error(),_first[declaration]); return
+    end
+    entry = _comments.size(); _commentdecl[entry] = declaration; _commentoutside[entry] = outside
+    return
+  comments: method = .llcomments..rules
+    return _comments
+  commentroot: method = .int
+    arg entry = .int
+    return _commentroots[entry]
+  commentlocation: method = .string
+    arg entry = .int
+    declaration = _commentdecl[entry]
+    return 'line ' || _line[_first[declaration]] || ', byte ' || _start[_first[declaration]] || ': ' || _name[declaration]
+  lexgrammar: method = .llcore..grammar
+    return _lexgraph
+  lexroots: method = .int[]
+    return _lexroots
+  lexkinds: method = .int[]
+    return _lexkinds
+  encoding: method = .string
+    return _encoding
+  commentopen: method = .string
+    if _comments.size() = 1 then do
+      if _comments.form(1) = 'nested' then return _comments.opening(1) as .string
+    end
+    return ''
+  commentclose: method = .string
+    if _comments.size() = 1 then do
+      if _comments.form(1) = 'nested' then return _comments.closing(1) as .string
+    end
+    return ''
+  declarations: method = .int
+    return _decls
+  declarationname: method = .string
+    arg at = .int
+    return _name[at]
+  declarationtype: method = .string
+    arg at = .int
+    return _type[at]
+  declarationhandle: method = .int
+    arg at = .int
+    return _handle[at]
+  malformed: method = .string
+    return _malformed
+  unmatched: method = .string
+    return _otherwise
+  eof: method = .int
+    return _eof
+
+  property: method = .llcharset..ranges
+    arg name = .string, token = .int
+    result = .llcharset..ranges()
+    if _encoding <> 'utf8' then do
+      call fail('Unicode properties require lexer input utf8',token); return result
+    end
+    name = substr(name,9)
+    if llproperties..known(name) = 0 then do
+      call fail('unknown Unicode 17.0.0 property ' || name,token); return result
+    end
+    result = llproperties..ranges(name)
+    if result.error() <> '' then call fail(result.error(),token)
+    return result
+
+/* BEGIN FRONTEND READER */
+  /** Generated lexer, declared token stage and canonical LR parser are the
+   * sole syntax authority here. The seed reader is absent from L1/L2. */
+  scan: method = .void
+    language = llsyntax..language(); request = .lllanguage..request(language,_bytes,_limits)
+    status = request.lex(); lexicalstatus = status
+    if status = 0 then status = request.parse_tokens(request.tokens())
+    if status <> 0 then do
+      _status = 3
+      if status = 2 then _status = 4
+      _error = llsource..diagnostic(_bytes,request.offset(),'LL_SYNTAX',request.error())
+      if lexicalstatus = 0 & status = 1 then call resynchronize(language,request.tokens(),request.offset())
+      if lexicalstatus = 1 then call lexicalresynchronize(language,request.offset())
+      return
+    end
+    tree = request.tree(); _syntax = .lltree..view(tree,request.root(),_limits.limit('tree.entries'))
+    if _syntax.error() <> '' then do
+      _status = 4; _error = _syntax.error(); return
+    end
+    tokens = request.tokens(); cursor = 0; line = 1; previous = -1; c = .int
+    do i = 0 to tokens.size() - 1
+      start = tokens.start(i); finish = tokens.finish(i + 1)
+      do while cursor < start
+        c = <at..u8>(cursor) _bytes
+        if c = 13 | (c = 10 & previous <> 13) then line = line + 1
+        previous = c; cursor = cursor + 1
+      end
+      text = binsubstr(_bytes,start + 1,finish - start) as .string
+      kind = language.tokenname(tokens.symbol(i))
+      if kind = 'declarationname' then do
+        endname = start
+        do while endname < finish
+          c = <at..u8>(endname) _bytes
+          if (c >= 65 & c <= 90) | (c >= 97 & c <= 122) | (c >= 48 & c <= 57) | c = 95 | c = 46 then endname = endname + 1
+          else leave
+        end
+        text = binsubstr(_bytes,start + 1,endname - start) as .string
+        call emit('symbol',text,line,start)
+        call emit(':',':',line,finish - 1)
+      end
+      else do
+        select
+          when kind = 'identifier' | left(kind,3) = 'kw.' then kind = 'symbol'
+          when kind = 'string' then do
+            quote = left(text,1)
+            text = changestr(quote || quote,substr(text,2,length(text) - 2),quote)
+          end
+          when kind = 'codepoint' then do
+            text = substr(text,3)
+            if length(text) > 6 then do
+              _status = 3; _error = 'codepoint must contain at most six hexadecimal digits'; return
+            end
+          end
+          when kind = 'integer' then nop
+          otherwise kind = text
+        end
+        call emit(kind,text,line,start)
+      end
+      if kind = 'symbol' | kind = 'declarationname' then do
+        if right(text,1) = '.' | pos('..',text) > 0 then call fail('invalid static compound name',_count)
+      end
+    end
+    extent = <blen>(_bytes)
+    do while cursor < extent
+      c = <at..u8>(cursor) _bytes
+      if c = 13 | (c = 10 & previous <> 13) then line = line + 1
+      previous = c; cursor = cursor + 1
+    end
+    call emit('eof','',line,cursor)
+    old = .int
+    do node = 1 to tree.size()
+      name = tree.label(node); offset = tree.start(node) + 1
+      if name = 'expression' then do
+        old = _expressions[offset]
+        if old = 0 then _expressions[offset] = node
+        else if tree.finish(old) < tree.finish(node) then _expressions[offset] = node
+      end
+      if name = 'set.expression' then do
+        old = _setexpressions[offset]
+        if old = 0 then _setexpressions[offset] = node
+        else if tree.finish(old) < tree.finish(node) then _setexpressions[offset] = node
+      end
+    end
+    return
+  tokenfor: method = .int
+    arg byte = .int
+    low = 1; high = _count
+    do while low < high
+      middle = (low + high) / 2
+      if _start[middle] < byte then low = middle + 1
+      else high = middle
+    end
+    return low
+  alternative: method = .int
+    node = _expressions[_start[_at] + 1]
+    if node = 0 then do
+      call fail('missing generated expression tree',_at); return 0
+    end
+    result = expressionnode(node)
+    _at = tokenfor(_syntax.finish(node))
+    return result
+  expressionnode: method = .int
+    arg node = .int
+    child = .int; mark = .int; op = .int
+    result = 0; name = _syntax.name(node); count = _syntax.count(node)
+    at = tokenfor(_syntax.start(node)); line = _line[at]; i = .int
+    if _status <> 0 then return 0
+    _depth = _depth + 1
+    if _depth > 128 then do
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: authored expression depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return 0
+    end
+    select name
+      when 'expression' then do
+        result = expressionnode(_syntax.child(node,1))
+        do i = 3 to count by 2 while _status = 0
+          child = expressionnode(_syntax.child(node,i)); op = 3
+          if _profile = 'contextfree' then op = 4
+          mark = tokenfor(_syntax.start(_syntax.child(node,i - 1)))
+          result = addnode(op,result,child,'choice',_line[mark])
+        end
+      end
+      when 'sequence' then do
+        do i = 1 to count while _status = 0
+          current = _syntax.child(node,i); child = expressionnode(current)
+          if result = 0 then result = child
+          else do
+            mark = tokenfor(_syntax.start(current))
+            result = addnode(2,result,child,'sequence',_line[mark])
+          end
+        end
+      end
+      when 'term' then do
+        first = _syntax.child(node,1); kind = _syntax.name(first)
+        if kind = 'bang' | kind = 'amp' then do
+          child = expressionnode(_syntax.child(node,2)); op = 8; label = 'negative lookahead'
+          if kind = 'amp' then do
+            op = 9; label = 'positive lookahead'
+          end
+          result = addnode(op,child,0,label,line)
+        end
+        else do
+          result = expressionnode(first)
+          if count >= 2 & _syntax.name(_syntax.child(node,2)) = 'suffix' then do
+            suffix = _syntax.child(node,2); mark = tokenfor(_syntax.start(suffix))
+            kind = _kind[mark]; line = _line[mark]
+            select kind
+              when '*' then result = addnode(7,result,0,'repeat *',line)
+              when '+' then do
+                tail = addnode(7,result,0,'repeat *',line)
+                result = addnode(2,result,tail,'repeat +',line)
+              end
+              when '?' then do
+                empty = addnode(6,0,0,'empty',line); op = 3
+                if _profile = 'contextfree' then op = 4
+                result = addnode(op,result,empty,'optional',line)
+              end
+              when '{' then do
+                _at = mark + 1; low = number(); high = low
+                if _kind[_at] = ',' then do
+                  _at = _at + 1; high = -1
+                  if _kind[_at] <> '}' then high = number()
+                end
+                _at = _at + 1; result = repeatnode(result,low,high,line)
+              end
+              otherwise call fail('unsupported generated suffix',mark)
+            end
+          end
+          if count >= 2 then do
+            field = _syntax.child(node,count)
+            if _syntax.name(field) = 'capture' then do
+              mark = tokenfor(_syntax.start(field))
+              result = capture(result,mark + 1)
+            end
+          end
+        end
+      end
+      when 'atom' then do
+        first = _syntax.child(node,1); kind = _syntax.name(first)
+        select kind
+          when 'lparen' then result = expressionnode(_syntax.child(node,2))
+          when 'string' then result = literal(_text[at] as .binary,line)
+          when 'codepoint' then do
+            if _lexmode = 0 then call fail('codepoint atoms require a lexical rule',at)
+            _at = at; scalar = codepoint(); members = .llcharset..ranges()
+            call members.add(scalar,scalar)
+            result = llcharset..lower(_graph,members,_encoding = 'utf8',line)
+          end
+          when 'reference' then do
+            named = index(_text[at])
+            if named = 0 then call fail('undefined symbol ' || _text[at],at)
+            else if _handle[named] = 0 then call fail('symbol is not a rule, token or charset',at)
+            else result = _handle[named]
+          end
+          otherwise call fail('unsupported generated atom',at)
+        end
+      end
+      otherwise call fail('unsupported generated expression node ' || name,at)
+    end
+    _depth = _depth - 1
+    return result
+  /** The proper reader can resume at a lexically proven declaration name.
+   * Quoted text/comments cannot supply this token. No repaired artifact is
+   * emitted; good later declarations are retained for inspection only. */
+  /** Inspect isolated declaration candidates after lexical damage. The
+   * original document remains failed; no recovered candidate is compiled. */
+  lexicalresynchronize: method = .void
+    arg language = .lllanguage..definition, failure = .int
+    i = .int
+    prepared = .llsource..prepared(_bytes,'utf8','/*','*/',_limits.limit('source.bytes'),1)
+    status = prepared.status()
+    if status > 1 then do
+      _status = 4; _error = prepared.error(); return
+    end
+    if status = 1 then do
+      _damagefirst[1] = prepared.offset(); _damagelast[1] = prepared.offset() + 2
+      _damagetext[1] = prepared.error()
+    end
+    scanner = .llmunch..scanner(language.automaton(),prepared.bytes(),'recover',_limits.limit('scan.work'))
+    status = scanner.run()
+    if status > 1 then do
+      _status = 4; _error = scanner.error(); return
+    end
+    do i = 1 to scanner.errors()
+      slot = _damagefirst[0] + 1
+      if slot > _limits.limit('recovery.errors') then do
+        _status = 4; _error = _limits.exhausted('recovery.errors',slot); return
+      end
+      _damagefirst[slot] = scanner.badstart(i); _damagelast[slot] = scanner.badend(i)
+      _damagetext[slot] = 'lexical damage; isolated declaration is not compiled'
+    end
+    raw = scanner.tokens(); tokens = .llcore..stream.tokens(_bytes)
+    do i = 0 to raw.size() - 1
+      ok = tokens.append(raw.symbol(i),raw.start(i),raw.finish(i + 1))
+    end
+    request = .lllanguage..request(language,_bytes,_limits)
+    if request.classify_tokens(tokens) <> 0 then do
+      _status = 4; _error = request.error(); return
+    end
+    _lexicalrecovery = 1
+    call resynchronize(language,request.tokens(),failure)
+    return
+  lineboundary: method = .int
+    arg offset = .int
+    do at = offset - 1 to 0 by -1
+      c = <at..u8>(at) _bytes
+      if c = 10 | c = 13 then return 1
+      if c <> 32 & c <> 9 then return 0
+    end
+    return 1
+  resynchronize: method = .void
+    arg language = .lllanguage..definition, tokens = .llcore..stream, failure = .int
+    i = .int
+    boundaries = .int[]; declaration = language.tokenid('declarationname')
+    do i = 0 to tokens.size() - 1
+      if tokens.symbol(i) = declaration then do
+        if _lexicalrecovery & lineboundary(tokens.start(i)) = 0 then iterate
+        boundaries[boundaries[0] + 1] = i
+      end
+    end
+    if boundaries[0] = 0 then return
+    first = boundaries[1]
+    if failure < tokens.start(first) then return
+    if boundaries[0] > _limits.limit('recovery.declarations') then do
+      _status = 4; _error = _limits.exhausted('recovery.declarations',boundaries[0]); return
+    end
+    collected = ''; errors = 0
+    do d = 1 to boundaries[0]
+      start = boundaries[d]; finish = tokens.size()
+      if d < boundaries[0] then finish = boundaries[d + 1]
+      fragment = .llcore..stream.tokens(_bytes)
+      do i = 0 to first - 1
+        ok = fragment.append(tokens.symbol(i),tokens.start(i),tokens.finish(i + 1))
+      end
+      do i = start to finish - 1
+        ok = fragment.append(tokens.symbol(i),tokens.start(i),tokens.finish(i + 1))
+      end
+      ok = fragment.boundary(tokens.start(finish))
+      probe = .lllanguage..request(language,_bytes,_limits); status = probe.parse_tokens(fragment)
+      damage = 0
+      do i = 1 to _damagefirst[0]
+        if _damagefirst[i] >= tokens.start(start) & _damagefirst[i] < tokens.start(finish) then damage = i
+      end
+      if damage > 0 then status = 1
+      if status = 0 then do
+        text = binsubstr(_bytes,tokens.start(start) + 1,tokens.finish(start + 1) - tokens.start(start)) as .string
+        _recovered[_recovered[0] + 1] = strip(left(text,pos(':',text) - 1))
+      end
+      else do
+        errors = errors + 1
+        if status = 1 & errors > _limits.limit('recovery.errors') then do
+          _status = 4
+          collected = collected || '0a'x || _limits.exhausted('recovery.errors',errors)
+          leave
+        end
+        if collected <> '' then collected = collected || '0a'x
+        if damage > 0 then collected = collected || llsource..diagnostic(_bytes,_damagefirst[damage],'LL_LEXICAL',_damagetext[damage])
+        else collected = collected || llsource..diagnostic(_bytes,probe.offset(),'LL_SYNTAX',probe.error())
+        if status <> 1 then do
+          _status = 4; leave
+        end
+      end
+    end
+    if errors > 0 then _error = collected
+    return
+  setunion: method = .llcharset..ranges
+    node = _setexpressions[_start[_at] + 1]
+    if node = 0 then do
+      call fail('missing generated charset tree',_at); return .llcharset..ranges()
+    end
+    result = setnode(node)
+    _at = tokenfor(_syntax.finish(node))
+    return result
+  setnode: method = .llcharset..ranges
+    arg node = .int
+    result = .llcharset..ranges(); name = _syntax.name(node); count = _syntax.count(node)
+    at = tokenfor(_syntax.start(node)); _depth = _depth + 1
+    if _depth > 128 then do
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: charset depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return result
+    end
+    if name = 'set.expression' | name = 'set.difference' then do
+      result = setnode(_syntax.child(node,1))
+      do i = 3 to count by 2 while _status = 0
+        other = setnode(_syntax.child(node,i))
+        if name = 'set.expression' then call result.unite(other)
+        else call result.subtract(other)
+      end
+    end
+    else if name = 'set.atom' then do
+      first = _syntax.child(node,1); kind = _syntax.name(first)
+      select kind
+        when 'lparen' then result = setnode(_syntax.child(node,2))
+        when 'kw.scalar' then do
+          if _encoding <> 'utf8' then call fail('scalar requires lexer input utf8',at)
+          call result.add(0,55295); call result.add(57344,1114111)
+        end
+        when 'set.reference' then do
+          if left(lower(_text[at]),8) = 'unicode.' & index(_text[at]) = 0 then result = property(_text[at],at)
+          else do
+          named = index(_text[at])
+          if named = 0 then call fail('unknown charset',at)
+          else if _type[named] <> 'charset' | _lexical[named] = 0 then call fail('expected lexical charset',at)
+          else result = charset(named)
+          end
+        end
+        when 'scalar.value' then do
+          _at = at; low = codepoint(); high = low
+          if count = 3 then do
+            _at = tokenfor(_syntax.start(_syntax.child(node,3))); high = codepoint()
+          end
+          if low > high then call fail('inverted range',at)
+          call result.add(low,high)
+        end
+        otherwise call fail('unsupported generated charset node',at)
+      end
+    end
+    else call fail('unsupported generated set expression',at)
+    _depth = _depth - 1
+    return result
+
+/* END FRONTEND READER */

@@ -1,0 +1,25 @@
+options levell
+namespace tinyconfigsectiontokens
+read: parser semantics contextfree input tokens start document
+identifier: token = 1
+integer: token = 2
+quoted: token = 3
+equals: token = 8
+semi: token = 9
+comma: token = 10
+open.array: token = 11
+close.array: token = 12
+true: token = 14
+false: token = 15
+open.section: token = 16
+close.section: token = 17
+name: rule = identifier | true | false
+number: rule = integer
+string: rule = quoted
+boolean: rule = true | false
+value: rule = number | string | array | boolean
+array: rule = open.array (value (comma value)*)? close.array
+binding: rule = name equals value semi
+section: rule = name open.section entry* close.section
+entry: rule = section | binding
+document: rule = entry*

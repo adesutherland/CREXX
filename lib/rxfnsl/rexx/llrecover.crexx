@@ -1,0 +1,194 @@
+/* cREXX License (MIT). Explicit, bounded recovery at declared token boundaries. */
+options levelb
+namespace llrecover expose request
+import rxfnsb
+import llcore
+import lllanguage
+import llmunch
+import llsource
+import lllimits
+
+/** Strict parsing remains lllanguage.request. This separate request collects
+ * damage and skips an entire synchronization interval, never executes input.
+ * Status: 0 clean, 1 recovered, 2 resource, 3 contract, 4 unrecoverable, 5 forest.
+ * This first profile is for flat records. Nested recovery needs region ownership.
+ */
+request: class
+  _language = .lllanguage..definition
+  _source = .binary
+  _tokens = .llcore..stream
+  _tree = .llcore..tree
+  _root = .int
+  _ran = .int
+  _status = .int
+  _limit = .int
+  _limits = .lllimits..policy
+  _messages = .string[]
+  _offsets = .int[]
+  _ends = .int[]
+  _skipfirst = .int[]
+  _skiplast = .int[]
+  _nodes = .int[]
+  _error = .string
+  _ordered = .int
+  *: factory
+    arg language = .lllanguage..definition, source = .binary, errors = 0, ?limits = .lllimits..policy
+    _language = language; _source = source; _limit = errors
+    _ran = 0; _status = 0; _root = 0; _error = ''
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    if errors = 0 then _limit = _limits.limit('recovery.errors')
+    else if ?limits then _limit = min(errors,_limits.limit('recovery.errors'))
+    else _limit = errors
+    _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
+    return
+  run: method = .int
+    i = .int; ignored = .int; text = .string
+    if _ran then return _status
+    _ran = 1
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); return _status
+    end
+    stages = _language.stages()
+    if _language.sync() < 0 | _language.hasparser() = 0 | stages[0] > 0 | _limit < 1 then do
+      _status = 3; _error = 'LL_RECOVERY_CONTRACT: declare root recovery; initial flat-record profile requires no token stages and a positive error allowance'
+      return _status
+    end
+    prepared = .llsource..prepared(_source,_language.encoding(),'','',_limits.limit('source.bytes'),1,_language.comments(),_limits.limit('scan.work'))
+    _status = prepared.status()
+    if _status <> 0 then do
+      _error = prepared.error(); call report(prepared.offset(),prepared.offset(),_error)
+      if _status = 1 then _status = 4
+      return _status
+    end
+    scan = .llmunch..scanner(_language.automaton(),prepared.bytes(),'recover',_limits.limit('scan.work'))
+    _status = scan.run()
+    if _status > 1 then do
+      _error = scan.error(); return _status
+    end
+    raw = scan.tokens()
+    do i = 0 to raw.size() - 1
+      ok = _tokens.append(raw.symbol(i),raw.start(i),raw.finish(i + 1))
+    end
+    do i = 1 to prepared.errors()
+      if covered(prepared.badstart(i)) then iterate
+      text = 'LL_UTF8: malformed UTF-8; original bytes ' || bin2x(binsubstr(_source,prepared.badstart(i) + 1,prepared.badend(i) - prepared.badstart(i)))
+      call report(prepared.badstart(i),prepared.badend(i),text)
+      if _status = 2 then return _status
+      ignored = skip(prepared.badstart(i))
+    end
+    do i = 1 to scan.errors()
+      if covered(scan.badstart(i)) then iterate
+      text = 'LL_LEXICAL: unexpected ' || llsource..lexeme(binsubstr(_source,scan.badstart(i) + 1,scan.badend(i) - scan.badstart(i)))
+      call report(scan.badstart(i),scan.badend(i),text)
+      if _status = 2 then return _status
+      ignored = skip(scan.badstart(i))
+    end
+    do attempt = 1 to _limit + 1
+      input = filtered()
+      probe = .lllanguage..request(_language,_source,_limits)
+      _status = probe.parse_tokens(input)
+      if _status = 0 then do
+        _tree = probe.tree(); _root = probe.root()
+        do i = 1 to _skipfirst[0]
+          _nodes[i] = _tree.add(-1,'error.skipped',_skipfirst[i],_skiplast[i],0,0)
+        end
+        if _messages[0] > 0 then _status = 1
+        return _status
+      end
+      _error = probe.error()
+      if _status <> 1 then return _status
+      call report(probe.offset(),probe.offset(),probe.error())
+      if _status = 2 then return _status
+      if skip(probe.offset()) = 0 then do
+        _status = 4; _error = 'LL_RECOVERY_STOP: no further tokens can be skipped at the declared boundary'; return _status
+      end
+    end
+    _status = 2; _error = lllimits..describe('recovery.errors',_limit,_limit + 1)
+    return _status
+  report: method = .void
+    arg first = .int, last = .int, message = .string
+    if _messages[0] >= _limit then do
+      _status = 2; _error = lllimits..describe('recovery.errors',_limit,_messages[0] + 1); return
+    end
+    _ordered = 0
+    i = _messages[0] + 1
+    _messages[i] = message; _offsets[i] = first; _ends[i] = last
+    return
+  covered: method = .int
+    arg at = .int
+    do i = 1 to _skipfirst[0]
+      if at >= _skipfirst[i] & at < _skiplast[i] then return 1
+    end
+    return 0
+  skip: method = .int
+    arg at = .int
+    i = .int
+    first = 0; last = <blen>(_source)
+    depth = 0; opening = -1; closing = -1
+    if _language.backend() = 'regional' then do
+      region = _language.region(); opening = region.open(); closing = region.close()
+    end
+    do i = 0 to _tokens.size() - 1
+      if _tokens.symbol(i) = opening then depth = depth + 1
+      if _tokens.symbol(i) = closing then depth = max(0,depth - 1)
+      if depth > 0 then iterate
+      if _tokens.symbol(i) <> _language.sync() then iterate
+      if _tokens.finish(i + 1) <= at then first = _tokens.finish(i + 1)
+      else do
+        last = _tokens.finish(i + 1); leave
+      end
+    end
+    removed = 0
+    do i = 0 to _tokens.size() - 1
+      offset = _tokens.start(i)
+      if offset >= first & offset < last & covered(offset) = 0 then removed = removed + 1
+    end
+    j = _skipfirst[0] + 1; _skipfirst[j] = first; _skiplast[j] = last
+    return removed
+  filtered: method = .llcore..stream
+    result = .llcore..stream.tokens(_source)
+    do i = 0 to _tokens.size() - 1
+      if covered(_tokens.start(i)) then iterate
+      ok = result.append(_tokens.symbol(i),_tokens.start(i),_tokens.finish(i + 1))
+    end
+    return result
+  tree: method = .llcore..tree
+    return _tree
+  root: method = .int
+    return _root
+  /** Report diagnostics in source order, irrespective of pipeline discovery. */
+  order: method = .void
+    if _ordered then return
+    _ordered = 1
+    i = .int; j = .int; first = .int; last = .int; node = .int; text = .string
+    do i = 2 to _messages[0]
+      first = _offsets[i]; last = _ends[i]; node = _nodes[i]; text = _messages[i]; j = i - 1
+      do while j > 0 & _offsets[j] > first
+        _offsets[j + 1] = _offsets[j]; _ends[j + 1] = _ends[j]; _nodes[j + 1] = _nodes[j]; _messages[j + 1] = _messages[j]
+        j = j - 1
+      end
+      _offsets[j + 1] = first; _ends[j + 1] = last; _nodes[j + 1] = node; _messages[j + 1] = text
+    end
+    return
+  errors: method = .int
+    call order()
+    return _messages[0]
+  message: method = .string
+    arg i = .int
+    call order()
+    return _messages[i]
+  offset: method = .int
+    arg i = .int
+    call order()
+    return _offsets[i]
+  finish: method = .int
+    arg i = .int
+    call order()
+    return _ends[i]
+  errornode: method = .int
+    arg i = .int
+    return _nodes[i]
+  error: method = .string
+    return _error

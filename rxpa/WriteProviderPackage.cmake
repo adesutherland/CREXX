@@ -12,10 +12,29 @@ function(file_entry out path)
     json_string(quoted "${name}")
     set(${out} "{\"path\":${quoted},\"sha256\":\"${hash}\"}" PARENT_SCOPE)
 endfunction()
+# Source locations can differ while publishing one adjacent dependency name.
+# Check incoming identities before copying; an old output from a prior build
+# may be replaced, but two current sources may never disagree on its bytes.
+macro(check_published_identity path)
+    get_filename_component(_identity_name "${path}" NAME)
+    if(platform STREQUAL "Windows")
+        string(TOLOWER "${_identity_name}" _identity_name)
+    endif()
+    string(SHA256 _identity_key "${_identity_name}")
+    file(SHA256 "${path}" _identity_hash)
+    if(DEFINED published_${_identity_key} AND
+       NOT published_${_identity_key} STREQUAL _identity_hash)
+        message(FATAL_ERROR "Conflicting provider dependency bytes: ${_identity_name}")
+    endif()
+    set(published_${_identity_key} "${_identity_hash}")
+endmacro()
 # Dependent targets can originate outside the provider output directory.
 # Publish their declared files before generating relative package metadata.
 set(publish_files ${runtime_files} ${link_files})
 list(REMOVE_DUPLICATES publish_files)
+foreach(path IN LISTS publish_files)
+    check_published_identity("${path}")
+endforeach()
 foreach(path IN LISTS publish_files)
     get_filename_component(name "${path}" NAME)
     if(NOT "${path}" STREQUAL "${output}/${name}")
@@ -29,7 +48,7 @@ foreach(path IN LISTS runtime_files)
     get_filename_component(name "${path}" NAME)
     list(APPEND scan_files "${output}/${name}")
 endforeach()
-list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll)$")
+list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll|rxplugin)$")
 list(REMOVE_DUPLICATES scan_files)
 set(system_dependencies "^/System/Library/" "${crexx_windows_system_dll_regex}"
     ".*/(libc|libm|libdl|libpthread|librt|ld-linux[^/]*)\\.so.*")
@@ -40,6 +59,7 @@ file(GET_RUNTIME_DEPENDENCIES LIBRARIES ${scan_files}
     DIRECTORIES "${output}" ${runtime_search_directories}
     RESOLVED_DEPENDENCIES_VAR dependencies
     UNRESOLVED_DEPENDENCIES_VAR missing
+    CONFLICTING_DEPENDENCIES_PREFIX package_conflicts
     PRE_EXCLUDE_REGEXES
         "libclang_rt\\..*" "libasan\\.so.*" "libubsan\\.so.*" "libtsan\\.so.*"
         "api-ms-.*" "ext-ms-.*" "[Nn][Vv][Cc][Uu][Dd][Aa]\\.dll" "[Vv][Uu][Ll][Kk][Aa][Nn]-1\\.dll"
@@ -48,6 +68,19 @@ file(GET_RUNTIME_DEPENDENCIES LIBRARIES ${scan_files}
 if(missing)
     message(FATAL_ERROR "Unresolved inference package dependencies: ${missing}")
 endif()
+# A copied root and an as-yet-unstaged transitive SDK DLL can resolve the same
+# DLL name through output and SDK directories. Accept only byte-identical paths
+# and stage the full discovered closure, leaving one hash per published file.
+foreach(name IN LISTS package_conflicts_FILENAMES)
+    foreach(path IN LISTS package_conflicts_${name})
+        check_published_identity("${path}")
+    endforeach()
+    list(GET package_conflicts_${name} 0 path)
+    list(APPEND dependencies "${path}")
+endforeach()
+foreach(path IN LISTS dependencies)
+    check_published_identity("${path}")
+endforeach()
 foreach(path IN LISTS dependencies)
     get_filename_component(name "${path}" NAME)
     if(NOT "${path}" STREQUAL "${output}/${name}")

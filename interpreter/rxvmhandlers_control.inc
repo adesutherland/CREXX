@@ -544,7 +544,7 @@ RXVM_HANDLER(METALOADEDEPROCS_REG_REG, VM_ADVANCE(2);
                             set_num_attributes(entry, 2);
                             set_null_string(entry->attributes[0], e_entry->index);
                             entry->attributes[1]->int_value =
-                                    (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod],
+                                    (rxinteger)(uintptr_t) rxvm_get_module_runtime_procedure(context->modules[mod],
                                                                                   e_entry->procedure);
 
                             entries++;
@@ -601,7 +601,7 @@ RXVM_HANDLER(METALOADEDPROCS_REG_REG, VM_ADVANCE(2);
                         set_num_attributes(entry, 2);
                         set_null_string(entry->attributes[0], p_entry->name);
                         entry->attributes[1]->int_value =
-                                (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod], (size_t)i);
+                                (rxinteger)(uintptr_t) rxvm_get_module_runtime_procedure(context->modules[mod], (size_t)i);
                         entries++;
                     }
                     i = p_entry->next;
@@ -2522,7 +2522,7 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
 RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
             {
                 /* Function pointer is in register 2 */
-                proc_runtime *called_function = (proc_runtime *) op2R->int_value;
+                proc_runtime *called_function = (proc_runtime *) (uintptr_t)op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     RXVM_INSTRUMENTATION_CALL(

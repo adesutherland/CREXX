@@ -1,0 +1,33 @@
+/* Diagnostic control for the Level L product grammar; not a foreign backend. */
+options levell
+import rxfnsb
+import llfront
+import llcore
+import llcheck
+import lllr
+arg argv = .string[]
+doc = .llfront..document(readbinary(argv[1]) as .string)
+if doc.run() <> 0 then do
+  say doc.error(); exit 1
+end
+graph = doc.grammar(); facts = .llcheck..analysis(graph,doc.root()); ok = facts.run()
+do i = 1 to graph.size()
+  first = ''
+  do symbol = 0 to 256
+    if facts.first(i,symbol) then first = first || symbol || ','
+  end
+  say 'FACT|' || i || '|' || facts.nullable(i) || '|' || first
+end
+tables = .lllr..tables(graph,doc.root(),'lr1'); status = tables.status()
+say 'STATUS|' || status || '|' || tables.states() || '|' || tables.conflictstate() || '|' || tables.conflictsymbol()
+say tables.error()
+if status <> 0 & tables.conflictstate() > 0 then do
+  items = tables.stateitems(tables.conflictstate()); cfg = tables.grammar()
+  do i = 1 to items.size()
+    p = items.production(i); rhs = ''
+    do j = 0 to cfg.length(p) - 1
+      rhs = rhs || cfg.rhs(p,j) || ','
+    end
+    say 'ITEM|' || cfg.lhs(p) || '|' || items.dot(i) || '|' || items.look(i) || '|' || rhs
+  end
+end

@@ -1,0 +1,4 @@
+PARSE|0|PROJECT|0
+NODE|name.value|11|0|4
+NODE|value|12|7|9
+NODE|assignment|10|0|9

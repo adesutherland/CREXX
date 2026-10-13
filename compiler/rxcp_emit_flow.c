@@ -485,7 +485,8 @@ static void flow_append_output_copy(OutputFragment *output,
 }
 
 /* A structured exit may bypass the normal end of one or more lexical scopes
- * and counted loops.  Their cleanup cannot be moved into the exit path because
+ * and counted loops, including live IF-condition temporaries. Their cleanup
+ * cannot be moved into the exit path because
  * the ordinary fall-through path still needs it, so reproduce it for every
  * crossed ancestor.  The target itself is excluded: LEAVE branches to its
  * normal end cleanup, ITERATE keeps the target loop active, and LEAVE_WITH
@@ -494,11 +495,22 @@ static void flow_emit_crossed_cleanups(OutputFragment *output,
                                        ASTNode *node,
                                        ASTNode *stop_before) {
     ASTNode *ancestor;
+    ASTNode *crossed_child;
 
     if (!output || !node) return;
-    for (ancestor = node->parent;
+    for (crossed_child = node, ancestor = node->parent;
          ancestor && ancestor != stop_before;
-         ancestor = ancestor->parent) {
+         crossed_child = ancestor, ancestor = ancestor->parent) {
+        if (ancestor->node_type == IF) {
+            ASTNode *condition = ast_chdn(ancestor, 0);
+
+            /* The condition stays live until the IF's normal end. A branch
+             * exit bypasses that end, but an exit while evaluating the
+             * condition must not release a result that is not live yet. */
+            if (condition && crossed_child != condition) {
+                flow_append_output_copy(output, condition->cleanup);
+            }
+        }
         if (ancestor->node_type == DO) {
             ASTNode *repeat = ast_chdn(ancestor, 0);
             if (repeat && repeat->node_type == REPEAT && repeat->cleanup) {

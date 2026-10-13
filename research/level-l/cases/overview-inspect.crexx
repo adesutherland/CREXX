@@ -1,0 +1,55 @@
+/* cREXX License (MIT). Bounded source/token/tree evidence for the user guide. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import lltree
+import levell_settings
+import rexxscript1
+
+main: procedure = .int
+  i = .int
+  source = 'retries = 3' as .binary
+  definition = levell_settings..language()
+  request = .lllanguage..request(definition,source)
+  if request.parse() <> 0 then do
+    say request.error(); return 1
+  end
+  tokens = request.tokens()
+  say 'SETTINGS TOKENS'
+  do i = 0 to tokens.size() - 1
+    first = tokens.start(i); last = tokens.finish(i + 1)
+    say definition.tokenname(tokens.symbol(i)) || ' [' || first || ',' || last || ') ' || (binsubstr(source,first + 1,last - first) as .string)
+  end
+  view = .lltree..view(request.tree(),request.root())
+  if view.error() <> '' then do
+    say view.error(); return 1
+  end
+  say 'SETTINGS NAMED TREE'
+  call dump(view)
+  sources = .string[]
+  sources[1] = 'if a then if b then say "yes" else say "no"'
+  sources[2] = 'if a then say "A" else if b then say "B"'
+  do i = 1 to sources[0]
+    program = rexxscript1..compile(sources[i] as .binary)
+    if program.compile() <> 0 then do
+      say program.error(); return 1
+    end
+    say 'IF TREE ' || i
+    view = program.view()
+    call dump(view)
+  end
+  return 0
+
+dump: procedure = .void
+  arg expose view = .lltree..view
+  nodes = .int[]; depths = .int[]; top = 1
+  nodes[1] = view.root(); depths[1] = 0
+  do while top > 0
+    node = nodes[top]; depth = depths[top]; top = top - 1
+    say copies('  ',depth) || view.name(node) || ' [' || view.start(node) || ',' || view.finish(node) || ') children=' || view.count(node)
+    do child = view.count(node) to 1 by -1
+      top = top + 1; nodes[top] = view.child(node,child); depths[top] = depth + 1
+    end
+  end
+  return

@@ -1,0 +1,21 @@
+[  0%] Built target rxbin
+[100%] Building C object compiler/tests/CMakeFiles/mutate_rxbin_float.dir/mutate_rxbin_float.c.o
+[100%] Linking C executable mutate_rxbin_float
+[100%] Built target mutate_rxbin_float
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product
+    Start 524: float_constant_folding_contract
+1/2 Test #524: float_constant_folding_contract ...   Passed    1.86 sec
+    Start 525: numeric_constant_contract
+2/2 Test #525: numeric_constant_contract .........   Passed    1.81 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+compiler            =   3.67 sec*proc (2 tests)
+comprehensive       =   3.67 sec*proc (2 tests)
+correctness         =   3.67 sec*proc (2 tests)
+numeric             =   3.67 sec*proc (2 tests)
+optimizer-parity    =   3.67 sec*proc (2 tests)
+
+Total Test time (real) =   3.74 sec
+RS-F01 reproducer: 4/4 cells return 0

@@ -74,6 +74,24 @@ table copy is introduced.
 - **Functionality**: Generating branch logic and labels for `IF`, `DO`, `LOOP`, `LEAVE`, `LEAVE_WITH`, `ITERATE`, and `SELECT`.
 - **Labeling**: Uses `node->node_number` combined with suffixes (e.g., `l123dostart`, `l123iffalse`).
 - **Block Exit Convention**: `LEAVE_WITH` copies its expression result into the parent `BLOCK_EXPR` register and branches to `l%dbexprend`.
+- **Crossed cleanup**: `flow_emit_crossed_cleanups` copies cleanup for exited
+  lexical scopes, counted loops and already-live `IF` conditions before a
+  structured branch. An `IF` condition stays live through its THEN/ELSE body;
+  `ITERATE`, `LEAVE`, `LEAVE_WITH` and frame branches must detach its temporary
+  links when they bypass the normal IF end. The ancestor walk tracks the crossed
+  child so an exit during condition evaluation does not release an unfinished
+  condition. The target is excluded: ITERATE keeps its loop active, while LEAVE
+  and LEAVE_WITH reach the target's normal cleanup. Exit paths copy fragments
+  rather than consuming the fall-through chain. This permits ordinary register
+  reuse and scalar-accessor inlining without leaving a destination register
+  linked to a previous condition's object attribute.
+  A BLOCK_EXPR with a return crossing an IF body reserves its result before
+  allocating the condition subtree, as for crossed loop cleanup. This keeps
+  return storage distinct from linked condition/helper registers and preserves
+  inlining. Direct final packed-load returns retain their result donation.
+  `iterate_condition_cleanup` covers all four RXC/RXAS opt/noopt combinations;
+  `frame_control_ast` checks nested branch paths, cleanup ownership and target
+  preservation.
 
 ### Procedures & Program Structure (`rxcp_emit_proc.c`)
 - **Functionality**: Logic for `PROCEDURE`, `PROGRAM_FILE`, and `REXX_UNIVERSE`.

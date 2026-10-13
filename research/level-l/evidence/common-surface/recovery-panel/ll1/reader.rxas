@@ -1,0 +1,732 @@
+/*
+ * SOURCE                 : settings-recover.crexx
+ */
+
+.globals=0
+
+main() .locals=28
+   .meta "settings-recover.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 106 106 17 "settings-recover.crexx" 11 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "settings-recover.crexx" 12 7 21 "  arg argv = .string[]"
+   .meta "settings-recover.main.argv"="b" ".string[*]" a1
+   .meta "settings-recover.main.definition"="b" ".lllanguage..definition" r1
+   .srcstep 2 2 17 "settings-recover.crexx" 24 3 39 "  definition = .lllanguage..definition"
+   null r1
+   .meta "settings-recover.main.pending"="b" ".int[*]" r10
+   .srcstep 3 3 17 "settings-recover.crexx" 39 3 17 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   null r10
+   .meta "settings-recover.main.source"="b" ".binary" r2
+   .srcstep 4 4 17 "settings-recover.crexx" 16 3 19 "  source = .binary"
+   null r2
+   .srcstep 7 7 17 "settings-recover.crexx" 13 3 31 "  if argv[0] < 1 | argv[0] > 2 then do"
+   .traceevent "C" 4 "R" "V" "r" 8 7 7 0 "argv" ""
+   getattrs r6,a1,0
+   .traceevent "V" 6 "R" "I" "r" 6 7 7 0 "argv" ""
+   ilt r4,r6,1
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
+   brt l35orend,r4
+   .traceevent "C" 4 "R" "V" "r" 6 7 7 0 "argv" ""
+   getattrs r4,a1,0
+   .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "argv" ""
+   igt r4,r4,2
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
+l35orend:
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
+   brf l41iffalse,r4
+   .srcstep 8 8 17 "settings-recover.crexx" 13 32 36 "  if argv[0] < 1 | argv[0] > 2 then do"
+   .srcstep 5 5 17 "settings-recover.crexx" 14 5 64 "    say 'usage: settings-recover settings.txt [maximum-errors]'; return 3"
+   say "usage: settings-recover settings.txt [maximum-errors]"
+   .srcstep 6 6 17 "settings-recover.crexx" 14 66 74 "    say 'usage: settings-recover settings.txt [maximum-errors]'; return 3"
+   ret 3
+l41iffalse:
+   .srcstep 12 12 17 "settings-recover.crexx" 17 3 5 "  do"
+   sigpush "FAILURE"
+   sigpush "ERROR"
+   sigpush "OVERFLOW_UNDERFLOW"
+   sigpush "DIVISION_BY_ZERO"
+   sigpush "CONVERSION_ERROR"
+   sigpush "INVALID_ARGUMENTS"
+   sigpush "OUT_OF_RANGE"
+   sigpush "UNICODE_ERROR"
+   sigpush "REFERENCE_INVALID"
+   sigpush "OBJECT_NOT_INITIALIZED"
+   sigpush "RXBIN_CORRUPTION"
+   sigpush "UNKNOWN_INSTRUCTION"
+   sigpush "FUNCTION_NOT_FOUND"
+   sigpush "NOT_IMPLEMENTED"
+   sigpush "INVALID_SIGNAL_CODE"
+   sigpush "NOTREADY"
+   sigpush "QUIT"
+   sigpush "TERM"
+   sigpush "POSIX_INT"
+   sigpush "POSIX_HUP"
+   sigpush "POSIX_USR1"
+   sigpush "POSIX_USR2"
+   sigpush "POSIX_CHLD"
+   sigpush "CHANNEL_ERROR"
+   sigpush "TASK_FAILURE"
+   sigpush "OTHER"
+   sigbr l62signalhandler0,"FAILURE"
+   sigbr l62signalhandler0,"ERROR"
+   sigbr l62signalhandler0,"OVERFLOW_UNDERFLOW"
+   sigbr l62signalhandler0,"DIVISION_BY_ZERO"
+   sigbr l62signalhandler0,"CONVERSION_ERROR"
+   sigbr l62signalhandler0,"INVALID_ARGUMENTS"
+   sigbr l62signalhandler0,"OUT_OF_RANGE"
+   sigbr l62signalhandler0,"UNICODE_ERROR"
+   sigbr l62signalhandler0,"REFERENCE_INVALID"
+   sigbr l62signalhandler0,"OBJECT_NOT_INITIALIZED"
+   sigbr l62signalhandler0,"RXBIN_CORRUPTION"
+   sigbr l62signalhandler0,"UNKNOWN_INSTRUCTION"
+   sigbr l62signalhandler0,"FUNCTION_NOT_FOUND"
+   sigbr l62signalhandler0,"NOT_IMPLEMENTED"
+   sigbr l62signalhandler0,"INVALID_SIGNAL_CODE"
+   sigbr l62signalhandler0,"NOTREADY"
+   sigbr l62signalhandler0,"QUIT"
+   sigbr l62signalhandler0,"TERM"
+   sigbr l62signalhandler0,"POSIX_INT"
+   sigbr l62signalhandler0,"POSIX_HUP"
+   sigbr l62signalhandler0,"POSIX_USR1"
+   sigbr l62signalhandler0,"POSIX_USR2"
+   sigbr l62signalhandler0,"POSIX_CHLD"
+   sigbr l62signalhandler0,"CHANNEL_ERROR"
+   sigbr l62signalhandler0,"TASK_FAILURE"
+   sigbr l62signalhandler0,"OTHER"
+   .srcstep 9 9 17 "settings-recover.crexx" 18 5 31 "    source = readbinary(argv[1])"
+   minlinkattr1 r8,a1,1
+   .traceevent "V" 6 "R" "S" "r" 8 9 9 0 "argv" ""
+   load r13,1
+   settpswapcall r2,rxfnsb.readbinary(),r13,r8,256,r14
+   swap r8,r14
+   unlink r8
+   .traceevent "F" 4 "R" "X" "r" 2 9 9 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 2 9 9 0 "source" ""
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   br l62signalend
+l62signalhandler0:
+   sigpop "OTHER"
+   sigpop "TASK_FAILURE"
+   sigpop "CHANNEL_ERROR"
+   sigpop "POSIX_CHLD"
+   sigpop "POSIX_USR2"
+   sigpop "POSIX_USR1"
+   sigpop "POSIX_HUP"
+   sigpop "POSIX_INT"
+   sigpop "TERM"
+   sigpop "QUIT"
+   sigpop "NOTREADY"
+   sigpop "INVALID_SIGNAL_CODE"
+   sigpop "NOT_IMPLEMENTED"
+   sigpop "FUNCTION_NOT_FOUND"
+   sigpop "UNKNOWN_INSTRUCTION"
+   sigpop "RXBIN_CORRUPTION"
+   sigpop "OBJECT_NOT_INITIALIZED"
+   sigpop "REFERENCE_INVALID"
+   sigpop "UNICODE_ERROR"
+   sigpop "OUT_OF_RANGE"
+   sigpop "INVALID_ARGUMENTS"
+   sigpop "CONVERSION_ERROR"
+   sigpop "DIVISION_BY_ZERO"
+   sigpop "OVERFLOW_UNDERFLOW"
+   sigpop "ERROR"
+   sigpop "FAILURE"
+   unlink r8
+   .srcstep 10 10 17 "settings-recover.crexx" 20 5 46 "    say 'SETTINGS_IO: cannot read ' || argv[1]; return 3"
+   minlinkattr1 r14,a1,1
+   .traceevent "V" 6 "R" "S" "r" 14 10 10 0 "argv" ""
+   concat r13,"SETTINGS_IO: cannot read ",r14
+   unlink r14
+   .traceevent "O" 4 "R" "S" "r" 13 10 10 0 "" ""
+   say r13
+   .srcstep 11 11 17 "settings-recover.crexx" 20 49 57 "    say 'SETTINGS_IO: cannot read ' || argv[1]; return 3"
+   ret 3
+   br l62signalend
+l62signalend:
+   .srcstep 13 13 17 "settings-recover.crexx" 22 3 13 "  limit = 16"
+   .meta "settings-recover.main.limit"="b" ".int" r3
+   load r3,16
+   .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 13 13 0 "limit" ""
+   .srcstep 15 15 17 "settings-recover.crexx" 23 3 17 "  if argv[0] = 2 then limit = argv[2] as .int"
+   .traceevent "C" 4 "R" "V" "r" 14 15 15 0 "argv" ""
+   getattrs r13,a1,0
+   .traceevent "V" 6 "R" "I" "r" 13 15 15 0 "argv" ""
+   ieq r13,r13,2
+   .traceevent "O" 4 "R" "B" "r" 13 15 15 0 "" ""
+   brf l76iffalse,r13
+   .srcstep 16 16 17 "settings-recover.crexx" 23 18 22 "  if argv[0] = 2 then limit = argv[2] as .int"
+   .srcstep 14 14 17 "settings-recover.crexx" 23 23 46 "  if argv[0] = 2 then limit = argv[2] as .int"
+   minlinkattr1 r8,a1,2
+   .traceevent "V" 6 "R" "S" "r" 8 14 14 0 "argv" ""
+   stoi r3,r8
+   unlink r8
+   .traceevent "A" 6 "R" "I" "r" 3 14 14 0 "limit" ""
+l76iffalse:
+   setobjuninit r1,"lllanguage.definition"
+   .srcstep 17 17 17 "settings-recover.crexx" 25 3 41 "  definition = levell_settings..language()"
+   load r14,0
+   call r1,levell_settings.language(),r14
+   .traceevent "F" 4 "R" "O" "r" 1 17 17 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 17 17 0 "definition" ""
+   .srcstep 18 18 17 "settings-recover.crexx" 26 3 56 "  request = .llrecover..request(definition,source,limit)"
+   .meta "settings-recover.main.request"="b" ".llrecover..request" r5
+   .traceevent "V" 6 "R" "O" "r" 1 18 18 0 "definition" ""
+   .traceevent "V" 6 "R" "X" "r" 2 18 18 0 "source" ""
+   .traceevent "V" 6 "R" "I" "r" 3 18 18 0 "limit" ""
+   load r0,3
+   settp r1,256
+   settp r2,256
+   settpcall r5,§llrecover.request.§factory(),r0,r3,256
+   .traceevent "F" 4 "R" "O" "r" 5 18 18 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 18 18 0 "request" ""
+   .srcstep 19 19 17 "settings-recover.crexx" 27 3 23 "  status = request.run()"
+   .meta "settings-recover.main.status"="b" ".int" r12
+   .traceevent "V" 6 "R" "O" "r" 5 19 19 0 "request" ""
+   load r4,1
+   settpcall r12,§llrecover.request.run(),r4,r5,256
+   .traceevent "F" 4 "R" "I" "r" 12 19 19 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 12 19 19 0 "status" ""
+   .srcstep 20 20 17 "settings-recover.crexx" 28 3 67 "  say 'Parse status: ' || status || '; errors: ' || request.errors()"
+   itos r12
+   .traceevent "V" 6 "R" "S" "r" 12 20 20 0 "status" ""
+   concat r14,"Parse status: ",r12
+   .traceevent "O" 4 "R" "S" "r" 14 20 20 0 "" ""
+   concat r14,r14,"; errors: "
+   .traceevent "O" 4 "R" "S" "r" 14 20 20 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "request" ""
+   load r4,1
+   settpcall r13,§llrecover.request.errors(),r4,r5,256
+   itos r13
+   .traceevent "F" 4 "R" "S" "r" 13 20 20 0 "errors" ""
+   concat r14,r14,r13
+   .traceevent "O" 4 "R" "S" "r" 14 20 20 0 "" ""
+   say r14
+   .srcstep 35 35 17 "settings-recover.crexx" 29 3 5 "  do i = 1 to request.errors()"
+   .srcstep 21 21 17 "settings-recover.crexx" 29 6 11 "  do i = 1 to request.errors()"
+   .meta "settings-recover.main.i"="b" ".int" r14
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 21 21 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 21 21 0 "i" ""
+   .srcstep 22 22 17 "settings-recover.crexx" 29 12 29 "  do i = 1 to request.errors()"
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "request" ""
+   load r4,1
+   settpcall r13,§llrecover.request.errors(),r4,r5,256
+   .traceevent "F" 4 "R" "I" "r" 13 0 0 0 "errors" ""
+l107dostart:
+   .srcstep 22 22 17 "settings-recover.crexx" 29 12 29 "  do i = 1 to request.errors()"
+   igt r8,r14,r13
+   brt l107doend,r8
+   .srcstep 34 34 17 "settings-recover.crexx" 30 5 110 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   minlinkattr1 r6,a1,1
+   .traceevent "V" 6 "R" "S" "r" 6 34 34 0 "argv" ""
+   concat r4,r6,": "
+   unlink r6
+   .traceevent "O" 4 "R" "S" "r" 4 34 34 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 2 34 34 0 "source" ""
+   .srcstep 28 28 17 "settings-recover.crexx" 30 56 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .srcstep 24 24 33 "settings-recover.crexx" 30 56 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 24 24 0 "§this" ""
+   .srcstep 25 25 33 "settings-recover.crexx" 30 63 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "I" "r" 14 25 25 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 14 25 25 0 "i" ""
+   .srcstep 26 26 6 "llrecover@rxfnsl-base.rxbin" 30 63 63 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "O" "r" 5 34 34 0 "§this" ""
+   assertinitialized r5
+   .srcstep 27 27 25 "llrecover.crexx" 148 5 22 "    return _offsets[i]"
+   linkattr1 r20,r5,7
+   .traceevent "V" 6 "R" "I" "r" 14 34 34 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 14 34 34 0 "_offsets" ""
+   minlinkattr1 r0,r20,r14,0
+   .traceevent "V" 6 "R" "I" "r" 0 34 34 0 "_offsets" ""
+   igetunlink r21,r0
+   unlink r20
+l6783bexprend:
+   load r18,"SETTINGS_PARSE"
+   .traceevent "L" 4 "R" "S" "r" 18 34 34 0 "" ""
+   .srcstep 33 33 17 "settings-recover.crexx" 30 91 98 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .srcstep 29 29 33 "settings-recover.crexx" 30 91 98 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "O" "r" 5 29 29 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 29 29 0 "§this" ""
+   .srcstep 30 30 33 "settings-recover.crexx" 30 98 98 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "I" "r" 14 30 30 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 14 30 30 0 "i" ""
+   .srcstep 31 31 6 "llrecover@rxfnsl-base.rxbin" 30 98 98 "    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))"
+   .traceevent "V" 6 "R" "O" "r" 5 34 34 0 "§this" ""
+   assertinitialized r5
+   .srcstep 32 32 25 "llrecover.crexx" 145 5 23 "    return _messages[i]"
+   linkattr1 r23,r5,5
+   .traceevent "V" 6 "R" "I" "r" 14 34 34 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 14 34 34 0 "_messages" ""
+   minlinkattr1 r22,r23,r14,0
+   .traceevent "V" 6 "R" "S" "r" 22 34 34 0 "_messages" ""
+   scopy r24,r22
+   unlinkn r22,r23
+l7065bexprend:
+   load r15,4
+   settp r2,256
+   swap r16,r2
+   swap r17,r21
+   settp r18,768
+   settpswapcall r25,llsource.diagnostic(),r15,r24,768,r19
+   swap r2,r16
+   swap r21,r17
+   swap r24,r19
+   .traceevent "F" 4 "R" "S" "r" 25 34 34 0 "diagnostic" ""
+   concat r25,r4,r25
+   .traceevent "O" 4 "R" "S" "r" 25 34 34 0 "" ""
+   say r25
+l107doinc:
+   .srcstep 23 23 17 "settings-recover.crexx" 29 6 7 "  do i = 1 to request.errors()"
+   inc r14
+   .srcstep 36 36 17 "settings-recover.crexx" 31 3 6 "  end"
+   br l107dostart
+l107doend:
+   .meta "settings-recover.main.i"
+   .srcstep 43 43 17 "settings-recover.crexx" 32 3 16 "  if status > 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 12 43 43 0 "status" ""
+   igt r25,r12,1
+   .traceevent "O" 4 "R" "B" "r" 25 43 43 0 "" ""
+   brf l146iffalse,r25
+   .srcstep 44 44 17 "settings-recover.crexx" 32 17 21 "  if status > 1 then do"
+   .srcstep 41 41 17 "settings-recover.crexx" 33 5 22 "    say request.error(); return status"
+   .srcstep 40 40 17 "settings-recover.crexx" 33 9 16 "    say request.error(); return status"
+   .srcstep 37 37 33 "settings-recover.crexx" 33 9 16 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "O" "r" 5 37 37 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 37 37 0 "§this" ""
+   .srcstep 38 38 6 "llrecover@rxfnsl-base.rxbin" 33 16 16 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "O" "r" 5 41 41 0 "§this" ""
+   assertinitialized r5
+   .srcstep 39 39 25 "llrecover.crexx" 156 5 18 "    return _error"
+   linkattr1 r24,r5,2
+   .traceevent "V" 6 "R" "S" "r" 24 41 41 0 "_error" ""
+   scopy r23,r24
+   unlink r24
+l6796bexprend:
+   say r23
+   .srcstep 42 42 17 "settings-recover.crexx" 33 26 39 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "I" "r" 12 42 42 0 "status" ""
+   ret r12
+l146iffalse:
+   .srcstep 48 48 17 "settings-recover.crexx" 35 3 51 "  tree = .lltree..view(request.tree(),request.root())"
+   .meta "settings-recover.main.tree"="b" ".lltree..view" r7
+   .traceevent "V" 6 "R" "O" "r" 5 48 48 0 "request" ""
+   load r4,1
+   settpcall r23,§llrecover.request.tree(),r4,r5,256
+   .traceevent "F" 4 "R" "O" "r" 23 48 48 0 "tree" ""
+   .srcstep 47 47 17 "settings-recover.crexx" 35 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .srcstep 45 45 33 "settings-recover.crexx" 35 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .traceevent "V" 6 "R" "O" "r" 5 45 45 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 45 45 0 "§this" ""
+   .srcstep 46 46 25 "llrecover.crexx" 140 5 17 "    return _root"
+   linkattr1 r21,r5,9
+   .traceevent "V" 6 "R" "I" "r" 21 48 48 0 "_root" ""
+   igetunlink r20,r21
+l6636bexprend:
+   load r22,3
+   settp r23,256
+   swap r24,r20
+   settpcall r7,§lltree.view.§factory(),r22,r25,0
+   swap r20,r24
+   .traceevent "F" 4 "R" "O" "r" 7 48 48 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 7 48 48 0 "tree" ""
+   .srcstep 59 59 17 "settings-recover.crexx" 36 3 24 "  if tree.error() <> '' then do"
+   .srcstep 52 52 17 "settings-recover.crexx" 36 6 10 "  if tree.error() <> '' then do"
+   .srcstep 49 49 33 "settings-recover.crexx" 36 6 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 49 49 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 49 49 0 "§this" ""
+   .srcstep 50 50 6 "lltree@rxfnsl-base.rxbin" 36 10 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 59 59 0 "§this" ""
+   assertinitialized r7
+   .srcstep 51 51 25 "lltree.crexx" 82 5 18 "    return _error"
+   linkattr1 r25,r7,3
+   .traceevent "V" 6 "R" "S" "r" 25 59 59 0 "_error" ""
+   scopy r24,r25
+   unlink r25
+l6805bexprend:
+   rne r24,r24,""
+   .traceevent "O" 4 "R" "B" "r" 24 59 59 0 "" ""
+   brf l174iffalse,r24
+   .srcstep 60 60 17 "settings-recover.crexx" 36 25 29 "  if tree.error() <> '' then do"
+   .srcstep 57 57 17 "settings-recover.crexx" 37 5 40 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   .srcstep 56 56 17 "settings-recover.crexx" 37 30 34 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   .srcstep 53 53 33 "settings-recover.crexx" 37 30 34 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 7 53 53 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 53 53 0 "§this" ""
+   .srcstep 54 54 6 "lltree@rxfnsl-base.rxbin" 37 34 34 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 7 57 57 0 "§this" ""
+   assertinitialized r7
+   .srcstep 55 55 25 "lltree.crexx" 82 5 18 "    return _error"
+   linkattr1 r23,r7,3
+   .traceevent "V" 6 "R" "S" "r" 23 57 57 0 "_error" ""
+   scopy r22,r23
+   unlink r23
+l6814bexprend:
+   concat r22,"SETTINGS_TREE: ",r22
+   .traceevent "O" 4 "R" "S" "r" 22 57 57 0 "" ""
+   say r22
+   .srcstep 58 58 17 "settings-recover.crexx" 37 44 52 "    say 'SETTINGS_TREE: ' || tree.error(); return 3"
+   ret 3
+l174iffalse:
+   .srcstep 61 61 17 "settings-recover.crexx" 39 21 29 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .meta "settings-recover.main.size"="b" ".int" r11
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 61 61 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 61 61 0 "size" ""
+   .srcstep 65 65 17 "settings-recover.crexx" 39 31 56 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .traceevent "V" 6 "R" "I" "r" 11 65 65 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 11 65 65 0 "pending" ""
+   minlinkattr1 r25,r10,r11,0
+   .srcstep 64 64 17 "settings-recover.crexx" 39 47 51 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .srcstep 62 62 33 "settings-recover.crexx" 39 47 51 "  pending = .int[]; size = 1; pending[size] = tree.root()"
+   .traceevent "V" 6 "R" "O" "r" 7 62 62 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 62 62 0 "§this" ""
+   .srcstep 63 63 25 "lltree.crexx" 59 5 17 "    return _root"
+   linkattr1 r24,r7,5
+   .traceevent "V" 6 "R" "I" "r" 24 65 65 0 "_root" ""
+   igetunlink r23,r24
+l6643bexprend:
+   isetunlink r25,r23
+   .traceevent "A" 6 "R" "I" "r" 23 65 65 0 "pending" ""
+   .srcstep 103 103 17 "settings-recover.crexx" 40 3 5 "  do while size > 0"
+l191dostart:
+   .srcstep 66 66 17 "settings-recover.crexx" 40 6 20 "  do while size > 0"
+   .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "size" ""
+   igt r24,r11,0
+   .traceevent "O" 4 "R" "B" "r" 24 0 0 0 "" ""
+   brf l191doend,r24
+   .srcstep 67 67 17 "settings-recover.crexx" 41 5 24 "    node = pending[size]; size = size - 1"
+   .meta "settings-recover.main.node"="b" ".int" r25
+   .traceevent "V" 6 "R" "I" "r" 11 67 67 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 11 67 67 0 "pending" ""
+   minlinkattr1 r23,r10,r11,0
+   .traceevent "V" 6 "R" "I" "r" 23 67 67 0 "pending" ""
+   igetunlink r25,r23
+   .traceevent "A" 6 "R" "I" "r" 25 67 67 0 "node" ""
+   .srcstep 68 68 17 "settings-recover.crexx" 41 27 42 "    node = pending[size]; size = size - 1"
+   .traceevent "V" 6 "R" "I" "r" 11 68 68 0 "size" ""
+   isub r11,r11,1
+   .traceevent "O" 4 "R" "I" "r" 11 68 68 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 68 68 0 "size" ""
+   .srcstep 82 82 17 "settings-recover.crexx" 42 5 38 "    if tree.name(node) = 'assignment' then do"
+   .traceevent "V" 6 "R" "O" "r" 7 82 82 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 25 82 82 0 "node" ""
+   load r6,2
+   settp r7,256
+   swapcall r23,§lltree.view.name(),r6,r25,r8
+   swap r25,r8
+   .traceevent "F" 4 "R" "S" "r" 23 82 82 0 "name" ""
+   req r23,r23,"assignment"
+   .traceevent "O" 4 "R" "B" "r" 23 82 82 0 "" ""
+   brf l233iffalse,r23
+   .srcstep 83 83 17 "settings-recover.crexx" 42 39 43 "    if tree.name(node) = 'assignment' then do"
+   .srcstep 81 81 17 "settings-recover.crexx" 43 7 82 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 81 81 0 "tree" ""
+   .srcstep 74 74 17 "settings-recover.crexx" 43 20 21 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .srcstep 69 69 33 "settings-recover.crexx" 43 21 25 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 69 69 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 69 69 0 "§this" ""
+   .srcstep 70 70 33 "settings-recover.crexx" 43 25 25 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "I" "r" 25 70 70 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 25 70 70 0 "node" ""
+   .srcstep 71 71 6 "lltree@rxfnsl-base.rxbin" 43 25 25 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 81 81 0 "§this" ""
+   assertinitialized r7
+   linkattr1 r21,r7,2
+   .traceevent "V" 6 "R" "I" "r" 25 81 81 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 81 81 0 "_counts" ""
+   minlinkattr1 r22,r21,r25,0
+   .traceevent "V" 6 "R" "I" "r" 22 81 81 0 "_counts" ""
+   igt r20,1,r22
+   unlinkn r22,r21
+   .traceevent "O" 4 "R" "B" "r" 20 81 81 0 "" ""
+   brf l6836iffalse,r20
+   .srcstep 72 72 25 "lltree.crexx" 68 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 81 81 0 "" ""
+   icopy r17,r19
+   br l6823bexprend
+l6836iffalse:
+   .srcstep 73 73 25 "lltree.crexx" 69 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r18,r7,1
+   linkattr1 r21,r7,4
+   .traceevent "V" 6 "R" "I" "r" 25 81 81 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 81 81 0 "_first" ""
+   minlinkattr1 r22,r21,r25,0
+   .traceevent "V" 6 "R" "I" "r" 22 81 81 0 "_first" ""
+   iadd r20,r22,1
+   unlinkn r22,r21
+   .traceevent "O" 4 "R" "I" "r" 20 81 81 0 "" ""
+   isub r20,r20,1
+   .traceevent "O" 4 "R" "I" "r" 20 81 81 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 20 81 81 0 "_children" ""
+   minlinkattr1 r19,r18,r20,0
+   .traceevent "V" 6 "R" "I" "r" 19 81 81 0 "_children" ""
+   igetunlink r17,r19
+   unlink r18
+l6823bexprend:
+   load r6,2
+   settp r7,256
+   swapcall r16,§lltree.view.text(),r6,r17,r8
+   swap r17,r8
+   .traceevent "F" 4 "R" "S" "r" 16 81 81 0 "text" ""
+   concat r16,r16," -> "
+   .traceevent "O" 4 "R" "S" "r" 16 81 81 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 7 81 81 0 "tree" ""
+   .srcstep 80 80 17 "settings-recover.crexx" 43 63 64 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .srcstep 75 75 33 "settings-recover.crexx" 43 64 68 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 75 75 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 75 75 0 "§this" ""
+   .srcstep 76 76 33 "settings-recover.crexx" 43 68 68 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "I" "r" 25 76 76 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 25 76 76 0 "node" ""
+   .srcstep 77 77 6 "lltree@rxfnsl-base.rxbin" 43 68 68 "      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))"
+   .traceevent "V" 6 "R" "O" "r" 7 81 81 0 "§this" ""
+   assertinitialized r7
+   linkattr1 r14,r7,2
+   .traceevent "V" 6 "R" "I" "r" 25 81 81 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 81 81 0 "_counts" ""
+   minlinkattr1 r15,r14,r25,0
+   .traceevent "V" 6 "R" "I" "r" 15 81 81 0 "_counts" ""
+   igt r13,3,r15
+   unlinkn r15,r14
+   .traceevent "O" 4 "R" "B" "r" 13 81 81 0 "" ""
+   brf l6868iffalse,r13
+   .srcstep 78 78 25 "lltree.crexx" 68 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 81 81 0 "" ""
+   icopy r26,r4
+   br l6855bexprend
+l6868iffalse:
+   .srcstep 79 79 25 "lltree.crexx" 69 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r0,r7,1
+   linkattr1 r14,r7,4
+   .traceevent "V" 6 "R" "I" "r" 25 81 81 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 81 81 0 "_first" ""
+   minlinkattr1 r15,r14,r25,0
+   .traceevent "V" 6 "R" "I" "r" 15 81 81 0 "_first" ""
+   iadd r13,r15,3
+   unlinkn r15,r14
+   .traceevent "O" 4 "R" "I" "r" 13 81 81 0 "" ""
+   isub r13,r13,1
+   .traceevent "O" 4 "R" "I" "r" 13 81 81 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 13 81 81 0 "_children" ""
+   minlinkattr1 r4,r0,r13,0
+   .traceevent "V" 6 "R" "I" "r" 4 81 81 0 "_children" ""
+   igetunlink r26,r4
+   unlink r0
+l6855bexprend:
+   load r6,2
+   settp r7,256
+   swapcall r27,§lltree.view.text(),r6,r26,r8
+   swap r26,r8
+   .traceevent "F" 4 "R" "S" "r" 27 81 81 0 "text" ""
+   concat r27,r16,r27
+   .traceevent "O" 4 "R" "S" "r" 27 81 81 0 "" ""
+   say r27
+l233iffalse:
+   .srcstep 101 101 17 "settings-recover.crexx" 45 5 7 "    do child = tree.count(node) to 1 by -1"
+   .srcstep 89 89 17 "settings-recover.crexx" 45 8 32 "    do child = tree.count(node) to 1 by -1"
+   .meta "settings-recover.main.child"="b" ".int" r27
+   .srcstep 88 88 17 "settings-recover.crexx" 45 16 20 "    do child = tree.count(node) to 1 by -1"
+   .srcstep 84 84 33 "settings-recover.crexx" 45 16 20 "    do child = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "O" "r" 7 84 84 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 84 84 0 "§this" ""
+   .srcstep 85 85 33 "settings-recover.crexx" 45 20 20 "    do child = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "I" "r" 25 85 85 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 25 85 85 0 "node" ""
+   .srcstep 86 86 6 "lltree@rxfnsl-base.rxbin" 45 20 20 "    do child = tree.count(node) to 1 by -1"
+   .traceevent "V" 6 "R" "O" "r" 7 89 89 0 "§this" ""
+   assertinitialized r7
+   .srcstep 87 87 25 "lltree.crexx" 65 5 24 "    return _counts[node]"
+   linkattr1 r23,r7,2
+   .traceevent "V" 6 "R" "I" "r" 25 89 89 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 89 89 0 "_counts" ""
+   minlinkattr1 r26,r23,r25,0
+   .traceevent "V" 6 "R" "I" "r" 26 89 89 0 "_counts" ""
+   igetunlink r27,r26
+   unlink r23
+l6887bexprend:
+   .traceevent "A" 6 "R" "I" "r" 27 89 89 0 "child" ""
+   .srcstep 90 90 17 "settings-recover.crexx" 45 33 37 "    do child = tree.count(node) to 1 by -1"
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 0 0 0 "" ""
+   .srcstep 91 91 17 "settings-recover.crexx" 45 38 43 "    do child = tree.count(node) to 1 by -1"
+   load r20,-1
+   .traceevent "L" 4 "R" "I" "r" 20 0 0 0 "" ""
+l234dostart:
+   .srcstep 90 90 17 "settings-recover.crexx" 45 33 37 "    do child = tree.count(node) to 1 by -1"
+   ilt r21,r27,r22
+   brt l234doend,r21
+   .srcstep 92 92 17 "settings-recover.crexx" 46 7 22 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 11 92 92 0 "size" ""
+   iadd r11,r11,1
+   .traceevent "O" 4 "R" "I" "r" 11 92 92 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 92 92 0 "size" ""
+   .srcstep 100 100 17 "settings-recover.crexx" 46 24 61 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 11 100 100 0 "size" ""
+   .traceevent "C" 4 "R" "I" "r" 11 100 100 0 "pending" ""
+   minlinkattr1 r19,r10,r11,0
+   .srcstep 99 99 17 "settings-recover.crexx" 46 40 44 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .srcstep 93 93 33 "settings-recover.crexx" 46 40 44 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "O" "r" 7 93 93 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 7 93 93 0 "§this" ""
+   .srcstep 94 94 33 "settings-recover.crexx" 46 44 44 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 25 94 94 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 25 94 94 0 "node" ""
+   .srcstep 95 95 33 "settings-recover.crexx" 46 44 44 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "I" "r" 27 95 95 0 "child" ""
+   .traceevent "A" 6 "R" "I" "r" 27 95 95 0 "index" ""
+   .srcstep 96 96 6 "lltree@rxfnsl-base.rxbin" 46 44 44 "      size = size + 1; pending[size] = tree.child(node,child)"
+   .traceevent "V" 6 "R" "O" "r" 7 100 100 0 "§this" ""
+   assertinitialized r7
+   .traceevent "V" 6 "R" "I" "r" 27 100 100 0 "index" ""
+   ilt r15,r27,1
+   .traceevent "O" 4 "R" "B" "r" 15 100 100 0 "" ""
+   brt l6914orend,r15
+   .traceevent "V" 6 "R" "I" "r" 27 100 100 0 "index" ""
+   linkattr1 r17,r7,2
+   .traceevent "V" 6 "R" "I" "r" 25 100 100 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 100 100 0 "_counts" ""
+   minlinkattr1 r18,r17,r25,0
+   .traceevent "V" 6 "R" "I" "r" 18 100 100 0 "_counts" ""
+   igt r16,r27,r18
+   unlinkn r18,r17
+   .traceevent "O" 4 "R" "B" "r" 16 100 100 0 "" ""
+   icopy r15,r16
+l6914orend:
+   .traceevent "O" 4 "R" "B" "r" 15 100 100 0 "" ""
+   brf l6913iffalse,r15
+   .srcstep 97 97 25 "lltree.crexx" 68 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 100 100 0 "" ""
+   icopy r8,r14
+   br l6900bexprend
+l6913iffalse:
+   .srcstep 98 98 25 "lltree.crexx" 69 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r13,r7,1
+   linkattr1 r17,r7,4
+   .traceevent "V" 6 "R" "I" "r" 25 100 100 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 25 100 100 0 "_first" ""
+   minlinkattr1 r18,r17,r25,0
+   .traceevent "V" 6 "R" "I" "r" 18 100 100 0 "_first" ""
+   .traceevent "V" 6 "R" "I" "r" 27 100 100 0 "index" ""
+   iadd r15,r18,r27
+   unlinkn r18,r17
+   .traceevent "O" 4 "R" "I" "r" 15 100 100 0 "" ""
+   isub r15,r15,1
+   .traceevent "O" 4 "R" "I" "r" 15 100 100 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 15 100 100 0 "_children" ""
+   minlinkattr1 r14,r13,r15,0
+   .traceevent "V" 6 "R" "I" "r" 14 100 100 0 "_children" ""
+   igetunlink r8,r14
+   unlink r13
+l6900bexprend:
+   isetunlink r19,r8
+   .traceevent "A" 6 "R" "I" "r" 8 100 100 0 "pending" ""
+l234doinc:
+   .srcstep 91 91 17 "settings-recover.crexx" 45 38 43 "    do child = tree.count(node) to 1 by -1"
+ iadd r27,r20,r27
+   .srcstep 102 102 17 "settings-recover.crexx" 46 61 62 "      size = size + 1; pending[size] = tree.child(node,child)"
+   br l234dostart
+l234doend:
+   .meta "settings-recover.main.child"
+l191doinc:
+   .srcstep 104 104 17 "settings-recover.crexx" 46 61 62 "      size = size + 1; pending[size] = tree.child(node,child)"
+   br l191dostart
+l191doend:
+   .meta "settings-recover.main.node"
+   .srcstep 105 105 17 "settings-recover.crexx" 50 3 16 "  return status"
+   .traceevent "V" 6 "R" "I" "r" 12 105 105 0 "status" ""
+   ret r12
+   .meta "settings-recover.main.argv"
+   .meta "settings-recover.main.definition"
+   .meta "settings-recover.main.limit"
+   .meta "settings-recover.main.pending"
+   .meta "settings-recover.main.request"
+   .meta "settings-recover.main.size"
+   .meta "settings-recover.main.source"
+   .meta "settings-recover.main.status"
+   .meta "settings-recover.main.tree"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/recovery-panel/ll1/levell_settings@linked.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "linked"
+
+/* Imported Declaration from file: llsource@rxfnsl-base.rxbin */
+
+llsource.diagnostic() .expose=llsource.diagnostic
+   .meta "llsource.diagnostic"="b" ".string" llsource.diagnostic() "source=.binary,offset=.int,code=.string,message=.string"
+   .meta "llsource.diagnostic"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: llrecover@rxfnsl-base.rxbin */
+
+§llrecover.request.§factory() .expose=llrecover.request.§factory
+   .meta "llrecover.request.§factory"="b" ".llrecover..request" §llrecover.request.§factory() "language=.lllanguage..definition,source=.binary,?errors=.int"
+   .meta "llrecover.request.§factory"=".autoload" "rxfnsl-base"
+
+§llrecover.request.run() .expose=llrecover.request.run
+   .meta "llrecover.request.run"="b" ".int" §llrecover.request.run() ""
+   .meta "llrecover.request.run"=".autoload" "rxfnsl-base"
+
+§llrecover.request.tree() .expose=llrecover.request.tree
+   .meta "llrecover.request.tree"="b" ".llcore..tree" §llrecover.request.tree() ""
+   .meta "llrecover.request.tree"=".autoload" "rxfnsl-base"
+
+§llrecover.request.errors() .expose=llrecover.request.errors
+   .meta "llrecover.request.errors"="b" ".int" §llrecover.request.errors() ""
+   .meta "llrecover.request.errors"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lltree@rxfnsl-base.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl-base"
+
+§lltree.view.name() .expose=lltree.view.name
+   .meta "lltree.view.name"="b" ".string" §lltree.view.name() "node=.int"
+   .meta "lltree.view.name"=".autoload" "rxfnsl-base"
+
+§lltree.view.text() .expose=lltree.view.text
+   .meta "lltree.view.text"="b" ".string" §lltree.view.text() "node=.int"
+   .meta "lltree.view.text"=".autoload" "rxfnsl-base"
