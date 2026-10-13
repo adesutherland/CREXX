@@ -132,10 +132,15 @@ class SplitPackageTests(unittest.TestCase):
             self.assertEqual([k for k in runtime if k.upper() == 'PATH'], ['PATH'])
             self.assertEqual(env[path_key], 'compiler-and-sdk-path')
 
-    def stage_provider(self):
+    def stage_provider(self, core_helper=True, build_helper=True):
         renamed = self.root / 'CREXX-windows-x64'
         self.base.rename(renamed)
         self.base = renamed
+        if core_helper:
+            helper = self.base / 'bin/crexx-provider-package.exe'
+            helper.write_bytes(b'qualified core helper')
+            self.manifest['files']['bin/crexx-provider-package.exe'] = core.digest(helper)
+            (self.base / 'core-package.json').write_text(json.dumps(self.manifest))
         archive = self.root / 'core.zip'
         core.archive(self.base, archive)
         build = self.root / 'build'
@@ -151,7 +156,10 @@ class SplitPackageTests(unittest.TestCase):
         runtime.write_text(json.dumps(dict(identity, backends=entries)))
         (providers / 'rxllama.native.json').write_text(json.dumps(dict(identity,
             link_libraries=entries[:1], runtime_files=entries + [dict(path=runtime.name, sha256=core.digest(runtime))])))
-        for name in ('rxllama.rxplugin', 'crexx-provider-package.exe'):
+        names = ['rxllama.rxplugin']
+        if build_helper:
+            names.append('crexx-provider-package.exe')
+        for name in names:
             (build / 'bin' / name).write_bytes(b'plugin input')
         inventory = build / 'lib/plugins/llama/tests/release-smoke-bootstrap-files.txt'
         inventory.parent.mkdir(parents=True)
@@ -164,6 +172,24 @@ class SplitPackageTests(unittest.TestCase):
             plugin.main()
             self.assertIn('llama-docs', install.call_args.args[0])
         self.providers = self.output / 'plugin-stage/CREXX-windows-x64/bin/providers'
+
+    def test_plugin_retains_core_helper_despite_different_rebuilt_bytes(self):
+        self.stage_provider()
+        with patch('sys.argv', self.arguments + ['--finalize-only']):
+            plugin.main()
+        combined = self.output / 'combined/CREXX-windows-x64'
+        self.assertEqual((combined / 'bin/crexx-provider-package.exe').read_bytes(),
+                         b'qualified core helper')
+        with zipfile.ZipFile(next((self.output / 'assets').glob('*.zip'))) as archive:
+            self.assertNotIn('CREXX-windows-x64/bin/crexx-provider-package.exe', archive.namelist())
+
+    def test_plugin_staging_needs_no_independently_rebuilt_core_helper(self):
+        self.stage_provider(build_helper=False)
+        self.assertFalse((self.providers.parent / 'crexx-provider-package.exe').exists())
+
+    def test_plugin_rejects_core_without_its_owned_helper(self):
+        with self.assertRaisesRegex(ValueError, 'Core package is missing its provider helper'):
+            self.stage_provider(core_helper=False)
 
     def test_signed_plugin_finalization_verifies_both_actual_archives(self):
         self.stage_provider()

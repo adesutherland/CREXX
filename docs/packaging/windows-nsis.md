@@ -12,6 +12,12 @@ provider checks and preserves the core, user models and environment on removal.
 Install the core first, then the matching llama setup. Versioned-release installer publication
 remains a maintainer operation.
 
+The current development core owns `bin/crexx-provider-package.exe`. Optional
+plugin packaging uses that manifest-verified copy and rejects a core that omits
+it; an independently compiled plugin-lane helper is never shipped over it.
+Shared runtime files still require identical bytes and ordinary plugin/core
+overlap checks remain in force.
+
 Snapshot asset names are explicit:
 
 - `CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`: automatic tester installer.
