@@ -1,0 +1,72 @@
+/*
+ * cREXX FORTRAN matrix multiplication sample
+ * -------------------------------------------
+ *
+ * This example keeps the original FORTRAN 66 fixed-format layout visible:
+ * columns 1-5 hold statement labels, column 6 marks continuation lines, and
+ * comments begin with C in column 1. RXPP captures the block and the
+ * imported fortran module executes it automatically.
+ */
+options levelg
+##cflag nosrcmap
+import fortran
+##external fortran
+
+/* The following block is FORTRAN source, not cREXX source. */
+FORTRAN RUN
+      PROGRAM MATMUL
+      INTEGER I,J,K
+      REAL A(3,10),B(10,3),C(3,3)
+
+C     Input matrix A (3 x 10), stored column by column.
+C     A =
+C       0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1.0
+C       1.1  1.2  1.3  1.4  1.5  1.6  1.7  1.8  1.9  2.0
+C       2.1  2.2  2.3  2.4  2.5  2.6  2.7  2.8  2.9  3.0
+
+      DATA A / 0.1,1.1,2.1,0.2,1.2,
+     1         2.2,0.3,1.3,2.3,0.4,
+     1         1.4,2.4,0.5,1.5,2.5,
+     1         0.6,1.6,2.6,0.7,1.7,
+     1         2.7,0.8,1.8,2.8,0.9,
+     1         1.9,2.9,1.0,2.0,3.0 /
+
+C     Input matrix B (10 x 3), stored column by column.
+C     B =
+C       0.01  0.02  0.03
+C       0.04  0.05  0.06
+C       0.07  0.08  0.09
+C       0.10  0.11  0.12
+C       0.13  0.14  0.15
+C       0.16  0.17  0.18
+C       0.19  0.20  0.21
+C       0.22  0.23  0.24
+C       0.25  0.26  0.27
+C       0.28  0.29  0.30
+
+      DATA B / 0.01,0.04,0.07,0.10,0.13,
+     1         0.16,0.19,0.22,0.25,0.28,
+     1         0.02,0.05,0.08,0.11,0.14,
+     1         0.17,0.20,0.23,0.26,0.29,
+     1         0.03,0.06,0.09,0.12,0.15,
+     1         0.18,0.21,0.24,0.27,0.30 /
+
+C     Calculate C = A * B.
+      DO 100 I = 1,3
+      DO 90 J = 1,3
+      C(I,J) = 0.0
+      DO 80 K = 1,10
+      C(I,J) = C(I,J) + A(I,K) * B(K,J)
+   80 CONTINUE
+   90 CONTINUE
+  100 CONTINUE
+
+      DO 310 I = 1,3
+      WRITE (*,300) (C(I,J),J = 1,3)
+  310 CONTINUE
+
+  300 FORMAT (3F10.3)
+
+      STOP
+      END
+END FORTRAN
