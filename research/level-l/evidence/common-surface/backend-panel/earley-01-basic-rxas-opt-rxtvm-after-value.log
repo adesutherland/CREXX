@@ -1,0 +1,3 @@
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/backend-panel/earley-01-basic/after-value.settings: SETTINGS_PARSE at line 1, column 13 (byte 12): unexpected 'many'; expected separator, end of input
+  workers = 4 many
+              ^

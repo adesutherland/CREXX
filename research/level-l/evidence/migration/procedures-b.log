@@ -1,0 +1,147 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      PROCEDURE : "main:" (-1:-1) [Type: .unknown]
+        CLASS : ".int" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "x" (-1:-1) [Type: .unknown]
+        OP_ADD : "+" (-1:-1) [Type: .unknown]
+          INTEGER : "1" (-1:-1) [Type: .unknown]
+          OP_MULT : "*" (-1:-1) [Type: .unknown]
+            INTEGER : "2" (-1:-1) [Type: .unknown]
+            INTEGER : "3" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "x" (-1:-1) [Type: .unknown]
+      PROCEDURE : "other:" (-1:-1) [Type: .unknown]
+        CLASS : ".int" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+        INTEGER : "4" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "procedures-b" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      CLASS : ".int" (1:18) [Type: .unknown]
+      ARGS : "" (1:22) [Type: .unknown]
+      INSTRUCTIONS : "" (2:2) [Type: .unknown]
+        ASSIGN : "=" (2:2) [Type: .unknown]
+          VAR_TARGET : "x" (2:2) [Type: .unknown]
+          OP_ADD : "+" (2:6) [Type: .unknown]
+            INTEGER : "1" (2:6) [Type: .unknown]
+            OP_MULT : "*" (2:10) [Type: .unknown]
+              INTEGER : "2" (2:10) [Type: .unknown]
+              INTEGER : "3" (2:14) [Type: .unknown]
+        RETURN : "return" (3:2) [Type: .unknown]
+          VAR_SYMBOL : "x" (3:9) [Type: .unknown]
+    PROCEDURE : "other:" (4:0) [Type: .unknown]
+      CLASS : ".int" (4:19) [Type: .unknown]
+      ARGS : "" (4:23) [Type: .unknown]
+      INSTRUCTIONS : "" (5:2) [Type: .unknown]
+        RETURN : "return" (5:2) [Type: .unknown]
+          INTEGER : "4" (5:9) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "procedures-b" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .unknown]
+      CLASS : ".int" (1:18) [Type: .int]
+      ARGS : "" (1:22) [Type: .unknown]
+      INSTRUCTIONS : "" (2:2) [Type: .unknown]
+        ASSIGN : "=" (2:2) [Type: .unknown]
+          VAR_TARGET : "x" (2:2) [Type: .unknown]
+          OP_ADD : "+" (2:6) [Type: .unknown]
+            INTEGER : "1" (2:6) [Type: .unknown]
+            OP_MULT : "*" (2:10) [Type: .unknown]
+              INTEGER : "2" (2:10) [Type: .unknown]
+              INTEGER : "3" (2:14) [Type: .unknown]
+        RETURN : "return" (3:2) [Type: .unknown]
+          VAR_SYMBOL : "x" (3:9) [Type: .unknown]
+    PROCEDURE : "other" (4:0) [Type: .unknown]
+      CLASS : ".int" (4:19) [Type: .int]
+      ARGS : "" (4:23) [Type: .unknown]
+      INSTRUCTIONS : "" (5:2) [Type: .unknown]
+        RETURN : "return" (5:2) [Type: .unknown]
+          INTEGER : "4" (5:9) [Type: .unknown]
+Scope [0]: Unnamed
+  procedures-b (Namespace) -> .unknown
+  Scope [1]: procedures-b
+    main (Function) -> .unknown
+    other (Function) -> .unknown
+    Scope [2]: main
+      x (Variable) -> .unknown
+    Scope [2]: other
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "procedures-b" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .int]
+      CLASS : ".int" (1:18) [Type: .int]
+      ARGS : "" (1:22) [Type: .unknown]
+      INSTRUCTIONS : "" (2:2) [Type: .unknown]
+        ASSIGN : "=" (2:2) [Type: .unknown]
+          VAR_TARGET : "x" (2:2) [Type: .unknown]
+          OP_ADD : "+" (2:6) [Type: .unknown]
+            INTEGER : "1" (2:6) [Type: .int]
+            OP_MULT : "*" (2:10) [Type: .unknown]
+              INTEGER : "2" (2:10) [Type: .int]
+              INTEGER : "3" (2:14) [Type: .int]
+        RETURN : "return" (3:2) [Type: .unknown]
+          VAR_SYMBOL : "x" (3:9) [Type: .unknown]
+    PROCEDURE : "other" (4:0) [Type: .int]
+      CLASS : ".int" (4:19) [Type: .int]
+      ARGS : "" (4:23) [Type: .unknown]
+      INSTRUCTIONS : "" (5:2) [Type: .unknown]
+        RETURN : "return" (5:2) [Type: .unknown]
+          INTEGER : "4" (5:9) [Type: .int]
+Scope [0]: Unnamed
+  procedures-b (Namespace) -> .unknown
+  Scope [1]: procedures-b
+    main (Function) -> .int
+    other (Function) -> .int
+    Scope [2]: main
+      x (Variable) -> .int
+    Scope [2]: other
+
+--- STAGE_FINAL ---
+REXX_UNIVERSE : "" (0:1) [Type: .void]
+  PROGRAM_FILE : "procedures-b" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .void]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .int]
+      CLASS : ".int" (1:18) [Type: .int]
+      ARGS : "" (1:22) [Type: .unknown]
+      INSTRUCTIONS : "" (2:2) [Type: .void]
+        ASSIGN : "=" (2:2) [Type: .int]
+          VAR_TARGET : "x" (2:2) [Type: .int]
+          OP_ADD : "+" (2:6) [Type: .int]
+            INTEGER : "1" (2:6) [Type: .int]
+            OP_MULT : "*" (2:10) [Type: .int]
+              INTEGER : "2" (2:10) [Type: .int]
+              INTEGER : "3" (2:14) [Type: .int]
+        RETURN : "return" (3:2) [Type: .int]
+          VAR_SYMBOL : "x" (3:9) [Type: .int]
+    PROCEDURE : "other" (4:0) [Type: .int]
+      CLASS : ".int" (4:19) [Type: .int]
+      ARGS : "" (4:23) [Type: .unknown]
+      INSTRUCTIONS : "" (5:2) [Type: .void]
+        RETURN : "return" (5:2) [Type: .int]
+          INTEGER : "4" (5:9) [Type: .int]
+Scope [0]: Unnamed
+  procedures-b (Namespace) -> .unknown
+  Scope [1]: procedures-b
+    main (Function) -> .int
+    other (Function) -> .int
+    Scope [2]: main
+      x (Variable) -> .int
+    Scope [2]: other
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

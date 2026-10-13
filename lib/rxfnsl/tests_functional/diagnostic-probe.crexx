@@ -1,0 +1,18 @@
+/* cREXX License (MIT). Exact parser locations and safe source rendering. */
+options levelb
+import rxfnsb
+import lllanguage
+import llsource
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1])
+  language = levell_settings..language()
+  if language.unicodeversion() <> '17.0.0' then return 6
+  request = .lllanguage..request(language,source)
+  status = request.parse()
+  say 'STATUS|' || status || '|BYTE|' || request.offset()
+  say 'MESSAGE|' || request.error()
+  if status <> 0 then say llsource..diagnostic(source,request.offset(),'LL_TARGET',request.error())
+  return status

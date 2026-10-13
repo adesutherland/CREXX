@@ -1,0 +1,2 @@
+/* Level L: checking regular lexer rules */
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/optimized/refuse-quote-opener/input.levell: LL_COMMENT_CONTRACT: bad opener overlaps default quote shielding; declare an unambiguous outside pattern

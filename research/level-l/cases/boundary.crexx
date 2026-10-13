@@ -1,0 +1,64 @@
+/* Sufficient conditions and counterexamples, not inferred arbitrary equivalence. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llboundary
+import llmunch
+import lllr
+import glcommon
+main: procedure = .int expose failures
+  failures = 0
+  source = readfile('research/level-l/specs/pika-assignment-tokens.levell')
+  source = changestr('semantics pika',source,'semantics contextfree')
+  doc = .llfront..document(source); ok = doc.run(); graph = doc.grammar(); root = doc.root()
+  original = .llmunch..automaton.legacy(glcommon..tabledata()); compact = original
+  do state = 1 to compact.states()
+    if compact.kind(state) < 0 then ok = compact.accepting(state,0)
+  end
+  proof = .llboundary..analysis(graph,root,compact)
+  ok = proof.run()
+  say proof.message()
+  call check ok = 0 & proof.certificate() <> '' & proof.matches(graph,compact),'compact assignment token boundaries certified'
+  tables = .lllr..tables(graph,root,'lr1'); ok = tables.status()
+  do n = 1 to 12
+    text = copies('a',n) || '=' || copies('1',n) || ';b=2;'
+    scanner = .llmunch..scanner(compact,text as .binary,'reverse'); ok = scanner.run(); input = scanner.tokens()
+    parser = .lllr..parser(tables,input); result = parser.run()
+    call check ok = 0 & result = 0 & input.size() = 8,'certified expansion maps to authored token derivation'
+  end
+  trivia = .llboundary..analysis(graph,root,original)
+  call check trivia.run() = 1 & pos('trivia',trivia.message()) > 0,'implicit source trivia cannot disappear from equivalence claim'
+  limited = .llboundary..analysis(graph,root,compact,1)
+  call check limited.run() = 2 & limited.certificate() = '','construction exhaustion cannot issue certificate'
+  revised = compact; ok = revised.accepting(1,1)
+  call check proof.matches(graph,revised) = 0,'lexer mutation invalidates boundary certificate'
+  extra = graph.add(6,0,0,'extra',99)
+  call check proof.matches(graph,compact) = 0,'grammar mutation invalidates boundary certificate'
+  source = 'options levell namespace unsafe read: parser semantics contextfree input tokens start document identifier: token = 1 number: token = 2 document: rule = identifier number'
+  doc = .llfront..document(source); ok = doc.run(); graph = doc.grammar()
+  unsafe = .llboundary..analysis(graph,doc.root(),compact)
+  call check unsafe.run() = 1 & pos('line',unsafe.message()) > 0,'adjacent identifier/number fails with located boundary obligation'
+  say unsafe.message()
+  scanner = .llmunch..scanner(compact,'a1' as .binary,'reverse'); ok = scanner.run(); input = scanner.tokens()
+  call check ok = 0 & input.size() = 1 & input.symbol(0) = 1,'concrete a plus 1 expansion is swallowed as one name'
+  pred = .llcore..grammar('contextfree'); atom = pred.add(1,1,0,'name',1); look = pred.add(9,atom,0,'look.inside',2)
+  rejected = .llboundary..analysis(pred,look,compact)
+  call check rejected.run() = 1 & rejected.certificate() = '','predicate crossing proposed boundary is not erased'
+  say 'boundary_failures='failures
+  if failures then return 1
+  return 0
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    failures = failures + 1; say 'FAIL:' message
+  end
+  return

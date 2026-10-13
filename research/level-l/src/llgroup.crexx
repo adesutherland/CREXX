@@ -1,0 +1,183 @@
+/* cREXX License (MIT). Declarative grouping of an ordered flat source tree. */
+options levell
+namespace llgroup expose declaration rewrite
+import llcore
+
+/** A group marker starts a region extending to the next marker or EOF.
+ * Other top-level nodes must have explicitly admitted member kinds.
+ */
+declaration: class
+  _marker = .int
+  _list = .int
+  _body = .int
+  _bodyname = .string
+  _implicit = .string
+  _member = .int[]
+  _count = .int
+  _error = .string
+  *: factory
+    arg marker = .int, list = .int, body = .int, implicit = '', bodyname = 'body'
+    _marker = marker; _list = list; _body = body; _bodyname = bodyname; _implicit = implicit
+    _count = 0; _error = ''
+    if marker <= 0 | list <= 0 | body <= 0 | marker = list | marker = body | list = body then _error = 'group kinds must be positive and distinct'
+    return
+  member: method = .int
+    arg kind = .int
+    if kind <= 0 | kind = _marker | kind = _list | kind = _body | _count >= 128 then do
+      _error = 'invalid grouping member declaration'; return 0
+    end
+    _count = _count + 1; _member[_count] = kind; return 1
+  accepts: method = .int
+    arg kind = .int
+    do i = 1 to _count
+      if _member[i] = kind then return 1
+    end
+    return 0
+  marker: method = .int
+    return _marker
+  list: method = .int
+    return _list
+  body: method = .int
+    return _body
+  bodyname: method = .string
+    return _bodyname
+  implicit: method = .string
+    return _implicit
+  error: method = .string
+    return _error
+
+/** Pure reconstruction, retaining original source and per-node origins.
+ * The binary list convention is explicit; source-node sharing is not traversal
+ * permission to visit a node twice in the flat list.
+ */
+rewrite: class
+  _source = .llcore..tree
+  _rules = .declaration
+  _out = .llcore..tree
+  _wanted = .int
+  _root = .int
+  _items = .int[]
+  _seen = .int[]
+  _origin = .int[]
+  _map = .int[]
+  _ran = .int
+  _status = .int
+  _fuel = .int
+  _work = .int
+  _depth = .int
+  _error = .string
+  *: factory
+    arg source = .llcore..tree, root = .int, rules = .declaration, fuel = 1000000
+    _source = source; _wanted = root; _rules = rules
+    _out = .llcore..tree.from_source(source.source()); _root = 0
+    _ran = 0; _status = 0; _fuel = fuel; _work = 0; _depth = 0; _error = ''
+    return
+  tick: method = .int
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = 'group rewrite work budget exhausted'; return 0
+    end
+    return 1
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _source.owns_source() = 0 | _source.validate() = 0 | _rules.error() <> '' | _wanted < 1 | _wanted > _source.size() then do
+      _status = 3; _error = 'group input: ' || _source.error() || _rules.error(); return _status
+    end
+    call flatten(_wanted)
+    if _status <> 0 then return _status
+    marker = 0; members = 0; first = -1; finish = 0; grouped = 0
+    do i = 1 to _items[0]
+      node = _items[i]
+      if tick() = 0 then return _status
+      if _source.kind(node) = _rules.marker() then do
+        if marker > 0 | members > 0 then do
+          group = closegroup(marker,members,first,finish)
+          grouped = append(grouped,group)
+        end
+        marker = node; members = 0; first = _source.start(node); finish = _source.finish(node)
+      end
+      else do
+        if _rules.accepts(_source.kind(node)) = 0 then do
+          _status = 3; _error = 'undeclared group member: ' || _source.label(node); return _status
+        end
+        if marker = 0 & _rules.implicit() = '' then do
+          _status = 3; _error = 'member before first group marker'; return _status
+        end
+        if first < 0 then first = _source.start(node)
+        finish = _source.finish(node); child = copy(node); members = append(members,child)
+      end
+    end
+    if marker > 0 | members > 0 then do
+      group = closegroup(marker,members,first,finish); grouped = append(grouped,group)
+    end
+    if grouped = 0 then grouped = _out.add(_rules.list(),'list',0,0,0,0)
+    _root = grouped
+    if _status = 0 & _out.validate() = 0 then do
+      _status = 3; _error = _out.error()
+    end
+    return _status
+  flatten: method = .void
+    arg node = .int
+    if node = 0 | _status <> 0 then return
+    if tick() = 0 then return
+    if _depth >= 512 then do
+      _status = 2; _error = 'group input depth budget exhausted'; return
+    end
+    if _seen[node] then do
+      _status = 3; _error = 'flat list repeats a source node'; return
+    end
+    _seen[node] = 1; _depth = _depth + 1
+    if _source.kind(node) = _rules.list() then do
+      call flatten(_source.left(node)); call flatten(_source.right(node))
+    end
+    else _items[_items[0] + 1] = node
+    _depth = _depth - 1
+    return
+  copy: method = .int
+    arg node = .int
+    if node = 0 | _status <> 0 then return 0
+    if _map[node] > 0 then return _map[node]
+    if tick() = 0 then return 0
+    if _depth >= 512 then do
+      _status = 2; _error = 'group subtree depth budget exhausted'; return 0
+    end
+    _depth = _depth + 1
+    a = copy(_source.left(node)); b = copy(_source.right(node))
+    out = _out.add(_source.kind(node),_source.label(node),_source.start(node),_source.finish(node),a,b)
+    _origin[out] = node; _map[node] = out; _depth = _depth - 1
+    return out
+  append: method = .int
+    arg list = .int, child = .int
+    if child = 0 then return list
+    if list = 0 then return child
+    return _out.add(_rules.list(),'list',_out.start(list),_out.finish(child),list,child)
+  closegroup: method = .int
+    arg marker = .int, members = .int, start = .int, finish = .int
+    header = 0; label = _rules.implicit()
+    if marker > 0 then do
+      a = copy(_source.left(marker)); b = copy(_source.right(marker))
+      header = append(a,b); label = _source.label(marker)
+    end
+    bodystart = finish
+    if members > 0 then bodystart = _out.start(members)
+    body = _out.add(_rules.body(),_rules.bodyname(),bodystart,finish,members,0)
+    group = _out.add(_rules.marker(),label,start,finish,header,body)
+    _origin[group] = marker
+    return group
+  tree: method = .llcore..tree
+    return _out
+  root: method = .int
+    return _root
+  origin: method = .int
+    arg node = .int
+    return _origin[node]
+  provenance: method = .string
+    arg node = .int
+    if _origin[node] = 0 then return 'synthetic'
+    if _out.kind(node) = _rules.marker() then return 'composite'
+    return 'exact'
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error

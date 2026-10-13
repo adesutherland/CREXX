@@ -1,0 +1,75 @@
+/* Single-mechanism research screen; Level B measurement harness.
+ * Serial 1 warmup + 6 balanced pairs; not a formal production verdict.
+ */
+options levelb
+import rxfnsb
+import lldp
+import lldfa
+import gdlex
+import gstmt
+import gschar
+main: procedure = .int
+  arg argv = .string[]
+  vm = 'unspecified'
+  if argv[0] >= 1 then vm = argv[1]
+  sources = .string[]; labels = .string[]; wanted = .int[]
+  labels[1] = 'short'; sources[1] = 'x=1+2*3;'; wanted[1] = 1
+  labels[2] = 'long_ident'; sources[2] = copies('a',512) || '=1+2*3;'; wanted[2] = 1
+  labels[3] = 'long_string'; sources[3] = "x='" || copies('a + 123 ; ',64) || "';"; wanted[3] = 1
+  labels[4] = 'long_comment'; sources[4] = 'x=1; /* ' || copies('a=1+2; ',96) || '*/ y=2;'; wanted[4] = 1
+  labels[5] = 'malformed'; sources[5] = 'x=(1+2; y=3;'; wanted[5] = 0
+  say 'vm,case,round,order,bytes,tokens,char_us,lex_us,token_parse_us,total_token_us,char_operations,token_operations,char_cells,token_cells,lex_steps,accepted'
+  do workload = 1 to sources[0]
+    source = sources[workload]
+    /* Round zero is the explicitly identified warmup. */
+    do round = 0 to 6
+      charus = .int; lexus = .int; parseus = .int
+      charops = .int; tokenops = .int; charcells = .int; tokencells = .int
+      charok = .int; tokenok = .int; tokencount = .int; lexsteps = .int
+      begin = .int; data = .int[]; span = .int
+      order = 'CT'
+      if round % 2 = 1 then order = 'TC'
+      do phase = 1 to 2
+        if (phase = 1 & order = 'CT') | (phase = 2 & order = 'TC') then do
+          begin = time('us')
+          data = characters(source)
+          span = gschar..parse(data)
+          charus = time('us') - begin
+          charops = lldp..opcount(); charcells = lldp..cellcount()
+          charok = span = data[0]
+        end
+        else do
+          begin = time('us')
+          tokens = gdlex..lex(source)
+          data = symbols(tokens)
+          lexus = time('us') - begin
+          lexsteps = lldfa..scansteps(); tokencount = data[0]
+          begin = time('us')
+          span = gstmt..parse(data)
+          parseus = time('us') - begin
+          tokenops = lldp..opcount(); tokencells = lldp..cellcount()
+          tokenok = span = data[0] & lldfa..scanstatus() = 0
+        end
+      end
+      if charok <> wanted[workload] | tokenok <> charok then do
+        say 'FAIL: paired equivalence' labels[workload] charok tokenok; return 1
+      end
+      say vm || ',' || labels[workload] || ',' || round || ',' || order || ',' || length(source) || ',' || tokencount || ',' || charus || ',' || lexus || ',' || parseus || ',' || (lexus + parseus) || ',' || charops || ',' || tokenops || ',' || charcells || ',' || tokencells || ',' || lexsteps || ',' || charok
+    end
+  end
+  return 0
+
+characters: procedure = .int[]
+  arg source = .string
+  result = .int[]; bytes = source as .binary
+  do index = 0 to <blen>(bytes) - 1
+    result[index + 1] = <at..u8>(index) bytes
+  end
+  return result
+symbols: procedure = .int[]
+  arg tokens = .binary
+  result = .int[]
+  do index = 0 to <blen>(tokens) / 12 - 1
+    result[index + 1] = <at..i32>(index * 12) tokens
+  end
+  return result

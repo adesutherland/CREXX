@@ -1,0 +1,17 @@
+/* cREXX License (MIT). Pinned Unicode property sets for lexical definitions. */
+options levelb
+namespace llproperties expose known ranges version names
+import rxfnsb
+import lludata
+import llcharset
+
+version: procedure = .string
+  return lludata..version()
+names: procedure = .string
+  return lludata..names()
+known: procedure = .int
+  arg name = .string
+  return wordpos(upper(name),upper(lludata..names())) <> 0
+ranges: procedure = .llcharset..ranges
+  arg name = .string
+  return .llcharset..ranges.packed(lludata..data(name))

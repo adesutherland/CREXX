@@ -1,0 +1,67 @@
+/* Reference-corresponding rank reversal and experimental algebraic dominance. */
+options levell
+import llc14cost
+main: procedure = .int
+  a = .llc14cost..reading(5,4,0,1,0,0,0,0,3)
+  b = .llc14cost..reading(5,0,4,2,0,0,0,0,0)
+  step = .llc14cost..reading(6,0,0,1,1073741825)
+  before = llc14cost..compare(a,b,0)
+  aftera = a.joined(step); afterb = b.joined(step)
+  after = llc14cost..compare(aftera,afterb,0)
+  sameend = a.finish() = b.finish(); samespent = a.spent() = b.spent()
+  say 'c14 equal end='sameend 'equal spent='samespent 'before='before 'after='after
+  if before >= 0 | after <= 0 | a.cost() <> 4 | b.cost() <> 4 then return 1
+  if llc14cost..dominates(a,b,0) | llc14cost..dominates(b,a,0) then return 1
+  frontier = .llc14cost..frontier(0)
+  ok = frontier.offer(a); ok = frontier.offer(b)
+  if frontier.count() <> 2 then return 1
+  finalfront = .llc14cost..frontier(0)
+  do i = 1 to frontier.count()
+    candidate = frontier.item(i); extended = candidate.joined(step)
+    ok = finalfront.offer(extended)
+  end
+  winner = finalfront.item(1)
+  do i = 2 to finalfront.count()
+    candidate = finalfront.item(i)
+    if llc14cost..compare(candidate,winner,0) < 0 then winner = candidate
+  end
+  if winner.evidence() <> 3 | winner.cost() <> 4 then return 1
+  say 'experimental_frontier_retains_globally_better_continuation=1'
+  /* End-of-file absences are one globally charged fact, not additive edits. */
+  eof = .llc14cost..reading(6,0,0,0,6,1)
+  joined = eof.joined(eof)
+  if joined.cost() <> 1 | joined.spent() <> 0 then return 1
+  /* Bounded algebra check: all non-EOF summaries with end 4, at most two
+     spent edits, feasible evidence and penalty 0..1, followed by the same
+     clean/repair step. This challenges the sufficient rule, not reachability. */
+  readings = .llc14cost..reading[]
+  do deleted = 0 to 2
+    do missing = 0 to 2 - deleted
+      do evidence = 0 to 4 - deleted
+        do penalty = 0 to 1
+          first = 0
+          if deleted + missing = 0 then first = 1073741825
+          readings[readings[0] + 1] = .llc14cost..reading(4,deleted,missing,evidence,first,0,penalty)
+        end
+      end
+    end
+  end
+  checked = 0
+  do i = 1 to readings[0]
+    do j = 1 to readings[0]
+      lhs = readings[i]; rhs = readings[j]
+      if llc14cost..dominates(lhs,rhs,0) then do
+        if llc14cost..compare(lhs,rhs,0) > 0 then return 1
+        do variant = 0 to 3
+          step = .llc14cost..reading(5,0,0,variant <mod> 2,1073741825)
+          if variant >= 2 then step = .llc14cost..reading(5,1,1,0,4)
+          la = lhs.joined(step); rb = rhs.joined(step)
+          if llc14cost..dominates(la,rb,0) = 0 | llc14cost..compare(la,rb,0) > 0 then return 1
+          checked = checked + 1
+        end
+      end
+    end
+  end
+  say 'c14_dominance_continuations_checked='checked
+  say 'c14cost_failures=0'
+  return 0

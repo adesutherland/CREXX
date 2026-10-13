@@ -1,0 +1,15 @@
+POLICY|hash.notes|KEEP|0
+POLICY|slash.notes|KEEP|0
+POLICY|c.notes|KEEP|0
+POLICY|rexx.notes|KEEP|0
+POLICY|angle.notes|KEEP|1
+POLICY|long.hash|KEEP|0
+COMMENTS|6|SHIELDED|0
+STATUS|0|BYTE|20
+MESSAGE|
+TOKEN|number|0|1|32
+TOKEN|plus|16|17|2B
+TOKEN|number|17|18|33
+TOKEN|times|18|19|2A
+TOKEN|number|19|20|34
+TREE_VALID|1

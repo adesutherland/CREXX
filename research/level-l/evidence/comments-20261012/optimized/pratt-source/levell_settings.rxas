@@ -1,0 +1,1209 @@
+/*
+ * SOURCE                 : levell_settings.crexx
+ */
+
+.globals=0
+
+language() .locals=46 .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" language() ""
+   .srcstep 106 106 17 "levell_settings.crexx" 12 1 46 "language: procedure = .lllanguage..definition"
+   numsci 18,1,1
+   .srcstep 1 1 17 "levell_settings.crexx" 13 3 42 "  graph = .llcore..grammar('contextfree')"
+   .meta "levell_settings.language.graph"="b" ".llcore..grammar" r1
+   load r35,"contextfree"
+   .traceevent "L" 4 "R" "S" "r" 35 1 1 0 "" ""
+   load r34,1
+   settpcall r1,§llcore.grammar.§factory(),r34,r35,768
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "graph" ""
+   .srcstep 2 2 17 "levell_settings.crexx" 14 3 34 "  id = graph.add(1,1,0,'number',4)"
+   .meta "levell_settings.language.id"="b" ".int" r32
+   .traceevent "V" 6 "R" "O" "r" 1 2 2 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 2 2 0 "" ""
+   load r5,"number"
+   .traceevent "L" 4 "R" "S" "r" 5 2 2 0 "" ""
+   load r6,4
+   .traceevent "L" 4 "R" "I" "r" 6 2 2 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 2 2 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 2 2 0 "id" ""
+   .srcstep 3 3 17 "levell_settings.crexx" 15 3 32 "  id = graph.add(1,2,0,'plus',5)"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   load r3,2
+   .traceevent "L" 4 "R" "I" "r" 3 3 3 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
+   load r5,"plus"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
+   load r6,5
+   .traceevent "L" 4 "R" "I" "r" 6 3 3 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 3 3 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 3 3 0 "id" ""
+   .srcstep 4 4 17 "levell_settings.crexx" 16 3 33 "  id = graph.add(1,3,0,'minus',6)"
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
+   load r3,3
+   .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
+   load r5,"minus"
+   .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
+   load r6,6
+   .traceevent "L" 4 "R" "I" "r" 6 4 4 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 4 4 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 4 4 0 "id" ""
+   .srcstep 5 5 17 "levell_settings.crexx" 17 3 33 "  id = graph.add(1,4,0,'times',7)"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
+   load r3,4
+   .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 5 5 0 "" ""
+   load r5,"times"
+   .traceevent "L" 4 "R" "S" "r" 5 5 5 0 "" ""
+   load r6,7
+   .traceevent "L" 4 "R" "I" "r" 6 5 5 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 5 5 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 5 5 0 "id" ""
+   .srcstep 6 6 17 "levell_settings.crexx" 18 3 34 "  id = graph.add(1,5,0,'divide',8)"
+   .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   load r3,5
+   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 6 6 0 "" ""
+   load r5,"divide"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   load r6,8
+   .traceevent "L" 4 "R" "I" "r" 6 6 6 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 6 6 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 6 6 0 "id" ""
+   .srcstep 7 7 17 "levell_settings.crexx" 19 3 34 "  id = graph.add(1,6,0,'lparen',9)"
+   .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 7 7 0 "" ""
+   load r3,6
+   .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
+   load r5,"lparen"
+   .traceevent "L" 4 "R" "S" "r" 5 7 7 0 "" ""
+   load r6,9
+   .traceevent "L" 4 "R" "I" "r" 6 7 7 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 7 7 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 7 7 0 "id" ""
+   .srcstep 8 8 17 "levell_settings.crexx" 20 3 35 "  id = graph.add(1,7,0,'rparen',10)"
+   .traceevent "V" 6 "R" "O" "r" 1 8 8 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 8 8 0 "" ""
+   load r3,7
+   .traceevent "L" 4 "R" "I" "r" 3 8 8 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 8 8 0 "" ""
+   load r5,"rparen"
+   .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
+   load r6,10
+   .traceevent "L" 4 "R" "I" "r" 6 8 8 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 8 8 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 8 8 0 "id" ""
+   .srcstep 9 9 17 "levell_settings.crexx" 21 3 39 "  id = graph.add(5,9,0,'arithmetic',33)"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "graph" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+   load r3,9
+   .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   load r5,"arithmetic"
+   .traceevent "L" 4 "R" "S" "r" 5 9 9 0 "" ""
+   load r6,33
+   .traceevent "L" 4 "R" "I" "r" 6 9 9 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 9 9 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 9 9 0 "id" ""
+   .srcstep 10 10 17 "levell_settings.crexx" 22 3 36 "  id = graph.add(5,28,0,'level.1',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "graph" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
+   load r3,28
+   .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 10 10 0 "" ""
+   load r5,"level.1"
+   .traceevent "L" 4 "R" "S" "r" 5 10 10 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 10 10 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 10 10 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 10 10 0 "id" ""
+   .srcstep 11 11 17 "levell_settings.crexx" 23 3 36 "  id = graph.add(5,36,0,'level.2',2)"
+   .traceevent "V" 6 "R" "O" "r" 1 11 11 0 "graph" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 11 11 0 "" ""
+   load r3,36
+   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 11 11 0 "" ""
+   load r5,"level.2"
+   .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 11 11 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 11 11 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 11 11 0 "id" ""
+   .srcstep 12 12 17 "levell_settings.crexx" 24 3 36 "  id = graph.add(5,20,0,'level.3',3)"
+   .traceevent "V" 6 "R" "O" "r" 1 12 12 0 "graph" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   load r3,20
+   .traceevent "L" 4 "R" "I" "r" 3 12 12 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 12 12 0 "" ""
+   load r5,"level.3"
+   .traceevent "L" 4 "R" "S" "r" 5 12 12 0 "" ""
+   load r6,3
+   .traceevent "L" 4 "R" "I" "r" 6 12 12 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 12 12 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 12 12 0 "id" ""
+   .srcstep 13 13 17 "levell_settings.crexx" 25 3 34 "  id = graph.add(1,1,0,'number',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 13 13 0 "" ""
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   load r5,"number"
+   .traceevent "L" 4 "R" "S" "r" 5 13 13 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 13 13 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 13 13 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 13 13 0 "id" ""
+   .srcstep 14 14 17 "levell_settings.crexx" 26 3 34 "  id = graph.add(1,6,0,'<open>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 14 14 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 14 14 0 "" ""
+   load r3,6
+   .traceevent "L" 4 "R" "I" "r" 3 14 14 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
+   load r5,"<open>"
+   .traceevent "L" 4 "R" "S" "r" 5 14 14 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 14 14 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 14 14 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 14 14 0 "id" ""
+   .srcstep 15 15 17 "levell_settings.crexx" 27 3 35 "  id = graph.add(1,7,0,'<close>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 15 15 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 15 15 0 "" ""
+   load r3,7
+   .traceevent "L" 4 "R" "I" "r" 3 15 15 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 15 15 0 "" ""
+   load r5,"<close>"
+   .traceevent "L" 4 "R" "S" "r" 5 15 15 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 15 15 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 15 15 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 15 15 0 "id" ""
+   .srcstep 16 16 17 "levell_settings.crexx" 28 3 41 "  id = graph.add(2,13,9,'<group.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 16 16 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 16 16 0 "" ""
+   load r3,13
+   .traceevent "L" 4 "R" "I" "r" 3 16 16 0 "" ""
+   load r4,9
+   .traceevent "L" 4 "R" "I" "r" 4 16 16 0 "" ""
+   load r5,"<group.head>"
+   .traceevent "L" 4 "R" "S" "r" 5 16 16 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 16 16 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 16 16 0 "id" ""
+   .srcstep 17 17 17 "levell_settings.crexx" 29 3 35 "  id = graph.add(2,15,14,'group',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 17 17 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
+   load r3,15
+   .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
+   load r4,14
+   .traceevent "L" 4 "R" "I" "r" 4 17 17 0 "" ""
+   load r5,"group"
+   .traceevent "L" 4 "R" "S" "r" 5 17 17 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 17 17 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 17 17 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 17 17 0 "id" ""
+   .srcstep 18 18 17 "levell_settings.crexx" 30 3 39 "  id = graph.add(4,12,16,'<primary>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 18 18 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 18 18 0 "" ""
+   load r3,12
+   .traceevent "L" 4 "R" "I" "r" 3 18 18 0 "" ""
+   load r4,16
+   .traceevent "L" 4 "R" "I" "r" 4 18 18 0 "" ""
+   load r5,"<primary>"
+   .traceevent "L" 4 "R" "S" "r" 5 18 18 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 18 18 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 18 18 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 18 18 0 "id" ""
+   .srcstep 19 19 17 "levell_settings.crexx" 31 3 42 "  id = graph.add(1,3,0,'<prefix.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 19 19 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 19 19 0 "" ""
+   load r3,3
+   .traceevent "L" 4 "R" "I" "r" 3 19 19 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
+   load r5,"<prefix.token>"
+   .traceevent "L" 4 "R" "S" "r" 5 19 19 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 19 19 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 19 19 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 19 19 0 "id" ""
+   .srcstep 20 20 17 "levell_settings.crexx" 32 3 38 "  id = graph.add(2,18,11,'negative',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 20 20 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 20 20 0 "" ""
+   load r3,18
+   .traceevent "L" 4 "R" "I" "r" 3 20 20 0 "" ""
+   load r4,11
+   .traceevent "L" 4 "R" "I" "r" 4 20 20 0 "" ""
+   load r5,"negative"
+   .traceevent "L" 4 "R" "S" "r" 5 20 20 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 20 20 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 20 20 0 "id" ""
+   .srcstep 21 21 17 "levell_settings.crexx" 33 3 39 "  id = graph.add(4,17,19,'<primary>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 21 21 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 21 21 0 "" ""
+   load r3,17
+   .traceevent "L" 4 "R" "I" "r" 3 21 21 0 "" ""
+   load r4,19
+   .traceevent "L" 4 "R" "I" "r" 4 21 21 0 "" ""
+   load r5,"<primary>"
+   .traceevent "L" 4 "R" "S" "r" 5 21 21 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 21 21 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 21 21 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 21 21 0 "id" ""
+   .srcstep 22 22 17 "levell_settings.crexx" 34 3 44 "  id = graph.add(1,2,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 22 22 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 22 22 0 "" ""
+   load r3,2
+   .traceevent "L" 4 "R" "I" "r" 3 22 22 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 22 22 0 "" ""
+   load r5,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 5 22 22 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 22 22 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 22 22 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 22 22 0 "id" ""
+   .srcstep 23 23 17 "levell_settings.crexx" 35 3 44 "  id = graph.add(2,9,21,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 23 23 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 23 23 0 "" ""
+   load r3,9
+   .traceevent "L" 4 "R" "I" "r" 3 23 23 0 "" ""
+   load r4,21
+   .traceevent "L" 4 "R" "I" "r" 4 23 23 0 "" ""
+   load r5,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 5 23 23 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 23 23 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 23 23 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 23 23 0 "id" ""
+   .srcstep 24 24 17 "levell_settings.crexx" 36 3 33 "  id = graph.add(2,22,10,'sum',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 24 24 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 24 24 0 "" ""
+   load r3,22
+   .traceevent "L" 4 "R" "I" "r" 3 24 24 0 "" ""
+   load r4,10
+   .traceevent "L" 4 "R" "I" "r" 4 24 24 0 "" ""
+   load r5,"sum"
+   .traceevent "L" 4 "R" "S" "r" 5 24 24 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 24 24 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 24 24 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 24 24 0 "id" ""
+   .srcstep 25 25 17 "levell_settings.crexx" 37 3 44 "  id = graph.add(4,10,23,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 25 25 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 25 25 0 "" ""
+   load r3,10
+   .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""
+   load r4,23
+   .traceevent "L" 4 "R" "I" "r" 4 25 25 0 "" ""
+   load r5,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 5 25 25 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 25 25 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 25 25 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 25 25 0 "id" ""
+   .srcstep 26 26 17 "levell_settings.crexx" 38 3 44 "  id = graph.add(1,3,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 26 26 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 26 26 0 "" ""
+   load r3,3
+   .traceevent "L" 4 "R" "I" "r" 3 26 26 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 26 26 0 "" ""
+   load r5,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 5 26 26 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 26 26 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 26 26 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 26 26 0 "id" ""
+   .srcstep 27 27 17 "levell_settings.crexx" 39 3 44 "  id = graph.add(2,9,25,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 27 27 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 27 27 0 "" ""
+   load r3,9
+   .traceevent "L" 4 "R" "I" "r" 3 27 27 0 "" ""
+   load r4,25
+   .traceevent "L" 4 "R" "I" "r" 4 27 27 0 "" ""
+   load r5,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 5 27 27 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 27 27 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 27 27 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 27 27 0 "id" ""
+   .srcstep 28 28 17 "levell_settings.crexx" 40 3 40 "  id = graph.add(2,26,10,'difference',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 28 28 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 28 28 0 "" ""
+   load r3,26
+   .traceevent "L" 4 "R" "I" "r" 3 28 28 0 "" ""
+   load r4,10
+   .traceevent "L" 4 "R" "I" "r" 4 28 28 0 "" ""
+   load r5,"difference"
+   .traceevent "L" 4 "R" "S" "r" 5 28 28 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 28 28 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 28 28 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 28 28 0 "id" ""
+   .srcstep 29 29 17 "levell_settings.crexx" 41 3 44 "  id = graph.add(4,24,27,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 29 29 0 "" ""
+   load r3,24
+   .traceevent "L" 4 "R" "I" "r" 3 29 29 0 "" ""
+   load r4,27
+   .traceevent "L" 4 "R" "I" "r" 4 29 29 0 "" ""
+   load r5,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 5 29 29 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 29 29 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 29 29 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 29 29 0 "id" ""
+   .srcstep 30 30 17 "levell_settings.crexx" 42 3 44 "  id = graph.add(1,4,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 30 30 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 30 30 0 "" ""
+   load r3,4
+   .traceevent "L" 4 "R" "I" "r" 3 30 30 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 30 30 0 "" ""
+   load r5,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 5 30 30 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 30 30 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 30 30 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 30 30 0 "id" ""
+   .srcstep 31 31 17 "levell_settings.crexx" 43 3 45 "  id = graph.add(2,10,29,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 31 31 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 31 31 0 "" ""
+   load r3,10
+   .traceevent "L" 4 "R" "I" "r" 3 31 31 0 "" ""
+   load r4,29
+   .traceevent "L" 4 "R" "I" "r" 4 31 31 0 "" ""
+   load r5,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 5 31 31 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 31 31 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 31 31 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 31 31 0 "id" ""
+   .srcstep 32 32 17 "levell_settings.crexx" 44 3 37 "  id = graph.add(2,30,11,'product',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 32 32 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 32 32 0 "" ""
+   load r3,30
+   .traceevent "L" 4 "R" "I" "r" 3 32 32 0 "" ""
+   load r4,11
+   .traceevent "L" 4 "R" "I" "r" 4 32 32 0 "" ""
+   load r5,"product"
+   .traceevent "L" 4 "R" "S" "r" 5 32 32 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 32 32 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 32 32 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 32 32 0 "id" ""
+   .srcstep 33 33 17 "levell_settings.crexx" 45 3 44 "  id = graph.add(4,11,31,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 33 33 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 33 33 0 "" ""
+   load r3,11
+   .traceevent "L" 4 "R" "I" "r" 3 33 33 0 "" ""
+   load r4,31
+   .traceevent "L" 4 "R" "I" "r" 4 33 33 0 "" ""
+   load r5,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 5 33 33 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 33 33 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 33 33 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 33 33 0 "id" ""
+   .srcstep 34 34 17 "levell_settings.crexx" 46 3 44 "  id = graph.add(1,5,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 34 34 0 "graph" ""
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 34 34 0 "" ""
+   load r3,5
+   .traceevent "L" 4 "R" "I" "r" 3 34 34 0 "" ""
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 34 34 0 "" ""
+   load r5,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 5 34 34 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 34 34 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 34 34 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 34 34 0 "id" ""
+   .srcstep 35 35 17 "levell_settings.crexx" 47 3 45 "  id = graph.add(2,10,33,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 35 35 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 35 35 0 "" ""
+   load r3,10
+   .traceevent "L" 4 "R" "I" "r" 3 35 35 0 "" ""
+   load r4,33
+   .traceevent "L" 4 "R" "I" "r" 4 35 35 0 "" ""
+   load r5,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 5 35 35 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 35 35 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 35 35 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 35 35 0 "id" ""
+   .srcstep 36 36 17 "levell_settings.crexx" 48 3 38 "  id = graph.add(2,34,11,'quotient',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 36 36 0 "graph" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 36 36 0 "" ""
+   load r3,34
+   .traceevent "L" 4 "R" "I" "r" 3 36 36 0 "" ""
+   load r4,11
+   .traceevent "L" 4 "R" "I" "r" 4 36 36 0 "" ""
+   load r5,"quotient"
+   .traceevent "L" 4 "R" "S" "r" 5 36 36 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 36 36 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 36 36 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 36 36 0 "id" ""
+   .srcstep 37 37 17 "levell_settings.crexx" 49 3 44 "  id = graph.add(4,32,35,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 37 37 0 "graph" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 37 37 0 "" ""
+   load r3,32
+   .traceevent "L" 4 "R" "I" "r" 3 37 37 0 "" ""
+   load r4,35
+   .traceevent "L" 4 "R" "I" "r" 4 37 37 0 "" ""
+   load r5,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 5 37 37 0 "" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 37 37 0 "" ""
+   load r0,6
+   settp r1,256
+   settp r5,768
+   call r32,§llcore.grammar.add(),r0
+   .traceevent "F" 4 "R" "I" "r" 32 37 37 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 32 37 37 0 "id" ""
+   .srcstep 38 38 17 "levell_settings.crexx" 50 3 49 "  operators = .llpratt..operators(1,6,7,'number')"
+   .meta "levell_settings.language.operators"="b" ".llpratt..operators" r8
+   load r35,1
+   .traceevent "L" 4 "R" "I" "r" 35 38 38 0 "" ""
+   load r36,6
+   .traceevent "L" 4 "R" "I" "r" 36 38 38 0 "" ""
+   load r37,7
+   .traceevent "L" 4 "R" "I" "r" 37 38 38 0 "" ""
+   load r38,"number"
+   .traceevent "L" 4 "R" "S" "r" 38 38 38 0 "" ""
+   load r34,4
+   settpcall r8,§llpratt.operators.§factory(),r34,r38,768
+   .traceevent "F" 4 "R" "O" "r" 8 38 38 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 8 38 38 0 "operators" ""
+   .srcstep 39 39 17 "levell_settings.crexx" 51 3 36 "  ok = operators.infix(2,10,0,'sum')"
+   .meta "levell_settings.language.ok"="b" ".int" r33
+   .traceevent "V" 6 "R" "O" "r" 8 39 39 0 "operators" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 39 39 0 "" ""
+   load r10,10
+   .traceevent "L" 4 "R" "I" "r" 10 39 39 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 39 39 0 "" ""
+   load r12,"sum"
+   .traceevent "L" 4 "R" "S" "r" 12 39 39 0 "" ""
+   load r7,5
+   settp r8,256
+   settpcall r33,§llpratt.operators.infix(),r7,r12,768
+   .traceevent "F" 4 "R" "I" "r" 33 39 39 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 33 39 39 0 "ok" ""
+   .srcstep 40 40 17 "levell_settings.crexx" 52 3 43 "  ok = operators.infix(3,10,0,'difference')"
+   .traceevent "V" 6 "R" "O" "r" 8 40 40 0 "operators" ""
+   load r9,3
+   .traceevent "L" 4 "R" "I" "r" 9 40 40 0 "" ""
+   load r10,10
+   .traceevent "L" 4 "R" "I" "r" 10 40 40 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 40 40 0 "" ""
+   load r12,"difference"
+   .traceevent "L" 4 "R" "S" "r" 12 40 40 0 "" ""
+   load r7,5
+   settp r8,256
+   settpcall r33,§llpratt.operators.infix(),r7,r12,768
+   .traceevent "F" 4 "R" "I" "r" 33 40 40 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 33 40 40 0 "ok" ""
+   .srcstep 41 41 17 "levell_settings.crexx" 53 3 37 "  ok = operators.prefix(3,'negative')"
+   .traceevent "V" 6 "R" "O" "r" 8 41 41 0 "operators" ""
+   load r9,3
+   .traceevent "L" 4 "R" "I" "r" 9 41 41 0 "" ""
+   load r10,"negative"
+   .traceevent "L" 4 "R" "S" "r" 10 41 41 0 "" ""
+   load r7,3
+   settp r8,256
+   settpcall r33,§llpratt.operators.prefix(),r7,r10,768
+   .traceevent "F" 4 "R" "I" "r" 33 41 41 0 "prefix" ""
+   .traceevent "A" 6 "R" "I" "r" 33 41 41 0 "ok" ""
+   .srcstep 42 42 17 "levell_settings.crexx" 54 3 40 "  ok = operators.infix(4,20,0,'product')"
+   .traceevent "V" 6 "R" "O" "r" 8 42 42 0 "operators" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 42 42 0 "" ""
+   load r10,20
+   .traceevent "L" 4 "R" "I" "r" 10 42 42 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 42 42 0 "" ""
+   load r12,"product"
+   .traceevent "L" 4 "R" "S" "r" 12 42 42 0 "" ""
+   load r7,5
+   settp r8,256
+   settpcall r33,§llpratt.operators.infix(),r7,r12,768
+   .traceevent "F" 4 "R" "I" "r" 33 42 42 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 33 42 42 0 "ok" ""
+   .srcstep 43 43 17 "levell_settings.crexx" 55 3 41 "  ok = operators.infix(5,20,0,'quotient')"
+   .traceevent "V" 6 "R" "O" "r" 8 43 43 0 "operators" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 43 43 0 "" ""
+   load r10,20
+   .traceevent "L" 4 "R" "I" "r" 10 43 43 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 43 43 0 "" ""
+   load r12,"quotient"
+   .traceevent "L" 4 "R" "S" "r" 12 43 43 0 "" ""
+   load r7,5
+   settp r8,256
+   settpcall r33,§llpratt.operators.infix(),r7,r12,768
+   .traceevent "F" 4 "R" "I" "r" 33 43 43 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 33 43 43 0 "ok" ""
+   .srcstep 52 52 17 "levell_settings.crexx" 56 3 45 "  dfa = .llmunch..automaton.loaded(lexerdata())"
+   .meta "levell_settings.language.dfa"="b" ".llmunch..automaton" r14
+   .srcstep 51 51 17 "levell_settings.crexx" 56 36 45 "  dfa = .llmunch..automaton.loaded(lexerdata())"
+   .meta "levell_settings.language.result"="b" ".binary" r35
+   .srcstep 44 44 17 "levell_settings.crexx" 77 3 19 "  result = .binary"
+   null r35
+   load r36,0x3146444c120000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000010000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000040000000500000006000000070000000000000008000000090000000a0000000b0000000b0000000b0000000b0000000b0000000b0000000b0000000b0000000b0000000b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffff06000000070000000400000002000000030000000500000001000000ffffffffffffffffffffffff00000000010000000100000001000000000000000200000003000000040000000500000006000000070000000800000009000000000000000a0000000b000000000000000c0000000d0000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000d0000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000d0000000e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f0000000000000010000000000000000c0000000d0000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000d0000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000d0000000e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000000000000000000000f0000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012000000
+   .traceevent "L" 4 "R" "X" "r" 36 52 52 0 "" ""
+   .traceevent "A" 6 "R" "X" "r" 36 52 52 0 "chunk" ""
+   .srcstep 49 49 17 "levell_settings.crexx" 79 3 30 "  call binappend result,chunk"
+   .srcstep 45 45 14 "binary.crexx" 350 29 32 "  arg expose dst = .binary, src = .binary"
+   .traceevent "V" 6 "R" "X" "r" 36 52 52 0 "chunk" ""
+   .srcstep 46 46 25 "binary.crexx" 351 3 13 "  result = 0"
+   load r41,0
+   .traceevent "L" 4 "R" "I" "r" 41 46 46 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 41 46 46 0 "result" ""
+   .srcstep 47 47 25 "binary.crexx" 352 13 28 "  assembler bappend dst,src"
+   .traceevent "V" 6 "R" "X" "r" 35 52 52 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 36 52 52 0 "src" ""
+   bappend r35,r36
+   .srcstep 48 48 25 "binary.crexx" 353 13 28 "  assembler blen result,dst"
+   .traceevent "V" 6 "R" "I" "r" 41 52 52 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 35 52 52 0 "result" ""
+   blen r41,r35
+   .traceevent "V" 6 "R" "I" "r" 41 52 52 0 "result" ""
+   copy r39,r41
+   .traceevent "A" 6 "R" "I" "r" 39 52 52 0 "__inline_unused_1456" ""
+   .srcstep 50 50 17 "levell_settings.crexx" 80 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 35 52 52 0 "result" ""
+   bcopy r34,r35
+l8384bexprend:
+   endlife r36
+   endlife r35
+   .meta "levell_settings.language.result"
+   load r37,1
+   settpswapcall r14,§llmunch.automaton.§factory.loaded(),r37,r34,768,r38
+   swap r34,r38
+   .traceevent "F" 4 "R" "O" "r" 14 52 52 0 "§factory.loaded" ""
+   .traceevent "A" 6 "R" "O" "r" 14 52 52 0 "dfa" ""
+   .srcstep 53 53 17 "levell_settings.crexx" 57 3 88 "  result = .lllanguage..definition.operatorform(dfa,operators,'arithmetic','utf8','','')"
+   .meta "levell_settings.language.result"="b" ".lllanguage..definition" r30
+   .traceevent "V" 6 "R" "O" "r" 14 53 53 0 "dfa" ""
+   .traceevent "V" 6 "R" "O" "r" 8 53 53 0 "operators" ""
+   load r16,"arithmetic"
+   .traceevent "L" 4 "R" "S" "r" 16 53 53 0 "" ""
+   load r17,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 17 53 53 0 "" ""
+   load r18,""
+   .traceevent "L" 4 "R" "S" "r" 18 53 53 0 "" ""
+   load r19,""
+   .traceevent "L" 4 "R" "S" "r" 19 53 53 0 "" ""
+   load r13,6
+   settp r14,256
+   settp r8,256
+   swap r15,r8
+   settp r16,768
+   settp r17,768
+   settp r18,768
+   settpcall r30,§lllanguage.definition.§factory.operatorform(),r13,r19,768
+   swap r8,r15
+   .traceevent "F" 4 "R" "O" "r" 30 53 53 0 "§factory.operatorform" ""
+   .traceevent "A" 6 "R" "O" "r" 30 53 53 0 "result" ""
+   .srcstep 54 54 17 "levell_settings.crexx" 58 3 32 "  comments = .llcomments..rules()"
+   .meta "levell_settings.language.comments"="b" ".llcomments..rules" r21
+   load r38,0
+   call r21,§llcomments.rules.§factory(),r38
+   .traceevent "F" 4 "R" "O" "r" 21 54 54 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 21 54 54 0 "comments" ""
+   .srcstep 55 55 17 "levell_settings.crexx" 59 3 56 "  ok = comments.add('hash.notes','line','#','',0,13,288)"
+   .traceevent "V" 6 "R" "O" "r" 21 55 55 0 "comments" ""
+   load r22,"hash.notes"
+   .traceevent "L" 4 "R" "S" "r" 22 55 55 0 "" ""
+   load r23,"line"
+   .traceevent "L" 4 "R" "S" "r" 23 55 55 0 "" ""
+   load r24,"#"
+   .traceevent "L" 4 "R" "S" "r" 24 55 55 0 "" ""
+   load r25,""
+   .traceevent "L" 4 "R" "S" "r" 25 55 55 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 55 55 0 "" ""
+   load r27,13
+   .traceevent "L" 4 "R" "I" "r" 27 55 55 0 "" ""
+   load r28,288
+   .traceevent "L" 4 "R" "I" "r" 28 55 55 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 55 55 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 55 55 0 "ok" ""
+   .srcstep 56 56 17 "levell_settings.crexx" 60 3 58 "  ok = comments.add('slash.notes','line','//','',0,14,318)"
+   .traceevent "V" 6 "R" "O" "r" 21 56 56 0 "comments" ""
+   load r22,"slash.notes"
+   .traceevent "L" 4 "R" "S" "r" 22 56 56 0 "" ""
+   load r23,"line"
+   .traceevent "L" 4 "R" "S" "r" 23 56 56 0 "" ""
+   load r24,"//"
+   .traceevent "L" 4 "R" "S" "r" 24 56 56 0 "" ""
+   load r25,""
+   .traceevent "L" 4 "R" "S" "r" 25 56 56 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 56 56 0 "" ""
+   load r27,14
+   .traceevent "L" 4 "R" "I" "r" 27 56 56 0 "" ""
+   load r28,318
+   .traceevent "L" 4 "R" "I" "r" 28 56 56 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 56 56 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 56 56 0 "ok" ""
+   .srcstep 57 57 17 "levell_settings.crexx" 61 3 57 "  ok = comments.add('c.notes','block','/*','*/',0,15,350)"
+   .traceevent "V" 6 "R" "O" "r" 21 57 57 0 "comments" ""
+   load r22,"c.notes"
+   .traceevent "L" 4 "R" "S" "r" 22 57 57 0 "" ""
+   load r23,"block"
+   .traceevent "L" 4 "R" "S" "r" 23 57 57 0 "" ""
+   load r24,"/*"
+   .traceevent "L" 4 "R" "S" "r" 24 57 57 0 "" ""
+   load r25,"*/"
+   .traceevent "L" 4 "R" "S" "r" 25 57 57 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 57 57 0 "" ""
+   load r27,15
+   .traceevent "L" 4 "R" "I" "r" 27 57 57 0 "" ""
+   load r28,350
+   .traceevent "L" 4 "R" "I" "r" 28 57 57 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 57 57 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 57 57 0 "ok" ""
+   .srcstep 58 58 17 "levell_settings.crexx" 62 3 61 "  ok = comments.add('rexx.notes','nested','(*','*)',0,16,384)"
+   .traceevent "V" 6 "R" "O" "r" 21 58 58 0 "comments" ""
+   load r22,"rexx.notes"
+   .traceevent "L" 4 "R" "S" "r" 22 58 58 0 "" ""
+   load r23,"nested"
+   .traceevent "L" 4 "R" "S" "r" 23 58 58 0 "" ""
+   load r24,"(*"
+   .traceevent "L" 4 "R" "S" "r" 24 58 58 0 "" ""
+   load r25,"*)"
+   .traceevent "L" 4 "R" "S" "r" 25 58 58 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 58 58 0 "" ""
+   load r27,16
+   .traceevent "L" 4 "R" "I" "r" 27 58 58 0 "" ""
+   load r28,384
+   .traceevent "L" 4 "R" "I" "r" 28 58 58 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 58 58 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 58 58 0 "ok" ""
+   .srcstep 59 59 17 "levell_settings.crexx" 63 3 64 "  ok = comments.add('angle.notes','block','<!--','-->',1,17,422)"
+   .traceevent "V" 6 "R" "O" "r" 21 59 59 0 "comments" ""
+   load r22,"angle.notes"
+   .traceevent "L" 4 "R" "S" "r" 22 59 59 0 "" ""
+   load r23,"block"
+   .traceevent "L" 4 "R" "S" "r" 23 59 59 0 "" ""
+   load r24,"<!--"
+   .traceevent "L" 4 "R" "S" "r" 24 59 59 0 "" ""
+   load r25,"-->"
+   .traceevent "L" 4 "R" "S" "r" 25 59 59 0 "" ""
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 59 59 0 "" ""
+   load r27,17
+   .traceevent "L" 4 "R" "I" "r" 27 59 59 0 "" ""
+   load r28,422
+   .traceevent "L" 4 "R" "I" "r" 28 59 59 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 59 59 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 59 59 0 "ok" ""
+   .srcstep 60 60 17 "levell_settings.crexx" 64 3 60 "  ok = comments.add('long.hash','nested','##','$$',0,18,477)"
+   .traceevent "V" 6 "R" "O" "r" 21 60 60 0 "comments" ""
+   load r22,"long.hash"
+   .traceevent "L" 4 "R" "S" "r" 22 60 60 0 "" ""
+   load r23,"nested"
+   .traceevent "L" 4 "R" "S" "r" 23 60 60 0 "" ""
+   load r24,"##"
+   .traceevent "L" 4 "R" "S" "r" 24 60 60 0 "" ""
+   load r25,"$$"
+   .traceevent "L" 4 "R" "S" "r" 25 60 60 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 60 60 0 "" ""
+   load r27,18
+   .traceevent "L" 4 "R" "I" "r" 27 60 60 0 "" ""
+   load r28,477
+   .traceevent "L" 4 "R" "I" "r" 28 60 60 0 "" ""
+   load r20,8
+   settp r21,256
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,768
+   settp r26,256
+   settp r27,256
+   settpcall r33,§llcomments.rules.add(),r20,r28,256
+   .traceevent "F" 4 "R" "I" "r" 33 60 60 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 33 60 60 0 "ok" ""
+   .srcstep 61 61 17 "levell_settings.crexx" 65 3 36 "  call result.usecomments(comments)"
+   .traceevent "V" 6 "R" "O" "r" 30 61 61 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 21 61 61 0 "comments" ""
+   load r29,2
+   settp r30,256
+   settpswapcall r38,§lllanguage.definition.usecomments(),r29,r21,256,r31
+   swap r21,r31
+   .traceevent "F" 4 "R" "V" "r" 38 61 61 0 "usecomments" ""
+   .srcstep 66 66 17 "levell_settings.crexx" 66 3 32 "  call result.unicode('17.0.0')"
+   .srcstep 62 62 33 "levell_settings.crexx" 66 8 14 "  call result.unicode('17.0.0')"
+   .traceevent "V" 6 "R" "O" "r" 30 62 62 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 62 62 0 "§this" ""
+   .srcstep 63 63 6 "lllanguage@rxfnsl.rxbin" 66 14 14 "  call result.unicode('17.0.0')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 64 64 25 "lllanguage.crexx" 100 5 30 "    _unicodeversion = version"
+   load r37,"17.0.0"
+   .traceevent "L" 4 "R" "S" "r" 37 64 64 0 "" ""
+   linkattr1 r38,r30,24
+   scopy r38,r37
+   unlink r38
+   .srcstep 65 65 6 "levell_settings.crexx" 66 8 32 "  call result.unicode('17.0.0')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 73 73 17 "levell_settings.crexx" 67 3 31 "  call result.lexical('','',-1)"
+   .srcstep 67 67 33 "levell_settings.crexx" 67 8 14 "  call result.lexical('','',-1)"
+   .traceevent "V" 6 "R" "O" "r" 30 67 67 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 67 67 0 "§this" ""
+   .srcstep 68 68 6 "lllanguage@rxfnsl.rxbin" 67 14 14 "  call result.lexical('','',-1)"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 69 69 25 "lllanguage.crexx" 117 5 27 "    _malformed = malformed; _unmatched = unmatched; _eof = eof"
+   load r36,""
+   .traceevent "L" 4 "R" "S" "r" 36 69 69 0 "" ""
+   linkattr1 r38,r30,14
+   scopy r38,r36
+   unlink r38
+   .srcstep 70 70 25 "lllanguage.crexx" 117 29 51 "    _malformed = malformed; _unmatched = unmatched; _eof = eof"
+   load r35,""
+   .traceevent "L" 4 "R" "S" "r" 35 70 70 0 "" ""
+   linkattr1 r38,r30,25
+   scopy r38,r35
+   unlink r38
+   .srcstep 71 71 25 "lllanguage.crexx" 117 53 63 "    _malformed = malformed; _unmatched = unmatched; _eof = eof"
+   load r34,-1
+   .traceevent "L" 4 "R" "I" "r" 34 71 71 0 "" ""
+   isetattr1 r30,10,r34
+   .srcstep 72 72 6 "levell_settings.crexx" 67 8 31 "  call result.lexical('','',-1)"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 78 78 17 "levell_settings.crexx" 68 3 31 "  call result.token(1,'number')"
+   .srcstep 74 74 33 "levell_settings.crexx" 68 8 14 "  call result.token(1,'number')"
+   .traceevent "V" 6 "R" "O" "r" 30 74 74 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 74 74 0 "§this" ""
+   .srcstep 75 75 6 "lllanguage@rxfnsl.rxbin" 68 14 14 "  call result.token(1,'number')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 76 76 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,2
+   load r29,"number"
+   .traceevent "L" 4 "R" "S" "r" 29 76 76 0 "" ""
+   scopy r38,r29
+   .traceevent "A" 6 "R" "S" "r" 38 76 76 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 77 77 6 "levell_settings.crexx" 68 8 31 "  call result.token(1,'number')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 83 83 17 "levell_settings.crexx" 69 3 29 "  call result.token(2,'plus')"
+   .srcstep 79 79 33 "levell_settings.crexx" 69 8 14 "  call result.token(2,'plus')"
+   .traceevent "V" 6 "R" "O" "r" 30 79 79 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 79 79 0 "§this" ""
+   .srcstep 80 80 6 "lllanguage@rxfnsl.rxbin" 69 14 14 "  call result.token(2,'plus')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 81 81 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,3
+   load r28,"plus"
+   .traceevent "L" 4 "R" "S" "r" 28 81 81 0 "" ""
+   scopy r38,r28
+   .traceevent "A" 6 "R" "S" "r" 38 81 81 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 82 82 6 "levell_settings.crexx" 69 8 29 "  call result.token(2,'plus')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 88 88 17 "levell_settings.crexx" 70 3 30 "  call result.token(3,'minus')"
+   .srcstep 84 84 33 "levell_settings.crexx" 70 8 14 "  call result.token(3,'minus')"
+   .traceevent "V" 6 "R" "O" "r" 30 84 84 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 84 84 0 "§this" ""
+   .srcstep 85 85 6 "lllanguage@rxfnsl.rxbin" 70 14 14 "  call result.token(3,'minus')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 86 86 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,4
+   load r27,"minus"
+   .traceevent "L" 4 "R" "S" "r" 27 86 86 0 "" ""
+   scopy r38,r27
+   .traceevent "A" 6 "R" "S" "r" 38 86 86 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 87 87 6 "levell_settings.crexx" 70 8 30 "  call result.token(3,'minus')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 93 93 17 "levell_settings.crexx" 71 3 30 "  call result.token(4,'times')"
+   .srcstep 89 89 33 "levell_settings.crexx" 71 8 14 "  call result.token(4,'times')"
+   .traceevent "V" 6 "R" "O" "r" 30 89 89 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 89 89 0 "§this" ""
+   .srcstep 90 90 6 "lllanguage@rxfnsl.rxbin" 71 14 14 "  call result.token(4,'times')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 91 91 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,5
+   load r26,"times"
+   .traceevent "L" 4 "R" "S" "r" 26 91 91 0 "" ""
+   scopy r38,r26
+   .traceevent "A" 6 "R" "S" "r" 38 91 91 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 92 92 6 "levell_settings.crexx" 71 8 30 "  call result.token(4,'times')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 98 98 17 "levell_settings.crexx" 72 3 31 "  call result.token(5,'divide')"
+   .srcstep 94 94 33 "levell_settings.crexx" 72 8 14 "  call result.token(5,'divide')"
+   .traceevent "V" 6 "R" "O" "r" 30 94 94 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 94 94 0 "§this" ""
+   .srcstep 95 95 6 "lllanguage@rxfnsl.rxbin" 72 14 14 "  call result.token(5,'divide')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 96 96 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,6
+   load r25,"divide"
+   .traceevent "L" 4 "R" "S" "r" 25 96 96 0 "" ""
+   scopy r38,r25
+   .traceevent "A" 6 "R" "S" "r" 38 96 96 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 97 97 6 "levell_settings.crexx" 72 8 31 "  call result.token(5,'divide')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 103 103 17 "levell_settings.crexx" 73 3 31 "  call result.token(6,'lparen')"
+   .srcstep 99 99 33 "levell_settings.crexx" 73 8 14 "  call result.token(6,'lparen')"
+   .traceevent "V" 6 "R" "O" "r" 30 99 99 0 "result" ""
+   .traceevent "A" 6 "R" "O" "r" 30 99 99 0 "§this" ""
+   .srcstep 100 100 6 "lllanguage@rxfnsl.rxbin" 73 14 14 "  call result.token(6,'lparen')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   assertinitialized r30
+   .srcstep 101 101 25 "lllanguage.crexx" 133 5 27 "    _tokens[id + 1] = name"
+   linkattr1 r31,r30,23
+   minlinkattr1 r38,r31,7
+   load r24,"lparen"
+   .traceevent "L" 4 "R" "S" "r" 24 101 101 0 "" ""
+   scopy r38,r24
+   .traceevent "A" 6 "R" "S" "r" 38 101 101 0 "_tokens" ""
+   unlinkn r38,r31
+   .srcstep 102 102 6 "levell_settings.crexx" 73 8 31 "  call result.token(6,'lparen')"
+   .traceevent "V" 6 "R" "O" "r" 30 0 0 0 "§this" ""
+   .srcstep 104 104 17 "levell_settings.crexx" 74 3 31 "  call result.token(7,'rparen')"
+   .traceevent "V" 6 "R" "O" "r" 30 104 104 0 "result" ""
+   load r44,7
+   .traceevent "L" 4 "R" "I" "r" 44 104 104 0 "" ""
+   load r45,"rparen"
+   .traceevent "L" 4 "R" "S" "r" 45 104 104 0 "" ""
+   load r42,3
+   settp r30,256
+   swap r43,r30
+   settpcall r38,§lllanguage.definition.token(),r42,r45,768
+   swap r30,r43
+   .traceevent "F" 4 "R" "V" "r" 38 104 104 0 "token" ""
+   .srcstep 105 105 17 "levell_settings.crexx" 75 3 16 "  return result"
+   .traceevent "V" 6 "R" "O" "r" 30 105 105 0 "result" ""
+   ret r30
+   .meta "levell_settings.language.comments"
+   .meta "levell_settings.language.dfa"
+   .meta "levell_settings.language.graph"
+   .meta "levell_settings.language.id"
+   .meta "levell_settings.language.ok"
+   .meta "levell_settings.language.operators"
+   .meta "levell_settings.language.result"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.definition.§factory.operatorform() .expose=lllanguage.definition.§factory.operatorform
+   .meta "lllanguage.definition.§factory.operatorform"="b" ".lllanguage..definition" §lllanguage.definition.§factory.operatorform() "dfa=.llmunch..automaton,operators=.llpratt..operators,name=.string,encoding=.string,?opening=.string,?closing=.string"
+   .meta "lllanguage.definition.§factory.operatorform"=".autoload" "rxfnsl"
+
+§lllanguage.definition.usecomments() .expose=lllanguage.definition.usecomments
+   .meta "lllanguage.definition.usecomments"="b" ".void" §lllanguage.definition.usecomments() "policies=.llcomments..rules"
+   .meta "lllanguage.definition.usecomments"=".autoload" "rxfnsl"
+
+§lllanguage.definition.token() .expose=lllanguage.definition.token
+   .meta "lllanguage.definition.token"="b" ".void" §lllanguage.definition.token() "id=.int,name=.string"
+   .meta "lllanguage.definition.token"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcomments@rxfnsl.rxbin */
+
+§llcomments.rules.§factory() .expose=llcomments.rules.§factory
+   .meta "llcomments.rules.§factory"="b" ".llcomments..rules" §llcomments.rules.§factory() ""
+   .meta "llcomments.rules.§factory"=".autoload" "rxfnsl"
+
+§llcomments.rules.add() .expose=llcomments.rules.add
+   .meta "llcomments.rules.add"="b" ".int" §llcomments.rules.add() "name=.string,form=.string,opening=.string,?closing=.string,?keep=.int,?line=.int,?byte=.int"
+   .meta "llcomments.rules.add"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llmunch@rxfnsl.rxbin */
+
+§llmunch.automaton.§factory.loaded() .expose=llmunch.automaton.§factory.loaded
+   .meta "llmunch.automaton.§factory.loaded"="b" ".llmunch..automaton" §llmunch.automaton.§factory.loaded() "data=.binary"
+   .meta "llmunch.automaton.§factory.loaded"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.grammar.§factory() .expose=llcore.grammar.§factory
+   .meta "llcore.grammar.§factory"="b" ".llcore..grammar" §llcore.grammar.§factory() "profile=.string"
+   .meta "llcore.grammar.§factory"=".autoload" "rxfnsl"
+
+§llcore.grammar.add() .expose=llcore.grammar.add
+   .meta "llcore.grammar.add"="b" ".int" §llcore.grammar.add() "op=.int,a=.int,b=.int,label=.string,line=.int"
+   .meta "llcore.grammar.add"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llpratt@rxfnsl.rxbin */
+
+§llpratt.operators.§factory() .expose=llpratt.operators.§factory
+   .meta "llpratt.operators.§factory"="b" ".llpratt..operators" §llpratt.operators.§factory() "atom=.int,open=.int,close=.int,?atomname=.string"
+   .meta "llpratt.operators.§factory"=".autoload" "rxfnsl"
+
+§llpratt.operators.infix() .expose=llpratt.operators.infix
+   .meta "llpratt.operators.infix"="b" ".int" §llpratt.operators.infix() "symbol=.int,power=.int,right=.int,name=.string"
+   .meta "llpratt.operators.infix"=".autoload" "rxfnsl"
+
+§llpratt.operators.prefix() .expose=llpratt.operators.prefix
+   .meta "llpratt.operators.prefix"="b" ".int" §llpratt.operators.prefix() "symbol=.int,name=.string"
+   .meta "llpratt.operators.prefix"=".autoload" "rxfnsl"

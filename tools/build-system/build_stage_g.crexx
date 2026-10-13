@@ -444,6 +444,8 @@ main: procedure = .int
     unicode_tools_work = unicode_work || "/tools"
     unicode_imports = imports_root || "/unicode-tools"
 
+    level_l_runtime = bin_dir || "/rxfnsl.rxbin"
+    gennorm2_language = bin_dir || "/gennorm2_language.rxbin"
     level_l_gennorm2_source = unicode_tools_source || "/level_l_gennorm2.crexx"
     unicode_normprops_source = unicode_tools_source || "/unicode_normprops.crexx"
     encoding_table_source = unicode_tools_source || "/encoding_table.crexx"
@@ -457,7 +459,12 @@ main: procedure = .int
       return 1
     end
 
-    level_l_gennorm2_key = action_key(tool_identity || ":level_l_gennorm2:-x", level_l_gennorm2_source, library)
+    if stage_import(cmake, unicode_tool_base_imports, level_l_runtime, "rxfnsl.rxbin") <> 0 | stage_import(cmake, unicode_tool_base_imports, gennorm2_language, "gennorm2_language.rxbin") <> 0 then do
+      call pool.close()
+      return 1
+    end
+
+    level_l_gennorm2_key = action_key(tool_identity || ":level_l_gennorm2:-x", level_l_gennorm2_source, library, level_l_runtime, gennorm2_language)
     unicode_normprops_key = action_key(tool_identity || ":unicode_normprops:-x", unicode_normprops_source, library)
     encoding_table_key = action_key(tool_identity || ":encoding_table:-x", encoding_table_source, library)
     casefold_table_key = action_key(tool_identity || ":casefold_table:-x", casefold_table_source, library)
@@ -604,7 +611,7 @@ main: procedure = .int
     casefold_link_key = action_key("link-generator:casefold", rxlink, generate_casefold_bin, casefold_table_bin)
     case_mapping_link_key = action_key("link-generator:case-mapping", rxlink, generate_case_mapping_bin, case_mapping_table_bin)
     grapheme_link_key = action_key("link-generator:grapheme", rxlink, generate_grapheme_bin, grapheme_table_bin)
-    normalization_link_key = action_key("link-generator:normalization", rxlink, generate_normalization_bin, level_l_gennorm2_bin, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, unicode_d_bin)
+    normalization_link_key = action_key("link-generator:normalization", rxlink, generate_normalization_bin, level_l_gennorm2_bin, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, unicode_d_bin, level_l_runtime, gennorm2_language)
 
     encoding_link_argv = .string[]
     call arrayappend encoding_link_argv, rxlink
@@ -641,6 +648,8 @@ main: procedure = .int
     call arrayappend normalization_link_argv, linked_generator_dir || "/normalization_generator"
     call arrayappend normalization_link_argv, generate_normalization_bin
     call arrayappend normalization_link_argv, level_l_gennorm2_bin
+    call arrayappend normalization_link_argv, level_l_runtime
+    call arrayappend normalization_link_argv, gennorm2_language
     call arrayappend normalization_link_argv, unicode_gennorm2_bin
     call arrayappend normalization_link_argv, unicode_data_bin
     call arrayappend normalization_link_argv, unicode_normprops_bin

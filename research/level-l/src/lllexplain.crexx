@@ -1,0 +1,103 @@
+/* cREXX License (MIT). Exact winning-rule reachability in generated DFAs. */
+options levell
+namespace lllexplain expose analysis
+import rxfnsb
+
+/** The generated ASCII table's accepting states already encode rule priority.
+ * BFS from the start finds a shortest complete token selecting a rule.
+ * Exhausting all reachable states proves no token can select it, provided
+ * each authored rule has a distinct nonzero accept ID. EOF ends the witness.
+ */
+analysis: class
+  _table = .binary
+  _states = .int
+  _classes = .int
+  _offset = .int
+  _valid = .int
+  _error = .string
+  _witness = .binary
+  _work = .int
+  *: factory
+    arg table = .binary
+    _table = table; _valid = 0; _error = ''; _work = 0; _witness = '' as .binary
+    return
+  validate: method = .int
+    if _valid then return 1
+    if <blen>(_table) < 136 then do
+      _error = 'truncated DFA table'; return 0
+    end
+    _states = <at..i32>(0) _table; _classes = <at..i32>(4) _table
+    if _states < 1 | _states > 2048 | _classes < 1 | _classes > 128 then do
+      _error = 'invalid DFA shape'; return 0
+    end
+    _offset = 136 + _states * 4
+    if <blen>(_table) <> _offset + _states * _classes * 4 then do
+      _error = 'invalid DFA table extent'; return 0
+    end
+    do byte = 0 to 127
+      if <at..u8>(8 + byte) _table >= _classes then do
+        _error = 'invalid DFA alphabet class'; return 0
+      end
+    end
+    do cell = 0 to _states * _classes - 1
+      target = <at..i32>(_offset + cell * 4) _table
+      if target < 0 | target > _states then do
+        _error = 'invalid DFA transition'; return 0
+      end
+    end
+    _valid = 1; return 1
+  next: method = .int
+    arg state = .int, byte = .int
+    if state = 0 | byte < 0 | byte > 127 then return 0
+    cls = <at..u8>(8 + byte) _table
+    return <at..i32>(_offset + ((state - 1) * _classes + cls) * 4) _table
+  accept: method = .int
+    arg state = .int
+    if state = 0 then return 0
+    return <at..i32>(136 + (state - 1) * 4) _table
+  search: method = .int
+    arg kind = .int, name = .string, line = .int, budget = 1000000
+    if validate() = 0 | kind = 0 then return 3
+    seen = .int[]; predecessor = .int[]; symbol = .int[]; agenda = .int[]
+    agenda[1] = 1; seen[1] = 1; at = 1; _work = 0; _witness = '' as .binary
+    do while at <= agenda[0]
+      state = agenda[at]; at = at + 1
+      if accept(state) = kind then do
+        do while state <> 1
+          _witness = x2bin(right(d2x(symbol[state]),2,'0')) || _witness
+          state = predecessor[state]
+        end
+        _error = name || ' (line ' || line || ') is selected by token 0x' || bin2x(_witness)
+        return 0
+      end
+      do byte = 0 to 127
+        _work = _work + 1
+        if _work > budget then do
+          _error = 'DFA reachability budget exhausted; rule reachability not established'; return 2
+        end
+        target = next(state,byte)
+        if target > 0 then do
+          if seen[target] = 0 then do
+            seen[target] = 1; predecessor[target] = state; symbol[target] = byte
+            agenda[agenda[0] + 1] = target
+          end
+        end
+      end
+    end
+    _error = name || ' (line ' || line || ') can never be selected: no reachable accepting state carries its rule ID. Check overlap and earlier-rule priority.'
+    return 1
+  winner: method = .int
+    arg text = .binary
+    if validate() = 0 then return 0
+    state = 1
+    do at = 0 to <blen>(text) - 1
+      state = next(state,<at..u8>(at) text)
+      if state = 0 then return 0
+    end
+    return accept(state)
+  witness: method = .binary
+    return _witness
+  message: method = .string
+    return _error
+  work: method = .int
+    return _work

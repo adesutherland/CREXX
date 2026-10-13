@@ -1,0 +1,24 @@
+{
+  "revision": 1,
+  "status": "approved programme; workload manifest frozen before new engines",
+  "implementation_unit": "byte or named token; preserve original source bytes",
+  "cases": [
+    {"id":"C01", "purpose":"shared lexer surface", "source":"specs/tinyexpr.levell", "observations":["kinds","spans","EOF","diagnostics"]},
+    {"id":"C02", "purpose":"complete configuration format", "language":"nested sections, assignments, quoted values, comments", "profiles":["ordered","contextfree"], "observations":["acceptance","named tree","format transformation"]},
+    {"id":"C03", "purpose":"standalone binary lexer", "language":"ASCII framing with NUL payload markers", "observations":["byte spans","NUL distinct from EOF","malformed input"]},
+    {"id":"C04", "purpose":"existing-token parser", "language":"arithmetic", "profiles":["ordered","contextfree"], "observations":["precedence","associativity","evaluation","spans"]},
+    {"id":"C05", "purpose":"embedded languages", "language":"text with delimited arithmetic interpolation", "observations":["boundary contract","source mapping","unsafe boundary rejection"]},
+    {"id":"C06", "purpose":"RexxScript expressions and statements", "source":"owning RexxScript tests and evaluator", "observations":["syntax","value","error location"]},
+    {"id":"C07", "purpose":"Mike language diversity", "languages":["Pascal","PLM","BASIC","Lisp","Prolog"], "observations":["token policy","nested constructs","trees"], "scope":"selected pinned fragments; all eight frontends remain in SOURCE-AUDIT.md"},
+    {"id":"C08", "purpose":"B/G/C initial AST and migration", "features":["soft keywords","label/assignment priority","abuttal","nested comments","continuation","clause boundaries","IF/THEN/ELSE","PARSE template","procedure grouping"], "observations":["source tree","provenance","invariant checks","rewrite projection"]},
+    {"id":"C09", "purpose":"Unicode rule-file consumer", "source":"pinned existing Level L bootstrap example", "observations":["unchanged surface","Unicode capability rejection or execution","byte/scalar mapping"]},
+    {"id":"A01", "purpose":"priority witness", "grammar":"('a' / 'ab') 'c'", "input":"abc", "ordered_accepts":false, "contextfree_accepts":true},
+    {"id":"A02", "purpose":"mixed left recursion", "source":"specs/mixed.peg and mixed-factored.peg", "observations":["reference differences","rule factoring","tree"]},
+    {"id":"A03", "purpose":"overlapping expansion", "grammar":"S <- &E 'x' S / 'x'; E <- E 'x' / 'x'", "input_family":"x^n", "observations":["expansions","memo entries","reachable nodes"]},
+    {"id":"A04", "purpose":"lexer rollback", "source":"specs/rollback.lex", "input_family":"a^n", "observations":["transitions","token agreement","linear-scan variant"]},
+    {"id":"A05", "purpose":"grammar admission", "features":["nullable repetition","left-corner cycle","LL conflict","LR1 not LALR1","genuine ambiguity","unreachable lexical rule","predicate priority"]},
+    {"id":"A06", "purpose":"lifecycle", "features":["independent contexts","large then small","deep nesting","resource exhaustion","mutation invalidates certificate","invalid source span"]},
+    {"id":"D01", "purpose":"recovery corpus", "operations":["delete","insert","substitute","truncate"], "selection":"deterministic development and held-out partitions", "observations":["clean-input invariance","repair cost","tree preservation","later structure","lexical failures"]}
+  ],
+  "measurement_policy":"No timings before concrete fixture, expected-result and source/tool manifests are frozen. No cross-profile speed comparisons presented as equivalent work."
+}

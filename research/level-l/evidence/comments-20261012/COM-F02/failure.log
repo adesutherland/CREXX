@@ -1,0 +1,12 @@
+COMMENTS|6|SHIELDED|0
+STATUS|1|BYTE|21
+MESSAGE|unexpected 'next'; expected separator, end of input
+TOKEN|identifier|0|4|706F7274
+TOKEN|equals|4|5|3D
+TOKEN|number|5|6|31
+TOKEN|identifier|21|25|6E657874
+TOKEN|equals|25|26|3D
+TOKEN|number|26|27|32
+COMMENT_TARGET at line 2, column 4 (byte 21): unexpected 'next'; expected separator, end of input
+  -->next=2
+     ^

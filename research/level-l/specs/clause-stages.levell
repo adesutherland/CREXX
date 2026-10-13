@@ -1,0 +1,27 @@
+/* Research finite-context fragment, not a complete Rexx grammar. */
+options levell
+namespace clauses
+read: parser semantics contextfree input tokens start document
+word: token = 1
+assign: token = 2
+comma: token = 3
+newline: token = 4
+semi: token = 5
+sayword: token = 6
+normalize: tokenstage start 1
+continuation: transform stage normalize state 0 take comma newline emit skip next 1
+terminator: transform stage normalize state 0 take newline emit semi next 1
+classify: tokenstage start 1
+clause.start: transform stage classify state 0 take semi emit copy next 1
+keyword.say: transform stage classify state 1 take word text 'say' unless next assign emit sayword next 2
+clause.body: transform stage classify state 1 take any emit copy next 2
+name: rule = word
+argument: rule = word
+assignment: rule = name assign argument
+command: rule = sayword argument
+statement: rule = assignment | command
+document: rule = semi* (statement semi+)*
+name.shape: tree rule name kind 1 arity 0
+argument.shape: tree rule argument kind 2 arity 0
+assignment.shape: tree rule assignment kind 3 arity 2
+command.shape: tree rule command kind 4 arity 1

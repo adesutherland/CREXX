@@ -1,0 +1,107 @@
+/* Full native c14 recovery reference correspondence, including raw error trees. */
+options levell
+import rxfnsb
+import llcore
+import llc14
+import llc14cost
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 & argv[0] <> 3 then return 2
+  survey = 0
+  if argv[0] = 3 then survey = argv[3] = 'survey'
+  failures = 0; cases = 0; name = ''; root = 1; input = .llcore..stream; ok = .int
+  better = 0; worse = 0; tied = 0; exhausted = 0; cleanchecked = 0
+  graph = .llc14..grammar()
+  do while lines(argv[1])
+    row = linein(argv[1]); command = word(row,1)
+    select command
+      when 'GRAMMAR' then do
+        name = word(row,2); graph = .llc14..grammar()
+      end
+      when 'CLAUSE' then do
+        id = word(row,2) as .int; op = word(row,3) as .int
+        a = word(row,4) as .int; b = word(row,5) as .int
+        value = decode(word(row,6)); label = word(row,7)
+        actualid = 0
+        select op
+          when 13 then actualid = graph.literal(value)
+          when 16 then actualid = graph.charset(value,a)
+          otherwise actualid = graph.node(op,label,a,b)
+        end
+        if actualid <> id then return 2
+      end
+      when 'EDGES' then do
+        id = word(row,2) as .int
+        do i = 3 to words(row)
+          ok = graph.edge(id,word(row,i) as .int)
+          if ok = 0 then return 2
+        end
+      end
+      when 'CASE' then do
+        cases = cases + 1; hex = word(row,2); source = decode(hex)
+        input = .llcore..stream(source); request = .llc14..parser(graph,root,input,3000000)
+        status = request.run()
+        if status > 1 then do
+          say 'ERROR:' name hex status request.error(); return 1
+        end
+        actual = 'C14|' || name || '|' || hex || '|' || status || '|' || request.cost() || '|' || request.canonical()
+        expected = linein(argv[2]); say actual
+        if actual \== expected then do
+          say 'DIFFERENCE: expected' expected; failures = failures + 1
+        end
+        if name = 'pruning' | survey then do
+          experimental = .llc14..parser(graph,root,input,3000000,'frontier-experiment')
+          trialstatus = experimental.run(); rank = 999
+          if trialstatus = 2 then exhausted = exhausted + 1
+          else if trialstatus > 2 then failures = failures + 1
+          else do
+            original = request.summary(); trial = experimental.summary()
+            rank = llc14cost..compare(trial,original,0)
+            if rank < 0 then better = better + 1
+            else if rank > 0 then worse = worse + 1
+            else tied = tied + 1
+            if status = 0 then do
+              cleanchecked = cleanchecked + 1
+              if trialstatus <> 0 | request.canonical() \== experimental.canonical() then failures = failures + 1
+            end
+            if name = 'pruning' then do
+              if trialstatus <> 1 | rank >= 0 | trial.evidence() <> 3 | trial.deleted() <> 0 | trial.missing() <> 4 then failures = failures + 1
+            end
+            if rank <> 0 then say 'FRONTIER_TREE|' || name || '|' || hex || '|' || experimental.canonical()
+          end
+          say 'FRONTIER|' || name || '|' || hex || '|' || trialstatus || '|' || rank || '|' || request.work() || '|' || experimental.work() || '|' || request.allocations() || '|' || experimental.allocations()
+          if name = 'pruning' & trialstatus = 2 then failures = failures + 1
+        end
+        arena = request.history()
+        if arena.validate(input.size()) = 0 | bincompare(request.source(),source) <> 0 then do
+          say 'INVALID HISTORY:' name hex; failures = failures + 1
+        end
+      end
+      otherwise do
+        say 'UNKNOWN:' row; return 2
+      end
+    end
+  end
+  if lines(argv[2]) then failures = failures + 1
+  input = .llcore..stream('abc' as .binary)
+  limited = .llc14..parser(graph,root,input,1)
+  if limited.run() <> 2 then failures = failures + 1
+  invalid = .llc14..grammar(); node = invalid.node(1,'',97)
+  malformed = .llc14..parser(invalid,node,input)
+  if malformed.run() <> 3 then failures = failures + 1
+  invalid = .llc14..grammar(); rule = invalid.node(5,'S'); body = invalid.literal(copies('a',512) as .binary)
+  ok = invalid.edge(rule,body); malformed = .llc14..parser(invalid,rule,input)
+  if malformed.run() <> 2 then failures = failures + 1
+  invalid = .llc14..grammar(); rule = invalid.node(5,'S'); body = invalid.node(1,'',97); ok = invalid.edge(rule,body)
+  tokenized = .llcore..stream.tokens('z' as .binary); ok = tokenized.append(97,0,1)
+  malformed = .llc14..parser(invalid,rule,tokenized)
+  if malformed.run() <> 3 then failures = failures + 1
+  say 'frontier_better='better 'worse='worse 'tied='tied 'exhausted='exhausted 'clean_checked='cleanchecked
+  say 'c14_reference_cases='cases
+  say 'c14_failures='failures
+  if failures > 0 then return 1
+  return 0
+decode: procedure = .binary
+  arg hex = .string
+  if hex = '-' then return '' as .binary
+  return x2bin(hex)

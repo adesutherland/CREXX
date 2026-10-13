@@ -1,0 +1,2204 @@
+/*
+ * SOURCE                 : reference-gennorm2.crexx
+ */
+
+.globals=3
+g0 .expose=level_l_gennorm2._level_l_error_message
+g1 .expose=level_l_gennorm2._level_l_error_offset
+g2 .expose=level_l_gennorm2._level_l_status
+
+level_l_gennorm2_lex() .locals=28 .expose=level_l_gennorm2.level_l_gennorm2_lex
+   .meta "level_l_gennorm2.level_l_gennorm2_lex"="b" ".binary" level_l_gennorm2_lex() "source=.string"
+   .srcstep 485 485 17 "reference-gennorm2.crexx" 8 1 110 "level_l_gennorm2_lex: procedure = .binary expose _level_l_status _level_l_error_offset _level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_message"="b" ".string" g0
+   .meta "level_l_gennorm2._level_l_error_offset"="b" ".int" g1
+   .meta "level_l_gennorm2._level_l_status"="b" ".int" g2
+   numsci 18,1,1
+   .srcstep 1 1 17 "reference-gennorm2.crexx" 9 7 23 "  arg source = .string"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.source"="b" ".string" a1
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.tokens"="b" ".binary" r1
+   .srcstep 2 2 17 "reference-gennorm2.crexx" 14 3 19 "  tokens = .binary"
+   null r1
+   .srcstep 3 3 17 "reference-gennorm2.crexx" 11 3 22 "  _level_l_status = 0"
+   load g2,0
+   .traceevent "L" 4 "R" "I" "g" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 2 3 3 0 "_level_l_status" ""
+   .srcstep 4 4 17 "reference-gennorm2.crexx" 12 3 28 "  _level_l_error_offset = 0"
+   load g1,0
+   .traceevent "L" 4 "R" "I" "g" 1 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 1 4 4 0 "_level_l_error_offset" ""
+   .srcstep 5 5 17 "reference-gennorm2.crexx" 13 3 30 "  _level_l_error_message = \"\""
+   load g0,""
+   .traceevent "L" 4 "R" "S" "g" 0 5 5 0 "" ""
+   .traceevent "A" 6 "R" "S" "g" 0 5 5 0 "_level_l_error_message" ""
+   .srcstep 6 6 17 "reference-gennorm2.crexx" 15 3 12 "  count = 0"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.count"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 6 6 0 "count" ""
+   .srcstep 7 7 17 "reference-gennorm2.crexx" 16 3 10 "  pos = 0"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.pos"="b" ".int" r12
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 7 7 0 "pos" ""
+   .srcstep 8 8 17 "reference-gennorm2.crexx" 17 3 12 "  start = 0"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.start"="b" ".int" r10
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 8 8 0 "start" ""
+   .srcstep 9 9 17 "reference-gennorm2.crexx" 18 3 41 "  source_len = <blen>(source as .binary)"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.source_len"="b" ".int" r4
+   .traceevent "V" 6 "R" "S" "a" 1 9 9 0 "source" ""
+   scopy r11,a1
+   stobin r11
+   blen r4,r11
+   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "source_len" ""
+   .srcstep 10 10 17 "reference-gennorm2.crexx" 19 3 33 "  scan_bytes = source as .binary"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.scan_bytes"="b" ".binary" r13
+   .traceevent "V" 6 "R" "S" "a" 1 10 10 0 "source" ""
+   scopy r13,a1
+   stobin r13
+   .traceevent "A" 6 "R" "X" "r" 13 10 10 0 "scan_bytes" ""
+   .srcstep 15 15 17 "reference-gennorm2.crexx" 20 3 44 "  call binresize scan_bytes, source_len + 1"
+   .srcstep 11 11 33 "reference-gennorm2.crexx" 20 44 44 "  call binresize scan_bytes, source_len + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "source_len" ""
+   iadd r19,r4,1
+   .traceevent "O" 4 "R" "I" "r" 19 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 11 11 0 "length" ""
+   .srcstep 12 12 25 "binary.crexx" 248 3 13 "  result = 0"
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 12 12 0 "result" ""
+   .srcstep 13 13 25 "binary.crexx" 249 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 13 0 0 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "length" ""
+   bresize r13,r19
+   .srcstep 14 14 25 "binary.crexx" 250 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 20 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 13 0 0 0 "scan_bytes" ""
+   blen r20,r13
+   .traceevent "V" 6 "R" "I" "r" 20 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 20 0 0 0 "__inline_unused_1986" ""
+   .srcstep 16 16 17 "reference-gennorm2.crexx" 23 3 15 "  yyaccept = 0"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.yyaccept"="b" ".int" r16
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 16 16 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 16 16 0 "yyaccept" ""
+   .srcstep 17 17 17 "reference-gennorm2.crexx" 24 3 12 "  state = 0"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.state"="b" ".int" r15
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 17 17 0 "state" ""
+   .srcstep 484 484 17 "reference-gennorm2.crexx" 25 3 5 "  do forever"
+l76dostart:
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.select_tmp"="b" ".int" r21
+   null r21
+   .traceevent "V" 6 "R" "I" "r" 15 0 0 0 "state" ""
+   icopy r21,r15
+   .traceevent "A" 6 "R" "I" "r" 21 0 0 0 "select_tmp" ""
+   .jtable jtable2672 auto
+   jumpi r21,jtable2672
+   br l2672dispatchend
+l2672dispatchcase0: .jcase jtable2672 0
+   .srcstep 18 18 17 "reference-gennorm2.crexx" 28 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.byte"="b" ".int" r11
+   .traceevent "V" 6 "R" "X" "r" 13 18 18 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 18 18 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 18 18 0 "byte" ""
+   .srcstep 19 19 17 "reference-gennorm2.crexx" 29 9 22 "        pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 19 19 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 19 19 0 "pos" ""
+   .srcstep 110 110 17 "reference-gennorm2.crexx" 30 9 24 "        if byte <= 0x2A then do"
+   .traceevent "V" 6 "R" "I" "r" 11 110 110 0 "byte" ""
+   ilte r8,r11,42
+   .traceevent "O" 4 "R" "B" "r" 8 110 110 0 "" ""
+   brf l296iffalse,r8
+   .srcstep 111 111 17 "reference-gennorm2.crexx" 30 25 29 "        if byte <= 0x2A then do"
+   .srcstep 62 62 17 "reference-gennorm2.crexx" 31 11 26 "          if byte <= 0x0D then do"
+   .traceevent "V" 6 "R" "I" "r" 11 62 62 0 "byte" ""
+   ilte r7,r11,13
+   .traceevent "O" 4 "R" "B" "r" 7 62 62 0 "" ""
+   brf l196iffalse,r7
+   .srcstep 63 63 17 "reference-gennorm2.crexx" 31 27 31 "          if byte <= 0x0D then do"
+   .srcstep 40 40 17 "reference-gennorm2.crexx" 32 13 28 "            if byte <= 0x09 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 40 40 0 "byte" ""
+   ilte r6,r11,9
+   .traceevent "O" 4 "R" "B" "r" 6 40 40 0 "" ""
+   brf l152iffalse,r6
+   .srcstep 41 41 17 "reference-gennorm2.crexx" 32 29 33 "            if byte <= 0x09 then do"
+   .srcstep 22 22 17 "reference-gennorm2.crexx" 33 15 30 "              if byte <= 0x00 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 22 22 0 "byte" ""
+   ilte r5,r11,0
+   .traceevent "O" 4 "R" "B" "r" 5 22 22 0 "" ""
+   brf l114iffalse,r5
+   .srcstep 23 23 17 "reference-gennorm2.crexx" 33 31 35 "              if byte <= 0x00 then do"
+   .srcstep 20 20 17 "reference-gennorm2.crexx" 34 17 26 "                state = 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 20 20 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 20 20 0 "state" ""
+   .srcstep 21 21 17 "reference-gennorm2.crexx" 35 17 24 "                iterate"
+   br l76doinc
+l114iffalse:
+   .srcstep 26 26 17 "reference-gennorm2.crexx" 37 15 30 "              if byte <= 0x08 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 26 26 0 "byte" ""
+   ilte r5,r11,8
+   .traceevent "O" 4 "R" "B" "r" 5 26 26 0 "" ""
+   brf l124iffalse,r5
+   .srcstep 27 27 17 "reference-gennorm2.crexx" 37 31 35 "              if byte <= 0x08 then do"
+   .srcstep 24 24 17 "reference-gennorm2.crexx" 38 17 26 "                state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 24 24 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 24 24 0 "state" ""
+   .srcstep 25 25 17 "reference-gennorm2.crexx" 39 17 24 "                iterate"
+   br l76doinc
+l124iffalse:
+   .srcstep 28 28 17 "reference-gennorm2.crexx" 41 15 24 "              state = 4"
+   load r15,4
+   .traceevent "L" 4 "R" "I" "r" 15 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 28 28 0 "state" ""
+   .srcstep 29 29 17 "reference-gennorm2.crexx" 42 15 22 "              iterate"
+   br l76doinc
+   br l152ifend
+   .srcstep 42 42 17 "reference-gennorm2.crexx" 43 13 16 "            end"
+l152iffalse:
+   .srcstep 32 32 17 "reference-gennorm2.crexx" 45 15 30 "              if byte <= 0x0A then do"
+   .traceevent "V" 6 "R" "I" "r" 11 32 32 0 "byte" ""
+   ilte r5,r11,10
+   .traceevent "O" 4 "R" "B" "r" 5 32 32 0 "" ""
+   brf l137iffalse,r5
+   .srcstep 33 33 17 "reference-gennorm2.crexx" 45 31 35 "              if byte <= 0x0A then do"
+   .srcstep 30 30 17 "reference-gennorm2.crexx" 46 17 26 "                state = 5"
+   load r15,5
+   .traceevent "L" 4 "R" "I" "r" 15 30 30 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 30 30 0 "state" ""
+   .srcstep 31 31 17 "reference-gennorm2.crexx" 47 17 24 "                iterate"
+   br l76doinc
+l137iffalse:
+   .srcstep 36 36 17 "reference-gennorm2.crexx" 49 15 30 "              if byte <= 0x0C then do"
+   .traceevent "V" 6 "R" "I" "r" 11 36 36 0 "byte" ""
+   ilte r5,r11,12
+   .traceevent "O" 4 "R" "B" "r" 5 36 36 0 "" ""
+   brf l147iffalse,r5
+   .srcstep 37 37 17 "reference-gennorm2.crexx" 49 31 35 "              if byte <= 0x0C then do"
+   .srcstep 34 34 17 "reference-gennorm2.crexx" 50 17 26 "                state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 34 34 0 "state" ""
+   .srcstep 35 35 17 "reference-gennorm2.crexx" 51 17 24 "                iterate"
+   br l76doinc
+l147iffalse:
+   .srcstep 38 38 17 "reference-gennorm2.crexx" 53 15 24 "              state = 6"
+   load r15,6
+   .traceevent "L" 4 "R" "I" "r" 15 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 38 38 0 "state" ""
+   .srcstep 39 39 17 "reference-gennorm2.crexx" 54 15 22 "              iterate"
+   br l76doinc
+l152ifend:
+   br l196ifend
+   .srcstep 64 64 17 "reference-gennorm2.crexx" 55 13 16 "            end"
+l196iffalse:
+   .srcstep 59 59 17 "reference-gennorm2.crexx" 58 13 28 "            if byte <= 0x22 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 59 59 0 "byte" ""
+   ilte r6,r11,34
+   .traceevent "O" 4 "R" "B" "r" 6 59 59 0 "" ""
+   brf l194iffalse,r6
+   .srcstep 60 60 17 "reference-gennorm2.crexx" 58 29 33 "            if byte <= 0x22 then do"
+   .srcstep 45 45 17 "reference-gennorm2.crexx" 59 15 29 "              if byte = 0x20 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 45 45 0 "byte" ""
+   ieq r5,r11,32
+   .traceevent "O" 4 "R" "B" "r" 5 45 45 0 "" ""
+   brf l165iffalse,r5
+   .srcstep 46 46 17 "reference-gennorm2.crexx" 59 30 34 "              if byte = 0x20 then do"
+   .srcstep 43 43 17 "reference-gennorm2.crexx" 60 17 26 "                state = 4"
+   load r15,4
+   .traceevent "L" 4 "R" "I" "r" 15 43 43 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 43 43 0 "state" ""
+   .srcstep 44 44 17 "reference-gennorm2.crexx" 61 17 24 "                iterate"
+   br l76doinc
+l165iffalse:
+   .srcstep 47 47 17 "reference-gennorm2.crexx" 63 15 24 "              state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 47 47 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 47 47 0 "state" ""
+   .srcstep 48 48 17 "reference-gennorm2.crexx" 64 15 22 "              iterate"
+   br l76doinc
+   br l194ifend
+   .srcstep 61 61 17 "reference-gennorm2.crexx" 65 13 16 "            end"
+l194iffalse:
+   .srcstep 51 51 17 "reference-gennorm2.crexx" 67 15 30 "              if byte <= 0x23 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 51 51 0 "byte" ""
+   ilte r5,r11,35
+   .traceevent "O" 4 "R" "B" "r" 5 51 51 0 "" ""
+   brf l179iffalse,r5
+   .srcstep 52 52 17 "reference-gennorm2.crexx" 67 31 35 "              if byte <= 0x23 then do"
+   .srcstep 49 49 17 "reference-gennorm2.crexx" 68 17 26 "                state = 7"
+   load r15,7
+   .traceevent "L" 4 "R" "I" "r" 15 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 49 49 0 "state" ""
+   .srcstep 50 50 17 "reference-gennorm2.crexx" 69 17 24 "                iterate"
+   br l76doinc
+l179iffalse:
+   .srcstep 55 55 17 "reference-gennorm2.crexx" 71 15 30 "              if byte <= 0x29 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 55 55 0 "byte" ""
+   ilte r5,r11,41
+   .traceevent "O" 4 "R" "B" "r" 5 55 55 0 "" ""
+   brf l189iffalse,r5
+   .srcstep 56 56 17 "reference-gennorm2.crexx" 71 31 35 "              if byte <= 0x29 then do"
+   .srcstep 53 53 17 "reference-gennorm2.crexx" 72 17 26 "                state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 53 53 0 "state" ""
+   .srcstep 54 54 17 "reference-gennorm2.crexx" 73 17 24 "                iterate"
+   br l76doinc
+l189iffalse:
+   .srcstep 57 57 17 "reference-gennorm2.crexx" 75 15 24 "              state = 9"
+   load r15,9
+   .traceevent "L" 4 "R" "I" "r" 15 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 57 57 0 "state" ""
+   .srcstep 58 58 17 "reference-gennorm2.crexx" 76 15 22 "              iterate"
+   br l76doinc
+l194ifend:
+l196ifend:
+   br l296ifend
+   .srcstep 112 112 17 "reference-gennorm2.crexx" 77 13 16 "            end"
+l296iffalse:
+   .srcstep 107 107 17 "reference-gennorm2.crexx" 81 11 26 "          if byte <= 0x3C then do"
+   .traceevent "V" 6 "R" "I" "r" 11 107 107 0 "byte" ""
+   ilte r7,r11,60
+   .traceevent "O" 4 "R" "B" "r" 7 107 107 0 "" ""
+   brf l294iffalse,r7
+   .srcstep 108 108 17 "reference-gennorm2.crexx" 81 27 31 "          if byte <= 0x3C then do"
+   .srcstep 81 81 17 "reference-gennorm2.crexx" 82 13 28 "            if byte <= 0x2F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 81 81 0 "byte" ""
+   ilte r6,r11,47
+   .traceevent "O" 4 "R" "B" "r" 6 81 81 0 "" ""
+   brf l241iffalse,r6
+   .srcstep 82 82 17 "reference-gennorm2.crexx" 82 29 33 "            if byte <= 0x2F then do"
+   .srcstep 67 67 17 "reference-gennorm2.crexx" 83 15 29 "              if byte = 0x2E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 67 67 0 "byte" ""
+   ieq r5,r11,46
+   .traceevent "O" 4 "R" "B" "r" 5 67 67 0 "" ""
+   brf l212iffalse,r5
+   .srcstep 68 68 17 "reference-gennorm2.crexx" 83 30 34 "              if byte = 0x2E then do"
+   .srcstep 65 65 17 "reference-gennorm2.crexx" 84 17 27 "                state = 10"
+   load r15,10
+   .traceevent "L" 4 "R" "I" "r" 15 65 65 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 65 65 0 "state" ""
+   .srcstep 66 66 17 "reference-gennorm2.crexx" 85 17 24 "                iterate"
+   br l76doinc
+l212iffalse:
+   .srcstep 69 69 17 "reference-gennorm2.crexx" 87 15 24 "              state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 69 69 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 69 69 0 "state" ""
+   .srcstep 70 70 17 "reference-gennorm2.crexx" 88 15 22 "              iterate"
+   br l76doinc
+   br l241ifend
+   .srcstep 83 83 17 "reference-gennorm2.crexx" 89 13 16 "            end"
+l241iffalse:
+   .srcstep 73 73 17 "reference-gennorm2.crexx" 91 15 30 "              if byte <= 0x39 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 73 73 0 "byte" ""
+   ilte r5,r11,57
+   .traceevent "O" 4 "R" "B" "r" 5 73 73 0 "" ""
+   brf l226iffalse,r5
+   .srcstep 74 74 17 "reference-gennorm2.crexx" 91 31 35 "              if byte <= 0x39 then do"
+   .srcstep 71 71 17 "reference-gennorm2.crexx" 92 17 27 "                state = 11"
+   load r15,11
+   .traceevent "L" 4 "R" "I" "r" 15 71 71 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 71 71 0 "state" ""
+   .srcstep 72 72 17 "reference-gennorm2.crexx" 93 17 24 "                iterate"
+   br l76doinc
+l226iffalse:
+   .srcstep 77 77 17 "reference-gennorm2.crexx" 95 15 30 "              if byte <= 0x3A then do"
+   .traceevent "V" 6 "R" "I" "r" 11 77 77 0 "byte" ""
+   ilte r5,r11,58
+   .traceevent "O" 4 "R" "B" "r" 5 77 77 0 "" ""
+   brf l236iffalse,r5
+   .srcstep 78 78 17 "reference-gennorm2.crexx" 95 31 35 "              if byte <= 0x3A then do"
+   .srcstep 75 75 17 "reference-gennorm2.crexx" 96 17 27 "                state = 13"
+   load r15,13
+   .traceevent "L" 4 "R" "I" "r" 15 75 75 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 75 75 0 "state" ""
+   .srcstep 76 76 17 "reference-gennorm2.crexx" 97 17 24 "                iterate"
+   br l76doinc
+l236iffalse:
+   .srcstep 79 79 17 "reference-gennorm2.crexx" 99 15 24 "              state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 79 79 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 79 79 0 "state" ""
+   .srcstep 80 80 17 "reference-gennorm2.crexx" 100 15 22 "              iterate"
+   br l76doinc
+l241ifend:
+   br l294ifend
+   .srcstep 109 109 17 "reference-gennorm2.crexx" 101 13 16 "            end"
+l294iffalse:
+   .srcstep 104 104 17 "reference-gennorm2.crexx" 104 13 28 "            if byte <= 0x40 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 104 104 0 "byte" ""
+   ilte r6,r11,64
+   .traceevent "O" 4 "R" "B" "r" 6 104 104 0 "" ""
+   brf l292iffalse,r6
+   .srcstep 105 105 17 "reference-gennorm2.crexx" 104 29 33 "            if byte <= 0x40 then do"
+   .srcstep 86 86 17 "reference-gennorm2.crexx" 105 15 30 "              if byte <= 0x3D then do"
+   .traceevent "V" 6 "R" "I" "r" 11 86 86 0 "byte" ""
+   ilte r5,r11,61
+   .traceevent "O" 4 "R" "B" "r" 5 86 86 0 "" ""
+   brf l254iffalse,r5
+   .srcstep 87 87 17 "reference-gennorm2.crexx" 105 31 35 "              if byte <= 0x3D then do"
+   .srcstep 84 84 17 "reference-gennorm2.crexx" 106 17 27 "                state = 14"
+   load r15,14
+   .traceevent "L" 4 "R" "I" "r" 15 84 84 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 84 84 0 "state" ""
+   .srcstep 85 85 17 "reference-gennorm2.crexx" 107 17 24 "                iterate"
+   br l76doinc
+l254iffalse:
+   .srcstep 90 90 17 "reference-gennorm2.crexx" 109 15 30 "              if byte <= 0x3E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 90 90 0 "byte" ""
+   ilte r5,r11,62
+   .traceevent "O" 4 "R" "B" "r" 5 90 90 0 "" ""
+   brf l264iffalse,r5
+   .srcstep 91 91 17 "reference-gennorm2.crexx" 109 31 35 "              if byte <= 0x3E then do"
+   .srcstep 88 88 17 "reference-gennorm2.crexx" 110 17 27 "                state = 15"
+   load r15,15
+   .traceevent "L" 4 "R" "I" "r" 15 88 88 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 88 88 0 "state" ""
+   .srcstep 89 89 17 "reference-gennorm2.crexx" 111 17 24 "                iterate"
+   br l76doinc
+l264iffalse:
+   .srcstep 92 92 17 "reference-gennorm2.crexx" 113 15 24 "              state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 92 92 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 92 92 0 "state" ""
+   .srcstep 93 93 17 "reference-gennorm2.crexx" 114 15 22 "              iterate"
+   br l76doinc
+   br l292ifend
+   .srcstep 106 106 17 "reference-gennorm2.crexx" 115 13 16 "            end"
+l292iffalse:
+   .srcstep 96 96 17 "reference-gennorm2.crexx" 117 15 30 "              if byte <= 0x46 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 96 96 0 "byte" ""
+   ilte r5,r11,70
+   .traceevent "O" 4 "R" "B" "r" 5 96 96 0 "" ""
+   brf l277iffalse,r5
+   .srcstep 97 97 17 "reference-gennorm2.crexx" 117 31 35 "              if byte <= 0x46 then do"
+   .srcstep 94 94 17 "reference-gennorm2.crexx" 118 17 27 "                state = 16"
+   load r15,16
+   .traceevent "L" 4 "R" "I" "r" 15 94 94 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 94 94 0 "state" ""
+   .srcstep 95 95 17 "reference-gennorm2.crexx" 119 17 24 "                iterate"
+   br l76doinc
+l277iffalse:
+   .srcstep 100 100 17 "reference-gennorm2.crexx" 121 15 29 "              if byte = 0x55 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 100 100 0 "byte" ""
+   ieq r5,r11,85
+   .traceevent "O" 4 "R" "B" "r" 5 100 100 0 "" ""
+   brf l287iffalse,r5
+   .srcstep 101 101 17 "reference-gennorm2.crexx" 121 30 34 "              if byte = 0x55 then do"
+   .srcstep 98 98 17 "reference-gennorm2.crexx" 122 17 27 "                state = 17"
+   load r15,17
+   .traceevent "L" 4 "R" "I" "r" 15 98 98 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 98 98 0 "state" ""
+   .srcstep 99 99 17 "reference-gennorm2.crexx" 123 17 24 "                iterate"
+   br l76doinc
+l287iffalse:
+   .srcstep 102 102 17 "reference-gennorm2.crexx" 125 15 24 "              state = 2"
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 102 102 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 102 102 0 "state" ""
+   .srcstep 103 103 17 "reference-gennorm2.crexx" 126 15 22 "              iterate"
+   br l76doinc
+l292ifend:
+l294ifend:
+l296ifend:
+   br l2672dispatchend
+l2672dispatchcase1: .jcase jtable2672 1
+   .srcstep 113 113 17 "reference-gennorm2.crexx" 133 7 65 "      call level_l_gennorm2_emit tokens, count, 0, source_len, 0"
+   .traceevent "V" 6 "R" "X" "r" 1 113 113 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 113 113 0 "count" ""
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 113 113 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 4 113 113 0 "source_len" ""
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 113 113 0 "" ""
+   load r0,5
+   call r8,level_l_gennorm2_emit(),r0
+   .traceevent "F" 4 "R" "I" "r" 8 113 113 0 "level_l_gennorm2_emit" ""
+   .srcstep 114 114 17 "reference-gennorm2.crexx" 134 7 20 "      return tokens"
+   .traceevent "V" 6 "R" "X" "r" 1 114 114 0 "tokens" ""
+   ret r1
+   br l2672dispatchend
+l2672dispatchcase2: .jcase jtable2672 2
+   .srcstep 115 115 17 "reference-gennorm2.crexx" 138 9 18 "        state = 3"
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 115 115 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 115 115 0 "state" ""
+   .srcstep 116 116 17 "reference-gennorm2.crexx" 139 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase3: .jcase jtable2672 3
+   .srcstep 117 117 17 "reference-gennorm2.crexx" 143 7 26 "      _level_l_status = 2"
+   load g2,2
+   .traceevent "L" 4 "R" "I" "g" 2 117 117 0 "" ""
+   .traceevent "A" 6 "R" "I" "g" 2 117 117 0 "_level_l_status" ""
+   .srcstep 118 118 17 "reference-gennorm2.crexx" 144 7 36 "      _level_l_error_offset = start"
+   .traceevent "V" 6 "R" "I" "r" 10 118 118 0 "start" ""
+   icopy g1,r10
+   .traceevent "A" 6 "R" "I" "g" 1 118 118 0 "_level_l_error_offset" ""
+   .srcstep 119 119 17 "reference-gennorm2.crexx" 145 7 66 "      _level_l_error_message = \"invalid gennorm2 input character\""
+   load g0,"invalid gennorm2 input character"
+   .traceevent "L" 4 "R" "S" "g" 0 119 119 0 "" ""
+   .traceevent "A" 6 "R" "S" "g" 0 119 119 0 "_level_l_error_message" ""
+   .srcstep 120 120 17 "reference-gennorm2.crexx" 146 7 20 "      return tokens"
+   .traceevent "V" 6 "R" "X" "r" 1 120 120 0 "tokens" ""
+   ret r1
+   br l2672dispatchend
+l2672dispatchcase4: .jcase jtable2672 4
+   .srcstep 121 121 17 "reference-gennorm2.crexx" 150 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 121 121 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 121 121 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 121 121 0 "byte" ""
+   .srcstep 125 125 17 "reference-gennorm2.crexx" 151 9 23 "        if byte = 0x09 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 125 125 0 "byte" ""
+   ieq r8,r11,9
+   .traceevent "O" 4 "R" "B" "r" 8 125 125 0 "" ""
+   brf l358iffalse,r8
+   .srcstep 126 126 17 "reference-gennorm2.crexx" 151 24 28 "        if byte = 0x09 then do"
+   .srcstep 122 122 17 "reference-gennorm2.crexx" 152 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 122 122 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 122 122 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 122 122 0 "pos" ""
+   .srcstep 123 123 17 "reference-gennorm2.crexx" 153 11 20 "          state = 4"
+   load r15,4
+   .traceevent "L" 4 "R" "I" "r" 15 123 123 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 123 123 0 "state" ""
+   .srcstep 124 124 17 "reference-gennorm2.crexx" 154 11 18 "          iterate"
+   br l76doinc
+l358iffalse:
+   .srcstep 130 130 17 "reference-gennorm2.crexx" 156 9 23 "        if byte = 0x20 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 130 130 0 "byte" ""
+   ieq r8,r11,32
+   .traceevent "O" 4 "R" "B" "r" 8 130 130 0 "" ""
+   brf l372iffalse,r8
+   .srcstep 131 131 17 "reference-gennorm2.crexx" 156 24 28 "        if byte = 0x20 then do"
+   .srcstep 127 127 17 "reference-gennorm2.crexx" 157 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 127 127 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 127 127 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 127 127 0 "pos" ""
+   .srcstep 128 128 17 "reference-gennorm2.crexx" 158 11 20 "          state = 4"
+   load r15,4
+   .traceevent "L" 4 "R" "I" "r" 15 128 128 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 128 128 0 "state" ""
+   .srcstep 129 129 17 "reference-gennorm2.crexx" 159 11 18 "          iterate"
+   br l76doinc
+l372iffalse:
+   .srcstep 132 132 17 "reference-gennorm2.crexx" 162 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 132 132 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 132 132 0 "start" ""
+   .srcstep 133 133 17 "reference-gennorm2.crexx" 163 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 133 133 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 133 133 0 "state" ""
+   .srcstep 134 134 17 "reference-gennorm2.crexx" 164 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase5: .jcase jtable2672 5
+   .srcstep 135 135 17 "reference-gennorm2.crexx" 169 7 70 "      call level_l_gennorm2_emit tokens, count, 9, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 135 135 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 135 135 0 "count" ""
+   load r25,9
+   .traceevent "L" 4 "R" "I" "r" 25 135 135 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 135 135 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 135 135 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 135 135 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 135 135 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 135 135 0 "level_l_gennorm2_emit" ""
+   .srcstep 136 136 17 "reference-gennorm2.crexx" 170 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 136 136 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 136 136 0 "start" ""
+   .srcstep 137 137 17 "reference-gennorm2.crexx" 171 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 137 137 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 137 137 0 "state" ""
+   .srcstep 138 138 17 "reference-gennorm2.crexx" 172 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase6: .jcase jtable2672 6
+   .srcstep 139 139 17 "reference-gennorm2.crexx" 176 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 139 139 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 139 139 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 139 139 0 "byte" ""
+   .srcstep 143 143 17 "reference-gennorm2.crexx" 177 9 23 "        if byte = 0x0A then do"
+   .traceevent "V" 6 "R" "I" "r" 11 143 143 0 "byte" ""
+   ieq r27,r11,10
+   .traceevent "O" 4 "R" "B" "r" 27 143 143 0 "" ""
+   brf l426iffalse,r27
+   .srcstep 144 144 17 "reference-gennorm2.crexx" 177 24 28 "        if byte = 0x0A then do"
+   .srcstep 140 140 17 "reference-gennorm2.crexx" 178 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 140 140 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 140 140 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 140 140 0 "pos" ""
+   .srcstep 141 141 17 "reference-gennorm2.crexx" 179 11 20 "          state = 5"
+   load r15,5
+   .traceevent "L" 4 "R" "I" "r" 15 141 141 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 141 141 0 "state" ""
+   .srcstep 142 142 17 "reference-gennorm2.crexx" 180 11 18 "          iterate"
+   br l76doinc
+l426iffalse:
+   .srcstep 145 145 17 "reference-gennorm2.crexx" 182 9 18 "        state = 3"
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 145 145 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 145 145 0 "state" ""
+   .srcstep 146 146 17 "reference-gennorm2.crexx" 183 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase7: .jcase jtable2672 7
+   .srcstep 147 147 17 "reference-gennorm2.crexx" 186 9 21 "        yyaccept = 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 147 147 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 147 147 0 "yyaccept" ""
+   .srcstep 148 148 17 "reference-gennorm2.crexx" 187 9 23 "        yymarker = pos"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.yymarker"="b" ".int" r9
+   .traceevent "V" 6 "R" "I" "r" 12 148 148 0 "pos" ""
+   icopy r9,r12
+   .traceevent "A" 6 "R" "I" "r" 9 148 148 0 "yymarker" ""
+   .srcstep 149 149 17 "reference-gennorm2.crexx" 188 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 149 149 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 149 149 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 149 149 0 "byte" ""
+   .srcstep 213 213 17 "reference-gennorm2.crexx" 189 9 24 "        if byte <= 0xDF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 213 213 0 "byte" ""
+   ilte r27,r11,223
+   .traceevent "O" 4 "R" "B" "r" 27 213 213 0 "" ""
+   brf l619iffalse,r27
+   .srcstep 214 214 17 "reference-gennorm2.crexx" 189 25 29 "        if byte <= 0xDF then do"
+   .srcstep 177 177 17 "reference-gennorm2.crexx" 190 11 26 "          if byte <= 0x0C then do"
+   .traceevent "V" 6 "R" "I" "r" 11 177 177 0 "byte" ""
+   ilte r26,r11,12
+   .traceevent "O" 4 "R" "B" "r" 26 177 177 0 "" ""
+   brf l527iffalse,r26
+   .srcstep 178 178 17 "reference-gennorm2.crexx" 190 27 31 "          if byte <= 0x0C then do"
+   .srcstep 152 152 17 "reference-gennorm2.crexx" 191 13 28 "            if byte <= 0x00 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 152 152 0 "byte" ""
+   ilte r25,r11,0
+   .traceevent "O" 4 "R" "B" "r" 25 152 152 0 "" ""
+   brf l465iffalse,r25
+   .srcstep 153 153 17 "reference-gennorm2.crexx" 191 29 33 "            if byte <= 0x00 then do"
+   .srcstep 150 150 17 "reference-gennorm2.crexx" 192 15 24 "              state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 150 150 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 150 150 0 "state" ""
+   .srcstep 151 151 17 "reference-gennorm2.crexx" 193 15 22 "              iterate"
+   br l76doinc
+l465iffalse:
+   .srcstep 157 157 17 "reference-gennorm2.crexx" 195 13 28 "            if byte \\= 0x0A then do"
+   .traceevent "V" 6 "R" "I" "r" 11 157 157 0 "byte" ""
+   ine r25,r11,10
+   .traceevent "O" 4 "R" "B" "r" 25 157 157 0 "" ""
+   brf l480iffalse,r25
+   .srcstep 158 158 17 "reference-gennorm2.crexx" 195 29 33 "            if byte \\= 0x0A then do"
+   .srcstep 154 154 17 "reference-gennorm2.crexx" 196 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 154 154 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 154 154 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 154 154 0 "pos" ""
+   .srcstep 155 155 17 "reference-gennorm2.crexx" 197 15 24 "              state = 7"
+   load r15,7
+   .traceevent "L" 4 "R" "I" "r" 15 155 155 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 155 155 0 "state" ""
+   .srcstep 156 156 17 "reference-gennorm2.crexx" 198 15 22 "              iterate"
+   br l76doinc
+l480iffalse:
+   .srcstep 159 159 17 "reference-gennorm2.crexx" 200 13 22 "            state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 159 159 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 159 159 0 "state" ""
+   .srcstep 160 160 17 "reference-gennorm2.crexx" 201 13 20 "            iterate"
+   br l76doinc
+   br l527ifend
+   .srcstep 179 179 17 "reference-gennorm2.crexx" 202 11 14 "          end"
+l527iffalse:
+   .srcstep 163 163 17 "reference-gennorm2.crexx" 204 13 28 "            if byte <= 0x0D then do"
+   .traceevent "V" 6 "R" "I" "r" 11 163 163 0 "byte" ""
+   ilte r25,r11,13
+   .traceevent "O" 4 "R" "B" "r" 25 163 163 0 "" ""
+   brf l493iffalse,r25
+   .srcstep 164 164 17 "reference-gennorm2.crexx" 204 29 33 "            if byte <= 0x0D then do"
+   .srcstep 161 161 17 "reference-gennorm2.crexx" 205 15 24 "              state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 161 161 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 161 161 0 "state" ""
+   .srcstep 162 162 17 "reference-gennorm2.crexx" 206 15 22 "              iterate"
+   br l76doinc
+l493iffalse:
+   .srcstep 168 168 17 "reference-gennorm2.crexx" 208 13 28 "            if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 168 168 0 "byte" ""
+   ilte r25,r11,127
+   .traceevent "O" 4 "R" "B" "r" 25 168 168 0 "" ""
+   brf l508iffalse,r25
+   .srcstep 169 169 17 "reference-gennorm2.crexx" 208 29 33 "            if byte <= 0x7F then do"
+   .srcstep 165 165 17 "reference-gennorm2.crexx" 209 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 165 165 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 165 165 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 165 165 0 "pos" ""
+   .srcstep 166 166 17 "reference-gennorm2.crexx" 210 15 24 "              state = 7"
+   load r15,7
+   .traceevent "L" 4 "R" "I" "r" 15 166 166 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 166 166 0 "state" ""
+   .srcstep 167 167 17 "reference-gennorm2.crexx" 211 15 22 "              iterate"
+   br l76doinc
+l508iffalse:
+   .srcstep 173 173 17 "reference-gennorm2.crexx" 213 13 28 "            if byte >= 0xC2 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 173 173 0 "byte" ""
+   igte r25,r11,194
+   .traceevent "O" 4 "R" "B" "r" 25 173 173 0 "" ""
+   brf l522iffalse,r25
+   .srcstep 174 174 17 "reference-gennorm2.crexx" 213 29 33 "            if byte >= 0xC2 then do"
+   .srcstep 170 170 17 "reference-gennorm2.crexx" 214 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 170 170 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 170 170 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 170 170 0 "pos" ""
+   .srcstep 171 171 17 "reference-gennorm2.crexx" 215 15 25 "              state = 18"
+   load r15,18
+   .traceevent "L" 4 "R" "I" "r" 15 171 171 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 171 171 0 "state" ""
+   .srcstep 172 172 17 "reference-gennorm2.crexx" 216 15 22 "              iterate"
+   br l76doinc
+l522iffalse:
+   .srcstep 175 175 17 "reference-gennorm2.crexx" 218 13 22 "            state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 175 175 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 175 175 0 "state" ""
+   .srcstep 176 176 17 "reference-gennorm2.crexx" 219 13 20 "            iterate"
+   br l76doinc
+l527ifend:
+   br l619ifend
+   .srcstep 215 215 17 "reference-gennorm2.crexx" 220 11 14 "          end"
+l619iffalse:
+   .srcstep 210 210 17 "reference-gennorm2.crexx" 223 11 26 "          if byte <= 0xEF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 210 210 0 "byte" ""
+   ilte r26,r11,239
+   .traceevent "O" 4 "R" "B" "r" 26 210 210 0 "" ""
+   brf l617iffalse,r26
+   .srcstep 211 211 17 "reference-gennorm2.crexx" 223 27 31 "          if byte <= 0xEF then do"
+   .srcstep 183 183 17 "reference-gennorm2.crexx" 224 13 28 "            if byte <= 0xE0 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 183 183 0 "byte" ""
+   ilte r25,r11,224
+   .traceevent "O" 4 "R" "B" "r" 25 183 183 0 "" ""
+   brf l545iffalse,r25
+   .srcstep 184 184 17 "reference-gennorm2.crexx" 224 29 33 "            if byte <= 0xE0 then do"
+   .srcstep 180 180 17 "reference-gennorm2.crexx" 225 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 180 180 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 180 180 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 180 180 0 "pos" ""
+   .srcstep 181 181 17 "reference-gennorm2.crexx" 226 15 25 "              state = 20"
+   load r15,20
+   .traceevent "L" 4 "R" "I" "r" 15 181 181 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 181 181 0 "state" ""
+   .srcstep 182 182 17 "reference-gennorm2.crexx" 227 15 22 "              iterate"
+   br l76doinc
+l545iffalse:
+   .srcstep 188 188 17 "reference-gennorm2.crexx" 229 13 27 "            if byte = 0xED then do"
+   .traceevent "V" 6 "R" "I" "r" 11 188 188 0 "byte" ""
+   ieq r25,r11,237
+   .traceevent "O" 4 "R" "B" "r" 25 188 188 0 "" ""
+   brf l560iffalse,r25
+   .srcstep 189 189 17 "reference-gennorm2.crexx" 229 28 32 "            if byte = 0xED then do"
+   .srcstep 185 185 17 "reference-gennorm2.crexx" 230 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 185 185 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 185 185 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 185 185 0 "pos" ""
+   .srcstep 186 186 17 "reference-gennorm2.crexx" 231 15 25 "              state = 22"
+   load r15,22
+   .traceevent "L" 4 "R" "I" "r" 15 186 186 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 186 186 0 "state" ""
+   .srcstep 187 187 17 "reference-gennorm2.crexx" 232 15 22 "              iterate"
+   br l76doinc
+l560iffalse:
+   .srcstep 190 190 17 "reference-gennorm2.crexx" 234 13 26 "            pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 190 190 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 190 190 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 190 190 0 "pos" ""
+   .srcstep 191 191 17 "reference-gennorm2.crexx" 235 13 23 "            state = 21"
+   load r15,21
+   .traceevent "L" 4 "R" "I" "r" 15 191 191 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 191 191 0 "state" ""
+   .srcstep 192 192 17 "reference-gennorm2.crexx" 236 13 20 "            iterate"
+   br l76doinc
+   br l617ifend
+   .srcstep 212 212 17 "reference-gennorm2.crexx" 237 11 14 "          end"
+l617iffalse:
+   .srcstep 196 196 17 "reference-gennorm2.crexx" 239 13 28 "            if byte <= 0xF0 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 196 196 0 "byte" ""
+   ilte r25,r11,240
+   .traceevent "O" 4 "R" "B" "r" 25 196 196 0 "" ""
+   brf l583iffalse,r25
+   .srcstep 197 197 17 "reference-gennorm2.crexx" 239 29 33 "            if byte <= 0xF0 then do"
+   .srcstep 193 193 17 "reference-gennorm2.crexx" 240 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 193 193 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 193 193 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 193 193 0 "pos" ""
+   .srcstep 194 194 17 "reference-gennorm2.crexx" 241 15 25 "              state = 23"
+   load r15,23
+   .traceevent "L" 4 "R" "I" "r" 15 194 194 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 194 194 0 "state" ""
+   .srcstep 195 195 17 "reference-gennorm2.crexx" 242 15 22 "              iterate"
+   br l76doinc
+l583iffalse:
+   .srcstep 201 201 17 "reference-gennorm2.crexx" 244 13 28 "            if byte <= 0xF3 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 201 201 0 "byte" ""
+   ilte r25,r11,243
+   .traceevent "O" 4 "R" "B" "r" 25 201 201 0 "" ""
+   brf l598iffalse,r25
+   .srcstep 202 202 17 "reference-gennorm2.crexx" 244 29 33 "            if byte <= 0xF3 then do"
+   .srcstep 198 198 17 "reference-gennorm2.crexx" 245 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 198 198 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 198 198 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 198 198 0 "pos" ""
+   .srcstep 199 199 17 "reference-gennorm2.crexx" 246 15 25 "              state = 24"
+   load r15,24
+   .traceevent "L" 4 "R" "I" "r" 15 199 199 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 199 199 0 "state" ""
+   .srcstep 200 200 17 "reference-gennorm2.crexx" 247 15 22 "              iterate"
+   br l76doinc
+l598iffalse:
+   .srcstep 206 206 17 "reference-gennorm2.crexx" 249 13 28 "            if byte <= 0xF4 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 206 206 0 "byte" ""
+   ilte r25,r11,244
+   .traceevent "O" 4 "R" "B" "r" 25 206 206 0 "" ""
+   brf l612iffalse,r25
+   .srcstep 207 207 17 "reference-gennorm2.crexx" 249 29 33 "            if byte <= 0xF4 then do"
+   .srcstep 203 203 17 "reference-gennorm2.crexx" 250 15 28 "              pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 203 203 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 203 203 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 203 203 0 "pos" ""
+   .srcstep 204 204 17 "reference-gennorm2.crexx" 251 15 25 "              state = 25"
+   load r15,25
+   .traceevent "L" 4 "R" "I" "r" 15 204 204 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 204 204 0 "state" ""
+   .srcstep 205 205 17 "reference-gennorm2.crexx" 252 15 22 "              iterate"
+   br l76doinc
+l612iffalse:
+   .srcstep 208 208 17 "reference-gennorm2.crexx" 254 13 22 "            state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 208 208 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 208 208 0 "state" ""
+   .srcstep 209 209 17 "reference-gennorm2.crexx" 255 13 20 "            iterate"
+   br l76doinc
+l617ifend:
+l619ifend:
+   br l2672dispatchend
+l2672dispatchcase8: .jcase jtable2672 8
+   .srcstep 216 216 17 "reference-gennorm2.crexx" 261 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 216 216 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 216 216 0 "start" ""
+   .srcstep 217 217 17 "reference-gennorm2.crexx" 262 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 217 217 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 217 217 0 "state" ""
+   .srcstep 218 218 17 "reference-gennorm2.crexx" 263 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase9: .jcase jtable2672 9
+   .srcstep 219 219 17 "reference-gennorm2.crexx" 268 7 70 "      call level_l_gennorm2_emit tokens, count, 6, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 219 219 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 219 219 0 "count" ""
+   load r25,6
+   .traceevent "L" 4 "R" "I" "r" 25 219 219 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 219 219 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 219 219 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 219 219 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 219 219 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 219 219 0 "level_l_gennorm2_emit" ""
+   .srcstep 220 220 17 "reference-gennorm2.crexx" 269 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 220 220 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 220 220 0 "start" ""
+   .srcstep 221 221 17 "reference-gennorm2.crexx" 270 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 221 221 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 221 221 0 "state" ""
+   .srcstep 222 222 17 "reference-gennorm2.crexx" 271 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase10: .jcase jtable2672 10
+   .srcstep 223 223 17 "reference-gennorm2.crexx" 275 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 223 223 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 223 223 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 223 223 0 "byte" ""
+   .srcstep 227 227 17 "reference-gennorm2.crexx" 276 9 23 "        if byte = 0x2E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 227 227 0 "byte" ""
+   ieq r27,r11,46
+   .traceevent "O" 4 "R" "B" "r" 27 227 227 0 "" ""
+   brf l676iffalse,r27
+   .srcstep 228 228 17 "reference-gennorm2.crexx" 276 24 28 "        if byte = 0x2E then do"
+   .srcstep 224 224 17 "reference-gennorm2.crexx" 277 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 224 224 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 224 224 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 224 224 0 "pos" ""
+   .srcstep 225 225 17 "reference-gennorm2.crexx" 278 11 21 "          state = 26"
+   load r15,26
+   .traceevent "L" 4 "R" "I" "r" 15 225 225 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 225 225 0 "state" ""
+   .srcstep 226 226 17 "reference-gennorm2.crexx" 279 11 18 "          iterate"
+   br l76doinc
+l676iffalse:
+   .srcstep 229 229 17 "reference-gennorm2.crexx" 281 9 18 "        state = 3"
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 229 229 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 229 229 0 "state" ""
+   .srcstep 230 230 17 "reference-gennorm2.crexx" 282 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase11: .jcase jtable2672 11
+   .srcstep 231 231 17 "reference-gennorm2.crexx" 285 9 21 "        yyaccept = 1"
+   load r16,1
+   .traceevent "L" 4 "R" "I" "r" 16 231 231 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 231 231 0 "yyaccept" ""
+   .srcstep 232 232 17 "reference-gennorm2.crexx" 286 9 23 "        yymarker = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 232 232 0 "pos" ""
+   icopy r9,r12
+   .traceevent "A" 6 "R" "I" "r" 9 232 232 0 "yymarker" ""
+   .srcstep 233 233 17 "reference-gennorm2.crexx" 287 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 233 233 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 233 233 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 233 233 0 "byte" ""
+   .srcstep 257 257 17 "reference-gennorm2.crexx" 288 9 24 "        if byte <= 0x2F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 257 257 0 "byte" ""
+   ilte r27,r11,47
+   .traceevent "O" 4 "R" "B" "r" 27 257 257 0 "" ""
+   brf l765iffalse,r27
+   .srcstep 258 258 17 "reference-gennorm2.crexx" 288 25 29 "        if byte <= 0x2F then do"
+   .srcstep 237 237 17 "reference-gennorm2.crexx" 289 11 25 "          if byte = 0x2E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 237 237 0 "byte" ""
+   ieq r26,r11,46
+   .traceevent "O" 4 "R" "B" "r" 26 237 237 0 "" ""
+   brf l717iffalse,r26
+   .srcstep 238 238 17 "reference-gennorm2.crexx" 289 26 30 "          if byte = 0x2E then do"
+   .srcstep 234 234 17 "reference-gennorm2.crexx" 290 13 26 "            pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 234 234 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 234 234 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 234 234 0 "pos" ""
+   .srcstep 235 235 17 "reference-gennorm2.crexx" 291 13 23 "            state = 27"
+   load r15,27
+   .traceevent "L" 4 "R" "I" "r" 15 235 235 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 235 235 0 "state" ""
+   .srcstep 236 236 17 "reference-gennorm2.crexx" 292 13 20 "            iterate"
+   br l76doinc
+l717iffalse:
+   .srcstep 239 239 17 "reference-gennorm2.crexx" 294 11 21 "          state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 239 239 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 239 239 0 "state" ""
+   .srcstep 240 240 17 "reference-gennorm2.crexx" 295 11 18 "          iterate"
+   br l76doinc
+   br l765ifend
+   .srcstep 259 259 17 "reference-gennorm2.crexx" 296 9 12 "        end"
+l765iffalse:
+   .srcstep 244 244 17 "reference-gennorm2.crexx" 298 11 26 "          if byte <= 0x39 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 244 244 0 "byte" ""
+   ilte r26,r11,57
+   .traceevent "O" 4 "R" "B" "r" 26 244 244 0 "" ""
+   brf l736iffalse,r26
+   .srcstep 245 245 17 "reference-gennorm2.crexx" 298 27 31 "          if byte <= 0x39 then do"
+   .srcstep 241 241 17 "reference-gennorm2.crexx" 299 13 26 "            pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 241 241 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 241 241 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 241 241 0 "pos" ""
+   .srcstep 242 242 17 "reference-gennorm2.crexx" 300 13 23 "            state = 11"
+   load r15,11
+   .traceevent "L" 4 "R" "I" "r" 15 242 242 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 242 242 0 "state" ""
+   .srcstep 243 243 17 "reference-gennorm2.crexx" 301 13 20 "            iterate"
+   br l76doinc
+l736iffalse:
+   .srcstep 248 248 17 "reference-gennorm2.crexx" 303 11 26 "          if byte <= 0x40 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 248 248 0 "byte" ""
+   ilte r26,r11,64
+   .traceevent "O" 4 "R" "B" "r" 26 248 248 0 "" ""
+   brf l746iffalse,r26
+   .srcstep 249 249 17 "reference-gennorm2.crexx" 303 27 31 "          if byte <= 0x40 then do"
+   .srcstep 246 246 17 "reference-gennorm2.crexx" 304 13 23 "            state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 246 246 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 246 246 0 "state" ""
+   .srcstep 247 247 17 "reference-gennorm2.crexx" 305 13 20 "            iterate"
+   br l76doinc
+l746iffalse:
+   .srcstep 253 253 17 "reference-gennorm2.crexx" 307 11 26 "          if byte <= 0x46 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 253 253 0 "byte" ""
+   ilte r26,r11,70
+   .traceevent "O" 4 "R" "B" "r" 26 253 253 0 "" ""
+   brf l760iffalse,r26
+   .srcstep 254 254 17 "reference-gennorm2.crexx" 307 27 31 "          if byte <= 0x46 then do"
+   .srcstep 250 250 17 "reference-gennorm2.crexx" 308 13 26 "            pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 250 250 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 250 250 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 250 250 0 "pos" ""
+   .srcstep 251 251 17 "reference-gennorm2.crexx" 309 13 23 "            state = 16"
+   load r15,16
+   .traceevent "L" 4 "R" "I" "r" 15 251 251 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 251 251 0 "state" ""
+   .srcstep 252 252 17 "reference-gennorm2.crexx" 310 13 20 "            iterate"
+   br l76doinc
+l760iffalse:
+   .srcstep 255 255 17 "reference-gennorm2.crexx" 312 11 21 "          state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 255 255 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 255 255 0 "state" ""
+   .srcstep 256 256 17 "reference-gennorm2.crexx" 313 11 18 "          iterate"
+   br l76doinc
+l765ifend:
+   br l2672dispatchend
+l2672dispatchcase12: .jcase jtable2672 12
+   .srcstep 260 260 17 "reference-gennorm2.crexx" 318 7 70 "      call level_l_gennorm2_emit tokens, count, 1, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 260 260 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 260 260 0 "count" ""
+   load r25,1
+   .traceevent "L" 4 "R" "I" "r" 25 260 260 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 260 260 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 260 260 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 260 260 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 260 260 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 260 260 0 "level_l_gennorm2_emit" ""
+   .srcstep 261 261 17 "reference-gennorm2.crexx" 319 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 261 261 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 261 261 0 "start" ""
+   .srcstep 262 262 17 "reference-gennorm2.crexx" 320 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 262 262 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 262 262 0 "state" ""
+   .srcstep 263 263 17 "reference-gennorm2.crexx" 321 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase13: .jcase jtable2672 13
+   .srcstep 264 264 17 "reference-gennorm2.crexx" 326 7 70 "      call level_l_gennorm2_emit tokens, count, 3, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 264 264 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 264 264 0 "count" ""
+   load r25,3
+   .traceevent "L" 4 "R" "I" "r" 25 264 264 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 264 264 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 264 264 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 264 264 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 264 264 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 264 264 0 "level_l_gennorm2_emit" ""
+   .srcstep 265 265 17 "reference-gennorm2.crexx" 327 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 265 265 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 265 265 0 "start" ""
+   .srcstep 266 266 17 "reference-gennorm2.crexx" 328 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 266 266 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 266 266 0 "state" ""
+   .srcstep 267 267 17 "reference-gennorm2.crexx" 329 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase14: .jcase jtable2672 14
+   .srcstep 268 268 17 "reference-gennorm2.crexx" 334 7 70 "      call level_l_gennorm2_emit tokens, count, 4, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 268 268 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 268 268 0 "count" ""
+   load r25,4
+   .traceevent "L" 4 "R" "I" "r" 25 268 268 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 268 268 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 268 268 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 268 268 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 268 268 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 268 268 0 "level_l_gennorm2_emit" ""
+   .srcstep 269 269 17 "reference-gennorm2.crexx" 335 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 269 269 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 269 269 0 "start" ""
+   .srcstep 270 270 17 "reference-gennorm2.crexx" 336 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 270 270 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 270 270 0 "state" ""
+   .srcstep 271 271 17 "reference-gennorm2.crexx" 337 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase15: .jcase jtable2672 15
+   .srcstep 272 272 17 "reference-gennorm2.crexx" 342 7 70 "      call level_l_gennorm2_emit tokens, count, 5, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 272 272 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 272 272 0 "count" ""
+   load r25,5
+   .traceevent "L" 4 "R" "I" "r" 25 272 272 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 272 272 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 272 272 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 272 272 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 272 272 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 272 272 0 "level_l_gennorm2_emit" ""
+   .srcstep 273 273 17 "reference-gennorm2.crexx" 343 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 273 273 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 273 273 0 "start" ""
+   .srcstep 274 274 17 "reference-gennorm2.crexx" 344 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 274 274 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 274 274 0 "state" ""
+   .srcstep 275 275 17 "reference-gennorm2.crexx" 345 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase16: .jcase jtable2672 16
+   .srcstep 276 276 17 "reference-gennorm2.crexx" 349 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 276 276 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 276 276 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 276 276 0 "byte" ""
+   .srcstep 279 279 17 "reference-gennorm2.crexx" 350 9 24 "        if byte <= 0x2F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 279 279 0 "byte" ""
+   ilte r27,r11,47
+   .traceevent "O" 4 "R" "B" "r" 27 279 279 0 "" ""
+   brf l864iffalse,r27
+   .srcstep 280 280 17 "reference-gennorm2.crexx" 350 25 29 "        if byte <= 0x2F then do"
+   .srcstep 277 277 17 "reference-gennorm2.crexx" 351 11 21 "          state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 277 277 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 277 277 0 "state" ""
+   .srcstep 278 278 17 "reference-gennorm2.crexx" 352 11 18 "          iterate"
+   br l76doinc
+l864iffalse:
+   .srcstep 284 284 17 "reference-gennorm2.crexx" 354 9 24 "        if byte <= 0x39 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 284 284 0 "byte" ""
+   ilte r27,r11,57
+   .traceevent "O" 4 "R" "B" "r" 27 284 284 0 "" ""
+   brf l878iffalse,r27
+   .srcstep 285 285 17 "reference-gennorm2.crexx" 354 25 29 "        if byte <= 0x39 then do"
+   .srcstep 281 281 17 "reference-gennorm2.crexx" 355 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 281 281 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 281 281 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 281 281 0 "pos" ""
+   .srcstep 282 282 17 "reference-gennorm2.crexx" 356 11 21 "          state = 16"
+   load r15,16
+   .traceevent "L" 4 "R" "I" "r" 15 282 282 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 282 282 0 "state" ""
+   .srcstep 283 283 17 "reference-gennorm2.crexx" 357 11 18 "          iterate"
+   br l76doinc
+l878iffalse:
+   .srcstep 288 288 17 "reference-gennorm2.crexx" 359 9 24 "        if byte <= 0x40 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "byte" ""
+   ilte r27,r11,64
+   .traceevent "O" 4 "R" "B" "r" 27 288 288 0 "" ""
+   brf l887iffalse,r27
+   .srcstep 289 289 17 "reference-gennorm2.crexx" 359 25 29 "        if byte <= 0x40 then do"
+   .srcstep 286 286 17 "reference-gennorm2.crexx" 360 11 21 "          state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 286 286 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 286 286 0 "state" ""
+   .srcstep 287 287 17 "reference-gennorm2.crexx" 361 11 18 "          iterate"
+   br l76doinc
+l887iffalse:
+   .srcstep 293 293 17 "reference-gennorm2.crexx" 363 9 24 "        if byte <= 0x46 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 293 293 0 "byte" ""
+   ilte r27,r11,70
+   .traceevent "O" 4 "R" "B" "r" 27 293 293 0 "" ""
+   brf l901iffalse,r27
+   .srcstep 294 294 17 "reference-gennorm2.crexx" 363 25 29 "        if byte <= 0x46 then do"
+   .srcstep 290 290 17 "reference-gennorm2.crexx" 364 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 290 290 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 290 290 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 290 290 0 "pos" ""
+   .srcstep 291 291 17 "reference-gennorm2.crexx" 365 11 21 "          state = 16"
+   load r15,16
+   .traceevent "L" 4 "R" "I" "r" 15 291 291 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 291 291 0 "state" ""
+   .srcstep 292 292 17 "reference-gennorm2.crexx" 366 11 18 "          iterate"
+   br l76doinc
+l901iffalse:
+   .srcstep 295 295 17 "reference-gennorm2.crexx" 368 9 19 "        state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 295 295 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 295 295 0 "state" ""
+   .srcstep 296 296 17 "reference-gennorm2.crexx" 369 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase17: .jcase jtable2672 17
+   .srcstep 297 297 17 "reference-gennorm2.crexx" 372 9 21 "        yyaccept = 2"
+   load r16,2
+   .traceevent "L" 4 "R" "I" "r" 16 297 297 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 297 297 0 "yyaccept" ""
+   .srcstep 298 298 17 "reference-gennorm2.crexx" 373 9 23 "        yymarker = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 298 298 0 "pos" ""
+   icopy r9,r12
+   .traceevent "A" 6 "R" "I" "r" 9 298 298 0 "yymarker" ""
+   .srcstep 299 299 17 "reference-gennorm2.crexx" 374 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 299 299 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 299 299 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 299 299 0 "byte" ""
+   .srcstep 303 303 17 "reference-gennorm2.crexx" 375 9 23 "        if byte = 0x6E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 303 303 0 "byte" ""
+   ieq r27,r11,110
+   .traceevent "O" 4 "R" "B" "r" 27 303 303 0 "" ""
+   brf l939iffalse,r27
+   .srcstep 304 304 17 "reference-gennorm2.crexx" 375 24 28 "        if byte = 0x6E then do"
+   .srcstep 300 300 17 "reference-gennorm2.crexx" 376 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 300 300 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 300 300 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 300 300 0 "pos" ""
+   .srcstep 301 301 17 "reference-gennorm2.crexx" 377 11 21 "          state = 28"
+   load r15,28
+   .traceevent "L" 4 "R" "I" "r" 15 301 301 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 301 301 0 "state" ""
+   .srcstep 302 302 17 "reference-gennorm2.crexx" 378 11 18 "          iterate"
+   br l76doinc
+l939iffalse:
+   .srcstep 305 305 17 "reference-gennorm2.crexx" 380 9 18 "        state = 3"
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 305 305 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 305 305 0 "state" ""
+   .srcstep 306 306 17 "reference-gennorm2.crexx" 381 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase18: .jcase jtable2672 18
+   .srcstep 307 307 17 "reference-gennorm2.crexx" 384 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 307 307 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 307 307 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 307 307 0 "byte" ""
+   .srcstep 310 310 17 "reference-gennorm2.crexx" 385 9 24 "        if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 310 310 0 "byte" ""
+   ilte r27,r11,127
+   .traceevent "O" 4 "R" "B" "r" 27 310 310 0 "" ""
+   brf l966iffalse,r27
+   .srcstep 311 311 17 "reference-gennorm2.crexx" 385 25 29 "        if byte <= 0x7F then do"
+   .srcstep 308 308 17 "reference-gennorm2.crexx" 386 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 308 308 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 308 308 0 "state" ""
+   .srcstep 309 309 17 "reference-gennorm2.crexx" 387 11 18 "          iterate"
+   br l76doinc
+l966iffalse:
+   .srcstep 315 315 17 "reference-gennorm2.crexx" 389 9 24 "        if byte <= 0xBF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 315 315 0 "byte" ""
+   ilte r27,r11,191
+   .traceevent "O" 4 "R" "B" "r" 27 315 315 0 "" ""
+   brf l980iffalse,r27
+   .srcstep 316 316 17 "reference-gennorm2.crexx" 389 25 29 "        if byte <= 0xBF then do"
+   .srcstep 312 312 17 "reference-gennorm2.crexx" 390 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 312 312 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 312 312 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 312 312 0 "pos" ""
+   .srcstep 313 313 17 "reference-gennorm2.crexx" 391 11 20 "          state = 7"
+   load r15,7
+   .traceevent "L" 4 "R" "I" "r" 15 313 313 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 313 313 0 "state" ""
+   .srcstep 314 314 17 "reference-gennorm2.crexx" 392 11 18 "          iterate"
+   br l76doinc
+l980iffalse:
+   .srcstep 317 317 17 "reference-gennorm2.crexx" 394 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 317 317 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 317 317 0 "state" ""
+   .srcstep 318 318 17 "reference-gennorm2.crexx" 395 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase19: .jcase jtable2672 19
+   .srcstep 319 319 17 "reference-gennorm2.crexx" 398 9 23 "        pos = yymarker"
+   .traceevent "V" 6 "R" "I" "r" 9 319 319 0 "yymarker" ""
+   icopy r12,r9
+   .traceevent "A" 6 "R" "I" "r" 12 319 319 0 "pos" ""
+   .srcstep 334 334 17 "reference-gennorm2.crexx" 399 9 25 "        if yyaccept <= 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 16 334 334 0 "yyaccept" ""
+   ilte r27,r16,1
+   .traceevent "O" 4 "R" "B" "r" 27 334 334 0 "" ""
+   brf l1024iffalse,r27
+   .srcstep 335 335 17 "reference-gennorm2.crexx" 399 26 30 "        if yyaccept <= 1 then do"
+   .srcstep 324 324 17 "reference-gennorm2.crexx" 400 11 26 "          if yyaccept = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 16 324 324 0 "yyaccept" ""
+   ieq r26,r16,0
+   .traceevent "O" 4 "R" "B" "r" 26 324 324 0 "" ""
+   brf l1007iffalse,r26
+   .srcstep 325 325 17 "reference-gennorm2.crexx" 400 27 31 "          if yyaccept = 0 then do"
+   .srcstep 320 320 17 "reference-gennorm2.crexx" 401 13 22 "            state = 8"
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 320 320 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 320 320 0 "state" ""
+   .srcstep 321 321 17 "reference-gennorm2.crexx" 402 13 20 "            iterate"
+   br l76doinc
+   br l1007ifend
+   .srcstep 326 326 17 "reference-gennorm2.crexx" 403 11 14 "          end"
+l1007iffalse:
+   .srcstep 322 322 17 "reference-gennorm2.crexx" 405 13 23 "            state = 12"
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 322 322 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 322 322 0 "state" ""
+   .srcstep 323 323 17 "reference-gennorm2.crexx" 406 13 20 "            iterate"
+   br l76doinc
+l1007ifend:
+   br l1024ifend
+   .srcstep 336 336 17 "reference-gennorm2.crexx" 407 11 14 "          end"
+l1024iffalse:
+   .srcstep 331 331 17 "reference-gennorm2.crexx" 410 11 26 "          if yyaccept = 2 then do"
+   .traceevent "V" 6 "R" "I" "r" 16 331 331 0 "yyaccept" ""
+   ieq r26,r16,2
+   .traceevent "O" 4 "R" "B" "r" 26 331 331 0 "" ""
+   brf l1022iffalse,r26
+   .srcstep 332 332 17 "reference-gennorm2.crexx" 410 27 31 "          if yyaccept = 2 then do"
+   .srcstep 327 327 17 "reference-gennorm2.crexx" 411 13 22 "            state = 3"
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 327 327 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 327 327 0 "state" ""
+   .srcstep 328 328 17 "reference-gennorm2.crexx" 412 13 20 "            iterate"
+   br l76doinc
+   br l1022ifend
+   .srcstep 333 333 17 "reference-gennorm2.crexx" 413 11 14 "          end"
+l1022iffalse:
+   .srcstep 329 329 17 "reference-gennorm2.crexx" 415 13 23 "            state = 30"
+   load r15,30
+   .traceevent "L" 4 "R" "I" "r" 15 329 329 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 329 329 0 "state" ""
+   .srcstep 330 330 17 "reference-gennorm2.crexx" 416 13 20 "            iterate"
+   br l76doinc
+l1022ifend:
+l1024ifend:
+   br l2672dispatchend
+l2672dispatchcase20: .jcase jtable2672 20
+   .srcstep 337 337 17 "reference-gennorm2.crexx" 421 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 337 337 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 337 337 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 337 337 0 "byte" ""
+   .srcstep 340 340 17 "reference-gennorm2.crexx" 422 9 24 "        if byte <= 0x9F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 340 340 0 "byte" ""
+   ilte r27,r11,159
+   .traceevent "O" 4 "R" "B" "r" 27 340 340 0 "" ""
+   brf l1047iffalse,r27
+   .srcstep 341 341 17 "reference-gennorm2.crexx" 422 25 29 "        if byte <= 0x9F then do"
+   .srcstep 338 338 17 "reference-gennorm2.crexx" 423 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 338 338 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 338 338 0 "state" ""
+   .srcstep 339 339 17 "reference-gennorm2.crexx" 424 11 18 "          iterate"
+   br l76doinc
+l1047iffalse:
+   .srcstep 345 345 17 "reference-gennorm2.crexx" 426 9 24 "        if byte <= 0xBF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 345 345 0 "byte" ""
+   ilte r27,r11,191
+   .traceevent "O" 4 "R" "B" "r" 27 345 345 0 "" ""
+   brf l1061iffalse,r27
+   .srcstep 346 346 17 "reference-gennorm2.crexx" 426 25 29 "        if byte <= 0xBF then do"
+   .srcstep 342 342 17 "reference-gennorm2.crexx" 427 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 342 342 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 342 342 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 342 342 0 "pos" ""
+   .srcstep 343 343 17 "reference-gennorm2.crexx" 428 11 21 "          state = 18"
+   load r15,18
+   .traceevent "L" 4 "R" "I" "r" 15 343 343 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 343 343 0 "state" ""
+   .srcstep 344 344 17 "reference-gennorm2.crexx" 429 11 18 "          iterate"
+   br l76doinc
+l1061iffalse:
+   .srcstep 347 347 17 "reference-gennorm2.crexx" 431 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 347 347 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 347 347 0 "state" ""
+   .srcstep 348 348 17 "reference-gennorm2.crexx" 432 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase21: .jcase jtable2672 21
+   .srcstep 349 349 17 "reference-gennorm2.crexx" 435 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 349 349 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 349 349 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 349 349 0 "byte" ""
+   .srcstep 352 352 17 "reference-gennorm2.crexx" 436 9 24 "        if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 352 352 0 "byte" ""
+   ilte r27,r11,127
+   .traceevent "O" 4 "R" "B" "r" 27 352 352 0 "" ""
+   brf l1088iffalse,r27
+   .srcstep 353 353 17 "reference-gennorm2.crexx" 436 25 29 "        if byte <= 0x7F then do"
+   .srcstep 350 350 17 "reference-gennorm2.crexx" 437 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 350 350 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 350 350 0 "state" ""
+   .srcstep 351 351 17 "reference-gennorm2.crexx" 438 11 18 "          iterate"
+   br l76doinc
+l1088iffalse:
+   .srcstep 357 357 17 "reference-gennorm2.crexx" 440 9 24 "        if byte <= 0xBF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 357 357 0 "byte" ""
+   ilte r27,r11,191
+   .traceevent "O" 4 "R" "B" "r" 27 357 357 0 "" ""
+   brf l1102iffalse,r27
+   .srcstep 358 358 17 "reference-gennorm2.crexx" 440 25 29 "        if byte <= 0xBF then do"
+   .srcstep 354 354 17 "reference-gennorm2.crexx" 441 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 354 354 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 354 354 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 354 354 0 "pos" ""
+   .srcstep 355 355 17 "reference-gennorm2.crexx" 442 11 21 "          state = 18"
+   load r15,18
+   .traceevent "L" 4 "R" "I" "r" 15 355 355 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 355 355 0 "state" ""
+   .srcstep 356 356 17 "reference-gennorm2.crexx" 443 11 18 "          iterate"
+   br l76doinc
+l1102iffalse:
+   .srcstep 359 359 17 "reference-gennorm2.crexx" 445 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 359 359 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 359 359 0 "state" ""
+   .srcstep 360 360 17 "reference-gennorm2.crexx" 446 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase22: .jcase jtable2672 22
+   .srcstep 361 361 17 "reference-gennorm2.crexx" 449 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 361 361 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 361 361 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 361 361 0 "byte" ""
+   .srcstep 364 364 17 "reference-gennorm2.crexx" 450 9 24 "        if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 364 364 0 "byte" ""
+   ilte r27,r11,127
+   .traceevent "O" 4 "R" "B" "r" 27 364 364 0 "" ""
+   brf l1129iffalse,r27
+   .srcstep 365 365 17 "reference-gennorm2.crexx" 450 25 29 "        if byte <= 0x7F then do"
+   .srcstep 362 362 17 "reference-gennorm2.crexx" 451 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 362 362 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 362 362 0 "state" ""
+   .srcstep 363 363 17 "reference-gennorm2.crexx" 452 11 18 "          iterate"
+   br l76doinc
+l1129iffalse:
+   .srcstep 369 369 17 "reference-gennorm2.crexx" 454 9 24 "        if byte <= 0x9F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 369 369 0 "byte" ""
+   ilte r27,r11,159
+   .traceevent "O" 4 "R" "B" "r" 27 369 369 0 "" ""
+   brf l1143iffalse,r27
+   .srcstep 370 370 17 "reference-gennorm2.crexx" 454 25 29 "        if byte <= 0x9F then do"
+   .srcstep 366 366 17 "reference-gennorm2.crexx" 455 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 366 366 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 366 366 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 366 366 0 "pos" ""
+   .srcstep 367 367 17 "reference-gennorm2.crexx" 456 11 21 "          state = 18"
+   load r15,18
+   .traceevent "L" 4 "R" "I" "r" 15 367 367 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 367 367 0 "state" ""
+   .srcstep 368 368 17 "reference-gennorm2.crexx" 457 11 18 "          iterate"
+   br l76doinc
+l1143iffalse:
+   .srcstep 371 371 17 "reference-gennorm2.crexx" 459 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 371 371 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 371 371 0 "state" ""
+   .srcstep 372 372 17 "reference-gennorm2.crexx" 460 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase23: .jcase jtable2672 23
+   .srcstep 373 373 17 "reference-gennorm2.crexx" 463 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 373 373 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 373 373 0 "byte" ""
+   .srcstep 376 376 17 "reference-gennorm2.crexx" 464 9 24 "        if byte <= 0x8F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 376 376 0 "byte" ""
+   ilte r27,r11,143
+   .traceevent "O" 4 "R" "B" "r" 27 376 376 0 "" ""
+   brf l1170iffalse,r27
+   .srcstep 377 377 17 "reference-gennorm2.crexx" 464 25 29 "        if byte <= 0x8F then do"
+   .srcstep 374 374 17 "reference-gennorm2.crexx" 465 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 374 374 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 374 374 0 "state" ""
+   .srcstep 375 375 17 "reference-gennorm2.crexx" 466 11 18 "          iterate"
+   br l76doinc
+l1170iffalse:
+   .srcstep 381 381 17 "reference-gennorm2.crexx" 468 9 24 "        if byte <= 0xBF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 381 381 0 "byte" ""
+   ilte r27,r11,191
+   .traceevent "O" 4 "R" "B" "r" 27 381 381 0 "" ""
+   brf l1184iffalse,r27
+   .srcstep 382 382 17 "reference-gennorm2.crexx" 468 25 29 "        if byte <= 0xBF then do"
+   .srcstep 378 378 17 "reference-gennorm2.crexx" 469 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 378 378 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 378 378 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 378 378 0 "pos" ""
+   .srcstep 379 379 17 "reference-gennorm2.crexx" 470 11 21 "          state = 21"
+   load r15,21
+   .traceevent "L" 4 "R" "I" "r" 15 379 379 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 379 379 0 "state" ""
+   .srcstep 380 380 17 "reference-gennorm2.crexx" 471 11 18 "          iterate"
+   br l76doinc
+l1184iffalse:
+   .srcstep 383 383 17 "reference-gennorm2.crexx" 473 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 383 383 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 383 383 0 "state" ""
+   .srcstep 384 384 17 "reference-gennorm2.crexx" 474 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase24: .jcase jtable2672 24
+   .srcstep 385 385 17 "reference-gennorm2.crexx" 477 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 385 385 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 385 385 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 385 385 0 "byte" ""
+   .srcstep 388 388 17 "reference-gennorm2.crexx" 478 9 24 "        if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 388 388 0 "byte" ""
+   ilte r27,r11,127
+   .traceevent "O" 4 "R" "B" "r" 27 388 388 0 "" ""
+   brf l1211iffalse,r27
+   .srcstep 389 389 17 "reference-gennorm2.crexx" 478 25 29 "        if byte <= 0x7F then do"
+   .srcstep 386 386 17 "reference-gennorm2.crexx" 479 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 386 386 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 386 386 0 "state" ""
+   .srcstep 387 387 17 "reference-gennorm2.crexx" 480 11 18 "          iterate"
+   br l76doinc
+l1211iffalse:
+   .srcstep 393 393 17 "reference-gennorm2.crexx" 482 9 24 "        if byte <= 0xBF then do"
+   .traceevent "V" 6 "R" "I" "r" 11 393 393 0 "byte" ""
+   ilte r27,r11,191
+   .traceevent "O" 4 "R" "B" "r" 27 393 393 0 "" ""
+   brf l1225iffalse,r27
+   .srcstep 394 394 17 "reference-gennorm2.crexx" 482 25 29 "        if byte <= 0xBF then do"
+   .srcstep 390 390 17 "reference-gennorm2.crexx" 483 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 390 390 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 390 390 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 390 390 0 "pos" ""
+   .srcstep 391 391 17 "reference-gennorm2.crexx" 484 11 21 "          state = 21"
+   load r15,21
+   .traceevent "L" 4 "R" "I" "r" 15 391 391 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 391 391 0 "state" ""
+   .srcstep 392 392 17 "reference-gennorm2.crexx" 485 11 18 "          iterate"
+   br l76doinc
+l1225iffalse:
+   .srcstep 395 395 17 "reference-gennorm2.crexx" 487 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 395 395 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 395 395 0 "state" ""
+   .srcstep 396 396 17 "reference-gennorm2.crexx" 488 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase25: .jcase jtable2672 25
+   .srcstep 397 397 17 "reference-gennorm2.crexx" 491 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 397 397 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 397 397 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 397 397 0 "byte" ""
+   .srcstep 400 400 17 "reference-gennorm2.crexx" 492 9 24 "        if byte <= 0x7F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 400 400 0 "byte" ""
+   ilte r27,r11,127
+   .traceevent "O" 4 "R" "B" "r" 27 400 400 0 "" ""
+   brf l1252iffalse,r27
+   .srcstep 401 401 17 "reference-gennorm2.crexx" 492 25 29 "        if byte <= 0x7F then do"
+   .srcstep 398 398 17 "reference-gennorm2.crexx" 493 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 398 398 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 398 398 0 "state" ""
+   .srcstep 399 399 17 "reference-gennorm2.crexx" 494 11 18 "          iterate"
+   br l76doinc
+l1252iffalse:
+   .srcstep 405 405 17 "reference-gennorm2.crexx" 496 9 24 "        if byte <= 0x8F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 405 405 0 "byte" ""
+   ilte r27,r11,143
+   .traceevent "O" 4 "R" "B" "r" 27 405 405 0 "" ""
+   brf l1266iffalse,r27
+   .srcstep 406 406 17 "reference-gennorm2.crexx" 496 25 29 "        if byte <= 0x8F then do"
+   .srcstep 402 402 17 "reference-gennorm2.crexx" 497 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 402 402 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 402 402 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 402 402 0 "pos" ""
+   .srcstep 403 403 17 "reference-gennorm2.crexx" 498 11 21 "          state = 21"
+   load r15,21
+   .traceevent "L" 4 "R" "I" "r" 15 403 403 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 403 403 0 "state" ""
+   .srcstep 404 404 17 "reference-gennorm2.crexx" 499 11 18 "          iterate"
+   br l76doinc
+l1266iffalse:
+   .srcstep 407 407 17 "reference-gennorm2.crexx" 501 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 407 407 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 407 407 0 "state" ""
+   .srcstep 408 408 17 "reference-gennorm2.crexx" 502 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase26: .jcase jtable2672 26
+   .srcstep 409 409 17 "reference-gennorm2.crexx" 506 7 70 "      call level_l_gennorm2_emit tokens, count, 2, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 409 409 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 409 409 0 "count" ""
+   load r25,2
+   .traceevent "L" 4 "R" "I" "r" 25 409 409 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 409 409 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 409 409 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 409 409 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 409 409 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 409 409 0 "level_l_gennorm2_emit" ""
+   .srcstep 410 410 17 "reference-gennorm2.crexx" 507 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 410 410 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 410 410 0 "start" ""
+   .srcstep 411 411 17 "reference-gennorm2.crexx" 508 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 411 411 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 411 411 0 "state" ""
+   .srcstep 412 412 17 "reference-gennorm2.crexx" 509 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase27: .jcase jtable2672 27
+   .srcstep 413 413 17 "reference-gennorm2.crexx" 513 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 413 413 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 413 413 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 413 413 0 "byte" ""
+   .srcstep 416 416 17 "reference-gennorm2.crexx" 514 9 24 "        if byte <= 0x2F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 416 416 0 "byte" ""
+   ilte r27,r11,47
+   .traceevent "O" 4 "R" "B" "r" 27 416 416 0 "" ""
+   brf l1312iffalse,r27
+   .srcstep 417 417 17 "reference-gennorm2.crexx" 514 25 29 "        if byte <= 0x2F then do"
+   .srcstep 414 414 17 "reference-gennorm2.crexx" 515 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 414 414 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 414 414 0 "state" ""
+   .srcstep 415 415 17 "reference-gennorm2.crexx" 516 11 18 "          iterate"
+   br l76doinc
+l1312iffalse:
+   .srcstep 421 421 17 "reference-gennorm2.crexx" 518 9 24 "        if byte <= 0x39 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 421 421 0 "byte" ""
+   ilte r27,r11,57
+   .traceevent "O" 4 "R" "B" "r" 27 421 421 0 "" ""
+   brf l1326iffalse,r27
+   .srcstep 422 422 17 "reference-gennorm2.crexx" 518 25 29 "        if byte <= 0x39 then do"
+   .srcstep 418 418 17 "reference-gennorm2.crexx" 519 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 418 418 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 418 418 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 418 418 0 "pos" ""
+   .srcstep 419 419 17 "reference-gennorm2.crexx" 520 11 21 "          state = 29"
+   load r15,29
+   .traceevent "L" 4 "R" "I" "r" 15 419 419 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 419 419 0 "state" ""
+   .srcstep 420 420 17 "reference-gennorm2.crexx" 521 11 18 "          iterate"
+   br l76doinc
+l1326iffalse:
+   .srcstep 423 423 17 "reference-gennorm2.crexx" 523 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 423 423 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 423 423 0 "state" ""
+   .srcstep 424 424 17 "reference-gennorm2.crexx" 524 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase28: .jcase jtable2672 28
+   .srcstep 425 425 17 "reference-gennorm2.crexx" 527 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 425 425 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 425 425 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 425 425 0 "byte" ""
+   .srcstep 429 429 17 "reference-gennorm2.crexx" 528 9 23 "        if byte = 0x69 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 429 429 0 "byte" ""
+   ieq r27,r11,105
+   .traceevent "O" 4 "R" "B" "r" 27 429 429 0 "" ""
+   brf l1358iffalse,r27
+   .srcstep 430 430 17 "reference-gennorm2.crexx" 528 24 28 "        if byte = 0x69 then do"
+   .srcstep 426 426 17 "reference-gennorm2.crexx" 529 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 426 426 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 426 426 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 426 426 0 "pos" ""
+   .srcstep 427 427 17 "reference-gennorm2.crexx" 530 11 21 "          state = 31"
+   load r15,31
+   .traceevent "L" 4 "R" "I" "r" 15 427 427 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 427 427 0 "state" ""
+   .srcstep 428 428 17 "reference-gennorm2.crexx" 531 11 18 "          iterate"
+   br l76doinc
+l1358iffalse:
+   .srcstep 431 431 17 "reference-gennorm2.crexx" 533 9 19 "        state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 431 431 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 431 431 0 "state" ""
+   .srcstep 432 432 17 "reference-gennorm2.crexx" 534 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase29: .jcase jtable2672 29
+   .srcstep 433 433 17 "reference-gennorm2.crexx" 537 9 21 "        yyaccept = 3"
+   load r16,3
+   .traceevent "L" 4 "R" "I" "r" 16 433 433 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 433 433 0 "yyaccept" ""
+   .srcstep 434 434 17 "reference-gennorm2.crexx" 538 9 23 "        yymarker = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 434 434 0 "pos" ""
+   icopy r9,r12
+   .traceevent "A" 6 "R" "I" "r" 9 434 434 0 "yymarker" ""
+   .srcstep 435 435 17 "reference-gennorm2.crexx" 539 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 435 435 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 435 435 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 435 435 0 "byte" ""
+   .srcstep 439 439 17 "reference-gennorm2.crexx" 540 9 23 "        if byte = 0x2E then do"
+   .traceevent "V" 6 "R" "I" "r" 11 439 439 0 "byte" ""
+   ieq r27,r11,46
+   .traceevent "O" 4 "R" "B" "r" 27 439 439 0 "" ""
+   brf l1396iffalse,r27
+   .srcstep 440 440 17 "reference-gennorm2.crexx" 540 24 28 "        if byte = 0x2E then do"
+   .srcstep 436 436 17 "reference-gennorm2.crexx" 541 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 436 436 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 436 436 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 436 436 0 "pos" ""
+   .srcstep 437 437 17 "reference-gennorm2.crexx" 542 11 21 "          state = 27"
+   load r15,27
+   .traceevent "L" 4 "R" "I" "r" 15 437 437 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 437 437 0 "state" ""
+   .srcstep 438 438 17 "reference-gennorm2.crexx" 543 11 18 "          iterate"
+   br l76doinc
+l1396iffalse:
+   .srcstep 443 443 17 "reference-gennorm2.crexx" 545 9 24 "        if byte <= 0x2F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 443 443 0 "byte" ""
+   ilte r27,r11,47
+   .traceevent "O" 4 "R" "B" "r" 27 443 443 0 "" ""
+   brf l1405iffalse,r27
+   .srcstep 444 444 17 "reference-gennorm2.crexx" 545 25 29 "        if byte <= 0x2F then do"
+   .srcstep 441 441 17 "reference-gennorm2.crexx" 546 11 21 "          state = 30"
+   load r15,30
+   .traceevent "L" 4 "R" "I" "r" 15 441 441 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 441 441 0 "state" ""
+   .srcstep 442 442 17 "reference-gennorm2.crexx" 547 11 18 "          iterate"
+   br l76doinc
+l1405iffalse:
+   .srcstep 448 448 17 "reference-gennorm2.crexx" 549 9 24 "        if byte <= 0x39 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 448 448 0 "byte" ""
+   ilte r27,r11,57
+   .traceevent "O" 4 "R" "B" "r" 27 448 448 0 "" ""
+   brf l1419iffalse,r27
+   .srcstep 449 449 17 "reference-gennorm2.crexx" 549 25 29 "        if byte <= 0x39 then do"
+   .srcstep 445 445 17 "reference-gennorm2.crexx" 550 11 24 "          pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 445 445 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 445 445 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 445 445 0 "pos" ""
+   .srcstep 446 446 17 "reference-gennorm2.crexx" 551 11 21 "          state = 29"
+   load r15,29
+   .traceevent "L" 4 "R" "I" "r" 15 446 446 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 446 446 0 "state" ""
+   .srcstep 447 447 17 "reference-gennorm2.crexx" 552 11 18 "          iterate"
+   br l76doinc
+l1419iffalse:
+   .srcstep 450 450 17 "reference-gennorm2.crexx" 554 9 19 "        state = 30"
+   load r15,30
+   .traceevent "L" 4 "R" "I" "r" 15 450 450 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 450 450 0 "state" ""
+   .srcstep 451 451 17 "reference-gennorm2.crexx" 555 9 16 "        iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase30: .jcase jtable2672 30
+   .srcstep 452 452 17 "reference-gennorm2.crexx" 559 7 70 "      call level_l_gennorm2_emit tokens, count, 8, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 452 452 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 452 452 0 "count" ""
+   load r25,8
+   .traceevent "L" 4 "R" "I" "r" 25 452 452 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 452 452 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 452 452 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 452 452 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 452 452 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 452 452 0 "level_l_gennorm2_emit" ""
+   .srcstep 453 453 17 "reference-gennorm2.crexx" 560 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 453 453 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 453 453 0 "start" ""
+   .srcstep 454 454 17 "reference-gennorm2.crexx" 561 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 454 454 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 454 454 0 "state" ""
+   .srcstep 455 455 17 "reference-gennorm2.crexx" 562 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchcase31: .jcase jtable2672 31
+   .srcstep 456 456 17 "reference-gennorm2.crexx" 566 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 456 456 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 456 456 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 456 456 0 "byte" ""
+   .srcstep 459 459 17 "reference-gennorm2.crexx" 567 9 24 "        if byte \\= 0x63 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 459 459 0 "byte" ""
+   ine r27,r11,99
+   .traceevent "O" 4 "R" "B" "r" 27 459 459 0 "" ""
+   brf l1465iffalse,r27
+   .srcstep 460 460 17 "reference-gennorm2.crexx" 567 25 29 "        if byte \\= 0x63 then do"
+   .srcstep 457 457 17 "reference-gennorm2.crexx" 568 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 457 457 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 457 457 0 "state" ""
+   .srcstep 458 458 17 "reference-gennorm2.crexx" 569 11 18 "          iterate"
+   br l76doinc
+l1465iffalse:
+   .srcstep 461 461 17 "reference-gennorm2.crexx" 571 9 22 "        pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 461 461 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 461 461 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 461 461 0 "pos" ""
+   .srcstep 462 462 17 "reference-gennorm2.crexx" 572 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 462 462 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 462 462 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 462 462 0 "byte" ""
+   .srcstep 465 465 17 "reference-gennorm2.crexx" 573 9 24 "        if byte \\= 0x6F then do"
+   .traceevent "V" 6 "R" "I" "r" 11 465 465 0 "byte" ""
+   ine r27,r11,111
+   .traceevent "O" 4 "R" "B" "r" 27 465 465 0 "" ""
+   brf l1490iffalse,r27
+   .srcstep 466 466 17 "reference-gennorm2.crexx" 573 25 29 "        if byte \\= 0x6F then do"
+   .srcstep 463 463 17 "reference-gennorm2.crexx" 574 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 463 463 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 463 463 0 "state" ""
+   .srcstep 464 464 17 "reference-gennorm2.crexx" 575 11 18 "          iterate"
+   br l76doinc
+l1490iffalse:
+   .srcstep 467 467 17 "reference-gennorm2.crexx" 577 9 22 "        pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 467 467 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 467 467 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 467 467 0 "pos" ""
+   .srcstep 468 468 17 "reference-gennorm2.crexx" 578 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 468 468 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 468 468 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 468 468 0 "byte" ""
+   .srcstep 471 471 17 "reference-gennorm2.crexx" 579 9 24 "        if byte \\= 0x64 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 471 471 0 "byte" ""
+   ine r27,r11,100
+   .traceevent "O" 4 "R" "B" "r" 27 471 471 0 "" ""
+   brf l1515iffalse,r27
+   .srcstep 472 472 17 "reference-gennorm2.crexx" 579 25 29 "        if byte \\= 0x64 then do"
+   .srcstep 469 469 17 "reference-gennorm2.crexx" 580 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 469 469 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 469 469 0 "state" ""
+   .srcstep 470 470 17 "reference-gennorm2.crexx" 581 11 18 "          iterate"
+   br l76doinc
+l1515iffalse:
+   .srcstep 473 473 17 "reference-gennorm2.crexx" 583 9 22 "        pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 473 473 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 473 473 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 473 473 0 "pos" ""
+   .srcstep 474 474 17 "reference-gennorm2.crexx" 584 9 40 "        byte = <at..u8>(pos) scan_bytes"
+   .traceevent "V" 6 "R" "X" "r" 13 474 474 0 "scan_bytes" ""
+   .traceevent "V" 6 "R" "I" "r" 12 474 474 0 "pos" ""
+   bgetu8 r11,r13,r12
+   .traceevent "A" 6 "R" "I" "r" 11 474 474 0 "byte" ""
+   .srcstep 477 477 17 "reference-gennorm2.crexx" 585 9 24 "        if byte \\= 0x65 then do"
+   .traceevent "V" 6 "R" "I" "r" 11 477 477 0 "byte" ""
+   ine r27,r11,101
+   .traceevent "O" 4 "R" "B" "r" 27 477 477 0 "" ""
+   brf l1540iffalse,r27
+   .srcstep 478 478 17 "reference-gennorm2.crexx" 585 25 29 "        if byte \\= 0x65 then do"
+   .srcstep 475 475 17 "reference-gennorm2.crexx" 586 11 21 "          state = 19"
+   load r15,19
+   .traceevent "L" 4 "R" "I" "r" 15 475 475 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 475 475 0 "state" ""
+   .srcstep 476 476 17 "reference-gennorm2.crexx" 587 11 18 "          iterate"
+   br l76doinc
+l1540iffalse:
+   .srcstep 479 479 17 "reference-gennorm2.crexx" 589 9 22 "        pos = pos + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 479 479 0 "pos" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 479 479 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 479 479 0 "pos" ""
+   .srcstep 480 480 17 "reference-gennorm2.crexx" 591 7 70 "      call level_l_gennorm2_emit tokens, count, 7, start, pos - start"
+   .traceevent "V" 6 "R" "X" "r" 1 480 480 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 480 480 0 "count" ""
+   load r25,7
+   .traceevent "L" 4 "R" "I" "r" 25 480 480 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 480 480 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 12 480 480 0 "pos" ""
+   .traceevent "V" 6 "R" "I" "r" 10 480 480 0 "start" ""
+   isub r27,r12,r10
+   .traceevent "O" 4 "R" "I" "r" 27 480 480 0 "" ""
+   load r22,5
+   swap r23,r1
+   swap r24,r2
+   swap r26,r10
+   call r8,level_l_gennorm2_emit(),r22
+   swap r1,r23
+   swap r2,r24
+   swap r10,r26
+   .traceevent "F" 4 "R" "I" "r" 8 480 480 0 "level_l_gennorm2_emit" ""
+   .srcstep 481 481 17 "reference-gennorm2.crexx" 592 7 18 "      start = pos"
+   .traceevent "V" 6 "R" "I" "r" 12 481 481 0 "pos" ""
+   icopy r10,r12
+   .traceevent "A" 6 "R" "I" "r" 10 481 481 0 "start" ""
+   .srcstep 482 482 17 "reference-gennorm2.crexx" 593 7 16 "      state = 0"
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 482 482 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 482 482 0 "state" ""
+   .srcstep 483 483 17 "reference-gennorm2.crexx" 594 7 14 "      iterate"
+   br l76doinc
+   br l2672dispatchend
+l2672dispatchend:
+l76doinc:
+   br l76dostart
+l76doend:
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.byte"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.yymarker"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.count"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.pos"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.scan_bytes"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.source"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.source_len"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.start"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.state"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.tokens"
+   .meta "level_l_gennorm2.level_l_gennorm2_lex.yyaccept"
+   .meta "level_l_gennorm2._level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_offset"
+   .meta "level_l_gennorm2._level_l_status"
+
+level_l_gennorm2_status() .locals=0 .expose=level_l_gennorm2.level_l_gennorm2_status
+   .meta "level_l_gennorm2.level_l_gennorm2_status"="b" ".int" level_l_gennorm2_status() ""
+   .srcstep 487 487 17 "reference-gennorm2.crexx" 601 1 110 "level_l_gennorm2_status: procedure = .int expose _level_l_status _level_l_error_offset _level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_message"="b" ".string" g0
+   .meta "level_l_gennorm2._level_l_error_offset"="b" ".int" g1
+   .meta "level_l_gennorm2._level_l_status"="b" ".int" g2
+   numsci 18,1,1
+   .srcstep 486 486 17 "reference-gennorm2.crexx" 602 3 25 "  return _level_l_status"
+   .traceevent "V" 6 "R" "I" "g" 2 486 486 0 "_level_l_status" ""
+   ret g2
+   .meta "level_l_gennorm2._level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_offset"
+   .meta "level_l_gennorm2._level_l_status"
+
+level_l_gennorm2_error_offset() .locals=0 .expose=level_l_gennorm2.level_l_gennorm2_error_offset
+   .meta "level_l_gennorm2.level_l_gennorm2_error_offset"="b" ".int" level_l_gennorm2_error_offset() ""
+   .srcstep 489 489 17 "reference-gennorm2.crexx" 604 1 116 "level_l_gennorm2_error_offset: procedure = .int expose _level_l_status _level_l_error_offset _level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_message"="b" ".string" g0
+   .meta "level_l_gennorm2._level_l_error_offset"="b" ".int" g1
+   .meta "level_l_gennorm2._level_l_status"="b" ".int" g2
+   numsci 18,1,1
+   .srcstep 488 488 17 "reference-gennorm2.crexx" 605 3 31 "  return _level_l_error_offset"
+   .traceevent "V" 6 "R" "I" "g" 1 488 488 0 "_level_l_error_offset" ""
+   ret g1
+   .meta "level_l_gennorm2._level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_offset"
+   .meta "level_l_gennorm2._level_l_status"
+
+level_l_gennorm2_error_message() .locals=0 .expose=level_l_gennorm2.level_l_gennorm2_error_message
+   .meta "level_l_gennorm2.level_l_gennorm2_error_message"="b" ".string" level_l_gennorm2_error_message() ""
+   .srcstep 491 491 17 "reference-gennorm2.crexx" 607 1 120 "level_l_gennorm2_error_message: procedure = .string expose _level_l_status _level_l_error_offset _level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_message"="b" ".string" g0
+   .meta "level_l_gennorm2._level_l_error_offset"="b" ".int" g1
+   .meta "level_l_gennorm2._level_l_status"="b" ".int" g2
+   numsci 18,1,1
+   .srcstep 490 490 17 "reference-gennorm2.crexx" 608 3 32 "  return _level_l_error_message"
+   .traceevent "V" 6 "R" "S" "g" 0 490 490 0 "_level_l_error_message" ""
+   ret g0
+   .meta "level_l_gennorm2._level_l_error_message"
+   .meta "level_l_gennorm2._level_l_error_offset"
+   .meta "level_l_gennorm2._level_l_status"
+
+level_l_gennorm2_token_count() .locals=2 .expose=level_l_gennorm2.level_l_gennorm2_token_count
+   .meta "level_l_gennorm2.level_l_gennorm2_token_count"="b" ".int" level_l_gennorm2_token_count() "tokens=.binary"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_count"=".inline" "I6;c,1,1,3,0,4,0,7,6,0,0,0,0,7,0,400;f,0,7265666572656E63652D67656E6E6F726D322E6372657878;u,0,0,610,7,23,1,202061726720746F6B656E73203D202E62696E617279;u,1,0,610,7,13,1,202061726720746F6B656E73203D202E62696E617279;u,2,0,610,16,23,1,202061726720746F6B656E73203D202E62696E617279;u,3,0,611,3,34,1,202072657475726E203C626C656E3E28746F6B656E7329203C696469763E203132;u,4,0,611,10,34,1,202072657475726E203C626C656E3E28746F6B656E7329203C696469763E203132;u,5,0,611,10,24,1,202072657475726E203C626C656E3E28746F6B656E7329203C696469763E203132;u,6,0,611,16,24,1,202072657475726E203C626C656E3E28746F6B656E7329203C696469763E203132;u,7,0,611,32,34,1,202072657475726E203C626C656E3E28746F6B656E7329203C696469763E203132;q,0,-1,3;s,0,0,746F6B656E73,2,7,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,7,7,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,7,7,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,746F6B656E73,-;<;>,0,2,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,4,56,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C696469763E,-;>,0,5,80,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C,-;>,0,6,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,746F6B656E73,-;<;<;>,0,7,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,12,0,0,3132,-;<;<;<;<"
+   .srcstep 494 494 17 "reference-gennorm2.crexx" 610 1 47 "level_l_gennorm2_token_count: procedure = .int"
+   numsci 18,1,1
+   .srcstep 492 492 17 "reference-gennorm2.crexx" 611 7 23 "  arg tokens = .binary"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_count.tokens"="b" ".binary" a1
+   .srcstep 493 493 17 "reference-gennorm2.crexx" 612 3 34 "  return <blen>(tokens) <idiv> 12"
+   .traceevent "V" 6 "R" "X" "a" 1 493 493 0 "tokens" ""
+   blen r1,a1
+   idiv r1,r1,12
+   .traceevent "O" 4 "R" "I" "r" 1 493 493 0 "" ""
+   ret r1
+   .meta "level_l_gennorm2.level_l_gennorm2_token_count.tokens"
+
+level_l_gennorm2_token_kind() .locals=4 .expose=level_l_gennorm2.level_l_gennorm2_token_kind
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind"="b" ".int" level_l_gennorm2_token_kind() "tokens=.binary,index=.int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind"=".inline" "I6;c,1,2,3,0,4,0,7,8,0,0,0,0,7,0,400,3,0,400;f,0,7265666572656E63652D67656E6E6F726D322E6372657878;u,0,0,614,7,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,1,0,614,7,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,2,0,614,7,13,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,3,0,614,16,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,4,0,614,25,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,5,0,614,25,30,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,6,0,614,33,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,7,0,615,3,38,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,8,0,615,10,38,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,9,0,615,13,18,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,10,0,615,32,38,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,11,0,615,19,31,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,12,0,615,20,25,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;u,13,0,615,28,30,1,202072657475726E203C61742E2E7531363E28696E646578202A2031322920746F6B656E73;q,0,-1,3;s,0,0,746F6B656E73,2,7,0,-,-,-,1,a,1;s,1,0,696E646578,2,3,0,-,-,-,1,a,2;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,1,3,7,7,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,2,112,7,7,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,746F6B656E73,-;<;>,0,3,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;>,0,4,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,5,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,0,0,0,0,696E646578,-;<;>,0,6,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,7,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,78,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C,-;>,0,9,14,8,8,0,0,-,-,-,-,753136,753136,0,-1,-1,0,0,0,0,0,753136,-;<;>,0,10,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,746F6B656E73,-;<;>,0,11,54,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2A,-;>,0,12,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,696E646578,-;<;>,0,13,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,12,0,0,3132,-;<;<;<;<;<"
+   .srcstep 498 498 17 "reference-gennorm2.crexx" 614 1 46 "level_l_gennorm2_token_kind: procedure = .int"
+   numsci 18,1,1
+   .srcstep 495 495 17 "reference-gennorm2.crexx" 615 7 23 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind.tokens"="b" ".binary" a1
+   .srcstep 496 496 17 "reference-gennorm2.crexx" 615 25 37 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind.index"="b" ".int" a2
+   .srcstep 497 497 17 "reference-gennorm2.crexx" 616 3 38 "  return <at..u16>(index * 12) tokens"
+   .traceevent "V" 6 "R" "X" "a" 1 497 497 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "a" 2 497 497 0 "index" ""
+   imult r2,a2,12
+   .traceevent "O" 4 "R" "I" "r" 2 497 497 0 "" ""
+   bgetu16 r3,a1,r2
+   ret r3
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind.index"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_kind.tokens"
+
+level_l_gennorm2_token_start() .locals=4 .expose=level_l_gennorm2.level_l_gennorm2_token_start
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start"="b" ".int" level_l_gennorm2_token_start() "tokens=.binary,index=.int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start"=".inline" "I6;c,1,2,3,0,4,0,7,10,0,0,0,0,7,0,400,3,0,400;f,0,7265666572656E63652D67656E6E6F726D322E6372657878;u,0,0,618,7,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,1,0,618,7,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,2,0,618,7,13,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,3,0,618,16,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,4,0,618,25,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,5,0,618,25,30,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,6,0,618,33,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,7,0,619,3,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,8,0,619,10,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,9,0,619,13,18,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,10,0,619,36,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,11,0,619,19,35,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,12,0,619,20,30,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,13,0,619,20,25,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,14,0,619,28,30,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;u,15,0,619,33,34,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20322920746F6B656E73;q,0,-1,3;s,0,0,746F6B656E73,2,7,0,-,-,-,1,a,1;s,1,0,696E646578,2,3,0,-,-,-,1,a,2;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,1,3,7,7,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,2,112,7,7,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,746F6B656E73,-;<;>,0,3,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;>,0,4,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,5,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,0,0,0,0,696E646578,-;<;>,0,6,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,7,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,78,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C,-;>,0,9,14,8,8,0,0,-,-,-,-,753332,753332,0,-1,-1,0,0,0,0,0,753332,-;<;>,0,10,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,746F6B656E73,-;<;>,0,11,46,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2B,-;>,0,12,54,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2A,-;>,0,13,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,696E646578,-;<;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,12,0,0,3132,-;<;<;>,0,15,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,2,0,0,32,-;<;<;<;<;<"
+   .srcstep 502 502 17 "reference-gennorm2.crexx" 618 1 47 "level_l_gennorm2_token_start: procedure = .int"
+   numsci 18,1,1
+   .srcstep 499 499 17 "reference-gennorm2.crexx" 619 7 23 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start.tokens"="b" ".binary" a1
+   .srcstep 500 500 17 "reference-gennorm2.crexx" 619 25 37 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start.index"="b" ".int" a2
+   .srcstep 501 501 17 "reference-gennorm2.crexx" 620 3 42 "  return <at..u32>(index * 12 + 2) tokens"
+   .traceevent "V" 6 "R" "X" "a" 1 501 501 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "a" 2 501 501 0 "index" ""
+   imult r2,a2,12
+   .traceevent "O" 4 "R" "I" "r" 2 501 501 0 "" ""
+   iadd r2,r2,2
+   .traceevent "O" 4 "R" "I" "r" 2 501 501 0 "" ""
+   bgetu32 r3,a1,r2
+   ret r3
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start.index"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_start.tokens"
+
+level_l_gennorm2_token_length() .locals=4 .expose=level_l_gennorm2.level_l_gennorm2_token_length
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length"="b" ".int" level_l_gennorm2_token_length() "tokens=.binary,index=.int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length"=".inline" "I6;c,1,2,3,0,4,0,7,10,0,0,0,0,7,0,400,3,0,400;f,0,7265666572656E63652D67656E6E6F726D322E6372657878;u,0,0,622,7,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,1,0,622,7,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,2,0,622,7,13,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,3,0,622,16,23,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,4,0,622,25,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,5,0,622,25,30,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,6,0,622,33,37,1,202061726720746F6B656E73203D202E62696E6172792C20696E646578203D202E696E74;u,7,0,623,3,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,8,0,623,10,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,9,0,623,13,18,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,10,0,623,36,42,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,11,0,623,19,35,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,12,0,623,20,30,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,13,0,623,20,25,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,14,0,623,28,30,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;u,15,0,623,33,34,1,202072657475726E203C61742E2E7533323E28696E646578202A203132202B20362920746F6B656E73;q,0,-1,3;s,0,0,746F6B656E73,2,7,0,-,-,-,1,a,1;s,1,0,696E646578,2,3,0,-,-,-,1,a,2;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,1,3,7,7,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,2,112,7,7,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,746F6B656E73,-;<;>,0,3,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;>,0,4,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,5,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,0,0,0,0,696E646578,-;<;>,0,6,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,7,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,78,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C,-;>,0,9,14,8,8,0,0,-,-,-,-,753332,753332,0,-1,-1,0,0,0,0,0,753332,-;<;>,0,10,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,746F6B656E73,-;<;>,0,11,46,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2B,-;>,0,12,54,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2A,-;>,0,13,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,696E646578,-;<;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,12,0,0,3132,-;<;<;>,0,15,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,6,0,0,36,-;<;<;<;<;<"
+   .srcstep 506 506 17 "reference-gennorm2.crexx" 622 1 48 "level_l_gennorm2_token_length: procedure = .int"
+   numsci 18,1,1
+   .srcstep 503 503 17 "reference-gennorm2.crexx" 623 7 23 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length.tokens"="b" ".binary" a1
+   .srcstep 504 504 17 "reference-gennorm2.crexx" 623 25 37 "  arg tokens = .binary, index = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length.index"="b" ".int" a2
+   .srcstep 505 505 17 "reference-gennorm2.crexx" 624 3 42 "  return <at..u32>(index * 12 + 6) tokens"
+   .traceevent "V" 6 "R" "X" "a" 1 505 505 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "a" 2 505 505 0 "index" ""
+   imult r2,a2,12
+   .traceevent "O" 4 "R" "I" "r" 2 505 505 0 "" ""
+   iadd r2,r2,6
+   .traceevent "O" 4 "R" "I" "r" 2 505 505 0 "" ""
+   bgetu32 r3,a1,r2
+   ret r3
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length.index"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_length.tokens"
+
+level_l_gennorm2_token_name() .locals=2 .expose=level_l_gennorm2.level_l_gennorm2_token_name
+   .meta "level_l_gennorm2.level_l_gennorm2_token_name"="b" ".string" level_l_gennorm2_token_name() "kind=.int"
+   .srcstep 523 523 17 "reference-gennorm2.crexx" 626 1 49 "level_l_gennorm2_token_name: procedure = .string"
+   numsci 18,1,1
+   .srcstep 507 507 17 "reference-gennorm2.crexx" 627 7 18 "  arg kind = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_name.kind"="b" ".int" a1
+   .meta "level_l_gennorm2.level_l_gennorm2_token_name.select_tmp"="b" ".int" r1
+   .srcstep 508 508 6 "reference-gennorm2.crexx" 628 3 14 "  select kind"
+   null r1
+   .srcstep 509 509 6 "reference-gennorm2.crexx" 628 3 14 "  select kind"
+   .traceevent "V" 6 "R" "I" "a" 1 509 509 0 "kind" ""
+   icopy r1,a1
+   .traceevent "A" 6 "R" "I" "r" 1 509 509 0 "select_tmp" ""
+   .srcstep 521 521 6 "reference-gennorm2.crexx" 628 3 14 "  select kind"
+   .jtable jtable2737 auto
+   jumpi r1,jtable2737
+   br l2737dispatchdefault
+l2737dispatchcase0: .jcase jtable2737 0
+   .srcstep 510 510 17 "reference-gennorm2.crexx" 629 17 29 "    when 0 then return \"eof\""
+   ret "eof"
+   br l2737dispatchend
+l2737dispatchcase1: .jcase jtable2737 1
+   .srcstep 511 511 17 "reference-gennorm2.crexx" 630 17 37 "    when 1 then return \"hexadecimal\""
+   ret "hexadecimal"
+   br l2737dispatchend
+l2737dispatchcase2: .jcase jtable2737 2
+   .srcstep 512 512 17 "reference-gennorm2.crexx" 631 17 31 "    when 2 then return \"range\""
+   ret "range"
+   br l2737dispatchend
+l2737dispatchcase3: .jcase jtable2737 3
+   .srcstep 513 513 17 "reference-gennorm2.crexx" 632 17 31 "    when 3 then return \"colon\""
+   ret "colon"
+   br l2737dispatchend
+l2737dispatchcase4: .jcase jtable2737 4
+   .srcstep 514 514 17 "reference-gennorm2.crexx" 633 17 32 "    when 4 then return \"equals\""
+   ret "equals"
+   br l2737dispatchend
+l2737dispatchcase5: .jcase jtable2737 5
+   .srcstep 515 515 17 "reference-gennorm2.crexx" 634 17 33 "    when 5 then return \"greater\""
+   ret "greater"
+   br l2737dispatchend
+l2737dispatchcase6: .jcase jtable2737 6
+   .srcstep 516 516 17 "reference-gennorm2.crexx" 635 17 30 "    when 6 then return \"star\""
+   ret "star"
+   br l2737dispatchend
+l2737dispatchcase7: .jcase jtable2737 7
+   .srcstep 517 517 17 "reference-gennorm2.crexx" 636 17 41 "    when 7 then return \"unicode_keyword\""
+   ret "unicode_keyword"
+   br l2737dispatchend
+l2737dispatchcase8: .jcase jtable2737 8
+   .srcstep 518 518 17 "reference-gennorm2.crexx" 637 17 33 "    when 8 then return \"version\""
+   ret "version"
+   br l2737dispatchend
+l2737dispatchcase9: .jcase jtable2737 9
+   .srcstep 519 519 17 "reference-gennorm2.crexx" 638 17 33 "    when 9 then return \"newline\""
+   ret "newline"
+   br l2737dispatchend
+l2737dispatchdefault:
+   .srcstep 520 520 17 "reference-gennorm2.crexx" 639 15 31 "    otherwise return \"unknown\""
+   ret "unknown"
+l2737dispatchend:
+   .srcstep 522 522 17 "reference-gennorm2.crexx" 641 3 19 "  return \"unknown\""
+   ret "unknown"
+   .meta "level_l_gennorm2.level_l_gennorm2_token_name.kind"
+
+level_l_gennorm2_emit() .locals=11
+   .meta "level_l_gennorm2.level_l_gennorm2_emit"="b" ".int" level_l_gennorm2_emit() "expose tokens=.binary,expose count=.int,kind=.int,start=.int,span_length=.int"
+   .srcstep 540 540 17 "reference-gennorm2.crexx" 643 1 40 "level_l_gennorm2_emit: procedure = .int"
+   numsci 18,1,1
+   .srcstep 524 524 17 "reference-gennorm2.crexx" 644 7 30 "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.tokens"="b" ".binary" a1
+   .srcstep 525 525 17 "reference-gennorm2.crexx" 644 32 51 "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.count"="b" ".int" a2
+   .srcstep 526 526 17 "reference-gennorm2.crexx" 644 53 64 "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.kind"="b" ".int" a3
+   .srcstep 527 527 17 "reference-gennorm2.crexx" 644 66 78 "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.start"="b" ".int" a4
+   .srcstep 528 528 17 "reference-gennorm2.crexx" 644 80 98 "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.span_length"="b" ".int" a5
+   .srcstep 529 529 17 "reference-gennorm2.crexx" 645 3 22 "  offset = count * 12"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.offset"="b" ".int" r2
+   .traceevent "V" 6 "R" "I" "a" 2 529 529 0 "count" ""
+   imult r2,a2,12
+   .traceevent "O" 4 "R" "I" "r" 2 529 529 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 529 529 0 "offset" ""
+   .srcstep 534 534 17 "reference-gennorm2.crexx" 646 3 37 "  call binresize tokens, offset + 12"
+   .srcstep 530 530 33 "reference-gennorm2.crexx" 646 37 37 "  call binresize tokens, offset + 12"
+   .traceevent "V" 6 "R" "I" "r" 2 530 530 0 "offset" ""
+   iadd r8,r2,12
+   .traceevent "O" 4 "R" "I" "r" 8 530 530 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 530 530 0 "length" ""
+   .srcstep 531 531 25 "binary.crexx" 248 3 13 "  result = 0"
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 531 531 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 531 531 0 "result" ""
+   .srcstep 532 532 25 "binary.crexx" 249 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "a" 1 0 0 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "length" ""
+   bresize a1,r8
+   .srcstep 533 533 25 "binary.crexx" 250 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 9 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "a" 1 0 0 0 "tokens" ""
+   blen r9,a1
+   .traceevent "V" 6 "R" "I" "r" 9 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 9 0 0 0 "__inline_unused_1986" ""
+   .srcstep 535 535 17 "reference-gennorm2.crexx" 647 3 34 "  <at..u16>(offset) tokens = kind"
+   .traceevent "V" 6 "R" "X" "a" 1 535 535 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 535 535 0 "offset" ""
+   .traceevent "V" 6 "R" "I" "a" 3 535 535 0 "kind" ""
+   bsetu16 a1,r2,a3
+   .srcstep 536 536 17 "reference-gennorm2.crexx" 648 3 39 "  <at..u32>(offset + 2) tokens = start"
+   .traceevent "V" 6 "R" "X" "a" 1 536 536 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 536 536 0 "offset" ""
+   iadd r10,r2,2
+   .traceevent "O" 4 "R" "I" "r" 10 536 536 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 4 536 536 0 "start" ""
+   bsetu32 a1,r10,a4
+   .srcstep 537 537 17 "reference-gennorm2.crexx" 649 3 45 "  <at..u32>(offset + 6) tokens = span_length"
+   .traceevent "V" 6 "R" "X" "a" 1 537 537 0 "tokens" ""
+   .traceevent "V" 6 "R" "I" "r" 2 537 537 0 "offset" ""
+   iadd r10,r2,6
+   .traceevent "O" 4 "R" "I" "r" 10 537 537 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 5 537 537 0 "span_length" ""
+   bsetu32 a1,r10,a5
+   .srcstep 538 538 17 "reference-gennorm2.crexx" 650 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "a" 2 538 538 0 "count" ""
+   iadd a2,a2,1
+   .traceevent "O" 4 "R" "I" "a" 2 538 538 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 2 538 538 0 "count" ""
+   .srcstep 539 539 17 "reference-gennorm2.crexx" 651 3 15 "  return count"
+   .traceevent "V" 6 "R" "I" "a" 2 539 539 0 "count" ""
+   ret a2
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.count"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.kind"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.offset"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.span_length"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.start"
+   .meta "level_l_gennorm2.level_l_gennorm2_emit.tokens"

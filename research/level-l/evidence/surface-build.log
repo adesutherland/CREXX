@@ -1,0 +1,8 @@
+Warning in surfacegen.crexx @ 43:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 30, column 11. Declare this binding explicitly if intentional., "token"
+Warning in surfacegen.crexx @ 52:32 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 23, column 6. Declare this binding explicitly if intentional., "index"
+Warning in surfacegen.crexx @ 130:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 101, column 10. Declare this binding explicitly if intentional., "index"
+Warning in surfacegen.crexx @ 141:15 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 101, column 10. Declare this binding explicitly if intentional., "index"
+4 warning(s) in source file
+PASS: parsed and lowered /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface/tinyexpr.levell
+Warning in surface.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsb"
+1 warning(s) in source file

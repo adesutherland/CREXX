@@ -1,0 +1,139 @@
+/* Pika-inspired reverse DP research control, not a complete Pika port.
+ * Dense rescan scheduling, grow-only spans, no predicates/semantic actions.
+ * Repetition shares suffix lengths; no suffix arrays or recursive host calls.
+ */
+options levell
+namespace lldp expose parse matchat diagnose expectedtoken opcount updatecount cellcount
+
+parse: procedure = .int expose matches stride operations updates cells
+  arg graph = .binary, root = .int, input = .int[]
+  clauses = <blen>(graph) / 144
+  size = input[0]; stride = size + 1
+  cells = clauses * stride; operations = 0; updates = 0
+  matches = .int[]
+
+  cell = .int; head = .int; tail = .int
+  do cell = 1 to cells
+    matches[cell] = -1
+  end
+  do at = size to 0 by -1
+    changed = 1
+    do while changed
+      changed = 0
+      do clause = 1 to clauses
+        operations = operations + 1
+        base = (clause - 1) * 144
+        type = <at..i32>(base) graph
+        a = <at..i32>(base + 4) graph
+        b = <at..i32>(base + 8) graph
+        length = -1
+        select type
+          when 1 then do
+            if at < size then do
+              symbol = input[at + 1]
+              if symbol >= 0 & symbol < 128 then do
+                if <at..u8>(base + 16 + symbol) graph = 1 then length = 1
+              end
+            end
+          end
+          when 2 then do
+            head = matchat(a,at)
+            if head >= 0 then do
+              tail = matchat(b,at + head)
+              if tail >= 0 then length = head + tail
+            end
+          end
+          when 3 then do
+            length = matchat(a,at)
+            if length < 0 then length = matchat(b,at)
+          end
+          when 4 then length = matchat(a,at)
+          when 5 then length = 0
+          when 6 then do
+            length = 0; head = matchat(a,at)
+            if head > 0 then do
+              tail = matchat(clause,at + head)
+              if tail >= 0 then length = head + tail
+            end
+          end
+          otherwise nop
+        end
+        cell = (clause - 1) * stride + at + 1
+        if length > matches[cell] then do
+          matches[cell] = length; changed = 1; updates = updates + 1
+        end
+      end
+    end
+  end
+  return matchat(root,0)
+
+matchat: procedure = .int expose matches stride
+  arg clause = .int, at = .int
+  if clause <= 0 | at < 0 | at >= stride then return -1
+  return matches[(clause - 1) * stride + at + 1]
+
+/* A separate anchored explanation pass. It does not alter recognition. */
+diagnose: procedure = .int expose failurepos expected visited stride
+  arg graph = .binary, root = .int, input = .int[]
+  failurepos = -1; expected = .int[]; visited = .int[]
+  index = .int
+  do index = 1 to 128
+    expected[index] = 0
+  end
+  do index = 1 to (<blen>(graph) / 144) * stride
+    visited[index] = 0
+  end
+  call walk graph,root,0,input
+  return failurepos
+
+walk: procedure = .void expose failurepos expected visited stride
+  arg graph = .binary, clause = .int, at = .int, input = .int[]
+  if clause <= 0 | at >= stride then return
+  symbol = .int
+  cell = (clause - 1) * stride + at + 1
+  if visited[cell] then return
+  visited[cell] = 1
+  base = (clause - 1) * 144
+  type = <at..i32>(base) graph
+  a = <at..i32>(base + 4) graph; b = <at..i32>(base + 8) graph
+  select type
+    when 1 then do
+      if matchat(clause,at) >= 0 then return
+      if at > failurepos then do
+        failurepos = at
+        do symbol = 0 to 127
+          expected[symbol + 1] = 0
+        end
+      end
+      if at = failurepos then do symbol = 0 to 127
+        if <at..u8>(base + 16 + symbol) graph = 1 then expected[symbol + 1] = 1
+      end
+    end
+    when 2 then do
+      call walk graph,a,at,input
+      head = matchat(a,at)
+      if head >= 0 then call walk graph,b,at + head,input
+    end
+    when 3 then do
+      call walk graph,a,at,input
+      call walk graph,b,at,input
+    end
+    when 4 then call walk graph,a,at,input
+    when 6 then do
+      call walk graph,a,at,input
+      head = matchat(a,at)
+      if head > 0 then call walk graph,clause,at + head,input
+    end
+    otherwise nop
+  end
+  return
+
+expectedtoken: procedure = .int expose expected
+  arg symbol = .int
+  return expected[symbol + 1]
+opcount: procedure = .int expose operations
+  return operations
+updatecount: procedure = .int expose updates
+  return updates
+cellcount: procedure = .int expose cells
+  return cells

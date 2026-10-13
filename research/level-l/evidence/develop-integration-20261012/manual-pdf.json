@@ -1,0 +1,11 @@
+{
+  "source": "lib/rxfnsl/doc/user-guide.md",
+  "source_sha256": "ef14f7c91d3006f85e10dee84af1ca0b75ac5167a65fbd2a512199ace61a63f4",
+  "pdf": "output/pdf/level-l-user-guide.pdf",
+  "pdf_sha256": "1783b3c43c0d795bf380478afa8de66e29740a243ec05f20983efbd09457a880",
+  "pages": 46,
+  "internal_links_checked": 80,
+  "rendered_pages_inspected": 46,
+  "embedded_unicode_font": true,
+  "text_margin_violations": 0
+}

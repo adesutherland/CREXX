@@ -1,0 +1,1083 @@
+diff --git a/lib/rxfnsg/rexx/LevelGBuilder.cmake b/lib/rxfnsg/rexx/LevelGBuilder.cmake
+index 0d866562c..d80e32ca3 100644
+--- a/lib/rxfnsg/rexx/LevelGBuilder.cmake
++++ b/lib/rxfnsg/rexx/LevelGBuilder.cmake
+@@ -239,6 +239,9 @@ add_custom_command(
+     ${_stage_g_product_sources}
+     ${_stage_g_unicode_tool_sources}
+     ${_stage_g_unicode_inputs}
++    levell_unicode_lexer
++    "${CMAKE_BINARY_DIR}/bin/gennorm2_language.rxbin"
++    "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+     "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+diff --git a/lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx b/lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx
+index be7298308..25407f6a1 100644
+--- a/lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx
++++ b/lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx
+@@ -1,602 +1,33 @@
+-/* Generated deterministic lexer used only by the Unicode build-time parser. */
++/* Level B compatibility adapter over the natively generated Level L scanner. */
+ /* Runtime normalization uses RXVM codepoint operations, not this DFA. */
+ options levelb
+ 
+ namespace level_l_gennorm2 expose level_l_gennorm2_lex level_l_gennorm2_status level_l_gennorm2_error_offset level_l_gennorm2_error_message level_l_gennorm2_token_count level_l_gennorm2_token_kind level_l_gennorm2_token_start level_l_gennorm2_token_length level_l_gennorm2_token_name
+ import rxfnsb
++import gennorm2_language
++import lllanguage
+ 
++/** Preserve the existing packed 12-byte token ABI for the Unicode parser.
++ * The generated definition owns lexer semantics; this adapter only transports
++ * tokens, EOF and the existing diagnostic accessors. */
+ level_l_gennorm2_lex: procedure = .binary expose _level_l_status _level_l_error_offset _level_l_error_message
+   arg source = .string
+-
+-  _level_l_status = 0
+-  _level_l_error_offset = 0
+-  _level_l_error_message = ""
+-  tokens = .binary
+-  count = 0
+-  pos = 0
+-  start = 0
+-  source_len = <blen>(source as .binary)
+-  scan_bytes = source as .binary
+-  call binresize scan_bytes, source_len + 1
+-
+-
+-  yyaccept = 0
+-  state = 0
+-  do forever
+-    select state
+-      when 0 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        pos = pos + 1
+-        if byte <= 0x2A then do
+-          if byte <= 0x0D then do
+-            if byte <= 0x09 then do
+-              if byte <= 0x00 then do
+-                state = 1
+-                iterate
+-              end
+-              if byte <= 0x08 then do
+-                state = 2
+-                iterate
+-              end
+-              state = 4
+-              iterate
+-            end
+-            else do
+-              if byte <= 0x0A then do
+-                state = 5
+-                iterate
+-              end
+-              if byte <= 0x0C then do
+-                state = 2
+-                iterate
+-              end
+-              state = 6
+-              iterate
+-            end
+-          end
+-          else do
+-            if byte <= 0x22 then do
+-              if byte = 0x20 then do
+-                state = 4
+-                iterate
+-              end
+-              state = 2
+-              iterate
+-            end
+-            else do
+-              if byte <= 0x23 then do
+-                state = 7
+-                iterate
+-              end
+-              if byte <= 0x29 then do
+-                state = 2
+-                iterate
+-              end
+-              state = 9
+-              iterate
+-            end
+-          end
+-        end
+-        else do
+-          if byte <= 0x3C then do
+-            if byte <= 0x2F then do
+-              if byte = 0x2E then do
+-                state = 10
+-                iterate
+-              end
+-              state = 2
+-              iterate
+-            end
+-            else do
+-              if byte <= 0x39 then do
+-                state = 11
+-                iterate
+-              end
+-              if byte <= 0x3A then do
+-                state = 13
+-                iterate
+-              end
+-              state = 2
+-              iterate
+-            end
+-          end
+-          else do
+-            if byte <= 0x40 then do
+-              if byte <= 0x3D then do
+-                state = 14
+-                iterate
+-              end
+-              if byte <= 0x3E then do
+-                state = 15
+-                iterate
+-              end
+-              state = 2
+-              iterate
+-            end
+-            else do
+-              if byte <= 0x46 then do
+-                state = 16
+-                iterate
+-              end
+-              if byte = 0x55 then do
+-                state = 17
+-                iterate
+-              end
+-              state = 2
+-              iterate
+-            end
+-          end
+-        end
+-      end
+-      when 1 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 0, source_len, 0
+-      return tokens
+-
+-      end
+-      when 2 then do
+-        state = 3
+-        iterate
+-      end
+-      when 3 then do
+-
+-      _level_l_status = 2
+-      _level_l_error_offset = start
+-      _level_l_error_message = "invalid gennorm2 input character"
+-      return tokens
+-
+-      end
+-      when 4 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x09 then do
+-          pos = pos + 1
+-          state = 4
+-          iterate
+-        end
+-        if byte = 0x20 then do
+-          pos = pos + 1
+-          state = 4
+-          iterate
+-        end
+-
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 5 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 9, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 6 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x0A then do
+-          pos = pos + 1
+-          state = 5
+-          iterate
+-        end
+-        state = 3
+-        iterate
+-      end
+-      when 7 then do
+-        yyaccept = 0
+-        yymarker = pos
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0xDF then do
+-          if byte <= 0x0C then do
+-            if byte <= 0x00 then do
+-              state = 8
+-              iterate
+-            end
+-            if byte \= 0x0A then do
+-              pos = pos + 1
+-              state = 7
+-              iterate
+-            end
+-            state = 8
+-            iterate
+-          end
+-          else do
+-            if byte <= 0x0D then do
+-              state = 8
+-              iterate
+-            end
+-            if byte <= 0x7F then do
+-              pos = pos + 1
+-              state = 7
+-              iterate
+-            end
+-            if byte >= 0xC2 then do
+-              pos = pos + 1
+-              state = 18
+-              iterate
+-            end
+-            state = 8
+-            iterate
+-          end
+-        end
+-        else do
+-          if byte <= 0xEF then do
+-            if byte <= 0xE0 then do
+-              pos = pos + 1
+-              state = 20
+-              iterate
+-            end
+-            if byte = 0xED then do
+-              pos = pos + 1
+-              state = 22
+-              iterate
+-            end
+-            pos = pos + 1
+-            state = 21
+-            iterate
+-          end
+-          else do
+-            if byte <= 0xF0 then do
+-              pos = pos + 1
+-              state = 23
+-              iterate
+-            end
+-            if byte <= 0xF3 then do
+-              pos = pos + 1
+-              state = 24
+-              iterate
+-            end
+-            if byte <= 0xF4 then do
+-              pos = pos + 1
+-              state = 25
+-              iterate
+-            end
+-            state = 8
+-            iterate
+-          end
+-        end
+-      end
+-      when 8 then do
+-
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 9 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 6, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 10 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x2E then do
+-          pos = pos + 1
+-          state = 26
+-          iterate
+-        end
+-        state = 3
+-        iterate
+-      end
+-      when 11 then do
+-        yyaccept = 1
+-        yymarker = pos
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x2F then do
+-          if byte = 0x2E then do
+-            pos = pos + 1
+-            state = 27
+-            iterate
+-          end
+-          state = 12
+-          iterate
+-        end
+-        else do
+-          if byte <= 0x39 then do
+-            pos = pos + 1
+-            state = 11
+-            iterate
+-          end
+-          if byte <= 0x40 then do
+-            state = 12
+-            iterate
+-          end
+-          if byte <= 0x46 then do
+-            pos = pos + 1
+-            state = 16
+-            iterate
+-          end
+-          state = 12
+-          iterate
+-        end
+-      end
+-      when 12 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 1, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 13 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 3, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 14 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 4, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 15 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 5, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 16 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x2F then do
+-          state = 12
+-          iterate
+-        end
+-        if byte <= 0x39 then do
+-          pos = pos + 1
+-          state = 16
+-          iterate
+-        end
+-        if byte <= 0x40 then do
+-          state = 12
+-          iterate
+-        end
+-        if byte <= 0x46 then do
+-          pos = pos + 1
+-          state = 16
+-          iterate
+-        end
+-        state = 12
+-        iterate
+-      end
+-      when 17 then do
+-        yyaccept = 2
+-        yymarker = pos
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x6E then do
+-          pos = pos + 1
+-          state = 28
+-          iterate
+-        end
+-        state = 3
+-        iterate
+-      end
+-      when 18 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x7F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0xBF then do
+-          pos = pos + 1
+-          state = 7
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 19 then do
+-        pos = yymarker
+-        if yyaccept <= 1 then do
+-          if yyaccept = 0 then do
+-            state = 8
+-            iterate
+-          end
+-          else do
+-            state = 12
+-            iterate
+-          end
+-        end
+-        else do
+-          if yyaccept = 2 then do
+-            state = 3
+-            iterate
+-          end
+-          else do
+-            state = 30
+-            iterate
+-          end
+-        end
+-      end
+-      when 20 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x9F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0xBF then do
+-          pos = pos + 1
+-          state = 18
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 21 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x7F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0xBF then do
+-          pos = pos + 1
+-          state = 18
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 22 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x7F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0x9F then do
+-          pos = pos + 1
+-          state = 18
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 23 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x8F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0xBF then do
+-          pos = pos + 1
+-          state = 21
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 24 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x7F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0xBF then do
+-          pos = pos + 1
+-          state = 21
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 25 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x7F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0x8F then do
+-          pos = pos + 1
+-          state = 21
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 26 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 2, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 27 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte <= 0x2F then do
+-          state = 19
+-          iterate
+-        end
+-        if byte <= 0x39 then do
+-          pos = pos + 1
+-          state = 29
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 28 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x69 then do
+-          pos = pos + 1
+-          state = 31
+-          iterate
+-        end
+-        state = 19
+-        iterate
+-      end
+-      when 29 then do
+-        yyaccept = 3
+-        yymarker = pos
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte = 0x2E then do
+-          pos = pos + 1
+-          state = 27
+-          iterate
+-        end
+-        if byte <= 0x2F then do
+-          state = 30
+-          iterate
+-        end
+-        if byte <= 0x39 then do
+-          pos = pos + 1
+-          state = 29
+-          iterate
+-        end
+-        state = 30
+-        iterate
+-      end
+-      when 30 then do
+-
+-      call level_l_gennorm2_emit tokens, count, 8, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-      when 31 then do
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte \= 0x63 then do
+-          state = 19
+-          iterate
+-        end
+-        pos = pos + 1
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte \= 0x6F then do
+-          state = 19
+-          iterate
+-        end
+-        pos = pos + 1
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte \= 0x64 then do
+-          state = 19
+-          iterate
+-        end
+-        pos = pos + 1
+-        byte = <at..u8>(pos) scan_bytes
+-        if byte \= 0x65 then do
+-          state = 19
+-          iterate
+-        end
+-        pos = pos + 1
+-
+-      call level_l_gennorm2_emit tokens, count, 7, start, pos - start
+-      start = pos
+-      state = 0
+-      iterate
+-
+-      end
+-    end
++  language = gennorm2_language..language()
++  request = .lllanguage..request(language,source as .binary)
++  _level_l_status = request.lex()
++  _level_l_error_offset = request.offset()
++  _level_l_error_message = request.error()
++  tokens = .binary; count = 0
++  /* Existing adapter ABI uses 2 for an unmatched character, 1 for decoding. */
++  if _level_l_status = 1 & left(_level_l_error_message,18) = 'invalid_character:' then _level_l_status = 2
++  separator = pos(': ',_level_l_error_message)
++  if separator > 0 & (_level_l_status = 1 | _level_l_status = 2) then _level_l_error_message = substr(_level_l_error_message,separator + 2)
++  stream = request.tokens()
++  do i = 0 to stream.size() - 1
++    call level_l_gennorm2_emit tokens,count,stream.symbol(i),stream.start(i),stream.finish(i + 1) - stream.start(i)
+   end
+-
++  if _level_l_status = 0 then call level_l_gennorm2_emit tokens,count,0,<blen>(source as .binary),0
++  return tokens
+ 
+ level_l_gennorm2_status: procedure = .int expose _level_l_status _level_l_error_offset _level_l_error_message
+   return _level_l_status
+diff --git a/lib/rxfnsl/CMakeLists.txt b/lib/rxfnsl/CMakeLists.txt
+index 766b5d6f5..59bd20f0e 100644
+--- a/lib/rxfnsl/CMakeLists.txt
++++ b/lib/rxfnsl/CMakeLists.txt
+@@ -1,4 +1,5 @@
+ cmake_minimum_required(VERSION 3.24)
+ 
+ add_subdirectory(rexx)
++add_subdirectory(tools)
+ add_subdirectory(tests_functional)
+diff --git a/lib/rxfnsl/rexx/CMakeLists.txt b/lib/rxfnsl/rexx/CMakeLists.txt
+index d859a2b02..53196902d 100644
+--- a/lib/rxfnsl/rexx/CMakeLists.txt
++++ b/lib/rxfnsl/rexx/CMakeLists.txt
+@@ -1,7 +1,14 @@
+ cmake_minimum_required(VERSION 3.24)
+ 
++set(_ll_flags)
++if(CREXX_LEVEL_L_NOOPT)
++  list(APPEND _ll_flags -n)
++endif()
++
+ set(RXFNSL_REXX_MODULES
+   tinyexpr
++  llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
++  llregular llsource lllanguage lltree
+ )
+ 
+ set(RXFNSL_REXX_BINS)
+@@ -17,21 +24,42 @@ crexx_add_import_root(rxfnsl_imports
+   DEPENDS library
+   COMMENT "Staging deterministic Level L imports ...")
+ 
++set(RXFNSL_DEPS_llcheck llcore)
++set(RXFNSL_DEPS_llcap llcore llcheck)
++set(RXFNSL_DEPS_llcfg llcore llcheck)
++set(RXFNSL_DEPS_lllr llcore llcheck llcap llcfg)
++set(RXFNSL_DEPS_llmunch llcore)
++set(RXFNSL_DEPS_llproject llcore)
++set(RXFNSL_DEPS_llstage llcore)
++set(RXFNSL_DEPS_llcharset llcore)
++set(RXFNSL_DEPS_llfront llcore llproject llstage llcharset)
++set(RXFNSL_DEPS_llregular llcore llmunch)
++set(RXFNSL_DEPS_lllanguage llcore lllr llmunch llstage llsource)
++set(RXFNSL_DEPS_lltree llcore)
+ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
+   get_filename_component(_basename "${_binfile}" NAME_WE)
+ 
++  set(_source_root "${CMAKE_CURRENT_BINARY_DIR}/source/${_basename}")
++  set(_module_deps)
++  foreach(_dep IN LISTS RXFNSL_DEPS_${_basename})
++    list(APPEND _module_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
++  endforeach()
+   add_custom_command(
+     OUTPUT "${_binfile}"
++    COMMAND ${CMAKE_COMMAND} -E make_directory "${_source_root}"
++    COMMAND ${CMAKE_COMMAND} -E copy_if_different
++            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx" "${_source_root}/${_basename}.crexx"
+     COMMAND $<TARGET_FILE:rxc>
+-            -x
++            ${_ll_flags} -x
+             --no-exe-import
+-            -i "${_rxfnsl_import_root}"
++            -i "${_rxfnsl_import_root};${CMAKE_CURRENT_BINARY_DIR}"
+             -o "${_basename}"
+-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+-    COMMAND $<TARGET_FILE:rxas> "${_basename}"
++            "${_source_root}/${_basename}.crexx"
++    COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${_basename}"
+     DEPENDS
+       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+       rxfnsl_imports
++      ${_module_deps}
+       ${_rxfnsl_import_files}
+       rxc
+       rxas
+@@ -53,12 +81,12 @@ endforeach()
+ string(APPEND _rxfnsl_control_text
+   "PRESERVE INLINE\n"
+   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
+-  "OUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl\n")
++  "OUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-base\n")
+ 
+ file(GENERATE OUTPUT "${_rxfnsl_control_file}" CONTENT "${_rxfnsl_control_text}")
+ 
+ add_custom_command(
+-  OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
++  OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-base.rxbin"
+   COMMAND $<TARGET_FILE:rxlink> -c "${_rxfnsl_control_file}"
+   DEPENDS rxlink ${RXFNSL_REXX_BINS} "${_rxfnsl_control_file}"
+   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+@@ -66,12 +94,14 @@ add_custom_command(
+   VERBATIM
+ )
+ 
+-add_custom_target(rxfnsl ALL
+-  DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
++add_custom_target(rxfnsl_base
++  DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl-base.rxbin"
+ )
+ 
+-add_dependencies(rxfnsl library)
++add_dependencies(rxfnsl_base library)
++set(RXFNSL_BASE_BINS "${RXFNSL_REXX_BINS}" PARENT_SCOPE)
+ 
++if(NOT CREXX_LEVEL_L_STANDALONE)
+ add_test(
+   NAME rxfnsl_tinyexpr_binary_surface_smoke
+   COMMAND ${CMAKE_COMMAND}
+@@ -89,3 +119,5 @@ add_test(
+ set_tests_properties(rxfnsl_tinyexpr_binary_surface_smoke PROPERTIES LABELS "library;level-l")
+ 
+ crexx_finalize_directory_qa_tiers()
++
++endif()
+diff --git a/lib/rxfnsl/rexx/tinyexpr.crexx b/lib/rxfnsl/rexx/tinyexpr.crexx
+index 00e1ea62f..85046bb22 100644
+--- a/lib/rxfnsl/rexx/tinyexpr.crexx
++++ b/lib/rxfnsl/rexx/tinyexpr.crexx
+@@ -22,7 +22,7 @@
+  * SOFTWARE.
+  */
+ 
+-options levell
++options levelb
+ 
+ namespace rxfnsl expose tinyexpr_lex tinyexpr_eval tinyexpr_status tinyexpr_error_offset tinyexpr_error_message tinyexpr_token_count tinyexpr_token_kind tinyexpr_token_start tinyexpr_token_length tinyexpr_token_value tinyexpr_token_is tinyexpr_token_name
+ import rxfnsb
+diff --git a/lib/rxfnsl/tests_functional/CMakeLists.txt b/lib/rxfnsl/tests_functional/CMakeLists.txt
+index 3277843f3..d4859744e 100644
+--- a/lib/rxfnsl/tests_functional/CMakeLists.txt
++++ b/lib/rxfnsl/tests_functional/CMakeLists.txt
+@@ -40,3 +40,34 @@ set_tests_properties(ts_tinyexpr_noopt ts_tinyexpr_opt
+ crexx_label_smoke_tests(
+         ts_tinyexpr_noopt
+ )
++
++# A second consumer, packed-image validation, ownership and source diagnostics.
++set(_generated_spec "${CMAKE_CURRENT_SOURCE_DIR}/../tools/example.levell")
++set(_generated_grammar "${CMAKE_CURRENT_BINARY_DIR}/levell_example.rxas")
++add_custom_command(OUTPUT "${_generated_grammar}"
++  COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
++    -DSPEC=${_generated_spec} -DOUTPUT=${_generated_grammar} -DFORMAT=rxas
++    -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
++  DEPENDS levell_cli "${_generated_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
++  VERBATIM)
++add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin"
++  COMMAND $<TARGET_FILE:rxas> levell_example
++  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
++    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
++    -o testGenerated "${CMAKE_CURRENT_SOURCE_DIR}/testGenerated.crexx"
++  COMMAND $<TARGET_FILE:rxas> testGenerated
++  COMMAND $<TARGET_FILE:rxlink> -s -o testGenerated-linked testGenerated levell_example
++    "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
++  DEPENDS rxc rxas rxlink rxfnsl "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
++    "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${_generated_grammar}" testGenerated.crexx
++  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
++add_custom_target(testlevell_generated ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin")
++add_dependencies(testrxfnsl testlevell_generated)
++foreach(_vm rxtvm rxbvm)
++  if(TARGET ${_vm})
++    add_test(NAME levell_generated_${_vm}
++      COMMAND $<TARGET_FILE:${_vm}> "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin" -a "${_generated_spec}")
++    set_tests_properties(levell_generated_${_vm} PROPERTIES
++      PASS_REGULAR_EXPRESSION "generated_failures=0" TIMEOUT 300 LABELS "library;level-l")
++  endif()
++endforeach()
+diff --git a/performance/ROADMAP.md b/performance/ROADMAP.md
+index 6e4a7c589..915f5b9aa 100644
+--- a/performance/ROADMAP.md
++++ b/performance/ROADMAP.md
+@@ -16,6 +16,34 @@ ledgers and superseded runs are available in Git history.
+ 
+ ## Current Position
+ 
++**LEVEL-L-PARSER-01 — experimental language-tooling research (10 October).**
++The [local research plan](../research/level-l/PLAN.md) owns the wide source audit,
++native Thompson-NFA/DFA and grammar-generator PoCs, re2c wrapping, actual Pika
++reference probes, diagnostics and lex-first equivalence/cost analysis. Hypothesis:
++token-boundary seeding and byte-alphabet compression reduce structural parser
++work for long identifiers and opaque strings/comments. Risks: PEG priority,
++contextual keywords, lost trivia/locations, left-recursive semantics, unbounded
++lexer rollback and quadratic fixed-point updates. Required evidence: identical
++recognition/token spans on declared fixtures, adversarial counterexamples,
++operation counts, retained serial raw samples including lexing cost, and source
++and binary provenance. This is a non-representative, single-mechanism research
++screen; RexxCPS cannot measure this parser mechanism and is intentionally absent.
++No production compiler/VM change or performance verdict is selected.
++The research proof is now executed: the established Rexx-like `.levell` AST
++feeds native DFA and retained direct re2c/cREXX backends, with four opt/no-opt/VM
++surface comparisons passing. Native token-first counts and raw paired screens
++are retained, alongside actual Pika mixed-recursion and quadratic live-object
++counterexamples and a quadratic maximal-munch rollback witness. Production
++backend selection, full parser-maker syntax, AST projection, Unicode breadth
++and owned parse-context lifecycle remain separate acceptance work.
++The expanded native portfolio and representative owned source-tree/composite
++consumers now execute. The [lifecycle review](../research/level-l/COST.md)
++retains passing opt/no-opt checks on both VMs, but the first timing block is
++inconclusive: its outer timer charged previous-context release and the host had
++concurrent compiler activity. The corrected boundary is qualified; uncontended
++measurements and final interpretation remain open. No speed ranking, per-engine
++live-memory result or production selection follows from that block.
++
+ **RXJSON-ACCESS-01 — published and normal hosted checks green
+ (18 September).** Five read-only JSON helpers borrow existing immutable binary
+ buffers, preserving public ownership and representation. Combined with RAG
+diff --git a/rexxscript/CMakeLists.txt b/rexxscript/CMakeLists.txt
+index 4be583bbf..e20152895 100644
+--- a/rexxscript/CMakeLists.txt
++++ b/rexxscript/CMakeLists.txt
+@@ -228,3 +228,5 @@ foreach(_rexxscript_exit_consumer IN ITEMS
+ endforeach()
+ 
+ add_subdirectory(tests_functional)
++
++include(${CMAKE_CURRENT_SOURCE_DIR}/modern.cmake)
+diff --git a/rexxscript/doc/README.md b/rexxscript/doc/README.md
+index beb584879..509c6ab7f 100644
+--- a/rexxscript/doc/README.md
++++ b/rexxscript/doc/README.md
+@@ -25,3 +25,8 @@ than duplicating the full command, runtime, and implementation descriptions.
+   related API metadata.
+ - Keep `docs/ai-context/REXXSCRIPT*.md` as maintainer/agent context that points
+   back to this directory for the product view.
++
++The local `levell` branch also contains an unreleased **RexxScript 1** review
++implementation, explicitly selected by `rexxscript1`. Its modern Level G scalar
++contract and Level L architecture are documented in the modern sections of the
++same user/developer guides. It does not redefine the legacy command implicitly.
+diff --git a/rexxscript/doc/developer-guide.md b/rexxscript/doc/developer-guide.md
+index 75ee4aa4b..e0f4cea32 100644
+--- a/rexxscript/doc/developer-guide.md
++++ b/rexxscript/doc/developer-guide.md
+@@ -210,3 +210,80 @@ Keep these boundaries explicit during beta 3:
+ - Host integration must remain explicit through `EXPOSE` and captured output.
+ - Level B defects found while extending RexxScript should be called out rather
+   than hidden behind broad workarounds.
++
++## Modern Level L implementation (local review)
++
++The [Level L user guide](../../lib/rxfnsl/doc/user-guide.md) explains grammar
++authoring, generated modules, token stages and source trees independently of
++RexxScript. Its [diagnostic assessment](../../lib/rxfnsl/doc/diagnostics.md)
++records current first-error behavior and the remaining recovery work.
++
++The modern command is `rexxscript1`; it does not replace the legacy modules
++above. The [modern user contract](user-guide.md#rexxscript-1-modern-level-l-review-implementation)
++records the selected subset and remaining boundaries. Its ownership is:
++
++1. Level L admits `grammar/rexxscript.levell`, emits portable packed images in
++   RXAS, and `rxas` produces compiler-importable bytecode. CMake publishes the
++   generated artifact only after successful admission.
++2. `RexxScriptProgram.crexx` owns source and a named Level L tree. Layout and
++   implicit-concatenation normalization are explicit consumer passes; the
++   grammar declares the DFA, LR rules and finite keyword stages. A module
++   initializer creates the generated language definition once. Calling
++   `rexxscript1..compile(source)` returns an already parsed reusable program.
++3. `RexxScriptExecution.crexx` owns fresh mutable variables, configuration,
++   output, result and budgets. A run is idempotent after completion; construct
++   another execution to run again. `RexxScriptOperators` maps the selected Level
++   G scalar rules onto typed RexxValue operations. `RexxScriptBifs` dispatches
++   directly to the existing rxfnsc functions using a live call context.
++
++For example, compile a caller with imports `rxfnsb`, `rexxscript1` and
++`rexxscript1run`, then use:
++
++```rexx
++program = rexxscript1..compile('x=1+2*3; return x' as .binary)
++run = .rexxscript1run..execution(program)
++status = run.run()
++value = run.result()
++```
++
++Link `rexxscript1`, `rxfnsl`, `rxfnsc`, `rxfnsg`, `classlib` and `library`.
++The shared Unicode BIF module requires the `rxfnsg` Unicode runtime even when
++a particular script does not call Unicode normalization. The native runner also
++links the shared `cstream` and `fs` providers required by those imported modules;
++script access remains governed by the BIF capability checks. The CMake runner
++and tests depend on the actual library files so an incremental library change
++relinks their embedded bytecode. This API owns
++returned values; ordinary VM object/binary assignment copies storage. It is not
++a copy-on-write design or a claim that all request initialization is zero-copy.
++The parser's packed table lookups use a private synchronous `EXPOSE` borrow,
++with no escaping alias. Creating a weak reference per lookup was rejected after
++sampling showed repeated lifetime-owner discovery. The [Level L guide](../../lib/rxfnsl/tools/README.md)
++records image representation, bounds and loader validation.
++
++Build `testrexxscript1` and `testlevell_generated`, then run the corresponding
++CTest names. They launch prebuilt bytecode directly on each available concrete
++VM. `tests_functional/build-review.sh opt|noopt [rxas|crexx]` supplies isolated
++full-module parity builds. `check-scalar-conformance.py BIN WORK` compares the
++same 28 scalar expressions with the current Level G compiler in both compiler
++modes and VMs. The interpreter matches all unoptimized runtime observations.
++One compiler disagreement remains: `0.1+0.2=0.3` is false at runtime but true
++after constant folding. The permanent `float-comparison-reproducer.rexx` and
++scalar receipt retain it explicitly; the harness reports the disagreement
++rather than counting that expression as optimizer conformance. The interpreter
++uses typed integer/float/decimal comparisons and string-targeted Rexx comparisons,
++not the Classic RexxValue decimal-comparison helper. This is overlap evidence,
++not complete Level G compatibility. The compiler can also diagnose a literal
++division by zero inside a short-circuited expression before execution; the
++interpreter checks the executed operand only.
++
++`check-cli.py BIN WORK` exercises the native executable, shared provider linkage,
++source I/O, UTF-8, syntax, undefined-variable and capability failures. Generator
++determinism/atomic failure and dual-format packed-byte checks are in
++`lib/rxfnsl/tests_functional/check-generator.py` and `check-image-parity.py`.
++
++Current local qualification is macOS ARM64 Debug. Linux, Windows, sanitizer,
++install/package and hosted CI qualification of the new product are not claimed.
++Host registration/exposure/write-back and the broader research programme remain
++open. The authoritative criteria and retained evidence live in
++`research/level-l/PLAN.md`; distinguish this product phase from the seven still
++open research criteria.
+diff --git a/rexxscript/doc/user-guide.md b/rexxscript/doc/user-guide.md
+index 1bb8df784..db57bfadf 100644
+--- a/rexxscript/doc/user-guide.md
++++ b/rexxscript/doc/user-guide.md
+@@ -264,3 +264,77 @@ The current RexxScript slice is intentionally small:
+ These limits keep the sandbox and runtime behavior predictable while the
+ Release 1 beta work establishes the shared Rexx value, variable-pool, and BIF
+ foundation.
++
++## RexxScript 1: modern Level L review implementation
++
++For an explanation of how source becomes tokens and trees, how the IF rules
++attach ELSE, and how the interpreter walks the result, read the
++[Level L process overview](../../lib/rxfnsl/doc/user-guide.md#overview-from-a-language-description-to-a-useful-program).
++It also distinguishes generated token stages from RexxScript's handwritten
++layout and concatenation passes.
++
++The local `levell` branch adds an explicitly selected modern implementation:
++`rexxscript1`, `rexxscript1.rxbin`, namespaces `rexxscript1` and `rexxscript1run`.
++It uses a [Level L grammar](../grammar/rexxscript.levell), Level G
++NUMERIC_COMMON expressions and typed RexxValue values. It is for review and has
++not been released. The `rexxscript` command and APIs described above continue to
++select the legacy evaluator; the implementation never guesses a dialect from
++whether parsing succeeds.
++
++```sh
++cmake --build cmake-build-levell-product --target rexxscript1_cli
++cmake-build-levell-product/bin/rexxscript1 rexxscript/examples/modern.rexx
++```
++
++The example prints `total: 46`, `café`, `ok` and returns a typed result of46
++through the reusable API. The CLI exit code is execution status, not the script
++RETURN value. It prints captured SAY output and a located diagnostic on failure.
++
++| Area | Modern review contract |
++|---|---|
++| Values/names | Scalar integer, float, explicit `d` decimal, string and shared-BIF RexxValue results. Assignment creates a case-insensitive local name. Undefined reads fail. |
++| Expressions | Level G NUMERIC_COMMON precedence; right-associative power binds more tightly than prefix minus. Integer `/` divides as integer; floating operands select floating arithmetic. Comparisons, blank/abuttal/explicit concatenation, short-circuit AND/OR and named integer operators are implemented. Named operators are case-insensitive. |
++| Literals | Decimal integers, ordinary dotted/exponent floats, decimal `d` suffix, `0x` integers and single/double quoted strings with doubled quote escaping. UTF-8 string contents are preserved. |
++| Statements | Assignment, IF/THEN/ELSE, simple/count/WHILE/UNTIL/FOREVER/controlled DO, LEAVE, ITERATE, CALL of a BIF, RETURN, SAY, COLLECT, NOP. ELSE binds to the closest unmatched IF. Controlled DO supports `TO` and optional `BY`. |
++| Layout | Newlines/semicolons terminate clauses. A comma before a physical newline continues a clause; commas in calls are argument separators. Parenthesized newlines and THEN/ELSE layout are normalized. A semicolon is never a continuation. Nested `/* */` comments preserve original byte offsets. |
++| Functions | Existing Level C BIF bodies and RexxBifCallContext, including omitted-argument flags and the per-run RexxVariablePool/configuration. This is the existing rxfnsc connection; Level G expression rules do not change Classic BIF contracts. |
++| Output | SAY collects printable lines; COLLECT appends typed values available through the API. RETURN terminates the run and stores a typed result. |
++| Exclusions | Declarations, classes, collections/indexing, script-defined procedures, imports, SIGNAL, GOTO and INTERPRET. No host registration, exposed inputs/outputs or write-back contract is selected yet. |
++
++This is a specified scalar subset, not complete Level G. Identifiers are ASCII
++letters/underscore plus digits. Named integer operators are contiguous angle
++bracket tokens. Type constructors/casts, binary/hex quoted literals, Unicode
++operator aliases, and the wider compiler's identifier and contextual-keyword
++rules are outside this first surface. A leading statement word can be assigned
++(e.g. `say=7; say say`); THEN/ELSE and DO-header words have the particular finite
++classification rules shown in the grammar, rather than a promise that every
++keyword is soft in every position. The grammar and these examples are intended
++for language review.
++
++Numeric comparisons preserve the runtime operand types. In particular,
++`0.1+0.2=0.3` is false for ordinary binary floats, while
++`0.1d+0.2d=0.3d` is true for decimals. The current Level G compiler incorrectly
++changes the first result during constant folding; this known comparison gap is
++retained in the review evidence. RexxScript follows the typed runtime result.
++
++The dispatch module lists the available Level C functions. File, stream,
++activation/context and clock services such as LINEIN, STREAM, ARG, DATE and TIME
++return `RS_CAPABILITY` until the host contract is selected. Unknown names return
++`RS_FUNCTION`; BIF argument errors retain their existing Level C codes. RANDOM
++and QUEUED retain their shared library behavior; no independent replacement or
++host-wide isolation claim is made for those services.
++
++A script is parsed and structurally validated before its first statement runs.
++Syntax recovery never produces an executable program. Runtime failure preserves
++already captured output in the result; it does not roll back BIF effects.
++Diagnostics include a stable code, line/column, byte offset and source excerpt;
++malformed UTF-8 uses a safe byte excerpt. Resource exhaustion is distinct from
++invalid syntax (`RS_PARSE_LIMIT`, `RS_FUEL`, `RS_DEPTH`, `RS_VALUE_LIMIT`,
++`RS_OUTPUT_LIMIT`); cancellation is `RS_CANCELLED`.
++
++Default limits are1MiB source,1,000,000 parser actions, nesting128,100,000
++execution ticks,1MiB output/value extent and10,000 output lines. Selected
++expanding BIF requests are checked before allocation; this is not a hard bound
++on every allocation or arbitrary shared/host library work. Cancellation is
++currently a synchronous run flag, tested before running. An asynchronous
++cross-worker cancellation/host API has not been selected or qualified.
+diff --git a/tools/build-system/build_stage_g.crexx b/tools/build-system/build_stage_g.crexx
+index e05fcb853..aacf0677c 100644
+--- a/tools/build-system/build_stage_g.crexx
++++ b/tools/build-system/build_stage_g.crexx
+@@ -442,6 +442,8 @@ main: procedure = .int
+     unicode_tools_work = unicode_work || "/tools"
+     unicode_imports = imports_root || "/unicode-tools"
+ 
++    level_l_runtime = bin_dir || "/rxfnsl.rxbin"
++    gennorm2_language = bin_dir || "/gennorm2_language.rxbin"
+     level_l_gennorm2_source = unicode_tools_source || "/level_l_gennorm2.crexx"
+     unicode_normprops_source = unicode_tools_source || "/unicode_normprops.crexx"
+     encoding_table_source = unicode_tools_source || "/encoding_table.crexx"
+@@ -455,7 +457,12 @@ main: procedure = .int
+       return 1
+     end
+ 
+-    level_l_gennorm2_key = action_key(tool_identity || ":level_l_gennorm2:-x", level_l_gennorm2_source, library)
++    if stage_import(cmake, unicode_tool_base_imports, level_l_runtime, "rxfnsl.rxbin") <> 0 | stage_import(cmake, unicode_tool_base_imports, gennorm2_language, "gennorm2_language.rxbin") <> 0 then do
++      call pool.close()
++      return 1
++    end
++
++    level_l_gennorm2_key = action_key(tool_identity || ":level_l_gennorm2:-x", level_l_gennorm2_source, library, level_l_runtime, gennorm2_language)
+     unicode_normprops_key = action_key(tool_identity || ":unicode_normprops:-x", unicode_normprops_source, library)
+     encoding_table_key = action_key(tool_identity || ":encoding_table:-x", encoding_table_source, library)
+     casefold_table_key = action_key(tool_identity || ":casefold_table:-x", casefold_table_source, library)
+@@ -602,7 +609,7 @@ main: procedure = .int
+     casefold_link_key = action_key("link-generator:casefold", rxlink, generate_casefold_bin, casefold_table_bin)
+     case_mapping_link_key = action_key("link-generator:case-mapping", rxlink, generate_case_mapping_bin, case_mapping_table_bin)
+     grapheme_link_key = action_key("link-generator:grapheme", rxlink, generate_grapheme_bin, grapheme_table_bin)
+-    normalization_link_key = action_key("link-generator:normalization", rxlink, generate_normalization_bin, level_l_gennorm2_bin, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, unicode_d_bin)
++    normalization_link_key = action_key("link-generator:normalization", rxlink, generate_normalization_bin, level_l_gennorm2_bin, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, unicode_d_bin, level_l_runtime, gennorm2_language)
+ 
+     encoding_link_argv = .string[]
+     call arrayappend encoding_link_argv, rxlink
+@@ -639,6 +646,8 @@ main: procedure = .int
+     call arrayappend normalization_link_argv, linked_generator_dir || "/normalization_generator"
+     call arrayappend normalization_link_argv, generate_normalization_bin
+     call arrayappend normalization_link_argv, level_l_gennorm2_bin
++    call arrayappend normalization_link_argv, level_l_runtime
++    call arrayappend normalization_link_argv, gennorm2_language
+     call arrayappend normalization_link_argv, unicode_gennorm2_bin
+     call arrayappend normalization_link_argv, unicode_data_bin
+     call arrayappend normalization_link_argv, unicode_normprops_bin

@@ -1,0 +1,185 @@
+/* Declarative token passes versus an independent direct finite-context pass. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llstage
+import lllr
+import llproject
+main: procedure = .int expose failures generated
+  failures = 0; generated = 0; text = ''; path = 'research/level-l/specs/clause-stages.levell'
+  do while lines(path)
+    text = text || linein(path) || '0a'x
+  end
+  doc = .llfront..document(text)
+  if doc.run() <> 0 then do
+    say doc.error(); return 1
+  end
+  normal = doc.stage('normalize'); classify = doc.stage('classify')
+  graph = doc.grammar(); table = .lllr..tables(graph,doc.root(),'lr1')
+  call check table.status() = 0,'declared staged grammar builds'
+  if table.status() <> 0 then do
+    say table.error(); return 1
+  end
+  call probe normal,classify,table,doc.schema(),'say=one' || '0a'x || 'SAY ,' || '0a'x || ' two' || '0a'x,0
+  call probe normal,classify,table,doc.schema(),'say value;say=two;',0
+  call probe normal,classify,table,doc.schema(),'say = say' || '0a'x,0
+  call probe normal,classify,table,doc.schema(),'say' || '0a'x,1
+  call probe normal,classify,table,doc.schema(),'say,one' || '0a'x,1
+  call probe normal,classify,table,doc.schema(),'',0
+  call probe normal,classify,table,doc.schema(),'0a0a'x,0
+  /* Same text, distinct owned contexts; repeated/interleaved stages cannot leak. */
+  input = lex('say x;say=x;')
+  a = .llstage..transducer(classify,input); b = .llstage..transducer(normal,input)
+  call check a.run() = 0 & b.run() = 0,'independent stage contexts'
+  aa = a.output(); bb = b.output()
+  call check aa.symbol(0) = 6 & bb.symbol(0) = 1 & aa.symbol(3) = 1,'keyword guard and context remain separate'
+  limited = .llstage..transducer(classify,input,1)
+  call check limited.run() = 2,'stage budget exhaustion is explicit'
+  missing = doc.stage('missing')
+  bad = .llstage..transducer(missing,input)
+  call check bad.run() = 3,'missing stage does not silently copy input'
+  do n = 0 to 4
+    call enumerate normal,classify,'',n
+  end
+  say 'stage_generated_cases='generated
+  say 'stage_failures='failures
+  if failures then return 1
+  return 0
+probe: procedure = .void expose failures
+  arg normal = .llstage..rules, classify = .llstage..rules, table = .lllr..tables, schema = .llproject..schema, text = .string, expected = .int
+  input = lex(text); normalizer = .llstage..transducer(normal,input)
+  if normalizer.run() <> 0 then do
+    failures = failures + 1; say normalizer.error(); return
+  end
+  normalized = normalizer.output(); classifier = .llstage..transducer(classify,normalized)
+  if classifier.run() <> 0 then do
+    failures = failures + 1; say classifier.error(); return
+  end
+  actual = classifier.output(); control = direct(input)
+  if canonical(actual) \== canonical(control) then do
+    failures = failures + 1; say 'STAGE DIFFERENCE:' canonical(actual) canonical(control)
+  end
+  if bincompare(actual.source(),text as .binary) <> 0 then failures = failures + 1
+  do i = 0 to actual.size() - 1
+    j = classifier.first(i); k = classifier.last(i)
+    first = normalizer.first(j); last = normalizer.last(k - 1)
+    if actual.start(i) <> input.start(first) | actual.finish(i + 1) <> input.finish(last) then failures = failures + 1
+  end
+  parser = .lllr..parser(table,actual); status = parser.run()
+  if status <> expected then do
+    failures = failures + 1; say 'STAGED PARSE DIFFERENCE:' status expected parser.error()
+  end
+  /* The independently selected statement subtree is a structural-pass consumer. */
+  if status = 0 & actual.size() > 2 then do
+    tree = parser.tree(); chosen = 0
+    do i = 1 to tree.size()
+      if tree.label(i) = 'statement' then do
+        chosen = i; leave
+      end
+    end
+    if chosen > 0 then do
+      /* Project just the reachable selected subtree to avoid unrelated roots. */
+      copy = .llcore..tree.from_source(tree.source())
+      root = copytree(tree,chosen,copy)
+      projected = .llproject..projection(copy,root,schema)
+      if projected.run() <> 0 then do
+        failures = failures + 1; say 'STRUCTURAL PASS:' projected.error()
+      end
+      else do
+        result = projected.tree()
+        call check result.validate() & result.owns_source(),'declared statement arity and provenance'
+        say 'STAGED_AST='result.label(projected.root()) '@' result.start(projected.root()) ':' result.finish(projected.root())
+      end
+    end
+  end
+  return
+copytree: procedure = .int
+  arg tree = .llcore..tree, node = .int, expose target = .llcore..tree
+  if node = 0 then return 0
+  a = copytree(tree,tree.left(node),target); b = copytree(tree,tree.right(node),target)
+  return target.add(tree.kind(node),tree.label(node),tree.start(node),tree.finish(node),a,b)
+canonical: procedure = .string
+  arg tokens = .llcore..stream
+  out = ''
+  do i = 0 to tokens.size() - 1
+    out = out || tokens.symbol(i) || '@' || tokens.start(i) || ':' || tokens.finish(i + 1) || ';'
+  end
+  return out
+lex: procedure = .llcore..stream
+  arg text = .string
+  bytes = text as .binary; out = .llcore..stream.tokens(bytes); at = 0; extent = <blen>(bytes)
+  do while at < extent
+    c = <at..u8>(at) bytes
+    if c = 32 then at = at + 1
+    else do
+      start = at; at = at + 1; kind = 255
+      select c
+        when 61 then kind = 2
+        when 44 then kind = 3
+        when 10 then kind = 4
+        when 59 then kind = 5
+        otherwise do
+          if (c >= 65 & c <= 90) | (c >= 97 & c <= 122) then do
+            kind = 1
+            do while at < extent
+              c = <at..u8>(at) bytes
+              if (c < 65 | c > 90) & (c < 97 | c > 122) then leave
+              at = at + 1
+            end
+          end
+        end
+      end
+      ok = out.append(kind,start,at)
+    end
+  end
+  return out
+direct: procedure = .llcore..stream
+  arg input = .llcore..stream
+  normalized = .llcore..stream.tokens(input.source()); at = 0
+  do while at < input.size()
+    kind = input.symbol(at)
+    if kind = 3 & input.symbol(at + 1) = 4 then at = at + 2
+    else do
+      if kind = 4 then kind = 5
+      ok = normalized.append(kind,input.start(at),input.finish(at + 1)); at = at + 1
+    end
+  end
+  out = .llcore..stream.tokens(input.source()); initial = 1; source = input.source()
+  do at = 0 to normalized.size() - 1
+    kind = normalized.symbol(at)
+    if initial & kind = 1 & normalized.symbol(at + 1) <> 2 then do
+      word = binsubstr(source,normalized.start(at) + 1,normalized.finish(at + 1) - normalized.start(at)) as .string
+      if upper(word) = 'SAY' then kind = 6
+    end
+    initial = kind = 5
+    ok = out.append(kind,normalized.start(at),normalized.finish(at + 1))
+  end
+  return out
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return
+
+enumerate: procedure = .void expose failures generated
+  arg normal = .llstage..rules, classify = .llstage..rules, text = .string, remaining = .int
+  if remaining > 0 then do
+    choices = .string[]
+    choices[1] = 'say '; choices[2] = '= '; choices[3] = 'x '
+    choices[4] = '0a'x; choices[5] = ', '; choices[6] = '; '
+    do i = 1 to choices[0]
+      call enumerate normal,classify,text || choices[i],remaining - 1
+    end
+    return
+  end
+  generated = generated + 1; input = lex(text)
+  a = .llstage..transducer(normal,input); status = a.run(); normalized = a.output()
+  b = .llstage..transducer(classify,normalized); other = b.run(); actual = b.output()
+  control = direct(input)
+  if status <> 0 | other <> 0 | canonical(actual) \== canonical(control) then do
+    failures = failures + 1; say 'GENERATED TOKEN DIFFERENCE:' text
+  end
+  return

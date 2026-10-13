@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=7
+main() .locals=8
    .meta "inline_test_byvalue_arg_reuse.main"="b" ".int" main() ""
    .srcstep 33 33 17 "inline_test_byvalue_arg_reuse.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -74,9 +74,9 @@ main() .locals=7
    .srcstep 13 13 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
    .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "value" ""
    .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "value" ""
-   call2 r0,snapshotThenIncrement(),r1,r1
-   .traceevent "F" 4 "R" "I" "r" 0 13 13 0 "snapshotthenincrement" ""
-   ieq r2,r0,88
+   call2 r7,snapshotThenIncrement(),r1,r1
+   .traceevent "F" 4 "R" "I" "r" 7 13 13 0 "snapshotthenincrement" ""
+   ieq r2,r7,88
    .traceevent "O" 4 "R" "B" "r" 2 13 13 0 "" ""
    .traceevent "A" 6 "R" "B" "r" 2 13 13 0 "passed" ""
    .srcstep 15 15 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
@@ -84,19 +84,19 @@ main() .locals=7
    brf l190iffalse,r2
    .srcstep 16 16 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
    .srcstep 14 14 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
-   load r6,0
-   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
-   icopy r5,r6
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+   icopy r0,r7
    br l178bexprend
 l190iffalse:
    .srcstep 17 17 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
    say "FAIL ref-overlap-call-parity"
    .srcstep 18 18 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
-   load r6,1
-   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
-   icopy r5,r6
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+   icopy r0,r7
 l178bexprend:
-   iadd r3,r3,r5
+   iadd r3,r3,r0
    .traceevent "O" 4 "R" "I" "r" 3 20 20 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 20 20 0 "errors" ""
    .srcstep 28 28 17 "inline_test_byvalue_arg_reuse.crexx" 19 3 62 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
@@ -104,17 +104,17 @@ l178bexprend:
    .srcstep 27 27 17 "inline_test_byvalue_arg_reuse.crexx" 19 21 26 "  errors = errors + check(value = 8, \"ref-overlap-writeback\")"
    .srcstep 21 21 33 "inline_test_byvalue_arg_reuse.crexx" 34 7 13 "  arg passed = .boolean, label = .string"
    .traceevent "V" 6 "R" "I" "r" 1 21 21 0 "value" ""
-   ieq r6,r1,8
-   .traceevent "O" 4 "R" "B" "r" 6 21 21 0 "" ""
-   .traceevent "A" 6 "R" "B" "r" 6 21 21 0 "passed" ""
+   ieq r7,r1,8
+   .traceevent "O" 4 "R" "B" "r" 7 21 21 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 7 21 21 0 "passed" ""
    .srcstep 23 23 17 "inline_test_byvalue_arg_reuse.crexx" 35 3 12 "  if passed then return 0"
-   .traceevent "V" 6 "R" "B" "r" 6 23 23 0 "passed" ""
-   brf l210iffalse,r6
+   .traceevent "V" 6 "R" "B" "r" 7 23 23 0 "passed" ""
+   brf l210iffalse,r7
    .srcstep 24 24 17 "inline_test_byvalue_arg_reuse.crexx" 35 13 17 "  if passed then return 0"
    .srcstep 22 22 17 "inline_test_byvalue_arg_reuse.crexx" 35 18 26 "  if passed then return 0"
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 28 28 0 "" ""
-   icopy r4,r5
+   icopy r6,r5
    br l200bexprend
 l210iffalse:
    .srcstep 25 25 17 "inline_test_byvalue_arg_reuse.crexx" 36 3 19 "  say \"FAIL\" label"
@@ -122,16 +122,16 @@ l210iffalse:
    .srcstep 26 26 17 "inline_test_byvalue_arg_reuse.crexx" 37 3 11 "  return 1"
    load r5,1
    .traceevent "L" 4 "R" "I" "r" 5 28 28 0 "" ""
-   icopy r4,r5
+   icopy r6,r5
 l200bexprend:
-   iadd r3,r3,r4
+   iadd r3,r3,r6
    .traceevent "O" 4 "R" "I" "r" 3 28 28 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 28 28 0 "errors" ""
    .srcstep 30 30 17 "inline_test_byvalue_arg_reuse.crexx" 21 3 16 "  if errors = 0 then say \"ok\""
    .traceevent "V" 6 "R" "I" "r" 3 30 30 0 "errors" ""
-   ieq r6,r3,0
-   .traceevent "O" 4 "R" "B" "r" 6 30 30 0 "" ""
-   brf l117iffalse,r6
+   ieq r7,r3,0
+   .traceevent "O" 4 "R" "B" "r" 7 30 30 0 "" ""
+   brf l117iffalse,r7
    .srcstep 31 31 17 "inline_test_byvalue_arg_reuse.crexx" 21 17 21 "  if errors = 0 then say \"ok\""
    .srcstep 29 29 17 "inline_test_byvalue_arg_reuse.crexx" 21 22 30 "  if errors = 0 then say \"ok\""
    say "ok"

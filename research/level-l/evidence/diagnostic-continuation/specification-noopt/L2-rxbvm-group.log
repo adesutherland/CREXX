@@ -1,0 +1,10 @@
+STATUS|3
+LL_SYNTAX at line 6, column 1 (byte 98): unexpected end of input; expected identifier, string, codepoint, bar, lparen, rparen, question, star, plus, bang, amp, lbrace, kw.options, kw.levell, kw.namespace, kw.token, kw.diagnostic, kw.lexer, kw.input, kw.comments, kw.nested, kw.parser, kw.semantics, kw.start, kw.charset, kw.pattern, kw.rule, kw.emit, kw.skip, kw.error, kw.tokenstage, kw.transform, kw.stage, kw.state, kw.take, kw.text, kw.unless, kw.next, kw.copy, kw.tree, kw.kind, kw.arity, kw.to, kw.except, kw.scalar, kw.backend, kw.recovery, kw.sync, kw.operators, kw.atom, kw.group, kw.infix, kw.prefix, kw.precedence, kw.region, kw.using, kw.open, kw.close, kw.as
+  second: rule = )
+  ^
+LL_SYNTAX at line 6, column 16 (byte 113): unexpected ')'; expected identifier, string, codepoint, lparen, bang, amp, kw.options, kw.levell, kw.namespace, kw.token, kw.diagnostic, kw.lexer, kw.input, kw.comments, kw.nested, kw.parser, kw.semantics, kw.start, kw.charset, kw.pattern, kw.rule, kw.emit, kw.skip, kw.error, kw.tokenstage, kw.transform, kw.stage, kw.state, kw.take, kw.text, kw.unless, kw.next, kw.copy, kw.tree, kw.kind, kw.arity, kw.to, kw.except, kw.scalar, kw.backend, kw.recovery, kw.sync, kw.operators, kw.atom, kw.group, kw.infix, kw.prefix, kw.precedence, kw.region, kw.using, kw.open, kw.close
+  second: rule = )
+                 ^
+CANDIDATE|item
+CANDIDATE|parse
+CANDIDATE|last.good

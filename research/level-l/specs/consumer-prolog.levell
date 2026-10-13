@@ -1,0 +1,24 @@
+options levell
+namespace consumerprolog
+read: parser semantics contextfree input tokens start document
+atom: token = 1
+variable: token = 2
+number: token = 3
+quoted.atom: token = 4
+open: token = 5
+close: token = 6
+comma: token = 7
+open.list: token = 8
+close.list: token = 9
+bar: token = 10
+implies: token = 11
+dot: token = 12
+name: rule = atom | quoted.atom
+arguments: rule = term (comma term)*
+compound: rule = name open arguments close
+list: rule = open.list (arguments (bar term)?)? close.list
+term: rule = compound | name | variable | number | list
+body: rule = term (comma term)*
+clause: rule = term (implies body)? dot
+document: rule = clause*
+classify: tokenstage start 1

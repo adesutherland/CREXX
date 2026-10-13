@@ -1,0 +1,71 @@
+[
+  {
+    "kind": "REXX_UNIVERSE",
+    "value": "",
+    "children": [
+      {
+        "kind": "PROGRAM_FILE",
+        "value": "",
+        "children": [
+          {
+            "kind": "INSTRUCTIONS",
+            "value": "",
+            "children": [
+              {
+                "kind": "REXX_OPTIONS",
+                "value": "options",
+                "children": [
+                  {
+                    "kind": "VAR_SYMBOL",
+                    "value": "levelc",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              },
+              {
+                "kind": "SAY",
+                "value": "say",
+                "children": [
+                  {
+                    "kind": "INTEGER",
+                    "value": "1",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              },
+              {
+                "kind": "TOKEN",
+                "value": "/*",
+                "children": [
+                  {
+                    "kind": "ERROR",
+                    "value": "RXC-LC-6.1",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              }
+            ],
+            "line": -1,
+            "column": -1
+          }
+        ],
+        "line": -1,
+        "column": -1
+      }
+    ],
+    "line": -1,
+    "column": -1
+  }
+]

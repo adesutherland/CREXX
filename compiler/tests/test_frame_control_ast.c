@@ -25,10 +25,89 @@ static void check_output(ASTNode *node, const char *expected,
     fclose(stream);
 }
 
+/* Exercise the ancestor path independently of register allocation: only an
+ * already-entered IF branch owns a live condition, and the target remains live.
+ * The detached exit copy must not consume the normal-path cleanup chain. */
+static void check_condition_exit(Context *context, ASTNode *procedure,
+                                 NodeType control_type, int path) {
+    ASTNode *target, *target_body, *repeat, *outer, *outer_condition, *outer_body;
+    ASTNode *inner, *condition, *then_body, *else_body, *exit_node, *label;
+    FILE *stream;
+    OutputFragment *fragment;
+    char buffer[4096];
+    size_t length;
+    const char *inner_unlink, *outer_unlink, *branch_text;
+
+    target = ast_ft(context, control_type == LEAVE_WITH ? BLOCK_EXPR : DO);
+    add_ast(procedure, target);
+    if (control_type == LEAVE_WITH) {
+        target->cleanup = output_fs("   unlink r73\n");
+    } else {
+        repeat = ast_ft(context, REPEAT);
+        repeat->cleanup = output_fs("   unlink r73\n");
+        add_ast(target, repeat);
+    }
+    target_body = ast_ft(context, INSTRUCTIONS);
+    add_ast(target, target_body);
+    outer = ast_ft(context, IF);
+    outer_condition = ast_ft(context, BLOCK_EXPR);
+    outer_condition->cleanup = output_fs("   unlink r72\n");
+    outer_body = ast_ft(context, INSTRUCTIONS);
+    add_ast(target_body, outer);
+    add_ast(outer, outer_condition);
+    add_ast(outer, outer_body);
+    inner = ast_ft(context, IF);
+    condition = ast_ft(context, BLOCK_EXPR);
+    condition->cleanup = output_fs("   unlink r71\n");
+    then_body = ast_ft(context, INSTRUCTIONS);
+    else_body = ast_ft(context, INSTRUCTIONS);
+    add_ast(outer_body, inner);
+    add_ast(inner, condition);
+    add_ast(inner, then_body);
+    add_ast(inner, else_body);
+    exit_node = ast_ft(context, control_type);
+    add_ast(path == 0 ? condition : (path == 1 ? then_body : else_body), exit_node);
+    exit_node->association = target;
+    if (control_type == FRAME_BRANCH) {
+        label = ast_ft(context, FRAME_LABEL);
+        add_ast(target, label);
+        exit_node->association = label;
+    }
+    emit_flow(exit_node, NULL);
+    stream = tmpfile();
+    assert(stream);
+    /* Inspect emitter fragments before the final superinstruction combiner;
+     * runtime coverage separately exercises optimized/fused assembly. */
+    fragment = exit_node->output;
+    while (fragment->before) fragment = fragment->before;
+    for (; fragment; fragment = fragment->after) {
+        if (fragment->output) fputs(fragment->output, stream);
+    }
+    rewind(stream);
+    length = fread(buffer, 1, sizeof(buffer) - 1, stream);
+    buffer[length] = 0;
+    fclose(stream);
+    inner_unlink = strstr(buffer, "unlink r71");
+    outer_unlink = strstr(buffer, "unlink r72");
+    branch_text = strstr(buffer, "   br ");
+    if (!outer_unlink || !branch_text || outer_unlink >= branch_text) {
+        fprintf(stderr, "control=%d path=%d output:\n%s", control_type, path, buffer);
+    }
+    assert((inner_unlink != NULL) == (path != 0));
+    assert(outer_unlink && branch_text && outer_unlink < branch_text);
+    if (inner_unlink) assert(inner_unlink < outer_unlink);
+    assert(!strstr(buffer, "r73"));
+    assert(!condition->cleanup->before && !condition->cleanup->after);
+    assert(!strcmp(condition->cleanup->output, "   unlink r71\n"));
+    assert(!outer_condition->cleanup->before && !outer_condition->cleanup->after);
+    assert(!strcmp(outer_condition->cleanup->output, "   unlink r72\n"));
+}
+
 int main(void) {
     Context *context;
     ASTNode *root, *namespace_node, *procedure, *body, *branch, *label, *on, *on_bound, *off;
     ASTNode *binding;
+    int path;
     const char fixture[] = "signal on syntax\nnext:\nsignal off syntax\n";
     char *source = malloc(sizeof(fixture));
     assert(source);
@@ -83,6 +162,12 @@ int main(void) {
     check_output(on, "sigbr l", "\"CLASSIC_SYNTAX\"");
     check_output(on_bound, "sigbrv l", "r7,\"CLASSIC_SYNTAX\"");
     check_output(off, "sighalt \"CLASSIC_SYNTAX\"", NULL);
+    for (path = 0; path < 3; path++) {
+        check_condition_exit(context, procedure, ITERATE, path);
+        check_condition_exit(context, procedure, LEAVE, path);
+        check_condition_exit(context, procedure, LEAVE_WITH, path);
+        check_condition_exit(context, procedure, FRAME_BRANCH, path);
+    }
     fre_cntx(context);
     puts("PASS frame label, branch, handler AST flow and RXAS emission");
     return 0;

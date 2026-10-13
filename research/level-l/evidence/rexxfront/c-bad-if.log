@@ -1,0 +1,20 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "levelc" (-1:-1) [Type: .unknown]
+      IF : "if" (-1:-1) [Type: .unknown]
+        OP_SCONCAT : "" (-1:-1) [Type: .unknown]
+          OP_SCONCAT : "" (-1:-1) [Type: .unknown]
+            INTEGER : "1" (-1:-1) [Type: .unknown]
+            VAR_SYMBOL : "say" (-1:-1) [Type: .unknown]
+          STRING : "bad" (-1:-1) [Type: .unknown]
+        TOKEN : "if" (-1:-1) [Type: .unknown]
+          ERROR : "RXC-LC-18.1 linenumber=\"2\" token=\"end-of-clause\"" (-1:-1) [Type: .unknown]
+Error in c-bad-if.rexx @ 2:1 - #RXC-LC-18.1 linenumber="2" token="end-of-clause", "if"
+1 error(s) in source file
+Error in c-bad-if.rexx @ 2:1 - #RXC-LC-18.1 linenumber="2" token="end-of-clause", "if"
+1 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

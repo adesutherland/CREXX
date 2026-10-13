@@ -1,0 +1,1 @@
+C14|array|5B312C2C325D|1|1|(Seq,0,6(Char,0,1)(Ref:N,1,1(OneOrMore,1,1(CharSet,1,1)))(ZeroOrMore,2,3(Seq,2,1(Char,2,1)(Ref:N,3,0(OneOrMore,3,0(CharSet,3,0(error,3,0)))))(Seq,3,2(Char,3,1)(Ref:N,4,1(OneOrMore,4,1(CharSet,4,1)))))(Char,5,1))

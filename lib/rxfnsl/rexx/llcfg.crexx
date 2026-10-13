@@ -1,0 +1,179 @@
+/* cREXX License (MIT). Pure CFG lowering shared by LR and Earley controls. */
+options levelb
+namespace llcfg expose productions
+import llcore
+import llcheck
+import lllimits
+
+/** Stable clause handles are nonterminals; terminals are -(symbol+1).
+ * Production 1 is the augmented root. Original labels remain on each lhs.
+ */
+productions: class
+  _g = .llcore..grammar
+  _facts = .llcheck..analysis
+  _root = .int
+  _count = .int
+  _slots = .int
+  _max = .int
+  _status = .int
+  _built = .int
+  _error = .string
+  _lhs = .int[]
+  _first = .int[]
+  _length = .int[]
+  _rhs = .int[]
+  _limits = .lllimits..policy
+  *: factory
+    arg graph = .llcore..grammar, root = .int, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    _g = graph; _root = root; _facts = .llcheck..analysis(graph,root,limits)
+    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0
+    return
+  build: method = .void
+    if _built then return
+    _built = 1; graph = _g; root = _root
+    if _facts.run() = 0 then do
+      _status = 3
+      if _facts.limit() then _status = 4
+      _error = _facts.error(); return
+    end
+    if graph.profile() <> 'contextfree' | _facts.ordered() | _facts.predicate() then do
+      clause = _facts.ordered()
+      if _facts.predicate() then clause = _facts.predicate()
+      detail = 'declared semantics ' || graph.profile()
+      if clause > 0 then detail = _facts.location(clause)
+      _status = 1; _error = 'LL_BACKEND_CAPABILITY: ' || detail || '. A CFG backend requires contextfree choice without PEG predicates or ordered choice. Select a compatible backend or explicitly reformulate the rules; changing choice semantics can change the language.'; return
+    end
+    ok = pair(graph.size() + 1,root,0)
+    i = .int; j = .int; a = .int; b = .int; op = .int; child = .int
+    emptyints = .int[]
+    do i = 1 to graph.size()
+      op = graph.op(i); a = graph.left(i); b = graph.right(i)
+      select op
+        when 1 then ok = pair(i,-a - 1,0)
+        when 2 then ok = pair(i,a,b)
+        when 4 then do
+          ok = pair(i,a,0); ok = pair(i,b,0)
+        end
+        when 5 then ok = pair(i,a,0)
+        when 6 then ok = pair(i,0,0)
+        when 7 then do
+          ok = pair(i,a,i); ok = pair(i,0,0)
+        end
+        when 11 then do j = a to b
+          ok = pair(i,-j - 1,0)
+        end
+        when 12 then do j = 0 to 255
+          ok = pair(i,-j - 1,0)
+        end
+        when 13 then do
+          text = graph.text(i); rhs = emptyints
+          do j = 0 to <blen>(text) - 1
+            byte = <at..u8>(j) text
+            rhs[j + 1] = -byte - 1
+          end
+          ok = append(i,rhs)
+        end
+        when 14 then do
+          ok = pair(i,a,i); ok = pair(i,a,0)
+        end
+        when 15 then do
+          ok = pair(i,a,0); ok = pair(i,0,0)
+        end
+        when 16 then do j = 0 to 255
+          if graph.contains(i,j) then ok = pair(i,-j - 1,0)
+        end
+        otherwise do
+          _status = 1; _error = _facts.location(i) || ': unsupported CFG clause (including explicit EOF assertion)'; return
+        end
+      end
+      if _status <> 0 then return
+    end
+    return
+  root: method = .int
+    return _root
+  pair: method = .int
+    arg lhs = .int, a = .int, b = .int
+    rhs = .int[]
+    if a <> 0 then rhs[1] = a
+    if b <> 0 then rhs[2] = b
+    return append(lhs,rhs)
+  append: method = .int
+    arg lhs = .int, rhs = .int[]
+    if _status <> 0 then return 0
+    if _count >= _limits.limit('cfg.productions') then do
+      _status = 4; _error = _limits.exhausted('cfg.productions',_count + 1); return 0
+    end
+    _count = _count + 1; _lhs[_count] = lhs
+    _first[_count] = _slots + 1; _length[_count] = rhs[0]
+    if rhs[0] > _max then _max = rhs[0]
+    do j = 1 to rhs[0]
+      _slots = _slots + 1; _rhs[_slots] = rhs[j]
+    end
+    return _count
+  count: method = .int
+    return _count
+  nonterminals: method = .int
+    return _g.size() + 1
+  maxrhs: method = .int
+    return _max
+  lhs: method = .int
+    arg p = .int
+    return _lhs[p]
+  length: method = .int
+    arg p = .int
+    return _length[p]
+  rhs: method = .int
+    arg p = .int, at = .int
+    if at < 0 | at >= _length[p] then return 0
+    return _rhs[_first[p] + at]
+  nullable: method = .int
+    arg nt = .int
+    if nt > _g.size() then nt = _root
+    return _facts.nullable(nt)
+  first: method = .int
+    arg nt = .int, symbol = .int
+    if nt > _g.size() then nt = _root
+    return _facts.first(nt,symbol)
+  label: method = .string
+    arg nt = .int
+    if nt > _g.size() then return '<root>'
+    return _g.label(nt)
+  location: method = .string
+    arg p = .int
+    nt = _lhs[p]
+    if nt > _g.size() then return '<root>'
+    if _g.op(nt) = 5 then return _facts.location(nt)
+    owners = ''; emptyints = .int[]
+    do rule = 1 to _g.size()
+      if _g.op(rule) <> 5 then iterate
+      pending = emptyints; pending[1] = _g.left(rule); used = emptyints; at = 1; found = 0
+      do while at <= pending[0]
+        child = pending[at]; at = at + 1
+        if child = nt then do
+          found = 1; leave
+        end
+        if child < 1 | child > _g.size() then iterate
+        if used[child] | _g.op(child) = 5 then iterate
+        used[child] = 1; op = _g.op(child)
+        if op = 2 | op = 4 then do
+          pending[pending[0] + 1] = _g.left(child); pending[pending[0] + 1] = _g.right(child)
+        end
+        else if op = 7 | op = 14 | op = 15 then pending[pending[0] + 1] = _g.left(child)
+      end
+      if found then do
+        if owners <> '' then owners = owners || ', '
+        owners = owners || _g.label(rule) || ' (line ' || _g.line(rule) || ')'
+      end
+    end
+    if owners = '' then return _facts.location(nt)
+    return owners
+  status: method = .int
+    call build
+    return _status
+  source: method = .llcore..grammar
+    return _g
+  error: method = .string
+    call build
+    return _error

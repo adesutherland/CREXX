@@ -1,0 +1,91 @@
+{
+  "cases": [
+    {
+      "case": "settings",
+      "stages": 3,
+      "accepted": true
+    },
+    {
+      "case": "settings-unicode-comment",
+      "stages": 3,
+      "accepted": true
+    },
+    {
+      "case": "lexer-only",
+      "stages": 3,
+      "accepted": true
+    },
+    {
+      "case": "parser-only",
+      "stages": 3,
+      "accepted": true
+    },
+    {
+      "case": "undefined",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "duplicate",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "unclosed-group",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "unclosed-quote",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "bad-codepoint",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "charset-cycle",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "inverted-range",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "duplicate-id",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "empty-lexical",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "reserved-eof",
+      "stages": 3,
+      "accepted": false
+    },
+    {
+      "case": "line-endings-'\\n'",
+      "stages": 3,
+      "line": 28
+    },
+    {
+      "case": "line-endings-'\\r'",
+      "stages": 3,
+      "line": 28
+    },
+    {
+      "case": "line-endings-'\\r\\n'",
+      "stages": 3,
+      "line": 28
+    }
+  ],
+  "self_description_sha256": "0ed01cd328143b00d81ed572b365acb67259594489bea8404d7b2da6762d7e29",
+  "opt_noopt_fixed_point_agrees": true
+}

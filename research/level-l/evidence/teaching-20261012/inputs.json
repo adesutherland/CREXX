@@ -1,0 +1,162 @@
+{
+  "recorded_utc": "2026-10-12T14:41:15.621477+00:00",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "head": "13041b6443c12690889c125021b45f2c8c329116",
+  "branch": "levell",
+  "scope": "New teaching source/test/documentation bytes; unchanged core at 13041b644; native functional evidence only.",
+  "sources": {
+    "lib/rxfnsl/examples/backends/ordered-prefix.levell": {
+      "bytes": 388,
+      "sha256": "37ba034698c417d9aa692ccaaf2d5f852bf6a398b63347f60c24d6231f4aa582"
+    },
+    "lib/rxfnsl/examples/backends/line-comments.levell": {
+      "bytes": 711,
+      "sha256": "c533f41c50fb3f89c04496205fb14793d9ce4c55e5c271b5b1aa9e5e6eba14c8"
+    },
+    "lib/rxfnsl/examples/backends/predictive.levell": {
+      "bytes": 692,
+      "sha256": "20a936b01c9b1b49a8f6d81dfa4ab70835e2e2db602a5c961efff42a27b274b8"
+    },
+    "lib/rxfnsl/examples/backends/ambiguous-arithmetic.levell": {
+      "bytes": 496,
+      "sha256": "dc91afd8beb9d5432665c1de7ad0f1252737e6cb4561e861806fc20df2d74e51"
+    },
+    "lib/rxfnsl/examples/backends/inspect.crexx": {
+      "bytes": 1340,
+      "sha256": "8619076272dbf2546f61dc3358bcff42ae53baffd2a0e0f9c0b2d46105dd6eab"
+    },
+    "lib/rxfnsl/examples/backends/left-recursive-list.levell": {
+      "bytes": 413,
+      "sha256": "40394cff4a7bcf343f27625fabb35f0d7b4a9dc64f89671bb927319c8c8f010a"
+    },
+    "lib/rxfnsl/examples/backends/palindrome.levell": {
+      "bytes": 333,
+      "sha256": "5ec3f4945b6f331194faa7377b7447909418b957f964062048475461c56f0279"
+    },
+    "lib/rxfnsl/examples/calculator/calculator.levell": {
+      "bytes": 1099,
+      "sha256": "d3aaf48df7c7e1173ac6cfd27eddccdbe4437e0446507214cf4609ebe16bcbc7"
+    },
+    "lib/rxfnsl/examples/calculator/example.calc": {
+      "bytes": 82,
+      "sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    "lib/rxfnsl/examples/calculator/calculator.crexx": {
+      "bytes": 3081,
+      "sha256": "b875babb28d1a01f182dc4fd509cc3566a1fd39fcda3aec3d656310ae306a35d"
+    },
+    "lib/rxfnsl/tests_functional/check-teaching-examples.py": {
+      "bytes": 11777,
+      "sha256": "3e9a39e623acb95cfda1100c886e98f31a6bee235edfb153088e612cdc31b9b0"
+    },
+    "lib/rxfnsl/doc/user-guide.md": {
+      "bytes": 92490,
+      "sha256": "79838d5bd150a7c9a25b3edb84d014d65aafe808dae082ff89fc8058857c137a"
+    },
+    "rexxscript/doc/developer-guide.md": {
+      "bytes": 17099,
+      "sha256": "fd1896abe68454bdc0107294a46b202f53505dcfbab65ea45348f8f3ea482f41"
+    },
+    "rexxscript/doc/user-guide.md": {
+      "bytes": 13114,
+      "sha256": "143c0639eb574c14978ba46ebb796f7e610c4b1b35eaccd49178a8c52d24667c"
+    },
+    "research/level-l/PLAN.md": {
+      "bytes": 186225,
+      "sha256": "ea7c2277ff83537601a9c1c1acc2d02e07592e261220681082bfc7946665c3e9"
+    },
+    "research/level-l/SURFACE.md": {
+      "bytes": 40851,
+      "sha256": "42eed4a6a41c35f5ff0878d78db8898f5b0a21c4a7eea5edbde6d309c30c1d70"
+    },
+    "research/level-l/README.md": {
+      "bytes": 22740,
+      "sha256": "3fe0d5fa1bf834397006e6858c4b160d5065307d1a080ca1be5c8bb0edf0a711"
+    }
+  },
+  "artifacts": {
+    "cmake-build-levell-product/bin/levell": {
+      "bytes": 2554056,
+      "sha256": "07d11492c70a523b761bca361a869ab06d3f2aa8d8fbc80db9196d25aa8b2a0d"
+    },
+    "cmake-build-levell-product/bin/rxc": {
+      "bytes": 5740944,
+      "sha256": "8c3690393edf3dbbb6e212ac276dd9fce061927b1e86578351be407a0d79ea35"
+    },
+    "cmake-build-levell-product/bin/rxas": {
+      "bytes": 1167000,
+      "sha256": "cd9fc0f74410bac9a74c7c53b615d24a088bb439b5326c443184f9a9b5a76135"
+    },
+    "cmake-build-levell-product/bin/rxlink": {
+      "bytes": 280744,
+      "sha256": "c70e73b09b84adf2c30db353834d7faf2059a9de52376ce84fa3a877af6c1b08"
+    },
+    "cmake-build-levell-product/bin/rxtvm": {
+      "bytes": 1712920,
+      "sha256": "6f4e0867ad39d6579162822daec56d2ecf70237654b63532352f9a6df3cb0b9d"
+    },
+    "cmake-build-levell-product/bin/rxbvm": {
+      "bytes": 1696264,
+      "sha256": "0f74435b2d862ba4d1a697bc98eb3a269bf16c38958a071a4483c9cd6460321f"
+    },
+    "cmake-build-levell-product/bin/rxfnsl.rxbin": {
+      "bytes": 1878220,
+      "sha256": "ce2c25ab796be51231fe467577e2353fddeaa797b9e4e4c8e73c164dd0dbb915"
+    },
+    "cmake-build-levell-product/bin/library.rxbin": {
+      "bytes": 1948682,
+      "sha256": "c1d834aa9a467945686e4fdfe321dde0f2484c6a3f5b0f9b22f06677cd6592a4"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/levell": {
+      "bytes": 266,
+      "sha256": "986de9c298d47ff802a3df9c8804595c7a26097001ad17aaecb15d536d876c61"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxc": {
+      "bytes": 5740944,
+      "sha256": "8c3690393edf3dbbb6e212ac276dd9fce061927b1e86578351be407a0d79ea35"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxas": {
+      "bytes": 1167000,
+      "sha256": "cd9fc0f74410bac9a74c7c53b615d24a088bb439b5326c443184f9a9b5a76135"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxlink": {
+      "bytes": 280744,
+      "sha256": "c70e73b09b84adf2c30db353834d7faf2059a9de52376ce84fa3a877af6c1b08"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxtvm": {
+      "bytes": 1712920,
+      "sha256": "6f4e0867ad39d6579162822daec56d2ecf70237654b63532352f9a6df3cb0b9d"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxbvm": {
+      "bytes": 1696264,
+      "sha256": "0f74435b2d862ba4d1a697bc98eb3a269bf16c38958a071a4483c9cd6460321f"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/rxfnsl.rxbin": {
+      "bytes": 1752080,
+      "sha256": "575bb741f203f4bb1258f4a5a44e03f5f00d9ecd8aa2fbf3bccacbb7347be5ec"
+    },
+    "research/level-l/build/surface-noopt-20261012/bin/library.rxbin": {
+      "bytes": 1948682,
+      "sha256": "c1d834aa9a467945686e4fdfe321dde0f2484c6a3f5b0f9b22f06677cd6592a4"
+    },
+    "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin": {
+      "bytes": 852521,
+      "sha256": "8dba71f37d0f18898e03b33b94ff6dc0b5c1c20726434da1683c5d8375f4faf8"
+    },
+    "research/level-l/build/product-noopt/bootstrap-build/tools/bootstrap/L2/levell-linked.rxbin": {
+      "bytes": 863571,
+      "sha256": "055a762ff53bc24915eacbdbc3e1d19780c62e7e86cd7d9bcd471867f98f4685"
+    }
+  },
+  "prior_core_identity_checks": 64,
+  "panels": {
+    "qualified-opt": {
+      "bytes": 464526,
+      "sha256": "5bcecef33f1b2bcc814844a154cea1637b6f688fe7105f47da9f995c9e9b6cd4"
+    },
+    "qualified-noopt": {
+      "bytes": 478766,
+      "sha256": "8475453de1d8f58299bf2082a7a161de6c32a824b7cf2feffbad65173dd1b772"
+    }
+  }
+}

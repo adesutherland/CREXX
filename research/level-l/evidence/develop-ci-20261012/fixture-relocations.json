@@ -1,0 +1,242 @@
+[
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/earley-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/earley-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/earley-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/earley-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/earley-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/earley-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/earley-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/earley-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/ll1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/ll1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/ll1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/ll1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/ll1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/ll1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/ll1-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/ll1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/lr1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/lr1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/lr1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/lr1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/lr1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/lr1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/lr1-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/lr1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/packrat-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/packrat-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/packrat-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/packrat-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/packrat-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/packrat-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/optimized/packrat-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/optimized/packrat-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/earley-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/earley-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/earley-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/earley-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/earley-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/earley-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/earley-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/earley-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/ll1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/ll1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/ll1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/ll1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/ll1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/ll1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/ll1-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/ll1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/lr1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/lr1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/lr1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/lr1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/lr1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/lr1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/lr1-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/lr1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/packrat-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/packrat-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/packrat-custom-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/packrat-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/packrat-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/packrat-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/comments-20261012/unoptimized/packrat-default-source/nul.txt",
+    "new": "research/level-l/evidence/comments-20261012/unoptimized/packrat-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-custom-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-default-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/earley-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-default-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/ll1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-custom-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-default-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/lr1-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-custom-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-custom-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-custom-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-custom-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-default-rxas/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-default-rxas/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  },
+  {
+    "old": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-default-source/nul.txt",
+    "new": "research/level-l/evidence/develop-integration-20261012/panels/comments/inputs/packrat-default-source/nul-byte.txt",
+    "sha256": "dd2466f2ad4663799e8a3c307d5afb7475db7a1f0d6ae1479a9d4132b7dc0f21"
+  }
+]

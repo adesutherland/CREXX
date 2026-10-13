@@ -1,0 +1,25 @@
+/* Start here. The default is UTF-8 scalar lexing and a complete CFG parse. */
+options levell
+namespace levell_settings
+identifier: token
+number: token
+string: token
+equals: token
+separator: token
+scan: lexer
+  letter: charset = 'a' to 'z' | 'A' to 'Z' | '_'
+  digit: charset = '0' to '9'
+  space: charset = ' ' | U+0009
+  body: charset = scalar except '"' | U+000A | U+000D
+  name.lex: rule = letter (letter | digit)* then emit identifier
+  number.lex: rule = digit+ then emit number
+  string.lex: rule = '"' (body | '""')* '"' then emit string
+  equals.lex: rule = '=' then emit equals
+  separator.lex: rule = U+000D U+000A | U+000D | U+000A | ';' then emit separator
+  whitespace: rule = space+ then skip
+parse: parser start settings backend packrat semantics ordered
+  settings: rule = separator settings | assignment tail | ''
+  tail: rule = separator settings | ''
+  assignment: rule = name.value equals value
+  name.value: rule = identifier
+  value: rule = number | string

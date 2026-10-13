@@ -1,0 +1,44 @@
+/* cREXX License (MIT). Inspect recognition without silently selecting a forest. */
+options levelb
+import rxfnsb
+import llcore
+import llforest
+import lllanguage
+import llsource
+import lltree
+import levell_lesson
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: inspect input.txt'; return 3
+  end
+  source = readbinary(argv[1])
+  definition = levell_lesson..language()
+  request = .lllanguage..request(definition,source)
+  status = request.parse()
+  say 'STATUS|' || status
+  if status = 5 then do
+    forest = request.forest()
+    say 'DERIVATIONS_CAPPED_AT_2|' || forest.derivations(request.forestroot(),2)
+    say 'FOREST_VALID|' || forest.validate()
+    say request.error()
+    return status
+  end
+  if status <> 0 then do
+    say llsource..diagnostic(source,request.offset(),'LESSON_PARSE',request.error())
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'LESSON_TREE: ' || tree.error(); return 3
+  end
+  pending = .int[]; top = 1; pending[top] = tree.root()
+  do while top > 0
+    node = pending[top]; top = top - 1
+    say 'NODE|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node)
+    do i = tree.count(node) to 1 by -1
+      top = top + 1; pending[top] = tree.child(node,i)
+    end
+  end
+  return 0

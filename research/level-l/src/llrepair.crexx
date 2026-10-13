@@ -1,0 +1,179 @@
+/* cREXX License (MIT). Exact bounded weighted edit oracle for pure CFGs. */
+options levell
+namespace llrepair expose oracle
+import rxfnsb
+import llcore
+import llcfg
+import llearley
+import llforest
+
+/** Dijkstra over byte strings, validated by the independent Earley engine.
+ * Positive insertion/deletion/substitution costs. This intentionally small
+ * oracle searches actual corrected documents; c14's absent-construct ranking
+ * is a different objective. No claim of polynomial dependence on edit budget.
+ */
+oracle: class
+  _g = .llcore..grammar
+  _root = .int
+  _source = .binary
+  _bound = .int
+  _wi = .int
+  _wd = .int
+  _ws = .int
+  _limit = .int
+  _fuel = .int
+  _work = .int
+  _ran = .int
+  _status = .int
+  _error = .string
+  _count = .int
+  _winner = .int
+  _tested = .int
+  _keys = .string[]
+  _hashhead = .int[]
+  _hashnext = .int[]
+  _dist = .int[]
+  _done = .int[]
+  _prev = .int[]
+  _op = .string[]
+  _at = .int[]
+  _byte = .string[]
+  _alphabet = .int[]
+  _forest = .llforest..arena
+  _forestroot = .int
+  *: factory
+    arg graph = .llcore..grammar, root = .int, source = .binary, bound = 2, insertion = 1, deletion = 1, substitution = 1, states = 20000, fuel = 2000000
+    _g = graph; _root = root; _source = source; _bound = bound; _wi = insertion; _wd = deletion; _ws = substitution
+    _limit = states; _fuel = fuel; _work = 0; _ran = 0; _status = 0; _error = ''
+    _count = 0; _winner = 0; _tested = 0; _forestroot = 0
+    return
+  tick: method = .int
+    _work = _work + 1
+    if _status = 2 | _work > _fuel then do
+      _status = 2; _error = 'resource exhausted: exact repair search work'; return 0
+    end
+    return 1
+  relax: method = .int
+    arg key = .string, cost = .int, previous = .int, operation = .string, at = .int, byte = .string
+    if cost > _bound then return 0
+    /* Every byte outside the CFG terminal alphabet needs its own deletion or
+       substitution. This lower bound cannot exclude a repair within d. */
+    required = 0
+    do k = 1 to length(key) by 2
+      bytevalue = x2d(substr(key,k,2))
+      if _alphabet[bytevalue + 1] = 0 then required = required + min(_wd,_ws)
+    end
+    if cost + required > _bound then return 0
+    if tick() = 0 then return 0
+    hash = 0
+    do i = 1 to length(key)
+      hash = (hash * 17 + pos(substr(key,i,1),'0123456789ABCDEF')) <mod> 4093
+    end
+    bucket = hash + 1; id = _hashhead[bucket]
+    do while id > 0
+      if tick() = 0 then return 0
+      if _keys[id] == key then leave
+      id = _hashnext[id]
+    end
+    if id > 0 then do
+      if _dist[id] <= cost then return id
+      /* Positive edge weights guarantee a settled node cannot improve. */
+      if _done[id] then do
+        _status = 3; _error = 'internal shortest-path invariant'; return 0
+      end
+    end
+    else do
+      if _count >= _limit then do
+        _status = 2; _error = 'resource exhausted: exact repair state limit'; return 0
+      end
+      _count = _count + 1; id = _count; _keys[id] = key
+      _hashnext[id] = _hashhead[bucket]; _hashhead[bucket] = id
+    end
+    _dist[id] = cost; _prev[id] = previous; _op[id] = operation; _at[id] = at; _byte[id] = byte
+    return id
+  run: method = .int
+    if _ran then return _status
+    _ran = 1; i = .int; symbol = .int; following = ''
+    if _bound < 0 | _wi < 1 | _wd < 1 | _ws < 1 | _limit < 1 then do
+      _status = 3; _error = 'exact repair needs positive edit costs and nonnegative bound'; return 3
+    end
+    cfg = .llcfg..productions(_g,_root)
+    if cfg.status() <> 0 then do
+      _status = 3; _error = cfg.error(); return 3
+    end
+    do p = 1 to cfg.count()
+      do i = 0 to cfg.length(p) - 1
+        symbol = cfg.rhs(p,i)
+        if symbol < 0 then _alphabet[-symbol] = 1
+      end
+    end
+    ok = relax(bin2x(_source),0,0,'',0,'')
+    do while _status = 0
+      current = 0
+      do i = 1 to _count
+        if tick() = 0 then return 2
+        if _done[i] = 0 then do
+          if current = 0 then current = i
+          else if _dist[i] < _dist[current] then current = i
+        end
+      end
+      if current = 0 then do
+        _status = 1; _error = 'no accepted document within weighted edit bound ' || _bound; return 1
+      end
+      _done[current] = 1; key = _keys[current]; distance = _dist[current]
+      bytes = x2bin(key); input = .llcore..stream(bytes)
+      recognizer = .llearley..parser(_g,_root,input,_fuel - _work)
+      status = recognizer.run(); _work = _work + recognizer.work(); _tested = _tested + 1
+      if status > 1 then do
+        _status = status; _error = recognizer.error(); return _status
+      end
+      if status = 0 then do
+        _winner = current; _forest = recognizer.forest(); _forestroot = recognizer.root(); return 0
+      end
+      size = length(key) <idiv> 2
+      do at = 0 to size
+        prefix = left(key,at * 2); suffix = substr(key,at * 2 + 1)
+        if at < size then do
+          following = substr(key,at * 2 + 3)
+          ok = relax(prefix || following,distance + _wd,current,'delete',at,'')
+        end
+        do symbol = 0 to 255
+          if _alphabet[symbol + 1] then do
+            byte = d2x(symbol,2)
+            ok = relax(prefix || byte || suffix,distance + _wi,current,'insert',at,byte)
+            if at < size then do
+              if substr(key,at * 2 + 1,2) \== byte then ok = relax(prefix || byte || following,distance + _ws,current,'replace',at,byte)
+            end
+          end
+          if _status = 2 then return 2
+        end
+      end
+    end
+    return _status
+  cost: method = .int
+    if _winner = 0 then return -1
+    return _dist[_winner]
+  repaired: method = .binary
+    if _winner = 0 then return '' as .binary
+    return x2bin(_keys[_winner])
+  /** Offsets refer to the current intermediate byte string at each edit. */
+  edits: method = .string
+    out = ''; id = _winner
+    do while id > 0
+      if _prev[id] = 0 then leave
+      out = _op[id] || '@' || _at[id] || ':' || _byte[id] || ';' || out
+      id = _prev[id]
+    end
+    return out
+  error: method = .string
+    return _error
+  states: method = .int
+    return _count
+  tested: method = .int
+    return _tested
+  work: method = .int
+    return _work
+  forest: method = .llforest..arena
+    return _forest
+  root: method = .int
+    return _forestroot

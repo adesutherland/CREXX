@@ -1,0 +1,61 @@
+/* Representative initial-tree grammar. B/G procedure grouping is a separate gate. */
+options levell
+namespace rexxfragment
+read: parser semantics ordered input tokens start document
+word: token = 1
+numeric: token = 2
+quoted: token = 3
+assign: token = 4
+semi: token = 5
+plus: token = 6
+times: token = 7
+open: token = 8
+close: token = 9
+comma: token = 10
+newline: token = 11
+colon: token = 12
+dot: token = 13
+ifword: token = 20
+thenword: token = 21
+elseword: token = 22
+sayword: token = 23
+parseword: token = 24
+upperword: token = 25
+varword: token = 26
+returnword: token = 27
+optionsword: token = 28
+protectedword: token = 31
+normalize: tokenstage start 1
+continued: transform stage normalize state 0 take comma newline emit skip next 1
+end.line: transform stage normalize state 0 take newline emit semi next 1
+classify: tokenstage start 1
+new.clause: transform stage classify state 0 take semi emit copy next 1
+header.options: transform stage classify state 1 take word text 'OPTIONS' emit optionsword next 2
+keyword.if: transform stage classify state 1 take word text 'IF' emit ifword next 3
+keyword.then: transform stage classify state 3 take word text 'THEN' emit thenword next 1
+keyword.else: transform stage classify state 1 take word text 'ELSE' emit elseword next 1
+keyword.say: transform stage classify state 1 take word text 'SAY' emit sayword next 2
+keyword.return: transform stage classify state 1 take word text 'RETURN' emit returnword next 2
+keyword.parse: transform stage classify state 1 take word text 'PARSE' emit parseword next 4
+keyword.upper: transform stage classify state 4 take word text 'UPPER' emit upperword next 4
+keyword.var: transform stage classify state 4 take word text 'VAR' emit varword next 2
+ordinary.clause: transform stage classify state 1 take any emit copy next 2
+name: rule = word | protectedword
+number: rule = numeric
+string: rule = quoted
+atom: rule = number | string | name | open expression close
+product: rule = atom (times atom)*
+addition: rule = product (plus product)*
+expression: rule = addition+
+assignment: rule = name assign expression
+label: rule = name colon
+say.statement: rule = sayword expression
+return.statement: rule = returnword expression
+template.target: rule = name | dot
+template.dynamic: rule = open name close
+template: rule = (template.dynamic | template.target)*
+parse.statement: rule = parseword upperword? varword name template
+if.statement: rule = ifword expression thenword statement (semi* elseword statement)?
+statement: rule = assignment | label | if.statement | say.statement | parse.statement | return.statement
+rest: rule = statement (semi+ rest?)?
+document: rule = optionsword word semi+ rest?

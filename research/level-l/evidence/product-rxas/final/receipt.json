@@ -1,0 +1,78 @@
+{
+  "created_utc": "2026-10-10T21:37:51.710651+00:00",
+  "branch": "levell",
+  "base_commit": "91313bcc5a447e9403f95b1f0bfc4dd9503d0618",
+  "working_tree": "local uncommitted product/research changes; unrelated performance/ROADMAP.md preserved; no compiler or VM C source changes",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "build": "cmake-build-levell-product, Debug",
+  "status": "implementation available for review; RS-AC04 open for RS-F01 compiler folding discrepancy",
+  "interpreter": {
+    "cases_per_cell": 60,
+    "cells": [
+      "noopt/rxtvm",
+      "noopt/rxbvm",
+      "opt/rxtvm",
+      "opt/rxbvm"
+    ],
+    "failures": 0
+  },
+  "second_language": {
+    "assertions_per_cell": 4725,
+    "cells": 4,
+    "failures": 0
+  },
+  "generator": {
+    "cases": 9,
+    "deterministic_rxas_specs": 2,
+    "failures": 0
+  },
+  "native_cli": {
+    "cases": 6,
+    "failures": 0
+  },
+  "source_emission_control": {
+    "cases_per_vm": 60,
+    "vms": 2,
+    "failures": 0
+  },
+  "scalar": {
+    "runtime_overlap": 28,
+    "compiler_modes": 2,
+    "compiler_vms": 2,
+    "known_optimizer_disagreements": 1,
+    "unexpected_failures": 0
+  },
+  "ctest": {
+    "current_product_passes": 4,
+    "earlier_legacy_tinyexpr_passes_reused": 7,
+    "earlier_modern_results_superseded": 4
+  },
+  "grammar": {
+    "dfa_states": 149,
+    "lr_states": 1612,
+    "independent_bison_states": 1613,
+    "bison_conflicts": 0
+  },
+  "packed_storage": {
+    "dfa_bytes": 35012,
+    "lr_bytes": 294972,
+    "lr_directory_bytes": 25792,
+    "lookup": "synchronous EXPOSE borrow, no image copy/MKREF",
+    "initialization": "owned value copies remain"
+  },
+  "open": [
+    "RS-F01 / RS-AC04",
+    "original research AC-14,15,18,22,23,24,25",
+    "host registration/exposure/write-back expressly undecided"
+  ],
+  "not_claimed": [
+    "release/publication",
+    "Linux/Windows qualification",
+    "sanitizer qualification",
+    "installed/package qualification",
+    "universal zero-copy",
+    "complete Level G language",
+    "representative performance result"
+  ]
+}

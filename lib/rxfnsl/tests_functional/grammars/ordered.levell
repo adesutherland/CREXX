@@ -1,0 +1,8 @@
+options levell
+namespace ordered_example
+number: token = 1
+scan: lexer input bytes
+  digit: charset = U+0030 to U+0039
+  numeric: rule = digit+ then emit number
+parse: parser semantics ordered input tokens start document
+  document: rule = number | number number

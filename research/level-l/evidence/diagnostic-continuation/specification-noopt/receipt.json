@@ -1,0 +1,554 @@
+{
+  "records": [
+    {
+      "name": "L1-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/driver-imports;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/specification-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L1-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L1-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/llfront.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/llsyntax.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxfnsl-base.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L1-rxtvm-group",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/group.levell"
+      ],
+      "status": 3,
+      "sha256": "98bf3e4c40f8354b7b39cd6578686297d0aef02c7efcc79c750abc2fc5fa72b3"
+    },
+    {
+      "name": "L1-rxbvm-group",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/group.levell"
+      ],
+      "status": 3,
+      "sha256": "98bf3e4c40f8354b7b39cd6578686297d0aef02c7efcc79c750abc2fc5fa72b3"
+    },
+    {
+      "name": "L1-bounded",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/group.levell",
+        "1"
+      ],
+      "status": 4,
+      "sha256": "b6c9c8f694acf217fb4047935aca2e5ad1d037560430a7187be8d49b271f05cb"
+    },
+    {
+      "name": "L1-preserve-group",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/group.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "2c9b0e3207386d47ee490f0c81df7183bbd9d6bf9d79ac8c804f4cf3aac716b5"
+    },
+    {
+      "name": "L1-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/lexical.levell"
+      ],
+      "status": 3,
+      "sha256": "dfad2b6f1a9d3b489758a41362e0a44da77542ec464d651807ce59800c979d92"
+    },
+    {
+      "name": "L1-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/lexical.levell"
+      ],
+      "status": 3,
+      "sha256": "dfad2b6f1a9d3b489758a41362e0a44da77542ec464d651807ce59800c979d92"
+    },
+    {
+      "name": "L1-preserve-lexical",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/lexical.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "2ef99bc3a54c4b52053ce73c8b0cc0c6b0cebb43b48520640518f4994855bce9"
+    },
+    {
+      "name": "L1-rxtvm-quote",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quote.levell"
+      ],
+      "status": 3,
+      "sha256": "b3aafff153a8bbc007504c5f772e8a7199c8667e673e4c43725f8ba9cd8898d6"
+    },
+    {
+      "name": "L1-rxbvm-quote",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quote.levell"
+      ],
+      "status": 3,
+      "sha256": "b3aafff153a8bbc007504c5f772e8a7199c8667e673e4c43725f8ba9cd8898d6"
+    },
+    {
+      "name": "L1-preserve-quote",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quote.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "d834877dfd3bc9e521098dd3337e12c7f6c9355c61a14ee4ff3ca639bd16e4f6"
+    },
+    {
+      "name": "L1-rxtvm-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/comment.levell"
+      ],
+      "status": 3,
+      "sha256": "674459ade0517d58a8e27740890b54f260f5c090205c0895645abadfdc336806"
+    },
+    {
+      "name": "L1-rxbvm-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/comment.levell"
+      ],
+      "status": 3,
+      "sha256": "674459ade0517d58a8e27740890b54f260f5c090205c0895645abadfdc336806"
+    },
+    {
+      "name": "L1-preserve-comment",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/comment.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "f71440dfdec488023e491455e17575e82f2f61c905cc47617f7f2967abb122e1"
+    },
+    {
+      "name": "L1-rxtvm-quoted-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quoted-header.levell"
+      ],
+      "status": 3,
+      "sha256": "4b5483a9a26943f47a39b92797bf78e007108187b346af79777866bbea8a7859"
+    },
+    {
+      "name": "L1-rxbvm-quoted-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quoted-header.levell"
+      ],
+      "status": 3,
+      "sha256": "4b5483a9a26943f47a39b92797bf78e007108187b346af79777866bbea8a7859"
+    },
+    {
+      "name": "L1-preserve-quoted-header",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/quoted-header.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "60a3b56d57233e4572d35139528c762004eb0c3f3fde9c6ba94b2dc1bcf86224"
+    },
+    {
+      "name": "L1-rxtvm-commented-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/commented-header.levell"
+      ],
+      "status": 3,
+      "sha256": "53892f5fd4f43f3d529c4b5e3f9f4896d5338b796e489d9a1215437f502c0b7f"
+    },
+    {
+      "name": "L1-rxbvm-commented-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/commented-header.levell"
+      ],
+      "status": 3,
+      "sha256": "53892f5fd4f43f3d529c4b5e3f9f4896d5338b796e489d9a1215437f502c0b7f"
+    },
+    {
+      "name": "L1-preserve-commented-header",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/commented-header.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L1/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "844f1eadba115ecfe692f8c5bc643345ab96c27a9edd0b7b118d77daae9f6d28"
+    },
+    {
+      "name": "L2-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/driver-imports;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/specification-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L2-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L2-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/llfront.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/llsyntax.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxfnsl-base.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "L2-rxtvm-group",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/group.levell"
+      ],
+      "status": 3,
+      "sha256": "98bf3e4c40f8354b7b39cd6578686297d0aef02c7efcc79c750abc2fc5fa72b3"
+    },
+    {
+      "name": "L2-rxbvm-group",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/group.levell"
+      ],
+      "status": 3,
+      "sha256": "98bf3e4c40f8354b7b39cd6578686297d0aef02c7efcc79c750abc2fc5fa72b3"
+    },
+    {
+      "name": "L2-bounded",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/group.levell",
+        "1"
+      ],
+      "status": 4,
+      "sha256": "b6c9c8f694acf217fb4047935aca2e5ad1d037560430a7187be8d49b271f05cb"
+    },
+    {
+      "name": "L2-preserve-group",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/group.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "786e3bdb10bcee8527138327004cc70fb36f2042b48d162369d93b18fbeed5dd"
+    },
+    {
+      "name": "L2-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/lexical.levell"
+      ],
+      "status": 3,
+      "sha256": "dfad2b6f1a9d3b489758a41362e0a44da77542ec464d651807ce59800c979d92"
+    },
+    {
+      "name": "L2-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/lexical.levell"
+      ],
+      "status": 3,
+      "sha256": "dfad2b6f1a9d3b489758a41362e0a44da77542ec464d651807ce59800c979d92"
+    },
+    {
+      "name": "L2-preserve-lexical",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/lexical.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "d60921cdfb873ca735bf4a2ff3532df58df2f5665cb1be8a7967c67f65a5e61e"
+    },
+    {
+      "name": "L2-rxtvm-quote",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quote.levell"
+      ],
+      "status": 3,
+      "sha256": "b3aafff153a8bbc007504c5f772e8a7199c8667e673e4c43725f8ba9cd8898d6"
+    },
+    {
+      "name": "L2-rxbvm-quote",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quote.levell"
+      ],
+      "status": 3,
+      "sha256": "b3aafff153a8bbc007504c5f772e8a7199c8667e673e4c43725f8ba9cd8898d6"
+    },
+    {
+      "name": "L2-preserve-quote",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quote.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "d1347e93fa03dd02b19d5b73c7a75bd51e974880083266034aed607be56165a0"
+    },
+    {
+      "name": "L2-rxtvm-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/comment.levell"
+      ],
+      "status": 3,
+      "sha256": "674459ade0517d58a8e27740890b54f260f5c090205c0895645abadfdc336806"
+    },
+    {
+      "name": "L2-rxbvm-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/comment.levell"
+      ],
+      "status": 3,
+      "sha256": "674459ade0517d58a8e27740890b54f260f5c090205c0895645abadfdc336806"
+    },
+    {
+      "name": "L2-preserve-comment",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/comment.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "5718a7ad7961c0d8fd6c552ace1778243567420d392350152c02694ebd136426"
+    },
+    {
+      "name": "L2-rxtvm-quoted-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quoted-header.levell"
+      ],
+      "status": 3,
+      "sha256": "4b5483a9a26943f47a39b92797bf78e007108187b346af79777866bbea8a7859"
+    },
+    {
+      "name": "L2-rxbvm-quoted-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quoted-header.levell"
+      ],
+      "status": 3,
+      "sha256": "4b5483a9a26943f47a39b92797bf78e007108187b346af79777866bbea8a7859"
+    },
+    {
+      "name": "L2-preserve-quoted-header",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/quoted-header.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "fad136dc90976a47a3f0eaa300fb4ac11e85c4d66448031ab92e940e9f7b6f3a"
+    },
+    {
+      "name": "L2-rxtvm-commented-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/commented-header.levell"
+      ],
+      "status": 3,
+      "sha256": "53892f5fd4f43f3d529c4b5e3f9f4896d5338b796e489d9a1215437f502c0b7f"
+    },
+    {
+      "name": "L2-rxbvm-commented-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/commented-header.levell"
+      ],
+      "status": 3,
+      "sha256": "53892f5fd4f43f3d529c4b5e3f9f4896d5338b796e489d9a1215437f502c0b7f"
+    },
+    {
+      "name": "L2-preserve-commented-header",
+      "argv": [
+        "cmake",
+        "-DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/rxtvm",
+        "-DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/commented-header.levell",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/specification-noopt/L2/preserved.rxas",
+        "-DFORMAT=rxas",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tools/generate.cmake"
+      ],
+      "status": 1,
+      "sha256": "c8c472f469de2c0b4313ec3d8bb88471e66fccdb9fcff55a53404f2ba3d83187"
+    }
+  ],
+  "candidate_cases": 24,
+  "scope": "L1/L2, both VMs; isolated candidates after lexical damage remain failed and never become generated code."
+}

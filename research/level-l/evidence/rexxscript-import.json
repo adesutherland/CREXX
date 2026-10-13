@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "rxfnsc.rxbin": {
+      "source": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-release/bin/rxfnsc.rxbin",
+      "sha256": "9bb14e4907661b459b39356c1cf5a1422186c03f15db81f075af2e86e85a9c84",
+      "bytes": 364836
+    },
+    "classlib.rxbin": {
+      "source": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-release/bin/classlib.rxbin",
+      "sha256": "ba58ceacc724f2bbf1326c46762aa3200a8cc21064b9f21615590022b6987c6d",
+      "bytes": 421426
+    }
+  },
+  "copy_consistency": "same bytes before/after copy",
+  "scope": "Existing selected-worktree build snapshots, not an exact source/release qualification."
+}

@@ -1,0 +1,3069 @@
+[
+  {
+    "backtrace": 3282,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_unicode_character_bifs.cmake"
+    ],
+    "name": "levelc_unicode_character_bifs",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3285,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_unicode_character_bifs_noopt.cmake"
+    ],
+    "name": "levelc_unicode_character_bifs_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3396,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_signal_unicode_labels.cmake"
+    ],
+    "name": "levelc_signal_unicode_labels",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3399,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_signal_unicode_labels_noopt.cmake"
+    ],
+    "name": "levelc_signal_unicode_labels_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3780,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_arg_unicode.cmake"
+    ],
+    "name": "levelc_arg_unicode",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3783,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_arg_unicode_noopt.cmake"
+    ],
+    "name": "levelc_arg_unicode_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3882,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_procedure_unicode.cmake"
+    ],
+    "name": "levelc_procedure_unicode",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3885,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests/levelc_procedure_unicode_noopt.cmake"
+    ],
+    "name": "levelc_procedure_unicode_noopt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 3955,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvm",
+      "-DBINDIR=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/rexx_src/levelc_signal_unicode_labels.rexx",
+      "-DBUILD_DIR=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests",
+      "-DNAME=levelc_signal_unicode_labels_linked",
+      "-DEXPECTED_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/rexx_src/levelc_signal_unicode_labels.expected",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/levelc_arg_linked.cmake"
+    ],
+    "name": "levelc_signal_unicode_labels_linked",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc"
+      }
+    ]
+  },
+  {
+    "backtrace": 5022,
+    "command": [
+      "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/classic_unicode_contract.py",
+      "--bindir",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin"
+    ],
+    "name": "classic_unicode_contract_opt",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "compiler",
+          "comprehensive",
+          "levelc",
+          "streams",
+          "unicode"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 1800.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc;rxfnsg;cstream"
+      }
+    ]
+  },
+  {
+    "backtrace": 5261,
+    "name": "test_rexxscript_noopt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "^ERROR ",
+          "ERROR reading module file",
+          "#FUNCTION_NOT_FOUND",
+          "#UNKNOWN_TYPE",
+          "#UNKNOWN_VARIABLE",
+          "#BAD_CONVERSION"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "SUCCESS"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/exits/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "test_rexxscript_bin"
+      }
+    ]
+  },
+  {
+    "backtrace": 5264,
+    "name": "test_rexxscript_opt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "^ERROR ",
+          "ERROR reading module file",
+          "#FUNCTION_NOT_FOUND",
+          "#UNKNOWN_TYPE",
+          "#UNKNOWN_VARIABLE",
+          "#BAD_CONVERSION"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "SUCCESS"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/exits/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "test_rexxscript_bin"
+      }
+    ]
+  },
+  {
+    "backtrace": 5267,
+    "name": "test_rexxscript_direct_noopt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "^ERROR ",
+          "ERROR reading module file",
+          "#FUNCTION_NOT_FOUND",
+          "#UNKNOWN_TYPE",
+          "#UNKNOWN_VARIABLE",
+          "#BAD_CONVERSION"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "SUCCESS"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/exits/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "test_rexxscript_direct_bin"
+      }
+    ]
+  },
+  {
+    "backtrace": 5270,
+    "name": "test_rexxscript_direct_opt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "^ERROR ",
+          "ERROR reading module file",
+          "#FUNCTION_NOT_FOUND",
+          "#UNKNOWN_TYPE",
+          "#UNKNOWN_VARIABLE",
+          "#BAD_CONVERSION"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "SUCCESS"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/compiler/exits/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "test_rexxscript_direct_bin"
+      }
+    ]
+  },
+  {
+    "backtrace": 6011,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/rxpp_smoke.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_smoke.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_smoke.cmake"
+    ],
+    "name": "rxpp_smoke",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6013,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/rxpp_fortran_block.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_fortran_block.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_fortran_block.cmake"
+    ],
+    "name": "rxpp_fortran_block",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "fortran",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 6015,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/rxpp_rexxscript_block.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_rexxscript_block.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_rexxscript_block.cmake"
+    ],
+    "name": "rxpp_rexxscript_block",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "preprocessor",
+          "regression",
+          "rexxscript",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 6017,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/rxpp_srcmap.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_srcmap.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_srcmap.cmake"
+    ],
+    "name": "rxpp_srcmap",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6019,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_dalias_opt",
+      "-DMODE=opt",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_dalias.cmake"
+    ],
+    "name": "rxpp_dalias_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "data",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;crexx;rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 6021,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_dalias_noopt",
+      "-DMODE=noopt",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_dalias.cmake"
+    ],
+    "name": "rxpp_dalias_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "data",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;crexx;rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 6023,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_relative_include",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_relative_include.cmake"
+    ],
+    "name": "rxpp_relative_include",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "includes",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6025,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_script_macro_exact_match",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_script_macro_exact_match.cmake"
+    ],
+    "name": "rxpp_script_macro_exact_match",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "macros",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6027,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_loadmacro",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_loadmacro.cmake"
+    ],
+    "name": "rxpp_loadmacro",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "macros",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6029,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_mcall_depth",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_mcall_depth.cmake"
+    ],
+    "name": "rxpp_mcall_depth",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "macros",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxc"
+      }
+    ]
+  },
+  {
+    "backtrace": 6031,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXPP_SH_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp-sh",
+      "-DPARSER_TESTER_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/dslsyntax-tools/parser_tester",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-DDUMP_AST_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/highlighting/dump_ast.txt",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_sh_srcmap",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_sh_srcmap.cmake"
+    ],
+    "name": "rxpp_sh_srcmap",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "preprocessor",
+          "srcmap",
+          "syntax_highlighting"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "syntax_highlighting_parser"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 6033,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXPP_SH_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp-sh",
+      "-DPARSER_TESTER_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/dslsyntax-tools/parser_tester",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-DDUMP_AST_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/highlighting/dump_ast.txt",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_sh_default_lookup",
+      "-DRXPP_SH_USE_ENV=OFF",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_sh_srcmap.cmake"
+    ],
+    "name": "rxpp_sh_default_lookup",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "preprocessor",
+          "srcmap",
+          "syntax_highlighting"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "syntax_highlighting_parser"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 6035,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DRXPP_SH_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp-sh",
+      "-DPARSER_TESTER_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/dslsyntax-tools/parser_tester",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-DDUMP_AST_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/compiler/tests/highlighting/dump_ast.txt",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_sh_tokens",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_sh_tokens.cmake"
+    ],
+    "name": "rxpp_sh_tokens",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "preprocessor",
+          "smoke",
+          "syntax_highlighting"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "syntax_highlighting_parser"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp;rxpp_sh;parser_tester"
+      }
+    ]
+  },
+  {
+    "backtrace": 6037,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_diagnostics",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/maclib.rexx",
+      "-DMESSAGE_PATH=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/messages",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_diagnostics.cmake"
+    ],
+    "name": "rxpp_diagnostics",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "diagnostics",
+          "preprocessor",
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 6039,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+      "-DRXAS_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+      "-DRXVM_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvm",
+      "-DBIN_DIR=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests/rxpp_diagnostic_catalogs",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/preprocessor/tests/run_rxpp_diagnostic_catalogs.cmake"
+    ],
+    "name": "rxpp_diagnostic_catalogs",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "diagnostics",
+          "preprocessor"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/preprocessor/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 7187,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxdas",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/rexx",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+      "-DOUTPUT_RXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/rexx/rxfnsl_binary_surface_check.rxas",
+      "-DEXPECT_TEXT_1=bgetu8",
+      "-DEXPECT_TEXT_2=bseti64",
+      "-DEXPECT_TEXT_3=bcmpb",
+      "-DEXPECT_ABSENT_1=bslice",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/linker/tests/check_rxdas_contains.cmake"
+    ],
+    "name": "rxfnsl_tinyexpr_binary_surface_smoke",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "level-l",
+          "library"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/rexx"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rxfnsl;rxdas"
+      }
+    ]
+  },
+  {
+    "backtrace": 7191,
+    "name": "ts_tinyexpr_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "optimizer-parity",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: rxfnsl tinyexpr generated-shape demo"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_tinyexpr_noopt_artifact"
+      }
+    ]
+  },
+  {
+    "backtrace": 7195,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional/ts_tinyexpr_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_tinyexpr_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "linked_opt",
+          "optimizer-parity"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: rxfnsl tinyexpr generated-shape demo"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_tinyexpr_opt_artifact;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7197,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional/testGenerated-linked.rxbin",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/../tools/example.levell"
+    ],
+    "name": "levell_generated_rxtvm",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "level-l",
+          "library",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "generated_failures=0"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 300.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testlevell_generated;rxtvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 7199,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional/testGenerated-linked.rxbin",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/../tools/example.levell"
+    ],
+    "name": "levell_generated_rxbvm",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "level-l",
+          "library",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "generated_failures=0"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 300.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testlevell_generated;rxbvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 7839,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx/stage-g/work/members/unicode_casefold/unicode_casefold.rxas",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/unicode_casefold.crexx.in",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_casefold_rxas.cmake"
+    ],
+    "name": "rxunicode_casefold_rxas_shape",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "casefold",
+          "comprehensive",
+          "levelg",
+          "library",
+          "shape",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7841,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx/stage-g/work/members/unicode_grapheme/unicode_grapheme.rxas",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/unicode_grapheme.crexx.in",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_grapheme_rxas.cmake"
+    ],
+    "name": "rxunicode_grapheme_rxas_shape",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "grapheme",
+          "levelg",
+          "library",
+          "shape",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7843,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DKIND=normalization",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx/stage-g/work/members/unicode_normalization/unicode_normalization.rxas",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_product_rxas.cmake"
+    ],
+    "name": "rxunicode_normalization_rxas_shape",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "levelg",
+          "library",
+          "normalization",
+          "shape",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7845,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DKIND=case_mapping",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx/stage-g/work/members/unicode_case_mapping/unicode_case_mapping.rxas",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_product_rxas.cmake"
+    ],
+    "name": "rxunicode_case_mapping_rxas_shape",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "case_mapping",
+          "comprehensive",
+          "levelg",
+          "library",
+          "shape",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7847,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DKIND=codec",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx/stage-g/work/members/unicode_codec/unicode_codec.rxas",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_product_rxas.cmake"
+    ],
+    "name": "rxunicode_codec_rxas_shape",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "codec",
+          "comprehensive",
+          "levelg",
+          "library",
+          "shape",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7849,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/unicode.crexx",
+      "-DDOC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/unicode.md",
+      "-DUSER_DOC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/docs/books/crexx_library_reference/unicode.md",
+      "-DNORMALIZATION_TEST=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../tests_functional/ts_unicode_normalization.crexx",
+      "-DCASE_MAPPING_TEST=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../tests_functional/ts_unicode_case_mapping.crexx",
+      "-DCASEFOLD_TEST=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../tests_functional/ts_unicode_casefold.crexx",
+      "-DGRAPHEME_TEST=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../tests_functional/ts_unicode_grapheme.crexx",
+      "-DCODEC_TEST=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../tests_functional/ts_unicode_codec.crexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsg/rexx/../unicode/check_casefold_contract.cmake"
+    ],
+    "name": "rxunicode_contract_surface",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "contract",
+          "essential",
+          "levelg",
+          "library",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/rexx"
+      }
+    ]
+  },
+  {
+    "backtrace": 7859,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "ts_math_numeric_rxbvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsg"
+    ],
+    "name": "ts_math_numeric_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "decimal",
+          "integer",
+          "levelg",
+          "library",
+          "math",
+          "optimizer-parity",
+          "rxbvm"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_math_numeric_rxbvm_noopt_artifact;rxbvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 7863,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_math_numeric_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_math_numeric_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "decimal",
+          "integer",
+          "levelg",
+          "library",
+          "linked_opt",
+          "math",
+          "optimizer-parity",
+          "rxbvm"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_math_numeric_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7867,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+      "ts_math_numeric_rxtvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsg"
+    ],
+    "name": "ts_math_numeric_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "decimal",
+          "integer",
+          "levelg",
+          "library",
+          "math",
+          "optimizer-parity",
+          "rxtvm"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_math_numeric_rxtvm_noopt_artifact;rxtvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 7871,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_math_numeric_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_math_numeric_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "decimal",
+          "integer",
+          "levelg",
+          "library",
+          "linked_opt",
+          "math",
+          "optimizer-parity",
+          "rxtvm"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_math_numeric_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7925,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_casefold_rxbvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_casefold_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "casefold",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_casefold_rxbvm_noopt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7929,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_casefold_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_casefold_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "casefold",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_casefold_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7933,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_casefold_rxtvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_casefold_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "casefold",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_casefold_rxtvm_noopt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7937,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_casefold_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_casefold_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "casefold",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_casefold_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7941,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_case_mapping_rxbvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_case_mapping_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "case",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_case_mapping_rxbvm_noopt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7945,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_case_mapping_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_case_mapping_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "case",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_case_mapping_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7949,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_case_mapping_rxtvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_case_mapping_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "case",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_case_mapping_rxtvm_noopt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7953,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_case_mapping_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_case_mapping_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "case",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_case_mapping_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7957,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_grapheme_rxbvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_grapheme_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "grapheme",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_grapheme_rxbvm_noopt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7961,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_grapheme_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_grapheme_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "grapheme",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_grapheme_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7965,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_grapheme_rxtvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_grapheme_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "grapheme",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_grapheme_rxtvm_noopt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7969,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_grapheme_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_grapheme_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "grapheme",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_grapheme_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7973,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_codec_rxbvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_codec_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "codec",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_codec_rxbvm_noopt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7977,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_codec_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_codec_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "codec",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_codec_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7981,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_codec_rxtvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_codec_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "codec",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_codec_rxtvm_noopt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7985,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_codec_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_codec_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "codec",
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_codec_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7989,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_normalization_rxbvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_normalization_rxbvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "normalization",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 1200.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_normalization_rxbvm_noopt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7993,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_normalization_rxbvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_normalization_rxbvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "normalization",
+          "optimizer-parity",
+          "rxbvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 1200.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_normalization_rxbvm_opt_artifact;rxbvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 7997,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_normalization_rxtvm_noopt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_normalization_rxtvm_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked",
+          "normalization",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 1200.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_normalization_rxtvm_noopt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 8001,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional/ts_unicode_normalization_rxtvm_opt_linked_runtime.cmake"
+    ],
+    "name": "ts_unicode_normalization_rxtvm_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "levelg",
+          "library",
+          "linked_opt",
+          "normalization",
+          "optimizer-parity",
+          "rxtvm",
+          "unicode"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 1200.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsg/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "ts_unicode_normalization_rxtvm_opt_artifact;rxtvm;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 8709,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/modern/testRexxScript1-linked.rxbin"
+    ],
+    "name": "rexxscript1_rxtvm",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "level-l",
+          "rexxscript",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "rexxscript1_failures=0"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "rexxscript1_functional"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testrexxscript1;rxtvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 8713,
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/modern/testRexxScript1-linked.rxbin"
+    ],
+    "name": "rexxscript1_rxbvm",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "level-l",
+          "rexxscript",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "rexxscript1_failures=0"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "rexxscript1_functional"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 600.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testrexxscript1;rxbvm"
+      }
+    ]
+  },
+  {
+    "backtrace": 8717,
+    "name": "testRexxScriptRuntime_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "optimizer-parity",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: RexxScript runtime"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "rexxscript_lineio_files"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptRuntime_noopt_artifact;rexxscript_cli"
+      }
+    ]
+  },
+  {
+    "backtrace": 8721,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional/testRexxScriptRuntime_opt_linked_runtime.cmake"
+    ],
+    "name": "testRexxScriptRuntime_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "linked_opt",
+          "optimizer-parity"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: RexxScript runtime"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "rexxscript_lineio_files"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptRuntime_opt_artifact;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 8725,
+    "name": "testRexxScriptCompat_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "optimizer-parity",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: evaluate helpers"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptCompat_noopt_artifact;rexxscript_cli"
+      }
+    ]
+  },
+  {
+    "backtrace": 8729,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional/testRexxScriptCompat_opt_linked_runtime.cmake"
+    ],
+    "name": "testRexxScriptCompat_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "linked_opt",
+          "optimizer-parity"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: evaluate helpers"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptCompat_opt_artifact;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 8733,
+    "name": "testRexxScriptArrayExpose_noopt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "optimizer-parity",
+          "smoke"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: RexxScript array EXPOSE"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptArrayExpose_noopt_artifact;rexxscript_cli"
+      }
+    ]
+  },
+  {
+    "backtrace": 8737,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional/testRexxScriptArrayExpose_opt_linked_runtime.cmake"
+    ],
+    "name": "testRexxScriptArrayExpose_opt",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "linked_opt",
+          "optimizer-parity"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: RexxScript array EXPOSE"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "testRexxScriptArrayExpose_opt_artifact;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 8739,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional/run_rexxscript_cli_smoke.cmake"
+    ],
+    "name": "rexxscript_cli_smoke",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "smoke"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/rexxscript/tests_functional"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "rexxscript_cli"
+      }
+    ]
+  },
+  {
+    "backtrace": 8747,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DGENERATED=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/examples/ui/text-inspector/generated/text_inspector.crexx",
+      "-DTUI_GENERATED=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/examples/ui/text-inspector/generated/text_inspector_tui.crexx",
+      "-DANSI_GENERATED=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/examples/ui/text-inspector/generated/text_inspector_ansi.crexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/examples/ui/text-inspector/CheckGenerated.cmake"
+    ],
+    "name": "text_inspector_rxpp_generation",
+    "properties": [
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "examples",
+          "rxpp",
+          "source-map",
+          "ui"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/examples/ui/text-inspector"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "example_text_inspector_artifacts"
+      }
+    ]
+  },
+  {
+    "backtrace": 9779,
+    "name": "tinyexpr_dispatch_compare_noopt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "FAIL:|PANIC:"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "dispatch",
+          "level-l",
+          "performance",
+          "performance-measurement"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: tinyexpr dispatch compare"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/tests/performance"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "tinyexpr_dispatch_compare_noopt_artifact"
+      }
+    ]
+  },
+  {
+    "backtrace": 9783,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/tests/performance/tinyexpr_dispatch_compare_opt_linked_runtime.cmake"
+    ],
+    "name": "tinyexpr_dispatch_compare_opt",
+    "properties": [
+      {
+        "name": "FAIL_REGULAR_EXPRESSION",
+        "value": [
+          "FAIL:|PANIC:"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "dispatch",
+          "level-l",
+          "linked_opt",
+          "performance",
+          "performance-measurement"
+        ]
+      },
+      {
+        "name": "PASS_REGULAR_EXPRESSION",
+        "value": [
+          "PASS: tinyexpr dispatch compare"
+        ]
+      },
+      {
+        "name": "RUN_SERIAL",
+        "value": true
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/tests/performance"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "tinyexpr_dispatch_compare_opt_artifact;rxlink"
+      }
+    ]
+  },
+  {
+    "backtrace": 10139,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/run_crexx_rxunicode_default_runtime.cmake"
+    ],
+    "name": "crexx_rxunicode_default_runtime",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "comprehensive",
+          "driver",
+          "levelg",
+          "library",
+          "runtime",
+          "unicode"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      }
+    ]
+  },
+  {
+    "backtrace": 10143,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/run_crexx_rexxscript_smoke.cmake"
+    ],
+    "name": "crexx_rexxscript_smoke",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxdas;rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 10163,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/crexx_rxpp_builddir_ws",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_builddir.cmake"
+    ],
+    "name": "crexx_rxpp_builddir",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 60.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;crexx;rxdas;rxpp"
+      }
+    ]
+  },
+  {
+    "backtrace": 10165,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_link",
+      "-DCASE=link",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_link",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10167,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_link_invalid_source",
+      "-DCASE=link_invalid_source",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_link_invalid_source",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10169,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_external_bare",
+      "-DCASE=external_bare",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_external_bare",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10171,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_external_spaces",
+      "-DCASE=external_spaces",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_external_spaces",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10173,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_external_names",
+      "-DCASE=external_names",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_external_names",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10175,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_external_missing",
+      "-DCASE=external_missing",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_external_missing",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  },
+  {
+    "backtrace": 10177,
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests/rxpp_metadata_norun",
+      "-DCASE=norun",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_rxpp_metadata.cmake"
+    ],
+    "name": "crexx_rxpp_metadata_norun",
+    "properties": [
+      {
+        "name": "ENVIRONMENT",
+        "value": [
+          "CREXX_DIAGNOSTICS=raw",
+          "CREXX_HOME=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration"
+        ]
+      },
+      {
+        "name": "LABELS",
+        "value": [
+          "build",
+          "driver",
+          "preprocessor",
+          "regression",
+          "smoke"
+        ]
+      },
+      {
+        "name": "RESOURCE_LOCK",
+        "value": [
+          "crexx_bin_workspace"
+        ]
+      },
+      {
+        "name": "TIMEOUT",
+        "value": 180.0
+      },
+      {
+        "name": "WORKING_DIRECTORY",
+        "value": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/crexx_driver/tests"
+      },
+      {
+        "name": "CREXX_PREP_TARGETS",
+        "value": "crexx;rxpp;rxvme;crexx;rxpp;rxvme"
+      }
+    ]
+  }
+]

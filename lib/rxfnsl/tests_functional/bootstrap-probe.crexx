@@ -1,0 +1,25 @@
+/* cREXX License (MIT). Exact-byte transport for independent bootstrap controls. */
+options levelb
+import rxfnsb
+import lllanguage
+import probe_language
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  data = readbinary(argv[1]); at = 4; count = <at..u32>(0) data
+  language = probe_language..language()
+  do i = 1 to count
+    extent = <at..u32>(at) data; at = at + 4
+    source = binsubstr(data,at + 1,extent); at = at + extent
+    request = .lllanguage..request(language,source)
+    if language.hasparser() then status = request.parse()
+    else status = request.lex()
+    say 'CASE|' || i || '|' || status || '|' || request.offset() || '|' || request.error()
+    tokens = request.tokens()
+    do j = 0 to tokens.size() - 1
+      say 'TOKEN|' || tokens.symbol(j) || '|' || tokens.start(j) || '|' || tokens.finish(j + 1) - tokens.start(j)
+    end
+    if status = 0 & language.eof() >= 0 then say 'TOKEN|' || language.eof() || '|' || extent || '|0'
+  end
+  return 0

@@ -1,0 +1,28 @@
+/* cREXX License (MIT). Observe source preparation independently of parsing. */
+options levelb
+import rxfnsb
+import llsource
+import llcomments
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1]); policies = .llcomments..rules()
+  ok = policies.add('hash','line','#')
+  ok = policies.add('slash','line','//')
+  ok = policies.add('block','block','/*','*/')
+  ok = policies.add('nested','nested','(*','*)')
+  keep = 0
+  if argv[0] > 1 then keep = argv[2] as .int
+  ok = policies.add('angle','block','<!--','-->',keep)
+  ok = policies.add('long.hash','nested','##','$$')
+  fuel = 10000000
+  if argv[0] > 2 then fuel = argv[3] as .int
+  encoding = 'utf8'
+  if argv[0] > 3 then encoding = argv[4]
+  request = .llsource..prepared(source,encoding,'','',1048576,0,policies,fuel)
+  status = request.status()
+  say 'STATUS|' || status || '|BYTE|' || request.offset()
+  say 'ORIGINAL|' || bin2x(source)
+  say 'MASK|' || bin2x(request.bytes())
+  say 'ERROR|' || request.error()
+  return status

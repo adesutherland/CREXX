@@ -1,0 +1,253 @@
+/* Common source/tokens/tree versus actual B/G/C initial AST observations. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llstage
+import llpeg
+import lltabpeg
+import llmunch
+import llcommentmask
+import gcrexx
+main: procedure = .int
+  failures = 0; cases = 0
+  doc = .llfront..document(readfile('research/level-l/specs/rexx-fragment.levell'))
+  if doc.run() <> 0 then do
+    say doc.error(); return 1
+  end
+  /* Positive lookahead, consuming one token, is already in the stage IR.
+   * The provisional authored spelling currently has only an unless guard. */
+  guard = .llstage..rules()
+  ok = guard.add('assignment priority',0,1,4,1,-1,'',31,1)
+  ok = guard.add('label priority',0,1,12,1,-1,'',31,1)
+  dfa = .llmunch..automaton.legacy(gcrexx..tabledata())
+  path = 'research/level-l/evidence/rexxfront/expected.txt'
+  do while lines(path)
+    row = linein(path); id = field(row,1); level = field(row,2); bytes = x2bin(field(row,3))
+    expected = field(row,4) as .int; wanted = field(row,5); cases = cases + 1
+    masker = .llcommentmask..mask(bytes); masked = masker.run()
+    scan = .llmunch..scanner(dfa,masker.output(),'reverse'); lexed = 1
+    if masked = 0 then lexed = scan.run()
+    if masked <> 0 | lexed <> 0 then do
+      if expected <> 1 then do
+        failures = failures + 1; say 'FAIL rexx ingress:' id masked lexed masker.error() scan.error()
+      end
+      say 'REXX_DIAGNOSTIC|'id'|lexical|'masker.offset()'|'masker.error()
+      iterate
+    end
+    input = .llcore..stream.tokens(bytes); tokens = scan.tokens()
+    do i = 0 to tokens.size() - 1
+      ok = input.append(tokens.symbol(i),tokens.start(i),tokens.finish(i + 1))
+    end
+    /* Final clause shutdown is a synthetic zero-width token, not a source byte. */
+    if input.size() > 0 then do
+      last = input.symbol(input.size() - 1)
+      if last <> 5 & last <> 11 then ok = input.append(5,<blen>(bytes),<blen>(bytes))
+    end
+    normal = .llstage..transducer(doc.stage('normalize'),input); ns = normal.run()
+    protect = .llstage..transducer(guard,normal.output()); gs = protect.run()
+    classify = .llstage..transducer(doc.stage('classify'),protect.output()); cs = classify.run()
+    if ns <> 0 | gs <> 0 | cs <> 0 then do
+      failures = failures + 1; say 'FAIL rexx stage:' id normal.error() protect.error() classify.error(); iterate
+    end
+    ready = classify.output()
+    a = .llpeg..parser(doc.grammar(),doc.root(),ready,'packrat')
+    b = .lltabpeg..parser(doc.grammar(),doc.root(),ready)
+    sa = a.run(); sb = b.run()
+    if sa <> expected | sb <> expected then do
+      failures = failures + 1; say 'FAIL rexx recognition:' id expected sa sb a.error() b.error()
+    end
+    if sa = 0 & sb = 0 then do
+      ta = a.arena(); tb = b.tree()
+      pa = .view(ta,level); pb = .view(tb,level)
+      va = pa.project(a.root()); vb = pb.project(b.root())
+      if va \== wanted | vb \== wanted then do
+        failures = failures + 1; say 'FAIL initial AST:' id 'want='wanted 'packrat='va 'tab='vb
+      end
+      if ta.validate() = 0 | tb.validate() = 0 | bincompare(ta.source(),bytes) <> 0 | bincompare(tb.source(),bytes) <> 0 then do
+        failures = failures + 1; say 'FAIL rexx source/tree ownership:' id
+      end
+      say 'REXX_AST|'id'|'va
+    end
+    else say 'REXX_DIAGNOSTIC|'id'|'a.error()
+  end
+  limited = .llcommentmask..mask('/*x*/' as .binary,'/*','*/',1)
+  if limited.run() <> 2 then failures = failures + 1
+  invalid = .llcommentmask..mask('abc' as .binary,'','*/')
+  if invalid.run() <> 3 then failures = failures + 1
+  binary = .llcommentmask..mask('2f2a002a2f'x as .binary)
+  if binary.run() <> 0 then failures = failures + 1
+  callAgain = binary.run()
+  if callAgain <> 0 then failures = failures + 1
+  say 'rexxfront_cases='cases
+  say 'rexxfront_failures='failures
+  if failures then return 1
+  return 0
+
+/* Consumer projection uses only the general tree; no compiler AST classes. */
+view: class
+  _tree = .llcore..tree
+  _level = .string
+  *: factory
+    arg tree = .llcore..tree, level = .string
+    _tree = tree; _level = level; return
+  node: method = .string
+    arg kind = .string, value = .string, children = ''
+    return '(' || kind || ':' || bin2x(value as .binary) || children || ')'
+  project: method = .string
+    arg at = .int
+    if at = 0 then return ''
+    label = _tree.label(at)
+    select label
+      when 'assignment' then return node('ASSIGN','=',node('VAR_TARGET',spelling(find(at,'name'))) || expression(find(at,'expression')))
+      when 'label' then return node('LABEL',spelling(find(at,'name')) || ':')
+      when 'say.statement' then return node('SAY','say',expression(find(at,'expression')))
+      when 'return.statement' then return node('RETURN','return',expression(find(at,'expression')))
+      when 'if.statement' then do
+        branches = .int[]; call selected(at,' statement ',branches)
+        children = expression(find(at,'expression'))
+        do i = 1 to branches[0]
+          children = children || project(branches[i])
+        end
+        return node('IF','if',children)
+      end
+      when 'parse.statement' then do
+        children = ''
+        if find(at,'upperword') > 0 then children = node('OPTIONS','',node('LITERAL','upper'))
+        children = children || node('VAR_REFERENCE',spelling(find(at,'name')),node('TOKEN','var'))
+        template = find(at,'template'); parts = .int[]
+        call selected(template,' template.target template.dynamic ',parts)
+        out = ''
+        do i = 1 to parts[0]
+          part = parts[i]
+          if _tree.label(part) = 'template.dynamic' then out = out || node('PATTERN','',node('VAR_REFERENCE',spelling(find(part,'name')),node('TOKEN','(')))
+          else out = out || node('TARGET',spelling(part))
+        end
+        return node('PARSE','parse',children || node('TEMPLATES','',node('TEMPLATES','',out)))
+      end
+      otherwise return project(_tree.left(at)) || project(_tree.right(at))
+    end
+    return ''
+  expression: method = .string
+    arg at = .int
+    parts = .int[]; call selected(at,' addition ',parts)
+    result = ''; previous = 0
+    do i = 1 to parts[0]
+      right = addition(parts[i])
+      if i = 1 then result = right
+      else do
+        kind = 'OP_SCONCAT'
+        if _level = 'c' then do
+          if touching(edge(previous,1),edge(parts[i],0)) then kind = 'OP_CONCAT'
+        end
+        result = node(kind,'',result || right)
+      end
+      previous = parts[i]
+    end
+    return result
+  addition: method = .string
+    arg at = .int
+    parts = .int[]; call selected(at,' product ',parts); result = ''
+    do i = 1 to parts[0]
+      value = product(parts[i])
+      if i = 1 then result = value
+      else result = node('OP_ADD','+',result || value)
+    end
+    return result
+  product: method = .string
+    arg at = .int
+    parts = .int[]; call selected(at,' atom ',parts); result = ''
+    do i = 1 to parts[0]
+      value = atom(parts[i])
+      if i = 1 then result = value
+      else result = node('OP_MULT','*',result || value)
+    end
+    return result
+  atom: method = .string
+    arg at = .int
+    parts = .int[]; call selected(at,' number string name expression ',parts)
+    if parts[0] <> 1 then return 'INVALID_ATOM'
+    item = parts[1]; label = _tree.label(item); text = spelling(item)
+    select label
+      when 'name' then return node('VAR_SYMBOL',text)
+      when 'number' then do
+        kind = 'INTEGER'
+        if pos('.',text) > 0 then kind = 'DECIMAL'
+        return node(kind,text)
+      end
+      when 'string' then do
+        quote = left(text,1); value = substr(text,2,length(text) - 2)
+        return node('STRING',changestr(quote || quote,value,quote))
+      end
+      otherwise return expression(item)
+    end
+    return ''
+  touching: method = .int
+    arg first = .int, last = .int
+    source = _tree.source(); text = binsubstr(source,first + 1,last - first) as .string
+    at = 1; extent = length(text); depth = 0
+    do while at <= extent
+      if substr(text,at,2) = '/*' then do
+        depth = depth + 1; at = at + 2
+      end
+      else if depth > 0 & substr(text,at,2) = '*/' then do
+        depth = depth - 1; at = at + 2
+      end
+      else if depth > 0 then at = at + 1
+      else return 0
+    end
+    return depth = 0
+  find: method = .int
+    arg at = .int, label = .string
+    if at = 0 then return 0
+    if _tree.label(at) = label then return at
+    first = find(_tree.left(at),label)
+    if first > 0 then return first
+    return find(_tree.right(at),label)
+  selected: method = .void
+    arg at = .int, labels = .string, expose items = .int[]
+    if at = 0 then return
+    if pos(' ' || _tree.label(at) || ' ',labels) > 0 then do
+      next = items[0] + 1; items[next] = at; return
+    end
+    call selected(_tree.left(at),labels,items)
+    call selected(_tree.right(at),labels,items)
+    return
+  edge: method = .int
+    arg at = .int, last = .int
+    if at = 0 then return -1
+    a = _tree.left(at); b = _tree.right(at); value = -1
+    if a = 0 & b = 0 then do
+      if _tree.start(at) = _tree.finish(at) then return -1
+      if last then return _tree.finish(at)
+      return _tree.start(at)
+    end
+    if last then do
+      value = edge(b,last)
+      if value < 0 then value = edge(a,last)
+    end
+    else do
+      value = edge(a,last)
+      if value < 0 then value = edge(b,last)
+    end
+    return value
+  spelling: method = .string
+    arg at = .int
+    source = _tree.source(); first = edge(at,0); last = edge(at,1)
+    return binsubstr(source,first + 1,last - first) as .string
+field: procedure = .string
+  arg row = .string, wanted = .int
+  start = 1
+  do i = 1 to wanted - 1
+    start = pos('|',row,start) + 1
+  end
+  finish = pos('|',row,start)
+  if finish = 0 then return substr(row,start)
+  return substr(row,start,finish - start)
+readfile: procedure = .string
+  arg path = .string
+  text = ''
+  do while lines(path)
+    text = text || linein(path) || '0a'x
+  end
+  return text

@@ -1,0 +1,170 @@
+/* Backend-only lowering of the existing authored Level L AST.
+ * Frontend syntax/validation is owned by the pinned levell_bootstrap module.
+ */
+options levell
+import rxfnsb
+import levell_bootstrap
+main: procedure = .int expose bad
+  arg argv = .string[]
+  if argv[0] <> 2 then do
+    say '/* usage: surfacegen authored.levell rules|wrapper */'; return 1
+  end
+  token = .levell_bootstrap..levellastnode; index = .int
+  source = ''
+  do while lines(argv[1])
+    source = source || linein(argv[1]) || '0a'x
+  end
+  result = levell_bootstrap..levell_parse(source)
+  if result.status() <> 0 then do
+    say '/* Level L error at byte' result.error_start() ':' result.error() '*/'; return 1
+  end
+  root = result.root()
+  lexer = findkind(root,'lexer_decl','')
+  if lexer.value() <> 'utf8' then do
+    say '/* native authored-surface proof accepts the utf8 profile only */'; return 1
+  end
+  bad = 0; rules = .string[]; eofkind = 0; failureid = 0; failuremessage = ''
+  do index = 0 to lexer.child_count() - 1
+    rule = lexer.child_at(index)
+    if rule.kind() <> 'rule_decl' then iterate
+    subject = rule.child_at(0); action = rule.child_at(1)
+    if subject.kind() = 'special' then do
+      select subject.name()
+        when 'eof' then do
+          token = findkind(root,'token_decl',action.value()); eofkind = token.number1()
+        end
+        when 'otherwise' then do
+          diagnostic = findkind(root,'diagnostic_decl',action.value())
+          failureid = diagnostic.number1(); failuremessage = diagnostic.value()
+        end
+        otherwise nop
+      end
+      iterate
+    end
+    expression = render(subject,root,lexer,0)
+    kind = -index - 1
+    if action.name() = 'emit' then do
+      token = findkind(root,'token_decl',action.value()); kind = token.number1()
+    end
+    else if action.name() <> 'skip' then bad = 1
+    rules[rules[0] + 1] = kind || ' ' || expression
+  end
+  if bad then do
+    say '/* native backend requires ASCII literals/ranges, no scalar/except or ordinary error actions */'
+    return 1
+  end
+  if argv[2] = 'rules' then do index = 1 to rules[0]
+    say rules[index]
+  end
+  else if argv[2] = 'wrapper' then do
+    say '/* Authored Level L AST -> native DFA backend; logical EOF retained. */'
+    say 'options levell'
+    say 'namespace gsurface expose lex status erroroffset errormessage'
+    say 'import rxfnsb'
+    say 'import lldfa'
+    say 'import gsurfaceraw'
+    say 'lex: procedure = .binary'
+    say '  arg source = .string'
+    say '  tokens = gsurfaceraw..lex(source)'
+    say '  if lldfa..scanstatus() = 0 then do'
+    say '    base = <blen>(tokens)'
+    say '    call binresize tokens,base + 12'
+    say '    <at..i32>(base) tokens =' eofkind
+    say '    <at..i32>(base + 4) tokens = <blen>(source as .binary)'
+    say '    <at..i32>(base + 8) tokens = 0'
+    say '  end'
+    say '  return tokens'
+    say 'status: procedure = .int'
+    say '  if lldfa..scanstatus() = 0 then return 0'
+    say '  return' failureid
+    say 'erroroffset: procedure = .int'
+    say '  return lldfa..scanoffset()'
+    say 'errormessage: procedure = .string'
+    say '  if lldfa..scanstatus() = 0 then return ""'
+    say '  return' quote(failuremessage)
+  end
+  else return 1
+  return 0
+
+findkind: procedure = .levell_bootstrap..levellastnode
+  arg parent = .levell_bootstrap..levellastnode, kind = .string, name = .string
+  do index = 0 to parent.child_count() - 1
+    node = parent.child_at(index)
+    if node.kind() == kind then do
+      if name == '' | upper(node.name()) == upper(name) then return node
+    end
+  end
+  return .levell_bootstrap..levellastnode('error')
+
+render: procedure = .string expose bad
+  arg node = .levell_bootstrap..levellastnode, root = .levell_bootstrap..levellastnode, lexer = .levell_bootstrap..levellastnode, depth = .int
+  index = .int; out = .string
+  if depth > 64 then do; bad = 1; return ''; end
+  select node.kind()
+    when 'literal' then do
+      text = node.name(); bytes = text as .binary; out = ''
+      do index = 0 to <blen>(bytes) - 1
+        out = out || point(<at..u8>(index) bytes)
+      end
+      return out
+    end
+    when 'codepoint' then return point(node.number1())
+    when 'range' then do
+      if node.number1() <= 0 | node.number2() > 127 then do
+        bad = 1; return ''
+      end
+      out = '('
+      do value = node.number1() to node.number2()
+        if value > node.number1() then out = out || '|'
+        out = out || point(value)
+      end
+      return out || ')'
+    end
+    when 'reference' then do
+      target = findkind(lexer,'charset_decl',node.name())
+      if target.kind() == 'error' then target = findkind(lexer,'pattern_decl',node.name())
+      if target.kind() == 'error' then target = findkind(root,'charset_decl',node.name())
+      if target.kind() == 'error' then target = findkind(root,'pattern_decl',node.name())
+      if target.kind() == 'error' then do; bad = 1; return ''; end
+      return '(' || render(target.child_at(0),root,lexer,depth + 1) || ')'
+    end
+    when 'charset_union' then return '(' || render(node.child_at(0),root,lexer,depth + 1) || '|' || render(node.child_at(1),root,lexer,depth + 1) || ')'
+    when 'alternation' then return '(' || render(node.child_at(0),root,lexer,depth + 1) || '|' || render(node.child_at(1),root,lexer,depth + 1) || ')'
+    when 'concatenation' then do
+      out = '('
+      do index = 0 to node.child_count() - 1
+        out = out || render(node.child_at(index),root,lexer,depth + 1)
+      end
+      return out || ')'
+    end
+    when 'repeat' then do
+      child = '(' || render(node.child_at(0),root,lexer,depth + 1) || ')'
+      minimum = node.number1(); maximum = node.number2()
+      if minimum > 128 | maximum > 128 then do; bad = 1; return ''; end
+      out = copies(child,minimum)
+      if maximum < 0 then out = out || child || '*'
+      else do index = minimum + 1 to maximum
+        out = out || child || '?'
+      end
+      return '(' || out || ')'
+    end
+    otherwise do; bad = 1; return ''; end
+  end
+  return ''
+
+point: procedure = .string expose bad
+  arg value = .int
+  if value <= 0 | value > 127 then do; bad = 1; return ''; end
+  select value
+    when 10 then return '[\n]'
+    when 13 then return '[\r]'
+    when 9 then return '[\t]'
+    otherwise nop
+  end
+  ch = d2c(value)
+  if ch = '\' | ch = ']' | ch = '^' then ch = '\' || ch
+  return '[' || ch || ']'
+
+quote: procedure = .string
+  arg text = .string
+  return '"' || changestr('"',text,'""') || '"'

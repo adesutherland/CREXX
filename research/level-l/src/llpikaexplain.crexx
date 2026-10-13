@@ -1,0 +1,123 @@
+/* cREXX License (MIT). Read-only, anchored Pika chart explanation. */
+options levell
+namespace llpikaexplain expose explanation
+import rxfnsb
+import llcore
+import llpika
+import llhistory
+
+/** Positive-clause explanation heuristic, separate from recognition/recovery.
+ * No minimum edit or completeness claim. Predicate grammars require another
+ * explanation policy and reject here. Never changes the supplied request.
+ */
+explanation: class
+  _g = .llpika..graph
+  _parser = .llpika..parser
+  _input = .llcore..stream
+  _history = .llhistory..arena
+  _root = .int
+  _fuel = .int
+  _work = .int
+  _far = .int
+  _seen = .int[]
+  _wanted = .int[]
+  _status = .int
+  _ran = .int
+  _error = .string
+  *: factory
+    arg graph = .llpika..graph, root = .int, parser = .llpika..parser, fuel = 1000000
+    _g = graph; _root = root; _parser = parser; _fuel = fuel
+    _input = parser.input(); _work = 0; _far = -1; _status = 0; _ran = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1; parsed = _parser.run()
+    if parsed > 1 | _root < 1 | _root > _g.size() | _g.identity() \== _parser.grammaridentity() then do
+      _status = 3; _error = 'explanation requires matching completed Pika chart'; return _status
+    end
+    do clause = 1 to _g.size()
+      op = _g.op(clause)
+      if op = 8 | op = 9 | op = 17 | _g.flags(clause) <> 0 then do
+        _status = 3; _error = 'positive Pika explanation does not admit predicates, start anchors or flagged terminals'; return _status
+      end
+    end
+    _history = _parser.arena()
+    call walk(_root,0)
+    node = _parser.stored(_root,0)
+    if node > 0 then do
+      finish = _history.length(node)
+      if finish < _input.size() then call expect(finish,256)
+    end
+    return _status
+  walk: method = .void
+    arg clause = .int, at = .int
+    if _status <> 0 then return
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = 'Pika explanation work budget exhausted'; return
+    end
+    key = (clause - 1) * (_input.size() + 1) + at + 1
+    if _seen[key] then return
+    _seen[key] = 1
+    op = _g.op(clause); node = _parser.stored(clause,at)
+    select op
+      when 1 then do
+        if node = 0 then do
+          members = _g.text(clause)
+          do i = 0 to <blen>(members) - 1
+            call expect(at,<at..u8>(i) members)
+          end
+        end
+      end
+      when 13 then do
+        if node = 0 then do
+          text = _g.text(clause)
+          if <blen>(text) > 0 then call expect(at,<at..u8>(0) text)
+        end
+      end
+      when 2 then do
+        cursor = at
+        do i = 1 to _g.count(clause)
+          child = _g.child(clause,i); call walk(child,cursor)
+          node = _parser.stored(child,cursor)
+          if node > 0 then cursor = cursor + _history.length(node)
+          else if _g.zero(child) = 0 then leave
+        end
+      end
+      when 3 then do
+        do i = 1 to _g.count(clause)
+          call walk(_g.child(clause,i),at)
+        end
+      end
+      when 14 then call walk(_g.child(clause,1),at)
+      otherwise nop
+    end
+    return
+  expect: method = .void
+    arg at = .int, symbol = .int
+    if at < _far then return
+    if at > _far then do
+      _far = at
+      do i = 1 to 257
+        _wanted[i] = 0
+      end
+    end
+    _wanted[symbol + 1] = 1
+    return
+  offset: method = .int
+    return _input.start(_far)
+  expectations: method = .string
+    out = ''
+    do symbol = 0 to 256
+      if _wanted[symbol + 1] then do
+        if out <> '' then out = out || ', '
+        if symbol = 256 then out = out || 'end of input'
+        else if symbol >= 32 & symbol <= 126 then out = out || '"' || d2c(symbol) || '"'
+        else out = out || 'byte ' || symbol
+      end
+    end
+    return out
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error

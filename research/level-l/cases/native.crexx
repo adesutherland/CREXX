@@ -1,0 +1,206 @@
+/* Functional research contracts, not production language conformance. */
+options levell
+import rxfnsb
+import lllex
+import lldfa
+import lldp
+import glex
+import gdlex
+import gexpr
+import gstmt
+import garray
+import gindirect
+import gchars
+import gpriority
+import grollback
+import gchoice
+import gmixed
+import gfactored
+main: procedure = .int expose failures
+  failures = 0
+  call lexical
+  call expression '1+2*3',1
+  call check gexpr..rulematch(2,0) = 1 & gexpr..rulematch(2,2) = 3, 'precedence tiers: Term stops at plus and consumes the multiplication'
+  call expression '(1+2)*3+4+5',1
+  call expression '1+',0
+  call expression '1+*2',0
+  call expression '(1+2',0
+  call expression '1 2',0
+  data = symbols(glex..lex('1+2+3'))
+  call check gindirect..parse(data) = data[0], 'indirect left recursion'
+  data = symbols(glex..lex('[1,''abc'',[2,3]]'))
+  call check garray..parse(data) = data[0], 'nested array grammar'
+  data = symbols(glex..lex('[1,]'))
+  call check garray..parse(data) <> data[0], 'bad array grammar'
+  source = 'a=1+2; b=''hello''; c=(3+4)*5;'
+  data = symbols(glex..lex(source))
+  call check gstmt..parse(data) = data[0], 'statement grammar'
+  data = characters('123+45*(67+8)')
+  call check gchars..parse(data) = data[0], 'scannerless expression grammar'
+  call recovery
+  data = symbols(glex..lex('(1+2'))
+  ignored = gexpr..parse(data)
+  frontier = gexpr..diagnose(data)
+  call check frontier = data[0] & lldp..expectedtoken(7), 'EOF diagnostic expects the missing right parenthesis'
+  say "diagnostic column=5 unexpected=<end of input> expected=')' hint=close the parenthesized expression"
+  call counterexamples
+  say 'native_failures='failures
+  if failures > 0 then return 1
+  say 'PASS: native generators, recognition, diagnostics and recovery'
+  return 0
+
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return
+
+symbols: procedure = .int[]
+  arg tokens = .binary
+  result = .int[]
+  do index = 0 to <blen>(tokens) / 12 - 1
+    result[index + 1] = <at..i32>(index * 12) tokens
+  end
+  return result
+
+characters: procedure = .int[]
+  arg source = .string
+  bytes = source as .binary; result = .int[]
+  do index = 0 to <blen>(bytes) - 1
+    result[index + 1] = <at..u8>(index) bytes
+  end
+  return result
+
+lexical: procedure = .void
+  source = "foo123=12+3; /* opaque + 123 */ bar='it''s'; // skip" || '0a'x
+  tokens = glex..lex(source)
+  control = gdlex..lex(source)
+  call check samebytes(tokens,control) & lldfa..scanstatus() = 0, 'native NFA/DFA token and span equivalence'
+  call check lllex..scanstatus() = 0, 'lexer valid comments and doubled quote'
+  call check <blen>(tokens) / 12 = 10, 'lexer token count'
+  call check <at..i32>(0) tokens = 1 & <at..i32>(8) tokens = 6, 'identifier maximal munch'
+  call check <at..i32>(72) tokens = 1 & <at..i32>(76) tokens = 32, 'span after comment'
+  tokens = glex..lex("x='broken")
+  control = gdlex..lex("x='broken")
+  call check lldfa..scanstatus() = 1 & lldfa..scanoffset() = 2, 'DFA malformed string'
+  call check lllex..scanstatus() = 1 & lllex..scanoffset() = 2, 'unterminated string span'
+  tokens = glex..lex('x=1;' || 'c3a9'x)
+  call check lllex..scanstatus() = 1 & lllex..scanoffset() = 4, 'ASCII boundary is explicit'
+  do byte = 1 to 127
+    sample = 'x=' || d2c(byte) || ';'
+    lefttokens = glex..lex(sample); righttokens = gdlex..lex(sample)
+    if samebytes(lefttokens,righttokens) = 0 | lllex..scanstatus() <> lldfa..scanstatus() | lllex..scanoffset() <> lldfa..scanoffset() then do
+      call check 0,'NFA/DFA byte-boundary differential'
+      return
+    end
+  end
+  call check 1,'NFA/DFA differential across 127 ASCII bytes'
+  return
+
+expression: procedure = .void
+  arg source = .string, wanted = .int
+  data = symbols(glex..lex(source))
+  result = gexpr..parse(data)
+  accepted = result = data[0] & lllex..scanstatus() = 0
+  call check accepted = wanted, 'expression ' || source
+  return
+
+recovery: procedure = .void
+  source = 'a=1+; b=2;' || '0a'x || 'c=(3+4; d=5;'
+  tokens = glex..lex(source); data = symbols(tokens)
+  tokencount = <blen>(tokens) / 12
+  prefix = gstmt..parse(data)
+  call check prefix <> data[0], 'damaged program fails full-input check'
+  /* Statement islands remain available even when Program does not match. */
+  islands = .int[]
+  do index = 0 to data[0] - 1
+    islands[index + 1] = gstmt..rulematch(2,index)
+  end
+  cursor = 0; recovered = 0; errors = 0
+  do while cursor < data[0]
+    span = islands[cursor + 1]
+    if span > 0 then do
+      recovered = recovered + 1; cursor = cursor + span
+    end
+    else do
+      errors = errors + 1; stop = cursor
+      do while stop < data[0] & data[stop + 1] <> 9
+        stop = stop + 1
+      end
+      if stop < data[0] then stop = stop + 1
+      fragment = copyrange(data,cursor,stop)
+      ignored = gstmt..parse(fragment)
+      frontier = gstmt..diagnose(fragment)
+      tokenindex = cursor + frontier
+      if tokenindex < tokencount then byteoffset = <at..i32>(tokenindex * 12 + 4) tokens
+      else byteoffset = length(source)
+      line = 1; column = 1
+      do charindex = 1 to byteoffset
+        if substr(source,charindex,1) = '0a'x then do
+          line = line + 1; column = 1
+        end
+        else column = column + 1
+      end
+      wanted = ''
+      if lldp..expectedtoken(1) then wanted = wanted || ' identifier'
+      if lldp..expectedtoken(2) then wanted = wanted || ' integer'
+      if lldp..expectedtoken(3) then wanted = wanted || ' string'
+      if lldp..expectedtoken(6) then wanted = wanted || " '('"
+      if lldp..expectedtoken(7) then wanted = wanted || " ')'"
+      if lldp..expectedtoken(9) then wanted = wanted || " ';'"
+      if wanted = '' then wanted = ' statement'
+      unexpected = substr(source,byteoffset + 1,1)
+      if unexpected = '' then unexpected = '<end of input>'
+      hint = 'supply the missing operand before the statement separator'
+      if lldp..expectedtoken(7) then hint = "insert ')' before the statement separator"
+      say 'diagnostic line='line 'column='column 'unexpected='unexpected 'expected='strip(wanted) 'hint='hint
+      if errors = 1 then call check byteoffset = 4 & lldp..expectedtoken(2), 'missing operand diagnostic location'
+      if errors = 2 then call check byteoffset = 17 & line = 2 & column = 7 & lldp..expectedtoken(7), 'missing parenthesis diagnostic location'
+      cursor = stop
+    end
+  end
+  call check recovered = 2 & errors = 2, 'two errors and two subsequent statement islands'
+  return
+
+copyrange: procedure = .int[]
+  arg data = .int[], start = .int, stop = .int
+  result = .int[]
+  do index = start to stop - 1
+    result[index - start + 1] = data[index + 1]
+  end
+  return result
+
+samebytes: procedure = .boolean
+  arg left = .binary, right = .binary
+  size = <blen>(left)
+  if size <> <blen>(right) then return 0
+  do index = 0 to size - 1
+    if <at..u8>(index) left <> <at..u8>(index) right then return 0
+  end
+  return 1
+
+counterexamples: procedure = .void
+  tokens = gpriority..lex('if')
+  kind = <at..i32>(0) tokens
+  call check kind = 20, 'equal-length lexer priority'
+  tokens = gpriority..lex('iff')
+  kind = <at..i32>(0) tokens
+  call check kind = 1, 'longest match overrides shorter keyword'
+  data = symbols(gpriority..lex('if=1;'))
+  call check gstmt..parse(data) <> data[0], 'hard keyword changes identifier-context recognition'
+  data = symbols(gdlex..lex('if=1;'))
+  call check gstmt..parse(data) = data[0], 'soft keyword retains identifier-context recognition'
+  data = characters('abc')
+  call check gchoice..parse(data) <> data[0], 'PEG ordered choice rejects maximal-munch counterexample'
+  data = characters('a+b-c')
+  call check gmixed..parse(data) <> data[0], 'native reduced engine also retains the mixed-LR limitation'
+  call check gfactored..parse(data) = data[0], 'factored operator choice repairs the native fixture'
+  do size = 8 to 32 by 8
+    tokens = grollback..lex(copies('a',size))
+    observed = lldfa..scansteps()
+    call check observed = size * (size + 1) / 2, 'unbounded maximal-munch rollback is quadratic'
+    say 'rollback n='size 'transitions='observed
+  end
+  return

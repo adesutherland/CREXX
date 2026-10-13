@@ -1,0 +1,65 @@
+/*
+ * Small FORTRAN IV add-on regression sample.
+ * It exercises optional and negative DO steps, numeric intrinsics, and
+ * one-line logical IF with a computed result and a labeled GOTO.
+ */
+options levelg
+##cflag nosrcmap
+import fortran
+##external fortran
+
+FORTRAN RUN
+      PROGRAM FEATURES
+      INTEGER I,N,UP,DOWN,L,P
+      PARAMETER (NMAX=3,SCALE=2.0)
+      REAL VALUES(NMAX),X,Y,Z
+      CHARACTER*12 TITLE
+      CHARACTER*8 NAME
+      CHARACTER*20 FULL
+
+      TITLE = 'FORTRAN IV'
+      NAME = 'cREXX'
+      NAME(1:4) = 'Rexx'
+      FULL = TITLE // NAME
+      L = LEN(TITLE)
+      P = INDEX(TITLE,'IV')
+
+      UP = 0
+      DO 100 I = 1,3
+      UP = UP + 1
+  100 CONTINUE
+
+      DOWN = 0
+      DO 200 I = 3,1,-1
+      DOWN = DOWN + 1
+  200 CONTINUE
+
+      N = 0
+      IF (UP .EQ. NMAX .AND. DOWN .EQ. 3) THEN
+      N = 1
+      ELSE
+      N = 0
+      END IF
+      IF (N .EQ. 1 .OR. UP .EQ. 0) GOTO 300
+      STOP
+
+  300 X = ABS(-2.5) * SCALE
+      Y = SQRT(9.0)
+      Z = MAX(UP,DOWN,INT(MOD(10,4)))
+
+      WRITE (*,*) 'UP,DOWN,N:',UP,DOWN,N
+      WRITE (*,310) UP,DOWN
+      WRITE (*,*) 'VALUES:',X,Y,Z
+      WRITE (*,320) X,Y,Z
+      WRITE (*,*) TITLE,NAME
+      WRITE (*,330) TITLE,NAME
+      WRITE (*,*) FULL,L,P
+      WRITE (*,340) FULL
+  310 FORMAT (2I5)
+  320 FORMAT (3F8.2)
+  330 FORMAT (A12,A8)
+  340 FORMAT (A20)
+
+      STOP
+      END
+END FORTRAN

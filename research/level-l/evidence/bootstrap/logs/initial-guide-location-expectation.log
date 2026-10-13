@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/check-user-guide.py", line 66, in <module>
+    output = generate(name, source, 1, [message])
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/check-user-guide.py", line 35, in generate
+    return run(name, [BIN / 'levell', path, '--rxas'], status, contains)
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/check-user-guide.py", line 25, in run
+    assert part.encode() in output, (name, part, output[-3000:])
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('grammar-cr-lines', 'line 27,', b'LL_GRAMMAR: line 28, byte 1080: undefined symbol absent_one\n')

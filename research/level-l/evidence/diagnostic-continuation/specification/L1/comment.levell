@@ -1,0 +1,7 @@
+options levell
+namespace broken
+item: token = 1
+parse: parser start last.good
+first: rule = item /* unclosed
+second: rule = )
+last.good: rule = item

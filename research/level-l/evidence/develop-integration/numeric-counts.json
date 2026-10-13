@@ -1,0 +1,10 @@
+{
+  "float-contract-commands.log": {
+    "commands": 156,
+    "vm_executions": 64
+  },
+  "numeric-contract-commands.log": {
+    "commands": 476,
+    "vm_executions": 200
+  }
+}

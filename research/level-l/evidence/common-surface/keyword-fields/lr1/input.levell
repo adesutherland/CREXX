@@ -1,0 +1,15 @@
+options levell
+namespace levell_settings
+identifier: token
+number: token
+equals: token
+scan: lexer
+letters: charset = 'a' to 'z'
+digits: charset = '0' to '9'
+name.lex: rule = letters+ then emit identifier
+number.lex: rule = digits+ then emit number
+equal.lex: rule = '=' then emit equals
+space.lex: rule = ' '+ then skip
+parse: parser start root backend lr1
+root: rule = (identifier as rule)* (equals number as as)?
+root.error: diagnostic rule root = 'LIST_MESSAGE {found}'

@@ -1,0 +1,5 @@
+options levelb
+namespace llsource expose diagnostic
+diagnostic: procedure = .string
+  arg source = .binary, offset = .int, code = .string, message = .string
+  return 'STALE_PROTOTYPE ' || code || message || offset || <blen>(source)

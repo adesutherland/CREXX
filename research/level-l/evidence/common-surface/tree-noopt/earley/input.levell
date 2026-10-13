@@ -1,0 +1,19 @@
+options levell
+namespace levell_settings
+identifier: token
+number: token
+equals: token
+scan: lexer
+letters: charset = 'a' to 'z'
+digits: charset = '0' to '9'
+name.lex: rule = letters+ then emit identifier
+number.lex: rule = digits+ then emit number
+equal.lex: rule = '=' then emit equals
+space.lex: rule = ' '+ then skip
+parse: parser start assignment backend earley
+assignment: rule = name.value equals value
+name.value: rule = identifier
+value: rule = number
+assignment.tree: tree rule assignment kind 10 arity 2
+name.tree: tree rule name.value kind 11 arity 0
+value.tree: tree rule value kind 12 arity 0

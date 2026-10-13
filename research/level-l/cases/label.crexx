@@ -1,0 +1,60 @@
+/* Explicit label placement, predicate suppression and recovery control. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import lllabel
+main: procedure = .int expose failures
+  failures = 0
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1); b = g.add(1,98,0,'b',1)
+  choice = g.add(3,a,b,'choice',1)
+  input = .llcore..stream('b' as .binary)
+  ordinary = .lllabel..parser(g,choice,input)
+  labeled = .lllabel..parser(g,choice,input); ok = labeled.annotate(a,1,'need a')
+  call check ordinary.run() = 0 & labeled.run() = 4 & labeled.thrown() = 1,'misplaced label changes a formerly valid alternative'
+  say labeled.error()
+  /* Predicates turn thrown labels into operand failure without recovery. */
+  neg = g.add(8,choice,0,'not.choice',2); root = g.add(2,neg,b,'predicate.then.b',2)
+  guarded = .lllabel..parser(g,root,input); ok = guarded.annotate(a,1,'need a',b)
+  call check guarded.run() = 0 & guarded.count() = 0,'negative lookahead suppresses thrown labels and recovery'
+  source = "options levell namespace list read: parser semantics ordered input bytes start document document: rule = '[' (item (',' needed.item)*)? close item: rule = 'a' needed.item: rule = item close: rule = ']' recover.item: rule = (!(']' | ',' | ';') any)* recover.close: rule = (!';' any)* any: charset = U+0000 to U+00FF"
+  doc = .llfront..document(source); status = doc.run(); g = doc.grammar(); root = doc.root()
+  need = find(g,'needed.item'); close = find(g,'close'); recoveritem = find(g,'recover.item'); recoverclose = find(g,'recover.close')
+  texts = .string[]; texts[1] = '[a]'; texts[2] = '[a,]'; texts[3] = '[a,x]'; texts[4] = '[a'; texts[5] = '[]'
+  repair = .lllabel..parser
+  do i = 1 to texts[0]
+    input = .llcore..stream(texts[i] as .binary)
+    strict = .lllabel..parser(g,root,input)
+    ok = strict.annotate(need,11,'expected an item after comma'); ok = strict.annotate(close,12,'expected closing bracket')
+    repair = .lllabel..parser(g,root,input)
+    ok = repair.annotate(need,11,'expected an item after comma',recoveritem); ok = repair.annotate(close,12,'expected closing bracket',recoverclose)
+    ss = strict.run(); sr = repair.run(); tree = repair.tree()
+    clean = i = 1 | i = 5
+    expected = (clean & ss = 0 & sr = 0) | (clean = 0 & ss = 4 & sr = 1)
+    call check expected,'clean and recovered outcomes remain distinct: ' || texts[i]
+    call check tree.validate() & tree.owns_source(),'recovery source tree validates'
+    if clean = 0 then do
+      call check repair.count() = 1,'one explicit recovery event'
+      say 'LABEL|'texts[i] '|'strict.error() '|skip='repair.finish(1) - repair.position(1)
+    end
+  end
+  limited = .lllabel..parser(g,root,input,1)
+  call check limited.run() = 2,'label interpreter budget is distinct from syntax rejection'
+  call check repair.annotate(need,99,'late') = 0,'annotations freeze before execution'
+  say 'label_failures='failures
+  if failures then return 1
+  return 0
+find: procedure = .int
+  arg g = .llcore..grammar, name = .string
+  do i = 1 to g.size()
+    if g.op(i) = 5 & g.label(i) == name then return i
+  end
+  return 0
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    failures = failures + 1; say 'FAIL:' message
+  end
+  return

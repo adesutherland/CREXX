@@ -1,0 +1,257 @@
+/* Frozen cross-family damage corpus. Different objectives remain different columns. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llhistory
+import llpeg
+import lllabel
+import lllr
+import lllrrepair
+import llrepair
+import llpika
+import llpikalower
+import llpikaexplain
+import llc14
+main: procedure = .int expose failures
+  failures = 0; cases = 0
+  annotated = readfile('research/level-l/specs/recovery-array.levell')
+  source = substr(annotated,1,pos('recover.item:',annotated) - 1)
+  orderedDoc = .llfront..document(source); labelDoc = .llfront..document(annotated)
+  cfgDoc = .llfront..document(changestr('semantics ordered',source,'semantics contextfree'))
+  pikaDoc = .llfront..document(changestr('semantics ordered',source,'semantics pika'))
+  so = orderedDoc.run(); sl = labelDoc.run(); sc = cfgDoc.run(); sp = pikaDoc.run()
+  if so <> 0 | sl <> 0 | sc <> 0 | sp <> 0 then do
+    say orderedDoc.error() labelDoc.error() cfgDoc.error() pikaDoc.error(); return 1
+  end
+  og = orderedDoc.grammar(); lg = labelDoc.grammar(); cg = cfgDoc.grammar()
+  tables = .lllr..tables(cg,cfgDoc.root(),'lr1')
+  lower = .llpikalower..lowering(pikaDoc.grammar(),pikaDoc.root()); status = lower.run()
+  c14g = recoverygraph(og)
+  if tables.status() <> 0 | status <> 0 then do
+    say tables.error() lower.error(); return 1
+  end
+  need = findrule(lg,'needed.item'); close = findrule(lg,'close'); needarray = findrule(lg,'needed.array')
+  ritem = findrule(lg,'recover.item'); rclose = findrule(lg,'recover.close'); rarray = findrule(lg,'recover.array')
+  pg = pikaDoc.grammar(); arrayrank = lower.rank(findrule(pg,'array'))
+  path = 'research/level-l/evidence/recovery-corpus.txt'
+  do while lines(path)
+    row = linein(path); id = word(row,1); split = word(row,2); hex = word(row,3)
+    clean = word(row,4) as .int; exact = word(row,5) as .int; later = word(row,6) as .int
+    bytes = '' as .binary
+    if hex <> '-' then bytes = x2bin(hex)
+    input = .llcore..stream(bytes); cases = cases + 1
+    peg = .llpeg..parser(og,orderedDoc.root(),input,'packrat'); status = peg.run()
+    sameclean = (status = 0) = clean
+    call check sameclean,'ordinary PEG recognition ' || id
+    call record id,split,'farthest',status,status = 0,'none',-1,-1,offset(peg.error()),peg.work(),0
+    if status = 1 then say 'MESSAGE|'id '|farthest|'peg.error()
+    strict = .lllabel..parser(lg,labelDoc.root(),input)
+    ok = strict.annotate(need,11,'expected item after comma'); ok = strict.annotate(close,12,'expected closing ] for array')
+    ok = strict.annotate(needarray,13,'expected array after semicolon')
+    status = strict.run()
+    sameclean = (status = 0) = clean
+    call check sameclean,'labels preserve clean language on frozen corpus ' || id
+    call record id,split,'labels',status,status = 0,'none',-1,-1,strict.offset(),strict.work(),0
+    if status = 4 then do
+      errorOffset = strict.offset(); errorCode = strict.thrown(); errorText = strict.error()
+      if errorCode = 0 then call diagnostic bytes,errorOffset,'PEG.FAIL',errorText,'Check this construct; no repair has been applied.'
+      else call diagnostic bytes,errorOffset,'PEG.LABEL',errorText,'Check this construct; no repair has been applied.'
+    end
+    labeled = .lllabel..parser(lg,labelDoc.root(),input)
+    ok = labeled.annotate(need,11,'expected item after comma',ritem); ok = labeled.annotate(close,12,'expected closing ] for array',rclose)
+    ok = labeled.annotate(needarray,13,'expected array after semicolon',rarray)
+    status = labeled.run(); tree = labeled.tree(); kept = -1
+    if later >= 0 then kept = 0
+    if status < 2 then do
+      call check tree.validate() & tree.owns_source(),'labeled recovered tree invariant ' || id
+      if later >= 0 then kept = selected(tree,labeled.root(),later,later + 3)
+    end
+    sameclean = (status = 0) = clean
+    call check sameclean,'recovered result never presented as clean ' || id
+    call record id,split,'label-recovery',status,status < 2,'events',labeled.count(),kept,labeled.offset(),labeled.work(),tree.size()
+    do event = 1 to labeled.count()
+      say 'EVENT|'id '|L'labeled.code(event) '|from='labeled.position(event) '|to='labeled.finish(event)
+    end
+    lr = .lllr..parser(tables,input); status = lr.run()
+    sameclean = (status = 0) = clean
+    call check sameclean,'LR recognition ' || id
+    call record id,split,'lr-expected',status,status = 0,'none',-1,-1,offset(lr.error()),lr.work(),0
+    if status = 1 then say 'MESSAGE|'id '|lr-expected|'lr.error()
+    repair = .lllrrepair..request(tables,input,3,3,250,500000,30000)
+    status = repair.run(); kept = -1
+    if later >= 0 then kept = 0
+    if status < 2 then do
+      output = repair.edited()
+      if repair.complete() & exact >= 0 then call check repair.cost() >= exact,'local full repair cannot beat global edit oracle ' || id
+      if later >= 0 then do
+        kept = 0
+        do i = 1 to <blen>(output) - 2
+          if repair.origin(i) = later + 1 & repair.origin(i + 1) = later + 2 & repair.origin(i + 2) = later + 3 then do
+            piece = binsubstr(output,i,3)
+            if bin2x(piece) = '5B615D' then kept = 1
+          end
+        end
+      end
+    end
+    sameclean = (status = 0) = clean
+    call check sameclean,'LR clean status ' || id
+    call record id,split,'lr-local',status,repair.complete(),'insert-delete',repair.cost(),kept,repair.offset(),repair.work(),repair.configurations()
+    if status = 1 then say 'SCRIPT|'id '|'repair.script(1)
+    pika = .llpika..parser(lower.graph(),lower.root(),input)
+    status = pika.run(); kept = -1
+    sameclean = (status = 0) = clean
+    call check sameclean,'Pika recognition on shared domain ' || id
+    if later >= 0 then do
+      island = pika.stored(arrayrank,later); history = pika.arena()
+      kept = island > 0 & history.length(island) = 3
+    end
+    call record id,split,'pika-islands',status,status = 0,'coverage-only',-1,kept,-1,pika.work(),pika.created()
+    if status = 1 then do
+      why = .llpikaexplain..explanation(lower.graph(),lower.root(),pika)
+      explained = why.run()
+      call check explained = 0,'positive chart explanation ' || id
+      say 'MESSAGE|'id '|pika|Clean named-array islands are available; coverage is not an edited full parse.'
+      if explained = 0 then call diagnostic bytes,why.offset(),'PIKA.EXPECT','expected ' || why.expectations(),'Chart explanation is a hypothesis; no edit has been applied.'
+      call record id,split,'pika-explain',explained,0,'none',-1,kept,why.offset(),why.work(),0
+    end
+    do variant = 1 to 2
+      strategy = 'c14'
+      if variant = 2 then strategy = 'frontier-experiment'
+      repaired = .llc14..parser(c14g,orderedDoc.root(),input,500000,strategy)
+      status = repaired.run(); history = repaired.history(); kept = -1
+      if later >= 0 then kept = 0
+      call check status <> 3,'c14 graph admitted ' || id
+      sameclean = (status = 0) = clean
+    call check sameclean,'c14 clean status ' || id
+      if status < 2 then do
+        call check history.validate(input.size()),'c14 history invariant ' || id
+        if later >= 0 then kept = selectedhistory(c14g,history,repaired.root(),later,later + 3)
+      end
+      call record id,split,strategy,status,status < 2,'c14-rank-cost',repaired.cost(),kept,-1,repaired.work(),repaired.allocations()
+      say 'C14TREE|'id '|'strategy '|'repaired.canonical()
+    end
+    /* Small exact native control also checks the independent BFS cost. */
+    if id = 'D002' | id = 'D005' | id = 'D011' then do
+      oracle = .llrepair..oracle(cg,cfgDoc.root(),bytes,2,1,1,2,20000,5000000)
+      status = oracle.run()
+      call check status = 0 & oracle.cost() = exact,'native exact oracle agrees with independent BFS ' || id
+      say 'ORACLE|'id '|'status '|'oracle.cost() '|'bin2x(oracle.repaired())
+    end
+  end
+  say 'recovery_cases='cases
+  say 'recovery_failures='failures
+  if failures then return 1
+  return 0
+record: procedure = .void
+  arg id = .string, split = .string, engine = .string, status = .int, full = .int, model = .string, cost = .int, later = .int, at = .int, work = .int, objects = .int
+  say 'REC|' || id || '|' || split || '|' || engine || '|' || status || '|' || full || '|' || model || '|' || cost || '|' || later || '|' || at || '|' || work || '|' || objects
+  return
+recoverygraph: procedure = .llc14..grammar
+  arg source = .llcore..grammar
+  target = .llc14..grammar()
+  do i = 1 to source.size()
+    op = source.op(i)
+    select op
+      when 13 then id = target.literal(source.text(i))
+      when 16 then id = target.charset(source.text(i),source.left(i))
+      otherwise id = target.node(op,source.label(i),source.left(i),source.right(i))
+    end
+  end
+  do i = 1 to source.size()
+    op = source.op(i)
+    if op = 2 | op = 3 then do
+      ok = target.edge(i,source.left(i)); ok = target.edge(i,source.right(i))
+    end
+    else if op = 5 | op = 7 | op = 8 | op = 9 | op = 14 | op = 15 then ok = target.edge(i,source.left(i))
+  end
+  return target
+selected: procedure = .int
+  arg tree = .llcore..tree, node = .int, start = .int, finish = .int
+  if node = 0 then return 0
+  if tree.label(node) = 'array' & tree.start(node) = start & tree.finish(node) = finish then return cleantree(tree,node)
+  return selected(tree,tree.left(node),start,finish) | selected(tree,tree.right(node),start,finish)
+cleantree: procedure = .int
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return 1
+  if pos('error.L',tree.label(node)) = 1 then return 0
+  return cleantree(tree,tree.left(node)) & cleantree(tree,tree.right(node))
+selectedhistory: procedure = .int
+  arg graph = .llc14..grammar, history = .llhistory..arena, node = .int, start = .int, finish = .int
+  if node = 0 then return 0
+  clause = history.clause(node)
+  if clause > 0 then do
+    if graph.label(clause) = 'Ref:array' & history.start(node) = start & history.length(node) = finish - start then do
+      if cleanhistory(history,node) then return 1
+    end
+  end
+  do i = 1 to history.count(node)
+    if selectedhistory(graph,history,history.child(node,i),start,finish) then return 1
+  end
+  return 0
+cleanhistory: procedure = .int
+  arg history = .llhistory..arena, node = .int
+  if history.clause(node) < 0 then return 0
+  do i = 1 to history.count(node)
+    if cleanhistory(history,history.child(node,i)) = 0 then return 0
+  end
+  return 1
+offset: procedure = .int
+  arg message = .string
+  start = pos('byte ',message)
+  if start = 0 then return -1
+  start = start + 5; finish = start
+  do while finish <= length(message)
+    if pos(substr(message,finish,1),'0123456789') = 0 then leave
+    finish = finish + 1
+  end
+  if finish = start then return -1
+  return substr(message,start,finish - start) as .int
+diagnostic: procedure = .void
+  arg bytes = .binary, at = .int, code = .string, expectation = .string, suggestion = .string
+  start = 0; line = 1; opener = -1; stack = .int[]; depth = 0
+  do i = 0 to min(at,<blen>(bytes)) - 1
+    byte = <at..u8>(i) bytes
+    if byte = 10 then do
+      line = line + 1; start = i + 1
+    end
+    if byte = 91 then do
+      depth = depth + 1; stack[depth] = i
+    end
+    if byte = 93 & depth > 0 then depth = depth - 1
+  end
+  if depth > 0 then opener = stack[depth]
+  text = ''; column = 0
+  do i = start to <blen>(bytes) - 1
+    byte = <at..u8>(i) bytes
+    if byte = 10 then leave
+    piece = d2c(byte)
+    if byte < 32 | byte > 126 then piece = '\x' || right(d2x(byte),2,'0')
+    text = text || piece
+    if i < at then column = column + length(piece)
+  end
+  say 'DIAGNOSTIC|'code '|line='line '|byte='at '|'expectation
+  say text
+  say copies(' ',column) || '^'
+  if opener >= 0 then say 'Related opening [ at byte' opener
+  say suggestion
+  return
+findrule: procedure = .int
+  arg graph = .llcore..grammar, name = .string
+  do i = 1 to graph.size()
+    if graph.op(i) = 5 & graph.label(i) == name then return i
+  end
+  return 0
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition = 0 then do
+    failures = failures + 1; say 'FAIL:' message
+  end
+  return

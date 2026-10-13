@@ -1,0 +1,104 @@
+/* cREXX License (MIT). Named n-ary view of an owned binary derivation tree. */
+options levelb
+namespace lltree expose view
+import rxfnsb
+import llcore
+import lllimits
+
+/** Keep authored rules and named terminals, erase only normalization wrappers.
+ * Child order and source spans are unchanged. Construction is explicitly
+ * bounded because flattening shared transparent lists can be quadratic.
+ */
+view: class
+  _source = .llcore..tree
+  _first = .int[]
+  _counts = .int[]
+  _children = .int[]
+  _root = .int
+  _error = .string
+  *: factory
+    arg source = .llcore..tree, root = .int, limit = 1000000
+    _source = source; _root = root; _error = ''
+    if source.validate() = 0 | root < 1 | root > source.size() then do
+      _error = 'invalid source tree'; return
+    end
+    i = .int
+    heads = .int[]; counts = .int[]; flat = .int[]; entries = 0; output = 0
+    do node = 1 to source.size()
+      a = source.left(node); b = source.right(node); ca = 0; cb = 0
+      if a > 0 then ca = counts[a]
+      if b > 0 then cb = counts[b]
+      kept = source.kind(node) = 5 | (source.kind(node) = 1 & left(source.label(node),7) <> 'symbol.')
+      heads[node] = entries + 1
+      if entries + ca + cb + 1 > limit | output + ca + cb > limit then do
+        _error = lllimits..describe('tree.entries',limit,max(entries + ca + cb + 1,output + ca + cb)); return
+      end
+      if kept then do
+        _first[node] = output + 1; _counts[node] = ca + cb
+        do i = 0 to ca - 1
+          output = output + 1; _children[output] = flat[heads[a] + i]
+        end
+        do i = 0 to cb - 1
+          output = output + 1; _children[output] = flat[heads[b] + i]
+        end
+        entries = entries + 1; flat[entries] = node; counts[node] = 1
+      end
+      else do
+        do i = 0 to ca - 1
+          entries = entries + 1; flat[entries] = flat[heads[a] + i]
+        end
+        do i = 0 to cb - 1
+          entries = entries + 1; flat[entries] = flat[heads[b] + i]
+        end
+        counts[node] = ca + cb
+      end
+    end
+    if counts[root] <> 1 then _error = 'named tree requires one root'
+    else _root = flat[heads[root]]
+    return
+  root: method = .int
+    return _root
+  name: method = .string
+    arg node = .int
+    return _source.label(node)
+  count: method = .int
+    arg node = .int
+    return _counts[node]
+  child: method = .int
+    arg node = .int, index = .int
+    if index < 1 | index > _counts[node] then return 0
+    return _children[_first[node] + index - 1]
+  /** Named fields are source-owning wrapper nodes. Repeated occurrences keep
+   * source order; an absent optional field has count zero. This lookup stays
+   * within the current named node, never borrowing a nested rule's field. */
+  fieldcount: method = .int
+    arg node = .int, name = .string
+    total = 0
+    do i = 1 to _counts[node]
+      field = _children[_first[node] + i - 1]
+      if _source.label(field) = '@field.' || lower(name) then total = total + 1
+    end
+    return total
+  field: method = .int
+    arg node = .int, name = .string, occurrence = 1
+    if occurrence < 1 then return 0
+    do i = 1 to _counts[node]
+      field = _children[_first[node] + i - 1]
+      if _source.label(field) <> '@field.' || lower(name) then iterate
+      occurrence = occurrence - 1
+      if occurrence = 0 then return field
+    end
+    return 0
+  start: method = .int
+    arg node = .int
+    return _source.start(node)
+  finish: method = .int
+    arg node = .int
+    return _source.finish(node)
+  text: method = .string
+    arg node = .int
+    return binsubstr(_source.source(),_source.start(node) + 1,_source.finish(node) - _source.start(node)) as .string
+  source: method = .binary
+    return _source.source()
+  error: method = .string
+    return _error

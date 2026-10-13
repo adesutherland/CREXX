@@ -1,0 +1,4 @@
+STATUS|1
+LESSON_PARSE at line 1, column 3 (byte 2): unexpected end of input; expected identifier
+  a,
+    ^

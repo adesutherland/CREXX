@@ -1,0 +1,58 @@
+/* LR(1)/LALR construction, runtime and failure contracts. */
+options levell
+import rxfnsb
+import llcore
+import lllr
+main: procedure = .int expose failures
+  failures = 0
+  g = .llcore..grammar('contextfree')
+  e = g.add(5,0,0,'Expr',1); digit = g.add(11,48,57,'number',2); plus = g.add(1,43,0,'plus',3)
+  lhs = g.add(2,e,plus,'Expr +',4); add = g.add(2,lhs,digit,'addition',5)
+  choice = g.add(4,add,digit,'expression alternatives',6); ok = g.body(e,choice)
+  canonical = .lllr..tables(g,e,'lr1'); merged = .lllr..tables(g,e,'lalr')
+  call check canonical.status() = 0 & merged.status() = 0, 'left-recursive expressions admitted by LR(1) and LALR'
+  say 'LR expression states='canonical.states() 'LALR='merged.states()
+  input = .llcore..stream('1+2+3' as .binary)
+  p = .lllr..parser(canonical,input); q = .lllr..parser(merged,input)
+  call check p.run() = 0 & q.run() = 0, 'both table families execute complete expressions'
+  tree = p.tree()
+  call check tree.validate() & tree.finish(p.root()) = 5, 'LR reductions preserve valid source tree spans'
+  input = .llcore..stream('1++2' as .binary); bad = .lllr..parser(canonical,input)
+  call check bad.run() = 1 & pos('byte 2',bad.error()) > 0, 'LR expected-token diagnostic locates missing operand'
+  say bad.error()
+  g = .llcore..grammar('contextfree')
+  s = g.add(5,0,0,'S',1); aa = g.add(5,0,0,'A',2); bb = g.add(5,0,0,'B',3)
+  a = g.add(1,97,0,'a',4); b = g.add(1,98,0,'b',5); c = g.add(1,99,0,'c',6)
+  d = g.add(1,100,0,'d',7); e = g.add(1,101,0,'e',8)
+  ok = g.body(aa,c); ok = g.body(bb,c)
+  a1 = g.add(2,a,aa,'a A',9); a1 = g.add(2,a1,d,'a A d',9)
+  a2 = g.add(2,b,bb,'b B',10); a2 = g.add(2,a2,d,'b B d',10)
+  a3 = g.add(2,a,bb,'a B',11); a3 = g.add(2,a3,e,'a B e',11)
+  a4 = g.add(2,b,aa,'b A',12); a4 = g.add(2,a4,e,'b A e',12)
+  one = g.add(4,a1,a2,'first alternatives',13); two = g.add(4,a3,a4,'last alternatives',14)
+  root = g.add(4,one,two,'all alternatives',15); ok = g.body(s,root)
+  canonical = .lllr..tables(g,s,'lr1'); merged = .lllr..tables(g,s,'lalr')
+  call check canonical.status() = 0 & merged.status() = 2, 'canonical LR(1) grammar rejects only after LALR merging'
+  call check pos('LALR merge introduced',merged.error()) > 0, 'merge conflict explains that canonical LR(1) succeeds'
+  say merged.error()
+  texts = .string[]; texts[1] = 'acd'; texts[2] = 'bcd'; texts[3] = 'ace'; texts[4] = 'bce'
+  do i = 1 to 4
+    input = .llcore..stream(texts[i] as .binary); p = .lllr..parser(canonical,input)
+    call check p.run() = 0, 'LR(1) distinct lookahead context ' || texts[i]
+  end
+  g = .llcore..grammar('contextfree')
+  s = g.add(5,0,0,'ambiguous S',1); a = g.add(1,97,0,'a',2)
+  seq = g.add(2,s,s,'S S',3); root = g.add(4,seq,a,'alternatives',4); ok = g.body(s,root)
+  conflict = .lllr..tables(g,s,'lr1')
+  call check conflict.status() = 2, 'ambiguous concatenation cannot get deterministic LR tables'
+  say conflict.error()
+  say 'lr_failures='failures
+  if failures > 0 then return 1
+  return 0
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return

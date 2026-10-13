@@ -1,0 +1,1234 @@
+/*
+ * SOURCE                 : comment-language-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=49
+   .meta "comment-language-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 213 213 17 "comment-language-probe.crexx" 13 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "comment-language-probe.crexx" 14 7 21 "  arg argv = .string[]"
+   .meta "comment-language-probe.main.argv"="b" ".string[*]" a1
+   .meta "comment-language-probe.main.i"="b" ".int" r21
+   .srcstep 2 2 17 "comment-language-probe.crexx" 15 3 11 "  i = .int; node = .int; status = .int"
+   null r21
+   .meta "comment-language-probe.main.node"="b" ".int" r15
+   .srcstep 3 3 17 "comment-language-probe.crexx" 15 13 24 "  i = .int; node = .int; status = .int"
+   null r15
+   .meta "comment-language-probe.main.status"="b" ".int" r24
+   .srcstep 4 4 17 "comment-language-probe.crexx" 15 26 39 "  i = .int; node = .int; status = .int"
+   null r24
+   .srcstep 5 5 17 "comment-language-probe.crexx" 16 3 29 "  source = readbinary(argv[1]); language = levell_settings..language()"
+   .meta "comment-language-probe.main.source"="b" ".binary" r10
+   minlinkattr1 r18,a1,1
+   .traceevent "V" 6 "R" "S" "r" 18 5 5 0 "argv" ""
+   load r25,1
+   settpswapcall r10,rxfnsb.readbinary(),r25,r18,256,r26
+   swap r18,r26
+   unlink r18
+   .traceevent "F" 4 "R" "X" "r" 10 5 5 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 10 5 5 0 "source" ""
+   .srcstep 6 6 17 "comment-language-probe.crexx" 16 33 69 "  source = readbinary(argv[1]); language = levell_settings..language()"
+   .meta "comment-language-probe.main.language"="b" ".lllanguage..definition" r1
+   load r26,0
+   call r1,levell_settings.language(),r26
+   .traceevent "F" 4 "R" "O" "r" 1 6 6 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 6 6 0 "language" ""
+   .srcstep 7 7 17 "comment-language-probe.crexx" 17 3 31 "  policies = language.comments(); shielded = 0"
+   .meta "comment-language-probe.main.policies"="b" ".llcomments..rules" r3
+   .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "language" ""
+   load r0,1
+   settpcall r3,§lllanguage.definition.comments(),r0,r1,256
+   .traceevent "F" 4 "R" "O" "r" 3 7 7 0 "comments" ""
+   .traceevent "A" 6 "R" "O" "r" 3 7 7 0 "policies" ""
+   .srcstep 8 8 17 "comment-language-probe.crexx" 17 35 47 "  policies = language.comments(); shielded = 0"
+   .meta "comment-language-probe.main.shielded"="b" ".int" r23
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 8 8 0 "shielded" ""
+   .srcstep 32 32 17 "comment-language-probe.crexx" 18 3 5 "  do i = 1 to policies.size()"
+   .srcstep 9 9 17 "comment-language-probe.crexx" 18 6 11 "  do i = 1 to policies.size()"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 9 9 0 "i" ""
+   .srcstep 10 10 17 "comment-language-probe.crexx" 18 12 28 "  do i = 1 to policies.size()"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "policies" ""
+   load r2,1
+   settpcall r26,§llcomments.rules.size(),r2,r3,256
+   .traceevent "F" 4 "R" "I" "r" 26 0 0 0 "size" ""
+l58dostart:
+   .srcstep 10 10 17 "comment-language-probe.crexx" 18 12 28 "  do i = 1 to policies.size()"
+   igt r25,r21,r26
+   brt l58doend,r25
+   .srcstep 17 17 17 "comment-language-probe.crexx" 19 5 45 "    shielded = shielded + policies.custom(i)"
+   .traceevent "V" 6 "R" "I" "r" 23 17 17 0 "shielded" ""
+   .srcstep 16 16 17 "comment-language-probe.crexx" 19 27 35 "    shielded = shielded + policies.custom(i)"
+   .srcstep 12 12 33 "comment-language-probe.crexx" 19 27 35 "    shielded = shielded + policies.custom(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 12 12 0 "policies" ""
+   .traceevent "A" 6 "R" "O" "r" 3 12 12 0 "§this" ""
+   .srcstep 13 13 33 "comment-language-probe.crexx" 19 35 35 "    shielded = shielded + policies.custom(i)"
+   .traceevent "V" 6 "R" "I" "r" 21 13 13 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 13 13 0 "entry" ""
+   .srcstep 14 14 6 "llcomments@rxfnsl.rxbin" 19 35 35 "    shielded = shielded + policies.custom(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "§this" ""
+   assertinitialized r3
+   .srcstep 15 15 25 "llcomments.crexx" 121 5 25 "    return _custom[entry]"
+   linkattr1 r16,r3,3
+   .traceevent "V" 6 "R" "I" "r" 21 17 17 0 "entry" ""
+   .traceevent "C" 4 "R" "I" "r" 21 17 17 0 "_custom" ""
+   minlinkattr1 r18,r16,r21,0
+   .traceevent "V" 6 "R" "I" "r" 18 17 17 0 "_custom" ""
+   igetunlink r14,r18
+   unlink r16
+l8963bexprend:
+   iadd r23,r23,r14
+   .traceevent "O" 4 "R" "I" "r" 23 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 17 17 0 "shielded" ""
+   .srcstep 31 31 17 "comment-language-probe.crexx" 20 5 70 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .srcstep 30 30 17 "comment-language-probe.crexx" 20 9 18 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .srcstep 23 23 33 "comment-language-probe.crexx" 20 39 41 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .srcstep 22 22 17 "comment-language-probe.crexx" 20 22 30 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .srcstep 18 18 33 "comment-language-probe.crexx" 20 22 30 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 18 18 0 "policies" ""
+   .traceevent "A" 6 "R" "O" "r" 3 18 18 0 "§this" ""
+   .srcstep 19 19 33 "comment-language-probe.crexx" 20 30 30 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "I" "r" 21 19 19 0 "i" ""
+   icopy r18,r21
+   .traceevent "A" 6 "R" "I" "r" 18 19 19 0 "entry" ""
+   .srcstep 20 20 6 "llcomments@rxfnsl.rxbin" 20 30 30 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 23 23 0 "§this" ""
+   assertinitialized r3
+   .srcstep 21 21 25 "llcomments.crexx" 100 5 24 "    return _names[entry]"
+   linkattr1 r14,r3,8
+   .traceevent "V" 6 "R" "I" "r" 18 23 23 0 "entry" ""
+   .traceevent "C" 4 "R" "I" "r" 18 23 23 0 "_names" ""
+   minlinkattr1 r16,r14,r18,0
+   .traceevent "V" 6 "R" "S" "r" 16 23 23 0 "_names" ""
+   scopy r13,r16
+   unlinkn r16,r14
+l8994bexprend:
+   concat r18,"POLICY|",r13
+   .traceevent "O" 4 "R" "S" "r" 18 23 23 0 "" ""
+   concat r27,r18,"|KEEP|"
+   .traceevent "O" 4 "R" "S" "r" 27 23 23 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 27 23 23 0 "__inline_lhs_84_89" ""
+   .srcstep 29 29 33 "comment-language-probe.crexx" 20 51 53 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "S" "r" 27 31 31 0 "__inline_lhs_84_89" ""
+   .srcstep 28 28 17 "comment-language-probe.crexx" 20 54 62 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .srcstep 24 24 33 "comment-language-probe.crexx" 20 54 62 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 24 24 0 "policies" ""
+   .traceevent "A" 6 "R" "O" "r" 3 24 24 0 "§this" ""
+   .srcstep 25 25 33 "comment-language-probe.crexx" 20 62 62 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "I" "r" 21 25 25 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 25 25 0 "entry" ""
+   .srcstep 26 26 6 "llcomments@rxfnsl.rxbin" 20 62 62 "    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)"
+   .traceevent "V" 6 "R" "O" "r" 3 31 31 0 "§this" ""
+   assertinitialized r3
+   .srcstep 27 27 25 "llcomments.crexx" 112 5 23 "    return _keep[entry]"
+   linkattr1 r16,r3,6
+   .traceevent "V" 6 "R" "I" "r" 21 31 31 0 "entry" ""
+   .traceevent "C" 4 "R" "I" "r" 21 31 31 0 "_keep" ""
+   minlinkattr1 r18,r16,r21,0
+   .traceevent "V" 6 "R" "I" "r" 18 31 31 0 "_keep" ""
+   igetunlink r14,r18
+   unlink r16
+l10052bexprend:
+   itos r14
+   concat r14,r27,r14
+   .traceevent "O" 4 "R" "S" "r" 14 31 31 0 "" ""
+   scopy r13,r14
+l8989bexprend:
+   say r13
+l58doinc:
+   .srcstep 11 11 17 "comment-language-probe.crexx" 18 6 7 "  do i = 1 to policies.size()"
+   inc r21
+   .srcstep 33 33 17 "comment-language-probe.crexx" 21 3 6 "  end"
+   br l58dostart
+l58doend:
+   .srcstep 34 34 17 "comment-language-probe.crexx" 22 3 65 "  say 'COMMENTS|' || policies.size() || '|SHIELDED|' || shielded"
+   .traceevent "V" 6 "R" "O" "r" 3 34 34 0 "policies" ""
+   load r2,1
+   settpcall r26,§llcomments.rules.size(),r2,r3,256
+   itos r26
+   .traceevent "F" 4 "R" "S" "r" 26 34 34 0 "size" ""
+   concat r26,"COMMENTS|",r26
+   .traceevent "O" 4 "R" "S" "r" 26 34 34 0 "" ""
+   concat r26,r26,"|SHIELDED|"
+   .traceevent "O" 4 "R" "S" "r" 26 34 34 0 "" ""
+   itos r23
+   .traceevent "V" 6 "R" "S" "r" 23 34 34 0 "shielded" ""
+   concat r26,r26,r23
+   .traceevent "O" 4 "R" "S" "r" 26 34 34 0 "" ""
+   say r26
+   .srcstep 35 35 17 "comment-language-probe.crexx" 23 3 29 "  limits = .lllimits..policy()"
+   .meta "comment-language-probe.main.limits"="b" ".lllimits..policy" r5
+   load r26,0
+   call r5,§lllimits.policy.§factory(),r26
+   .traceevent "F" 4 "R" "O" "r" 5 35 35 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 35 35 0 "limits" ""
+   .srcstep 37 37 17 "comment-language-probe.crexx" 24 3 17 "  if argv[0] > 2 then ok = limits.set('scan.work',argv[3] as .int)"
+   .traceevent "C" 4 "R" "V" "r" 26 37 37 0 "argv" ""
+   getattrs r25,a1,0
+   .traceevent "V" 6 "R" "I" "r" 25 37 37 0 "argv" ""
+   igt r25,r25,2
+   .traceevent "O" 4 "R" "B" "r" 25 37 37 0 "" ""
+   brf l120iffalse,r25
+   .srcstep 38 38 17 "comment-language-probe.crexx" 24 18 22 "  if argv[0] > 2 then ok = limits.set('scan.work',argv[3] as .int)"
+   .srcstep 36 36 17 "comment-language-probe.crexx" 24 23 66 "  if argv[0] > 2 then ok = limits.set('scan.work',argv[3] as .int)"
+   .meta "comment-language-probe.main.ok"="b" ".int" r22
+   .traceevent "V" 6 "R" "O" "r" 5 36 36 0 "limits" ""
+   load r6,"scan.work"
+   .traceevent "L" 4 "R" "S" "r" 6 36 36 0 "" ""
+   minlinkattr1 r18,a1,3
+   .traceevent "V" 6 "R" "S" "r" 18 36 36 0 "argv" ""
+   stoi r7,r18
+   unlink r18
+   load r4,3
+   settp r5,256
+   settp r6,768
+   call r22,§lllimits.policy.set(),r4
+   .traceevent "F" 4 "R" "I" "r" 22 36 36 0 "set" ""
+   .traceevent "A" 6 "R" "I" "r" 22 36 36 0 "ok" ""
+l120iffalse:
+   .srcstep 109 109 17 "comment-language-probe.crexx" 25 3 17 "  if argv[0] > 1 then do"
+   .traceevent "C" 4 "R" "V" "r" 26 109 109 0 "argv" ""
+   getattrs r25,a1,0
+   .traceevent "V" 6 "R" "I" "r" 25 109 109 0 "argv" ""
+   igt r25,r25,1
+   .traceevent "O" 4 "R" "B" "r" 25 109 109 0 "" ""
+   brf l260iffalse,r25
+   .srcstep 110 110 17 "comment-language-probe.crexx" 25 18 22 "  if argv[0] > 1 then do"
+   .srcstep 107 107 17 "comment-language-probe.crexx" 26 5 27 "    if argv[2] = 'recover' then do"
+   minlinkattr1 r18,a1,2
+   .traceevent "V" 6 "R" "S" "r" 18 107 107 0 "argv" ""
+   req r16,r18,"recover"
+   unlink r18
+   .traceevent "O" 4 "R" "B" "r" 16 107 107 0 "" ""
+   brf l258iffalse,r16
+   .srcstep 108 108 17 "comment-language-probe.crexx" 26 28 32 "    if argv[2] = 'recover' then do"
+   .srcstep 39 39 17 "comment-language-probe.crexx" 27 7 62 "      recovery = .llrecover..request(language,source,0,limits)"
+   .meta "comment-language-probe.main.recovery"="b" ".llrecover..request" r12
+   .traceevent "V" 6 "R" "O" "r" 1 39 39 0 "language" ""
+   .traceevent "V" 6 "R" "X" "r" 10 39 39 0 "source" ""
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 39 39 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 5 39 39 0 "limits" ""
+   load r28,4
+   settp r1,256
+   swap r29,r1
+   settp r10,256
+   swap r30,r10
+   settp r31,256
+   settpswapcall r12,§llrecover.request.§factory(),r28,r5,256,r32
+   swap r1,r29
+   swap r10,r30
+   swap r5,r32
+   .traceevent "F" 4 "R" "O" "r" 12 39 39 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 12 39 39 0 "recovery" ""
+   .srcstep 40 40 17 "comment-language-probe.crexx" 28 7 28 "      status = recovery.run()"
+   .traceevent "V" 6 "R" "O" "r" 12 40 40 0 "recovery" ""
+   load r31,1
+   settpswapcall r24,§llrecover.request.run(),r31,r12,256,r32
+   swap r12,r32
+   .traceevent "F" 4 "R" "I" "r" 24 40 40 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 24 40 40 0 "status" ""
+   .srcstep 41 41 17 "comment-language-probe.crexx" 29 7 63 "      say 'STATUS|' || status || '|ERRORS|' || recovery.errors()"
+   itos r24
+   .traceevent "V" 6 "R" "S" "r" 24 41 41 0 "status" ""
+   concat r32,"STATUS|",r24
+   .traceevent "O" 4 "R" "S" "r" 32 41 41 0 "" ""
+   concat r32,r32,"|ERRORS|"
+   .traceevent "O" 4 "R" "S" "r" 32 41 41 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 12 41 41 0 "recovery" ""
+   load r30,1
+   settpswapcall r29,§llrecover.request.errors(),r30,r12,256,r31
+   swap r12,r31
+   itos r29
+   .traceevent "F" 4 "R" "S" "r" 29 41 41 0 "errors" ""
+   concat r32,r32,r29
+   .traceevent "O" 4 "R" "S" "r" 32 41 41 0 "" ""
+   say r32
+   .srcstep 46 46 17 "comment-language-probe.crexx" 30 7 39 "      say 'MESSAGE|' || recovery.error()"
+   .srcstep 45 45 17 "comment-language-probe.crexx" 30 25 33 "      say 'MESSAGE|' || recovery.error()"
+   .srcstep 42 42 33 "comment-language-probe.crexx" 30 25 33 "      say 'MESSAGE|' || recovery.error()"
+   .traceevent "V" 6 "R" "O" "r" 12 42 42 0 "recovery" ""
+   .traceevent "A" 6 "R" "O" "r" 12 42 42 0 "§this" ""
+   .srcstep 43 43 6 "llrecover@rxfnsl.rxbin" 30 33 33 "      say 'MESSAGE|' || recovery.error()"
+   .traceevent "V" 6 "R" "O" "r" 12 46 46 0 "§this" ""
+   assertinitialized r12
+   .srcstep 44 44 25 "llrecover.crexx" 194 5 18 "    return _error"
+   linkattr1 r32,r12,2
+   .traceevent "V" 6 "R" "S" "r" 32 46 46 0 "_error" ""
+   scopy r31,r32
+   unlink r32
+l9016bexprend:
+   concat r31,"MESSAGE|",r31
+   .traceevent "O" 4 "R" "S" "r" 31 46 46 0 "" ""
+   say r31
+   .srcstep 68 68 17 "comment-language-probe.crexx" 31 7 9 "      do i = 1 to recovery.errors()"
+   .srcstep 47 47 17 "comment-language-probe.crexx" 31 10 15 "      do i = 1 to recovery.errors()"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 47 47 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 47 47 0 "i" ""
+   .srcstep 48 48 17 "comment-language-probe.crexx" 31 16 34 "      do i = 1 to recovery.errors()"
+   .traceevent "V" 6 "R" "O" "r" 12 0 0 0 "recovery" ""
+   load r31,1
+   settpswapcall r30,§llrecover.request.errors(),r31,r12,256,r32
+   swap r12,r32
+   .traceevent "F" 4 "R" "I" "r" 30 0 0 0 "errors" ""
+l161dostart:
+   .srcstep 48 48 17 "comment-language-probe.crexx" 31 16 34 "      do i = 1 to recovery.errors()"
+   igt r32,r21,r30
+   brt l161doend,r32
+   .srcstep 67 67 17 "comment-language-probe.crexx" 32 9 78 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .srcstep 66 66 17 "comment-language-probe.crexx" 32 13 26 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .srcstep 57 57 33 "comment-language-probe.crexx" 32 49 51 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .srcstep 56 56 17 "comment-language-probe.crexx" 32 30 38 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .srcstep 50 50 33 "comment-language-probe.crexx" 32 30 38 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "O" "r" 12 50 50 0 "recovery" ""
+   .traceevent "A" 6 "R" "O" "r" 12 50 50 0 "§this" ""
+   .srcstep 51 51 33 "comment-language-probe.crexx" 32 38 38 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "I" "r" 21 51 51 0 "i" ""
+   icopy r31,r21
+   .traceevent "A" 6 "R" "I" "r" 31 51 51 0 "i" ""
+   .srcstep 52 52 6 "llrecover@rxfnsl.rxbin" 32 38 38 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "O" "r" 12 57 57 0 "§this" ""
+   assertinitialized r12
+   .srcstep 53 53 25 "llrecover.crexx" 184 5 15 "    call order()"
+   .traceevent "V" 6 "R" "O" "r" 12 53 53 0 "§this" ""
+   load r28,1
+   settpswapcall r9,§llrecover.request.order(),r28,r12,256,r29
+   swap r12,r29
+   .traceevent "F" 4 "R" "V" "r" 9 53 53 0 "order" ""
+   linkattr1 r28,r12,8
+   .traceevent "V" 6 "R" "I" "r" 31 57 57 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 31 57 57 0 "_offsets" ""
+   minlinkattr1 r29,r28,r31,0
+   .traceevent "V" 6 "R" "I" "r" 29 57 57 0 "_offsets" ""
+   igetunlink r34,r29
+   .traceevent "A" 6 "R" "I" "r" 34 57 57 0 "__inline_leave_9039_9038" ""
+   unlink r28
+   .srcstep 54 54 14 "llrecover.crexx" 185 5 22 "    return _offsets[i]"
+   .traceevent "V" 6 "R" "O" "r" 12 57 57 0 "§this" ""
+   .srcstep 55 55 25 "llrecover.crexx" 185 5 22 "    return _offsets[i]"
+   .traceevent "V" 6 "R" "I" "r" 34 57 57 0 "__inline_leave_9039_9038" ""
+   br l9055bexprend
+l9055bexprend:
+   itos r34
+   concat r34,"DIAGNOSTIC|",r34
+   .traceevent "O" 4 "R" "S" "r" 34 57 57 0 "" ""
+   concat r33,r34,"|"
+   .traceevent "O" 4 "R" "S" "r" 33 57 57 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 33 57 57 0 "__inline_lhs_178_183" ""
+   .srcstep 65 65 33 "comment-language-probe.crexx" 32 56 58 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "S" "r" 33 67 67 0 "__inline_lhs_178_183" ""
+   .srcstep 64 64 17 "comment-language-probe.crexx" 32 59 67 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .srcstep 58 58 33 "comment-language-probe.crexx" 32 59 67 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "O" "r" 12 58 58 0 "recovery" ""
+   .traceevent "A" 6 "R" "O" "r" 12 58 58 0 "§this" ""
+   .srcstep 59 59 33 "comment-language-probe.crexx" 32 67 67 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "I" "r" 21 59 59 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 59 59 0 "i" ""
+   .srcstep 60 60 6 "llrecover@rxfnsl.rxbin" 32 67 67 "        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)"
+   .traceevent "V" 6 "R" "O" "r" 12 67 67 0 "§this" ""
+   assertinitialized r12
+   .srcstep 61 61 25 "llrecover.crexx" 180 5 15 "    call order()"
+   .traceevent "V" 6 "R" "O" "r" 12 61 61 0 "§this" ""
+   load r36,1
+   settpswapcall r34,§llrecover.request.order(),r36,r12,256,r37
+   swap r12,r37
+   .traceevent "F" 4 "R" "V" "r" 34 61 61 0 "order" ""
+   linkattr1 r36,r12,6
+   .traceevent "V" 6 "R" "I" "r" 21 67 67 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 21 67 67 0 "_messages" ""
+   minlinkattr1 r37,r36,r21,0
+   .traceevent "V" 6 "R" "S" "r" 37 67 67 0 "_messages" ""
+   scopy r35,r37
+   .traceevent "A" 6 "R" "S" "r" 35 67 67 0 "__inline_leave_10079_10078" ""
+   unlinkn r37,r36
+   .srcstep 62 62 14 "llrecover.crexx" 181 5 23 "    return _messages[i]"
+   .traceevent "V" 6 "R" "O" "r" 12 67 67 0 "§this" ""
+   .srcstep 63 63 25 "llrecover.crexx" 181 5 23 "    return _messages[i]"
+   .traceevent "V" 6 "R" "S" "r" 35 67 67 0 "__inline_leave_10079_10078" ""
+   br l10065bexprend
+l10065bexprend:
+   concat r37,r33,r35
+   .traceevent "O" 4 "R" "S" "r" 37 67 67 0 "" ""
+   scopy r36,r37
+l9050bexprend:
+   say r36
+l161doinc:
+   .srcstep 49 49 17 "comment-language-probe.crexx" 31 10 11 "      do i = 1 to recovery.errors()"
+   inc r21
+   .srcstep 69 69 17 "comment-language-probe.crexx" 33 7 10 "      end"
+   br l161dostart
+l161doend:
+   .srcstep 71 71 17 "comment-language-probe.crexx" 34 7 20 "      if status > 1 then return status"
+   .traceevent "V" 6 "R" "I" "r" 24 71 71 0 "status" ""
+   igt r37,r24,1
+   .traceevent "O" 4 "R" "B" "r" 37 71 71 0 "" ""
+   brf l191iffalse,r37
+   .srcstep 72 72 17 "comment-language-probe.crexx" 34 21 25 "      if status > 1 then return status"
+   .srcstep 70 70 17 "comment-language-probe.crexx" 34 26 39 "      if status > 1 then return status"
+   .traceevent "V" 6 "R" "I" "r" 24 70 70 0 "status" ""
+   ret r24
+l191iffalse:
+   .srcstep 73 73 17 "comment-language-probe.crexx" 35 7 26 "      raw = recovery.tree(); root = recovery.root()"
+   .meta "comment-language-probe.main.raw"="b" ".llcore..tree" r14
+   .traceevent "V" 6 "R" "O" "r" 12 73 73 0 "recovery" ""
+   load r36,1
+   settpswapcall r14,§llrecover.request.tree(),r36,r12,256,r37
+   swap r12,r37
+   .traceevent "F" 4 "R" "O" "r" 14 73 73 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 14 73 73 0 "raw" ""
+   .srcstep 76 76 17 "comment-language-probe.crexx" 35 30 50 "      raw = recovery.tree(); root = recovery.root()"
+   .srcstep 74 74 33 "comment-language-probe.crexx" 35 37 45 "      raw = recovery.tree(); root = recovery.root()"
+   .traceevent "V" 6 "R" "O" "r" 12 74 74 0 "recovery" ""
+   .traceevent "A" 6 "R" "O" "r" 12 74 74 0 "§this" ""
+   .srcstep 75 75 33 "comment-language-probe.crexx" 35 45 45 "      raw = recovery.tree(); root = recovery.root()"
+   linkattr1 r37,r12,11
+   .traceevent "V" 6 "R" "I" "r" 37 75 75 0 "_root" ""
+   copy r11,r37
+   .traceevent "A" 6 "R" "I" "r" 11 75 75 0 "root" ""
+   unlink r37
+   .srcstep 78 78 17 "comment-language-probe.crexx" 36 7 32 "      if raw.source() <> source then return 7"
+   .meta "comment-language-probe.main.root"="b" ".int" r11
+   .traceevent "V" 6 "R" "O" "r" 14 78 78 0 "raw" ""
+   load r36,1
+   settpswapcall r35,§llcore.tree.source(),r36,r14,256,r37
+   swap r14,r37
+   .traceevent "F" 4 "R" "X" "r" 35 78 78 0 "source" ""
+   .traceevent "V" 6 "R" "X" "r" 10 78 78 0 "source" ""
+   binne r37,r35,r10
+   .traceevent "O" 4 "R" "B" "r" 37 78 78 0 "" ""
+   brf l212iffalse,r37
+   .srcstep 79 79 17 "comment-language-probe.crexx" 36 33 37 "      if raw.source() <> source then return 7"
+   .srcstep 77 77 17 "comment-language-probe.crexx" 36 38 46 "      if raw.source() <> source then return 7"
+   ret 7
+l212iffalse:
+   .srcstep 80 80 17 "comment-language-probe.crexx" 37 7 45 "      recoveredview = .lltree..view(raw,root)"
+   .meta "comment-language-probe.main.recoveredview"="b" ".lltree..view" r13
+   .traceevent "V" 6 "R" "O" "r" 14 80 80 0 "raw" ""
+   .traceevent "V" 6 "R" "I" "r" 11 80 80 0 "root" ""
+   load r34,3
+   settp r14,256
+   swap r35,r14
+   swap r36,r11
+   settpcall r13,§lltree.view.§factory(),r34,r37,0
+   swap r14,r35
+   swap r11,r36
+   .traceevent "F" 4 "R" "O" "r" 13 80 80 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 13 80 80 0 "recoveredview" ""
+   .srcstep 86 86 17 "comment-language-probe.crexx" 38 7 37 "      if recoveredview.error() <> '' then return 8"
+   .srcstep 84 84 17 "comment-language-probe.crexx" 38 10 23 "      if recoveredview.error() <> '' then return 8"
+   .srcstep 81 81 33 "comment-language-probe.crexx" 38 10 23 "      if recoveredview.error() <> '' then return 8"
+   .traceevent "V" 6 "R" "O" "r" 13 81 81 0 "recoveredview" ""
+   .traceevent "A" 6 "R" "O" "r" 13 81 81 0 "§this" ""
+   .srcstep 82 82 6 "lltree@rxfnsl.rxbin" 38 23 23 "      if recoveredview.error() <> '' then return 8"
+   .traceevent "V" 6 "R" "O" "r" 13 86 86 0 "§this" ""
+   assertinitialized r13
+   .srcstep 83 83 25 "lltree.crexx" 104 5 18 "    return _error"
+   linkattr1 r37,r13,3
+   .traceevent "V" 6 "R" "S" "r" 37 86 86 0 "_error" ""
+   scopy r36,r37
+   unlink r37
+l9087bexprend:
+   rne r36,r36,""
+   .traceevent "O" 4 "R" "B" "r" 36 86 86 0 "" ""
+   brf l226iffalse,r36
+   .srcstep 87 87 17 "comment-language-probe.crexx" 38 38 42 "      if recoveredview.error() <> '' then return 8"
+   .srcstep 85 85 17 "comment-language-probe.crexx" 38 43 51 "      if recoveredview.error() <> '' then return 8"
+   ret 8
+l226iffalse:
+   .srcstep 104 104 17 "comment-language-probe.crexx" 39 7 9 "      do node = 1 to raw.size()"
+   .srcstep 88 88 17 "comment-language-probe.crexx" 39 10 18 "      do node = 1 to raw.size()"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 88 88 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 88 88 0 "node" ""
+   .srcstep 93 93 17 "comment-language-probe.crexx" 39 19 30 "      do node = 1 to raw.size()"
+   .srcstep 92 92 17 "comment-language-probe.crexx" 39 22 25 "      do node = 1 to raw.size()"
+   .srcstep 89 89 33 "comment-language-probe.crexx" 39 22 25 "      do node = 1 to raw.size()"
+   .traceevent "V" 6 "R" "O" "r" 14 89 89 0 "raw" ""
+   .traceevent "A" 6 "R" "O" "r" 14 89 89 0 "§this" ""
+   .srcstep 90 90 6 "llcore@rxfnsl.rxbin" 39 25 25 "      do node = 1 to raw.size()"
+   .traceevent "V" 6 "R" "O" "r" 14 0 0 0 "§this" ""
+   assertinitialized r14
+   .srcstep 91 91 25 "llcore.crexx" 305 5 17 "    return _size"
+   linkattr1 r37,r14,11
+   .traceevent "V" 6 "R" "I" "r" 37 0 0 0 "_size" ""
+   igetunlink r36,r37
+l8814bexprend:
+l227dostart:
+   .srcstep 93 93 17 "comment-language-probe.crexx" 39 19 30 "      do node = 1 to raw.size()"
+   igt r35,r15,r36
+   brt l227doend,r35
+   .srcstep 102 102 17 "comment-language-probe.crexx" 40 9 51 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .traceevent "V" 6 "R" "O" "r" 13 102 102 0 "recoveredview" ""
+   .traceevent "V" 6 "R" "I" "r" 15 102 102 0 "node" ""
+   load r38,2
+   settp r13,256
+   swap r39,r13
+   swapcall r34,§lltree.view.name(),r38,r15,r40
+   swap r13,r39
+   swap r15,r40
+   .traceevent "F" 4 "R" "S" "r" 34 102 102 0 "name" ""
+   req r40,r34,"assignment"
+   .traceevent "O" 4 "R" "B" "r" 40 102 102 0 "" ""
+   brf l254iffalse,r40
+   .srcstep 103 103 17 "comment-language-probe.crexx" 40 52 56 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .srcstep 101 101 17 "comment-language-probe.crexx" 40 57 124 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .traceevent "V" 6 "R" "O" "r" 13 101 101 0 "recoveredview" ""
+   .srcstep 100 100 17 "comment-language-probe.crexx" 40 96 97 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .srcstep 95 95 33 "comment-language-probe.crexx" 40 97 110 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .traceevent "V" 6 "R" "O" "r" 13 95 95 0 "recoveredview" ""
+   .traceevent "A" 6 "R" "O" "r" 13 95 95 0 "§this" ""
+   .srcstep 96 96 33 "comment-language-probe.crexx" 40 110 110 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .traceevent "V" 6 "R" "I" "r" 15 96 96 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 15 96 96 0 "node" ""
+   .srcstep 97 97 6 "lltree@rxfnsl.rxbin" 40 110 110 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   .traceevent "V" 6 "R" "O" "r" 13 101 101 0 "§this" ""
+   assertinitialized r13
+   linkattr1 r38,r13,2
+   .traceevent "V" 6 "R" "I" "r" 15 101 101 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 15 101 101 0 "_counts" ""
+   minlinkattr1 r39,r38,r15,0
+   .traceevent "V" 6 "R" "I" "r" 39 101 101 0 "_counts" ""
+   igt r34,1,r39
+   unlinkn r39,r38
+   .traceevent "O" 4 "R" "B" "r" 34 101 101 0 "" ""
+   brf l9109iffalse,r34
+   .srcstep 98 98 25 "lltree.crexx" 69 47 55 "    if index < 1 | index > _counts[node] then return 0"
+   load r32,0
+   .traceevent "L" 4 "R" "I" "r" 32 101 101 0 "" ""
+   icopy r30,r32
+   br l9096bexprend
+l9109iffalse:
+   .srcstep 99 99 25 "lltree.crexx" 70 5 46 "    return _children[_first[node] + index - 1]"
+   linkattr1 r31,r13,1
+   linkattr1 r38,r13,4
+   .traceevent "V" 6 "R" "I" "r" 15 101 101 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 15 101 101 0 "_first" ""
+   minlinkattr1 r39,r38,r15,0
+   .traceevent "V" 6 "R" "I" "r" 39 101 101 0 "_first" ""
+   iadd r34,r39,1
+   unlinkn r39,r38
+   .traceevent "O" 4 "R" "I" "r" 34 101 101 0 "" ""
+   isub r34,r34,1
+   .traceevent "O" 4 "R" "I" "r" 34 101 101 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 34 101 101 0 "_children" ""
+   minlinkattr1 r32,r31,r34,0
+   .traceevent "V" 6 "R" "I" "r" 32 101 101 0 "_children" ""
+   igetunlink r30,r32
+   unlink r31
+l9096bexprend:
+   load r41,2
+   settp r13,256
+   swap r42,r13
+   swapcall r29,§lltree.view.text(),r41,r30,r43
+   swap r13,r42
+   swap r30,r43
+   .traceevent "F" 4 "R" "S" "r" 29 101 101 0 "text" ""
+   concat r43,"ASSIGNMENT|",r29
+   .traceevent "O" 4 "R" "S" "r" 43 101 101 0 "" ""
+   say r43
+l254iffalse:
+l227doinc:
+   .srcstep 94 94 17 "comment-language-probe.crexx" 39 10 14 "      do node = 1 to raw.size()"
+   inc r15
+   .srcstep 105 105 17 "comment-language-probe.crexx" 40 124 125 "        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))"
+   br l227dostart
+l227doend:
+   .srcstep 106 106 17 "comment-language-probe.crexx" 42 7 20 "      return status"
+   .traceevent "V" 6 "R" "I" "r" 24 106 106 0 "status" ""
+   ret r24
+   endlife r14
+   endlife r13
+   endlife r12
+   .meta "comment-language-probe.main.raw"
+   .meta "comment-language-probe.main.recoveredview"
+   .meta "comment-language-probe.main.recovery"
+   .meta "comment-language-probe.main.root"
+l258iffalse:
+l260iffalse:
+   .srcstep 111 111 17 "comment-language-probe.crexx" 45 3 56 "  request = .lllanguage..request(language,source,limits)"
+   .meta "comment-language-probe.main.request"="b" ".lllanguage..request" r17
+   .traceevent "V" 6 "R" "O" "r" 1 111 111 0 "language" ""
+   .traceevent "V" 6 "R" "X" "r" 10 111 111 0 "source" ""
+   .traceevent "V" 6 "R" "O" "r" 5 111 111 0 "limits" ""
+   load r8,3
+   settp r1,256
+   swap r9,r1
+   settp r10,256
+   settpswapcall r17,§lllanguage.request.§factory(),r8,r5,256,r11
+   swap r1,r9
+   swap r5,r11
+   .traceevent "F" 4 "R" "O" "r" 17 111 111 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 17 111 111 0 "request" ""
+   .srcstep 112 112 17 "comment-language-probe.crexx" 46 3 25 "  status = request.parse()"
+   .traceevent "V" 6 "R" "O" "r" 17 112 112 0 "request" ""
+   load r16,1
+   settpcall r24,§lllanguage.request.parse(),r16,r17,256
+   .traceevent "F" 4 "R" "I" "r" 24 112 112 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 24 112 112 0 "status" ""
+   .srcstep 119 119 17 "comment-language-probe.crexx" 47 3 56 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 118 118 17 "comment-language-probe.crexx" 47 7 16 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 113 113 33 "comment-language-probe.crexx" 47 27 29 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   itos r24
+   .traceevent "V" 6 "R" "S" "r" 24 113 113 0 "status" ""
+   concat r43,"STATUS|",r24
+   .traceevent "O" 4 "R" "S" "r" 43 113 113 0 "" ""
+   concat r44,r43,"|BYTE|"
+   .traceevent "O" 4 "R" "S" "r" 44 113 113 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 44 113 113 0 "__inline_lhs_277_282" ""
+   .srcstep 117 117 33 "comment-language-probe.crexx" 47 39 41 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "S" "r" 44 119 119 0 "__inline_lhs_277_282" ""
+   .srcstep 116 116 17 "comment-language-probe.crexx" 47 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 114 114 33 "comment-language-probe.crexx" 47 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "O" "r" 17 114 114 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 17 114 114 0 "§this" ""
+   .srcstep 115 115 25 "lllanguage.crexx" 380 5 19 "    return _offset"
+   linkattr1 r43,r17,7
+   .traceevent "V" 6 "R" "I" "r" 43 119 119 0 "_offset" ""
+   igetunlink r42,r43
+l8823bexprend:
+   itos r42
+   concat r42,r44,r42
+   .traceevent "O" 4 "R" "S" "r" 42 119 119 0 "" ""
+   scopy r41,r42
+l8784bexprend:
+   say r41
+   .srcstep 124 124 17 "comment-language-probe.crexx" 48 3 34 "  say 'MESSAGE|' || request.error()"
+   .srcstep 123 123 17 "comment-language-probe.crexx" 48 21 28 "  say 'MESSAGE|' || request.error()"
+   .srcstep 120 120 33 "comment-language-probe.crexx" 48 21 28 "  say 'MESSAGE|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 17 120 120 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 17 120 120 0 "§this" ""
+   .srcstep 121 121 6 "lllanguage@rxfnsl.rxbin" 48 28 28 "  say 'MESSAGE|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 17 124 124 0 "§this" ""
+   assertinitialized r17
+   .srcstep 122 122 25 "lllanguage.crexx" 382 5 18 "    return _error"
+   linkattr1 r43,r17,1
+   .traceevent "V" 6 "R" "S" "r" 43 124 124 0 "_error" ""
+   scopy r42,r43
+   unlink r43
+l9128bexprend:
+   concat r42,"MESSAGE|",r42
+   .traceevent "O" 4 "R" "S" "r" 42 124 124 0 "" ""
+   say r42
+   .srcstep 125 125 17 "comment-language-probe.crexx" 49 3 26 "  tokens = request.tokens()"
+   .meta "comment-language-probe.main.tokens"="b" ".llcore..stream" r19
+   .traceevent "V" 6 "R" "O" "r" 17 125 125 0 "request" ""
+   load r16,1
+   settpcall r19,§lllanguage.request.tokens(),r16,r17,256
+   .traceevent "F" 4 "R" "O" "r" 19 125 125 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 125 125 0 "tokens" ""
+   .srcstep 127 127 17 "comment-language-probe.crexx" 50 3 31 "  if tokens.source() <> source then return 7"
+   .traceevent "V" 6 "R" "O" "r" 19 127 127 0 "tokens" ""
+   load r18,1
+   settpcall r43,§llcore.stream.source(),r18,r19,256
+   .traceevent "F" 4 "R" "X" "r" 43 127 127 0 "source" ""
+   .traceevent "V" 6 "R" "X" "r" 10 127 127 0 "source" ""
+   binne r43,r43,r10
+   .traceevent "O" 4 "R" "B" "r" 43 127 127 0 "" ""
+   brf l305iffalse,r43
+   .srcstep 128 128 17 "comment-language-probe.crexx" 50 32 36 "  if tokens.source() <> source then return 7"
+   .srcstep 126 126 17 "comment-language-probe.crexx" 50 37 45 "  if tokens.source() <> source then return 7"
+   ret 7
+l305iffalse:
+   .srcstep 194 194 17 "comment-language-probe.crexx" 51 3 5 "  do i = 0 to tokens.size() - 1"
+   .srcstep 129 129 17 "comment-language-probe.crexx" 51 6 11 "  do i = 0 to tokens.size() - 1"
+   load r21,0
+   .traceevent "L" 4 "R" "I" "r" 21 129 129 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 129 129 0 "i" ""
+   .srcstep 134 134 17 "comment-language-probe.crexx" 51 12 32 "  do i = 0 to tokens.size() - 1"
+   .srcstep 133 133 17 "comment-language-probe.crexx" 51 15 21 "  do i = 0 to tokens.size() - 1"
+   .srcstep 130 130 33 "comment-language-probe.crexx" 51 15 21 "  do i = 0 to tokens.size() - 1"
+   .traceevent "V" 6 "R" "O" "r" 19 130 130 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 130 130 0 "§this" ""
+   .srcstep 131 131 6 "llcore@rxfnsl.rxbin" 51 21 21 "  do i = 0 to tokens.size() - 1"
+   .traceevent "V" 6 "R" "O" "r" 19 0 0 0 "§this" ""
+   assertinitialized r19
+   .srcstep 132 132 25 "llcore.crexx" 198 5 17 "    return _size"
+   linkattr1 r43,r19,5
+   .traceevent "V" 6 "R" "I" "r" 43 0 0 0 "_size" ""
+   igetunlink r42,r43
+l8798bexprend:
+   isub r42,r42,1
+   .traceevent "O" 4 "R" "I" "r" 42 0 0 0 "" ""
+l306dostart:
+   .srcstep 134 134 17 "comment-language-probe.crexx" 51 12 32 "  do i = 0 to tokens.size() - 1"
+   igt r41,r21,r42
+   brt l306doend,r41
+   .srcstep 193 193 17 "comment-language-probe.crexx" 52 5 208 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 168 168 17 "comment-language-probe.crexx" 52 9 17 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 159 159 33 "comment-language-probe.crexx" 52 84 86 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 158 158 17 "comment-language-probe.crexx" 52 9 17 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 149 149 33 "comment-language-probe.crexx" 52 58 60 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 148 148 17 "comment-language-probe.crexx" 52 21 29 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 136 136 33 "comment-language-probe.crexx" 52 21 29 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 1 136 136 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 136 136 0 "§this" ""
+   .srcstep 143 143 33 "comment-language-probe.crexx" 52 47 53 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 142 142 17 "comment-language-probe.crexx" 52 39 40 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 137 137 33 "comment-language-probe.crexx" 52 40 46 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 137 137 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 137 137 0 "§this" ""
+   .srcstep 138 138 33 "comment-language-probe.crexx" 52 46 46 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 138 138 0 "i" ""
+   icopy r39,r21
+   .traceevent "A" 6 "R" "I" "r" 39 138 138 0 "position" ""
+   .srcstep 139 139 6 "llcore@rxfnsl.rxbin" 52 46 46 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 143 143 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 39 143 143 0 "position" ""
+   ilt r36,r39,0
+   .traceevent "O" 4 "R" "B" "r" 36 143 143 0 "" ""
+   brt l9294orend,r36
+   .traceevent "V" 6 "R" "I" "r" 39 143 143 0 "position" ""
+   linkattr1 r38,r19,5
+   .traceevent "V" 6 "R" "I" "r" 38 143 143 0 "_size" ""
+   igte r37,r39,r38
+   unlink r38
+   .traceevent "O" 4 "R" "B" "r" 37 143 143 0 "" ""
+   icopy r36,r37
+l9294orend:
+   .traceevent "O" 4 "R" "B" "r" 36 143 143 0 "" ""
+   brf l9293iffalse,r36
+   .srcstep 140 140 25 "llcore.crexx" 207 46 55 "    if position < 0 | position >= _size then return -1"
+   load r35,-1
+   .traceevent "L" 4 "R" "I" "r" 35 143 143 0 "" ""
+   icopy r45,r35
+   br l9283bexprend
+l9293iffalse:
+   .srcstep 141 141 25 "llcore.crexx" 208 5 30 "    return _kind[position + 1]"
+   linkattr1 r35,r19,4
+   .traceevent "V" 6 "R" "I" "r" 39 143 143 0 "position" ""
+   iadd r38,r39,1
+   .traceevent "O" 4 "R" "I" "r" 38 143 143 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 38 143 143 0 "_kind" ""
+   minlinkattr1 r36,r35,r38,0
+   .traceevent "V" 6 "R" "I" "r" 36 143 143 0 "_kind" ""
+   igetunlink r45,r36
+   unlink r35
+l9283bexprend:
+   .traceevent "A" 6 "R" "I" "r" 45 143 143 0 "__inline_scoped_arg_9137_0" ""
+   .srcstep 144 144 33 "comment-language-probe.crexx" 52 21 29 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 1 144 144 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 1 144 144 0 "§this" ""
+   .srcstep 145 145 33 "comment-language-probe.crexx" 52 29 29 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 45 145 145 0 "__inline_scoped_arg_9137_0" ""
+   icopy r40,r45
+   .traceevent "A" 6 "R" "I" "r" 40 145 145 0 "id" ""
+   .srcstep 146 146 6 "lllanguage@rxfnsl.rxbin" 52 29 29 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 1 149 149 0 "§this" ""
+   assertinitialized r1
+   .srcstep 147 147 25 "lllanguage.crexx" 165 5 26 "    return _tokens[id + 1]"
+   linkattr1 r36,r1,23
+   .traceevent "V" 6 "R" "I" "r" 40 149 149 0 "id" ""
+   iadd r39,r40,1
+   .traceevent "O" 4 "R" "I" "r" 39 149 149 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 39 149 149 0 "_tokens" ""
+   minlinkattr1 r38,r36,r39,0
+   .traceevent "V" 6 "R" "S" "r" 38 149 149 0 "_tokens" ""
+   scopy r35,r38
+   unlinkn r38,r36
+l9276bexprend:
+   concat r40,"TOKEN|",r35
+   .traceevent "O" 4 "R" "S" "r" 40 149 149 0 "" ""
+   concat r47,r40,"|"
+   .traceevent "O" 4 "R" "S" "r" 47 149 149 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 47 149 149 0 "__inline_lhs_328_333" ""
+   .srcstep 157 157 33 "comment-language-probe.crexx" 52 65 67 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "S" "r" 47 159 159 0 "__inline_lhs_328_333" ""
+   .srcstep 156 156 17 "comment-language-probe.crexx" 52 68 74 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 150 150 33 "comment-language-probe.crexx" 52 68 74 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 150 150 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 150 150 0 "§this" ""
+   .srcstep 151 151 33 "comment-language-probe.crexx" 52 74 74 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 151 151 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 151 151 0 "position" ""
+   .srcstep 152 152 6 "llcore@rxfnsl.rxbin" 52 74 74 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 159 159 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 21 159 159 0 "position" ""
+   linkattr1 r40,r19,5
+   .traceevent "V" 6 "R" "I" "r" 40 159 159 0 "_size" ""
+   igte r39,r21,r40
+   unlink r40
+   .traceevent "O" 4 "R" "B" "r" 39 159 159 0 "" ""
+   brf l10100iffalse,r39
+   .srcstep 153 153 25 "llcore.crexx" 211 31 47 "    if position >= _size then return _boundary"
+   linkattr1 r38,r19,1
+   .traceevent "V" 6 "R" "I" "r" 38 159 159 0 "_boundary" ""
+   igetunlink r36,r38
+   br l10090bexprend
+l10100iffalse:
+   .traceevent "V" 6 "R" "I" "r" 21 159 159 0 "position" ""
+   ilt r40,r21,0
+   .traceevent "O" 4 "R" "B" "r" 40 159 159 0 "" ""
+   brf l10106iffalse,r40
+   .srcstep 154 154 25 "llcore.crexx" 212 26 35 "    if position < 0 then return -1"
+   load r39,-1
+   .traceevent "L" 4 "R" "I" "r" 39 159 159 0 "" ""
+   icopy r36,r39
+   br l10090bexprend
+l10106iffalse:
+   .srcstep 155 155 25 "llcore.crexx" 213 5 31 "    return _start[position + 1]"
+   linkattr1 r38,r19,7
+   .traceevent "V" 6 "R" "I" "r" 21 159 159 0 "position" ""
+   iadd r40,r21,1
+   .traceevent "O" 4 "R" "I" "r" 40 159 159 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 40 159 159 0 "_start" ""
+   minlinkattr1 r39,r38,r40,0
+   .traceevent "V" 6 "R" "I" "r" 39 159 159 0 "_start" ""
+   igetunlink r36,r39
+   unlink r38
+l10090bexprend:
+   itos r36
+   concat r36,r47,r36
+   .traceevent "O" 4 "R" "S" "r" 36 159 159 0 "" ""
+   scopy r35,r36
+l9269bexprend:
+   concat r46,r35,"|"
+   .traceevent "O" 4 "R" "S" "r" 46 159 159 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 46 159 159 0 "__inline_lhs_335_342" ""
+   .srcstep 167 167 33 "comment-language-probe.crexx" 52 91 93 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "S" "r" 46 193 193 0 "__inline_lhs_335_342" ""
+   .srcstep 166 166 17 "comment-language-probe.crexx" 52 94 100 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 160 160 33 "comment-language-probe.crexx" 52 94 100 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 160 160 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 160 160 0 "§this" ""
+   .srcstep 161 161 33 "comment-language-probe.crexx" 52 100 100 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 161 161 0 "i" ""
+   iadd r40,r21,1
+   .traceevent "O" 4 "R" "I" "r" 40 161 161 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 40 161 161 0 "position" ""
+   .srcstep 162 162 6 "llcore@rxfnsl.rxbin" 52 100 100 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 193 193 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 40 193 193 0 "position" ""
+   ilt r39,r40,1
+   .traceevent "O" 4 "R" "B" "r" 39 193 193 0 "" ""
+   brf l10129iffalse,r39
+   .srcstep 163 163 25 "llcore.crexx" 216 26 34 "    if position < 1 then return 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 193 193 0 "" ""
+   icopy r36,r38
+   br l10117bexprend
+l10129iffalse:
+   .traceevent "V" 6 "R" "I" "r" 40 193 193 0 "position" ""
+   linkattr1 r39,r19,5
+   .traceevent "V" 6 "R" "I" "r" 39 193 193 0 "_size" ""
+   igt r38,r40,r39
+   unlink r39
+   .traceevent "O" 4 "R" "B" "r" 38 193 193 0 "" ""
+   brf l10135iffalse,r38
+   .srcstep 164 164 25 "llcore.crexx" 217 30 46 "    if position > _size then return _boundary"
+   linkattr1 r36,r19,1
+   .traceevent "V" 6 "R" "I" "r" 36 193 193 0 "_boundary" ""
+   unlinkbr r36,l10117bexprend
+l10135iffalse:
+   .srcstep 165 165 25 "llcore.crexx" 218 5 25 "    return _end[position]"
+   linkattr1 r38,r19,2
+   .traceevent "V" 6 "R" "I" "r" 40 193 193 0 "position" ""
+   .traceevent "C" 4 "R" "I" "r" 40 193 193 0 "_end" ""
+   minlinkattr1 r39,r38,r40,0
+   .traceevent "V" 6 "R" "I" "r" 39 193 193 0 "_end" ""
+   igetunlink r36,r39
+   unlink r38
+l10117bexprend:
+   itos r36
+   concat r40,r46,r36
+   .traceevent "O" 4 "R" "S" "r" 40 193 193 0 "" ""
+   scopy r36,r40
+l9266bexprend:
+   concat r36,r36,"|"
+   .traceevent "O" 4 "R" "S" "r" 36 193 193 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 10 193 193 0 "source" ""
+   .srcstep 175 175 17 "comment-language-probe.crexx" 52 148 154 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 169 169 33 "comment-language-probe.crexx" 52 148 154 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 169 169 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 169 169 0 "§this" ""
+   .srcstep 170 170 33 "comment-language-probe.crexx" 52 154 154 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 170 170 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 170 170 0 "position" ""
+   .srcstep 171 171 6 "llcore@rxfnsl.rxbin" 52 154 154 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 193 193 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   linkattr1 r32,r19,5
+   .traceevent "V" 6 "R" "I" "r" 32 193 193 0 "_size" ""
+   igte r31,r21,r32
+   unlink r32
+   .traceevent "O" 4 "R" "B" "r" 31 193 193 0 "" ""
+   brf l9349iffalse,r31
+   .srcstep 172 172 25 "llcore.crexx" 211 31 47 "    if position >= _size then return _boundary"
+   linkattr1 r30,r19,1
+   .traceevent "V" 6 "R" "I" "r" 30 193 193 0 "_boundary" ""
+   igetunlink r29,r30
+   br l9339bexprend
+l9349iffalse:
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   ilt r32,r21,0
+   .traceevent "O" 4 "R" "B" "r" 32 193 193 0 "" ""
+   brf l9355iffalse,r32
+   .srcstep 173 173 25 "llcore.crexx" 212 26 35 "    if position < 0 then return -1"
+   load r31,-1
+   .traceevent "L" 4 "R" "I" "r" 31 193 193 0 "" ""
+   icopy r29,r31
+   br l9339bexprend
+l9355iffalse:
+   .srcstep 174 174 25 "llcore.crexx" 213 5 31 "    return _start[position + 1]"
+   linkattr1 r30,r19,7
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   iadd r32,r21,1
+   .traceevent "O" 4 "R" "I" "r" 32 193 193 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 32 193 193 0 "_start" ""
+   minlinkattr1 r31,r30,r32,0
+   .traceevent "V" 6 "R" "I" "r" 31 193 193 0 "_start" ""
+   igetunlink r29,r31
+   unlink r30
+l9339bexprend:
+   iadd r11,r29,1
+   .traceevent "O" 4 "R" "I" "r" 11 193 193 0 "" ""
+   .srcstep 192 192 17 "comment-language-probe.crexx" 52 168 174 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 183 183 33 "comment-language-probe.crexx" 52 175 181 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 182 182 17 "comment-language-probe.crexx" 52 168 174 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 176 176 33 "comment-language-probe.crexx" 52 168 174 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 176 176 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 176 176 0 "§this" ""
+   .srcstep 177 177 33 "comment-language-probe.crexx" 52 174 174 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 177 177 0 "i" ""
+   iadd r29,r21,1
+   .traceevent "O" 4 "R" "I" "r" 29 177 177 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 177 177 0 "position" ""
+   .srcstep 178 178 6 "llcore@rxfnsl.rxbin" 52 174 174 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 183 183 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 29 183 183 0 "position" ""
+   ilt r28,r29,1
+   .traceevent "O" 4 "R" "B" "r" 28 183 183 0 "" ""
+   brf l9407iffalse,r28
+   .srcstep 179 179 25 "llcore.crexx" 216 26 34 "    if position < 1 then return 0"
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 183 183 0 "" ""
+   icopy r48,r26
+   br l9395bexprend
+l9407iffalse:
+   .traceevent "V" 6 "R" "I" "r" 29 183 183 0 "position" ""
+   linkattr1 r28,r19,5
+   .traceevent "V" 6 "R" "I" "r" 28 183 183 0 "_size" ""
+   igt r26,r29,r28
+   unlink r28
+   .traceevent "O" 4 "R" "B" "r" 26 183 183 0 "" ""
+   brf l9413iffalse,r26
+   .srcstep 180 180 25 "llcore.crexx" 217 30 46 "    if position > _size then return _boundary"
+   linkattr1 r25,r19,1
+   .traceevent "V" 6 "R" "I" "r" 25 183 183 0 "_boundary" ""
+   igetunlink r48,r25
+   br l9395bexprend
+l9413iffalse:
+   .srcstep 181 181 25 "llcore.crexx" 218 5 25 "    return _end[position]"
+   linkattr1 r26,r19,2
+   .traceevent "V" 6 "R" "I" "r" 29 183 183 0 "position" ""
+   .traceevent "C" 4 "R" "I" "r" 29 183 183 0 "_end" ""
+   minlinkattr1 r28,r26,r29,0
+   .traceevent "V" 6 "R" "I" "r" 28 183 183 0 "_end" ""
+   igetunlink r48,r28
+   unlink r26
+l9395bexprend:
+   .traceevent "A" 6 "R" "I" "r" 48 183 183 0 "__inline_lhs_9366_362" ""
+   .srcstep 191 191 33 "comment-language-probe.crexx" 52 189 190 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 48 193 193 0 "__inline_lhs_9366_362" ""
+   .srcstep 190 190 17 "comment-language-probe.crexx" 52 191 197 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .srcstep 184 184 33 "comment-language-probe.crexx" 52 191 197 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 184 184 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 19 184 184 0 "§this" ""
+   .srcstep 185 185 33 "comment-language-probe.crexx" 52 197 197 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "I" "r" 21 185 185 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 21 185 185 0 "position" ""
+   .srcstep 186 186 6 "llcore@rxfnsl.rxbin" 52 197 197 "    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))"
+   .traceevent "V" 6 "R" "O" "r" 19 193 193 0 "§this" ""
+   assertinitialized r19
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   linkattr1 r29,r19,5
+   .traceevent "V" 6 "R" "I" "r" 29 193 193 0 "_size" ""
+   igte r28,r21,r29
+   unlink r29
+   .traceevent "O" 4 "R" "B" "r" 28 193 193 0 "" ""
+   brf l10154iffalse,r28
+   .srcstep 187 187 25 "llcore.crexx" 211 31 47 "    if position >= _size then return _boundary"
+   linkattr1 r26,r19,1
+   .traceevent "V" 6 "R" "I" "r" 26 193 193 0 "_boundary" ""
+   igetunlink r25,r26
+   br l10144bexprend
+l10154iffalse:
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   ilt r29,r21,0
+   .traceevent "O" 4 "R" "B" "r" 29 193 193 0 "" ""
+   brf l10160iffalse,r29
+   .srcstep 188 188 25 "llcore.crexx" 212 26 35 "    if position < 0 then return -1"
+   load r28,-1
+   .traceevent "L" 4 "R" "I" "r" 28 193 193 0 "" ""
+   icopy r25,r28
+   br l10144bexprend
+l10160iffalse:
+   .srcstep 189 189 25 "llcore.crexx" 213 5 31 "    return _start[position + 1]"
+   linkattr1 r26,r19,7
+   .traceevent "V" 6 "R" "I" "r" 21 193 193 0 "position" ""
+   iadd r29,r21,1
+   .traceevent "O" 4 "R" "I" "r" 29 193 193 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 29 193 193 0 "_start" ""
+   minlinkattr1 r28,r26,r29,0
+   .traceevent "V" 6 "R" "I" "r" 28 193 193 0 "_start" ""
+   igetunlink r25,r28
+   unlink r26
+l10144bexprend:
+   isub r25,r48,r25
+   .traceevent "O" 4 "R" "I" "r" 25 193 193 0 "" ""
+   icopy r18,r25
+l9393bexprend:
+   load r9,3
+   settp r10,256
+   settpswapcall r35,rxfnsb.binsubstr(),r9,r18,256,r12
+   swap r18,r12
+   .traceevent "F" 4 "R" "X" "r" 35 193 193 0 "binsubstr" ""
+   load r34,1
+   settpcall r16,rxfnsb.bin2x(),r34,r35,256
+   .traceevent "F" 4 "R" "S" "r" 16 193 193 0 "bin2x" ""
+   concat r36,r36,r16
+   .traceevent "O" 4 "R" "S" "r" 36 193 193 0 "" ""
+   say r36
+l306doinc:
+   .srcstep 135 135 17 "comment-language-probe.crexx" 51 6 7 "  do i = 0 to tokens.size() - 1"
+   inc r21
+   .srcstep 195 195 17 "comment-language-probe.crexx" 53 3 6 "  end"
+   br l306dostart
+l306doend:
+   .srcstep 209 209 17 "comment-language-probe.crexx" 54 3 16 "  if status = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 24 209 209 0 "status" ""
+   ieq r43,r24,0
+   .traceevent "O" 4 "R" "B" "r" 43 209 209 0 "" ""
+   brf l406iffalse,r43
+   .srcstep 210 210 17 "comment-language-probe.crexx" 54 17 21 "  if status = 0 then do"
+   .srcstep 196 196 17 "comment-language-probe.crexx" 55 5 24 "    tree = request.tree()"
+   .meta "comment-language-probe.main.tree"="b" ".llcore..tree" r42
+   .traceevent "V" 6 "R" "O" "r" 17 196 196 0 "request" ""
+   load r16,1
+   settpcall r42,§lllanguage.request.tree(),r16,r17,256
+   .traceevent "F" 4 "R" "O" "r" 42 196 196 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 42 196 196 0 "tree" ""
+   .srcstep 198 198 17 "comment-language-probe.crexx" 56 5 31 "    if tree.source() <> source then return 7"
+   .traceevent "V" 6 "R" "O" "r" 42 198 198 0 "tree" ""
+   load r41,1
+   settpcall r40,§llcore.tree.source(),r41,r42,256
+   .traceevent "F" 4 "R" "X" "r" 40 198 198 0 "source" ""
+   .traceevent "V" 6 "R" "X" "r" 10 198 198 0 "source" ""
+   binne r41,r40,r10
+   .traceevent "O" 4 "R" "B" "r" 41 198 198 0 "" ""
+   brf l386iffalse,r41
+   .srcstep 199 199 17 "comment-language-probe.crexx" 56 32 36 "    if tree.source() <> source then return 7"
+   .srcstep 197 197 17 "comment-language-probe.crexx" 56 37 45 "    if tree.source() <> source then return 7"
+   ret 7
+l386iffalse:
+   .srcstep 200 200 17 "comment-language-probe.crexx" 57 5 39 "    say 'TREE_VALID|' || tree.validate()"
+   .traceevent "V" 6 "R" "O" "r" 42 200 200 0 "tree" ""
+   load r41,1
+   settpcall r40,§llcore.tree.validate(),r41,r42,256
+   itos r40
+   .traceevent "F" 4 "R" "S" "r" 40 200 200 0 "validate" ""
+   concat r41,"TREE_VALID|",r40
+   .traceevent "O" 4 "R" "S" "r" 41 200 200 0 "" ""
+   say r41
+   endlife r42
+   .meta "comment-language-probe.main.tree"
+   br l406ifend
+   .srcstep 211 211 17 "comment-language-probe.crexx" 57 39 40 "    say 'TREE_VALID|' || tree.validate()"
+l406iffalse:
+   .srcstep 208 208 17 "comment-language-probe.crexx" 59 8 87 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .traceevent "V" 6 "R" "X" "r" 10 208 208 0 "source" ""
+   .srcstep 203 203 17 "comment-language-probe.crexx" 59 40 47 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .srcstep 201 201 33 "comment-language-probe.crexx" 59 40 47 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 17 201 201 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 17 201 201 0 "§this" ""
+   .srcstep 202 202 25 "lllanguage.crexx" 380 5 19 "    return _offset"
+   linkattr1 r42,r17,7
+   .traceevent "V" 6 "R" "I" "r" 42 208 208 0 "_offset" ""
+   igetunlink r41,r42
+l8807bexprend:
+   load r12,"COMMENT_TARGET"
+   .traceevent "L" 4 "R" "S" "r" 12 208 208 0 "" ""
+   .srcstep 207 207 17 "comment-language-probe.crexx" 59 74 81 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .srcstep 204 204 33 "comment-language-probe.crexx" 59 74 81 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 17 204 204 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 17 204 204 0 "§this" ""
+   .srcstep 205 205 6 "lllanguage@rxfnsl.rxbin" 59 81 81 "  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())"
+   .traceevent "V" 6 "R" "O" "r" 17 208 208 0 "§this" ""
+   assertinitialized r17
+   .srcstep 206 206 25 "lllanguage.crexx" 382 5 18 "    return _error"
+   linkattr1 r40,r17,1
+   .traceevent "V" 6 "R" "S" "r" 40 208 208 0 "_error" ""
+   scopy r39,r40
+   unlink r40
+l9910bexprend:
+   load r9,5
+   settp r10,256
+   swap r11,r41
+   settp r12,768
+   settp r39,768
+   swap r13,r39
+   settpcall r38,llsource.diagnostic(),r9,r14,512
+   swap r41,r11
+   swap r39,r13
+   .traceevent "F" 4 "R" "S" "r" 38 208 208 0 "diagnostic" ""
+   say r38
+l406ifend:
+   .srcstep 212 212 17 "comment-language-probe.crexx" 60 3 16 "  return status"
+   .traceevent "V" 6 "R" "I" "r" 24 212 212 0 "status" ""
+   ret r24
+   .meta "comment-language-probe.main.argv"
+   .meta "comment-language-probe.main.i"
+   .meta "comment-language-probe.main.language"
+   .meta "comment-language-probe.main.limits"
+   .meta "comment-language-probe.main.node"
+   .meta "comment-language-probe.main.ok"
+   .meta "comment-language-probe.main.policies"
+   .meta "comment-language-probe.main.request"
+   .meta "comment-language-probe.main.shielded"
+   .meta "comment-language-probe.main.source"
+   .meta "comment-language-probe.main.status"
+   .meta "comment-language-probe.main.tokens"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/optimized/earley-custom-rxas/levell_settings@levell_settings.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "levell_settings"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.binsubstr() .expose=rxfnsb.binsubstr
+   .meta "rxfnsb.binsubstr"="b" ".binary" rxfnsb.binsubstr() "data=.binary,start=.int,?count=.int"
+   .meta "rxfnsb.binsubstr"=".autoload" "library"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.bin2x() .expose=rxfnsb.bin2x
+   .meta "rxfnsb.bin2x"="b" ".string" rxfnsb.bin2x() "data=.binary"
+   .meta "rxfnsb.bin2x"=".autoload" "library"
+
+/* Imported Declaration from file: llsource@rxfnsl.rxbin */
+
+llsource.diagnostic() .expose=llsource.diagnostic
+   .meta "llsource.diagnostic"="b" ".string" llsource.diagnostic() "source=.binary,offset=.int,code=.string,message=.string,?display=.string"
+   .meta "llsource.diagnostic"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lllimits@rxfnsl.rxbin */
+
+§lllimits.policy.§factory() .expose=lllimits.policy.§factory
+   .meta "lllimits.policy.§factory"="b" ".lllimits..policy" §lllimits.policy.§factory() ""
+   .meta "lllimits.policy.§factory"=".autoload" "rxfnsl"
+
+§lllimits.policy.set() .expose=lllimits.policy.set
+   .meta "lllimits.policy.set"="b" ".int" §lllimits.policy.set() "name=.string,value=.int"
+   .meta "lllimits.policy.set"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llrecover@rxfnsl.rxbin */
+
+§llrecover.request.§factory() .expose=llrecover.request.§factory
+   .meta "llrecover.request.§factory"="b" ".llrecover..request" §llrecover.request.§factory() "language=.lllanguage..definition,source=.binary,?errors=.int,?limits=.lllimits..policy"
+   .meta "llrecover.request.§factory"=".autoload" "rxfnsl"
+
+§llrecover.request.run() .expose=llrecover.request.run
+   .meta "llrecover.request.run"="b" ".int" §llrecover.request.run() ""
+   .meta "llrecover.request.run"=".autoload" "rxfnsl"
+
+§llrecover.request.tree() .expose=llrecover.request.tree
+   .meta "llrecover.request.tree"="b" ".llcore..tree" §llrecover.request.tree() ""
+   .meta "llrecover.request.tree"=".autoload" "rxfnsl"
+
+§llrecover.request.order() .expose=llrecover.request.order
+   .meta "llrecover.request.order"="b" ".void" §llrecover.request.order() ""
+   .meta "llrecover.request.order"=".autoload" "rxfnsl"
+
+§llrecover.request.errors() .expose=llrecover.request.errors
+   .meta "llrecover.request.errors"="b" ".int" §llrecover.request.errors() ""
+   .meta "llrecover.request.errors"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lltree@rxfnsl.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl"
+
+§lltree.view.name() .expose=lltree.view.name
+   .meta "lltree.view.name"="b" ".string" §lltree.view.name() "node=.int"
+   .meta "lltree.view.name"=".autoload" "rxfnsl"
+
+§lltree.view.text() .expose=lltree.view.text
+   .meta "lltree.view.text"="b" ".string" §lltree.view.text() "node=.int"
+   .meta "lltree.view.text"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.tree.validate() .expose=llcore.tree.validate
+   .meta "llcore.tree.validate"="b" ".int" §llcore.tree.validate() ""
+   .meta "llcore.tree.validate"=".autoload" "rxfnsl"
+
+§llcore.tree.source() .expose=llcore.tree.source
+   .meta "llcore.tree.source"="b" ".binary" §llcore.tree.source() ""
+   .meta "llcore.tree.source"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl"
+
+§lllanguage.request.tokens() .expose=lllanguage.request.tokens
+   .meta "lllanguage.request.tokens"="b" ".llcore..stream" §lllanguage.request.tokens() ""
+   .meta "lllanguage.request.tokens"=".autoload" "rxfnsl"
+
+§lllanguage.request.tree() .expose=lllanguage.request.tree
+   .meta "lllanguage.request.tree"="b" ".llcore..tree" §lllanguage.request.tree() ""
+   .meta "lllanguage.request.tree"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.definition.comments() .expose=lllanguage.definition.comments
+   .meta "lllanguage.definition.comments"="b" ".llcomments..rules" §lllanguage.definition.comments() ""
+   .meta "lllanguage.definition.comments"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.stream.source() .expose=llcore.stream.source
+   .meta "llcore.stream.source"="b" ".binary" §llcore.stream.source() ""
+   .meta "llcore.stream.source"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcomments@rxfnsl.rxbin */
+
+§llcomments.rules.size() .expose=llcomments.rules.size
+   .meta "llcomments.rules.size"="b" ".int" §llcomments.rules.size() ""
+   .meta "llcomments.rules.size"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"

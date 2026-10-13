@@ -1,0 +1,183 @@
+/* Authoritative Level L specification syntax. Shared lowering is Level B. */
+options levell
+namespace llsyntax
+identifier: token = 1
+integer: token = 2
+string: token = 3
+codepoint: token = 4
+colon: token = 5
+equals: token = 6
+bar: token = 7
+lparen: token = 8
+rparen: token = 9
+question: token = 10
+star: token = 11
+plus: token = 12
+bang: token = 13
+amp: token = 14
+lbrace: token = 15
+rbrace: token = 16
+comma: token = 17
+kw.options: token = 18
+kw.levell: token = 19
+kw.namespace: token = 20
+kw.token: token = 21
+kw.diagnostic: token = 22
+kw.lexer: token = 23
+kw.input: token = 24
+kw.comments: token = 25
+kw.nested: token = 26
+kw.parser: token = 27
+kw.semantics: token = 28
+kw.start: token = 29
+kw.charset: token = 30
+kw.pattern: token = 31
+kw.rule: token = 32
+kw.then: token = 33
+kw.emit: token = 34
+kw.skip: token = 35
+kw.error: token = 36
+kw.tokenstage: token = 37
+kw.transform: token = 38
+kw.stage: token = 39
+kw.state: token = 40
+kw.take: token = 41
+kw.text: token = 42
+kw.unless: token = 43
+kw.next: token = 44
+kw.copy: token = 45
+kw.tree: token = 46
+kw.kind: token = 47
+kw.arity: token = 48
+kw.to: token = 49
+kw.except: token = 50
+kw.scalar: token = 51
+kw.backend: token = 52
+kw.recovery: token = 53
+kw.sync: token = 54
+kw.operators: token = 55
+kw.atom: token = 56
+kw.group: token = 57
+kw.infix: token = 58
+kw.prefix: token = 59
+kw.precedence: token = 61
+kw.region: token = 62
+kw.using: token = 63
+kw.open: token = 64
+kw.close: token = 65
+kw.as: token = 66
+declarationname: token = 60
+notes: comments nested '/*' '*/'
+scan: lexer input utf8bytes
+  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  digit: charset = U+0030 to U+0039
+  hex: charset = digit | U+0041 to U+0046 | U+0061 to U+0066
+  whitespace: charset = U+0009 | U+000A | U+000D | U+0020
+  singlebody: charset = U+0000 to U+0026 | U+0028 to U+00FF
+  doublebody: charset = U+0000 to U+0021 | U+0023 to U+00FF
+  codepoint.rule: rule = ('U+' | 'u+') hex+ then emit codepoint
+  identifier.rule: rule = letter (letter | digit | '.')* then emit identifier
+  integer.rule: rule = digit+ then emit integer
+  string.rule: rule = "'" (singlebody | "''")* "'" | '"' (doublebody | '""')* '"' then emit string
+  whitespace.rule: rule = whitespace+ then skip
+  colon.rule: rule = ':' then emit colon
+  equals.rule: rule = '=' then emit equals
+  bar.rule: rule = '|' then emit bar
+  lparen.rule: rule = '(' then emit lparen
+  rparen.rule: rule = ')' then emit rparen
+  question.rule: rule = '?' then emit question
+  star.rule: rule = '*' then emit star
+  plus.rule: rule = '+' then emit plus
+  bang.rule: rule = '!' then emit bang
+  amp.rule: rule = '&' then emit amp
+  lbrace.rule: rule = '{' then emit lbrace
+  rbrace.rule: rule = '}' then emit rbrace
+  comma.rule: rule = ',' then emit comma
+words: tokenstage start 1
+classify.declaration: transform stage words state 1 take identifier colon emit declarationname next 1
+classify.as: transform stage words state 1 take identifier text 'AS' emit kw.as next 1
+classify.options: transform stage words state 1 take identifier text 'OPTIONS' emit kw.options next 1
+classify.levell: transform stage words state 1 take identifier text 'LEVELL' emit kw.levell next 1
+classify.namespace: transform stage words state 1 take identifier text 'NAMESPACE' emit kw.namespace next 1
+classify.token: transform stage words state 1 take identifier text 'TOKEN' emit kw.token next 1
+classify.diagnostic: transform stage words state 1 take identifier text 'DIAGNOSTIC' emit kw.diagnostic next 1
+classify.lexer: transform stage words state 1 take identifier text 'LEXER' emit kw.lexer next 1
+classify.input: transform stage words state 1 take identifier text 'INPUT' emit kw.input next 1
+classify.comments: transform stage words state 1 take identifier text 'COMMENTS' emit kw.comments next 1
+classify.nested: transform stage words state 1 take identifier text 'NESTED' emit kw.nested next 1
+classify.parser: transform stage words state 1 take identifier text 'PARSER' emit kw.parser next 1
+classify.semantics: transform stage words state 1 take identifier text 'SEMANTICS' emit kw.semantics next 1
+classify.start: transform stage words state 1 take identifier text 'START' emit kw.start next 1
+classify.charset: transform stage words state 1 take identifier text 'CHARSET' emit kw.charset next 1
+classify.pattern: transform stage words state 1 take identifier text 'PATTERN' emit kw.pattern next 1
+classify.rule: transform stage words state 1 take identifier text 'RULE' emit kw.rule next 1
+classify.then: transform stage words state 1 take identifier text 'THEN' emit kw.then next 1
+classify.emit: transform stage words state 1 take identifier text 'EMIT' emit kw.emit next 1
+classify.skip: transform stage words state 1 take identifier text 'SKIP' emit kw.skip next 1
+classify.error: transform stage words state 1 take identifier text 'ERROR' emit kw.error next 1
+classify.tokenstage: transform stage words state 1 take identifier text 'TOKENSTAGE' emit kw.tokenstage next 1
+classify.transform: transform stage words state 1 take identifier text 'TRANSFORM' emit kw.transform next 1
+classify.stage: transform stage words state 1 take identifier text 'STAGE' emit kw.stage next 1
+classify.state: transform stage words state 1 take identifier text 'STATE' emit kw.state next 1
+classify.take: transform stage words state 1 take identifier text 'TAKE' emit kw.take next 1
+classify.text: transform stage words state 1 take identifier text 'TEXT' emit kw.text next 1
+classify.unless: transform stage words state 1 take identifier text 'UNLESS' emit kw.unless next 1
+classify.next: transform stage words state 1 take identifier text 'NEXT' emit kw.next next 1
+classify.copy: transform stage words state 1 take identifier text 'COPY' emit kw.copy next 1
+classify.tree: transform stage words state 1 take identifier text 'TREE' emit kw.tree next 1
+classify.kind: transform stage words state 1 take identifier text 'KIND' emit kw.kind next 1
+classify.arity: transform stage words state 1 take identifier text 'ARITY' emit kw.arity next 1
+classify.to: transform stage words state 1 take identifier text 'TO' emit kw.to next 1
+classify.except: transform stage words state 1 take identifier text 'EXCEPT' emit kw.except next 1
+classify.scalar: transform stage words state 1 take identifier text 'SCALAR' emit kw.scalar next 1
+classify.backend: transform stage words state 1 take identifier text 'BACKEND' emit kw.backend next 1
+classify.recovery: transform stage words state 1 take identifier text 'RECOVERY' emit kw.recovery next 1
+classify.sync: transform stage words state 1 take identifier text 'SYNC' emit kw.sync next 1
+classify.operators: transform stage words state 1 take identifier text 'OPERATORS' emit kw.operators next 1
+classify.atom: transform stage words state 1 take identifier text 'ATOM' emit kw.atom next 1
+classify.group: transform stage words state 1 take identifier text 'GROUP' emit kw.group next 1
+classify.infix: transform stage words state 1 take identifier text 'INFIX' emit kw.infix next 1
+classify.prefix: transform stage words state 1 take identifier text 'PREFIX' emit kw.prefix next 1
+classify.precedence: transform stage words state 1 take identifier text 'PRECEDENCE' emit kw.precedence next 1
+classify.region: transform stage words state 1 take identifier text 'REGION' emit kw.region next 1
+classify.using: transform stage words state 1 take identifier text 'USING' emit kw.using next 1
+classify.open: transform stage words state 1 take identifier text 'OPEN' emit kw.open next 1
+classify.close: transform stage words state 1 take identifier text 'CLOSE' emit kw.close next 1
+parse: parser semantics contextfree input tokens start document
+  document: rule = header declaration+
+  header: rule = kw.options kw.levell kw.namespace name
+  declaration: rule = declarationname body
+  body: rule = token.declaration | diagnostic.declaration | lexer.declaration | comments.declaration | parser.declaration | charset.declaration | pattern.declaration | rule.declaration | stage.declaration | transform.declaration | tree.declaration | recovery.declaration | operators.declaration | infix.declaration | prefix.declaration | region.declaration
+  token.declaration: rule = kw.token (equals integer)?
+  diagnostic.declaration: rule = kw.diagnostic (kw.rule name)? equals string
+  recovery.declaration: rule = kw.recovery kw.rule name kw.sync name
+  lexer.declaration: rule = kw.lexer (kw.input name)? (kw.backend name)?
+  comments.declaration: rule = kw.comments name string string? comment.qualifier*
+  comment.qualifier: rule = name name
+  parser.declaration: rule = kw.parser parser.qualifier*
+  parser.qualifier: rule = kw.semantics name | kw.input name | kw.start name | kw.backend name
+  charset.declaration: rule = kw.charset equals set.expression
+  pattern.declaration: rule = kw.pattern equals expression
+  rule.declaration: rule = kw.rule equals expression (kw.then action)?
+  action: rule = kw.emit name | kw.skip | kw.error name
+  stage.declaration: rule = kw.tokenstage kw.start integer
+  transform.declaration: rule = kw.transform kw.stage name kw.state integer kw.take take.name take.name? (kw.text string)? (kw.unless kw.next name)? kw.emit name kw.next integer
+  tree.declaration: rule = kw.tree kw.rule name kw.kind integer kw.arity integer
+  operators.declaration: rule = kw.operators kw.atom name kw.group name name
+  infix.declaration: rule = kw.infix name name kw.precedence integer name
+  prefix.declaration: rule = kw.prefix name name
+  region.declaration: rule = kw.region kw.token name kw.using name kw.open name kw.close name
+  expression: rule = sequence (bar sequence)*
+  sequence: rule = term+
+  term: rule = bang term | amp term | atom suffix? capture?
+  capture: rule = kw.as name
+  atom: rule = reference | string | codepoint | lparen expression rparen
+  suffix: rule = star | plus | question | lbrace integer (comma integer?)? rbrace
+  set.expression: rule = set.difference (bar set.difference)*
+  set.difference: rule = set.atom (kw.except set.atom)*
+  set.atom: rule = scalar.value (kw.to scalar.value)? | set.reference | kw.scalar | lparen set.expression rparen
+  scalar.value: rule = codepoint | string
+  name: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.as
+  reference: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close
+  set.reference: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close
+  take.name: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close

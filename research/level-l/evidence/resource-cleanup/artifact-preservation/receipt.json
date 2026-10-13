@@ -1,0 +1,381 @@
+{
+  "records": [
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/lr1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "lr1-generate",
+      "sha256": "9aaa02f4da2c0bb7c3c79727309672f2d018bc379b79fabcf4a684878bea7683",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/ll1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "ll1-generate",
+      "sha256": "e8156f391971bdca73446dd6c2ee2ce36c8fd3d9db3b25bebc80e4d1a08d75ca",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/packrat/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "packrat-generate",
+      "sha256": "03198da284763dc4810fe2d6755f76c82638224e5d8451924c706a1534298c99",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/earley/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "earley-generate",
+      "sha256": "faea8914e9e4bb13faaada677af27185f5bc6b364480f01e42167b62b0340269",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/pratt/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "pratt-generate",
+      "sha256": "68aa92964042bd264e1b020a66a0f9810530fc9c98bbd0515c2bd08e79859e8a",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/regional/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "regional-generate",
+      "sha256": "009e507faced08809ff6e3ba891aaa724d91a1f9d8e28abb22f8cf9d1b581444",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates/predicate/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates/receipt.json",
+      "name": "predicate-generate",
+      "sha256": "dceaef3a00c044949bceaea4b4b65c101ba8a7c99def5113f9357ae296a2d9d3",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/lr1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "lr1-rxas-generate",
+      "sha256": "d82821ca6c199a14ee5d6ae3d504eab4e8913518df5d71ec38f8b8ef3c6325b8",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/lr1/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "lr1-source-generate",
+      "sha256": "294f6220b83dcfaf4222da08f44215b57e7d0e402064947865c3c3012325a2a3",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/ll1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "ll1-rxas-generate",
+      "sha256": "76446c2dfefb63979fc46bfa8cf8027a7f43794bf725bd94d5dd2c4c803983a5",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/ll1/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "ll1-source-generate",
+      "sha256": "58761a081aa8391eda5002b8bdfbe1a1fef7e5ee88b08173bd6cda7be374f5ac",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/packrat/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "packrat-rxas-generate",
+      "sha256": "7a3751807b5fcbf8e750f50244ab3fd17eb7b43bfbfef5747fc1bedfa3a45900",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/packrat/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "packrat-source-generate",
+      "sha256": "8e0f3c34d9d49afe3328a009f833e66fc25263edfa51d3bffb18178364f37409",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/earley/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "earley-rxas-generate",
+      "sha256": "ce1f50c68a24927d8f4895a074c8d2bb89fcba10d0169348acfbd112230d725c",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/earley/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery/receipt.json",
+      "name": "earley-source-generate",
+      "sha256": "32fc09586ce6313d57be877a195f049dff804d2e534b2e18e2015794392e2da6",
+      "byte_identical": true
+    },
+    {
+      "mode": "opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/unicode-surface/lexer/property.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/unicode-surface/lexer/receipt.json",
+      "name": "generate",
+      "sha256": "f97c8f639db1b50b999bd029c3d4b971a94069aed15cba634d83c2be46f28fed",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/lr1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "lr1-generate",
+      "sha256": "9aaa02f4da2c0bb7c3c79727309672f2d018bc379b79fabcf4a684878bea7683",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/ll1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "ll1-generate",
+      "sha256": "e8156f391971bdca73446dd6c2ee2ce36c8fd3d9db3b25bebc80e4d1a08d75ca",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/packrat/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "packrat-generate",
+      "sha256": "03198da284763dc4810fe2d6755f76c82638224e5d8451924c706a1534298c99",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/earley/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "earley-generate",
+      "sha256": "faea8914e9e4bb13faaada677af27185f5bc6b364480f01e42167b62b0340269",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/pratt/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "pratt-generate",
+      "sha256": "68aa92964042bd264e1b020a66a0f9810530fc9c98bbd0515c2bd08e79859e8a",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/regional/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "regional-generate",
+      "sha256": "009e507faced08809ff6e3ba891aaa724d91a1f9d8e28abb22f8cf9d1b581444",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/predicate/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-coordinates-noopt/receipt.json",
+      "name": "predicate-generate",
+      "sha256": "dceaef3a00c044949bceaea4b4b65c101ba8a7c99def5113f9357ae296a2d9d3",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/lr1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "lr1-rxas-generate",
+      "sha256": "d82821ca6c199a14ee5d6ae3d504eab4e8913518df5d71ec38f8b8ef3c6325b8",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/lr1/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "lr1-source-generate",
+      "sha256": "294f6220b83dcfaf4222da08f44215b57e7d0e402064947865c3c3012325a2a3",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/ll1/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "ll1-rxas-generate",
+      "sha256": "76446c2dfefb63979fc46bfa8cf8027a7f43794bf725bd94d5dd2c4c803983a5",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/ll1/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "ll1-source-generate",
+      "sha256": "58761a081aa8391eda5002b8bdfbe1a1fef7e5ee88b08173bd6cda7be374f5ac",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/packrat/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "packrat-rxas-generate",
+      "sha256": "7a3751807b5fcbf8e750f50244ab3fd17eb7b43bfbfef5747fc1bedfa3a45900",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/packrat/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "packrat-source-generate",
+      "sha256": "8e0f3c34d9d49afe3328a009f833e66fc25263edfa51d3bffb18178364f37409",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/earley/input.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "earley-rxas-generate",
+      "sha256": "ce1f50c68a24927d8f4895a074c8d2bb89fcba10d0169348acfbd112230d725c",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/earley/input.levell"
+      ],
+      "previous_receipt": "research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/receipt.json",
+      "name": "earley-source-generate",
+      "sha256": "32fc09586ce6313d57be877a195f049dff804d2e534b2e18e2015794392e2da6",
+      "byte_identical": true
+    },
+    {
+      "mode": "noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/surface-noopt-20261012/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/unicode-surface/lexer-noopt/property.levell",
+        "--rxas"
+      ],
+      "previous_receipt": "research/level-l/evidence/unicode-surface/lexer-noopt/receipt.json",
+      "name": "generate",
+      "sha256": "f97c8f639db1b50b999bd029c3d4b971a94069aed15cba634d83c2be46f28fed",
+      "byte_identical": true
+    }
+  ],
+  "scope": "Explicit seed-array reset removes shadowing warnings; retained successful coordinate/recovery/property generation is byte-identical. Runtime parser/scanner/recovery source is unchanged."
+}

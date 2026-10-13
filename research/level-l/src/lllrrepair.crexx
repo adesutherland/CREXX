@@ -1,0 +1,273 @@
+/* cREXX License (MIT). Bounded CPCT+-style local LR repair experiment.
+ * Mechanisms from Diekmann/Tratt, ECOOP 2020: unit insert/delete cost,
+ * zero-cost reductions and single shifts, all minimum-cost local successes,
+ * then rank by continued parsing. This clarity-first implementation does
+ * not claim correspondence to their optimized Rust implementation.
+ */
+options levell
+namespace lllrrepair expose request
+import rxfnsb
+import llcore
+import llcfg
+import lllr
+
+/** Repair the FIRST syntax error; preserve all untouched input after it.
+ * Status 0 clean, 1 local repairs available, 2 resource limit, 3 invalid,
+ * 4 no local repair within the stated cost bound. complete() additionally
+ * tells whether the selected repair parses the entire remaining input.
+ * edited() contains token IDs, not replacement source text for a token lexer.
+ * source() always owns the ORIGINAL source bytes. origin(i) maps selected
+ * edited tokens to original token numbers; negatives encode insertion sites.
+ */
+request: class
+  _tables = .lllr..tables
+  _cfg = .llcfg..productions
+  _input = .llcore..stream
+  _bound = .int
+  _horizon = .int
+  _preview = .int
+  _fuel = .int
+  _cells = .int
+  _work = .int
+  _ran = .int
+  _status = .int
+  _error = .string
+  _where = .int
+  _cost = .int
+  _best = .int
+  _bestscore = .int
+  _complete = .int
+  _selected = .binary
+  _selectedmap = .string
+  _prefix = .binary
+  _prefixmap = .string
+  _stacksize = .int
+  _state = .int[]
+  _parent = .int[]
+  _depth = .int[]
+  _stackkey = .string[]
+  _size = .int
+  _top = .int[]
+  _at = .int[]
+  _price = .int[]
+  _streak = .int[]
+  _previous = .string[]
+  _script = .string[]
+  _emitted = .binary[]
+  _map = .string[]
+  _key = .string[]
+  _solutions = .int[]
+  _score = .int[]
+  _done = .int[]
+  _alphabet = .int[]
+  *: factory
+    arg tables = .lllr..tables, input = .llcore..stream, bound = 3, horizon = 3, preview = 250, fuel = 1000000, cells = 50000
+    _tables = tables; _input = input; _bound = bound; _horizon = horizon; _preview = preview; _fuel = fuel; _cells = cells
+    _work = 0; _ran = 0; _status = 0; _error = ''; _where = 0; _cost = -1
+    _best = 0; _bestscore = -1; _complete = 0; _stacksize = 0; _size = 0
+    _selected = '' as .binary; _selectedmap = ''; _prefix = '' as .binary; _prefixmap = ''
+    return
+  tick: method = .int
+    _work = _work + 1
+    if _status = 2 then return 0
+    if _work > _fuel then do
+      _status = 2; _error = 'LR repair work budget exhausted; minimum repair set incomplete'; return 0
+    end
+    return 1
+  push: method = .int
+    arg parent = .int, state = .int
+    if _stacksize >= _cells then do
+      _status = 2; _error = 'LR repair stack storage budget exhausted'; return 0
+    end
+    _stacksize = _stacksize + 1; id = _stacksize
+    _parent[id] = parent; _state[id] = state; _depth[id] = 1; prefix = ''
+    if parent > 0 then do
+      _depth[id] = _depth[parent] + 1; prefix = _stackkey[parent]
+    end
+    _stackkey[id] = prefix || state || ','
+    return id
+  reduce: method = .int
+    arg top = .int, production = .int
+    count = _cfg.length(production)
+    if count >= _depth[top] then do
+      _status = 3; _error = 'LR repair reduction stack underflow'; return 0
+    end
+    do i = 1 to count
+      top = _parent[top]
+    end
+    state = _tables.target(_state[top],_cfg.lhs(production))
+    if state = 0 then do
+      _status = 3; _error = 'LR repair invalid goto'; return 0
+    end
+    return push(top,state)
+  symbol: method = .int
+    arg at = .int
+    symbol = _input.symbol(at)
+    if symbol < 0 then return 256
+    return symbol
+  byte: method = .binary
+    arg token = .int
+    return x2bin(right(d2x(token),2,'0'))
+  /** Shift ONE inserted token, performing the reductions it requires. */
+  insert: method = .int
+    arg top = .int, token = .int
+    do while tick()
+      action = _tables.action(_state[top],token)
+      if action = 0 | action = 999999 then return 0
+      if action > 0 then return push(top,action)
+      top = reduce(top,-action)
+      if _status > 1 then return 0
+    end
+    return 0
+  add: method = .void
+    arg top = .int, at = .int, cost = .int, streak = .int, previous = .string, script = .string, emitted = .binary, map = .string
+    if top = 0 | _status > 1 then return
+    key = _stackkey[top] || '|' || at || '|' || streak || '|' || previous || '|' || script
+    do i = 1 to _size
+      if tick() = 0 then return
+      if _key[i] == key then return
+    end
+    if _size >= _cells then do
+      _status = 2; _error = 'LR repair configuration budget exhausted'; return
+    end
+    _size = _size + 1; id = _size
+    _top[id] = top; _at[id] = at; _price[id] = cost; _streak[id] = streak; _previous[id] = previous
+    _script[id] = script; _emitted[id] = emitted; _map[id] = map; _key[id] = key
+    return
+  /** Rank without editing by original-input progress, with a fixed horizon. */
+  score: method = .int
+    arg top = .int, at = .int
+    shifted = 0
+    do while shifted < _preview & tick()
+      action = _tables.action(_state[top],symbol(at))
+      if action = 999999 then return _input.size() + 1
+      if action = 0 then return at
+      if action > 0 then do
+        top = push(top,action); at = at + 1; shifted = shifted + 1
+      end
+      else top = reduce(top,-action)
+      if _status > 1 then return -1
+    end
+    return at
+  success: method = .void
+    arg id = .int
+    /* Different reduction schedules can lead to the same repair script. */
+    do i = 1 to _solutions[0]
+      old = _solutions[i]
+      if _script[old] == _script[id] then return
+    end
+    _solutions[_solutions[0] + 1] = id
+    rank = score(_top[id],_at[id]); _score[id] = rank
+    if rank > _bestscore then do
+      _bestscore = rank; _best = id
+    end
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _tables.status() <> 0 | _input.error() <> '' | _bound < 0 | _bound > 16 | _horizon < 1 | _preview < 1 | _cells < 1 then do
+      _status = 3; _error = 'invalid LR repair request: ' || _tables.error() || _input.error(); return _status
+    end
+    _cfg = _tables.grammar(); top = push(0,1); at = 0
+    do while tick()
+      token = symbol(at); action = _tables.action(_state[top],token)
+      if action = 999999 then do
+        _complete = 1; _selected = _prefix; _selectedmap = _prefixmap; _cost = 0; return 0
+      end
+      if action = 0 then leave
+      if action > 0 then do
+        top = push(top,action); _prefix = _prefix || byte(token); at = at + 1
+        _prefixmap = _prefixmap || at || ' '
+      end
+      else top = reduce(top,-action)
+      if _status > 1 then return _status
+    end
+    if _status > 1 then return _status
+    _where = at
+    used = .int[]
+    do p = 1 to _cfg.count()
+      do slot = 0 to _cfg.length(p) - 1
+        token = _cfg.rhs(p,slot)
+        if token < 0 then used[-token] = 1
+      end
+    end
+    do token = 0 to 255
+      if used[token + 1] then _alphabet[_alphabet[0] + 1] = token
+    end
+    call add(top,at,0,0,'','',_prefix,_prefixmap)
+    do cost = 0 to _bound
+      id = 1
+      do while id <= _size
+        if _price[id] <> cost then do
+          id = id + 1; iterate
+        end
+        if tick() = 0 then return _status
+        top = _top[id]; at = _at[id]; token = symbol(at)
+        action = _tables.action(_state[top],token)
+        if action = 999999 | _streak[id] >= _horizon then do
+          call success(id)
+        end
+        else do
+          /* Keep reduction-only configurations; a mandatory bundled shift
+             would miss minimum-cost repairs near EOF and between shifts. */
+          if action < 0 then do
+            next = reduce(top,-action)
+            call add(next,at,cost,_streak[id],_previous[id],_script[id],_emitted[id],_map[id])
+          end
+          else if action > 0 then do
+            next = push(top,action)
+            call add(next,at + 1,cost,_streak[id] + 1,'shift',_script[id],_emitted[id] || byte(token),_map[id] || (at + 1) || ' ')
+          end
+          if cost < _bound & _solutions[0] = 0 then do
+            if token <> 256 then call add(top,at + 1,cost + 1,0,'delete',_script[id] || 'D' || at || ';',_emitted[id],_map[id])
+            /* Canonicalize adjacent commuting insert/delete operations:
+               insertions precede deletions until an original token shifts. */
+            if _previous[id] <> 'delete' then do i = 1 to _alphabet[0]
+              inserted = _alphabet[i]; next = insert(top,inserted)
+              if next > 0 then call add(next,at,cost + 1,0,'insert',_script[id] || 'I' || at || ':' || inserted || ';',_emitted[id] || byte(inserted),_map[id] || (-at - 1) || ' ')
+              if _status > 1 then return _status
+            end
+          end
+        end
+        if _status > 1 then return _status
+        id = id + 1
+      end
+      if _solutions[0] > 0 then do
+        _cost = cost; leave
+      end
+    end
+    if _best = 0 then do
+      _status = 4; _error = 'no local LR repair within cost ' || _bound; return _status
+    end
+    _selected = _emitted[_best]; _selectedmap = _map[_best]
+    do at = _at[_best] to _input.size() - 1
+      _selected = _selected || byte(symbol(at)); _selectedmap = _selectedmap || (at + 1) || ' '
+    end
+    _complete = _bestscore > _input.size()
+    _status = 1
+    _error = 'syntax error at byte ' || _input.start(_where) || '; ' || _solutions[0] || ' minimum-cost local repair(s), cost ' || _cost || '; selected ' || _script[_best]
+    return _status
+  source: method = .binary
+    return _input.source()
+  edited: method = .binary
+    return _selected
+  origin: method = .int
+    arg token = .int
+    return word(_selectedmap,token) as .int
+  count: method = .int
+    return _solutions[0]
+  script: method = .string
+    arg repair = .int
+    return _script[_solutions[repair]]
+  cost: method = .int
+    return _cost
+  complete: method = .int
+    return _complete
+  offset: method = .int
+    return _where
+  work: method = .int
+    return _work
+  configurations: method = .int
+    return _size
+  error: method = .string
+    return _error

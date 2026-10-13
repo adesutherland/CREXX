@@ -1,0 +1,60 @@
+Change Dir: '/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build'
+
+Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile -j8 rxfnsl levell_unicode_lexer
+/opt/homebrew/bin/cmake -S/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap -B/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build --check-build-system CMakeFiles/Makefile.cmake 0
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/Makefile2 rxfnsl
+/opt/homebrew/bin/cmake -S/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap -B/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build --check-build-system CMakeFiles/Makefile.cmake 0
+/opt/homebrew/bin/cmake -E cmake_progress_start /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/CMakeFiles 45
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/Makefile2 tools/CMakeFiles/rxfnsl.dir/all
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/library.dir/build.make CMakeFiles/library.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/CMakeFiles/library.dir/DependInfo.cmake "--color=" library
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/library.dir/build.make CMakeFiles/library.dir/build
+make[3]: Nothing to be done for `CMakeFiles/library.dir/build'.
+[  2%] Built target library
+/Library/Developer/CommandLineTools/usr/bin/make  -f rexx/CMakeFiles/rxfnsl_imports.dir/build.make rexx/CMakeFiles/rxfnsl_imports.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/rexx /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/rexx /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/rexx/CMakeFiles/rxfnsl_imports.dir/DependInfo.cmake "--color=" rxfnsl_imports
+/Library/Developer/CommandLineTools/usr/bin/make  -f rexx/CMakeFiles/rxfnsl_imports.dir/build.make rexx/CMakeFiles/rxfnsl_imports.dir/build
+make[3]: Nothing to be done for `rexx/CMakeFiles/rxfnsl_imports.dir/build'.
+[  4%] Built target rxfnsl_imports
+/Library/Developer/CommandLineTools/usr/bin/make  -f rexx/CMakeFiles/rxfnsl_base.dir/build.make rexx/CMakeFiles/rxfnsl_base.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/rexx /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/rexx /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/rexx/CMakeFiles/rxfnsl_base.dir/DependInfo.cmake "--color=" rxfnsl_base
+/Library/Developer/CommandLineTools/usr/bin/make  -f rexx/CMakeFiles/rxfnsl_base.dir/build.make rexx/CMakeFiles/rxfnsl_base.dir/build
+make[3]: Nothing to be done for `rexx/CMakeFiles/rxfnsl_base.dir/build'.
+[ 53%] Built target rxfnsl_base
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_base_imports.dir/build.make tools/CMakeFiles/levell_base_imports.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/CMakeFiles/levell_base_imports.dir/DependInfo.cmake "--color=" levell_base_imports
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_base_imports.dir/build.make tools/CMakeFiles/levell_base_imports.dir/build
+[ 55%] Staging deterministic compiler imports for levell_base_imports ...
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools && /opt/homebrew/bin/cmake -E make_directory /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/imports
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools && /opt/homebrew/bin/cmake -E copy_if_different /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/bin/library.rxbin /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/bin/rxfnsl-base.rxbin /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/imports
+[ 55%] Built target levell_base_imports
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_driver_imports_0.dir/build.make tools/CMakeFiles/levell_driver_imports_0.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/CMakeFiles/levell_driver_imports_0.dir/DependInfo.cmake "--color=" levell_driver_imports_0
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_driver_imports_0.dir/build.make tools/CMakeFiles/levell_driver_imports_0.dir/build
+[ 57%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools && /opt/homebrew/bin/cmake -E make_directory /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/L0/driver-imports
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools && /opt/homebrew/bin/cmake -E copy_if_different /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/L0/llfront.rxbin /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/L0/driver-imports
+[ 62%] Built target levell_driver_imports_0
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_syntax_imports_1.dir/build.make tools/CMakeFiles/levell_syntax_imports_1.dir/depend
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/bootstrap /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/CMakeFiles/levell_syntax_imports_1.dir/DependInfo.cmake "--color=" levell_syntax_imports_1
+/Library/Developer/CommandLineTools/usr/bin/make  -f tools/CMakeFiles/levell_syntax_imports_1.dir/build.make tools/CMakeFiles/levell_syntax_imports_1.dir/build
+[ 64%] Generating bootstrap/L1/llsyntax.rxas
+cd /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools && /opt/homebrew/bin/cmake -DLEVEL_L_VM=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm -DLEVEL_L_BYTECODE=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/L0/levell-linked.rxbin -DSPEC=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools/../grammar/levell.levell -DOUTPUT=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/build/tools/bootstrap/L1/llsyntax.rxas -DFORMAT=rxas -P /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools/generate.cmake
+
+CMake Error at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools/generate.cmake:17 (message):
+  
+  /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools/../grammar/levell.levell
+
+  
+  /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/lifecycle-host-budgets/source/lib/rxfnsl/tools/../grammar/levell.levell:
+  LL_GRAMMAR: line 185, byte 12392: empty alternative: write a quoted empty
+  literal explicitly
+
+
+
+
+
+make[3]: *** [tools/bootstrap/L1/llsyntax.rxas] Error 1
+make[2]: *** [tools/CMakeFiles/levell_syntax_imports_1.dir/all] Error 2
+make[1]: *** [tools/CMakeFiles/rxfnsl.dir/rule] Error 2
+make: *** [rxfnsl] Error 2

@@ -1,0 +1,41 @@
+Analyze (cpp)	Build	2026-10-12T20:00:41.2485770Z [2226/2278] Linking C executable tests/rxc_classdecl_static
+Analyze (cpp)	Build	2026-10-12T20:00:42.2070718Z [2227/2278] Generating cri17_attached_provider_opt.rxbin
+Analyze (cpp)	Build	2026-10-12T20:00:43.2183877Z [2228/2278] Generating rcc_provider_autoload_noopt.rxbin
+Analyze (cpp)	Build	2026-10-12T20:00:44.2306154Z [2229/2278] Generating rcc_provider_autoload_opt.rxbin
+Analyze (cpp)	Build	2026-10-12T20:00:45.3566024Z [2230/2278] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+Analyze (cpp)	Build	2026-10-12T20:00:45.4612324Z [2231/2278] Linking C executable bin/rexxscript1
+Analyze (cpp)	Build	2026-10-12T20:00:45.4612955Z FAILED: [code=1] bin/rexxscript1
+Analyze (cpp)	Build	2026-10-12T20:00:45.4615705Z : && /usr/bin/cc -g -Wl,--dependency-file=rexxscript/CMakeFiles/rexxscript1_cli.dir/link.d rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o -o bin/rexxscript1  bin/librxvml.a  bin/librxpashim.a  -Wl,--whole-archive "/home/runner/work/_temp/build/bin/rxcstream_static.a" -Wl,--no-whole-archive  -Wl,--whole-archive "/home/runner/work/_temp/build/bin/rxfs_static.a" -Wl,--no-whole-archive  bin/librxvmplugin.a  bin/rxvm_mc_decimal_manual.a  bin/libplatform.a  bin/libdecnumber.a  -lm  bin/libavl_tree.a  bin/librxpa.a  bin/librxvmref.a  bin/librxvmmemory.a  bin/librxbin.a  /usr/lib/x86_64-linux-gnu/libssl.so  /usr/lib/x86_64-linux-gnu/libcrypto.so && :
+Analyze (cpp)	Build	2026-10-12T20:00:45.4618512Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `rxcstream_capability_init':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4620299Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:89:(.text+0x3e5): undefined reference to `rxpa_register_static_plugin_manifest_v2'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4621246Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_resource':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4622035Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:95:(.text+0x437): undefined reference to `rxpa_getnativepayload'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4622814Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_payload':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4623609Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:111:(.text+0x62a): undefined reference to `rxpa_getnativepayload'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4624383Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_copy':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4625149Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:117:(.text+0x6f1): undefined reference to `rxpa_setnativepayload'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4625921Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_open':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4626651Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:149:(.text+0xb2f): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4627476Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:149:(.text+0xb48): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4628337Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:151:(.text+0xbc7): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4629196Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:151:(.text+0xbe0): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4630673Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:153:(.text+0xd1c): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4631536Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:153:(.text+0xd35): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4632393Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:155:(.text+0xd8e): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4633240Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:155:(.text+0xda7): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4634129Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:199:(.text+0x10ad): undefined reference to `rxpa_setnativepayload'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4635040Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:199:(.text+0x10d4): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4636092Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:199:(.text+0x10ed): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4636943Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:200:(.text+0x112f): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4637803Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:200:(.text+0x1148): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4638650Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:201:(.text+0x115e): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4639756Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:201:(.text+0x1177): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4640563Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `cs_ready':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4641313Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x11d8): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4642151Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x11ee): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4643038Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x11ff): undefined reference to `rxpa_isinitialized'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4644084Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x1214): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4644949Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x122a): undefined reference to `rxpa_setstring'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4645781Z /usr/bin/ld: /home/runner/work/_temp/build/bin/rxcstream_static.a(rxcstream.c.o): in function `_rxpa_method_body_cs_ready':
+Analyze (cpp)	Build	2026-10-12T20:00:45.4646577Z /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x128d): undefined reference to `rxpa_setint'
+Analyze (cpp)	Build	2026-10-12T20:00:45.4647404Z /usr/bin/ld: /home/runner/work/CREXX/CREXX/lib/plugins/cstream/rxcstream.c:203:(.text+0x12a3): undefined reference to `rxpa_setstring'

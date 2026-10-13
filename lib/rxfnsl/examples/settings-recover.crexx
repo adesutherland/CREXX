@@ -1,0 +1,50 @@
+/* cREXX License (MIT). Inspect errors and later settings without executing. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import llrecover
+import llsource
+import lltree
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then do
+    say 'usage: settings-recover settings.txt [maximum-errors]'; return 3
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'SETTINGS_IO: cannot read ' || argv[1]; return 3
+  end
+  limit = 16
+  if argv[0] = 2 then limit = argv[2] as .int
+  definition = .lllanguage..definition
+  definition = levell_settings..language()
+  request = .llrecover..request(definition,source,limit)
+  status = request.run()
+  say 'Parse status: ' || status || '; errors: ' || request.errors()
+  do i = 1 to request.errors()
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(i),'SETTINGS_PARSE',request.message(i))
+  end
+  if status > 1 then do
+    say request.error(); return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'SETTINGS_TREE: ' || tree.error(); return 3
+  end
+  pending = .int[]; size = 1; pending[size] = tree.root()
+  do while size > 0
+    node = pending[size]; size = size - 1
+    if tree.name(node) = 'assignment' then do
+      say tree.text(tree.child(node,1)) || ' -> ' || tree.text(tree.child(node,3))
+    end
+    do child = tree.count(node) to 1 by -1
+      size = size + 1; pending[size] = tree.child(node,child)
+    end
+  end
+  /* A recovered tree is useful for inspection; success remains status 0. */
+  return status

@@ -1,0 +1,166 @@
+Grammar
+
+    0 $accept: S $end
+
+    1 S: 'a' A 'd'
+    2  | 'b' B 'd'
+    3  | 'a' B 'e'
+    4  | 'b' A 'e'
+
+    5 A: 'c'
+
+    6 B: 'c'
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    'a' (97) 1 3
+    'b' (98) 2 4
+    'c' (99) 5 6
+    'd' (100) 1 2
+    'e' (101) 3 4
+    error (256)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (8)
+        on left: 0
+    S (9)
+        on left: 1 2 3 4
+        on right: 0
+    A (10)
+        on left: 5
+        on right: 1 4
+    B (11)
+        on left: 6
+        on right: 2 3
+
+
+State 0
+
+    0 $accept: • S $end
+    1 S: • 'a' A 'd'
+    2  | • 'b' B 'd'
+    3  | • 'a' B 'e'
+    4  | • 'b' A 'e'
+
+    'a'  shift, and go to state 1
+    'b'  shift, and go to state 2
+
+    S  go to state 3
+
+
+State 1
+
+    1 S: 'a' • A 'd'
+    3  | 'a' • B 'e'
+    5 A: • 'c'
+    6 B: • 'c'
+
+    'c'  shift, and go to state 4
+
+    A  go to state 5
+    B  go to state 6
+
+
+State 2
+
+    2 S: 'b' • B 'd'
+    4  | 'b' • A 'e'
+    5 A: • 'c'
+    6 B: • 'c'
+
+    'c'  shift, and go to state 14
+
+    A  go to state 7
+    B  go to state 8
+
+
+State 3
+
+    0 $accept: S • $end
+
+    $end  shift, and go to state 9
+
+
+State 4
+
+    5 A: 'c' •  ['d']
+    6 B: 'c' •  ['e']
+
+    'd'  reduce using rule 5 (A)
+    'e'  reduce using rule 6 (B)
+
+
+State 5
+
+    1 S: 'a' A • 'd'
+
+    'd'  shift, and go to state 10
+
+
+State 6
+
+    3 S: 'a' B • 'e'
+
+    'e'  shift, and go to state 11
+
+
+State 7
+
+    4 S: 'b' A • 'e'
+
+    'e'  shift, and go to state 12
+
+
+State 8
+
+    2 S: 'b' B • 'd'
+
+    'd'  shift, and go to state 13
+
+
+State 9
+
+    0 $accept: S $end •
+
+    $default  accept
+
+
+State 10
+
+    1 S: 'a' A 'd' •  [$end]
+
+    $end  reduce using rule 1 (S)
+
+
+State 11
+
+    3 S: 'a' B 'e' •  [$end]
+
+    $end  reduce using rule 3 (S)
+
+
+State 12
+
+    4 S: 'b' A 'e' •  [$end]
+
+    $end  reduce using rule 4 (S)
+
+
+State 13
+
+    2 S: 'b' B 'd' •  [$end]
+
+    $end  reduce using rule 2 (S)
+
+
+State 14
+
+    5 A: 'c' •  ['e']
+    6 B: 'c' •  ['d']
+
+    'd'  reduce using rule 6 (B)
+    'e'  reduce using rule 5 (A)

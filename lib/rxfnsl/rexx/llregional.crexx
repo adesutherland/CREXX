@@ -1,0 +1,285 @@
+/* cREXX License (MIT). Checked delimiter-bounded Pratt regions inside LR CFGs. */
+options levelb
+namespace llregional expose plan parser
+import llcore
+import lllimits
+import llcfg
+import llpratt
+import lllr
+
+/** Build both specialized outer tables and an unspecialized whole CFG.
+ * Boundary tokens must be absent from both component terminal alphabets.
+ * The virtual token must occur in the outer grammar and nowhere in raw input.
+ */
+plan: class
+  _outer = .llcore..grammar
+  _expanded = .llcore..grammar
+  _ops = .llpratt..operators
+  _tables = .lllr..tables
+  _root = .int
+  _virtual = .int
+  _open = .int
+  _close = .int
+  _ready = .int
+  _status = .int
+  _error = .string
+  _loaded = .int
+  *: factory
+    arg outer = .llcore..grammar, root = .int, operators = .llpratt..operators, virtual = .int, open = .int, close = .int
+    _outer = outer; _root = root; _ops = operators; _virtual = virtual; _open = open; _close = close
+    _ready = 0; _status = 0; _error = ''; _expanded = .llcore..grammar('contextfree')
+    _loaded = 0
+    return
+  loaded: factory
+    arg tables = .lllr..tables, operators = .llpratt..operators, virtual = .int, open = .int, close = .int
+    _tables = tables; cfg = tables.grammar(); _outer = cfg.source(); _root = cfg.root()
+    _ops = operators; _virtual = virtual; _open = open; _close = close
+    _ready = 0; _status = 0; _error = ''; _expanded = .llcore..grammar('contextfree'); _loaded = 1
+    return
+  build: method = .int
+    if _ready then return _status
+    _ready = 1
+    if _virtual < 0 | _virtual > 255 | _open < 0 | _open > 255 | _close < 0 | _close > 255 | _open = _close | _virtual = _open | _virtual = _close then do
+      _status = 3; _error = 'region requires three distinct byte/token kinds'; return _status
+    end
+    if _ops.build() = 0 then do
+      _status = 3; _error = _ops.error(); return _status
+    end
+    inner = _ops.grammar()
+    outercfg = .llcfg..productions(_outer,_root); innercfg = .llcfg..productions(inner,1)
+    call outercfg.build(); call innercfg.build()
+    if outercfg.status() <> 0 | innercfg.status() <> 0 then do
+      _status = 3; _error = 'region requires admitted pure CFG components'; return _status
+    end
+    present = 0; p = .int; j = .int; symbol = .int; c = .int; op = .int; a = .int; b = .int; id = .int
+    reachable = _outer.reachable(_root)
+    do p = 2 to outercfg.count()
+      if reachable[outercfg.lhs(p)] = 0 then iterate
+      do j = 0 to outercfg.length(p) - 1
+        symbol = outercfg.rhs(p,j)
+        if symbol >= 0 then iterate
+        symbol = -symbol - 1
+        if symbol = _virtual then present = 1
+        if symbol = _open | symbol = _close then do
+          _status = 3; _error = 'unsafe region: boundary token also belongs to outer grammar'; return _status
+        end
+      end
+    end
+    do p = 1 to innercfg.count()
+      do j = 0 to innercfg.length(p) - 1
+        symbol = innercfg.rhs(p,j)
+        if symbol >= 0 then iterate
+        symbol = -symbol - 1
+        if symbol = _open | symbol = _close | symbol = _virtual then do
+          _status = 3; _error = 'unsafe region: boundary/virtual token belongs to inner grammar'; return _status
+        end
+      end
+    end
+    if present = 0 then do
+      _status = 3; _error = 'virtual region token absent from outer grammar'; return _status
+    end
+    /* Only individual terminal nodes may serve as region sites. */
+    do c = 1 to _outer.size()
+      op = _outer.op(c)
+      if op = 11 & _outer.left(c) <= _virtual & _outer.right(c) >= _virtual then do
+        _status = 3; _error = 'region site must be a named single token, not a range'; return _status
+      end
+      if op = 12 | op = 13 | op = 16 then do
+        _status = 3; _error = 'regional outer profile requires normalized individual terminals'; return _status
+      end
+    end
+    if _loaded = 0 then _tables = .lllr..tables(_outer,_root,'lr1')
+    if _tables.status() <> 0 then do
+      _status = 3; _error = _tables.error(); return _status
+    end
+    do c = 1 to _outer.size()
+      op = _outer.op(c); a = _outer.left(c); b = _outer.right(c)
+      if op = 1 & a = _virtual then do
+        op = 5; a = 0
+      end
+      id = _expanded.add(op,a,b,_outer.label(c),_outer.line(c))
+    end
+    offset = _outer.size()
+    do c = 1 to inner.size()
+      op = inner.op(c); a = inner.left(c); b = inner.right(c)
+      if op = 2 | op = 4 then do
+        a = a + offset; b = b + offset
+      end
+      else if op = 5 | op = 7 | op = 14 | op = 15 then a = a + offset
+      if op = 13 | op = 16 then do
+        _status = 3; _error = 'operator normal form unexpectedly contains extended clause'; return _status
+      end
+      id = _expanded.add(op,a,b,inner.label(c),inner.line(c))
+    end
+    open = _expanded.add(1,_open,0,'<region.open>',1)
+    close = _expanded.add(1,_close,0,'<region.close>',1)
+    head = _expanded.add(2,open,offset + 1,'<region.head>',1)
+    body = _expanded.add(2,head,close,'<region.body>',1)
+    do c = 1 to _outer.size()
+      if _outer.op(c) = 1 & _outer.left(c) = _virtual then ok = _expanded.body(c,body)
+    end
+    return _status
+  expanded: method = .llcore..grammar
+    return _expanded
+  root: method = .int
+    return _root
+  tables: method = .lllr..tables
+    return _tables
+  operators: method = .llpratt..operators
+    return _ops
+  virtual: method = .int
+    return _virtual
+  open: method = .int
+    return _open
+  close: method = .int
+    return _close
+  error: method = .string
+    return _error
+
+/** Owned composite request. Each delimited interior is parsed exactly once.
+ * Partial regions or failed callees are syntax errors; budgets are distinct.
+ */
+parser: class
+  _plan = .plan
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _stage = .llcore..stream
+  _regions = .llcore..tree[]
+  _roots = .int[]
+  _region = .int[]
+  _starts = .int[]
+  _count = .int
+  _depth = .int
+  _root = .int
+  _ran = .int
+  _status = .int
+  _offset = .int
+  _named = .int
+  _contexts = .binary
+  _expected = .string
+  _fuel = .int
+  _work = .int
+  _error = .string
+  *: factory
+    arg compiled = .plan, input = .llcore..stream, fuel = 1000000, named = 0
+    _plan = compiled; _input = input; _tree = .llcore..tree.from_source(input.source())
+    _stage = .llcore..stream.tokens(input.source()); _root = 0; _ran = 0; _status = 0
+    _count = 0; _depth = 0; _fuel = fuel; _work = 0; _error = ''
+    _offset = 0; _named = named
+    _expected = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _plan.build() <> 0 | _input.error() <> '' then do
+      _status = 3; _error = _plan.error() || _input.error(); return _status
+    end
+    at = 0; ok = .int
+    do while at < _input.size()
+      _work = _work + 1
+      if _work > _fuel then do
+        _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+      end
+      symbol = _input.symbol(at)
+      if symbol = _plan.virtual() then do
+        _status = 3; _error = 'raw input contains reserved virtual-region token'; return _status
+      end
+      if symbol <> _plan.open() then do
+        ok = _stage.append(symbol,_input.start(at),_input.finish(at + 1)); at = at + 1
+      end
+      else do
+        start = at; inner = .llcore..stream.tokens(_input.source()); at = at + 1
+        do while at < _input.size() & _input.symbol(at) <> _plan.close()
+          _work = _work + 1
+          if _work > _fuel then do
+            _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+          end
+          if _input.symbol(at) = _plan.virtual() then do
+            _status = 3; _error = 'raw input contains reserved virtual-region token'; return _status
+          end
+          ok = inner.append(_input.symbol(at),_input.start(at),_input.finish(at + 1)); at = at + 1
+        end
+        if at = _input.size() then do
+          _status = 1; _offset = _input.start(at); _error = 'missing region closer for opener at byte ' || _input.start(start); return _status
+        end
+        ok = inner.boundary(_input.start(at))
+        callee = .llpratt..parser(_plan.operators(),inner,_fuel - _work)
+        _status = callee.run(); _work = _work + callee.work()
+        if _status <> 0 then do
+          _offset = callee.offset()
+          _error = 'embedded expression opened at byte ' || _input.start(start) || ': ' || callee.error()
+          if _status = 2 & _work > _fuel then _error = lllimits..describe('parse.work',_fuel,_work)
+          return _status
+        end
+        _count = _count + 1; _regions[_count] = callee.tree(); _roots[_count] = callee.root()
+        if _named then _regions[_count] = callee.namedtree()
+        _starts[_count] = _input.start(start)
+        ok = _stage.append(_plan.virtual(),_input.start(start),_input.finish(at + 1))
+        _region[_stage.size()] = _count; at = at + 1
+      end
+    end
+    outer = .lllr..parser(_plan.tables(),_stage,_fuel - _work)
+    _status = outer.run(); _work = _work + outer.work()
+    if _status <> 0 then do
+      _offset = outer.offset()
+      _contexts = outer.contexts(); _expected = outer.expected()
+      _error = 'outer language: ' || outer.error()
+      if _status = 2 & _work > _fuel then _error = lllimits..describe('parse.work',_fuel,_work)
+      return _status
+    end
+    raw = outer.tree(); _root = graft(raw,outer.root(),1)
+    if _status = 0 & _tree.validate() = 0 then do
+      _status = 3; _error = _tree.error()
+    end
+    return _status
+  graft: method = .int
+    arg source = .llcore..tree, node = .int, replace = .int
+    if node = 0 | _status <> 0 then return 0
+    if _depth >= 512 then do
+      _status = 2; _error = 'LL_IMPLEMENTATION_LIMIT: recursive regional tree depth exceeds 512; a larger work budget cannot raise this implementation bound'; return 0
+    end
+    _depth = _depth + 1
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return 0
+    end
+    a = 0; b = 0
+    if replace & source.label(node) = 'symbol.' || _plan.virtual() then do
+      low = 1; high = _count; found = 0
+      do while low <= high
+        _work = _work + 1
+        if _work > _fuel then do
+          _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return 0
+        end
+        middle = (low + high) <idiv> 2
+        if _starts[middle] = source.start(node) then do
+          found = middle; leave
+        end
+        if _starts[middle] < source.start(node) then low = middle + 1
+        else high = middle - 1
+      end
+      if found = 0 then do
+        _status = 3; _error = 'virtual token has no owned regional result'; return 0
+      end
+      inner = _regions[found]; a = graft(inner,_roots[found],0); _depth = _depth - 1
+      return _tree.add(source.kind(node),source.label(node),source.start(node),source.finish(node),a,0)
+    end
+    a = graft(source,source.left(node),replace); b = graft(source,source.right(node),replace)
+    _depth = _depth - 1
+    return _tree.add(source.kind(node),source.label(node),source.start(node),source.finish(node),a,b)
+  root: method = .int
+    return _root
+  tree: method = .llcore..tree
+    return _tree
+  work: method = .int
+    return _work
+  regions: method = .int
+    return _count
+  error: method = .string
+    return _error
+  offset: method = .int
+    return _offset
+  contexts: method = .binary
+    return _contexts
+  expected: method = .string
+    return _expected

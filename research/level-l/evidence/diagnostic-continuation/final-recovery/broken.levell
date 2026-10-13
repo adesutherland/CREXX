@@ -1,0 +1,8 @@
+options levell
+namespace broken
+scan: lexer
+item: token
+parse: parser start first
+first: rule = (item
+second: rule = )
+last.good: rule = item

@@ -1,0 +1,100 @@
+/* cREXX License (MIT). Declared nested-comment stage with stable byte offsets. */
+options levell
+namespace llcommentmask expose mask
+import rxfnsb
+
+/** Recognize nested delimiters outside single/double quoted strings.
+ * Doubled quotes escape a quote. The output replaces comments by equal-length
+ * spaces; callers must retain original source and remap token ownership.
+ * This is a counter stage, not a regular-expression language claim.
+ */
+mask: class
+  _source = .binary
+  _open = .string
+  _close = .string
+  _out = .binary
+  _fuel = .int
+  _work = .int
+  _peak = .int
+  _at = .int
+  _status = .int
+  _ran = .int
+  _error = .string
+  *: factory
+    arg source = .binary, opening = '/*', closing = '*/', fuel = 1000000
+    _source = source; _open = opening; _close = closing; _fuel = fuel
+    _work = 0; _peak = 0; _at = 0; _status = 0; _ran = 0; _error = ''; _out = '' as .binary
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _open = '' | _close = '' | _open = _close then do
+      _status = 3; _error = 'invalid nested-comment delimiters'; return _status
+    end
+    extent = <blen>(_source)
+    do i = 0 to extent - 1
+      _work = _work + 1
+      if _work > _fuel then do
+        _at = i; _status = 2; _error = 'comment-stage profile budget exhausted'; return _status
+      end
+      if <at..u8>(i) _source > 127 then do
+        _at = i; _status = 3; _error = 'comment stage profile is ASCII bytes'; return _status
+      end
+    end
+    text = _source as .string; at = 1; depth = 0; quote = ''; openingAt = 0
+    result = ''; a = length(_open); b = length(_close)
+    do while at <= extent
+      _work = _work + a + b + 1
+      if _work > _fuel then do
+        _status = 2; _at = at - 1; _error = 'comment-stage work budget exhausted'; return _status
+      end
+      c = substr(text,at,1)
+      if depth > 0 then do
+        if substr(text,at,b) = _close then do
+          depth = depth - 1; result = result || copies(' ',b); at = at + b
+        end
+        else if substr(text,at,a) = _open then do
+          depth = depth + 1; result = result || copies(' ',a); at = at + a
+        end
+        else do
+          result = result || ' '; at = at + 1
+        end
+        _peak = max(_peak,depth)
+      end
+      else if quote <> '' then do
+        result = result || c; at = at + 1
+        if c = quote then do
+          if substr(text,at,1) = quote then do
+            result = result || quote; at = at + 1
+          end
+          else quote = ''
+        end
+      end
+      else if substr(text,at,a) = _open then do
+        openingAt = at - 1; depth = 1; _peak = max(_peak,1)
+        result = result || copies(' ',a); at = at + a
+      end
+      else do
+        if c = "'" | c = '"' then do
+          quote = c; openingAt = at - 1
+        end
+        result = result || c; at = at + 1
+      end
+    end
+    _out = result as .binary
+    if depth > 0 | quote <> '' then do
+      _status = 1; _at = openingAt
+      if depth > 0 then _error = 'unclosed nested comment'
+      else _error = 'unclosed quoted string'
+    end
+    return _status
+  output: method = .binary
+    return _out
+  offset: method = .int
+    return _at
+  work: method = .int
+    return _work
+  depth: method = .int
+    return _peak
+  error: method = .string
+    return _error

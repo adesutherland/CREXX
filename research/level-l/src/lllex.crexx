@@ -1,0 +1,102 @@
+/* Level L research: Thompson-NFA scanner; ASCII, maximal munch, rule order. */
+options levell
+namespace lllex expose scan scanstatus scanoffset scansteps
+import rxfnsb
+
+scan: procedure = .binary expose status erroroffset steps
+  arg source = .string, graph = .binary, root = .int
+  status = 0; erroroffset = 0; steps = 0
+  bytes = source as .binary
+  size = <blen>(bytes)
+  states = <blen>(graph) / 144
+  result = .binary
+  state = .int; base = .int
+  at = 0
+  do while at < size
+    active = .int[]
+    do state = 1 to states
+      active[state] = 0
+    end
+    active[root] = 1
+    call closure active, graph, states
+    cursor = at; bestend = at; bestkind = 0; bestrule = states + 1
+    do while cursor < size
+      ch = <at..u8>(cursor) bytes
+      if ch >= 128 then leave
+      following = .int[]
+      do state = 1 to states
+        following[state] = 0
+      end
+      live = 0
+      do state = 1 to states
+        if active[state] = 0 then iterate
+        base = (state - 1) * 144
+        if <at..i32>(base) graph <> 1 then iterate
+        steps = steps + 1
+        if <at..u8>(base + 16 + ch) graph = 1 then do
+          dest = <at..i32>(base + 4) graph
+          following[dest] = 1; live = 1
+        end
+      end
+      if live = 0 then leave
+      call closure following, graph, states
+      cursor = cursor + 1
+      do state = 1 to states
+        if following[state] = 0 then iterate
+        base = (state - 1) * 144
+        if <at..i32>(base) graph = 2 then do
+          /* Earlier accepting node is the earlier specification rule. */
+          if cursor > bestend | state < bestrule then do
+            bestend = cursor; bestrule = state
+            bestkind = <at..i32>(base + 12) graph
+          end
+        end
+      end
+      active = following
+    end
+    if bestend = at then do
+      status = 1; erroroffset = at
+      return result
+    end
+    if bestkind > 0 then do
+      base = <blen>(result)
+      call binresize result, base + 12
+      <at..i32>(base) result = bestkind
+      <at..i32>(base + 4) result = at
+      <at..i32>(base + 8) result = bestend - at
+    end
+    at = bestend
+  end
+  return result
+
+closure: procedure = .void
+  arg expose active = .int[], graph = .binary, states = .int
+  state = .int
+  pending = .int[]; count = 0
+  do state = 1 to states
+    if active[state] = 1 then do
+      count = count + 1; pending[count] = state
+    end
+  end
+  index = 1
+  do while index <= count
+    state = pending[index]; index = index + 1
+    base = (state - 1) * 144
+    if <at..i32>(base) graph <> 0 then iterate
+    do edge = 1 to 2
+      dest = <at..i32>(base + edge * 4) graph
+      if dest > 0 then do
+        if active[dest] = 0 then do
+          active[dest] = 1; count = count + 1; pending[count] = dest
+        end
+      end
+    end
+  end
+  return
+
+scanstatus: procedure = .int expose status
+  return status
+scanoffset: procedure = .int expose erroroffset
+  return erroroffset
+scansteps: procedure = .int expose steps
+  return steps

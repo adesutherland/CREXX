@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-10",
+  "branch": "levell",
+  "source_base": "91313bcc5a447e9403f95b1f0bfc4dd9503d0618",
+  "scope": "local experimental sources; no production source changes",
+  "binary_origin": "/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin",
+  "profile": "existing ordinary Release product tools; no profiling VM options enabled",
+  "reference_pika": "8050ceaf70c79a04416fdbdc374e92f9478de7b0",
+  "reference_squirrel_inspected_only": "bb1ae84701060462636c07c814286ac2875e0568",
+  "measure_policy": "one warmup and six serial balanced pairs per case per concrete VM; research screen, no formal product verdict",
+  "source_variants": "source trace metadata retained in both cells; no AST construction; image startup excluded",
+  "retained_measure_image_sha256": "943c2d7aa784ee7d7df8eb00aada1447941c1abd181ed1516fa6abccd3288ff9",
+  "tools": {
+    "rxc": {
+      "sha256": "ec484ab6549c6c70f78509ced1b57577243f3ab1e423bb4af528d765680754f4",
+      "version": "crexx-1.0.0-beta.3+local.g10e8184e39ad.dirty"
+    },
+    "rxas": {
+      "sha256": "77619dd331d95175c1fb817a2ef14064d8c8e12d223929e55f6b7ff47922a206",
+      "version": "crexx-1.0.0-beta.3+local.g10e8184e39ad.dirty"
+    },
+    "rxlink": {
+      "sha256": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a"
+    },
+    "rxtvm": {
+      "sha256": "4a5f9d96af98d97dbc78d5438190331cd232b540cfbadab4b766750d15b41309",
+      "version": "crexx-1.0.0-beta.3+local.g36bced241809.dirty (Threaded Mode)"
+    },
+    "rxbvm": {
+      "sha256": "e25361990acb6594a57ef94d47ec56cccf55f0ac74c4eb03eca65977c3edffee",
+      "version": "crexx-1.0.0-beta.3+local.g10e8184e39ad.dirty (Bytecode Mode)"
+    },
+    "library.rxbin": {
+      "sha256": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003"
+    },
+    "classlib.rxbin": {
+      "sha256": "a1e35e9bfb96da037c3ec42d60ccb89e25ed0106c5610470eec52d49c0ad32a9"
+    },
+    "rxfnsl.rxbin": {
+      "sha256": "00b44f5784f938f98b5335f2642663537b62aa267c918fdec0b81f5437dfcb55"
+    },
+    "rxcexits.rxbin": {
+      "sha256": "81cdf36cfb554b4331d96fbe7c89f6aaed5e43540fdfcfbcc7e03d8422389f43"
+    }
+  },
+  "host": {
+    "host": "Darwin 25.6.0 arm64",
+    "cpu": "10",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin",
+    "java": "openjdk version \"26.0.1\" 2026-04-21\nOpenJDK Runtime Environment Temurin-26.0.1+8 (build 26.0.1+8)\nOpenJDK 64-Bit Server VM Temurin-26.0.1+8 (build 26.0.1+8, mixed mode, sharing)",
+    "power": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=23068771)\t80%; AC attached; not charging present: true",
+    "load": "14:01  up 5 days,  3:31, 2 users, load averages: 2.84 2.18 2.01"
+  },
+  "re2c": {
+    "version": "re2c 4.5.1",
+    "sha256": "cb8e34ad127fa6263c58e0ded14e1c4696cf35b4f8facb96bfaa0868a8f17ec6"
+  },
+  "build_cache_evidence": [
+    "CMAKE_BUILD_TYPE:STRING=Release",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ],
+  "limitations": [
+    "Existing binaries identify older dirty build revisions; the source base is not asserted to be their exact qualified source revision. Binary hashes pin the tools used.",
+    "macOS ARM64 only; no release qualification, hosted matrices, sanitizer or other-platform claim.",
+    "Current Squirrel Dart reference inspected but not executed: Dart runtime unavailable."
+  ],
+  "authored_surface": {
+    "direction": "retain established Rexx-like declaration surface; user steering on 10 October",
+    "source_commit": "9a86fb37c0d0d7b9cd395d676e8a0a3ef45e39b8",
+    "source_hashes": {
+      "experiments/unicode/level-l-bootstrap/levell_bootstrap.crexx": "cbf77fdd98339844e206825317df4591debcf962a958c2177c70685259ec3986",
+      "experiments/unicode/level-l-bootstrap/levell_generate.crexx": "39680bf02cc0f1674f8b4d07de560f6713d3113ba3457b1553f60a1e47688da2",
+      "experiments/unicode/level-l-bootstrap/specs/tinyexpr.levell": "caa9656a16a899f406d0bc5ddd127083c66d431b28894f5ceb21127fbe3ae078",
+      "experiments/unicode/level-l-emitter/crexx.syntax": "1ec54fca8a984a109e0e1964cae9dc6e53a97b1fda2519c24d26449c5c8005e6",
+      "docs/ai-context/CREXX_LEVEL_L_SYNTAX.md": "6f477ed82b489275511bdf20f89d8d310eb05de3c9aaf39ec66fe7e5aaaf069e",
+      "docs/books/crexx_language_reference/level_l_syntax.md": "1341df394014a8ab67f93e0b43d6550de36015d5b58fc97b6d12b1893b7fab8a"
+    },
+    "pipeline": "pinned unchanged Level B frontend AST to native DFA and retained direct re2c/cREXX emitter",
+    "proof": "eight source fixtures; opt/noopt x rxtvm/rxbvm; explicit wider-Unicode backend rejection",
+    "native_limits": "UTF8 typed string ingress, ASCII non-NUL patterns, no scalar/except/binary profile/ordinary error action",
+    "private_namespace_aliases": "gsurface/gsurfaceraw allow differential implementations to coexist; no product API selection"
+  },
+  "measure_reuse_verified_sha256": "943c2d7aa784ee7d7df8eb00aada1447941c1abd181ed1516fa6abccd3288ff9",
+  "host_capture_timing": "post-run environment capture; research screen, not formal controlled baseline",
+  "qualification": {
+    "native_cells": 4,
+    "surface_cells": 4,
+    "invalid_spec_vm_cells": 2,
+    "re2c_process_vm_cells": 2,
+    "pika_probe": "passed; acknowledged failures reproduced as expected limitations",
+    "current_source_base_qualified": false
+  }
+}

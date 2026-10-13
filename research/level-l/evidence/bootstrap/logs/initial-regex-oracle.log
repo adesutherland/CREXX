@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-bootstrap.py", line 80, in <module>
+    qualify('bounded-unicode',header+'''  pair: pattern = U+03B1{2,3}
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      value.rule: rule = pair U+1F600? then emit value
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    '''+footer,[s.encode() for s in ['', 'α','αα','ααα','αααα','αα😀','ααα😀','αα😀αα','😀','ααβ']],
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     lambda s: ([(1,m.start(),m.end()-m.start()) for m in re.finditer(rb'(?:\xce\xb1){2,3}(?:\xf0\x9f\x98\x80)?',s)]+[(0,len(s),0)]) if re.fullmatch(rb'(?:(?:\xce\xb1){2,3}(?:\xf0\x9f\x98\x80)?)*',s) else None)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/check-bootstrap.py", line 42, in qualify
+    assert (result['status']==0)==(expected is not None),(name,i,source,result,expected)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('bounded-unicode', 4, b'\xce\xb1\xce\xb1\xce\xb1\xce\xb1', {'status': 1, 'offset': 6, 'error': 'bad_character: unmatched scalar', 'tokens': []}, [(1, 0, 6), (0, 8, 0)])

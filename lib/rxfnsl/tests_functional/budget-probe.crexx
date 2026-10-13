@@ -1,0 +1,37 @@
+/* cREXX License (MIT). Host budgets are independent of the language artifact. */
+options levelb
+import rxfnsb
+import lllimits
+import lllanguage
+import llproject
+import llrecover
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  limits = .lllimits..policy()
+  if argv[0] >= 3 then do
+    ok = limits.set(argv[2],argv[3] as .int)
+    if ok = 0 then do
+      say limits.error(); return 3
+    end
+  end
+  if argv[0] = 4 then do
+    if argv[4] = 'recover' then do
+      recovered = .llrecover..request(levell_settings..language(),readbinary(argv[1]),16,limits)
+      recoveredstatus = recovered.run()
+      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()
+      return recoveredstatus
+    end
+  end
+  request = .lllanguage..request(levell_settings..language(),readbinary(argv[1]),limits)
+  status = request.parse()
+  say 'PARSE|' || status || '|' || request.error()
+  if status <> 0 then return status
+  if argv[0] = 4 then do
+    projection = .llproject..projection
+    projection = request.projection()
+    status = projection.run()
+    say 'PROJECT|' || status || '|' || projection.error()
+  end
+  return status

@@ -1,0 +1,107 @@
+/* Level L subset construction with an equivalence-class byte alphabet. */
+options levell
+namespace lldfabuild expose determinize
+import rxfnsb
+determinize: procedure = .binary
+  arg nfa = .binary, root = .int
+  nstates = <blen>(nfa) / 144
+  signatures = .string[]; representatives = .int[]
+  classes = .binary; call binresize classes,128
+  alphabet = 0; cls = .int; state = .int; base = .int; ch = .int; index = .int
+  do ch = 0 to 127
+    signature = ''
+    do state = 1 to nstates
+      base = (state - 1) * 144
+      if <at..i32>(base) nfa = 1 then signature = signature || d2x(<at..u8>(base + 16 + ch) nfa,1)
+    end
+    cls = 0
+    do index = 1 to alphabet
+      if signatures[index] == signature then cls = index
+    end
+    if cls = 0 then do
+      alphabet = alphabet + 1; cls = alphabet
+      signatures[cls] = signature; representatives[cls] = ch
+    end
+    <at..u8>(ch) classes = cls - 1
+  end
+  sets = .string[]; accepting = .int[]; edges = .int[]
+  initial = overlay('1',copies('0',nstates),root)
+  sets[1] = closure(nfa,initial,nstates)
+  total = 1; next = 1
+  do while next <= total
+    /* Determinization is exponential in the general regex size. */
+    if total > 2048 then do
+      overflow = .binary
+      return overflow
+    end
+    active = sets[next]; kind = 0
+    do state = 1 to nstates
+      base = (state - 1) * 144
+      if substr(active,state,1) = '1' then do
+        if <at..i32>(base) nfa = 2 then do
+          kind = <at..i32>(base + 12) nfa
+          leave
+        end
+      end
+    end
+    accepting[next] = kind
+    do cls = 1 to alphabet
+      ch = representatives[cls]
+      following = copies('0',nstates); live = 0
+      do state = 1 to nstates
+        if substr(active,state,1) <> '1' then iterate
+        base = (state - 1) * 144
+        if <at..i32>(base) nfa <> 1 then iterate
+        if <at..u8>(base + 16 + ch) nfa = 1 then do
+          dest = <at..i32>(base + 4) nfa
+          following = overlay('1',following,dest); live = 1
+        end
+      end
+      target = 0
+      if live then do
+        following = closure(nfa,following,nstates)
+        do index = 1 to total
+          if sets[index] == following then target = index
+        end
+        if target = 0 then do
+          total = total + 1; target = total; sets[target] = following
+        end
+      end
+      edges[(next - 1) * alphabet + cls] = target
+    end
+    next = next + 1
+  end
+  result = .binary
+  call binresize result,136 + total * 4 + total * alphabet * 4
+  <at..i32>(0) result = total; <at..i32>(4) result = alphabet
+  do ch = 0 to 127
+    <at..u8>(8 + ch) result = <at..u8>(ch) classes
+  end
+  do state = 1 to total
+    <at..i32>(136 + (state - 1) * 4) result = accepting[state]
+  end
+  do index = 1 to total * alphabet
+    <at..i32>(136 + total * 4 + (index - 1) * 4) result = edges[index]
+  end
+  return result
+
+closure: procedure = .string
+  arg nfa = .binary, active = .string, nstates = .int
+  changed = 1
+  do while changed
+    changed = 0
+    do state = 1 to nstates
+      if substr(active,state,1) <> '1' then iterate
+      base = (state - 1) * 144
+      if <at..i32>(base) nfa <> 0 then iterate
+      do edge = 1 to 2
+        dest = <at..i32>(base + edge * 4) nfa
+        if dest > 0 then do
+          if substr(active,dest,1) <> '1' then do
+            active = overlay('1',active,dest); changed = 1
+          end
+        end
+      end
+    end
+  end
+  return active

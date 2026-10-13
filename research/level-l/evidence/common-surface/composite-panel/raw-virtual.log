@@ -1,0 +1,2 @@
+/* Level L: checking regular lexer rules */
+LL_REGION_ADMISSION: the virtual region token must not be emitted by the lexer

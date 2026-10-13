@@ -1,0 +1,6 @@
+options levelg
+main: procedure = .int
+  x = 1 + 2 * 3
+  return x
+other: procedure = .int
+  return 4

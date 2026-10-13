@@ -1,0 +1,18 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "levelc" (-1:-1) [Type: .unknown]
+      PARSE : "parse" (-1:-1) [Type: .unknown]
+        LITERAL : "upper" (-1:-1) [Type: .unknown]
+        TOKEN : "unknown" (-1:-1) [Type: .unknown]
+          ERROR : "RXC-LC-25.13 keywords=\"ARG PULL SOURCE LINEIN VERSION VALUE VAR\" token=\"unknown\"" (-1:-1) [Type: .unknown]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          LITERAL : "target" (-1:-1) [Type: .unknown]
+Error in c-bad-parse.rexx @ 2:13 - #RXC-LC-25.13 keywords="ARG PULL SOURCE LINEIN VERSION VALUE VAR" token="unknown", "unknown"
+1 error(s) in source file
+Error in c-bad-parse.rexx @ 2:13 - #RXC-LC-25.13 keywords="ARG PULL SOURCE LINEIN VERSION VALUE VAR" token="unknown", "unknown"
+1 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

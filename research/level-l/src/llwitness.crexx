@@ -1,0 +1,200 @@
+/* cREXX License (MIT). Bounded, evidence-producing grammar witnesses. */
+options levell
+namespace llwitness expose search dependencies
+import rxfnsb
+import llcore
+import llcheck
+import llcap
+import llpeg
+import llearley
+
+/** Enumerate shortest inputs over an explicit alphabet.
+ * Ambiguity requires two derivations of ONE complete input in ONE forest.
+ * Priority compares an ordinary PEG with its explicitly unordered contrast;
+ * the contrast is never offered as a semantics-preserving transformation.
+ * 0 witness, 1 none within bound, 2 budget, 3 invalid/unadmitted search.
+ */
+search: class
+  _g = .llcore..grammar
+  _contrast = .llcore..grammar
+  _root = .int
+  _mode = .string
+  _alphabet = .binary
+  _length = .int
+  _limit = .int
+  _fuel = .int
+  _cases = .int
+  _work = .int
+  _status = .int
+  _stop = .int
+  _ran = .int
+  _witness = .binary
+  _error = .string
+  *: factory
+    arg graph = .llcore..grammar, root = .int, mode = .string, alphabet = .binary, length = 6, limit = 10000, fuel = 1000000
+    _g = graph; _root = root; _mode = mode; _alphabet = alphabet
+    _length = length; _limit = limit; _fuel = fuel; _cases = 0; _work = 0
+    _status = 1; _stop = 0; _ran = 0; _witness = '' as .binary; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _length < 0 | _length > 16 | _limit < 1 | _fuel < 1 then do
+      _status = 3; _error = 'invalid witness-search bounds'; return _status
+    end
+    facts = .llcheck..analysis(_g,_root)
+    if facts.run() = 0 then do
+      _status = 3; _error = facts.error(); return _status
+    end
+    if _mode = 'ambiguity' then do
+      if _g.profile() <> 'contextfree' then do
+        _status = 3; _error = 'ambiguity search requires CFG semantics'; return _status
+      end
+      provider = .llcap..backend; provider = .llearley..engine()
+      decision = llcap..admit(facts,provider)
+      if decision.status() <> 0 then do
+        _status = 3; _error = decision.message(); return _status
+      end
+      _contrast = _g
+    end
+    else if _mode = 'priority' then do
+      if _g.profile() <> 'ordered' then do
+        _status = 3; _error = 'priority search requires ordinary PEG semantics'; return _status
+      end
+      provider = .llcap..backend; provider = .llpeg..engine('packrat')
+      decision = llcap..admit(facts,provider)
+      if decision.status() <> 0 then do
+        _status = 3; _error = decision.message(); return _status
+      end
+      _contrast = .llcore..grammar('contextfree')
+      do id = 1 to _g.size()
+        op = _g.op(id)
+        if op = 4 | (op > 6 & op <> 11 & op <> 12) then do
+          _status = 3; _error = facts.location(id) || ': priority contrast admits terminals, sequence, choice and named references only'; return _status
+        end
+        if op = 3 then op = 4
+        node = _contrast.add(op,_g.left(id),_g.right(id),_g.label(id),_g.line(id))
+      end
+    end
+    else do
+      _status = 3; _error = 'unknown witness search'; return _status
+    end
+    do length = 0 to _length
+      call enumerate('' as .binary,length)
+      if _stop then leave
+    end
+    if _status = 1 then _error = 'No witness found through length ' || _length || ' over alphabet 0x' || bin2x(_alphabet) || '; this does not prove equivalence or unambiguity.'
+    return _status
+  enumerate: method = .void
+    arg prefix = .binary, remaining = .int
+    if _stop then return
+    if remaining = 0 then do
+      call probe(prefix); return
+    end
+    do i = 0 to <blen>(_alphabet) - 1
+      byte = binsubstr(_alphabet,i + 1,1)
+      call enumerate(prefix || byte,remaining - 1)
+      if _stop then return
+    end
+    return
+  exhausted: method = .void
+    _status = 2; _stop = 1; _error = 'Witness search resource exhausted; no negative language conclusion.'
+    return
+  probe: method = .void
+    arg text = .binary
+    if _cases >= _limit | _work >= _fuel then do
+      call exhausted(); return
+    end
+    _cases = _cases + 1; input = .llcore..stream(text)
+    cfg = .llearley..parser(_contrast,_root,input,_fuel - _work)
+    status = cfg.run(); _work = _work + cfg.work()
+    if status = 2 then do
+      call exhausted(); return
+    end
+    if status = 3 then do
+      _status = 3; _stop = 1; _error = cfg.error(); return
+    end
+    if status <> 0 then return
+    found = 0; explanation = ''
+    if _mode = 'ambiguity' then do
+      forest = cfg.forest(); count = forest.derivations(cfg.root(),2)
+      if count = -2 then do
+        call exhausted(); return
+      end
+      if count = 2 then do
+        found = 1; explanation = 'Two distinct complete derivations of the same input in the packed forest.'
+      end
+      if count = -1 then do
+        found = 1; explanation = 'A successful packed forest contains a reachable derivation cycle.'
+      end
+    end
+    else do
+      if _work >= _fuel then do
+        call exhausted(); return
+      end
+      peg = .llpeg..parser(_g,_root,input,'packrat',_fuel - _work)
+      status = peg.run(); _work = _work + peg.work()
+      if status = 2 then do
+        call exhausted(); return
+      end
+      if status = 3 then do
+        _status = 3; _stop = 1; _error = peg.error(); return
+      end
+      if status = 1 then do
+        found = 1
+        explanation = 'Unordered alternatives accept this whole input; ordered PEG choice rejects it. Making choice unordered changes the language.'
+      end
+    end
+    if found then do
+      _status = 0; _stop = 1; _witness = text
+      _error = _g.label(_root) || ' (line ' || _g.line(_root) || '), witness 0x' || bin2x(text) || ': ' || explanation
+    end
+    return
+  witness: method = .binary
+    return _witness
+  message: method = .string
+    return _error
+  cases: method = .int
+    return _cases
+  work: method = .int
+    return _work
+
+/** Actual same-position cycle path, using the shared conservative nullability
+ * facts. A path through a conservative edge is a missing progress proof; it
+ * is not a claim that every input loops. */
+dependencies: class
+  _g = .llcore..grammar
+  _facts = .llcheck..analysis
+  _seen = .int[]
+  _active = .int[]
+  _stack = .int[]
+  _depth = .int
+  _path = .string
+  *: factory
+    arg graph = .llcore..grammar, root = .int
+    _g = graph; _facts = .llcheck..analysis(graph,root); _depth = 0; _path = ''
+    return
+  explain: method = .string
+    if _facts.run() = 0 then return _facts.error()
+    do id = 1 to _g.size()
+      call visit(id)
+      if _path <> '' then return 'Same-position dependency cycle: ' || _path || '. Ordinary PEG termination is not proved for this profile.'
+    end
+    return 'No conservative same-position cycle.'
+  visit: method = .void
+    arg id = .int
+    if _path <> '' then return
+    if _active[id] then do
+      do i = _active[id] to _depth
+        _path = _path || _facts.location(_stack[i]) || ' -> '
+      end
+      _path = _path || _facts.location(id)
+      return
+    end
+    if _seen[id] then return
+    _seen[id] = 1; _depth = _depth + 1; _stack[_depth] = id; _active[id] = _depth
+    op = _g.op(id); a = _g.left(id); b = _g.right(id)
+    if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then call visit(a)
+    if op = 3 | op = 4 | (op = 2 & _facts.nullable(a)) then call visit(b)
+    _active[id] = 0; _depth = _depth - 1
+    return

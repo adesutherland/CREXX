@@ -1,0 +1,144 @@
+[  0%] Built target dslsyntax_parser
+[  0%] Built target avl_tree
+[  0%] Built target rxbin
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target rxpa
+[  0%] Built target platform
+[  0%] Built target lemon
+[  5%] Built target re2c_objects_autogen
+[  5%] Built target rxvmmemory
+[  5%] Built target decnumber
+[  5%] Built target rxvm_platform_objects
+[ 11%] Built target rxbvm_core_objects
+[ 11%] Built target rxpashim
+[ 11%] Built target rxcpack
+[ 11%] Built target rxtvm_core_objects
+[ 11%] Built target rxlink
+[ 11%] Built target rxvmref
+[ 11%] Built target rxvmplugin
+[ 16%] Built target mc_decimal_manual
+[ 16%] Built target rxbvml
+[ 16%] Built target rxtvm
+[ 16%] Built target rxvml
+[ 27%] Built target re2c
+[ 33%] Built target rxaslib
+[ 38%] Built target rxas
+[ 38%] Built target rxc_typed_objects
+[ 38%] Built target rxc_classic_objects
+[ 55%] Built target rxc_backend_objects
+[ 55%] Built target library-rxas
+[ 55%] Built target rxclib
+[ 55%] Built target rxc
+[ 88%] Built target library-rexx
+[ 88%] Built target library
+[ 88%] Built target rxfnsl_imports
+[ 94%] Built target rxfnsl_base
+[ 94%] Staging deterministic compiler imports for levell_base_imports ...
+[ 94%] Built target levell_base_imports
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[ 94%] Built target levell_driver_imports_0
+[ 94%] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[ 94%] Built target levell_syntax_imports_1
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[ 94%] Built target levell_driver_imports_1
+[ 94%] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[ 94%] Built target levell_syntax_imports_2
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[ 94%] Built target levell_driver_imports_2
+[ 94%] Built target rxfnsl
+[100%] Built target levell_cli
+[100%] Generating levell_example.rxas
+[100%] Generating testGenerated-linked.rxbin
+[100%] Built target testlevell_generated
+[  0%] Built target lemon
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target avl_tree
+[  0%] Built target rxbin
+[  0%] Built target dslsyntax_parser
+[  0%] Built target rxpa
+[  0%] Built target platform
+[  3%] Built target re2c_objects_autogen
+[  3%] Built target rxvmmemory
+[  3%] Built target decnumber
+[  3%] Built target rxpashim
+[  3%] Built target _hash
+[  3%] Built target rxvm_platform_objects
+[  7%] Built target rxbvm_core_objects
+[  7%] Built target rxtvm_core_objects
+[  7%] Built target fs
+[  7%] Built target rxcpack
+[  7%] Built target cstream
+[  7%] Built target rxlink
+[  7%] Built target rxvmref
+[  7%] Built target rxvmplugin
+[ 11%] Built target mc_decimal_manual
+[ 11%] Built target rxtvm
+[ 11%] Built target rxbvml
+[ 11%] Built target rxvml
+[ 11%] Built target rxbvm
+[ 19%] Built target re2c
+[ 23%] Built target rxaslib
+[ 26%] Built target rxas
+[ 26%] Built target rxc_classic_objects
+[ 26%] Built target rxc_typed_objects
+[ 38%] Built target rxc_backend_objects
+[ 38%] Built target library-rxas
+[ 38%] Built target rxclib
+[ 38%] Built target rxc
+[ 38%] Built target token_bin
+[ 61%] Built target library-rexx
+[ 61%] Built target library
+[ 61%] Built target rxfnsl_imports
+[ 61%] Built target compiler_exit_imports
+[ 61%] Built target exit_dump_bin
+[ 65%] Built target exit_rxqueue_bin
+[ 65%] Built target exit_query_bin
+[ 65%] Built target exit_address_bin
+[ 65%] Built target exit_execio_bin
+[ 65%] Built target exit_sortx_bin
+[ 65%] Built target exit_sort_bin
+[ 69%] Built target rxfnsl_base
+[ 69%] Built target exit_add_bin
+[ 69%] Built target exit_fsay_bin
+[ 69%] Built target exit_msay_bin
+[ 69%] Built target exit_signal_bin
+[ 69%] Built target exit_parse_bin
+[ 69%] Built target exit_trace_bin
+[ 69%] Built target exit_rexxscript_bin
+[ 69%] Built target exit_substr_bin
+[ 69%] Staging deterministic compiler imports for levell_base_imports ...
+[ 69%] Built target exit_dummy_bin
+[ 69%] Built target compiler_exit_bin
+[ 69%] Built target levell_base_imports
+[ 69%] Built target classlib_imports
+[ 69%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[ 80%] Built target classlib
+[ 80%] Built target levell_driver_imports_0
+[ 80%] Built target stage_g_builder_imports
+[ 80%] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[ 80%] Built target levell_syntax_imports_1
+[ 80%] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[ 80%] Built target levell_driver_imports_1
+[ 80%] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[ 80%] Built target levell_syntax_imports_2
+[ 80%] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[ 80%] Built target levell_driver_imports_2
+[ 80%] Built target rxfnsl
+[ 80%] Built target levell_unicode_lexer
+[ 80%] Building Level G and Unicode with the Level B builder ...
+[ 84%] Built target levell_cli
+[ 84%] Built target rxfnsg
+[ 84%] Built target rxfnsc_imports
+[ 96%] Built target rxfnsc
+[100%] Staging deterministic compiler imports for rexxscript1_imports ...
+[100%] Built target rexxscript1_imports
+[100%] Generating modern/RexxScriptOperators.rxbin
+[100%] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[100%] Generating modern/RexxScriptBifs.rxbin
+[100%] Generating modern/rexxscriptgrammar.rxbin
+[100%] Generating modern/RexxScriptProgram.rxbin
+[100%] Generating modern/RexxScriptExecution.rxbin
+[100%] Generating ../bin/rexxscript1.rxbin
+[100%] Built target rexxscript1
+[100%] Generating modern/testRexxScript1-linked.rxbin
+[100%] Built target testrexxscript1

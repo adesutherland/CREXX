@@ -193,6 +193,23 @@ Because linked images may share one constant pool across multiple modules,
 module-local runtime walkers now follow `proc_head`, `expose_head`, and
 `meta_head` chains instead of sweeping the entire pool.
 
+Compatibility method/factory registry rebuilds use a private, optional
+`rxvmlinkindex` lookup index over these metadata chains. Each rebuild passes
+the index explicitly to procedure/signature, interface relationship and member
+lookups. It owns only temporary worker-allocated tables and borrows metadata
+and procedure pointers from that context; no TLS pointer, context field or
+persistent cache is added. The index is freed before the rebuild returns.
+Cleanup binds the owning worker through the existing allocator enter/leave
+scope and restores the previous worker, including when another context is active.
+Allocation or size-check failure frees partial index storage and selects the
+original ordered metadata walks, so failure of this optional acceleration
+does not skip registry population. Procedure lookup retains case-insensitive
+first-match behavior; member owners and class/interface pairs retain exact
+matching and module/metadata order. Signature, factory/default selection and
+dispatch policy remain with the existing VM code. An index from another
+context also selects the ordered fallback. This changes rebuild cost without
+changing the public rebuild APIs, dirty flags or canonical graph authority.
+
 Under RXBIN 007 the loader validates and retains the materialized sealed-image
 semantic graph. During linking it builds one process-local graph binding with a
 dense callable-ID-to-`proc_runtime *` array and bound factory/provider rows.

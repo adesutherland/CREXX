@@ -1,0 +1,7 @@
+options levell
+namespace nullable_example
+number: token = 1
+scan: lexer input bytes
+  number.rule: rule = '' then emit number
+parse: parser semantics contextfree input tokens start document
+  document: rule = number

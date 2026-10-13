@@ -1,0 +1,24 @@
+/* cREXX License (MIT). Diagnostic order and associated original error nodes. */
+options levelb
+import rxfnsb
+import llrecover
+import llcore
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1])
+  request = .llrecover..request(levell_settings..language(),source)
+  if request.run() <> 1 then return 1
+  tree = request.tree()
+  if tree.source() <> source | tree.validate() = 0 then return 2
+  previous = -1
+  do i = 1 to request.errors()
+    offset = request.offset(i); node = request.errornode(i)
+    if offset < previous | node < 1 then return 3
+    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4
+    previous = offset
+  end
+  if request.errors() <> 2 then return 5
+  say 'ordered_original_error_nodes=2; failures=0'
+  return 0

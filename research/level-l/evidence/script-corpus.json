@@ -1,0 +1,342 @@
+[
+  {
+    "id": "E000",
+    "kind": "expression",
+    "expression": "1+2*3",
+    "source": "result=1+2*3",
+    "split": "development"
+  },
+  {
+    "id": "E001",
+    "kind": "expression",
+    "expression": "10-3-2",
+    "source": "result=10-3-2",
+    "split": "heldout"
+  },
+  {
+    "id": "E002",
+    "kind": "expression",
+    "expression": "8/3",
+    "source": "result=8/3",
+    "split": "development"
+  },
+  {
+    "id": "E003",
+    "kind": "expression",
+    "expression": "-8/3",
+    "source": "result=-8/3",
+    "split": "development"
+  },
+  {
+    "id": "E004",
+    "kind": "expression",
+    "expression": "--2",
+    "source": "result=--2",
+    "split": "heldout"
+  },
+  {
+    "id": "E005",
+    "kind": "expression",
+    "expression": "1--2",
+    "source": "result=1--2",
+    "split": "development"
+  },
+  {
+    "id": "E006",
+    "kind": "expression",
+    "expression": "'a' 'b'",
+    "source": "result='a' 'b'",
+    "split": "development"
+  },
+  {
+    "id": "E007",
+    "kind": "expression",
+    "expression": "'a''b'",
+    "source": "result='a''b'",
+    "split": "heldout"
+  },
+  {
+    "id": "E008",
+    "kind": "expression",
+    "expression": "'a' || 'b'",
+    "source": "result='a' || 'b'",
+    "split": "development"
+  },
+  {
+    "id": "E009",
+    "kind": "expression",
+    "expression": "x+3",
+    "source": "result=x+3",
+    "split": "development"
+  },
+  {
+    "id": "E010",
+    "kind": "expression",
+    "expression": "'total ' || x",
+    "source": "result='total ' || x",
+    "split": "heldout"
+  },
+  {
+    "id": "E011",
+    "kind": "expression",
+    "expression": "12x",
+    "source": "result=12x",
+    "split": "development"
+  },
+  {
+    "id": "E012",
+    "kind": "expression",
+    "expression": "length('abc')",
+    "source": "result=length('abc')",
+    "split": "development"
+  },
+  {
+    "id": "E013",
+    "kind": "expression",
+    "expression": "substr('abc',2)",
+    "source": "result=substr('abc',2)",
+    "split": "heldout"
+  },
+  {
+    "id": "E014",
+    "kind": "expression",
+    "expression": "substr('abc',2,)",
+    "source": "result=substr('abc',2,)",
+    "split": "development"
+  },
+  {
+    "id": "E015",
+    "kind": "expression",
+    "expression": "substr('abc',,2)",
+    "source": "result=substr('abc',,2)",
+    "split": "development"
+  },
+  {
+    "id": "E016",
+    "kind": "expression",
+    "expression": "substr('abc',2,1)",
+    "source": "result=substr('abc',2,1)",
+    "split": "heldout"
+  },
+  {
+    "id": "E017",
+    "kind": "expression",
+    "expression": "length(substr('abcdef',2,3))",
+    "source": "result=length(substr('abcdef',2,3))",
+    "split": "development"
+  },
+  {
+    "id": "E018",
+    "kind": "expression",
+    "expression": "'12'+3",
+    "source": "result='12'+3",
+    "split": "development"
+  },
+  {
+    "id": "E019",
+    "kind": "expression",
+    "expression": "1+",
+    "source": "result=1+",
+    "split": "heldout"
+  },
+  {
+    "id": "E020",
+    "kind": "expression",
+    "expression": "(1+2)",
+    "source": "result=(1+2)",
+    "split": "development"
+  },
+  {
+    "id": "E021",
+    "kind": "expression",
+    "expression": "1**2",
+    "source": "result=1**2",
+    "split": "development"
+  },
+  {
+    "id": "E022",
+    "kind": "expression",
+    "expression": "'open",
+    "source": "result='open",
+    "split": "heldout"
+  },
+  {
+    "id": "E023",
+    "kind": "expression",
+    "expression": "unknown",
+    "source": "result=unknown",
+    "split": "development"
+  },
+  {
+    "id": "E024",
+    "kind": "expression",
+    "expression": "1/0",
+    "source": "result=1/0",
+    "split": "development"
+  },
+  {
+    "id": "E025",
+    "kind": "expression",
+    "expression": "'a'+2",
+    "source": "result='a'+2",
+    "split": "heldout"
+  },
+  {
+    "id": "E026",
+    "kind": "expression",
+    "expression": "length()",
+    "source": "result=length()",
+    "split": "development"
+  },
+  {
+    "id": "E027",
+    "kind": "expression",
+    "expression": "substr('abc',0)",
+    "source": "result=substr('abc',0)",
+    "split": "development"
+  },
+  {
+    "id": "E028",
+    "kind": "expression",
+    "expression": "1\n+2",
+    "source": "result=1\n+2",
+    "split": "heldout"
+  },
+  {
+    "id": "E029",
+    "kind": "expression",
+    "expression": "1e2",
+    "source": "result=1e2",
+    "split": "development"
+  },
+  {
+    "id": "E030",
+    "kind": "expression",
+    "expression": "+2*3",
+    "source": "result=+2*3",
+    "split": "development"
+  },
+  {
+    "id": "E031",
+    "kind": "expression",
+    "expression": "@+2*3",
+    "source": "result=@+2*3",
+    "split": "heldout"
+  },
+  {
+    "id": "E032",
+    "kind": "expression",
+    "expression": "12*3",
+    "source": "result=12*3",
+    "split": "development"
+  },
+  {
+    "id": "E033",
+    "kind": "expression",
+    "expression": "1@2*3",
+    "source": "result=1@2*3",
+    "split": "development"
+  },
+  {
+    "id": "E034",
+    "kind": "expression",
+    "expression": "1+*3",
+    "source": "result=1+*3",
+    "split": "heldout"
+  },
+  {
+    "id": "E035",
+    "kind": "expression",
+    "expression": "1+@*3",
+    "source": "result=1+@*3",
+    "split": "development"
+  },
+  {
+    "id": "E036",
+    "kind": "expression",
+    "expression": "1+23",
+    "source": "result=1+23",
+    "split": "development"
+  },
+  {
+    "id": "E037",
+    "kind": "expression",
+    "expression": "1+2@3",
+    "source": "result=1+2@3",
+    "split": "heldout"
+  },
+  {
+    "id": "E038",
+    "kind": "expression",
+    "expression": "1+2*",
+    "source": "result=1+2*",
+    "split": "development"
+  },
+  {
+    "id": "E039",
+    "kind": "expression",
+    "expression": "1+2*@",
+    "source": "result=1+2*@",
+    "split": "development"
+  },
+  {
+    "id": "S000",
+    "kind": "statement",
+    "source": "a=1;say 'starting';say a;a=a+2;result=a",
+    "split": "development"
+  },
+  {
+    "id": "S001",
+    "kind": "statement",
+    "source": "result=x+3;say result",
+    "split": "heldout"
+  },
+  {
+    "id": "S002",
+    "kind": "statement",
+    "source": "say 'before';result='after';say result",
+    "split": "development"
+  },
+  {
+    "id": "S003",
+    "kind": "statement",
+    "source": "if 0 then do; say 'bad'; end; say 'good'",
+    "split": "development"
+  },
+  {
+    "id": "S004",
+    "kind": "statement",
+    "source": "say 'before'; signal done; say 'bad'; done:; say 'after'",
+    "split": "heldout"
+  },
+  {
+    "id": "S005",
+    "kind": "statement",
+    "source": "result=1+;say 'later'",
+    "split": "development"
+  },
+  {
+    "id": "S006",
+    "kind": "statement",
+    "source": "result=substr('abc',0);say 'later'",
+    "split": "development"
+  },
+  {
+    "id": "S007",
+    "kind": "statement",
+    "source": "result=1/*comment*/+2",
+    "split": "heldout"
+  },
+  {
+    "id": "S008",
+    "kind": "statement",
+    "source": "result='/*quoted*/'",
+    "split": "development"
+  },
+  {
+    "id": "S009",
+    "kind": "statement",
+    "source": "say 'a;b';result=3",
+    "split": "development"
+  }
+]

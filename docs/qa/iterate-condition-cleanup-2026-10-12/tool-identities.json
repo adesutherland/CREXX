@@ -1,0 +1,26 @@
+{
+  "rxc": {
+    "sha256": "5cf5ea14999b6d7580726e1f76872ae03e0a97f609a6e9d60f885fe097bcbbff",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc"
+  },
+  "rxas": {
+    "sha256": "df7999318cb95bef269d3a6f956b750e9ee1386b6854e43395c1b4552d56e7c1",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas"
+  },
+  "rxlink": {
+    "sha256": "baedfc52dcedc7cd61bf1ef1b08218cddfefa19b67dd47875b5b961158912c24",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxlink"
+  },
+  "rxvm": {
+    "sha256": "46d84575a033ff9ee559fb7d74dcad7b2307eae9a46fd990f44326220bfcb0df",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxbvm"
+  },
+  "library.rxbin": {
+    "sha256": "158eeb61fd8dbbf6f3a201d06b10ec62bdf3a29f93faee4a6c57518882d50ff1",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin"
+  },
+  "ui_catalog.rxbin": {
+    "sha256": "8f325ccebf82c47af2dbed1e09e7ff8b1bfb4e85550ba9767d0d67b800b80c32",
+    "resolved": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/ui_catalog.rxbin"
+  }
+}

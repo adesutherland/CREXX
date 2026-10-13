@@ -1,0 +1,21 @@
+/* cREXX License (MIT). Standalone DFA route with shared comment preparation. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import levell_comments
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1]); definition = levell_comments..language()
+  if definition.hasparser() then return 3
+  request = .lllanguage..request(definition,source)
+  status = request.lex()
+  say 'STATUS|' || status || '|BYTE|' || request.offset()
+  say 'MESSAGE|' || request.error()
+  tokens = request.tokens()
+  if tokens.source() <> source then return 7
+  do i = 0 to tokens.size() - 1
+    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)
+  end
+  return status

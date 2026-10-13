@@ -26,7 +26,7 @@ endif()
 
 file(READ "${OUTPUT_FILE}" output)
 string(FIND "${output}" "__rexxscript_source = ''" init_pos)
-string(FIND "${output}" "msg_1=111" body_pos)
+string(FIND "${output}" "msg.1=111" body_pos)
 string(FIND "${output}" "|| \";\"" separator_pos)
 string(FIND "${output}" "REXXSCRIPT __rexxscript_source" call_pos)
 string(FIND "${output}" "EXPOSE total, count" expose_pos)

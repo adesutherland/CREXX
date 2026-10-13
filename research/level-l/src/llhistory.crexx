@@ -1,0 +1,89 @@
+/* cREXX License (MIT). Recognition histories, including failure evidence. */
+options levell
+namespace llhistory expose arena
+import llcore
+
+/** Owned DAG of parse attempts. Unlike a selected syntax tree, alternatives
+ * overlap and a failed child's frontier can exceed its parent's accepted prefix.
+ */
+arena: class
+  _size = .int
+  _edges = .int
+  _clause = .int[]
+  _ok = .int[]
+  _start = .int[]
+  _length = .int[]
+  _first = .int[]
+  _count = .int[]
+  _child = .int[]
+  *: factory
+    _size = 0; _edges = 0
+    return
+  add: method = .int
+    arg clause = .int, ok = .int, start = .int, length = .int, children = .int[]
+    _size = _size + 1
+    _clause[_size] = clause; _ok[_size] = ok; _start[_size] = start; _length[_size] = length
+    _first[_size] = _edges + 1; _count[_size] = children[0]
+    do i = 1 to children[0]
+      _edges = _edges + 1; _child[_edges] = children[i]
+    end
+    return _size
+  size: method = .int
+    return _size
+  edges: method = .int
+    return _edges
+  ok: method = .int
+    arg node = .int
+    return _ok[node]
+  start: method = .int
+    arg node = .int
+    return _start[node]
+  length: method = .int
+    arg node = .int
+    return _length[node]
+  clause: method = .int
+    arg node = .int
+    return _clause[node]
+  count: method = .int
+    arg node = .int
+    return _count[node]
+  child: method = .int
+    arg node = .int, index = .int
+    return _child[_first[node] + index - 1]
+  validate: method = .int
+    arg extent = .int
+    do i = 1 to _size
+      if _start[i] < 0 | _length[i] < 0 | _start[i] + _length[i] > extent then return 0
+      do j = 1 to _count[i]
+        c = child(i,j)
+        if c < 1 | c >= i then return 0
+      end
+    end
+    return 1
+  /** Stable reference-comparison form, deliberately independent of arena IDs. */
+  canonical: method = .string
+    arg graph = .llcore..grammar, node = .int
+    op = graph.op(_clause[node]); kind = ''
+    select op
+      when 1 then kind = 'Char'
+      when 2 then kind = 'Seq'
+      when 3 then kind = 'First'
+      when 5 then kind = 'Ref:' || graph.label(_clause[node])
+      when 6 then kind = 'Nothing'
+      when 7 then kind = 'ZeroOrMore'
+      when 8 then kind = 'NotFollowedBy'
+      when 9 then kind = 'FollowedBy'
+      when 10 then kind = 'End'
+      when 11 then kind = 'CharSet'
+      when 12 then kind = 'AnyChar'
+      when 13 then kind = 'Str'
+      when 14 then kind = 'OneOrMore'
+      when 15 then kind = 'Optional'
+      when 16 then kind = 'CharSet'
+      otherwise kind = 'Unknown'
+    end
+    out = '(' || kind || ',' || _ok[node] || ',' || _start[node] || ',' || _length[node]
+    do i = 1 to _count[node]
+      out = out || canonical(graph,child(node,i))
+    end
+    return out || ')'

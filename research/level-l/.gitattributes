@@ -1,0 +1,2 @@
+# Preserve exact retained test inputs and observations, including CR/CRLF cases.
+evidence/** -text

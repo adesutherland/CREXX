@@ -1,0 +1,2 @@
+# Checksummed raw inputs must retain their original bytes on every host.
+unicode/data/** -text

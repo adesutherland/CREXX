@@ -1,0 +1,124 @@
+/* Independent core conformance fixtures for the pinned Dart reference. */
+options levell
+import rxfnsb
+import llcore
+import llsquirrel
+import llhistory
+
+main: procedure = .int expose failures
+  failures = 0
+  g = .llcore..grammar('squirrel')
+  r = g.add(5,0,0,'S',1)
+  a = g.add(1,97,0,'a',2); b = g.add(1,98,0,'b',3)
+  seq = g.add(2,r,b,'seq',4); choice = g.add(3,seq,a,'choice',5)
+  ok = g.body(r,choice)
+  call probe 'direct',g,r,'',0
+  call probe 'direct',g,r,'a',1
+  call probe 'direct',g,r,'abbb',1
+  call probe 'direct',g,r,'abx',0
+  do n = 0 to 4
+    call enumerate 'generated-direct',g,r,'abx','',n
+  end
+  g = .llcore..grammar('squirrel')
+  r = g.add(5,0,0,'S',1); t = g.add(5,0,0,'T',2)
+  plus = g.add(1,43,0,'plus',3); minus = g.add(1,45,0,'minus',4)
+  a = g.add(11,97,122,'letter',5); ok = g.body(t,a)
+  seq = g.add(2,r,plus,'prefix.plus',6); add = g.add(2,seq,t,'add',7)
+  seq = g.add(2,r,minus,'prefix.minus',8); sub = g.add(2,seq,t,'sub',9)
+  choice = g.add(3,add,sub,'operators',10); choice = g.add(3,choice,t,'choice',11)
+  ok = g.body(r,choice)
+  call probe 'mixed',g,r,'a+b-c',1
+  call probe 'mixed',g,r,'a-b+c',1
+  call probe 'mixed',g,r,'a+',0
+  call probe 'mixed',g,r,'a++b',0
+  do n = 0 to 4
+    call enumerate 'generated-mixed',g,r,'ab+-','',n
+  end
+  g = .llcore..grammar('squirrel')
+  r = g.add(5,0,0,'S',1); rb = g.add(5,0,0,'B',2)
+  a = g.add(1,97,0,'a',3); b = g.add(1,98,0,'b',4)
+  choice = g.add(3,rb,a,'S.body',5); ok = g.body(r,choice)
+  seq = g.add(2,r,b,'seq',6); choice = g.add(3,seq,a,'B.body',7); ok = g.body(rb,choice)
+  call probe 'indirect',g,r,'abbb',1
+  g = .llcore..grammar('squirrel')
+  a = g.add(1,97,0,'a',1); ab = g.literal('ab' as .binary,'ab',2)
+  c = g.add(1,99,0,'c',3); choice = g.add(3,a,ab,'choice',4)
+  root = g.add(2,choice,c,'S',5)
+  call probe 'prefix',g,root,'abc',0
+  g = .llcore..grammar('squirrel')
+  root = g.literal('function' as .binary,'function',1)
+  call probe 'literal-frontier',g,root,'fun?',0
+  g = .llcore..grammar('squirrel')
+  a = g.add(1,97,0,'a',1); b = g.add(1,98,0,'b',2); c = g.add(1,99,0,'c',3)
+  bc = g.add(2,b,c,'bc',4); look = g.add(9,bc,0,'look',5); root = g.add(2,a,look,'S',6)
+  call probe 'predicate-frontier',g,root,'abx',0
+  g = .llcore..grammar('squirrel')
+  empty = g.add(6,0,0,'empty',1); root = g.add(7,empty,0,'S',2)
+  call probe 'nullable-star',g,root,'',1
+  root = g.add(14,empty,0,'Splus',3)
+  call probe 'nullable-plus',g,root,'',0
+  g = .llcore..grammar('squirrel')
+  a = g.add(1,97,0,'a',1); optional = g.add(15,a,0,'optional',2)
+  chars = g.characters('0123456789ABC' as .binary,0,'chars',3)
+  many = g.add(14,chars,0,'many',4); root = g.add(2,optional,many,'S',5)
+  call probe 'charset',g,root,'a19BC',1
+  g = .llcore..grammar('squirrel')
+  chars = g.characters('abc' as .binary,1,'chars',1); root = g.add(7,chars,0,'S',2)
+  call probe 'inverted-set',g,root,'XYz',1
+  g = .llcore..grammar('squirrel')
+  b = g.add(1,98,0,'b',1); negative = g.add(8,b,0,'negative',2)
+  any = g.add(12,0,0,'any',3); root = g.add(2,negative,any,'S',4)
+  call probe 'negative',g,root,'a',1
+  call probe 'negative',g,root,'b',0
+  g = .llcore..grammar('squirrel')
+  root = g.add(1,0,0,'nul',1)
+  call probe 'nul',g,root,'00'x,1
+  g = .llcore..grammar('squirrel')
+  r = g.add(5,0,0,'S',1); rb = g.add(5,0,0,'B',2)
+  a = g.add(1,97,0,'a',3); b = g.add(1,98,0,'b',4)
+  seq = g.add(2,rb,b,'seq',5); choice = g.add(3,seq,a,'shared',6)
+  ok = g.body(r,choice); ok = g.body(rb,choice)
+  call probe 'shared-body',g,r,'abbb',1
+  do n = 4 to 32 by 4
+    if n = 4 | n = 8 | n = 16 | n = 32 then do
+      g = .llcore..grammar('squirrel')
+      r = g.add(5,0,0,'S',1); e = g.add(5,0,0,'E',2); x = g.add(1,120,0,'x',3)
+      seq = g.add(2,e,x,'E.seq',4); choice = g.add(3,seq,x,'E.body',5); ok = g.body(e,choice)
+      look = g.add(9,e,0,'look',6); seq = g.add(2,look,x,'prefix',7)
+      seq = g.add(2,seq,r,'recur',8); choice = g.add(3,seq,x,'S.body',9); ok = g.body(r,choice)
+      call probe 'overlap',g,r,copies('x',n),1
+    end
+  end
+  say 'squirrel_failures='failures
+  if failures > 0 then return 1
+  return 0
+
+probe: procedure = .void expose failures
+  arg name = .string, graph = .llcore..grammar, root = .int, text = .string, expected = .int
+  input = .llcore..stream(text as .binary)
+  parser = .llsquirrel..parser(graph,root,input)
+  status = parser.run()
+  if status > 1 then do
+    say 'FAIL: build/resource' name parser.error(); failures = failures + 1; return
+  end
+  accepted = status = 0
+  history = parser.history()
+  if (expected >= 0 & accepted <> expected) | history.validate(length(text)) = 0 then do
+    say 'FAIL:' name 'acceptance/provenance'; failures = failures + 1
+  end
+  node = parser.root()
+  canonical = ''
+  if name <> 'overlap' then canonical = history.canonical(graph,node)
+  say 'CORE|'name'|'c2x(text)'|'accepted'|'history.ok(node)'|'history.length(node)'|'parser.work()'|'parser.hits()'|'parser.expansions()'|'canonical
+  return
+
+enumerate: procedure = .void
+  arg name = .string, graph = .llcore..grammar, root = .int, alphabet = .string, prefix = .string, remaining = .int
+  if remaining = 0 then do
+    call probe name,graph,root,prefix,-1
+    return
+  end
+  do i = 1 to length(alphabet)
+    call enumerate name,graph,root,alphabet,prefix || substr(alphabet,i,1),remaining - 1
+  end
+  return

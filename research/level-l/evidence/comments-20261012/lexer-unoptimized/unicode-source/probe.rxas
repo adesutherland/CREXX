@@ -1,0 +1,397 @@
+/*
+ * SOURCE                 : comment-lexer-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=20
+   .meta "comment-lexer-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 73 73 17 "comment-lexer-probe.crexx" 8 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "comment-lexer-probe.crexx" 9 7 21 "  arg argv = .string[]"
+   .meta "comment-lexer-probe.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "comment-lexer-probe.crexx" 10 3 29 "  source = readbinary(argv[1]); definition = levell_comments..language()"
+   .meta "comment-lexer-probe.main.source"="b" ".binary" r2
+   minlinkattr1 r4,a1,1
+   .traceevent "V" 6 "R" "S" "r" 4 2 2 0 "argv" ""
+   load r6,1
+   settpswapcall r2,rxfnsb.readbinary(),r6,r4,256,r7
+   swap r4,r7
+   unlink r4
+   .traceevent "F" 4 "R" "X" "r" 2 2 2 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 2 2 2 0 "source" ""
+   .srcstep 3 3 17 "comment-lexer-probe.crexx" 10 33 71 "  source = readbinary(argv[1]); definition = levell_comments..language()"
+   .meta "comment-lexer-probe.main.definition"="b" ".lllanguage..definition" r1
+   load r7,0
+   call r1,levell_comments.language(),r7
+   .traceevent "F" 4 "R" "O" "r" 1 3 3 0 "language" ""
+   .traceevent "A" 6 "R" "O" "r" 1 3 3 0 "definition" ""
+   .srcstep 9 9 17 "comment-lexer-probe.crexx" 11 3 26 "  if definition.hasparser() then return 3"
+   .srcstep 7 7 17 "comment-lexer-probe.crexx" 11 6 16 "  if definition.hasparser() then return 3"
+   .srcstep 4 4 33 "comment-lexer-probe.crexx" 11 6 16 "  if definition.hasparser() then return 3"
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "definition" ""
+   .traceevent "A" 6 "R" "O" "r" 1 4 4 0 "§this" ""
+   .srcstep 5 5 6 "lllanguage@rxfnsl.rxbin" 11 16 16 "  if definition.hasparser() then return 3"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "§this" ""
+   assertinitialized r1
+   .srcstep 6 6 25 "lllanguage.crexx" 126 5 22 "    return _hasparser"
+   linkattr1 r7,r1,13
+   .traceevent "V" 6 "R" "I" "r" 7 9 9 0 "_hasparser" ""
+   igetunlink r6,r7
+l8760bexprend:
+   brf l36iffalse,r6
+   .srcstep 10 10 17 "comment-lexer-probe.crexx" 11 26 27 "  if definition.hasparser() then return 3"
+   .srcstep 8 8 17 "comment-lexer-probe.crexx" 11 34 42 "  if definition.hasparser() then return 3"
+   ret 3
+l36iffalse:
+   .srcstep 11 11 17 "comment-lexer-probe.crexx" 12 3 51 "  request = .lllanguage..request(definition,source)"
+   .meta "comment-lexer-probe.main.request"="b" ".lllanguage..request" r5
+   .traceevent "V" 6 "R" "O" "r" 1 11 11 0 "definition" ""
+   .traceevent "V" 6 "R" "X" "r" 2 11 11 0 "source" ""
+   load r0,3
+   settp r1,256
+   settp r2,256
+   settpcall r5,§lllanguage.request.§factory(),r0,r3,512
+   .traceevent "F" 4 "R" "O" "r" 5 11 11 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 11 11 0 "request" ""
+   .srcstep 12 12 17 "comment-lexer-probe.crexx" 13 3 23 "  status = request.lex()"
+   .meta "comment-lexer-probe.main.status"="b" ".int" r10
+   .traceevent "V" 6 "R" "O" "r" 5 12 12 0 "request" ""
+   load r4,2
+   settp r5,256
+   settpcall r10,§lllanguage.request.lex(),r4,r6,0
+   .traceevent "F" 4 "R" "I" "r" 10 12 12 0 "lex" ""
+   .traceevent "A" 6 "R" "I" "r" 10 12 12 0 "status" ""
+   .srcstep 19 19 17 "comment-lexer-probe.crexx" 14 3 56 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 18 18 17 "comment-lexer-probe.crexx" 14 7 16 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 13 13 33 "comment-lexer-probe.crexx" 14 27 29 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   itos r10
+   .traceevent "V" 6 "R" "S" "r" 10 13 13 0 "status" ""
+   concat r7,"STATUS|",r10
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   concat r11,r7,"|BYTE|"
+   .traceevent "O" 4 "R" "S" "r" 11 13 13 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 13 13 0 "__inline_lhs_52_57" ""
+   .srcstep 17 17 33 "comment-lexer-probe.crexx" 14 39 41 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "S" "r" 11 19 19 0 "__inline_lhs_52_57" ""
+   .srcstep 16 16 17 "comment-lexer-probe.crexx" 14 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 14 14 33 "comment-lexer-probe.crexx" 14 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "O" "r" 5 14 14 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 14 14 0 "§this" ""
+   .srcstep 15 15 25 "lllanguage.crexx" 380 5 19 "    return _offset"
+   linkattr1 r7,r5,7
+   .traceevent "V" 6 "R" "I" "r" 7 19 19 0 "_offset" ""
+   igetunlink r6,r7
+l8792bexprend:
+   itos r6
+   concat r6,r11,r6
+   .traceevent "O" 4 "R" "S" "r" 6 19 19 0 "" ""
+   scopy r4,r6
+l8769bexprend:
+   say r4
+   .srcstep 24 24 17 "comment-lexer-probe.crexx" 15 3 34 "  say 'MESSAGE|' || request.error()"
+   .srcstep 23 23 17 "comment-lexer-probe.crexx" 15 21 28 "  say 'MESSAGE|' || request.error()"
+   .srcstep 20 20 33 "comment-lexer-probe.crexx" 15 21 28 "  say 'MESSAGE|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 20 20 0 "§this" ""
+   .srcstep 21 21 6 "lllanguage@rxfnsl.rxbin" 15 28 28 "  say 'MESSAGE|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "§this" ""
+   assertinitialized r5
+   .srcstep 22 22 25 "lllanguage.crexx" 382 5 18 "    return _error"
+   linkattr1 r7,r5,1
+   .traceevent "V" 6 "R" "S" "r" 7 24 24 0 "_error" ""
+   scopy r6,r7
+   unlink r7
+l8932bexprend:
+   concat r6,"MESSAGE|",r6
+   .traceevent "O" 4 "R" "S" "r" 6 24 24 0 "" ""
+   say r6
+   .srcstep 25 25 17 "comment-lexer-probe.crexx" 16 3 26 "  tokens = request.tokens()"
+   .meta "comment-lexer-probe.main.tokens"="b" ".llcore..stream" r8
+   .traceevent "V" 6 "R" "O" "r" 5 25 25 0 "request" ""
+   load r4,1
+   settpcall r8,§lllanguage.request.tokens(),r4,r5,256
+   .traceevent "F" 4 "R" "O" "r" 8 25 25 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 8 25 25 0 "tokens" ""
+   .srcstep 27 27 17 "comment-lexer-probe.crexx" 17 3 31 "  if tokens.source() <> source then return 7"
+   .traceevent "V" 6 "R" "O" "r" 8 27 27 0 "tokens" ""
+   load r7,1
+   settpcall r6,§llcore.stream.source(),r7,r8,256
+   .traceevent "F" 4 "R" "X" "r" 6 27 27 0 "source" ""
+   .traceevent "V" 6 "R" "X" "r" 2 27 27 0 "source" ""
+   binne r7,r6,r2
+   .traceevent "O" 4 "R" "B" "r" 7 27 27 0 "" ""
+   brf l80iffalse,r7
+   .srcstep 28 28 17 "comment-lexer-probe.crexx" 17 32 36 "  if tokens.source() <> source then return 7"
+   .srcstep 26 26 17 "comment-lexer-probe.crexx" 17 37 45 "  if tokens.source() <> source then return 7"
+   ret 7
+l80iffalse:
+   .srcstep 70 70 17 "comment-lexer-probe.crexx" 18 3 5 "  do i = 0 to tokens.size() - 1"
+   .srcstep 29 29 17 "comment-lexer-probe.crexx" 18 6 11 "  do i = 0 to tokens.size() - 1"
+   .meta "comment-lexer-probe.main.i"="b" ".int" r7
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 29 29 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 29 29 0 "i" ""
+   .srcstep 34 34 17 "comment-lexer-probe.crexx" 18 12 32 "  do i = 0 to tokens.size() - 1"
+   .srcstep 33 33 17 "comment-lexer-probe.crexx" 18 15 21 "  do i = 0 to tokens.size() - 1"
+   .srcstep 30 30 33 "comment-lexer-probe.crexx" 18 15 21 "  do i = 0 to tokens.size() - 1"
+   .traceevent "V" 6 "R" "O" "r" 8 30 30 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 8 30 30 0 "§this" ""
+   .srcstep 31 31 6 "llcore@rxfnsl.rxbin" 18 21 21 "  do i = 0 to tokens.size() - 1"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "§this" ""
+   assertinitialized r8
+   .srcstep 32 32 25 "llcore.crexx" 198 5 17 "    return _size"
+   linkattr1 r6,r8,5
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "_size" ""
+   igetunlink r4,r6
+l8783bexprend:
+   isub r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 0 0 0 "" ""
+l81dostart:
+   .srcstep 34 34 17 "comment-lexer-probe.crexx" 18 12 32 "  do i = 0 to tokens.size() - 1"
+   igt r3,r7,r4
+   brt l81doend,r3
+   .srcstep 69 69 17 "comment-lexer-probe.crexx" 19 5 116 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 68 68 17 "comment-lexer-probe.crexx" 19 9 17 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 59 59 33 "comment-lexer-probe.crexx" 19 86 88 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 58 58 17 "comment-lexer-probe.crexx" 19 9 17 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 49 49 33 "comment-lexer-probe.crexx" 19 60 62 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 48 48 17 "comment-lexer-probe.crexx" 19 21 31 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 36 36 33 "comment-lexer-probe.crexx" 19 21 31 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 1 36 36 0 "definition" ""
+   .traceevent "A" 6 "R" "O" "r" 1 36 36 0 "§this" ""
+   .srcstep 43 43 33 "comment-lexer-probe.crexx" 19 49 55 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 42 42 17 "comment-lexer-probe.crexx" 19 41 42 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 37 37 33 "comment-lexer-probe.crexx" 19 42 48 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 37 37 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 8 37 37 0 "§this" ""
+   .srcstep 38 38 33 "comment-lexer-probe.crexx" 19 48 48 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "I" "r" 7 38 38 0 "i" ""
+   icopy r15,r7
+   .traceevent "A" 6 "R" "I" "r" 15 38 38 0 "position" ""
+   .srcstep 39 39 6 "llcore@rxfnsl.rxbin" 19 48 48 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 43 43 0 "§this" ""
+   assertinitialized r8
+   .traceevent "V" 6 "R" "I" "r" 15 43 43 0 "position" ""
+   ilt r18,r15,0
+   .traceevent "O" 4 "R" "B" "r" 18 43 43 0 "" ""
+   brt l9101orend,r18
+   .traceevent "V" 6 "R" "I" "r" 15 43 43 0 "position" ""
+   linkattr1 r16,r8,5
+   .traceevent "V" 6 "R" "I" "r" 16 43 43 0 "_size" ""
+   igte r17,r15,r16
+   unlink r16
+   .traceevent "O" 4 "R" "B" "r" 17 43 43 0 "" ""
+   icopy r18,r17
+l9101orend:
+   .traceevent "O" 4 "R" "B" "r" 18 43 43 0 "" ""
+   brf l9100iffalse,r18
+   .srcstep 40 40 25 "llcore.crexx" 207 46 55 "    if position < 0 | position >= _size then return -1"
+   load r19,-1
+   .traceevent "L" 4 "R" "I" "r" 19 43 43 0 "" ""
+   icopy r12,r19
+   br l9090bexprend
+l9100iffalse:
+   .srcstep 41 41 25 "llcore.crexx" 208 5 30 "    return _kind[position + 1]"
+   linkattr1 r16,r8,4
+   .traceevent "V" 6 "R" "I" "r" 15 43 43 0 "position" ""
+   iadd r19,r15,1
+   .traceevent "O" 4 "R" "I" "r" 19 43 43 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 43 43 0 "_kind" ""
+   minlinkattr1 r18,r16,r19,0
+   .traceevent "V" 6 "R" "I" "r" 18 43 43 0 "_kind" ""
+   igetunlink r12,r18
+   unlink r16
+l9090bexprend:
+   .traceevent "A" 6 "R" "I" "r" 12 43 43 0 "__inline_scoped_arg_8941_0" ""
+   .srcstep 44 44 33 "comment-lexer-probe.crexx" 19 21 31 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 1 44 44 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 1 44 44 0 "§this" ""
+   .srcstep 45 45 33 "comment-lexer-probe.crexx" 19 31 31 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "I" "r" 12 45 45 0 "__inline_scoped_arg_8941_0" ""
+   icopy r0,r12
+   .traceevent "A" 6 "R" "I" "r" 0 45 45 0 "id" ""
+   .srcstep 46 46 6 "lllanguage@rxfnsl.rxbin" 19 31 31 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 1 49 49 0 "§this" ""
+   assertinitialized r1
+   .srcstep 47 47 25 "lllanguage.crexx" 165 5 26 "    return _tokens[id + 1]"
+   linkattr1 r16,r1,23
+   .traceevent "V" 6 "R" "I" "r" 0 49 49 0 "id" ""
+   iadd r19,r0,1
+   .traceevent "O" 4 "R" "I" "r" 19 49 49 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 49 49 0 "_tokens" ""
+   minlinkattr1 r18,r16,r19,0
+   .traceevent "V" 6 "R" "S" "r" 18 49 49 0 "_tokens" ""
+   scopy r15,r18
+   unlinkn r18,r16
+l9083bexprend:
+   concat r15,"TOKEN|",r15
+   .traceevent "O" 4 "R" "S" "r" 15 49 49 0 "" ""
+   concat r14,r15,"|"
+   .traceevent "O" 4 "R" "S" "r" 14 49 49 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 14 49 49 0 "__inline_lhs_103_108" ""
+   .srcstep 57 57 33 "comment-lexer-probe.crexx" 19 67 69 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "S" "r" 14 59 59 0 "__inline_lhs_103_108" ""
+   .srcstep 56 56 17 "comment-lexer-probe.crexx" 19 70 76 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 50 50 33 "comment-lexer-probe.crexx" 19 70 76 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 50 50 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 8 50 50 0 "§this" ""
+   .srcstep 51 51 33 "comment-lexer-probe.crexx" 19 76 76 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "I" "r" 7 51 51 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 7 51 51 0 "position" ""
+   .srcstep 52 52 6 "llcore@rxfnsl.rxbin" 19 76 76 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 59 59 0 "§this" ""
+   assertinitialized r8
+   .traceevent "V" 6 "R" "I" "r" 7 59 59 0 "position" ""
+   linkattr1 r19,r8,5
+   .traceevent "V" 6 "R" "I" "r" 19 59 59 0 "_size" ""
+   igte r18,r7,r19
+   unlink r19
+   .traceevent "O" 4 "R" "B" "r" 18 59 59 0 "" ""
+   brf l9290iffalse,r18
+   .srcstep 53 53 25 "llcore.crexx" 211 31 47 "    if position >= _size then return _boundary"
+   linkattr1 r16,r8,1
+   .traceevent "V" 6 "R" "I" "r" 16 59 59 0 "_boundary" ""
+   igetunlink r15,r16
+   br l9280bexprend
+l9290iffalse:
+   .traceevent "V" 6 "R" "I" "r" 7 59 59 0 "position" ""
+   ilt r19,r7,0
+   .traceevent "O" 4 "R" "B" "r" 19 59 59 0 "" ""
+   brf l9296iffalse,r19
+   .srcstep 54 54 25 "llcore.crexx" 212 26 35 "    if position < 0 then return -1"
+   load r18,-1
+   .traceevent "L" 4 "R" "I" "r" 18 59 59 0 "" ""
+   icopy r15,r18
+   br l9280bexprend
+l9296iffalse:
+   .srcstep 55 55 25 "llcore.crexx" 213 5 31 "    return _start[position + 1]"
+   linkattr1 r16,r8,7
+   .traceevent "V" 6 "R" "I" "r" 7 59 59 0 "position" ""
+   iadd r19,r7,1
+   .traceevent "O" 4 "R" "I" "r" 19 59 59 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 59 59 0 "_start" ""
+   minlinkattr1 r18,r16,r19,0
+   .traceevent "V" 6 "R" "I" "r" 18 59 59 0 "_start" ""
+   igetunlink r15,r18
+   unlink r16
+l9280bexprend:
+   itos r15
+   concat r15,r14,r15
+   .traceevent "O" 4 "R" "S" "r" 15 59 59 0 "" ""
+   scopy r0,r15
+l9076bexprend:
+   concat r13,r0,"|"
+   .traceevent "O" 4 "R" "S" "r" 13 59 59 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 13 59 59 0 "__inline_lhs_110_117" ""
+   .srcstep 67 67 33 "comment-lexer-probe.crexx" 19 93 95 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "S" "r" 13 69 69 0 "__inline_lhs_110_117" ""
+   .srcstep 66 66 17 "comment-lexer-probe.crexx" 19 96 102 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .srcstep 60 60 33 "comment-lexer-probe.crexx" 19 96 102 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 60 60 0 "tokens" ""
+   .traceevent "A" 6 "R" "O" "r" 8 60 60 0 "§this" ""
+   .srcstep 61 61 33 "comment-lexer-probe.crexx" 19 102 102 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "I" "r" 7 61 61 0 "i" ""
+   iadd r19,r7,1
+   .traceevent "O" 4 "R" "I" "r" 19 61 61 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 61 61 0 "position" ""
+   .srcstep 62 62 6 "llcore@rxfnsl.rxbin" 19 102 102 "    say 'TOKEN|' || definition.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1)"
+   .traceevent "V" 6 "R" "O" "r" 8 69 69 0 "§this" ""
+   assertinitialized r8
+   .traceevent "V" 6 "R" "I" "r" 19 69 69 0 "position" ""
+   ilt r18,r19,1
+   .traceevent "O" 4 "R" "B" "r" 18 69 69 0 "" ""
+   brf l9320iffalse,r18
+   .srcstep 63 63 25 "llcore.crexx" 216 26 34 "    if position < 1 then return 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 69 69 0 "" ""
+   icopy r15,r16
+   br l9308bexprend
+l9320iffalse:
+   .traceevent "V" 6 "R" "I" "r" 19 69 69 0 "position" ""
+   linkattr1 r18,r8,5
+   .traceevent "V" 6 "R" "I" "r" 18 69 69 0 "_size" ""
+   igt r16,r19,r18
+   unlink r18
+   .traceevent "O" 4 "R" "B" "r" 16 69 69 0 "" ""
+   brf l9326iffalse,r16
+   .srcstep 64 64 25 "llcore.crexx" 217 30 46 "    if position > _size then return _boundary"
+   linkattr1 r15,r8,1
+   .traceevent "V" 6 "R" "I" "r" 15 69 69 0 "_boundary" ""
+   unlinkbr r15,l9308bexprend
+l9326iffalse:
+   .srcstep 65 65 25 "llcore.crexx" 218 5 25 "    return _end[position]"
+   linkattr1 r16,r8,2
+   .traceevent "V" 6 "R" "I" "r" 19 69 69 0 "position" ""
+   .traceevent "C" 4 "R" "I" "r" 19 69 69 0 "_end" ""
+   minlinkattr1 r18,r16,r19,0
+   .traceevent "V" 6 "R" "I" "r" 18 69 69 0 "_end" ""
+   igetunlink r15,r18
+   unlink r16
+l9308bexprend:
+   itos r15
+   concat r19,r13,r15
+   .traceevent "O" 4 "R" "S" "r" 19 69 69 0 "" ""
+   scopy r15,r19
+l9073bexprend:
+   say r15
+l81doinc:
+   .srcstep 35 35 17 "comment-lexer-probe.crexx" 18 6 7 "  do i = 0 to tokens.size() - 1"
+   inc r7
+   .srcstep 71 71 17 "comment-lexer-probe.crexx" 20 3 6 "  end"
+   br l81dostart
+l81doend:
+   .meta "comment-lexer-probe.main.i"
+   .srcstep 72 72 17 "comment-lexer-probe.crexx" 21 3 16 "  return status"
+   .traceevent "V" 6 "R" "I" "r" 10 72 72 0 "status" ""
+   ret r10
+   .meta "comment-lexer-probe.main.argv"
+   .meta "comment-lexer-probe.main.definition"
+   .meta "comment-lexer-probe.main.request"
+   .meta "comment-lexer-probe.main.source"
+   .meta "comment-lexer-probe.main.status"
+   .meta "comment-lexer-probe.main.tokens"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/lexer-unoptimized/unicode-source/levell_comments@levell_comments.rxbin */
+
+levell_comments.language() .expose=levell_comments.language
+   .meta "levell_comments.language"="b" ".lllanguage..definition" levell_comments.language() ""
+   .meta "levell_comments.language"=".autoload" "levell_comments"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl"
+
+§lllanguage.request.lex() .expose=lllanguage.request.lex
+   .meta "lllanguage.request.lex"="b" ".int" §lllanguage.request.lex() "?classify=.int"
+   .meta "lllanguage.request.lex"=".autoload" "rxfnsl"
+
+§lllanguage.request.tokens() .expose=lllanguage.request.tokens
+   .meta "lllanguage.request.tokens"="b" ".llcore..stream" §lllanguage.request.tokens() ""
+   .meta "lllanguage.request.tokens"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.stream.source() .expose=llcore.stream.source
+   .meta "llcore.stream.source"="b" ".binary" §llcore.stream.source() ""
+   .meta "llcore.stream.source"=".autoload" "rxfnsl"

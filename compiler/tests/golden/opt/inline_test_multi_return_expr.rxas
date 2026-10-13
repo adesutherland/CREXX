@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=6
    .meta "inline_test_multi_return_expr.main"="b" ".int" main() ""
    .srcstep 19 19 17 "inline_test_multi_return_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -30,36 +30,37 @@ l8dostart:
    .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 7 7 17 "inline_test_multi_return_expr.crexx" 13 3 13 "  if val < 0 then return -1"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
-   ilt r3,r0,0
-   .traceevent "O" 4 "R" "B" "r" 3 7 7 0 "" ""
-   brf l58iffalse,r3
+   ilt r4,r0,0
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
+   brf l58iffalse,r4
    .srcstep 8 8 17 "inline_test_multi_return_expr.crexx" 13 14 18 "  if val < 0 then return -1"
    .srcstep 6 6 17 "inline_test_multi_return_expr.crexx" 13 19 28 "  if val < 0 then return -1"
-   load r4,-1
-   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
-   icopy r3,r4
+   load r5,-1
+   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
+   icopy r3,r5
    br l53bexprend
 l58iffalse:
    .srcstep 10 10 17 "inline_test_multi_return_expr.crexx" 14 3 13 "  if val > 0 then return 1"
    .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "val" ""
-   igt r4,r0,0
-   .traceevent "O" 4 "R" "B" "r" 4 10 10 0 "" ""
-   brf l64iffalse,r4
+   igt r5,r0,0
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l64iffalse,r5
    .srcstep 11 11 17 "inline_test_multi_return_expr.crexx" 14 14 18 "  if val > 0 then return 1"
    .srcstep 9 9 17 "inline_test_multi_return_expr.crexx" 14 19 27 "  if val > 0 then return 1"
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 14 14 0 "" ""
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
+   icopy r3,r4
    br l53bexprend
 l64iffalse:
    .srcstep 12 12 17 "inline_test_multi_return_expr.crexx" 15 3 11 "  return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
-   icopy r3,r4
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
+   icopy r3,r5
 l53bexprend:
-   iadd r3,r3,10
-   itos r3
-   .traceevent "O" 4 "R" "S" "r" 3 14 14 0 "" ""
-   say r3
+   iadd r4,r3,10
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 14 14 0 "" ""
+   say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test_multi_return_expr.crexx" 5 6 7 "  do i = -1 to 1"
    inc r0

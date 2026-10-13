@@ -1,0 +1,62 @@
+{
+  "records": [
+    {
+      "name": "compile-shadow",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/import-isolation/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/import-isolation/shadow",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/import-isolation/stale-prototype.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "assemble-shadow",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/import-isolation/shadow"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-with-shadow",
+      "argv": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product",
+        "--target",
+        "rexxscript1_cli",
+        "testrexxscript1",
+        "--parallel",
+        "4"
+      ],
+      "status": 0,
+      "sha256": "50109c393b45200d268628b2e260cdaea4ebc8ab73ca92921701c96b504c3c1b"
+    },
+    {
+      "name": "rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/rexxscript/modern/testRexxScript1-linked.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e17ca02e405f570da6ef228cec2577706f9c6767c251883ba1a9176016725ddf"
+    },
+    {
+      "name": "rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/rexxscript/modern/testRexxScript1-linked.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e17ca02e405f570da6ef228cec2577706f9c6767c251883ba1a9176016725ddf"
+    }
+  ],
+  "scope": "Obsolete four-argument llsource.diagnostic export beside linked drivers; native packing and both interpreter consumers use current private imports."
+}

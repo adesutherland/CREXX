@@ -1,0 +1,68 @@
+/*
+ * SOURCE                 : diagnostic-call-repro.crexx
+ */
+
+.globals=0
+
+main() .locals=7
+   .meta "diagnostic-call-repro.main"="b" ".int" main() ""
+   .srcstep 5 5 17 "diagnostic-call-repro.crexx" 4 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "diagnostic-call-repro.crexx" 5 3 9 "  at = 0; code = 12"
+   .meta "diagnostic-call-repro.main.at"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "at" ""
+   .srcstep 2 2 17 "diagnostic-call-repro.crexx" 5 11 20 "  at = 0; code = 12"
+   .meta "diagnostic-call-repro.main.code"="b" ".int" r1
+   load r1,12
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "code" ""
+   .srcstep 3 3 17 "diagnostic-call-repro.crexx" 6 3 42 "  call diagnostic at,'L' || code,'need a'"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "at" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 3 3 0 "code" ""
+   concat r4,"L",r1
+   .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
+   load r5,"need a"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
+   settp r4,768
+   settp r5,768
+   call3 r6,diagnostic(),r0,r4,r5
+   .traceevent "F" 4 "R" "V" "r" 6 3 3 0 "diagnostic" ""
+   .srcstep 4 4 17 "diagnostic-call-repro.crexx" 7 3 11 "  return 0"
+   ret 0
+   .meta "diagnostic-call-repro.main.at"
+   .meta "diagnostic-call-repro.main.code"
+
+diagnostic() .locals=4
+   .meta "diagnostic-call-repro.diagnostic"="b" ".void" diagnostic() "at=.int,code=.string,expectation=.string"
+   .srcstep 11 11 17 "diagnostic-call-repro.crexx" 8 1 30 "diagnostic: procedure = .void"
+   numsci 18,1,1
+   .srcstep 6 6 17 "diagnostic-call-repro.crexx" 9 7 16 "  arg at = .int, code = .string, expectation = .string"
+   .meta "diagnostic-call-repro.diagnostic.at"="b" ".int" a1
+   .srcstep 7 7 17 "diagnostic-call-repro.crexx" 9 18 32 "  arg at = .int, code = .string, expectation = .string"
+   .meta "diagnostic-call-repro.diagnostic.code"="b" ".string" a2
+   .srcstep 8 8 17 "diagnostic-call-repro.crexx" 9 34 55 "  arg at = .int, code = .string, expectation = .string"
+   .meta "diagnostic-call-repro.diagnostic.expectation"="b" ".string" a3
+   .srcstep 9 9 17 "diagnostic-call-repro.crexx" 10 3 50 "  say 'DIAGNOSTIC|'code '|byte='at '|'expectation"
+   .traceevent "V" 6 "R" "S" "a" 2 9 9 0 "code" ""
+   concat r3,"DIAGNOSTIC|",a2
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
+   sconcat r3,r3,"|byte="
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 9 9 0 "at" ""
+   concat r3,r3,a1
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
+   sconcat r3,r3,"|"
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
+   .traceevent "V" 6 "R" "S" "a" 3 9 9 0 "expectation" ""
+   concat r3,r3,a3
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
+   say r3
+   .srcstep 10 10 17 "diagnostic-call-repro.crexx" 11 3 9 "  return"
+   ret
+   .meta "diagnostic-call-repro.diagnostic.at"
+   .meta "diagnostic-call-repro.diagnostic.code"
+   .meta "diagnostic-call-repro.diagnostic.expectation"

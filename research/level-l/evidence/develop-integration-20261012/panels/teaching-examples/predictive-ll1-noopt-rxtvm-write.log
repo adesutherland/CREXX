@@ -1,0 +1,5 @@
+STATUS|0
+NODE|command|0|12
+NODE|writeword|0|5
+NODE|identifier|6|10
+NODE|number|11|12

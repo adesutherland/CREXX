@@ -1,0 +1,2 @@
+/* Level L: checking regular lexer rules */
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/limits-fixed/input.levell: LL_RESOURCE_LIMIT: lr.items budget 1, required at least 2. Increase the host budget or reduce the workload.

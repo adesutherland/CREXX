@@ -1,0 +1,2 @@
+/* Level L: checking regular lexer rules */
+LL_LR_ADMISSION: LL_LR_CONFLICT: LR(1) conflict before end of input. Cannot choose between completing first (line 15) and completing second (line 16). State the intended choice in the rules (for example factor the shared prefix or separate expression precedence). A conflict alone does not prove ambiguity.

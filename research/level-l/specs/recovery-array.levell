@@ -1,0 +1,13 @@
+options levell
+namespace recoveryarrays
+read: parser semantics ordered input bytes start document
+document: rule = array (';' needed.array)*
+array: rule = '[' (item (',' needed.item)*)? close
+item: rule = 'a' | array
+needed.item: rule = item
+needed.array: rule = array
+close: rule = ']'
+recover.item: rule = (!(']' | ',' | ';') any)*
+recover.close: rule = (!';' any)*
+recover.array: rule = (!';' any)*
+any: charset = U+0000 to U+00FF

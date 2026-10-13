@@ -1,0 +1,72 @@
+/* Level L front end for re2c: translate our regex subset to re2c syntax. */
+options levell
+import rxfnsb
+main: procedure = .int expose pattern cursor
+  arg argv = .string[]
+  if argv[0] <> 2 then do
+    say '/* usage: re2cwrap lexical-spec C-template */'; return 1
+  end
+  do while lines(argv[2])
+    line = linein(argv[2])
+    if line <> '@@RULES@@' then say line
+    else do while lines(argv[1])
+      specification = strip(linein(argv[1]))
+      if specification = '' then iterate
+      if left(specification,1) = '#' then iterate
+      kind = word(specification,1) as .int
+      pattern = strip(substr(specification,wordindex(specification,2))); cursor = 1
+      expression = convert()
+      if kind < 0 then say '        ' expression '{ continue; }'
+      else say '        ' expression '{ kind ='kind'; goto token; }'
+    end
+  end
+  return 0
+
+convert: procedure = .string expose pattern cursor
+  result = ''; byte = .int
+  do while cursor <= length(pattern)
+    ch = substr(pattern,cursor,1); cursor = cursor + 1
+    if pos(ch,'()|*+?') > 0 then result = result || ch || ' '
+    else if ch = '[' then do
+      mask = copies('0',128); invert = 0
+      if substr(pattern,cursor,1) = '^' then do
+        invert = 1; cursor = cursor + 1
+      end
+      do while cursor <= length(pattern) & substr(pattern,cursor,1) <> ']'
+        low = character(); high = low
+        if substr(pattern,cursor,1) = '-' & substr(pattern,cursor + 1,1) <> ']' then do
+          cursor = cursor + 1; high = character()
+        end
+        do byte = low to high
+          mask = overlay('1',mask,byte + 1)
+        end
+      end
+      cursor = cursor + 1
+      if invert then mask = translate(mask,'10','01')
+      result = result || '['
+      /* NUL is reserved as the checked sentinel in this C control. */
+      do byte = 1 to 127
+        if substr(mask,byte + 1,1) = '1' then result = result || '\x' || d2x(byte,2)
+      end
+      result = result || '] '
+    end
+    else if ch = '.' then result = result || '[\x01-\x7f] '
+    else do
+      cursor = cursor - 1; byte = character()
+      result = result || '"\x' || d2x(byte,2) || '" '
+    end
+  end
+  return result
+
+character: procedure = .int expose pattern cursor
+  ch = substr(pattern,cursor,1); cursor = cursor + 1
+  if ch = '\' then do
+    ch = substr(pattern,cursor,1); cursor = cursor + 1
+    select ch
+      when 'n' then return 10
+      when 'r' then return 13
+      when 't' then return 9
+      otherwise nop
+    end
+  end
+  return c2d(ch)

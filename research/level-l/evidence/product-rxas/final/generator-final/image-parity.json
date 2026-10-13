@@ -1,0 +1,12 @@
+{
+  "lexerdata": {
+    "bytes": 35012,
+    "sha256": "d95e4daf1e1c9afd9457d78ab9c0b2550c31824c1e080404bb148a22ca6cbcd8",
+    "states": 149
+  },
+  "parserdata": {
+    "bytes": 294972,
+    "sha256": "7e93a1e469803cb7e76934df92b46bedc0841162d7155d3b2459e4287fe00372",
+    "states": 1612
+  }
+}

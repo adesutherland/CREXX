@@ -1,0 +1,108 @@
+[
+  {
+    "kind": "REXX_UNIVERSE",
+    "value": "",
+    "children": [
+      {
+        "kind": "PROGRAM_FILE",
+        "value": "",
+        "children": [
+          {
+            "kind": "INSTRUCTIONS",
+            "value": "",
+            "children": [
+              {
+                "kind": "REXX_OPTIONS",
+                "value": "options",
+                "children": [
+                  {
+                    "kind": "VAR_SYMBOL",
+                    "value": "levelc",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              },
+              {
+                "kind": "ASSIGN",
+                "value": "=",
+                "children": [
+                  {
+                    "kind": "VAR_TARGET",
+                    "value": "flag",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  },
+                  {
+                    "kind": "INTEGER",
+                    "value": "1",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              },
+              {
+                "kind": "IF",
+                "value": "if",
+                "children": [
+                  {
+                    "kind": "VAR_SYMBOL",
+                    "value": "flag",
+                    "children": [],
+                    "line": -1,
+                    "column": -1
+                  },
+                  {
+                    "kind": "SAY",
+                    "value": "say",
+                    "children": [
+                      {
+                        "kind": "STRING",
+                        "value": "yes",
+                        "children": [],
+                        "line": -1,
+                        "column": -1
+                      }
+                    ],
+                    "line": -1,
+                    "column": -1
+                  },
+                  {
+                    "kind": "SAY",
+                    "value": "say",
+                    "children": [
+                      {
+                        "kind": "STRING",
+                        "value": "bad",
+                        "children": [],
+                        "line": -1,
+                        "column": -1
+                      }
+                    ],
+                    "line": -1,
+                    "column": -1
+                  }
+                ],
+                "line": -1,
+                "column": -1
+              }
+            ],
+            "line": -1,
+            "column": -1
+          }
+        ],
+        "line": -1,
+        "column": -1
+      }
+    ],
+    "line": -1,
+    "column": -1
+  }
+]

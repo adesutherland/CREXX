@@ -1,0 +1,1651 @@
+/*
+ * SOURCE                 : levell_settings.crexx
+ */
+
+.globals=0
+
+language() .locals=17 .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" language() ""
+   .srcstep 75 75 17 "levell_settings.crexx" 11 1 46 "language: procedure = .lllanguage..definition"
+   numsci 18,1,1
+   .srcstep 1 1 17 "levell_settings.crexx" 12 3 42 "  graph = .llcore..grammar('contextfree')"
+   .meta "levell_settings.language.graph"="b" ".llcore..grammar" r1
+   load r8,"contextfree"
+   .traceevent "L" 4 "R" "S" "r" 8 1 1 0 "" ""
+   load r7,1
+   settpcall r1,§llcore.grammar.§factory(),r7,r8,768
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "graph" ""
+   .srcstep 2 2 17 "levell_settings.crexx" 13 3 38 "  id = graph.add(1,1,0,'identifier',5)"
+   .meta "levell_settings.language.id"="b" ".int" r2
+   .traceevent "V" 6 "R" "O" "r" 1 2 2 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 2 2 0 "" ""
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 2 2 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 2 2 0 "" ""
+   load r12,"identifier"
+   .traceevent "L" 4 "R" "S" "r" 12 2 2 0 "" ""
+   load r13,5
+   .traceevent "L" 4 "R" "I" "r" 13 2 2 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 2 2 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 2 2 0 "id" ""
+   .srcstep 3 3 17 "levell_settings.crexx" 14 3 34 "  id = graph.add(1,2,0,'number',6)"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 3 3 0 "" ""
+   load r10,2
+   .traceevent "L" 4 "R" "I" "r" 10 3 3 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 3 3 0 "" ""
+   load r12,"number"
+   .traceevent "L" 4 "R" "S" "r" 12 3 3 0 "" ""
+   load r13,6
+   .traceevent "L" 4 "R" "I" "r" 13 3 3 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 3 3 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "id" ""
+   .srcstep 4 4 17 "levell_settings.crexx" 15 3 34 "  id = graph.add(1,3,0,'string',7)"
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 4 4 0 "" ""
+   load r10,3
+   .traceevent "L" 4 "R" "I" "r" 10 4 4 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 4 4 0 "" ""
+   load r12,"string"
+   .traceevent "L" 4 "R" "S" "r" 12 4 4 0 "" ""
+   load r13,7
+   .traceevent "L" 4 "R" "I" "r" 13 4 4 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "id" ""
+   .srcstep 5 5 17 "levell_settings.crexx" 16 3 34 "  id = graph.add(1,4,0,'equals',8)"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 5 5 0 "" ""
+   load r10,4
+   .traceevent "L" 4 "R" "I" "r" 10 5 5 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 5 5 0 "" ""
+   load r12,"equals"
+   .traceevent "L" 4 "R" "S" "r" 12 5 5 0 "" ""
+   load r13,8
+   .traceevent "L" 4 "R" "I" "r" 13 5 5 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 5 5 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "id" ""
+   .srcstep 6 6 17 "levell_settings.crexx" 17 3 37 "  id = graph.add(1,5,0,'separator',9)"
+   .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 6 6 0 "" ""
+   load r10,5
+   .traceevent "L" 4 "R" "I" "r" 10 6 6 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 6 6 0 "" ""
+   load r12,"separator"
+   .traceevent "L" 4 "R" "S" "r" 12 6 6 0 "" ""
+   load r13,9
+   .traceevent "L" 4 "R" "I" "r" 13 6 6 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 6 6 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 6 6 0 "id" ""
+   .srcstep 7 7 17 "levell_settings.crexx" 18 3 39 "  id = graph.add(1,6,0,'expression',10)"
+   .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 7 7 0 "" ""
+   load r10,6
+   .traceevent "L" 4 "R" "I" "r" 10 7 7 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 7 7 0 "" ""
+   load r12,"expression"
+   .traceevent "L" 4 "R" "S" "r" 12 7 7 0 "" ""
+   load r13,10
+   .traceevent "L" 4 "R" "I" "r" 13 7 7 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 7 7 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "id" ""
+   .srcstep 8 8 17 "levell_settings.crexx" 19 3 33 "  id = graph.add(1,7,0,'plus',11)"
+   .traceevent "V" 6 "R" "O" "r" 1 8 8 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 8 8 0 "" ""
+   load r10,7
+   .traceevent "L" 4 "R" "I" "r" 10 8 8 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 8 8 0 "" ""
+   load r12,"plus"
+   .traceevent "L" 4 "R" "S" "r" 12 8 8 0 "" ""
+   load r13,11
+   .traceevent "L" 4 "R" "I" "r" 13 8 8 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 8 8 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 8 8 0 "id" ""
+   .srcstep 9 9 17 "levell_settings.crexx" 20 3 34 "  id = graph.add(1,8,0,'times',12)"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 9 9 0 "" ""
+   load r10,8
+   .traceevent "L" 4 "R" "I" "r" 10 9 9 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 9 9 0 "" ""
+   load r12,"times"
+   .traceevent "L" 4 "R" "S" "r" 12 9 9 0 "" ""
+   load r13,12
+   .traceevent "L" 4 "R" "I" "r" 13 9 9 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 9 9 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "id" ""
+   .srcstep 10 10 17 "levell_settings.crexx" 21 3 34 "  id = graph.add(1,9,0,'minus',13)"
+   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 10 10 0 "" ""
+   load r10,9
+   .traceevent "L" 4 "R" "I" "r" 10 10 10 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 10 10 0 "" ""
+   load r12,"minus"
+   .traceevent "L" 4 "R" "S" "r" 12 10 10 0 "" ""
+   load r13,13
+   .traceevent "L" 4 "R" "I" "r" 13 10 10 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 10 10 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 10 10 0 "id" ""
+   .srcstep 11 11 17 "levell_settings.crexx" 22 3 36 "  id = graph.add(1,10,0,'lparen',14)"
+   .traceevent "V" 6 "R" "O" "r" 1 11 11 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 11 11 0 "" ""
+   load r10,10
+   .traceevent "L" 4 "R" "I" "r" 10 11 11 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 11 11 0 "" ""
+   load r12,"lparen"
+   .traceevent "L" 4 "R" "S" "r" 12 11 11 0 "" ""
+   load r13,14
+   .traceevent "L" 4 "R" "I" "r" 13 11 11 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 11 11 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 11 11 0 "id" ""
+   .srcstep 12 12 17 "levell_settings.crexx" 23 3 36 "  id = graph.add(1,11,0,'rparen',15)"
+   .traceevent "V" 6 "R" "O" "r" 1 12 12 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 12 12 0 "" ""
+   load r10,11
+   .traceevent "L" 4 "R" "I" "r" 10 12 12 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 12 12 0 "" ""
+   load r12,"rparen"
+   .traceevent "L" 4 "R" "S" "r" 12 12 12 0 "" ""
+   load r13,15
+   .traceevent "L" 4 "R" "I" "r" 13 12 12 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 12 12 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "id" ""
+   .srcstep 13 13 17 "levell_settings.crexx" 24 3 38 "  id = graph.add(1,12,0,'lbracket',16)"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 13 13 0 "" ""
+   load r10,12
+   .traceevent "L" 4 "R" "I" "r" 10 13 13 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 13 13 0 "" ""
+   load r12,"lbracket"
+   .traceevent "L" 4 "R" "S" "r" 12 13 13 0 "" ""
+   load r13,16
+   .traceevent "L" 4 "R" "I" "r" 13 13 13 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 13 13 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "id" ""
+   .srcstep 14 14 17 "levell_settings.crexx" 25 3 38 "  id = graph.add(1,13,0,'rbracket',17)"
+   .traceevent "V" 6 "R" "O" "r" 1 14 14 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 14 14 0 "" ""
+   load r10,13
+   .traceevent "L" 4 "R" "I" "r" 10 14 14 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 14 14 0 "" ""
+   load r12,"rbracket"
+   .traceevent "L" 4 "R" "S" "r" 12 14 14 0 "" ""
+   load r13,17
+   .traceevent "L" 4 "R" "I" "r" 13 14 14 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 14 14 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 14 14 0 "id" ""
+   .srcstep 15 15 17 "levell_settings.crexx" 26 3 38 "  id = graph.add(5,24,0,'settings',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 15 15 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 15 15 0 "" ""
+   load r10,24
+   .traceevent "L" 4 "R" "I" "r" 10 15 15 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 15 15 0 "" ""
+   load r12,"settings"
+   .traceevent "L" 4 "R" "S" "r" 12 15 15 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 15 15 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 15 15 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 15 15 0 "id" ""
+   .srcstep 16 16 17 "levell_settings.crexx" 27 3 34 "  id = graph.add(5,25,0,'tail',39)"
+   .traceevent "V" 6 "R" "O" "r" 1 16 16 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 16 16 0 "" ""
+   load r10,25
+   .traceevent "L" 4 "R" "I" "r" 10 16 16 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 16 16 0 "" ""
+   load r12,"tail"
+   .traceevent "L" 4 "R" "S" "r" 12 16 16 0 "" ""
+   load r13,39
+   .traceevent "L" 4 "R" "I" "r" 13 16 16 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 16 16 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 16 16 0 "id" ""
+   .srcstep 17 17 17 "levell_settings.crexx" 28 3 40 "  id = graph.add(5,27,0,'assignment',40)"
+   .traceevent "V" 6 "R" "O" "r" 1 17 17 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 17 17 0 "" ""
+   load r10,27
+   .traceevent "L" 4 "R" "I" "r" 10 17 17 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 17 17 0 "" ""
+   load r12,"assignment"
+   .traceevent "L" 4 "R" "S" "r" 12 17 17 0 "" ""
+   load r13,40
+   .traceevent "L" 4 "R" "I" "r" 13 17 17 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 17 17 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 17 17 0 "id" ""
+   .srcstep 18 18 17 "levell_settings.crexx" 29 3 39 "  id = graph.add(5,1,0,'name.value',41)"
+   .traceevent "V" 6 "R" "O" "r" 1 18 18 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 18 18 0 "" ""
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 18 18 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 18 18 0 "" ""
+   load r12,"name.value"
+   .traceevent "L" 4 "R" "S" "r" 12 18 18 0 "" ""
+   load r13,41
+   .traceevent "L" 4 "R" "I" "r" 13 18 18 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 18 18 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 18 18 0 "id" ""
+   .srcstep 19 19 17 "levell_settings.crexx" 30 3 35 "  id = graph.add(5,29,0,'value',42)"
+   .traceevent "V" 6 "R" "O" "r" 1 19 19 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 19 19 0 "" ""
+   load r10,29
+   .traceevent "L" 4 "R" "I" "r" 10 19 19 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 19 19 0 "" ""
+   load r12,"value"
+   .traceevent "L" 4 "R" "S" "r" 12 19 19 0 "" ""
+   load r13,42
+   .traceevent "L" 4 "R" "I" "r" 13 19 19 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 19 19 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 19 19 0 "id" ""
+   .srcstep 20 20 17 "levell_settings.crexx" 31 3 40 "  id = graph.add(5,30,0,'arithmetic',49)"
+   .traceevent "V" 6 "R" "O" "r" 1 20 20 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 20 20 0 "" ""
+   load r10,30
+   .traceevent "L" 4 "R" "I" "r" 10 20 20 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 20 20 0 "" ""
+   load r12,"arithmetic"
+   .traceevent "L" 4 "R" "S" "r" 12 20 20 0 "" ""
+   load r13,49
+   .traceevent "L" 4 "R" "I" "r" 13 20 20 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 20 20 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "id" ""
+   .srcstep 21 21 17 "levell_settings.crexx" 32 3 38 "  id = graph.add(2,5,14,'sequence',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 21 21 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 21 21 0 "" ""
+   load r10,5
+   .traceevent "L" 4 "R" "I" "r" 10 21 21 0 "" ""
+   load r11,14
+   .traceevent "L" 4 "R" "I" "r" 11 21 21 0 "" ""
+   load r12,"sequence"
+   .traceevent "L" 4 "R" "S" "r" 12 21 21 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 21 21 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 21 21 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 21 21 0 "id" ""
+   .srcstep 22 22 17 "levell_settings.crexx" 33 3 39 "  id = graph.add(2,16,15,'sequence',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 22 22 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
+   load r10,16
+   .traceevent "L" 4 "R" "I" "r" 10 22 22 0 "" ""
+   load r11,15
+   .traceevent "L" 4 "R" "I" "r" 11 22 22 0 "" ""
+   load r12,"sequence"
+   .traceevent "L" 4 "R" "S" "r" 12 22 22 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 22 22 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 22 22 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 22 22 0 "id" ""
+   .srcstep 23 23 17 "levell_settings.crexx" 34 3 37 "  id = graph.add(4,20,21,'choice',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 23 23 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 23 23 0 "" ""
+   load r10,20
+   .traceevent "L" 4 "R" "I" "r" 10 23 23 0 "" ""
+   load r11,21
+   .traceevent "L" 4 "R" "I" "r" 11 23 23 0 "" ""
+   load r12,"choice"
+   .traceevent "L" 4 "R" "S" "r" 12 23 23 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 23 23 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 23 23 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 23 23 0 "id" ""
+   .srcstep 24 24 17 "levell_settings.crexx" 35 3 34 "  id = graph.add(6,0,0,'empty',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 24 24 0 "graph" ""
+   load r9,6
+   .traceevent "L" 4 "R" "I" "r" 9 24 24 0 "" ""
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 24 24 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 24 24 0 "" ""
+   load r12,"empty"
+   .traceevent "L" 4 "R" "S" "r" 12 24 24 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 24 24 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 24 24 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 24 24 0 "id" ""
+   .srcstep 25 25 17 "levell_settings.crexx" 36 3 37 "  id = graph.add(4,22,23,'choice',38)"
+   .traceevent "V" 6 "R" "O" "r" 1 25 25 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 25 25 0 "" ""
+   load r10,22
+   .traceevent "L" 4 "R" "I" "r" 10 25 25 0 "" ""
+   load r11,23
+   .traceevent "L" 4 "R" "I" "r" 11 25 25 0 "" ""
+   load r12,"choice"
+   .traceevent "L" 4 "R" "S" "r" 12 25 25 0 "" ""
+   load r13,38
+   .traceevent "L" 4 "R" "I" "r" 13 25 25 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 25 25 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 25 25 0 "id" ""
+   .srcstep 26 26 17 "levell_settings.crexx" 37 3 37 "  id = graph.add(4,20,23,'choice',39)"
+   .traceevent "V" 6 "R" "O" "r" 1 26 26 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 26 26 0 "" ""
+   load r10,20
+   .traceevent "L" 4 "R" "I" "r" 10 26 26 0 "" ""
+   load r11,23
+   .traceevent "L" 4 "R" "I" "r" 11 26 26 0 "" ""
+   load r12,"choice"
+   .traceevent "L" 4 "R" "S" "r" 12 26 26 0 "" ""
+   load r13,39
+   .traceevent "L" 4 "R" "I" "r" 13 26 26 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 26 26 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 26 26 0 "id" ""
+   .srcstep 27 27 17 "levell_settings.crexx" 38 3 38 "  id = graph.add(2,17,4,'sequence',40)"
+   .traceevent "V" 6 "R" "O" "r" 1 27 27 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 27 27 0 "" ""
+   load r10,17
+   .traceevent "L" 4 "R" "I" "r" 10 27 27 0 "" ""
+   load r11,4
+   .traceevent "L" 4 "R" "I" "r" 11 27 27 0 "" ""
+   load r12,"sequence"
+   .traceevent "L" 4 "R" "S" "r" 12 27 27 0 "" ""
+   load r13,40
+   .traceevent "L" 4 "R" "I" "r" 13 27 27 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 27 27 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 27 27 0 "id" ""
+   .srcstep 28 28 17 "levell_settings.crexx" 39 3 39 "  id = graph.add(2,26,18,'sequence',40)"
+   .traceevent "V" 6 "R" "O" "r" 1 28 28 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 28 28 0 "" ""
+   load r10,26
+   .traceevent "L" 4 "R" "I" "r" 10 28 28 0 "" ""
+   load r11,18
+   .traceevent "L" 4 "R" "I" "r" 11 28 28 0 "" ""
+   load r12,"sequence"
+   .traceevent "L" 4 "R" "S" "r" 12 28 28 0 "" ""
+   load r13,40
+   .traceevent "L" 4 "R" "I" "r" 13 28 28 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 28 28 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 28 28 0 "id" ""
+   .srcstep 29 29 17 "levell_settings.crexx" 40 3 35 "  id = graph.add(4,2,3,'choice',42)"
+   .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 29 29 0 "" ""
+   load r10,2
+   .traceevent "L" 4 "R" "I" "r" 10 29 29 0 "" ""
+   load r11,3
+   .traceevent "L" 4 "R" "I" "r" 11 29 29 0 "" ""
+   load r12,"choice"
+   .traceevent "L" 4 "R" "S" "r" 12 29 29 0 "" ""
+   load r13,42
+   .traceevent "L" 4 "R" "I" "r" 13 29 29 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 29 29 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 29 29 0 "id" ""
+   .srcstep 30 30 17 "levell_settings.crexx" 41 3 36 "  id = graph.add(4,28,6,'choice',42)"
+   .traceevent "V" 6 "R" "O" "r" 1 30 30 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 30 30 0 "" ""
+   load r10,28
+   .traceevent "L" 4 "R" "I" "r" 10 30 30 0 "" ""
+   load r11,6
+   .traceevent "L" 4 "R" "I" "r" 11 30 30 0 "" ""
+   load r12,"choice"
+   .traceevent "L" 4 "R" "S" "r" 12 30 30 0 "" ""
+   load r13,42
+   .traceevent "L" 4 "R" "I" "r" 13 30 30 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 30 30 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 30 30 0 "id" ""
+   .srcstep 31 31 17 "levell_settings.crexx" 42 3 36 "  id = graph.add(5,45,0,'level.1',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 31 31 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 31 31 0 "" ""
+   load r10,45
+   .traceevent "L" 4 "R" "I" "r" 10 31 31 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 31 31 0 "" ""
+   load r12,"level.1"
+   .traceevent "L" 4 "R" "S" "r" 12 31 31 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 31 31 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 31 31 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 31 31 0 "id" ""
+   .srcstep 32 32 17 "levell_settings.crexx" 43 3 36 "  id = graph.add(5,49,0,'level.2',2)"
+   .traceevent "V" 6 "R" "O" "r" 1 32 32 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 32 32 0 "" ""
+   load r10,49
+   .traceevent "L" 4 "R" "I" "r" 10 32 32 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 32 32 0 "" ""
+   load r12,"level.2"
+   .traceevent "L" 4 "R" "S" "r" 12 32 32 0 "" ""
+   load r13,2
+   .traceevent "L" 4 "R" "I" "r" 13 32 32 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 32 32 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 32 32 0 "id" ""
+   .srcstep 33 33 17 "levell_settings.crexx" 44 3 36 "  id = graph.add(5,41,0,'level.3',3)"
+   .traceevent "V" 6 "R" "O" "r" 1 33 33 0 "graph" ""
+   load r9,5
+   .traceevent "L" 4 "R" "I" "r" 9 33 33 0 "" ""
+   load r10,41
+   .traceevent "L" 4 "R" "I" "r" 10 33 33 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 33 33 0 "" ""
+   load r12,"level.3"
+   .traceevent "L" 4 "R" "S" "r" 12 33 33 0 "" ""
+   load r13,3
+   .traceevent "L" 4 "R" "I" "r" 13 33 33 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 33 33 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 33 33 0 "id" ""
+   .srcstep 34 34 17 "levell_settings.crexx" 45 3 34 "  id = graph.add(1,2,0,'number',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 34 34 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 34 34 0 "" ""
+   load r10,2
+   .traceevent "L" 4 "R" "I" "r" 10 34 34 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 34 34 0 "" ""
+   load r12,"number"
+   .traceevent "L" 4 "R" "S" "r" 12 34 34 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 34 34 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 34 34 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 34 34 0 "id" ""
+   .srcstep 35 35 17 "levell_settings.crexx" 46 3 35 "  id = graph.add(1,10,0,'<open>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 35 35 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 35 35 0 "" ""
+   load r10,10
+   .traceevent "L" 4 "R" "I" "r" 10 35 35 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 35 35 0 "" ""
+   load r12,"<open>"
+   .traceevent "L" 4 "R" "S" "r" 12 35 35 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 35 35 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 35 35 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 35 35 0 "id" ""
+   .srcstep 36 36 17 "levell_settings.crexx" 47 3 36 "  id = graph.add(1,11,0,'<close>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 36 36 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 36 36 0 "" ""
+   load r10,11
+   .traceevent "L" 4 "R" "I" "r" 10 36 36 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 36 36 0 "" ""
+   load r12,"<close>"
+   .traceevent "L" 4 "R" "S" "r" 12 36 36 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 36 36 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 36 36 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 36 36 0 "id" ""
+   .srcstep 37 37 17 "levell_settings.crexx" 48 3 42 "  id = graph.add(2,34,30,'<group.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 37 37 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 37 37 0 "" ""
+   load r10,34
+   .traceevent "L" 4 "R" "I" "r" 10 37 37 0 "" ""
+   load r11,30
+   .traceevent "L" 4 "R" "I" "r" 11 37 37 0 "" ""
+   load r12,"<group.head>"
+   .traceevent "L" 4 "R" "S" "r" 12 37 37 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 37 37 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 37 37 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 37 37 0 "id" ""
+   .srcstep 38 38 17 "levell_settings.crexx" 49 3 35 "  id = graph.add(2,36,35,'group',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 38 38 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 38 38 0 "" ""
+   load r10,36
+   .traceevent "L" 4 "R" "I" "r" 10 38 38 0 "" ""
+   load r11,35
+   .traceevent "L" 4 "R" "I" "r" 11 38 38 0 "" ""
+   load r12,"group"
+   .traceevent "L" 4 "R" "S" "r" 12 38 38 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 38 38 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 38 38 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 38 38 0 "id" ""
+   .srcstep 39 39 17 "levell_settings.crexx" 50 3 39 "  id = graph.add(4,33,37,'<primary>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 39 39 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 39 39 0 "" ""
+   load r10,33
+   .traceevent "L" 4 "R" "I" "r" 10 39 39 0 "" ""
+   load r11,37
+   .traceevent "L" 4 "R" "I" "r" 11 39 39 0 "" ""
+   load r12,"<primary>"
+   .traceevent "L" 4 "R" "S" "r" 12 39 39 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 39 39 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 39 39 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 39 39 0 "id" ""
+   .srcstep 40 40 17 "levell_settings.crexx" 51 3 42 "  id = graph.add(1,9,0,'<prefix.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 40 40 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 40 40 0 "" ""
+   load r10,9
+   .traceevent "L" 4 "R" "I" "r" 10 40 40 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 40 40 0 "" ""
+   load r12,"<prefix.token>"
+   .traceevent "L" 4 "R" "S" "r" 12 40 40 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 40 40 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 40 40 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 40 40 0 "id" ""
+   .srcstep 41 41 17 "levell_settings.crexx" 52 3 38 "  id = graph.add(2,39,32,'negative',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 41 41 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 41 41 0 "" ""
+   load r10,39
+   .traceevent "L" 4 "R" "I" "r" 10 41 41 0 "" ""
+   load r11,32
+   .traceevent "L" 4 "R" "I" "r" 11 41 41 0 "" ""
+   load r12,"negative"
+   .traceevent "L" 4 "R" "S" "r" 12 41 41 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 41 41 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 41 41 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 41 41 0 "id" ""
+   .srcstep 42 42 17 "levell_settings.crexx" 53 3 39 "  id = graph.add(4,38,40,'<primary>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 42 42 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 42 42 0 "" ""
+   load r10,38
+   .traceevent "L" 4 "R" "I" "r" 10 42 42 0 "" ""
+   load r11,40
+   .traceevent "L" 4 "R" "I" "r" 11 42 42 0 "" ""
+   load r12,"<primary>"
+   .traceevent "L" 4 "R" "S" "r" 12 42 42 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 42 42 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 42 42 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 42 42 0 "id" ""
+   .srcstep 43 43 17 "levell_settings.crexx" 54 3 44 "  id = graph.add(1,7,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 43 43 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 43 43 0 "" ""
+   load r10,7
+   .traceevent "L" 4 "R" "I" "r" 10 43 43 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 43 43 0 "" ""
+   load r12,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 12 43 43 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 43 43 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 43 43 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 43 43 0 "id" ""
+   .srcstep 44 44 17 "levell_settings.crexx" 55 3 45 "  id = graph.add(2,30,42,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 44 44 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 44 44 0 "" ""
+   load r10,30
+   .traceevent "L" 4 "R" "I" "r" 10 44 44 0 "" ""
+   load r11,42
+   .traceevent "L" 4 "R" "I" "r" 11 44 44 0 "" ""
+   load r12,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 12 44 44 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 44 44 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 44 44 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 44 44 0 "id" ""
+   .srcstep 45 45 17 "levell_settings.crexx" 56 3 33 "  id = graph.add(2,43,31,'sum',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 45 45 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 45 45 0 "" ""
+   load r10,43
+   .traceevent "L" 4 "R" "I" "r" 10 45 45 0 "" ""
+   load r11,31
+   .traceevent "L" 4 "R" "I" "r" 11 45 45 0 "" ""
+   load r12,"sum"
+   .traceevent "L" 4 "R" "S" "r" 12 45 45 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 45 45 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 45 45 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 45 45 0 "id" ""
+   .srcstep 46 46 17 "levell_settings.crexx" 57 3 44 "  id = graph.add(4,31,44,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 46 46 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 46 46 0 "" ""
+   load r10,31
+   .traceevent "L" 4 "R" "I" "r" 10 46 46 0 "" ""
+   load r11,44
+   .traceevent "L" 4 "R" "I" "r" 11 46 46 0 "" ""
+   load r12,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 12 46 46 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 46 46 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 46 46 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 46 46 0 "id" ""
+   .srcstep 47 47 17 "levell_settings.crexx" 58 3 44 "  id = graph.add(1,8,0,'<operator.token>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 47 47 0 "graph" ""
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 47 47 0 "" ""
+   load r10,8
+   .traceevent "L" 4 "R" "I" "r" 10 47 47 0 "" ""
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 47 47 0 "" ""
+   load r12,"<operator.token>"
+   .traceevent "L" 4 "R" "S" "r" 12 47 47 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 47 47 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 47 47 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 47 47 0 "id" ""
+   .srcstep 48 48 17 "levell_settings.crexx" 59 3 45 "  id = graph.add(2,31,46,'<operator.head>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 48 48 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 48 48 0 "" ""
+   load r10,31
+   .traceevent "L" 4 "R" "I" "r" 10 48 48 0 "" ""
+   load r11,46
+   .traceevent "L" 4 "R" "I" "r" 11 48 48 0 "" ""
+   load r12,"<operator.head>"
+   .traceevent "L" 4 "R" "S" "r" 12 48 48 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 48 48 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 48 48 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 48 48 0 "id" ""
+   .srcstep 49 49 17 "levell_settings.crexx" 60 3 37 "  id = graph.add(2,47,32,'product',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 49 49 0 "graph" ""
+   load r9,2
+   .traceevent "L" 4 "R" "I" "r" 9 49 49 0 "" ""
+   load r10,47
+   .traceevent "L" 4 "R" "I" "r" 10 49 49 0 "" ""
+   load r11,32
+   .traceevent "L" 4 "R" "I" "r" 11 49 49 0 "" ""
+   load r12,"product"
+   .traceevent "L" 4 "R" "S" "r" 12 49 49 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 49 49 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 49 49 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 49 49 0 "id" ""
+   .srcstep 50 50 17 "levell_settings.crexx" 61 3 44 "  id = graph.add(4,32,48,'<level.choice>',1)"
+   .traceevent "V" 6 "R" "O" "r" 1 50 50 0 "graph" ""
+   load r9,4
+   .traceevent "L" 4 "R" "I" "r" 9 50 50 0 "" ""
+   load r10,32
+   .traceevent "L" 4 "R" "I" "r" 10 50 50 0 "" ""
+   load r11,48
+   .traceevent "L" 4 "R" "I" "r" 11 50 50 0 "" ""
+   load r12,"<level.choice>"
+   .traceevent "L" 4 "R" "S" "r" 12 50 50 0 "" ""
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 50 50 0 "" ""
+   load r7,6
+   settp r1,256
+   swap r8,r1
+   settp r12,768
+   call r2,§llcore.grammar.add(),r7
+   swap r1,r8
+   .traceevent "F" 4 "R" "I" "r" 2 50 50 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 2 50 50 0 "id" ""
+   .srcstep 51 51 17 "levell_settings.crexx" 62 3 51 "  operators = .llpratt..operators(2,10,11,'number')"
+   .meta "levell_settings.language.operators"="b" ".llpratt..operators" r4
+   load r10,2
+   .traceevent "L" 4 "R" "I" "r" 10 51 51 0 "" ""
+   load r11,10
+   .traceevent "L" 4 "R" "I" "r" 11 51 51 0 "" ""
+   load r12,11
+   .traceevent "L" 4 "R" "I" "r" 12 51 51 0 "" ""
+   load r13,"number"
+   .traceevent "L" 4 "R" "S" "r" 13 51 51 0 "" ""
+   load r9,4
+   settpcall r4,§llpratt.operators.§factory(),r9,r13,768
+   .traceevent "F" 4 "R" "O" "r" 4 51 51 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 4 51 51 0 "operators" ""
+   .srcstep 52 52 17 "levell_settings.crexx" 63 3 36 "  ok = operators.infix(7,10,0,'sum')"
+   .meta "levell_settings.language.ok"="b" ".int" r3
+   .traceevent "V" 6 "R" "O" "r" 4 52 52 0 "operators" ""
+   load r10,7
+   .traceevent "L" 4 "R" "I" "r" 10 52 52 0 "" ""
+   load r11,10
+   .traceevent "L" 4 "R" "I" "r" 11 52 52 0 "" ""
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 52 52 0 "" ""
+   load r13,"sum"
+   .traceevent "L" 4 "R" "S" "r" 13 52 52 0 "" ""
+   load r8,5
+   settp r4,256
+   swap r9,r4
+   settpcall r3,§llpratt.operators.infix(),r8,r13,768
+   swap r4,r9
+   .traceevent "F" 4 "R" "I" "r" 3 52 52 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 3 52 52 0 "ok" ""
+   .srcstep 53 53 17 "levell_settings.crexx" 64 3 40 "  ok = operators.infix(8,20,0,'product')"
+   .traceevent "V" 6 "R" "O" "r" 4 53 53 0 "operators" ""
+   load r10,8
+   .traceevent "L" 4 "R" "I" "r" 10 53 53 0 "" ""
+   load r11,20
+   .traceevent "L" 4 "R" "I" "r" 11 53 53 0 "" ""
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 53 53 0 "" ""
+   load r13,"product"
+   .traceevent "L" 4 "R" "S" "r" 13 53 53 0 "" ""
+   load r8,5
+   settp r4,256
+   swap r9,r4
+   settpcall r3,§llpratt.operators.infix(),r8,r13,768
+   swap r4,r9
+   .traceevent "F" 4 "R" "I" "r" 3 53 53 0 "infix" ""
+   .traceevent "A" 6 "R" "I" "r" 3 53 53 0 "ok" ""
+   .srcstep 54 54 17 "levell_settings.crexx" 65 3 37 "  ok = operators.prefix(9,'negative')"
+   .traceevent "V" 6 "R" "O" "r" 4 54 54 0 "operators" ""
+   load r12,9
+   .traceevent "L" 4 "R" "I" "r" 12 54 54 0 "" ""
+   load r13,"negative"
+   .traceevent "L" 4 "R" "S" "r" 13 54 54 0 "" ""
+   load r10,3
+   settp r4,256
+   swap r11,r4
+   settpcall r3,§llpratt.operators.prefix(),r10,r13,768
+   swap r4,r11
+   .traceevent "F" 4 "R" "I" "r" 3 54 54 0 "prefix" ""
+   .traceevent "A" 6 "R" "I" "r" 3 54 54 0 "ok" ""
+   .srcstep 55 55 17 "levell_settings.crexx" 66 3 45 "  dfa = .llmunch..automaton.loaded(lexerdata())"
+   .meta "levell_settings.language.dfa"="b" ".llmunch..automaton" r0
+   call r13,lexerdata()
+   .traceevent "F" 4 "R" "X" "r" 13 55 55 0 "lexerdata" ""
+   load r12,1
+   settpcall r0,§llmunch.automaton.§factory.loaded(),r12,r13,256
+   .traceevent "F" 4 "R" "O" "r" 0 55 55 0 "§factory.loaded" ""
+   .traceevent "A" 6 "R" "O" "r" 0 55 55 0 "dfa" ""
+   .srcstep 56 56 17 "levell_settings.crexx" 67 3 1154 "  tables = .lllr..tables.loaded(graph,14,parserdata(),'11:contextfree;1,1,0,5,10:identifier;;1,2,0,6,6:number;;1,3,0,7,6:string;;1,4,0,8,6:equals;;1,5,0,9,9:separator;;1,6,0,10,10:expression;;1,7,0,11,4:plus;;1,8,0,12,5:times;;1,9,0,13,5:minus;;1,10,0,14,6:lparen;;1,11,0,15,6:rparen;;1,12,0,16,8:lbracket;;1,13,0,17,8:rbracket;;5,24,0,38,8:settings;;5,25,0,39,4:tail;;5,27,0,40,10:assignment;;5,1,0,41,10:name.value;;5,29,0,42,5:value;;5,30,0,49,10:arithmetic;;2,5,14,38,8:sequence;;2,16,15,38,8:sequence;;4,20,21,38,6:choice;;6,0,0,38,5:empty;;4,22,23,38,6:choice;;4,20,23,39,6:choice;;2,17,4,40,8:sequence;;2,26,18,40,8:sequence;;4,2,3,42,6:choice;;4,28,6,42,6:choice;;5,45,0,1,7:level.1;;5,49,0,2,7:level.2;;5,41,0,3,7:level.3;;1,2,0,1,6:number;;1,10,0,1,6:<open>;;1,11,0,1,7:<close>;;2,34,30,1,12:<group.head>;;2,36,35,1,5:group;;4,33,37,1,9:<primary>;;1,9,0,1,14:<prefix.token>;;2,39,32,1,8:negative;;4,38,40,1,9:<primary>;;1,7,0,1,16:<operator.token>;;2,30,42,1,15:<operator.head>;;2,43,31,1,3:sum;;4,31,44,1,14:<level.choice>;;1,8,0,1,16:<operator.token>;;2,31,46,1,15:<operator.head>;;2,47,32,1,7:product;;4,32,48,1,14:<level.choice>;;|root=14')"
+   .traceevent "V" 6 "R" "O" "r" 1 56 56 0 "graph" ""
+   load r11,14
+   .traceevent "L" 4 "R" "I" "r" 11 56 56 0 "" ""
+   .meta "levell_settings.language.tables"="b" ".lllr..tables" r6
+   call r12,parserdata()
+   .traceevent "F" 4 "R" "X" "r" 12 56 56 0 "parserdata" ""
+   load r13,"11:contextfree;1,1,0,5,10:identifier;;1,2,0,6,6:number;;1,3,0,7,6:string;;1,4,0,8,6:equals;;1,5,0,9,9:separator;;1,6,0,10,10:expression;;1,7,0,11,4:plus;;1,8,0,12,5:times;;1,9,0,13,5:minus;;1,10,0,14,6:lparen;;1,11,0,15,6:rparen;;1,12,0,16,8:lbracket;;1,13,0,17,8:rbracket;;5,24,0,38,8:settings;;5,25,0,39,4:tail;;5,27,0,40,10:assignment;;5,1,0,41,10:name.value;;5,29,0,42,5:value;;5,30,0,49,10:arithmetic;;2,5,14,38,8:sequence;;2,16,15,38,8:sequence;;4,20,21,38,6:choice;;6,0,0,38,5:empty;;4,22,23,38,6:choice;;4,20,23,39,6:choice;;2,17,4,40,8:sequence;;2,26,18,40,8:sequence;;4,2,3,42,6:choice;;4,28,6,42,6:choice;;5,45,0,1,7:level.1;;5,49,0,2,7:level.2;;5,41,0,3,7:level.3;;1,2,0,1,6:number;;1,10,0,1,6:<open>;;1,11,0,1,7:<close>;;2,34,30,1,12:<group.head>;;2,36,35,1,5:group;;4,33,37,1,9:<primary>;;1,9,0,1,14:<prefix.token>;;2,39,32,1,8:negative;;4,38,40,1,9:<primary>;;1,7,0,1,16:<operator.token>;;2,30,42,1,15:<operator.head>;;2,43,31,1,3:sum;;4,31,44,1,14:<level.choice>;;1,8,0,1,16:<operator.token>;;2,31,46,1,15:<operator.head>;;2,47,32,1,7:product;;4,32,48,1,14:<level.choice>;;|root=14"
+   .traceevent "L" 4 "R" "S" "r" 13 56 56 0 "" ""
+   load r9,4
+   settp r1,256
+   swap r10,r1
+   settp r12,256
+   settpcall r6,§lllr.tables.§factory.loaded(),r9,r13,768
+   swap r1,r10
+   .traceevent "F" 4 "R" "O" "r" 6 56 56 0 "§factory.loaded" ""
+   .traceevent "A" 6 "R" "O" "r" 6 56 56 0 "tables" ""
+   .srcstep 57 57 17 "levell_settings.crexx" 68 3 86 "  result = .lllanguage..definition.regional(dfa,tables,operators,6,12,13,'utf8','','')"
+   .meta "levell_settings.language.result"="b" ".lllanguage..definition" r5
+   .traceevent "V" 6 "R" "O" "r" 0 57 57 0 "dfa" ""
+   .traceevent "V" 6 "R" "O" "r" 6 57 57 0 "tables" ""
+   .traceevent "V" 6 "R" "O" "r" 4 57 57 0 "operators" ""
+   load r11,6
+   .traceevent "L" 4 "R" "I" "r" 11 57 57 0 "" ""
+   load r12,12
+   .traceevent "L" 4 "R" "I" "r" 12 57 57 0 "" ""
+   load r13,13
+   .traceevent "L" 4 "R" "I" "r" 13 57 57 0 "" ""
+   load r14,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 14 57 57 0 "" ""
+   load r15,""
+   .traceevent "L" 4 "R" "S" "r" 15 57 57 0 "" ""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 57 57 0 "" ""
+   load r7,9
+   settp r0,256
+   swap r8,r0
+   settp r6,256
+   swap r9,r6
+   settp r4,256
+   swap r10,r4
+   settp r14,768
+   settp r15,768
+   settpcall r5,§lllanguage.definition.§factory.regional(),r7,r16,768
+   swap r0,r8
+   swap r6,r9
+   swap r4,r10
+   .traceevent "F" 4 "R" "O" "r" 5 57 57 0 "§factory.regional" ""
+   .traceevent "A" 6 "R" "O" "r" 5 57 57 0 "result" ""
+   .srcstep 58 58 17 "levell_settings.crexx" 69 3 31 "  call result.lexical('','',-1)"
+   .traceevent "V" 6 "R" "O" "r" 5 58 58 0 "result" ""
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 58 58 0 "" ""
+   load r15,""
+   .traceevent "L" 4 "R" "S" "r" 15 58 58 0 "" ""
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 58 58 0 "" ""
+   isub r16,0,r11
+   .traceevent "P" 4 "R" "I" "r" 16 58 58 0 "" ""
+   load r12,4
+   settp r5,256
+   swap r13,r5
+   settp r14,768
+   settp r15,768
+   call r10,§lllanguage.definition.lexical(),r12
+   swap r5,r13
+   .traceevent "F" 4 "R" "V" "r" 10 58 58 0 "lexical" ""
+   .srcstep 59 59 17 "levell_settings.crexx" 70 3 26 "  call result.recovery(5)"
+   .traceevent "V" 6 "R" "O" "r" 5 59 59 0 "result" ""
+   load r16,5
+   .traceevent "L" 4 "R" "I" "r" 16 59 59 0 "" ""
+   load r14,2
+   settp r5,256
+   swap r15,r5
+   call r13,§lllanguage.definition.recovery(),r14
+   swap r5,r15
+   .traceevent "F" 4 "R" "V" "r" 13 59 59 0 "recovery" ""
+   .srcstep 60 60 17 "levell_settings.crexx" 71 3 35 "  call result.token(1,'identifier')"
+   .traceevent "V" 6 "R" "O" "r" 5 60 60 0 "result" ""
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 60 60 0 "" ""
+   load r16,"identifier"
+   .traceevent "L" 4 "R" "S" "r" 16 60 60 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 60 60 0 "token" ""
+   .srcstep 61 61 17 "levell_settings.crexx" 72 3 31 "  call result.token(2,'number')"
+   .traceevent "V" 6 "R" "O" "r" 5 61 61 0 "result" ""
+   load r15,2
+   .traceevent "L" 4 "R" "I" "r" 15 61 61 0 "" ""
+   load r16,"number"
+   .traceevent "L" 4 "R" "S" "r" 16 61 61 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 61 61 0 "token" ""
+   .srcstep 62 62 17 "levell_settings.crexx" 73 3 31 "  call result.token(3,'string')"
+   .traceevent "V" 6 "R" "O" "r" 5 62 62 0 "result" ""
+   load r15,3
+   .traceevent "L" 4 "R" "I" "r" 15 62 62 0 "" ""
+   load r16,"string"
+   .traceevent "L" 4 "R" "S" "r" 16 62 62 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 62 62 0 "token" ""
+   .srcstep 63 63 17 "levell_settings.crexx" 74 3 31 "  call result.token(4,'equals')"
+   .traceevent "V" 6 "R" "O" "r" 5 63 63 0 "result" ""
+   load r15,4
+   .traceevent "L" 4 "R" "I" "r" 15 63 63 0 "" ""
+   load r16,"equals"
+   .traceevent "L" 4 "R" "S" "r" 16 63 63 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 63 63 0 "token" ""
+   .srcstep 64 64 17 "levell_settings.crexx" 75 3 34 "  call result.token(5,'separator')"
+   .traceevent "V" 6 "R" "O" "r" 5 64 64 0 "result" ""
+   load r15,5
+   .traceevent "L" 4 "R" "I" "r" 15 64 64 0 "" ""
+   load r16,"separator"
+   .traceevent "L" 4 "R" "S" "r" 16 64 64 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 64 64 0 "token" ""
+   .srcstep 65 65 17 "levell_settings.crexx" 76 3 35 "  call result.token(6,'expression')"
+   .traceevent "V" 6 "R" "O" "r" 5 65 65 0 "result" ""
+   load r15,6
+   .traceevent "L" 4 "R" "I" "r" 15 65 65 0 "" ""
+   load r16,"expression"
+   .traceevent "L" 4 "R" "S" "r" 16 65 65 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 65 65 0 "token" ""
+   .srcstep 66 66 17 "levell_settings.crexx" 77 3 29 "  call result.token(7,'plus')"
+   .traceevent "V" 6 "R" "O" "r" 5 66 66 0 "result" ""
+   load r15,7
+   .traceevent "L" 4 "R" "I" "r" 15 66 66 0 "" ""
+   load r16,"plus"
+   .traceevent "L" 4 "R" "S" "r" 16 66 66 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 66 66 0 "token" ""
+   .srcstep 67 67 17 "levell_settings.crexx" 78 3 30 "  call result.token(8,'times')"
+   .traceevent "V" 6 "R" "O" "r" 5 67 67 0 "result" ""
+   load r15,8
+   .traceevent "L" 4 "R" "I" "r" 15 67 67 0 "" ""
+   load r16,"times"
+   .traceevent "L" 4 "R" "S" "r" 16 67 67 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 67 67 0 "token" ""
+   .srcstep 68 68 17 "levell_settings.crexx" 79 3 30 "  call result.token(9,'minus')"
+   .traceevent "V" 6 "R" "O" "r" 5 68 68 0 "result" ""
+   load r15,9
+   .traceevent "L" 4 "R" "I" "r" 15 68 68 0 "" ""
+   load r16,"minus"
+   .traceevent "L" 4 "R" "S" "r" 16 68 68 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 68 68 0 "token" ""
+   .srcstep 69 69 17 "levell_settings.crexx" 80 3 32 "  call result.token(10,'lparen')"
+   .traceevent "V" 6 "R" "O" "r" 5 69 69 0 "result" ""
+   load r15,10
+   .traceevent "L" 4 "R" "I" "r" 15 69 69 0 "" ""
+   load r16,"lparen"
+   .traceevent "L" 4 "R" "S" "r" 16 69 69 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 69 69 0 "token" ""
+   .srcstep 70 70 17 "levell_settings.crexx" 81 3 32 "  call result.token(11,'rparen')"
+   .traceevent "V" 6 "R" "O" "r" 5 70 70 0 "result" ""
+   load r15,11
+   .traceevent "L" 4 "R" "I" "r" 15 70 70 0 "" ""
+   load r16,"rparen"
+   .traceevent "L" 4 "R" "S" "r" 16 70 70 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 70 70 0 "token" ""
+   .srcstep 71 71 17 "levell_settings.crexx" 82 3 34 "  call result.token(12,'lbracket')"
+   .traceevent "V" 6 "R" "O" "r" 5 71 71 0 "result" ""
+   load r15,12
+   .traceevent "L" 4 "R" "I" "r" 15 71 71 0 "" ""
+   load r16,"lbracket"
+   .traceevent "L" 4 "R" "S" "r" 16 71 71 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 71 71 0 "token" ""
+   .srcstep 72 72 17 "levell_settings.crexx" 83 3 34 "  call result.token(13,'rbracket')"
+   .traceevent "V" 6 "R" "O" "r" 5 72 72 0 "result" ""
+   load r15,13
+   .traceevent "L" 4 "R" "I" "r" 15 72 72 0 "" ""
+   load r16,"rbracket"
+   .traceevent "L" 4 "R" "S" "r" 16 72 72 0 "" ""
+   load r13,3
+   settp r5,256
+   swap r14,r5
+   settpcall r12,§lllanguage.definition.token(),r13,r16,768
+   swap r5,r14
+   .traceevent "F" 4 "R" "V" "r" 12 72 72 0 "token" ""
+   .srcstep 73 73 17 "levell_settings.crexx" 84 3 195 "  call result.diagnostic('value.error','value','Expected a number, quoted string or bracketed expression; found {found}.',x2bin('00000000000000000000000000010000000000000000000000000000000000'))"
+   .traceevent "V" 6 "R" "O" "r" 5 73 73 0 "result" ""
+   load r13,"value.error"
+   .traceevent "L" 4 "R" "S" "r" 13 73 73 0 "" ""
+   load r14,"value"
+   .traceevent "L" 4 "R" "S" "r" 14 73 73 0 "" ""
+   load r15,"Expected a number, quoted string or bracketed expression; found {found}."
+   .traceevent "L" 4 "R" "S" "r" 15 73 73 0 "" ""
+   load r10,"00000000000000000000000000010000000000000000000000000000000000"
+   .traceevent "L" 4 "R" "S" "r" 10 73 73 0 "" ""
+   load r9,1
+   settpcall r16,rxfnsb.x2bin(),r9,r10,768
+   .traceevent "F" 4 "R" "X" "r" 16 73 73 0 "x2bin" ""
+   load r11,5
+   settp r5,256
+   swap r12,r5
+   settp r13,768
+   settp r14,768
+   settp r15,768
+   settpcall r10,§lllanguage.definition.diagnostic(),r11,r16,256
+   swap r5,r12
+   .traceevent "F" 4 "R" "V" "r" 10 73 73 0 "diagnostic" ""
+   .srcstep 74 74 17 "levell_settings.crexx" 85 3 16 "  return result"
+   .traceevent "V" 6 "R" "O" "r" 5 74 74 0 "result" ""
+   ret r5
+   .meta "levell_settings.language.dfa"
+   .meta "levell_settings.language.graph"
+   .meta "levell_settings.language.id"
+   .meta "levell_settings.language.ok"
+   .meta "levell_settings.language.operators"
+   .meta "levell_settings.language.result"
+   .meta "levell_settings.language.tables"
+
+lexerdata() .locals=6
+   .meta "levell_settings.lexerdata"="b" ".binary" lexerdata() ""
+   .srcstep 93 93 17 "levell_settings.crexx" 86 1 31 "lexerdata: procedure = .binary"
+   numsci 18,1,1
+   .meta "levell_settings.lexerdata.result"="b" ".binary" r1
+   .srcstep 76 76 17 "levell_settings.crexx" 87 3 19 "  result = .binary"
+   null r1
+   .meta "levell_settings.lexerdata.chunk"="b" ".binary" r0
+   load r2,0x3146444c8a0000003400000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000200000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000500000006000000060000000600000006000000060000000700000008000000090000000a000000060000000b00000006000000060000000c0000000c0000000c0000000c0000000c0000000c0000000c0000000c0000000c0000000c000000060000000d000000060000000e0000000600000006000000060000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000000f0000001000000006000000110000000600000012000000060000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000130000001300000013000000060000000600000006000000060000000600000014000000150000001600000016000000160000001600000016000000160000001600000016000000160000001600000016000000160000001600000017000000180000001900000019000000190000001a000000190000001900000019000000190000001900000019000000190000001900000019000000190000001b0000001c0000001d0000001d0000001d0000001d0000001d0000001e0000001d0000001d0000001f0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d0000001d000000200000001d000000210000001d0000001d0000001d0000001d0000002200000023000000230000002400000025000000260000002600000026000000260000002600000026000000260000002600000027000000260000002800000026000000260000002600000026000000260000002600000026000000260000002600000026000000260000002600000026000000260000002600000026000000290000002a0000002b0000002b0000002b0000002b0000002c0000002d0000002b0000002b0000002b0000002b0000002b0000002b0000002e0000002f000000300000003100000032000000320000003200000033000000230000002300000023000000230000002300000023000000230000002300000023000000230000002300000000000000ffffffff0500000005000000ffffffff000000000a0000000b000000080000000700000009000000020000000500000004000000010000000c0000000d00000001000000010000000000000000000000000000000000000000000000ffffffffffffffff05000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000010000000100000001000000010000000000000000000000000000000000000000000000000000000100000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000100000001000000000000000000000000000000010000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000001000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000200000003000000040000000500000006000000000000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000130000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000140000000000000000000000150000000000000000000000000000001600000017000000000000000000000000000000180000000000000000000000000000001900000000000000000000001a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+   .traceevent "L" 4 "R" "X" "r" 2 0 0 0 "" ""
+   bcopy r0,r2
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 77 77 17 "levell_settings.crexx" 89 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 77 77 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 77 77 0 "chunk" ""
+   load r2,2
+   swap r3,r1
+   settpswapcall r5,rxfnsb.binappend(),r2,r0,256,r4
+   swap r1,r3
+   swap r0,r4
+   .traceevent "F" 4 "R" "I" "r" 5 77 77 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1b\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x19\0\0\0\0\0\0\0\0\0\0\0\x1a\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0*\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 78 78 17 "levell_settings.crexx" 91 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 78 78 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 78 78 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 78 78 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\05\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\06\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\07\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 79 79 17 "levell_settings.crexx" 93 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 79 79 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 79 79 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 79 79 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\08\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\09\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x19\0\0\0\0\0\0\0\0\0\0\0\x1a\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x19\0\0\0\0\0\0\0\0\0\0\0\x1a\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0:\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0;\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0<\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 80 80 17 "levell_settings.crexx" 95 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 80 80 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 80 80 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 80 80 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0=\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0>\0\0\0\?\0\0\0\?\0\0\0\?\0\0\0\?\0\0\0\?\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0A\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0B\0\0\0C\0\0\0C\0\0\0C\0\0\0C\0\0\0C\0\0\0C\0\0\0D\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0E\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0F\0\0\0G\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0H\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0I\0\0\0J\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0K\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0L\0\0\0M\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0N\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0O\0\0\0P\0\0\0P\0\0\0Q\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0*\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 81 81 17 "levell_settings.crexx" 97 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 81 81 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 81 81 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 81 81 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0R\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0S\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0T\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0U\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0V\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 82 82 17 "levell_settings.crexx" 99 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 82 82 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 82 82 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 82 82 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0W\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0X\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0Y\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0Z\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 83 83 17 "levell_settings.crexx" 101 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 83 83 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 83 83 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 83 83 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0[\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\\\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0]\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0^\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0_\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0`\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0a\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0b\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0c\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0d\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 84 84 17 "levell_settings.crexx" 103 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 84 84 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 84 84 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 84 84 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0f\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0g\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0h\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0i\0\0\0j\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0k\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0l\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0m\0\0\0n\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0o\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0p\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0q\0\0\0r\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0s\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0t\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0u\0\0\0v\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 85 85 17 "levell_settings.crexx" 105 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 85 85 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 85 85 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 85 85 0 "binappend" ""
+   load r5,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0w\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0x\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0y\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0z\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 86 86 17 "levell_settings.crexx" 107 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 86 86 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 86 86 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 86 86 0 "binappend" ""
+   load r5,"\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 87 87 17 "levell_settings.crexx" 109 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 87 87 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 87 87 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 87 87 0 "binappend" ""
+   load r5,0x00000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f00000020000000200000002000000020000000210000002200000023000000230000002300000024000000250000002600000027000000280000002900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b0000007b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c0000007c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d0000007d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e0000007e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f0000007f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000081000000810000008100000081000000810000008100000081000000810000008100000081000000810000008100000081000000810000008100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000820000008200000082000000820000008200000082000000
+   .traceevent "L" 4 "R" "X" "r" 5 0 0 0 "" ""
+   bcopy r0,r5
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 88 88 17 "levell_settings.crexx" 111 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 88 88 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 88 88 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 88 88 0 "binappend" ""
+   load r5,0x8200000082000000820000008200000082000000820000008200000082000000820000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000083000000830000008300000083000000830000008300000083000000830000008300000083000000830000008300000083000000830000008300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000840000008400000084000000840000008400000084000000840000008400000084000000840000008400000084000000840000008400000084000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008500000085000000850000008500000085000000850000008500000085000000850000008500000085000000850000008500000085000000850000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000086000000860000008600000086000000860000008600000086000000860000008600000086000000860000008600000086000000860000008600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000870000008700000087000000870000008700000087000000870000008700000087000000870000008700000087000000870000008700000087000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008800000088000000880000008800000088000000880000008800000088000000880000008800000088000000880000008800000088000000880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000089000000890000008900000089000000890000008900000089000000890000008900000089000000890000008900000089000000890000008900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b00000000000000000000002c00000000000000000000002d0000002e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002f00000000000000300000003100000000000000000000000000000032000000330000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b00000000000000000000002c00000000000000000000002d0000002e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002f0000000000000030000000310000000000000000000000000000003200000033000000000000000000000000000000340000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+   .traceevent "L" 4 "R" "X" "r" 5 0 0 0 "" ""
+   bcopy r0,r5
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 89 89 17 "levell_settings.crexx" 113 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 89 89 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 89 89 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 89 89 0 "binappend" ""
+   load r5,0x00000000000000008a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b00000000000000000000002c00000000000000000000002d0000002e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002f00000000000000300000003100000000000000000000000000000032000000330000000000000000000000000000003400000000000000000000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e0000001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f0000002000000020000000200000002000000021000000220000002300000023000000230000002400000025000000260000002700000028000000290000001c0000001c0000001c0000001c0000001c0000001d0000001e0000001e0000001e0000001e000000
+   .traceevent "L" 4 "R" "X" "r" 5 0 0 0 "" ""
+   bcopy r0,r5
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 90 90 17 "levell_settings.crexx" 115 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 90 90 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 90 90 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 90 90 0 "binappend" ""
+   load r5,"\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1c\0\0\0\x1d\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\x1e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x1f\0\0\0 \0\0\0 \0\0\0 \0\0\0 \0\0\0!\0\0\0\"\0\0\0#\0\0\0#\0\0\0#\0\0\0$\0\0\0%\0\0\0&\0\0\0\'\0\0\0(\0\0\0)\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\0\0\0\0\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0/\0\0\0\0\0\0\00\0\0\01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\02\0\0\03\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\0\0\0\0\0\0\0\0\0\0\0"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   scopy r0,r5
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 91 91 17 "levell_settings.crexx" 117 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 91 91 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 91 91 0 "chunk" ""
+   load r3,2
+   swap r4,r1
+   settpswapcall r2,rxfnsb.binappend(),r3,r0,256,r5
+   swap r1,r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 2 91 91 0 "binappend" ""
+   .srcstep 92 92 17 "levell_settings.crexx" 118 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 1 92 92 0 "result" ""
+   ret r1
+   .meta "levell_settings.lexerdata.chunk"
+   .meta "levell_settings.lexerdata.result"
+
+parserdata() .locals=6
+   .meta "levell_settings.parserdata"="b" ".binary" parserdata() ""
+   .srcstep 97 97 17 "levell_settings.crexx" 119 1 32 "parserdata: procedure = .binary"
+   numsci 18,1,1
+   .meta "levell_settings.parserdata.result"="b" ".binary" r1
+   .srcstep 94 94 17 "levell_settings.crexx" 120 3 19 "  result = .binary"
+   null r1
+   .meta "levell_settings.parserdata.chunk"="b" ".binary" r0
+   load r2,0x3152424c1f000000320100000200000002000000060000000300000001010000e7fffffffeffffff02000000faffffff03000000fffeffff04000000fbfeffff05000000f2feffff06000000f0feffff07000000effeffff08000000ecfeffff09000000ebfeffff0a000000eafeffff0b000000e9feffff0c000000e8feffff0d000000e6feffff0e000000e5feffff0f00000006010000feffffff04020000faffffff08020000faffffff03030000faffffff08030000eeffffff06040000020000000a0400000300000005050000e7ffffff36fbffff0200000032fbffff0300000037faffff0400000033faffff050000002afaffff1000000028faffff0700000027faffff0800000024faffff0900000023faffff0a00000022faffff0b00000021faffff0c00000020faffff0d0000001efaffff0e0000001dfaffff0f000000060600003f420f000c0600000300000007070000e7ffffffcef8ffff03000000cff7ffff05000000c5f7ffff11000000c0f7ffff12000000bdf7ffff13000000bbf7ffff140000000c070000150000009df7ffff150000009ef6ffff1600000009090000e9ffffff0a0a0000e8ffffff0b0b0000e6ffffff0c0c0000e5ffffff0d0d0000f1ffffff100d000017000000110d000018000000140d00001900000073f0ffff1700000072f0ffff180000006ff0ffff1900000074efffff1a00000073efffff1b00000070efffff1c00000064efffff1d0000005aefffff1e00000059efffff1f000000140e0000efffffff0f0f0000efffffff10100000ebffffff11110000eaffffff12120000e4ffffff13130000e3ffffff14140000f0ffffff17140000fbffffff18140000fbffffff1b140000fbffffff18150000e2ffffff19150000e2ffffff1c150000e2ffffff1c160000fdffffff17170000fdffffff1d170000fcffffff18180000fcffffff1e180000f9ffffff19190000f9ffffff1f190000e0ffffff1a1a0000e0ffffff201a0000dfffffff1b1b0000dfffffff211b0000ddffffff1c1c0000ddffffff221c0000e1ffffff1d1d0000e1ffffff231d0000deffffff1e1e0000deffffff241e0000edffffff1f1f0000edffffff
+   .traceevent "L" 4 "R" "X" "r" 2 0 0 0 "" ""
+   bcopy r0,r2
+   .traceevent "A" 6 "R" "X" "r" 0 0 0 0 "chunk" ""
+   .srcstep 95 95 17 "levell_settings.crexx" 122 3 30 "  call binappend result,chunk"
+   .traceevent "V" 6 "R" "X" "r" 1 95 95 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 95 95 0 "chunk" ""
+   load r2,2
+   swap r3,r1
+   settpswapcall r5,rxfnsb.binappend(),r2,r0,256,r4
+   swap r1,r3
+   swap r0,r4
+   .traceevent "F" 4 "R" "I" "r" 5 95 95 0 "binappend" ""
+   .srcstep 96 96 17 "levell_settings.crexx" 123 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 1 96 96 0 "result" ""
+   ret r1
+   .meta "levell_settings.parserdata.chunk"
+   .meta "levell_settings.parserdata.result"
+
+/* Imported Declaration from file: lllanguage@rxfnsl-base.rxbin */
+
+§lllanguage.definition.§factory.regional() .expose=lllanguage.definition.§factory.regional
+   .meta "lllanguage.definition.§factory.regional"="b" ".lllanguage..definition" §lllanguage.definition.§factory.regional() "dfa=.llmunch..automaton,parser=.lllr..tables,operators=.llpratt..operators,virtual=.int,open=.int,close=.int,encoding=.string,?opening=.string,?closing=.string"
+   .meta "lllanguage.definition.§factory.regional"=".autoload" "rxfnsl-base"
+
+§lllanguage.definition.recovery() .expose=lllanguage.definition.recovery
+   .meta "lllanguage.definition.recovery"="b" ".void" §lllanguage.definition.recovery() "sync=.int"
+   .meta "lllanguage.definition.recovery"=".autoload" "rxfnsl-base"
+
+§lllanguage.definition.lexical() .expose=lllanguage.definition.lexical
+   .meta "lllanguage.definition.lexical"="b" ".void" §lllanguage.definition.lexical() "malformed=.string,unmatched=.string,eof=.int"
+   .meta "lllanguage.definition.lexical"=".autoload" "rxfnsl-base"
+
+§lllanguage.definition.token() .expose=lllanguage.definition.token
+   .meta "lllanguage.definition.token"="b" ".void" §lllanguage.definition.token() "id=.int,name=.string"
+   .meta "lllanguage.definition.token"=".autoload" "rxfnsl-base"
+
+§lllanguage.definition.diagnostic() .expose=lllanguage.definition.diagnostic
+   .meta "lllanguage.definition.diagnostic"="b" ".void" §lllanguage.definition.diagnostic() "name=.string,rule=.string,template=.string,mask=.binary"
+   .meta "lllanguage.definition.diagnostic"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.x2bin() .expose=rxfnsb.x2bin
+   .meta "rxfnsb.x2bin"="b" ".binary" rxfnsb.x2bin() "hex=.string"
+   .meta "rxfnsb.x2bin"=".autoload" "library"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.binappend() .expose=rxfnsb.binappend
+   .meta "rxfnsb.binappend"="b" ".int" rxfnsb.binappend() "expose dst=.binary,src=.binary"
+   .meta "rxfnsb.binappend"=".autoload" "library"
+
+/* Imported Declaration from file: llmunch@rxfnsl-base.rxbin */
+
+§llmunch.automaton.§factory.loaded() .expose=llmunch.automaton.§factory.loaded
+   .meta "llmunch.automaton.§factory.loaded"="b" ".llmunch..automaton" §llmunch.automaton.§factory.loaded() "data=.binary"
+   .meta "llmunch.automaton.§factory.loaded"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: llcore@rxfnsl-base.rxbin */
+
+§llcore.grammar.§factory() .expose=llcore.grammar.§factory
+   .meta "llcore.grammar.§factory"="b" ".llcore..grammar" §llcore.grammar.§factory() "profile=.string"
+   .meta "llcore.grammar.§factory"=".autoload" "rxfnsl-base"
+
+§llcore.grammar.add() .expose=llcore.grammar.add
+   .meta "llcore.grammar.add"="b" ".int" §llcore.grammar.add() "op=.int,a=.int,b=.int,label=.string,line=.int"
+   .meta "llcore.grammar.add"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: llpratt@rxfnsl-base.rxbin */
+
+§llpratt.operators.§factory() .expose=llpratt.operators.§factory
+   .meta "llpratt.operators.§factory"="b" ".llpratt..operators" §llpratt.operators.§factory() "atom=.int,open=.int,close=.int,?atomname=.string"
+   .meta "llpratt.operators.§factory"=".autoload" "rxfnsl-base"
+
+§llpratt.operators.infix() .expose=llpratt.operators.infix
+   .meta "llpratt.operators.infix"="b" ".int" §llpratt.operators.infix() "symbol=.int,power=.int,right=.int,name=.string"
+   .meta "llpratt.operators.infix"=".autoload" "rxfnsl-base"
+
+§llpratt.operators.prefix() .expose=llpratt.operators.prefix
+   .meta "llpratt.operators.prefix"="b" ".int" §llpratt.operators.prefix() "symbol=.int,name=.string"
+   .meta "llpratt.operators.prefix"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lllr@rxfnsl-base.rxbin */
+
+§lllr.tables.§factory.loaded() .expose=lllr.tables.§factory.loaded
+   .meta "lllr.tables.§factory.loaded"="b" ".lllr..tables" §lllr.tables.§factory.loaded() "graph=.llcore..grammar,root=.int,image=.binary,identity=.string"
+   .meta "lllr.tables.§factory.loaded"=".autoload" "rxfnsl-base"

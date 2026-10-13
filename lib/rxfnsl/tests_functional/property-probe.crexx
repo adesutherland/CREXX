@@ -1,0 +1,24 @@
+/* cREXX License (MIT). Observe generated Unicode intervals through native code. */
+options levelb
+import rxfnsb
+import llproperties
+import llcharset
+
+main: procedure = .int
+  names = llproperties..names(); table = .llcharset..ranges
+  i = .int; j = .int; image = .binary
+  say 'VERSION|' || llproperties..version()
+  do i = 1 to words(names)
+    name = word(names,i)
+    if llproperties..known(lower(name)) = 0 then return 1
+    table = llproperties..ranges(lower(name))
+    if table.error() <> '' then return 2
+    call binresize image,table.count() * 8
+    do j = 1 to table.count()
+      <at..i32>((j - 1) * 8) image = table.low(j)
+      <at..i32>((j - 1) * 8 + 4) image = table.high(j)
+    end
+    say 'PROPERTY|' || name || '|' || bin2x(image)
+  end
+  if llproperties..known('invented') then return 3
+  return 0

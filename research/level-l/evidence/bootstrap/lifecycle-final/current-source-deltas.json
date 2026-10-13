@@ -1,0 +1,12 @@
+{
+  "changed_paths": [
+    "rexx/llcharset.crexx",
+    "tools/levell.crexx"
+  ],
+  "explanations": {
+    "rexx/llcharset.crexx": "Intentional runtime diagnostic literal mutation inside isolated lifecycle test; main source unchanged.",
+    "tools/levell.crexx": "Later source-emitter unused-import cleanup; RXAS output unchanged and source emission qualified separately.",
+    "bootstrap/CMakeLists.txt": "rxtvm import made optional; same rxtvm-present branch used by all macOS runs.",
+    "tools/README.md": "Documentation update only."
+  }
+}

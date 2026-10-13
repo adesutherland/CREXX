@@ -1,0 +1,445 @@
+/* cREXX License (MIT). Owned packrat, predictive and Squirrel-core research engines.
+ * Squirrel rule memo protocol corresponds to bb1ae84701060462636c07c814286ac2875e0568,
+ * dart/lib/src/parser/memo_entry.dart (Luke Hutchison); see reference license.
+ * Recovery and reference failure trees are separate implementation work.
+ */
+options levelb
+namespace llpeg expose parser engine
+import rxfnsb
+import llcore
+import lllimits
+import llcheck
+import llcap
+
+/** A single owned parse request. No mutable module-global parser state.
+ * @param engine packrat, ll1 or squirrel; admitted semantics are checked first.
+ * @param fuel Maximum match invocations, including cache hits. Exhaustion is not syntax failure.
+ */
+parser: class
+  _g = .llcore..grammar
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _facts = .llcheck..analysis
+  _engine = .string
+  _root = .int
+  _width = .int
+  _fuel = .int
+  _calls = .int
+  _work = .int
+  _expansions = .int
+  _memo = .int
+  _depth = .int
+  _maxdepth = .int
+  _status = .int
+  _ran = .int
+  _result = .int
+  _selected = .int
+  _last = .int
+  _far = .int
+  _silent = .int
+  _error = .string
+  _active = .int[]
+  _computed = .int[]
+  _end = .int[]
+  _nodes = .int[]
+  _found = .int[]
+  _version = .int[]
+  _seen = .int[]
+  _wanted = .int[]
+  _diagnosed = .int[]
+  _context = .int
+  _contexts = .binary
+
+  *: factory
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, engine = .string, fuel = 1000000, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _g = graph; _root = root; _input = input; _engine = engine; _fuel = fuel
+    _width = input.size() + 1; _tree = .llcore..tree.from_source(input.source())
+    _facts = .llcheck..analysis(graph,root,limits)
+    _status = 0; _ran = 0; _calls = 0; _work = 0; _memo = 0
+    _depth = 0; _maxdepth = 0; _expansions = 0
+    _result = -1; _selected = 0; _last = 0; _far = -1; _silent = 0; _error = ''
+    _context = root
+    call binresize _contexts,graph.size()
+    return
+
+  /** Run once; subsequent calls return the retained outcome. */
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _input.error() <> '' then do
+      _status = 3; _error = _input.error(); return _status
+    end
+    if _facts.run() = 0 then do
+      _status = 3; _error = _facts.error()
+      if _facts.limit() then _status = 2
+      return _status
+    end
+    backend = .llcap..backend
+    backend = .engine(_engine)
+    admitted = llcap..admit(_facts,backend)
+    if admitted.status() <> 0 then do
+      _status = 3; _error = admitted.message(); return _status
+    end
+    _result = recognize(_root,0)
+    _selected = _last
+    if _status = 2 then return _status
+    if _result <> _input.size() then do
+      _status = 1
+      if _engine = 'packrat' then do
+        _far = -1
+        do i = 1 to 259
+          _wanted[i] = 0
+        end
+        call explain(_root,0)
+        if _status = 2 then return _status
+      end
+      if _result >= 0 then call expect(_result,256)
+      _error = 'unexpected input at byte ' || _input.start(_far) || '; expected ' || expectations()
+    end
+    return _status
+
+  /** Replay diagnostic observations from immutable memo outcomes. Negative
+   * predicates hide their child evidence, never the memo entry itself. Every
+   * reachable clause/position is visited once, including cached successes.
+   */
+  explain: method = .void
+    arg clause = .int, at = .int
+    key = (clause - 1) * _width + at + 1
+    if _diagnosed[key] = _context + 1 | _computed[key] = 0 | _status = 2 then return
+    _diagnosed[key] = _context + 1; _calls = _calls + 1
+    if _calls > _fuel then do
+      _status = 2; _error = lllimits..describe('parse.work',_fuel,_calls); return
+    end
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    select op
+      when 1 then do
+        if _end[key] < 0 then call expect(at,a)
+      end
+      when 11 then do
+        if _end[key] < 0 then do wanted = a to b
+          call expect(at,wanted)
+        end
+      end
+      when 12 then do
+        if _end[key] < 0 then call expect(at,257)
+      end
+      when 10 then do
+        if _end[key] < 0 then call expect(at,256)
+      end
+      when 2 then do
+        call explain(a,at)
+        middle = _end[(a - 1) * _width + at + 1]
+        if middle >= 0 then call explain(b,middle)
+      end
+      when 3 then do
+        call explain(a,at)
+        if _end[(a - 1) * _width + at + 1] < 0 then call explain(b,at)
+      end
+      when 5 then do
+        saved = _context
+        if left(_g.label(clause),7) <> '@field.' then _context = clause
+        call explain(a,at)
+        _context = saved
+      end
+      when 7 then do
+        call explain(a,at)
+        middle = _end[(a - 1) * _width + at + 1]
+        if middle > at then call explain(clause,middle)
+      end
+      when 8 then do
+        if _end[key] < 0 then call expect(at,258)
+      end
+      when 9 then call explain(a,at)
+      otherwise nop
+    end
+    return
+
+  recognize: method = .int
+    arg clause = .int, at = .int
+    _calls = _calls + 1
+    if _calls > _fuel then do
+      _status = 2; _last = 0; _error = lllimits..describe('parse.work',_fuel,_calls); return -1
+    end
+    if _depth >= 512 then do
+      _status = 2; _last = 0; _error = 'LL_IMPLEMENTATION_LIMIT: recursive parser depth exceeds 512; a larger work budget cannot raise this implementation bound'; return -1
+    end
+    if _status = 2 then do
+      _last = 0; return -1
+    end
+    answer = .int
+    memoize = 1
+    if _engine = 'll1' then memoize = 0
+    if _engine = 'squirrel' & _g.op(clause) <> 5 then memoize = 0
+    if memoize = 0 then do
+      _depth = _depth + 1
+      if _depth > _maxdepth then _maxdepth = _depth
+      answer = evaluate(clause,at)
+      _depth = _depth - 1
+      return answer
+    end
+    key = (clause - 1) * _width + at + 1
+    if _computed[key] & (_active[key] | _seen[key] = _version[at + 1]) then do
+      _last = _nodes[key]; return _end[key]
+    end
+    if _active[key] then do
+      _found[key] = 1; _computed[key] = 1; _end[key] = -1; _nodes[key] = 0
+      _last = 0; return -1
+    end
+    if _computed[key] = 0 then _memo = _memo + 1
+    _active[key] = 1
+    _depth = _depth + 1
+    if _depth > _maxdepth then _maxdepth = _depth
+    do forever
+      answer = evaluate(clause,at)
+      if _status = 2 then leave
+      if _computed[key] then do
+        if answer < 0 | (_end[key] >= 0 & answer <= _end[key]) then leave
+      end
+      _computed[key] = 1; _end[key] = answer; _nodes[key] = _last
+      if _found[key] = 0 | _engine <> 'squirrel' then leave
+      _version[at + 1] = _version[at + 1] + 1
+      _seen[key] = _version[at + 1]; _expansions = _expansions + 1
+    end
+    _depth = _depth - 1; _active[key] = 0
+    _seen[key] = _version[at + 1]
+    if _status = 2 then do
+      _last = 0; return -1
+    end
+    _last = _nodes[key]
+    return _end[key]
+
+  evaluate: method = .int
+    arg clause = .int, at = .int
+    _work = _work + 1; _last = 0
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    symbol = _input.symbol(at)
+    answer = -1; leftnode = 0; rightnode = 0; next = .int
+    select op
+      when 1 then do
+        if symbol = a then answer = at + 1
+        else call expect(at,a)
+      end
+      when 11 then do
+        if symbol >= a & symbol <= b then answer = at + 1
+        else do wanted = a to b
+          call expect(at,wanted)
+        end
+      end
+      when 12 then do
+        if symbol >= 0 then answer = at + 1
+        else call expect(at,257)
+      end
+      when 6 then answer = at
+      when 10 then do
+        if at = _input.size() then answer = at
+        else call expect(at,256)
+      end
+      when 2 then do
+        middle = recognize(a,at); leftnode = _last
+        if middle >= 0 then do
+          answer = recognize(b,middle); rightnode = _last
+        end
+      end
+      when 3 then do
+        chosen = a
+        if _engine = 'll1' then chosen = selectalternative(clause,at)
+        if chosen > 0 then do
+          answer = recognize(chosen,at); leftnode = _last
+        end
+        if answer < 0 & _engine <> 'll1' then do
+          answer = recognize(b,at); leftnode = _last
+        end
+      end
+      when 4 then do
+        chosen = selectalternative(clause,at)
+        if chosen > 0 then do
+          answer = recognize(chosen,at); leftnode = _last
+        end
+      end
+      when 5 then do
+        saved = _context
+        if left(_g.label(clause),7) <> '@field.' then _context = clause
+        answer = recognize(a,at); leftnode = _last
+        _context = saved
+      end
+      when 7 then do
+        answer = at
+        if _engine = 'packrat' then do
+          next = recognize(a,at); leftnode = _last
+          if next >= 0 then do
+            if next <= at then do
+              _status = 2; _error = 'nonprogressing repetition violated admission'; return -1
+            end
+            answer = recognize(clause,next); rightnode = _last
+          end
+        end
+        else do
+          do forever
+            next = recognize(a,answer); rightnode = _last
+            if next < 0 then leave
+            if next <= answer then do
+              _status = 2; _error = 'nonprogressing repetition violated admission'; return -1
+            end
+            leftnode = emit(clause,at,next,leftnode,rightnode)
+            answer = next
+          end
+          rightnode = 0
+        end
+      end
+      when 8 then do
+        _silent = _silent + 1
+        looked = recognize(a,at)
+        _silent = _silent - 1
+        if looked < 0 then answer = at
+        else call expect(at,258)
+      end
+      when 9 then do
+        looked = recognize(a,at)
+        if looked >= 0 then answer = at
+      end
+      otherwise do
+        _status = 3; _error = 'unsupported executable clause'; return -1
+      end
+    end
+    if answer < 0 | _status = 2 then do
+      _last = 0; return -1
+    end
+    _last = emit(clause,at,answer,leftnode,rightnode)
+    return answer
+
+  selectalternative: method = .int
+    arg clause = .int, at = .int
+    a = _g.left(clause); b = _g.right(clause)
+    symbol = _input.symbol(at)
+    if symbol < 0 then symbol = 256
+    if _facts.first(a,symbol) then return a
+    if _facts.nullable(a) & _facts.follow(clause,symbol) then return a
+    if _facts.first(b,symbol) then return b
+    if _facts.nullable(b) & _facts.follow(clause,symbol) then return b
+    do candidate = 0 to 256
+      if _facts.first(clause,candidate) | (_facts.nullable(clause) & _facts.follow(clause,candidate)) then call expect(at,candidate)
+    end
+    return 0
+
+  emit: method = .int
+    arg clause = .int, at = .int, finish = .int, a = .int, b = .int
+    firstbyte = _input.start(at); lastbyte = firstbyte
+    if finish > at then lastbyte = _input.finish(finish)
+    if a > 0 then do
+      firstbyte = min(firstbyte,_tree.start(a)); lastbyte = max(lastbyte,_tree.finish(a))
+    end
+    if b > 0 then do
+      firstbyte = min(firstbyte,_tree.start(b)); lastbyte = max(lastbyte,_tree.finish(b))
+    end
+    return _tree.add(_g.op(clause),_g.label(clause),firstbyte,lastbyte,a,b)
+
+  expect: method = .void
+    arg at = .int, symbol = .int
+    if _silent > 0 | at < _far then return
+    if at > _far then do
+      do context = 0 to <blen>(_contexts) - 1
+        <at..u8>(context) _contexts = 0
+      end
+      do i = 1 to 259
+        _wanted[i] = 0
+      end
+      _far = at
+    end
+    _wanted[symbol + 1] = 1
+    if _context > 0 then <at..u8>(_context - 1) _contexts = 1
+    return
+
+  expectations: method = .string
+    out = ''
+    do i = 0 to 258
+      if _wanted[i + 1] then do
+        if out <> '' then out = out || ', '
+        select i
+          when 256 then out = out || 'end of input'
+          when 257 then out = out || 'any symbol'
+          when 258 then out = out || 'negative lookahead to fail'
+          otherwise do
+            name = 'symbol ' || i
+            do clause = 1 to _g.size()
+              if _g.op(clause) = 1 & _g.left(clause) = i then do
+                name = _g.label(clause); leave
+              end
+            end
+            out = out || name
+          end
+        end
+      end
+    end
+    return out
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  result: method = .int
+    return _result
+  root: method = .int
+    return _selected
+  offset: method = .int
+    return _input.start(max(0,_far))
+  position: method = .int
+    return max(0,_far)
+  contexts: method = .binary
+    return _contexts
+  arena: method = .llcore..tree
+    return _tree
+  work: method = .int
+    return _work
+  calls: method = .int
+    return _calls
+  expansions: method = .int
+    return _expansions
+  memos: method = .int
+    return _memo
+  maxdepth: method = .int
+    return _maxdepth
+
+/** Capability provider for this engine family; shared analysis contains no
+ * backend names. Bounds are conditional on the evaluator and pure terminals.
+ */
+engine: class implements .llcap..backend
+  _name = .string
+  *: factory
+    arg name = .string
+    _name = name
+    return
+  name: method = .string
+    return _name
+  version: method = .string
+    return 'research-2'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    if facts.extended() then return reject(facts,1,facts.extended(),'extended terminal/combinator needs lowering for this control engine')
+    if facts.emptyloop() then return reject(facts,2,facts.emptyloop(),'repetition body may succeed without consuming input')
+    select _name
+      when 'packrat' then do
+        if facts.unions() then return reject(facts,1,facts.unions(),'CFG alternatives require a CFG engine or checked conversion')
+        if facts.profile() <> 'ordered' then return reject(facts,1,0,'ordinary packrat requires ordered semantics')
+        if facts.cycle() then return reject(facts,2,facts.cycle(),'left-corner cycle; ordinary PEG progress not proved')
+        return .llcap..decision(0,'',0,'linear-input','O(g*(t+1)+a); memoized clauses and repetition tails; constant-time terminals; completed runs',facts,_name,version())
+      end
+      when 'll1' then do
+        if facts.predicate() then return reject(facts,1,facts.predicate(),'predicates unsupported by LL(1)')
+        if facts.cycle() then return reject(facts,2,facts.cycle(),'left-corner cycle; predictive progress not proved')
+        if facts.conflict() then return reject(facts,2,facts.conflict(),'alternatives compete on symbol ' || facts.witness() || '; LL(1) not proved')
+        if facts.profile() <> 'ordered' & facts.profile() <> 'contextfree' then return reject(facts,1,0,'LL(1) conversion for this recursive profile is not proved')
+        return .llcap..decision(0,'',0,'linear-input','O(g*(t+1)+a); fixed grammar; completed runs; disjoint prediction',facts,_name,version())
+      end
+      when 'squirrel' then do
+        if facts.unions() then return reject(facts,1,facts.unions(),'CFG union unsupported by Squirrel')
+        if facts.profile() <> 'squirrel' & facts.profile() <> 'ordered' then return reject(facts,1,0,'Squirrel profile mismatch')
+        if facts.profile() = 'ordered' & facts.cycle() then return reject(facts,1,facts.cycle(),'left recursion requires explicitly declared squirrel semantics')
+        return .llcap..decision(0,'',0,'unknown','rule-only memoization; expansion and subexpression work need accounting; reference conformance pending',facts,_name,version())
+      end
+      otherwise return reject(facts,1,0,'unsupported backend: ' || _name)
+    end
+    return reject(facts,1,0,'unsupported backend: ' || _name)
+  reject: method = .llcap..decision
+    arg facts = .llcheck..analysis, status = .int, clause = .int, message = .string
+    if clause > 0 then message = facts.location(clause) || ': ' || message
+    return .llcap..decision(status,message,clause,'unknown','',facts,_name,version())

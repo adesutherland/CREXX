@@ -1,0 +1,190 @@
+{
+  "cases": [
+    {
+      "case": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/source/lib/rxfnsl/bootstrap",
+        "-B",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "-DCREXX_HOST_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/frozen-tools-20261010",
+        "-DCMAKE_BUILD_TYPE=Debug"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 0.14,
+      "log_sha256": "018a4298567b1ac410a9252cb3567f0b496e8b19680d3e87632ba94b30e6817e"
+    },
+    {
+      "case": "cold",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 48.686,
+      "log_sha256": "1e8cbbc24e9663b01dd9c5a183f244471f3ebc80c3964985fd9173527bde7f9f"
+    },
+    {
+      "case": "noop",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 0.509,
+      "log_sha256": "adfc2bb85de8c4145d5f254009c18fe2c4b22b0a85b098bb923cd4a188444d45"
+    },
+    {
+      "case": "grammar-edit",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 40.472,
+      "log_sha256": "128cb46dfe6faf7126a7aa967b2095a4663a27362396ff298aef37e0277aa225"
+    },
+    {
+      "case": "runtime-edit",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 35.118,
+      "log_sha256": "6a0eb03768348466466c7e2ffdfd352fc23b7bfb8bb4fdea076e682a990523f8"
+    },
+    {
+      "case": "invalid-grammar",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 2,
+      "elapsed_seconds": 0.447,
+      "log_sha256": "c4a9727dfc02386eb14ee2c2ce14099b57d4e60f151dd7e23aa42b0f46668b61"
+    },
+    {
+      "case": "restored",
+      "command": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/bootstrap-lifecycle-2/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "8",
+        "--verbose"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 14.875,
+      "log_sha256": "2dd4bf267266491fd3b40c9636596009ed83271ffa0834c7543f1610ed6201b4"
+    }
+  ],
+  "host_tools": {
+    "library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003",
+    "rxc": "4966d232a029594b4d01189bf60bc76ca3545571fdd19d3247ea26e337bf96fa",
+    "rxas": "fa7039950b5e00ba7b39ab0abcd6ec0a5a3bbbc3a8d15d5c50e973ca206fc68f",
+    "rxbvm": "7a3a9cc8406d63203445d251f61b3012e9a499ded6075bf171b606770cbf8931",
+    "rxlink": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a",
+    "rxtvm": "4a5f9d96af98d97dbc78d5438190331cd232b540cfbadab4b766750d15b41309"
+  },
+  "no_op_unchanged": true,
+  "re2c_invocations": 0,
+  "level_g_present": false,
+  "generated": {
+    "tools/gennorm2_language.rxas": "8a83c5a23df74a9ace997b38136572e5a7bfe4b7d208793d2d9c89464a7e5455",
+    "bin/library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003",
+    "bin/rxfnsl-base.rxbin": "4e825601d52303ffa333d448380c48c30c04008652ea84d97c07960248563a1b",
+    "bin/rxfnsl.rxbin": "9ff2aa48092b04d21bd5928613d36b4ab34146a7b0d8bc9b50cec4e56c7e89c2",
+    "bin/gennorm2_language.rxbin": "873b925208fef7388172d0b785f986817ae4ce37c737cc99a41477909394be91",
+    "rexx/llcfg.rxas": "8e135a0ab055b6c22e6a2cd13204cc12cb17607ccb88e26d34d6926ac28bf674",
+    "rexx/lllanguage.rxbin": "fe185f2c280af73bfd2a88e2ce21a90034c87694bbb02073af55058797699f7f",
+    "rexx/lltree.rxbin": "cca01b1fc1a3a0a37ae712a4aa3a758d9a5bd14b5b9e28089a448856ca763ef4",
+    "rexx/llcore.rxbin": "ff40da3e2961c8fba82e893e523afc388f3d2d39f2de5328747387495527d6b7",
+    "rexx/llcheck.rxbin": "0fc3acb13ad3078ea03e941e2e37084153321dfe01cca4492eb6756ad62e5e81",
+    "rexx/llproject.rxbin": "8848e5dea77b3a527f10a743e51232d0c3b2b60ea5ec9d7904edb3aa159fd4e7",
+    "rexx/llcharset.rxbin": "3f691542ac33583540b5013f5347c0d999ab194f36b84eda0f6c24c36432cd66",
+    "rexx/lllanguage.rxas": "0dca0601a3da1bb34e2663b22bf314a8a3e593614b93ed98648534d665188c26",
+    "rexx/llcore.rxas": "5dc09648d542272fe0160dde5845f947b7115862f2ace6214837343e6c54c311",
+    "rexx/tinyexpr.rxas": "6a2d008a404e746b908e3b0f0e81e05f59fce607aeb02418662577e80aa8db82",
+    "rexx/llsource.rxas": "76c14f0a1ba36c0dec4af1e0ca3c6ba7c5472872d3fdf87e7a0c3e42ca2364c4",
+    "rexx/llstage.rxbin": "103166150fef48fbf60b2899f4d40c41a2a1247fb367ea1d727b64c6b528dfbc",
+    "rexx/llcharset.rxas": "2301c12440dbc6e5331a50ac8f47a02f32f27dac2ba252b8cb71dd8a85865008",
+    "rexx/lltree.rxas": "18b26cc089836781f5cd16821e976d9046441a8bddbf8a7836bddc11274d9563",
+    "rexx/llcfg.rxbin": "4827b3af28ac6a6b6be84c8938481f4452d7b74aa1baa1ad2557708c5327939c",
+    "rexx/llregular.rxas": "9cdbfb75e8791a0b364893d77e7238a2276620d98350b076c1c99e9f182dd170",
+    "rexx/llsource.rxbin": "f395ad5fb7db2e5981e7f93bc1aa5192ba30cfe96ec625e4c36d1c6744c55c28",
+    "rexx/llmunch.rxas": "0436a0dcb7a5deedfb550e775de07395f3e4505e1ff7a37451afd6a8ee20fd23",
+    "rexx/llcap.rxbin": "aefacb8de096f85a1b72bdc560aaa13116b0c8633d732e7fecd5c194416b62c3",
+    "rexx/llmunch.rxbin": "712fcfa18c626c1c22d9f90d50e4ed5eebcc84be238107b3f3cd2cc4d7842785",
+    "rexx/lllr.rxas": "66a7e75938342fdae3f1c2cc40f1439e6026cb69112253ff7c5f02523f0deefd",
+    "rexx/llregular.rxbin": "e7ebae11eb3e5118ae791e19871af3dab55c1e889462e7ad2b139359d44a3948",
+    "rexx/llcap.rxas": "0644a030339ad6aa7595b69c02426a93ac003427af3f351ebd6eea20226b6ab0",
+    "rexx/llcheck.rxas": "22ed6a24a6fe5d3b9c80dd75360b58f37ae20d5b1b92741739f442e9cae94d20",
+    "rexx/lllr.rxbin": "eeca2d1736b709e7d9454bc56a85dec0db7359db7892bd9d15e76935ed065882",
+    "rexx/llproject.rxas": "a329d32fcca60e987ffc30249ccd0c8334705c4d35e7944f0c261f4a0637bc17",
+    "rexx/llstage.rxas": "61c0b4e06af97549a7a34c7e47c96098b943d1290f3f3e49a3851568a4e1075d",
+    "rexx/tinyexpr.rxbin": "729feecd6f866268f06ded0c664f4f3987f9335254696b9372dfb6be2e470677",
+    "rexx/imports/library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003",
+    "tools/bootstrap/verified.stamp": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tools/bootstrap/L2/levell.rxas": "d7b29d764a4e00be658fd4d177959086e9b6788f55b5c70576d0d9ed80ee76e7",
+    "tools/bootstrap/L2/levell.rxbin": "9abb8660d88cfdbb40efcf30b12e8dad8a5e16169795362fc01ad4e2f219b746",
+    "tools/bootstrap/L2/llfront.rxas": "41c45b5f60c1b88642cd254c6665afede62f6d43b2a946c1a783a6c72f57f4e4",
+    "tools/bootstrap/L2/levell-linked.rxbin": "5be974aa11bd1b2d838ebea109027e0cfc36af8e2ff4cc26f4936e51f10e934c",
+    "tools/bootstrap/L2/llsyntax.rxas": "b51533a152b81879d5b6dd30ff1b5654d1d119fccb9ef2967c1dc1356982b58e",
+    "tools/bootstrap/L2/llfront.rxbin": "7b530d01e00131e32c18aab0576257f970e78f0be22dcffb8704c26c60cdb8e6",
+    "tools/bootstrap/L2/llsyntax.rxbin": "75132c798b68ff9a80a95a70989b7be0ad93d6e59b6d9f3c2ab24b29192206e6",
+    "tools/bootstrap/imports/library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003",
+    "tools/bootstrap/imports/rxfnsl-base.rxbin": "4e825601d52303ffa333d448380c48c30c04008652ea84d97c07960248563a1b",
+    "tools/bootstrap/L0/levell.rxas": "9428f2e646e6a6dff13ba2f5e2af5ffe34f87ea3f72702bc811efef770df0808",
+    "tools/bootstrap/L0/levell.rxbin": "da2aac0ad4b787766f883c5967163930185d18b54c47195716a0ba87bd2584ad",
+    "tools/bootstrap/L0/llfront.rxas": "bacb52254160b29b0ff69f9450f5bd069d58abc190f6d0be1868b5ab8f003f64",
+    "tools/bootstrap/L0/levell-linked.rxbin": "0b2db83950737fafced8e0a572dd3fa44a0f389926f36025ef7d33a6c97e5ccc",
+    "tools/bootstrap/L0/llfront.rxbin": "90d1e5ce0207773f9328fe57257911a67a1afda3dd8be9f4b36351920fc1c171",
+    "tools/bootstrap/L1/levell.rxas": "5980edadc7ffb233d0cefc16db31b4ab95ac0fbd17bcd88d4c12363dee6d4f34",
+    "tools/bootstrap/L1/levell.rxbin": "6abfd7e2c26c1076759380f8158e2cd40734b1bc64001ae94048de8b23258958",
+    "tools/bootstrap/L1/llfront.rxas": "4a82f3dbf4d0b99b8c14d92085943181bdf66770ee0cb488aeef830ad0fa3dd8",
+    "tools/bootstrap/L1/levell-linked.rxbin": "e4cfbca0b53da388e9d003c65b2c687f17b36b6eed6563eb21c86a72ebd213a8",
+    "tools/bootstrap/L1/llsyntax.rxas": "b51533a152b81879d5b6dd30ff1b5654d1d119fccb9ef2967c1dc1356982b58e",
+    "tools/bootstrap/L1/llfront.rxbin": "26c5f0d4fb3fae93ab9a4d802870e620053a25ed10e1caaa2e72b99d365b5e57",
+    "tools/bootstrap/L1/llsyntax.rxbin": "72dc339eaa142e825e62a162d5d0549a3e8959dda36e875fedd93869ee481776"
+  }
+}

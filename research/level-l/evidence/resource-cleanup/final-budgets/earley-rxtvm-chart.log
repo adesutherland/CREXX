@@ -1,0 +1,1 @@
+PARSE|2|LL_RESOURCE_LIMIT: earley.cells budget 1, more required. Increase the host budget or reduce the workload. Earley dense index needs 286 * 4^2 cells.

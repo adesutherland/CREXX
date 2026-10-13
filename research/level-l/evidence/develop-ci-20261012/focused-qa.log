@@ -1,0 +1,25 @@
+[0/2] Re-checking globbed directories...
+[1/6] Generating levell_example.rxas
+[2/6] Generating levell_example.rxbin
+[3/6] Staging deterministic compiler imports for levell_generated_test_imports ...
+[4/6] Generating testGenerated-linked.rxbin
+[5/6] Generating modern/testRexxScript1-linked.rxbin
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+    Start 2853: rexxscript1_rxtvm
+    Start 2455: levell_generated_rxtvm
+    Start 2456: levell_generated_rxbvm
+1/4 Test #2456: levell_generated_rxbvm ...........   Passed    1.57 sec
+2/4 Test #2455: levell_generated_rxtvm ...........   Passed    1.65 sec
+3/4 Test #2853: rexxscript1_rxtvm ................   Passed   12.61 sec
+    Start 2854: rexxscript1_rxbvm
+4/4 Test #2854: rexxscript1_rxbvm ................   Passed   12.48 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+level-l       =  28.31 sec*proc (4 tests)
+library       =   3.22 sec*proc (2 tests)
+rexxscript    =  25.09 sec*proc (2 tests)
+smoke         =  28.31 sec*proc (4 tests)
+
+Total Test time (real) =  25.17 sec
