@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -67,28 +68,15 @@ def windows_execution_environment(env):
 def smoke_level_l(prefix, source, work, run, extension):
     """Exercise the installed generator, library and modern script command."""
     binary = prefix / 'bin'
-    grammar = work / 'settings.levell'
-    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.levell', grammar)
-    generated = work / 'levell_settings'
-    run('levell-generate', [binary / ('levell' + extension), grammar, '--rxas'],
-        stdout_path=generated.with_suffix('.rxas'))
-    run('levell-assemble', [binary / ('rxas' + extension), generated])
-    imports = work / 'levell-imports'
-    imports.mkdir()
-    for path in (binary / 'library.rxbin', binary / 'rxfnsl.rxbin',
-                 generated.with_suffix('.rxbin')):
-        shutil.copy2(path, imports / path.name)
+    grammar = work / 'settings.crexx'
+    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.crexx', grammar)
     reader_source = work / 'settings-reader.crexx'
     shutil.copy2(source / 'lib/rxfnsl/examples/settings-reader.crexx', reader_source)
     settings = work / 'settings.txt'
     shutil.copy2(source / 'lib/rxfnsl/examples/settings.txt', settings)
-    reader = work / 'settings-reader'
-    run('levell-consumer-compile', [binary / ('rxc' + extension), '-x',
-        '--no-exe-import', '-i', imports, '-o', reader, reader_source])
-    run('levell-consumer-assemble', [binary / ('rxas' + extension), reader])
     linked = work / 'settings-linked'
-    run('levell-consumer-link', [binary / ('rxlink' + extension), '-o', linked,
-        reader, generated, binary / 'rxfnsl', binary / 'library'])
+    driver = binary / ('crexx' + extension)
+    run('levell-program-build', [driver, '--program', linked, reader_source, grammar])
     for vm in ('rxbvm', 'rxtvm'):
         executable = binary / (vm + extension)
         if executable.exists():
@@ -96,9 +84,18 @@ def smoke_level_l(prefix, source, work, run, extension):
                 'retries -> 3')
             if 'greeting -> "café"' not in output or 'note -> "say ""hello"""' not in output:
                 raise RuntimeError('Installed Level L consumer lost Unicode or quoted text')
-    grammar.write_text('options levell\nnamespace bad\nunknown declaration\n', encoding='utf-8')
-    run('levell-invalid-grammar', [binary / ('levell' + extension), grammar, '--rxas'],
+    # Exercise the default header and the opposite source order in the same
+    # installed workflow. A separate library-generation command is unnecessary.
+    short = work / 'settings.rxl'
+    short.write_text(grammar.read_text(encoding='utf-8').replace('options levell\n', '', 1), encoding='utf-8')
+    run('levell-short-program', [driver, '--program', linked, short, reader_source])
+    run('levell-short-consumer', [binary / ('rxbvm' + extension), linked, '-a', settings], 'retries -> 3')
+    before_failure = hashlib.sha256(linked.with_suffix('.rxbin').read_bytes()).hexdigest()
+    short.write_text('namespace bad\nunknown declaration\n', encoding='utf-8')
+    run('levell-invalid-grammar', [driver, '--program', linked, reader_source, short],
         'LL_GRAMMAR', expected_returncode=1)
+    if hashlib.sha256(linked.with_suffix('.rxbin').read_bytes()).hexdigest() != before_failure:
+        raise RuntimeError('Failed installed grammar build replaced the working program')
     script = work / 'modern.rxs'
     script.write_text("say 1+2*3; say 0.1d+0.2d; say length('café')\n", encoding='utf-8')
     output = run('rexxscript1-installed', [binary / ('rexxscript1' + extension), script])
@@ -111,7 +108,59 @@ def smoke_level_l(prefix, source, work, run, extension):
         raise RuntimeError('Modern RexxScript executed a syntactically invalid script')
 
 
-def smoke(prefix, source, preferred_vm, logs):
+def smoke_native_package(prefix, source, build, work, run, extension):
+    """A real, model-free DLL dependency must work from a llama-free core."""
+    isolated = work / 'package-core'
+    shutil.copytree(prefix, isolated, symlinks=True)
+    fixture = source / 'tests/rxpa/core-native-package'
+    fixture_build = work / 'provider-build'
+    run('provider-configure', ['cmake', '-S', fixture, '-B', fixture_build,
+        '-DCREXX_SOURCE=' + str(source), '-DCREXX_GENERATED=' + str(build / 'generated'),
+        '-DCMAKE_BUILD_TYPE=Release'], native_build=True)
+    run('provider-build', ['cmake', '--build', fixture_build, '--config', 'Release', '--parallel', '2'],
+        native_build=True)
+    provider_dir = isolated / 'bin/providers'
+    for path in (fixture_build / 'bin/providers').iterdir():
+        shutil.copy2(path, provider_dir / path.name)
+        # Match the normal build's flat plugin import root as well as the
+        # canonical native package directory. Windows declaration inspection
+        # loads the plugin's adjacent runtime DLLs from this flat root.
+        shutil.copy2(path, isolated / 'bin' / path.name)
+    manifest = provider_dir / 'rxcore_package.native.json'
+    helper = isolated / ('bin/crexx-provider-package' + extension)
+    run('provider-validation', [sys.executable, source / 'tests/native-inference/package_acceptance.py',
+        helper, manifest], 'PASS: native manifest identity/hash/traversal/collision/Unicode controls')
+    # Reproduce the original llama-free core omission in this private copy.
+    missing_output = work / 'provider-missing-helper' / 'consumer'
+    missing_output.parent.mkdir()
+    held = helper.with_name(helper.name + '.held')
+    helper.rename(held)
+    try:
+        run('provider-missing-helper', [isolated / ('bin/crexx' + extension), '--program',
+            missing_output, fixture / 'consumer.crexx', '--jobs', '1', '--native'],
+            'FAILED: package native project program rc=2', native_build=True,
+            native_prefix=isolated, expected_returncode=1)
+    finally:
+        held.rename(helper)
+    output = work / 'provider-native' / 'consumer'
+    output.parent.mkdir()
+    run('provider-native-build', [isolated / ('bin/crexx' + extension), '--program',
+        output, fixture / 'consumer.crexx', '--jobs', '1', '--native'],
+        'PUBLISHED: native program', native_build=True, native_prefix=isolated)
+    executable = output.with_suffix(extension) if extension else output
+    assert executable.is_file() and (output.parent / 'rxcore_package.native.json').is_file()
+    relocated = work / 'provider-relocated'
+    shutil.copytree(output.parent, relocated)
+    if os.name == 'nt':
+        for path in (prefix / 'bin').glob('*.dll'):
+            shutil.copy2(path, relocated / path.name)
+    shutil.rmtree(output.parent)
+    shutil.rmtree(isolated)
+    shutil.rmtree(fixture_build)
+    run('provider-relocated', [relocated / executable.name], 'core native package value=7')
+
+
+def smoke(prefix, source, preferred_vm, logs, build):
     work = Path(tempfile.mkdtemp(prefix='crexx-core-consumer-'))
     extension = '.exe' if os.name == 'nt' else ''
     env = dict(os.environ)
@@ -126,14 +175,14 @@ def smoke(prefix, source, preferred_vm, logs):
     outcome = 'failed'
 
     def run(label, args, marker=None, native_build=False, expected_returncode=0,
-            stdout_path=None):
+            stdout_path=None, native_prefix=None):
         args = list(map(str, args))
         with (logs / (label + '.log')).open('w', encoding='utf-8') as log:
             log.write('argv=' + repr(args) + '\n'); log.flush()
             generated = stdout_path.open('wb') if stdout_path else None
             try:
                 result = subprocess.run(args, cwd=work,
-                    env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
+                    env=dict(env, CREXX_HOME=str(native_prefix or prefix)) if native_build else execution,
                     stdout=generated if generated else log, stderr=log, timeout=1800)
             finally:
                 if generated:
@@ -220,6 +269,7 @@ def smoke(prefix, source, preferred_vm, logs):
         shutil.rmtree(console_native.parent)
         run('relocated-console-native', [relocated / console_executable.name],
             'PASS: rxconsole Level B contract')
+        smoke_native_package(prefix, source, build, work, run, extension)
         outcome = 'passed'
     finally:
         (logs / 'summary.json').write_text(json.dumps(dict(outcome=outcome,
@@ -257,6 +307,10 @@ def main():
             shutil.copy2(source / name, payload / name)
         for name in ('VERSION', 'BUILDINFO'):
             shutil.copy2(build / 'generated' / name, payload / name)
+        notices = payload / 'share/crexx/licenses/nlohmann-json'
+        notices.mkdir(parents=True)
+        for name in ('LICENSE', 'provenance.json'):
+            shutil.copy2(source / 'rxpa/vendor/nlohmann' / name, notices / name)
     if args.toolchain == 'msvc':
         redist = Path(os.environ['VCToolsRedistDir']) / 'x64'
         runtimes = list(redist.glob('Microsoft.VC*.CRT/*.dll'))
@@ -277,7 +331,7 @@ def main():
         assert digest(installed / name) == expected, name
     logs = output / 'qa'
     logs.mkdir()
-    smoke(installed, source, args.preferred_vm, logs)
+    smoke(installed, source, args.preferred_vm, logs, build)
     (logs / 'archive.json').write_text(json.dumps(dict(name=asset.name,
         bytes=asset.stat().st_size, sha256=digest(asset), **{k:v for k,v in manifest.items() if k != 'files'}), indent=2) + '\n')
     print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumers including Classic encoded streams and console')

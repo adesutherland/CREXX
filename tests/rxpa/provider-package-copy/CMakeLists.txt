@@ -69,3 +69,40 @@ add_test(NAME provider_package_file_links
         "$<TARGET_FILE:copy_dependency>"
         "${CMAKE_BINARY_DIR}/bin/providers/rxcopy_provider${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set_tests_properties(provider_package_file_links PROPERTIES TIMEOUT 300)
+
+# A partial flat package declares one DLL, while another transitive DLL is
+# initially found in the SDK. Both routes encounter identical dependency bytes
+# under different source paths, as in a GTK DLL closure on Windows.
+add_library(copy_branch SHARED branch.c)
+target_link_libraries(copy_branch PRIVATE copy_dependency)
+set_target_properties(copy_branch PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/a"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/a"
+    BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${origin}")
+if(APPLE)
+    set_target_properties(copy_branch PROPERTIES INSTALL_NAME_DIR "@rpath")
+endif()
+add_library(copy_root_partial MODULE root.c)
+target_compile_definitions(copy_root_partial PRIVATE PACKAGE_TRANSITIVE_ROOT)
+target_link_libraries(copy_root_partial PRIVATE copy_dependency copy_branch)
+set_target_properties(copy_root_partial PROPERTIES SUFFIX ".rxplugin"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/partial"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/partial"
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "${origin};$<TARGET_FILE_DIR:copy_branch>")
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/partial-$<CONFIG>.cmake" CONTENT
+"set(platform \"${CMAKE_SYSTEM_NAME}\")\nset(provider partial_control)\nset(arch \"${CMAKE_SYSTEM_PROCESSOR}\")\nset(engine fixture)\nset(runtime_files \"$<TARGET_FILE:copy_root_partial>\" \"$<TARGET_FILE:copy_dependency>\")\nset(runtime_search_directories \"$<TARGET_FILE_DIR:copy_branch>\")\nset(branch \"$<TARGET_FILE:copy_branch>\")\n")
+add_custom_target(provider_package_partial_measure
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check-partial.py"
+        "${CMAKE_BINARY_DIR}/partial-$<CONFIG>.cmake"
+        "${CREXX_PACKAGE_HELPER_DIR}/WriteProviderPackage.cmake"
+        "${CMAKE_BINARY_DIR}/partial-proof"
+    DEPENDS copy_root_partial copy_dependency copy_branch
+    VERBATIM)
+# Measured before registration: Debug 0.178 s, Apple-ASan flags 0.207 s.
+add_test(NAME provider_package_partial
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check-partial.py"
+        "${CMAKE_BINARY_DIR}/partial-$<CONFIG>.cmake"
+        "${CREXX_PACKAGE_HELPER_DIR}/WriteProviderPackage.cmake"
+        "${CMAKE_BINARY_DIR}/partial-ctest-proof")
+set_tests_properties(provider_package_partial PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)

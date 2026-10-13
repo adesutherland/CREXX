@@ -1,0 +1,1 @@
+PASS: installed SDK inventory, relocated CMake and static-provider native consumer

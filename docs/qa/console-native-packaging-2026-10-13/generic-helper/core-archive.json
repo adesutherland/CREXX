@@ -1,0 +1,12 @@
+{
+  "name": "CREXX-user-test-1031ef530b6e21d0a2a2b9f764c50e40cced28c6-macos-arm64.zip",
+  "bytes": 44285333,
+  "sha256": "438f40468721a5a5bd54978bf24cdf5eef7af9c9f4837a39a7b9f923eda86b9d",
+  "schema": 1,
+  "component": "core",
+  "commit": "1031ef530b6e21d0a2a2b9f764c50e40cced28c6",
+  "platform": "macos-arm64",
+  "toolchain": "appleclang",
+  "preferred_vm": "rxbvm",
+  "llama_enabled": false
+}

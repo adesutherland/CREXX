@@ -47,6 +47,17 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    generated-package link/runtime hash checks and a missing module dependency
    negative control in the standalone provider-package fixture. Measure its
    controls in normal Debug and with maintained Apple ASan flags.
+8. **CP-AC-08 — PASS:** crexx-provider-package builds/installs/packages with
+   ENABLE_LLAMA=OFF and appears in the ordinary product and SDK inventories.
+   Preserve the existing validator/copier/fingerprint implementation and llama
+   consumers. Use retained pinned nlohmann header/license bytes without enabling
+   inference or introducing an online core-build dependency. Verify real native
+   use of a selected provider carrying .native.json from the extracted core.
+9. **CP-AC-09 — PASS:** Dependency collection accepts colliding source paths only
+   when their bytes match, stages the transitive closure, and rejects missing
+   dependencies or conflicting bytes under the same published name. Reproduce
+   the partial-flat GTK-style DLL layout with the standalone fixture before
+   editing the collector; preserve manifest hash and collision validation.
 
 ## Implementation steps
 
@@ -63,6 +74,13 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    with concurrent develop changes, commit/publish the substantive correction,
    and verify refs. Normal automatic publication checks are expected to pass;
    no status-only CI commit or manual overnight dispatch is planned.
+5. **CP-STEP-05 — DONE (AC-08):** Correct the generic helper's optional-llama
+   target ownership and header dependency, then verify an actual selected native
+   dependency consumer and unchanged validation/fingerprint/copy semantics.
+6. **CP-STEP-06 — PUBLICATION READY (AC-09):** Reproduce partial-flat module/runtime dependency
+   conflicts, accept only identical resolved copies, stage/validate the resulting
+   closure, and measure positive/negative controls in Debug and maintained ASan
+   flags. Publish the compatible corrections with retained evidence.
 
 ## Baseline evidence
 
@@ -103,3 +121,40 @@ are expected to pass; actual ref verification is reported in the conversation.
 CP-AC-06 is verified by those final refs, without a CI-status-only follow-up.
 Native Windows app proof, GTK runtime delivery and signed interim distribution
 remain with the Windows owner; none is claimed complete by this Mac repair.
+
+## Windows continuation, additional concrete core gap
+
+After the first two commits (e56c90ddd / 1031ef530), the Windows owner proved the
+native console ConPTY path and the bundled NetRexx launcher. GTK native linking
+then reached a missing crexx-provider-package.exe: its generic target is declared
+only inside optional lib/plugins/llama despite the documented provider-neutral
+driver protocol. This Mac task owns the correction; GTK source changes stay with
+the Windows owner. The provider/writer source files were explicitly reserved to
+avoid concurrent edits. Native GUI qualification and signing remain pending.
+
+## Generic helper / partial closure qualified continuation
+
+The core helper target now builds with llama disabled using the pinned, licensed
+header. Shared copier/validator source bytes are unchanged. C1/product/driver
+closure includes the helper, and core/SDK inventories carry it and its MIT
+notice. The actual extracted core passed 32 commands, including unchanged
+validation/fingerprint controls, the absent-helper rc=2 control (project exit 1),
+a real DLL consumer and relocation after producer directories were removed.
+SDK inventory/CMake/native proof passed. The offline llama-enabled configuration
+still accepts the same target with no engine build.
+
+The partial-flat GTK-style conflict is reproduced and repaired with strict
+per-name hashes; identical paths pass and differing/missing bytes fail. Controls
+were measured before CTest registration in Debug and maintained Apple ASan flags,
+then all three fixture CTests passed.
+`docs/qa/console-native-packaging-2026-10-13/generic-helper/README.md` retains
+exact inputs, commands, source/header identities and expected publication state.
+The compatible core-target and collector causes are published together as two
+reviewable commits. Remote refs provide CP-AC-06 proof; occupied dirty develop
+checkouts are preserved instead of force-updated. Windows GUI and signed interim
+delivery remain owned by the Windows task and are not claimed complete here.
+The final integration with concurrent develop 8d3572094 preserves its approved
+grammar/driver changes. Qualified unchanged helper/collector fixtures are reused;
+the changed product/package workflow was rebuilt and passed 30 actual extracted
+core commands plus SDK proof. The unpublished integration commit includes this
+updated receipt before the first push, with no post-CI status commit planned.

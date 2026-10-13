@@ -1,0 +1,10 @@
+{
+  "project": "nlohmann/json",
+  "version": "3.12.0",
+  "llama_source_commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "source_archive_sha256": "2de0d87eda4696e9f6bbd771d4c623267f4e95856cce6f99793f91522f993e43",
+  "files": {
+    "json.hpp": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63",
+    "LICENSE": "c0d068392ea65358b798b8c165103560f06e9e3b38c4ab4e2d8810a7b931af86"
+  }
+}

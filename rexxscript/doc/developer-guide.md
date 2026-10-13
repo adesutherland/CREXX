@@ -38,7 +38,7 @@ records the selected subset and remaining boundaries. Its ownership is:
    directly to the existing rxfnsc functions using a live call context.
 
 This is an end-to-end Level L interpreter example, like the
-[calculator](../../lib/rxfnsl/examples/calculator/calculator.levell), with a
+[calculator](../../lib/rxfnsl/examples/calculator/calculator.rxl), with a
 larger language and application semantics. Parsing decides syntax and nesting;
 the named-view adapter exposes the selected tree; the validator checks structural
 constraints; execution follows control flow. Evaluating an IF visits only its
@@ -57,7 +57,7 @@ when the shared service preserves the actual language and source contracts.
 | Words/numbers/strings/operators, nested comments, keyword classification, IF attachment and precedence | `grammar/rexxscript.levell` and Level L | Already generated/shared. Do not add a second parser in a visitor. Generalized line/block/nested comments are now a shared source-layer facility; RexxScript retains its existing nested-comment language policy. |
 | Physical-newline continuation, parenthesis nesting and THEN/ELSE layout | First pass in `RexxScriptProgram.compile()` | Good migration target for a declared layout stage. Its unbounded parenthesis counter exceeds the current finite token-stage facility. Specify reset/progress and test physical/logical line boundaries before deleting it. |
 | Blank/abuttal concatenation and function-call adjacency | Second pass in `RexxScriptProgram.compile()` | Good migration target for source-gap-aware token insertion, including explicit synthetic origins. Current finite transforms cannot emit an extra synthetic operator while retaining both adjacent tokens. Test whitespace/comments/adjacency and continuation jointly. |
-| Grammar wrappers and positional child plumbing | `RexxScriptExecution` and `lltree` | Named captures and later application-tree/list shaping can reduce this coupling. Freeze expected shapes and source origins first; replacing wrappers with fields can be incremental. |
+| Grammar wrappers and positional child plumbing | `RexxScriptExecution` and `lltree` | Statement lists use repetition and appear as direct ordered children. Execution iterates those children without following recursive tail nodes. Named captures can further reduce positional access; preserve source origins when changing a field. |
 | Literal values, NUMERIC_COMMON conversions/operators, variables, loops, branch selection, BIF effects and budgets | `RexxScriptExecution`, `RexxScriptOperators`, shared `rxfnsc` | Keep as application semantics. Share a proven operator/lowering contract where useful; Level L should not become a Rexx-specific evaluator. |
 | Legacy scanner/parser/evaluator and facades | `RexxScriptEvaluator`, `RexxScriptRuntime`, compatibility modules and compiler exit | Retain while these consumers use the legacy dialect/host API. Removal needs an explicit migration decision, classified compatibility tests and the still-pending modern host contract. |
 

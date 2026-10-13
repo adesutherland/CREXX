@@ -6,6 +6,26 @@ project(CREXX_PLUGIN_ARCHITECTURE)
 
 find_package(Threads REQUIRED)
 
+# The native driver consumes generic .native.json packages even without llama.
+# Reuse the existing shared validator/copier unchanged; its JSON header is the
+# pinned MIT-licensed single-header dependency retained in this core source.
+add_executable(crexx-provider-package
+        "${CMAKE_SOURCE_DIR}/lib/plugins/llama/provider_package.cpp"
+        "${CMAKE_SOURCE_DIR}/binutils/rxsha256.c")
+target_compile_features(crexx-provider-package PRIVATE cxx_std_17)
+# This standalone C++ tool needs no generated cREXX headers. On case-insensitive
+# filesystems generated/VERSION otherwise shadows the standard <version> header.
+set_target_properties(crexx-provider-package PROPERTIES INCLUDE_DIRECTORIES
+        "${CMAKE_CURRENT_SOURCE_DIR}/vendor;${CMAKE_SOURCE_DIR}/binutils/include")
+target_compile_definitions(crexx-provider-package PRIVATE
+        CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}"
+        CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+set_target_properties(crexx-provider-package PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+install(TARGETS crexx-provider-package RUNTIME DESTINATION bin)
+install(FILES vendor/nlohmann/LICENSE vendor/nlohmann/provenance.json
+        DESTINATION share/crexx/licenses/nlohmann-json)
+
 # Build library for the RX Plugin Architecture
 add_library(rxpa STATIC rxpa.c rxpa.h crexxpa.h)
 target_link_libraries(rxpa PUBLIC Threads::Threads)

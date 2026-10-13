@@ -193,7 +193,7 @@ configure_linker_for_static_lib(crexx _hash)
 
 target_link_libraries(crexx rxvml rxpashim)
 
-add_dependencies(crexx rxvme rxvml rxpa avl_tree rxbin platform
+add_dependencies(crexx crexx-provider-package rxvme rxvml rxpa avl_tree rxbin platform
         fs fs_static _platform _platform_static _hash _hash_static float float_static
         _treemap _treemap_static
         _llist _llist_static

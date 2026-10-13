@@ -2,7 +2,8 @@
 
 Level L helps you build programs that read a language: configuration files,
 commands, scripts, expressions or source code. You describe the language in a
-`.levell` file. Level L generates a module that your cREXX program uses to
+`.crexx` file beginning with `options levell`, or a short-form `.rxl` file.
+Level L generates a module that your cREXX program uses to
 recognize input and return its structure. Your program then reads settings,
 evaluates expressions, executes statements or produces another output.
 
@@ -56,21 +57,21 @@ inside assignments or statements inside loops.
 
 ### Build the language module, then use it on documents
 
-There are two kinds of input file. The `.levell` specification describes your
-language. A settings file or script is a document written in that language.
+There are two kinds of input file. A `.crexx` specification with `options levell`,
+or a short-form `.rxl` file, describes your language. A settings file or script is a document written in that language.
 
 ```mermaid
 flowchart LR
-    G["Your .levell specification"] --> B["levell: check rules and generate a module"]
+    G["Your language specification"] --> B["crexx calls levell to check rules and generate a module"]
     B --> M["Language module"]
     M --> A["Your cREXX application"]
     S["Settings file, script or other input"] --> A
     A --> R["Result or error messages"]
 ```
 
-At build time, `levell` checks the specification and generates the language
-module. You compile or assemble that module and link it with your application
-and the Level L library. Generate it again when the specification changes.
+At build time, `crexx` calls `levell` to check the specification and generate the
+language module. It assembles the module, compiles your application and links
+them with the Level L runtime. On later builds it reuses unchanged work.
 
 At run time, your application creates a language definition from the module
 and a fresh **request** for each input document. A request holds the source,
@@ -130,18 +131,18 @@ The resulting named tree is:
 
 ```text
 settings
-├── assignment
-│   ├── name.value
-│   │   └── identifier       "retries"
-│   ├── equals              "="
-│   └── value
-│       └── number          "3"
-└── tail                    empty
+└── assignment
+    ├── name.value
+    │   └── identifier       "retries"
+    ├── equals              "="
+    └── value
+        └── number          "3"
 ```
 
 Rule names become node names. The `name.value` and `value` nodes remain because
-they are named in the grammar. The `tail` node represents the optional remainder
-of the file, which is empty here. The `equals` token remains as a child too.
+they are named in the grammar. Repetition puts successive assignments directly
+under `settings`; its generated helper nodes are hidden. The `equals` token
+remains as a child of the assignment.
 
 ### Use the tree
 
@@ -206,7 +207,7 @@ lines and a final separator are allowed.
 
 Use these complete files:
 
-- [01-basic.levell](../examples/settings/01-basic.levell): the specification.
+- [01-basic.crexx](../examples/settings/01-basic.crexx): the specification.
 - [settings-reader.crexx](../examples/settings-reader.crexx): the cREXX reader.
 - [settings.txt](../examples/settings.txt): sample input.
 
@@ -234,8 +235,7 @@ scan: lexer
   separator.lex: rule = U+000D U+000A | U+000D | U+000A | ';' then emit separator
   whitespace: rule = space+ then skip
 parse: parser start settings
-  settings: rule = separator settings | assignment tail | ''
-  tail: rule = separator settings | ''
+  settings: rule = separator* (assignment (separator assignment?)*)?
   assignment: rule = name.value equals value
   name.value: rule = identifier
   value: rule = number | string
@@ -244,14 +244,21 @@ parse: parser start settings
 Read the lexer rules first. A **charset** is a set of characters: `digit` is the
 set `0` through `9`. `U+0009` names the tab character by its Unicode number.
 `scalar` means any Unicode scalar value, the character units used by the lexer.
-The string rule accepts doubled quotes and other characters, including line
-endings inside the quotes. Outside strings, CR, LF, CRLF and `;` produce a
+The string rule accepts doubled quotes and characters other than line endings. Outside strings, CR, LF, CRLF and `;` produce a
 `separator` token.
 
-In the parser, `settings` accepts a leading separator, an assignment followed
-by `tail`, or an empty file. `tail` accepts a separator followed by more settings,
-or nothing. The empty quoted literal `''` means “match nothing”. These rules
-allow blank lines while requiring a separator between assignments.
+Read `settings` from left to right:
+
+- `separator*` accepts any leading blank lines or semicolons.
+- `assignment` reads the first setting.
+- `(separator assignment?)*` reads further separators, each optionally
+  followed by a setting. This allows blank lines and a final separator.
+- The outer `(...)?` allows a file with no assignments.
+
+`*` means zero or more, `+` means one or more, and `?` means optional. Repeated
+matches appear in source order under their containing rule. Level L generates
+the internal rules needed to implement repetition for the selected backend.
+
 
 The short headers select UTF-8 character matching and the LR(1) parser. You can
 use those defaults without understanding the algorithms. [Backend selection](#choose-a-backend-and-understand-competing-paths)
@@ -259,51 +266,50 @@ explains when to choose another one.
 
 ### Prepare the tools
 
-Run the commands from the repository root in a POSIX shell. Use a configured
-cREXX build directory; the examples call it `cmake-build-levell-product`.
-If you need to create it, configure it first:
+An installed cREXX distribution supplies `crexx`, `levell` and the runtime
+libraries. The commands below run from the repository root and use that
+installation:
+
+```sh
+task_bin="$(dirname "$(command -v crexx)")"
+```
+
+To use a local build instead, build `stage-product` and set
+`task_bin` to its `bin` directory:
 
 ```sh
 cmake -S . -B cmake-build-levell-product -DCMAKE_BUILD_TYPE=Debug
-cmake --build cmake-build-levell-product --target levell_cli --parallel 4
+cmake --build cmake-build-levell-product --target stage-product --parallel 4
+task_bin="$PWD/cmake-build-levell-product/bin"
 ```
 
-This builds the Level L command and its required cREXX tools and libraries.
-Use the tools and libraries from that build together.
+### Build and run the reader
 
-### Generate and run the reader
-
-The generated namespace is `levell_settings`, which is also the output module's
-basename. The temporary import directory below contains the libraries needed
-to compile the reader.
+The reader imports `levell_settings`, the namespace declared in the grammar.
+Include both source files in one program build:
 
 ```sh
-task_bin="$PWD/cmake-build-levell-product/bin"
-task_work="$PWD/cmake-build-levell-product/examples/settings"
-mkdir -p "$task_work/imports"
-
-cmake -DLEVEL_L="$task_bin/levell" \
-  -DSPEC="$PWD/lib/rxfnsl/examples/settings/01-basic.levell" \
-  -DOUTPUT="$task_work/levell_settings.rxas" -DFORMAT=rxas \
-  -P lib/rxfnsl/tools/generate.cmake
-
-"$task_bin/rxas" "$task_work/levell_settings"
-cp "$task_bin/library.rxbin" "$task_bin/rxfnsl.rxbin" \
-  "$task_work/levell_settings.rxbin" "$task_work/imports/"
-"$task_bin/rxc" -x --no-exe-import -i "$task_work/imports" \
-  -o "$task_work/settings-reader" lib/rxfnsl/examples/settings-reader.crexx
-"$task_bin/rxas" "$task_work/settings-reader"
-"$task_bin/rxlink" -o "$task_work/settings-reader-linked" \
-  "$task_work/settings-reader.rxbin" "$task_work/levell_settings.rxbin" \
-  "$task_bin/rxfnsl.rxbin" "$task_bin/library.rxbin"
-"$task_bin/rxtvm" "$task_work/settings-reader-linked.rxbin" \
+"$task_bin/crexx" --program build/settings-reader \
+  lib/rxfnsl/examples/settings-reader.crexx \
+  lib/rxfnsl/examples/settings/01-basic.crexx
+"$task_bin/rxvme" build/settings-reader.rxbin \
   -a lib/rxfnsl/examples/settings.txt
 ```
 
-Run each command only after the preceding one succeeds. `generate.cmake` writes
-an output file only after successful generation. `rxas` assembles the module;
-`rxc` compiles the reader; `rxlink` combines the reader and its libraries;
-`rxtvm` runs the linked program. The same linked program also runs with `rxbvm`.
+The grammar can appear before or after the reader. `crexx` generates it first
+and supplies its module when compiling the reader. The linked program includes
+the Level L runtime. **You do not need a separate library build.**
+
+For a quick build and run, leave out `--program`:
+
+```sh
+"$task_bin/crexx" lib/rxfnsl/examples/settings-reader.crexx \
+  lib/rxfnsl/examples/settings/01-basic.crexx \
+  --args lib/rxfnsl/examples/settings.txt
+```
+
+This writes the program beside the reader. Use `--program` to choose an output
+path and build without running. Add `--native` to create a native executable.
 
 Expected output:
 
@@ -347,11 +353,11 @@ file is found before any setting takes effect.
 
 The files in [examples/settings](../examples/settings) extend the same language.
 Each numbered file is complete. Generate the selected file in place of
-`01-basic.levell` using the commands above, then assemble and relink.
+`01-basic.crexx` in the program build command above, then run the reader.
 
 | Lesson | Adds | Reader |
 |---|---|---|
-| [01-basic](../examples/settings/01-basic.levell) | Assignments, strings, numbers and separators | `settings-reader.crexx` |
+| [01-basic](../examples/settings/01-basic.crexx) | Assignments, strings, numbers and separators | `settings-reader.crexx` |
 | [02-messages](../examples/settings/02-messages.levell) | A custom value error | `settings-reader.crexx` |
 | [03-unicode](../examples/settings/03-unicode.levell) | Explicit Unicode name ranges | `settings-reader.crexx` |
 | [04-recovery](../examples/settings/04-recovery.levell) | Continue after a damaged setting | `settings-recover.crexx` |
@@ -363,7 +369,7 @@ Each numbered file is complete. Generate the selected file in place of
 The [recovery reader](../examples/settings-recover.crexx) and
 [field reader](../examples/settings-fields.crexx) use the same generated
 namespace. To build either, substitute its source filename and output basename
-for `settings-reader` in the compilation, assembly, linking and run commands.
+for `settings-reader` in the build and run commands.
 
 ### Add your own wording
 
@@ -614,24 +620,11 @@ The examples in `examples/backends` share the namespace `levell_lesson` and the
 same tree inspector. After preparing the tools, this runs the PEG value example:
 
 ```sh
-task_bin="$PWD/cmake-build-levell-product/bin"
-task_work="$PWD/cmake-build-levell-product/examples/backend"
-mkdir -p "$task_work/imports"
-cmake -DLEVEL_L="$task_bin/levell" \
-  -DSPEC="$PWD/lib/rxfnsl/examples/backends/ordered-values.levell" \
-  -DOUTPUT="$task_work/levell_lesson.rxas" -DFORMAT=rxas \
-  -P lib/rxfnsl/tools/generate.cmake
-"$task_bin/rxas" "$task_work/levell_lesson"
-cp "$task_bin/library.rxbin" "$task_bin/rxfnsl.rxbin" \
-  "$task_work/levell_lesson.rxbin" "$task_work/imports/"
-"$task_bin/rxc" -x --no-exe-import -i "$task_work/imports" \
-  -o "$task_work/inspect" lib/rxfnsl/examples/backends/inspect.crexx
-"$task_bin/rxas" "$task_work/inspect"
-"$task_bin/rxlink" -s -o "$task_work/inspect-linked" \
-  "$task_work/inspect.rxbin" "$task_work/levell_lesson.rxbin" \
-  "$task_bin/rxfnsl.rxbin" "$task_bin/library.rxbin"
-printf '%s' 'true' > "$task_work/input.txt"
-"$task_bin/rxtvm" "$task_work/inspect-linked.rxbin" -a "$task_work/input.txt"
+"$task_bin/crexx" --program build/inspect \
+  lib/rxfnsl/examples/backends/inspect.crexx \
+  lib/rxfnsl/examples/backends/ordered-values.levell
+printf '%s' 'true' > build/input.txt
+"$task_bin/rxvme" build/inspect.rxbin -a build/input.txt
 ```
 
 The output includes `STATUS|0` and `NODE|boolean|0|4`. Each `NODE` line gives a
@@ -726,7 +719,7 @@ or workload adjustment; it is not a syntax diagnosis.
 
 ## Build an end-to-end calculator
 
-The [calculator grammar](../examples/calculator/calculator.levell),
+The [calculator grammar](../examples/calculator/calculator.rxl),
 [evaluator](../examples/calculator/calculator.crexx) and
 [sample input](../examples/calculator/example.calc) form a complete interpreter.
 It accepts decimal numbers, `+ - * /`, prefix minus, parentheses and nested
@@ -765,28 +758,18 @@ The evaluator visits children before their parent. It converts number text to
 two child values; a `sum` adds them. The `arithmetic` wrapper passes through its
 child's result. Evaluation therefore produces 14.
 
-After preparing the tools, run from the repository root:
+After preparing the tools, build the calculator and its grammar together:
 
 ```sh
-task_bin="$PWD/cmake-build-levell-product/bin"
-task_work="$PWD/cmake-build-levell-product/examples/calculator"
-mkdir -p "$task_work/imports"
-cmake -DLEVEL_L="$task_bin/levell" \
-  -DSPEC="$PWD/lib/rxfnsl/examples/calculator/calculator.levell" \
-  -DOUTPUT="$task_work/levell_calculator.rxas" -DFORMAT=rxas \
-  -P lib/rxfnsl/tools/generate.cmake
-"$task_bin/rxas" "$task_work/levell_calculator"
-cp "$task_bin/library.rxbin" "$task_bin/rxfnsl.rxbin" \
-  "$task_work/levell_calculator.rxbin" "$task_work/imports/"
-"$task_bin/rxc" -x --no-exe-import -i "$task_work/imports" \
-  -o "$task_work/calculator" lib/rxfnsl/examples/calculator/calculator.crexx
-"$task_bin/rxas" "$task_work/calculator"
-"$task_bin/rxlink" -s -o "$task_work/calculator-linked" \
-  "$task_work/calculator.rxbin" "$task_work/levell_calculator.rxbin" \
-  "$task_bin/rxfnsl.rxbin" "$task_bin/library.rxbin"
-"$task_bin/rxtvm" "$task_work/calculator-linked.rxbin" \
+"$task_bin/crexx" --program build/calculator \
+  lib/rxfnsl/examples/calculator/calculator.crexx \
+  lib/rxfnsl/examples/calculator/calculator.rxl
+"$task_bin/rxvme" build/calculator.rxbin \
   -a lib/rxfnsl/examples/calculator/example.calc
 ```
+
+The two source files may share a basename: the driver keeps the generated
+grammar and application artifacts in separate private build directories.
 
 The sample `2 + 3 * (4 - 1)` prints `RESULT|11`. The decimal evaluator also gives
 `0.3` for `0.1+0.2`. Numeric types and conversions are choices made by the
@@ -801,12 +784,18 @@ These errors include the original source location and produce no `RESULT`.
 
 ### File structure and names
 
+Use `.crexx` for an ordinary cREXX source file containing a Level L description.
 Begin with:
 
 ```rexx
 options levell
 namespace my_language
 ```
+
+The short suffix `.rxl` selects Level L automatically. In that form the
+`options levell` line is optional; `namespace` is still required. An explicit
+other level is an error. Existing `.levell` files with their Level L header
+remain supported. Suffix and header matching are case-insensitive.
 
 Declarations have the form `name: kind ...`. Their names are global within the
 specification. Names and keywords are ASCII and case-insensitive. Names begin
@@ -1166,6 +1155,37 @@ positions. Captures can provide named access to important parts.
 
 There are no application actions embedded in parser rules. Perform conversions,
 validation and execution by reading the successful tree.
+
+### Lists and optional parts
+
+Use repetition to describe a list directly:
+
+```rexx
+names: rule = identifier (comma identifier)*
+block: rule = open statement* close
+call: rule = name lparen arguments? rparen
+```
+
+The first rule requires a name and then accepts any number of comma/name pairs.
+A trailing comma is an error. The second allows an empty block; replace `*`
+with `+` to require at least one statement. Its `statement` rule must include
+any required statement terminator. The third makes the argument list optional.
+
+Repetition helpers are hidden in the named tree. Use a repeated capture when
+you want to retrieve just the items and leave separators out of the traversal:
+
+```rexx
+names: rule = identifier as item (comma identifier as item)*
+```
+
+`tree.fieldcount(node,'item')` gives the number of names, and
+`tree.field(node,'item',index)` retrieves each one in source order. The fields
+refer to matched source nodes; your application converts their text into values.
+
+A repeated expression must consume input whenever it succeeds. For example,
+`(identifier?)*` is rejected because its item can be empty. Parser admission
+still applies to the expanded grammar. If generation reports a conflict,
+inspect the alternatives and repeated part of the reported rule.
 
 ### Captures
 
@@ -1667,10 +1687,49 @@ is 16. When both are supplied, the smaller error allowance applies.
 
 ## Command line and build integration
 
-### Command syntax
+### Build a program or reusable library
+
+For an application that owns its grammar, build both in one command:
+
+```sh
+crexx --program build/reader reader.crexx settings.rxl
+```
+
+This produces `build/reader.rxbin`. The driver generates each language module,
+compiles the application against the generated modules and links the Level L
+runtime. Input order does not matter. Add `--native` for an executable.
+`--program` builds without running; an ordinary invocation builds and runs:
+
+```sh
+crexx reader.crexx settings.rxl --args settings.txt
+```
+
+Use a library build when several applications should share a generated module:
+
+```sh
+crexx --library build/languages/settings settings.rxl
+crexx --program build/reader reader.crexx -i build/languages -l build/languages/settings
+```
+
+`-i` locates the library's interfaces for compilation; `-l` includes its
+implementation in the linked program. The reader imports the namespace in the
+grammar, independently of the source filename. Libraries contain the generated
+modules; a program build adds their shared Level L runtime once. Several
+grammars can share one library or be built as separate libraries.
+
+A grammar-only invocation, `crexx settings.rxl`, also builds a library beside
+the source. It does not attempt to execute a parser definition.
+
+The driver uses a private `OUTPUT.crexx-build` directory for generated files and
+dependency records. Unchanged builds reuse their outputs. Grammar, generator
+and runtime changes invalidate the relevant work. Failed generation or
+compilation preserves the last successfully published library or program.
+Messages identify the original grammar file and source location.
+
+### Use the generator directly
 
 ```text
-levell specification.levell [--rxas|--graph] [--limit name=count]
+levell specification.crexx [--rxas|--graph] [--limit name=count]
 levell --limits
 ```
 
@@ -1680,6 +1739,8 @@ levell --limits
 | No output switch | Level B-compatible cREXX source for the same language definition. Useful for reading the generated code. |
 | `--graph` | The frontend's parser-rule graph for inspection. Backend table construction is not run. |
 | `--limits` | Available resource settings, defaults and maximum representable values. |
+
+The input may also be `.rxl` or `.levell`.
 
 The command writes generated output and its principal diagnostics to standard
 output. Check its exit code before treating output as a generated module:
@@ -1698,6 +1759,8 @@ settings for that invocation; they do not become rules of the generated language
 Use [generate.cmake](../tools/generate.cmake):
 
 ```sh
+task_work="$PWD/build/generated"
+mkdir -p "$task_work"
 cmake -DLEVEL_L="$task_bin/levell" \
   -DSPEC="$PWD/my_language.levell" \
   -DOUTPUT="$task_work/my_language.rxas" -DFORMAT=rxas \
@@ -1788,7 +1851,7 @@ number of declarations you wrote.
 | `scan.work` | 10,000,000 | Counted scanning work, separately for comment preparation and lexical scanning. |
 | `parse.work` | 1,000,000 | Counted parser or token-stage operations, including diagnostic work. |
 | `earley.cells` | 8,000,000 | Index capacities for Earley's partial parses and forest. |
-| `tree.entries` | 1,000,000 | Entries used by the requested application-tree projection. |
+| `tree.entries` | 1,000,000 | Entries used by the named view or application-tree projection. The named view counts named nodes and their child links. |
 | `recovery.errors` | 16 | Collected target or specification errors. |
 | `recovery.declarations` | 512 | Declaration intervals inspected during specification recovery. |
 
@@ -1858,6 +1921,16 @@ RexxScript calls `lex(0)`, performs layout work, calls `classify_tokens(...)`,
 performs concatenation work and calls `parse_tokens(...)`. These are actual
 stages. The expression and statement rules within the LR grammar all take part
 in one parse.
+
+Statement sequences use the same list notation as the settings example:
+
+```rexx
+statements: rule = separator* (statement (separator statement?)*)?
+```
+
+The named `statements` node contains its statements and separators in source
+order. Execution visits each statement child, stopping when control flow leaves
+the sequence. No application code follows generated repetition nodes.
 
 ### How IF statements get their structure
 

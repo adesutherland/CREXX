@@ -13,6 +13,14 @@ and concrete LINK_FILES, then checks copied linker-file hashes and the module's
 discovered runtime dependency. This covers INTERFACE SDK packages whose concrete
 import libraries have no owning TARGET_LINKER_FILE, such as PkgConfig::GTK3.
 
+`provider_package_partial` reproduces a partial flat GTK-style closure: the
+copied module/declared DLL and a transitive SDK DLL encounter identical library
+bytes at different paths. Identical copies must pass and be staged once;
+different bytes and a missing transitive DLL must fail. Before registration,
+these three controls measured 0.178 s in Debug and 0.207 s with maintained Apple
+ASan flags. Final combined CTest runs pass 3/3 in 0.27 s and 0.26 s respectively.
+The new collector control is serial with the same 300-second hang backstop.
+
 This standalone fixture builds no cREXX tools, llama.cpp engine or models. The
 plugin CI job runs it before spending time on an engine build. Its files are
 QA data and never enter release archives.

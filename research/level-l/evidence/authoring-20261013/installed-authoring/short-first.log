@@ -1,0 +1,7 @@
+START: grammar short_grammar
+BUILT: grammar short_grammar
+WAVE: project compile/assemble jobs=1
+START: project member reader
+BUILT: project member reader
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reordered.rxbin

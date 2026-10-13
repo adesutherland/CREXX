@@ -97,16 +97,11 @@ execution: class
     return
   sequence: method = .void
     arg node = .int
-    do while node <> 0 & _status = 0 & _flow = 0
-      if tick(node) = 0 | _tree.count(node) = 0 then return
-      first = _tree.child(node,1)
-      if _tree.name(first) = 'separator' then node = _tree.child(node,2)
-      else do
-        call statement(first)
-        tail = _tree.child(node,2)
-        node = 0
-        if _tree.count(tail) > 0 then node = _tree.child(tail,2)
-      end
+    do i = 1 to _tree.count(node)
+      if _status <> 0 | _flow <> 0 then return
+      child = _tree.child(node,i)
+      if tick(child) = 0 then return
+      if _tree.name(child) = 'statement' then call statement(child)
     end
     return
   statement: method = .void

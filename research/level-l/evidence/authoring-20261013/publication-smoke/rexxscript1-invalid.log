@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/publication-install/bin/rexxscript1', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-1bb6h3sr/modern.rxs']
+RS_PARSE at line 2, column 1 (byte 26): unexpected end of input; expected identifier, number, string, plus, minus, open, not, bitnot
+  
+  ^

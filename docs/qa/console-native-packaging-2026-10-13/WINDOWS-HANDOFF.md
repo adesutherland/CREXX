@@ -5,6 +5,17 @@ inputs needed by the Windows GTK overlay. The Windows task owns GTK target/app
 implementation and native Windows qualification. No release tag or signed
 distribution was created by this Mac task.
 
+The continuation also supplies `crexx-provider-package.exe` from llama-free core
+RXPA/product/driver builds. Its existing validator/fingerprint/copier code is
+unchanged and uses the exact pinned nlohmann header already used in the Windows
+engineering helper (SHA-256 aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63).
+The installed core/SDK now require this helper and its MIT notice. Replace the
+temporary engineering-only helper with the matched product output after fetching
+the correction. Partial-flat runtime scanning accepts only identical duplicate
+library bytes, stages their transitive closure, and rejects differing hashes or
+missing dependencies; the 44-DLL manual pre-staging workaround is not the intended
+normal package path.
+
 ## Build and verify the matching core
 
 Fetch the published develop correction into the isolated Windows worktree while
