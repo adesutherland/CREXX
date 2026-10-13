@@ -29,7 +29,7 @@ foreach(path IN LISTS runtime_files)
     get_filename_component(name "${path}" NAME)
     list(APPEND scan_files "${output}/${name}")
 endforeach()
-list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll)$")
+list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll|rxplugin)$")
 list(REMOVE_DUPLICATES scan_files)
 set(system_dependencies "^/System/Library/" "${crexx_windows_system_dll_regex}"
     ".*/(libc|libm|libdl|libpthread|librt|ld-linux[^/]*)\\.so.*")
