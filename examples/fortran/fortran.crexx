@@ -1,0 +1,1193 @@
+options levelg
+namespace fortran expose fortran_run
+import rxfnsb
+import rxmath
+/* The interpreter state is local to each fortran_run invocation. */
+fortran_run: procedure = .string[]
+    arg source = .string[], ?bindings = .string[], ?exports = .string[]
+    started_us = time("us")
+
+    /* Per-run FORTRAN interpreter state. The fort_* helper procedures expose
+     * these variables from their fortran_run caller scope. */
+    fort_action_kind = .string[]
+    fort_action_label = .string[]
+    fort_action_text = .string[]
+    fort_action_line = .int[]
+    fort_action_target = .int[]
+    fort_action_target2 = .int[]
+    fort_action_target3 = .int[]
+    fort_action_count = 0
+    fort_procedure_name = .string[]
+    fort_procedure_text = .string[]
+    fort_procedure_start = .int[]
+    fort_procedure_end = .int[]
+    fort_procedure_count = 0
+    fort_label_name = .string[]
+    fort_label_pc = .int[]
+    fort_label_count = 0
+    fort_variable_name = .string[]
+    fort_variable_value = .string[]
+    fort_variable_length = .int[]
+    fort_variable_count = 0
+    fort_parameter_name = .string[]
+    fort_parameter_value = .string[]
+    fort_parameter_count = 0
+    fort_array_name = .string[]
+    fort_array_dim1 = .int[]
+    fort_array_dim2 = .int[]
+    fort_array_dim3 = .int[]
+    fort_array_dims = .int[]
+    fort_array_base = .int[]
+    fort_array_size = .int[]
+    fort_array_count = 0
+    fort_array_value = .string[]
+    fort_array_value_count = 0
+    fort_loop_var = .string[]
+    fort_loop_variable_index = .int[]
+    fort_loop_current = .string[]
+    fort_loop_limit = .string[]
+    fort_loop_step = .string[]
+    fort_loop_body = .int[]
+    fort_loop_end = .int[]
+    fort_loop_count = 0
+    fort_call_return_pc = .int[]
+    fort_call_arg_base = .int[]
+    fort_call_arg_count = .int[]
+    fort_call_formal = .string[]
+    fort_call_actual = .string[]
+    fort_call_saved = .string[]
+    fort_call_kind = .string[]
+    fort_call_array_no = .int[]
+    fort_call_array_offset = .int[]
+    fort_call_count = 0
+
+    call fort_prepare source
+    call fort_apply_bindings bindings
+    call fort_execute
+    result = fort_collect_exports(exports)
+    finished_us = time("us")
+    elapsed_us = finished_us - started_us
+    /* TIME("us") is relative to midnight, so handle midnight rollover. */
+    if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+    say "FORTRAN_ELAPSED" elapsed_us/1000000' seconds'
+return result
+
+/* Import host typed-array values prepared by RXPP.  The payload is packed as
+ * target name, element count, and count values for each C$RX BIND directive.
+ * cREXX typed arrays are one-based; element zero is their read-only count. */
+fort_apply_bindings: procedure = .void expose fort_array_name fort_array_base fort_array_size fort_array_count fort_array_value
+    arg bindings = .string[]
+    position = 1
+    do while position <= bindings.0
+        target = upper(strip(bindings[position]))
+        position = position + 1
+        if position > bindings.0 then call fort_fail "incomplete C$RX BIND payload", 0, "", target
+        count = bindings[position] + 0
+        position = position + 1
+        array_no = fort_find_array(target)
+        if array_no = 0 then call fort_fail "C$RX BIND target is not a declared array", 0, "", target
+        if count < 1 then call fort_fail "C$RX BIND source array is empty", 0, "", target
+        if count > fort_array_size[array_no] then call fort_fail "C$RX BIND source array is larger than FORTRAN target", 0, "", target
+        i = 1
+        do while i <= count
+            if position > bindings.0 then call fort_fail "incomplete C$RX BIND values", 0, "", target
+            fort_array_value[fort_array_base[array_no] + i - 1] = bindings[position]
+            position = position + 1
+            i = i + 1
+        end
+    end
+return
+
+/* Pack exported FORTRAN arrays as count followed by values for each target. */
+fort_collect_exports: procedure = .string[] expose fort_array_name fort_array_base fort_array_size fort_array_count fort_array_value
+    arg exports = .string[]
+    result = .string[]
+    position = 1
+    export_index = 1
+    do while export_index <= exports.0
+        target = exports[export_index]
+        array_no = fort_find_array(target)
+        if array_no = 0 then call fort_fail "C$RX EXPORT target is not a declared array", 0, "", target
+        result[position] = fort_array_size[array_no]
+        position = position + 1
+        value_index = 1
+        do while value_index <= fort_array_size[array_no]
+            result[position] = fort_array_value[fort_array_base[array_no] + value_index - 1]
+            position = position + 1
+            value_index = value_index + 1
+        end
+        export_index = export_index + 1
+    end
+return result
+
+fort_prepare: procedure = .void expose fort_action_kind fort_action_label fort_action_text fort_action_line fort_action_target fort_action_target2 fort_action_target3 fort_action_count fort_label_name fort_label_pc fort_label_count fort_array_name fort_array_dim1 fort_array_dim2 fort_array_dim3 fort_array_dims fort_array_base fort_array_size fort_array_count fort_array_value fort_parameter_name fort_parameter_value fort_parameter_count fort_procedure_name fort_procedure_text fort_procedure_start fort_procedure_end fort_procedure_count
+    arg source = .string[]
+    close = .int
+    tail = .string
+    targets = .string[]
+    if_pc = .int
+    else_pc = .int
+    proc = .int
+    fort_action_count = 0
+    fort_label_count = 0
+    fort_action_kind = .string[]
+    fort_action_label = .string[]
+    fort_action_text = .string[]
+    fort_action_line = .int[]
+    fort_action_target = .int[]
+    fort_action_target2 = .int[]
+    fort_action_target3 = .int[]
+    fort_label_name = .string[]
+    fort_label_pc = .int[]
+    fort_array_name = .string[]
+    fort_array_dim1 = .int[]
+    fort_array_dim2 = .int[]
+    fort_array_dim3 = .int[]
+    fort_array_dims = .int[]
+    fort_array_base = .int[]
+    fort_array_size = .int[]
+    fort_array_value = .string[]
+    fort_array_count = 0
+    block_stack = .int[]
+    block_stack_count = 0
+
+    i = 1
+    do while i <= source.0
+        line = source[i]
+        first = left(line, 1)
+        if first = "C" | first = "c" | first = "*" | first = "!" | strip(substr(line, 1, 6)) = "C" | strip(substr(line, 1, 6)) = "c" then do
+            i = i + 1
+            iterate
+        end
+
+        label = strip(substr(line, 1, 5))
+        if label <> "" & datatype(label, "N") = 1 & datatype(substr(line, 6, 1), "N") = 1 then label = label || substr(line, 6, 1)
+        statement = strip(substr(line, 7))
+        if statement = "" then do
+            i = i + 1
+            iterate
+        end
+        /* C$RX directives are comments even when indented into the
+         * statement field, which is convenient in free-form RXPP blocks. */
+        if upper(left(statement, 4)) = "C$RX" then do
+            i = i + 1
+            iterate
+        end
+
+        do while i < source.0
+            next_line = source[i + 1]
+            continuation = substr(next_line, 6, 1)
+            next_first = left(next_line, 1)
+            shifted_continuation = substr(next_line, 7, 1)
+            shifted_label = strip(substr(next_line, 1, 6))
+            if strip(substr(next_line, 1, 5)) <> "" & datatype(shifted_label, "N") = 1 then leave
+            shifted_ok = 0
+            if strip(substr(next_line, 1, 6)) = "" then do
+                if shifted_continuation = "1" | shifted_continuation = "2" | shifted_continuation = "3" | shifted_continuation = "4" | shifted_continuation = "5" | shifted_continuation = "6" | shifted_continuation = "7" | shifted_continuation = "8" | shifted_continuation = "9" then shifted_ok = 1
+            end
+            if continuation = "" then do
+                if shifted_ok = 1 then nop
+                else leave
+            end
+            if next_first = "C" | next_first = "c" | next_first = "*" | next_first = "!" then leave
+            if shifted_ok = 1 then continuation_text = strip(substr(next_line, 8))
+            else continuation_text = strip(substr(next_line, 7))
+            statement = statement || continuation_text
+            i = i + 1
+        end
+
+        upper_statement = upper(statement)
+        operation = word(upper_statement, 1)
+        if operation = "PROGRAM" then
+            kind = "NOP"
+        else if operation = "CHARACTER" | left(operation, 9) = "CHARACTER" then do
+            call fort_declare_character statement, i
+            kind = "NOP"
+        end
+        else if operation = "INTEGER" | operation = "REAL" | operation = "DOUBLE" | operation = "LOGICAL" | operation = "DIMENSION" then do
+            call fort_declare statement, operation, i
+            kind = "NOP"
+        end
+        else if operation = "DATA" then do
+            call fort_load_data statement, i
+            kind = "NOP"
+        end
+        else if operation = "PARAMETER" then do
+            call fort_declare_parameter statement, i
+            kind = "NOP"
+        end
+        else if operation = "CONTINUE" then
+            kind = "CONTINUE"
+        else if operation = "GOTO" then do
+            kind = "GOTO"
+            statement = word(statement, 2)
+        end
+        else if operation = "DO" then
+            kind = "DO"
+        else if operation = "SUBROUTINE" then
+            kind = "SUBROUTINE"
+        else if operation = "CALL" then
+            kind = "CALL"
+        else if operation = "RETURN" then
+            kind = "RETURN"
+        else if operation = "IF" then do
+            close = lastpos(")", statement)
+            tail = strip(substr(statement, close + 1))
+            if upper(tail) = "THEN" then kind = "IFTHEN"
+            else do
+                targets = fort_split_csv(tail)
+                if targets.0 = 3 & datatype(strip(targets[1]), "N") = 1 & datatype(strip(targets[2]), "N") = 1 & datatype(strip(targets[3]), "N") = 1 then kind = "AIF"
+                else kind = "LIF"
+            end
+        end
+        else if operation = "ELSE" then
+            kind = "ELSE"
+        else if operation = "END" & word(upper_statement, 2) = "IF" then
+            kind = "ENDIF"
+        else if operation = "WRITE" then
+            kind = "WRITE"
+        else if operation = "FORMAT" then
+            kind = "FORMAT"
+        else if operation = "STOP" then
+            kind = "STOP"
+        else if pos("=", statement) > 0 then
+            kind = "ASSIGN"
+        else if operation = "END" then
+            kind = "END"
+        else
+            call fort_fail "unsupported FORTRAN statement", i, label, statement
+
+        call fort_add_action kind, label, statement, i
+        i = i + 1
+    end
+
+    pc = 1
+    pc = 1
+    do while pc <= fort_action_count
+        if fort_action_kind[pc] = "SUBROUTINE" then do
+            open = pos("(", fort_action_text[pc])
+            if open = 0 then call fort_fail "SUBROUTINE requires an argument list", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            fort_procedure_count = fort_procedure_count + 1
+            proc = fort_procedure_count
+            name_part = strip(substr(fort_action_text[pc], length("SUBROUTINE") + 1))
+            name_open = pos("(", name_part)
+            fort_procedure_name[proc] = upper(strip(left(name_part, name_open - 1)))
+            fort_procedure_text[proc] = fort_action_text[pc]
+            fort_procedure_start[proc] = pc + 1
+            scan = pc + 1
+            do while scan <= fort_action_count
+                if fort_action_kind[scan] = "END" then leave
+                scan = scan + 1
+            end
+            if scan > fort_action_count then call fort_fail "SUBROUTINE has no END", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            fort_procedure_end[proc] = scan
+            fort_action_target[pc] = scan + 1
+            pc = scan
+        end
+        pc = pc + 1
+    end
+    pc = 1
+    do while pc <= fort_action_count
+        if fort_action_kind[pc] = "GOTO" | fort_action_kind[pc] = "DO" then do
+            target = fort_find_label(fort_action_text[pc])
+            if fort_action_kind[pc] = "DO" then target = fort_find_label(word(fort_action_text[pc], 2))
+            if target = 0 then call fort_fail "unresolved FORTRAN label", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            fort_action_target[pc] = target
+        end
+        else if fort_action_kind[pc] = "AIF" then do
+            targets = fort_aif_targets(fort_action_text[pc])
+            fort_action_target[pc] = fort_find_label(targets[1])
+            fort_action_target2[pc] = fort_find_label(targets[2])
+            fort_action_target3[pc] = fort_find_label(targets[3])
+            if fort_action_target[pc] = 0 | fort_action_target2[pc] = 0 | fort_action_target3[pc] = 0 then call fort_fail "unresolved arithmetic IF label", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+        end
+        else if fort_action_kind[pc] = "CALL" then do
+            proc = fort_find_procedure(fort_call_name(fort_action_text[pc]))
+            if proc = 0 then call fort_fail "unresolved FORTRAN SUBROUTINE", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            fort_action_target[pc] = proc
+        end
+        else if fort_action_kind[pc] = "IFTHEN" then do
+            block_stack_count = block_stack_count + 1
+            block_stack[block_stack_count] = pc
+        end
+        else if fort_action_kind[pc] = "ELSE" then do
+            if block_stack_count = 0 then call fort_fail "ELSE without IF", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            if block_stack[block_stack_count] < 0 then call fort_fail "duplicate ELSE", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            fort_action_target[block_stack[block_stack_count]] = pc + 1
+            block_stack[block_stack_count] = -block_stack[block_stack_count]
+        end
+        else if fort_action_kind[pc] = "ENDIF" then do
+            if block_stack_count = 0 then call fort_fail "END IF without IF", fort_action_line[pc], fort_action_label[pc], fort_action_text[pc]
+            if block_stack[block_stack_count] < 0 then do
+                if_pc = -block_stack[block_stack_count]
+                else_pc = fort_action_target[if_pc] - 1
+                fort_action_target[else_pc] = pc + 1
+            end
+            else do
+                if_pc = block_stack[block_stack_count]
+                fort_action_target[if_pc] = pc + 1
+            end
+            block_stack_count = block_stack_count - 1
+        end
+        pc = pc + 1
+    end
+    if block_stack_count <> 0 then call fort_fail "IF has no END IF", 0, "", "IF"
+return
+
+fort_add_action: procedure = .void expose fort_action_kind fort_action_label fort_action_text fort_action_line fort_action_target fort_action_target2 fort_action_target3 fort_action_count fort_label_name fort_label_pc fort_label_count
+    arg kind = .string, label = .string, text = .string, line = .int
+    fort_action_count = fort_action_count + 1
+    pc = fort_action_count
+    fort_action_kind[pc] = kind
+    fort_action_label[pc] = label
+    fort_action_text[pc] = text
+    fort_action_line[pc] = line
+    fort_action_target[pc] = 0
+    fort_action_target2[pc] = 0
+    fort_action_target3[pc] = 0
+    if label <> "" then do
+        if fort_find_label(label) <> 0 then call fort_fail "duplicate FORTRAN label", line, label, label
+        fort_label_count = fort_label_count + 1
+        fort_label_name[fort_label_count] = label
+        fort_label_pc[fort_label_count] = pc
+    end
+return
+
+fort_find_label: procedure = .int expose fort_label_name fort_label_pc fort_label_count
+    arg wanted = .string
+    wanted = strip(wanted)
+    i = 1
+    do while i <= fort_label_count
+        if fort_label_name[i] = wanted then return fort_label_pc[i]
+        i = i + 1
+    end
+return 0
+
+fort_call_name: procedure = .string
+    arg statement = .string
+    body = strip(substr(statement, length("CALL") + 1))
+    open = pos("(", body)
+    if open = 0 then return upper(strip(body))
+return upper(strip(left(body, open - 1)))
+
+fort_find_procedure: procedure = .int expose fort_procedure_name fort_procedure_count
+    arg wanted = .string
+    wanted = upper(strip(wanted))
+    i = 1
+    do while i <= fort_procedure_count
+        if fort_procedure_name[i] = wanted then return i
+        i = i + 1
+    end
+return 0
+
+fort_split_csv: procedure = .string[]
+    arg text = .string
+    result = .string[]
+    count = 0
+    depth = 0
+    quote = .string
+    quote = ""
+    start = 1
+    i = 1
+    do while i <= length(text)
+        ch = substr(text, i, 1)
+        if quote = "" & (ch = "'" | ch = '"') then quote = ch
+        else if quote <> "" & ch = quote then quote = ""
+        else if quote = "" & ch = "(" then depth = depth + 1
+        else if quote = "" & ch = ")" then depth = depth - 1
+        else if quote = "" & ch = "," & depth = 0 then do
+            count = count + 1
+            result[count] = strip(substr(text, start, i - start))
+            start = i + 1
+        end
+        i = i + 1
+    end
+    if strip(substr(text, start)) <> "" then do
+        count = count + 1
+        result[count] = strip(substr(text, start))
+    end
+return result
+
+fort_declare: procedure = .void expose fort_array_name fort_array_dim1 fort_array_dim2 fort_array_dim3 fort_array_dims fort_array_base fort_array_size fort_array_count fort_array_value fort_array_value_count fort_variable_name fort_variable_value fort_variable_count fort_parameter_name fort_parameter_value fort_parameter_count
+    arg statement = .string, kind = .string, line = .int
+    declarations = strip(substr(statement, length(kind) + 1))
+    names = fort_split_csv(declarations)
+    i = 1
+    do while i <= names.0
+        item = strip(names[i])
+        open = pos("(", item)
+        if open = 0 then do
+            call fort_set_variable upper(item), 0
+        end
+        else do
+            name = upper(strip(left(item, open - 1)))
+            close = pos(")", item, open + 1)
+            if close = 0 then call fort_fail "array declaration has no closing parenthesis", line, "", item
+            dimensions = fort_split_csv(substr(item, open + 1, close - open - 1))
+            if dimensions.0 < 1 | dimensions.0 > 3 then call fort_fail "only one to three dimensional arrays are supported", line, "", item
+            fort_array_count = fort_array_count + 1
+            array_no = fort_array_count
+            fort_array_name[array_no] = name
+            fort_array_dims[array_no] = dimensions.0
+            fort_array_dim1[array_no] = fort_eval_expression(dimensions[1], line, "")
+            fort_array_dim2[array_no] = 1
+            fort_array_dim3[array_no] = 1
+            if dimensions.0 >= 2 then fort_array_dim2[array_no] = fort_eval_expression(dimensions[2], line, "")
+            if dimensions.0 >= 3 then fort_array_dim3[array_no] = fort_eval_expression(dimensions[3], line, "")
+            size = fort_array_dim1[array_no] * fort_array_dim2[array_no] * fort_array_dim3[array_no]
+            fort_array_base[array_no] = fort_array_value_count + 1
+            fort_array_size[array_no] = size
+            k = 1
+            do while k <= size
+                fort_array_value_count = fort_array_value_count + 1
+                fort_array_value[fort_array_value_count] = 0
+                k = k + 1
+            end
+        end
+        i = i + 1
+    end
+return
+
+fort_declare_character: procedure = .void expose fort_variable_name fort_variable_value fort_variable_length fort_variable_count
+    arg statement = .string, line = .int
+    body = strip(substr(statement, length("CHARACTER") + 1))
+    star = pos("*", body)
+    if star = 0 then call fort_fail "CHARACTER declaration requires a length", line, "", statement
+    length_text = strip(substr(body, star + 1))
+    if left(length_text, 1) = "(" & right(length_text, 1) = ")" then length_text = strip(substr(length_text, 2, length(length_text) - 2))
+    length_text = word(length_text, 1)
+    first_name = word(body, 2)
+    if first_name = "" then call fort_fail "CHARACTER declaration has no name", line, "", statement
+    if datatype(length_text, "N") <> 1 | length_text < 1 then call fort_fail "invalid CHARACTER length", line, "", statement
+    name_list = strip(substr(body, pos(first_name, body)))
+    names = fort_split_csv(name_list)
+    i = 1
+    do while i <= names.0
+        name = upper(strip(names[i]))
+        if name = "" then call fort_fail "empty CHARACTER name", line, "", statement
+        index = fort_find_variable(name)
+        if index = 0 then do
+            fort_variable_count = fort_variable_count + 1
+            index = fort_variable_count
+            fort_variable_name[index] = name
+        end
+        fort_variable_length[index] = length_text
+        fort_variable_value[index] = copies(" ", length_text as .int)
+        i = i + 1
+    end
+return
+
+fort_declare_parameter: procedure = .void expose fort_parameter_name fort_parameter_value fort_parameter_count fort_variable_name fort_variable_value fort_variable_count fort_array_name fort_array_base fort_array_value
+    arg statement = .string, line = .int
+    open = pos("(", statement)
+    close = lastpos(")", statement)
+    if open = 0 | close = 0 then call fort_fail "malformed PARAMETER statement", line, "", statement
+    definitions = fort_split_csv(substr(statement, open + 1, close - open - 1))
+    i = 1
+    do while i <= definitions.0
+        equals = pos("=", definitions[i])
+        if equals = 0 then call fort_fail "PARAMETER item has no equals sign", line, "", definitions[i]
+        name = upper(strip(left(definitions[i], equals - 1)))
+        if name = "" then call fort_fail "PARAMETER item has no name", line, "", definitions[i]
+        if fort_find_parameter(name) <> 0 then call fort_fail "duplicate FORTRAN PARAMETER", line, "", name
+        value = fort_eval_expression(strip(substr(definitions[i], equals + 1)), line, "")
+        fort_parameter_count = fort_parameter_count + 1
+        fort_parameter_name[fort_parameter_count] = name
+        fort_parameter_value[fort_parameter_count] = value
+        i = i + 1
+    end
+return
+
+fort_find_parameter: procedure = .int expose fort_parameter_name fort_parameter_count
+    arg wanted = .string
+    wanted = upper(strip(wanted))
+    i = 1
+    do while i <= fort_parameter_count
+        if fort_parameter_name[i] = wanted then return i
+        i = i + 1
+    end
+return 0
+
+fort_find_array: procedure = .int expose fort_array_name fort_array_count
+    arg wanted = .string
+    i = 1
+    do while i <= fort_array_count
+        if fort_array_name[i] = upper(strip(wanted)) then return i
+        i = i + 1
+    end
+return 0
+
+fort_array_offset: procedure = .int expose fort_array_name fort_array_dim1 fort_array_dim2 fort_array_dim3 fort_array_dims fort_array_base fort_array_count
+    arg array_no = .int, subscripts = .string[], line = .int, label = .string
+    if subscripts.0 <> fort_array_dims[array_no] then call fort_fail "wrong number of array subscripts", line, label, fort_array_name[array_no]
+    first = fort_eval_expression(subscripts[1], line, label)
+    second = 1
+    third = 1
+    if subscripts.0 >= 2 then second = fort_eval_expression(subscripts[2], line, label)
+    if subscripts.0 >= 3 then third = fort_eval_expression(subscripts[3], line, label)
+    if first < 1 | first > fort_array_dim1[array_no] | second < 1 | second > fort_array_dim2[array_no] | third < 1 | third > fort_array_dim3[array_no] then call fort_fail "array subscript outside bounds", line, label, fort_array_name[array_no]
+    offset = (first - 1) + fort_array_dim1[array_no] * (second - 1) + fort_array_dim1[array_no] * fort_array_dim2[array_no] * (third - 1)
+return fort_array_base[array_no] + offset
+
+fort_load_data: procedure = .void expose fort_array_name fort_array_base fort_array_size fort_array_value fort_array_value_count
+    arg statement = .string, line = .int
+    first_space = pos(" ", statement)
+    body = strip(substr(statement, first_space + 1))
+    slash1 = pos("/", body)
+    slash2 = pos("/", body, slash1 + 1)
+    if slash1 = 0 | slash2 = 0 then call fort_fail "DATA statement requires slash-delimited values", line, "", statement
+    name = strip(left(body, slash1 - 1))
+    array_no = fort_find_array(name)
+    if array_no = 0 then call fort_fail "DATA target is not a declared array", line, "", name
+    values = fort_split_csv(substr(body, slash1 + 1, slash2 - slash1 - 1))
+    array_pos = 1
+    i = 1
+    do while i <= values.0
+        offset = fort_array_base[array_no] + array_pos - 1
+        if array_pos > fort_array_size[array_no] then call fort_fail "too many DATA values for array", line, "", name
+        fort_array_value[offset] = strip(values[i])
+        array_pos = array_pos + 1
+        i = i + 1
+    end
+return
+
+fort_single_subscript: procedure = .string[]
+    arg value = .int
+    result = .string[]
+    result[1] = value
+return result
+
+fort_aif_targets: procedure = .string[]
+    arg statement = .string
+    close = lastpos(")", statement)
+    if close = 0 then do
+        empty = .string[]
+        return empty
+    end
+return fort_split_csv(strip(substr(statement, close + 1)))
+
+fort_execute: procedure = .void expose fort_action_kind fort_action_label fort_action_text fort_action_line fort_action_target fort_action_target2 fort_action_target3 fort_action_count fort_variable_name fort_variable_value fort_variable_length fort_variable_count fort_parameter_name fort_parameter_value fort_parameter_count fort_procedure_name fort_procedure_text fort_procedure_start fort_procedure_end fort_procedure_count fort_call_return_pc fort_call_arg_base fort_call_arg_count fort_call_formal fort_call_actual fort_call_saved fort_call_kind fort_call_array_no fort_call_array_offset fort_call_count fort_array_name fort_array_base fort_array_value fort_loop_var fort_loop_variable_index fort_loop_current fort_loop_limit fort_loop_step fort_loop_body fort_loop_end fort_loop_count
+    close = .int
+    condition = .string
+    action = .string
+    action_word = .string
+    target = .int
+    fort_loop_var = .string[]
+    fort_loop_current = .string[]
+    fort_loop_limit = .string[]
+    fort_loop_step = .string[]
+    fort_loop_body = .int[]
+    fort_loop_end = .int[]
+    fort_loop_count = 0
+    fort_call_count = 0
+    pc = 1
+    running = 1
+
+    do while running = 1
+        if pc < 1 | pc > fort_action_count then call fort_fail "guest program counter outside action table", 0, "", pc
+        loop_pc = fort_loop_terminal(pc)
+        if loop_pc <> 0 then do
+            pc = loop_pc
+            iterate
+        end
+        kind = fort_action_kind[pc]
+        if kind = "ASSIGN" then do
+            call fort_execute_assignment fort_action_text[pc], fort_action_line[pc], fort_action_label[pc]
+            pc = pc + 1
+        end
+        else if kind = "GOTO" then
+            pc = fort_action_target[pc]
+        else if kind = "SUBROUTINE" then
+            pc = fort_action_target[pc]
+        else if kind = "CALL" then
+            pc = fort_enter_call(fort_action_text[pc], pc + 1, fort_action_line[pc], fort_action_label[pc])
+        else if kind = "RETURN" then
+            pc = fort_leave_call(fort_action_line[pc], fort_action_label[pc])
+        else if kind = "DO" then do
+            call fort_start_do fort_action_text[pc], fort_action_target[pc], pc, fort_action_line[pc], fort_action_label[pc]
+            pc = pc + 1
+        end
+        else if kind = "AIF" then do
+            close = lastpos(")", fort_action_text[pc])
+            condition = fort_eval_expression(strip(substr(fort_action_text[pc], 5, close - 5)), fort_action_line[pc], fort_action_label[pc])
+            if condition < 0 then pc = fort_action_target[pc]
+            else if condition = 0 then pc = fort_action_target2[pc]
+            else pc = fort_action_target3[pc]
+        end
+        else if kind = "IFTHEN" then do
+            close = lastpos(")", fort_action_text[pc])
+            condition = fort_eval_condition(strip(substr(fort_action_text[pc], 5, close - 5)), fort_action_line[pc], fort_action_label[pc])
+            if condition = 1 then pc = pc + 1
+            else pc = fort_action_target[pc]
+        end
+        else if kind = "ELSE" then
+            pc = fort_action_target[pc]
+        else if kind = "ENDIF" then
+            pc = pc + 1
+        else if kind = "LIF" then do
+            close = lastpos(")", fort_action_text[pc])
+            condition = fort_eval_condition(strip(substr(fort_action_text[pc], 5, close - 5)), fort_action_line[pc], fort_action_label[pc])
+            if condition = 1 then do
+                action = strip(substr(fort_action_text[pc], close + 1))
+                action_word = upper(word(action, 1))
+                if action_word = "STOP" then running = 0
+                else if action_word = "GOTO" then do
+                    target = fort_find_label(word(action, 2))
+                    if target = 0 then call fort_fail "unresolved logical IF label", fort_action_line[pc], fort_action_label[pc], action
+                    pc = target
+                end
+                else call fort_fail "unsupported logical IF action", fort_action_line[pc], fort_action_label[pc], action
+                if running = 1 & action_word <> "GOTO" then pc = pc + 1
+            end
+            else pc = pc + 1
+        end
+        else if kind = "WRITE" then do
+            call fort_execute_write fort_action_text[pc], fort_action_line[pc], fort_action_label[pc]
+            pc = pc + 1
+        end
+        else if kind = "STOP" then
+            running = 0
+        else if kind = "END" then do
+            if fort_call_count > 0 then pc = fort_leave_call(fort_action_line[pc], fort_action_label[pc])
+            else running = 0
+        end
+        else
+            pc = pc + 1
+    end
+
+return
+
+fort_enter_call: procedure = .int expose fort_procedure_name fort_procedure_text fort_procedure_start fort_procedure_count fort_variable_name fort_variable_value fort_variable_count fort_call_return_pc fort_call_arg_base fort_call_arg_count fort_call_formal fort_call_actual fort_call_saved fort_call_kind fort_call_array_no fort_call_array_offset fort_call_count fort_array_name fort_array_base fort_array_value fort_array_count
+    arg statement = .string, return_pc = .int, line = .int, label = .string
+    actual_index = .int
+    actual_value = .string
+    proc = fort_find_procedure(fort_call_name(statement))
+    if proc = 0 then call fort_fail "unresolved FORTRAN SUBROUTINE", line, label, statement
+    header = fort_procedure_text[proc]
+    header_open = pos("(", header)
+    header_close = lastpos(")", header)
+    call_body = strip(substr(statement, length("CALL") + 1))
+    call_open = pos("(", call_body)
+    call_close = lastpos(")", call_body)
+    formal_args = .string[]
+    actual_args = .string[]
+    if header_open > 0 & header_close > header_open then formal_args = fort_split_csv(substr(header, header_open + 1, header_close - header_open - 1))
+    if call_open > 0 & call_close > call_open then actual_args = fort_split_csv(substr(call_body, call_open + 1, call_close - call_open - 1))
+    if formal_args.0 <> actual_args.0 then call fort_fail "FORTRAN CALL argument count mismatch", line, label, statement
+    fort_call_count = fort_call_count + 1
+    frame = fort_call_count
+    fort_call_return_pc[frame] = return_pc
+    fort_call_arg_base[frame] = 1
+    if frame > 1 then fort_call_arg_base[frame] = fort_call_arg_base[frame - 1] + fort_call_arg_count[frame - 1]
+    fort_call_arg_count[frame] = formal_args.0
+    i = 1
+    do while i <= formal_args.0
+        formal = upper(strip(formal_args[i]))
+        actual = upper(strip(actual_args[i]))
+        actual_open = pos("(", actual)
+        actual_close = lastpos(")", actual)
+        actual_array_no = 0
+        actual_offset = 0
+        if actual_open > 0 then do
+            if actual_close = 0 then call fort_fail "malformed array actual argument", line, label, actual
+            actual_array_no = fort_find_array(left(actual, actual_open - 1))
+            if actual_array_no = 0 then call fort_fail "CALL actual array is not declared", line, label, actual
+            actual_subscripts = fort_split_csv(substr(actual, actual_open + 1, actual_close - actual_open - 1))
+            actual_offset = fort_array_offset(actual_array_no, actual_subscripts, line, label)
+            actual_index = 0
+            actual_value = fort_array_value[actual_offset]
+        end
+        else do
+            actual_index = fort_find_variable(actual)
+            if actual_index = 0 then call fort_fail "CALL actual is not a declared scalar", line, label, actual
+            actual_value = fort_variable_value[actual_index]
+        end
+        formal_index = fort_find_variable(formal)
+        if formal_index = 0 then do
+            call fort_set_variable formal, 0
+            formal_index = fort_find_variable(formal)
+        end
+        arg_index = fort_call_arg_base[frame] + i - 1
+        fort_call_formal[arg_index] = formal
+        fort_call_actual[arg_index] = actual
+        fort_call_saved[arg_index] = fort_variable_value[formal_index]
+        if actual_open > 0 then do
+            fort_call_kind[arg_index] = "ARRAY_ELEMENT"
+            fort_call_array_no[arg_index] = actual_array_no
+            fort_call_array_offset[arg_index] = actual_offset
+        end
+        else
+            fort_call_kind[arg_index] = "SCALAR"
+        call fort_set_variable formal, actual_value
+        i = i + 1
+    end
+return fort_procedure_start[proc]
+
+fort_leave_call: procedure = .int expose fort_variable_name fort_variable_value fort_variable_count fort_call_return_pc fort_call_arg_base fort_call_arg_count fort_call_formal fort_call_actual fort_call_saved fort_call_kind fort_call_array_no fort_call_array_offset fort_call_count fort_array_value
+    arg line = .int, label = .string
+    if fort_call_count = 0 then call fort_fail "RETURN outside FORTRAN SUBROUTINE", line, label, "RETURN"
+    frame = fort_call_count
+    i = 1
+    do while i <= fort_call_arg_count[frame]
+        arg_index = fort_call_arg_base[frame] + i - 1
+        formal_index = fort_find_variable(fort_call_formal[arg_index])
+        if fort_call_kind[arg_index] = "ARRAY_ELEMENT" then
+            fort_array_value[fort_call_array_offset[arg_index]] = fort_variable_value[formal_index]
+        else do
+            actual_index = fort_find_variable(fort_call_actual[arg_index])
+            if actual_index = 0 then call fort_fail "CALL actual disappeared", line, label, fort_call_actual[arg_index]
+            if fort_call_formal[arg_index] <> fort_call_actual[arg_index] then call fort_set_variable fort_call_actual[arg_index], fort_variable_value[formal_index]
+        end
+        if fort_call_formal[arg_index] <> fort_call_actual[arg_index] then call fort_set_variable fort_call_formal[arg_index], fort_call_saved[arg_index]
+        i = i + 1
+    end
+    return_pc = fort_call_return_pc[frame]
+    fort_call_count = fort_call_count - 1
+return return_pc
+
+fort_execute_assignment: procedure = .void expose fort_variable_name fort_variable_value fort_variable_length fort_variable_count fort_parameter_name fort_parameter_value fort_parameter_count fort_array_name fort_array_base fort_array_value
+    arg statement = .string, line = .int, label = .string
+    fast_index = .int
+    operator_at = .int
+    operator = .string
+    increment = .string
+    equals = pos("=", statement)
+    if equals = 0 then call fort_fail "assignment has no equals sign", line, label, statement
+    target = upper(strip(left(statement, equals - 1)))
+    expression = strip(substr(statement, equals + 1))
+    if target = "" then call fort_fail "assignment has no variable name", line, label, statement
+    if fort_find_parameter(target) <> 0 then call fort_fail "assignment to FORTRAN PARAMETER", line, label, target
+
+    /* Fast path for the common scalar increment/decrement form, such as
+     * SUM = SUM + 1. It avoids recursive expression parsing and a variable
+     * table lookup on every iteration while preserving the general path. */
+    open = pos("(", target)
+    if open = 0 then do
+        fast_index = fort_find_variable(target)
+        operator_at = pos("+", expression, 2)
+        operator = "+"
+        if operator_at = 0 then do
+            operator_at = pos("-", expression, 2)
+            operator = "-"
+        end
+        if fast_index <> 0 & operator_at > 0 & strip(left(expression, operator_at - 1)) = target then do
+            increment = strip(substr(expression, operator_at + 1))
+            if datatype(increment, "N") = 1 then do
+                if operator = "+" then fort_variable_value[fast_index] = fort_variable_value[fast_index] + increment
+                else fort_variable_value[fast_index] = fort_variable_value[fast_index] - increment
+                return
+            end
+        end
+    end
+
+    result = fort_eval_expression(expression, line, label)
+    open = pos("(", target)
+    if open = 0 then
+        call fort_set_variable target, result
+    else do
+        close = pos(")", target, open + 1)
+        if close = 0 then call fort_fail "array assignment has no closing parenthesis", line, label, target
+        subscripts = fort_split_csv(substr(target, open + 1, close - open - 1))
+        variable_name = upper(strip(left(target, open - 1)))
+        variable_index = fort_find_variable(variable_name)
+        if subscripts.0 = 1 & pos(":", subscripts[1]) > 0 & variable_index <> 0 & fort_variable_length[variable_index] > 0 then do
+            colon = pos(":", subscripts[1])
+            start_value = fort_eval_expression(strip(left(subscripts[1], colon - 1)), line, label)
+            end_value = fort_eval_expression(strip(substr(subscripts[1], colon + 1)), line, label)
+            slice_length = end_value - start_value + 1
+            if start_value < 1 | end_value < start_value | end_value > fort_variable_length[variable_index] then call fort_fail "substring bounds outside CHARACTER variable", line, label, target
+            if length(result) > slice_length then result = left(result, slice_length)
+            else if length(result) < slice_length then result = result || copies(" ", slice_length - length(result))
+            fort_variable_value[variable_index] = left(fort_variable_value[variable_index], start_value - 1) || result || substr(fort_variable_value[variable_index], end_value + 1)
+        end
+        else do
+            array_no = fort_find_array(variable_name)
+            if array_no = 0 then call fort_fail "assignment target is not a declared array", line, label, target
+            offset = fort_array_offset(array_no, subscripts, line, label)
+            fort_array_value[offset] = result
+        end
+    end
+return
+
+fort_eval_expression: procedure = .string expose fort_variable_name fort_variable_value fort_variable_count fort_parameter_name fort_parameter_value fort_parameter_count fort_array_name fort_array_base fort_array_value
+    arg expression = .string, line = .int, label = .string
+    expression = strip(expression)
+    if expression = "" then call fort_fail "empty FORTRAN expression", line, label, expression
+    operator = ""
+    operator_at = 0
+    operator_length = .int
+    depth = 0
+    quote = .string
+    quote = ""
+    i = 2
+    do while i <= length(expression)
+        ch = substr(expression, i, 1)
+        if quote = "" & (ch = "'" | ch = '"') then quote = ch
+        else if quote <> "" & ch = quote then quote = ""
+        else if quote = "" & ch = "(" then depth = depth + 1
+        else if quote = "" & ch = ")" then depth = depth - 1
+        else if quote = "" & depth = 0 then do
+            if ch = "/" & substr(expression, i + 1, 1) = "/" then do
+                operator = "//"
+                operator_at = i
+                leave
+            end
+            else if ch = "+" | ch = "-" | ch = "*" | ch = "/" then do
+                operator = ch
+                operator_at = i
+                leave
+            end
+        end
+        i = i + 1
+    end
+    if operator_at = 0 then return fort_eval_atom(expression, line, label)
+
+    left_value = fort_eval_expression(strip(left(expression, operator_at - 1)), line, label)
+    operator_length = length(operator)
+    right_value = fort_eval_expression(strip(substr(expression, operator_at + operator_length)), line, label)
+    if operator = "+" then return left_value + right_value
+    if operator = "-" then return left_value - right_value
+    if operator = "*" then return left_value * right_value
+    if operator = "//" then return left_value || right_value
+    return left_value / right_value
+
+fort_eval_condition: procedure = .int
+    arg condition = .string, line = .int, label = .string
+    operator = .string
+    operator_at = .int
+    left_value = .string
+    right_value = .string
+    left_condition = .string
+    right_condition = .string
+    upper_condition = upper(strip(condition))
+    logical_at = pos(".OR.", upper_condition)
+    if logical_at > 0 then do
+        left_condition = fort_eval_condition(strip(left(condition, logical_at - 1)), line, label)
+        right_condition = fort_eval_condition(strip(substr(condition, logical_at + 4)), line, label)
+        if left_condition = 1 | right_condition = 1 then return 1
+        return 0
+    end
+    logical_at = pos(".AND.", upper_condition)
+    if logical_at > 0 then do
+        left_condition = fort_eval_condition(strip(left(condition, logical_at - 1)), line, label)
+        right_condition = fort_eval_condition(strip(substr(condition, logical_at + 5)), line, label)
+        if left_condition = 1 & right_condition = 1 then return 1
+        return 0
+    end
+    if left(upper_condition, 5) = ".NOT." then do
+        if fort_eval_condition(strip(substr(condition, 6)), line, label) = 1 then return 0
+        return 1
+    end
+    operators = ".EQ. .NE. .LE. .GE. .LT. .GT."
+    i = 1
+    do while i <= words(operators)
+        operator = word(operators, i)
+        operator_at = pos(operator, upper(condition))
+        if operator_at > 0 then do
+            left_value = fort_eval_expression(strip(left(condition, operator_at - 1)), line, label)
+            right_value = fort_eval_expression(strip(substr(condition, operator_at + length(operator))), line, label)
+            if operator = ".EQ." then return left_value = right_value
+            if operator = ".NE." then return left_value <> right_value
+            if operator = ".LE." then return left_value <= right_value
+            if operator = ".GE." then return left_value >= right_value
+            if operator = ".LT." then return left_value < right_value
+            return left_value > right_value
+        end
+        i = i + 1
+    end
+    call fort_fail "unsupported logical IF condition", line, label, condition
+return 0
+
+fort_eval_atom: procedure = .string expose fort_variable_name fort_variable_value fort_variable_length fort_variable_count fort_parameter_name fort_parameter_value fort_parameter_count fort_array_name fort_array_base fort_array_value
+    arg atom = .string, line = .int, label = .string
+    atom = strip(atom)
+    if (left(atom, 1) = "'" & right(atom, 1) = "'") | (left(atom, 1) = '"' & right(atom, 1) = '"') then return substr(atom, 2, length(atom) - 2)
+    if datatype(atom, "N") = 1 then return atom
+    open = pos("(", atom)
+    if open > 0 then do
+        close = lastpos(")", atom)
+        if close = 0 then call fort_fail "array reference has no closing parenthesis", line, label, atom
+        function_name = upper(strip(left(atom, open - 1)))
+        if function_name = "ABS" | function_name = "SQRT" | function_name = "INT" | function_name = "MOD" | function_name = "MIN" | function_name = "MAX" | function_name = "LEN" | function_name = "INDEX" then do
+            arguments = fort_split_csv(substr(atom, open + 1, close - open - 1))
+            if function_name = "ABS" then return abs(fort_eval_expression(arguments[1], line, label))
+            if function_name = "SQRT" then return sqrt(fort_eval_expression(arguments[1], line, label))
+            if function_name = "INT" then return floattrunc(fort_eval_expression(arguments[1], line, label)) as .int
+            if function_name = "MOD" then return fort_eval_expression(arguments[1], line, label) <mod> fort_eval_expression(arguments[2], line, label)
+            if function_name = "LEN" then do
+                argument = strip(arguments[1])
+                argument_index = fort_find_variable(upper(argument))
+                if argument_index <> 0 & fort_variable_length[argument_index] > 0 then return fort_variable_length[argument_index]
+                return length(fort_eval_expression(argument, line, label))
+            end
+            if function_name = "INDEX" then return pos(fort_eval_expression(arguments[2], line, label), fort_eval_expression(arguments[1], line, label))
+            result = fort_eval_expression(arguments[1], line, label)
+            i = 2
+            do while i <= arguments.0
+                candidate = fort_eval_expression(arguments[i], line, label)
+                if function_name = "MIN" & candidate < result then result = candidate
+                if function_name = "MAX" & candidate > result then result = candidate
+                i = i + 1
+            end
+            return result
+        end
+        subscripts = fort_split_csv(substr(atom, open + 1, close - open - 1))
+        if subscripts.0 = 1 & pos(":", subscripts[1]) > 0 then do
+            variable_name = upper(strip(left(atom, open - 1)))
+            variable_index = fort_find_variable(variable_name)
+            if variable_index = 0 | fort_variable_length[variable_index] = 0 then call fort_fail "substring target is not a CHARACTER variable", line, label, atom
+            colon = pos(":", subscripts[1])
+            start_value = fort_eval_expression(strip(left(subscripts[1], colon - 1)), line, label)
+            end_value = fort_eval_expression(strip(substr(subscripts[1], colon + 1)), line, label)
+            if start_value < 1 | end_value < start_value | end_value > fort_variable_length[variable_index] then call fort_fail "substring bounds outside CHARACTER variable", line, label, atom
+            return substr(fort_variable_value[variable_index], start_value, end_value - start_value + 1)
+        end
+        array_no = fort_find_array(left(atom, open - 1))
+        if array_no = 0 then call fort_fail "unknown FORTRAN array", line, label, atom
+        subscripts = fort_split_csv(substr(atom, open + 1, close - open - 1))
+        offset = fort_array_offset(array_no, subscripts, line, label)
+        return fort_array_value[offset]
+    end
+    parameter = fort_find_parameter(upper(atom))
+    if parameter <> 0 then return fort_parameter_value[parameter]
+    index = fort_find_variable(upper(atom))
+    if index = 0 then call fort_fail "unknown FORTRAN variable", line, label, atom
+return fort_variable_value[index]
+
+fort_start_do: procedure = .void expose fort_loop_var fort_loop_variable_index fort_loop_current fort_loop_limit fort_loop_step fort_loop_body fort_loop_end fort_loop_count fort_variable_name fort_variable_value fort_variable_count
+    arg statement = .string, end_pc = .int, do_pc = .int, line = .int, label = .string
+    second_comma = .int
+    limit_value = .string
+    step_value = .string
+    variable = word(statement, 3)
+    equals = pos("=", statement)
+    comma = pos(",", statement, equals + 1)
+    if equals = 0 | comma = 0 then call fort_fail "malformed DO statement", line, label, statement
+    start_value = fort_eval_expression(strip(substr(statement, equals + 1, comma - equals - 1)), line, label)
+    second_comma = pos(",", statement, comma + 1)
+    if second_comma = 0 then do
+        limit_value = fort_eval_expression(strip(substr(statement, comma + 1)), line, label)
+        step_value = 1
+    end
+    else do
+        limit_value = fort_eval_expression(strip(substr(statement, comma + 1, second_comma - comma - 1)), line, label)
+        step_value = fort_eval_expression(strip(substr(statement, second_comma + 1)), line, label)
+    end
+    if step_value = 0 then call fort_fail "zero FORTRAN DO step", line, label, statement
+    fort_loop_count = fort_loop_count + 1
+    frame = fort_loop_count
+    fort_loop_var[frame] = upper(variable)
+    call fort_set_variable variable, start_value
+    fort_loop_variable_index[frame] = fort_find_variable(variable)
+    fort_loop_current[frame] = start_value
+    fort_loop_limit[frame] = limit_value
+    fort_loop_step[frame] = step_value
+    fort_loop_body[frame] = do_pc + 1
+    fort_loop_end[frame] = end_pc
+return
+
+fort_loop_terminal: procedure = .int expose fort_loop_var fort_loop_variable_index fort_loop_current fort_loop_limit fort_loop_step fort_loop_body fort_loop_end fort_loop_count fort_variable_name fort_variable_value fort_variable_count
+    arg pc = .int
+    if fort_loop_count = 0 then return 0
+    frame = fort_loop_count
+    if fort_loop_end[frame] <> pc then return 0
+    next_value = fort_loop_current[frame] + fort_loop_step[frame]
+    if (fort_loop_step[frame] > 0 & next_value <= fort_loop_limit[frame]) | (fort_loop_step[frame] < 0 & next_value >= fort_loop_limit[frame]) then do
+        fort_loop_current[frame] = next_value
+        fort_variable_value[fort_loop_variable_index[frame]] = next_value
+        return fort_loop_body[frame]
+    end
+    fort_loop_count = fort_loop_count - 1
+return 0
+
+fort_execute_write: procedure = .void expose fort_variable_name fort_variable_value fort_variable_count fort_array_name fort_array_base fort_array_value fort_action_text
+    arg statement = .string, line = .int, label = .string
+    close = pos(")", statement)
+    if close = 0 then call fort_fail "malformed WRITE statement", line, label, statement
+    control = fort_split_csv(strip(substr(statement, 8, close - 8)))
+    values = fort_split_csv(strip(substr(statement, close + 1)))
+    output = ""
+    format_statement = ""
+    if control.0 >= 2 & strip(control[2]) <> "*" then do
+        format_pc = fort_find_label(strip(control[2]))
+        if format_pc = 0 then call fort_fail "unresolved FORMAT label", line, label, control[2]
+        format_statement = fort_action_text[format_pc]
+    end
+    format_index = 1
+    value = .string
+    i = 1
+    do while i <= values.0
+        item = strip(values[i])
+        inner_close = pos(")", item)
+        outer_close = lastpos(")", item)
+        equals = pos("=", item, inner_close + 1)
+        if left(item, 1) = "(" & inner_close > 0 & outer_close > inner_close & equals > inner_close then do
+            comma = pos(",", item, equals + 1)
+            if comma = 0 then call fort_fail "malformed implied-DO WRITE item", line, label, item
+            expression = strip(substr(item, 2, inner_close - 1))
+            loop_variable = strip(substr(item, inner_close + 2, equals - inner_close - 2))
+            start_value = fort_eval_expression(strip(substr(item, equals + 1, comma - equals - 1)), line, label)
+            limit_value = fort_eval_expression(strip(substr(item, comma + 1, outer_close - comma - 1)), line, label)
+            current_value = start_value
+            do while current_value <= limit_value
+                expanded_expression = changestr(loop_variable, expression, current_value)
+                value = fort_eval_expression(expanded_expression, line, label)
+                if format_statement <> "" then
+                    output = output || fort_format_value(value, format_statement, format_index, line, label)
+                else
+                    output = output || " " || value
+                format_index = format_index + 1
+                current_value = current_value + 1
+            end
+        end
+        else do
+            if (left(item, 1) = "'" & right(item, 1) = "'") | (left(item, 1) = '"' & right(item, 1) = '"') then
+                value = substr(item, 2, length(item) - 2)
+            else
+                value = fort_eval_expression(item, line, label)
+            if format_statement <> "" then
+                output = output || fort_format_value(value, format_statement, format_index, line, label)
+            else
+                output = output || " " || value
+            format_index = format_index + 1
+        end
+        i = i + 1
+    end
+    say strip(output)
+return
+
+fort_format_value: procedure = .string
+    arg value = .string, statement = .string, index = .int, line = .int, label = .string
+    candidate = .string
+    format_type = .string
+    type_pos = .int
+    repeat = .string
+    remaining = .int
+    descriptor = .string
+    dot = .int
+    width = .string
+    decimals = .string
+    rendered = .string
+    prefix = .string
+    literal = .string
+    x_pos = .int
+    open = pos("(", statement)
+    close = lastpos(")", statement)
+    if open = 0 | close <= open then call fort_fail "malformed FORMAT statement", line, label, statement
+    descriptors = fort_split_csv(substr(statement, open + 1, close - open - 1))
+    if descriptors.0 = 0 then call fort_fail "empty FORMAT statement", line, label, statement
+
+    remaining = index
+    prefix = ""
+    descriptor = ""
+    i = 1
+    do while i <= descriptors.0
+        candidate = upper(strip(descriptors[i]))
+        if (left(candidate, 1) = "'" & right(candidate, 1) = "'") | (left(candidate, 1) = '"' & right(candidate, 1) = '"') then do
+            if remaining = 1 then prefix = prefix || substr(descriptors[i], 2, length(descriptors[i]) - 2)
+            i = i + 1
+            iterate
+        end
+        x_pos = pos("X", candidate)
+        if x_pos > 0 & x_pos = length(candidate) then do
+            repeat = strip(left(candidate, x_pos - 1))
+            if repeat = "" then repeat = 1
+            else if datatype(repeat, "N") <> 1 then call fort_fail "invalid FORMAT X descriptor", line, label, candidate
+            if remaining = 1 then prefix = prefix || copies(" ", repeat as .int)
+            i = i + 1
+            iterate
+        end
+        fpos = pos("F", candidate)
+        format_type = "F"
+        type_pos = fpos
+        if type_pos = 0 then do
+            type_pos = pos("I", candidate)
+            format_type = "I"
+        end
+        if type_pos = 0 then do
+            type_pos = pos("A", candidate)
+            format_type = "A"
+        end
+        if type_pos = 0 then call fort_fail "unsupported FORMAT descriptor", line, label, candidate
+        repeat = strip(left(candidate, type_pos - 1))
+        if repeat = "" then repeat = 1
+        else if datatype(repeat, "N") <> 1 then call fort_fail "invalid FORMAT repeat", line, label, candidate
+        if remaining <= repeat then do
+            descriptor = substr(candidate, type_pos + 1)
+            leave
+        end
+        remaining = remaining - repeat
+        i = i + 1
+    end
+    if descriptor = "" then do
+        candidate = upper(strip(descriptors[descriptors.0]))
+            type_pos = pos("F", candidate)
+            if type_pos = 0 then do
+                type_pos = pos("I", candidate)
+                format_type = "I"
+            end
+            if type_pos = 0 then do
+                type_pos = pos("A", candidate)
+                format_type = "A"
+            end
+        descriptor = substr(candidate, type_pos + 1)
+    end
+
+    if format_type = "A" then do
+        width = strip(descriptor)
+        if width = "" then rendered = value
+        else do
+            if datatype(width, "N") <> 1 then call fort_fail "invalid FORMAT A descriptor", line, label, descriptor
+            if length(value) > width then rendered = left(value, width)
+            else rendered = value || copies(" ", width - length(value))
+        end
+    end
+    else if format_type = "I" then do
+        width = strip(descriptor)
+        if datatype(width, "N") <> 1 then call fort_fail "invalid FORMAT I descriptor", line, label, descriptor
+        rendered = format(value, , 0)
+    end
+    else do
+        dot = pos(".", descriptor)
+        if dot = 0 then call fort_fail "FORMAT F descriptor requires decimals", line, label, descriptor
+        width = strip(left(descriptor, dot - 1))
+        decimals = strip(substr(descriptor, dot + 1))
+        if datatype(width, "N") <> 1 | datatype(decimals, "N") <> 1 then call fort_fail "invalid FORMAT F descriptor", line, label, descriptor
+        rendered = format(value, , decimals)
+    end
+    if width > 0 & format_type <> "A" then rendered = right(rendered, width)
+return prefix || rendered
+
+fort_find_variable: procedure = .int expose fort_variable_name fort_variable_count
+    arg wanted = .string
+    i = 1
+    do while i <= fort_variable_count
+        if fort_variable_name[i] = upper(wanted) then return i
+        i = i + 1
+    end
+return 0
+
+fort_set_variable: procedure = .void expose fort_variable_name fort_variable_value fort_variable_length fort_variable_count
+    arg name = .string, value = .string
+    padding = .int
+    index = fort_find_variable(name)
+    if index = 0 then do
+        fort_variable_count = fort_variable_count + 1
+        index = fort_variable_count
+        fort_variable_name[index] = upper(name)
+        fort_variable_length[index] = 0
+    end
+    if fort_variable_length[index] > 0 then do
+        if length(value) > fort_variable_length[index] then value = left(value, fort_variable_length[index])
+        else if length(value) < fort_variable_length[index] then do
+            padding = fort_variable_length[index] - length(value)
+            if padding > 0 then value = value || copies(" ", padding)
+        end
+    end
+    fort_variable_value[index] = value
+return
+
+fort_fail: procedure = .void
+    arg message = .string, line = .int, label = .string, detail = .string
+    signal .signal("failure", message || " at FORTRAN line " || line || " label " || label || ": " || detail)
+return
