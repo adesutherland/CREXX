@@ -11,7 +11,10 @@ capabilities: procedure = .uicapabilities
   caps = .uicapabilities()
   call caps.enable("ui.resource.choose")
   call caps.enable("io.text.read")
+  call caps.enable("io.text.write")
   call caps.enable("ui.dialog")
+  call caps.enable("ui.widgets")
+  call caps.enable("ui.collections")
   return caps
 
 /** Portable TUI driver with interactive and deterministic scripted modes. */
@@ -67,6 +70,7 @@ tuidriver: class implements .uidriver
     _modal = 0
     _error = ""
     answer = .string
+    body = .uipayload
     rc = _session.post(.uimessage("ui.ready", .uipayload()))
     if rc < 0 then _error = "Cannot admit ui.ready"
     do while _running & _error = ""
@@ -105,7 +109,40 @@ tuidriver: class implements .uidriver
       end
       command = next_input("Command")
       if _exhausted then leave
-      command = lower(strip(command))
+      raw_command = strip(command)
+      command = lower(raw_command)
+
+      control_handled = 0
+      do control = 1 to view.count()
+        if lower(view.node_id(control)) = lower(word(raw_command, 1)) then do
+          body = .uipayload()
+          call body.put_text("node", view.node_id(control))
+          value = subword(raw_command, 2)
+          if view.node_kind(control) = "integer" then do
+            call body.put_text("value", value)
+            rc = _session.post(.uimessage("widget.value.changed", body))
+            if rc >= 0 then rc = _session.post(.uimessage("widget.value.committed", body))
+            if rc < 0 then _error = "Integer input admission failed"
+            control_handled = 1
+          end
+          else if view.node_kind(control) = "choice" then do
+            chosen = ""
+            do option = 1 to view.node_option_count(control)
+              if value = view.node_option_id(control, option) | value = option as .string then chosen = view.node_option_id(control, option)
+            end
+            if chosen = "" then call emit_line("Unknown choice for " || view.node_id(control))
+            else do
+              items = .string[]
+              items[1] = chosen
+              call body.put_texts("items", items)
+              rc = _session.post(.uimessage("widget.selection.changed", body))
+              if rc < 0 then _error = "Choice input admission failed"
+            end
+            control_handled = 1
+          end
+        end
+      end
+      if control_handled then iterate
 
       action = ""
       do index = 1 to view.count()
@@ -148,8 +185,8 @@ tuidriver: class implements .uidriver
       body = effect.body()
       if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
         if _modal then call fail_effect(effect, "dialog_busy", "Another dialog is active")
-        else if name = "ui.resource.choose" & body.text("purpose") \= "open" then
-          call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+        else if name = "ui.resource.choose" & body.text("purpose") \= "open" & body.text("purpose") \= "save" then
+          call fail_effect(effect, "unsupported_purpose", "Unsupported file chooser purpose")
         else do
           _request = effect
           _modal = 1
@@ -158,6 +195,11 @@ tuidriver: class implements .uidriver
       else if name = "io.text.read" then do
         rc = _session.complete(_resources.read(effect))
         if rc < 0 then _error = "Read completion rejected"
+      end
+      else if name = "io.text.write" then do
+        response = _resources.write(effect)
+        rc = _session.complete(response)
+        if rc < 0 then _error = "Write completion rejected"
       end
       else if name = "ui.close" then do
         if _modal then call cancelled("host_closed")
@@ -177,7 +219,8 @@ tuidriver: class implements .uidriver
     arg path = .string
     if strip(path) = "" then call cancelled("dialog_cancelled")
     else do
-      grant = _resources.grant(path)
+      request_body = _request.body()
+      grant = _resources.grant(path, request_body.text("purpose"))
       if grant.id() = "" then call fail_effect(_request, "resource_limit", "Local resource grant limit reached")
       else do
         body = .uipayload()
@@ -227,9 +270,15 @@ tuidriver: class implements .uidriver
     maximum_column = 0
     do position_index = 1 to view.count()
       kind = view.node_kind(position_index)
-      if kind \= "label" & kind \= "line" & kind \= "button" then do
+      if kind \= "label" & kind \= "line" & kind \= "button" & kind \= "choice" & kind \= "integer" then do
         _error = "Unsupported line view node: " || kind
         return
+      end
+      if kind = "integer" then do
+        if view.node_minimum(position_index) < -2147483648 | view.node_maximum(position_index) > 2147483647 | view.node_step(position_index) > 2147483647 then do
+          _error = "Unsupported line integer bounds"
+          return
+        end
       end
       if view.node_row(position_index) > maximum_row then
         maximum_row = view.node_row(position_index)
@@ -249,6 +298,16 @@ tuidriver: class implements .uidriver
               if rendered \= "" then rendered = rendered || "    "
               if kind = "button" then
                 rendered = rendered || "[" || upper(view.node_shortcut(render_index)) || "] " || view.node_text(render_index)
+              else if kind = "integer" then
+                rendered = rendered || view.node_id(render_index) || ": " || view.node_value(render_index) || " (" || view.node_minimum(render_index) || "-" || view.node_maximum(render_index) || ", step " || view.node_step(render_index) || ")"
+              else if kind = "choice" then do
+                rendered = rendered || view.node_id(render_index) || ":"
+                do option = 1 to view.node_option_count(render_index)
+                  mark = " "
+                  if view.node_value(render_index) = view.node_option_id(render_index, option) then mark = "*"
+                  rendered = rendered || " [" || mark || option || "] " || view.node_option_text(render_index, option)
+                end
+              end
               else rendered = rendered || view.node_text(render_index)
             end
           end

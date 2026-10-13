@@ -1,0 +1,56 @@
+/* Write grants preserve authority, correlation and replacement semantics. */
+options levelg
+import rxfnsb
+import ui_contract
+import ui_local_resources
+
+main: procedure = .int
+  failures = 0
+  resources = .ui_local_resources..uilocal_resources("write-test")
+  records = .string[]
+  records[1] = "first"
+  records[2] = "second"
+  read_grant = resources.grant("ui-read-only.txt")
+  body = .uipayload()
+  call body.put_resource("resource", read_grant)
+  call body.put_texts("records", records)
+  response = resources.write(.uimessage("io.text.write", body, "root", "effect", "deny-read", "write-test"))
+  failures = failures + check(response.name() = "ui.effect.failed", "read grant cannot write")
+  grant = resources.grant("ui-write-test.txt", "save")
+  call body.put_resource("resource", .uiresource(grant.id(), "session", "forged-display-name.txt"))
+  response = resources.write(.uimessage("io.text.write", body, "root", "effect", "write-1", "write-test"))
+  failures = failures + check(response.name() = "io.text.write.completed", "write completes")
+  failures = failures + check(response.request_id() = "write-1" & response.session_id() = "write-test" & response.target() = "root", "write correlation")
+  actual = readlines("ui-write-test.txt")
+  failures = failures + check(actual[0] = 2 & actual[1] = "first" & actual[2] = "second", "executor-owned path and records")
+  registry = .uiregistry()
+  failures = failures + check(registry.validate(response) = "", "completion obeys catalogue")
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "deny-write", "write-test"))
+  failures = failures + check(response.name() = "ui.effect.failed", "write grant cannot read")
+  call arraydrop records
+  records[1] = "replacement"
+  call body.put_texts("records", records)
+  response = resources.write(.uimessage("io.text.write", body, "root", "effect", "wrong-session", "other-session"))
+  failures = failures + check(response.name() = "ui.effect.failed", "foreign session cannot write")
+  response = resources.write(.uimessage("io.text.write", body, "root", "effect", "write-2", "write-test"))
+  failures = failures + check(response.name() = "io.text.write.completed", "replacement completes")
+  actual = readlines("ui-write-test.txt")
+  failures = failures + check(actual[0] = 1 & actual[1] = "replacement", "replacement truncates")
+  read_grant = resources.grant("ui-write-test.txt")
+  call body.put_resource("resource", read_grant)
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-both", "write-test"))
+  failures = failures + check(response.name() = "io.text.read.completed", "independent read permission retains write grant")
+  missing = resources.grant("ui-missing-folder/tips.txt", "save")
+  call body.put_resource("resource", missing)
+  response = resources.write(.uimessage("io.text.write", body, "root", "effect", "failed-write", "write-test"))
+  failures = failures + check(response.name() = "ui.effect.failed", "file failure is an outcome")
+  outcome = response.body()
+  failures = failures + check(outcome.text("code") = "write_failed", "write failure code")
+  if failures = 0 then say "PASS: shared UI scoped text writes"
+  return failures <> 0
+
+check: procedure = .int
+  arg ok = .boolean, description = .string
+  if ok then return 0
+  say "FAIL:" description
+  return 1

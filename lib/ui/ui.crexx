@@ -16,7 +16,7 @@ uiview: interface
   /** @return number of logical nodes */
   count: method = .int
   /** @param index one-based node index
-   * @return `label`, `line`, `input`, or `button`
+   * @return `label`, `line`, `input`, `button`, `choice`, or `integer`
    */
   node_kind: method = .string
     arg index = .int
@@ -60,6 +60,29 @@ uiview: interface
    */
   node_column: method = .int
     arg index = .int
+  /** @param index one-based node index @return current editable/selected value */
+  node_value: method = .string
+    arg index = .int
+  /** @param index one-based node index @return single-choice option count */
+  node_option_count: method = .int
+    arg index = .int
+  /** @param index node index @param option one-based option index
+   * @return stable choice item identity, or empty for an invalid index */
+  node_option_id: method = .string
+    arg index = .int, option = .int
+  /** @param index node index @param option one-based option index
+   * @return displayed choice label, or empty for an invalid index */
+  node_option_text: method = .string
+    arg index = .int, option = .int
+  /** @param index node index @return inclusive integer lower bound */
+  node_minimum: method = .int
+    arg index = .int
+  /** @param index node index @return inclusive integer upper bound */
+  node_maximum: method = .int
+    arg index = .int
+  /** @param index node index @return positive integer increment */
+  node_step: method = .int
+    arg index = .int
 
 /** Mutable logical-view builder returned through the read-only uiview contract. */
 uiview_impl: class implements .uiview
@@ -74,12 +97,22 @@ uiview_impl: class implements .uiview
   _anchors = .string[]
   _rows = .int[]
   _columns = .int[]
+  _values = .string[]
+  _option_counts = .int[]
+  _option_offsets = .int[]
+  _option_ids = .string[]
+  _option_texts = .string[]
+  _option_total = .int
+  _minimums = .int[]
+  _maximums = .int[]
+  _steps = .int[]
 
   /** @param title application window or screen title */
   *: factory
     arg title = .string
     _title = title
     _count = 0
+    _option_total = 0
     return
 
   /** Append a text label.
@@ -96,6 +129,7 @@ uiview_impl: class implements .uiview
     _texts[_count] = text
     _actions[_count] = ""
     _shortcuts[_count] = ""
+    call initialise_control()
     call place_current relation, anchor
     return
 
@@ -112,6 +146,7 @@ uiview_impl: class implements .uiview
     _texts[_count] = ""
     _actions[_count] = ""
     _shortcuts[_count] = ""
+    call initialise_control()
     call place_current relation, anchor
     return
 
@@ -131,6 +166,7 @@ uiview_impl: class implements .uiview
     _texts[_count] = text
     _actions[_count] = action
     _shortcuts[_count] = shortcut
+    call initialise_control()
     call place_current relation, anchor
     return
 
@@ -142,6 +178,82 @@ uiview_impl: class implements .uiview
     arg id = .string, text = .string, relation = "below", anchor = ""
     call add_label(id, text, relation, anchor)
     _kinds[_count] = "input"
+    _values[_count] = text
+    return
+
+  /** Append one exclusive choice using stable item IDs.
+   * @param id stable control identity
+   * @param option_ids distinct nonempty item IDs (maximum 64)
+   * @param option_texts corresponding display labels
+   * @param selected current item ID, which must belong to the options
+   * @param relation placement relative to the anchor
+   * @param anchor stable earlier node identity
+   * @return 1 when added; 0 for invalid input, with the view unchanged
+   */
+  add_choice: method = .int
+    arg id = .string, option_ids = .string[], option_texts = .string[], selected = .string, relation = "below", anchor = ""
+    i = .int
+    previous = .int
+    if id = "" | length(id) > 128 | option_ids[0] < 1 | option_ids[0] > 64 then return 0
+    if option_ids[0] \= option_texts[0] then return 0
+    found = 0
+    do i = 1 to option_ids[0]
+      if option_ids[i] = "" | length(option_ids[i]) > 128 | length(option_texts[i]) > 16384 then return 0
+      if option_ids[i] = selected then found = 1
+      do previous = 1 to i - 1
+        if option_ids[previous] = option_ids[i] then return 0
+      end
+    end
+    if \found then return 0
+    do i = 1 to _count
+      if _ids[i] = id then return 0
+    end
+    call add_label(id, "", relation, anchor)
+    _kinds[_count] = "choice"
+    _values[_count] = selected
+    _option_counts[_count] = option_ids[0]
+    _option_offsets[_count] = _option_total
+    do i = 1 to option_ids[0]
+      _option_total = _option_total + 1
+      _option_ids[_option_total] = option_ids[i]
+      _option_texts[_option_total] = option_texts[i]
+    end
+    return 1
+
+  /** Append a bounded integer editor, preserving text during editing.
+   * @param id stable control identity
+   * @param value current text, including transient invalid/empty editing state
+   * @param minimum inclusive lower bound
+   * @param maximum inclusive upper bound
+   * @param step positive increment
+   * @param relation placement relative to the anchor
+   * @param anchor stable earlier node identity
+   * @return 1 when added; 0 for invalid configuration, with the view unchanged
+   * Drivers reject bounds they cannot represent; features validate committed
+   * text before conversion. Rendering a value never represents user input.
+   */
+  add_integer: method = .int
+    arg id = .string, value = .string, minimum = .int, maximum = .int, step = 1, relation = "below", anchor = ""
+    if id = "" | length(id) > 128 | length(value) > 16384 | minimum > maximum | step < 1 then return 0
+    do i = 1 to _count
+      if _ids[i] = id then return 0
+    end
+    call add_label(id, value, relation, anchor)
+    _kinds[_count] = "integer"
+    _values[_count] = value
+    _minimums[_count] = minimum
+    _maximums[_count] = maximum
+    _steps[_count] = step
+    return 1
+
+  /** Initialise optional fields for the just-added logical node. */
+  initialise_control: method = .void
+    _values[_count] = ""
+    _option_counts[_count] = 0
+    _option_offsets[_count] = 0
+    _minimums[_count] = 0
+    _maximums[_count] = 0
+    _steps[_count] = 0
     return
 
   /** Append a node from RXPP's compact builder specification.
@@ -275,3 +387,40 @@ uiview_impl: class implements .uiview
     arg index = .int
     if index < 1 | index > _count then return -1
     return _columns[index]
+
+  node_value: method = .string
+    arg index = .int
+    if index < 1 | index > _count then return ""
+    return _values[index]
+
+  node_option_count: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return 0
+    return _option_counts[index]
+
+  node_option_id: method = .string
+    arg index = .int, option = .int
+    if index < 1 | index > _count then return ""
+    if option < 1 | option > _option_counts[index] then return ""
+    return _option_ids[_option_offsets[index] + option]
+
+  node_option_text: method = .string
+    arg index = .int, option = .int
+    if index < 1 | index > _count then return ""
+    if option < 1 | option > _option_counts[index] then return ""
+    return _option_texts[_option_offsets[index] + option]
+
+  node_minimum: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return 0
+    return _minimums[index]
+
+  node_maximum: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return 0
+    return _maximums[index]
+
+  node_step: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return 0
+    return _steps[index]

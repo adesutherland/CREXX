@@ -18,7 +18,8 @@ capabilities: procedure = .uicapabilities
   caps = .uicapabilities()
   call caps.enable("ui.resource.choose")
   call caps.enable("io.text.read")
-  names = "ui.dialog ui.viewport ui.keyboard ui.text ui.pointer ui.scroll ui.widgets"
+  call caps.enable("io.text.write")
+  names = "ui.dialog ui.viewport ui.keyboard ui.text ui.pointer ui.scroll ui.widgets ui.collections"
   do i = 1 to words(names)
     call caps.enable(word(names, i))
   end
@@ -36,6 +37,10 @@ ansidriver: class implements .uidriver
   _focus = .string
   _saved_focus = .string
   _pressed = .string
+  _pressed_item = .string
+  _editing_node = .string
+  _editing_text = .string
+  _replace_edit = .int
   _handle = .int
   _columns = .int
   _rows = .int
@@ -48,6 +53,10 @@ ansidriver: class implements .uidriver
     _focus = ""
     _saved_focus = ""
     _pressed = ""
+    _pressed_item = ""
+    _editing_node = ""
+    _editing_text = ""
+    _replace_edit = 1
     _handle = 0
     _columns = 80
     _rows = 24
@@ -69,6 +78,10 @@ ansidriver: class implements .uidriver
     _focus = ""
     _saved_focus = ""
     _pressed = ""
+    _pressed_item = ""
+    _editing_node = ""
+    _editing_text = ""
+    _replace_edit = 1
     _error = ""
     _dirty = 1
     _resources = .uilocal_resources(_session.id())
@@ -140,6 +153,19 @@ ansidriver: class implements .uidriver
   draw: method = .void
     view = _session.view()
     if _modal then view = _dialog.view()
+    do index = 1 to view.count()
+      kind = view.node_kind(index)
+      if wordpos(kind, "label line input button choice integer") = 0 then do
+        _error = "Unsupported terminal view node: " || kind
+        return
+      end
+      if kind = "integer" then do
+        if view.node_minimum(index) < -2147483648 | view.node_maximum(index) > 2147483647 | view.node_step(index) > 2147483647 then do
+          _error = "Unsupported terminal integer bounds"
+          return
+        end
+      end
+    end
     frame = _canvas.render(view, _focus)
     if _focus = "" then do
       _focus = _canvas.next_focus("", 1)
@@ -158,12 +184,52 @@ ansidriver: class implements .uidriver
     name = ""
     direction = .int
     phase = .string
+    view = .uiview
+    focused_index = 0
+    control_kind = ""
+    if \_modal then do
+      focused_index = control_index(_focus)
+      if focused_index > 0 then do
+        view = _session.view()
+        control_kind = view.node_kind(focused_index)
+      end
+    end
     if kind = 1 then do
       if text = "Tab" then do
         direction = 1
         if fields[5] <mod> 2 = 1 then direction = -1
         _focus = _canvas.next_focus(_focus, direction)
+        _editing_node = ""
+        _replace_edit = 1
         return
+      end
+      if \_modal & control_kind = "choice" & (text = "Left" | text = "Right" | text = "Up" | text = "Down") then do
+        direction = 1
+        if text = "Left" | text = "Up" then direction = -1
+        call cycle_choice(focused_index, direction)
+        return
+      end
+      if \_modal & control_kind = "integer" then do
+        if text = "Enter" then do
+          call begin_integer(focused_index)
+          call integer_value(focused_index, _editing_text, "widget.value.committed")
+          _replace_edit = 1
+          return
+        end
+        if text = "Backspace" | text = "Delete" then do
+          call begin_integer(focused_index)
+          if text = "Delete" then _editing_text = ""
+          else _editing_text = left(_editing_text, max(0, length(_editing_text) - 1))
+          _replace_edit = 0
+          call integer_value(focused_index, _editing_text, "widget.value.changed")
+          return
+        end
+        if text = "Up" | text = "Down" then do
+          direction = 1
+          if text = "Down" then direction = -1
+          call increment_integer(focused_index, direction)
+          return
+        end
       end
       if text = "Enter" & _focus \= "dialog.filename" then do
         call activated(_focus)
@@ -187,6 +253,17 @@ ansidriver: class implements .uidriver
       name = "ui.input.key"
     end
     if kind = 2 | kind = 3 then do
+      if \_modal & control_kind = "integer" then do
+        call begin_integer(focused_index)
+        candidate = text
+        if \_replace_edit then candidate = _editing_text || text
+        if length(candidate) <= 4096 then do
+          _editing_text = candidate
+          _replace_edit = 0
+          call integer_value(focused_index, candidate, "widget.value.changed")
+        end
+        return
+      end
       if \_modal & kind = 2 then do
         view = _session.view()
         do i = 1 to view.count()
@@ -206,12 +283,25 @@ ansidriver: class implements .uidriver
       node = _canvas.hit(fields[1], fields[2])
       if fields[8] = 1 & fields[7] = 1 then do
         _pressed = node
+        _pressed_item = _canvas.choice_item(fields[1], fields[2])
         if node \= "" then _focus = node
+        _editing_node = ""
+        _replace_edit = 1
       end
       if fields[8] = 2 & fields[7] = 1 then do
         pressed = _pressed
+        pressed_item = _pressed_item
         _pressed = ""
-        if node \= "" & node = pressed then call activated(node)
+        _pressed_item = ""
+        if node \= "" & node = pressed then do
+          index = control_index(node)
+          view = _session.view()
+          if \_modal & index > 0 & view.node_kind(index) = "choice" then do
+            item = _canvas.choice_item(fields[1], fields[2])
+            if item \= "" & item = pressed_item then call choose_item(index, item)
+          end
+          else call activated(node)
+        end
       end
       call body.put_text("node", node)
       call body.put_integer("x", fields[1])
@@ -245,8 +335,14 @@ ansidriver: class implements .uidriver
       view = _session.view()
       do i = 1 to view.count()
         if view.node_id(i) = node then do
-          rc = _session.invoke(view.node_action(i))
-          if rc < 0 then _error = "Command rejected"
+          if view.node_kind(i) = "choice" then call cycle_choice(i, 1)
+          else if view.node_kind(i) = "integer" then do
+            call begin_integer(i)
+          end
+          else do
+            rc = _session.invoke(view.node_action(i))
+            if rc < 0 then _error = "Command rejected"
+          end
           leave
         end
       end
@@ -260,6 +356,78 @@ ansidriver: class implements .uidriver
       rc = _session.post(event)
       if rc < 0 then _error = "Input admission failed: " || event.name()
     end
+    return
+
+  /** @param node stable node identity @return index in the current root view */
+  control_index: method = .int
+    arg node = .string
+    view = _session.view()
+    do i = 1 to view.count()
+      if view.node_id(i) = node then return i
+    end
+    return 0
+
+  choose_item: method = .void
+    arg index = .int, item = .string
+    view = _session.view()
+    items = .string[]
+    items[1] = item
+    body = .uipayload()
+    call body.put_text("node", view.node_id(index))
+    call body.put_texts("items", items)
+    call deliver(.uimessage("widget.selection.changed", body))
+    return
+
+  cycle_choice: method = .void
+    arg index = .int, delta = .int
+    view = _session.view()
+    count = view.node_option_count(index)
+    if count < 1 then return
+    selected = 1
+    do option = 1 to count
+      if view.node_option_id(index, option) = view.node_value(index) then selected = option
+    end
+    selected = (selected - 1 + delta + count) <mod> count + 1
+    call choose_item(index, view.node_option_id(index, selected))
+    return
+
+  begin_integer: method = .void
+    arg index = .int
+    view = _session.view()
+    if _editing_node \= view.node_id(index) then do
+      _editing_node = view.node_id(index)
+      _editing_text = view.node_value(index)
+      _replace_edit = 1
+    end
+    return
+
+  integer_value: method = .void
+    arg index = .int, value = .string, event = .string
+    view = _session.view()
+    body = .uipayload()
+    call body.put_text("node", view.node_id(index))
+    call body.put_text("value", value)
+    call deliver(.uimessage(event, body))
+    return
+
+  increment_integer: method = .void
+    arg index = .int, delta = .int
+    view = _session.view()
+    value = view.node_minimum(index)
+    raw = strip(view.node_value(index))
+    if datatype(raw, "W") then do
+      do
+        value = raw
+      on signal
+        value = view.node_minimum(index)
+      end
+    end
+    value = max(view.node_minimum(index), min(view.node_maximum(index), value))
+    value = max(view.node_minimum(index), min(view.node_maximum(index), value + delta * view.node_step(index)))
+    _editing_node = view.node_id(index)
+    _editing_text = value as .string
+    _replace_edit = 1
+    call integer_value(index, _editing_text, "widget.value.changed")
     return
 
   dialog_cancel: method = .void
@@ -283,7 +451,8 @@ ansidriver: class implements .uidriver
         end
         else do
           name = "ui.resource.selected"
-          resource = _resources.grant(_dialog.selection())
+          request_body = _request.body()
+          resource = _resources.grant(_dialog.selection(), request_body.text("purpose"))
           if resource.id() = "" then do
             name = "ui.effect.failed"
             call body.put_text("code", "resource_limit")
@@ -318,17 +487,18 @@ ansidriver: class implements .uidriver
     name = effect.name()
     body = effect.body()
     rc = .int
+    response = .uimessage
     if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
       if _modal then do
         call fail_effect(effect, "dialog_busy", "Another dialog is active")
         return
       end
-      if name = "ui.resource.choose" & body.text("purpose") \= "open" then do
-        call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+      if name = "ui.resource.choose" & body.text("purpose") \= "open" & body.text("purpose") \= "save" then do
+        call fail_effect(effect, "unsupported_purpose", "Unsupported file chooser purpose")
         return
       end
       if name = "ui.dialog.confirm" then _dialog = .uiconfirm_dialog(body.text("title"), body.text("message"))
-      else _dialog = .uifile_dialog(body.text("title"), rxfs..cwd())
+      else _dialog = .uifile_dialog(body.text("title"), rxfs..cwd(), body.text("purpose"))
       call _dialog.resize(_columns, _rows)
       _request = effect
       _modal = 1
@@ -342,6 +512,12 @@ ansidriver: class implements .uidriver
       response = _resources.read(effect)
       rc = _session.complete(response)
       if rc < 0 then _error = "Read completion rejected"
+      return
+    end
+    if name = "io.text.write" then do
+      response = _resources.write(effect)
+      rc = _session.complete(response)
+      if rc < 0 then _error = "Write completion rejected"
       return
     end
     if name = "ui.close" then do

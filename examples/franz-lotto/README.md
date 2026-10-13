@@ -1,6 +1,6 @@
 # Franz's Lotto teaching examples
 
-Two small examples implement the game choices from Franz Marx's LottoV41:
+These examples implement the game choices from Franz Marx's LottoV41:
 Austrian 6/45, German 6/49 and Euro-Lotto 5/50 plus 2/12. Each accepts 1–50
 tips, draws without duplicate balls within each pool, sorts the results and
 writes a file only on explicit Save. Distinct tips may repeat by chance; the
@@ -14,8 +14,14 @@ two Euro pools are independent. These are recreational programming examples.
   existing `gui` plugin and a single-choice combo. The [provider build kit](crexx/gui-provider/)
   contains unchanged Beta 3 source/headers; a native plugin and GTK 3 runtime
   closure must be built separately for Windows.
+- [Shared cREXX UI](surface/README.md): one Level G component, model, session
+  and Save workflow projected through ANSI and GTK. Three exclusive choices
+  become GTK radio buttons; a bounded integer becomes a spin control. This
+  extension uses the current development libraries and optimiser repair.
+- [Illustrated OO/native guide](SHARED-UI-GUIDE.md): real Windows screenshots,
+  console capture and a comparison with the NetRexx Swing example.
 
-This is a **source-only Windows transport**, not a release-package payload.
+Git carries the source and documentation, rather than release binaries.
 Generated `.rxbin`, `.rxas`, `.class`, native plugins and dependency bundles are
 not committed. Start with [WINDOWS-HANDOVER.md](WINDOWS-HANDOVER.md), build the
 sources, and perform the [native checklist](WINDOWS-CHECKLIST.txt).
@@ -30,8 +36,12 @@ that check uses the exact released tools and libraries.
 The [retained Mac receipt](TEST-RECEIPT.txt) records previous model, ANSI, Swing,
 GTK widget and clean-package checks. [SOURCE-SHA256.txt](SOURCE-SHA256.txt)
 identifies the unchanged code/build inputs copied from that tested preparation.
-Native Windows builds, interaction and the GTK dependency bundle remain open.
+The current [Windows native receipt](WINDOWS-NATIVE-RECEIPT.md) records the
+shared/native qualification separately from that historical Mac baseline.
 
-These standalone examples are not registered in the aggregate CMake/CTest
-product targets on this transport branch. No production language/API change is
-part of the transfer. MIT license: [LICENSE.txt](LICENSE.txt).
+The shared examples are registered in CMake/CTest with opt/noopt Save and GTK
+tests. The native build scripts produce `Lotto-Console.exe`, `Lotto-GTK.exe` and
+a self-contained NetRexx Java app image; see `surface/BUILD-WINDOWS.ps1` and
+`netrexx/BUILD-NATIVE-WINDOWS.ps1`. The original procedural sources remain
+unchanged. The shared UI surface is an approved library extension; this branch
+does not introduce language syntax. MIT license: [LICENSE.txt](LICENSE.txt).

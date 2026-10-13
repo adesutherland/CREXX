@@ -1,0 +1,9 @@
+/* A line host is useful for scripting the same application's full workflow. */
+options levelg
+import ui_contract
+import ui_tui
+import lotto_surface
+
+session = make_lotto_session("lotto-line", ui_tui..capabilities())
+driver = .ui_tui..tuidriver()
+exit driver.run(session)

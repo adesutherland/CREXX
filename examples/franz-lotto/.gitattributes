@@ -1,0 +1,5 @@
+# SOURCE-SHA256.txt identifies the qualified delivery's exact source bytes.
+# Preserve those bytes when Windows Git has core.autocrlf=true.
+* text eol=lf
+*.jpg -text
+*.png -text

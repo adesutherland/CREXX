@@ -1,0 +1,55 @@
+/* The same feature must keep its full Save effect chain across owner turns. */
+options levelg
+import rxfnsb
+import ui_contract
+import ui_tui
+import lotto_surface
+
+main: procedure = .int
+  session = make_lotto_session("lotto-test", ui_tui..capabilities())
+  rc = session.invoke("lotto.generate")
+  rc = session.pump()
+  if rc < 0 then exit 1
+  rc = session.invoke("lotto.save")
+  rc = session.pump()
+  if rc < 0 | session.pending() \= 1 then do
+    say "FAIL: chooser not queued" session.fault()
+    return 1
+  end
+  chooser = session.take_effect()
+  body = .uipayload()
+  call body.put_resource("resource", .uiresource("test-grant", "session", "tips.txt"))
+  rc = session.complete(.uimessage("ui.resource.selected", body, "root", "event", chooser.request_id(), session.id()))
+  if rc < 0 then exit 1
+  rc = session.pump()
+  if rc < 0 | session.pending() \= 1 then return 1
+  confirmation = session.take_effect()
+  if confirmation.name() \= "ui.dialog.confirm" then return 1
+  body = .uipayload()
+  call body.put_text("response", "ok")
+  rc = session.complete(.uimessage("ui.dialog.accepted", body, "root", "event", confirmation.request_id(), session.id()))
+  if rc < 0 then exit 1
+  rc = session.pump()
+  if rc < 0 | session.pending() \= 1 then return 1
+  write = session.take_effect()
+  if write.name() \= "io.text.write" then return 1
+  body = write.body()
+  records = body.texts("records")
+  if records[0] \= 11 then return 1
+  call session.close()
+  commands = .string[]
+  commands[1] = "g"
+  commands[2] = "s"
+  commands[3] = "lotto-cancelled-test.txt"
+  commands[4] = "cancel"
+  commands[5] = "q"
+  driver = .ui_tui..tuidriver.scripted(commands)
+  session = make_lotto_session("lotto-script-test", ui_tui..capabilities())
+  rc = driver.run(session)
+  if rc \= 0 | pos("OK / Cancel: cancel", driver.transcript()) = 0 | pos("Save cancelled.", driver.transcript()) = 0 then do
+    say "FAIL: line host lost chained confirmation"
+    say driver.transcript()
+    return 1
+  end
+  say "PASS: shared Lotto Save chain"
+  return 0

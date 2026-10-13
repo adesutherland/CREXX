@@ -7,6 +7,7 @@ set(CREXX_ARRAY_FORMATTING_MODULE
 add_subdirectory(functions/array-formatting)
 add_subdirectory(exits/pprint)
 add_subdirectory(ui/text-inspector)
+add_subdirectory(franz-lotto)
 add_subdirectory(fortran)
 add_subdirectory(forth)
 
@@ -14,6 +15,7 @@ add_custom_target(crexx-examples)
 add_dependencies(crexx-examples
         example_array_formatting_artifacts
         example_pprint_exit_artifacts
+        example_franz_lotto_artifacts
         example_text_inspector_artifacts)
 
 if(BUILD_TESTING)
@@ -21,6 +23,7 @@ if(BUILD_TESTING)
     add_dependencies(qa-prep-examples
             example_array_formatting_artifacts
             example_pprint_exit_artifacts
+            example_franz_lotto_artifacts
             example_text_inspector_artifacts)
 endif()
 

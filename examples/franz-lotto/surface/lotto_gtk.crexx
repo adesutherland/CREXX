@@ -1,0 +1,9 @@
+/* The session and feature are shared; this launcher selects the GTK host. */
+options levelg
+import ui_contract
+import ui_gtk
+import lotto_surface
+
+session = make_lotto_session("lotto-gtk", ui_gtk..capabilities())
+driver = .ui_gtk..gtkdriver()
+exit driver.run(session)

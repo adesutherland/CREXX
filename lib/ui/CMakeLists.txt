@@ -136,7 +136,7 @@ if(ENABLE_GTK)
             COMMENT "Building Level G cREXX GTK UI driver"
             VERBATIM)
     add_custom_target(ui_gtk ALL DEPENDS "${CREXX_UI_GTK_IMAGE}")
-    add_dependencies(ui_gtk ui _ui_gtk_native)
+    add_dependencies(ui_gtk ui _ui_gtk_native _ui_gtk_native_static _ui_gtk_native_runtime_package)
 endif()
 
 if(BUILD_TESTING)
@@ -152,6 +152,7 @@ if(ENABLE_GTK)
     install(TARGETS _ui_gtk_native
             LIBRARY DESTINATION bin
             RUNTIME DESTINATION bin)
+    install(TARGETS _ui_gtk_native_static ARCHIVE DESTINATION bin/providers)
 endif()
 install(FILES README.md TERMINAL.md EXTENDING.md DESTINATION share/crexx/ui)
 install(DIRECTORY rxpp/ui DESTINATION share/crexx/ui/rxpp)

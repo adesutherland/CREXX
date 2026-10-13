@@ -1,16 +1,37 @@
 /* Minimal GTK 3 driver for the experimental cREXX UI library. */
 #include <gtk/gtk.h>
 #include <string.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "crexxpa.h"
 
 #define UI_GTK_MAX_NODES 64
 
-typedef struct ui_gtk_node {
+/* Publish the stable provider identity for compiler/native packaging. GTK and
+ * the process-owned window state remain on the conservative legacy lane; this
+ * does not claim process reentrancy or VM-session affinity. */
+static uint32_t ui_gtk_procedure_capabilities(const char *name) {
+    (void)name;
+    return 0u;
+}
+RXPA_PLUGIN_PROCEDURE_CAPABILITIES(ui_gtk_procedure_capabilities)
+
+typedef struct ui_gtk_node ui_gtk_node;
+typedef struct ui_gtk_option {
+    char *id;
+    GtkWidget *widget;
+    ui_gtk_node *owner;
+} ui_gtk_option;
+
+struct ui_gtk_node {
     char *id;
     char *action;
     GtkWidget *widget;
-} ui_gtk_node;
+    ui_gtk_option *options;
+    int option_count;
+    gboolean owns_widget;
+};
 
 typedef struct ui_gtk_loop {
     rxpa_attribute_value handler;
@@ -24,6 +45,7 @@ static GtkWidget *ui_window;
 static GtkWidget *ui_grid;
 static ui_gtk_node ui_nodes[UI_GTK_MAX_NODES];
 static int ui_node_count;
+static int ui_rendering;
 static ui_gtk_loop *ui_active_loop;
 static const char ui_handler_descriptor[] =
         "rxsig1|on_native_event|.int|action=.string,payload=.string";
@@ -70,11 +92,28 @@ static void ui_gtk_enqueue(const char *action, const char *payload) {
 static void ui_gtk_clear_nodes(void) {
     int index;
     for (index = 0; index < UI_GTK_MAX_NODES; ++index) {
+        int option;
+        for (option = 0; option < ui_nodes[index].option_count; ++option) {
+            ui_gtk_option *item = &ui_nodes[index].options[option];
+            if (item->widget) {
+                g_signal_handlers_disconnect_by_data(item->widget, item);
+                g_object_unref(item->widget);
+            }
+            g_free(item->id);
+        }
+        g_free(ui_nodes[index].options);
+        if (ui_nodes[index].owns_widget && ui_nodes[index].widget) {
+            g_signal_handlers_disconnect_by_data(ui_nodes[index].widget, &ui_nodes[index]);
+            g_object_unref(ui_nodes[index].widget);
+        }
         g_free(ui_nodes[index].id);
         g_free(ui_nodes[index].action);
         ui_nodes[index].id = NULL;
         ui_nodes[index].action = NULL;
         ui_nodes[index].widget = NULL;
+        ui_nodes[index].options = NULL;
+        ui_nodes[index].option_count = 0;
+        ui_nodes[index].owns_widget = FALSE;
     }
     ui_node_count = 0;
 }
@@ -134,6 +173,70 @@ static void ui_gtk_button_clicked(GtkButton *button, gpointer data) {
     if (node) ui_gtk_enqueue("command", node->action);
 }
 
+/* Marshal owned facts using the existing catalogue payloads. Never call an
+ * application from a widget signal, and never emit an input while rendering. */
+static void ui_gtk_quote(GString *output, const char *text) {
+    const unsigned char *cursor = (const unsigned char *)(text ? text : "");
+    g_string_append_c(output, '"');
+    for (; *cursor; ++cursor) {
+        if (*cursor == '"' || *cursor == '\\') {
+            g_string_append_c(output, '\\');
+            g_string_append_c(output, (char)*cursor);
+        } else if (*cursor < 32) {
+            g_string_append_printf(output, "\\u%04x", (unsigned int)*cursor);
+        } else g_string_append_c(output, (char)*cursor);
+    }
+    g_string_append_c(output, '"');
+}
+
+static void ui_gtk_choice_changed(GtkToggleButton *button, gpointer data) {
+    ui_gtk_option *option = (ui_gtk_option *)data;
+    GString *payload;
+    if (ui_rendering || !option || !gtk_toggle_button_get_active(button)) return;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, option->owner->id);
+    g_string_append(payload, ",\"items\":[");
+    ui_gtk_quote(payload, option->id);
+    g_string_append(payload, "]}");
+    ui_gtk_enqueue("selection.changed", payload->str);
+    g_string_free(payload, TRUE);
+}
+
+static void ui_gtk_integer_fact(ui_gtk_node *node, const char *action) {
+    GString *payload;
+    if (ui_rendering || !node || !node->widget) return;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append(payload, ",\"value\":");
+    ui_gtk_quote(payload, gtk_entry_get_text(GTK_ENTRY(node->widget)));
+    g_string_append_c(payload, '}');
+    ui_gtk_enqueue(action, payload->str);
+    g_string_free(payload, TRUE);
+}
+
+static void ui_gtk_integer_changed(GtkEditable *editable, gpointer data) {
+    (void)editable;
+    ui_gtk_integer_fact((ui_gtk_node *)data, "value.changed");
+}
+
+static void ui_gtk_integer_committed(GtkEntry *entry, gpointer data) {
+    (void)entry;
+    ui_gtk_integer_fact((ui_gtk_node *)data, "value.committed");
+}
+
+static void ui_gtk_project_integer(ui_gtk_node *node, const char *text) {
+    char *end;
+    gint64 value;
+    gdouble minimum, maximum;
+    gtk_spin_button_get_range(GTK_SPIN_BUTTON(node->widget), &minimum, &maximum);
+    errno = 0;
+    value = g_ascii_strtoll(text, &end, 10);
+    if (!errno && end != text && !*end && value >= minimum && value <= maximum)
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(node->widget), (gdouble)value);
+    /* Keep transient/invalid edits as text; the feature owns validation. */
+    gtk_entry_set_text(GTK_ENTRY(node->widget), text);
+}
+
 static gboolean ui_gtk_delete(GtkWidget *widget, GdkEvent *event, gpointer data) {
     (void)widget;
     (void)event;
@@ -171,6 +274,7 @@ PROCEDURE(create) {
     if (!gtk_init_check(NULL, NULL)) RETURNINTX(0);
 
     ui_gtk_clear_nodes();
+    ui_rendering = 0;
     ui_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     ui_grid = gtk_grid_new();
     if (!ui_window || !ui_grid) RETURNINTX(0);
@@ -255,6 +359,126 @@ PROCEDURE(add_button) {
     ENDPROC
 }
 
+PROCEDURE(add_choice) {
+    const char *id = GETSTRING(ARG0);
+    const char *selected = GETSTRING(ARG3);
+    rxinteger column = GETINT(ARG4), row = GETINT(ARG5);
+    size_t count = GETARRAYHI(ARG1), labels = GETARRAYHI(ARG2), index, previous;
+    gboolean found = FALSE;
+    GtkRadioButton *group = NULL;
+    ui_gtk_node *node;
+    if (!ui_grid || !*id || column < 0 || column > INT_MAX || row < 0 || row > INT_MAX ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id) ||
+        count < 1 || count > 64 || count != labels) RETURNINTX(0);
+    for (index = 0; index < count; ++index) {
+        const char *item = GETSARRAY(ARG1, index);
+        if (!item || !*item) RETURNINTX(0);
+        if (strcmp(item, selected) == 0) found = TRUE;
+        for (previous = 0; previous < index; ++previous)
+            if (strcmp(item, GETSARRAY(ARG1, previous)) == 0) RETURNINTX(0);
+    }
+    if (!found) RETURNINTX(0);
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
+    node->options = g_new0(ui_gtk_option, count);
+    node->option_count = (int)count;
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, (int)column, (int)row, 1, 1);
+    g_object_ref(node->widget);
+    node->owns_widget = TRUE;
+    ++ui_rendering;
+    for (index = 0; index < count; ++index) {
+        ui_gtk_option *option = &node->options[index];
+        option->id = g_strdup(GETSARRAY(ARG1, index));
+        option->owner = node;
+        option->widget = gtk_radio_button_new_with_label_from_widget(group, GETSARRAY(ARG2, index));
+        if (!group) group = GTK_RADIO_BUTTON(option->widget);
+        gtk_box_pack_start(GTK_BOX(node->widget), option->widget, FALSE, FALSE, 0);
+        g_object_ref(option->widget);
+        g_object_set_data(G_OBJECT(option->widget), "crexx-node-id", node->id);
+        g_object_set_data(G_OBJECT(option->widget), "crexx-item-id", option->id);
+        g_signal_connect(option->widget, "toggled", G_CALLBACK(ui_gtk_choice_changed), option);
+    }
+    for (index = 0; index < count; ++index)
+        if (strcmp(node->options[index].id, selected) == 0)
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(node->options[index].widget), TRUE);
+    --ui_rendering;
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(set_choice) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    const char *selected = GETSTRING(ARG3);
+    size_t count = GETARRAYHI(ARG1), index;
+    gboolean found = FALSE;
+    if (!node || !node->options || count != (size_t)node->option_count ||
+        count != GETARRAYHI(ARG2)) RETURNINTX(0);
+    for (index = 0; index < count; ++index) {
+        if (strcmp(node->options[index].id, GETSARRAY(ARG1, index)) != 0) RETURNINTX(0);
+        if (strcmp(node->options[index].id, selected) == 0) found = TRUE;
+    }
+    if (!found) RETURNINTX(0);
+    /* Later input facts already own the user's current control state. Do not
+     * reproject an earlier owner turn over it; the last mailbox turn renders
+     * the final model once every captured fact has been admitted. */
+    if (!g_queue_is_empty(&ui_events)) RETURNINTX(1);
+    ++ui_rendering;
+    for (index = 0; index < count; ++index) {
+        gtk_button_set_label(GTK_BUTTON(node->options[index].widget), GETSARRAY(ARG2, index));
+        if (strcmp(node->options[index].id, selected) == 0)
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(node->options[index].widget), TRUE);
+    }
+    --ui_rendering;
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_integer) {
+    const char *id = GETSTRING(ARG0), *value = GETSTRING(ARG1);
+    rxinteger minimum = GETINT(ARG2), maximum = GETINT(ARG3), step = GETINT(ARG4);
+    rxinteger column = GETINT(ARG5), row = GETINT(ARG6);
+    ui_gtk_node *node;
+    /* GTK's integer getter and platform coordinates are signed 32-bit. */
+    if (!ui_grid || !*id || ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id) ||
+        minimum < INT_MIN || maximum > INT_MAX || minimum > maximum || step < 1 || step > INT_MAX ||
+        column < 0 || column > INT_MAX || row < 0 || row > INT_MAX) RETURNINTX(0);
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_spin_button_new_with_range((gdouble)minimum, (gdouble)maximum, (gdouble)step);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(node->widget), 0);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(node->widget), TRUE);
+    gtk_spin_button_set_update_policy(GTK_SPIN_BUTTON(node->widget), GTK_UPDATE_IF_VALID);
+    gtk_entry_set_width_chars(GTK_ENTRY(node->widget), 8);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, (int)column, (int)row, 1, 1);
+    g_object_ref(node->widget);
+    node->owns_widget = TRUE;
+    ++ui_rendering;
+    ui_gtk_project_integer(node, value);
+    --ui_rendering;
+    g_signal_connect(node->widget, "changed", G_CALLBACK(ui_gtk_integer_changed), node);
+    g_signal_connect(node->widget, "activate", G_CALLBACK(ui_gtk_integer_committed), node);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(set_integer) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    const char *value = GETSTRING(ARG1);
+    if (!node || !node->widget || !GTK_IS_SPIN_BUTTON(node->widget)) RETURNINTX(0);
+    if (!g_queue_is_empty(&ui_events)) RETURNINTX(1);
+    ++ui_rendering;
+    if (strcmp(gtk_entry_get_text(GTK_ENTRY(node->widget)), value) != 0)
+        ui_gtk_project_integer(node, value);
+    --ui_rendering;
+    RETURNINT(1);
+    ENDPROC
+}
+
 PROCEDURE(set_text) {
     const char *id = GETSTRING(ARG0);
     const char *text = GETSTRING(ARG1);
@@ -298,11 +522,14 @@ PROCEDURE(begin_dialog) {
     const char *title = GETSTRING(ARG1);
     const char *message = GETSTRING(ARG2);
     if (!ui_window || ui_dialog) RETURNINTX(0);
-    ui_dialog_is_file = strcmp(kind, "file") == 0;
+    ui_dialog_is_file = strcmp(kind, "file") == 0 || strcmp(kind, "save") == 0;
     if (ui_dialog_is_file) {
         ui_dialog = gtk_file_chooser_dialog_new(title, GTK_WINDOW(ui_window),
-                GTK_FILE_CHOOSER_ACTION_OPEN,
-                "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
+                strcmp(kind, "save") == 0 ? GTK_FILE_CHOOSER_ACTION_SAVE : GTK_FILE_CHOOSER_ACTION_OPEN,
+                "_Cancel", GTK_RESPONSE_CANCEL,
+                strcmp(kind, "save") == 0 ? "_Save" : "_Open", GTK_RESPONSE_ACCEPT, NULL);
+        /* The shared feature requests its own correlated confirmation. */
+        gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(ui_dialog), FALSE);
         gtk_window_set_default_size(GTK_WINDOW(ui_dialog), 760, 520);
     } else if (strcmp(kind, "confirm") == 0) {
         ui_dialog = gtk_message_dialog_new(GTK_WINDOW(ui_window),
@@ -378,6 +605,14 @@ LOADFUNCS
             "id=.string,text=.string,action=.string,column=.int,row=.int");
     ADDPROC(set_text, "ui_gtk_native.set_text", "b", ".int",
             "id=.string,text=.string");
+    ADDPROC(add_choice, "ui_gtk_native.add_choice", "b", ".int",
+            "id=.string,option_ids=.string[],option_texts=.string[],selected=.string,column=.int,row=.int");
+    ADDPROC(set_choice, "ui_gtk_native.set_choice", "b", ".int",
+            "id=.string,option_ids=.string[],option_texts=.string[],selected=.string");
+    ADDPROC(add_integer, "ui_gtk_native.add_integer", "b", ".int",
+            "id=.string,value=.string,minimum=.int,maximum=.int,step=.int,column=.int,row=.int");
+    ADDPROC(set_integer, "ui_gtk_native.set_integer", "b", ".int",
+            "id=.string,value=.string");
     ADDPROC(show, "ui_gtk_native.show", "b", ".int", "");
     ADDPROC(begin_dialog, "ui_gtk_native.begin_dialog", "b", ".int",
             "kind=.string,title=.string,message=.string");

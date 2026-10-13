@@ -1,0 +1,9 @@
+/* The session and feature are shared; this launcher selects the ANSI host. */
+options levelg
+import ui_contract
+import ui_ansi
+import lotto_surface
+
+session = make_lotto_session("lotto-console", ui_ansi..capabilities())
+driver = .ui_ansi..ansidriver()
+exit driver.run(session)
