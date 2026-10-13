@@ -30,7 +30,7 @@ The driver renders the component's view after processing work. A view is a
 disposable description with stable node IDs, not live native widgets. A dialog
 is a **deferred effect**: its request remains active until acceptance,
 cancellation or failure returns as a correlated event. “Deferred” does not imply
-a worker thread. Physical file reads in this tracer are synchronous.
+a worker thread. Physical file reads and bounded writes in this tracer are synchronous.
 
 Lifecycle: compose/register; start the surface; post `ui.ready`; service input
 and effects; repeat. `ui.close.requested` is vetoable intent. The component
@@ -70,33 +70,50 @@ Level G; native providers expose lower-level mechanism, not application policy.
 | --- | --- | --- |
 | Line TUI | Owner loop; retained chooser/confirmation request; next line supplies response | Blocking line input; shortcuts/command IDs; row-oriented rendering |
 | ANSI | Timed console polling; Level G modal dialog state; resize stays live | Keyboard, text, mouse, paste where supported; bounded cell projection |
-| GTK | Native GTK loop; owned signal mailbox serviced on idle; response-driven dialogs | One GTK 3 window; fixed label/line/button topology |
+| GTK | Native GTK loop; owned signal mailbox serviced on idle; response-driven dialogs | One GTK 3 window; fixed labels, lines, buttons, choices and integers |
 
 Each host starts with core capabilities and explicitly enables its implemented
 services through `capabilities()`. All three demonstrate Open, Cancel,
 confirmation, read failure and orderly close. Capability families are not a
 claim to implement every catalogue operation: unsupported effects and chooser
 purposes receive explicit failures. The local chooser implements single-file
-Open, not Save or multiple selection.
+Open and Save. Multiple selection is outside this slice.
 
-`ui_local_resources` owns bounded, session-scoped path grants and text reading.
+`ui_local_resources` owns bounded, session-scoped path grants and text reading/writing.
 The feature may display a grant's name but cannot use it as authority. The same
 executor handles missing files, oversized data and forged/expired grants in all
-hosts. Limits and terminal-specific qualifications are in [TERMINAL.md](TERMINAL.md).
+hosts. Open grants read permission; Save grants write permission. Write
+completions contain the executor-owned resource, and records use UTF-8 with LF
+separators. Failed writes return correlated outcomes; replacement is not atomic.
+Limits and terminal-specific qualifications are in [TERMINAL.md](TERMINAL.md).
 
 ## Logical view, RXPP and builders
 
 Nodes have stable IDs; buttons contain **command IDs**, not native signals or
 event handlers. The current vocabulary is `label`, `line`, `button`, and
-`input` (the ANSI dialog editor). Relative `root`/`below`/`right` placement
+`input` (the ANSI dialog editor), `choice` and bounded `integer`.
+Relative `root`/`below`/`right` placement
 resolves to logical rows/columns. GTK uses a grid, line TUI groups rows, and ANSI
 projects cells. Unknown anchors/relations currently fall back below the previous
 node: stricter validation, containers, spans and responsive layout are future work.
+
+`add_choice` takes parallel stable item IDs/labels and the selected ID. Selection
+posts `widget.selection.changed` with a singleton `items` array. `add_integer`
+takes value text, inclusive bounds and a positive step; edits/commits use
+`widget.value.changed`/`widget.value.committed`. Features validate before
+conversion. Rendering does not emit user events. GTK supplies radios and a spin
+control; ANSI supplies exclusive keyboard/pointer selection and numeric editing.
+Line input uses `nodeID itemID` (or item ordinal) and `nodeID value`.
+Integer bounds in these hosts must fit signed 32-bit values; unsupported bounds
+fail explicitly. The [shared Lotto example](../../examples/franz-lotto/SHARED-UI-GUIDE.md)
+uses one feature for both console and GTK.
 
 One directory macro package, loaded by `##LOADMACRO ui`, provides:
 
 - `UI_COMMAND`: checked command registration.
 - `UI_NODE`: logical view construction.
+- Use the typed `add_choice`/`add_integer` builders for their item arrays and
+  bounds; the existing scalar `UI_NODE` macro keeps its original syntax.
 - `UI_LAUNCHER`: session factory + driver capabilities + `driver.run(session)`.
 
 All three launchers use that same macro. RXPP produces one output per invocation,
@@ -109,6 +126,13 @@ A builder can generate view/layout, command descriptors, schemas and composition
 Handwritten feature logic stays separate and survives regeneration. It must not
 generate terminal escapes, GTK handles or browser DOM calls into a feature.
 
+For native packaging, GTK supplies a stable RXPA provider ID and the ordinary
+dynamic/static pair. Its V2 capability query remains conservative (zero); it
+does not promise GTK reentrancy or per-VM window state. The provider package
+declares concrete GTK link files and hashes its adjacent DLL closure. On Windows
+with an MSYS2 SDK, MSVC must use its own runtime headers and GTK DLL import
+archives; a Visual Studio developer environment supplies the SDK include order.
+
 ## GTK callback lifetime
 
 GTK signals copy native facts into a bounded mailbox (128 records). One idle
@@ -117,6 +141,11 @@ pump updates. Native response/destroy signals caused by executing an effect
 enqueue facts instead of re-entering the active cREXX call. Dialogs use response
 signals, not a nested blocking dialog loop. Window-manager close returns to the
 application for a decision; destruction is reported afterward.
+
+Choice/integer projection waits while captured native facts remain in that
+mailbox. An earlier owner turn must not overwrite a later user edit before its
+fact is admitted. The last mailbox turn renders the final model without input
+echo; the GTK regression queues selection/editing and commits between turns.
 
 RXPA `CALLMETHODX` is synchronous. Its borrowed values remain inside native
 `run()`. Because cREXX objects have value semantics, the small callback receiver

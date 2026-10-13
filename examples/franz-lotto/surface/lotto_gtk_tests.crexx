@@ -1,0 +1,66 @@
+/* Exercise the actual shared feature, GTK controls, dialogs and Save executor. */
+options levelg
+import rxfnsb
+import ui_contract
+import ui_gtk
+import ui_gtk_test
+import lotto_surface
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] < 1 then return 1
+  path = args[1]
+  data = "keep me" || '0A'x
+  written = writebinary(path, data as .binary)
+  if written < 0 then return 1
+  driver = .gtkdriver()
+  do round = 1 to 2
+    steps = .string[]
+    call arraydrop steps
+    steps[1] = "choice|game|EU"
+    steps[2] = "value|tips|50"
+    steps[3] = "click|generate"
+    steps[4] = "expect|status|Generated 50 tips. Save explicitly; use Previous/Next."
+    do i = 5 to 10
+      steps[i] = "click|next"
+    end
+    steps[11] = "expect|summary|Euro-Lotto: 5 from 50 + 2 from 12 - tips 49-50 of 50"
+    steps[12] = "value|tips|51"
+    steps[13] = "enter|tips"
+    steps[14] = "expect|status|Enter a whole number from 1 to 50. Results kept."
+    steps[15] = "click|save"
+    steps[16] = "file|" || path
+    if round = 1 then do
+      steps[17] = "cancel"
+      steps[18] = "expect|status|Save cancelled. Results kept."
+      steps[19] = "click|quit"
+    end
+    else do
+      steps[17] = "ok"
+      steps[18] = "expect|status|Saved the complete generated result to the selected file."
+      steps[19] = "choice|game|DE"
+      steps[20] = "click|save"
+      steps[21] = "file|" || path
+      steps[22] = "ok"
+      steps[23] = "expect|status|Saved the complete generated result to the selected file."
+      steps[24] = "click|quit"
+    end
+    session = make_lotto_session("lotto-gtk-test-" || round, ui_gtk..capabilities())
+    rc = ui_gtk_test..start(steps)
+    if rc < 0 then return 1
+    run_rc = driver.run(session)
+    test_rc = ui_gtk_test..finish()
+    if run_rc \= 0 | test_rc \= 0 then do
+      say "FAIL: shared Lotto GTK" round run_rc test_rc driver.error()
+      return 1
+    end
+    records = readlines(path)
+    if round = 1 then do
+      if records[0] \= 1 | records[1] \= "keep me" then return 1
+    end
+    else do
+      if records[0] \= 51 | pos("Euro-Lotto", records[1]) = 0 | left(records[51], 3) \= "50:" then return 1
+    end
+  end
+  say "PASS: shared Lotto GTK controls, paging, validation, Save and reuse"
+  return 0

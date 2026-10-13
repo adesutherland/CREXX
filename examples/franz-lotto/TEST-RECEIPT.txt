@@ -1,0 +1,62 @@
+LOTTO EXAMPLES - RETAINED MAC TEST RECEIPT
+11 October 2026
+
+Local test platform: macOS ARM64.
+cREXX tools: official v1.0.0-beta.3 macOS ARM64 release ZIP, unchanged compiler,
+assembler, linker and VM. Tag: ae1607b8e145174422cee7f3e73fbcc37a65226c.
+NetRexx compiler: 5.10-GA, build 18-20260320-1410.
+Java: OpenJDK 21.0.11. Compiled classes target Java 8 bytecode (major version 52).
+
+MAIN EXAMPLES
+
+Both models: passed 3825 generated tips each (all three games, every count
+1-50), checking number counts, ranges, sorting, uniqueness within each pool
+and formatting. Counts were validated before conversion; empty, 0, 51,
+negative, decimal, overlong, alphabetic and expression-like input were rejected.
+Save, replacement/truncation, saved result identity and save failure passed.
+cREXX model checks passed with both ordinary optimization and -n builds.
+
+ANSI: tested in real foreground pseudo-terminals. Keyboard entry, 50-tip
+paging, independent inspection of saved Euro/German number pools, two-step Save,
+invalid entry, mouse press/release matching, numeric paste, command-looking paste
+isolation, resize, save failure/recovery and Quit/Ctrl-C passed. Saved termios,
+alternate-screen exit and cursor restoration were checked. Startup/Generate did
+not write the tips file.
+
+Swing: actual radio buttons, text field, Generate/Enter, results area, Save logic
+and Quit were exercised on the event-dispatch thread. Tests covered exclusive
+choice, 50 Euro tips, invalid entry keeping results, changing selection without
+relabelling saved results, file write failure and subsequent recovery. Both
+checks and the application run with classpath '.' only, without a NetRexx JAR.
+The file chooser and physical Windows mouse interaction still need manual checks.
+
+OPTIONAL cREXX GTK GUI
+
+The included GUI provider C source and public headers are unchanged copies from
+the same Beta 3 tag. Its standalone wrapper built without warnings on macOS
+with GTK 3.24.52. The GUI application was compiled/assembled/linked with the
+released Beta 3 tools and ran with the released Beta 3 VM. Its widget smoke
+passed creation, 50-tip generation, invalid-count preservation, replacement with
+one tip and cleanup. The displayed list count includes one header row.
+
+This is a bounded widget smoke, not full GUI interaction or Windows qualification.
+The Windows native plugin and dependency bundle are not included. The ordinary
+ANSI application does not depend on this optional plugin.
+
+DELIVERY VERIFICATION
+
+The original 11 October email package was independently unpacked, rebuilt and
+checked with paths containing spaces. This transport branch preserves the
+qualified source bytes but excludes all generated artifacts. Source/build-input
+identities are enumerated in SOURCE-SHA256.txt. Internal logs, the original
+private email attachment, host-specific native plugins and tool installations
+are excluded. The bytecode is linked with source/TRACE metadata stripped.
+
+WINDOWS STATUS
+
+Native Windows execution remains OPEN for the Windows continuation begun on
+12 October. No new runtime pass is inferred from this source transport.
+Windows commands are documented with quoted paths; the native checklist is
+WINDOWS-CHECKLIST.txt. No Windows pass or finished cross-platform GUI toolkit
+is claimed. The GTK add-on also needs an interactive Windows check and a clean
+dependency-bundle test before it is supplied as a ready-to-run Windows GUI.

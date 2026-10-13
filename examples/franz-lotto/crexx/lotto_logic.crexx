@@ -1,0 +1,126 @@
+/* Lotto teaching example, MIT License; see ../LICENSE.txt.
+ * Game choices follow Franz Marx's LottoV41: 6/45, 6/49, 5/50 + 2/12.
+ * This module knows nothing about the screen. Arrays are one-based in cREXX;
+ * array[0] holds the element count. Types make the intended values explicit.
+ */
+options levelb
+namespace lotto_logic expose game_name parse_count pick_numbers generate_tips save_tips
+import rxfnsb
+
+/** @param game 1=Austria, 2=Germany, 3=Euro-Lotto @return display name */
+game_name: procedure = .string
+  arg game = .int
+  if game = 1 then return "Austria: 6 from 45"
+  if game = 2 then return "Germany: 6 from 49"
+  if game = 3 then return "Euro-Lotto: 5 from 50 + 2 from 12"
+  return "Invalid game"
+
+/** Validate before converting: no decimals, signs, or expressions.
+ * @param text editable field @return 1..50, or zero for invalid input
+ */
+parse_count: procedure = .int
+  arg text = .string
+  if length(text) < 1 | length(text) > 2 then return 0
+  do i = 1 to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  count = .int
+  count = text
+  if count < 1 | count > 50 then return 0
+  return count
+
+/** Partial Fisher-Yates sampling: no retry loop and no repeated ball.
+ * The small result is then sorted for readable output. This is recreational
+ * pseudo-random selection, not a prediction of an actual lottery draw.
+ * @param maximum size of the pool @param needed balls to draw
+ * @return sorted, two-digit numbers separated by spaces
+ */
+pick_numbers: procedure = .string
+  arg maximum = .int, needed = .int
+  i = .int
+  j = .int
+  pool = .int[]
+  picked = .int[]
+  do i = 1 to maximum
+    pool[i] = i
+  end
+  do i = 1 to needed
+    slot = random(i, maximum)
+    picked[i] = pool[slot]
+    pool[slot] = pool[i]
+  end
+  do i = 1 to needed - 1
+    do j = i + 1 to needed
+      if picked[j] < picked[i] then do
+        temporary = picked[i]
+        picked[i] = picked[j]
+        picked[j] = temporary
+      end
+    end
+  end
+  result = ""
+  do i = 1 to needed
+    if i > 1 then result = result || " "
+    result = result || right(picked[i], 2, "0")
+  end
+  return result
+
+/** @param game game ID @param count number of tips
+ * @return tips, or an empty array for invalid arguments
+ */
+generate_tips: procedure = .string[]
+  arg game = .int, count = .int
+  tips = .string[]
+  if game < 1 | game > 3 | count < 1 | count > 50 then return tips
+  maximum = 45
+  needed = 6
+  if game = 2 then maximum = 49
+  if game = 3 then do
+    maximum = 50
+    needed = 5
+  end
+  do i = 1 to count
+    line = pick_numbers(maximum, needed)
+    if game = 3 then line = line || " + " || pick_numbers(12, 2)
+    tips[i] = line
+  end
+  return tips
+
+/** Explicit Save owns and closes its stream, including on a write failure.
+ * @param path output file (replaced) @param game game of the GENERATED tips
+ * @param tips complete result @return zero on success, one on failure
+ */
+save_tips: procedure = .int
+  arg path = .string, game = .int, tips = .string[]
+  if tips[0] = 0 then return 1
+  fileid = 0
+  failed = 0
+  write_error = 0
+  flush_error = 0
+  close_error = 0
+  mode = "w"
+  newline = '0A'x /* text-mode files use the platform's line ending */
+  do
+    assembler fopen fileid, path, mode
+    if fileid = 0 then failed = 1
+    else do
+      header = "Lotto starter - " || game_name(game) || " - " || tips[0] || " tips" || newline
+      assembler fwrite fileid, header
+      do i = 1 to tips[0]
+        line = right(i, 2, "0") || ": " || tips[i] || newline
+        assembler fwrite fileid, line
+      end
+      assembler fflush flush_error, fileid
+      assembler ferror write_error, fileid
+    end
+  on signal
+    failed = 1
+  end
+  if fileid > 0 then do
+    do
+      assembler fclose close_error, fileid
+    on signal
+      close_error = 1
+    end
+  end
+  return failed | write_error \= 0 | flush_error \= 0 | close_error \= 0

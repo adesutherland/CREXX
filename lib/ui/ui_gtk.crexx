@@ -13,7 +13,10 @@ capabilities: procedure = .uicapabilities
   caps = .uicapabilities()
   call caps.enable("ui.resource.choose")
   call caps.enable("io.text.read")
+  call caps.enable("io.text.write")
   call caps.enable("ui.dialog")
+  call caps.enable("ui.widgets")
+  call caps.enable("ui.collections")
   return caps
 
 /** GTK 3 host. Application policy lives exclusively in session components. */
@@ -59,6 +62,18 @@ gtkdriver: class implements .uidriver
       if kind = "label" then rc = add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
       else if kind = "line" then rc = add_line(view.node_id(index), view.node_column(index), view.node_row(index))
       else if kind = "button" then rc = add_button(view.node_id(index), view.node_text(index), view.node_action(index), view.node_column(index), view.node_row(index))
+      else if kind = "choice" then do
+        option_ids = .string[]
+        option_texts = .string[]
+        call arraydrop option_ids
+        call arraydrop option_texts
+        do option = 1 to view.node_option_count(index)
+          option_ids[option] = view.node_option_id(index, option)
+          option_texts[option] = view.node_option_text(index, option)
+        end
+        rc = ui_gtk_native..add_choice(view.node_id(index), option_ids, option_texts, view.node_value(index), view.node_column(index), view.node_row(index))
+      end
+      else if kind = "integer" then rc = ui_gtk_native..add_integer(view.node_id(index), view.node_value(index), view.node_minimum(index), view.node_maximum(index), view.node_step(index), view.node_column(index), view.node_row(index))
       if rc \= 1 then _error = "Unsupported or invalid GTK view node: " || kind
     end
     native_rc = -1
@@ -99,6 +114,8 @@ gtkdriver: class implements .uidriver
       rc = _session.invoke(payload)
       rc = 0
     end
+    else if (action = "selection.changed" | action = "value.changed" | action = "value.committed") & \_modal & \_closing then
+      rc = _session.post(.uimessage("widget." || action, .uipayload(payload)))
     else if action = "close.requested" & \_closing then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
     else if action = "dialog.accepted" | action = "dialog.cancelled" then do
       if _modal then do
@@ -112,7 +129,8 @@ gtkdriver: class implements .uidriver
           call finish(_request, "ui.dialog.accepted", body)
         end
         else do
-          grant = _resources.grant(payload)
+          request_body = _request.body()
+          grant = _resources.grant(payload, request_body.text("purpose"))
           if grant.id() = "" then call fail_effect(_request, "resource_limit", "Local resource grant limit reached")
           else do
             call body.put_resource("resource", grant)
@@ -149,13 +167,14 @@ gtkdriver: class implements .uidriver
       body = effect.body()
       if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
         if _modal | _closing then call fail_effect(effect, "dialog_busy", "Another dialog or close is active")
-        else if name = "ui.resource.choose" & body.text("purpose") \= "open" then
-          call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+        else if name = "ui.resource.choose" & body.text("purpose") \= "open" & body.text("purpose") \= "save" then
+          call fail_effect(effect, "unsupported_purpose", "Unsupported file chooser purpose")
         else do
           _request = effect
           _modal = 1
           kind = "confirm"
           if name = "ui.resource.choose" then kind = "file"
+          if name = "ui.resource.choose" & body.text("purpose") = "save" then kind = "save"
           if begin_dialog(kind, body.text("title"), body.text("message")) \= 1 then do
             _modal = 0
             call fail_effect(effect, "dialog_failed", "Cannot create GTK dialog")
@@ -165,6 +184,11 @@ gtkdriver: class implements .uidriver
       else if name = "io.text.read" then do
         rc = _session.complete(_resources.read(effect))
         if rc < 0 then _error = "Read completion rejected"
+      end
+      else if name = "io.text.write" then do
+        response = _resources.write(effect)
+        rc = _session.complete(response)
+        if rc < 0 then _error = "Write completion rejected"
       end
       else if name = "ui.close" then do
         if _closing then call fail_effect(effect, "close_busy", "Close already in progress")
@@ -199,8 +223,24 @@ gtkdriver: class implements .uidriver
   render: method = .void
     if _closing | _closed then return
     view = _session.view()
+    option = .int
     do index = 1 to view.count()
-      if view.node_kind(index) \= "line" then do
+      kind = view.node_kind(index)
+      if kind = "choice" then do
+        option_ids = .string[]
+        option_texts = .string[]
+        call arraydrop option_ids
+        call arraydrop option_texts
+        do option = 1 to view.node_option_count(index)
+          option_ids[option] = view.node_option_id(index, option)
+          option_texts[option] = view.node_option_text(index, option)
+        end
+        if ui_gtk_native..set_choice(view.node_id(index), option_ids, option_texts, view.node_value(index)) \= 1 then _error = "GTK choice projection failed"
+      end
+      else if kind = "integer" then do
+        if ui_gtk_native..set_integer(view.node_id(index), view.node_value(index)) \= 1 then _error = "GTK integer projection failed"
+      end
+      else if kind \= "line" then do
         if set_text(view.node_id(index), view.node_text(index)) \= 1 then _error = "GTK view projection failed"
       end
     end

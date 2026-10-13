@@ -77,6 +77,19 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
     positive, missing-dependency and hash controls; pass the three focused normal
     and Apple-ASan-flag fixture tests. Native Linux confirmation remains assigned
     to the normal automatic publication workflow.
+14. **CP-AC-14 — OPEN:** Following Adrian's 13 October continuation instruction,
+    integrate the published packaging fixes into PR #717 and verify its exact
+    final head passes the normal full Build and CodeQL checks. Retain the native
+    Windows owner’s app/package proof and keep any unmet platform claims explicit.
+15. **CP-AC-15 — OPEN:** After CP-AC-14 passes, mark PR #717 ready and merge it
+    into develop without bypassing checks. Verify the promoted commit and tree
+    against the qualified candidate and preserve occupied dirty checkouts.
+16. **CP-AC-16 — OPEN:** Complete the promoted commit's automatic Build/snapshot
+    publication, then pin/download/hash-verify matching Windows core, Vulkan
+    plugin and retained manager artifacts. Verify manifests, toolchain, BUILDINFO,
+    bootstrap identity and local signing-tool/configuration availability before
+    asking Adrian to log in to SimplySign. Preparing these inputs is authorized;
+    this continuation does not itself claim actual signing or release completion.
 
 ## Implementation steps
 
@@ -111,6 +124,12 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    the fixture search order, run focused package/fixture tests, then publish the
    two reviewable causes together on hotfix/develop with their receipt. Hand off
    exact source to the Windows owner; do not sign or tag older artifacts.
+9. **CP-STEP-09 — ACTIVE (AC-14/15/16):** Coordinate the existing Windows owner’s
+   candidate integration, follow the normal CI and repair actual failures,
+   promote the passing PR, and verify the successful same-commit snapshot/manager
+   cohort. Reuse valid unchanged local QA; do not dispatch overnight matrices or
+   add status-only pushes. Retain preparation evidence outside source publication
+   and request SimplySign login only when the matching inputs are ready.
 
 ## Signing-readiness CI repair continuation
 

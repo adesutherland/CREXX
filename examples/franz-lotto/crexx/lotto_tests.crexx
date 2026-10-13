@@ -1,0 +1,75 @@
+/* Focused checks for the same model used by the ANSI application. */
+options levelb
+import rxfnsb
+import lotto_logic
+
+main: procedure = .int
+  arg args = .string[]
+  i = .int
+  tips = .string[]
+  failures = 0
+  failures = failures + check(parse_count("1") = 1, "minimum")
+  failures = failures + check(parse_count("50") = 50, "maximum")
+  failures = failures + check(parse_count("05") = 5, "leading zero")
+  invalid = "0 00 51 99 -1 1.5 100 abc +1 1e1"
+  failures = failures + check(parse_count("") = 0, "empty")
+  do i = 1 to words(invalid)
+    failures = failures + check(parse_count(word(invalid, i)) = 0, "reject " || word(invalid, i))
+  end
+  ignored = random(1, 50, 12345)
+  do game = 1 to 3
+    do count = 1 to 50
+      tips = generate_tips(game, count)
+      failures = failures + check(tips[0] = count, "tip count")
+      do i = 1 to count
+        needed = 6
+        maximum = 45
+        if game = 2 then maximum = 49
+        if game = 3 then do
+          needed = 5
+          maximum = 50
+        end
+        failures = failures + validate_pool(tips[i], needed, maximum)
+        if game = 3 then do
+          failures = failures + check(word(tips[i], 6) = "+", "Euro separator")
+          failures = failures + validate_pool(subword(tips[i], 7), 2, 12)
+          failures = failures + check(words(tips[i]) = 8, "Euro width")
+        end
+        else failures = failures + check(words(tips[i]) = 6, "six balls")
+      end
+    end
+  end
+  tips = generate_tips(0, 1)
+  failures = failures + check(tips[0] = 0, "invalid game")
+  tips = generate_tips(1, 0)
+  failures = failures + check(tips[0] = 0, "invalid count")
+  tips = generate_tips(3, 3)
+  failures = failures + check(save_tips("lotto-test-output.txt", 3, tips) = 0, "save")
+  records = readlines("lotto-test-output.txt")
+  failures = failures + check(records[0] = 4, "saved count")
+  failures = failures + check(records[2] = "01: " || tips[1], "saved first tip")
+  tips = generate_tips(1, 1)
+  failures = failures + check(save_tips("lotto-test-output.txt", 1, tips) = 0, "replace")
+  records = readlines("lotto-test-output.txt")
+  failures = failures + check(records[0] = 2, "replacement truncates")
+  failures = failures + check(save_tips("missing-lotto-folder/output.txt", 1, tips) = 1, "save failure")
+  if failures = 0 then say "PASS: cREXX Lotto (3825 tips; validation, save, replace, failure)"
+  return failures <> 0
+
+validate_pool: procedure = .int
+  arg line = .string, needed = .int, maximum = .int
+  previous = 0
+  do i = 1 to needed
+    value = .int
+    value = word(line, i)
+    if value <= previous | value > maximum then return 1
+    if length(word(line, i)) \= 2 then return 1
+    previous = value
+  end
+  return 0
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if ok then return 0
+  say "FAIL:" label
+  return 1

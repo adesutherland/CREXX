@@ -1,0 +1,30 @@
+NATIVE WINDOWS CHECKLIST - CONTINUATION FROM 12 OCTOBER 2026
+
+The examples have passed local macOS checks. Native Windows proof remains open.
+Use a writable source checkout and the released Beta 3 Windows core runtime.
+Build the applications/checks first; no generated binaries are committed.
+
+1. Follow crexx/WINDOWS.txt and run lotto_checks.rxbin. Expect PASS.
+2. Run the ANSI example. Select each game and generate both 1 and 50 tips.
+   Check sorted numbers, no duplicate numbers within each pool, and Euro's
+   separate five-plus-two pools. Use Next/Prev to reach tip 50.
+3. Try empty, 0 and 51 in the numeric field. Results should be kept, with a
+   validation message. Check keyboard operation and any available mouse input.
+4. Save twice to confirm. Open Lotto-Tipps-cREXX.txt in Notepad: expect one
+   header and the requested number of tip lines, with normal line endings.
+   Change the selected game WITHOUT Generate, then Save: the header must still
+   describe the game of the generated results.
+5. Shrink/enlarge the terminal, then Quit and Ctrl-C in separate runs. The
+   normal terminal, cursor and keyboard echo should be restored.
+6. Follow netrexx/WINDOWS.txt. Run LottoTests and LottoGuiTests; expect PASS.
+   Open LottoWindow, try all three radio choices, 1/50 tips and invalid entry.
+   Scroll to tip 50, Save to a chosen path, confirm/cancel replacement, and Quit.
+7. Optional GTK: use crexx/gui-provider/WINDOWS-BUILD.txt to build the plugin,
+   run its widget smoke and manually test all game choices, Generate, Save,
+   invalid entry, scrolling and both Quit/window X. Qualify a separate dependency
+   bundle before giving that native GUI add-on to Franz.
+
+Report any failure with the program, selected game/count, exact error, cREXX
+version, Java version and whether it happened in Command Prompt or Windows
+Terminal. Preserve an error screenshot or console text; do not reinstall or
+change several dependencies at once before recording the failure.

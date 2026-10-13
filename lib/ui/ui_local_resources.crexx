@@ -6,9 +6,10 @@ namespace ui_local_resources expose uilocal_resources
 import rxfnsb
 import ui_contract
 
-/** Bounded, session-owned grants for the local read-only tracer. */
+/** Bounded, session-owned grants for local text read/write executors. */
 uilocal_resources: class
   _paths = .string[]
+  _rights = .int[]
   _id = .string
   /** @param id unique owning session identity */
   *: factory
@@ -16,15 +17,24 @@ uilocal_resources: class
     _id = id
     return
   /** @param path selected by the provider's own file dialog
+   * @param purpose open grants read, save grants write; default preserves reads
    * @return opaque grant; empty ID on limit; display name is not authority
    */
   grant: method = .uiresource
-    arg path = .string
+    arg path = .string, purpose = "open"
+    if purpose \= "open" & purpose \= "save" then return .uiresource("", "session", "")
     do i = 1 to _paths[0]
-      if _paths[i] = path then return .uiresource(_id || ":file:" || i, "session", path)
+      if _paths[i] = path then do
+        if purpose = "open" & _rights[i] = 2 then _rights[i] = 3
+        if purpose = "save" & _rights[i] = 1 then _rights[i] = 3
+        return .uiresource(_id || ":file:" || i, "session", path)
+      end
     end
     if _paths[0] >= 64 | length(path) > 4096 | path = "" then return .uiresource("", "session", "")
     _paths[_paths[0] + 1] = path
+    right = 1
+    if purpose = "save" then right = 2
+    _rights[_paths[0]] = right
     return .uiresource(_id || ":file:" || _paths[0], "session", path)
   /** Execute one text-read request. @param effect correlated request
    * @return correlated completion/failure ready for session admission
@@ -35,7 +45,9 @@ uilocal_resources: class
     resource = input.resource("resource")
     path = ""
     do i = 1 to _paths[0]
-      if effect.session_id() = _id & resource.id() = _id || ":file:" || i & resource.scope() = "session" then path = _paths[i]
+      if effect.session_id() = _id & resource.id() = _id || ":file:" || i & resource.scope() = "session" then do
+        if _rights[i] = 1 | _rights[i] = 3 then path = _paths[i]
+      end
     end
     output = .uipayload()
     if path = "" then do
@@ -67,4 +79,55 @@ uilocal_resources: class
     output = .uipayload()
     call output.put_text("code", "resource_too_large")
     call output.put_text("message", "File exceeds the tracer message limits")
+    return .uimessage("ui.effect.failed", output, effect.target(), "event", effect.request_id(), effect.session_id())
+
+  /** Execute a bounded record replacement using an executor-owned write grant.
+   * @param effect correlated io.text.write request
+   * @return correlated completion/failure; display names never choose a path
+   * Records are UTF-8 text separated by LF. Failed writes may be partial; this
+   * executor does not claim transactional replacement. Every stream is closed
+   * by the standard writebinary helper, including its error path.
+   */
+  write: method = .uimessage
+    arg effect = .uimessage
+    i = .int
+    if effect.name() \= "io.text.write" then return write_failure(effect, "invalid_effect", "Expected a text-write request")
+    registry = .uiregistry()
+    if registry.validate(effect) \= "" then return write_failure(effect, "invalid_payload", "Invalid text-write payload")
+    input = effect.body()
+    resource = input.resource("resource")
+    path = ""
+    do i = 1 to _paths[0]
+      if effect.session_id() = _id & resource.id() = _id || ":file:" || i & resource.scope() = "session" then do
+        if _rights[i] = 2 | _rights[i] = 3 then path = _paths[i]
+      end
+    end
+    if path = "" then return write_failure(effect, "invalid_resource", "Unknown, expired or read-only local resource")
+    records = input.texts("records")
+    content = ""
+    do i = 1 to records[0]
+      /* At most 1 MiB of UTF-8, including four-byte codepoints and separators. */
+      if length(content) + length(records[i]) + 1 > 262144 then return write_failure(effect, "resource_too_large", "Text exceeds the local write limit")
+      content = content || records[i] || '0A'x
+    end
+    data = content as .binary
+    failed = 0
+    do
+      written = writebinary(path, data)
+      if written < 0 then failed = 1
+    on signal
+      failed = 1
+    end
+    if failed then return write_failure(effect, "write_failed", "Cannot write the selected file")
+    output = .uipayload()
+    call output.put_resource("resource", .uiresource(resource.id(), "session", path))
+    return .uimessage("io.text.write.completed", output, effect.target(), "event", effect.request_id(), effect.session_id())
+
+  /** @param effect originating request @param code stable failure code
+   * @param message diagnostic @return correlated failure without file data */
+  write_failure: method = .uimessage
+    arg effect = .uimessage, code = .string, message = .string
+    output = .uipayload()
+    call output.put_text("code", code)
+    call output.put_text("message", message)
     return .uimessage("ui.effect.failed", output, effect.target(), "event", effect.request_id(), effect.session_id())
