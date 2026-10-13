@@ -58,6 +58,15 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    dependencies or conflicting bytes under the same published name. Reproduce
    the partial-flat GTK-style DLL layout with the standalone fixture before
    editing the collector; preserve manifest hash and collision validation.
+10. **CP-AC-10 — MAC PASS / WINDOWS HANDOFF:** Correct the generic helper's Windows command-line path
+    handling for Unicode package/consumer directories. Preserve all validation,
+    copying, hashing and fingerprint rules and the existing acceptance harness.
+    Retain fcb MSVC/MinGW job diagnostics, pass normal Mac Unicode/package proof,
+    then hand off the exact published fix for native Windows revalidation.
+11. **CP-AC-11 — CLASSIFIED / WINDOWS HANDOFF:** Classify the MinGW first-fingerprint failure's actual
+    return code/runtime closure rather than assuming its empty stderr is the
+    MSVC Unicode failure. Apply a focused runtime packaging correction only if
+    independently established; leave native proof visibly open if unavailable.
 
 ## Implementation steps
 
@@ -81,6 +90,28 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    conflicts, accept only identical resolved copies, stage/validate the resulting
    closure, and measure positive/negative controls in Debug and maintained ASan
    flags. Publish the compatible corrections with retained evidence.
+7. **CP-STEP-07 — PUBLICATION READY (AC-10/11):** Inspect completed fcb Windows job logs and
+   artifacts, normalize Windows wide command-line arguments to the existing
+   UTF-8 boundary, run unchanged acceptance and actual package/SDK checks, and
+   publish with a Windows proof handoff. Investigate any distinct MinGW loader
+   failure separately. No signing/tagging or publication architecture redesign.
+
+## Windows Unicode and GNU runtime diagnostics
+
+The fcb Build (38389192522) completed both Windows build/correctness jobs, then
+MSVC failed the unchanged Unicode acceptance harness with a multi-byte mapping
+error. The helper treated narrow CRT argv as UTF-8. The correction reads the
+native wide command line, normalizes its arguments at the existing UTF-8 boundary,
+and leaves the manifest validator/copier checks intact.
+
+The Windows owner's same-source GCC16 probe independently established MinGW
+return -1073741515 (STATUS_DLL_NOT_FOUND) with empty output under system-only PATH.
+Adding the exact compiler's libstdc++-6.dll/libgcc_s_seh-1.dll/libwinpthread-1.dll
+restored the ASCII fingerprint. The unchanged Unicode harness then failed with
+an illegal-byte-sequence conversion error, proving both defects. Core staging
+therefore supplies the selected GNU runtime files rather than relaxing PATH.
+Native Windows acceptance remains owned by that task after the focused Mac
+qualification and source publication; no signed/release-ready claim follows.
 
 ## Baseline evidence
 
@@ -158,3 +189,13 @@ grammar/driver changes. Qualified unchanged helper/collector fixtures are reused
 the changed product/package workflow was rebuilt and passed 30 actual extracted
 core commands plus SDK proof. The unpublished integration commit includes this
 updated receipt before the first push, with no post-CI status commit planned.
+
+Mac source-phase proof for the Windows continuation passed: normal C1/product
+build without warnings, actual extracted core 30/30 commands including the
+unchanged acceptance harness, SDK/native consumer, and 13 split-package tests.
+The command-line and GNU loader causes are retained separately. Native Windows
+wide-command-line and runtime staging revalidation remains with the Windows
+owner after this qualified source publication. The validator and acceptance
+harness are unchanged; no architecture or signing operation was introduced.
+`docs/qa/console-native-packaging-2026-10-13/windows-unicode/README.md` records
+exact inputs, failed job artifacts, qualification bounds and publication state.

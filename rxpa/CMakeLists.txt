@@ -20,6 +20,9 @@ set_target_properties(crexx-provider-package PROPERTIES INCLUDE_DIRECTORIES
 target_compile_definitions(crexx-provider-package PRIVATE
         CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}"
         CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+if(WIN32)
+    target_link_libraries(crexx-provider-package PRIVATE shell32)
+endif()
 set_target_properties(crexx-provider-package PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 install(TARGETS crexx-provider-package RUNTIME DESTINATION bin)

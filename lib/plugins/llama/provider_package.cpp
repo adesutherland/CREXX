@@ -3,9 +3,38 @@
 #include <iostream>
 #include <map>
 #include <set>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <shellapi.h>
+#include <memory>
+#endif
 int main(int argc, char **argv) {
     using namespace rxllama_package;
     try {
+#ifdef _WIN32
+        // Narrow CRT argv is encoded in the active code page, not necessarily
+        // UTF-8. Preserve the native Unicode command line at the existing UTF-8
+        // filesystem boundary used by this helper and its manifest validator.
+        int wide_argc = 0;
+        std::unique_ptr<wchar_t *, decltype(&LocalFree)> wide_argv(
+            CommandLineToArgvW(GetCommandLineW(), &wide_argc), &LocalFree);
+        if (!wide_argv) throw std::runtime_error("cannot read Unicode command line");
+        std::vector<std::string> utf8_arguments;
+        utf8_arguments.reserve(wide_argc);
+        for (int i = 0; i < wide_argc; ++i)
+            utf8_arguments.push_back(utf8_path(fs::path(wide_argv.get()[i])));
+        std::vector<char *> argument_pointers;
+        argument_pointers.reserve(wide_argc);
+        for (auto &argument : utf8_arguments) argument_pointers.push_back(argument.data());
+        argc = wide_argc;
+        argv = argument_pointers.data();
+#endif
         const bool fingerprint = argc == 3 && std::string(argv[1]) == "--fingerprint";
         if (!fingerprint && argc != 4) throw std::runtime_error("usage: crexx-provider-package MANIFEST OUTPUT_STEM GNU|MSVC, or --fingerprint MANIFEST");
         auto source = fs::absolute(fs::u8path(argv[fingerprint ? 2 : 1])); auto root = source.parent_path();
