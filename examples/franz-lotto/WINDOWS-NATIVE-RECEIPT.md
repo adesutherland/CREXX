@@ -62,9 +62,22 @@ The core packaging CI exposed two helper problems on Windows: Unicode narrow
 arguments fail the unchanged acceptance test, and MinGW needs its C++ runtime
 closure. A same-source probe confirmed missing-DLL exit `0xC0000135`; supplying
 the three matched GNU runtime DLLs made ASCII fingerprinting pass, then exposed
-the independent Unicode failure. The Mac agent is preparing the narrow fixes.
-No successful matched core/plugin/manager signing input exists for this UI
-overlay yet. Do not sign an older snapshot to substitute for it.
+the independent Unicode failure. Mac fixes `b112fe05a` and `ba62fbe7f` are now
+merged. Both normal Windows CMake helper targets passed the unchanged
+hash/identity/traversal/collision/Unicode harness under system-only PATH. All
+three automatically staged MinGW runtime hashes match the selected compiler.
+A target-local MSVC C++ `/EHsc` option preserves exception-path ownership and
+removes the observed C4530 warning; C compilation flags remain unchanged.
+The earlier review bundle retains source `a8be8ca89` and its original honest
+engineering producer identity. Successful matched core/plugin/manager CI and
+signing remain open; do not sign an older snapshot to substitute for them.
+
+The unsigned review archive `Franz-Lotto-Windows-Review-20261013.zip` contains
+4,246 files and is 90,999,512 bytes. Its SHA-256 is
+`36e063506519a4530cdb7a4eca3c1674a2913f3071a78acbad63e20e98afd27f`.
+Clean extraction passed every hash and x64/console-vs-GUI PE subsystem checks.
+The uploaded private Drive file's folder, owner-only permissions and byte size
+were read back successfully. It is a review download, not signed delivery.
 
 Physical Windows terminal mouse/viewport resizing remains an unclaimed manual
 check. The GTK UI automation helper could click the chooser but timed out typing

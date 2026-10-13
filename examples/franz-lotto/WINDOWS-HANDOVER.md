@@ -186,10 +186,15 @@ released Beta 3 prefix remains unchanged.
 - All 13 legacy source hashes now match exactly after restoring LF. RexxDoc
   block/parameter/return coverage is preserved or increased in the changed UI
   sources covered by the retained baseline.
-- Open: qualify the final extracted package, publish the UI source and obtain
-  the matched signed interim distribution. Core CI revealed helper Unicode
-  arguments and MinGW C++ runtime closure failures; the Mac agent is preparing
-  narrow corrections. No signed assets,
+- UI source `a8be8ca89` is published and remote-verified. Core helper fixes
+  `b112fe05a`/`ba62fbe7f` are merged, and normal MSVC/MinGW targets pass the
+  unchanged Unicode/negative-control harness with system-only PATH. MinGW's
+  three staged runtime DLL hashes match the selected compiler. MSVC uses a
+  target-local C++ `/EHsc` option for exception-path ownership.
+- The unsigned review ZIP is privately uploaded: 4,246 files, 90,999,512 bytes,
+  SHA-256 `36e063506519a4530cdb7a4eca3c1674a2913f3071a78acbad63e20e98afd27f`.
+  All clean-extraction hashes/PE subsystem checks passed. Final signed recipient
+  delivery and matching successful CI/signing inputs remain open. No signed assets,
   new release tag, final recipient Drive package or email have been produced.
 
 ### Mac diagnosis dispatch — 12 October 2026

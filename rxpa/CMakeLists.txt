@@ -13,6 +13,11 @@ add_executable(crexx-provider-package
         "${CMAKE_SOURCE_DIR}/lib/plugins/llama/provider_package.cpp"
         "${CMAKE_SOURCE_DIR}/binutils/rxsha256.c")
 target_compile_features(crexx-provider-package PRIVATE cxx_std_17)
+if(MSVC)
+    # Validator failures use C++ exceptions and owned streams/argv. Preserve
+    # their destructors even when the product's global flags omit /EHsc.
+    target_compile_options(crexx-provider-package PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
+endif()
 # This standalone C++ tool needs no generated cREXX headers. On case-insensitive
 # filesystems generated/VERSION otherwise shadows the standard <version> header.
 set_target_properties(crexx-provider-package PROPERTIES INCLUDE_DIRECTORIES
