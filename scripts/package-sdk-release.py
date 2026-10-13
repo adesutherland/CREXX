@@ -85,6 +85,8 @@ def required_inventory(prefix, platform):
         'bin/providers/rxsqlite' + suffix,
         'bin/providers/rxvector.rxplugin',
         'bin/providers/rxvector' + suffix,
+        'bin/providers/rxconsole.rxplugin',
+        'bin/providers/rxconsole' + suffix,
         'bin/crexx' + ('.exe' if platform.startswith('windows-') else ''),
     )
     for name in required:

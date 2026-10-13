@@ -1,0 +1,38 @@
+[
+  {
+    "check": "sdk-missing-archive",
+    "error": "SDK is missing bin/providers/rxconsole.a",
+    "expected": true
+  },
+  {
+    "check": "native-missing-archive",
+    "argv": [
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/crexx",
+      "--program",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/lib/plugins/console/tests/test_console.crexx",
+      "--jobs",
+      "1",
+      "--native"
+    ],
+    "exit": 1,
+    "expected": true,
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing.log"
+  },
+  {
+    "check": "native-restored-archive",
+    "argv": [
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/crexx",
+      "--program",
+      "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/restored/console",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/lib/plugins/console/tests/test_console.crexx",
+      "--jobs",
+      "1",
+      "--native"
+    ],
+    "exit": 0,
+    "relocated_exit": 0,
+    "stdout": "PASS: rxconsole Level B contract\n",
+    "log": "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/restored.log"
+  }
+]

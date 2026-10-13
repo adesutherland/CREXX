@@ -204,6 +204,22 @@ def smoke(prefix, source, preferred_vm, logs):
             'PASS: packaged Classic encoded stream')
         if (work / 'classic-stream.bin').read_bytes() != b'\x80\xe9':
             raise RuntimeError('Packaged Classic stream wrote incorrect Windows-1252 bytes')
+
+        # A dynamic .rxplugin does not supply the archive required by --native.
+        # Use the headless console contract; terminal interaction belongs to
+        # the platform UI tests, while this proves installed static closure.
+        console_source = work / 'console.crexx'
+        shutil.copy2(source / 'lib/plugins/console/tests/test_console.crexx', console_source)
+        console_native = work / 'console-native' / 'console'
+        console_native.parent.mkdir()
+        run('console-native-build', [prefix / ('bin/crexx' + extension), '--program',
+            console_native, console_source, '--jobs', '1', '--native'],
+            'PUBLISHED: native program', True)
+        console_executable = console_native.with_suffix(extension) if extension else console_native
+        shutil.copy2(console_executable, relocated / console_executable.name)
+        shutil.rmtree(console_native.parent)
+        run('relocated-console-native', [relocated / console_executable.name],
+            'PASS: rxconsole Level B contract')
         outcome = 'passed'
     finally:
         (logs / 'summary.json').write_text(json.dumps(dict(outcome=outcome,
@@ -264,7 +280,7 @@ def main():
     smoke(installed, source, args.preferred_vm, logs)
     (logs / 'archive.json').write_text(json.dumps(dict(name=asset.name,
         bytes=asset.stat().st_size, sha256=digest(asset), **{k:v for k,v in manifest.items() if k != 'files'}), indent=2) + '\n')
-    print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumers including Classic encoded streams')
+    print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumers including Classic encoded streams and console')
 
 
 if __name__ == '__main__':
