@@ -1,0 +1,16 @@
+/*
+ * MiniForth diagnostic example. The optional second argument enables kernel
+ * tracing without making the normal demonstration noisy.
+ */
+options levelb
+import forth
+##external forth
+
+##data trace_input
+  3 4 + .
+  5 DUP * .
+  bye
+##end
+
+call forth_set_debug 1
+call forth_run trace_input
