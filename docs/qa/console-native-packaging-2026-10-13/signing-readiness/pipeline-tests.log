@@ -1,0 +1,22 @@
+test_missing_file_is_not_removed_or_blessed (test_llama_release_pipeline.ManifestSigningTests.test_missing_file_is_not_removed_or_blessed) ... ok
+test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency (test_llama_release_pipeline.ManifestSigningTests.test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency) ... ok
+test_unknown_file_is_not_added (test_llama_release_pipeline.ManifestSigningTests.test_unknown_file_is_not_added) ... ok
+test_actual_collectors_accept_complete_sets_and_reject_missing_files (test_llama_release_pipeline.MatrixTests.test_actual_collectors_accept_complete_sets_and_reject_missing_files) ... ok
+test_collectors_require_correct_plugin_sets (test_llama_release_pipeline.MatrixTests.test_collectors_require_correct_plugin_sets) ... ok
+test_core_matrix_is_shared_and_has_no_gpu_build_flags (test_llama_release_pipeline.MatrixTests.test_core_matrix_is_shared_and_has_no_gpu_build_flags) ... ok
+test_cuda_only_for_release_or_explicit_manual_selection (test_llama_release_pipeline.MatrixTests.test_cuda_only_for_release_or_explicit_manual_selection) ... ok
+test_deep_manual_retry_selects_only_requested_core (test_llama_release_pipeline.MatrixTests.test_deep_manual_retry_selects_only_requested_core) ... ok
+test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate (test_llama_release_pipeline.MatrixTests.test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate) ... ok
+test_deep_windows_retry_keeps_both_toolchains_and_full_default (test_llama_release_pipeline.MatrixTests.test_deep_windows_retry_keeps_both_toolchains_and_full_default) ... ok
+test_delivery_names_unique_and_required_backends_present (test_llama_release_pipeline.MatrixTests.test_delivery_names_unique_and_required_backends_present) ... ok
+test_nested_manifests_refresh_without_changing_identity_or_members (test_llama_release_pipeline.PackageSigningTests.test_nested_manifests_refresh_without_changing_identity_or_members) ... ok
+test_refresh_cannot_escape_root_or_bless_missing_bootstrap (test_llama_release_pipeline.PackageSigningTests.test_refresh_cannot_escape_root_or_bless_missing_bootstrap) ... ok
+test_signer_preserves_selected_vm_copy_and_refreshes_core_manifest (test_llama_release_pipeline.PackageSigningTests.test_signer_preserves_selected_vm_copy_and_refreshes_core_manifest) ... ok
+test_signing_rejects_mixed_source_and_overlapping_payloads (test_llama_release_pipeline.PackageSigningTests.test_signing_rejects_mixed_source_and_overlapping_payloads) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.023s
+
+OK
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp4ajonvxk/rxllama.native.json
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpt5fcfol8/rxllama.native.json

@@ -68,6 +68,16 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
     MSVC Unicode failure. Apply a focused runtime packaging correction only if
     independently established; leave native proof visibly open if unavailable.
 
+12. **CP-AC-12 — PASS:** Plugin staging consumes the manifest-verified core
+    helper, never substitutes an independently rebuilt helper, and rejects a
+    core missing that helper. A permanent staging/finalization regression proves
+    different rebuild bytes and an absent rebuild do not replace the core.
+13. **CP-AC-13 — MAC PASS / LINUX CI HANDOFF:** The partial fixture's loader search exposes the SDK
+    dependency to its differing-byte control on ELF as well as Mach-O. Preserve
+    positive, missing-dependency and hash controls; pass the three focused normal
+    and Apple-ASan-flag fixture tests. Native Linux confirmation remains assigned
+    to the normal automatic publication workflow.
+
 ## Implementation steps
 
 1. **CP-STEP-01 — DONE (AC-01/05):** Inspect fresh CMake closure and
@@ -95,6 +105,24 @@ hotfix2 checkout. This is an urgent packaging repair promoted to develop.
    UTF-8 boundary, run unchanged acceptance and actual package/SDK checks, and
    publish with a Windows proof handoff. Investigate any distinct MinGW loader
    failure separately. No signing/tagging or publication architecture redesign.
+
+8. **CP-STEP-08 — PUBLICATION READY (AC-09/12/13/06):** Retain both failed jobs, reproduce
+   the helper ownership regression, consume the qualified core helper, correct
+   the fixture search order, run focused package/fixture tests, then publish the
+   two reviewable causes together on hotfix/develop with their receipt. Hand off
+   exact source to the Windows owner; do not sign or tag older artifacts.
+
+## Signing-readiness CI repair continuation
+
+Build 38402040395 at cf98b71b10794d5f214aa07bba18c23cd6370d73 passed all
+core lanes, optimizer parity and the native Windows quality gates, but exposed
+two remaining packaging issues. Windows Vulkan staging attempted to replace the
+now core-owned generic helper with an independently compiled plugin-lane copy.
+Linux's partial-package differing-byte control did not expose its SDK dependency
+because the ELF fixture searches its already staged copy first. These repairs
+preserve the unchanged-core distribution contract and the collector's strict
+hash/collision policy. Native Lotto delivery and actual signing remain separate
+Windows-owner gates; the current signer still selects older 5c57df76 assets.
 
 ## Windows Unicode and GNU runtime diagnostics
 

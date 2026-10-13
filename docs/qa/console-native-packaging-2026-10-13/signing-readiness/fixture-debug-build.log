@@ -1,0 +1,5 @@
+[0/1] Re-running CMake...
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-console-package-fixture-debug
+[1/2] Linking C shared module partial/libcopy_root_partial.rxplugin

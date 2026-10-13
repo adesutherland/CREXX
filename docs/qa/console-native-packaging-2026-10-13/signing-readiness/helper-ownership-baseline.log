@@ -1,0 +1,141 @@
+test_changed_qualified_binary_is_rejected (test_split_release.SplitPackageTests.test_changed_qualified_binary_is_rejected) ... ok
+test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu (test_split_release.SplitPackageTests.test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu) ... ERROR
+test_finalization_rejects_accidental_core_overlap_after_staging (test_split_release.SplitPackageTests.test_finalization_rejects_accidental_core_overlap_after_staging) ... ERROR
+test_finalization_rejects_changed_provider_without_refreshed_hashes (test_split_release.SplitPackageTests.test_finalization_rejects_changed_provider_without_refreshed_hashes) ... ERROR
+test_matching_core_passes_but_other_commit_or_toolchain_does_not (test_split_release.SplitPackageTests.test_matching_core_passes_but_other_commit_or_toolchain_does_not) ... ok
+test_msvc_runtime_preflight_accepts_shared_bytes_and_rejects_missing_or_changed (test_split_release.SplitPackageTests.test_msvc_runtime_preflight_accepts_shared_bytes_and_rejects_missing_or_changed) ... ok
+test_nonlocal_archive_entries_are_rejected (test_split_release.SplitPackageTests.test_nonlocal_archive_entries_are_rejected) ... ok
+test_plugin_cannot_replace_core_with_different_bytes (test_split_release.SplitPackageTests.test_plugin_cannot_replace_core_with_different_bytes) ... ok
+test_plugin_rejects_core_without_its_owned_helper (test_split_release.SplitPackageTests.test_plugin_rejects_core_without_its_owned_helper) ... FAIL
+test_plugin_retains_core_helper_despite_different_rebuilt_bytes (test_split_release.SplitPackageTests.test_plugin_retains_core_helper_despite_different_rebuilt_bytes) ... ERROR
+test_plugin_staging_needs_no_independently_rebuilt_core_helper (test_split_release.SplitPackageTests.test_plugin_staging_needs_no_independently_rebuilt_core_helper) ... ERROR
+test_selected_msvc_redist_uses_actual_crt_name_and_rejects_ambiguity (test_split_release.SplitPackageTests.test_selected_msvc_redist_uses_actual_crt_name_and_rejects_ambiguity) ... ok
+test_shared_identical_runtime_is_not_duplicated (test_split_release.SplitPackageTests.test_shared_identical_runtime_is_not_duplicated) ... ok
+test_signed_plugin_finalization_verifies_both_actual_archives (test_split_release.SplitPackageTests.test_signed_plugin_finalization_verifies_both_actual_archives) ... ERROR
+test_windows_restricted_path_handles_environment_key_casing (test_split_release.SplitPackageTests.test_windows_restricted_path_handles_environment_key_casing) ... ok
+test_zip_preserves_public_vm_link_and_execute_permission (test_split_release.SplitPackageTests.test_zip_preserves_public_vm_link_and_execute_permission) ... ok
+
+======================================================================
+ERROR: test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu (test_split_release.SplitPackageTests.test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 214, in test_cpu_only_package_rejects_gpu_backend_then_accepts_cpu
+    self.stage_provider()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 35, in add_file
+    raise ValueError('Plugin would replace a qualified core file: ' + str(relative))
+ValueError: Plugin would replace a qualified core file: bin/crexx-provider-package.exe
+
+======================================================================
+ERROR: test_finalization_rejects_accidental_core_overlap_after_staging (test_split_release.SplitPackageTests.test_finalization_rejects_accidental_core_overlap_after_staging)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 225, in test_finalization_rejects_accidental_core_overlap_after_staging
+    self.stage_provider()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 35, in add_file
+    raise ValueError('Plugin would replace a qualified core file: ' + str(relative))
+ValueError: Plugin would replace a qualified core file: bin/crexx-provider-package.exe
+
+======================================================================
+ERROR: test_finalization_rejects_changed_provider_without_refreshed_hashes (test_split_release.SplitPackageTests.test_finalization_rejects_changed_provider_without_refreshed_hashes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 208, in test_finalization_rejects_changed_provider_without_refreshed_hashes
+    self.stage_provider()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 35, in add_file
+    raise ValueError('Plugin would replace a qualified core file: ' + str(relative))
+ValueError: Plugin would replace a qualified core file: bin/crexx-provider-package.exe
+
+======================================================================
+ERROR: test_plugin_retains_core_helper_despite_different_rebuilt_bytes (test_split_release.SplitPackageTests.test_plugin_retains_core_helper_despite_different_rebuilt_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 177, in test_plugin_retains_core_helper_despite_different_rebuilt_bytes
+    self.stage_provider()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 35, in add_file
+    raise ValueError('Plugin would replace a qualified core file: ' + str(relative))
+ValueError: Plugin would replace a qualified core file: bin/crexx-provider-package.exe
+
+======================================================================
+ERROR: test_plugin_staging_needs_no_independently_rebuilt_core_helper (test_split_release.SplitPackageTests.test_plugin_staging_needs_no_independently_rebuilt_core_helper)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 187, in test_plugin_staging_needs_no_independently_rebuilt_core_helper
+    self.stage_provider(build_helper=False)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 34, in add_file
+    if core.digest(existing) != core.digest(source):
+                                ~~~~~~~~~~~^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-core-release.py", line 18, in digest
+    with path.open('rb') as stream:
+         ~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp2onze206/build/bin/crexx-provider-package.exe'
+
+======================================================================
+ERROR: test_signed_plugin_finalization_verifies_both_actual_archives (test_split_release.SplitPackageTests.test_signed_plugin_finalization_verifies_both_actual_archives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 195, in test_signed_plugin_finalization_verifies_both_actual_archives
+    self.stage_provider()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 172, in stage_provider
+    plugin.main()
+    ~~~~~~~~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 113, in main
+    add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/package-llama-release.py", line 35, in add_file
+    raise ValueError('Plugin would replace a qualified core file: ' + str(relative))
+ValueError: Plugin would replace a qualified core file: bin/crexx-provider-package.exe
+
+======================================================================
+FAIL: test_plugin_rejects_core_without_its_owned_helper (test_split_release.SplitPackageTests.test_plugin_rejects_core_without_its_owned_helper)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/scripts/tests/test_split_release.py", line 191, in test_plugin_rejects_core_without_its_owned_helper
+    with self.assertRaisesRegex(ValueError, 'Core package is missing its provider helper'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.072s
+
+FAILED (failures=1, errors=6)
+SHARED_RUNTIME: concrt140.dll b14c396b93a92b7ae6b202be13980530fd2a9a1302d9944c8786d19804bcc45d
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpl8yz1zz2/output/plugin-stage/CREXX-windows-x64
