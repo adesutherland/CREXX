@@ -129,7 +129,7 @@ if a.part in ['all', 'calculator']:
     for route in ['rxas', 'source']:
         for mode in ['opt', 'noopt']:
             key = 'calculator-' + route + '-' + mode
-            work = generate(key, (calculator / 'calculator.levell').read_text(),
+            work = generate(key, (calculator / 'calculator.rxl').read_text(),
                             'levell_calculator', route, language_mode=mode)
             image = consumer(key, work, 'levell_calculator', calculator / 'calculator.crexx', mode)
             observe(key, work, image, mode, cases)

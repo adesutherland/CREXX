@@ -1,0 +1,5 @@
+# Preserve the diagnostic's displayed empty source line byte-for-byte.
+installed-smoke/rexxscript1-invalid.log -whitespace
+publication-smoke/rexxscript1-invalid.log -whitespace
+# Retain CMake flag-report spacing in the raw build receipt.
+publication-build.log -whitespace

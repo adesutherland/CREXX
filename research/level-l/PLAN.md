@@ -1,5 +1,218 @@
 # Level L language tooling research — 10 October 2026
 
+### Authoring and build refinements — approved 13 October 2026
+
+**Vision:** make a Level L language module a normal part of a cREXX project.
+Programmers can use `.crexx` with `options levell`, or a short dedicated suffix,
+and let `crexx` generate, assemble and link the module. Teach ordinary lists
+using the existing repetition notation and useful named fields. Preserve the
+language accepted by each example, original source diagnostics, the Level B
+bootstrap and existing consumers. This increment supplements LANG-AC02/04/11–13;
+the wider research and language criteria remain unchanged.
+
+**Status:** Adrian approved the source forms, wrapper integration, list cleanup,
+regression tests and guide update. A combined program build includes its grammar
+modules directly; creating a separate library is optional. **UX-AC01–05 are
+locally verified** by [the qualification receipt](evidence/authoring-20261013/README.md).
+The existing `develop` checkout was fast-forwarded to `54b610b95` before editing;
+incoming Fortran/Forth work was preserved. Before publication, develop packaging
+fixes through `1031ef530` were integrated and their combined installed workflow
+was checked. Adrian authorized commit/push to `develop` and light monitoring
+on 13 October. The enclosing commit is the publication payload; normal automatic
+CI is expected to pass, with its actual results reported in the conversation.
+No new release tag or overall programme completion is claimed.
+
+**Approved decisions:**
+
+- Use `.crexx` with `options levell` as the ordinary source form. Offer `.rxl`
+  as the short Level L suffix; retain `.levell` for existing sources. For
+  `.rxl`, Level L is the default when OPTIONS is absent. An explicit different
+  level is an error. Namespace declarations remain part of the source.
+- Route through the installed `crexx` driver and existing `--library` and
+  `--program` commands. Generate packed RXAS, assemble with `rxas`, and link
+  generated modules and their Level L runtime dependencies. A standalone
+  grammar builds a reusable module; an application supplies execution.
+- The compiler source-import scan identifies Level L headers and leaves their
+  namespaces to generated modules; it does not feed grammar declarations into
+  the typed source parser. Its dependency snapshot still tracks changes in
+  source kind. This is source selection, not a parser/scanner replacement.
+- Build generated grammar providers before compiling their consumers. Extend
+  existing caching, dependency and atomic-publication rules; generator/runtime
+  changes invalidate affected products. Required bootstrap construction still
+  works without Level G or the high-level project driver.
+- Reuse existing `*`, `+`, `?`, groups and `as` captures. Convert ordinary
+  hand-authored list/tail scaffolding where it simplifies the source. Preserve
+  deliberate recursive backend demonstrations. Keep Pratt operator declarations
+  as the existing concise expression form.
+
+**List-construction finding:** the first simplified RexxScript run exposed
+quadratic intermediate frontier copies in the named-tree view: the existing
+3,000-statement regression exhausted `tree.entries`. The view now counts
+transparent frontiers and materializes visible links for named parents only.
+UX-AC04 includes a direct 3,000-item test at an exact 6,001-entry budget, its
+one-entry-too-small refusal, order/span checks and transparent-root selection.
+This repairs the observed regression without increasing user budgets.
+
+**Acceptance criteria — locally verified on macOS ARM64 Debug:**
+
+1. **UX-AC01 — Source selection.** `.crexx` with `options levell`, `.rxl` with
+   its agreed default, and existing `.levell` sources generate equivalent
+   modules. Tests cover leading comments, case, conflicting headers, paths
+   containing spaces and unchanged B/G/C selection. Locations refer to original
+   source even when the level is supplied by a suffix.
+2. **UX-AC02 — Integrated builds.** Installed `crexx` builds a standalone
+   grammar library and a mixed grammar/application project, links the required
+   runtime, and runs the example through bytecode and native packaging. Verify
+   dependency ordering rather than relying on input-file order or old outputs.
+3. **UX-AC03 — Build lifecycle.** Focused tests prove clean/no-op builds,
+   grammar/tool/runtime invalidation, output collision checks and preservation
+   of the last good artifact on errors. Grammar failures stop dependent work
+   and retain the authored filename, rule and location.
+4. **UX-AC04 — List clarity and equivalence.** Simplified settings and
+   RexxScript lists preserve acceptance, item order, captures and source spans,
+   with readers adapted to the intended flatter named tree. Test zero/one/many
+   items, blank lines, repeated separators, trailing separators, missing
+   separators, malformed items, diagnostics and recovery. Exercise LL/LR/PEG/
+   Earley where the selected grammar is admitted; preserve their distinct
+   semantics and report capability failures against authored rules.
+5. **UX-AC05 — Bootstrap and teaching continuity.** L0/L1/L2 regeneration still
+   agrees with no Level G bootstrap dependency. Update the guide, diagrams and
+   progressive settings/calculator instructions to use tested wrapper commands
+   and repetition-first teaching. Existing recursive backend lessons remain
+   clearly identified. Retain focused toolchain/both-VM regression evidence.
+
+**Implementation steps — approved:**
+
+1. **UX-STEP01 (AC01–05):** agree suffix/header behavior and build/list scope;
+   reconcile the current guide and consumers against those decisions. **Agreed.**
+2. **UX-STEP02 (AC01–03/05):** implement source selection and driver generation,
+   dependency ordering, linking and lifecycle handling. Depends on STEP01;
+   retain the independent Level B bootstrap path. **Verified.**
+3. **UX-STEP03 (AC04/05):** simplify ordinary lists and adapt tree consumers;
+   compare with retained original grammars and inspect diagnostics/recovery.
+   Depends on STEP01; new semantics require a separate decision. **Verified:**
+   384 old/new observations plus capture, recovery and interpreter regressions.
+4. **UX-STEP04 (AC01–05):** run focused installed/build/backend regressions,
+   update the user guide and record evidence and remaining criteria. Depends
+   on STEP02/03; follow the repository's ordinary publication policy. **Verified:**
+   30 existing CTests, 56 installed authoring commands, 22 installed package
+   commands, 13 packaging unit tests and 80 valid guide links. Wider research
+   and host-platform qualification criteria below remain unchanged.
+
+### Next-stage recommendation — AST infrastructure, proposed 13 October 2026
+
+**Status:** proposal for Adrian's review; no new AST syntax or implementation is
+approved by this entry. The authoring publication above is independent of this
+decision. This advances LANG-AC04/09/10/12/13 and research AC-26 without replacing
+their wider obligations.
+
+**Vision and intended outcome:** let a language author turn a successful parse
+into useful application nodes with named fields and lists, then inspect, check
+and transform them through a common Level B library. The same application AST
+should work with every admitted parser backend. Source ownership and diagnostic
+origins survive each stage. Settings, calculators, script engines and later
+compiler frontends use the same services; cREXX-specific symbols, types, control
+flow and runtime behavior remain consumer policies.
+
+**Why this next:** the product already exposes DFA, LL(1), canonical LR(1),
+packrat PEG, Pratt and Earley. Its named view supports arbitrary child counts
+and captures, but application-tree projection still has a binary 0/1/2-child
+schema. Builders, grouping and restricted attribute scheduling have research
+controls, not one settled product API. A stronger AST layer therefore improves
+all current algorithms and tests the intended compiler-migration direction.
+A new parser should follow a concrete grammar, diagnosis or resource need that
+the current portfolio cannot meet. Pika and Squirrel remain research work;
+there is no proposed change to their support status here.
+
+**Proposed contracts for review:**
+
+- Keep the ordinary named tree and captures useful without a schema. An optional
+  AST declaration defines named node kinds, required/optional fields and ordered
+  lists. Variable child counts do not require hand-written binary list nodes.
+  Review concrete settings/calculator before-and-after surface examples first.
+- Keep original source, parser derivations/forests and application ASTs distinct.
+  An ambiguous forest cannot become an AST by silently choosing its first path.
+  Existing explicit result/status contracts remain visible.
+- Prefer owned node storage and tree-scoped node IDs, with snapshots frozen after
+  construction. A checked builder or rewrite creates a new result; source maps
+  relate new nodes to old nodes and original text. Derived analysis records
+  identify their owning tree/revision. Exact, composite, synthetic and recovered
+  origins remain distinguishable. Measure copying and lifecycle behavior before
+  promising a particular physical representation or zero-copy API.
+- Supply iterative walks in source order and child-before-parent order, named
+  field/list access, searches and folds (combine child results into a parent
+  result). Add pure checked rewrites for wrapper removal, list construction and
+  one declared grouping/lowering example. Failed passes publish no partial AST.
+- Start analysis scheduling with acyclic dependencies; then promote the existing
+  restricted monotone finite-domain worklist control. Such analyses only add
+  facts until stable. Every stronger operation needs its own admitted contract.
+  A work budget bounds execution; it does not prove equivalence or convergence
+  of arbitrary rewrite callbacks.
+- Keep syntax mechanics separate from execution: branch choice, short-circuiting,
+  BIF effects and language-specific arithmetic stay in the application evaluator.
+  Preserve the Level B bootstrap; production rxc/rxas frontend migration remains
+  a separately approved programme.
+
+**Numbered acceptance criteria — proposed and open:**
+
+1. **AST-AC01 — Shape and simple authoring.** A basic grammar still works without
+   AST declarations. Optional schemas express named required/optional fields and
+   zero/one/many lists. Invalid field names, kinds and cardinalities produce
+   located grammar/schema diagnostics. Verify runnable settings/calculator
+   examples and negative build fixtures against the reviewed surface.
+2. **AST-AC02 — Ownership and origins.** Construct and retain two independent
+   trees, interleave traversals, release their requests and preserve valid owned
+   results. Check original bytes, Unicode spans, trivia/source access, synthetic
+   and recovered origins, and rejection of foreign or stale node handles.
+   Retain measured storage/copy behavior and named resource-limit failures.
+3. **AST-AC03 — Common algorithms.** Iterative walks, field/list lookup, search,
+   folds and checked reconstruction preserve order and origins on empty, deep,
+   wide and malformed trees. A failed pass leaves its input usable and publishes
+   no partial result. Test exact budgets and equivalent opt/noopt execution on
+   both VMs; derive bounds for the admitted traversal profiles.
+4. **AST-AC04 — Analysis and rewrite contracts.** Validate before/after schemas
+   and invalidate derived facts after a relevant change. Execute a structural
+   rewrite with stated pre/postconditions, an acyclic attribute calculation and
+   a restricted monotone cyclic analysis against independent controls. Cycles,
+   unsupported operations and resource exhaustion have distinct diagnostics;
+   only proved profiles carry termination/equivalence claims.
+5. **AST-AC05 — Backend and application independence.** Equivalent admitted
+   unambiguous fixtures produce the same application AST across the current
+   applicable backends. Forests need explicit resolution; recovered input
+   remains marked and cannot execute as a clean RexxScript program. Migrate
+   settings, calculator and one bounded RexxScript slice, preserving outputs,
+   errors and control-flow behavior while removing positional tree plumbing.
+6. **AST-AC06 — Product continuity and migration evidence.** The supported AST
+   library builds through Level B, L0/L1/L2 still agree, and combined/installed
+   program builds pass. Update the progressive manual and one compiler-shaped
+   builder/validator example. Record the remaining cREXX AST/proof migration
+   work without claiming a production compiler migration.
+
+**Numbered implementation steps — proposed:**
+
+1. **AST-STEP01 (AC01–06):** inventory the product and research tree contracts;
+   present small before/after surface examples, ownership rules and diagnostics.
+   **Decision gate:** Adrian approves the AST/API shape before implementation.
+2. **AST-STEP02 (AC01–03/06):** implement the reviewed schema, owned storage,
+   builders, fields/lists and provenance, retaining existing parse views.
+   Depends on STEP01; qualify settings and calculator first.
+3. **AST-STEP03 (AC02–04):** add iterative traversal/folds, validation and pure
+   reconstruction; retain independent controls and explicit bounds. Depends on
+   STEP02; no unrestricted rewrite engine is implied.
+4. **AST-STEP04 (AC04/05):** promote the admitted analysis schedules and one
+   grouping/lowering pass; adapt a bounded RexxScript consumer. Depends on
+   STEP03; compare with the existing consumer before removing duplicate code.
+5. **AST-STEP05 (AC01–06):** qualify backend equivalence, failure/lifecycle,
+   bootstrap and installed examples; update the manual and migration map.
+   Depends on STEP02–04; report criteria separately from wider research closure.
+
+**Design references:** the [LLVM AST tutorial](https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl02.html)
+illustrates an application-oriented syntax tree. [MLIR's rewrite contracts](https://mlir.llvm.org/docs/PatternRewriter/)
+separate pattern matching, mutation and traversal/scheduling, and distinguish
+bounded recursion from general repeated rewriting. These are reference designs,
+not dependencies or proofs for Level L. Reuse and requalify the local `llgroup`
+and `llschedule` research controls where their restricted contracts fit.
+
 ### Develop CI repair — approved 12 October 2026
 
 **Vision:** make the published Level L checkpoint build and check out on all

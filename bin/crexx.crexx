@@ -461,12 +461,31 @@ if linkOptionsUsed & \native then do
   return 2
 end
 
+/* A grammar is a build input, never a script entry point. */
+implicitProject = 0
+if projectMode = '' & compile then do
+  grammarCount = 0; firstProgram = 0
+  do sourceIndex = 1 to filenames[0]
+    sourceKind = driverLevelL(filenames[sourceIndex])
+    if sourceKind < 0 then return 2
+    if sourceKind then grammarCount = grammarCount + 1
+    else if firstProgram = 0 then firstProgram = sourceIndex
+  end
+  if grammarCount > 0 then do
+    implicitProject = 1; projectMode = 'library'; outputIndex = 1
+    if firstProgram > 0 then do
+      projectMode = 'program'; outputIndex = firstProgram
+    end
+    projectOutput = driverOutputStem(filenames[outputIndex],rxfs..cwd(),dirsep)
+  end
+end
+
 if projectMode <> '' then do
   if lockTimeoutUsed then do
     say '--lock-timeout applies to ordinary source invocations, not --library or --program'
     return 2
   end
-  if argsStart > 0 then do
+  if argsStart > 0 & \implicitProject then do
     say '--args is not available with --library or --program'
     return 2
   end
@@ -480,7 +499,17 @@ if projectMode <> '' then do
   end
   projectBinaryRoots = rxpath || lpath
   if binaryRoots <> '' then projectBinaryRoots = projectBinaryRoots || ';' || binaryRoots
-  return buildProject(projectMode, projectOutput, filenames, projectJobs, projectRebuild, optimize, native, sourceRoots, projectBinaryRoots, binaryRoots, libs, userLibs, importRxas, diagnosticsMode, diagnosticLocale, rxpath, dirsep, platformUpper)
+  projectRc = buildProject(projectMode, projectOutput, filenames, projectJobs, projectRebuild, optimize, native, sourceRoots, projectBinaryRoots, binaryRoots, libs, userLibs, importRxas, diagnosticsMode, diagnosticLocale, rxpath, dirsep, platformUpper)
+  if projectRc <> 0 | \implicitProject | projectMode = 'library' | \execute | native then return projectRc
+  runArgs = .string[]
+  call appendArrayValue runArgs, rxpath || 'bin' || dirsep || 'rxvme'
+  call appendArrayValue runArgs, projectOutput || '.rxbin'
+  call appendArrayValue runArgs, '-a'
+  do argumentIndex = 1 to cliArgs[0]
+    call appendArrayValue runArgs, cliArgs[argumentIndex]
+  end
+  address crexx "run :runArgs[]"
+  return rc
 end
 
 /* Ordinary source builds publish adjacent artifacts. Acquire every output
@@ -808,6 +837,12 @@ do i=.int(1) to filenames[0]
     link_cmd = renderCommand(linkArgs, platformUpper)
     if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET link_cmd
     address crexx "run :linkArgs[]" output out error err
+    do diagnosticIndex = 1 to out.0
+      say out.diagnosticIndex
+    end
+    do diagnosticIndex = 1 to err.0
+      say err.diagnosticIndex
+    end
     if verbose then do
       res = .string
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
@@ -1011,6 +1046,120 @@ if lower(right(filename,6)) = '.crexx' then filename = substr(filename,1,length(
 if lower(right(filename,5)) = '.rexx' then filename = substr(filename,1,length(filename)-5)
 if lower(right(filename,7)) = '.bcrexx' then filename = substr(filename,1,length(filename)-7)
 return rxfs..abspath(chop_suffix(filename))
+
+/** Identify a leading static OPTIONS LEVELL, ignoring nested block comments.
+ * Dedicated grammar suffixes select Level L even for a malformed header, so
+ * the generator supplies the original source diagnostic. */
+driverLevelL: procedure = .int
+arg path = .string
+if lower(right(path,4)) = '.rxl' | lower(right(path,7)) = '.levell' then return 1
+if \isfile(path) then return 0
+source = .string
+do
+  source = readbinary(path) as .string
+on signal
+  say 'cannot read source:' path
+  return -1
+end
+at = 1; depth = 0; token = ''; tokens = .string[]
+do while at <= length(source) & tokens[0] < 2
+  pair = substr(source,at,2); ch = substr(source,at,1)
+  if depth > 0 then do
+    if pair = '/*' then do
+      depth = depth + 1; at = at + 2
+    end
+    else if pair = '*/' then do
+      depth = depth - 1; at = at + 2
+    end
+    else at = at + 1
+    iterate
+  end
+  if pair = '/*' | pos(ch,' ' || '090a0d'x) > 0 then do
+    if token <> '' then do
+      call appendArrayValue tokens, lower(token); token = ''
+    end
+    if pair = '/*' then do
+      depth = 1; at = at + 2
+    end
+    else at = at + 1
+    iterate
+  end
+  if verify(ch,'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_') <> 0 then leave
+  token = token || ch; at = at + 1
+end
+if token <> '' & tokens[0] < 2 then call appendArrayValue tokens, lower(token)
+if tokens[0] <> 2 then return 0
+return tokens[1] = 'options' & tokens[2] = 'levell'
+
+/** Grammar action identity includes its executable and runtime interfaces. */
+projectGrammarKey: procedure = .string
+arg source = .string, generator = .string, rxas = .string, runtimeRoot = .string, optimize = .int
+state = rxhash..sha256init()
+state = projectKeyText(state,'crexx-grammar/v1')
+state = projectKeyText(state,source)
+state = projectKeyText(state,projectFileHash(source))
+state = projectKeyText(state,projectFileHash(generator))
+assemblerPath = rxas
+if isfile(assemblerPath || '.exe') then assemblerPath = assemblerPath || '.exe'
+state = projectKeyText(state,projectFileHash(assemblerPath))
+state = projectKeyText(state,projectFileHash(runtimeRoot || '/rxfnsl.rxbin'))
+state = projectKeyText(state,projectFileHash(runtimeRoot || '/library.rxbin'))
+state = projectKeyText(state,optimize)
+return rxhash..sha256finalhex(state)
+
+/** Publish grammar artifacts only after successful generation and assembly. */
+projectBuildGrammar: procedure = .int
+arg source = .string, stem = .string, workDir = .string, generator = .string, rxas = .string, runtimeRoot = .string, key = .string, optimize = .int, rebuild = .int
+outputBase = workDir || '/' || stem
+if \rebuild & projectActionCurrent(outputBase || '.rxbin',workDir || '/action.sha256',key) then do
+  say 'SKIP: grammar current' stem
+  return 0
+end
+privateDir = workDir || '/pending'
+if projectMakeDirectory(privateDir) <> 0 then return 1
+privateBase = privateDir || '/' || stem
+argv = .string[]
+call appendArrayValue argv, generator
+call appendArrayValue argv, source
+call appendArrayValue argv, '--rxas'
+generatedLines = .string[]; errors = .string[]; i = .int
+say 'START: grammar' stem
+address crexx "run :argv[]" output generatedLines error errors
+result = rc
+do i = 1 to errors[0]
+  say errors[i]
+end
+if result <> 0 then do
+  do i = 1 to generatedLines[0]
+    say generatedLines[i]
+  end
+  return result
+end
+assembly = privateBase || '.rxas'
+do i = 1 to generatedLines[0]
+  if lineout(assembly,generatedLines[i]) <> 0 then do
+    call lineout assembly
+    say 'FAILED: write generated grammar' assembly
+    return 1
+  end
+end
+call lineout assembly
+assembleArgs = .string[]
+call appendArrayValue assembleArgs, rxas
+if \optimize then call appendArrayValue assembleArgs, '-n'
+call appendArrayValue assembleArgs, '-o'
+call appendArrayValue assembleArgs, privateBase
+call appendArrayValue assembleArgs, privateBase
+if projectRunArgv('assemble grammar ' || source,assembleArgs) <> 0 then return 1
+if key <> projectGrammarKey(source,generator,rxas,runtimeRoot,optimize) then do
+  say 'FAILED: grammar inputs changed during generation; retry the build'
+  return 1
+end
+if rxfs..rename(privateBase || '.rxbin',outputBase || '.rxbin') <> 0 then return 1
+if rxfs..rename(assembly,outputBase || '.rxas') <> 0 then return 1
+if projectWriteStamp(workDir || '/action.sha256',key) <> 0 then return 1
+say 'BUILT: grammar' stem
+return 0
 
 projectFileHash: procedure = .string
 arg path = .string
@@ -1510,6 +1659,9 @@ do while rest <> ''
     rest = substr(rest, sep + 1)
   end
   if item <> '' then do
+    imagePath = item
+    if lower(right(imagePath,6)) <> '.rxbin' then imagePath = imagePath || '.rxbin'
+    if isfile(imagePath) & findStaticModule(item) = '' then iterate
     call appendArrayValue argv, '-l'
     call appendArrayValue argv, item
   end
@@ -1558,6 +1710,7 @@ end
 cwd = rxfs..cwd()
 resolvedSources = .string[]
 stems = .string[]
+grammars = .int[]; grammarKeys = .string[]; grammarCount = 0
 sourceRoots = projectNormalizeRoots(configuredSourceRoots, cwd, dirsep)
 do i = 1 to sources[0]
   resolvedSources[i] = projectAbsolutePath(sources[i], cwd, dirsep)
@@ -1565,7 +1718,11 @@ do i = 1 to sources[0]
     say 'missing project source:' sources[i]
     return 2
   end
+  grammars[i] = driverLevelL(resolvedSources[i])
+  if grammars[i] < 0 then return 2
+  grammarCount = grammarCount + grammars[i]
   stems[i] = projectSourceStem(resolvedSources[i])
+  if grammars[i] then stems[i] = stems[i] || '_grammar'
   if stems[i] = '' then do
     say 'cannot derive project member name from:' sources[i]
     return 2
@@ -1595,6 +1752,28 @@ if projectMakeDirectory(publishRoot) <> 0 then return 1
 rxc = rxpath || 'bin' || dirsep || 'rxc'
 rxas = rxpath || 'bin' || dirsep || 'rxas'
 rxlink = rxpath || 'bin' || dirsep || 'rxlink'
+/* Generate providers before any consumer compiler can resolve their imports. */
+generator = rxpath || 'bin' || dirsep || 'levell'
+if isfile(generator || '.exe') then generator = generator || '.exe'
+if grammarCount > 0 then do
+  if \isfile(generator) then do
+    say 'Level L generator is missing from this installation:' generator
+    return 2
+  end
+  grammarRoots = ''
+  do i = 1 to resolvedSources[0]
+    if \grammars[i] then iterate
+    grammarDir = workRoot || '/grammars/' || stems[i]
+    grammarKeys[i] = projectGrammarKey(resolvedSources[i],generator,rxas,rxpath || 'bin',optimize)
+    grammarRc = projectBuildGrammar(resolvedSources[i],stems[i],grammarDir,generator,rxas,rxpath || 'bin',grammarKeys[i],optimize,forceRebuild)
+    if grammarRc <> 0 then return grammarRc
+    grammarRoots = appendSemicolonValue(grammarRoots,grammarDir)
+  end
+  binaryRoots = grammarRoots || ';' || binaryRoots
+end
+/* A reusable library leaves shared runtime imports external. A program supplies
+ * one runtime candidate, including when its grammars arrive through -l. */
+if mode = 'program' then libraryInputs = appendSemicolonValue(libraryInputs,rxpath || 'bin' || dirsep || 'rxfnsl')
 compileKey = projectCompileKey(optimize, sourceRoots, binaryRoots, rxc, rxas, rxpath || 'bin' || dirsep || 'crexx', importRxas, diagnostics, diagnosticLocale)
 projectKey = projectActionKey(mode, outputBase, optimize, resolvedSources, sourceRoots, binaryRoots, dependencyRoots, libraryInputs, rxc, rxas, rxlink, compileKey)
 finalOutput = outputBase || '.rxbin'
@@ -1607,6 +1786,7 @@ end
 
 requests = .channelvalue[]
 do i = 1 to resolvedSources[0]
+  if grammars[i] then iterate
   memberDir = memberRoot || '/' || stems[i]
   memberOutput = memberDir || '/' || stems[i] || '.rxbin'
   memberStamp = memberDir || '/action.sha256'
@@ -1642,6 +1822,7 @@ if waveRc <> 0 then return 1
    cannot detect. Recheck the completed snapshots before publishing a wave. */
 if importRxas & requests[0] > 0 then do
   do i = 1 to resolvedSources[0]
+    if grammars[i] then iterate
     checkedMemberDir = memberRoot || '/' || stems[i]
     checkedMemberKey = projectMemberKey(compileKeyAfter, resolvedSources[i])
     checkedRequest = projectCompileRequest(resolvedSources[i], stems[i], checkedMemberDir, sourceRoots, binaryRoots, rxc, rxas, checkedMemberKey, optimize, importRxas, diagnostics, diagnosticLocale)
@@ -1663,8 +1844,29 @@ call appendArrayValue linkArgs, rxlink
 if optimize then call appendArrayValue linkArgs, '-s'
 call appendArrayValue linkArgs, '-o'
 call appendArrayValue linkArgs, privateBase
+if mode = 'library' then do i = 1 to stems[0]
+  call appendArrayValue linkArgs, '-r'
+  call appendArrayValue linkArgs, stems[i]
+end
 do i = 1 to stems[0]
-  call appendArrayValue linkArgs, memberRoot || '/' || stems[i] || '/' || stems[i] || '.rxbin'
+  if grammars[i] then do
+    if grammarKeys[i] <> projectGrammarKey(resolvedSources[i],generator,rxas,rxpath || 'bin',optimize) then do
+      say 'FAILED: grammar inputs changed during compilation; retry the build'
+      return 1
+    end
+    call appendArrayValue linkArgs, workRoot || '/grammars/' || stems[i] || '/' || stems[i] || '.rxbin'
+  end
+  else call appendArrayValue linkArgs, memberRoot || '/' || stems[i] || '/' || stems[i] || '.rxbin'
+end
+if mode = 'program' then call appendArrayValue linkArgs, rxpath || 'bin' || dirsep || 'rxfnsl.rxbin'
+/* Explicit bytecode libraries belong in the linked product. Native-provider
+ * inputs remain available to the native packager through userLibraries. */
+explicitLibraries = .string[]
+call appendSemicolonValuesToArray explicitLibraries, userLibraries
+do libraryIndex = 1 to explicitLibraries[0]
+  libraryPath = explicitLibraries[libraryIndex]
+  if lower(right(libraryPath,6)) <> '.rxbin' then libraryPath = libraryPath || '.rxbin'
+  if isfile(libraryPath) then call appendArrayUnique linkArgs, libraryPath
 end
 say 'BARRIER: link' mode
 if projectRunArgv('link project ' || mode, linkArgs) <> 0 then return 1
@@ -1751,10 +1953,12 @@ say '--link-keep-source -- keep source/TRACE debug metadata in the linked native
 say '--link-keep-inline -- keep inline-body metadata in the linked native image'
 say
 say 'Source files without OPTIONS use rxc file-type defaults: .rexx is Level C'
-say 'and .crexx/.crx are Level G.'
+say 'and .crexx/.crx are Level G. OPTIONS LEVELL selects grammar generation.'
+say '.rxl defaults to Level L; .levell is also accepted. A grammar alone builds a library.'
+say 'Include grammars with application sources to build the program in one command.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
 say '--library and --program optimize by default, compile explicit sources in one parallel'
-say 'wave, link only after that wave succeeds, and publish the final RXBIN atomically.'
+say 'wave after any Level L generators, then link and publish the final RXBIN atomically.'
 say 'Use --nooptimize for diagnostic parity; --program also accepts --native.'
 say 'Native packaging uses rxlink before rxcpack; declared provider archives and explicit'
 say 'plugin/static libraries are linked with platform-appropriate retention flags.'

@@ -75,3 +75,23 @@ combined source and replace the temporary engineering helper with matched core
 output before recipient packaging. It can use the writer directly without
 manually pre-staging all transitive DLLs. Core/static/GTK/App tests and same-commit
 signer inputs still govern eventual signed distribution delivery.
+
+## Concurrent develop integration
+
+Before publication, develop advanced to 8d3572094 with the approved Level L
+grammar-source integration. The helper and collector changes were committed
+separately (afd66dc2e / bd76275e6), then merged with that upstream work. The
+collector, fixture and generic helper inputs remain byte-identical; the changed
+driver/grammar/package-smoke inputs were rebuilt and requalified.
+
+The combined source (pre-receipt merge 890b67f4b) passed a warning-free C1/product
+build, the actual extracted core's 30 commands in 42.957 s, and the SDK
+inventory/CMake/native proof. It includes the updated `.crexx`/`.rxl` grammar
+workflow, both ordinary optimization paths, the missing-helper failure after
+rxlink, preserved package validation, and a relocated real DLL consumer.
+[Integrated core](integrated-core-summary.json),
+[SDK](integrated-sdk-result.txt), [build](integrated-build-summary.txt) and
+[final input hashes](integrated-qualified-inputs.json) retain this final proof.
+Only this receipt was added to the unpublished integration commit afterwards;
+no qualified product/fixture input changed. The unchanged Debug/ASan-flag
+collector controls and offline llama-enabled configuration are reused.

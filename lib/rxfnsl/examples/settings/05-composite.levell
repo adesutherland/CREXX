@@ -35,8 +35,7 @@ scan: lexer
   rbracket.lex: rule = ']' then emit rbracket
   whitespace: rule = space+ then skip
 parse: parser start settings
-  settings: rule = separator settings | assignment tail | ''
-  tail: rule = separator settings | ''
+  settings: rule = separator* (assignment (separator assignment?)*)?
   assignment: rule = name.value equals value
   name.value: rule = identifier
   value: rule = number | string | expression

@@ -6,8 +6,9 @@ import llcore
 import lllimits
 
 /** Keep authored rules and named terminals, erase only normalization wrappers.
- * Child order and source spans are unchanged. Construction is explicitly
- * bounded because flattening shared transparent lists can be quadratic.
+ * Child order and source spans are unchanged. Transparent nodes retain only
+ * frontier counts; visible child links are materialized once per named parent.
+ * The entry budget bounds the resulting view without copying every list suffix.
  */
 view: class
   _source = .llcore..tree
@@ -22,39 +23,66 @@ view: class
     if source.validate() = 0 | root < 1 | root > source.size() then do
       _error = 'invalid source tree'; return
     end
-    i = .int
-    heads = .int[]; counts = .int[]; flat = .int[]; entries = 0; output = 0
+    current = .int; top = .int; a = .int; b = .int
+    counts = .int[]; pending = .int[]; output = 0; entries = 0
     do node = 1 to source.size()
       a = source.left(node); b = source.right(node); ca = 0; cb = 0
       if a > 0 then ca = counts[a]
       if b > 0 then cb = counts[b]
+      if ca > limit - cb then do
+        _error = lllimits..describe('tree.entries',limit,limit + 1); return
+      end
       kept = source.kind(node) = 5 | (source.kind(node) = 1 & left(source.label(node),7) <> 'symbol.')
-      heads[node] = entries + 1
-      if entries + ca + cb + 1 > limit | output + ca + cb > limit then do
-        _error = lllimits..describe('tree.entries',limit,max(entries + ca + cb + 1,output + ca + cb)); return
-      end
       if kept then do
+        if entries + output + ca + cb + 1 > limit then do
+          _error = lllimits..describe('tree.entries',limit,entries + output + ca + cb + 1); return
+        end
         _first[node] = output + 1; _counts[node] = ca + cb
-        do i = 0 to ca - 1
-          output = output + 1; _children[output] = flat[heads[a] + i]
+        /* Expand only transparent nodes. A named descendant is one child,
+         * and its own descendants belong to that descendant's view. */
+        top = 0
+        if b > 0 then do
+          top = top + 1; pending[top] = b
         end
-        do i = 0 to cb - 1
-          output = output + 1; _children[output] = flat[heads[b] + i]
+        if a > 0 then do
+          top = top + 1; pending[top] = a
         end
-        entries = entries + 1; flat[entries] = node; counts[node] = 1
+        do while top > 0
+          current = pending[top]; top = top - 1
+          if counts[current] = 0 then iterate
+          named = source.kind(current) = 5 | (source.kind(current) = 1 & left(source.label(current),7) <> 'symbol.')
+          if named then do
+            output = output + 1; _children[output] = current
+          end
+          else do
+            rightChild = source.right(current); leftChild = source.left(current)
+            if rightChild > 0 then do
+              top = top + 1; pending[top] = rightChild
+            end
+            if leftChild > 0 then do
+              top = top + 1; pending[top] = leftChild
+            end
+          end
+        end
+        counts[node] = 1; entries = entries + 1
       end
-      else do
-        do i = 0 to ca - 1
-          entries = entries + 1; flat[entries] = flat[heads[a] + i]
-        end
-        do i = 0 to cb - 1
-          entries = entries + 1; flat[entries] = flat[heads[b] + i]
-        end
-        counts[node] = ca + cb
-      end
+      else counts[node] = ca + cb
     end
     if counts[root] <> 1 then _error = 'named tree requires one root'
-    else _root = flat[heads[root]]
+    else do
+      current = root
+      do forever
+        if source.kind(current) = 5 | (source.kind(current) = 1 & left(source.label(current),7) <> 'symbol.') then leave
+        a = source.left(current); b = source.right(current)
+        if a > 0 then do
+          if counts[a] > 0 then do
+            current = a; iterate
+          end
+        end
+        current = b
+      end
+      _root = current
+    end
     return
   root: method = .int
     return _root

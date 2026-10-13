@@ -1,5 +1,5 @@
 /* cREXX License (MIT). Generated second-language and packed-image contracts. */
-options levell
+options levelb
 import rxfnsb
 import llcore
 import llfront
@@ -8,6 +8,7 @@ import llregular
 import llmunch
 import lllanguage
 import llsource
+import lltree
 import levell_example
 main: procedure = .int expose failures checks
   arg argv = .string[]
@@ -80,6 +81,27 @@ main: procedure = .int expose failures checks
   call check(pos('^',message) > 0,'source caret')
   message = llsource..diagnostic('61ff'x as .binary,1,'TEST','invalid UTF8')
   call check(pos('source bytes:',message) > 0,'malformed byte explanation')
+  /* Long repeated lists must not materialize every intermediate suffix.
+   * The named view has 3,001 nodes and 3,000 visible child references. */
+  raw = .llcore..tree.from_source(copies('x',3000) as .binary)
+  chain = 0
+  do item = 3000 to 1 by -1
+    leaf = raw.add(1,'identifier',item - 1,item,0,0)
+    chain = raw.add(2,'sequence',item - 1,3000,leaf,chain)
+  end
+  root = raw.add(5,'items',0,3000,chain,0)
+  view = .lltree..view(raw,root,6001)
+  call check(view.error() = '', 'flat list within linear entry budget')
+  if view.error() = '' then do
+    call check(view.count(view.root()) = 3000,'flat list item count')
+    call check(view.start(view.child(view.root(),1)) = 0,'flat list first span')
+    call check(view.finish(view.child(view.root(),3000)) = 3000,'flat list last span')
+  end
+  exhausted = .lltree..view(raw,root,6000)
+  call check(pos('tree.entries budget 6000',exhausted.error()) > 0,'flat list exact entry budget')
+  transparent = raw.add(2,'sequence',0,3000,root,0)
+  through = .lltree..view(raw,transparent,6001)
+  call check(through.error() = '' & through.root() = root,'transparent root selects named root')
   say 'generated_checks=' || checks
   say 'generated_failures=' || failures
   return failures

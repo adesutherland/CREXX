@@ -23,7 +23,7 @@ main: procedure = .int
   arg argv = .string[]
   rule = .int; d = .int; i = .int; entry = .int; name = .string
   if argv[0] < 1 then do
-    say 'usage: levell specification.levell [--rxas|--graph] [--limit name=count] (generated artifact on stdout)'; return 2
+    say 'usage: levell specification.crexx|specification.rxl [--rxas|--graph] [--limit name=count] (generated artifact on stdout)'; return 2
   end
   limits = .lllimits..policy()
   if argv[1] = '--limits' then do
@@ -80,7 +80,7 @@ main: procedure = .int
   if checked.status() <> 0 then do
     say argv[1] || ': ' || llsource..diagnostic(source,checked.offset(),'LL_SPECIFICATION',checked.error()); return 1
   end
-  doc = .llfront..document(source as .string,0,limits)
+  doc = .llfront..document(source as .string,0,limits,lower(right(argv[1],4)) = '.rxl')
   if doc.run() <> 0 then do
     if doc.run() = 4 then say argv[1] || ': ' || doc.error()
     else say argv[1] || ': LL_GRAMMAR: ' || doc.error()

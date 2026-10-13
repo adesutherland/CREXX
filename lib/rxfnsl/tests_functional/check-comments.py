@@ -278,7 +278,7 @@ if a.part in ('all', 'backends'):
                     assert b'LL_COMMENT: unclosed' not in data and b'value.error' not in data
 
     # The expression components receive exactly the same prepared byte policy.
-    pratt = (root / 'lib/rxfnsl/examples/calculator/calculator.levell').read_text()
+    pratt = (root / 'lib/rxfnsl/examples/calculator/calculator.rxl').read_text()
     pratt = pratt.replace('namespace levell_calculator', 'namespace levell_settings')
     pratt = pratt.replace("notes: comments nested '(*' '*)'", declarations)
     regional = (root / 'lib/rxfnsl/examples/settings/05-composite.levell').read_text()

@@ -153,3 +153,8 @@ The compatible core-target and collector causes are published together as two
 reviewable commits. Remote refs provide CP-AC-06 proof; occupied dirty develop
 checkouts are preserved instead of force-updated. Windows GUI and signed interim
 delivery remain owned by the Windows task and are not claimed complete here.
+The final integration with concurrent develop 8d3572094 preserves its approved
+grammar/driver changes. Qualified unchanged helper/collector fixtures are reused;
+the changed product/package workflow was rebuilt and passed 30 actual extracted
+core commands plus SDK proof. The unpublished integration commit includes this
+updated receipt before the first push, with no post-CI status commit planned.
