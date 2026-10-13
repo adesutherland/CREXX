@@ -14,6 +14,7 @@ import llforest
 import llpratt
 import llregional
 import llproject
+import llast
 import lllimits
 
 definition: class
@@ -26,6 +27,7 @@ definition: class
   _regional = .llregional..plan
   _expressionname = .string
   _schema = .llproject..schema
+  _ast = .llast..schema
   _encoding = .string
   _unicodeversion = .string
   _open = .string
@@ -47,7 +49,7 @@ definition: class
     _dfa = dfa; _parser = parser; _encoding = encoding; _open = opening; _close = closing
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
     _backend = 'lr1'; _root = 0; _sync = -1
-    _schema = .llproject..schema()
+    _schema = .llproject..schema(); _ast = .llast..schema()
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
@@ -57,7 +59,7 @@ definition: class
     _encoding = encoding; _open = opening; _close = closing
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
     _sync = -1
-    _schema = .llproject..schema()
+    _schema = .llproject..schema(); _ast = .llast..schema()
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
@@ -66,7 +68,7 @@ definition: class
     _dfa = dfa; _encoding = encoding; _open = opening; _close = closing
     _hasparser = 0; _malformed = ''; _unmatched = ''; _eof = -1
     _backend = 'none'; _root = 0; _sync = -1
-    _schema = .llproject..schema()
+    _schema = .llproject..schema(); _ast = .llast..schema()
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
@@ -75,7 +77,7 @@ definition: class
     _dfa = dfa; _operators = operators; _expressionname = name; _backend = 'pratt'
     _encoding = encoding; _open = opening; _close = closing; _sync = -1
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
-    _schema = .llproject..schema()
+    _schema = .llproject..schema(); _ast = .llast..schema()
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
@@ -85,7 +87,7 @@ definition: class
     _regional = .llregional..plan.loaded(parser,operators,virtual,open,close)
     _encoding = encoding; _open = opening; _close = closing; _sync = -1
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
-    _schema = .llproject..schema()
+    _schema = .llproject..schema(); _ast = .llast..schema()
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
@@ -104,6 +106,14 @@ definition: class
   keep: method = .int
     arg name = .string, kind = .int, arity = .int
     return _schema.keep(name,kind,arity)
+  astmap: method = .int
+    arg rule = .string, kind = .string
+    return _ast.mapping(rule,kind)
+  astfield: method = .int
+    arg rule = .string, name = .string, source = .string, mode = .string, card = .string
+    return _ast.field(rule,name,source,mode,card)
+  astschema: method = .llast..schema
+    return _ast
   schema: method = .llproject..schema
     return _schema
   recovery: method = .void
@@ -376,6 +386,10 @@ request: class
     root = _root
     if _status <> 0 then root = 0
     return .llproject..projection(_tree,root,_language.schema(),_limits.limit('tree.entries'))
+  /** Construct an owned AST only from a successful unique parse. */
+  ast: method = .llast..tree
+    if _status <> 0 | _root = 0 then return .llast..tree.failed('LL_AST_PARSE: AST construction requires a successful unique parse; ' || _error)
+    return .llast..tree(_tree,_root,_language.astschema(),_limits.limit('tree.entries'))
   offset: method = .int
     return _offset
   error: method = .string

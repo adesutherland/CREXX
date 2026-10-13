@@ -6,6 +6,7 @@ namespace llfront expose document
 import rxfnsb
 import llcore
 import llproject
+import llast
 import llstage
 import llcharset
 import llcomments
@@ -47,6 +48,8 @@ document: class
   _graph = .llcore..grammar
   _stages = .llstage..rules[]
   _schema = .llproject..schema
+  _ast = .llast..schema
+  _astat = .int[]
   _root = .int
   _profile = .string
   _units = .string
@@ -97,6 +100,7 @@ document: class
     _status = 0; _ran = 0; _error = ''; _at = 1; _end = 0; _depth = 0
     _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
     _schema = .llproject..schema()
+    _ast = .llast..schema()
     _encoding = ''; _commentopen = ''; _commentclose = ''
     _comments = .llcomments..rules()
     _malformed = ''; _otherwise = ''; _eof = -1; _lexmode = 0
@@ -191,6 +195,8 @@ document: class
       if _type[d] = 'parser' then lexical = 0
       _lexical[d] = lexical & (_type[d] = 'rule' | _type[d] = 'pattern' | _type[d] = 'charset')
     end
+    call astclauses()
+    if _status <> 0 then return _status
     startname = ''; parsers = 0; d = .int; name = .string
     do d = 1 to _decls
       if _type[d] <> 'parser' then iterate
@@ -362,6 +368,7 @@ document: class
       end
     end
     call buildoperators()
+    call checkast()
     target = index(startname)
     if parsers = 0 then nop
     else if target = 0 then call fail('undefined start rule ' || startname,1)
@@ -371,6 +378,146 @@ document: class
       _status = 4; _error = lllimits..describe('grammar.clauses',_limit,_graph.size())
     end
     return _status
+  /** Split an attached construction clause from its recognition declaration.
+   * The full generated syntax reader has already checked the surface; the
+   * identical token lowering also serves the minimal bootstrap reader. */
+  astclauses: method = .void
+    d = .int; t = .int; ok = .int
+    do d = 1 to _decls while _status = 0
+      if _lexical[d] then iterate
+      if wordpos(_type[d],'token rule operators infix prefix') = 0 then iterate
+      t = _first[d] + 3
+      do while t < _last[d]
+        if wordat(t) = 'then' & wordat(t + 1) = 'tree' then leave
+        t = t + 1
+      end
+      if t >= _last[d] then iterate
+      _astat[d] = t; _at = t + 2; _end = _last[d]; _last[d] = t - 1
+      kind = _name[d]
+      if _kind[_at] = 'symbol' then do
+        kind = _text[_at]; _at = _at + 1
+      end
+      ok = _ast.mapping(_name[d],kind)
+      if ok = 0 then call fail(_ast.error(),t)
+      ok = expect('(')
+      do while _at <= _end & _kind[_at] <> ')' & _status = 0
+        at = _at; field = _text[_at]
+        if _kind[_at] <> 'symbol' then call fail('AST field requires a name',_at)
+        _at = _at + 1; ok = expect('=')
+        selector = wordat(_at); mode = 'capture'; card = 'one'
+        if _kind[_at] <> 'symbol' then call fail('AST field requires a capture, operand or text',_at)
+        _at = _at + 1
+        if selector = 'text' then do
+          mode = 'text'; selector = ''
+          if _kind[_at] = '(' then do
+            _at = _at + 1; selector = wordat(_at)
+            if _kind[_at] <> 'symbol' then call fail('text() requires a capture name',_at)
+            _at = _at + 1; ok = expect(')')
+          end
+        end
+        else if _type[d] = 'infix' | _type[d] = 'prefix' | _type[d] = 'operators' then mode = 'operand'
+        select _kind[_at]
+          when '*' then do
+            card = 'many'; _at = _at + 1
+          end
+          when '+' then do
+            card = 'some'; _at = _at + 1
+          end
+          when '?' then do
+            card = 'optional'; _at = _at + 1
+          end
+          otherwise nop
+        end
+        ok = _ast.field(_name[d],field,selector,mode,card)
+        if ok = 0 then call fail(_ast.error(),at)
+        if _kind[_at] = ')' then leave
+        ok = expect(',')
+      end
+      ok = expect(')')
+      if _at <> _end + 1 then call fail('unexpected token after then tree',_at)
+    end
+    return
+  /** Capture multiplicities are computed within the enclosing rule. Named
+   * called rules are boundaries, so recursive language rules do not create
+   * cycles in this local field analysis. Counts saturate at two (many). */
+  capturebound: method = .int
+    arg root = .int, field = .string, maximum = .int
+    todo = .int[]; expanded = .int[]; amounts = .int[]; done = .int[]
+    top = 1; todo[top] = root; expanded[top] = 0
+    do while top > 0
+      id = todo[top]
+      if done[id] then do
+        top = top - 1; iterate
+      end
+      op = _graph.op(id); a = _graph.left(id); b = _graph.right(id)
+      if op = 5 then do
+        amounts[id] = _graph.label(id) = '@field.' || field; done[id] = 1; top = top - 1; iterate
+      end
+      if op <> 2 & op <> 3 & op <> 4 & op <> 7 & op <> 14 & op <> 15 then do
+        amounts[id] = 0; done[id] = 1; top = top - 1; iterate
+      end
+      if expanded[top] = 0 then do
+        expanded[top] = 1
+        if b > 0 & (op = 2 | op = 3 | op = 4) then do
+          top = top + 1; todo[top] = b; expanded[top] = 0
+        end
+        if a > 0 then do
+          top = top + 1; todo[top] = a; expanded[top] = 0
+        end
+        iterate
+      end
+      top = top - 1; done[id] = 1
+      select
+        when op = 2 then amounts[id] = min(2,amounts[a] + amounts[b])
+        when op = 3 | op = 4 then do
+          if maximum then amounts[id] = max(amounts[a],amounts[b])
+          else amounts[id] = min(amounts[a],amounts[b])
+        end
+        otherwise do
+          amounts[id] = 0
+          if maximum & amounts[a] > 0 then amounts[id] = 2
+          if op = 14 & maximum = 0 then amounts[id] = amounts[a]
+          if op = 15 & maximum then amounts[id] = amounts[a]
+        end
+      end
+    end
+    return amounts[root]
+  checkast: method = .void
+    if _status <> 0 then return
+    if _regiontoken >= 0 & _ast.index(_operatorname) > 0 then do
+      call fail('LL_AST_REGION: an embedded expression has no operators wrapper; attach that tree mapping to an enclosing parser rule',_astat[index(_operatorname)])
+      return
+    end
+    do f = 1 to _ast.fields() while _status = 0
+      d = index(_ast.rule(_ast.owner(f))); selector = _ast.source(f); mode = _ast.mode(f)
+      if mode = 'text' & selector = '' then iterate
+      if mode = 'operand' then do
+        allowed = 'inner'
+        if _type[d] = 'infix' then allowed = 'left right'
+        if wordpos(selector,allowed) = 0 then call fail('LL_AST_OPERAND: unknown operand ' || selector || ' in ' || _name[d] || '; available: ' || allowed,_astat[d])
+        if _ast.card(f) <> 'one' then call fail('LL_AST_CARDINALITY: an operator operand is one node',_astat[d])
+        iterate
+      end
+      if _type[d] <> 'rule' then do
+        call fail('LL_AST_CAPTURE: ' || _name[d] || ' has no capture named ' || selector,_astat[d]); iterate
+      end
+      root = _graph.left(_handle[d]); low = capturebound(root,selector,0); high = capturebound(root,selector,1)
+      if high = 0 then call fail('LL_AST_CAPTURE: unknown capture ' || selector || ' in ' || _name[d],_astat[d])
+      card = _ast.card(f)
+      expected = 'exactly one match'
+      if card = 'optional' then expected = 'at most one match'
+      if card = 'some' then expected = 'at least one match'
+      actual = 'may be absent'
+      if high > 1 & card <> 'some' then do
+        if low = 0 & card = 'one' then actual = 'may be absent or may match more than once'
+        else actual = 'may match more than once'
+      end
+      if (card = 'one' & (low <> 1 | high <> 1)) | (card = 'optional' & high > 1) | (card = 'some' & low = 0) then call fail('LL_AST_CARDINALITY: field ' || _name[d] || '.' || _ast.name(f) || ' requires ' || expected || ', but capture ' || selector || ' ' || actual,_astat[d])
+    end
+    if _status = 0 & _ast.check() = 0 then call fail(_ast.error(),_astat[index(_ast.rule(_ast.conflict()))])
+    return
+  astschema: method = .llast..schema
+    return _ast
   /** One optional operator component. Its checked CFG lowering is shared with
    * the Pratt implementation; an outer grammar can instead name a region. */
   buildoperators: method = .void

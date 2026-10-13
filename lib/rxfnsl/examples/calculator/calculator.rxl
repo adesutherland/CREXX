@@ -1,7 +1,7 @@
 /* Complete expression language: meaning lives in calculator.crexx. */
 options levell
 namespace levell_calculator
-number: token
+number: token then tree Number(spelling = text)
 plus: token
 minus: token
 times: token
@@ -26,7 +26,12 @@ scan: lexer input utf8
 parse: parser start arithmetic backend pratt
 arithmetic: operators atom number group lparen rparen
 sum: infix arithmetic plus precedence 10 left
+  then tree Add(left = left, right = right)
 difference: infix arithmetic minus precedence 10 left
+  then tree Subtract(left = left, right = right)
 product: infix arithmetic times precedence 20 left
+  then tree Multiply(left = left, right = right)
 quotient: infix arithmetic divide precedence 20 left
+  then tree Divide(left = left, right = right)
 negative: prefix arithmetic minus
+  then tree Negate(value = inner)

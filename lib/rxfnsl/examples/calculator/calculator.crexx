@@ -1,10 +1,9 @@
 /* cREXX License (MIT). Complete Level L calculator: selected tree to value. */
 options levelb
 import rxfnsb
-import llcore
 import lllanguage
 import llsource
-import lltree
+import llast
 import levell_calculator
 
 /** Parse the whole file before evaluating. Decimal arithmetic belongs to this
@@ -31,55 +30,48 @@ main: procedure = .int
     say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())
     return status
   end
-  tree = .lltree..view(request.tree(),request.root())
+  tree = request.ast()
   if tree.error() <> '' then do
     say 'CALC_TREE: ' || tree.error(); return 3
   end
-  pending = .int[]; expanded = .int[]; values = .decimal[]
-  top = 1; pending[top] = tree.root(); expanded[top] = 0
-  node = .int; child = .int; count = .int; name = .string
+  walk = tree.walk('children first')
+  values = .decimal[]
+  node = .llast..node
   a = .decimal; b = .decimal; value = .decimal
   do
-    do while top > 0
-      node = pending[top]; count = tree.count(node); name = tree.name(node)
-      if expanded[top] = 0 then do
-        expanded[top] = 1
-        do child = count to 1 by -1
-          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0
-        end
-        iterate
-      end
-      top = top - 1
-      if name = 'number' & count = 0 then value = tree.text(node) as .decimal
-      else if (name = 'arithmetic' | name = 'group' | name = 'negative') & count = 1 then do
-        value = values[tree.child(node,1)]
-        if name = 'negative' then value = -value
-      end
-      else if wordpos(name,'sum difference product quotient') > 0 & count = 2 then do
-        a = values[tree.child(node,1)]; b = values[tree.child(node,2)]
-        select name
-          when 'sum' then value = a + b
-          when 'difference' then value = a - b
-          when 'product' then value = a * b
-          when 'quotient' then do
-            if b = 0 then do
-              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')
-              return 3
+    do while walk.next()
+      node = walk.node()
+      select node.kind()
+        when 'Number' then value = node.text('spelling') as .decimal
+        when 'Negate' then value = -values[node.child('value').id()]
+        otherwise do
+          a = values[node.child('left').id()]
+          b = values[node.child('right').id()]
+          select node.kind()
+            when 'Add' then value = a + b
+            when 'Subtract' then value = a - b
+            when 'Multiply' then value = a * b
+            when 'Divide' then do
+              if b = 0 then do
+                say argv[1] || ': ' || llsource..diagnostic(source,node.child('right').start(),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')
+                return 3
+              end
+              value = a / b
             end
-            value = a / b
+            otherwise do
+              say 'CALC_TREE: unexpected kind ' || node.kind(); return 3
+            end
           end
-          otherwise nop
         end
       end
-      else do
-        say 'CALC_TREE: unexpected node or child count: ' || name || ' / ' || count
-        return 3
-      end
-      values[node] = value
+      values[node.id()] = value
     end
   on signal
-    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')
+    say argv[1] || ': ' || llsource..diagnostic(source,node.start(),'CALC_VALUE','Decimal conversion or arithmetic failed.')
     return 3
   end
-  say 'RESULT|' || values[tree.root()]
+  if walk.error() <> '' then do
+    say 'CALC_TREE: ' || walk.error(); return 3
+  end
+  say 'RESULT|' || values[tree.root().id()]
   return 0

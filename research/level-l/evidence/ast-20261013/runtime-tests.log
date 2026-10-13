@@ -1,0 +1,69 @@
+[0/2] Re-checking globbed directories...
+[1/3] Generating ts_llast_noopt-linked.rxbin
+[2/3] Generating ts_llast_opt-linked.rxbin
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2877: rexxscript1_rxtvm
+      Start 2458: ts_llast_noopt_rxbvm
+      Start 2459: ts_llast_opt_rxtvm
+      Start 2460: ts_llast_opt_rxbvm
+      Start 2457: ts_llast_noopt_rxtvm
+      Start 2455: levell_generated_rxtvm
+      Start 2456: levell_generated_rxbvm
+      Start 2465: ast_lr1_noopt_rxtvm
+ 1/26 Test #2465: ast_lr1_noopt_rxtvm ..............   Passed    0.15 sec
+      Start 2467: ast_lr1_opt_rxtvm
+ 2/26 Test #2467: ast_lr1_opt_rxtvm ................   Passed    0.16 sec
+      Start 2468: ast_lr1_opt_rxbvm
+ 3/26 Test #2468: ast_lr1_opt_rxbvm ................   Passed    0.13 sec
+      Start 2466: ast_lr1_noopt_rxbvm
+ 4/26 Test #2466: ast_lr1_noopt_rxbvm ..............   Passed    0.16 sec
+      Start 2473: ast_earley_noopt_rxtvm
+ 5/26 Test #2473: ast_earley_noopt_rxtvm ...........   Passed    0.09 sec
+      Start 2474: ast_earley_noopt_rxbvm
+ 6/26 Test #2474: ast_earley_noopt_rxbvm ...........   Passed    0.09 sec
+      Start 2454: ts_tinyexpr_opt
+ 7/26 Test #2454: ts_tinyexpr_opt ..................   Passed    0.13 sec
+      Start 2476: ast_earley_opt_rxbvm
+ 8/26 Test #2476: ast_earley_opt_rxbvm .............   Passed    0.08 sec
+      Start 2475: ast_earley_opt_rxtvm
+ 9/26 Test #2475: ast_earley_opt_rxtvm .............   Passed    0.09 sec
+      Start 2453: ts_tinyexpr_noopt
+10/26 Test #2453: ts_tinyexpr_noopt ................   Passed    0.09 sec
+      Start 2461: ast_ll1_noopt_rxtvm
+11/26 Test #2461: ast_ll1_noopt_rxtvm ..............   Passed    0.07 sec
+      Start 2463: ast_ll1_opt_rxtvm
+12/26 Test #2463: ast_ll1_opt_rxtvm ................   Passed    0.06 sec
+      Start 2462: ast_ll1_noopt_rxbvm
+13/26 Test #2462: ast_ll1_noopt_rxbvm ..............   Passed    0.05 sec
+      Start 2464: ast_ll1_opt_rxbvm
+14/26 Test #2464: ast_ll1_opt_rxbvm ................   Passed    0.05 sec
+      Start 2469: ast_packrat_noopt_rxtvm
+15/26 Test #2469: ast_packrat_noopt_rxtvm ..........   Passed    0.05 sec
+      Start 2471: ast_packrat_opt_rxtvm
+16/26 Test #2471: ast_packrat_opt_rxtvm ............   Passed    0.05 sec
+      Start 2470: ast_packrat_noopt_rxbvm
+17/26 Test #2470: ast_packrat_noopt_rxbvm ..........   Passed    0.06 sec
+      Start 2472: ast_packrat_opt_rxbvm
+18/26 Test #2472: ast_packrat_opt_rxbvm ............   Passed    0.06 sec
+19/26 Test #2456: levell_generated_rxbvm ...........   Passed    2.43 sec
+20/26 Test #2455: levell_generated_rxtvm ...........   Passed    2.46 sec
+21/26 Test #2457: ts_llast_noopt_rxtvm .............   Passed    5.19 sec
+22/26 Test #2458: ts_llast_noopt_rxbvm .............   Passed    5.25 sec
+23/26 Test #2460: ts_llast_opt_rxbvm ...............   Passed    5.26 sec
+24/26 Test #2459: ts_llast_opt_rxtvm ...............   Passed    5.39 sec
+25/26 Test #2877: rexxscript1_rxtvm ................   Passed   13.76 sec
+      Start 2878: rexxscript1_rxbvm
+26/26 Test #2878: rexxscript1_rxbvm ................   Passed   11.93 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Label Time Summary:
+comprehensive       =  22.64 sec*proc (21 tests)
+level-l             =  53.08 sec*proc (24 tests)
+library             =  27.40 sec*proc (22 tests)
+linked_opt          =   0.13 sec*proc (1 test)
+optimizer-parity    =  22.73 sec*proc (22 tests)
+rexxscript          =  25.69 sec*proc (2 tests)
+smoke               =  30.67 sec*proc (5 tests)
+
+Total Test time (real) =  25.76 sec

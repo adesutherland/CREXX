@@ -1,0 +1,39 @@
+/* cREXX License (MIT). Level L tutorial: inspect application nodes and fields. */
+options levelb
+import rxfnsb
+import lllanguage
+import llsource
+import llast
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: settings-ast settings.txt'; return 2
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'SETTINGS_IO: cannot read ' || argv[1]; return 2
+  end
+  definition = levell_settings..language()
+  request = .lllanguage..request(definition,source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'SETTINGS_PARSE',request.error())
+    return status
+  end
+  tree = request.ast()
+  if tree.error() <> '' then do
+    say 'SETTINGS_TREE: ' || tree.error(); return 3
+  end
+  walk = tree.walk('parents first')
+  do while walk.next()
+    node = walk.node()
+    if node.kind() = 'Assignment' then say node.text('name') || ' -> ' || node.text('spelling')
+  end
+  if walk.error() <> '' then do
+    say 'SETTINGS_TREE: ' || walk.error(); return 3
+  end
+  return 0

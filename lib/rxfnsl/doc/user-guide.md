@@ -154,18 +154,20 @@ A script interpreter uses the same idea to execute statements. For an IF, it
 evaluates the condition and executes the selected branch. Both branches must
 be syntactically valid, but only the selected branch has effects.
 
-Level L offers two ways to inspect a successful parse:
+Choose the tree representation that fits the application:
 
 | Representation | When to use it |
 |---|---|
 | Raw tree, `.llcore..tree` | Low-level tree operations. It includes helper nodes used to represent the grammar. |
-| Named view, `.lltree..view` | Ordinary application code. It hides internal helper nodes and exposes your named rules and tokens with their ordered children. |
+| Named view, `.lltree..view` | Inspect the grammar structure. It hides internal helper nodes and exposes your named rules and tokens with their ordered children. |
+| Application AST, `request.ast()` | Work with kinds and named fields chosen by `then tree` mappings, such as `Assignment(name, value)`. |
 
-An application may also build its own **abstract syntax tree (AST)**. This is a
-smaller tree organized around what the application does, for example an
-`Assignment` with `name` and `value` fields. The settings reader uses the named
-view directly. A compiler might prefer its own AST for checking names and types
-before generating code.
+An **abstract syntax tree (AST)** is organized around the application's work.
+Add `then tree` mappings when grammar wrappers and punctuation would otherwise
+make your reader cumbersome. The basic settings reader uses the named view;
+the calculator and settings lesson 9 use AST fields, common walks and rewrites.
+The [tree reference](#application-trees-with-then-tree) explains both choices.
+
 
 ### Where extra stages fit
 
@@ -365,6 +367,7 @@ Each numbered file is complete. Generate the selected file in place of
 | [06-fields](../examples/settings/06-fields.levell) | Named `name` and `contents` fields | `settings-fields.crexx` |
 | [07-properties](../examples/settings/07-properties.levell) | Unicode identifier properties | `settings-fields.crexx` |
 | [08-comments](../examples/settings/08-comments.levell) | Line, block and nested comments | `settings-fields.crexx` |
+| [09-ast](../examples/settings/09-ast.rxl) | Application nodes and lists with `then tree` | `settings-ast.crexx` |
 
 The [recovery reader](../examples/settings-recover.crexx) and
 [field reader](../examples/settings-fields.crexx) use the same generated
@@ -725,16 +728,24 @@ The [calculator grammar](../examples/calculator/calculator.rxl),
 It accepts decimal numbers, `+ - * /`, prefix minus, parentheses and nested
 `(* ... *)` comments.
 
-The grammar chooses Pratt and declares its operators:
+The grammar chooses Pratt, declares precedence and attaches application nodes
+to the token and operator declarations:
 
 ```rexx
+number: token then tree Number(spelling = text)
+/* Declare the other tokens and lexer rules here; see the complete file. */
 parse: parser start arithmetic backend pratt
 arithmetic: operators atom number group lparen rparen
 sum: infix arithmetic plus precedence 10 left
+  then tree Add(left = left, right = right)
 difference: infix arithmetic minus precedence 10 left
+  then tree Subtract(left = left, right = right)
 product: infix arithmetic times precedence 20 left
+  then tree Multiply(left = left, right = right)
 quotient: infix arithmetic divide precedence 20 left
+  then tree Divide(left = left, right = right)
 negative: prefix arithmetic minus
+  then tree Negate(value = inner)
 ```
 
 **Precedence** controls which operator binds more tightly: multiplication and
@@ -742,21 +753,26 @@ division have 20, while addition and subtraction have 10. **Associativity**
 controls operators at the same level: `left` makes `8-3-1` mean `(8-3)-1`.
 Prefix minus binds more tightly than the infix operators.
 
-For `2+3*4`, the tree is:
+After `request.parse()` succeeds, `request.ast()` constructs this AST for
+`2+3*4`:
 
 ```text
-arithmetic
-└── sum
-    ├── number    "2"
-    └── product
-        ├── number    "3"
-        └── number    "4"
+Add
+├── left: Number(spelling="2")
+└── right: Multiply
+    ├── left: Number(spelling="3")
+    └── right: Number(spelling="4")
 ```
 
-The evaluator visits children before their parent. It converts number text to
-`.decimal` values and stores a result for each node. A `product` multiplies its
-two child values; a `sum` adds them. The `arithmetic` wrapper passes through its
-child's result. Evaluation therefore produces 14.
+`then tree` selects the useful nodes and names their fields. Parentheses,
+operator tokens and grammar wrappers guide parsing; the AST carries operands
+and values. The original parse tree remains available for inspecting the grammar.
+
+The evaluator uses `tree.walk('children first')`. It converts `Number.spelling`
+to a `.decimal` and stores the value under `node.id()`. `Multiply` multiplies
+its `left` and `right` child values; `Add` adds them. The walk visits `2`, `3`,
+`4`, `Multiply`, then `Add`, producing 14. Numeric rules belong to this
+application, so another consumer can use the same AST with different arithmetic.
 
 After preparing the tools, build the calculator and its grammar together:
 
@@ -843,7 +859,8 @@ keywords to type literally.
 | `NAME: region token VIRTUAL using COMPONENT open OPEN close CLOSE` | Embed a Pratt expression in an LR parser. |
 | `NAME: tokenstage start STATE` | Define a token-processing stage. |
 | `NAME: transform stage ...` | Define one action in that stage; see the [stage reference](#token-stages). |
-| `NAME: tree rule RULE kind NUMBER arity NUMBER` | Keep a named rule in an application-tree projection. |
+| `... then tree [KIND](FIELDS)` | Attach application-node construction to a token, parser rule or operator declaration. |
+| `NAME: tree rule RULE kind NUMBER arity NUMBER` | Keep a named rule in the binary application-tree projection. |
 
 Square brackets in this reference table mean an optional part of a declaration.
 Do not include those brackets in the specification. The parser header also
@@ -1372,6 +1389,7 @@ Capture-field lookup is case-insensitive.
 | `tokens()` | Token stream held by the request. |
 | `tree()`, `root()` | Raw tree and root of a successful single-tree result. |
 | `forest()`, `forestroot()` | Earley forest and its root. |
+| `ast()` | Construct an owned application AST from `then tree` mappings. Requires a successful unique parse. |
 | `projection()` | Create the declared application-tree projection. Call its `run()` method to perform it. |
 | `offset()`, `error()` | Error's original byte offset and message. |
 
@@ -1493,9 +1511,231 @@ node identifiers to avoid passing the entire tree through each recursive call.
 Packed table lookups read the stored tables directly; request construction and
 public value returns can still copy data.
 
-### Application-tree projection
+### Application trees with `then tree`
 
-A **projection** builds a smaller tree by keeping selected named rules and
+An **abstract syntax tree**, or AST, records the parts your application needs.
+Use `then tree` to describe those parts beside the rule that recognizes them:
+
+```rexx
+number: token then tree Number(spelling = text)
+program: rule = (statement as item)*
+  then tree (items = item*)
+statement: rule = identifier as name equals number as value
+  then tree Assignment(name = text(name), value = value)
+```
+
+The token declaration makes a `Number` with its original spelling. The
+`program` rule makes a node with an ordered list called `items`. The statement
+rule makes an `Assignment` with a text field and a child field. `identifier` and
+`equals` do not have mappings, so they do not become application nodes.
+
+The declaration label supplies the default kind: `then tree (...)` on `program`
+creates a kind named `program`. Put a name before the parentheses to choose a
+different kind, as in `then tree Assignment(...)`. Names are case-insensitive;
+the spelling of the declared kind is retained when `kind()` returns it.
+
+| Field expression | Result |
+|---|---|
+| `name = text` | Text covered by this rule or token. |
+| `name = text(capture)` | Text covered by one named capture in this rule. |
+| `name = capture` | One application child from that capture. |
+| `name = capture?` | Zero or one child. |
+| `name = capture*` | An ordered list with zero or more children. |
+| `name = capture+` | An ordered list with at least one child. |
+| `left = left`, `right = right` | The operands of an infix operator. |
+| `value = inner` | The operand of a prefix operator. |
+
+`text` is a selector, not a conversion. `Number(spelling = text)` retains `007`
+as `007`; the application decides whether to convert it to a number. Text from
+a quoted string includes the quotes. There are no application expressions or
+callbacks inside a mapping.
+
+The two uses of `*` have related but distinct jobs. In the rule, `(statement as
+item)*` recognizes repeated statements. In the mapping, `items = item*` collects
+the captured results into a list. Each matched capture must supply one AST
+child. Put the capture inside the repetition to capture every item separately.
+
+Unmapped rules pass their mapped descendants through. This removes wrappers
+such as `value: rule = number | string` without an additional mapping. A mapped
+rule chooses its own fields; descendants that it does not choose are omitted.
+The final result must have one root. An unmapped empty document therefore needs
+a mapped enclosing rule if it is to produce an AST.
+
+Level L infers a **schema**, the contract describing each kind's field names,
+text or child fields, and allowed child counts. Mappings that use the same kind
+must agree on that contract and field order. The grammar checker reports
+unknown captures, duplicate fields, incompatible kind declarations and impossible
+capture counts with a specification line and byte location. Construction also
+checks that every selected child capture produces one application node.
+
+For an embedded expression, put mappings on its tokens and infix/prefix
+operators, or on an enclosing parser rule. The embedded component does not
+retain the `operators` declaration as a wrapper node. A mapping attached to
+that absent wrapper is a build error.
+
+See [settings lesson 9](../examples/settings/09-ast.rxl) and its
+[reader](../examples/settings-ast.crexx) for lists, original Unicode spelling,
+comments and embedded arithmetic in one complete example.
+
+### Construct and read an AST
+
+Import `llast` in the application, then construct the AST after a successful
+parse:
+
+```rexx
+tree = request.ast()
+if tree.status() <> 0 then do
+  say tree.error()
+  return tree.status()
+end
+root = tree.root()
+do i = 1 to root.count('items')
+  assignment = root.child('items',i)
+  say assignment.text('name')
+end
+```
+
+The AST owns its source and nodes, so the request can be released after
+construction. `request.ast()` rejects failed parses and ambiguous forests. A
+recovery reader handles its damaged records separately; an AST request does not
+silently turn damaged input into a clean program.
+
+| Tree method | Result |
+|---|---|
+| `status()` | 0 for a complete tree, 2 for a resource limit, 3 for a contract failure. |
+| `error()` | Empty on success; otherwise the diagnostic. |
+| `root()` | A handle to the root; invalid on failure. |
+| `source()` | The complete original bytes, including skipped text. |
+| `entries()` | Allocated nodes, field slots and child links. |
+| `walk(order)` | An iterative walk; defaults to `children first`. |
+| `rewrite(order)` | A checked reconstruction; accepts `children first`. |
+
+A **handle** is a small reference to one node. Copying a handle does not copy
+the tree. Keep its owning `tree` alive and do not reassign that tree while using
+its handles or walks. Copying the owning tree itself makes an independent value.
+A handle from the first tree still belongs to that first tree.
+
+| Node method | Result |
+|---|---|
+| `valid()` | Whether the owner and node still exist. |
+| `kind()` | Declared kind, such as `Assignment` or `Number`. |
+| `text(name)` | A text field's value. |
+| `count(name)` | Number of children in a child field. |
+| `child(name,index)` | Child handle; index defaults to 1. Invalid when the optional child or list index is absent. |
+| `start()`, `finish()` | Original half-open byte range. |
+| `sourcetext()` | Original text covered by that range. |
+| `origin()` | `exact`, `composite` or `derived`, as explained below. |
+| `id()` | Tree-local integer, useful for storing calculated values by node. |
+
+An unknown field, or using `text()` on a child field, raises an `ERROR` signal
+containing `LL_AST_FIELD`. An expired owner raises `REFERENCE_INVALID` on access;
+`valid()` lets you check it first. Use `count()` or the returned handle's
+`valid()` when an optional child may be absent.
+
+### Walk the nodes
+
+A walk follows named child fields in their declaration order and list members
+in their input order:
+
+```rexx
+walk = tree.walk('parents first')
+do while walk.next()
+  node = walk.node()
+  say node.kind() || ': ' || node.sourcetext()
+end
+if walk.error() <> '' then say walk.error()
+```
+
+`parents first` visits a node before its children. It is useful for displaying
+the tree or finding declarations. `children first` visits children before their
+parent. It is useful for calculating a parent's value from its children's
+values, as the calculator does. These are also called *preorder* and *postorder*.
+
+The walk uses an explicit stack, so deeply nested input does not require a
+recursive application procedure. Each reachable node is visited once. For a
+tree with N nodes, F field slots and E child links, walking takes O(N + F + E)
+operations; the cursor stack grows with nesting depth. Here O(...) describes how
+work grows with tree size, not a time in seconds. Each child has one parent;
+construction rejects shared children rather than traversing them repeatedly.
+
+A walk is a structural operation. An interpreter still decides which IF branch
+to execute and when to stop a loop. Walking every node is appropriate for
+inspection and pure calculations, not for executing both branches of an IF.
+
+### Rewrite into a new tree
+
+A **rewrite** replaces selected nodes while preserving the input tree. This
+example folds additions of numeric literals:
+
+```rexx
+pass = tree.rewrite('children first')
+do while pass.next()
+  node = pass.node()
+  if node.kind() = 'Add' then do
+    left = node.child('left')
+    right = node.child('right')
+    if left.kind() = 'Number' & right.kind() = 'Number' then do
+      value = (left.text('spelling') as .decimal) + (right.text('spelling') as .decimal)
+      replacement = pass.make('Number')
+      ok = replacement.settext('spelling',value as .string)
+      ok = pass.replace(replacement)
+    end
+  end
+end
+folded = pass.finish()
+if folded.status() <> 0 then do
+  say folded.error()
+  return folded.status()
+end
+```
+
+At each step, `node` already contains the rewritten children. Replacing a child
+therefore affects what its parent sees later in the same pass. Unchanged nodes
+are copied into the result automatically. Replacement nodes are not revisited.
+Call `finish()` after `next()` returns 0; it validates and publishes a complete
+new tree. The original remains usable after success or failure.
+
+`make(kind)` creates a **draft**, a replacement under construction. The kind
+must occur in the inferred schema. Set text fields with `settext(name,value)`
+and add children with `append(name,child)`. Children must come from the current
+pass's nodes. A draft belongs to the current step; after `replace()` accepts it,
+it cannot be edited. Required fields and child counts are checked. Foreign
+children, cycles, reused children and stale drafts are errors. A failed pass
+publishes no root, and `finish()` can be called only once.
+
+A reconstruction visits each original node once. With a fixed schema and a
+bounded amount of application work per node, its work grows linearly with tree
+size. The `tree.entries` limit also counts replacement nodes, fields and links,
+including intermediates that later become unreachable. Application arithmetic
+and arbitrary callback loops remain the application's responsibility.
+
+The [complete folding calculator](../examples/calculator/fold.crexx) handles
+all of the calculator's operators. Build it with the same grammar:
+
+```sh
+"$task_bin/crexx" --program build/fold \
+  lib/rxfnsl/examples/calculator/fold.crexx \
+  lib/rxfnsl/examples/calculator/calculator.rxl
+"$task_bin/rxvme" build/fold.rxbin \
+  -a lib/rxfnsl/examples/calculator/example.calc
+```
+
+It reports the original expression, the resulting `Number` and `RESULT|11`.
+
+### Origins survive rewriting
+
+Nodes created directly by a mapping have an `exact` origin. Removing expression
+parentheses keeps their full range on the surviving node and marks that range
+`composite`. A replacement has a `derived` origin and inherits the replaced
+node's range. Thus a folded `Number` may have spelling `14` while `sourcetext()`
+still returns `2+3*4`. Source bytes are never rewritten by changing a text field.
+This lets diagnostics point back to the expression that produced a value.
+
+### Binary application-tree projection
+
+The binary projection API returns integer kinds and at most two children per
+node. Use `then tree` for named fields, lists and common walks. A **projection**
+builds a smaller tree by keeping selected named rules and
 removing other wrappers. For example:
 
 ```rexx
@@ -1851,7 +2091,7 @@ number of declarations you wrote.
 | `scan.work` | 10,000,000 | Counted scanning work, separately for comment preparation and lexical scanning. |
 | `parse.work` | 1,000,000 | Counted parser or token-stage operations, including diagnostic work. |
 | `earley.cells` | 8,000,000 | Index capacities for Earley's partial parses and forest. |
-| `tree.entries` | 1,000,000 | Entries used by the named view or application-tree projection. The named view counts named nodes and their child links. |
+| `tree.entries` | 1,000,000 | Entries in each tree construction stage. A named view counts nodes and child links; an AST or rewrite counts nodes, field slots and child links, including discarded intermediates. |
 | `recovery.errors` | 16 | Collected target or specification errors. |
 | `recovery.declarations` | 512 | Declaration intervals inspected during specification recovery. |
 
@@ -2020,7 +2260,9 @@ for the script language and its value rules.
 | Unicode names fail | Use `input utf8` and name rules containing the desired characters or Unicode properties. |
 | Two visually identical names compare differently | Decide whether the application should normalize or case-fold names before comparison. Preserve their original spelling for messages. |
 | A tree has more wrappers than expected | Authored rule names remain in the named view. Use fields or a projection for application access. |
-| A `tree` declaration has no visible effect | Call `request.projection()` and its `run()`; the named view is a separate representation. |
+| `then tree` has no visible effect | Call `request.ast()` after a successful parse; the named view remains a separate representation. |
+| A binary `tree rule` declaration has no visible effect | Call `request.projection()` and its `run()`. |
+| An AST field reports an unexpected child count | Put `as item` inside the repetition and match the mapping suffix to the rule: `item?`, `item*` or `item+`. Each capture supplies one mapped node. |
 | A custom message is not used | Check that it names the rule failing at that position and that the context is unambiguous. |
 | Only one error is shown | Strict requests stop at failure. Use a declared record recovery request for multi-error inspection. |
 | Status 5 is returned | The input was accepted by Earley but has no unique finite tree. Inspect the forest. |

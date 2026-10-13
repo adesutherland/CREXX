@@ -99,12 +99,74 @@ This repairs the observed regression without increasing user budgets.
    commands, 13 packaging unit tests and 80 valid guide links. Wider research
    and host-platform qualification criteria below remain unchanged.
 
-### Next-stage recommendation — AST infrastructure, proposed 13 October 2026
+### AST infrastructure — implementation approved 13 October 2026
 
-**Status:** proposal for Adrian's review; no new AST syntax or implementation is
-approved by this entry. The authoring publication above is independent of this
-decision. This advances LANG-AC04/09/10/12/13 and research AC-26 without replacing
+**Status:** the reviewed first AST surface is implemented and locally qualified
+on macOS ARM64, based on synchronized develop `ec481f8e6`. It includes attached
+mappings, inferred field contracts, owned trees, reference handles, iterative
+walks, checked one-pass reconstruction, calculator/folding and settings examples.
+[Qualification and scope](evidence/ast-20261013/README.md) retain the results and
+identities. Adrian authorized commit/push to `develop` and light CI monitoring
+on 13 October. The enclosing commit is the publication payload; its qualified
+code and test inputs are unchanged. Normal automatic CI is expected to pass,
+with actual results reported in the conversation rather than a status-only
+commit. This advances LANG-AC04/09/10/12/13 and research AC-26 without closing
 their wider obligations.
+
+**Criterion status for this delivery:**
+
+| Criterion | Verified here | Still open in the wider criterion |
+|---|---|---|
+| AST-AC01 | Simple attached mappings; named text/child fields; required, optional and list counts; located refusals; settings/calculator | None for the reviewed inferred-schema surface. |
+| AST-AC02 | Independent owned results; borrowed handles; request release; exact/composite/derived source ranges; Unicode; stale/foreign-handle rejection; counted budgets | Synthetic and recovered origin infrastructure; broader migration measurements. |
+| AST-AC03 | Iterative walks; field/list access; application folds; checked reconstruction; empty/deep/wide/malformed/shared inputs; atomic failure; opt/noopt and both VMs; explicit traversal bounds | General search/fold convenience services and the wider builder/grouping profiles. |
+| AST-AC04 | Schema-checked one-pass rewrites with input preservation and retained origins; application constant-fold control | Derived-fact invalidation, acyclic and monotone cyclic analyses, grouping/lowering and their proofs. |
+| AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; existing RexxScript regressions | Bounded RexxScript consumer migration and recovered-origin integration. |
+| AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Compiler-shaped builder/validator example and production migration work. |
+
+AST-STEP02/03 and the first-delivery portion of AST-STEP05 are complete within
+the scope above. AST-STEP04 and the remaining portions of AST-STEP05 stay open.
+The complete AST infrastructure programme is not being marked complete.
+
+**Approved first surface:**
+
+```rexx
+program: rule = (statement as item)*
+  then tree (items = item*)
+sum: infix arithmetic plus precedence 10 left
+  then tree Add(left = left, right = right)
+```
+
+- The enclosing label supplies the default AST kind; an explicit kind renames
+  it. Indentation is formatting, not scope. Named captures supply ordinary
+  fields; operator declarations supply left/right/inner operand roles.
+- Text fields retain spelling; application code chooses numeric conversions.
+  `*`, `+` and `?` describe ordered lists and optional fields. Construction is
+  separate from recognition and occurs only for a successful selected parse.
+- Walks offer parents-first and children-first order. A children-first rewrite
+  exposes rewritten children to their parent, visits each original node once,
+  and does not recursively revisit replacement nodes. It preserves its input
+  and publishes only a checked complete result, with origins retained.
+- The worked calculator demonstrates this surface, constant folding in ordinary
+  Level B, and original-source diagnostics. Basic grammars need no AST schema.
+  The first schema is inferred from mappings; richer explicit schema and
+  multiple-projection syntax remain design extensions to review, not silently
+  accepted additions to the source language.
+- Regional component wrapper mappings are rejected with `LL_AST_REGION`, because
+  that wrapper is absent from the grafted result. Token/infix/prefix and enclosing
+  parser-rule mappings remain available; the checker never silently drops a
+  requested wrapper mapping. This admission boundary is documented and tested.
+
+**Implementation sequence for this delivery:**
+
+1. AST-STEP02: mapping grammar/lowering, inferred field contracts and generated
+   definitions; retain L0/L1/L2 bootstrap parity (AST-AC01/02/06).
+2. AST-STEP03: owned result storage, small reference handles, iterative walks,
+   checked builders and one-pass reconstruction (AST-AC02/03/04).
+3. AST-STEP05: calculator and settings examples, positive/negative backend,
+   ownership, origin and rewrite regressions, installed build and guide evidence
+   (AST-AC01–06). **Verified for the first-delivery scope above.** The wider analysis/grouping/RexxScript criteria below stay
+   individually visible; completing this delivery is not their automatic proof.
 
 **Vision and intended outcome:** let a language author turn a successful parse
 into useful application nodes with named fields and lists, then inspect, check
@@ -124,7 +186,7 @@ A new parser should follow a concrete grammar, diagnosis or resource need that
 the current portfolio cannot meet. Pika and Squirrel remain research work;
 there is no proposed change to their support status here.
 
-**Proposed contracts for review:**
+**Infrastructure contracts:**
 
 - Keep the ordinary named tree and captures useful without a schema. An optional
   AST declaration defines named node kinds, required/optional fields and ordered
@@ -153,7 +215,11 @@ there is no proposed change to their support status here.
   Preserve the Level B bootstrap; production rxc/rxas frontend migration remains
   a separately approved programme.
 
-**Numbered acceptance criteria — proposed and open:**
+The implemented count analysis, traversal bounds, ownership rules and rewrite
+transaction are described in [AST-CONTRACT.md](AST-CONTRACT.md). In particular,
+finite structural reconstruction does not prove arbitrary application semantics.
+
+**Numbered acceptance criteria — open until verified:**
 
 1. **AST-AC01 — Shape and simple authoring.** A basic grammar still works without
    AST declarations. Optional schemas express named required/optional fields and
@@ -188,11 +254,12 @@ there is no proposed change to their support status here.
    builder/validator example. Record the remaining cREXX AST/proof migration
    work without claiming a production compiler migration.
 
-**Numbered implementation steps — proposed:**
+**Numbered implementation steps:**
 
 1. **AST-STEP01 (AC01–06):** inventory the product and research tree contracts;
    present small before/after surface examples, ownership rules and diagnostics.
-   **Decision gate:** Adrian approves the AST/API shape before implementation.
+   **Verified:** Adrian approved the calculator walkthrough and attached
+   `then tree` form before requesting implementation. See decisions above.
 2. **AST-STEP02 (AC01–03/06):** implement the reviewed schema, owned storage,
    builders, fields/lists and provenance, retaining existing parse views.
    Depends on STEP01; qualify settings and calculator first.

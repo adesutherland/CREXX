@@ -1,0 +1,196 @@
+/* cREXX License (MIT). Application tree ownership and algorithm regressions. */
+options levelb
+import rxfnsb
+import llcore
+import llast
+
+main: procedure = .int
+  failures = .int; replacement = .llast..draft
+  contract = .llast..schema()
+  ok = contract.mapping('number','Number')
+  ok = contract.field('number','spelling','','text','one')
+  ok = contract.mapping('sum','Add')
+  ok = contract.field('sum','left','left','operand','one')
+  ok = contract.field('sum','right','right','operand','one')
+  raw = .llcore..tree.from_source('2+3' as .binary)
+  a = raw.add(1,'number',0,1,0,0)
+  b = raw.add(1,'number',2,3,0,0)
+  root = raw.add(5,'sum',0,3,a,b)
+  tree = .llast..tree(raw,root,contract)
+  failures = check(tree.error() = '',tree.error())
+  failures = failures + check(tree.root().kind() = 'Add','root kind')
+  failures = failures + check(tree.root().child('left').text('spelling') = '2','named left')
+  failures = failures + check(tree.entries() = 9,'entry accounting')
+  exact = .llast..tree(raw,root,contract,9)
+  failures = failures + check(exact.status() = 0,'exact entry budget')
+  short = .llast..tree(raw,root,contract,8)
+  failures = failures + check(short.status() = 2 & pos('tree.entries',short.error()) > 0,'entry budget failure')
+  first = tree.walk('parents first'); second = tree.walk('children first')
+  parents = ''; children = ''
+  do while first.next()
+    parents = parents || first.node().kind() || ' '
+    ok = second.next(); children = children || second.node().kind() || ' '
+  end
+  failures = failures + check(parents = 'Add Number Number ','parent order')
+  failures = failures + check(children = 'Number Number Add ','child order')
+  failures = failures + check(second.next() = 0,'walk completion')
+  copy = tree
+  held = copy.root()
+  failures = failures + check(held.child('right').sourcetext() = '3','independent owning copy')
+  pass = tree.rewrite()
+  visits = 0
+  do while pass.next()
+    current = pass.node(); visits = visits + 1
+    if current.kind() = 'Add' then do
+      replacement = pass.make('Number')
+      value = (current.child('left').text('spelling') as .decimal) + (current.child('right').text('spelling') as .decimal)
+      ok = replacement.settext('spelling',value as .string)
+      ok = pass.replace(replacement)
+    end
+  end
+  folded = pass.finish()
+  failures = failures + check(folded.error() = '',folded.error())
+  failures = failures + check(visits = 3,'replacements not revisited')
+  failures = failures + check(folded.root().text('spelling') = '5','constant fold')
+  failures = failures + check(folded.root().sourcetext() = '2+3' & folded.root().origin() = 'derived','rewrite source provenance')
+  failures = failures + check(tree.root().kind() = 'Add' & held.kind() = 'Add','input and independent tree intact')
+  twice = pass.finish()
+  failures = failures + check(pos('LL_AST_LIFECYCLE',twice.error()) > 0,'double finish')
+  early = tree.rewrite(); incomplete = early.finish()
+  failures = failures + check(incomplete.status() <> 0 & incomplete.root().valid() = 0,'no partial early result')
+  bad = tree.rewrite()
+  do while bad.next()
+    if bad.node().kind() = 'Add' then do
+      missing = bad.make('Number'); ok = bad.replace(missing)
+    end
+  end
+  failed = bad.finish()
+  failures = failures + check(pos('LL_AST_CARDINALITY',failed.error()) > 0 & failed.root().valid() = 0,'required replacement field')
+  failures = failures + check(tree.root().child('left').text('spelling') = '2','failure leaves input usable')
+  bad = tree.rewrite(); ok = bad.next(); foreign = bad.make('Add')
+  ok = foreign.append('left',held)
+  failures = failures + check(ok = 0 & pos('LL_AST_OWNER',bad.error()) > 0,'foreign child refused')
+  expired = temporary()
+  failures = failures + check(expired.valid() = 0,'expired handle')
+  caught = 0
+  do
+    text = tree.root().text('missing')
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'unknown field signalled')
+  /* Dead parser alternatives must never construct invalid application nodes. */
+  dead = raw.add(5,'sum',0,3,0,0)
+  selected = .llast..tree(raw,root,contract)
+  failures = failures + check(selected.error() = '', 'unselected alternative ignored')
+  limited = exact.rewrite()
+  do while limited.next()
+    if limited.node().kind() = 'Add' then do
+      replacement = limited.make('Number')
+      ok = replacement.settext('spelling','5'); ok = limited.replace(replacement)
+    end
+  end
+  exhausted = limited.finish()
+  failures = failures + check(exhausted.status() = 2 & exhausted.root().valid() = 0,'rewrite allocation limit is atomic')
+  failures = failures + check(exact.root().kind() = 'Add','budget failure preserves input')
+  sealed = tree.rewrite(); ok = sealed.next()
+  replacement = sealed.make('Number'); ok = replacement.settext('spelling','9')
+  ok = sealed.replace(replacement); ok = replacement.settext('spelling','10')
+  failures = failures + check(ok = 0 & pos('LL_AST_FROZEN',sealed.error()) > 0,'accepted draft immutable')
+  stale = tree.rewrite(); ok = stale.next(); replacement = stale.make('Number')
+  ok = stale.next(); ok = stale.replace(replacement)
+  failures = failures + check(ok = 0 & pos('LL_AST_LIFECYCLE',stale.error()) > 0,'draft expires at next step')
+  owned = tree.rewrite(); other = tree.rewrite()
+  ok = owned.next(); ok = other.next(); replacement = other.make('Number')
+  ok = owned.replace(replacement)
+  failures = failures + check(ok = 0 & pos('LL_AST_OWNER',owned.error()) > 0,'foreign replacement')
+  invalid = .llcore..tree.from_source('x' as .binary)
+  root = invalid.add(5,'sum',0,1,2,0)
+  malformed = .llast..tree(invalid,root,contract)
+  failures = failures + check(malformed.status() = 3 & malformed.root().valid() = 0,'malformed raw tree rejected')
+  emptycontract = .llast..schema()
+  absent = .llast..tree(raw,3,emptycontract)
+  failures = failures + check(pos('LL_AST_SCHEMA',absent.error()) > 0,'no mapping diagnosis')
+  /* CFG reductions carry an extra production wrapper; operand roles agree
+   * with the direct Pratt shape tested above. */
+  cfg = .llcore..tree.from_source('2+3' as .binary)
+  a = cfg.add(1,'number',0,1,0,0); token = cfg.add(1,'plus',1,2,0,0)
+  b = cfg.add(1,'number',2,3,0,0)
+  head = cfg.add(2,'head',0,2,a,token)
+  body = cfg.add(2,'production',0,3,head,b)
+  sum = cfg.add(2,'sum',0,3,body,0)
+  root = cfg.add(5,'arithmetic',0,3,sum,0)
+  reduced = .llast..tree(cfg,root,contract)
+  failures = failures + check(reduced.status() = 0,'CFG reduction operand normalization')
+  if reduced.status() = 0 then failures = failures + check(reduced.root().child('right').text('spelling') = '3','CFG right operand')
+  sharedschema = contract
+  ok = sharedschema.mapping('pair','Pair')
+  ok = sharedschema.field('pair','left','only','capture','one')
+  ok = sharedschema.field('pair','right','only','capture','one')
+  input = .llcore..tree.from_source('2' as .binary)
+  leaf = input.add(1,'number',0,1,0,0)
+  capture = input.add(5,'@field.only',0,1,leaf,0)
+  root = input.add(5,'pair',0,1,capture,0)
+  shared = .llast..tree(input,root,sharedschema)
+  failures = failures + check(pos('LL_AST_SHARED',shared.error()) > 0 & shared.root().valid() = 0,'shared children refused')
+  failures = failures + lists()
+  say 'ast_failures=' || failures
+  return failures
+
+check: procedure = .int
+  arg passed = .int, message = .string
+  if passed then return 0
+  say 'FAIL: ' || message
+  return 1
+
+temporary: procedure = .llast..node
+  contract = .llast..schema(); ok = contract.mapping('leaf','Leaf')
+  source = .llcore..tree.from_source('x' as .binary)
+  root = source.add(1,'leaf',0,1,0,0)
+  tree = .llast..tree(source,root,contract)
+  return tree.root()
+
+lists: procedure = .int
+  contract = .llast..schema()
+  ok = contract.mapping('leaf','Leaf')
+  ok = contract.field('leaf','spelling','','text','one')
+  ok = contract.mapping('program','Program')
+  ok = contract.field('program','items','item','capture','many')
+  ok = contract.field('program','maybe','missing','capture','optional')
+  source = .llcore..tree.from_source(copies('x',1000) as .binary)
+  chain = 0; root = .int; i = .int
+  do i = 1 to 1000
+    leaf = source.add(1,'leaf',i-1,i,0,0)
+    capture = source.add(5,'@field.item',i-1,i,leaf,0)
+    if chain = 0 then chain = capture
+    else chain = source.add(2,'sequence',0,i,chain,capture)
+  end
+  root = source.add(5,'program',0,1000,chain,0)
+  tree = .llast..tree(source,root,contract)
+  failures = check(tree.error() = '',tree.error())
+  failures = failures + check(tree.root().count('items') = 1000,'wide list')
+  failures = failures + check(tree.root().child('items',1000).start() = 999,'list source order')
+  failures = failures + check(tree.root().count('maybe') = 0 & tree.root().child('maybe').valid() = 0,'missing optional')
+  walk = tree.walk(); visits = 0
+  do while walk.next()
+    visits = visits + 1
+  end
+  failures = failures + check(visits = 1001,'linear wide walk')
+  empty = .llcore..tree.from_source('' as .binary)
+  root = empty.add(5,'program',0,0,0,0)
+  tree = .llast..tree(empty,root,contract)
+  failures = failures + check(tree.error() = '' & tree.root().count('items') = 0,'empty list')
+  /* A chain exercises explicit walk stacks and exposes accidental recursion. */
+  ok = contract.mapping('wrap','Wrap')
+  ok = contract.field('wrap','value','inner','operand','one')
+  do i = 1 to 2000
+    root = empty.add(5,'wrap',0,0,root,0)
+  end
+  deep = .llast..tree(empty,root,contract)
+  failures = failures + check(deep.error() = '',deep.error())
+  walk = deep.walk(); visits = 0
+  do while walk.next()
+    visits = visits + 1
+  end
+  failures = failures + check(visits = 2001,'iterative deep walk')
+  return failures

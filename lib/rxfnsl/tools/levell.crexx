@@ -18,6 +18,7 @@ import llpratt
 import llregional
 import lllimits
 import llproperties
+import llast
 
 main: procedure = .int
   arg argv = .string[]
@@ -225,6 +226,13 @@ main: procedure = .int
   do i = 1 to schema.size()
     say '  ok = result.keep(' || quoted(schema.name(i)) || ',' || schema.kind(i) || ',' || schema.arity(i) || ')'
   end
+  astschema = doc.astschema()
+  do i = 1 to astschema.size()
+    say '  ok = result.astmap(' || quoted(astschema.rule(i)) || ',' || quoted(astschema.kind(i)) || ')'
+  end
+  do i = 1 to astschema.fields()
+    say '  ok = result.astfield(' || quoted(astschema.rule(astschema.owner(i))) || ',' || quoted(astschema.name(i)) || ',' || quoted(astschema.source(i)) || ',' || quoted(astschema.mode(i)) || ',' || quoted(astschema.card(i)) || ')'
+  end
   do d = 1 to doc.declarations()
     name = doc.declarationname(d); type = doc.declarationtype(d)
     if type = 'token' then do
@@ -289,7 +297,7 @@ emitdata: procedure = .void
  * r7..r16 are the reusable argument window and r0 discards method results. */
 assembly: procedure = .void
   arg doc = .llfront..document, table = .lllr..tables, dfa = .llmunch..automaton, shields = .binary[], policies = .llcomments..rules
-  rule = .int
+  rule = .int; item = .int
   graph = doc.grammar()
   say '.globals=0'
   say 'language() .locals=17 .expose=' || doc.module() || '.language'
@@ -450,6 +458,26 @@ assembly: procedure = .void
     call asmcall(0,'lllanguage.definition.keep',4)
     say '  swap r4,r7'
   end
+  astschema = doc.astschema()
+  do item = 1 to astschema.size()
+    say '  settp r4,256'
+    say '  swap r7,r4'
+    call asmload(8,asmquote(astschema.rule(item)),768)
+    call asmload(9,asmquote(astschema.kind(item)),768)
+    call asmcall(0,'lllanguage.definition.astmap',3)
+    say '  swap r4,r7'
+  end
+  do item = 1 to astschema.fields()
+    say '  settp r4,256'
+    say '  swap r7,r4'
+    call asmload(8,asmquote(astschema.rule(astschema.owner(item))),768)
+    call asmload(9,asmquote(astschema.name(item)),768)
+    call asmload(10,asmquote(astschema.source(item)),768)
+    call asmload(11,asmquote(astschema.mode(item)),768)
+    call asmload(12,asmquote(astschema.card(item)),768)
+    call asmcall(0,'lllanguage.definition.astfield',6)
+    say '  swap r4,r7'
+  end
   do d = 1 to doc.declarations()
     name = doc.declarationname(d); type = doc.declarationtype(d)
     if type = 'token' then do
@@ -528,6 +556,8 @@ assembly: procedure = .void
   call asmimport('lllanguage.definition.diagnostic')
   call asmimport('lllanguage.definition.recovery')
   call asmimport('lllanguage.definition.keep')
+  call asmimport('lllanguage.definition.astmap')
+  call asmimport('lllanguage.definition.astfield')
   call asmimport('llstage.rules.§factory')
   call asmimport('llstage.rules.add')
   return

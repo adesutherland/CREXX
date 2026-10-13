@@ -1,0 +1,66 @@
+[0/2] Re-checking globbed directories...
+[1/174] Generating bootstrap/L0/source/llfront.crexx
+[2/174] Generating bootstrap/L0/llfront.rxbin
+[3/174] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[4/174] Generating bootstrap/L0/levell-linked.rxbin
+[5/174] Generating bootstrap/L1/llsyntax.rxas
+[6/174] Generating bootstrap/L1/llsyntax.rxbin
+[7/174] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[8/174] Generating bootstrap/L1/source/llfront.crexx
+[9/174] Generating bootstrap/L1/llfront.rxbin
+[10/174] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[11/174] Generating bootstrap/L1/levell-linked.rxbin
+[12/174] Generating bootstrap/L2/llsyntax.rxas
+[13/174] Generating bootstrap/L2/llsyntax.rxbin
+[14/174] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[15/174] Generating bootstrap/L2/source/llfront.crexx
+[16/174] Generating bootstrap/L2/llfront.rxbin
+[17/174] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[18/174] Generating bootstrap/L2/levell-linked.rxbin
+[19/174] Generating bootstrap/verified.stamp
+[20/174] Generating ../../../bin/rxfnsl.rxbin
+[21/174] Staging deterministic compiler imports for levell_ast_test_imports ...
+[22/174] Generating levell.c
+[23/174] Generating ts_llast_noopt-linked.rxbin
+[24/174] Generating ts_tinyexpr_noopt.rxbin
+[25/174] Building C object lib/rxfnsl/tools/CMakeFiles/levell_cli.dir/levell.c.o
+[26/174] Generating ts_tinyexpr_opt.rxbin
+[27/174] Linking C executable bin/levell
+[28/174] Generating gennorm2_language.rxas
+[29/174] Generating ../../../bin/gennorm2_language.rxbin
+[30/174] Generating ts_llast_opt-linked.rxbin
+[31/174] Generating levell_example.rxas
+[32/174] Generating levell_example.rxbin
+[33/174] Generating ast-lr1/ast_fixture.rxbin
+[34/174] Staging deterministic compiler imports for levell_generated_test_imports ...
+[35/174] Staging deterministic compiler imports for levell_ast_lr1_imports ...
+[36/174] Generating ast-ll1/ast_fixture.rxbin
+[37/174] Staging deterministic compiler imports for levell_ast_ll1_imports ...
+[38/174] Generating ast-packrat/ast_fixture.rxbin
+[39/174] Staging deterministic compiler imports for levell_ast_packrat_imports ...
+[40/174] Generating ast-ll1/noopt-linked.rxbin
+[41/174] Generating testGenerated-linked.rxbin
+[42/174] Generating ast-ll1/opt-linked.rxbin
+[43/174] Generating ast-lr1/noopt-linked.rxbin
+[44/174] Generating ast-packrat/noopt-linked.rxbin
+[45/174] Generating ast-earley/ast_fixture.rxbin
+[46/174] Staging deterministic compiler imports for levell_ast_earley_imports ...
+[47/174] Generating ast-lr1/opt-linked.rxbin
+[48/174] Generating ast-packrat/opt-linked.rxbin
+[49/174] Generating ast-earley/noopt-linked.rxbin
+[50/174] Generating ast-earley/opt-linked.rxbin
+[51/174] Building Level G and Unicode with the Level B builder ...
+[52/66] Staging deterministic compiler imports for rexxscript1_imports ...
+[53/66] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[54/66] Generating modern/rexxscriptgrammar.rxbin
+[55/66] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptProgram ...
+[56/66] Generating modern/RexxScriptOperators.rxbin
+[57/66] Generating modern/RexxScriptProgram.rxbin
+[58/66] Generating modern/RexxScriptBifs.rxbin
+[59/66] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptExecution ...
+[60/66] Generating modern/RexxScriptExecution.rxbin
+[61/66] Generating ../bin/rexxscript1.rxbin
+[62/66] Staging deterministic compiler imports for rexxscript1_driver_imports ...
+[63/66] Generating modern/RexxScript1Runner.c
+[64/66] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+[65/66] Linking C executable bin/rexxscript1

@@ -1,0 +1,484 @@
+{
+  "commands": [
+    {
+      "key": "unknown-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/unknown.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "4ac6f6c5ae76a85bda9f51c94a5e9b3578ba7a3aa81634d95fa9bd7e5c7b1135"
+    },
+    {
+      "key": "unknown-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/unknown.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "4ac6f6c5ae76a85bda9f51c94a5e9b3578ba7a3aa81634d95fa9bd7e5c7b1135"
+    },
+    {
+      "key": "unknown-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/unknown.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "4ac6f6c5ae76a85bda9f51c94a5e9b3578ba7a3aa81634d95fa9bd7e5c7b1135"
+    },
+    {
+      "key": "required-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "34f9c2511dd4f0c6a295bd17add16aa4a05905f3fddefba09f01d8bd35e325d1"
+    },
+    {
+      "key": "required-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "34f9c2511dd4f0c6a295bd17add16aa4a05905f3fddefba09f01d8bd35e325d1"
+    },
+    {
+      "key": "required-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "34f9c2511dd4f0c6a295bd17add16aa4a05905f3fddefba09f01d8bd35e325d1"
+    },
+    {
+      "key": "list-required-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/list-required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "99e6842769ab51f02c500a5cf547b4f46ed82f3854572b432c6782d9e66a87ee"
+    },
+    {
+      "key": "list-required-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/list-required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "99e6842769ab51f02c500a5cf547b4f46ed82f3854572b432c6782d9e66a87ee"
+    },
+    {
+      "key": "list-required-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/list-required.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "99e6842769ab51f02c500a5cf547b4f46ed82f3854572b432c6782d9e66a87ee"
+    },
+    {
+      "key": "nonempty-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nonempty.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "84ae9218ef5c11d4b1284011e6e4f5f8138c63f3bcfe4532e4deebbcd81a0b50"
+    },
+    {
+      "key": "nonempty-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nonempty.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "84ae9218ef5c11d4b1284011e6e4f5f8138c63f3bcfe4532e4deebbcd81a0b50"
+    },
+    {
+      "key": "nonempty-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nonempty.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "84ae9218ef5c11d4b1284011e6e4f5f8138c63f3bcfe4532e4deebbcd81a0b50"
+    },
+    {
+      "key": "nested-scope-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nested-scope.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "3de49930c2582abfe3145bfe102d284acfb00b05cefd77149aadd47a6a7fbee0"
+    },
+    {
+      "key": "nested-scope-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nested-scope.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "3de49930c2582abfe3145bfe102d284acfb00b05cefd77149aadd47a6a7fbee0"
+    },
+    {
+      "key": "nested-scope-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/nested-scope.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "3de49930c2582abfe3145bfe102d284acfb00b05cefd77149aadd47a6a7fbee0"
+    },
+    {
+      "key": "duplicate-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/duplicate.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "64ac01ef86a6dc9e14c5956fca51aeb1e27b5585d7f998ecddfd2e925c24c37a"
+    },
+    {
+      "key": "duplicate-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/duplicate.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "64ac01ef86a6dc9e14c5956fca51aeb1e27b5585d7f998ecddfd2e925c24c37a"
+    },
+    {
+      "key": "duplicate-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/duplicate.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "64ac01ef86a6dc9e14c5956fca51aeb1e27b5585d7f998ecddfd2e925c24c37a"
+    },
+    {
+      "key": "text-list-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/text-list.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "86b6f2bb2c8fed480437ec66147ae76e1ad021af9d5456a612f9f2f616b957b1"
+    },
+    {
+      "key": "text-list-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/text-list.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "86b6f2bb2c8fed480437ec66147ae76e1ad021af9d5456a612f9f2f616b957b1"
+    },
+    {
+      "key": "text-list-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/text-list.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "86b6f2bb2c8fed480437ec66147ae76e1ad021af9d5456a612f9f2f616b957b1"
+    },
+    {
+      "key": "conflicting-kind-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "08502e2d39a9cc58afefe113a6d0684b6bd9a6b3793fa194bc23f89a74c43a5e"
+    },
+    {
+      "key": "conflicting-kind-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "08502e2d39a9cc58afefe113a6d0684b6bd9a6b3793fa194bc23f89a74c43a5e"
+    },
+    {
+      "key": "conflicting-kind-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "08502e2d39a9cc58afefe113a6d0684b6bd9a6b3793fa194bc23f89a74c43a5e"
+    },
+    {
+      "key": "regional-wrapper-L0",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "6adc4feaeaa3c7c63256a3f4d449a3632229246eb2bbb333ae4f384f2a593d41"
+    },
+    {
+      "key": "regional-wrapper-L1",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "6adc4feaeaa3c7c63256a3f4d449a3632229246eb2bbb333ae4f384f2a593d41"
+    },
+    {
+      "key": "regional-wrapper-L2",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "6adc4feaeaa3c7c63256a3f4d449a3632229246eb2bbb333ae4f384f2a593d41"
+    }
+  ],
+  "observations": [
+    {
+      "key": "unknown",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/unknown.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CAPTURE: unknown capture absent in statement\n"
+    },
+    {
+      "key": "unknown",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/unknown.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CAPTURE: unknown capture absent in statement\n"
+    },
+    {
+      "key": "unknown",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/unknown.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CAPTURE: unknown capture absent in statement\n"
+    },
+    {
+      "key": "required",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/required.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CARDINALITY: field statement.value requires exactly one match, but capture value may be absent\n"
+    },
+    {
+      "key": "required",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/required.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CARDINALITY: field statement.value requires exactly one match, but capture value may be absent\n"
+    },
+    {
+      "key": "required",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/required.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_CARDINALITY: field statement.value requires exactly one match, but capture value may be absent\n"
+    },
+    {
+      "key": "list-required",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/list-required.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires exactly one match, but capture item may be absent or may match more than once\n"
+    },
+    {
+      "key": "list-required",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/list-required.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires exactly one match, but capture item may be absent or may match more than once\n"
+    },
+    {
+      "key": "list-required",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/list-required.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires exactly one match, but capture item may be absent or may match more than once\n"
+    },
+    {
+      "key": "nonempty",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/nonempty.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires at least one match, but capture item may be absent\n"
+    },
+    {
+      "key": "nonempty",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/nonempty.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires at least one match, but capture item may be absent\n"
+    },
+    {
+      "key": "nonempty",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/nonempty.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires at least one match, but capture item may be absent\n"
+    },
+    {
+      "key": "nested-scope",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/nested-scope.rxl: LL_GRAMMAR: line 21, byte 687: LL_AST_CAPTURE: unknown capture key in statement\n"
+    },
+    {
+      "key": "nested-scope",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/nested-scope.rxl: LL_GRAMMAR: line 21, byte 687: LL_AST_CAPTURE: unknown capture key in statement\n"
+    },
+    {
+      "key": "nested-scope",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/nested-scope.rxl: LL_GRAMMAR: line 21, byte 687: LL_AST_CAPTURE: unknown capture key in statement\n"
+    },
+    {
+      "key": "duplicate",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/duplicate.rxl: LL_GRAMMAR: line 18, byte 600: LL_AST_SCHEMA: duplicate field items in program\n"
+    },
+    {
+      "key": "duplicate",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/duplicate.rxl: LL_GRAMMAR: line 18, byte 600: LL_AST_SCHEMA: duplicate field items in program\n"
+    },
+    {
+      "key": "duplicate",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/duplicate.rxl: LL_GRAMMAR: line 18, byte 600: LL_AST_SCHEMA: duplicate field items in program\n"
+    },
+    {
+      "key": "text-list",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/text-list.rxl: LL_GRAMMAR: line 20, byte 679: LL_AST_SCHEMA: text field name requires one source\n"
+    },
+    {
+      "key": "text-list",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/text-list.rxl: LL_GRAMMAR: line 20, byte 679: LL_AST_SCHEMA: text field name requires one source\n"
+    },
+    {
+      "key": "text-list",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/text-list.rxl: LL_GRAMMAR: line 20, byte 679: LL_AST_SCHEMA: text field name requires one source\n"
+    },
+    {
+      "key": "conflicting-kind",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_SCHEMA: conflicting field name for kind Number\n"
+    },
+    {
+      "key": "conflicting-kind",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_SCHEMA: conflicting field name for kind Number\n"
+    },
+    {
+      "key": "conflicting-kind",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/conflicting-kind.rxl: LL_GRAMMAR: line 20, byte 663: LL_AST_SCHEMA: conflicting field name for kind Number\n"
+    },
+    {
+      "key": "regional-wrapper",
+      "stage": "L0",
+      "output": "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl: LL_GRAMMAR: line 54, byte 2140: LL_AST_REGION: an embedded expression has no operators wrapper; attach that tree mapping to an enclosing parser rule\n"
+    },
+    {
+      "key": "regional-wrapper",
+      "stage": "L1",
+      "output": "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl: LL_GRAMMAR: line 54, byte 2140: LL_AST_REGION: an embedded expression has no operators wrapper; attach that tree mapping to an enclosing parser rule\n"
+    },
+    {
+      "key": "regional-wrapper",
+      "stage": "L2",
+      "output": "/private/tmp/levell-ast-admission-opt/regional-wrapper.rxl: LL_GRAMMAR: line 54, byte 2140: LL_AST_REGION: an embedded expression has no operators wrapper; attach that tree mapping to an enclosing parser rule\n"
+    }
+  ],
+  "sources": {
+    "lib/rxfnsl/tests_functional/ast-fixture.rxl": "af62673756adef38b8ac43dc146fb5d06f49842682f6e205a8f2b1032b16a8d9",
+    "lib/rxfnsl/tests_functional/ast-probe.crexx": "18b834561ae995406f16b7db01a908daf8b6012bc45fcbfc29a77af6970fe2ef",
+    "lib/rxfnsl/tests_functional/check-ast-surface.py": "6c3f7cdc5dc077da184a16736fcd0018a9e6633a47bb532661dff313db3be127",
+    "lib/rxfnsl/examples/calculator/calculator.rxl": "ec140a3abda41285fc3a1550161656b74c86f407625dafcde3d64652170053e9",
+    "lib/rxfnsl/examples/calculator/calculator.crexx": "ee681cd317a40a105c4de46e161d15458f6ee7c7df81abe8769803cef69fe7f8",
+    "lib/rxfnsl/examples/calculator/fold.crexx": "e4c5c9b7f293cb4906f21499d9c537a87952cb3e4cc301266e74bde6eba80219",
+    "lib/rxfnsl/examples/settings/09-ast.rxl": "3a8d8ec7cb747c71f60545d556e67c12efbee96e0f82dede15c95419f1152d62",
+    "lib/rxfnsl/examples/settings-ast.crexx": "c8d825cef992a14ab8d68d750d664dafd21ffc253da9e8879d192932365c2dd7"
+  },
+  "tools": {
+    "levell": "a70331e8a1d68224577997c81bd3ffe5fbbe2fdaa374e7e8dcf0a2f0c8384a88",
+    "rxfnsl.rxbin": "6102cfe1ab6a122b930a32b9e3639d049ce203ab1b7cb86e8099ecf5248b381a",
+    "rxc": "04d623a6cb53dd0221b0d496cbb1d0d858fa1d56dd3c40d47eb9aead060f4a53",
+    "rxas": "71e09bccb4e71e214e73995a62e84a8b5e5b51c9ffd89b95bfe9ddadf3d2c834",
+    "rxlink": "1606ac66593ae8e50b0d7c12fcabf77b9d1ce6dd00012bd4d22635bd72cb44b2",
+    "rxtvm": "3f01772a637378d96814845cdb587da4c5241438cc8a710987e357fd512bcf60",
+    "rxbvm": "40b0ea817aad0620c686391fd9f5ccff8186b1893f6b91e6f387fcaf5f0c0119"
+  }
+}

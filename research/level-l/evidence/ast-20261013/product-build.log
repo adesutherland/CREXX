@@ -1,0 +1,98 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gec481f8e64a5.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261012T191809Z
+-- CREXX Build Commit: ec481f8e64a5
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/../DSL-Syntax-Highlighter
+-- C compiler flags:
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always
+-- Linker flags for executables:
+-- Linker flags for shared libs:
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables:
+-- Debug linker flags for shared libs:
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (2.6s)
+-- Generating done (0.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+[0/4] Re-checking globbed directories...
+[1/181] cREXX compile and assemble llast ...
+[2/181] cREXX compile and assemble lllanguage ...
+[3/181] cREXX compile and assemble llrecover ...
+[4/181] cREXX Linked Level L Library Image ...
+[5/181] Staging deterministic compiler imports for levell_base_imports ...
+[6/181] Generating bootstrap/L0/source/llfront.crexx
+[7/181] Generating bootstrap/L0/llfront.rxbin
+[8/181] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[9/181] Generating bootstrap/L0/levell-linked.rxbin
+[10/181] Generating bootstrap/L1/llsyntax.rxas
+[11/181] Generating bootstrap/L1/llsyntax.rxbin
+[12/181] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[13/181] Generating bootstrap/L1/source/llfront.crexx
+[14/181] Generating bootstrap/L1/llfront.rxbin
+[15/181] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[16/181] Generating bootstrap/L1/levell-linked.rxbin
+[17/181] Generating bootstrap/L2/llsyntax.rxas
+[18/181] Generating bootstrap/L2/llsyntax.rxbin
+[19/181] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[20/181] Generating bootstrap/L2/source/llfront.crexx
+[21/181] Generating bootstrap/L2/llfront.rxbin
+[22/181] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[23/181] Generating bootstrap/L2/levell-linked.rxbin
+[24/181] Generating bootstrap/verified.stamp
+[25/181] Generating ../../../bin/rxfnsl.rxbin
+[26/181] Staging deterministic compiler imports for levell_ast_test_imports ...
+[27/181] Generating levell.c
+[28/181] Generating ts_llast_noopt-linked.rxbin
+[29/181] Generating ts_tinyexpr_noopt.rxbin
+[30/181] Building C object lib/rxfnsl/tools/CMakeFiles/levell_cli.dir/levell.c.o
+[31/181] Generating ts_tinyexpr_opt.rxbin
+[32/181] Linking C executable bin/levell
+[33/181] Generating gennorm2_language.rxas
+[34/181] Generating ../../../bin/gennorm2_language.rxbin
+[35/181] Generating ts_llast_opt-linked.rxbin
+[36/181] Generating levell_example.rxas
+[37/181] Generating levell_example.rxbin
+[38/181] Generating ast-lr1/ast_fixture.rxbin
+[39/181] Generating ast-ll1/ast_fixture.rxbin
+[40/181] Staging deterministic compiler imports for levell_generated_test_imports ...
+[41/181] Staging deterministic compiler imports for levell_ast_ll1_imports ...
+[42/181] Staging deterministic compiler imports for levell_ast_lr1_imports ...
+[43/181] Generating ast-ll1/noopt-linked.rxbin
+[44/181] Generating testGenerated-linked.rxbin
+[45/181] Generating ast-ll1/opt-linked.rxbin
+[46/181] Generating ast-packrat/ast_fixture.rxbin
+[47/181] Staging deterministic compiler imports for levell_ast_packrat_imports ...
+[48/181] Generating ast-lr1/noopt-linked.rxbin
+[49/181] Generating ast-earley/ast_fixture.rxbin
+[50/181] Staging deterministic compiler imports for levell_ast_earley_imports ...
+[51/181] Generating ast-packrat/noopt-linked.rxbin
+[52/181] Generating ast-lr1/opt-linked.rxbin
+[53/181] Generating ast-earley/noopt-linked.rxbin
+[54/181] Generating ast-packrat/opt-linked.rxbin
+[55/181] Generating ast-earley/opt-linked.rxbin
+[56/181] Building Level G and Unicode with the Level B builder ...
+[57/73] Staging deterministic compiler imports for rexxscript1_imports ...
+[58/73] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[59/73] Generating modern/rexxscriptgrammar.rxbin
+[60/73] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptProgram ...
+[61/73] Generating modern/RexxScriptOperators.rxbin
+[62/73] Generating modern/RexxScriptProgram.rxbin
+[63/73] Generating modern/RexxScriptBifs.rxbin
+[64/73] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptExecution ...
+[65/73] Generating modern/RexxScriptExecution.rxbin
+[66/73] Generating ../bin/rexxscript1.rxbin
+[67/73] Staging deterministic compiler imports for rexxscript1_driver_imports ...
+[68/73] Generating modern/RexxScript1Runner.c
+[69/73] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+[70/73] Linking C executable bin/rexxscript1

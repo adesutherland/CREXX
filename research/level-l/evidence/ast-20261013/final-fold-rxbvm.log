@@ -1,0 +1,3 @@
+ORIGINAL|2 + 3 * (4 - 1)
+FOLDED|Number|derived
+RESULT|11

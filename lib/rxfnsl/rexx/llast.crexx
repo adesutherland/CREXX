@@ -1,0 +1,785 @@
+/* cREXX License (MIT). Application trees, field contracts and checked walks. */
+options levelb
+namespace llast expose schema storage tree node walk rewrite draft
+import rxfnsb
+import llcore
+import lltree
+import lllimits
+
+/* Direct Level B instruction keeps the bootstrap independent of exits. */
+badfield: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Declarative mappings. Field modes are text, capture, or operand; cardinality
+ * is one, optional, many or some. Names are case-insensitive, kind spelling is
+ * retained for display. No application expression executes in this schema. */
+schema: class
+  _rule = .string[]
+  _kind = .string[]
+  _owner = .int[]
+  _field = .string[]
+  _source = .string[]
+  _mode = .string[]
+  _card = .string[]
+  _error = .string
+  _conflict = .int
+  *: factory
+    _error = ''; _conflict = 0
+    return
+  mapping: method = .int
+    arg rule = .string, kind = .string
+    if rule = '' | kind = '' | index(rule) > 0 then do
+      _error = 'LL_AST_SCHEMA: invalid or duplicate mapping for ' || rule; return 0
+    end
+    slot = _rule[0] + 1; _rule[slot] = lower(rule); _kind[slot] = kind
+    return slot
+  field: method = .int
+    arg rule = .string, name = .string, source = .string, mode = .string, card = .string
+    owner = index(rule)
+    if owner = 0 | name = '' | wordpos(mode,'text capture operand') = 0 | wordpos(card,'one optional many some') = 0 then do
+      _error = 'LL_AST_SCHEMA: invalid field ' || name || ' in ' || rule; return 0
+    end
+    if mode = 'text' & card <> 'one' then do
+      _error = 'LL_AST_SCHEMA: text field ' || name || ' requires one source'; return 0
+    end
+    do i = 1 to _field[0]
+      if _owner[i] = owner & _field[i] = lower(name) then do
+        _error = 'LL_AST_SCHEMA: duplicate field ' || name || ' in ' || rule; return 0
+      end
+    end
+    slot = _field[0] + 1
+    _owner[slot] = owner; _field[slot] = lower(name); _source[slot] = lower(source)
+    _mode[slot] = mode; _card[slot] = card
+    return slot
+  index: method = .int
+    arg rule = .string
+    do i = 1 to _rule[0]
+      if _rule[i] = lower(rule) then return i
+    end
+    return 0
+  kindindex: method = .int
+    arg kind = .string
+    do i = 1 to _kind[0]
+      if lower(_kind[i]) = lower(kind) then return i
+    end
+    return 0
+  size: method = .int
+    return _rule[0]
+  fields: method = .int
+    return _field[0]
+  rule: method = .string
+    arg i = .int
+    return _rule[i]
+  kind: method = .string
+    arg i = .int
+    return _kind[i]
+  owner: method = .int
+    arg i = .int
+    return _owner[i]
+  name: method = .string
+    arg i = .int
+    return _field[i]
+  source: method = .string
+    arg i = .int
+    return _source[i]
+  mode: method = .string
+    arg i = .int
+    return _mode[i]
+  card: method = .string
+    arg i = .int
+    return _card[i]
+  error: method = .string
+    return _error
+  conflict: method = .int
+    return _conflict
+  /** All mappings of one kind must describe the same ordered field contract. */
+  check: method = .int
+    do i = 1 to _rule[0]
+      first = kindindex(_kind[i])
+      if first = i then iterate
+      a = 1; b = 1
+      do forever
+        do while a <= _field[0]
+          if _owner[a] = first then leave
+          a = a + 1
+        end
+        do while b <= _field[0]
+          if _owner[b] = i then leave
+          b = b + 1
+        end
+        if a > _field[0] & b > _field[0] then leave
+        if a > _field[0] | b > _field[0] then do
+          _conflict = i
+          _error = 'LL_AST_SCHEMA: conflicting fields for kind ' || _kind[i]; return 0
+        end
+        if _field[a] <> _field[b] | (_mode[a] = 'text') <> (_mode[b] = 'text') | _card[a] <> _card[b] then do
+          _conflict = i
+          _error = 'LL_AST_SCHEMA: conflicting field ' || _field[b] || ' for kind ' || _kind[i]; return 0
+        end
+        a = a + 1; b = b + 1
+      end
+    end
+    return _error = ''
+
+/** Owned arena. Handles and cursors borrow this storage through explicit Level
+ * B references; they never copy its arrays. New nodes may link only to earlier
+ * nodes, making cycles impossible. The public tree freezes it after validation.
+ * @param source Original bytes, retained even when a literal is rewritten.
+ * @param contract Inferred node/field schema.
+ * @param limit Maximum combined nodes, fields and child links.
+ */
+storage: class
+  _source = .binary
+  _schema = .llast..schema
+  _limit = .int
+  _entries = .int
+  _frozen = .int
+  _error = .string
+  _root = .int
+  _generation = .int
+  _sealed = .int[]
+  _rule = .int[]
+  _start = .int[]
+  _finish = .int[]
+  _origin = .string[]
+  _first = .int[]
+  _last = .int[]
+  _declaration = .int[]
+  _text = .string[]
+  _set = .int[]
+  _head = .int[]
+  _tail = .int[]
+  _count = .int[]
+  _child = .int[]
+  _next = .int[]
+  *: factory
+    arg source = .binary, contract = .llast..schema, limit = 1000000
+    _source = source; _schema = contract; _limit = limit
+    _entries = 0; _frozen = 0; _error = ''; _root = 0; _generation = 0
+    if contract.check() = 0 then _error = contract.error()
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  reserve: method = .int
+    arg count = .int
+    if _error <> '' then return 0
+    if _frozen then do
+      call fail('LL_AST_FROZEN: completed trees cannot be edited'); return 0
+    end
+    if count > _limit - _entries then do
+      call fail(lllimits..describe('tree.entries',_limit,_entries + count)); return 0
+    end
+    _entries = _entries + count; return 1
+  add: method = .int
+    arg rule = .int, start = .int, finish = .int, origin = 'exact'
+    i = .int
+    extent = <blen>(_source)
+    if rule < 1 | rule > _schema.size() | start < 0 | finish < start | finish > extent then do
+      call fail('LL_AST_NODE: invalid node kind or source range'); return 0
+    end
+    fields = 0
+    do i = 1 to _schema.fields()
+      if _schema.owner(i) = rule then fields = fields + 1
+    end
+    if reserve(1 + fields) = 0 then return 0
+    id = _rule[0] + 1; _rule[id] = rule; _start[id] = start; _finish[id] = finish; _origin[id] = origin
+    _first[id] = _declaration[0] + 1
+    do i = 1 to _schema.fields()
+      if _schema.owner(i) <> rule then iterate
+      slot = _declaration[0] + 1; _declaration[slot] = i
+      _text[slot] = ''; _set[slot] = 0; _head[slot] = 0; _tail[slot] = 0; _count[slot] = 0
+    end
+    _last[id] = _declaration[0]
+    return id
+  field: method = .int
+    arg id = .int, name = .string
+    if valid(id) = 0 then return 0
+    do f = _first[id] to _last[id]
+      if _schema.name(_declaration[f]) = lower(name) then return f
+    end
+    return 0
+  generation: method = .int
+    return _generation
+  advance: method = .void
+    _generation = _generation + 1
+    return
+  seal: method = .int
+    arg id = .int
+    if validate(id) = 0 then return 0
+    _sealed[id] = 1; return 1
+  editable: method = .int
+    arg id = .int
+    if reserve(0) = 0 then return 0
+    if valid(id) = 0 then do
+      call fail('LL_AST_NODE: invalid draft'); return 0
+    end
+    if _sealed[id] then do
+      call fail('LL_AST_FROZEN: an accepted replacement cannot be edited'); return 0
+    end
+    return 1
+  settext: method = .int
+    arg id = .int, name = .string, value = .string
+    if editable(id) = 0 then return 0
+    f = field(id,name)
+    if f = 0 then do
+      call fail('LL_AST_FIELD: unknown field ' || name); return 0
+    end
+    if _schema.mode(_declaration[f]) <> 'text' then do
+      call fail('LL_AST_FIELD: ' || name || ' is a child field'); return 0
+    end
+    _text[f] = value; _set[f] = 1; return 1
+  append: method = .int
+    arg id = .int, name = .string, child = .int
+    if editable(id) = 0 then return 0
+    f = field(id,name)
+    if f = 0 then do
+      call fail('LL_AST_FIELD: unknown field ' || name); return 0
+    end
+    if _schema.mode(_declaration[f]) = 'text' | child < 1 | child >= id then do
+      call fail('LL_AST_CHILD: child must belong to this result and precede its parent'); return 0
+    end
+    if reserve(1) = 0 then return 0
+    edge = _child[0] + 1; _child[edge] = child; _next[edge] = 0
+    if _tail[f] > 0 then _next[_tail[f]] = edge
+    else _head[f] = edge
+    _tail[f] = edge; _count[f] = _count[f] + 1
+    return 1
+  validate: method = .int
+    arg id = .int
+    if valid(id) = 0 then do
+      call fail('LL_AST_NODE: invalid node handle'); return 0
+    end
+    do f = _first[id] to _last[id]
+      decl = _declaration[f]; count = _count[f]; card = _schema.card(decl)
+      if _schema.mode(decl) = 'text' then count = _set[f]
+      if (card = 'one' & count <> 1) | (card = 'optional' & count > 1) | (card = 'some' & count < 1) then do
+        call fail('LL_AST_CARDINALITY: ' || kind(id) || '.' || _schema.name(decl) || ' requires ' || card || '; found ' || count || ' at byte ' || _start[id]); return 0
+      end
+    end
+    return _error = ''
+  freeze: method = .int
+    arg root = .int
+    if _error <> '' then return 0
+    if valid(root) = 0 then do
+      call fail('LL_AST_ROOT: mapping must produce exactly one root'); return 0
+    end
+    /* Only reachable nodes are results; obsolete rewrite intermediates are not
+     * validated or traversed as though they belonged to the final tree. */
+    pending = .int[]; seen = .int[]; top = 1; pending[top] = root
+    do while top > 0 & _error = ''
+      id = pending[top]; top = top - 1
+      if seen[id] then do
+        call fail('LL_AST_SHARED: each child must have one parent in the result tree'); return 0
+      end
+      seen[id] = 1
+      if validate(id) = 0 then leave
+      do f = _first[id] to _last[id]
+        edge = _head[f]
+        do while edge > 0
+          top = top + 1; pending[top] = _child[edge]; edge = _next[edge]
+        end
+      end
+    end
+    if _error <> '' then return 0
+    _root = root; _frozen = 1; return 1
+  valid: method = .int
+    arg id = .int
+    return id > 0 & id <= _rule[0]
+  kind: method = .string
+    arg id = .int
+    if valid(id) = 0 then return ''
+    return _schema.kind(_rule[id])
+  text: method = .string
+    arg id = .int, name = .string
+    f = field(id,name)
+    if f = 0 then do
+      call badfield('LL_AST_FIELD: unknown field ' || name || ' on ' || kind(id)); return 0
+    end
+    if _schema.mode(_declaration[f]) <> 'text' then do
+      call badfield('LL_AST_FIELD: ' || name || ' is a child field'); return 0
+    end
+    return _text[f]
+  count: method = .int
+    arg id = .int, name = .string
+    f = field(id,name)
+    if f = 0 then do
+      call badfield('LL_AST_FIELD: unknown field ' || name || ' on ' || kind(id)); return 0
+    end
+    if _schema.mode(_declaration[f]) = 'text' then do
+      call badfield('LL_AST_FIELD: ' || name || ' is a text field'); return 0
+    end
+    return _count[f]
+  child: method = .int
+    arg id = .int, name = .string, occurrence = 1
+    f = field(id,name)
+    if f = 0 then do
+      call badfield('LL_AST_FIELD: unknown field ' || name || ' on ' || kind(id)); return 0
+    end
+    if _schema.mode(_declaration[f]) = 'text' then do
+      call badfield('LL_AST_FIELD: ' || name || ' is a text field'); return 0
+    end
+    if occurrence < 1 then return 0
+    edge = _head[f]
+    do while edge > 0 & occurrence > 1
+      edge = _next[edge]; occurrence = occurrence - 1
+    end
+    if edge = 0 then return 0
+    return _child[edge]
+  /** Flatten named child fields in declaration order, lists in source order. */
+  children: method = .int
+    arg id = .int
+    count = 0
+    if valid(id) = 0 then return 0
+    do f = _first[id] to _last[id]
+      count = count + _count[f]
+    end
+    return count
+  childat: method = .int
+    arg id = .int, occurrence = .int
+    if valid(id) = 0 | occurrence < 1 then return 0
+    do f = _first[id] to _last[id]
+      if occurrence <= _count[f] then return child(id,_schema.name(_declaration[f]),occurrence)
+      occurrence = occurrence - _count[f]
+    end
+    return 0
+  schema: method = .llast..schema
+    return _schema
+  contract: method = reference .llast..schema
+    return reference _schema
+  rule: method = .int
+    arg id = .int
+    return _rule[id]
+  start: method = .int
+    arg id = .int
+    return _start[id]
+  finish: method = .int
+    arg id = .int
+    return _finish[id]
+  origin: method = .string
+    arg id = .int
+    return _origin[id]
+  source: method = .binary
+    return _source
+  cover: method = .void
+    arg id = .int, start = .int, finish = .int
+    if reserve(0) = 0 then return
+    extent = <blen>(_source)
+    if valid(id) = 0 | start < 0 | start > _start[id] | finish < _finish[id] | finish > extent then do
+      call fail('LL_AST_ORIGIN: invalid enclosing source range'); return
+    end
+    _start[id] = start; _finish[id] = finish; _origin[id] = 'composite'
+    return
+  sourcetext: method = .string
+    arg id = .int
+    return binsubstr(_source,_start[id] + 1,_finish[id] - _start[id]) as .string
+  root: method = .int
+    return _root
+  size: method = .int
+    return _rule[0]
+  entries: method = .int
+    return _entries
+  limit: method = .int
+    return _limit
+  firstfield: method = .int
+    arg id = .int
+    return _first[id]
+  lastfield: method = .int
+    arg id = .int
+    return _last[id]
+  declaration: method = .int
+    arg f = .int
+    return _declaration[f]
+  firstedge: method = .int
+    arg f = .int
+    return _head[f]
+  nextedge: method = .int
+    arg edge = .int
+    return _next[edge]
+  edgechild: method = .int
+    arg edge = .int
+    return _child[edge]
+  error: method = .string
+    return _error
+
+/** A small borrowed node handle. Keep the owning tree or rewrite pass alive.
+ * @param owner Live arena reference; copying a handle does not copy the tree.
+ * @param id Arena-local node number, never transferable to another arena.
+ */
+node: class
+  _owner = reference .llast..storage
+  _id = .int
+  *: factory
+    arg owner = reference .llast..storage, id = .int
+    _owner = owner; _id = id
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner
+    return owner.valid(_id)
+  kind: method = .string
+    owner = dereference _owner
+    return owner.kind(_id)
+  text: method = .string
+    arg name = .string
+    owner = dereference _owner
+    return owner.text(_id,name)
+  count: method = .int
+    arg name = .string
+    owner = dereference _owner
+    return owner.count(_id,name)
+  child: method = .llast..node
+    arg name = .string, occurrence = 1
+    owner = dereference _owner
+    return .llast..node(_owner,owner.child(_id,name,occurrence))
+  start: method = .int
+    owner = dereference _owner
+    return owner.start(_id)
+  finish: method = .int
+    owner = dereference _owner
+    return owner.finish(_id)
+  origin: method = .string
+    owner = dereference _owner
+    return owner.origin(_id)
+  sourcetext: method = .string
+    owner = dereference _owner
+    return owner.sourcetext(_id)
+  id: method = .int
+    return _id
+  belongs: method = .int
+    arg owner = reference .llast..storage
+    return _owner <refsame> owner
+
+/** Iterative traversal. Each edge is followed once; depth consumes an explicit
+ * cursor stack rather than the Rexx call stack. The arena remains borrowed. */
+walk: class
+  _owner = reference .llast..storage
+  _pending = .int[]
+  _position = .int[]
+  _edge = .int[]
+  _top = .int
+  _current = .int
+  _parents = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llast..storage, root = .int, order = 'children first'
+    _owner = owner; _current = 0; _error = ''; _top = 1
+    _pending[1] = root; _position[1] = -1
+    _parents = order = 'parents first'
+    if order <> 'parents first' & order <> 'children first' then do
+      _error = 'LL_AST_ORDER: use parents first or children first'; _top = 0
+    end
+    return
+  next: method = .int
+    owner = dereference _owner
+    _current = 0
+    do while _top > 0
+      id = _pending[_top]
+      if owner.valid(id) = 0 then do
+        _error = 'LL_AST_NODE: invalid walk root'; _top = 0; return 0
+      end
+      if _position[_top] = -1 then do
+        _position[_top] = owner.firstfield(id)
+        _edge[_top] = 0
+        if _position[_top] <= owner.lastfield(id) then _edge[_top] = owner.firstedge(_position[_top])
+        if _parents then do
+          _current = id; return 1
+        end
+      end
+      do while _position[_top] <= owner.lastfield(id) & _edge[_top] = 0
+        _position[_top] = _position[_top] + 1
+        if _position[_top] <= owner.lastfield(id) then _edge[_top] = owner.firstedge(_position[_top])
+      end
+      if _edge[_top] > 0 then do
+        child = owner.edgechild(_edge[_top]); _edge[_top] = owner.nextedge(_edge[_top])
+        _top = _top + 1; _pending[_top] = child; _position[_top] = -1
+      end
+      else do
+        _top = _top - 1
+        if _parents = 0 then do
+          _current = id; return 1
+        end
+      end
+    end
+    return 0
+  node: method = .llast..node
+    return .llast..node(_owner,_current)
+  error: method = .string
+    return _error
+
+/** Frozen application result. A parse request may be released after this tree
+ * is constructed. Borrowed node/walk handles remain valid while this owning
+ * value stays alive and is not replaced. Copying the tree is an explicit value
+ * copy; obtaining nodes or walking does not copy its source or arrays. */
+tree: class
+  _store = .llast..storage
+  *: factory
+    arg source = .llcore..tree, root = .int, contract = .llast..schema, limit = 1000000
+    ok = .int
+    _store = .llast..storage(source.source(),contract,limit)
+    if _store.error() <> '' then return
+    if contract.size() = 0 then do
+      call _store.fail('LL_AST_SCHEMA: no then tree mappings were declared'); return
+    end
+    view = .lltree..view(source,root,limit)
+    if view.error() <> '' then do
+      call _store.fail(view.error()); return
+    end
+    raw = .int; lhs = .int; rhs = .int; current = .int; child = .int
+    mapped = .int[]; counts = .int[]
+    reachable = .int[]; pending = .int[]; top = 1; pending[top] = root
+    do while top > 0
+      raw = pending[top]; top = top - 1
+      if reachable[raw] then iterate
+      reachable[raw] = 1
+      lhs = source.left(raw); rhs = source.right(raw)
+      if lhs > 0 then do
+        top = top + 1; pending[top] = lhs
+      end
+      if rhs > 0 then do
+        top = top + 1; pending[top] = rhs
+      end
+    end
+    /* Earlier-child source IDs permit a single bottom-up projection. A
+     * transparent subtree keeps one ID and a saturated count, not a copied
+     * list of all of its descendants. */
+    do raw = 1 to source.size() while _store.error() = ''
+      if reachable[raw] = 0 then iterate
+      lhs = source.left(raw); rhs = source.right(raw)
+      ca = 0; cb = 0; one = 0
+      if lhs > 0 then do
+        ca = counts[lhs]; one = mapped[lhs]
+      end
+      if rhs > 0 then do
+        cb = counts[rhs]
+        if ca = 0 then one = mapped[rhs]
+      end
+      rule = contract.index(source.label(raw))
+      if rule = 0 then do
+        counts[raw] = min(2,ca + cb); mapped[raw] = one
+        if counts[raw] = 1 & source.label(raw) = 'group' then call _store.cover(one,source.start(raw),source.finish(raw))
+        iterate
+      end
+      /* Parser derivations wrap binary productions differently. Read the
+       * projected frontier in source order, stopping at mapped children, so
+       * operand roles mean the same thing for Pratt, LR and Earley. */
+      operands = .int[]; total = 0; top = 0
+      if rhs > 0 then do
+        top = top + 1; pending[top] = rhs
+      end
+      if lhs > 0 then do
+        top = top + 1; pending[top] = lhs
+      end
+      do while top > 0 & total < 3
+        current = pending[top]; top = top - 1
+        if counts[current] = 0 then iterate
+        if counts[current] = 1 then do
+          total = total + 1; operands[total] = mapped[current]
+        end
+        else do
+          child = source.right(current)
+          if child > 0 then do
+            top = top + 1; pending[top] = child
+          end
+          child = source.left(current)
+          if child > 0 then do
+            top = top + 1; pending[top] = child
+          end
+        end
+      end
+      created = _store.add(rule,source.start(raw),source.finish(raw))
+      if created = 0 then leave
+      do f = 1 to contract.fields() while _store.error() = ''
+        if contract.owner(f) <> rule then iterate
+        name = contract.name(f); selector = contract.source(f); mode = contract.mode(f)
+        if mode = 'operand' then do
+          chosen = 0
+          select selector
+            when 'left' then do
+              if total = 2 then chosen = operands[1]
+            end
+            when 'right' then do
+              if total = 2 then chosen = operands[2]
+            end
+            when 'inner' then do
+              if total = 1 then chosen = operands[1]
+            end
+            otherwise nop
+          end
+          if chosen = 0 then call _store.fail('LL_AST_OPERAND: ' || source.label(raw) || '.' || selector || ' must produce one AST node at byte ' || source.start(raw))
+          else ok = _store.append(created,name,chosen)
+        end
+        else if mode = 'text' & selector = '' then ok = _store.settext(created,name,view.text(raw))
+        else do
+          found = 0
+          do c = 1 to view.count(raw) while _store.error() = ''
+            capture = view.child(raw,c)
+            if view.name(capture) <> '@field.' || selector then iterate
+            found = found + 1
+            if mode = 'text' then do
+              if found > 1 then call _store.fail('LL_AST_CARDINALITY: text(' || selector || ') matched more than once at byte ' || source.start(raw))
+              else ok = _store.settext(created,name,view.text(capture))
+            end
+            else if counts[capture] <> 1 then call _store.fail('LL_AST_CAPTURE: ' || selector || ' must produce one AST node at byte ' || source.start(capture))
+            else ok = _store.append(created,name,mapped[capture])
+          end
+        end
+      end
+      ok = _store.validate(created)
+      mapped[raw] = created; counts[raw] = 1
+    end
+    if _store.error() <> '' then return
+    if counts[root] <> 1 then call _store.fail('LL_AST_ROOT: mapping must produce exactly one root')
+    else ok = _store.freeze(mapped[root])
+    return
+  loaded: factory
+    arg store = .llast..storage
+    _store = store
+    return
+  failed: factory
+    arg message = .string
+    _store = .llast..storage(''x as .binary,.llast..schema())
+    call _store.fail(message)
+    return
+  status: method = .int
+    if _store.error() = '' then return 0
+    if left(_store.error(),18) = 'LL_RESOURCE_LIMIT:' then return 2
+    return 3
+  error: method = .string
+    return _store.error()
+  root: method = .llast..node
+    return .llast..node(reference _store,_store.root())
+  walk: method = .llast..walk
+    arg order = 'children first'
+    return .llast..walk(reference _store,_store.root(),order)
+  rewrite: method = .llast..rewrite
+    arg order = 'children first'
+    return .llast..rewrite(reference _store,order)
+  source: method = .binary
+    return _store.source()
+  entries: method = .int
+    return _store.entries()
+
+/** A mutable replacement under construction, confined to its owning pass.
+ * @param owner Pass-owned arena; expired drafts are invalid references.
+ * @param id Fresh replacement node.
+ */
+draft: class
+  _owner = reference .llast..storage
+  _id = .int
+  _generation = .int
+  *: factory
+    arg owner = reference .llast..storage, id = .int
+    _owner = owner; _id = id
+    arena = dereference owner; _generation = arena.generation()
+    return
+  settext: method = .int
+    arg name = .string, value = .string
+    owner = dereference _owner
+    if current() = 0 then return 0
+    return owner.settext(_id,name,value)
+  append: method = .int
+    arg name = .string, child = .llast..node
+    owner = dereference _owner
+    if current() = 0 then return 0
+    if child.belongs(_owner) = 0 then do
+      call owner.fail('LL_AST_OWNER: replacement child belongs to another tree or pass'); return 0
+    end
+    return owner.append(_id,name,child.id())
+  current: method = .int
+    owner = dereference _owner
+    if _generation <> owner.generation() then do
+      call owner.fail('LL_AST_LIFECYCLE: draft belongs to an earlier rewrite step'); return 0
+    end
+    return 1
+  id: method = .int
+    return _id
+  belongs: method = .int
+    arg owner = reference .llast..storage
+    return _owner <refsame> owner
+
+/** One children-first reconstruction. Current nodes already contain rewritten
+ * children. New replacements are not revisited. The input is never mutated;
+ * finish publishes a frozen result only after a complete successful traversal.
+ */
+rewrite: class
+  _input = reference .llast..storage
+  _output = .llast..storage
+  _walk = .llast..walk
+  _mapped = .int[]
+  _raw = .int
+  _current = .int
+  _done = .int
+  _finished = .int
+  *: factory
+    arg input = reference .llast..storage, order = 'children first'
+    _input = input; owner = dereference input
+    _output = .llast..storage(owner.source(),owner.schema(),owner.limit())
+    _walk = .llast..walk(input,owner.root(),'children first')
+    _raw = 0; _current = 0; _done = 0; _finished = 0
+    if order <> 'children first' then call _output.fail('LL_AST_ORDER: rewrites require children first')
+    if owner.error() <> '' then call _output.fail(owner.error())
+    return
+  next: method = .int
+    if _finished | _done | _output.error() <> '' then return 0
+    call _output.advance()
+    if _walk.next() = 0 then do
+      _done = 1
+      if _walk.error() <> '' then call _output.fail(_walk.error())
+      return 0
+    end
+    original = _walk.node(); _raw = original.id()
+    owner = dereference _input; contract = dereference owner.contract()
+    _current = _output.add(owner.rule(_raw),owner.start(_raw),owner.finish(_raw),owner.origin(_raw))
+    if _current = 0 then return 0
+    do f = owner.firstfield(_raw) to owner.lastfield(_raw) while _output.error() = ''
+      decl = owner.declaration(f); name = contract.name(decl)
+      if contract.mode(decl) = 'text' then ok = _output.settext(_current,name,owner.text(_raw,name))
+      else do
+        edge = owner.firstedge(f)
+        do while edge > 0 & _output.error() = ''
+          child = owner.edgechild(edge)
+          ok = _output.append(_current,name,_mapped[child]); edge = owner.nextedge(edge)
+        end
+      end
+    end
+    _mapped[_raw] = _current
+    return _output.error() = ''
+  node: method = .llast..node
+    return .llast..node(reference _output,_current)
+  make: method = .llast..draft
+    arg kind = .string
+    contract = dereference _output.contract()
+    rule = contract.kindindex(kind); id = 0
+    if _current = 0 | _done | _finished then call _output.fail('LL_AST_LIFECYCLE: make requires a current rewrite node')
+    else if rule = 0 then call _output.fail('LL_AST_KIND: unknown replacement kind ' || kind)
+    else id = _output.add(rule,_output.start(_current),_output.finish(_current),'derived')
+    return .llast..draft(reference _output,id)
+  replace: method = .int
+    arg replacement = .llast..draft
+    if _current = 0 | _done | _finished then do
+      call _output.fail('LL_AST_LIFECYCLE: replace requires a current rewrite node'); return 0
+    end
+    if replacement.belongs(reference _output) = 0 then do
+      call _output.fail('LL_AST_OWNER: replacement belongs to another pass'); return 0
+    end
+    if replacement.current() = 0 then return 0
+    id = replacement.id()
+    if _output.seal(id) = 0 then return 0
+    _mapped[_raw] = id; _current = id
+    return 1
+  finish: method = .llast..tree
+    if _finished then return .llast..tree.failed('LL_AST_LIFECYCLE: rewrite already finished')
+    _finished = 1
+    call _output.advance()
+    if _done = 0 then call _output.fail('LL_AST_LIFECYCLE: finish requires a complete walk')
+    if _output.error() <> '' then return .llast..tree.failed(_output.error())
+    owner = dereference _input
+    ok = _output.freeze(_mapped[owner.root()])
+    if ok = 0 then return .llast..tree.failed(_output.error())
+    return .llast..tree.loaded(_output)
+  error: method = .string
+    return _output.error()
