@@ -89,7 +89,10 @@ set_target_properties(copy_root_partial PROPERTIES SUFFIX ".rxplugin"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/partial"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/partial"
     BUILD_WITH_INSTALL_RPATH TRUE
-    INSTALL_RPATH "${origin};$<TARGET_FILE_DIR:copy_branch>")
+    # ELF scanning caches the first resolution of a dependency name. Search the
+    # SDK first so a differing staged copy is compared with the SDK's bytes,
+    # rather than resolving every edge to the already staged negative control.
+    INSTALL_RPATH "$<TARGET_FILE_DIR:copy_branch>;${origin}")
 file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/partial-$<CONFIG>.cmake" CONTENT
 "set(platform \"${CMAKE_SYSTEM_NAME}\")\nset(provider partial_control)\nset(arch \"${CMAKE_SYSTEM_PROCESSOR}\")\nset(engine fixture)\nset(runtime_files \"$<TARGET_FILE:copy_root_partial>\" \"$<TARGET_FILE:copy_dependency>\")\nset(runtime_search_directories \"$<TARGET_FILE_DIR:copy_branch>\")\nset(branch \"$<TARGET_FILE:copy_branch>\")\n")
 add_custom_target(provider_package_partial_measure

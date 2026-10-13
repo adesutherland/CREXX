@@ -1,0 +1,28 @@
+2026-10-13T13:37:59.6579474Z 3/3 Test #3: provider_package_partial .........***Failed    0.16 sec
+2026-10-13T13:37:59.6579906Z PASS: partial package complete
+2026-10-13T13:37:59.6580177Z Traceback (most recent call last):
+2026-10-13T13:37:59.6586240Z   File "/home/runner/work/CREXX/CREXX/tests/rxpa/provider-package-copy/check-partial.py", line 49, in <module>
+2026-10-13T13:37:59.6586838Z     assert result.returncode != 0 and marker in log_text, log_text
+2026-10-13T13:37:59.6587180Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-13T13:37:59.6587471Z AssertionError
+2026-10-13T13:37:59.6587595Z
+2026-10-13T13:37:59.6587716Z Errors while running CTest
+2026-10-13T13:37:59.6587858Z
+2026-10-13T13:37:59.6587974Z 67% tests passed, 1 tests failed out of 3
+2026-10-13T13:37:59.6588157Z
+2026-10-13T13:37:59.6588262Z Total Test time (real) =   0.37 sec
+2026-10-13T13:37:59.6588431Z
+2026-10-13T13:37:59.6588533Z The following tests FAILED:
+2026-10-13T13:37:59.6588788Z 	  3 - provider_package_partial (Failed)
+2026-10-13T13:37:59.7004432Z ##[error]Process completed with exit code 8.
+2026-10-13T13:37:59.7137571Z ##[group]Run actions/upload-artifact@v7
+2026-10-13T13:37:59.7137849Z with:
+2026-10-13T13:37:59.7138214Z   name: plugin-qa-llama.rexx-linux-x64-vulkan-cf98b71b10794d5f214aa07bba18c23cd6370d73
+2026-10-13T13:37:59.7140016Z   path: /home/runner/work/_temp/plugin-package/qa
+/home/runner/work/_temp/release-smoke
+/home/runner/work/_temp/build/Testing/Temporary
+/home/runner/work/_temp/build/CMakeCache.txt
+/home/runner/work/_temp/build/CMakeFiles/CMakeConfigureLog.yaml
+/home/runner/work/_temp/build/lib/plugins/llama/tests/release-smoke-msvc-runtime-files.txt
+/home/runner/work/_temp/compiler-cache
+/home/runner/work/_temp/package-scan/Testing/Temporary
