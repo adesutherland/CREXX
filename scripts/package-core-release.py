@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -111,7 +112,59 @@ def smoke_level_l(prefix, source, work, run, extension):
         raise RuntimeError('Modern RexxScript executed a syntactically invalid script')
 
 
-def smoke(prefix, source, preferred_vm, logs):
+def smoke_native_package(prefix, source, build, work, run, extension):
+    """A real, model-free DLL dependency must work from a llama-free core."""
+    isolated = work / 'package-core'
+    shutil.copytree(prefix, isolated, symlinks=True)
+    fixture = source / 'tests/rxpa/core-native-package'
+    fixture_build = work / 'provider-build'
+    run('provider-configure', ['cmake', '-S', fixture, '-B', fixture_build,
+        '-DCREXX_SOURCE=' + str(source), '-DCREXX_GENERATED=' + str(build / 'generated'),
+        '-DCMAKE_BUILD_TYPE=Release'], native_build=True)
+    run('provider-build', ['cmake', '--build', fixture_build, '--config', 'Release', '--parallel', '2'],
+        native_build=True)
+    provider_dir = isolated / 'bin/providers'
+    for path in (fixture_build / 'bin/providers').iterdir():
+        shutil.copy2(path, provider_dir / path.name)
+        # Match the normal build's flat plugin import root as well as the
+        # canonical native package directory. Windows declaration inspection
+        # loads the plugin's adjacent runtime DLLs from this flat root.
+        shutil.copy2(path, isolated / 'bin' / path.name)
+    manifest = provider_dir / 'rxcore_package.native.json'
+    helper = isolated / ('bin/crexx-provider-package' + extension)
+    run('provider-validation', [sys.executable, source / 'tests/native-inference/package_acceptance.py',
+        helper, manifest], 'PASS: native manifest identity/hash/traversal/collision/Unicode controls')
+    # Reproduce the original llama-free core omission in this private copy.
+    missing_output = work / 'provider-missing-helper' / 'consumer'
+    missing_output.parent.mkdir()
+    held = helper.with_name(helper.name + '.held')
+    helper.rename(held)
+    try:
+        run('provider-missing-helper', [isolated / ('bin/crexx' + extension), '--program',
+            missing_output, fixture / 'consumer.crexx', '--jobs', '1', '--native'],
+            'FAILED: package native project program rc=2', native_build=True,
+            native_prefix=isolated, expected_returncode=1)
+    finally:
+        held.rename(helper)
+    output = work / 'provider-native' / 'consumer'
+    output.parent.mkdir()
+    run('provider-native-build', [isolated / ('bin/crexx' + extension), '--program',
+        output, fixture / 'consumer.crexx', '--jobs', '1', '--native'],
+        'PUBLISHED: native program', native_build=True, native_prefix=isolated)
+    executable = output.with_suffix(extension) if extension else output
+    assert executable.is_file() and (output.parent / 'rxcore_package.native.json').is_file()
+    relocated = work / 'provider-relocated'
+    shutil.copytree(output.parent, relocated)
+    if os.name == 'nt':
+        for path in (prefix / 'bin').glob('*.dll'):
+            shutil.copy2(path, relocated / path.name)
+    shutil.rmtree(output.parent)
+    shutil.rmtree(isolated)
+    shutil.rmtree(fixture_build)
+    run('provider-relocated', [relocated / executable.name], 'core native package value=7')
+
+
+def smoke(prefix, source, preferred_vm, logs, build):
     work = Path(tempfile.mkdtemp(prefix='crexx-core-consumer-'))
     extension = '.exe' if os.name == 'nt' else ''
     env = dict(os.environ)
@@ -126,14 +179,14 @@ def smoke(prefix, source, preferred_vm, logs):
     outcome = 'failed'
 
     def run(label, args, marker=None, native_build=False, expected_returncode=0,
-            stdout_path=None):
+            stdout_path=None, native_prefix=None):
         args = list(map(str, args))
         with (logs / (label + '.log')).open('w', encoding='utf-8') as log:
             log.write('argv=' + repr(args) + '\n'); log.flush()
             generated = stdout_path.open('wb') if stdout_path else None
             try:
                 result = subprocess.run(args, cwd=work,
-                    env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
+                    env=dict(env, CREXX_HOME=str(native_prefix or prefix)) if native_build else execution,
                     stdout=generated if generated else log, stderr=log, timeout=1800)
             finally:
                 if generated:
@@ -220,6 +273,7 @@ def smoke(prefix, source, preferred_vm, logs):
         shutil.rmtree(console_native.parent)
         run('relocated-console-native', [relocated / console_executable.name],
             'PASS: rxconsole Level B contract')
+        smoke_native_package(prefix, source, build, work, run, extension)
         outcome = 'passed'
     finally:
         (logs / 'summary.json').write_text(json.dumps(dict(outcome=outcome,
@@ -257,6 +311,10 @@ def main():
             shutil.copy2(source / name, payload / name)
         for name in ('VERSION', 'BUILDINFO'):
             shutil.copy2(build / 'generated' / name, payload / name)
+        notices = payload / 'share/crexx/licenses/nlohmann-json'
+        notices.mkdir(parents=True)
+        for name in ('LICENSE', 'provenance.json'):
+            shutil.copy2(source / 'rxpa/vendor/nlohmann' / name, notices / name)
     if args.toolchain == 'msvc':
         redist = Path(os.environ['VCToolsRedistDir']) / 'x64'
         runtimes = list(redist.glob('Microsoft.VC*.CRT/*.dll'))
@@ -277,7 +335,7 @@ def main():
         assert digest(installed / name) == expected, name
     logs = output / 'qa'
     logs.mkdir()
-    smoke(installed, source, args.preferred_vm, logs)
+    smoke(installed, source, args.preferred_vm, logs, build)
     (logs / 'archive.json').write_text(json.dumps(dict(name=asset.name,
         bytes=asset.stat().st_size, sha256=digest(asset), **{k:v for k,v in manifest.items() if k != 'files'}), indent=2) + '\n')
     print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumers including Classic encoded streams and console')
