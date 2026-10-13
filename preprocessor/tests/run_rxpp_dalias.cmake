@@ -48,3 +48,28 @@ foreach(assignment IN ITEMS "aliased.1='first'" "direct.1='second'")
         message(FATAL_ERROR "Missing generated assignment ${assignment}: ${generated}")
     endif()
 endforeach()
+
+foreach(invalid_case IN ITEMS reserved malformed duplicate)
+    if(invalid_case STREQUAL "reserved")
+        set(invalid_source "##DALIAS IF\nsay 'SHOULD_NOT_RUN'\n")
+    elseif(invalid_case STREQUAL "malformed")
+        set(invalid_source "##DALIAS 1FORTH\nsay 'SHOULD_NOT_RUN'\n")
+    else()
+        set(invalid_source "##DALIAS CONFIG, config\nsay 'SHOULD_NOT_RUN'\n")
+    endif()
+    file(WRITE "${WORK}/${invalid_case}.rxpp" "${invalid_source}")
+    execute_process(
+        COMMAND "${CREXX_BIN}" ${options} "${invalid_case}.rxpp"
+        WORKING_DIRECTORY "${WORK}"
+        RESULT_VARIABLE invalid_result
+        OUTPUT_VARIABLE invalid_output
+        ERROR_VARIABLE invalid_errors
+        TIMEOUT 120)
+    if(invalid_result EQUAL 0)
+        message(FATAL_ERROR "Invalid DALIAS ${invalid_case} unexpectedly succeeded")
+    endif()
+    string(FIND "${invalid_output}${invalid_errors}" "DALIAS" invalid_marker)
+    if(invalid_marker EQUAL -1)
+        message(FATAL_ERROR "Invalid DALIAS ${invalid_case} produced no useful diagnostic: ${invalid_output}${invalid_errors}")
+    endif()
+endforeach()

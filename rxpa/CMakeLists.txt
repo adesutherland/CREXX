@@ -20,8 +20,35 @@ set_target_properties(crexx-provider-package PROPERTIES INCLUDE_DIRECTORIES
 target_compile_definitions(crexx-provider-package PRIVATE
         CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}"
         CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+if(WIN32)
+    target_link_libraries(crexx-provider-package PRIVATE shell32)
+endif()
 set_target_properties(crexx-provider-package PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(MINGW)
+    # This is the first mandatory C++ executable in the parser-free core.
+    # Stage the selected GNU compiler's runtime alongside it, so native package
+    # validation also works with an isolated/system-only Windows PATH.
+    get_filename_component(_crexx_cxx_bin "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    foreach(_runtime IN ITEMS libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll)
+        execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "-print-file-name=${_runtime}"
+                OUTPUT_VARIABLE _runtime_path OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE _runtime_query)
+        if(NOT _runtime_query EQUAL 0 OR NOT IS_ABSOLUTE "${_runtime_path}" OR
+           NOT EXISTS "${_runtime_path}")
+            set(_runtime_path "${_crexx_cxx_bin}/${_runtime}")
+        endif()
+        if(EXISTS "${_runtime_path}")
+            set_property(TARGET crexx-provider-package APPEND PROPERTY
+                    LINK_DEPENDS "${_runtime_path}")
+            add_custom_command(TARGET crexx-provider-package POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_runtime_path}"
+                            "$<TARGET_FILE_DIR:crexx-provider-package>/${_runtime}"
+                    VERBATIM)
+            install(FILES "${_runtime_path}" DESTINATION bin)
+        endif()
+    endforeach()
+endif()
 install(TARGETS crexx-provider-package RUNTIME DESTINATION bin)
 install(FILES vendor/nlohmann/LICENSE vendor/nlohmann/provenance.json
         DESTINATION share/crexx/licenses/nlohmann-json)
