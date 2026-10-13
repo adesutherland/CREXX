@@ -690,6 +690,38 @@ the `settings.` stem and invokes `load_config settings` after the complete
 block has been collected. `##DALIAS` only registers names; it does not emit a
 data array by itself.
 
+#### Planned bare-block alias extension
+
+The current form requires the `##` prefix on the aliased directive. A planned
+extension will allow an explicitly registered alias to introduce a block
+without that prefix, using a matching `END alias` terminator:
+
+```rexx
+##DALIAS FORTH
+
+forth trace_input
+  3 4 + .
+  bye
+end Forth
+```
+
+This extension is opt-in: only names declared by `##DALIAS` may be recognized
+as bare block starters. Alias matching is case-insensitive, so `forth`,
+`Forth`, and `FORTH` refer to the same registered block. The terminator is
+specific to the alias, so ordinary REXX statements are not confused with an
+RXPP block. Existing `##alias ... ##END` syntax remains valid. Bare aliases
+use the alias-specific `END alias` form; a plain `END` is not used as the
+terminator.
+
+Aliases are validated when `##DALIAS` is read. They must be ordinary RXPP
+identifiers beginning with a letter or underscore and continuing with letters,
+digits, or underscores. Empty names, malformed names, duplicates, RXPP
+directive names, and reserved REXX words such as `DO`, `IF`, and `END` are
+rejected immediately.
+
+This syntax is planned and is not yet implemented in the current RXPP
+preprocessor.
+
 ### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
 
 `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for

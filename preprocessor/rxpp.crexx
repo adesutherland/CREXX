@@ -655,6 +655,10 @@ GetPrecomp: procedure
             else if upper(word(line,2)) = 'PROCEDURES' then call cmd_fortran_run lineNo,line,'PROCEDURES'
          end
       end
+      else if pos('<'ucmd,dalias'>') > 0 then do
+         call cmd_data_alias lineNo,line
+         iterate
+      end
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##MACRO'  then lineno=cmd_macro(lineNo,line)
@@ -678,7 +682,6 @@ GetPrecomp: procedure
       else if ucmd = '##DALIAS'  then call cmd_dalias  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-      else if pos('<'ucmd,dalias'>') > 0 then call cmd_data lineNo,line
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -1747,10 +1750,44 @@ CMD_dalias: procedure
    line=translate(line,,',')
    line=DropComment(line,3)
 
+   alias_count=0
    do i=2 to words(line)
-      dalias= dalias '<##'upper(word(line,i))'>'
-   end
+      alias=upper(word(line,i))
+      if left(alias,2)='##' then alias=substr(alias,3)
 
+      if alias='' then do
+         say 'RXPP error: empty DALIAS name at line' line_no
+         exit 8
+      end
+      if verify(left(alias,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZ_','N') \= 0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
+         exit 8
+      end
+      if verify(alias,'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_','N') \= 0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
+         exit 8
+      end
+
+      reserved = ' ADDRESS ARG BY CALL DO ELSE END EXIT IF IMPORT INTERPRET ITERATE LEAVE NOP NUMERIC OPTIONS OTHERWISE PARSE PROCEDURE PULL PUSH RETURN SAY SELECT SIGNAL THEN TRACE WHEN WHILE '
+      rxpp_reserved = ' ARRAY BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE SET SYS USE UNSET '
+      if pos(' 'alias' ',reserved)>0 | pos(' 'alias' ',rxpp_reserved)>0 then do
+         say 'RXPP error: invalid DALIAS name' alias '- reserved keyword'
+         exit 8
+      end
+
+      if pos('<##'alias'>',dalias)>0 | pos('<'alias'>',dalias)>0 then do
+         say 'RXPP error: duplicate DALIAS name' alias
+         exit 8
+      end
+
+      dalias= dalias '<##'alias'>'
+      dalias= dalias '<'alias'>'
+      alias_count=alias_count+1
+   end
+   if alias_count=0 then do
+      say 'RXPP error: ##DALIAS requires at least one alias name'
+      exit 8
+   end
 return
 /* ------------------------------------------------------------------
  * Load macro names from PATH, Content will loaded if used
@@ -1968,6 +2005,142 @@ CMD_data: procedure
      /* Replace the suppressed ##END with a call after all array entries. */
      source.i='call 'callback' 'array
      stype.i=' '
+  end
+return
+
+/* ------------------------------------------------------------------
+ * CMD_data_alias: Implements ##DATA blocks: converts lines into array assignments
+ * until ##END, then optionally calls a callback with the array name.
+ * ------------------------------------------------------------------
+ */
+/*
+ * Collect a named data block.
+ *
+ * Supported forms:
+ *
+ *     ##PYTHON program
+ *       print("Hello")
+ *     ##END PYTHON
+ *
+ *     PYTHON program pythonRule
+ *       print("Hello")
+ *     END PYTHON
+ *
+ * The first word identifies the registered data alias.
+ * The second word names the receiving array.
+ * The optional third word names a callback procedure.
+ */
+CMD_data_alias: procedure
+  arg line_no=.int,line=.string
+  /*
+   * Mark the opening line as an RXPP data directive.
+   */
+  stype.line_no = 'D'
+
+  /*
+   * Remove comments from the opening directive before
+   * interpreting its parameters.
+   */
+  line = qstripcomment('/*','*/',line)
+  directive_form = left(strip(line),2)
+
+  wi = wordindex(line,2)
+  if wi>0 then do
+     qpi = qpos('##',line,wi)
+     if qpi = 0 then qpi = qpos('--',line,wi)
+     if qpi > 1 then line = substr(line,1,qpi-1)
+  end
+  /*
+   * Determine the alias from the first word.
+   *
+   * Both forms are accepted:
+   *
+   *     ##PYTHON
+   *     PYTHON
+   */
+  alias = upper(word(line,1))
+
+  if left(alias,2) = '##' then alias = substr(alias,3)
+  if alias = '' then do
+     say 'RXPP error: missing data-block alias'
+     return
+  end
+
+  /*
+   * Confirm that the alias has been registered by ##DALIAS.
+   *
+   * dalias contains entries such as:
+   *
+   *     <##FORTRAN> <FORTRAN> <##PYTHON> <PYTHON>
+   */
+  aliasToken = '<'alias'>'
+   /*
+   * The second word is the receiving array.
+   * The third word is an optional callback procedure.
+   */
+  array = word(line,2)
+  if array = '' then array=alias
+  callback = word(line,3)
+  /*
+   * Only an array name and an optional callback are allowed.
+   */
+  if word(line,4) <> '' then do
+     say 'RXPP error: too many parameters on' alias 'block'
+     return
+  end
+
+  /*
+   * The end marker must match the opening alias.
+   *
+   * Both forms are accepted:
+   *
+   *     ##END PYTHON
+   *     END PYTHON
+   */
+  endMarker1 = '##END 'alias
+  endMarker2 = 'END 'alias
+  endMarker3 = '##END'
+  j = 0
+  foundEnd = 0
+  i = .int
+  /*
+   * Read source lines until the matching named end marker.
+   */
+  do i = line_no + 1 to source.0
+     line = source.i
+     testLine = upper(strip(line))
+     if testLine = endMarker1 | testLine = endMarker2 | (directive_form = '##' & testLine = endMarker3) then do
+        foundEnd = 1
+        leave
+     end
+     /*
+      * Store the original source line as an array element.
+      */
+     j = j + 1
+     source.i = array'.'j'='safe_quote(line)
+  end
+  /*
+   * Protect against an unterminated data block. Without this
+   * check, the procedure could accidentally continue past the
+   * end of the source buffer.
+   */
+  if foundEnd = 0 then do
+     say 'RXPP error: missing' endMarker1
+     return
+  end
+
+  /*
+   * Without a callback, suppress the end marker as an RXPP
+   * directive.
+   */
+  if callback = '' then stype.i = 'D'
+  /*
+   * With a callback, replace the end marker by a call that
+   * receives the populated array.
+   */
+  else do
+     source.i = 'call 'callback' 'array
+     stype.i = ' '
   end
 return
 /* ------------------------------------------------------------------

@@ -1214,6 +1214,37 @@ The alias declaration must appear before the aliased directive.
 
 `##DALIAS` aliases the **directive name**. It does not define an alias for the generated stem or its contents.
 
+##### Planned bare-block aliases
+
+The current `##DALIAS` form requires the `##` prefix when the alias is used.
+RXPP is planned to support an opt-in bare-block form with an alias-specific
+terminator:
+
+```rexx
+##DALIAS FORTH
+
+forth trace_input
+  3 4 + .
+  bye
+end Forth
+```
+
+Only aliases previously declared by `##DALIAS` would be recognized as bare
+block starters. Alias matching would be case-insensitive, so `forth`, `Forth`,
+and `FORTH` would refer to the same registered block. `END FORTH` would
+terminate the block, while existing `##FORTH ... ##END` syntax would remain
+valid. A plain `END` would not be used, avoiding ambiguity with ordinary REXX
+source.
+
+Aliases are validated when `##DALIAS` is read. They must be ordinary RXPP
+identifiers beginning with a letter or underscore and continuing with letters,
+digits, or underscores. Empty names, malformed names, duplicates, RXPP
+directive names, and reserved REXX words such as `DO`, `IF`, and `END` are
+rejected immediately.
+
+This is a planned extension and is not implemented in the current RXPP
+preprocessor.
+
 For example, a program can be described as:
 
 ```rexx
