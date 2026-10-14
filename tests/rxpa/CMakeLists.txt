@@ -119,6 +119,9 @@ set_tests_properties(
         PROPERTIES
         ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers"
         TIMEOUT 60)
+# Keep native TLS/session isolation in the fast publication gate as well as
+# overnight comprehensive QA; artifact prerequisites are already registered.
+crexx_label_smoke_tests(cri17_attached_provider_noopt cri17_attached_provider_opt)
 
 function(crexx_configure_cri17_attached_control TARGET_NAME)
     # The private VM header exposes C11 atomics to this test harness.
