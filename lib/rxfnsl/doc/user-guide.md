@@ -1589,8 +1589,9 @@ if tree.status() <> 0 then do
   return tree.status()
 end
 root = tree.root()
-do i = 1 to root.count('items')
-  assignment = root.child('items',i)
+items = root.each('items')
+do while items.next()
+  assignment = items.node()
   say assignment.text('name')
 end
 ```
@@ -1609,6 +1610,7 @@ silently turn damaged input into a clean program.
 | `entries()` | Allocated nodes, field slots and child links. |
 | `walk(order)` | An iterative walk; defaults to `children first`. |
 | `rewrite(order)` | A checked reconstruction; accepts `children first`. |
+| `analyse(limit)` | A children-first analysis; defaults to one million visited nodes. |
 
 A **handle** is a small reference to one node. Copying a handle does not copy
 the tree. Keep its owning `tree` alive and do not reassign that tree while using
@@ -1623,14 +1625,87 @@ A handle from the first tree still belongs to that first tree.
 | `count(name)` | Number of children in a child field. |
 | `child(name,index)` | Child handle; index defaults to 1. Invalid when the optional child or list index is absent. |
 | `start()`, `finish()` | Original half-open byte range. |
+| `offset()` | Diagnostic anchor within that range; initially its start. |
+| `children()`, `at(index)` | Child count and indexed access across all fields. |
+| `each(field)` | A linear child cursor; omit `field` to visit all child fields. |
 | `sourcetext()` | Original text covered by that range. |
 | `origin()` | `exact`, `composite` or `derived`, as explained below. |
 | `id()` | Tree-local integer, useful for storing calculated values by node. |
 
 An unknown field, or using `text()` on a child field, raises an `ERROR` signal
-containing `LL_AST_FIELD`. An expired owner raises `REFERENCE_INVALID` on access;
-`valid()` lets you check it first. Use `count()` or the returned handle's
+containing `LL_AST_FIELD`. An expired or replaced tree raises an `ERROR` signal containing
+`LL_AST_OWNER`; `valid()` lets you check a handle first. Use `count()` or the returned handle's
 `valid()` when an optional child may be absent.
+
+### Calculate facts about a tree
+
+An **analysis** calculates information about a tree without changing it. For
+example, a calculator can find constant values; a script checker can list the
+variables an expression reads. Level L supplies the traversal and result table.
+Your program supplies the calculation and the class used for each result.
+
+Call `tree.analyse()` and record one object for each node. Children are visited
+before their parent, so a parent can use their completed results. Here is a
+complete calculation of subtree sizes:
+
+```rexx
+sizefact: class
+  _size = .int
+  *: factory
+    arg size = .int
+    _size = size
+    return
+  size: method = .int
+    return _size
+
+/* Inside the procedure that owns tree: */
+pass = tree.analyse()
+do while pass.next()
+  node = pass.node()
+  size = 1
+  children = node.each()
+  do while children.next()
+    child = pass.get(children.node()) as .sizefact
+    size = size + child.size()
+  end
+  ok = pass.put(.sizefact(size) as .object)
+end
+facts = pass.finish()
+if facts.error() <> '' then do
+  say facts.error()
+  return 1
+end
+result = facts.get(tree.root()) as .sizefact
+say result.size()
+```
+
+The cast `as .object` stores the application's class in the common result table.
+The cast `as .sizefact` checks its type when reading it back. `each()` visits
+every child without copying the list. Use `each('items')` for one named list,
+or `child('value')` to read a single field. A cursor has `next()`, `node()` and
+`error()` methods. Indexed access is convenient for a particular item; a cursor
+visits a long list in linear time.
+
+| Analysis method | Meaning |
+|---|---|
+| `next()` | Advance to the next node; zero when finished or failed. |
+| `node()` | Current input node. |
+| `get(node)` | Read a completed dependency's result. |
+| `put(object)` | Record this node's result exactly once. |
+| `finish()` | Publish the complete result table. |
+| `error()` | Empty until a contract or resource check fails. |
+
+The completed table provides `get(node)`, `has(node)`, `size()` and `error()`.
+Keep the input tree alive while using its results. A copied or rewritten tree
+has its own identity and needs its own analysis. Reading another tree's facts
+reports `LL_AST_OWNER`; reading an unfinished dependency reports
+`LL_AST_DEPENDENCY`. An incomplete or failed pass publishes no usable results.
+These checks prevent a transformation from accidentally using stale facts.
+
+`tree.analyse(limit)` bounds the number of visited nodes and result records.
+Exhaustion reports `analysis.nodes`. The calculation and the size of each result
+belong to the application. This pass has no repeated callbacks: each node is
+visited once, and its result must depend on results already available.
 
 ### Walk the nodes
 
@@ -1650,6 +1725,8 @@ if walk.error() <> '' then say walk.error()
 the tree or finding declarations. `children first` visits children before their
 parent. It is useful for calculating a parent's value from its children's
 values, as the calculator does. These are also called *preorder* and *postorder*.
+`walk.depth()` gives the current nesting depth: 0 for the root, 1 for its
+children, and so on.
 
 The walk uses an explicit stack, so deeply nested input does not require a
 recursive application procedure. Each reachable node is visited once. For a
@@ -1694,6 +1771,11 @@ therefore affects what its parent sees later in the same pass. Unchanged nodes
 are copied into the result automatically. Replacement nodes are not revisited.
 Call `finish()` after `next()` returns 0; it validates and publishes a complete
 new tree. The original remains usable after success or failure.
+
+`pass.original()` gives the corresponding input node. Use it to read facts
+calculated before rewriting; `pass.node()` gives the output node with its
+already-rewritten children. Keeping these roles explicit prevents mixing the
+identities of the two trees.
 
 `make(kind)` creates a **draft**, a replacement under construction. The kind
 must occur in the inferred schema. Set text fields with `settext(name,value)`
@@ -2145,8 +2227,10 @@ with RexxScript values and function services.
 | 4 | Generated keyword stage | Classify words according to statement context. |
 | 5 | RexxScript concatenation pass | Insert blank/abuttal operators where the language requires implicit concatenation. |
 | 6 | Generated LR parser | Build the statement and expression tree. |
-| 7 | Level L named view | Expose named rules and their ordered children. |
-| 8 | RexxScript validation and execution | Check uses such as `LEAVE` inside loops, then execute with fresh state. |
+| 7 | Level L application AST | Construct named fields from the grammar's `then tree` mappings. |
+| 8 | RexxScript validation | Check control placement and source nesting before executing anything. |
+| 9 | Analysis and checked folding | Calculate constants and replace eligible expressions with exact typed literals. |
+| 10 | RexxScript execution | Execute chosen branches with fresh variable and function state. |
 
 **Abuttal** means adjacent terms without an explicit operator between them.
 RexxScript distinguishes it from blank concatenation and function-call
@@ -2165,12 +2249,12 @@ in one parse.
 Statement sequences use the same list notation as the settings example:
 
 ```rexx
-statements: rule = separator* (statement (separator statement?)*)?
+statements: rule = separator* (statement as item (separator (statement as item)?)*)?
+  then tree Sequence(items = item*)
 ```
 
-The named `statements` node contains its statements and separators in source
-order. Execution visits each statement child, stopping when control flow leaves
-the sequence. No application code follows generated repetition nodes.
+The `Sequence` node contains an ordered `items` list of statements. Execution
+visits each item, stopping when control flow leaves the sequence.
 
 ### How IF statements get their structure
 
@@ -2229,20 +2313,66 @@ rules about what can follow them.
 
 ### Execution follows the chosen structure
 
-The named `if.closed` node has six immediate children:
+The grammar maps `if.closed` and `if.continued` to `IfElse(condition, yes, no)`.
+It maps `if.open` to `IfThen(condition, yes)`. The open/closed distinction still
+resolves ELSE during parsing; the interpreter uses the useful branch fields:
 
-```text
-1 ifword   2 expression   3 thenword
-4 closed.statement       5 elseword   6 closed.statement
+```rexx
+value = expression(node.child('condition'))
+if rexxscriptoperators..truth(value) then call statement(node.child('yes'))
+else if node.kind() = 'IfElse' then call statement(node.child('no'))
 ```
 
-`if.open` has four, with `statement` at position 4. `if.continued` has six,
-with `open.statement` at position 6. The interpreter evaluates child 2, executes
-child 4 if true, or child 6 if false and present.
+A general walk visits every child. Execution instead chooses branches and
+short-circuits logical AND/OR; it must not execute every node it encounters.
+Loop and return behavior remain part of the interpreter.
 
-It does not need to search for an ELSE: the grammar has already attached it.
-Likewise, the expression tree supplies precedence for evaluation. Application
-code can focus on values, names, control flow and effects.
+### Analyse and fold a script
+
+The [analysis example](../../../rexxscript/examples/ast-analysis.crexx) follows
+this script through the full process:
+
+```rexx
+x=2+3*4; if x>10 then say x else say 1/0
+```
+
+`rexxscriptanalysis..analyse(reference tree)` returns facts for each AST node:
+`known()` says whether its constant value was calculated, `value()` returns that
+RexxValue, `reads()` lists variable names used directly in expressions, and
+`effects()` marks possible state changes or function calls. Reads and effects
+include both branches. A function may access additional state, so a call keeps
+its effect flag and stays outside constant folding. The analysis never calls
+a BIF or consults the variable pool.
+
+`rexxscriptanalysis..fold(reference tree)` creates a new checked AST. It changes
+`2+3*4` into a Number with spelling `14`, while retaining the original source
+range. The expression `x>10` depends on a variable and remains an expression.
+The failing calculation `1/0` also remains an expression; the script can run
+successfully because that branch is not selected.
+
+Analysis and execution share RexxScript's numeric operations. A folded literal
+must decode to the same type and exact value. Floating-point spelling is checked
+against the original bits, including signed zero. A value that cannot round-trip
+stays as an expression. Failed arithmetic is left for execution so that folding
+does not introduce errors in an unselected branch.
+
+A replacement keeps the full original range for `sourcetext()`. Its `offset()`
+can retain a more precise diagnostic anchor within that range. This preserves
+the location of a later error even when its operand was folded. Applications
+can set that anchor with `replacement.locate(offset)` before accepting a draft.
+
+Build and run the example using installed tools:
+
+```sh
+crexx --program ast-analysis rexxscript/examples/ast-analysis.crexx
+rxvm ast-analysis.rxbin
+```
+
+The output reports constant value `14`, variable read `X`, the Number replacement
+and original spelling `2+3*4`, followed by the script's output `14`. Execution
+folds by default. Pass `0` as the fourth argument of
+`rexxscript1run..execution(program, fuel, maximum, fold)` to compare ordinary
+execution with folding. Both paths apply the same validation and runtime rules.
 
 See the [RexxScript user guide](../../../rexxscript/doc/user-guide.md#rexxscript-1-modern-level-l-review-implementation)
 for the script language and its value rules.

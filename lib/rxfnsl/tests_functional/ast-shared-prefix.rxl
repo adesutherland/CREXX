@@ -1,0 +1,13 @@
+options levell
+namespace ast_shared_prefix
+name: token = 1 then tree Name(spelling = text)
+first: token = 2
+second: token = 3
+scan: lexer
+word: rule = "x" then emit name
+one: rule = ";" then emit first
+two: rule = "!" then emit second
+parse: parser start program backend lr1
+program: rule = choice.one | choice.two
+choice.one: rule = name as value first then tree First(value = value)
+choice.two: rule = name as value second then tree Second(value = value)

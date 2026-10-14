@@ -15,6 +15,7 @@ p = argparse.ArgumentParser()
 p.add_argument('build', type=Path)
 p.add_argument('output', type=Path)
 p.add_argument('--diagnostics-only', action='store_true')
+p.add_argument('--shared-prefix-only', action='store_true')
 a = p.parse_args()
 root = Path(__file__).resolve().parents[3]
 binary = a.build.resolve() / 'bin'
@@ -90,7 +91,7 @@ cases = [
 ]
 calculator = root / 'lib/rxfnsl/examples/calculator'
 settings = root / 'lib/rxfnsl/examples/settings'
-if not a.diagnostics_only:
+if not a.diagnostics_only and not a.shared_prefix_only:
     for backend in ['ll1', 'lr1', 'packrat', 'earley']:
         text = base.replace('backend lr1', 'backend ' + backend)
         if backend == 'packrat':
@@ -137,6 +138,18 @@ if not a.diagnostics_only:
                  settings.parent / 'settings-ast.crexx')
     observe('settings', work, [('unicode-composite', 'é=2;\nβ=[2+3*4] /* note */', ['é -> 2', 'β -> [2+3*4]'])])
 
+# Identical named captures in a shared prefix must not invent LR ambiguity.
+if not a.diagnostics_only:
+    shared = (fixtures / 'ast-shared-prefix.rxl').read_text(encoding='utf-8')
+    for backend in ['lr1', 'packrat', 'earley']:
+        text = shared.replace('backend lr1', 'backend ' + backend)
+        if backend == 'packrat':
+            text = text.replace('start program backend', 'start program semantics ordered backend')
+        for route in ['rxas', 'source']:
+            key = backend + '-shared-' + route
+            work = build(key, text, 'ast_shared_prefix', fixtures / 'ast-shared-prefix.crexx', route)
+            observe(key, work, [('first', 'x;', ['First|x']), ('second', 'x!', ['Second|x'])])
+
 # Admission errors must be located and must not publish a generated module.
 for name, text, code, detail in [
     ('unknown', base.replace('value = value?', 'value = absent?'), 'LL_AST_CAPTURE', 'unknown capture absent'),
@@ -169,7 +182,8 @@ for name, text, code, detail in [
 
 receipt = dict(commands=records, observations=observations,
                sources={str(path.relative_to(root)): sha(path) for path in [
-                   fixtures / 'ast-fixture.rxl', fixtures / 'ast-probe.crexx', Path(__file__).resolve(),
+                   fixtures / 'ast-fixture.rxl', fixtures / 'ast-probe.crexx',
+                   fixtures / 'ast-shared-prefix.rxl', fixtures / 'ast-shared-prefix.crexx', Path(__file__).resolve(),
                    calculator / 'calculator.rxl', calculator / 'calculator.crexx', calculator / 'fold.crexx',
                    settings / '09-ast.rxl', settings.parent / 'settings-ast.crexx']},
                tools={name: sha(binary / name) for name in ['levell', 'rxfnsl.rxbin', 'rxc', 'rxas', 'rxlink', 'rxtvm', 'rxbvm']})

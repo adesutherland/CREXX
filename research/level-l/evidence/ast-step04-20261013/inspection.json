@@ -1,0 +1,392 @@
+{
+  "guide_links": [
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#overview-from-a-language-description-to-a-useful-program"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#build-and-run-a-complete-example"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#grow-one-settings-grammar"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#choose-a-backend-and-understand-competing-paths"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#build-an-end-to-end-calculator"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#specification-reference"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#lexical-rules-and-unicode"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#comments-and-layout"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#parser-rules-and-operators"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#token-stages-and-composite-parsing"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#runtime-api-reference"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#trees-fields-and-source-locations"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#error-messages-and-recovery"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#command-line-and-build-integration"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#resource-limits"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#rexxscript-a-larger-example"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#troubleshooting"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#glossary"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#application-trees-with-then-tree"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#rexxscript-a-larger-example"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/01-basic.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings-reader.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings.txt"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#choose-a-backend-and-understand-competing-paths"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/01-basic.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/02-messages.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/03-unicode.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/04-recovery.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/05-composite.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/06-fields.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/07-properties.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/08-comments.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/09-ast.rxl"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings-recover.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings-fields.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#message-templates"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/unicode.settings"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#unicode-properties"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/damaged.settings"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#recovery-requests"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/comments.settings"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#comments-and-layout"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../grammar/tinyexpr.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#lexer-only-applications"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/predictive.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#build-and-run-a-complete-example"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#rexxscript-a-larger-example"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/left-recursive-list.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#build-an-end-to-end-calculator"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/05-composite.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/ordered-values.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/ambiguous-arithmetic.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/palindrome.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/inspect.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/predictive.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/left-recursive-list.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/ordered-prefix.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/palindrome.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/ambiguous-arithmetic.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#parse-forests"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/calculator/calculator.rxl"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/calculator/calculator.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/calculator/example.calc"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#token-stages"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#possible-alternatives-versus-ordered-alternatives"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#token-stages"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#request-operations"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#resource-limits"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "#recovery-requests"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings/09-ast.rxl"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/settings-ast.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/calculator/fold.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../tools/generate.cmake"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/modern.cmake"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "bootstrap.md"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../tools/README.md"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/grammar/rexxscript.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/RexxScriptProgram.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/RexxScriptExecution.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/examples/ast-analysis.crexx"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../../../rexxscript/doc/user-guide.md#rexxscript-1-modern-level-l-review-implementation"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../tools/example.levell"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/backends/"
+    },
+    {
+      "guide": "lib/rxfnsl/doc/user-guide.md",
+      "link": "../examples/calculator/"
+    },
+    {
+      "guide": "rexxscript/doc/user-guide.md",
+      "link": "#rexxscript-1-modern-level-l-review-implementation"
+    },
+    {
+      "guide": "rexxscript/doc/user-guide.md",
+      "link": "../../lib/rxfnsl/doc/user-guide.md#overview-from-a-language-description-to-a-useful-program"
+    },
+    {
+      "guide": "rexxscript/doc/user-guide.md",
+      "link": "../grammar/rexxscript.levell"
+    },
+    {
+      "guide": "rexxscript/doc/user-guide.md",
+      "link": "../examples/ast-analysis.crexx"
+    },
+    {
+      "guide": "rexxscript/doc/user-guide.md",
+      "link": "../../lib/rxfnsl/doc/user-guide.md#calculate-facts-about-a-tree"
+    }
+  ],
+  "doc_blocks": {
+    "rexxscript/RexxScriptExecution.crexx": {
+      "before": 1,
+      "after": 1
+    },
+    "rexxscript/RexxScriptOperators.crexx": {
+      "before": 2,
+      "after": 5
+    },
+    "rexxscript/RexxScriptProgram.crexx": {
+      "before": 3,
+      "after": 4
+    },
+    "lib/rxfnsl/rexx/llast.crexx": {
+      "before": 9,
+      "after": 20
+    }
+  },
+  "self_description": {
+    "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+    "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+    "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+    "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203"
+  }
+}

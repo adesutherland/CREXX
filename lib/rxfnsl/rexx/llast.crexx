@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Application trees, field contracts and checked walks. */
 options levelb
-namespace llast expose schema storage tree node walk rewrite draft
+namespace llast expose schema storage tree node walk rewrite draft analysis facts children
 import rxfnsb
 import llcore
 import lltree
@@ -11,6 +11,18 @@ badfield: procedure = .void
   arg message = .string
   assembler signal "ERROR",message
   return
+
+/* The reference identifies an owning variable; the serial identifies its
+ * immutable contents. Reassigning that variable must not revive old facts. */
+identities: initialiser expose ast_identity
+  ast_identity = 0
+  return
+next_identity: procedure = .int expose ast_identity
+  if ast_identity = 9223372036854775807 then do
+    call badfield('LL_AST_IDENTITY: snapshot identities exhausted'); return 0
+  end
+  ast_identity = ast_identity + 1
+  return ast_identity
 
 /** Declarative mappings. Field modes are text, capture, or operand; cardinality
  * is one, optional, many or some. Names are case-insensitive, kind spelling is
@@ -131,6 +143,7 @@ schema: class
  * @param limit Maximum combined nodes, fields and child links.
  */
 storage: class
+  _identity = .int
   _source = .binary
   _schema = .llast..schema
   _limit = .int
@@ -143,6 +156,7 @@ storage: class
   _rule = .int[]
   _start = .int[]
   _finish = .int[]
+  _offset = .int[]
   _origin = .string[]
   _first = .int[]
   _last = .int[]
@@ -156,10 +170,14 @@ storage: class
   _next = .int[]
   *: factory
     arg source = .binary, contract = .llast..schema, limit = 1000000
+    _identity = next_identity()
     _source = source; _schema = contract; _limit = limit
     _entries = 0; _frozen = 0; _error = ''; _root = 0; _generation = 0
     if contract.check() = 0 then _error = contract.error()
     return
+  /** Immutable content identity; references separately identify the owner. */
+  identity: method = .int
+    return _identity
   fail: method = .void
     arg message = .string
     if _error = '' then _error = message
@@ -186,7 +204,7 @@ storage: class
       if _schema.owner(i) = rule then fields = fields + 1
     end
     if reserve(1 + fields) = 0 then return 0
-    id = _rule[0] + 1; _rule[id] = rule; _start[id] = start; _finish[id] = finish; _origin[id] = origin
+    id = _rule[0] + 1; _rule[id] = rule; _start[id] = start; _finish[id] = finish; _offset[id] = start; _origin[id] = origin
     _first[id] = _declaration[0] + 1
     do i = 1 to _schema.fields()
       if _schema.owner(i) <> rule then iterate
@@ -359,6 +377,22 @@ storage: class
   finish: method = .int
     arg id = .int
     return _finish[id]
+  offset: method = .int
+    arg id = .int
+    return _offset[id]
+  /** A replacement may retain an application's original diagnostic anchor. */
+  locate: method = .int
+    arg id = .int, offset = .int
+    if reserve(0) = 0 then return 0
+    if valid(id) = 0 then return 0
+    if _sealed[id] then do
+      call fail('LL_AST_FROZEN: accepted replacement cannot be edited'); return 0
+    end
+    if offset < _start[id] | offset > _finish[id] then do
+      call fail('LL_AST_ORIGIN: diagnostic offset must lie within the node source range'); return 0
+    end
+    _offset[id] = offset
+    return 1
   origin: method = .string
     arg id = .int
     return _origin[id]
@@ -410,63 +444,149 @@ storage: class
  * @param id Arena-local node number, never transferable to another arena.
  */
 node: class
+  _identity = .int
   _owner = reference .llast..storage
   _id = .int
   *: factory
     arg owner = reference .llast..storage, id = .int
     _owner = owner; _id = id
+    input = dereference owner; _identity = input.identity()
     return
   valid: method = .int
     if <refvalid>(_owner) = 0 then return 0
     owner = dereference _owner
-    return owner.valid(_id)
+    current = owner.identity()
+    return (_identity = current) & owner.valid(_id)
   kind: method = .string
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.kind(_id)
   text: method = .string
     arg name = .string
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.text(_id,name)
   count: method = .int
     arg name = .string
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.count(_id,name)
   child: method = .llast..node
     arg name = .string, occurrence = 1
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return .llast..node(_owner,owner.child(_id,name,occurrence))
+  /** All child fields in declaration order, for schema-independent algorithms. */
+  children: method = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
+    owner = dereference _owner
+    return owner.children(_id)
+  at: method = .llast..node
+    arg occurrence = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
+    owner = dereference _owner
+    return .llast..node(_owner,owner.childat(_id,occurrence))
+  /** A linear cursor over a named list, or all child fields when omitted. */
+  each: method = .llast..children
+    arg field = ''
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
+    return .llast..children(_owner,_id,field)
   start: method = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.start(_id)
   finish: method = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.finish(_id)
+  offset: method = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
+    owner = dereference _owner
+    return owner.offset(_id)
   origin: method = .string
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.origin(_id)
   sourcetext: method = .string
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.sourcetext(_id)
   id: method = .int
     return _id
   belongs: method = .int
     arg owner = reference .llast..storage
-    return _owner <refsame> owner
+    return valid() & (_owner <refsame> owner)
+
+/** Linear child cursor. No list or owner is copied. */
+children: class
+  _owner = reference .llast..storage
+  _identity = .int
+  _field = .int
+  _last = .int
+  _edge = .int
+  _current = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llast..storage, id = .int, field = ''
+    _owner = owner; input = dereference owner; _identity = input.identity()
+    _current = 0; _error = ''; _edge = 0
+    _field = input.firstfield(id); _last = input.lastfield(id)
+    if field <> '' then do
+      _field = input.field(id,field); _last = _field
+      if _field = 0 then do
+        _error = 'LL_AST_FIELD: unknown child field ' || field; _last = -1
+      end
+      else do
+        contract = dereference input.contract()
+        if contract.mode(input.declaration(_field)) = 'text' then do
+          _error = 'LL_AST_FIELD: ' || field || ' is a text field'; _last = -1
+        end
+      end
+    end
+    if _field <= _last then _edge = input.firstedge(_field)
+    return
+  next: method = .int
+    if _error <> '' then return 0
+    if <refvalid>(_owner) = 0 then do
+      _error = 'LL_AST_OWNER: child cursor owner has expired'; return 0
+    end
+    input = dereference _owner
+    if _identity <> input.identity() then do
+      _error = 'LL_AST_OWNER: child cursor snapshot has been replaced'; return 0
+    end
+    _current = 0
+    do while _edge = 0 & _field <= _last
+      _field = _field + 1
+      if _field <= _last then _edge = input.firstedge(_field)
+    end
+    if _edge = 0 then return 0
+    _current = input.edgechild(_edge); _edge = input.nextedge(_edge)
+    return 1
+  node: method = .llast..node
+    if <refvalid>(_owner) = 0 then call badfield('LL_AST_OWNER: cursor owner has expired')
+    input = dereference _owner
+    if input.identity() <> _identity then call badfield('LL_AST_OWNER: cursor snapshot has been replaced')
+    return .llast..node(_owner,_current)
+  error: method = .string
+    return _error
 
 /** Iterative traversal. Each edge is followed once; depth consumes an explicit
  * cursor stack rather than the Rexx call stack. The arena remains borrowed. */
 walk: class
+  _identity = .int
   _owner = reference .llast..storage
   _pending = .int[]
   _position = .int[]
   _edge = .int[]
   _top = .int
+  _level = .int
   _current = .int
   _parents = .int
   _error = .string
   *: factory
     arg owner = reference .llast..storage, root = .int, order = 'children first'
-    _owner = owner; _current = 0; _error = ''; _top = 1
+    _owner = owner; input = dereference owner; _identity = input.identity()
+    _current = 0; _level = 0; _error = ''; _top = 1
     _pending[1] = root; _position[1] = -1
     _parents = order = 'parents first'
     if order <> 'parents first' & order <> 'children first' then do
@@ -474,7 +594,13 @@ walk: class
     end
     return
   next: method = .int
-    owner = dereference _owner
+    if <refvalid>(_owner) = 0 then do
+      _error = 'LL_AST_OWNER: walk snapshot has expired or been replaced'; return 0
+    end
+    owner = dereference _owner; identity = owner.identity()
+    if (_identity = identity) = 0 then do
+      _error = 'LL_AST_OWNER: walk snapshot has been replaced'; return 0
+    end
     _current = 0
     do while _top > 0
       id = _pending[_top]
@@ -486,7 +612,7 @@ walk: class
         _edge[_top] = 0
         if _position[_top] <= owner.lastfield(id) then _edge[_top] = owner.firstedge(_position[_top])
         if _parents then do
-          _current = id; return 1
+          _current = id; _level = _top - 1; return 1
         end
       end
       do while _position[_top] <= owner.lastfield(id) & _edge[_top] = 0
@@ -500,13 +626,18 @@ walk: class
       else do
         _top = _top - 1
         if _parents = 0 then do
-          _current = id; return 1
+          _current = id; _level = _top; return 1
         end
       end
     end
     return 0
   node: method = .llast..node
+    if <refvalid>(_owner) = 0 then call badfield('LL_AST_OWNER: cursor owner has expired')
+    input = dereference _owner
+    if input.identity() <> _identity then call badfield('LL_AST_OWNER: cursor snapshot has been replaced')
     return .llast..node(_owner,_current)
+  depth: method = .int
+    return _level
   error: method = .string
     return _error
 
@@ -658,6 +789,10 @@ tree: class
   rewrite: method = .llast..rewrite
     arg order = 'children first'
     return .llast..rewrite(reference _store,order)
+  /** One result per node, with completed children available before parents. */
+  analyse: method = .llast..analysis
+    arg limit = 1000000
+    return .llast..analysis(reference _store,limit)
   source: method = .binary
     return _store.source()
   entries: method = .int
@@ -676,6 +811,11 @@ draft: class
     _owner = owner; _id = id
     arena = dereference owner; _generation = arena.generation()
     return
+  locate: method = .int
+    arg offset = .int
+    owner = dereference _owner
+    if current() = 0 then return 0
+    return owner.locate(_id,offset)
   settext: method = .int
     arg name = .string, value = .string
     owner = dereference _owner
@@ -706,6 +846,7 @@ draft: class
  * finish publishes a frozen result only after a complete successful traversal.
  */
 rewrite: class
+  _identity = .int
   _input = reference .llast..storage
   _output = .llast..storage
   _walk = .llast..walk
@@ -716,7 +857,7 @@ rewrite: class
   _finished = .int
   *: factory
     arg input = reference .llast..storage, order = 'children first'
-    _input = input; owner = dereference input
+    _input = input; owner = dereference input; _identity = owner.identity()
     _output = .llast..storage(owner.source(),owner.schema(),owner.limit())
     _walk = .llast..walk(input,owner.root(),'children first')
     _raw = 0; _current = 0; _done = 0; _finished = 0
@@ -735,6 +876,7 @@ rewrite: class
     owner = dereference _input; contract = dereference owner.contract()
     _current = _output.add(owner.rule(_raw),owner.start(_raw),owner.finish(_raw),owner.origin(_raw))
     if _current = 0 then return 0
+    ok = _output.locate(_current,owner.offset(_raw))
     do f = owner.firstfield(_raw) to owner.lastfield(_raw) while _output.error() = ''
       decl = owner.declaration(f); name = contract.name(decl)
       if contract.mode(decl) = 'text' then ok = _output.settext(_current,name,owner.text(_raw,name))
@@ -748,6 +890,12 @@ rewrite: class
     end
     _mapped[_raw] = _current
     return _output.error() = ''
+  /** Input node corresponding to the current reconstructed node. */
+  original: method = .llast..node
+    if <refvalid>(_input) = 0 then call badfield('LL_AST_OWNER: rewrite input expired')
+    owner = dereference _input
+    if owner.identity() <> _identity then call badfield('LL_AST_OWNER: rewrite input replaced')
+    return .llast..node(_input,_raw)
   node: method = .llast..node
     return .llast..node(reference _output,_current)
   make: method = .llast..draft
@@ -777,9 +925,149 @@ rewrite: class
     call _output.advance()
     if _done = 0 then call _output.fail('LL_AST_LIFECYCLE: finish requires a complete walk')
     if _output.error() <> '' then return .llast..tree.failed(_output.error())
+    if <refvalid>(_input) = 0 then return .llast..tree.failed('LL_AST_OWNER: rewrite input expired')
     owner = dereference _input
+    if owner.identity() <> _identity then return .llast..tree.failed('LL_AST_OWNER: rewrite input replaced')
     ok = _output.freeze(_mapped[owner.root()])
     if ok = 0 then return .llast..tree.failed(_output.error())
     return .llast..tree.loaded(_output)
   error: method = .string
     return _output.error()
+
+/** A completed table of application-defined node results. Values are objects;
+ * the language application owns their types and meaning. The table borrows its
+ * immutable input tree. Copying or rewriting a tree does not transfer its facts.
+ */
+facts: class
+  _identity = .int
+  _owner = reference .llast..storage
+  _values = .object[]
+  _present = .int[]
+  _complete = .int
+  _count = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llast..storage
+    _owner = owner; input = dereference owner; _identity = input.identity()
+    _complete = 0; _count = 0; _error = ''
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  accepts: method = .int
+    arg node = .llast..node
+    if <refvalid>(_owner) = 0 then do
+      call fail('LL_AST_OWNER: analysis tree has expired or been replaced'); return 0
+    end
+    input = dereference _owner; identity = input.identity()
+    if (_identity = identity) = 0 then do
+      call fail('LL_AST_OWNER: analysis tree has been replaced'); return 0
+    end
+    if node.belongs(_owner) = 0 | node.valid() = 0 then do
+      call fail('LL_AST_OWNER: analysis node belongs to another tree'); return 0
+    end
+    return _error = ''
+  /** Internal pass operation: each visited node has exactly one result. */
+  record: method = .int
+    arg node = .llast..node, value = .object
+    if _complete then do
+      call fail('LL_AST_LIFECYCLE: completed facts cannot be edited'); return 0
+    end
+    if accepts(node) = 0 then return 0
+    id = node.id()
+    if _present[id] then do
+      call fail('LL_AST_DEPENDENCY: node already has an analysis result'); return 0
+    end
+    if initialized(value) = 0 then do
+      call fail('LL_AST_FACT: analysis result must be an initialized object'); return 0
+    end
+    _values[id] = value; _present[id] = 1; _count = _count + 1
+    return 1
+  /** Internal dependency lookup: parents cannot read unfinished results. */
+  dependency: method = .object
+    arg node = .llast..node
+    if accepts(node) then do
+      if _present[node.id()] then return _values[node.id()]
+      call fail('LL_AST_DEPENDENCY: result is not available; analyse children before parents')
+    end
+    call badfield(_error)
+    none = .object; return none
+  seal: method = .void
+    _complete = 1
+    return
+  has: method = .int
+    arg node = .llast..node
+    if _complete = 0 | accepts(node) = 0 then return 0
+    return _present[node.id()]
+  get: method = .object
+    arg node = .llast..node
+    if _complete = 0 then call fail('LL_AST_LIFECYCLE: analysis result is incomplete')
+    if _error <> '' then do
+      call badfield(_error); none = .object; return none
+    end
+    return dependency(node)
+  error: method = .string
+    return _error
+  size: method = .int
+    if _complete = 0 | _error <> '' then return 0
+    return _count
+
+/** Finite children-first analysis. Record one object for each current node.
+ * @param owner Immutable input storage, borrowed until the results are released.
+ * @param limit Maximum visited nodes/results; does not bound callback allocation.
+ * @return finish() publishes facts only after the entire traversal succeeds.
+ */
+analysis: class
+  _facts = .llast..facts
+  _walk = .llast..walk
+  _current = .llast..node
+  _active = .int
+  _recorded = .int
+  _done = .int
+  _finished = .int
+  _visits = .int
+  _limit = .int
+  *: factory
+    arg owner = reference .llast..storage, limit = 1000000
+    input = dereference owner
+    _facts = .llast..facts(owner); _walk = .llast..walk(owner,input.root())
+    _active = 0; _recorded = 0; _done = 0; _finished = 0; _visits = 0; _limit = limit
+    if input.error() <> '' then call _facts.fail(input.error())
+    if limit < 0 then call _facts.fail('LL_AST_LIMIT: analysis limit must be nonnegative')
+    return
+  next: method = .int
+    if _finished | _done | _facts.error() <> '' then return 0
+    if _active & _recorded = 0 then do
+      call _facts.fail('LL_AST_FACT: current node has no analysis result'); return 0
+    end
+    if _walk.next() = 0 then do
+      _done = 1; _active = 0
+      if _walk.error() <> '' then call _facts.fail(_walk.error())
+      return 0
+    end
+    if _visits >= _limit then do
+      call _facts.fail('LL_RESOURCE_LIMIT: analysis.nodes limit=' || _limit || ' required=' || (_visits + 1)); return 0
+    end
+    _visits = _visits + 1; _current = _walk.node(); _active = 1; _recorded = 0
+    return 1
+  node: method = .llast..node
+    return _current
+  put: method = .int
+    arg value = .object
+    if _active = 0 | _finished then do
+      call _facts.fail('LL_AST_LIFECYCLE: put requires a current analysis node'); return 0
+    end
+    _recorded = _facts.record(_current,value)
+    return _recorded
+  get: method = .object
+    arg node = .llast..node
+    return _facts.dependency(node)
+  finish: method = .llast..facts
+    if _finished then call _facts.fail('LL_AST_LIFECYCLE: analysis already finished')
+    _finished = 1
+    if _done = 0 then call _facts.fail('LL_AST_LIFECYCLE: finish requires a complete analysis')
+    call _facts.seal()
+    return _facts
+  error: method = .string
+    return _facts.error()

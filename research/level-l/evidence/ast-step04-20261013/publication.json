@@ -1,0 +1,17 @@
+{
+  "publication_base": "60f58c0a98243a2a70973dc656956609d2e972a2",
+  "qualified_base": "50926edb8b6b36e98ba496b568c35bd6b544f5b8",
+  "qualification_inputs_verified_before_documentation_update": 20,
+  "unchanged_qualified_inputs_after_documentation_update": 19,
+  "qualification_reused": true,
+  "publication_documentation": {
+    "research/level-l/PLAN.md": "3530688d862932ec733f765761ee9af32e7fae3c86329dc2c066fa0c476273b8",
+    "research/level-l/evidence/ast-step04-20261013/README.md": "95bd4f8d8f86ec0fc8853c56967824654553f3cb7ffdab670b337b6e3a0f4477"
+  },
+  "incoming_commits": [
+    "60f58c0a98243a2a70973dc656956609d2e972a2 Retry transient Apple installer ticket stapling failures",
+    "3e1c1ad3ee592fa613e02ec2e4b5d0b3b3c35838 Use compiler-specific TLS in the CRI-17 provider fixture",
+    "5d4ed462b7f116bf6e85e7d39018414e30c31118 Repair Level L source-byte import fixture after grammar integration"
+  ],
+  "scope": "Approved AST-STEP04 acyclic RexxScript increment; sparse properties and flow-analysis extensions remain design proposals."
+}

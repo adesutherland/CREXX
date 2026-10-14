@@ -1,0 +1,146 @@
+/* cREXX License (MIT). Finite analysis scheduling and result ownership. */
+options levelb
+import rxfnsb
+import llcore
+import llast
+
+measure: class
+  _value = .int
+  *: factory
+    arg value = .int
+    _value = value
+    return
+  value: method = .int
+    return _value
+
+main: procedure = .int
+  ok = .int; unused = .object; replacement = .llast..draft; revived = .llast..node
+  tree = example(); pass = tree.analyse(3); failures = 0
+  do while pass.next()
+    node = pass.node(); count = 1
+    children = node.each()
+    do while children.next()
+      previous = pass.get(children.node()) as .measure
+      count = count + previous.value()
+    end
+    ok = pass.put(.measure(count) as .object)
+  end
+  facts = pass.finish()
+  failures = check(facts.error() = '' & facts.size() = 3,'exact budget and complete table')
+  info = facts.get(tree.root()) as .measure
+  failures = failures + check(info.value() = 3,'children available before parent')
+  held = facts
+  copy = tree
+  failures = failures + check(held.has(copy.root()) = 0 & pos('LL_AST_OWNER',held.error()) > 0,'copied owner refused')
+  failures = failures + check(facts.has(tree.root()),'independent result copy')
+  rewrite = tree.rewrite()
+  do while rewrite.next()
+    nop
+  end
+  changed = rewrite.finish(); held = facts
+  failures = failures + check(held.has(changed.root()) = 0,'rewritten owner refused')
+  early = tree.analyse(); incomplete = early.finish()
+  failures = failures + check(incomplete.size() = 0 & pos('LL_AST_LIFECYCLE',incomplete.error()) > 0,'early finish publishes no results')
+  future = tree.analyse(); ok = future.next(); caught = 0
+  do
+    unused = future.get(tree.root())
+  on signal
+    caught = 1
+  end
+  bad = future.finish()
+  failures = failures + check(caught & pos('LL_AST_DEPENDENCY',bad.error()) > 0 & bad.size() = 0,'future dependency refused')
+  short = tree.analyse(2)
+  do while short.next()
+    ok = short.put(.measure(1) as .object)
+  end
+  bad = short.finish()
+  failures = failures + check(pos('analysis.nodes',bad.error()) > 0 & bad.size() = 0,'node budget is atomic')
+  missing = tree.analyse(); ok = missing.next(); ok = missing.next(); bad = missing.finish()
+  failures = failures + check(pos('LL_AST_FACT',bad.error()) > 0,'every node requires a result')
+  duplicate = tree.analyse(); ok = duplicate.next()
+  ok = duplicate.put(.measure(1) as .object); ok = duplicate.put(.measure(2) as .object)
+  failures = failures + check(ok = 0 & pos('LL_AST_DEPENDENCY',duplicate.error()) > 0,'duplicate result refused')
+  twice = pass.finish()
+  failures = failures + check(pos('LL_AST_LIFECYCLE',twice.error()) > 0,'double finish')
+  stale = temporary(); caught = 0
+  do
+    unused = stale.get(tree.root())
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & pos('LL_AST_OWNER',stale.error()) > 0,'expired owner diagnosed')
+  root = tree.root(); cursor = root.each(); walk = tree.walk()
+  ok = cursor.next(); ok = walk.next()
+  inputchange = tree.rewrite()
+  do while inputchange.next()
+    nop
+  end
+  tree = changed
+  failures = failures + check(facts.has(tree.root()) = 0,'reassignment cannot revive stale facts')
+  failures = failures + check(root.valid() = 0,'node snapshot replacement')
+  caught = 0
+  do
+    revived = cursor.node()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'cursor cannot revive old node before advancing')
+  caught = 0
+  do
+    revived = walk.node()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'walk cannot revive old node before advancing')
+  caught = 0
+  do
+    revived = inputchange.original()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'rewrite cannot revive old input node')
+  failures = failures + check(cursor.next() = 0 & pos('LL_AST_OWNER',cursor.error()) > 0,'child cursor snapshot replacement')
+  failures = failures + check(walk.next() = 0 & pos('LL_AST_OWNER',walk.error()) > 0,'walk snapshot replacement')
+  invalidated = inputchange.finish()
+  failures = failures + check(invalidated.status() = 3 & invalidated.root().valid() = 0,'rewrite input replacement')
+  pass2 = tree.rewrite()
+  do while pass2.next()
+    if pass2.node().kind() = 'Add' then do
+      replacement = pass2.make('Number'); ok = replacement.settext('spelling','5')
+      ok = replacement.locate(2); ok = pass2.replace(replacement)
+    end
+  end
+  located = pass2.finish()
+  failures = failures + check(located.root().start() = 0 & located.root().offset() = 2,'diagnostic anchor separate from full range')
+  failures = failures + check(located.root().sourcetext() = '2+3','source retained with anchor')
+  wrongfield = located.root().each('spelling')
+  failures = failures + check(pos('LL_AST_FIELD',wrongfield.error()) > 0,'text is not a child list')
+  badanchor = tree.rewrite(); ok = badanchor.next(); replacement = badanchor.make('Number')
+  ok = replacement.settext('spelling','2'); ok = replacement.locate(99)
+  failures = failures + check(ok = 0 & pos('LL_AST_ORIGIN',badanchor.error()) > 0,'invalid diagnostic anchor')
+  say 'analysis_failures=' || failures
+  return failures
+
+example: procedure = .llast..tree
+  contract = .llast..schema()
+  ok = contract.mapping('number','Number'); ok = contract.field('number','spelling','','text','one')
+  ok = contract.mapping('sum','Add')
+  ok = contract.field('sum','left','left','operand','one'); ok = contract.field('sum','right','right','operand','one')
+  raw = .llcore..tree.from_source('2+3' as .binary)
+  a = raw.add(1,'number',0,1,0,0); b = raw.add(1,'number',2,3,0,0)
+  root = raw.add(5,'sum',0,3,a,b)
+  return .llast..tree(raw,root,contract)
+
+temporary: procedure = .llast..facts
+  ok = .int
+  tree = example(); pass = tree.analyse()
+  do while pass.next()
+    ok = pass.put(.measure(1) as .object)
+  end
+  return pass.finish()
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL: ' || message
+  return 1

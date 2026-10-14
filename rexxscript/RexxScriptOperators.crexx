@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Scalar NUMERIC_COMMON operations over RexxValue. */
 options levelb numeric_common
-namespace rexxscriptoperators expose binary unary truth
+namespace rexxscriptoperators expose binary unary truth number stringliteral literal
 import rxfnsb
 import rexxvalue
 
@@ -137,3 +137,52 @@ comparison: procedure = .RexxValue
     when op = 'ge' | op = 'strictge' then return .RexxValue.fromInt(above | equal)
   end
   return .RexxValue.fromInt(0)
+
+/** Interpret source spelling without changing the Level G scalar type. */
+number: procedure = .RexxValue
+  arg text = .string
+  text = strip(text)
+  if lower(left(text,2)) = '0x' then return .RexxValue.fromInt(x2d(substr(text,3)))
+  if lower(right(text,1)) = 'd' then return .RexxValue.fromDecimal(left(text,length(text) - 1) as .decimal)
+  if pos('.',text) = 0 & pos('e',lower(text)) = 0 then return .RexxValue.fromInt(text as .int)
+  return .RexxValue.fromFloat(text as .float)
+
+/** Quoted strings retain their original doubled-quote escape convention. */
+stringliteral: procedure = .RexxValue
+  arg text = .string
+  text = strip(text); quote = left(text,1)
+  return .RexxValue(changestr(quote || quote,substr(text,2,length(text) - 2),quote))
+
+/** A replacement literal only when decoding preserves the precise typed value.
+ * Empty means leave the expression unchanged. In particular, printable float
+ * formatting is never assumed to preserve the underlying IEEE value.
+ */
+literal: procedure = .string
+  arg value = .RexxValue
+  text = ''; decoded = .RexxValue
+  do
+    select
+      when value.hasInt() then do
+        text = value.asInt() as .string; decoded = number(text)
+        if decoded.hasInt() & decoded.asInt() = value.asInt() then return text
+      end
+      when value.hasDecimal() then do
+        text = (value.asDecimal() as .string) || 'd'; decoded = number(text)
+        if decoded.hasDecimal() & decoded.asDecimal() = value.asDecimal() then return text
+      end
+      when value.hasFloat() then do
+        text = value.asFloat() as .string
+        if pos('.',text) = 0 & pos('e',lower(text)) = 0 then text = text || '.0'
+        decoded = number(text)
+        original = '0000000000000000'x as .binary; restored = original
+        <packed..float>(0) original = value.asFloat()
+        <packed..float>(0) restored = decoded.asFloat()
+        originalbits = <packed..int>(0) original; restoredbits = <packed..int>(0) restored
+        if originalbits = restoredbits then return text
+      end
+      otherwise return ''
+    end
+  on signal
+    return ''
+  end
+  return ''

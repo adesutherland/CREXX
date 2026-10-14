@@ -88,32 +88,35 @@ crexx_add_import_root(levell_ast_test_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ast-imports" OUTPUT_VARIABLE _ast_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library rxfnsl)
-foreach(_mode noopt opt)
-  set(_ast_flags)
-  if(_mode STREQUAL "noopt")
-    list(APPEND _ast_flags -n)
-  endif()
-  set(_ast_name "ts_llast_${_mode}")
-  add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> ${_ast_flags} -x --no-exe-import
-      -i "${CMAKE_CURRENT_BINARY_DIR}/ast-imports"
-      -o "${_ast_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_llast.crexx"
-    COMMAND $<TARGET_FILE:rxas> ${_ast_flags} "${_ast_name}"
-    COMMAND $<TARGET_FILE:rxlink> -s -o "${_ast_name}-linked" "${_ast_name}"
-      "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
-    DEPENDS rxc rxas rxlink rxfnsl levell_ast_test_imports ${_ast_imports} ts_llast.crexx
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(${_ast_name} ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin")
-  add_dependencies(testrxfnsl ${_ast_name})
-  foreach(_vm rxtvm rxbvm)
-    if(TARGET ${_vm})
-      add_test(NAME ${_ast_name}_${_vm}
-        COMMAND $<TARGET_FILE:${_vm}> "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin")
-      set_tests_properties(${_ast_name}_${_vm} PROPERTIES
-        PASS_REGULAR_EXPRESSION "ast_failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
-      crexx_register_test_prep_targets(TESTS ${_ast_name}_${_vm} TARGETS ${_ast_name} ${_vm})
+foreach(_test llast llanalysis)
+  foreach(_mode noopt opt)
+    set(_ast_flags)
+    if(_mode STREQUAL "noopt")
+      list(APPEND _ast_flags -n)
     endif()
+    set(_ast_name "ts_${_test}_${_mode}")
+    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxc> ${_ast_flags} -x --no-exe-import
+        -i "${CMAKE_CURRENT_BINARY_DIR}/ast-imports"
+        -o "${_ast_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_${_test}.crexx"
+      COMMAND $<TARGET_FILE:rxas> ${_ast_flags} "${_ast_name}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_ast_name}-linked" "${_ast_name}"
+        "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+      DEPENDS rxc rxas rxlink rxfnsl levell_ast_test_imports ${_ast_imports} ts_${_test}.crexx
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+    add_custom_target(${_ast_name} ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin")
+    add_dependencies(testrxfnsl ${_ast_name})
+    foreach(_vm rxtvm rxbvm)
+      if(TARGET ${_vm})
+        add_test(NAME ${_ast_name}_${_vm}
+          COMMAND $<TARGET_FILE:${_vm}> "${CMAKE_CURRENT_BINARY_DIR}/${_ast_name}-linked.rxbin")
+        set_tests_properties(${_ast_name}_${_vm} PROPERTIES
+          PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_ast_name}_${_vm} TARGETS ${_ast_name} ${_vm})
+      endif()
+    endforeach()
   endforeach()
+
 endforeach()
 
 # Keep generated mappings under normal CI on every general parser backend.

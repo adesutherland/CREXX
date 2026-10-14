@@ -101,7 +101,84 @@ This repairs the observed regression without increasing user budgets.
 
 ### AST infrastructure — implementation approved 13 October 2026
 
-**Status:** the reviewed first AST surface is implemented and locally qualified
+#### AST-STEP04 first increment — locally qualified
+
+**Vision:** exercise the common AST in a real script engine, remove positional
+tree plumbing from expressions, assignment, SAY and IF, and make reusable
+analysis and checked constant folding available without adding grammar syntax.
+The enclosing sequence/block/loop wiring uses named fields where required
+to carry this slice; loop algorithms, language rules, BIF effects and Level G
+numeric behavior remain application policy. This is the approved acyclic
+increment of STEP04, not closure of the later cyclic-analysis or recovered-origin
+work. Adrian authorized publication of this increment on 14 October 2026.
+
+**Acceptance criteria for this increment:**
+
+1. **AST4-AC01 — Migration.** RexxScript executes the named AST for expressions,
+   assignment, SAY and IF. Existing language acceptance, values, branch and
+   short-circuit behavior, BIF order/effects and source diagnostics agree with
+   the retained pre-migration implementation. Existing loops, return and
+   control validation continue to work around the migrated slice.
+2. **AST4-AC02 — Analysis.** A Level B children-first service records one
+   application-defined result per node, reads only completed dependencies and
+   publishes only a complete result. Wrong-tree, expired-owner, missing/future
+   dependency, incomplete pass and resource failures have explicit tests.
+   Rewritten/copied trees cannot consume another tree's facts accidentally.
+3. **AST4-AC03 — Meaning-preserving fold.** RexxScript analysis reports known
+   constants and conservative variable reads/effects. Folding calls the same
+   scalar operations as execution, preserves types and exact representable
+   values, never invokes BIFs, and leaves failing/unsupported computations for
+   execution. Folded and ordinary execution agree on results, output, state,
+   effects and reachable-error locations; input ASTs remain usable.
+4. **AST4-AC04 — Structure and limits.** Checked one-pass reconstruction is
+   finite, source ranges survive replacements, and failed analysis/rewrite
+   publishes no partial result. Cover deep/wide/empty trees, fresh runs,
+   cancellation and bounded interpreter work; record the structural proof and
+   separate it from application-equivalence evidence.
+5. **AST4-AC05 — Integration and teaching.** Level B bootstrap, normal product,
+   both VMs, opt/noopt focused tests and installed RexxScript/Level L examples
+   pass. The guide explains the analysis-to-rewrite pipeline and a complete
+   worked example. Preserve wider AST-AC01–06 obligations above/below.
+
+**Implementation steps:**
+
+1. **AST4-STEP01 (AC01/03):** retain the current interpreter as a differential
+   control; map existing grammar rules with captures and `then tree`, preserving
+   recognition and keeping the ordinary source surface unchanged. **Complete.**
+2. **AST4-STEP02 (AC02/04):** implement tree-owned result tables and checked
+   children-first analysis, with lifecycle, dependency and budget regressions.
+   **Complete.**
+3. **AST4-STEP03 (AC01/03/04):** migrate named-field execution and add RexxScript
+   facts and checked folding, sharing numeric/literal operations. Depends on
+   STEP01/02; unsupported or non-round-trippable constants remain unchanged.
+   **Complete.**
+4. **AST4-STEP04 (AC01–05):** compare against retained controls and unfolded
+   execution, qualify affected builds/tests and installed use, and update the
+   guide, contract and evidence. New tests should be prebuilt direct VM tests,
+   not nested aggregate builds. Keep subsequent analysis profiles visibly open.
+   **Complete.**
+
+**Increment status:** AST4-AC01–05 and AST4-STEP01–04 are verified locally on
+macOS ARM64 Debug, based on develop `50926edb8`. Adrian authorized commit/push
+to `develop` and light CI monitoring on 14 October. Before publication the
+checkout was synchronized through `60f58c0a9`; all 20 recorded inputs still
+matched their qualification hashes. Incoming changes concern separate test
+fixtures, their evidence and Apple packaging retries. The enclosing commit is
+the publication payload; only publication documentation changed after those
+checks. [Qualification and exact inputs](evidence/ast-step04-20261013/README.md)
+retain the results and publication reconciliation. Normal automatic CI is
+expected to pass; actual results are reported in the conversation, without a
+status-only commit. The unchanged Level B bootstrap contract is preserved.
+
+| Criterion | Verification |
+|---|---|
+| AST4-AC01 | Existing 60-case RexxScript suite on both VMs; 28 exact command-line comparisons with the retained pre-migration interpreter; named-field execution review. |
+| AST4-AC02 | Dedicated analysis tests cover dependencies, exact/exhausted budgets, early/double finish, missing/duplicate facts, expired/copied/rewritten/reassigned owners and current-cursor access. |
+| AST4-AC03 | 40 new cases compare folded and ordinary output, state, scalar types/values, float bits, short-circuit effects and exact error strings; exact-float and integer replacement shapes checked. |
+| AST4-AC04 | Existing empty, 1,000-item and 2,000-wrapper AST controls; atomic rewrite/analysis failures; source anchors; fresh executions, cancellation and fuel controls; updated structural contract. |
+| AST4-AC05 | Warning-free product; four equal opt/noopt L1/L2 self-descriptions; both VMs and compiler modes; 267 AST surface observations plus 51 unoptimised capture/diagnostic observations; eight installed commands; updated guide and example. |
+
+**Previous delivery:** the reviewed first AST surface is implemented and locally qualified
 on macOS ARM64, based on synchronized develop `ec481f8e6`. It includes attached
 mappings, inferred field contracts, owned trees, reference handles, iterative
 walks, checked one-pass reconstruction, calculator/folding and settings examples.
@@ -113,19 +190,21 @@ with actual results reported in the conversation rather than a status-only
 commit. This advances LANG-AC04/09/10/12/13 and research AC-26 without closing
 their wider obligations.
 
-**Criterion status for this delivery:**
+**Cumulative criterion status:**
 
 | Criterion | Verified here | Still open in the wider criterion |
 |---|---|---|
 | AST-AC01 | Simple attached mappings; named text/child fields; required, optional and list counts; located refusals; settings/calculator | None for the reviewed inferred-schema surface. |
 | AST-AC02 | Independent owned results; borrowed handles; request release; exact/composite/derived source ranges; Unicode; stale/foreign-handle rejection; counted budgets | Synthetic and recovered origin infrastructure; broader migration measurements. |
 | AST-AC03 | Iterative walks; field/list access; application folds; checked reconstruction; empty/deep/wide/malformed/shared inputs; atomic failure; opt/noopt and both VMs; explicit traversal bounds | General search/fold convenience services and the wider builder/grouping profiles. |
-| AST-AC04 | Schema-checked one-pass rewrites with input preservation and retained origins; application constant-fold control | Derived-fact invalidation, acyclic and monotone cyclic analyses, grouping/lowering and their proofs. |
-| AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; existing RexxScript regressions | Bounded RexxScript consumer migration and recovered-origin integration. |
+| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors | Restricted monotone cyclic analysis, grouping/lowering and their proofs. |
+| AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; named RexxScript slice, effects/control/error comparisons and retained pre-migration control | Recovered-origin integration. |
 | AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Compiler-shaped builder/validator example and production migration work. |
 
 AST-STEP02/03 and the first-delivery portion of AST-STEP05 are complete within
-the scope above. AST-STEP04 and the remaining portions of AST-STEP05 stay open.
+the scope above. The acyclic RexxScript increment of AST-STEP04 is implemented;
+its local integration gates are verified above. Cyclic analysis, grouping/lowering
+and the remaining portions of AST-STEP05 stay open.
 The complete AST infrastructure programme is not being marked complete.
 
 **Approved first surface:**

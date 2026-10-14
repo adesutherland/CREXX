@@ -26,9 +26,10 @@ crexx_add_import_root(rexxscript1_imports DIRECTORY "${_rs1_root}/imports"
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library classlib rxfnsc rxfnsl)
-set(_rs1_modules rexxscriptgrammar RexxScriptBifs RexxScriptOperators RexxScriptProgram RexxScriptExecution)
+set(_rs1_modules rexxscriptgrammar RexxScriptBifs RexxScriptOperators RexxScriptAnalysis RexxScriptProgram RexxScriptExecution)
 set(_rs1_deps_RexxScriptProgram rexxscriptgrammar)
-set(_rs1_deps_RexxScriptExecution RexxScriptProgram RexxScriptBifs RexxScriptOperators)
+set(_rs1_deps_RexxScriptAnalysis RexxScriptOperators)
+set(_rs1_deps_RexxScriptExecution RexxScriptProgram RexxScriptBifs RexxScriptOperators RexxScriptAnalysis)
 set(_rs1_bins)
 foreach(_module IN LISTS _rs1_modules)
   set(_source "${CMAKE_CURRENT_SOURCE_DIR}/${_module}.crexx")
@@ -130,5 +131,33 @@ foreach(_vm rxtvm rxbvm)
     crexx_label_smoke_tests(rexxscript1_${_vm}
       PREP_TARGETS testrexxscript1 ${_vm})
   endif()
+endforeach()
+# AST analysis/folding regressions are prebuilt; each CTest runs a single VM.
+foreach(_ast_mode opt noopt)
+  set(_ast_flags)
+  if(_ast_mode STREQUAL "noopt")
+    list(APPEND _ast_flags -n)
+  endif()
+  set(_ast_test "testRexxScriptAST_${_ast_mode}")
+  add_custom_command(OUTPUT "${_rs1_root}/${_ast_test}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_ast_flags} -x --no-exe-import -i "${_rs1_root}/imports;${_rs1_root}/driver-imports"
+      -o "${_ast_test}" "${CMAKE_CURRENT_SOURCE_DIR}/tests_functional/testRexxScriptAST.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_ast_flags} "${_ast_test}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_ast_test}-linked" "${_ast_test}"
+      "${CMAKE_BINARY_DIR}/bin/rexxscript1" "${CMAKE_BINARY_DIR}/bin/rxfnsl"
+      "${CMAKE_BINARY_DIR}/bin/rxfnsc" "${CMAKE_BINARY_DIR}/bin/rxfnsg" "${CMAKE_BINARY_DIR}/bin/classlib" "${CMAKE_BINARY_DIR}/bin/library"
+    DEPENDS rxc rxas rxlink rexxscript1_driver_imports ${_rs1_driver_imports} rxfnsg rexxscript1 ${_rs1_runtime_bins} tests_functional/testRexxScriptAST.crexx
+    WORKING_DIRECTORY "${_rs1_root}" VERBATIM)
+  add_custom_target(${_ast_test} ALL DEPENDS "${_rs1_root}/${_ast_test}-linked.rxbin")
+  add_dependencies(testrexxscript1 ${_ast_test})
+  foreach(_vm rxtvm rxbvm)
+    if(TARGET ${_vm})
+      add_test(NAME rexxscript_ast_${_ast_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}> "${_rs1_root}/${_ast_test}-linked.rxbin")
+      set_tests_properties(rexxscript_ast_${_ast_mode}_${_vm} PROPERTIES
+        PASS_REGULAR_EXPRESSION "rexxscript_ast_failures=0" TIMEOUT 600
+        RESOURCE_LOCK rexxscript1_functional LABELS "rexxscript;level-l;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS rexxscript_ast_${_ast_mode}_${_vm} TARGETS ${_ast_test} ${_vm})
+    endif()
+  endforeach()
 endforeach()
 crexx_finalize_directory_qa_tiers()

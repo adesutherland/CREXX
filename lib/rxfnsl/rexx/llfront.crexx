@@ -154,7 +154,14 @@ document: class
     if _kind[token] <> 'symbol' then do
       call fail('capture requires a field name after as',token); return node
     end
-    return addnode(5,node,0,'@field.' || lower(_text[token]),_line[token])
+    label = '@field.' || lower(_text[token])
+    /* Identical capture wrappers denote the same labelled reduction. Separate
+     * copies would introduce artificial LR reduce/reduce conflicts in shared
+     * prefixes (for example the condition of open/closed IF statements). */
+    do i = 1 to _graph.size()
+      if _graph.op(i) = 5 & _graph.left(i) = node & _graph.label(i) = label then return i
+    end
+    return addnode(5,node,0,label,_line[token])
   run: method = .int
     if _ran then return _status
     _ran = 1

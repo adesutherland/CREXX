@@ -9,7 +9,8 @@ import rexxvalue
 import rexxpool
 import rexxclassicconfig
 import rexxclassicbifs
-import lltree
+import llast
+import rexxscriptanalysis
 import llsource
 
 /** One execution owns all mutable state. Construct another to rerun a program.
@@ -18,7 +19,8 @@ import llsource
  */
 execution: class
   _program = .rexxscript1..program
-  _tree = .lltree..view
+  _tree = .llast..tree
+  _fold = .int
   _pool = .RexxVariablePool
   _config = .RexxClassicConfig
   _output = .string[]
@@ -32,26 +34,26 @@ execution: class
   _status = .int
   _code = .string
   _message = .string
-  _node = .int
+  _node = .llast..node
   _flow = .int
   _loops = .int
   _depth = .int
   *: factory
-    arg program = .rexxscript1..program, fuel = 100000, maximum = 1048576
+    arg program = .rexxscript1..program, fuel = 100000, maximum = 1048576, fold = 1
     _program = program; _pool = .RexxVariablePool(); _config = .RexxClassicConfig("UTF8")
     _result = .RexxValue(''); _fuel = fuel; _maximum = maximum; _bytes = 0; _cancelled = 0
-    _ran = 0; _status = 0; _code = ''; _message = ''; _node = 0; _flow = 0; _loops = 0; _depth = 0
+    _ran = 0; _status = 0; _code = ''; _message = ''; _fold = fold; _flow = 0; _loops = 0; _depth = 0
     return
   cancel: method = .void
     _cancelled = 1
     return
   fail: method = .void
-    arg code = .string, message = .string, node = .int, status = 1
+    arg code = .string, message = .string, node = .llast..node, status = 1
     if _status <> 0 then return
     _status = status; _code = code; _message = message; _node = node
     return
   tick: method = .int
-    arg node = .int
+    arg node = .llast..node
     _node = node
     if _cancelled then call fail('RS_CANCELLED','execution cancelled',node,3)
     _fuel = _fuel - 1
@@ -66,9 +68,21 @@ execution: class
       if parsed = 2 then _status = 2
       _code = _program.code(); _message = _program.error(); return _status
     end
-    _tree = _program.view()
+    _tree = _program.ast()
     call validate(_tree.root(),0,0)
     if _status <> 0 then return _status
+    if _cancelled then do
+      call fail('RS_CANCELLED','execution cancelled',_tree.root(),3); return _status
+    end
+    if _fold then do
+      folded = rexxscriptanalysis..fold(reference _tree)
+      if folded.status() <> 0 then do
+        _status = 1
+        if folded.status() = 2 then _status = 2
+        _code = 'RS_AST'; _message = folded.error(); return _status
+      end
+      _tree = folded
+    end
     do
       call statement(_tree.root())
     on signal
@@ -76,110 +90,113 @@ execution: class
     end
     return _status
   validate: method = .void
-    arg node = .int, loops = .int, depth = .int
-    pending = .int[]; levels = .int[]; nestings = .int[]
-    pending[1] = node; levels[1] = loops; nestings[1] = depth; top = 1
-    do while top > 0 & _status = 0
-      current = pending[top]; loops = levels[top]; depth = nestings[top]; top = top - 1
-      name = _tree.name(current)
-      if (name = 'leave.statement' | name = 'iterate.statement') & loops = 0 then do
-        call fail('RS_CONTROL',name || ' outside a loop',current); return
+    arg node = .llast..node, loops = .int, depth = .int
+    levels = .int[]; nestings = .int[]
+    walker = _tree.walk('parents first')
+    do while walker.next() & _status = 0
+      current = walker.node(); level = walker.depth() + 1
+      loops = 0; depth = 0
+      if level > 1 then do
+        loops = levels[level - 1]; depth = nestings[level - 1]
       end
-      if left(name,3) = 'do.' & name <> 'do.group' then loops = loops + 1
-      if left(name,3) = 'do.' | left(name,3) = 'if.' | name = 'group.value' | name = 'call.value' | name = 'prefix' then depth = depth + 1
+      name = current.kind()
+      if (name = 'Leave' | name = 'Iterate') & loops = 0 then do
+        call fail('RS_CONTROL',lower(name) || '.statement outside a loop',current); return
+      end
+      if wordpos(name,'While Until Forever Repeat Controlled') > 0 then loops = loops + 1
+      if wordpos(name,'Block While Until Forever Repeat Controlled IfThen IfElse Group Call Prefix') > 0 then depth = depth + 1
       if depth > 128 then do
         call fail('RS_DEPTH','source nesting limit exceeded',current,2); return
       end
-      do i = _tree.count(current) to 1 by -1
-        top = top + 1; pending[top] = _tree.child(current,i); levels[top] = loops; nestings[top] = depth
-      end
+      levels[level] = loops; nestings[level] = depth
     end
     return
   sequence: method = .void
-    arg node = .int
-    do i = 1 to _tree.count(node)
+    arg node = .llast..node
+    items = node.each('items')
+    do while items.next()
       if _status <> 0 | _flow <> 0 then return
-      child = _tree.child(node,i)
+      child = items.node()
       if tick(child) = 0 then return
-      if _tree.name(child) = 'statement' then call statement(child)
+      call statement(child)
     end
     return
   statement: method = .void
-    arg node = .int
-    if node = 0 | _flow <> 0 | _status <> 0 then return
+    arg node = .llast..node
+    if node.valid() = 0 | _flow <> 0 | _status <> 0 then return
     if tick(node) = 0 then return
-    name = _tree.name(node); count = _tree.count(node)
+    name = node.kind(); count = node.children()
     select name
-      when 'statements' then call sequence(node)
-      when 'assignment' then do
-        key = upper(strip(_tree.text(_tree.child(node,1))))
-        value = expression(_tree.child(node,3))
+      when 'Sequence' then call sequence(node)
+      when 'Assignment' then do
+        key = upper(strip(node.text('name')))
+        value = expression(node.child('value'))
         if _status = 0 then call _pool.setValue(key,value)
       end
-      when 'say.statement' then do
-        value = expression(_tree.child(node,2)); text = value.asString()
+      when 'Say' then do
+        value = expression(node.child('value')); text = value.asString()
         if _status = 0 then call outputvalue(text,node)
       end
-      when 'collect.statement' then do
-        value = expression(_tree.child(node,2))
+      when 'Collect' then do
+        value = expression(node.child('value'))
         if _status = 0 then do
           _bytes = _bytes + <blen>(value.asBinary())
           if _bytes > _maximum then call fail('RS_OUTPUT_LIMIT','collected/output byte limit exceeded',node,2)
           else _collected[_collected[0] + 1] = value
         end
       end
-      when 'call.statement' then do
-        ignored = expression(_tree.child(node,2))
+      when 'Invoke' then do
+        ignored = expression(node.child('value'))
       end
-      when 'return.statement' then do
+      when 'Return' then do
         value = .RexxValue('')
-        if count > 1 then value = expression(_tree.child(node,2))
+        if node.count('value') > 0 then value = expression(node.child('value'))
         if _status = 0 then do
           _result = value; _flow = 3
         end
       end
-      when 'leave.statement' then _flow = 1
-      when 'iterate.statement' then _flow = 2
-      when 'nop.statement' then nop
-      when 'if.closed' then call conditional(node)
-      when 'if.open' then call conditional(node)
-      when 'if.continued' then call conditional(node)
-      when 'do.group' then call statement(_tree.child(node,3))
-      when 'do.while' then call execute_loop(node)
-      when 'do.until' then call execute_loop(node)
-      when 'do.forever' then call execute_loop(node)
-      when 'do.count' then call execute_loop(node)
-      when 'do.control' then call execute_loop(node)
+      when 'Leave' then _flow = 1
+      when 'Iterate' then _flow = 2
+      when 'Nop' then nop
+      when 'IfElse' then call conditional(node)
+      when 'IfThen' then call conditional(node)
+      when 'Block' then call statement(node.child('body'))
+      when 'Program' then call statement(node.child('body'))
+      when 'While' then call execute_loop(node)
+      when 'Until' then call execute_loop(node)
+      when 'Forever' then call execute_loop(node)
+      when 'Repeat' then call execute_loop(node)
+      when 'Controlled' then call execute_loop(node)
       otherwise do
         /* Transparent statement/list nodes preserve the authored child order. */
         do i = 1 to count while _status = 0 & _flow = 0
-          call statement(_tree.child(node,i))
+          call statement(node.at(i))
         end
       end
     end
     return
   conditional: method = .void
-    arg node = .int
-    value = expression(_tree.child(node,2))
+    arg node = .llast..node
+    value = expression(node.child('condition'))
     if _status <> 0 then return
-    if rexxscriptoperators..truth(value) then call statement(_tree.child(node,4))
-    else if _tree.count(node) >= 6 then call statement(_tree.child(node,6))
+    if rexxscriptoperators..truth(value) then call statement(node.child('yes'))
+    else if node.kind() = 'IfElse' then call statement(node.child('no'))
     return
   execute_loop: method = .void
-    arg node = .int
+    arg node = .llast..node
     value = .RexxValue; condition = .RexxValue; current = .RexxValue
-    name = _tree.name(node); count = _tree.count(node); body = _tree.child(node,count - 1)
+    name = node.kind(); count = node.children(); body = node.child('body')
     iterations = 0; limit = 0; key = ''; step = .RexxValue.fromInt(1); finish = .RexxValue.fromInt(0)
-    if name = 'do.count' then do
-      value = expression(_tree.child(node,2)); limit = value.asInt()
+    if name = 'Repeat' then do
+      value = expression(node.child('count')); limit = value.asInt()
       if limit < 0 then do
         call fail('RS_LOOP','negative loop count',node); return
       end
     end
-    if name = 'do.control' then do
-      header = strip(_tree.text(_tree.child(node,2))); key = upper(strip(left(header,length(header) - 1)))
-      value = expression(_tree.child(node,3)); finish = expression(_tree.child(node,5))
-      if count = 10 then step = expression(_tree.child(node,7))
+    if name = 'Controlled' then do
+      header = strip(node.text('name')); key = upper(strip(left(header,length(header) - 1)))
+      value = expression(node.child('initial')); finish = expression(node.child('last'))
+      if node.count('step') > 0 then step = expression(node.child('step'))
       if step.asDecimal() = 0 then do
         call fail('RS_LOOP','DO BY must be nonzero',node); return
       end
@@ -188,12 +205,12 @@ execution: class
     _loops = _loops + 1
     do while _status = 0 & _flow = 0
       if tick(node) = 0 then leave
-      if name = 'do.count' & iterations >= limit then leave
-      if name = 'do.while' then do
-        condition = expression(_tree.child(node,3))
+      if name = 'Repeat' & iterations >= limit then leave
+      if name = 'While' then do
+        condition = expression(node.child('condition'))
         if rexxscriptoperators..truth(condition) = 0 | _status <> 0 then leave
       end
-      if name = 'do.control' then do
+      if name = 'Controlled' then do
         current = _pool.value(key)
         if step.asDecimal() > 0 & current.asDecimal() > finish.asDecimal() then leave
         if step.asDecimal() < 0 & current.asDecimal() < finish.asDecimal() then leave
@@ -205,11 +222,11 @@ execution: class
       end
       if _flow = 2 then _flow = 0
       iterations = iterations + 1
-      if name = 'do.until' then do
-        condition = expression(_tree.child(node,3))
+      if name = 'Until' then do
+        condition = expression(node.child('condition'))
         if rexxscriptoperators..truth(condition) then leave
       end
-      if name = 'do.control' then do
+      if name = 'Controlled' then do
         current = _pool.value(key)
         following = rexxscriptoperators..binary('plus',current,step)
         call _pool.setValue(key,following)
@@ -218,50 +235,44 @@ execution: class
     _loops = _loops - 1
     return
   expression: method = .RexxValue
-    arg node = .int
+    arg node = .llast..node
     value = .RexxValue('')
-    if node = 0 | _status <> 0 then return value
+    if node.valid() = 0 | _status <> 0 then return value
     if tick(node) = 0 then return value
     if _depth >= 128 then do
       call fail('RS_DEPTH','expression nesting limit exceeded',node,2); return value
     end
-    name = _tree.name(node); count = _tree.count(node)
-    nested = name = 'group.value' | name = 'call.value' | name = 'prefix' | (name = 'exponential' & count > 1)
+    name = node.kind()
+    nested = name = 'Group' | name = 'Call' | name = 'Prefix'
+    if name = 'Chain' then do
+      if node.count('operators') > 0 then nested = node.child('operators').kind() = 'power'
+    end
     _depth = _depth + nested
     select name
-      when 'number.value' then do
-        text = strip(_tree.text(node))
-        if lower(left(text,2)) = '0x' then value = .RexxValue.fromInt(x2d(substr(text,3)))
-        else if lower(right(text,1)) = 'd' then value = .RexxValue.fromDecimal(left(text,length(text) - 1) as .decimal)
-        else if pos('.',text) = 0 & pos('e',lower(text)) = 0 then value = .RexxValue.fromInt(text as .int)
-        else value = .RexxValue.fromFloat(text as .float)
-      end
-      when 'string.value' then do
-        text = strip(_tree.text(node)); quote = left(text,1)
-        value = .RexxValue(changestr(quote || quote,substr(text,2,length(text) - 2),quote))
-      end
-      when 'name.value' then do
-        key = upper(strip(_tree.text(node)))
+      when 'Number' then value = rexxscriptoperators..number(node.text('spelling'))
+      when 'String' then value = rexxscriptoperators..stringliteral(node.text('spelling'))
+      when 'Name' then do
+        key = upper(strip(node.text('spelling')))
         if _pool.hasBinding(key) = 0 then call fail('RS_UNDEFINED','undefined variable ' || key,node)
         else value = _pool.value(key)
       end
-      when 'group.value' then value = expression(_tree.child(node,2))
-      when 'call.value' then value = builtin(node)
-      when 'prefix' then do
-        operation = _tree.name(_tree.child(node,1)); argument = _tree.child(node,2)
-        /* The signed minimum is representable, although its positive
-         * magnitude is not. Match the compiler's signed-literal boundary. */
-        if operation = 'minus' & strip(_tree.text(argument)) = '9223372036854775808' then value = .RexxValue.fromInt(-9223372036854775808)
+      when 'Group' then value = expression(node.child('value'))
+      when 'Call' then value = builtin(node)
+      when 'Prefix' then do
+        operation = node.child('operator').kind(); argument = node.child('value')
+        /* The signed minimum's positive magnitude is not representable. */
+        if operation = 'minus' & strip(argument.sourcetext()) = '9223372036854775808' then value = .RexxValue.fromInt(-9223372036854775808)
         else do
           operand = expression(argument)
           if _status = 0 then value = rexxscriptoperators..unary(operation,operand)
         end
       end
-      otherwise do
-        if count > 0 then value = expression(_tree.child(node,1))
-        do i = 2 to count by 2 while _status = 0
-          op = _tree.name(_tree.child(node,i))
-          /* Level G AND/OR short-circuit; XOR evaluates both sides. */
+      when 'Chain' then do
+        operands = node.each('operands'); operators = node.each('operators')
+        ok = operands.next(); value = expression(operands.node())
+        do while operators.next() & _status = 0
+          ok = operands.next(); op = operators.node().kind()
+          /* Evaluation, unlike analysis, follows only the chosen operands. */
           if op = 'and' then do
             if rexxscriptoperators..truth(value) = 0 then do
               value = .RexxValue.fromInt(0); iterate
@@ -272,10 +283,11 @@ execution: class
               value = .RexxValue.fromInt(1); iterate
             end
           end
-          right = expression(_tree.child(node,i + 1))
+          right = expression(operands.node())
           if _status = 0 then value = rexxscriptoperators..binary(op,value,right)
         end
       end
+      otherwise call fail('RS_AST','unexpected expression kind ' || name,node)
     end
     _depth = _depth - nested
     if _status = 0 & (value.hasString() | value.hasBinary()) then do
@@ -283,15 +295,16 @@ execution: class
     end
     return value
   builtin: method = .RexxValue
-    arg node = .int
+    arg node = .llast..node
     i = .int
-    name = upper(strip(_tree.text(_tree.child(node,1))))
-    arguments = _tree.child(node,3); values = .RexxValue[]; exists = .int[]; total = 0
-    do i = 1 to _tree.count(arguments) by 2
-      argument = _tree.child(arguments,i); total = total + 1
-      exists[total] = _tree.count(argument) <> 0
+    name = upper(strip(node.text('name')))
+    arguments = node.child('arguments'); values = .RexxValue[]; exists = .int[]; total = 0
+    items = arguments.each('items')
+    do while items.next()
+      argument = items.node(); total = total + 1
+      exists[total] = argument.count('value') <> 0
       value = .RexxValue('')
-      if exists[total] then value = expression(_tree.child(argument,1))
+      if exists[total] then value = expression(argument.child('value'))
       values[total] = value
     end
     /* f() has zero arguments; f(,) has two omitted argument positions. */
@@ -327,7 +340,7 @@ execution: class
     if context.hasError() then call fail(context.errorCode(),context.errorMessage(),node)
     return result
   outputvalue: method = .void
-    arg value = .string, node = .int
+    arg value = .string, node = .llast..node
     _bytes = _bytes + <blen>(value as .binary) + 1
     if _bytes > _maximum | _output[0] >= 10000 then do
       call fail('RS_OUTPUT_LIMIT','output limit exceeded',node,2); return
@@ -350,5 +363,7 @@ execution: class
     if _status = 0 then return ''
     if _code = 'RS_PARSE' | _code = 'RS_PARSE_LIMIT' | _code = 'RS_LANGUAGE' then return _message
     offset = 0
-    if _node > 0 then offset = _tree.start(_node)
+    if initialized(_node) then do
+      if _node.valid() then offset = _node.offset()
+    end
     return llsource..diagnostic(_program.source(),offset,_code,_message)

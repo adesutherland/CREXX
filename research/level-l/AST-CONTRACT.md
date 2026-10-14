@@ -50,11 +50,13 @@ that they retain. Discarded expression groups extend the retained child's
 original range and mark it composite. The source bytes themselves are immutable.
 
 An owning tree contains its own arena and original source. A node handle has
-only an arena reference and an integer ID; a walk has a borrowed arena reference
+an arena reference, a snapshot serial and an integer ID; a walk has a borrowed arena reference
 and cursor arrays. They do not contain an owning arena copy. Owners must outlive
 their handles. A request can be replaced after constructing its owning AST.
-The VM's reference validity check rejects expired owners; arena identity rejects
-foreign replacement children. Copying the owning tree remains a value copy.
+The VM's reference validity check rejects expired owners; the arena's immutable
+serial detects replacement of a live owner variable. Serials are module-local
+and refuse exhaustion before signed-integer wrap. Arena identity rejects foreign
+replacement children. Copying the owning tree remains a value copy.
 
 ## Termination and resource bounds
 
@@ -100,9 +102,74 @@ The retained regression corpus checks precedence, associativity, prefix minus,
 decimal values and original-source failures; it is not a proof of arbitrary
 numeric codecs or effectful rewrites.
 
+## Acyclic analysis and invalidation
+
+`tree.analyse(limit)` schedules the same finite children-first walk. It accepts
+one initialized application object per visited node. Reading an unrecorded
+result fails with `LL_AST_DEPENDENCY`; a missing result, duplicate result or
+incomplete finish publishes no usable table. Thus every admitted dependency
+points to an earlier completed result. This proves the schedule acyclic; it
+does not discover arbitrary application dependencies or solve cyclic equations.
+
+A table borrows its owning arena and records the arena's immutable snapshot
+serial. Both must match at lookup. Distinct tree copies have distinct owner
+references; rewritten contents have a new serial even when assigned into the
+same variable. Facts are therefore invalidated by replacement without trying
+to infer which application properties may still be true. Node handles, walks
+and child cursors use the same check. Rewrite completion checks its input's
+identity too. Result objects are returned by value.
+
+For N visited nodes, the scheduler fills N result records. Its arrays use arena
+IDs, so their capacity is bounded by A, the number of allocated arena nodes,
+plus the walk's O(depth) cursors. A can exceed N when an earlier rewrite left
+unreachable intermediate nodes; the tree's entry allowance already bounds A.
+Each reachable node is scheduled once. The analysis node allowance bounds filled
+records/visits, not array capacity, application result size or callback work.
+The `each(field)` cursor follows each child link once; repeated indexed lookup
+is not claimed linear. The RexxScript client uses cursors for list operations.
+Its conservative read-name sets may require more than linear total storage;
+they are application facts, not a parser complexity certificate.
+
+## RexxScript folding profile
+
+Recognition retains the original language rules. Identical capture wrappers
+with the same target and name are interned, avoiding duplicate labelled LR
+reductions in shared prefixes. This does not merge captures with different
+names or alter PEG choice ordering.
+
+Named AST fields replace positional expression, assignment, SAY and IF access.
+The enclosing loop algorithms are preserved; only their tree access changes.
+Validation precedes folding. Runtime branch choice, short-circuiting, variable
+lookups and BIFs remain in execution, not a whole-tree evaluation walk.
+
+Analysis reports constants, conservative reads and potential effects. Literal
+conversion and scalar operations are shared with execution. It never invokes a
+BIF or inspects the variable pool. A failing calculation stays unknown, allowing
+its runtime error to remain conditional on reaching that expression. Folding
+uses the common checked single traversal and replaces only supported pure
+expressions with a literal whose decoding preserves the scalar type and value.
+Float round trips compare the native bits, including signed zero. Integer and
+decimal comparisons retain their respective numeric domains. Unsupported or
+non-round-trippable values remain expressions.
+
+Each replacement retains the full original range and a checked diagnostic
+anchor within that range. The analysis carries the last operand actually
+visited under short-circuit rules; the replacement uses that anchor. This
+preserves downstream error locations when an operand was folded. A pass cannot
+set an anchor outside its replacement's original range.
+
+The structural schedule and identity contracts are independent of numeric
+semantics. The shared-operation and exact-round-trip conditions describe the
+admitted folding argument; differential tests cover the current RexxScript
+implementation, not arbitrary new effects, numeric codecs or callbacks.
+Equivalence assumes sufficient resource allowances. Folding can reduce runtime
+visits, so execution fuel bounds work rather than prescribing an identical
+number of ticks for the two trees.
+
 ## Qualification
 
-[AST evidence](evidence/ast-20261013/README.md) records the exact source/tool
+[First AST evidence](evidence/ast-20261013/README.md) and
+[analysis/RexxScript evidence](evidence/ast-step04-20261013/README.md) record the exact source/tool
 identities, backend comparisons, runtime ownership/budget tests, bootstrap
-agreement and installed examples. Wider analysis scheduling, synthetic/recovered
+agreement and installed examples. Wider cyclic-analysis scheduling, synthetic/recovered
 origins and compiler migration criteria remain in the authoritative plan.
