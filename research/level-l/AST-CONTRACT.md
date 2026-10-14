@@ -173,3 +173,113 @@ number of ticks for the two trees.
 identities, backend comparisons, runtime ownership/budget tests, bootstrap
 agreement and installed examples. Wider cyclic-analysis scheduling, synthetic/recovered
 origins and compiler migration criteria remain in the authoritative plan.
+
+## Sparse application properties
+
+`llannotation.contract` contains each field name, scalar type and literal default
+once. A store contains K explicit `(node ID, property ID, value)` entries. There
+is no node-count by property-count array. Default reads do not allocate entries;
+an explicit value equal to the default still occupies one entry. The initial
+lookup uses a linear scan of K entries: O(K) lookup/update, O(K + P) records for
+P declarations, plus stored text. This is a sparse representation, not a claim
+of constant-time associative lookup. Reads and replacement writes do not grow K.
+
+A store borrows an AST root handle, whose arena reference and snapshot serial
+check every read/write. A copied tree has a different owner reference. A rewrite
+has a new snapshot serial. Replacing the same owning variable with different
+contents therefore invalidates its properties. Restoring the identical snapshot
+value into the same owning variable preserves the identity/content pair; this
+contract is about snapshot contents and owner identity, not assignment counting.
+
+Finishing seals a draft and returns a value-owned table. Its failure state is
+sticky; no getter can expose partial values after a failed write/finish. A node
+view borrows the table, captures its group serial and checks both that serial
+and the AST binding. Rejecting a stale view does not poison the replacement
+group it happened to reference. Default values are immutable scalar strings/integers;
+there are no shared mutable collection defaults. Generated source and RXAS
+facades call the same checked runtime, with identical public type signatures.
+RXAS receiver argument windows use the compiler's swap/copyback pattern so an
+ERROR signal can restore the caller's mapping before a handler runs.
+
+## Checked structured flow
+
+`llflow.mapping` validates every AST kind and every named execution field
+against the inferred schema. Assignments have a text target and exactly one
+value child. Branches have a required condition and true child, with a required
+or optional false child. Sequence/evaluate consume their selected children in
+field/list order. Every child has one execution role; unused text metadata is
+inert. Read/value leaves cannot conceal child computations.
+
+The graph builder walks children first. Each AST node receives an entry event;
+its children's completed flow fragments are connected as specified. Assignment
+adds its write after the value fragment. A branch adds a decision after its
+condition and a join after both arms; an absent false arm supplies a direct
+false edge to the join. A sequence connects each fragment once in order.
+The mapping contains no callback and the builder performs no fixed-point search.
+An N-node tree creates O(N) events and edges and uses O(A + N) indexed records,
+where A is arena capacity (already bounded by the AST entry budget). Source
+handles remain borrowed, including each branch edge's originating AST node.
+
+The structured source profile generates acyclic flow. It does not yet expose
+loops, returns, exceptions, call effects, bindings or short-circuit semantics.
+A public construction mutation outside the builder is refused; failed graphs
+publish no start point, dimensions or readable events. Owner identities are
+captured on construction, including before the first query. Graph/result serials prevent an old
+analysis or point view from being reused after replacement, even for another
+graph on the same AST. This increment does not close the wider cyclic-language
+mapping and grouping/lowering acceptance criteria.
+
+## Definite assignment domain and proof
+
+Let B be flow events, E edges, and V the finite set of variable spellings found
+in read/write events or supplied at entry. Names are exact and case-sensitive.
+Let `U[b]` be the set of variables that may be unassigned just before event b.
+Reachability is tracked separately: an empty set at an unvisited point must not
+be confused with proof that all names are assigned.
+
+For entry names I:
+
+- Entry starts reachable with `U[entry] = V \ I`.
+- For a write to x, `T_b(U) = U \ {x}`. Other events use `T_b(U) = U`.
+- For every reachable edge `b -> c`, add `T_b(U[b])` to `U[c]` and mark c reachable.
+- A read of x is unsafe exactly when x is in U at that reachable read event.
+
+The implementation starts other sets empty and schedules a point only when
+reachability or its incoming set grows. Union and removal of a *fixed* name are
+monotone under subset inclusion. Thus every bit changes at most once, from 0 to
+1, and each point changes from unreachable to reachable at most once. There are
+at most B*V bit additions and B reachability additions. A deduplicated worklist
+therefore terminates. Removing x in a transfer never removes incoming facts,
+so it does not invalidate this argument.
+
+For a finite graph with these operations the equations characterize existence
+of a path reaching a point without an intervening write. Equivalently, a name
+is definitely assigned when no such path exists. This follows by induction on
+path length: entry supplies exactly the initially unassigned names; identity
+preserves a witness, writing x eliminates its witness, and union retains any
+incoming witness. Each transfer distributes over union, so the least fixed
+point equals the union of path results. This proves the analysis relative to
+its supplied execution graph. It does not establish that an incorrect mapping
+matches the target language, or that a syntactically possible branch is feasible
+under the language's value semantics.
+
+The state matrix contains `B * max(1,V)` bytes, checked by division before
+multiplication. The extra B-byte case covers reachability bookkeeping when V=0.
+The counted cell allowance is not the total resident memory: names, adjacency,
+source handles and worklist records are separate. Adjacency permits outgoing
+edge iteration without rescanning the entire graph. Each event is scheduled at
+most V+1 times; the main propagation costs O((B+E)*(V+1)*max(1,V)) in the
+worst case, plus bounded name lookup/collection work. Linear name lookup can
+cost O((B+I)*V) while collecting names. The work allowance counts these name
+comparisons, propagated edge visits and variable tests; it interrupts the
+calculation independently of the mathematical convergence bound. A failed
+calculation publishes no point answers.
+
+For a reported read, witness construction searches from entry while refusing
+to cross any write to that name. A found predecessor chain is consequently an
+actual graph path reaching the read unassigned. Its branch edges provide the
+explanation. The search visits each reachable event/edge at most once and has
+its own edge allowance; message construction and source-line scanning depend
+on path/source length. Witness exhaustion does not rewrite the completed
+analysis. The tests also enumerate all four paths through two branches for each
+of 16 combinations of writes, providing an independent result control.

@@ -1,0 +1,240 @@
+/* cREXX License (MIT). Sparse properties, structured flow and path controls. */
+options levelb
+import rxfnsb
+import lllanguage
+import llast
+import llannotation
+import llflow
+import flowdemo
+
+main: procedure = .int
+  failures = 0; ok = .int; caught = .int; unused = .string; answer = .int
+  tree = parseinput('if flag then x = 10; end; say x;')
+  root = tree.root(); saynode = root.child('items',2); readnode = saynode.child('value')
+  draft = .flowdemo..notes(reference tree)
+  notes = draft.finish()
+  failures = failures + check(notes.error() = '' & notes.size() = 0,'empty properties')
+  entry = notes.at(readnode)
+  failures = failures + check(entry.getmessage() = '' & entry.getpriority() = 0,'declared defaults')
+  failures = failures + check(entry.hasmessage() = 0 & entry.haspriority() = 0 & notes.size() = 0,'reading defaults never inserts')
+  draft = .flowdemo..notes(reference tree,2)
+  ok = draft.setmessage(readnode,'Check x'); ok = draft.setpriority(readnode,0)
+  notes = draft.finish(); entry = notes.at(readnode)
+  failures = failures + check(notes.size() = 2 & entry.haspriority() & entry.getpriority() = 0,'explicit default remains present')
+  failures = failures + check(entry.hasmessage() & entry.getmessage() = 'Check x','typed message accessor')
+  ok = draft.setpriority(readnode,1)
+  failures = failures + check(ok = 0 & pos('FROZEN',draft.error()) > 0,'draft frozen after finish')
+  failures = failures + check(notes.error() = '' & notes.at(readnode).getpriority() = 0,'finished value independent of failed draft')
+  draft = .flowdemo..notes(reference tree,1)
+  ok = draft.setmessage(readnode,'first'); ok = draft.setmessage(readnode,'replacement')
+  failures = failures + check(ok & draft.size() = 1,'replacement does not allocate another entry')
+  ok = draft.setpriority(readnode,2); failed = draft.finish(); caught = 0
+  do
+    unused = failed.at(readnode).getmessage()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(ok = 0 & caught & pos('properties.entries',failed.error()) > 0,'entry exhaustion publishes no readable partial values')
+  copied = tree; foreign = .flowdemo..notes(reference tree)
+  ok = foreign.setmessage(copied.root(),'wrong')
+  failures = failures + check(ok = 0 & pos('LL_AST_OWNER',foreign.error()) > 0,'copied tree cannot share properties')
+  pass = tree.rewrite()
+  do while pass.next()
+    nop
+  end
+  rewritten = pass.finish(); foreign = .flowdemo..notes(reference tree)
+  ok = foreign.setmessage(rewritten.root(),'wrong')
+  failures = failures + check(ok = 0 & pos('LL_AST_OWNER',foreign.error()) > 0,'rewritten tree cannot share properties')
+  shape = .llannotation..contract(); ok = shape.add('n','.int','0')
+  raw = .llannotation..store(reference tree,shape)
+  ok = raw.put(readnode,1,'.string','bad')
+  failures = failures + check(ok = 0 & pos('LL_PROPERTY_TYPE',raw.error()) > 0,'runtime type mismatch')
+  raw = .llannotation..store(reference tree,shape)
+  ok = raw.put(readnode,2,'.int','0')
+  failures = failures + check(ok = 0 & pos('unknown property',raw.error()) > 0,'unknown runtime field')
+  temporary = expiredentry(reference tree); caught = 0
+  do
+    unused = temporary.getmessage()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'expired property owner')
+  replacement = .flowdemo..notes(reference tree); replacement = replacement.finish()
+  notes = replacement; caught = 0
+  do
+    unused = entry.getmessage()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'replaced property group invalidates view')
+  failures = failures + check(notes.error() = '' & notes.at(readnode).getmessage() = '', 'stale view does not poison replacement group')
+
+  zero = .flowdemo..notes(reference tree,0); zero = zero.finish()
+  failures = failures + check(zero.at(root).getpriority() = 0 & zero.size() = 0,'zero entry budget permits defaults')
+  early = .flowdemo..notes(reference tree); caught = 0
+  do
+    unused = early.at(root).getmessage()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & pos('LIFECYCLE',early.error()) > 0,'unfinished group cannot be read')
+  twice = .flowdemo..notes(reference tree); completed = twice.finish(); completed = twice.finish()
+  failures = failures + check(pos('already finished',completed.error()) > 0,'double property finish')
+  gone = expirednotes()
+  failures = failures + check(pos('LL_AST_OWNER',gone.error()) > 0,'property tree lifetime')
+  gonegraph = expiredgraph()
+  failures = failures + check(pos('LL_AST_OWNER',gonegraph.error()) > 0,'flow tree lifetime')
+  goneinfo = expiredanalysis()
+  failures = failures + check(pos('LL_FLOW_OWNER',goneinfo.error()) > 0,'analysis graph lifetime')
+
+  graph = flowdemo..execution(reference tree)
+  result = graph.definiteassignment('flag')
+  failures = failures + check(result.error() = '' & result.count() = 1,'optional ELSE unsafe read')
+  failures = failures + check(result.before(saynode).assigned('x') = 0 & result.before(saynode).assigned('flag'),'state before statement')
+  failures = failures + check(result.node(1).id() = readnode.id() & result.message(1) = 'x may be read before it is assigned.','exact diagnostic and source node')
+  failures = failures + check(result.witness(1) = 'From entry: Take the false branch of If on line 1. Reach this read without assigning x.','actual false-branch witness')
+  count = graph.entries(); exact = flowdemo..execution(reference tree,count)
+  failures = failures + check(exact.error() = '' & exact.entries() = count,'exact graph entry budget')
+  do allowance = 0 to count - 1
+    shortgraph = flowdemo..execution(reference tree,allowance)
+    failures = failures + check(shortgraph.points() = 0 & pos('flow.entries',shortgraph.error()) > 0,'graph exhaustion boundary ' || allowance)
+  end
+  short = flowdemo..execution(reference tree,count - 1)
+  failures = failures + check(short.points() = 0 & pos('flow.entries',short.error()) > 0,'atomic graph exhaustion')
+  caught = 0
+  do
+    partial = short.node(1)
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'failed graph has no readable partial events')
+  bad = graph.definiteassignment('flag',0)
+  failures = failures + check(bad.count() = 0 & pos('analysis.cells',bad.error()) > 0,'cell budget failure distinct from clean analysis')
+  cellcount = graph.points() * 2
+  exactcells = graph.definiteassignment('flag',cellcount)
+  failures = failures + check(exactcells.error() = '' & exactcells.count() = 1,'exact state cell budget')
+  bad = graph.definiteassignment('flag',cellcount - 1)
+  failures = failures + check(pos('analysis.cells',bad.error()) > 0,'one short cell budget')
+  bad = graph.definiteassignment('flag',1000000,0); caught = 0
+  do
+    answer = bad.before(readnode).assigned('x')
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & pos('analysis.work',bad.error()) > 0,'incomplete answers unavailable')
+  exactinfo = graph.definiteassignment('flag'); ok = exactinfo.count(); used = exactinfo.work()
+  exactinfo = graph.definiteassignment('flag',1000000,used)
+  failures = failures + check(exactinfo.error() = '' & exactinfo.count() = 1,'exact analysis work budget')
+  bad = graph.definiteassignment('flag',1000000,used - 1)
+  failures = failures + check(pos('analysis.work',bad.error()) > 0,'one short work budget')
+  caught = 0
+  do
+    unused = result.witness(1,0)
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & result.error() = '' & result.count() = 1,'witness budget leaves completed analysis usable')
+  windows = parseinput('x = 1;' || '0d0a'x || 'if flag then y = 1; end;' || '0d0a'x || 'say y;')
+  winflow = flowdemo..execution(reference windows); wininfo = winflow.definiteassignment('flag')
+  failures = failures + check(wininfo.node(1).line() = 3 & pos('on line 2',wininfo.witness(1)) > 0,'CRLF diagnostic and witness source lines')
+  safe = parseinput('if flag then x = 10; else x = 20; end; say x;')
+  safegraph = flowdemo..execution(reference safe); safeinfo = safegraph.definiteassignment('flag')
+  failures = failures + check(safeinfo.error() = '' & safeinfo.count() = 0 & safeinfo.before(safe.root().child('items',2)).assigned('x'),'both branches assign')
+  evaluation = parseinput('x = x; say x;'); evalgraph = flowdemo..execution(reference evaluation)
+  evalinfo = evalgraph.definiteassignment()
+  failures = failures + check(evalinfo.error() = '' & evalinfo.count() = 1,'value read before assignment')
+  failures = failures + check(evalinfo.before(evaluation.root().child('items',2)).assigned('x'),'assignment takes effect afterwards')
+  cases = parseinput('x = 1; say X;'); casegraph = flowdemo..execution(reference cases); caseinfo = casegraph.definiteassignment()
+  failures = failures + check(caseinfo.count() = 1 & caseinfo.message(1) = 'X may be read before it is assigned.','variable spelling is case sensitive')
+  empty = parseinput(''); emptygraph = flowdemo..execution(reference empty); emptyinfo = emptygraph.definiteassignment()
+  failures = failures + check(emptyinfo.error() = '' & emptyinfo.count() = 0 & emptyinfo.before(empty.root()).assigned('missing') = 0,'empty graph and unknown variable')
+
+  /* Independent path control: 16 combinations of writes in two IF branches.
+   * Enumerate four execution paths and intersect the resulting assignment. */
+  do mask = 0 to 15
+    a = (mask / 1) % 2; b = (mask / 2) % 2; c = (mask / 4) % 2; d = (mask / 8) % 2
+    source = 'if flag then ' || writeif(a) || ' else ' || writeif(b) || ' end; if other then ' || writeif(c) || ' else ' || writeif(d) || ' end; say x;'
+    control = 1
+    do first = 0 to 1
+      do second = 0 to 1
+        firstwrite = a
+        if first then firstwrite = b
+        secondwrite = c
+        if second then secondwrite = d
+        if firstwrite = 0 & secondwrite = 0 then control = 0
+      end
+    end
+    paths = parseinput(source); pathgraph = flowdemo..execution(reference paths); info = pathgraph.definiteassignment('flag other')
+    failures = failures + check(info.error() = '' & info.before(paths.root().child('items',3)).assigned('x') = control,'enumerated path control ' || mask)
+    failures = failures + check(info.count() = 1 - control,'read diagnostic path control ' || mask)
+  end
+  /* Keep the shared fixtures inside Earley's declared default chart budget;
+   * the other backends also exercise larger ASTs with the same flow services. */
+  language = flowdemo..language(); width = 200; depth = 40
+  if language.backend() = 'earley' then do
+    width = 20; depth = 8
+  end
+  wide = parseinput(copies('x = 1;',width) || 'say x;'); widegraph = flowdemo..execution(reference wide); wideinfo = widegraph.definiteassignment()
+  failures = failures + check(wideinfo.error() = '' & wideinfo.count() = 0,'wide sequence')
+  nested = parseinput(copies('if flag then ',depth) || 'x = 1;' || copies(' end;',depth) || ' say x;')
+  nestedgraph = flowdemo..execution(reference nested); nestedinfo = nestedgraph.definiteassignment('flag')
+  failures = failures + check(nestedinfo.error() = '' & nestedinfo.count() = 1,'nested branch construction and joins')
+  locked = flowdemo..execution(reference tree); count = locked.points(); ok = locked.edge(1,1)
+  failures = failures + check(count > 0 & ok = 0 & pos('LL_FLOW_FROZEN',locked.error()) > 0,'checked graphs reject public edge mutation')
+  heldstate = result.before(saynode)
+  graph = flowdemo..execution(reference tree); caught = 0
+  do
+    answer = heldstate.assigned('x')
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & pos('LL_FLOW_OWNER',result.error()) > 0,'replaced graph invalidates result')
+  graph = flowdemo..execution(reference tree); result = graph.definiteassignment('flag'); heldstate = result.before(saynode)
+  result = graph.definiteassignment('flag x'); caught = 0
+  do
+    answer = heldstate.assigned('x')
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'replaced result invalidates point view')
+  delayed = graph.definiteassignment('flag')
+  graph = flowdemo..execution(reference tree)
+  failures = failures + check(pos('LL_FLOW_OWNER',delayed.error()) > 0,'graph replacement before first analysis query')
+  delayedgraph = flowdemo..execution(reference tree)
+  graph = flowdemo..execution(reference tree); result = graph.definiteassignment('flag'); ok = result.count()
+  tree = rewritten
+  failures = failures + check(pos('OWNER',result.error()) > 0 & pos('OWNER',notes.error()) > 0,'replaced AST invalidates properties and flow')
+  failures = failures + check(pos('LL_AST_OWNER',delayedgraph.error()) > 0,'tree replacement before first graph query')
+  say 'failures=' || failures
+  return failures
+
+parseinput: procedure = .llast..tree
+  arg source = .string
+  language = flowdemo..language(); request = .lllanguage..request(language,source as .binary)
+  if request.parse() <> 0 then do
+    say 'PARSE FAILED:' request.error(); exit 1
+  end
+  return request.ast()
+expirednotes: procedure = .flowdemo..notes
+  tree = parseinput(''); draft = .flowdemo..notes(reference tree)
+  return draft.finish()
+expiredgraph: procedure = .llflow..graph
+  tree = parseinput('')
+  return flowdemo..execution(reference tree)
+expiredanalysis: procedure = .llflow..result
+  tree = parseinput(''); graph = flowdemo..execution(reference tree)
+  result = graph.definiteassignment(); ok = result.count()
+  return result
+writeif: procedure = .string
+  arg enabled = .int
+  if enabled then return 'x = 1;'
+  return ''
+expiredentry: procedure = .flowdemo..notes_entry
+  arg tree = reference .llast..tree
+  draft = .flowdemo..notes(tree); notes = draft.finish(); owner = dereference tree
+  return notes.at(owner.root())
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL:' description
+  return 1

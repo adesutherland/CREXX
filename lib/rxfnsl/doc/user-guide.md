@@ -25,6 +25,8 @@ exact declaration forms, runtime methods and error handling rules.
 - [Token stages and composite parsing](#token-stages-and-composite-parsing)
 - [Runtime API reference](#runtime-api-reference)
 - [Trees, fields and source locations](#trees-fields-and-source-locations)
+- [Sparse AST properties and defaults](#add-sparse-properties-and-defaults)
+- [Flow mappings and definite assignment](#describe-execution-order-with-flow-mappings)
 - [Error messages and recovery](#error-messages-and-recovery)
 - [Command line and build integration](#command-line-and-build-integration)
 - [Resource limits](#resource-limits)
@@ -1626,6 +1628,7 @@ A handle from the first tree still belongs to that first tree.
 | `child(name,index)` | Child handle; index defaults to 1. Invalid when the optional child or list index is absent. |
 | `start()`, `finish()` | Original half-open byte range. |
 | `offset()` | Diagnostic anchor within that range; initially its start. |
+| `line()` | One-based source line containing the diagnostic anchor; CRLF counts as one line ending. |
 | `children()`, `at(index)` | Child count and indexed access across all fields. |
 | `each(field)` | A linear child cursor; omit `field` to visit all child fields. |
 | `sourcetext()` | Original text covered by that range. |
@@ -1706,6 +1709,244 @@ These checks prevent a transformation from accidentally using stale facts.
 Exhaustion reports `analysis.nodes`. The calculation and the size of each result
 belong to the application. This pass has no repeated callbacks: each node is
 visited once, and its result must depend on results already available.
+
+### Add sparse properties and defaults
+
+Use **properties** for information your application attaches to nodes: a review
+message, a priority, or the result of a check. Properties are separate from the
+fields that define tree structure. You can add a message to an Assignment
+without changing its required `name` and `value` fields.
+
+Declare a group after the grammar:
+
+```rexx
+notes: properties
+  message: property .string default ''
+  priority: property .int default 0
+```
+
+The group owns the successive `property` declarations. The next declaration of
+another kind ends the group. Indentation makes the relationship easy to read;
+it does not establish scope. Names within a group are case-insensitive. Use
+simple names without dots for groups and properties. The group name becomes
+a generated class or procedure; `language` is reserved for the parser factory.
+
+With namespace `flowdemo`, these declarations generate a `.flowdemo..notes`
+class. Create a draft for your tree, write the properties you need, then finish:
+
+```rexx
+draft = .flowdemo..notes(reference tree)
+call draft.setmessage(node,'Check this assignment')
+call draft.setpriority(node,2)
+notes = draft.finish()
+if notes.error() <> '' then do
+  say notes.error()
+  return 1
+end
+note = notes.at(node)
+say note.getmessage()
+say note.hasmessage()
+```
+
+Each property has `get` and `has` methods on the node view, and a `set` method
+on the draft. Thus `message` generates `getmessage()`, `hasmessage()` and
+`setmessage(node,value)`. The setter returns 1 on success and 0 on failure.
+Unknown accessors and values of the wrong type are diagnosed when compiling
+your cREXX program.
+
+**Sparse** means that the table stores only values you explicitly set. An unset
+priority reads as 0 and `haspriority()` returns 0. Setting priority to 0 makes
+`haspriority()` return 1: the value is now explicit. Reading a default does not
+insert an entry. `size()` counts explicit node/property pairs; setting the same
+pair again replaces its value.
+
+Defaults are literal `.string` or `.int` values. Strings use Rexx quoting and
+integers may have a sign. Each group stores its defaults once. A property group
+can annotate any kind of node in its owning tree.
+
+`finish()` freezes the draft and returns an independent finished group. Check
+its `error()` before reading it. A failed draft cannot publish readable partial
+values. Writing after finish or finishing twice fails. Keep the tree alive
+while using a group, and keep the finished group alive while using an `at(node)`
+view. Another tree, including a copied or rewritten tree, needs its own group.
+Replacing the owning tree with a different snapshot invalidates its groups.
+
+| Generated group operation | Meaning |
+|---|---|
+| `.notes(reference tree,limit)` | Create a draft; `limit` defaults to 1,000,000 explicit entries. |
+| `setmessage(node,value)` | Write or replace a string property. |
+| `setpriority(node,value)` | Write or replace an integer property. |
+| `finish()` | Freeze and return a finished group. |
+| `at(node)` | Borrow a view of one node's properties. |
+| `size()` | Number of explicit entries; reads of defaults do not change it. |
+| `error()` | Empty on success; otherwise the ownership, lifecycle or resource error. |
+| `view.getmessage()`, `view.getpriority()` | Return an explicit value or its declared default. |
+| `view.hasmessage()`, `view.haspriority()` | Whether that property was explicitly set. |
+
+### Describe execution order with flow mappings
+
+A tree describes how source is nested. A **flow graph** describes the order in
+which operations can happen. These are different questions. An IF has a
+condition and two branches in its tree; execution evaluates the condition and
+then follows one branch.
+
+A flow declaration gives the AST kinds their execution roles:
+
+```rexx
+execution: flow
+  Program: sequence items
+  Block: sequence items
+  Assignment: assign name value
+  If: branch condition then yes else no
+  Say: evaluate value
+  Name: read spelling
+  Number: value
+```
+
+Here `Assignment`, `If` and the other labels are AST kind names from `then tree`.
+The words after each operation name fields on that kind. The declaration says
+that an assignment evaluates its `value` child before writing the variable
+whose spelling is in its `name` field. `Say` evaluates its child; the application
+continues to own output and interpretation.
+
+| Mapping | Execution order |
+|---|---|
+| `Kind: sequence items` | Visit the children of `items` in order. |
+| `Kind: evaluate left right` | Visit the listed child fields in order, and each field's children in order. One or more fields may be listed. |
+| `Kind: assign name value` | Evaluate the one `value` child, then assign the variable in text field `name`. |
+| `Kind: branch condition then yes else no` | Evaluate `condition`, choose `yes` or `no`, then join their outgoing paths. An absent optional `no` goes straight to the join. |
+| `Kind: read spelling` | Read the variable in the text field `spelling`. |
+| `Kind: value` | A leaf value with no variable reads or writes. |
+
+Every AST kind needs a mapping. Every child field needs a declared execution
+role; text metadata may be left unused. `condition` and `yes` must each contain
+one child. `no` may contain one child or be optional. The grammar checker
+reports unknown kinds, misspelled fields and incompatible field types or
+counts before generating code. For example, using `test` when the actual field
+is `condition` reports the available fields.
+
+These operations describe sequences, assignments and branches. Calls with
+unknown effects, short-circuit operators and loops need their own execution
+semantics before they can be mapped accurately. Do not label an effectful node
+`value` to suppress a missing-mapping error. A binary arithmetic node whose two
+children always execute can use `evaluate left right`.
+
+### Worked example: find a read before assignment
+
+The complete example is in [examples/flow](../examples/flow/). Build it with:
+
+```sh
+crexx --program flow-check lib/rxfnsl/examples/flow/rules.rxl \
+      lib/rxfnsl/examples/flow/check.crexx
+rxvm flow-check
+```
+
+The grammar's assignment rule is ordinary Level L:
+
+```rexx
+assignment: rule = identifier as name equals expression as value semi
+  then tree Assignment(name = text(name), value = value)
+```
+
+Its IF rule captures a condition, a required block and an optional ELSE block:
+
+```rexx
+conditional: rule = kw.if expression as condition kw.then block as yes (kw.else block as no)? kw.end semi
+  then tree If(condition = condition, yes = yes, no = no?)
+```
+
+For this source, the host supplies `flag`:
+
+```text
+if flag then
+  x = 10;
+end;
+say x;
+```
+
+The tree has an If followed by a Say. The If's `yes` child is a Block containing
+an Assignment, and its `no` field is empty. The important execution paths are:
+
+```text
+                 true -> assign x ---+
+read flag ------<                    +--> read x
+                 false --------------+
+```
+
+**Definite assignment** asks whether a variable has been assigned on every path
+that reaches a particular point. Here the false branch reaches `say x` without
+assigning `x`, so the answer for `x` is false.
+
+```rexx
+graph = flowdemo..execution(reference tree)
+result = graph.definiteassignment('flag')
+if result.error() <> '' then do
+  say result.error()
+  return 1
+end
+say result.before(sayNode).assigned('x')  /* 0 */
+```
+
+The argument `'flag'` names variables already assigned at entry. Supply several
+names separated by spaces. Variable names are case-sensitive and retain their
+exact spelling. A language with case-insensitive variables should normalize
+its AST names consistently before constructing flow. This profile uses a
+single variable scope.
+
+A completed result can contain diagnostics. That is distinct from `error()`,
+which means the analysis could not produce a usable answer:
+
+```rexx
+do i = 1 to result.count()
+  node = result.node(i)
+  say llsource..diagnostic(tree.source(),node.offset(),'UNASSIGNED',result.message(i))
+  say result.witness(i)
+end
+```
+
+The example reports:
+
+```text
+UNASSIGNED at line 4, column 5 (byte 32): x may be read before it is assigned.
+  say x;
+      ^
+From entry: Take the false branch of If on line 1. Reach this read without assigning x.
+```
+
+Add `else x = 20;` before `end;` and both paths assign `x`. The diagnostic goes
+away and `assigned('x')` before Say returns 1. An assignment such as `x = x;`
+still reports the read on its right-hand side: the write happens afterwards.
+The checker considers both branches possible; it does not evaluate conditions.
+
+The example also copies each diagnostic message into `notes`, demonstrating
+how calculated facts and application annotations fit together. Flow analysis
+does not change the AST or execute the target program.
+
+| Flow or result method | Meaning |
+|---|---|
+| `execution(reference tree,limit)` | Construct checked flow; `limit` counts events plus edges and defaults to 1,000,000. |
+| `graph.error()` | Construction or ownership error. |
+| `graph.points()`, `graph.edges()`, `graph.entries()` | Successful graph dimensions. |
+| `graph.definiteassignment(names,cells,work)` | Analyse with entry names; defaults are 1,000,000 state cells and 10,000,000 work units. |
+| `result.error()` | Empty when the analysis completed successfully. |
+| `result.before(node).assigned(name)` | Whether the name is definitely assigned on entry to that AST node. Unknown names return 0. |
+| `result.count()` | Number of unsafe reads in a completed result. |
+| `result.node(i)` | Source AST node for diagnostic `i`, numbered from 1. |
+| `result.message(i)` | The unsafe-read message. |
+| `result.witness(i,limit)` | One actual entry-to-read path without an assignment; default 1,000,000 edge visits. |
+| `result.work()` | Work consumed by the analysis. |
+
+Keep the tree, graph and result alive while using their borrowed views.
+Replacing a graph or result invalidates its earlier views. Failed construction,
+exhausted allowances and expired owners expose no usable answers. Resource
+errors name `flow.entries`, `analysis.cells`, `analysis.work` or `witness.work`
+so the caller can increase the relevant allowance.
+
+The analysis tracks names that may still be unassigned. At a join it combines
+those names from the incoming paths. An assignment removes its name from the
+outgoing set. New information only adds possibilities at each point; with a
+finite graph and finite set of names, that process reaches a stable result.
+The guarantee is relative to the execution roles declared in the flow mapping.
 
 ### Walk the nodes
 

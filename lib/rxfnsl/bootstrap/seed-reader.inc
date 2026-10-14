@@ -64,7 +64,7 @@
           call emit('codepoint',value,line,start)
           if value = '' | length(value) > 6 then call fail('expected codepoint U+0000..U+10FFFF',_count)
         end
-        when symbolstart(c) then do
+        when symbolstart(c) | (c = 46 & symbolstart(byte(at + 1))) then do
           at = at + 1
           do while symbolpart(byte(at))
             at = at + 1
@@ -81,7 +81,7 @@
           call emit('integer',binsubstr(_bytes,start + 1,at - start) as .string,line,start)
         end
         otherwise do
-          if c < 128 & pos(d2c(c),':=|()?*+!&{},') > 0 then call emit(d2c(c),d2c(c),line,start)
+          if c < 128 & pos(d2c(c),':=|()?*+-!&{},') > 0 then call emit(d2c(c),d2c(c),line,start)
           else do
             call emit('error','',line,start); call fail('unsupported authored character',_count)
           end

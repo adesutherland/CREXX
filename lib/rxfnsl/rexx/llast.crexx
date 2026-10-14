@@ -380,6 +380,15 @@ storage: class
   offset: method = .int
     arg id = .int
     return _offset[id]
+  line: method = .int
+    arg id = .int
+    line = 1; previous = -1
+    do at = 0 to _offset[id] - 1
+      c = <at..u8>(at) _source
+      if c = 13 | (c = 10 & previous <> 13) then line = line + 1
+      previous = c
+    end
+    return line
   /** A replacement may retain an application's original diagnostic anchor. */
   locate: method = .int
     arg id = .int, offset = .int
@@ -503,6 +512,10 @@ node: class
     if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
     return owner.offset(_id)
+  line: method = .int
+    if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
+    owner = dereference _owner
+    return owner.line(_id)
   origin: method = .string
     if valid() = 0 then call badfield('LL_AST_OWNER: node snapshot has expired or been replaced')
     owner = dereference _owner
@@ -516,6 +529,10 @@ node: class
   belongs: method = .int
     arg owner = reference .llast..storage
     return valid() & (_owner <refsame> owner)
+  /** Compare borrowed snapshots without copying their owning arenas. */
+  sameowner: method = .int
+    arg other = .llast..node
+    return valid() & other.belongs(_owner)
 
 /** Linear child cursor. No list or owner is copied. */
 children: class
@@ -797,6 +814,9 @@ tree: class
     return _store.source()
   entries: method = .int
     return _store.entries()
+  /** Immutable construction contract for checked analysis mappings. */
+  contract: method = .llast..schema
+    return _store.schema()
 
 /** A mutable replacement under construction, confined to its owning pass.
  * @param owner Pass-owned arena; expired drafts are invalid references.

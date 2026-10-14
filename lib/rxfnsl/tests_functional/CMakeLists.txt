@@ -171,4 +171,63 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
+
+# Compile the properties/flow lesson on each general backend. Tests execute
+# prelinked consumers; no CTest launches a compiler or nested matrix.
+set(_flow_spec "${CMAKE_CURRENT_SOURCE_DIR}/../examples/flow/rules.rxl")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_flow_spec}")
+file(READ "${_flow_spec}" _flow_text)
+foreach(_backend ll1 lr1 packrat earley)
+  set(_flow_dir "${CMAKE_CURRENT_BINARY_DIR}/flow-${_backend}")
+  file(MAKE_DIRECTORY "${_flow_dir}")
+  string(REPLACE "backend ll1" "backend ${_backend}" _flow_backend_text "${_flow_text}")
+  if(_backend STREQUAL "packrat")
+    string(REPLACE "semantics contextfree" "semantics ordered" _flow_backend_text "${_flow_backend_text}")
+  endif()
+  file(GENERATE OUTPUT "${_flow_dir}/rules.rxl" CONTENT "${_flow_backend_text}")
+  set(_flow_provider "${_flow_dir}/flowdemo.rxas")
+  add_custom_command(OUTPUT "${_flow_provider}"
+    COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
+      -DSPEC=${_flow_dir}/rules.rxl -DOUTPUT=${_flow_provider} -DFORMAT=rxas
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    DEPENDS levell_cli "${_flow_dir}/rules.rxl" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    VERBATIM)
+  add_custom_command(OUTPUT "${_flow_dir}/flowdemo.rxbin"
+    COMMAND $<TARGET_FILE:rxas> flowdemo
+    DEPENDS rxas "${_flow_provider}"
+    WORKING_DIRECTORY "${_flow_dir}" VERBATIM)
+  crexx_add_import_root(levell_flow_${_backend}_imports
+    DIRECTORY "${_flow_dir}/imports" OUTPUT_VARIABLE _flow_imports
+    FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${_flow_dir}/flowdemo.rxbin"
+    DEPENDS library rxfnsl)
+  foreach(_mode noopt opt)
+    set(_flow_flags)
+    if(_mode STREQUAL "noopt")
+      list(APPEND _flow_flags -n)
+    endif()
+    set(_flow_name "ts_llflow_${_backend}_${_mode}")
+    add_custom_command(OUTPUT "${_flow_dir}/${_flow_name}-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxc> ${_flow_flags} -x --no-exe-import
+        -i "${_flow_dir}/imports"
+        -o "${_flow_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_llflow.crexx"
+      COMMAND $<TARGET_FILE:rxas> ${_flow_flags} "${_flow_name}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_flow_name}-linked" "${_flow_name}" flowdemo
+        "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+      DEPENDS rxc rxas rxlink rxfnsl levell_flow_${_backend}_imports ${_flow_imports} ts_llflow.crexx
+      WORKING_DIRECTORY "${_flow_dir}" VERBATIM)
+    add_custom_target(${_flow_name} ALL DEPENDS "${_flow_dir}/${_flow_name}-linked.rxbin")
+    add_dependencies(testrxfnsl ${_flow_name})
+    foreach(_vm rxtvm rxbvm)
+      if(TARGET ${_vm})
+        add_test(NAME ${_flow_name}_${_vm}
+          COMMAND $<TARGET_FILE:${_vm}> "${_flow_dir}/${_flow_name}-linked.rxbin")
+        set_tests_properties(${_flow_name}_${_vm} PROPERTIES
+          PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_flow_name}_${_vm} TARGETS ${_flow_name} ${_vm})
+      endif()
+    endforeach()
+  endforeach()
+endforeach()
+
 crexx_finalize_directory_qa_tiers()

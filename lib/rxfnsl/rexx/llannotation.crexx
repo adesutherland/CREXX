@@ -1,0 +1,203 @@
+/* cREXX License (MIT). Sparse, typed, tree-bound application properties. */
+options levelb
+namespace llannotation expose contract store entry
+import rxfnsb
+import llast
+
+failaccess: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+identities: initialiser expose annotation_serial
+  annotation_serial = 0
+  return
+next_identity: procedure = .int expose annotation_serial
+  if annotation_serial = 9223372036854775807 then call failaccess('LL_AST_IDENTITY: property identities exhausted')
+  annotation_serial = annotation_serial + 1
+  return annotation_serial
+
+/** Property names, scalar types and defaults are stored once per contract. */
+contract: class
+  _names = .string[]
+  _types = .string[]
+  _defaults = .string[]
+  _error = .string
+  *: factory
+    _error = ''
+    return
+  add: method = .int
+    arg name = .string, type = .string, value = .string
+    if _error <> '' then return 0
+    name = lower(name); type = lower(type)
+    if index(name) > 0 then do
+      _error = 'LL_PROPERTY: duplicate property ' || name; return 0
+    end
+    if type <> '.string' & type <> '.int' then do
+      _error = 'LL_PROPERTY: ' || name || ' requires .string or .int'; return 0
+    end
+    if type = '.int' then do
+      valid = value <> '' & verify(value,'0123456789+-') = 0
+      integer = .int
+      do
+        integer = value as .int
+      on signal
+        valid = 0
+      end
+      if valid = 0 then do
+        _error = 'LL_PROPERTY: ' || name || ' default must be a representable integer'; return 0
+      end
+      value = integer as .string
+    end
+    n = _names[0] + 1; _names[n] = name; _types[n] = type; _defaults[n] = value
+    return 1
+  index: method = .int
+    arg name = .string
+    do i = 1 to _names[0]
+      if lower(name) = _names[i] then return i
+    end
+    return 0
+  size: method = .int
+    return _names[0]
+  name: method = .string
+    arg i = .int
+    return _names[i]
+  type: method = .string
+    arg i = .int
+    return _types[i]
+  defaultvalue: method = .string
+    arg i = .int
+    return _defaults[i]
+  error: method = .string
+    return _error
+
+/** Sparse entries contain only explicit node/property pairs. Reads never insert.
+ * The tree is borrowed; the finished group owns its independent value table.
+ * @param limit Maximum explicit entries, including explicitly set defaults.
+ */
+store: class
+  _root = .llast..node
+  _contract = .llannotation..contract
+  _node = .int[]
+  _property = .int[]
+  _value = .string[]
+  _limit = .int
+  _complete = .int
+  _error = .string
+  _identity = .int
+  *: factory
+    arg owner = reference .llast..tree, contract = .llannotation..contract, limit = 1000000
+    _identity = next_identity(); _contract = contract; _limit = limit; _complete = 0; _error = contract.error()
+    if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: property tree has expired'
+    else do
+      tree = dereference owner
+      if tree.status() <> 0 then _error = tree.error()
+      _root = tree.root()
+    end
+    if limit < 0 then _error = 'LL_PROPERTY_LIMIT: properties.entries must be nonnegative'
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  identity: method = .int
+    return _identity
+  live: method = .int
+    if initialized(_root) = 0 then call fail('LL_AST_OWNER: property tree is unavailable')
+    else if _root.valid() = 0 then call fail('LL_AST_OWNER: property tree has expired or been replaced')
+    return _error = ''
+  accepts: method = .int
+    arg node = .llast..node
+    if live() = 0 then return 0
+    if _root.sameowner(node) = 0 then call fail('LL_AST_OWNER: property node belongs to another tree')
+    return _error = ''
+  locate: method = .int
+    arg node = .llast..node, property = .int
+    do i = 1 to _node[0]
+      if _node[i] = node.id() & _property[i] = property then return i
+    end
+    return 0
+  put: method = .int
+    arg node = .llast..node, property = .int, type = .string, value = .string
+    if accepts(node) = 0 then return 0
+    if _complete then call fail('LL_PROPERTY_FROZEN: finished properties cannot be edited')
+    if property < 1 | property > _contract.size() then call fail('LL_PROPERTY: unknown property')
+    else if type <> _contract.type(property) then call fail('LL_PROPERTY_TYPE: incorrect value type for ' || _contract.name(property))
+    if _error <> '' then return 0
+    if type = '.int' then do
+      integer = .int
+      do
+        integer = value as .int
+      on signal
+        call fail('LL_PROPERTY_TYPE: value is not a representable integer'); return 0
+      end
+      value = integer as .string
+    end
+    slot = locate(node,property)
+    if slot = 0 then do
+      slot = _node[0] + 1
+      if slot > _limit then do
+        call fail('LL_RESOURCE_LIMIT: properties.entries limit=' || _limit || ' required=' || slot); return 0
+      end
+      _node[slot] = node.id(); _property[slot] = property
+    end
+    _value[slot] = value
+    return 1
+  finish: method = .llannotation..store
+    if _complete then call fail('LL_PROPERTY_LIFECYCLE: properties already finished')
+    ok = live(); _complete = 1
+    return self
+  check: method = .int
+    arg node = .llast..node, property = .int, serial = .int
+    if serial <> _identity then do
+      /* The stale view belongs to another snapshot; preserve this group's state. */
+      call failaccess('LL_PROPERTY_OWNER: property group has been replaced'); return 0
+    end
+    if _complete = 0 then call fail('LL_PROPERTY_LIFECYCLE: finish properties before reading')
+    if accepts(node) = 0 then return 0
+    if property < 1 | property > _contract.size() then call fail('LL_PROPERTY: unknown property')
+    return _error = ''
+  has: method = .int
+    arg node = .llast..node, property = .int, serial = .int
+    if check(node,property,serial) = 0 then do
+      call failaccess(_error); return 0
+    end
+    return locate(node,property) > 0
+  get: method = .string
+    arg node = .llast..node, property = .int, serial = .int
+    if check(node,property,serial) = 0 then do
+      call failaccess(_error); return ''
+    end
+    slot = locate(node,property)
+    if slot = 0 then return _contract.defaultvalue(property)
+    return _value[slot]
+  size: method = .int
+    if live() = 0 then return 0
+    return _node[0]
+  error: method = .string
+    ok = live()
+    return _error
+
+/** Borrowed view of one node's properties. Keep its finished group alive. */
+entry: class
+  _owner = reference .llannotation..store
+  _node = .llast..node
+  _identity = .int
+  *: factory
+    arg owner = reference .llannotation..store, node = .llast..node
+    _owner = owner; _node = node
+    data = dereference owner; _identity = data.identity()
+    return
+  has: method = .int
+    arg property = .int
+    if <refvalid>(_owner) = 0 then do
+      call failaccess('LL_PROPERTY_OWNER: property group has expired'); return 0
+    end
+    data = dereference _owner
+    return data.has(_node,property,_identity)
+  get: method = .string
+    arg property = .int
+    if <refvalid>(_owner) = 0 then do
+      call failaccess('LL_PROPERTY_OWNER: property group has expired'); return ''
+    end
+    data = dereference _owner
+    return data.get(_node,property,_identity)

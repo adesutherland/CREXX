@@ -19,6 +19,8 @@ import llregional
 import lllimits
 import llproperties
 import llast
+import llannotation
+import llflow
 
 main: procedure = .int
   arg argv = .string[]
@@ -179,7 +181,12 @@ main: procedure = .int
     return 0
   end
   say 'options levelb'
-  say 'namespace' doc.module() 'expose language'
+  exposed = 'language'
+  do d = 1 to doc.declarations()
+    if doc.declarationtype(d) = 'flow' then exposed = exposed || ' ' || doc.declarationname(d)
+    if doc.declarationtype(d) = 'properties' then exposed = exposed || ' ' || doc.declarationname(d) || ' ' || doc.declarationname(d) || '_entry'
+  end
+  say 'namespace' doc.module() 'expose' exposed
   say 'import rxfnsb'
   say 'import llcore'
   if doc.root() > 0 & doc.backend() = 'lr1' then say 'import lllr'
@@ -192,6 +199,16 @@ main: procedure = .int
     end
   end
   say 'import lllanguage'
+  do d = 1 to doc.declarations()
+    if doc.declarationtype(d) = 'properties' then do
+      say 'import llannotation'; say 'import llast'; leave
+    end
+  end
+  do d = 1 to doc.declarations()
+    if doc.declarationtype(d) = 'flow' then do
+      say 'import llflow'; say 'import llast'; leave
+    end
+  end
   say 'language: procedure = .lllanguage..definition'
   say '  graph = .llcore..grammar(' || quoted(graph.profile()) || ')'
   do i = 1 to graph.size()
@@ -258,6 +275,7 @@ main: procedure = .int
     if policies.custom(entry) then call emitdata('shielddata' || entry,shields[entry])
   end
   if doc.root() > 0 & doc.backend() = 'lr1' then call emitdata('parserdata',table.image())
+  call servicesource(doc)
   return 0
 quoted: procedure = .string
   arg text = .string
@@ -297,8 +315,14 @@ emitdata: procedure = .void
  * r7..r16 are the reusable argument window and r0 discards method results. */
 assembly: procedure = .void
   arg doc = .llfront..document, table = .lllr..tables, dfa = .llmunch..automaton, shields = .binary[], policies = .llcomments..rules
-  rule = .int; item = .int
+  rule = .int; item = .int; d = .int
   graph = doc.grammar()
+  do d = 1 to doc.declarations()
+    if doc.declarationtype(d) <> 'properties' then iterate
+    full = lower(doc.module()) || '.' || lower(doc.declarationname(d))
+    call asmclass(full,'_data','.llannotation..store')
+    call asmclass(full || '_entry','_view','.llannotation..entry')
+  end
   say '.globals=0'
   say 'language() .locals=17 .expose=' || doc.module() || '.language'
   say '  .meta ' || asmquote(doc.module() || '.language') || '="b" ".lllanguage..definition" language() ""'
@@ -560,6 +584,7 @@ assembly: procedure = .void
   call asmimport('lllanguage.definition.astfield')
   call asmimport('llstage.rules.§factory')
   call asmimport('llstage.rules.add')
+  call serviceassembly(doc)
   return
 asmoperators: procedure = .void
   arg doc = .llfront..document
@@ -621,3 +646,198 @@ asmquote: procedure = .string
   end
   escaped = changestr('7F'x,escaped,'\x7F')
   return '"' || escaped || '"'
+
+/** Small typed facades; all lifecycle and algorithms live in the common runtime. */
+servicesource: procedure = .void
+  arg doc = .llfront..document
+  p = .int
+  do d = 1 to doc.declarations()
+    name = lower(doc.declarationname(d)); type = doc.declarationtype(d)
+    if type = 'properties' then do
+      shape = doc.properties(d)
+      say name || ': class'
+      say '  _data = .llannotation..store'
+      say '  *: factory'
+      say '    arg tree = reference .llast..tree, limit = 1000000'
+      say '    shape = .llannotation..contract()'
+      do p = 1 to shape.size()
+        say '    ok = shape.add(' || quoted(shape.name(p)) || ',' || quoted(shape.type(p)) || ',' || quoted(shape.defaultvalue(p)) || ')'
+      end
+      say '    _data = .llannotation..store(tree,shape,limit)'
+      say '    return'
+      say '  frozen: factory'
+      say '    arg data = .llannotation..store'
+      say '    _data = data'
+      say '    return'
+      say '  finish: method = .' || name
+      say '    return .' || name || '.frozen(_data.finish())'
+      say '  at: method = .' || name || '_entry'
+      say '    arg node = .llast..node'
+      say '    return .' || name || '_entry(reference _data,node)'
+      say '  error: method = .string'
+      say '    return _data.error()'
+      say '  size: method = .int'
+      say '    return _data.size()'
+      do p = 1 to shape.size()
+        say '  set' || shape.name(p) || ': method = .int'
+        say '    arg node = .llast..node, value = ' || shape.type(p)
+        say '    return _data.put(node,' || p || ',' || quoted(shape.type(p)) || ',value as .string)'
+      end
+      say name || '_entry: class'
+      say '  _view = .llannotation..entry'
+      say '  *: factory'
+      say '    arg data = reference .llannotation..store, node = .llast..node'
+      say '    _view = .llannotation..entry(data,node)'
+      say '    return'
+      do p = 1 to shape.size()
+        say '  get' || shape.name(p) || ': method = ' || shape.type(p)
+        say '    return _view.get(' || p || ') as ' || shape.type(p)
+        say '  has' || shape.name(p) || ': method = .int'
+        say '    return _view.has(' || p || ')'
+      end
+    end
+    else if type = 'flow' then do
+      flow = doc.flow(d)
+      say name || ': procedure = .llflow..graph'
+      say '  arg tree = reference .llast..tree, limit = 1000000'
+      say '  mapping = .llflow..mapping()'
+      do m = 1 to flow.size()
+        say '  ok = mapping.add(' || quoted(flow.kind(m)) || ',' || quoted(flow.op(m)) || ',' || quoted(flow.fields(m)) || ')'
+      end
+      say '  return .llflow..graph(tree,mapping,limit)'
+    end
+  end
+  return
+
+/** RXAS facade layout is one owned runtime member at attribute 1. Compiler
+ * metadata and executable signatures mirror servicesource, checked together.
+ * Runtime classes keep their own layouts private behind public calls. */
+serviceassembly: procedure = .void
+  arg doc = .llfront..document
+  d = .int; p = .int; operation = .int; member = .string; resulttype = .string
+  any = 0
+  do d = 1 to doc.declarations()
+    if doc.declarationtype(d) = 'properties' | doc.declarationtype(d) = 'flow' then any = 1
+  end
+  if any = 0 then return
+  do d = 1 to doc.declarations()
+    name = lower(doc.declarationname(d)); full = lower(doc.module()) || '.' || name
+    type = doc.declarationtype(d)
+    if type = 'properties' then do
+      shape = doc.properties(d)
+      call asmheader(full || '.§factory','.' || lower(doc.module()) || '..' || name,'tree=reference .llast..tree,?limit=.int')
+      call asmdefault(2,full)
+      call asmcall(1,'llannotation.contract.§factory',0)
+      do p = 1 to shape.size()
+        say '  link r5,r1'; say '  settp r5,256'; say '  swap r7,r5'
+        call asmload(8,asmquote(shape.name(p)),768)
+        call asmload(9,asmquote(shape.type(p)),768)
+        call asmload(10,asmquote(shape.defaultvalue(p)),768)
+        call asmcall(0,'llannotation.contract.add',4)
+        say '  swap r5,r7'; say '  unlink r5'
+      end
+      say '  copy r7,a1'; say '  settp r7,256'
+      say '  copy r8,r1'; say '  settp r8,256'
+      say '  icopy r9,a2'; say '  settp r9,256'
+      call asmcall(2,'llannotation.store.§factory',3)
+      call asmwrap(full,2)
+      call asmheader(full || '.§factory.frozen','.' || lower(doc.module()) || '..' || name,'data=.llannotation..store')
+      /* Factories use §factory.name, exactly as emitted by rxc. */
+      say '  copy r2,a1'
+      call asmwrap(full,2)
+      call asmheader(full || '.finish','.' || lower(doc.module()) || '..' || name,'')
+      say '  linkattr1 r5,a1,1'; say '  settp r5,256'; say '  swap r7,r5'
+      call asmcall(2,'llannotation.store.finish',1)
+      say '  swap r5,r7'; say '  unlink r5'
+      call asmwrap(full,2)
+      call asmheader(full || '.at','.' || lower(doc.module()) || '..' || name || '_entry','node=.llast..node')
+      say '  linkattr1 r3,a1,1'; say '  mkref r7,r3'; say '  unlink r3'; say '  settp r7,256'
+      say '  copy r8,a2'; say '  settp r8,256'
+      call asmcall(2,'llannotation.entry.§factory',2)
+      call asmwrap(full || '_entry',2)
+      call asmheader(full || '_entry.§factory','.' || lower(doc.module()) || '..' || name || '_entry','data=reference .llannotation..store,node=.llast..node')
+      say '  copy r7,a1'; say '  settp r7,256'
+      say '  copy r8,a2'; say '  settp r8,256'
+      call asmcall(2,'llannotation.entry.§factory',2)
+      call asmwrap(full || '_entry',2)
+      do operation = 1 to 2
+        member = word('error size',operation); resulttype = word('.string .int',operation)
+        call asmheader(full || '.' || member,resulttype,'')
+        say '  linkattr1 r5,a1,1'; say '  settp r5,256'; say '  swap r7,r5'
+        call asmcall(0,'llannotation.store.' || member,1)
+        say '  swap r5,r7'; say '  unlink r5'; say '  ret r0'
+      end
+      do p = 1 to shape.size()
+        call asmheader(full || '.set' || shape.name(p),'.int','node=.llast..node,value=' || shape.type(p))
+        say '  linkattr1 r5,a1,1'; say '  settp r5,256'; say '  swap r7,r5'
+        say '  copy r8,a2'; say '  settp r8,256'
+        call asmload(9,p as .string)
+        call asmload(10,asmquote(shape.type(p)),768)
+        if shape.type(p) = '.int' then do
+          say '  icopy r11,a3'; say '  itos r11'
+        end
+        else say '  scopy r11,a3'
+        say '  settp r11,768'
+        call asmcall(0,'llannotation.store.put',5)
+        say '  swap r5,r7'; say '  unlink r5'; say '  ret r0'
+        do operation = 1 to 2
+          member = word('get has',operation); resulttype = '.int'
+          if operation = 1 then resulttype = shape.type(p)
+          call asmheader(full || '_entry.' || member || shape.name(p),resulttype,'')
+          say '  linkattr1 r5,a1,1'; say '  settp r5,256'; say '  swap r7,r5'
+          call asmload(8,p as .string)
+          call asmcall(0,'llannotation.entry.' || member,2)
+          say '  swap r5,r7'; say '  unlink r5'
+          if member = 'get' & resulttype = '.int' then say '  stoi r0'
+          say '  ret r0'
+        end
+      end
+    end
+    else if type = 'flow' then do
+      flow = doc.flow(d)
+      call asmheader(full,'.llflow..graph','tree=reference .llast..tree,?limit=.int')
+      call asmdefault(2,full)
+      call asmcall(1,'llflow.mapping.§factory',0)
+      do m = 1 to flow.size()
+        say '  link r5,r1'; say '  settp r5,256'; say '  swap r7,r5'
+        call asmload(8,asmquote(flow.kind(m)),768)
+        call asmload(9,asmquote(flow.op(m)),768)
+        call asmload(10,asmquote(flow.fields(m)),768)
+        call asmcall(0,'llflow.mapping.add',4)
+        say '  swap r5,r7'; say '  unlink r5'
+      end
+      say '  copy r7,a1'; say '  settp r7,256'
+      say '  copy r8,r1'; say '  settp r8,256'
+      say '  icopy r9,a2'; say '  settp r9,256'
+      call asmcall(0,'llflow.graph.§factory',3)
+      say '  ret r0'
+    end
+  end
+  symbols = 'llannotation.contract.§factory llannotation.contract.add llannotation.store.§factory llannotation.store.finish llannotation.store.put llannotation.store.error llannotation.store.size llannotation.entry.§factory llannotation.entry.get llannotation.entry.has llflow.mapping.§factory llflow.mapping.add llflow.graph.§factory'
+  do i = 1 to words(symbols)
+    call asmimport(word(symbols,i))
+  end
+  return
+asmclass: procedure = .void
+  arg full = .string, member = .string, type = .string
+  say '.meta ' || asmquote(full) || '="b" ".unknown" .class'
+  say '.meta ' || asmquote(full || '.' || member) || '="b" ' || asmquote(type) || ' .attr 1'
+  return
+asmheader: procedure = .void
+  arg full = .string, type = .string, args = .string
+  say '§' || full || '() .locals=12 .expose=' || full
+  say '  .meta ' || asmquote(full) || '="b" ' || asmquote(type) || ' §' || full || '() ' || asmquote(args)
+  return
+asmwrap: procedure = .void
+  arg full = .string, data = .int
+  say '  setattrs r3,2'; say '  setobjtype r3,' || asmquote(full)
+  say '  linkattr1 r4,r3,1'; say '  copy r4,r' || data; say '  unlink r4'
+  say '  ret r3'
+  return
+asmdefault: procedure = .void
+  arg argument = .int, label = .string
+  label = 'provided.' || label
+  say '  brtpandt ' || label || ',a' || argument || ',256'
+  say '  load a' || argument || ',1000000'
+  say label || ':'
+  return
