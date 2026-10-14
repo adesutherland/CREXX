@@ -471,6 +471,11 @@ jobs:
             fi
           done < <(find "$stage" -type f -print0)
 
+      - name: Check macOS installer stapling recovery
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: python scripts/test-macos-stapling.py
+
       - name: Package and smoke the actual core ZIP
         shell: bash
         run: |
@@ -743,8 +748,7 @@ jobs:
             --team-id "$APPLE_TEAM_ID" \
             --wait
 
-          xcrun stapler staple "$CREXX_MACOS_PKG_ASSET"
-          xcrun stapler validate "$CREXX_MACOS_PKG_ASSET"
+          bash scripts/staple-macos-installer.sh "$CREXX_MACOS_PKG_ASSET"
           spctl --assess --type install --verbose=4 "$CREXX_MACOS_PKG_ASSET"
 
           mkdir -p "${{ runner.temp }}/release-assets"
@@ -1328,8 +1332,7 @@ jobs:
           pkgutil --check-signature "$pkg"
           xcrun notarytool submit "$pkg" --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
-          xcrun stapler staple "$pkg"
-          xcrun stapler validate "$pkg"
+          bash scripts/staple-macos-installer.sh "$pkg"
           spctl --assess --type install --verbose=4 "$pkg"
           cp "$pkg" "${CREXX_RELEASE_ASSET%.zip}.pkg"
 
