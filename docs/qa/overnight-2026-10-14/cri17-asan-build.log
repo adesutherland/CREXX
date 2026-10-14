@@ -1,0 +1,65 @@
+Command: cmake --build cmake-build-debugasan --target cri17_attached_provider_test cri17_attached_provider_control-rxvml cri17_attached_provider_control-rxbvml --parallel 10
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g50926edb8b6b.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260825T144557Z
+-- CREXX Build Commit: 50926edb8b6b
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX-hotfix/../DSL-Syntax-Highlighter
+-- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always -fsanitize=address -fno-omit-frame-pointer
+-- Linker flags for executables: -fsanitize=address
+-- Linker flags for shared libs: -fsanitize=address
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (2.7s)
+-- Generating done (0.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan
+[0/4] Re-checking globbed directories...
+[1/16] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[2/16] Building C object tests/rxpa/CMakeFiles/_cri17_attached_static.dir/cri17_attached_provider.c.o
+[3/16] Building C object tests/rxpa/CMakeFiles/_cri17_attached.dir/cri17_attached_provider.c.o
+[4/16] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+In file included from /Users/adrian/CLionProjects/CREXX-hotfix/interpreter/rxvml.c:32:
+/Users/adrian/CLionProjects/CREXX-hotfix/interpreter/rxvmvars.h:2899:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2899 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX-hotfix/interpreter/rxvml.c:32:
+/Users/adrian/CLionProjects/CREXX-hotfix/interpreter/rxvmvars.h:3034:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3034 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[5/16] Linking C shared module tests/rxpa/rx_cri17provider.rxplugin
+[6/16] Linking C static library bin/librxvml.a
+[7/16] Linking C static library tests/rx_cri17provider_static.a
+[8/16] Generating cri17_attached_provider_noopt.rxbin
+[9/16] Building C object tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxvml.dir/cri17_attached_provider_control.c.o
+[10/16] Building C object tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxbvml.dir/cri17_attached_provider_control.c.o
+[11/16] Generating cri17_attached_provider_opt.rxbin
+[12/16] Linking C executable tests/cri17_attached_provider_control-rxvml
+[13/16] Linking C executable tests/cri17_attached_provider_control-rxbvml

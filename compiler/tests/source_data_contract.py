@@ -66,7 +66,12 @@ try:
         source = header + "值 = '漢🙂'\nsay 值\nreturn 0\n".encode()
         assert compile_run('unicode', source) == '漢🙂\n'.encode()
         provider = work / 'source_provider.crexx'
-        provider.write_bytes(header + b'namespace source_provider expose get_text\n'
+        # Level L import discovery reserves authored L sources for grammars,
+        # whose generated binaries supply their namespace. This fixture is a
+        # typed routine, so the L consumer imports a B provider; its NUL comment
+        # and result still exercise the source-import byte preservation path.
+        provider_header = b'options levelb\n' if a.level == 'l' else header
+        provider.write_bytes(provider_header + b'namespace source_provider expose get_text\n'
                              + b'/* provider\x00comment */\nget_text: procedure = .string\n'
                              + b"return 'i\x00m'\n")
         source = header + b"import source_provider\nsay get_text()\nreturn 0\n"

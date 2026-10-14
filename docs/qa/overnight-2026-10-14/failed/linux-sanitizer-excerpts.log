@@ -1,0 +1,35 @@
+          Start 1769: source_data_contract_l_opt
+3095/3165 Test #1769: source_data_contract_l_opt ....................................***Failed    9.06 sec
+Source data evidence: /tmp/crexx-source-data-f8jdboo2
+Traceback (most recent call last):
+  File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+    assert compile_run('imported', source) == b'i\x00m\n'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+    run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+  File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+    raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+AssertionError: ['/home/runner/work/_temp/debugasan/bin/rxc', '-i', '/home/runner/work/_temp/debugasan/bin', '-o', '/tmp/crexx-source-data-f8jdboo2/imported', '/tmp/crexx-source-data-f8jdboo2/imported.crexx']: exit 2; /tmp/crexx-source-data-f8jdboo2/command-6.log
+Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+1 warning(s) in source file
+Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+1 error(s) in source file
+
+
+
+99% tests passed, 1 tests failed out of 3095
+
+Label Time Summary:
+abi                                  =   0.02 sec*proc (1 test)
+address                              =   5.41 sec*proc (3 tests)
+allocation                           =   0.16 sec*proc (8 tests)
+arrays                               =  70.72 sec*proc (1 test)
+assembler                            =  12.18 sec*proc (3 tests)
+autoload                             =   0.84 sec*proc (4 tests)
+benchmark                            = 375.33 sec*proc (50 tests)
+binary                               = 304.04 sec*proc (10 tests)
+binary-io                            =   2.24 sec*proc (4 tests)
+
+The following tests FAILED:
+	1769 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Errors while running CTest

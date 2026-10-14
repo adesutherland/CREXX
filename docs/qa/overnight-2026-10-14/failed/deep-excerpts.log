@@ -1,0 +1,470 @@
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:46.9188590Z           Start 1773: source_data_contract_l_opt
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7068760Z 3088/3157 Test #1773: source_data_contract_l_opt ....................................***Failed    3.79 sec
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7076740Z Source data evidence: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-p_3kc7w5
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7077990Z Traceback (most recent call last):
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7323100Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7324540Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7325290Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7326600Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7328030Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7329540Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7348520Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7356240Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-p_3kc7w5/imported', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-p_3kc7w5/imported.crexx']: exit 2; /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-p_3kc7w5/command-6.log
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7362850Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7364110Z 1 warning(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7365140Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7366330Z 1 error(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7366830Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:00:50.7366840Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:02:57.3010150Z           Start 1779: source_data_contract_l_noopt
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8518220Z 3094/3157 Test #1779: source_data_contract_l_noopt ..................................***Failed    3.55 sec
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8519880Z Source data evidence: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-euwyg_oi
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8522080Z Traceback (most recent call last):
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8523660Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8525740Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8526510Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8528140Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8530670Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8532160Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8534050Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8538830Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-euwyg_oi/imported', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-euwyg_oi/imported.crexx']: exit 2; /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-euwyg_oi/command-6.log
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8542900Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8543740Z 1 warning(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8544460Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8545660Z 1 error(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8546010Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:03:00.8546020Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:05:57.0005640Z           Start 1785: source_data_contract_l_linked_opt
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3837470Z 3100/3157 Test #1785: source_data_contract_l_linked_opt .............................***Failed    4.38 sec
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3840390Z Source data evidence: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-bdkofkqt
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3842170Z Traceback (most recent call last):
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3845210Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3847240Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3848380Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3854120Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3856600Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3872340Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3874960Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3881520Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-bdkofkqt/imported', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-bdkofkqt/imported.crexx']: exit 2; /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-bdkofkqt/command-8.log
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3888060Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3889390Z 1 warning(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3890460Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3893230Z 1 error(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3893760Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:06:01.3893770Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:07.0993230Z           Start 1791: source_data_contract_l_linked_noopt
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9092140Z 3106/3157 Test #1791: source_data_contract_l_linked_noopt ...........................***Failed    3.81 sec
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9095450Z Source data evidence: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-hpi53hhs
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9097460Z Traceback (most recent call last):
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9099750Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9101880Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9103020Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9104840Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9106920Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9108910Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9111230Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9117960Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-hpi53hhs/imported', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-hpi53hhs/imported.crexx']: exit 2; /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-source-data-hpi53hhs/command-8.log
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9122730Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9123590Z 1 warning(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9124310Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9125110Z 1 error(s) in source file
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9125440Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:09:10.9125450Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:12.9989780Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:12.9990780Z 99% tests passed, 4 tests failed out of 3157
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0157240Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0158090Z Label Time Summary:
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0158990Z abi                                  =   0.01 sec*proc (1 test)
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0160120Z address                              =   1.24 sec*proc (3 tests)
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0161350Z allocation                           =   0.23 sec*proc (8 tests)
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0162540Z arrays                               =  14.36 sec*proc (1 test)
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0489670Z 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0489930Z The following tests FAILED:
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0490940Z 	1773 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0492920Z 	1779 - source_data_contract_l_noopt (Failed)             compiler comprehensive levell source
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0494640Z 	1785 - source_data_contract_l_linked_opt (Failed)        compiler comprehensive levell source
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0496240Z 	1791 - source_data_contract_l_linked_noopt (Failed)      compiler comprehensive levell source
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0878550Z FAILED: [code=8] CMakeFiles/qa-comprehensive /Users/runner/work/_temp/qualification/CMakeFiles/qa-comprehensive 
+Comprehensive macOS x86_64	UNKNOWN STEP	2026-10-14T04:17:13.0884590Z cd /Users/runner/work/_temp/qualification && /usr/local/bin/ctest --test-dir /Users/runner/work/_temp/qualification --parallel 5 --output-on-failure --label-regex "^(essential|smoke|comprehensive)\$"
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:41.3930994Z [235/2226] Building C object tests/rxpa/CMakeFiles/_cri17_attached.dir/cri17_attached_provider.c.obj
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:41.3952361Z D:/a/CREXX/CREXX/tests/rxpa/cri17_attached_provider.c:73:1: warning: 'thread' attribute directive ignored [-Wattributes]
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:41.3953829Z    73 | static CRI17_THREAD_LOCAL cri17_session *cri17_current_session;
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:41.4122830Z       | ^~~~~~
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:42.7089291Z [236/2226] Building C object tests/rxpa/CMakeFiles/_cri17_attached_static.dir/cri17_attached_provider.c.obj
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:42.7112074Z D:/a/CREXX/CREXX/tests/rxpa/cri17_attached_provider.c:73:1: warning: 'thread' attribute directive ignored [-Wattributes]
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:42.7113893Z    73 | static CRI17_THREAD_LOCAL cri17_session *cri17_current_session;
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:42.7131662Z       | ^~~~~~
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:42.9749693Z [237/2226] Linking C executable linker\rxlink_concat_files.exe
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:44.3191593Z [238/2226] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.obj
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:45.7059037Z [239/2226] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.obj
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T02:42:45.7987245Z [240/2226] Building RC object disassembler/CMakeFiles/rxdas.dir/__/platform/windows-utf8.rc.obj
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.1773533Z           Start 3136: rcc_provider_unused_import_elided
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4228296Z 2824/3053 Test #3129: cri17_attached_provider_opt ..................................***Failed    0.65 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4243950Z FAIL: CRI-17 attached workers shared one RXPA session 3
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4259953Z CMake Error at D:/a/CREXX/CREXX/cmake/CrexxLinkedRuntime.cmake:218 (message):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4288781Z   runner failed for cri17_attached_provider_opt with exit code 1
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4367215Z Call Stack (most recent call first):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4409246Z   cri17_attached_provider_opt_linked_runtime.cmake:5 (crexx_link_and_run)
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4447312Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4454138Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4466341Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4484729Z           Start 3137: rxpa_process_reentrant_manifest
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4557949Z 2825/3053 Test #3137: rxpa_process_reentrant_manifest ..............................   Passed    0.02 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4558942Z           Start 3138: rxpa_invalid_manifest_is_legacy
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4593508Z 2826/3053 Test #3138: rxpa_invalid_manifest_is_legacy ..............................   Passed    0.02 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4614045Z           Start 3139: rxpa_dynamic_context_ownership
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.4915872Z 2827/3053 Test #3139: rxpa_dynamic_context_ownership ...............................   Passed    0.03 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.5131503Z           Start 3140: rxpa_objects_dynamic_rxbvm_noopt
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:19:46.6171546Z 2828/3053 Test #3140: rxpa_objects_dynamic_rxbvm_noopt .............................   Passed    0.13 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:07.4799225Z           Start 1671: source_data_contract_l_opt
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3398316Z 2959/3053 Test #1671: source_data_contract_l_opt ...................................***Failed    1.86 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3399310Z Source data evidence: D:\a\_temp\msys64\tmp\crexx-source-data-1gw9bksz
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3400277Z Traceback (most recent call last):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3400757Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3401329Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3401701Z            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3402222Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3402792Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3403212Z     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3403595Z          '-o', output, path])
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3403887Z          ^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3404339Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3404915Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3405410Z                          + output[-12000:].decode(errors='replace'))
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3407387Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-1gw9bksz\\imported', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-1gw9bksz\\imported.crexx']: exit 2; D:\a\_temp\msys64\tmp\crexx-source-data-1gw9bksz\command-6.log
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3408916Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:26:09.3409347Z 1 warning(s) in source file
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:04.8352402Z           Start 1677: source_data_contract_l_noopt
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6914511Z 2965/3053 Test #1677: source_data_contract_l_noopt .................................***Failed    1.86 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6915359Z Source data evidence: D:\a\_temp\msys64\tmp\crexx-source-data-cikjiu_m
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6915996Z Traceback (most recent call last):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6916573Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6917581Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6919531Z            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6920571Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6921799Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6922675Z     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6923295Z          '-o', output, path])
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6923795Z          ^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6924471Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6925507Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6926326Z                          + output[-12000:].decode(errors='replace'))
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6928493Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-n', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-cikjiu_m\\imported', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-cikjiu_m\\imported.crexx']: exit 2; D:\a\_temp\msys64\tmp\crexx-source-data-cikjiu_m\command-6.log
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6931210Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:27:06.6932009Z 1 warning(s) in source file
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:23.5294947Z           Start 1683: source_data_contract_l_linked_opt
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3950714Z 2971/3053 Test #1683: source_data_contract_l_linked_opt ............................***Failed    1.87 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3951459Z Source data evidence: D:\a\_temp\msys64\tmp\crexx-source-data-z0kvxfal
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3951953Z Traceback (most recent call last):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3952756Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3953812Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3954200Z            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3954689Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3955253Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3955716Z     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3956074Z          '-o', output, path])
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3956360Z          ^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3956800Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3957370Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3957898Z                          + output[-12000:].decode(errors='replace'))
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3959109Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-z0kvxfal\\imported', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-z0kvxfal\\imported.crexx']: exit 2; D:\a\_temp\msys64\tmp\crexx-source-data-z0kvxfal\command-8.log
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3960412Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:28:25.3960826Z 1 warning(s) in source file
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:42.2863856Z           Start 1689: source_data_contract_l_linked_noopt
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1778034Z 2977/3053 Test #1689: source_data_contract_l_linked_noopt ..........................***Failed    1.89 sec
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1779192Z Source data evidence: D:\a\_temp\msys64\tmp\crexx-source-data-uo34qf0h
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1780299Z Traceback (most recent call last):
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1781058Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1781939Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1782542Z            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1783106Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1783676Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1784107Z     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1784503Z          '-o', output, path])
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1784788Z          ^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1785235Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1786057Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1786535Z                          + output[-12000:].decode(errors='replace'))
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1787803Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-n', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-uo34qf0h\\imported', 'D:\\a\\_temp\\msys64\\tmp\\crexx-source-data-uo34qf0h\\imported.crexx']: exit 2; D:\a\_temp\msys64\tmp\crexx-source-data-uo34qf0h\command-8.log
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1789214Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:29:44.1789638Z 1 warning(s) in source file
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0669404Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0670013Z 99% tests passed, 5 tests failed out of 3053
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0694565Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0695408Z Label Time Summary:
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0696170Z abi                                  =   0.01 sec*proc (1 test)
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0697004Z address                              =   0.45 sec*proc (3 tests)
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0698449Z allocation                           =   0.06 sec*proc (6 tests)
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0699514Z arrays                               =   4.52 sec*proc (1 test)
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0870633Z 
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0870849Z The following tests FAILED:
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0871649Z 	1671 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0873085Z 	1677 - source_data_contract_l_noopt (Failed)             compiler comprehensive levell source
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0874210Z 	1683 - source_data_contract_l_linked_opt (Failed)        compiler comprehensive levell source
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0875353Z 	1689 - source_data_contract_l_linked_noopt (Failed)      compiler comprehensive levell source
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0876893Z 	3129 - cri17_attached_provider_opt (Failed)              comprehensive concurrency cri-17 interpreter linked_opt optimizer-parity provider regression rxpa
+Comprehensive Windows x64 MinGW	UNKNOWN STEP	2026-10-14T03:33:08.0878171Z Errors while running CTest
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:01.8889599Z           Start 1769: source_data_contract_l_opt
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5463670Z 3077/3153 Test #1769: source_data_contract_l_opt ....................................***Failed    1.66 sec
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5464542Z Source data evidence: /tmp/crexx-source-data-7rlxt0_6
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5467444Z Traceback (most recent call last):
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5476060Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5477044Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5477583Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5478458Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5479427Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5480159Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5480774Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5481924Z AssertionError: ['/home/runner/work/_temp/qualification/bin/rxc', '-i', '/home/runner/work/_temp/qualification/bin', '-o', '/tmp/crexx-source-data-7rlxt0_6/imported', '/tmp/crexx-source-data-7rlxt0_6/imported.crexx']: exit 2; /tmp/crexx-source-data-7rlxt0_6/command-6.log
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5483328Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5483705Z 1 warning(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5484012Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5484345Z 1 error(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5484494Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:03.5484499Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:57.5749015Z           Start 1775: source_data_contract_l_noopt
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2348126Z 3083/3153 Test #1775: source_data_contract_l_noopt ..................................***Failed    1.66 sec
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2348916Z Source data evidence: /tmp/crexx-source-data-4io0cdxp
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2349540Z Traceback (most recent call last):
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2350442Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2351404Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2351975Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2353347Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2354348Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2355306Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2356512Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2357751Z AssertionError: ['/home/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/home/runner/work/_temp/qualification/bin', '-o', '/tmp/crexx-source-data-4io0cdxp/imported', '/tmp/crexx-source-data-4io0cdxp/imported.crexx']: exit 2; /tmp/crexx-source-data-4io0cdxp/command-6.log
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2358922Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2359299Z 1 warning(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2359616Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2359966Z 1 error(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2360145Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:13:59.2360150Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:07.2156004Z           Start 1781: source_data_contract_l_linked_opt
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8824252Z 3089/3153 Test #1781: source_data_contract_l_linked_opt .............................***Failed    1.67 sec
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8825082Z Source data evidence: /tmp/crexx-source-data-fq9u0lqk
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8825659Z Traceback (most recent call last):
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8826685Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8827602Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8828148Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8830610Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8831356Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8832240Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8833230Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8834433Z AssertionError: ['/home/runner/work/_temp/qualification/bin/rxc', '-i', '/home/runner/work/_temp/qualification/bin', '-o', '/tmp/crexx-source-data-fq9u0lqk/imported', '/tmp/crexx-source-data-fq9u0lqk/imported.crexx']: exit 2; /tmp/crexx-source-data-fq9u0lqk/command-8.log
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8835582Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8835948Z 1 warning(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8836259Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8836598Z 1 error(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8836751Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:15:08.8836756Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:15.2975353Z           Start 1787: source_data_contract_l_linked_noopt
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9640399Z 3095/3153 Test #1787: source_data_contract_l_linked_noopt ...........................***Failed    1.67 sec
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9641452Z Source data evidence: /tmp/crexx-source-data-dzaayasy
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9641995Z Traceback (most recent call last):
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9643153Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9643945Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9644360Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9645010Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9645703Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9646371Z   File "/home/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9647134Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9648614Z AssertionError: ['/home/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/home/runner/work/_temp/qualification/bin', '-o', '/tmp/crexx-source-data-dzaayasy/imported', '/tmp/crexx-source-data-dzaayasy/imported.crexx']: exit 2; /tmp/crexx-source-data-dzaayasy/command-8.log
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9650050Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9650484Z 1 warning(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9650849Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9651256Z 1 error(s) in source file
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9651432Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:16:16.9651437Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1577334Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1577696Z 99% tests passed, 4 tests failed out of 3153
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1622379Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1622685Z Label Time Summary:
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1623646Z abi                                  =   0.00 sec*proc (1 test)
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1624313Z address                              =   0.33 sec*proc (3 tests)
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1625009Z allocation                           =   0.03 sec*proc (8 tests)
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1625673Z arrays                               =   6.51 sec*proc (1 test)
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1752645Z 
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1752739Z The following tests FAILED:
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1753265Z Errors while running CTest
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1753684Z 	1769 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1754294Z 	1775 - source_data_contract_l_noopt (Failed)             compiler comprehensive levell source
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1754879Z 	1781 - source_data_contract_l_linked_opt (Failed)        compiler comprehensive levell source
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1755460Z 	1787 - source_data_contract_l_linked_noopt (Failed)      compiler comprehensive levell source
+Comprehensive Linux x64	UNKNOWN STEP	2026-10-14T03:19:20.1965697Z FAILED: [code=8] CMakeFiles/qa-comprehensive /home/runner/work/_temp/qualification/CMakeFiles/qa-comprehensive 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:07.1909869Z           Start 1663: source_data_contract_l_opt
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1333456Z 1705/2921 Test #1663: source_data_contract_l_opt ...................................***Failed    1.94 sec
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1334802Z Source data evidence: C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-skcmr_fo
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1336066Z Traceback (most recent call last):
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1351838Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1353173Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1353825Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1354697Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1355650Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1356625Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1357987Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1360938Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-skcmr_fo\\imported', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-skcmr_fo\\imported.crexx']: exit 2; C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-skcmr_fo\command-6.log
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1363751Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1364439Z 1 warning(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1365032Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1365694Z 1 error(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1366021Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:24:09.1366029Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:09.1716935Z           Start 1669: source_data_contract_l_noopt
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1172422Z 1711/2921 Test #1669: source_data_contract_l_noopt .................................***Failed    1.94 sec
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1173149Z Source data evidence: C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-n1tes34s
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1173655Z Traceback (most recent call last):
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1175633Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1176591Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1177193Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1177988Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1179791Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1181106Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1182420Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1185388Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-n', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-n1tes34s\\imported', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-n1tes34s\\imported.crexx']: exit 2; C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-n1tes34s\command-6.log
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1188811Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1189628Z 1 warning(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1190250Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1190942Z 1 error(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1191298Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:25:11.1191306Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:35.5704531Z           Start 1675: source_data_contract_l_linked_opt
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5679494Z 1717/2921 Test #1675: source_data_contract_l_linked_opt ............................***Failed    2.00 sec
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5680637Z Source data evidence: C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-cxnwgk1a
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5681571Z Traceback (most recent call last):
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5682480Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5683750Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5684235Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5685092Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5685698Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5686357Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5687125Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5688930Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-cxnwgk1a\\imported', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-cxnwgk1a\\imported.crexx']: exit 2; C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-cxnwgk1a\command-8.log
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5690397Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5690809Z 1 warning(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5691170Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5691554Z 1 error(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5691741Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:26:37.5691746Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:27:59.4665368Z           Start 1681: source_data_contract_l_linked_noopt
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4383141Z 1723/2921 Test #1681: source_data_contract_l_linked_noopt ..........................***Failed    1.97 sec
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4383879Z Source data evidence: C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-bwh82_nu
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4384380Z Traceback (most recent call last):
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4389028Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 73, in <module>
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4389715Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4390286Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4390833Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 37, in compile_run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4391396Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4391937Z   File "D:\a\CREXX\CREXX\compiler\tests\source_data_contract.py", line 28, in run
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4392558Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4394218Z AssertionError: ['D:\\a\\_temp\\qualification\\bin\\rxc', '-n', '-i', 'D:\\a\\_temp\\qualification\\bin', '-o', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-bwh82_nu\\imported', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-source-data-bwh82_nu\\imported.crexx']: exit 2; C:\Users\RUNNER~1\AppData\Local\Temp\crexx-source-data-bwh82_nu\command-8.log
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4395693Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4396113Z 1 warning(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4396478Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4397110Z 1 error(s) in source file
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4397308Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:28:01.4397313Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8327071Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8327725Z 99% tests passed, 4 tests failed out of 2921
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8365911Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8366276Z Label Time Summary:
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8367046Z abi                                  =   0.01 sec*proc (1 test)
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8374042Z address                              =   0.37 sec*proc (3 tests)
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8375030Z allocation                           =   0.10 sec*proc (6 tests)
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8375835Z arrays                               =   4.64 sec*proc (1 test)
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8475230Z 
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8475314Z The following tests FAILED:
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8476285Z 	1663 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8476879Z 	1669 - source_data_contract_l_noopt (Failed)             compiler comprehensive levell source
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8477460Z 	1675 - source_data_contract_l_linked_opt (Failed)        compiler comprehensive levell source
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8478027Z 	1681 - source_data_contract_l_linked_noopt (Failed)      compiler comprehensive levell source
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8478646Z Errors while running CTest
+Comprehensive Windows x64 MSVC	UNKNOWN STEP	2026-10-14T03:34:09.8657481Z FAILED: [code=8] CMakeFiles/qa-comprehensive D:/a/_temp/qualification/CMakeFiles/qa-comprehensive 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:22.9584300Z           Start 1773: source_data_contract_l_opt
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2646740Z 3094/3157 Test #1773: source_data_contract_l_opt ....................................***Failed    1.31 sec
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2647960Z Source data evidence: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-vgg7x6y9
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2649380Z Traceback (most recent call last):
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2686810Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2687690Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2688090Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2688610Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2689100Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2689660Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2690750Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2692270Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-vgg7x6y9/imported', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-vgg7x6y9/imported.crexx']: exit 2; /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-vgg7x6y9/command-6.log
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2694000Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2694330Z 1 warning(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2694730Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2695060Z 1 error(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2695210Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:07:24.2695220Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:11.2562810Z           Start 1779: source_data_contract_l_noopt
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7264690Z 3100/3157 Test #1779: source_data_contract_l_noopt ..................................***Failed    1.47 sec
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7265430Z Source data evidence: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-noypcgnz
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7266700Z Traceback (most recent call last):
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7270750Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7271570Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7271970Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7273950Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7274550Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7275240Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7275880Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7277370Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-noypcgnz/imported', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-noypcgnz/imported.crexx']: exit 2; /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-noypcgnz/command-6.log
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7279150Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7279530Z 1 warning(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7279880Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7280250Z 1 error(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7280360Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:08:12.7280370Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:16.4985520Z           Start 1785: source_data_contract_l_linked_opt
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3464350Z 3106/3157 Test #1785: source_data_contract_l_linked_opt .............................***Failed    1.85 sec
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3465630Z Source data evidence: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-sxko4om2
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3466150Z Traceback (most recent call last):
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3468840Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3471810Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3472170Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3472990Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3473610Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3487810Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3488460Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3490470Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-sxko4om2/imported', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-sxko4om2/imported.crexx']: exit 2; /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-sxko4om2/command-8.log
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3496840Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3497240Z 1 warning(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3497520Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3497900Z 1 error(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3498090Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:09:18.3498090Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:28.7991790Z           Start 1791: source_data_contract_l_linked_noopt
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3699130Z 3112/3157 Test #1791: source_data_contract_l_linked_noopt ...........................***Failed    1.57 sec
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3749590Z Source data evidence: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-rhscsq2r
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3765190Z Traceback (most recent call last):
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3781520Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 73, in <module>
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3789910Z     assert compile_run('imported', source) == b'i\x00m\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3795610Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3799960Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 37, in compile_run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3820440Z     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3821460Z   File "/Users/runner/work/CREXX/CREXX/compiler/tests/source_data_contract.py", line 28, in run
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3822980Z     raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3830010Z AssertionError: ['/Users/runner/work/_temp/qualification/bin/rxc', '-n', '-i', '/Users/runner/work/_temp/qualification/bin', '-o', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-rhscsq2r/imported', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-rhscsq2r/imported.crexx']: exit 2; /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-source-data-rhscsq2r/command-8.log
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3834600Z Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT, "source_provider"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3835460Z 1 warning(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3836290Z Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND, "get_text"
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3837080Z 1 error(s) in source file
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3837460Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:10:30.3837470Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2262380Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2262790Z 99% tests passed, 4 tests failed out of 3157
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2320190Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2320610Z Label Time Summary:
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2321910Z abi                                  =   0.00 sec*proc (1 test)
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2322700Z address                              =   0.30 sec*proc (3 tests)
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2323030Z allocation                           =   0.09 sec*proc (8 tests)
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2323390Z arrays                               =   5.63 sec*proc (1 test)
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2483490Z 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2483570Z The following tests FAILED:
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2483900Z 	1773 - source_data_contract_l_opt (Failed)               compiler comprehensive levell source
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2484520Z 	1779 - source_data_contract_l_noopt (Failed)             compiler comprehensive levell source
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2485120Z 	1785 - source_data_contract_l_linked_opt (Failed)        compiler comprehensive levell source
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2485650Z 	1791 - source_data_contract_l_linked_noopt (Failed)      compiler comprehensive levell source
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2486320Z FAILED: [code=8] CMakeFiles/qa-comprehensive /Users/runner/work/_temp/qualification/CMakeFiles/qa-comprehensive 
+Comprehensive macOS arm64	UNKNOWN STEP	2026-10-14T03:14:37.2487390Z cd /Users/runner/work/_temp/qualification && /opt/homebrew/bin/ctest --test-dir /Users/runner/work/_temp/qualification --parallel 5 --output-on-failure --label-regex "^(essential|smoke|comprehensive)\$"
