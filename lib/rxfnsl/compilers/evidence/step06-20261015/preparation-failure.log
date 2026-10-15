@@ -1,0 +1,16 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20261015-210424-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20261015-210424-build/build.log
+==> build failed with rc 2
+[ 86%] Built target levell_driver_imports_2
+[ 86%] Generating bootstrap/L2/levell-linked.rxbin
+[ 86%] Generating bootstrap/L2/levell-linked.rxbin
+ERROR: no root modules selected
+make[3]: *** [lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin] Error 1
+make[2]: *** [lib/rxfnsl/tools/CMakeFiles/levell_unicode_lexer.dir/all] Error 2
+make[2]: *** Waiting for unfinished jobs....
+[ 86%] Generating bootstrap/verified.stamp
+[ 86%] Generating ../../../bin/rxfnsl.rxbin
+[ 86%] Built target rxfnsl
+make[1]: *** [lib/rxfnsl/compilers/CMakeFiles/llcompiler_poc_measure.dir/rule] Error 2
+make: *** [llcompiler_poc_measure] Error 2

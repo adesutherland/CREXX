@@ -1,0 +1,51 @@
+.globals=0
+main() .locals=2
+.srcstep 0 0 6 "" 0 0 0 ""
+load r1,0
+call r0,llf1(),r1
+ret r0
+llf1() .locals=14
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+llb1:
+.srcstep 12 0 17 "walk-g.crexx" 2 5 7 "say 01"
+load r2,1
+.srcstep 4 0 17 "walk-g.crexx" 2 1 7 "say 01"
+copy r3,r2
+itos r3
+say r3
+.srcstep 21 0 17 "walk-g.crexx" 3 4 5 "if 1 then say 'ok'"
+load r4,1
+.srcstep 13 0 65 "walk-g.crexx" 3 1 19 "if 1 then say 'ok'"
+copy r5,r4
+itob r5
+icopy r6,r5
+brt llb2,r6
+br llb3
+llb2:
+.srcstep 30 0 17 "walk-g.crexx" 3 15 19 "if 1 then say 'ok'"
+load r7,"ok"
+.srcstep 22 0 65 "walk-g.crexx" 3 11 19 "if 1 then say 'ok'"
+say r7
+.srcstep 13 0 65 "walk-g.crexx" 3 1 19 "if 1 then say 'ok'"
+br llb4
+llb3:
+.srcstep 39 0 17 "walk-g.crexx" 4 10 11 "else say 1 / 0"
+load r8,1
+.srcstep 37 0 17 "walk-g.crexx" 4 10 15 "else say 1 / 0"
+copy r1,r8
+.srcstep 41 0 17 "walk-g.crexx" 4 14 15 "else say 1 / 0"
+load r9,0
+.srcstep 37 0 17 "walk-g.crexx" 4 10 15 "else say 1 / 0"
+copy r10,r1
+idiv r11,r10,r9
+.srcstep 31 0 17 "walk-g.crexx" 4 6 15 "else say 1 / 0"
+copy r12,r11
+itos r12
+say r12
+.srcstep 13 0 65 "walk-g.crexx" 3 1 19 "if 1 then say 'ok'"
+llb4:
+.srcstep 2 0 98 "walk-g.crexx" 1 1 15 "options levelg"
+load r13,0
+ret r13

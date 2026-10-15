@@ -1,0 +1,7 @@
+# Exact tool output: AST source slices include spaces; IR dumps end with a blank
+# line and runtime diagnostics may end a context field with a space.
+*.crexx text eol=lf
+*.rxas text eol=lf
+*.ast -text whitespace=-blank-at-eol,-blank-at-eof
+*.ir -text whitespace=-blank-at-eol,-blank-at-eof
+reached-*.txt -text whitespace=-blank-at-eol

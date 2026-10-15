@@ -1,0 +1,4 @@
+options levelg
+say 01
+if 1 then say 'ok'
+else say 1 / 0

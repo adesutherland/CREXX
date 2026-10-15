@@ -296,6 +296,12 @@ cmake --build cmake-build-levell-product --target stage-product --parallel 4
 task_bin="$PWD/cmake-build-levell-product/bin"
 ```
 
+Parallel Make builds use the same bootstrap ownership as other generators:
+the library and Unicode generator wait for verified L2 completion. No serial
+build workaround is required for that preparation path. See the
+[bootstrap guide](bootstrap.md#build-lifecycle-and-failure) for dependencies
+and incremental rebuild behaviour.
+
 ### Build and run the reader
 
 The reader imports `levell_settings`, the namespace declared in the grammar.
@@ -3261,6 +3267,39 @@ The supported relay covers existing fatal string-message conditions, not
 arbitrary condition payloads or complete backtraces. Clause grouping, full TRACE,
 and the other remaining quality work are recorded in the
 [emission-quality review](../compilers/doc/EMISSION-QUALITY-REVIEW.md).
+
+### Following a complete C/G compilation
+
+The [paired walkthrough](../compilers/examples/step06/README.md) includes real
+source trees, frontend IR, optimised emission IR and RXAS. It also gives build,
+installed execution and view-regeneration commands. Use the same body with
+`options levelc` or `options levelg`:
+
+```rexx
+say 01
+if 1 then say 'ok'
+else say 1 / 0
+```
+
+C prints `01` then `ok`; G prints `1` then `ok`. Both source trees preserve the
+literal spelling `01`. C's semantic mapping keeps those bytes; G's maps them to
+the integer value 1. Both frontend IRs retain the division arm. Shared Level L
+optimisation proves the condition true and removes the unreachable arm from the
+emission graph. Both default and `-n` compilation execute correctly.
+
+Change `if 1` to `if 0`: division is reached and remains a runtime error, with
+line 4 source context. It is not a compile-time error just because its operands
+are constants. Remove `then` instead: compilation fails with
+`LL_COMPILER_SYNTAX`, and an existing output file is preserved. In this exact
+example the parser reports the unexpected ELSE on line 4, where THEN is still
+required; the diagnostic location is the detection point.
+
+The [profile map](../compilers/doc/poc-coverage.md) gives the exact supported
+language, ownership/error tests and remaining boundaries. Compilation is Level
+B code using Level L libraries all the way through emission. Existing RXAS,
+linker and VM tools still process the result. Full C/G syntax, proper B
+self-hosting, arbitrary imports, full TRACE/condition handlers and INTERPRET
+are outside this admitted compiler slice.
 
 ## RexxScript: a larger example
 

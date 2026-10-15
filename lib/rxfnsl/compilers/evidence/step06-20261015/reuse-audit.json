@@ -1,0 +1,146 @@
+{
+  "baseline": "5f9feff27eaf114bd57f17e162d956270ff8fc54",
+  "baseline_manifest": "../step05-20261015/input-hashes.json",
+  "checked_inputs": 182,
+  "changes": {
+    "lib/rxfnsl/compilers/backend.cmake": {
+      "qualified": "c6e775e4e34b8de6e0bfd154779e48d38ae932fc8ff3964140d6ac75c0ea2817",
+      "current": "cedff9fc42b68bb998500123c4a897aea8e77ed2b8fbcb23091c693197791820"
+    }
+  },
+  "explanation": "Only backend.cmake adds the Level B view consumer, measurement target and four serial CTests with explicit prep dependencies. Existing production sources, test bodies and qualified products are unchanged.",
+  "checked_products": 26,
+  "product_mismatches": [],
+  "source_imports": {
+    "lib/rxfnsl/compilers/common/llcompilercontracts.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb"
+      ]
+    },
+    "lib/rxfnsl/compilers/common/llcrexxir.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "llir"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llcompiler.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "llfrontend",
+        "llrxas",
+        "llir",
+        "llirservices",
+        "llsource",
+        "llcompilercontracts"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llcompilercli.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "rxfs",
+        "llcompiler",
+        "llir",
+        "llcompilercontracts"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llfrontend.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "llast",
+        "llir",
+        "llsource",
+        "llcrexxir",
+        "llfrontendparse",
+        "llcompilercontracts"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llfrontendparse.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "llcore",
+        "llast",
+        "lllanguage",
+        "lllimits",
+        "llcgrammar",
+        "llggrammar"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llrxc-c.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "llcompilercli"
+      ]
+    },
+    "lib/rxfnsl/compilers/driver/llrxc-g.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "llcompilercli"
+      ]
+    },
+    "lib/rxfnsl/compilers/rxas/llctarget.crexx": {
+      "options": [
+        "levelb numeric_classic"
+      ],
+      "imports": [
+        "rxfnsb",
+        "rexxvalue",
+        "rexxpool",
+        "rexxactivation",
+        "rexxclassicconfig",
+        "rexxclassicbifs",
+        "rexxclassicbifarg",
+        "rexxclassicbiflength"
+      ]
+    },
+    "lib/rxfnsl/compilers/rxas/llrxas.crexx": {
+      "options": [
+        "levelb"
+      ],
+      "imports": [
+        "rxfnsb",
+        "llir",
+        "llcrexxir",
+        "llcompilercontracts",
+        "llsource"
+      ]
+    }
+  },
+  "bootstrap_recheck": {
+    "opt": {
+      "stamp_exists": true,
+      "image": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/product-opt/bootstrap-build/bin/rxfnsl.rxbin",
+      "qualified_sha256": "15f844ca4610ae6f7b02bfca40c90e5a83990f827372cc1a845eec8d07c91043",
+      "current_sha256": "15f844ca4610ae6f7b02bfca40c90e5a83990f827372cc1a845eec8d07c91043",
+      "matches": true
+    },
+    "noopt": {
+      "stamp_exists": true,
+      "image": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/product-noopt/bootstrap-build/bin/rxfnsl.rxbin",
+      "qualified_sha256": "b57785ad0cbb2fdf8012879710ccc1025d544eed91ae08a465d901c72d86b1a3",
+      "current_sha256": "b57785ad0cbb2fdf8012879710ccc1025d544eed91ae08a465d901c72d86b1a3",
+      "matches": true
+    }
+  }
+}

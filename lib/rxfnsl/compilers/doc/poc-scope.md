@@ -2,7 +2,8 @@
 
 **Approved profile; both source-to-IR frontends implemented in STEP03.**
 This defines the first slice of both compilers. STEP04 supplies executable RXAS and its [backend qualification](../evidence/step04-20261015/README.md);
-the complete compiling PoC, including optimisation, remains STEP06.
+STEP05 supplies shared optimisation; STEP06 consolidates the
+[coverage and evidence](poc-coverage.md) for the complete bounded pipeline.
 The full replacement obligations remain in [PLAN.md](../PLAN.md). Unsupported
 source receives a located profile diagnostic; neither compiler falls back to
 the old frontend or rewrites its input as B source.
@@ -58,9 +59,10 @@ admission and mappings, not emitted execution. Compile-time constant
 folding in the new pipeline must preserve these outcomes and the timing of
 observable effects/errors.
 
-## Required acceptance corpus as the implementation arrives
+## Acceptance corpus and retained evidence
 
-Retain the six examples and add focused cases for each POC row, including:
+The [coverage matrix](poc-coverage.md) connects the six controls, existing
+regressions and STEP06 additions to each POC row, including:
 
 1. Exact numeric literal/cast round trips, int64 overflow, float signed zero,
    decimal precision and changes of numeric context around a call.

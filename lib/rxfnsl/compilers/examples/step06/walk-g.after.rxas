@@ -1,0 +1,26 @@
+.globals=0
+main() .locals=2
+.srcstep 0 0 6 "" 0 0 0 ""
+load r1,0
+call r0,llf1(),r1
+ret r0
+llf1() .locals=5
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+llb1:
+.srcstep 42 0 34 "walk-g.crexx" 2 1 7 "say 01"
+load r2,"1"
+.srcstep 4 0 17 "walk-g.crexx" 2 1 7 "say 01"
+say r2
+.srcstep 43 0 98 "walk-g.crexx" 3 1 19 "if 1 then say 'ok'"
+llb2:
+.srcstep 30 0 17 "walk-g.crexx" 3 15 19 "if 1 then say 'ok'"
+load r3,"ok"
+.srcstep 22 0 65 "walk-g.crexx" 3 11 19 "if 1 then say 'ok'"
+say r3
+.srcstep 13 0 65 "walk-g.crexx" 3 1 19 "if 1 then say 'ok'"
+llb3:
+.srcstep 2 0 98 "walk-g.crexx" 1 1 15 "options levelg"
+load r4,0
+ret r4

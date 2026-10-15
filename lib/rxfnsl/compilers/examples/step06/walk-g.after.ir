@@ -1,0 +1,13 @@
+function $MAIN -> crexx.g.int64
+  entry.1:
+    %1 = core.constant 1 : crexx.g.text @origin:42
+    crexx.g.say %1 @origin:4
+    core.jump -> if.yes.2 @origin:43
+  if.yes.2:
+    %2 = core.constant ok : crexx.g.text @origin:30
+    crexx.g.say %2 @origin:22
+    core.jump -> if.join.4 @origin:13
+  if.join.4:
+    %3 = core.constant 0 : crexx.g.int64 @origin:2
+    core.return %3 @origin:2
+

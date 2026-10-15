@@ -1,0 +1,17 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20261015-211116-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20261015-211116-build/build.log
+==> build passed
+[100%] Built target llcompiler_llcompilercli_imports_opt
+[100%] Generating backend/opt/llcompilercli.rxbin
+[100%] Staging deterministic compiler imports for llcompiler_consumers_imports_opt ...
+[100%] Built target llcompiler_consumers_imports_opt
+[100%] Generating backend/opt/backend-poc-linked.rxbin
+[100%] Built target llcompiler_backend-poc_opt
+[100%] Generating backend/opt/llrxc-c-linked.rxbin
+[100%] Built target llcompiler_llrxc-c_opt
+[100%] Generating backend/opt/llrxc-g-linked.rxbin
+[100%] Built target llcompiler_llrxc-g_opt
+POC_E2E|commands=54|failures=0
+[100%] Built target llcompiler_poc_measure
+ASan run complete: cmake-build-debugasan/asan-logs/20261015-211116-build

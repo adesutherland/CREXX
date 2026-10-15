@@ -1,0 +1,718 @@
+{
+  "mode": "opt",
+  "vm": "rxtvm",
+  "seconds": 33.526,
+  "empty_path": true,
+  "commands": [
+    {
+      "label": "views-c",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/backend-poc-linked.rxbin",
+        "-a",
+        "c",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c"
+      ],
+      "status": 0,
+      "seconds": 1.705
+    },
+    {
+      "label": "walk-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.261
+    },
+    {
+      "label": "walk-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "walk-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.374
+    },
+    {
+      "label": "walk-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.073
+    },
+    {
+      "label": "reached-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.271
+    },
+    {
+      "label": "reached-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "reached-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.369
+    },
+    {
+      "label": "reached-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-before-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.07
+    },
+    {
+      "label": "syntax-c-before",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/broken-c.crexx"
+      ],
+      "status": 1,
+      "seconds": 2.033
+    },
+    {
+      "label": "control-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 2.745
+    },
+    {
+      "label": "control-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.018
+    },
+    {
+      "label": "control-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.492
+    },
+    {
+      "label": "control-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.094
+    },
+    {
+      "label": "walk-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.41
+    },
+    {
+      "label": "walk-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "walk-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.378
+    },
+    {
+      "label": "walk-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.07
+    },
+    {
+      "label": "reached-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.298
+    },
+    {
+      "label": "reached-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "reached-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.374
+    },
+    {
+      "label": "reached-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-c-after-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.071
+    },
+    {
+      "label": "syntax-c-after",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/broken-c.crexx"
+      ],
+      "status": 1,
+      "seconds": 2.143
+    },
+    {
+      "label": "control-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 2.733
+    },
+    {
+      "label": "control-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.008
+    },
+    {
+      "label": "control-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.379
+    },
+    {
+      "label": "control-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-c-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.081
+    },
+    {
+      "label": "views-g",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/backend-poc-linked.rxbin",
+        "-a",
+        "g",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g"
+      ],
+      "status": 0,
+      "seconds": 1.589
+    },
+    {
+      "label": "walk-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.2
+    },
+    {
+      "label": "walk-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "walk-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.025
+    },
+    {
+      "label": "walk-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "reached-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.197
+    },
+    {
+      "label": "reached-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "reached-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.024
+    },
+    {
+      "label": "reached-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-before-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.004
+    },
+    {
+      "label": "syntax-g-before",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/broken-g.crexx"
+      ],
+      "status": 1,
+      "seconds": 2.084
+    },
+    {
+      "label": "control-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.698
+    },
+    {
+      "label": "control-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "control-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.025
+    },
+    {
+      "label": "control-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "walk-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.258
+    },
+    {
+      "label": "walk-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "walk-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.024
+    },
+    {
+      "label": "walk-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "reached-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.232
+    },
+    {
+      "label": "reached-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "reached-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.024
+    },
+    {
+      "label": "reached-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/reached-g-after-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.004
+    },
+    {
+      "label": "syntax-g-after",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/walk-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/broken-g.crexx"
+      ],
+      "status": 1,
+      "seconds": 2.096
+    },
+    {
+      "label": "control-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 1.509
+    },
+    {
+      "label": "control-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "control-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.025
+    },
+    {
+      "label": "control-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/checks/llcompiler_poc_opt_rxtvm/control-g-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    }
+  ],
+  "shapes": {
+    "walk-c-before": {
+      "instructions": 147,
+      "calls": 17,
+      "source_records": 18,
+      "frames": [
+        6,
+        25
+      ],
+      "bytes": 5336
+    },
+    "walk-c-after": {
+      "instructions": 96,
+      "calls": 11,
+      "source_records": 11,
+      "frames": [
+        6,
+        16
+      ],
+      "bytes": 3814
+    },
+    "walk-g-before": {
+      "instructions": 27,
+      "calls": 1,
+      "source_records": 16,
+      "frames": [
+        2,
+        14
+      ],
+      "bytes": 1244
+    },
+    "walk-g-after": {
+      "instructions": 10,
+      "calls": 1,
+      "source_records": 9,
+      "frames": [
+        2,
+        5
+      ],
+      "bytes": 657
+    }
+  },
+  "inputs": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/check-poc.py": "99ee8964a104e6e41601e7882560a1441cfd7d67d88fad22bfc520042c25c0e6",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend-poc.crexx": "3fe5132440bb2b6e0f90a21726afd1e717e69b13f9531ae4556d23a784f96bf2",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx": "2158f9ac6d72381505a33c970b422f0b5e6be7181ed0fbf6b82010211aa04450",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx": "28677917d0b7271ac6054ca9fa6cafb20d2ee8bf66704e3778721c943c217981",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx": "f186900e9288f7575c26f0710c1bdcec2497a99a902ce00336d98d8ec5b3c2e8",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx": "a0217a1d42eef7ef3455161dbae26bcc17e7a9b6ce7c6c0088d06328f6c3fd84"
+  }
+}

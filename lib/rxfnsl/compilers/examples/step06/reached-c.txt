@@ -1,0 +1,6 @@
+PANIC: reached-c.crexx:4:10: RXC-LC-42.3 operator="/" operation="/" value="1" value="0" value="9" (SIGNAL CLASSIC_SYNTAX)
+  at module 47 (RexxClassicBifs) address 3989 (0xf95)
+  source: RexxClassicBifs.crexx:505:15:     assembler signal "CLASSIC_SYNTAX", detail
+  called from:
+  at module 1 (/private/tmp/levell-step06-isolated-debug/reached-c-after.rxas) address 40 (0x28)
+  source: :0:0: 

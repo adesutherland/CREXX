@@ -23,6 +23,13 @@ performance testing is not required for this research project. The scoped
 standing instruction is in root `AGENTS.md`; the second formal Release verdict,
 AC-power and sampling gates no longer apply. Functional/resource/code-quality
 acceptance and the later production-replacement gates remain.
+STEP06 is now locally qualified for the agreed C/G PoC; [receipt](evidence/step06-20261015/README.md)
+and [coverage map](doc/poc-coverage.md). No compiler implementation changed;
+retained inputs/products were verified and only missing proof added. The
+parallel-Make preparation finding F6-PREP-01 is repaired and locally verified;
+[repair receipt](../../../research/level-l/evidence/bootstrap-order-20261015/README.md).
+Full AC12 platform delivery remains open. STEP06 publication and monitor
+handover are authorised; STEP07 is proposed for review only.
 STEP04 qualification baseline:
 `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`. Original planning source baseline:
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
@@ -966,7 +973,7 @@ regressions now and use both frontends to drive later shared IR improvements.
 The original functional receipt is evidence for execution, not a code-quality
 pass. The review's small controls are not representative timing measurements.
 
-1. **EQ-AC01 — Source identity and fidelity (open).** Recompiling the same
+1. **EQ-AC01 — Source identity and fidelity (Phase A identity/ranges verified; full clause/TRACE gate open).** Recompiling the same
    logical source under two physical roots preserves emitted source identity
    and deterministic output. Test CLI and service, colliding basenames and
    explicit source mapping, Unicode/CRLF/multiline spans, derived/generated
@@ -977,7 +984,7 @@ pass. The review's small controls are not representative timing measurements.
    path. Branch entries, loops, calls and failing/skipped operands still report
    the correct authored location. Generated entry handling has a documented,
    meaningful fallback. Do not globally deduplicate address-bearing records.
-3. **EQ-AC03 — Proportionate baseline construction (open).** `SAY expression`
+3. **EQ-AC03 — Proportionate baseline construction (verified for the admitted profile in STEP05).** `SAY expression`
    and assignments construct only their selected operand/default. Empty `SAY`
    retains its behaviour. Call windows reflect actual selected target calls,
    with no fixed eight-argument floor in a call-free body; entry-to-next-label
@@ -990,7 +997,7 @@ pass. The review's small controls are not representative timing measurements.
    helpers; reducing caller text alone cannot close a cost finding. Review the
    Classic target contract before changing it. Shared passes must demonstrate
    named redundant operations removed without changing observable semantics.
-5. **EQ-AC05 — Durable qualification (open).** Add permanent structural and
+5. **EQ-AC05 — Durable qualification (verified for direct Phase A repairs; wider gates open).** Add permanent structural and
    semantic regressions for repaired findings, both assembler modes and concrete
    VMs where affected, with source metadata retained. Keep examples, architecture
    and user guide current. Reuse unchanged qualification; do not claim runtime
@@ -999,10 +1006,10 @@ pass. The review's small controls are not representative timing measurements.
 | Step | Criteria / dependencies | State and owner |
 |---|---|---|
 | EQ-STEP01: inspect STEP04 RXAS, compare native B/G/C, retain evidence and classify findings | AC16; identifies EQ-AC01–05 closure evidence | Complete as a review; [report](doc/EMISSION-QUALITY-REVIEW.md). |
-| EQ-STEP02: repair source identity/provenance/grouping, redundant source-state emission, unused default construction and needless frame/entry scaffolding | EQ-AC01–03/05; review source-identity and clause-mapping surface before implementation | CP essentials complete locally. Real clause grouping, unused defaults and frame/entry scaffolding remain open for later approval. |
+| EQ-STEP02: repair source identity/provenance/grouping, redundant source-state emission, unused default construction and needless frame/entry scaffolding | EQ-AC01–03/05; review source-identity and clause-mapping surface before implementation | CP essentials and STEP05 unused-default/frame/fallthrough repairs verified locally. Real clause grouping remains a later reviewed gate. |
 | EQ-STEP03: review Classic activation/numeric/helper lowering with paired typed controls | EQ-AC04; inspect actual helper work, error/lifetime obligations and INTERPRET compatibility | Bounded condition-provenance correction completed below; broader numeric/activation work remains open. No automatic native-C/runtime rewrite. |
-| EQ-STEP04: execute approved shared passes and subsequently review liveness/register reuse | EQ-AC04/05; LLCOMP-STEP05 pass gates and EQ-STEP02 baseline | Open; shared IR/backend. Simple stable allocation was approved, not claimed optimal. |
-| EQ-STEP05: retain focused structural/semantic proof and regenerate the walkthrough with each repair | EQ-AC01–05; affected implementation and existing publication rules | Open; compiler regressions/docs. No broad QA merely for this documentation review. |
+| EQ-STEP04: execute approved shared passes and subsequently review liveness/register reuse | EQ-AC04/05; LLCOMP-STEP05 pass gates and EQ-STEP02 baseline | Shared passes verified in STEP05; liveness/register reuse remains open for review. Simple stable allocation is not claimed optimal. |
+| EQ-STEP05: retain focused structural/semantic proof and regenerate the walkthrough with each repair | EQ-AC01–05; affected implementation and existing publication rules | Direct repairs have permanent STEP05 regressions; STEP06 adds the consolidated walkthrough/coverage. Wider semantic gates remain open. |
 
 F4-AC07 is the bounded STEP04 quality gate covering EQ-AC01–03 and EQ-AC05 for
 their direct repairs. EQ-AC04's broader pass/target costs remain open through
@@ -1081,9 +1088,10 @@ full programme gates remain separate.
 
 CP criteria contribute to EQ-AC01/02/05 and LLCOMP-AC09/15/16; they do not fully
 close those wider gates. Real clause grouping, broader provenance and an
-adapter-boundary alternative are named further work in the review. EQ-AC03's
-unused defaults/frame layout, EQ-AC04's numeric/helper costs, STEP05 shared
-optimisation and STEP08/AC11 INTERPRET requirements retain their existing scope.
+adapter-boundary alternative are named further work in the review. STEP05
+subsequently verified EQ-AC03's unused defaults/frame layout and the approved
+shared passes. EQ-AC04's broader numeric/helper specialisation and STEP08/AC11
+INTERPRET requirements retain their existing scope.
 
 ## STEP04 product-stage dependency repair
 
@@ -1241,9 +1249,11 @@ The [final receipt](evidence/step05-20261015/README.md) maps every F5 criterion
 to its evidence. Develop publication and lightweight CI-monitor handover were
 subsequently authorised on 15 October; no automatic reruns are authorised.
 
-## STEP06 proposal: qualify the complete C/G PoC
+## STEP06: qualify the complete C/G PoC
 
-**For review, 15 October 2026; implementation not yet authorised.** STEP05
+**Approved for implementation, 15 October 2026.** Adrian authorised the agreed
+C/G PoC scope, Level B-only implementation, coverage-gap closure, documentation
+and reuse of valid evidence. STEP05
 supplies the working optimised pipeline. STEP06 establishes whether the bounded
 POC-01–10 profile is coherent, usable and a useful test of Level L before
 approving further language coverage. The pipeline stays Level B-only and uses
@@ -1268,31 +1278,31 @@ inlining and broader language/ABI coverage remain their named later gates.
 
 ### Numbered acceptance criteria
 
-1. **F6-AC01 — Profile and semantics (open).** Map every POC-01–10 row to source,
+1. **F6-AC01 — Profile and semantics (verified locally for the agreed PoC).** Map every POC-01–10 row to source,
    expected behaviour and evidence through AST, IR, optimised IR, RXAS and
    execution. Include agreement and intentional C/G differences: literal bytes,
    numeric context, variable defaults/unset reads, eager/skipped operands,
    calls/arguments and control flow. Reuse independent expected values and the
    non-C/G oracle; old compiler output alone is not the specification.
-2. **F6-AC02 — Failure and ownership (open).** The same matrix covers syntax,
+2. **F6-AC02 — Failure and ownership (verified locally for the agreed PoC).** The same matrix covers syntax,
    profile/type, malformed source/import, unknown-contract and budget failures,
    together with reached/skipped runtime errors, Unicode/CRLF origins,
    repeated requests and owned results. Failure preserves existing destination
    files and exposes no partial executable. Any discovered gap gains a focused
    permanent regression before closure.
-3. **F6-AC03 — Emitted-code quality (open).** Retain a few complete before/after
+3. **F6-AC03 — Emitted-code quality (verified locally for the agreed PoC).** Retain a few complete before/after
    examples and structural assertions: meaningful source names/spans, no unused
    default construction or gratuitous frame/call machinery, and required C ABI,
    numeric/activation/error work preserved. Separate executable counts, helpers,
    registers and metadata; classify remaining conservatism against named later
    passes. Static counts establish no execution-speed claim.
-4. **F6-AC04 — Bootstrap and installed use (open).** Retain the B/L-only compiler
+4. **F6-AC04 — Bootstrap and installed use (verified locally for the agreed PoC).** Retain the B/L-only compiler
    host closure, opt/no-opt standalone bootstrap and installed CLI/service
    evidence. Demonstrate compilation with old compiler commands unavailable to
    the new drivers. Inventory native seed/binutils, generated launchers and the
    separate Classic target-runtime dependencies. Proper B self-hosting remains
    STEP07B; it must not be claimed from this seed-built PoC.
-5. **F6-AC05 — Modes, platforms and resource boundaries (open).** Consolidate
+5. **F6-AC05 — Modes, platforms and resource boundaries (verified locally for the agreed PoC).** Consolidate
    B-host, IR and assembler optimisation modes and both supported VMs, keeping
    each axis distinct. Match local/normal hosted evidence to exact inputs;
    record unavailable or untested platform cells explicitly, including
@@ -1300,7 +1310,7 @@ inlining and broader language/ABI coverage remain their named later gates.
    without claiming full AC12 platform qualification. Exercise deterministic
    work/index/byte/register refusals; no formal timing campaign, deep matrix
    dispatch or new production-replacement gate is implied.
-6. **F6-AC06 — Walkthrough and review decision (open).** Update the enduring
+6. **F6-AC06 — Walkthrough and review decision (verified locally for the agreed PoC).** Update the enduring
    architecture/user guide with a reproducible paired example, actual tree/IR/
    RXAS views, failure variants and installed commands. Summarise improvements
    and gaps in Level L separately from C/G coverage. Present the resulting PoC
@@ -1311,12 +1321,68 @@ inlining and broader language/ABI coverage remain their named later gates.
 
 | Step | Work and acceptance | Dependency / decision gate |
 |---|---|---|
-| **F6-STEP01** | Audit existing POC-01–10 coverage, exact input identities and dependency/mode/platform evidence; identify only missing proof. F6-AC01/04/05. | Approval of this bounded proposal; reuse STEP05 qualification. |
-| **F6-STEP02** | Fill decisive semantic/failure/ownership/code-shape gaps with Level B consumers and shared non-C/G tests; fix demonstrated in-scope defects. F6-AC01–05. | F6-STEP01. New language/IR/architecture decisions require separate review. |
-| **F6-STEP03** | Regenerate the paired walkthrough and update architecture, guide and criterion/evidence matrix. F6-AC03/06. | Qualified implementation inputs; do not repeat unchanged broad tests. |
-| **F6-STEP04** | Present the complete Phase A assessment, remaining obligations and proposed STEP07 coverage increments. F6-AC01–06. | PoC review gate; no default compiler replacement or later implementation without approval. |
+| **F6-STEP01 — complete** | Audit existing POC-01–10 coverage, exact input identities and dependency/mode/platform evidence; identify only missing proof. F6-AC01/04/05. | Approval of this bounded proposal; reuse STEP05 qualification. |
+| **F6-STEP02 — complete** | Fill decisive semantic/failure/ownership/code-shape gaps with Level B consumers and shared non-C/G tests; fix demonstrated in-scope defects. F6-AC01–05. | F6-STEP01. New language/IR/architecture decisions require separate review. |
+| **F6-STEP03 — complete** | Regenerate the paired walkthrough and update architecture, guide and criterion/evidence matrix. F6-AC03/06. | Qualified implementation inputs; do not repeat unchanged broad tests. |
+| **F6-STEP04 — complete** | Present the complete Phase A assessment, remaining obligations and proposed STEP07 coverage increments. F6-AC01–06. | PoC review gate; no default compiler replacement or later implementation without approval. |
 
-### Simple proposed acceptance example
+### Accepted walkthrough and gap audit
+
+F6-STEP01 checked all 182 STEP05 retained input hashes against develop
+`5f9feff27eaf114bd57f17e162d956270ff8fc54`: every input matches. Existing
+backend, provenance, generic IR/oracle, lifecycle, budget, bootstrap and
+installed-tool evidence is reused for unchanged inputs. The added checks are:
+
+1. A Level B service consumer saves the accepted paired source tree, original
+   and optimised IR and RXAS, checking source retention and removed division.
+2. A narrow end-to-end check executes the pair with IR on/off, checks reached
+   division and missing-THEN failures, and preserves previous CLI output.
+3. Paired nested logical evaluation/return-from-loop cases and Classic
+   expression-valued DIGITS/FUZZ setters prove evaluation count and context.
+4. The new commands execute with an empty PATH and only admitted target
+   packages. Existing installed/bootstrap evidence supplies the other layers.
+
+No compiler implementation defect has been found. ASan preparation exposed
+F6-PREP-01: duplicate parallel Make generation of the L2 reader image. The
+authorised producer-order repair now closes that finding with an old/fixed
+fresh-graph regression, real parallel preparation and byte-identity proof; see
+the [repair receipt](../../../research/level-l/evidence/bootstrap-order-20261015/README.md).
+Full platform delivery remains open under AC12. The 54-command aggregate was measured in isolation in Debug (31.271s) and the
+maintained Apple ASan build (117.116s) before CTest registration; serial scheduling
+and 900s/300s outer/inner hang guards preserve slower-host applicability. The [STEP06 receipt](evidence/step06-20261015/README.md) now verifies F6-AC01–06
+for the agreed local PoC: 28 focused CTests, the 54-command ASan aggregate,
+isolated installed requests and retained exact-input evidence. The broader
+LLCOMP criteria retain their full replacement/platform obligations.
+
+### F6-PREP-01 repair and STEP06 publication
+
+Adrian authorised this repair, STEP06 publication to `develop` and CI-monitor
+handover on 15 October 2026. The separately reviewable repair is commit
+`7326287c5`; it is published with this STEP06 qualification increment. The outcome is a deterministic parallel Make
+bootstrap: the public library and Unicode generator consume the completed,
+verified L2 image without compiling/linking it concurrently. Preserve file
+freshness dependencies, incremental rebuilds, standalone B-only operation and
+unchanged generated bytecode. No compiler semantics or native implementation
+change is intended.
+
+1. **F6-PREP-AC01 (verified locally):** a fresh focused Unix Makefiles graph using the real
+   bootstrap CMake declarations reproduces duplicate execution before the fix
+   and passes after it. Include missing-output, changed-input and no-op checks.
+2. **F6-PREP-AC02 (verified locally):** rebuild the missing real L2 output with parallel
+   preparation in normal Debug and maintained Apple ASan; verify the original
+   preparation target succeeds, each producer executes once and qualified
+   generated products retain their bytes. Reuse unchanged semantic evidence.
+3. **F6-PREP-AC03 (qualification/docs complete; publication authorised):** update the receipt, architecture/guide and open-finding
+   disposition; publish only approved paths, verify remote `develop`, switch
+   the existing lightweight monitor and present STEP07 for review only.
+
+| Step | Acceptance and dependency |
+|---|---|
+| **F6-PREP-STEP01 — complete** | Reproduce with actual CMake declarations and record target/file ownership; AC01. |
+| **F6-PREP-STEP02 — complete** | Add producer ordering, retain a permanent regression and qualify real parallel preparation; AC01/02, after reproducer. |
+| **F6-PREP-STEP03 — publication authorised** | Reuse verified STEP06 evidence, document and publish repair plus STEP06, hand over monitoring and propose STEP07; AC03, after focused checks. |
+
+### Simple acceptance example
 
 Use the following body in two files, prefixed respectively by `options levelc`
 and `options levelg`:
@@ -1334,8 +1400,8 @@ else say 1 / 0
 | Shared optimisation | Prove literal truth and remove the unreachable division arm | Prove literal truth and remove the unreachable division arm |
 | RXAS | Keep the required Classic runtime/condition setup | Keep the typed entry/return ABI |
 
-This is a proposed qualification case using existing syntax, not a claim of a
-newly executed combined example. The source tree and frontend IR retain the
+This is an executed qualification case using existing syntax; the
+[actual source/tree/IR/RXAS and error outputs](examples/step06/README.md) are retained. The source tree and frontend IR retain the
 ELSE arm. The optimised emission graph can remove it; both `-n` and normal
 compilation must execute without an arithmetic error. Division itself has no
 compile-time evaluator: changing the condition to `0` must retain the reached
@@ -1343,6 +1409,17 @@ division and report a runtime error at its source location. Removing `THEN`
 must instead fail compilation and preserve any previous output file. These
 three cases demonstrate language distinction, shared control proof and error
 fidelity without adding a new surface.
+
+## STEP07 next-increment review
+
+The [STEP07 review packet](doc/STEP07-REVIEW.md) proposes a bounded STEP07A:
+scalar optional/default/presence contracts, checked separate G modules and
+admitted C runtime-call contracts, with independent Level L checks. It contains
+the paired `scale(7)` / `scale(7,3)` example, tree/IR responsibilities,
+F7A-AC01–06 and F7A-STEP01–04. This is a proposal only; STEP06 publication does
+not authorise STEP07 implementation. References/ownership and Classic exposure,
+then wider control forms, follow as reviewed slices. Proper B and INTERPRET
+remain their explicit later gates.
 
 ## Qualification and documentation practice
 
@@ -1378,11 +1455,11 @@ fidelity without adding a new surface.
 | STEP01 | Reviewed and approved as the STEP02 foundation: scope, architecture, trees, IR/API, algorithms, dependency inventory and six source controls. [Review packet](doc/STEP01-REVIEW.md). |
 | STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
 | STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Published as `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67` with the CI preparation repair. Hosted results are separate. |
-| STEP04 / executable backend | Published `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`; original [functional receipt](evidence/step04-20261015/README.md) retained. Emission review reopens source-metadata portions of F4-AC03/05; new F4-AC07 and EQ-AC01–05 remain open. Hosted results are separate. |
+| STEP04 / executable backend | Published `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`; original [functional receipt](evidence/step04-20261015/README.md) retained. CP provenance and STEP05 construction/emitter cleanup close the direct Phase A defects with retained evidence; full clause/TRACE and wider target-cost work remain open under EQ/AC16. Hosted results are separate. |
 | Essential metadata/condition correction | CP-AC01–06 and CP-STEP01–03 verified locally; [receipt](evidence/provenance-20261015/README.md). Published as `f14d8a569a8ced9420fd27e8d6277db0617825db`. Existing diagnostic structure retained; original faults now survive the relay. Wider redesign and hosted outcomes remain separate. |
 | STEP04 product-stage repair | PKG-AC01/02 verified locally; PKG-AC03 regression/docs/evidence complete and publication approved. [Receipt](evidence/package-stage-20261015/README.md). All four compiler products now belong to the normal product selection; hosted delivery remains separate. |
 | STEP05 / shared Level L optimisation | F5-AC01–08 and F5-STEP01–04 verified locally; [receipt](evidence/step05-20261015/README.md). Level B-only shared services, C/G integration, independent tests, code-quality examples, B-only bootstrap and installed delivery complete. Formal research performance tests are not required. Develop publication and lightweight CI-monitor handover authorised; hosted outcomes separate. |
-| STEP06 / remaining Phase A | Proposed bounded qualification/usability review below; F6-AC01–06 remain open pending approval and execution. |
+| STEP06 / remaining Phase A | F6-AC01–06 and F6-STEP01–04 verified locally for the agreed C/G PoC; [receipt](evidence/step06-20261015/README.md), [coverage](doc/poc-coverage.md), [walkthrough](examples/step06/README.md). F6-PREP-01 repaired and locally qualified; develop publication/CI handover authorised. Wider replacement/platform gates remain open; STEP07 is review-only. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
 | LLCOMP-AC01–16 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions; AC16 now explicitly requires emitted-code quality. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |

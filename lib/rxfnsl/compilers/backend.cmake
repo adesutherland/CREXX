@@ -64,7 +64,7 @@ foreach(_mode opt noopt)
     add_custom_target(llcompilers ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin")
     install(FILES "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin" DESTINATION bin)
   endif()
-  foreach(_consumer backend-probe backend-tests backend-optimise llrxc-c llrxc-g)
+  foreach(_consumer backend-probe backend-tests backend-optimise backend-poc llrxc-c llrxc-g)
     set(_source "${CMAKE_CURRENT_SOURCE_DIR}/driver/${_consumer}.crexx")
     if(_consumer MATCHES "^backend-")
       set(_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_consumer}.crexx")
@@ -105,6 +105,13 @@ set_tests_properties(llcompiler_product_inventory PROPERTIES
 # producers here would hide a missing stage dependency on a clean CI build.
 crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS stage-product)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_custom_target(llcompiler_poc_measure
+  COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-poc.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/poc-measure"
+    --mode opt --vm rxbvm
+  DEPENDS llcompiler_backend-poc_opt llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt
+    llcompiler_target_opt library rxfnsc classlib rxbvm rxas rxlink
+  VERBATIM)
 add_custom_target(llcompiler_backend_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/backend-measure"
@@ -170,6 +177,22 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_optimise}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-optimise_${_mode} llcompiler_target_${_mode}
+          library rxfnsc classlib rxas rxlink ${_vm})
+
+      # STEP06: 54 nested commands, isolated Debug 32s / Apple ASan 118s.
+      # Serial whole tests and 300s inner / 900s outer limits are hang guards.
+      set(_poc "llcompiler_poc_${_mode}_${_vm}")
+      add_test(NAME ${_poc}
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-poc.py"
+          --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_poc}"
+          --mode ${_mode} --vm ${_vm})
+      set_tests_properties(${_poc} PROPERTIES
+        PASS_REGULAR_EXPRESSION "POC_E2E[|]commands=54[|]failures=0"
+        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_poc}
+        TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
+          llcompiler_backend-poc_${_mode} llcompiler_target_${_mode}
           library rxfnsc classlib rxas rxlink ${_vm})
     endif()
   endforeach()

@@ -44,6 +44,24 @@ references: two operations can use the same value, and a loop points back to
 an earlier block. They therefore have different structures. The source AST
 remains available for explanations and diagnostics after lowering.
 
+## End-to-end scope and qualification
+
+The admitted C/G pipeline already executes source through Level L grammar,
+AST, verified IR, shared optimisation and RXAS emission. Compiler-specific
+instruction selection/ABI logic is Level B in `llrxas`; output construction is
+the generic Level L `llir.writer`, with sections, chunks, origins, limits and
+sinks. The existing native assembler/linker/VM run the generated program.
+STEP06 audits this existing vertical path; it does not introduce another
+emission route or broaden the language.
+
+The [coverage matrix](poc-coverage.md) maps all ten PoC rows, failure/lifetime
+contracts, bootstrap dependencies, optimisation axes and platform boundaries.
+The [paired walkthrough](../examples/step06/README.md) shows actual tree/IR/RXAS
+views, exact outputs and reached/skipped errors. Full replacement, proper B
+self-hosting, arbitrary imports/classes, full TRACE/conditions and INTERPRET
+remain their later review gates. Generic Level L proof continues to use
+independent non-C/G consumers, not only these compiler examples.
+
 ## Ownership of components
 
 | Component | Owner and responsibility |
@@ -87,9 +105,11 @@ That foundation example does not compile a source file. The separate
 compilation and execution.
 
 Execution correctness does not establish emitted-code quality. The
-[STEP04 emission review](EMISSION-QUALITY-REVIEW.md) records current source-map,
-path, construction and frame-layout defects separately from later shared
-optimisation and Classic target-contract work. PLAN.md AC16 and its EQ criteria
+[STEP04 emission review](EMISSION-QUALITY-REVIEW.md) records the historical
+source-map, path, construction and frame-layout findings. Essential provenance
+and STEP05 cleanup repaired the direct defects; the [coverage matrix](poc-coverage.md#code-quality-and-remaining-work)
+distinguishes those repairs from remaining allocation, Classic target-contract
+and full TRACE work. PLAN.md AC16 and its EQ criteria
 own closure; the existing functional receipts do not close those findings.
 
 The [essential condition-provenance correction](CONDITION-PROVENANCE-REVIEW.md)
@@ -238,6 +258,12 @@ separate from these B compiler generations. Building L again with B1 checks
 that proper B can build the generator and its libraries. Building the same
 closure with B2 checks whether the products stabilise. This avoids hiding an
 old seed-built library or frontend inside an apparently self-hosted compiler.
+
+The current build graph gives `levell_bootstrap` ownership of the verified L2
+image. The public library and Unicode generator have target-order dependencies
+on it as well as file-freshness dependencies. This prevents parallel Make
+consumers from independently executing the same bootstrap recipe. The native
+CLI waits through the public library; compilation remains in Level B.
 
 Compare corresponding B2/B3 compiler products, B libraries, Level L modules and
 generated grammar outputs. Pin sources, semantic schemas, flags, Unicode data,

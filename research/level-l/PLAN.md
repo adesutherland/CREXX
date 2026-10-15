@@ -67,7 +67,14 @@ on 15 October. Adrian accepted the cleanup's
 Shared passes and local qualification are complete; the [receipt](../../lib/rxfnsl/compilers/evidence/step05-20261015/README.md)
 verifies F5-AC01–08. Adrian authorised STEP05 develop publication and monitor
 handover on 15 October; hosted outcomes remain separate. The subplan now also
-records the STEP06 qualification proposal for review before implementation. Adrian then
+records the STEP06 bounded qualification approved on 15 October: reuse valid
+evidence, close C/G PoC coverage gaps, keep all compiler logic Level B, and
+update architecture and user guidance. F6-AC01–06 are locally qualified for
+the agreed PoC; [receipt](../../lib/rxfnsl/compilers/evidence/step06-20261015/README.md).
+The parallel-Make preparation finding is repaired with a permanent regression
+and byte-identical real-tool rebuilds; [receipt](evidence/bootstrap-order-20261015/README.md).
+Full replacement/platform gates remain open. STEP06 develop publication and
+monitor handover are authorised; STEP07 is proposed for review only. Its F6 criteria remain the authority. Adrian then
 clarified that formal performance testing is not required for Level L research;
 root `AGENTS.md` records this scoped exception. Functional, resource and emitted
 code-quality acceptance remain. This increment uses both compiler examples to
