@@ -30,6 +30,7 @@ exact declaration forms, runtime methods and error handling rules.
 - [Error messages and recovery](#error-messages-and-recovery)
 - [Command line and build integration](#command-line-and-build-integration)
 - [Resource limits](#resource-limits)
+- [Intermediate representation and semantic services](#intermediate-representation-and-semantic-services)
 - [RexxScript: a larger example](#rexxscript-a-larger-example)
 - [Troubleshooting](#troubleshooting)
 - [Glossary](#glossary)
@@ -2980,6 +2981,89 @@ grammar or operator data needed by their runtime algorithm.
 Reuse a language definition and create fresh requests for input documents.
 Avoid repeatedly copying complete tree views in visitor calls. These practices
 keep application overhead separate from the work of recognition.
+
+## Intermediate representation and semantic services
+
+An AST describes the constructs in a source program: an assignment, an IF, a
+call, or a literal. A compiler often needs a second representation that spells
+out the order of evaluation and the possible transfers of control. That is an
+**intermediate representation**, usually shortened to **IR**.
+
+Level L provides this through `llir` and `llirservices`. They use compact numeric
+records internally and give applications named operations, checked handles and
+readable dumps. You can use them with any language. Register its types and
+operation semantics in ordinary Level B code.
+
+### From a tree to ordered operations
+
+For `say 2+3`, a source tree could contain a Say node whose value is an Add node
+with two literal children. Its IR makes each step explicit:
+
+```text
+%1 = core.constant 2 : crexx.g.int64
+%2 = core.constant 3 : crexx.g.int64
+%3 = crexx.g.iadd %1 %2
+%4 = crexx.g.itext %3
+crexx.g.say %4
+core.return
+```
+
+The numbers identify immutable results. The addition's result feeds conversion
+to text; that result feeds SAY. The compiler registers what addition, conversion
+and output mean. Level L checks their input/result types and preserves their
+order. SAY carries an output effect, which prevents an optimiser from deleting
+it simply because it has no result value.
+
+The [worked example](../examples/ir/demo.crexx) constructs this graph, folds the
+addition and text conversion, displays both graphs, and prints `5` from the
+retained SAY argument. The compiler operation families live in a separate
+Level B library. The wrapper keeps its runtime imports external and supplies
+Level L when linking the program. From the repository root, using installed tools:
+
+```sh
+crexx --library build/ir/semantics lib/rxfnsl/compilers/common/llcrexxir.crexx
+crexx --program build/ir/demo lib/rxfnsl/examples/ir/demo.crexx -i build/ir -l build/ir/semantics
+rxvm build/ir/demo
+```
+
+### Blocks, slots and analysis
+
+A block is a sequence of operations ending in a branch, jump or return.
+Branches join blocks into a graph; a loop is a cycle in that graph. A temporary
+value is local to its block. To carry a value across a branch, store it in a typed
+slot and load it in the destination block. A slot represents mutable local
+storage in one function invocation.
+
+`llirservices..analyse(reference graph)` determines which blocks can be reached
+and whether each slot is assigned on every path to a load. At a join, a slot is
+definitely assigned only when all incoming paths assign it. Both Boolean branch
+edges are considered. The result explains a possible read before assignment
+with its operation ID. This supplements the AST flow mappings: AST mappings
+analyse the source-shaped tree, while IR analysis follows the explicitly lowered
+operations and graph.
+
+### Contracts make transformations checkable
+
+A schema names types, operands, results, attributes and effects. A type codec
+checks exact constant bytes. An application can register a semantic verifier,
+a constant evaluator and a lowering service. These are Level B objects supplied
+by the host application.
+
+A constant evaluator can return a checked value, keep the original operation,
+report invalid input, or report that its work budget ran out. For example, a
+checked integer addition folds `2+3`; an overflowing addition is kept for
+runtime handling. Unknown effects grant no permission to fold an operation.
+
+A transformation builds a new module and verifies it before returning it.
+Failure preserves the original module. Analysis facts belong to one exact
+module revision; recompute them after accepting a rewrite. Source origins survive
+into new operations, including the distinction between authored, generated and
+recovered input.
+
+Use the [IR API reference](ir-design.md) for construction, semantic interfaces,
+analysis, checked replacement, target lowering, saved forms and the chunk-based
+text emitter. The example constructs IR directly; source-language frontends and
+target instruction selection are applications built on these services.
 
 ## RexxScript: a larger example
 

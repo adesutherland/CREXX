@@ -1,0 +1,232 @@
+/* cREXX License (MIT). Semantic extensions independent of the C/G compilers. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+
+main: procedure = .int
+  absent = .llir..operation
+  target = makeschema('target',absent)
+  source = makeschema('source',target.operation('machine.add'))
+  graph = makegraph(source)
+  failures = check(graph.error() = '','source module')
+  if graph.error() <> '' then do
+    say graph.error(); return 1
+  end
+  facts = .llirservices..facts(reference graph)
+  answer = llirservices..evaluate(reference graph,3,facts)
+  failures = failures + check(answer.status() = 'constant' & answer.size() = 1,'constant dispatch')
+  codec = .llir..intcodec()
+  if answer.status() = 'constant' then failures = failures + check(codec.format(answer.at(1)) = '5','exact evaluator result')
+  image = graph.binary()
+  change = llirservices..rewrite(reference graph,3,facts)
+  if change.status() <> 'changed' then say change.message()
+  folded = change.result()
+  failures = failures + check(change.status() = 'changed','checked constant replacement')
+  failures = failures + check(bin2x(image) = bin2x(graph.binary()),'original unchanged after replacement')
+  failures = failures + check(folded.identity() <> graph.identity(),'replacement has a fresh revision')
+  failures = failures + check(pos('demo.add',folded.dump()) = 0 & pos('core.constant 5',folded.dump()) > 0,'replacement contains the evaluated constant')
+  failures = failures + check(facts.matches(reference folded) = 0,'facts cannot migrate to replacement revision')
+  change = llirservices..lower(reference graph,target)
+  lowered = change.result()
+  if change.status() <> 'changed' then say change.message()
+  failures = failures + check(change.status() = 'changed' & pos('machine.add',lowered.dump()) > 0,'registered target lowering')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(image),'source unchanged after lowering')
+  report = llirservices..analyse(reference graph)
+  failures = failures + check(report.status() = 'ok' & report.issues() = 0,'generic flow analysis')
+  if report.status() <> 'ok' then say report.message()
+  if report.status() = 'ok' then do
+    flowfacts = report.facts()
+    failures = failures + check(flowfacts.has('block',1,'reachable'),'reachable fact present')
+  end
+  call facts.put('operation',3,'truth','00'x as .binary)
+  failures = failures + check(facts.has('operation',3,'truth') & bin2x(facts.get('operation',3,'truth')) = '00','explicit false fact')
+  failures = failures + check(facts.has('operation',3,'missing') = 0,'absent fact')
+  report = llirservices..analyse(reference graph,1)
+  failures = failures + check(report.status() = 'limit','analysis work budget')
+  change = llirservices..rewrite(reference graph,3,facts,1)
+  failures = failures + check(change.status() = 'limit','rewrite work budget')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(image),'budget failure preserves original')
+  i = .int; expected = .string; preserved = .llir..module
+  mode = .string; schema = .llir..contract; other = .llir..module; otherfacts = .llirservices..facts; result = .llir..evaluation
+  do i = 1 to 7
+    mode = word('badcount badbits badstatus missingfact keep limit signal',i)
+    schema = makeschema(mode,target.operation('machine.add'))
+    other = makegraph(schema)
+    otherfacts = .llirservices..facts(reference other)
+    result = llirservices..evaluate(reference other,3,otherfacts)
+    expected = 'invalid'
+    if mode = 'keep' | mode = 'limit' then expected = mode
+    failures = failures + check(result.status() = expected,'evaluator refusal ' || mode)
+  end
+  schema = makeschema('foreign',target.operation('machine.add'))
+  other = makegraph(schema)
+  change = llirservices..lower(reference other,target)
+  failures = failures + check(change.status() = 'invalid' & pos('foreign',change.message()) > 0,'foreign lowering value rejected')
+  schema = makeschema('unknown',target.operation('machine.add'))
+  other = makegraph(schema); otherfacts = .llirservices..facts(reference other)
+  result = llirservices..evaluate(reference other,3,otherfacts)
+  failures = failures + check(result.status() = 'keep','unknown effects block folding')
+  report = llirservices..analyse(reference other)
+  failures = failures + check(report.status() = 'unsupported','unknown continuation blocks complete analysis')
+  schema = makeschema('reject',target.operation('machine.add'))
+  other = makegraph(schema)
+  failures = failures + check(pos('LL_IR_SEMANTIC: demo rejected',other.error()) > 0 & pos('operation 3',other.error()) > 0,'located semantic verifier diagnostic')
+  do i = 1 to 7
+    mode = word('lower_badcount lower_badtype lower_badstatus lower_effect lower_keep lower_limit lower_signal',i)
+    schema = makeschema(mode,target.operation('machine.add')); other = makegraph(schema)
+    saved = other.binary(); change = llirservices..lower(reference other,target)
+    expected = 'invalid'
+    if mode = 'lower_keep' then expected = 'keep'
+    if mode = 'lower_limit' then expected = 'limit'
+    failures = failures + check(change.status() = expected,'lowering refusal ' || mode)
+    preserved = change.result()
+    failures = failures + check(bin2x(other.binary()) = bin2x(saved) & bin2x(preserved.binary()) = bin2x(saved),'lowering failure preserves source ' || mode)
+  end
+  limited = .llirservices..facts(reference graph,1,20)
+  call limited.put('operation',3,'a','01'x as .binary)
+  call limited.put('operation',3,'b','01'x as .binary)
+  failures = failures + check(pos('ir.facts.entries',limited.error()) > 0,'fact entry budget')
+  limited = .llirservices..facts(reference graph,10,1)
+  call limited.put('operation',3,'a','01'x as .binary)
+  failures = failures + check(pos('ir.facts.bytes',limited.error()) > 0,'fact byte budget')
+  change = llirservices..lower(reference graph,target,1000000,1,1)
+  failures = failures + check(change.status() = 'limit','lowering storage budget')
+  change = llirservices..lower(reference graph,source)
+  preserved = change.result()
+  failures = failures + check(change.status() = 'changed' & preserved.text() = graph.text(),'identity-schema reconstruction')
+  other = graph; expired = .llirservices..facts(reference other); other = folded
+  failures = failures + check(expired.valid() = 0,'facts expire on owner replacement')
+  failures = failures + flowtest(source)
+  say 'failures=' || failures
+  return failures
+
+makeschema: procedure = .llir..contract
+  arg mode = .string, targetop = .llir..operation
+  s = .llir..schema(); family = s.family('demo',1)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  op = .llir..operation
+  if mode = 'target' then do
+    machine = s.family('machine',1); op = machine.operation('add')
+  end
+  else op = family.operation('add')
+  call op.input('left',integer); call op.input('right',integer); call op.output('value',integer)
+  if mode <> 'unknown' then do
+    call op.state('none'); call op.failure('none'); call op.termination('returns')
+  end
+  call op.evaluator(.addition(mode) as .object)
+  call op.verifier(.extra_check(mode) as .object)
+  if mode = 'source' | mode = 'foreign' | left(mode,6) = 'lower_' then call op.lowerer(.add_lowering(targetop,mode) as .object)
+  return s.finish()
+
+makegraph: procedure = .llir..module
+  arg contract = .llir..contract
+  draft = .llir..builder(contract); at = draft.synthetic('semantic fixture')
+  fn = draft.function('main',contract.voidtype()); entry = fn.block('entry')
+  integer = contract.type('demo.integer')
+  left = entry.constant(integer,'2',at); right = entry.constant(integer,'3',at)
+  sum = entry.binary(contract.operation('demo.add'),left,right,at)
+  total = fn.slot('total',integer); call entry.store(total,sum,at)
+  call entry.returnvoid(at)
+  return draft.finish()
+
+addition: class implements .llir..evaluator
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if _mode = 'keep' | _mode = 'limit' then return .llir..evaluation(_mode,'test refusal')
+    if _mode = 'signal' then assembler signal "ERROR","test service failure"
+    if _mode = 'badstatus' then return .llir..evaluation('guess')
+    result = .llir..evaluation('constant')
+    if _mode = 'badcount' then return result
+    if _mode = 'badbits' then do
+      call result.add('01'x as .binary); return result
+    end
+    left = input.at(1); right = input.at(2)
+    a = <at..i64>(0) left; b = <at..i64>(0) right
+    if a < -1000000 | a > 1000000 | b < -1000000 | b > 1000000 then return .llir..evaluation('keep','fixture arithmetic domain exceeded')
+    value = .binary; call binresize value,8; <at..i64>(0) value = a + b
+    call result.add(value)
+    if _mode = 'missingfact' then call result.use('not.available')
+    return result
+
+extra_check: class implements .llir..verification
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode
+    return
+  check: method = .string
+    arg input = .llir..opview
+    if _mode = 'reject' then return 'demo rejected'
+    if input.inputs() <> 2 then return 'addition requires two inputs'
+    return ''
+
+add_lowering: class implements .llir..lowering
+  _op = .llir..operation
+  _mode = .string
+  *: factory
+    arg op = .llir..operation, mode = .string
+    _op = op; _mode = mode
+    return
+  lower: method = .llir..fragment
+    arg input = .llir..lowerrequest
+    value = .llir..valuehandle
+    result = .llir..fragment('ok')
+    if _mode = 'foreign' then do
+      original = input.source(); call result.add(original.input(1)); return result
+    end
+    dest = input.destination()
+    if _mode = 'lower_badcount' then return result
+    if _mode = 'lower_badstatus' then return .llir..fragment('guess')
+    if _mode = 'lower_keep' then return .llir..fragment('keep','test refusal')
+    if _mode = 'lower_limit' then return .llir..fragment('limit','test budget')
+    if _mode = 'lower_signal' then assembler signal "ERROR","test lowering failure"
+    if _mode = 'lower_badtype' then do
+      /* Boolean IDs are core, but the destination owns its own schema handle. */
+      mappedinput = input.input(1); type = mappedinput.type()
+      boolean = .llir..typeid(type.schemaid(),2)
+      value = dest.constant(boolean,'true',input.origin()); call result.add(value); return result
+    end
+    if _mode = 'lower_effect' then do
+      call dest.returnvoid(input.origin()); call result.add(input.input(1)); return result
+    end
+    value = dest.binary(_op,input.input(1),input.input(2),input.origin())
+    call result.add(value)
+    return result
+
+flowtest: procedure = .int
+  arg contract = .llir..contract
+  failures = 0
+  do initialise = 0 to 1
+    draft = .llir..builder(contract); at = draft.synthetic('join and loop fixture')
+    fn = draft.function('flow',contract.voidtype()); integer = contract.type('demo.integer')
+    entry = fn.block('entry'); yes = fn.block('yes'); no = fn.block('no'); join = fn.block('join'); done = fn.block('done'); dead = fn.block('dead')
+    slot = fn.slot('total',integer)
+    test = entry.constant(contract.boolean(),'true',at); call entry.branch(test,yes,no,at)
+    one = yes.constant(integer,'1',at); call yes.store(slot,one,at); call yes.jump(join,at)
+    if initialise then do
+      two = no.constant(integer,'2',at); call no.store(slot,two,at)
+    end
+    call no.jump(join,at)
+    value = join.load(slot,at); again = join.constant(contract.boolean(),'false',at)
+    call join.branch(again,join,done,at)
+    call done.returnvoid(at); call dead.returnvoid(at)
+    graph = draft.finish(); report = llirservices..analyse(reference graph)
+    failures = failures + check(report.status() = 'ok' & report.issues() = 1 - initialise,'join definite assignment ' || initialise)
+    if report.status() = 'ok' then do
+      facts = report.facts()
+      failures = failures + check(bin2x(facts.get('block',dead.id(),'reachable')) = '00','unreachable block recorded')
+    end
+  end
+  return failures
+
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL: ' || description
+  return 1

@@ -1,0 +1,51 @@
+/* cREXX License (MIT). Non-representative Level L numeric-layout screen.
+ * Both layouts perform identical construction, field scans and field rewrites.
+ * Output includes raw microseconds and correctness checks, not a speed claim. */
+options levelb
+import rxfnsb
+import llir
+
+main: procedure = .int
+  arg argv = .string[]
+  rows = 512; samples = 3
+  if argv[0] > 0 then rows = argv[1] as .int
+  if rows < 1 | rows > 100000 then return 2
+  i = .int; c = .int
+  expected = 16 * rows * (rows + 1) <idiv> 2 + 5 * rows
+  do sample = 0 to samples
+    do layout = 1 to 2
+      table = .llir..table(12,layout)
+      begin = time('us')
+      do i = 1 to rows
+        id = table.add()
+        do c = 1 to 12
+          call table.put(id,c,i * 16 + c)
+        end
+      end
+      construction = time('us') - begin
+      do i = 1 to rows
+        do c = 1 to 12
+          if table.get(i,c) <> i * 16 + c then return 6
+        end
+      end
+      checksum = 0; begin = time('us')
+      do i = 1 to rows
+        checksum = checksum + table.get(i,5)
+      end
+      scan = time('us') - begin
+      if checksum <> expected then return 3
+      begin = time('us')
+      do i = 1 to rows
+        call table.put(i,5,table.get(i,5) + 1)
+      end
+      rewriting = time('us') - begin
+      checksum = 0
+      do i = 1 to rows
+        checksum = checksum + table.get(i,5)
+      end
+      if checksum <> expected + rows then return 4
+      if table.usedbytes() <> rows * 48 then return 5
+      say 'IR_STORAGE|sample=' || sample || '|layout=' || layout || '|rows=' || rows || '|build_us=' || construction || '|scan_us=' || scan || '|rewrite_us=' || rewriting || '|payload=' || table.usedbytes() || '|capacity=' || table.bytes() || '|checksum=' || checksum
+    end
+  end
+  return 0

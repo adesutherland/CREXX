@@ -1,6 +1,7 @@
 # Purposeful source trees and semantic tables
 
-**Proposed for STEP01 review.** Generic IR records and storage are defined in
+The source-tree designs below are approved for the forthcoming frontends.
+The implemented generic IR records and storage are defined in
 the [Level L IR design](../../doc/ir-design.md). This document describes the
 compiler-owned source trees and their relationship to that IR.
 

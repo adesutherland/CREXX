@@ -1,0 +1,41 @@
+{
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu": "Apple M5",
+  "lifecycle": "One process per concrete Release VM; sample 0 warmup, samples 1..3 measured, row then column serial; no task build or QA running",
+  "profiling": "CREXX_VM_PROFILING=OFF",
+  "source_sha256": "3dd9591ebcf9758cd8469ecfa8c494c67c90ad1b9f87b4ec15808c1a283d6f58",
+  "ir_sha256": "378553e5459aa79475e171cd8aae8cf2482ba156ad33d235750383c28ec35d0f",
+  "image_sha256": "95d6a8c357ca4a65dcab1f49f7c1b06eeea00390973c86e2d3cba224e6613790",
+  "compiler_sha256": "82132cbe5b98c9c17cc66b6fd0d794e0e9560d6cd30f62449c97fa1f2735d421",
+  "assembler_sha256": "cb6b0bf96f14615cac4182f26aeacaf9ef419e98c53e8ec8b482103e89f4ebe0",
+  "linker_sha256": "a63de32a2023fb5a1058880bed5c0dc220746f7c01d99d63168038da3eec7b13",
+  "results": [
+    {
+      "vm": "rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-release/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/build/levell-ir-step02/storage-linked.rxbin",
+        "-a",
+        "1000"
+      ],
+      "sha256": "795d7b51f66adb197cfb9254fb4ecf27e72ce7c2ef78706bcba094464af32553",
+      "exit": 0,
+      "output": "IR_STORAGE|sample=0|layout=1|rows=1000|build_us=5598|scan_us=146|rewrite_us=321|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=0|layout=2|rows=1000|build_us=7135|scan_us=128|rewrite_us=285|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=1|layout=1|rows=1000|build_us=3878|scan_us=122|rewrite_us=260|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=1|layout=2|rows=1000|build_us=5833|scan_us=109|rewrite_us=244|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=2|layout=1|rows=1000|build_us=3369|scan_us=106|rewrite_us=224|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=2|layout=2|rows=1000|build_us=5330|scan_us=96|rewrite_us=213|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=3|layout=1|rows=1000|build_us=2984|scan_us=95|rewrite_us=207|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=3|layout=2|rows=1000|build_us=4834|scan_us=90|rewrite_us=197|payload=48000|capacity=49152|checksum=8014000\n",
+      "elapsed_seconds": 0.36742401123046875
+    },
+    {
+      "vm": "rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-release/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/build/levell-ir-step02/storage-linked.rxbin",
+        "-a",
+        "1000"
+      ],
+      "sha256": "a8d91b4f3ba03537881f7ed173318c936860a63bccc6e6ce629d9a33c5bdee4b",
+      "exit": 0,
+      "output": "IR_STORAGE|sample=0|layout=1|rows=1000|build_us=6682|scan_us=172|rewrite_us=388|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=0|layout=2|rows=1000|build_us=8211|scan_us=135|rewrite_us=304|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=1|layout=1|rows=1000|build_us=4116|scan_us=123|rewrite_us=280|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=1|layout=2|rows=1000|build_us=6353|scan_us=115|rewrite_us=261|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=2|layout=1|rows=1000|build_us=3536|scan_us=115|rewrite_us=257|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=2|layout=2|rows=1000|build_us=5649|scan_us=103|rewrite_us=226|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=3|layout=1|rows=1000|build_us=3136|scan_us=102|rewrite_us=232|payload=48000|capacity=49152|checksum=8014000\nIR_STORAGE|sample=3|layout=2|rows=1000|build_us=5157|scan_us=98|rewrite_us=220|payload=48000|capacity=49152|checksum=8014000\n",
+      "elapsed_seconds": 0.35596704483032227
+    }
+  ]
+}

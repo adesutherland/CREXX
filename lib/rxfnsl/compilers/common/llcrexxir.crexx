@@ -1,0 +1,88 @@
+/* cREXX License (MIT). Compiler-owned IR families; the host is Level B only. */
+options levelb
+namespace llcrexxir expose registerfamilies intadd inttext textcodec
+import rxfnsb
+import llir
+
+/** Register the initial scalar C/G contracts. The host never imports the G
+ * compiler or changes a Classic runtime's ambient numeric context. */
+registerfamilies: procedure = .void
+  arg registry = reference .llir..schema
+  schema = dereference registry
+  g = schema.family('crexx.g',1)
+  integer = g.type('int64',.llir..intcodec() as .object)
+  text = g.type('text',.llcrexxir..textcodec() as .object)
+  op = g.operation('iadd')
+  call op.input('left',integer); call op.input('right',integer); call op.output('value',integer)
+  call op.state('none'); call op.failure('overflow'); call op.termination('returns')
+  call op.evaluator(.llcrexxir..intadd() as .object)
+  op = g.operation('itext')
+  call op.input('value',integer); call op.output('text',text)
+  call op.state('none'); call op.failure('none'); call op.termination('returns')
+  call op.evaluator(.llcrexxir..inttext() as .object)
+  op = g.operation('say')
+  call op.input('text',text)
+  call op.state('output'); call op.failure('io'); call op.termination('returns')
+  c = schema.family('crexx.c',1)
+  value = c.type('value',.llir..bytescodec() as .object)
+  context = c.type('numeric',.llir..bytescodec() as .object)
+  op = c.operation('add')
+  call op.input('left',value); call op.input('right',value); call op.input('context',context)
+  call op.output('value',value)
+  call op.state('none'); call op.failure('arithmetic'); call op.termination('returns')
+  /* No Classic evaluator is registered until its exact contextual operation
+   * contract is implemented. A cached host numeric setting is never a fact. */
+  op = c.operation('say')
+  call op.input('value',value)
+  call op.state('output'); call op.failure('conversion.io'); call op.termination('returns')
+  return
+
+/** UTF-8 text literals, stored as exact bytes. Binary/Classic literal values use
+ * bytescodec and are not forced through Unicode decoding. */
+textcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bits = .binary
+    do
+      text = bits as .string
+      if bin2x(text as .binary) <> bin2x(bits) then return 'text does not round-trip as UTF-8'
+      return ''
+    on signal
+      return 'invalid UTF-8 text'
+    end
+    return 'invalid UTF-8 text'
+  format: method = .string
+    arg bits = .binary
+    return bits as .string
+
+/** Checked int64 addition. Overflow keeps the operation for runtime handling. */
+intadd: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','integer evaluation budget exhausted')
+    left = input.at(1); right = input.at(2)
+    a = <at..i64>(0) left; b = <at..i64>(0) right
+    if b > 0 then do
+      if a > 9223372036854775807 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    if b < 0 then do
+      if a < -9223372036854775808 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    bytes = .binary; call binresize bytes,8; <at..i64>(0) bytes = a + b
+    result = .llir..evaluation('constant'); call result.add(bytes)
+    return result
+
+inttext: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    codec = .llir..intcodec(); text = codec.format(input.at(1))
+    result = .llir..evaluation('constant'); call result.add(text as .binary)
+    return result

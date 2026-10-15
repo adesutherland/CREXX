@@ -1,8 +1,8 @@
 # Processing algorithms and their contracts
 
-**Proposed for STEP01 review.** This documents the intended algorithms, not
-completed proofs or measured performance. Code and decisive tests must accompany
-each implemented stage under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
+The foundation algorithms below are implemented in `llir` and `llirservices`.
+Frontend parsing, production optimisation and RXAS selection remain planned.
+Each implemented stage carries its contract and decisive tests under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
 
 ## Stages and evidence
 
@@ -49,33 +49,60 @@ With B reachable blocks and S slots, the candidate sets can lose at most B*S
 members. This supplies a finite termination argument for this specific monotone
 analysis. It is not a proof that arbitrary extension callbacks converge.
 
-## Work and storage bounds
+## Foundation algorithms and bounds
 
-Let N be operations, U operand references, B blocks, E edges, V results, S slots
-and X total source/constant bytes. These are sizes of an admitted IR, not source
-language complexity bounds.
+Let N be operations, U operand references, B blocks, E edges, V results, S slots,
+F functions, D schema fields and X source/constant bytes. These describe admitted
+IR sizes, not source-language complexity. `ir-design.md` specifies record widths
+and the accounting boundary of `bytes()` and `capacity()`.
 
-- With indexed IDs and bounded descriptor lookup, structural/order validation
-  takes O(N+U+B+E), plus type/constant semantic-validator work. It stores visited
-  and ownership indexes proportional to the records. No universal bound is
-  claimed for arbitrary registered validators.
-- Reachability takes O(B+E) work and O(B) marking/queue space.
-- The slot fixed point is finite. With straightforward bit sets, a deliberately
-  loose scheduling bound is O((B+E)*(B*S+1)*ceil(S/w)), plus the O(N+U) statement
-  checks, where w is the bit-set word size. Record the actual schedule and
-  tighten this bound against the implementation; do not quote it as measured
-  compile time.
-- The first local pass scans each operation once. Descriptor, map and evaluator
-  costs are additional. Every evaluator receives a work budget and must report
-  exhaustion. A budget bounds the attempt, not semantic equivalence.
-- Candidate packed operation headers use 48*N bytes, value records 16*V and
-  operand/edge ID arrays 4*(U+E). Add block/function/slot tables, indexes, schema,
-  sparse facts, buffers and X. Retain the complete measurement, including live
-  old/new snapshots during a rewrite.
+- Construction appends fixed-width rows and exact byte-pool entries. Table
+  capacity doubles; row-major growth copies a buffer, while the comparison
+  column layout relocates each field column. IDs are checked unsigned 32-bit
+  fields. Host entry and byte budgets are checked before each append.
+- Verification walks each block's operation chain with a visited index. It
+  checks operand definition order and block ownership, result definitions,
+  terminators, signatures, ranges and successor ownership. Names are checked for
+  duplicates by comparisons with earlier records. Descriptor fields are looked
+  up by scanning the registered field table. Thus this first implementation has
+  quadratic name-check terms and descriptor-lookup costs; it does not claim a
+  universally linear validator. Constant codecs and semantic callbacks add their
+  own work. Origin parents must precede children, preventing provenance cycles.
+- Reachability uses a queue and follows both successors of a Boolean branch.
+  Its graph traversal is O(B+E). It does not inspect literal truth to prune an
+  edge. Complete analysis requires registered, normally returning extensions
+  with known state effects.
+- Definite assignment keeps two B*S byte matrices, rather than packed bit sets.
+  Non-entry reachable blocks start with their function's slots set. Each sweep
+  intersects predecessor outputs, then scans block operations to add stores.
+  The implementation finds predecessors by scanning the graph, giving a loose
+  bound O((B*S+1)*(B*S*(B+E)+N)) before descriptor and fact-publication costs.
+  The sets can lose at most B*S members, so the sweep terminates. A work budget
+  limits attempted scans; a preliminary lattice-size check bounds matrix
+  allocation. Loads are diagnosed at their position in the converged block.
+- Facts are sparse ordered arrays keyed by entity, ID and name. Lookup is a
+  linear scan; storing M distinct facts can take O(M²) comparisons. Fact payload
+  and key bytes have independent budgets. These foundations do not yet claim
+  an indexed large-program fact store.
+- Evaluation receives literal operands, exact operation facts and a work budget.
+  The coordinator checks status, result count, every result codec and declared
+  consumed facts. A service must respect its budget; arbitrary trusted callback
+  execution is not preempted by this interface.
+- Rebuilding traverses records, copies origins/constants, remaps temporary uses
+  and verifies a fresh candidate. Single-operation folding is a foundation API,
+  so repeated calls rebuild repeatedly. The later production pass should batch
+  work. Both source and candidate are live during a rebuild. Target lowering
+  currently admits only pure straight-line fragments with checked results.
+- The emitter appends bounded chunks. `finish()` publishes a complete output;
+  flattening allocates once and copies chunks linearly. Streaming walks chunks
+  and stops on sink failure. Section append copies chunk descriptors/payloads
+  according to Level B value ownership; no balanced rope or zero-copy claim is
+  made. File publication needs a temporary file and atomic rename above this API.
 
-Parser/table construction and regex longest-match costs require their own
-grammar-specific admission/resource accounts. No blanket linear-time promise
-for the entire compiler follows from a linear IR traversal.
+The table-layout screen is explicitly non-representative. It compares the same
+construction, field scan and rewrite on row and column layouts and checks exact
+checksums. It does not measure complete compiler latency, VM allocation overhead
+or peak process memory. Representative measurements remain LLCOMP-AC13.
 
 ## Transformation obligations
 
@@ -101,17 +128,16 @@ a small cREXX IR evaluator for the admitted operation set. Keep compiler and
 assembler optimisations separately controllable. The evaluator is a test tool;
 it is not an implementation shortcut for source compilation or INTERPRET.
 
-## Emitter surface for the first review
+## Implemented emitter surface
 
-The proposed basic Level B API is a chunk writer with `write(text)`,
+The basic Level B API is a chunk writer with `write(text)`,
 `line(text)`, `indent()`, `dedent()`, `section()` and `append(section)`.
-`finish()` returns a checked output object that can stream to a sink. Advanced
-operations attach source origins and expose copying/work counters. Underflowing
+`finish()` returns a checked output object that can stream to a sink. Callers can attach source-origin IDs and inspect output byte/chunk counts. Underflowing
 indentation, unknown sections, budget exhaustion and sink errors are explicit
 failures. RXAS-specific quoting and register names belong to the backend.
 
-The first implementation may use an append-only chunk list rather than a
-balanced rope if it only needs append and section concatenation. Benchmark the
+The implementation uses an append-only chunk list for append and section
+concatenation. Benchmark the
 actual output workload before adding tree balancing. Emit N bytes with bounded
 chunk overhead and one final materialisation or streaming traversal; do not
 repeatedly concatenate the entire accumulated string.

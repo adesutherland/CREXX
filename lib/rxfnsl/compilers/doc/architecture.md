@@ -1,7 +1,8 @@
 # Compiler architecture
 
-**Proposed design for STEP01 review.** The source examples have been checked
-with existing compilers. The new compilers and IR APIs are not implemented.
+The Level L IR foundation and its semantic extension API are implemented in
+Level B. The source frontends, complete optimisation pipeline and RXAS backend
+are subsequent compiler stages. The source controls use the existing compilers.
 [PLAN.md](../PLAN.md) owns scope, acceptance and approval.
 
 ## What the pipeline does
@@ -48,6 +49,43 @@ remains available for explanations and diagnostics after lowering.
 The generic IR does not depend on either compiler. Its tests include a small
 non-cREXX operation family. Compiler-specific facts do not become undocumented
 requirements of generic nodes or transformations.
+
+## Implemented foundation
+
+`llir` owns versioned schemas, fixed-width numeric records, checked builders,
+read-only handles, source origins, exact codecs and chunked output. `llirservices`
+coordinates optional semantic verification, constant evaluation and target
+lowering. It also supplies revision-bound sparse facts and a reachability and
+definite-assignment analysis. Both modules import only Level B services.
+
+The physical graph has thirteen tables. Functions own blocks and typed slots;
+blocks link their ordered operations; operations reference local immutable
+values, successors, attributes and origins. Constants and sources use an exact
+byte pool. A frozen module owns its storage. Its handles borrow that owner and
+check identity on access. A rewrite builds and verifies another module, leaving
+the source intact on refusal or failure. See the [record and API reference](../../doc/ir-design.md).
+
+`compilers/common/llcrexxir.crexx` is a separate consumer registering initial
+C/G families. G signed addition has a checked int64 evaluator; overflow preserves
+the runtime operation. Classic addition carries an explicit numeric-context
+operand and has no evaluator until that language contract is implemented.
+`crexx.g.say` and `crexx.c.say` declare output effects. Constant replacement never
+removes SAY. The [worked example](../../examples/ir/demo.crexx) folds its argument,
+shows the IR and prints the resulting constant through the existing Level B host.
+It does not yet compile a C/G source file or emit an executable RXAS program.
+
+An independent test family uses the same APIs without importing compiler
+semantics. Its lowering service produces a pure straight-line target fragment.
+This initial checked profile admits constants and pure target operations;
+stateful, failing and control-changing mappings need the later backend's explicit
+obligations. The coordinator checks ownership, result types, order and the whole
+candidate graph. It cannot establish the mathematical equivalence of arbitrary
+host-supplied callbacks. That remains the semantic provider's responsibility.
+
+The format contains an ordered schema manifest, numeric records and byte pools.
+The host registers the matching schema and services before loading. Loading an
+image never loads executable callback code. Unknown semantics grant no permission
+to fold or claim a complete flow analysis.
 
 ## Proposed frontend algorithms
 

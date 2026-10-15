@@ -1,6 +1,6 @@
 # Level L language tooling research — 10 October 2026
 
-### cREXX C/G compilers and shared IR — STEP01 review, 15 October 2026
+### cREXX C/G compilers and shared IR — STEP02 foundation, 15 October 2026
 
 Adrian requested a documented plan for separate new C/G compilers written
 entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
@@ -27,9 +27,16 @@ The [review packet](../../lib/rxfnsl/compilers/doc/STEP01-REVIEW.md) now defines
 POC-01–10, purposeful C/G source trees, the Level L IR and extension API,
 processing algorithms and bootstrap ownership. Six source controls passed with
 existing tools on both VMs; their exact evidence boundary is recorded.
-STEP02 will implement the Level B-only IR and semantic services, regressions
-and documentation. This commit preserves the design baseline. The complete destination remains recorded
-in STEP07–10. This advances the planning for
+STEP02 now implements the Level B-only IR and semantic services, including SAY
+registrations and a worked folding example. Its [local qualification receipt](../../lib/rxfnsl/compilers/evidence/step02-20261015/README.md)
+records checked schemas, numeric storage/codecs, facts, flow analysis, semantic
+callbacks, replacement/lowering and chunked output. Adrian authorised the
+qualified STEP02 increment and existing baseline for publication to `develop`
+on 15 October 2026; hosted results are reported separately by the CI monitor.
+The compiler plan now includes the STEP03 frontend proposal for review.
+STEP03–06 source compilers,
+backend and end-to-end PoC remain open, as does the full STEP07–10 destination.
+This advances the foundation portions of
 AST-AC02–06 and research AC-26; it does not mark their remaining migration or
 measurement obligations complete. Existing implementation approvals and AST7
 qualification remain as recorded below.
@@ -39,11 +46,11 @@ structures and processing algorithms to be documented alongside each increment.
 `LLCOMP-AC15` makes that a delivery requirement with a runnable paired C/G
 walkthrough and explicit ownership, invariant and algorithm contracts.
 
-The subplan also records the proposed numeric IR: checked handles over compact
+The subplan records the implemented numeric IR foundation: checked handles over compact
 indexed storage, exact constant/name pools, sparse analysis tables and readable
-text/structured views. Its physical layout and codec contracts are reviewed in
-STEP01 and measured in STEP02; this is not approval of an encoding or an AST
-storage rewrite.
+text/structured views. STEP02 retains fixed-width row records after a bounded
+row/column comparison and implements checked text/binary codecs. AST storage is
+unchanged; representative compiler performance remains an open criterion.
 
 ### Authoring and build refinements — approved 13 October 2026
 

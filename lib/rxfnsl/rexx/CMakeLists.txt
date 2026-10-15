@@ -6,7 +6,7 @@ if(CREXX_LEVEL_L_NOOPT)
 endif()
 
 set(RXFNSL_REXX_MODULES
-  tinyexpr lllimits lludata llproperties
+  tinyexpr lllimits lludata llproperties llir llirservices
   llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
   llregular llcomments llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree llast llannotation llflow
 )
@@ -26,6 +26,7 @@ crexx_add_import_root(rxfnsl_imports
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../unicode/Properties.cmake")
 
+set(RXFNSL_DEPS_llirservices llir)
 set(RXFNSL_DEPS_llproperties lludata llcharset)
 set(RXFNSL_DEPS_llcheck llcore lllimits)
 set(RXFNSL_DEPS_llcap llcore llcheck)

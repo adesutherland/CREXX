@@ -11,6 +11,17 @@ immediate working set. Current measurements remain in `performance/RESULTS.md`;
 superseded raw evidence is available in Git history. Keep only selected current
 baselines and evidence required by unresolved qualification in HEAD.
 
+## LEVEL-L-IR-01 — initial foundation storage
+
+Retain fixed-width row records behind Level L's checked IR handles. The
+[STEP02 mechanism screen](../lib/rxfnsl/compilers/evidence/step02-20261015/README.md)
+verified identical values and buffer accounting for rows and packed columns.
+Rows constructed faster in those samples; columns slightly favoured field scans
+and updates. Both showed warmup trends. This supports the simple initial builder
+layout, not a representative compiler performance or peak-memory claim.
+Reopen packing/index choices when the paired C/G frontend/backend workload exists.
+Keep schema meaning and public handles independent of storage layout.
+
 ## Consolidated Programme Decisions
 
 These are durable selection boundaries from the completed programmes, not

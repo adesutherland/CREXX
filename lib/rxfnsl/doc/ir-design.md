@@ -1,245 +1,369 @@
-# Extensible Level L IR: review design
+# Level L intermediate representation
 
-**Proposed API and representation for compiler STEP01. Nothing in this document
-is an implemented public API yet.** The [compiler plan](../compilers/PLAN.md)
-owns delivery. Existing AST/flow APIs remain as documented in the user guide.
+The `llir` module supplies checked numeric storage, construction handles,
+read-only views, exact saved forms and a text emitter. `llirservices` supplies
+revision-bound facts, flow analysis, semantic-service dispatch and atomic
+transformations. Both are Level B modules in `rxfnsl`.
 
-## The basic model
+## The model
 
-An intermediate representation describes operations and how their results are
-used. Level L supplies its structure and algorithms. An application registers
-the operations, types and semantic services appropriate to its language.
+An **intermediate representation**, or IR, describes operations and how their
+results are used. A compiler builds it after recognising source syntax and
+checking language rules. An AST describes the source constructs; IR makes their
+evaluation order and control transfers explicit.
 
-A **module** owns functions, symbols, constants and source origins. A
-**function** owns local slots and blocks. A **block** is an ordered sequence
-of operations ending in one control operation. A **value** is an immutable
-result of an operation. A **slot** is mutable storage within one invocation.
-An **edge** connects one block to a possible successor.
+A **module** owns functions, constants and source origins. A **function** owns
+local slots and blocks. A **block** is an ordered sequence of operations ending
+in one control operation. A **value** is an immutable result of an operation.
+A **slot** is mutable storage within one invocation. An **edge** connects a block
+to a possible successor.
 
-The proposed first profile uses explicit slots and block-local temporary
-values. A temporary is defined once and may be used only later in that block.
-An expression result needed across a branch is stored in a typed slot and
-loaded after the join. Constants and incoming arguments become block-local
-values through explicit operations. This avoids phi nodes: special join values
-used by an SSA representation. Full SSA may be a later checked profile; this
-first profile does not pretend that arbitrary cross-block value uses are valid.
+A temporary value may be used only after its definition in the same block.
+Store a value in a typed slot and load it in another block when it must cross a
+branch or loop. This representation uses no phi nodes: the special join values
+of an SSA representation. Arguments and constants become local temporary values
+through explicit operations.
 
 ```text
-function main -> void
-  slot total : crexx.g.int64
+function main -> core.void
   entry:
-    %a = core.constant 2 : crexx.g.int64
-    %b = core.constant 3 : crexx.g.int64
-    %sum = crexx.g.iadd %a, %b
-    core.store total, %sum
+    %1 = core.constant 2 : crexx.g.int64
+    %2 = core.constant 3 : crexx.g.int64
+    %3 = crexx.g.iadd %1 %2
+    %4 = crexx.g.itext %3
+    crexx.g.say %4
     core.return
 ```
 
-This is proposed readable IR notation, not cREXX source. `%sum` identifies an
-immutable result. `total` identifies a slot. Integer overflow belongs to the
-`crexx.g.iadd` contract; the generic graph does not decide its arithmetic.
+The percent numbers identify operation results. They are neither source variable
+names nor machine registers. `crexx.g.iadd` gets its arithmetic meaning from the
+compiler's registered operation family. Level L supplies its storage and checks.
 
-## Standard operations
+## Register a contract
 
-| Operation | Contract in the first profile |
-|---|---|
-| `core.constant` | Materialise an exact typed constant from the module pool. The registered type defines its encoding and validates it. |
-| `core.argument` | Read a typed argument of the current function. Source-language missing arguments require a separate explicit representation. |
-| `core.load`, `core.store` | Read/write a named function slot of the exact declared type. No implicit casts or dynamic aliasing. |
-| `core.jump` | End the block with one successor in the same function. |
-| `core.branch` | Consume a Level L Boolean and end with explicit true/false successors. Source truth conversion happens before this operation. |
-| `core.return` | End the function with values matching its IR signature. Source EXIT, Classic no-value return and resumable transfers are separate contracts. |
-
-A Boolean is a distinct logical type with two values. The G mapper may use a
-representation-compatible G Boolean after an explicit checked type agreement.
-Classic converts its value with the appropriate IF/WHILE logical-validation
-operation. Numeric truth is never assumed by `core.branch`.
-
-Calls are registered operations with signatures, effect and control contracts;
-there is no default claim that an unknown call is pure or always returns.
-Exceptional termination is an explicit possible outcome, distinct from the
-normal block successor. The first profile permits propagation out of a
-function, not a hidden in-function handler. Later catch/resumption operations
-must introduce their edges and activation contracts before analyses admit them.
-
-## Schema and semantic extension API
-
-Use an ordinary Level B API first. It fits existing cREXX classes and interfaces
-and avoids introducing a second declaration language before the contracts are
-tested. Convenience operations cover common cases; a named builder handles
-unusual arity and attributes.
-
-The proposed registration example is:
+A family has a name and semantic version. Types have codecs for exact constants;
+operations declare named inputs, results, attributes and effects. Finish the
+schema before constructing a module.
 
 ```rexx
 schema = .llir..schema()
-g = schema.family('crexx.g', 1)
-int64 = g.type('int64', .gsemantics..int64type())
-add = g.operation('iadd')
-call add.input('left', int64)
-call add.input('right', int64)
-call add.output('value', int64)
+family = schema.family('demo',1)
+integer = family.type('integer',.llir..intcodec() as .object)
+add = family.operation('add')
+call add.input('left',integer)
+call add.input('right',integer)
+call add.output('value',integer)
 call add.state('none')
 call add.failure('overflow')
 call add.termination('returns')
-call add.evaluator(.gsemantics..integeradd())
+call add.evaluator(my_evaluator as .object)
 contract = schema.finish()
 ```
 
-`state('none')` says this operation does not access mutable program state. It
-does not erase the declared overflow outcome. `termination('returns')` excludes
-divergence and nonlocal transfers; declared failure can still propagate.
-Absent declarations mean unknown, not the reassuring default. `finish()`
-validates the schema and returns a frozen contract or diagnostics.
+Names use ASCII letters, digits, underscore and dot. Source-language names and
+source files can contain Unicode. Family registration qualifies a local type or
+operation name, so `integer` above becomes `demo.integer`. Duplicate names,
+foreign types and wrong service interfaces produce `LL_IR_SCHEMA` diagnostics.
+A frozen contract cannot be edited.
 
-The corresponding small construction surface is:
+The default state, failure and termination summaries are `unknown`.
+`state('none')` means no access to mutable state or observable output.
+`failure('none')` means no language failure; other named failure summaries retain
+that possibility. `termination('returns')` means ordinary continuation, including
+propagation of a declared failure out of the function. `diverges` and `transfer`
+identify other outcomes; the initial flow analyser refuses those continuations.
+
+State and failure names are compiler-owned contract identifiers. Level L does
+not infer aliasing, effects or mathematical properties from a name. Complete
+language semantics belong to the registering application. The normal control
+contracts and the meaning of core slots cannot be redefined by an extension.
+
+### Types and exact constants
+
+A `typecodec` implements three methods:
+
+| Method | Result |
+|---|---|
+| `parse(text)` | Exact `.binary` encoding of the external literal text. |
+| `check(bits)` | Empty string for valid encoding, otherwise an explanation. |
+| `format(bits)` | External text representing those exact bits. |
+
+Built-in codecs are `intcodec` (signed 64-bit little endian), `boolcodec` (one
+byte, zero or one) and `bytescodec` (arbitrary bytes, with uppercase hexadecimal
+external text). `core.boolean` uses `boolcodec`. `core.void` denotes absence of
+a function result and cannot type a temporary, slot or constant.
+
+`constant(type,text,origin)` uses the codec to parse a literal.
+`constantbytes(type,bits,origin)` checks an already encoded constant. Exact byte
+identity is distinct from source-language numeric equality. Define an operation
+when the language needs a comparison or conversion.
+
+### Semantic services
+
+Services are host-registered Level B objects. Loading an IR file never discovers,
+loads or executes callback code from that file. A host must supply the matching
+frozen contract, including its trusted services.
+
+| Interface | Method and purpose |
+|---|---|
+| `llir.verification` | `check(opview) -> string`. Additional semantic checks after all structural checks; empty string means success. |
+| `llir.evaluator` | `evaluate(request) -> evaluation`. Compute exact constant results from literal operands and explicit facts. |
+| `llir.lowering` | `lower(lowerrequest) -> fragment`. Construct replacement operations in the supplied destination block. |
+
+Register them with `operation.verifier`, `.evaluator` and `.lowerer`, passing an
+explicit `as .object` value. The structural signature generates the basic type
+and arity checks; a verifier adds relationships specific to that operation.
+
+An evaluator request offers `opcode()`, `operation()`, `size()`, `at(ordinal)`,
+`has(key)`, `get(key)` and `budget()`. `at` returns exact operand bytes.
+`operation()` provides read-only access to typed inputs, results and attributes.
+A context fact belongs to the input operation in the current module revision.
+
+An evaluator returns `.llir..evaluation(status,message)`:
+
+| Status | Meaning |
+|---|---|
+| `constant` | Append every exact result with `add(bits)`, in declared order. Record each consumed context fact with `use(key)`. |
+| `keep` | A justified constant is unavailable. Leave possible runtime arithmetic errors as runtime operations. |
+| `invalid` | Malformed IR or a broken semantic contract. |
+| `limit` | The service's cooperative work budget was exhausted. |
+
+The coordinator rejects wrong result counts, invalid encodings, missing consumed
+facts, unknown outcomes and service signals. It requires no mutable state effect,
+a known failure summary and ordinary continuation before accepting a constant.
+An evaluator must establish that its particular inputs return those results
+without a language failure. This permits a checked addition to fold `2+3` while
+retaining an overflowing expression. A correct result encoding alone is not a
+proof of the evaluator's arithmetic: compiler tests and proofs establish that
+contract.
+
+A callback is trusted Level B code, not a sandbox. The request budget is
+cooperative; it cannot interrupt a callback that ignores it. Destination storage
+budgets and coordinator work budgets are checked separately.
+
+## Build and inspect a module
 
 ```rexx
 draft = .llir..builder(contract)
-main = draft.function('main', contract.voidtype())
+source = draft.source('example.txt','say 2+3' as .binary)
+at = source.origin(0,7)
+main = draft.function('main',contract.voidtype())
 entry = main.block('entry')
-left = entry.constant(int64, '2', origin)
-right = entry.constant(int64, '3', origin)
-sum = entry.binary(add, left, right, origin)
-total = main.slot('total', int64)
-call entry.store(total, sum, origin)
-call entry.returnvoid(origin)
-built = draft.finish()
+left = entry.constant(integer,'2',at)
+right = entry.constant(integer,'3',at)
+sum = entry.binary(add,left,right,at)
+total = main.slot('total',integer)
+call entry.store(total,sum,at)
+call entry.returnvoid(at)
+graph = draft.finish()
+if graph.error() <> '' then say graph.error()
 ```
 
-These are proposed class/method spellings. `origin` is an already-created checked
-source origin. Literal text is accepted at this construction boundary by the
-type codec; the stored constant has an exact typed encoding. Hot passes use
-constant handles and resolved descriptors, not repeated numeric text parsing.
+Ranges are zero-based, half-open byte ranges. The example's range covers all
+seven bytes. Use `draft.synthetic(description)` for generated material without
+source text. `origin.derive()` retains a contributing origin. Origin methods
+include `first`, `last`, `filename`, `sourcebytes`, `kind`, `parents` and `parent`.
+Kinds are `exact`, `composite`, `derived`, `synthetic` and `recovered`. Any
+recovered origin prevents successful executable-module publication.
 
-`entry.binary` is shorthand for a checked operation with two inputs and one
-output. A general operation builder exposes `input(name,value)`,
-`attribute(name,typedValue)`, `successor(name,block)` and `finish()`, returning
-named result handles. Registering an operation does not require every caller
-to use that verbose form.
+`finish()` freezes and verifies the complete draft, including unreachable
+blocks. On failure the result reports an error and exposes no successful graph
+or encoded output. Existing published modules remain usable. A published module
+supports `functions`, `blocks`, `operations`, `operation(id)`, `block(id)`,
+`dump`, `text`, `binary`, `bytes`, `capacity` and `identity`.
 
-| Service | Proposed contract |
+### Construction reference
+
+| Owner | Methods |
 |---|---|
-| Type codec | Validate exact constant encoding, decode/encode external text, and supply equality appropriate to that encoding. Float bit identity and numeric equality are separate operations. |
-| Operation verifier | Read-only operation and schema view -> diagnostics. Check additional relationships beyond structural type/arity checks. |
-| Effect summary | State domains read/written, I/O/trace, possible failures, divergence, transfer and alias/escape behaviour. Explicitly unknown components remain unknown. |
-| Constant evaluator | Read-only constant operands and proved semantic context -> `constant`, `keep`, `invalid` or `limit`. No access to the running program's variable pool or mutable host numeric defaults. |
-| Lowering service | Read-only operation -> checked replacement fragment in a destination builder, with result/origin mappings and control/effect obligations. |
+| Builder | `function(name,resulttype)`, `source(name,bytes)`, `synthetic(description)`, `finish()`, `error()`. |
+| Function | `argument(type)` before creating blocks; `block(name)`; `slot(name,type)`. The first block is the entry. |
+| Block | `constant`, `constantbytes`, `readarg(ordinal,origin)`, `load(slot,origin)`, `store(slot,value,origin)`. |
+| Block | `binary(descriptor,left,right,origin)` for two inputs, one result and no attributes; `operation(descriptor,origin)` for a named draft. |
+| Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
+| Operation draft | `input(name,value)`, `attribute(name,bits)`, `finish()`. Every declared field must be supplied once. |
+| Operation view | `name`, `inputs`, `input`, `results`, `result`, `namedresult`, `attribute`, `origin`, `next`, `blockid`, `successors`, `successor`, `schema`. |
+| Value handle | `type`, `isconstant`, `bytes` for literal constants. |
 
-`constant` includes all exact result values and consumed context facts. `keep`
-means no justified fold; possible runtime overflow/division errors use this
-outcome rather than turning an unreachable expression into a compile error.
-`invalid` means malformed IR or a broken evaluator contract. `limit` preserves
-the input and identifies the exhausted budget. Optional optimisation may then
-retain the original operation; mandatory lowering must report failure.
+An operation draft produces a view; use `namedresult('value')` to obtain a result
+by its declared name. Read operations in a block with `block.first()` and
+`op.next()` until `op.valid()` is false. Function results currently have one
+value or `core.void`; extension operations may have multiple results.
 
-The folding coordinator verifies result type/arity, facts and effect eligibility
-before replacement. An evaluator's answer alone does not authorise deleting
-trace events, state reads or errors. The compiler must supply independently
-tested or proved semantic contracts. Structural checking cannot prove that an
-arbitrary user-supplied evaluator computes the right answer.
+The seven core operations are constant, argument, load, store, jump, branch and
+return. A branch consumes exactly `core.boolean`, with true then false
+successors. A return matches its owning function's result. Edges stay within one
+function. A block has one final jump, branch or return. Extension operations in
+this profile are straight-line operations; graph control uses the core forms.
 
-Registration is explicit and in-process, using cREXX service objects. A saved
-IR image contains schema/family identities, never code to load or run. Numeric
-codes are resolved once from namespaced, versioned families. A module needing
-an unknown family cannot compile; an inspection tool may retain opaque records
-only when the envelope is structurally valid and its limitations are explicit.
+Handles borrow their owner through checked Level B references. Appending records
+does not invalidate them. Destroying or replacing the owner does. A handle from
+one module cannot be used in another. After `finish`, obtain fresh read handles
+from the returned graph; draft handles still refer to the frozen draft owner.
+An attempted edit to a published module raises `LL_IR_LIFECYCLE` and preserves it.
 
-## Effects and facts
+The `arena`, `table`, schema storage and reader classes are implementation
+services exposed for Level B linkage and the framework's own algorithms.
+Applications use the checked handles above, not raw table mutation.
 
-State domains describe what may change: for example a Classic variable pool,
-numeric context, argument frame, output stream or an unknown external resource.
-Domain identity and possible aliasing matter. Two different pool handles are
-not automatically disjoint. Initially, unknown calls invalidate every fact
-about mutable state they may access; there is no speculative motion across them.
+## Analyse flow and record facts
 
-Facts belong to a module revision, semantic-profile version and analysis run.
-They can record constant values, reachable blocks and definitely assigned slots.
-Sparse absence means unknown. An explicit false fact remains distinguishable
-from absence, following the existing `has...()`/`get...()` property convention.
-Source AST properties are not automatically trusted optimisation facts.
+```rexx
+report = llirservices..analyse(reference graph)
+if report.status() = 'ok' then do
+  do i = 1 to report.issues()
+    say report.diagnostic(i)
+  end
+  facts = report.facts()
+end
+```
 
-The first implementation retains operation order. It folds eligible constants,
-propagates block-local values, simplifies proved branches and removes operations
-proved discardable. A Boolean fact can remove an impossible edge without
-removing the computation that produced the Boolean.
+`ok` means the analysis completed. `issues()` counts loads that may read an
+unassigned slot. A compiler must inspect those issues before emitting code that
+requires definite assignment. Structural verification alone does not establish
+that every load is initialised.
 
-## Storage proposal
+Reachability follows both branch edges. Definite assignment intersects the
+incoming sets at a join and iterates loops until no set changes. Function entry
+starts with no assigned slots. The analysis checks each reachable load against
+the stores preceding it. An unreachable block is still structurally checked.
+Unknown state effects or incomplete continuation contracts return `unsupported`.
+Other outcomes are `invalid` and `limit`; neither publishes analysis facts.
 
-The baseline candidate is fixed-width little-endian records in Level B `.binary`
-buffers, addressed through numeric IDs. Access uses the existing binary-memory
-intrinsics; no native compiler helper is added. Compare this layout with packed
-parallel columns during STEP02 before selecting the permanent working layout.
+Facts use `has(domain,id,key)` and `get(domain,id,key)`. `get` returns exact bytes;
+it raises `LL_IR_FACT` for absence. `reachable` facts belong to blocks and
+`definitely.assigned` facts to load operations. Both use byte `00` or `01`.
 
-| Record | Candidate fields |
+For application analyses, construct `.llirservices..facts(reference graph)` and
+use `put(domain,id,key,bits)`. Domains are `function`, `block`, `operation`,
+`value` and `slot`. Explicit empty or false values differ from absent facts.
+Recording a fact states the caller's conclusion; it does not prove that conclusion.
+The store is bound to the exact owner and revision, and has entry/byte budgets.
+
+## Evaluate, rewrite and lower
+
+```rexx
+facts = .llirservices..facts(reference graph)
+answer = llirservices..evaluate(reference graph,operation_id,facts)
+change = llirservices..rewrite(reference graph,operation_id,facts)
+if change.status() = 'changed' then graph = change.result()
+```
+
+`evaluate` reports a checked result without modifying the module. `rewrite`
+repeats the eligibility checks and builds a new module with the selected operation
+replaced by constants. It remaps every use and gives replacement constants derived
+origins. This is a one-operation transformation primitive, not an automatic
+optimisation pipeline. Create fresh facts after accepting the new graph.
+
+A change reports `changed`, `keep`, `invalid` or `limit`. Its `result()` is the
+verified candidate on `changed`, otherwise the original graph. `operation(oldid)`
+and `value(oldid)` map IDs into that result; zero denotes an operation removed
+without a replacement operation. Failed candidates are never published.
+
+`llirservices..lower(reference graph,target_contract)` rebuilds a graph against
+a target contract. Shared types must have matching names and family versions;
+retained operations must have matching signatures and effects. For operations
+absent from the target it invokes their registered lowering service.
+
+A lower request supplies `source()`, `destination()`, mapped `input(ordinal)`,
+derived `origin()` and `budget()`. Return `.llir..fragment('ok')` and `add(value)`
+for each mapped result. `keep`, `invalid` and `limit` retain the original module.
+The first lowering profile supports pure, normally returning straight-line
+fragments without language failure. New operations must satisfy the same effect
+contract; state operations, terminators, foreign results, type mismatches and
+cross-block results are rejected. This is the foundation for registering richer
+checked lowerings as compiler backends are developed.
+
+## Saved forms and numeric storage
+
+`graph.dump()` is a readable named view. Optional function and block IDs filter
+it. `graph.text()` and `graph.binary()` are complete lossless forms.
+`llir..loadtext(contract,text)` and `llir..loadbinary(contract,bits)` require the
+same registered schema manifest and return a verified frozen module or an error.
+The manifest includes ordered family versions, type names, operation names,
+effects and field signatures. Changing registration order changes the manifest.
+The host is responsible for versioning changes to codecs or semantic services.
+
+Binary version 1 begins with magic bytes `4C4C4952`, then u32 version 1 and a
+length-prefixed UTF-8 manifest. Thirteen tables follow, each with u32 count and
+width, then little-endian u32 fields in row order. A length-prefixed byte pool
+follows. Each byte-pool item has its own u32 length. Text version 1 uses the same
+record structure, decimal fields and hexadecimal byte strings. It preserves
+embedded zeros, non-UTF-8 constants and exact source bytes. Both loaders reject
+truncation, incompatible schemas, unknown versions, invalid ranges and trailing
+data before publishing a graph.
+
+| Table | Fields, in order |
 |---|---|
-| Module | Schema families, functions, symbols, constants, source files, origins, properties and profile. |
-| Function | Name/signature, entry block, block/slot lists, source origin and ABI extension attributes. |
-| Block | Owning function, first/last operation, flags. |
-| Operation | Opcode, block, next operation, operand start/count, result start/count, successor start/count, attribute-set ID, origin ID, flags. |
-| Value | Defining operation, result ordinal, type ID, flags. |
-| Slot | Owning function, type, name, flags; initialisation is explicit executable IR. |
-| Origin | Exact source identity/ranges, provenance kind and optional contributing-origin IDs. |
+| Functions (6) | name pool ID, result type, entry block, argument start/count, reserved zero |
+| Blocks (4) | function, first/last operation, name pool ID |
+| Operations (12) | opcode, block, next, operand start/count, result start/count, edge start/count, attribute start, origin, auxiliary ID |
+| Values (4) | defining operation, result ordinal, type, reserved zero |
+| Slots (4) | function, type, name pool ID, reserved zero |
+| Operands / edges (1 each) | value ID / block ID |
+| Constants (2) | type, byte-pool ID |
+| Origins (6) | source, first/last byte, kind, contributor start/count |
+| Sources (2) | name pool ID, source-bytes pool ID |
+| Attributes (4) | operation, ordinal, type, constant ID |
+| Arguments (2) | function, type |
+| Contributors (1) | earlier origin ID |
 
-With twelve 32-bit fields an operation header occupies 48 bytes; that is only
-the candidate header cost. Operand/value/edge tables, constants, names, indexes,
-sources and sparse facts all contribute to total memory. Record this full
-storage formula and measure it. Numeric IDs are not machine pointers and do not
-imply zero allocation or automatic packing of ordinary `.int[]` arrays.
+Core opcode IDs are 1–7 in the order listed above. Extension IDs are 16 plus
+registration ordinal. Numeric IDs are not pointers, persisted callbacks or VM
+registers. Zero represents absence only in the fields that permit it.
 
-ID zero is absent only in fields whose schema permits absence. Counts and
-offset arithmetic are checked before allocation/access. A representational
-ceiling produces a clear diagnostic; resource policy and representation are
-reported separately. Opcode/record widths are encoding choices, not limits
-silently imposed on a user's source grammar.
+Working tables use fixed-width binary records, growing geometrically. An
+operation header occupies 48 bytes. `bytes()` counts used record bytes and
+byte-pool payloads; `capacity()` additionally counts allocated table slack.
+These figures exclude VM objects, array indexes, schema/service objects and
+allocator overhead. They are storage accounting, not process peak memory.
 
-Only the owning builder mutates buffers. Handles carry owner identity, revision
-and ID through explicit Level B references. Appending/growing storage preserves
-IDs. A transform publishes a new frozen owner with a mapping where needed;
-compaction may change IDs only with that mapping. No handle stores a byte
-pointer that would survive a moved buffer accidentally. No record recycling
-can make a stale handle refer to another operation.
+Builders and loaders default to 1,000,000 records/pool entries and 64 MiB of
+logical record/payload bytes. Hosts can supply different positive budgets.
+Loaders also apply their byte budget to the complete input image. Facts have
+separate entry/payload budgets; analyses and transformations have work budgets.
+The u32 representation ceiling is reported separately from resource policy.
 
-Use dense records for common fields and sparse side tables for optional facts.
-Intern immutable repeated names/types where equality permits it. Store exact
-constants separately: decimal text/coefficient data, float bits, arbitrary
-bytes and Classic source spelling are not coerced into one integer field.
-Strings and byte sequences use explicit lengths, including embedded zero.
+## Emit text without repeated whole-output copying
 
-## Verifier and transformations
+```rexx
+out = .llir..writer()
+call out.line('main:')
+call out.indent()
+call out.line('say "hello"',origin_id)
+call out.dedent()
+result = out.finish()
+if result.error() = '' then say result.text()
+```
 
-The first verifier checks schema/profile, unique ownership, valid ranges/IDs,
-types and arity, operation order, same-block earlier definitions, signature
-agreement and valid terminators/targets. Slot analysis separately establishes
-which slots are initialised on every path reaching a load. Unreachable blocks
-still undergo structural and type checks. Incomplete control summaries prevent
-a claimed complete flow analysis.
+`write(text,origin_id)` appends exact text. `line` adds current indentation and
+LF. `indent` and `dedent` change indentation. `section()` creates another writer;
+finish it and append its output with `append(reference section_output)`.
+`finish` rejects unbalanced indentation and publishes no partial successful
+output after an error.
 
-An operation sequence can produce a runtime failure and terminate abnormally;
-this is not a malformed graph. The semantic profile defines those outcomes.
-Recovered-source damage, in contrast, prevents executable publication.
+Output is a list of byte chunks with origin IDs. `text()` allocates the final
+buffer once and copies each chunk once. `stream(sink)` calls a registered
+`llir.sink.write(binary)` for each chunk and reports a returned error or signal.
+A sink may already have written preceding chunks when it fails; file publication
+should use a temporary file and rename after success. The writer's default byte
+budget is 64 MiB, configurable in its factory. It does not choose target
+instructions or machine registers.
 
-Analyses and rewrite inputs are read-only. A pass stages a candidate, checks
-the result and commits it atomically. Failed validation or a budget stop leaves
-the original owner usable and provides operation/source diagnostics. An
-unchanged pass may return the original owner. Measure full-copy versus safe
-sharing costs before promising persistent or copy-on-write storage.
+## Worked examples and compiler families
 
-## Readable and portable forms
+The [SAY example](../examples/ir/demo.crexx) constructs `2+3`, converts it to
+text, folds the arithmetic and conversion, and prints `5` from the retained SAY
+operation. It shows before/after IR. It does not invoke a new source compiler or
+an RXAS backend.
 
-Provide deterministic dumps with names, types, origins and optional facts;
-filtered function/block/source-span views; and a structured programmatic view.
-The complete text form round-trips a semantic module. Filtered views are not
-presented as reloadable modules. Passes access handles directly without text.
+The separate [compiler family module](../compilers/common/llcrexxir.crexx)
+registers `crexx.g.int64`, `crexx.g.text`, checked `iadd`, `itext`, and `say`;
+Classic `value`, explicit `numeric` context, `add` and `say`. Classic constants
+preserve literal bytes. Classic contextual arithmetic has no evaluator until
+its exact semantic implementation is supplied. Both SAY operations declare an
+observable output effect and are ineligible for constant replacement.
 
-A saved binary image declares magic/version, schema families, byte order,
-record widths, counts, section ranges and constant encodings. Validate lengths,
-overflow, references, type contracts and resource limits before publishing a
-loaded owner. File-local IDs are resolved within that owner. Native pointers,
-borrowed handles and arbitrary registered callback code never enter the image.
-
-Text/binary round trips compare module semantics, exact observable constants
-and source origins. They need not preserve temporary numeric IDs after an
-explicit renumbering. Unknown versions, truncation and impossible counts are
-tested refusals. Layout/codec decisions and measurements remain review items;
-no speed claim follows merely from choosing a binary format.
+The independent [semantic-service fixture](../tests_functional/ts_llirservices.crexx)
+defines a small non-C/G arithmetic family, a target lowering, and flow examples.
+It demonstrates that the generic library has no compiler-family dependency.

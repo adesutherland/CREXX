@@ -16,6 +16,24 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**LEVEL-L-IR-01 — numeric IR storage screen (15 October).** The approved
+[compiler foundation plan](../lib/rxfnsl/compilers/PLAN.md#step02-implementation-record)
+compares fixed-width record and column storage before retaining its first
+layout. Hypothesis: row records favour append and whole-operation handling;
+columns may favour field scans. Risks are incorrect growth copies, changed IDs,
+width/extent overflow and misleading omission of side-table/pool costs.
+The Level B [harness](../tests/performance/levell_ir_storage.crexx) checks identical
+values before measuring construction, scans and field rewrites. This is a
+non-representative storage mechanism screen, not a compiler speed or memory
+qualification. RexxCPS has no corresponding IR arena workload and is inapplicable.
+The [STEP02 receipt](../lib/rxfnsl/compilers/evidence/step02-20261015/README.md) retains
+serial Release observations: all fields/checksums agree, rows favour construction
+and columns slightly favour the single-field scan/update. The initial foundation
+retains row records. Warmup trends and excluded VM overhead are explicit. This
+bounded screen is complete; representative compiler measurements remain open.
+No production compiler/VM optimisation is selected.
+
+
 **LEVEL-L-PARSER-01 — experimental language-tooling research (10 October).**
 The [local research plan](../research/level-l/PLAN.md) owns the wide source audit,
 native Thompson-NFA/DFA and grammar-generator PoCs, re2c wrapping, actual Pika

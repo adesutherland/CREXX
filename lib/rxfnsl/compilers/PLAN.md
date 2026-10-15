@@ -1,8 +1,8 @@
 # cREXX compilers built with Level L
 
-Status: STEP01 reviewed and STEP02 implementation authorised by Adrian,
-15 October 2026. This baseline records the approved foundation design before
-implementation. Planning source baseline: develop
+Status: STEP01 approved; STEP02 foundation implemented and locally qualified,
+15 October 2026. Publication target: `develop`, carrying the design baseline
+`d13a91c1b` and this qualified STEP02 increment. Original planning source baseline: develop
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
 
 Start with the [STEP01 review](doc/STEP01-REVIEW.md), then the
@@ -107,9 +107,9 @@ lib/rxfnsl/
     doc/                    compiler usage, IR reference and migration matrix
 ```
 
-The subtree currently contains the plan, review documents, source examples and
-existing-tool comparison evidence. Implementation will use distinct build
-targets and installed commands, proposed names `llrxc-c` and `llrxc-g` for the
+The subtree contains the plan, review documents, source controls, initial C/G
+semantic families and IR regression consumers. The forthcoming source compilers
+will use distinct build targets and installed commands, proposed names `llrxc-c` and `llrxc-g` for the
 PoC and `llrxc-b` for the later proper B compiler, with a
 private library namespace. Ordinary `rxc`, `rxc-c` and wrapper routing continue
 to select existing products until the replacement gate. No prototype silently
@@ -207,11 +207,11 @@ targets are checked references: an IR is not forced into an AST's single-parent
 tree shape. Loops are graph cycles; an operation may use a value also used by
 other operations. Preserve the source tree and its origin links independently.
 
-STEP01 proposes explicit typed slots and block-local immutable temporary
+STEP02 implements explicit typed slots and block-local immutable temporary
 values. Values crossing a join use stores and loads; the verifier rejects
 cross-block temporary references. Full SSA, with its additional join and
-dominance checks, remains a later profile. See the proposed
-[IR proposal](../doc/ir-design.md). Do not implement sharing by attaching the
+dominance checks, remains a later profile. See the
+[IR reference](../doc/ir-design.md). Do not implement sharing by attaching the
 same owned AST child twice.
 
 Operations have defined operand/result types, evaluation order, state effects,
@@ -232,16 +232,16 @@ transfer or resumable handler.
 | Source tracing and diagnostics | Retained authored-operation anchors and ordered trace events through optimisation and emission. |
 
 The common IR can carry named operation families such as `crexx.g.iadd` and
-`crexx.c.add`. These names describe a proposed readable dump, not new language
-syntax. Classic and G mappers share infrastructure without erasing semantics.
+`crexx.c.add`. These registered operation names appear in readable dumps.
+They do not introduce source-language syntax. Classic and G mappers share infrastructure without erasing semantics.
 Lower specialised operations into supported core operations/runtime calls
 through checked passes. Verify every stage's admitted operation set.
 
-### Proposed numeric storage and readable views
+### Numeric storage and readable views
 
 Adrian proposed compact numeric IR storage with human, LLM and programmatic
 views. The recommendation is a checked, indexed binary representation behind
-named operations and fields. This remains a proposal for STEP01 review. Define
+named operations and fields. STEP02 implements this foundation. Define
 the IR's meaning independently of its physical layout so storage improvements
 do not change compiler semantics or the authoring interface.
 
@@ -261,24 +261,19 @@ Use three layers:
    encoding for persistence. In-process algorithms use the semantic API directly
    over numeric storage, without text conversion or constructing a second tree.
 
-For example, a proposed readable view is:
+For example, the worked SAY example includes:
 
 ```text
-%v3 = crexx.g.iadd %v1, %v2 : int
+%3 = crexx.g.iadd %1 %2 @origin:1
 ```
 
-One possible working layout stores that operation as:
+With that example's registration order, the third operation has opcode 17,
+block 1, operand start/count 1/2, result start/count 3/1 and origin 1. The values
+table identifies result 3 as defined by operation 3 with type 3 (`crexx.g.int64`).
+The two operand records contain value IDs 1 and 2, whose defining constants
+contain the integer values 2 and 3. The full fixed-width layout is in the
+[IR reference](../doc/ir-design.md#saved-forms-and-numeric-storage).
 
-```text
-operation 42: opcode=17, type=1, result_start=20, result_count=1,
-              operand_start=80, operand_count=2, origin=9
-results[20] = 3
-operands[80..81] = [1, 2]
-```
-
-The numbers are illustrative: the schema describes opcode 17 as `crexx.g.iadd`
-and type 1 as `int`. Operand IDs 1 and 2 identify values, not integer literals
-1 and 2. Their defining operations and constant records supply their meaning.
 The verifier checks operand/result types and counts, definition/use rules,
 block membership and source references. A compact record cannot replace those
 semantic checks. Variable result ranges allow operations with more than one
@@ -295,15 +290,16 @@ observable where an absent value differs from an explicit default. In
 particular, absent analysis knowledge is not a false condition or a proved fact.
 
 The existing Level B [binary-memory operations](../../../docs/books/crexx_language_reference/binary_memory.md)
-provide fixed-width fields and host-native packed integer/float access to
+provide canonical little-endian fixed-width fields as well as separate
+host-native packed access. The IR uses the portable fixed-width fields in
 `.binary` buffers. Ordinary `.int[]` values are not automatically packed; a
-numeric-looking array alone does not establish compact storage. Prototype the
-new arena with these existing Level B facilities and borrowed references, with
-no new C helper or Level G dependency. Retain existing AST storage and APIs
+numeric-looking array alone does not establish compact storage. The new arena
+uses these existing Level B facilities and borrowed references, with no new C
+helper or Level G dependency. Retain existing AST storage and APIs
 unless a separate, measured migration is agreed.
 
-Start by comparing fixed-width operation records with parallel packed columns
-for the frequently accessed fields. Keep variable operand/edge lists in separate
+STEP02 compared fixed-width operation records with parallel packed columns
+and retained row records for construction. Keep variable operand/edge lists in separate
 appendable storage and use indexed lookup. Measure scan-heavy and rewrite-heavy
 passes before selecting a layout. Avoid variable-length integer compression or
 bit packing in the first working arena: its decoding and mutation costs need
@@ -673,6 +669,159 @@ subsequent implementation and named pass/PoC gates.
 STEP07–10 preserve the full destination and later decisions; bounded approval
 does not remove those outcomes.
 
+## STEP02 implementation record
+
+Authorised 15 October 2026; baseline `d13a91c1b`. The outcome is a reusable
+Level B-only IR library with checked semantic extension services, usable by a
+small independent language consumer before the C/G frontends exist. Existing
+AST consumers keep their APIs. STEP03 frontends, STEP04 target backend and
+STEP05 production optimisation passes remain separate deliveries.
+
+Acceptance for this increment (IR2-AC01–07 verified by the
+[STEP02 receipt](evidence/step02-20261015/README.md)):
+
+1. **IR2-AC01:** Versioned family/type/operation registration, frozen schemas,
+   explicit unknown effects, and checked service dispatch. Duplicate, foreign,
+   incomplete and invalid registrations have stable diagnostics.
+2. **IR2-AC02:** Numeric graph storage and named construction handles support
+   functions, blocks, typed slots, arguments, constants, extension operations,
+   branches and returns. Reject invalid ownership, stale handles, types,
+   use order, signatures and terminators; demonstrate loops and joins.
+3. **IR2-AC03:** Read-only structured views, deterministic named dumps and
+   lossless text/binary loading preserve exact constants and source origins.
+   Corrupt, truncated, incompatible and over-budget input publishes no module.
+4. **IR2-AC04:** Semantic verifier/evaluator/lowering contracts have checked
+   success, keep, invalid and limit outcomes. An independent non-C/G consumer
+   and initial compiler family registrations exercise those contracts. No
+   callback is obtained from an input file; unknown effects remain conservative.
+5. **IR2-AC05:** Sparse revision-bound facts and checked replacement foundations
+   preserve the source module on failure. A generic analysis/consumer exercises
+   the graph without depending on C/G semantics.
+6. **IR2-AC06:** A bounded chunk emitter supports text, lines, indentation and
+   sections with explicit failure; callers can emit without quadratic whole-
+   output concatenation. Target instruction selection remains STEP04.
+7. **IR2-AC07:** Compare fixed-width record and column storage using a Level B
+   harness; retain costs and bounded measurements. Compile/link/run focused
+   regressions in opt/no-opt and both VMs, check the B-only dependency closure,
+   product integration and relevant existing AST regressions. Update architecture
+   and the enduring user guide with runnable examples and exact API contracts.
+
+Implementation sequence:
+
+| Step | Work | Acceptance |
+|---|---|---|
+| IR2-STEP01 | Implement schema and semantic service types; numerical storage and checked builders. | IR2-AC01/02/04 |
+| IR2-STEP02 | Implement verifier, views, codecs, facts and atomic replacement/service coordination. | IR2-AC02–05 |
+| IR2-STEP03 | Add emitter, independent example and initial compiler semantic registrations. | IR2-AC04–06 |
+| IR2-STEP04 | Regressions, storage comparison, B-only build/consumer qualification, documentation. | IR2-AC01–07 |
+
+Current state: **IR2-STEP01–04 complete; IR2-AC01–07 verified locally.**
+The [qualification receipt](evidence/step02-20261015/README.md) records the product
+build, 16 new and 113 existing CTests, both seed-built B-only bootstrap modes,
+eight whole-no-opt consumer executions, installed-wrapper example and storage
+comparison. Source/tool hashes identify the qualified working-tree inputs.
+
+SAY was explicitly added at Adrian's request: G and C registrations declare
+observable output, the calculator-like example prints `5`, and folding preserves
+SAY. The compiler families live in `compilers/common/llcrexxir.crexx`; generic
+services remain independent in `rexx/llir.crexx` and `rexx/llirservices.crexx`.
+
+The initial lowering coordinator admits pure straight-line fragments. The
+stateful/control mappings and complete C/G semantics required by the eventual
+backend remain open under STEP03–05. This foundation does not close the overall
+compiler acceptance criteria, imply proper-B self-hosting or replace an existing
+compiler. Adrian authorised committing and publishing this increment to
+`develop` on 15 October 2026, together with the existing baseline. The required
+local gates passed and their input hashes were rechecked before publication.
+Normal Build CREXX and CodeQL workflows are expected to pass; their observed
+results belong to GitHub and the lightweight monitor, not a status-only commit.
+No hosted CI pass is claimed by this local qualification record.
+
+## STEP03 proposal for review
+
+**Proposed; implementation awaits Adrian's approval.** The outcome is two real
+source-to-IR frontends under `compilers/levelc` and `compilers/levelg`, written
+in Level B with Level L grammars. Each keeps its own source semantics and
+produces a checked module in the shared IR. This implements the frontend part
+of the agreed [POC-01–10 scope](doc/poc-scope.md), without narrowing its scalar,
+control, routine, numeric-context or library-call requirements. Executable
+RXAS delivery remains STEP04 and production optimisation passes remain STEP05.
+
+The basic source surface is existing C/G syntax. For a small illustration:
+
+```rexx
+/* Classic */
+options levelc
+total = 2 + 3
+if total > 4 then say total
+else say 0
+```
+
+```rexx
+/* Typed G */
+options levelg
+total = .int
+total = 2 + 3
+if total > 4 then say total
+else say 0
+```
+
+Both have expected output `5` when the executable pipeline is complete. STEP03
+produces their source trees, semantic tables and verified IR. G binds `total`
+to an explicitly initialised typed slot and selects typed integer operations.
+C retains the dynamic pool name `TOTAL`, exact literal spelling and explicit
+numeric context. Both use core branch blocks and their language's SAY contract.
+The [paired walkthrough](doc/pipeline-walkthrough.md) shows the larger example
+with a routine, loop and actual library call. Its source controls already run
+with existing tools; its frontend IR remains explanatory until STEP03 generates it.
+
+Acceptance for this increment (all **open**):
+
+1. **F3-AC01 — Two complete admitted grammars.** Generated Level L DFA/LR(1)
+   frontends recognise the POC-01–10 source corpus, including Classic contextual
+   names and whitespace concatenation, nearest-IF ELSE binding, routine forms,
+   loop transfers and calls. Preserve exact origins, spelling and ordered AST
+   children. Evidence: positive/negative grammar fixtures and schema validation.
+2. **F3-AC02 — Explicit language mappings.** G binding/types/defaults and
+   short-circuit evaluation, and C pools/unset names, eager operands, argument
+   presence/RESULT and NUMERIC context produce distinct checked operations.
+   Extend compiler-owned families for the full admitted profile, including SAY,
+   with documented types/effects/failures. Evidence: tree/IR checks for the six
+   controls plus focused semantic edge cases; no guessed context or G-shaped
+   Classic AST. Runtime execution equivalence remains a STEP04–06 gate.
+3. **F3-AC03 — Checked calls and imported contracts.** Resolve admitted local
+   routines, recursion and library/BIF calls from their actual contracts, with
+   the required metadata reader implemented in Level B. Wrong/missing imports,
+   signatures and argument forms produce located diagnostics. No native compiler
+   reader or frontend is a source-compilation dependency. Evidence: dependency
+   audit and valid/malformed contract fixtures; emitted ABI execution is STEP04.
+4. **F3-AC04 — Atomic source-to-IR result.** Clean inputs yield schema-verified
+   IR and readable dumps. Syntax/type/profile errors, recovered input and
+   resource limits yield owned diagnostics without a successful module.
+   Evidence: malformed/unsupported inputs, exact source spans, bounded failure
+   tests and repeated independent requests. Use a reusable frontend service;
+   complete installed compiler CLI/RXAS output remains STEP04.
+5. **F3-AC05 — B-only delivery and explanation.** Both frontend hosts build
+   with B/L imports only, run on both concrete VMs in the maintained modes, and
+   retain existing AST/IR regression behaviour. Keep architecture, source-tree
+   schemas, binding/lowering algorithms, user guide and paired generated stage
+   dumps current. Evidence: product build, focused regressions, dependency
+   manifests and documentation/fixture cross-checks.
+
+Implementation sequence, serving LLCOMP-AC03–05/08/09/15:
+
+| Step | Work | Acceptance / dependency |
+|---|---|---|
+| F3-STEP01 | Implement both grammars and purpose-built source trees; demonstrate grammar admission and diagnostics. | F3-AC01/04; review approval first. |
+| F3-STEP02 | Implement G binding/types and Classic pool/routine/context tables; extend semantic families and build expression/control IR, including SAY. | F3-AC02/04; after F3-STEP01. |
+| F3-STEP03 | Complete local/recursive calls, argument and RESULT handling, and the required Level B import-contract reader/mapping. | F3-AC02–04; after the corresponding F3-STEP02 contracts. |
+| F3-STEP04 | Qualify all POC rows at the frontend boundary; record generated examples and update architecture/algorithms/manual. | F3-AC01–05; all earlier steps. |
+
+No new source syntax, native C compiler logic, default-tool replacement or
+INTERPRET execution is part of this approval. Any newly required public contract
+or architectural change returns for review before implementation. Completing a
+small arithmetic example alone does not close F3-AC01–05 or STEP03.
+
 ## Qualification and documentation practice
 
 - Compare each frontend with its own language semantics and existing compiler;
@@ -703,12 +852,12 @@ does not remove those outcomes.
 |---|---|
 | Architecture direction: cREXX compilers, Level L-owned extensible numeric IR and parallel documentation | Agreed; detailed contracts presented in STEP01. |
 | STEP01 | Reviewed and approved as the STEP02 foundation: scope, architecture, trees, IR/API, algorithms, dependency inventory and six source controls. [Review packet](doc/STEP01-REVIEW.md). |
-| STEP02 / foundation implementation | Authorised; this commit preserves the pre-implementation baseline. |
-| STEP03–06 / remaining Phase A | Later steps; no frontend/backend implementation claimed. |
+| STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
+| STEP03–06 / remaining Phase A | STEP03 proposal above awaits review; F3-AC01–05 open. No frontend/backend implementation claimed. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
-| LLCOMP-AC01–15 | Open; no compiler implementation or qualification claimed. |
+| LLCOMP-AC01–15 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |
-| Existing production compilers and bootstrap | Unchanged by this planning edit. |
+| Existing production compilers and bootstrap | Existing routing retained. Seed-built Level L now includes the IR modules; proper B remains STEP07B. |
 
 ## References
 
