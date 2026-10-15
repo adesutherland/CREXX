@@ -1,0 +1,11 @@
+{
+  "command": [
+    "cmake",
+    "--build",
+    "cmake-build-levell-integration",
+    "--parallel",
+    "8"
+  ],
+  "exit": 0,
+  "seconds": 0.30106125003658235
+}

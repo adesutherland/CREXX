@@ -1,0 +1,58 @@
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.8934160Z         Start 2451: llcompiler_ir_demo_opt_rxtvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.8994689Z 269/940 Test #2451: llcompiler_ir_demo_opt_rxtvm .........................***Failed  Required regular expression not found. Regex=[IR_DEMO[|]OK
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9016269Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9044596Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/opt/demo-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9053800Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9084027Z         Start 2452: llcompiler_ir_demo_opt_rxbvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9104619Z 270/940 Test #2452: llcompiler_ir_demo_opt_rxbvm .........................***Failed  Required regular expression not found. Regex=[IR_DEMO[|]OK
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9134022Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9144377Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/opt/demo-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9173776Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9194246Z         Start 2453: llcompiler_ir_contracts_opt_rxtvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9204481Z 271/940 Test #2453: llcompiler_ir_contracts_opt_rxtvm ....................***Failed  Required regular expression not found. Regex=[failures=0
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9224435Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9254518Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/opt/contracts-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9283909Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9294132Z         Start 2454: llcompiler_ir_contracts_opt_rxbvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9324597Z 272/940 Test #2454: llcompiler_ir_contracts_opt_rxbvm ....................***Failed  Required regular expression not found. Regex=[failures=0
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9344224Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9354440Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/opt/contracts-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9368030Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9368396Z         Start 2455: llcompiler_ir_demo_noopt_rxtvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9369454Z 273/940 Test #2455: llcompiler_ir_demo_noopt_rxtvm .......................***Failed  Required regular expression not found. Regex=[IR_DEMO[|]OK
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9370374Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9371162Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/noopt/demo-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9371910Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9372223Z         Start 2456: llcompiler_ir_demo_noopt_rxbvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9400127Z 274/940 Test #2456: llcompiler_ir_demo_noopt_rxbvm .......................***Failed  Required regular expression not found. Regex=[IR_DEMO[|]OK
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9401186Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9402225Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/noopt/demo-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9403076Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9403517Z         Start 2457: llcompiler_ir_contracts_noopt_rxtvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9494771Z 275/940 Test #2457: llcompiler_ir_contracts_noopt_rxtvm ..................***Failed  Required regular expression not found. Regex=[failures=0
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9523898Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9524646Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/noopt/contracts-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9525386Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9525594Z         Start 2458: llcompiler_ir_contracts_noopt_rxbvm
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9554490Z 276/940 Test #2458: llcompiler_ir_contracts_noopt_rxbvm ..................***Failed  Required regular expression not found. Regex=[failures=0
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9583893Z ]  0.01 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9614324Z ERROR reading module file /home/runner/work/_temp/debug-parity/lib/rxfnsl/compilers/noopt/contracts-linked.rxbin
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9643745Z
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:41.9673934Z         Start 2459: ts_tinyexpr_noopt
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:42.2926549Z 277/940 Test #2459: ts_tinyexpr_noopt ....................................   Passed    0.34 sec
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:29:42.2953991Z         Start 2460: ts_tinyexpr_opt
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9786557Z 99% tests passed, 8 tests failed out of 940
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9861531Z The following tests FAILED:
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9861938Z 	2451 - llcompiler_ir_demo_opt_rxtvm (Failed)             level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9862479Z 	2452 - llcompiler_ir_demo_opt_rxbvm (Failed)             level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9863005Z 	2453 - llcompiler_ir_contracts_opt_rxtvm (Failed)        level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9863533Z 	2454 - llcompiler_ir_contracts_opt_rxbvm (Failed)        level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9864214Z 	2455 - llcompiler_ir_demo_noopt_rxtvm (Failed)           level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9864750Z 	2456 - llcompiler_ir_demo_noopt_rxbvm (Failed)           level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9865162Z Errors while running CTest
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9865539Z 	2457 - llcompiler_ir_contracts_noopt_rxtvm (Failed)      level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:04.9866085Z 	2458 - llcompiler_ir_contracts_noopt_rxbvm (Failed)      level-l library optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:05.0257718Z FAILED: [code=8] CMakeFiles/qa-optimizer-parity /home/runner/work/_temp/debug-parity/CMakeFiles/qa-optimizer-parity
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:05.0258926Z cd /home/runner/work/_temp/debug-parity && /usr/local/bin/ctest --test-dir /home/runner/work/_temp/debug-parity --parallel 5 --output-on-failure --label-regex "^optimizer-parity\$" --label-exclude "^performance-measurement\$"
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:05.0260046Z ninja: build stopped: subcommand failed.
+Linux Debug Optimizer Parity	UNKNOWN STEP	2026-10-15T12:39:05.0287598Z ##[error]Process completed with exit code 8.

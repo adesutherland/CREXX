@@ -1,0 +1,26 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+    Start 3025: text_inspector_core_noopt
+    Start 3026: text_inspector_core_opt
+1/4 Test #3025: text_inspector_core_noopt ........   Passed    0.07 sec
+    Start 3027: text_inspector_tui_noopt
+2/4 Test #3026: text_inspector_core_opt ..........   Passed    0.12 sec
+    Start 3028: text_inspector_tui_opt
+3/4 Test #3027: text_inspector_tui_noopt .........   Passed    0.15 sec
+4/4 Test #3028: text_inspector_tui_opt ...........   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+classes             =   0.19 sec*proc (2 tests)
+comprehensive       =   0.55 sec*proc (4 tests)
+effects             =   0.55 sec*proc (4 tests)
+event-loop          =   0.36 sec*proc (2 tests)
+events              =   0.19 sec*proc (2 tests)
+examples            =   0.55 sec*proc (4 tests)
+linked_opt          =   0.33 sec*proc (2 tests)
+optimizer-parity    =   0.55 sec*proc (4 tests)
+rxpp                =   0.55 sec*proc (4 tests)
+tui                 =   0.36 sec*proc (2 tests)
+ui                  =   0.55 sec*proc (4 tests)
+
+Total Test time (real) =   0.44 sec

@@ -1,0 +1,7 @@
+qa-prep-optimizer-parity direct dependencies (compiler subset):
+    lib/rxfnsl/compilers/llcompiler_frontend-tests_noopt
+    lib/rxfnsl/compilers/llcompiler_frontend-tests_opt
+    lib/rxfnsl/compilers/llcompiler_ir_contracts_noopt
+    lib/rxfnsl/compilers/llcompiler_ir_contracts_opt
+    lib/rxfnsl/compilers/llcompiler_ir_demo_noopt
+    lib/rxfnsl/compilers/llcompiler_ir_demo_opt

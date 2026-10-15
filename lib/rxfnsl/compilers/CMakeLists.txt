@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
+# Finalize after this directory has declared every test, including frontends.
+# Preparation targets are collected by the parent after subdirectories return.
+crexx_schedule_directory_qa_tier_finalization()
+
 # Compiler semantics are a separate consumer of the generic Level L library.
 crexx_add_import_root(llcompiler_ir_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports" OUTPUT_VARIABLE _compiler_ir_imports
