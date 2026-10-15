@@ -191,7 +191,7 @@ document: class
       type = wordat(_at + 2); parent = 0
       if group > 0 then do
         if _type[group] = 'properties' & type = 'property' then parent = group
-        if _type[group] = 'flow' & wordpos(type,'sequence assign branch evaluate read value') > 0 then parent = group
+        if _type[group] = 'flow' & wordpos(type,'sequence assign branch evaluate read value loop break continue return shortcircuit') > 0 then parent = group
       end
       if parent = 0 then group = 0
       if _kind[_at] <> 'symbol' | _kind[_at + 1] <> ':' then do
@@ -314,6 +314,11 @@ document: class
         when 'evaluate' then nop
         when 'read' then nop
         when 'value' then nop
+        when 'loop' then nop
+        when 'break' then nop
+        when 'continue' then nop
+        when 'return' then nop
+        when 'shortcircuit' then nop
         otherwise call fail('unsupported declaration kind ' || _type[d],_first[d] + 2)
       end
     end
@@ -455,22 +460,40 @@ document: class
         if ok = 0 then call fail(contract.error(),_first[d])
         _properties[_group[d]] = contract
       end
-      else if wordpos(type,'sequence assign branch evaluate read value') > 0 then do
+      else if wordpos(type,'sequence assign branch evaluate read value loop break continue return shortcircuit') > 0 then do
         if _group[d] = 0 then do
           call fail('LL_FLOW: operation must follow its flow group',_first[d]); leave
         end
-        fields = ''
+        fields = ''; operation = type
         if type = 'branch' then do
-          fields = _text[_at]; _at = _at + 1; ok = expect('then')
-          fields = fields || ' ' || _text[_at]; _at = _at + 1; ok = expect('else')
-          fields = fields || ' ' || _text[_at]; _at = _at + 1
+          fields = flowfield(); ok = expect('then')
+          fields = fields || ' ' || flowfield(); ok = expect('else')
+          fields = fields || ' ' || flowfield()
         end
-        else do while _at <= _end
-          if _kind[_at] <> 'symbol' then call fail('LL_FLOW: expected an AST field name',_at)
-          fields = strip(fields || ' ' || _text[_at]); _at = _at + 1
+        else if type = 'loop' then do
+          if wordat(_at) = 'while' then do
+            operation = 'while'; _at = _at + 1
+            fields = flowfield(); ok = expect('do')
+            fields = fields || ' ' || flowfield()
+          end
+          else do
+            ok = expect('do'); fields = flowfield()
+            if _at <= _end then do
+              ok = expect('until'); operation = 'until'
+              fields = flowfield() || ' ' || fields
+            end
+          end
         end
-        if _at <> _end + 1 then call fail('LL_FLOW: unexpected mapping qualifier',_at)
-        mapping = _flows[_group[d]]; ok = mapping.add(_name[d],type,fields)
+        else if type = 'shortcircuit' then do
+          fields = flowfield(); operation = wordat(_at)
+          if operation <> 'and' & operation <> 'or' then call fail('LL_FLOW: expected AND or OR between shortcircuit fields',min(_at,_count))
+          _at = _at + 1; fields = fields || ' ' || flowfield()
+        end
+        else do while _at <= _end & _status = 0
+          fields = strip(fields || ' ' || flowfield())
+        end
+        if _status = 0 & _at <> _end + 1 then call fail('LL_FLOW: unexpected mapping qualifier',min(_at,_count))
+        mapping = _flows[_group[d]]; ok = mapping.add(_name[d],operation,fields)
         if ok = 0 then call fail(mapping.error(),_first[d])
         _flows[_group[d]] = mapping
       end
@@ -492,6 +515,14 @@ document: class
       _flows[d] = mapping
     end
     return
+  /** A required field must be present before consuming it, including at EOF. */
+  flowfield: method = .string
+    if _status <> 0 then return ''
+    if _at > _end | _kind[_at] <> 'symbol' then do
+      call fail('LL_FLOW: expected an AST field name',min(_at,_count)); return ''
+    end
+    field = _text[_at]; _at = _at + 1
+    return field
   properties: method = .llannotation..contract
     arg declaration = .int
     return _properties[declaration]
@@ -1117,7 +1148,7 @@ document: class
     return result
 
 /* BEGIN FRONTEND READER */
-  /** Generated lexer, declared token stage and canonical LR parser are the
+  /** Generated lexer, declared token stage and generated LL(1) parser are the
    * sole syntax authority here. The seed reader is absent from L1/L2. */
   scan: method = .void
     language = llsyntax..language(); request = .lllanguage..request(language,_bytes,_limits)

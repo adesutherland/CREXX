@@ -1,0 +1,141 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2500: ts_llstructuredflow_ll1_opt_rxtvm
+      Start 2914: rexxscript1_rxtvm
+      Start 2495: ts_llflow_earley_noopt_rxbvm
+      Start 2497: ts_llflow_earley_opt_rxbvm
+      Start 2496: ts_llflow_earley_opt_rxtvm
+      Start 2494: ts_llflow_earley_noopt_rxtvm
+      Start 2460: ts_llast_opt_rxtvm
+      Start 2459: ts_llast_noopt_rxbvm
+ 1/64 Test #2459: ts_llast_noopt_rxbvm ......................   Passed    8.96 sec
+      Start 2461: ts_llast_opt_rxbvm
+ 2/64 Test #2460: ts_llast_opt_rxtvm ........................   Passed    9.05 sec
+      Start 2458: ts_llast_noopt_rxtvm
+ 3/64 Test #2497: ts_llflow_earley_opt_rxbvm ................   Passed   12.41 sec
+      Start 2488: ts_llflow_lr1_opt_rxtvm
+ 4/64 Test #2496: ts_llflow_earley_opt_rxtvm ................   Passed   12.49 sec
+      Start 2486: ts_llflow_lr1_noopt_rxtvm
+ 5/64 Test #2495: ts_llflow_earley_noopt_rxbvm ..............   Passed   12.59 sec
+      Start 2487: ts_llflow_lr1_noopt_rxbvm
+ 6/64 Test #2494: ts_llflow_earley_noopt_rxtvm ..............   Passed   12.81 sec
+      Start 2489: ts_llflow_lr1_opt_rxbvm
+ 7/64 Test #2500: ts_llstructuredflow_ll1_opt_rxtvm .........   Passed   15.08 sec
+      Start 2482: ts_llflow_ll1_noopt_rxtvm
+ 8/64 Test #2487: ts_llflow_lr1_noopt_rxbvm .................   Passed    4.26 sec
+      Start 2483: ts_llflow_ll1_noopt_rxbvm
+ 9/64 Test #2488: ts_llflow_lr1_opt_rxtvm ...................   Passed    4.45 sec
+      Start 2485: ts_llflow_ll1_opt_rxbvm
+10/64 Test #2486: ts_llflow_lr1_noopt_rxtvm .................   Passed    4.49 sec
+      Start 2456: levell_generated_rxtvm
+11/64 Test #2489: ts_llflow_lr1_opt_rxbvm ...................   Passed    4.41 sec
+      Start 2457: levell_generated_rxbvm
+12/64 Test #2461: ts_llast_opt_rxbvm ........................   Passed    8.83 sec
+      Start 2490: ts_llflow_packrat_noopt_rxtvm
+13/64 Test #2458: ts_llast_noopt_rxtvm ......................   Passed    8.81 sec
+      Start 2492: ts_llflow_packrat_opt_rxtvm
+14/64 Test #2482: ts_llflow_ll1_noopt_rxtvm .................   Passed    3.62 sec
+      Start 2491: ts_llflow_packrat_noopt_rxbvm
+15/64 Test #2483: ts_llflow_ll1_noopt_rxbvm .................   Passed    3.68 sec
+      Start 2493: ts_llflow_packrat_opt_rxbvm
+16/64 Test #2485: ts_llflow_ll1_opt_rxbvm ...................   Passed    3.69 sec
+      Start 2484: ts_llflow_ll1_opt_rxtvm
+17/64 Test #2456: levell_generated_rxtvm ....................   Passed    3.85 sec
+      Start 2470: ast_lr1_noopt_rxtvm
+18/64 Test #2457: levell_generated_rxbvm ....................   Passed    3.62 sec
+      Start 2471: ast_lr1_noopt_rxbvm
+19/64 Test #2470: ast_lr1_noopt_rxtvm .......................   Passed    0.14 sec
+      Start 2472: ast_lr1_opt_rxtvm
+20/64 Test #2471: ast_lr1_noopt_rxbvm .......................   Passed    0.14 sec
+      Start 2473: ast_lr1_opt_rxbvm
+21/64 Test #2472: ast_lr1_opt_rxtvm .........................   Passed    0.15 sec
+      Start 2481: ast_earley_opt_rxbvm
+22/64 Test #2473: ast_lr1_opt_rxbvm .........................   Passed    0.15 sec
+      Start 2478: ast_earley_noopt_rxtvm
+23/64 Test #2481: ast_earley_opt_rxbvm ......................   Passed    0.09 sec
+      Start 2479: ast_earley_noopt_rxbvm
+24/64 Test #2478: ast_earley_noopt_rxtvm ....................   Passed    0.08 sec
+      Start 2480: ast_earley_opt_rxtvm
+25/64 Test #2479: ast_earley_noopt_rxbvm ....................   Passed    0.08 sec
+      Start 2466: ast_ll1_noopt_rxtvm
+26/64 Test #2480: ast_earley_opt_rxtvm ......................   Passed    0.08 sec
+      Start 2468: ast_ll1_opt_rxtvm
+27/64 Test #2466: ast_ll1_noopt_rxtvm .......................   Passed    0.05 sec
+      Start 2467: ast_ll1_noopt_rxbvm
+28/64 Test #2468: ast_ll1_opt_rxtvm .........................   Passed    0.05 sec
+      Start 2469: ast_ll1_opt_rxbvm
+29/64 Test #2467: ast_ll1_noopt_rxbvm .......................   Passed    0.06 sec
+      Start 2475: ast_packrat_noopt_rxbvm
+30/64 Test #2469: ast_ll1_opt_rxbvm .........................   Passed    0.05 sec
+      Start 2476: ast_packrat_opt_rxtvm
+31/64 Test #2475: ast_packrat_noopt_rxbvm ...................   Passed    0.05 sec
+      Start 2477: ast_packrat_opt_rxbvm
+32/64 Test #2476: ast_packrat_opt_rxtvm .....................   Passed    0.05 sec
+      Start 2474: ast_packrat_noopt_rxtvm
+33/64 Test #2477: ast_packrat_opt_rxbvm .....................   Passed    0.05 sec
+      Start 2463: ts_llanalysis_noopt_rxbvm
+34/64 Test #2474: ast_packrat_noopt_rxtvm ...................   Passed    0.06 sec
+      Start 2465: ts_llanalysis_opt_rxbvm
+35/64 Test #2463: ts_llanalysis_noopt_rxbvm .................   Passed    0.02 sec
+      Start 2462: ts_llanalysis_noopt_rxtvm
+36/64 Test #2465: ts_llanalysis_opt_rxbvm ...................   Passed    0.02 sec
+      Start 2464: ts_llanalysis_opt_rxtvm
+37/64 Test #2462: ts_llanalysis_noopt_rxtvm .................   Passed    0.02 sec
+      Start 2498: ts_llstructuredflow_ll1_noopt_rxtvm
+38/64 Test #2464: ts_llanalysis_opt_rxtvm ...................   Passed    0.02 sec
+      Start 2499: ts_llstructuredflow_ll1_noopt_rxbvm
+39/64 Test #2490: ts_llflow_packrat_noopt_rxtvm .............   Passed    3.85 sec
+      Start 2501: ts_llstructuredflow_ll1_opt_rxbvm
+40/64 Test #2492: ts_llflow_packrat_opt_rxtvm ...............   Passed    3.95 sec
+      Start 2502: ts_llstructuredflow_lr1_noopt_rxtvm
+41/64 Test #2491: ts_llflow_packrat_noopt_rxbvm .............   Passed    3.91 sec
+      Start 2503: ts_llstructuredflow_lr1_noopt_rxbvm
+42/64 Test #2484: ts_llflow_ll1_opt_rxtvm ...................   Passed    3.68 sec
+      Start 2504: ts_llstructuredflow_lr1_opt_rxtvm
+43/64 Test #2493: ts_llflow_packrat_opt_rxbvm ...............   Passed    3.79 sec
+      Start 2505: ts_llstructuredflow_lr1_opt_rxbvm
+44/64 Test #2501: ts_llstructuredflow_ll1_opt_rxbvm .........   Passed   11.25 sec
+      Start 2506: ts_llstructuredflow_packrat_noopt_rxtvm
+45/64 Test #2498: ts_llstructuredflow_ll1_noopt_rxtvm .......   Passed   11.64 sec
+      Start 2507: ts_llstructuredflow_packrat_noopt_rxbvm
+46/64 Test #2499: ts_llstructuredflow_ll1_noopt_rxbvm .......   Passed   11.64 sec
+      Start 2508: ts_llstructuredflow_packrat_opt_rxtvm
+47/64 Test #2502: ts_llstructuredflow_lr1_noopt_rxtvm .......   Passed   14.24 sec
+      Start 2509: ts_llstructuredflow_packrat_opt_rxbvm
+48/64 Test #2503: ts_llstructuredflow_lr1_noopt_rxbvm .......   Passed   13.57 sec
+      Start 2510: ts_llstructuredflow_earley_noopt_rxtvm
+49/64 Test #2505: ts_llstructuredflow_lr1_opt_rxbvm .........   Passed   13.19 sec
+      Start 2511: ts_llstructuredflow_earley_noopt_rxbvm
+50/64 Test #2504: ts_llstructuredflow_lr1_opt_rxtvm .........   Passed   13.67 sec
+      Start 2512: ts_llstructuredflow_earley_opt_rxtvm
+51/64 Test #2507: ts_llstructuredflow_packrat_noopt_rxbvm ...   Passed   11.20 sec
+      Start 2513: ts_llstructuredflow_earley_opt_rxbvm
+52/64 Test #2508: ts_llstructuredflow_packrat_opt_rxtvm .....   Passed   11.60 sec
+53/64 Test #2506: ts_llstructuredflow_packrat_noopt_rxtvm ...   Passed   12.00 sec
+54/64 Test #2509: ts_llstructuredflow_packrat_opt_rxbvm .....   Passed   11.04 sec
+55/64 Test #2510: ts_llstructuredflow_earley_noopt_rxtvm ....   Passed   18.59 sec
+56/64 Test #2511: ts_llstructuredflow_earley_noopt_rxbvm ....   Passed   17.75 sec
+57/64 Test #2512: ts_llstructuredflow_earley_opt_rxtvm ......   Passed   18.15 sec
+58/64 Test #2513: ts_llstructuredflow_earley_opt_rxbvm ......   Passed   15.59 sec
+59/64 Test #2914: rexxscript1_rxtvm .........................   Passed  164.90 sec
+      Start 2915: rexxscript1_rxbvm
+60/64 Test #2915: rexxscript1_rxbvm .........................   Passed  123.02 sec
+      Start 2919: rexxscript_ast_noopt_rxbvm
+61/64 Test #2919: rexxscript_ast_noopt_rxbvm ................   Passed   13.31 sec
+      Start 2916: rexxscript_ast_opt_rxtvm
+62/64 Test #2916: rexxscript_ast_opt_rxtvm ..................   Passed   13.72 sec
+      Start 2918: rexxscript_ast_noopt_rxtvm
+63/64 Test #2918: rexxscript_ast_noopt_rxtvm ................   Passed   13.38 sec
+      Start 2917: rexxscript_ast_opt_rxbvm
+64/64 Test #2917: rexxscript_ast_opt_rxbvm ..................   Passed   13.65 sec
+
+100% tests passed, 0 tests failed out of 64
+
+Label Time Summary:
+comprehensive       = 409.42 sec*proc (60 tests)
+level-l             = 704.80 sec*proc (64 tests)
+library             = 362.84 sec*proc (58 tests)
+optimizer-parity    = 409.42 sec*proc (60 tests)
+rexxscript          = 341.96 sec*proc (6 tests)
+smoke               = 295.38 sec*proc (4 tests)
+
+Total Test time (real) = 342.05 sec

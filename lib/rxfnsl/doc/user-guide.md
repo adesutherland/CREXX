@@ -170,6 +170,14 @@ make your reader cumbersome. The basic settings reader uses the named view;
 the calculator and settings lesson 9 use AST fields, common walks and rewrites.
 The [tree reference](#application-trees-with-then-tree) explains both choices.
 
+An AST field connects a parent to a child or stores text. For example, an `If`
+node can have a `condition` child and two block children called `yes` and `no`.
+Your `then tree` mapping defines those field names. An optional **flow mapping**
+uses the same names to describe which children execute in which order. The
+library can then build a graph of possible execution paths and analyse it.
+The [IF walkthrough](#from-grammar-captures-to-ast-fields) follows these links
+from source text to an assignment diagnostic.
+
 
 ### Where extra stages fit
 
@@ -1790,7 +1798,8 @@ which operations can happen. These are different questions. An IF has a
 condition and two branches in its tree; execution evaluates the condition and
 then follows one branch.
 
-A flow declaration gives the AST kinds their execution roles:
+A flow declaration tells the graph builder how each AST kind connects its
+children's execution paths:
 
 ```rexx
 execution: flow
@@ -1803,20 +1812,139 @@ execution: flow
   Number: value
 ```
 
-Here `Assignment`, `If` and the other labels are AST kind names from `then tree`.
-The words after each operation name fields on that kind. The declaration says
-that an assignment evaluates its `value` child before writing the variable
-whose spelling is in its `name` field. `Say` evaluates its child; the application
-continues to own output and interpretation.
+The declaration is a recipe shared by every node of each named kind. For each
+particular `If` in the parsed source, the builder looks up that node's fields
+and constructs its part of the flow graph. It retains links back to the AST
+and source locations. Your application constructs the graph explicitly:
 
-| Mapping | Execution order |
+```rexx
+tree = request.ast()
+graph = flowdemo..execution(reference tree)
+```
+
+Building the graph describes possible execution. It does not run the target
+program or choose an IF branch from a runtime value.
+
+#### From grammar captures to AST fields
+
+Read this declaration as a sentence: "For an If node, branch on its condition
+child; the true arm is its yes child, and the false arm is its no child."
+
+```rexx
+If: branch condition then yes else no
+```
+
+| Part | What it names |
+|---|---|
+| `If` | An AST kind declared by `then tree If(...)`. |
+| `branch` | The library's branching operation. |
+| `condition` | A child field on this If node, containing its expression AST. |
+| `then`, `else` | Keywords in the flow declaration. |
+| `yes`, `no` | Child fields on this If node, containing its two arms. |
+
+`condition`, `yes` and `no` are names chosen by the grammar author. They are
+neither flow-point identifiers nor Boolean values. They are defined on the
+left of the equals signs in `then tree`:
+
+```rexx
+conditional: rule = kw.if expression as test kw.then block as taken (kw.else block as alternative)? kw.end semi
+  then tree If(condition = test, yes = taken, no = alternative?)
+```
+
+There are two sets of names here:
+
+- `as test`, `as taken` and `as alternative` name **captures**: the pieces of
+  this rule's successful match that the AST mapping will use.
+- `condition`, `yes` and `no` name the resulting **AST fields**. For example,
+  `condition = test` puts the expression captured as `test` into the child
+  field called `condition`.
+
+The flow declaration refers to the AST fields. It does not refer directly to
+the captures. Many examples use the same name for both, such as
+`condition = condition`; this is a naming convenience. If you rename the AST
+field, update the flow declaration to use that name too. The grammar checker
+checks this connection before generating the language module.
+
+For the following input:
+
+```text
+if flag then
+  x = 10;
+else
+  x = 20;
+end;
+```
+
+the relevant tree is:
+
+```text
+If
+  condition -> Name
+                 spelling = "flag"
+  yes       -> Block
+                 items[1] -> Assignment
+                               name = "x"
+                               value -> Number(spelling = "10")
+  no        -> Block
+                 items[1] -> Assignment
+                               name = "x"
+                               value -> Number(spelling = "20")
+```
+
+Each arrow above is a child field or list member. `spelling` and `name` hold
+text. If the source has no ELSE, `no` has zero children because its mapping
+uses `alternative?`.
+
+Application code follows exactly these links. Given a handle called `ifNode`:
+
+```rexx
+testNode = ifNode.child('condition')
+thenBlock = ifNode.child('yes')
+if ifNode.count('no') = 1 then elseBlock = ifNode.child('no')
+```
+
+The graph builder does the same lookup using the fields named in the flow
+declaration. It constructs flow for the condition expression and each block,
+then connects them:
+
+```text
+                       true  -> process x = 10 --+
+read flag -> decision <                         +-> join -> following statement
+                       false -> process x = 20 --+
+```
+
+The decision and join are **flow points** created by the builder. They are not
+extra fields declared on the AST. An AST node can contribute several flow
+points: this If contributes entry, decision and join points, while its children
+contribute their own points. The tree records nesting; the graph records
+possible execution order.
+
+#### Flow operation reference
+
+| Mapping | Flow represented |
 |---|---|
 | `Kind: sequence items` | Visit the children of `items` in order. |
 | `Kind: evaluate left right` | Visit the listed child fields in order, and each field's children in order. One or more fields may be listed. |
 | `Kind: assign name value` | Evaluate the one `value` child, then assign the variable in text field `name`. |
-| `Kind: branch condition then yes else no` | Evaluate `condition`, choose `yes` or `no`, then join their outgoing paths. An absent optional `no` goes straight to the join. |
+| `Kind: branch condition then yes else no` | Evaluate `condition`, then connect a true path to `yes` and a false path to `no`. Their normal completions join. An absent optional `no` goes straight to the join. |
 | `Kind: read spelling` | Read the variable in the text field `spelling`. |
 | `Kind: value` | A leaf value with no variable reads or writes. |
+| `Kind: loop while condition do body` | Test before each iteration. False leaves the loop; the body may run zero times. |
+| `Kind: loop do body until condition` | Run the body, then test. True leaves the loop; false repeats. |
+| `Kind: loop do body` | Repeat the body until an explicit exit. |
+| `Kind: break` | Leave the nearest enclosing loop. |
+| `Kind: continue` | Start the nearest loop's next test, or its next body for an unconditional loop. |
+| `Kind: return value` | Evaluate the `value` child when present, then leave the analysed root. |
+| `Kind: return` | Leave the analysed root immediately. |
+| `Kind: shortcircuit left and right` | Evaluate `left`; evaluate `right` only on the true path. |
+| `Kind: shortcircuit left or right` | Evaluate `left`; evaluate `right` only on the false path. |
+
+`sequence` is convenient for a statement list; `evaluate` names one or more
+child fields such as operands. Both preserve the specified order. `value`
+means that a leaf has no flow work inside it. It does not calculate a value or
+declare that a condition is true. An assignment's write follows the flow of its
+value child, so `x = x;` reads x before assigning it. `Say: evaluate value`
+describes evaluation of the argument; output remains application behavior.
 
 Every AST kind needs a mapping. Every child field needs a declared execution
 role; text metadata may be left unused. `condition` and `yes` must each contain
@@ -1825,11 +1953,69 @@ reports unknown kinds, misspelled fields and incompatible field types or
 counts before generating code. For example, using `test` when the actual field
 is `condition` reports the available fields.
 
-These operations describe sequences, assignments and branches. Calls with
-unknown effects, short-circuit operators and loops need their own execution
-semantics before they can be mapped accurately. Do not label an effectful node
-`value` to suppress a missing-mapping error. A binary arithmetic node whose two
-children always execute can use `evaluate left right`.
+Loop conditions, loop bodies and short-circuit operands are single required
+children. A return value may be required or optional. Use a Block with
+`sequence items` to hold several loop statements. `break` and `continue` have
+no child fields. A jump outside a loop reports its AST kind, line and byte
+offset when the graph is built, including when the jump follows a return.
+
+Only paths that finish normally join the following statement. `break` goes to
+the loop exit, `continue` goes to the next test or iteration, and `return`
+ends the current analysis root. Analyse each function body as a separate root;
+these mappings do not model calls between functions. A binary arithmetic node
+whose children always execute can use `evaluate left right`. Give calls and
+other effects an explicit application contract before analysing them.
+
+Short-circuit expressions preserve their true and false outcomes through nested
+short-circuit expressions and into a branch or loop test. When used as an
+ordinary value, both outcomes join after evaluation. `evaluate` describes
+ordered evaluation; it does not declare that the parent's truth value equals
+one of its children's truth values.
+
+#### Conditions and analysis facts
+
+The condition remains an ordinary expression AST. For `if flag`, it is a Name
+node; for a language supporting `if 2 + 3 > 4`, it would contain the arithmetic
+and comparison nodes. A flow mapping describes when that expression executes.
+An analysis of values answers what it can mean.
+
+The built-in `definiteassignment()` analysis tracks variable reads and writes.
+It considers both branch edges possible, including when the condition is a
+literal. Supplying `flag` as an entry variable says it is assigned; it does not
+supply flag's value. The method does not calculate condition values, propagate
+constants or consume proof assumptions.
+
+Your application can inspect the condition while analysing the graph. For a
+decision in the If mapping above, the graph provides its source If node:
+Check `graph.op(point) = 'branch'` and `graph.node(point).kind() = 'If'`:
+
+```rexx
+ifNode = graph.node(point)
+testNode = ifNode.child('condition')
+```
+
+This example uses the field name declared above. The source link supplies the
+whole expression, not just its text or a branch label. An application analysis
+can combine that expression with facts about the program:
+
+| Kind of fact | Example | How it helps reasoning |
+|---|---|---|
+| Constant expression | `2 + 3 > 4` is true under the language's numeric rules. | The false edge cannot be taken after successful evaluation. |
+| Value at a program point | Every incoming path assigns flag the value 1, and the language treats 1 as true. | This particular test of flag has a known outcome. |
+| Fact on a branch edge | The condition is `x > 0`. | On the true edge, a value analysis can use `x > 0` until an operation changes that knowledge. |
+
+These are different questions from whether x or flag has been assigned. A
+value-aware analysis needs the target language's arithmetic, comparison and
+truth rules. It must account for writes, joins, and any effects or errors in
+condition evaluation. Knowing the result of a condition does not by itself
+justify removing the work needed to evaluate it. Unknown values retain both
+possible outcomes.
+
+The common AST [analysis service](#calculate-facts-about-a-tree) can store application-defined
+facts against nodes. [RexxScript's constant analysis](#analyse-and-fold-a-script)
+is a worked consumer of that service. Those facts are separate from the current
+flow solver: storing a constant or a sparse property does not automatically
+remove a branch from definite-assignment analysis.
 
 ### Worked example: find a read before assignment
 
@@ -1927,8 +2113,13 @@ does not change the AST or execute the target program.
 | `execution(reference tree,limit)` | Construct checked flow; `limit` counts events plus edges and defaults to 1,000,000. |
 | `graph.error()` | Construction or ownership error. |
 | `graph.points()`, `graph.edges()`, `graph.entries()` | Successful graph dimensions. |
+| `graph.op(point)` | Operation at a flow point, such as `read`, `write`, `branch` or `join`. Point IDs run from 1 to `points()`. |
+| `graph.node(point)` | The AST node responsible for that flow point. Follow its fields to inspect the corresponding expression or statement. |
+| `graph.from(link)`, `graph.destination(link)` | Source and destination point IDs for an edge. Edge IDs run from 1 to `edges()`. |
+| `graph.label(link)` | `true` or `false` for a branch choice, `break` or `continue` for a jump; empty for an ordinary edge. |
 | `graph.definiteassignment(names,cells,work)` | Analyse with entry names; defaults are 1,000,000 state cells and 10,000,000 work units. |
 | `result.error()` | Empty when the analysis completed successfully. |
+| `result.before(node).reachable()` | Whether entry can reach this node in the flow graph. |
 | `result.before(node).assigned(name)` | Whether the name is definitely assigned on entry to that AST node. Unknown names return 0. |
 | `result.count()` | Number of unsafe reads in a completed result. |
 | `result.node(i)` | Source AST node for diagnostic `i`, numbered from 1. |
@@ -1947,6 +2138,116 @@ those names from the incoming paths. An assignment removes its name from the
 outgoing set. New information only adds possibilities at each point; with a
 finite graph and finite set of names, that process reaches a stable result.
 The guarantee is relative to the execution roles declared in the flow mapping.
+
+### Worked example: loops, exits and skipped operands
+
+Build [loops.rxl](../examples/flow/loops.rxl) with
+[loops.crexx](../examples/flow/loops.crexx):
+
+```sh
+crexx --program flow-loops lib/rxfnsl/examples/flow/loops.rxl \
+      lib/rxfnsl/examples/flow/loops.crexx
+rxvm flow-loops
+```
+
+Start with an ordinary grammar rule that captures the condition and body:
+
+```rexx
+pretest: rule = kw.while expression as condition kw.do block as body kw.end semi
+  then tree While(condition = condition, body = body)
+```
+
+The flow group explains how those children execute:
+
+```rexx
+execution: flow
+  While: loop while condition do body
+  Until: loop do body until condition
+  Forever: loop do body
+  Break: break
+  Continue: continue
+  Return: return value
+```
+
+`While`, `Until` and `Forever` are AST kinds chosen by this grammar. `condition`
+and `body` name their fields. The words `loop`, `while`, `do` and `until` select
+the execution rule. The complete file also contains the mappings for blocks,
+assignments, reads and the other node kinds.
+
+The example analyses this program with `flag` and `other` assigned at entry:
+
+```text
+while flag do
+  if other then break; end;
+  x = 1;
+  continue;
+end;
+say x;
+return;
+say missing;
+```
+
+The first `say` can run without assigning x: the WHILE test might be false
+immediately, or the IF might take BREAK. The diagnostic points to x and shows
+one such path. CONTINUE goes back to the WHILE test. The final `say` cannot be
+reached because RETURN ends the program, so it produces no unsafe-read message.
+
+```rexx
+result = graph.definiteassignment('flag other')
+if result.error() <> '' then do
+  say result.error()
+  return 1
+end
+say result.before(lastSay).reachable()  /* 0 */
+```
+
+`reachable()` means that the constructed graph has a path from entry to this
+node. `assigned('x')` is true when x has been assigned on every path reaching
+it. An unreachable node returns 0 for both queries. Test reachability first
+when presenting assignment information about dead code.
+
+For an UNTIL loop, normal completion and CONTINUE reach the test after the
+body. BREAK skips that test. An unconditional loop has no implicit exit; code
+after it is reachable only through a BREAK. Nested jumps target the innermost
+loop. A RETURN inside any number of loops still leaves the analysis root.
+
+The small example language spells short-circuit expressions as `both(a,b)`
+and `either(a,b)`, and assignment expressions as `set(name,value)`. These make
+execution order visible without adding operator precedence to the lesson:
+
+```rexx
+  Both: shortcircuit left and right
+  Either: shortcircuit left or right
+  Set: assign name value
+```
+
+Compare these inputs:
+
+```text
+say both(flag, set(x, 1));
+say x;
+```
+
+The second statement reports an unsafe read: false flag skips the assignment.
+Now use the expression as a condition:
+
+```text
+if both(flag, set(x, 1)) then
+  say x;
+end;
+```
+
+Reaching the true branch requires evaluating the right operand, so x is
+assigned before that SAY. With `either`, reaching the false branch requires
+evaluating the right operand. This is reasoning about execution paths; the
+analysis does not calculate the truth of the literal 1.
+
+Loops may repeat indefinitely in the target program, but the analysis still
+terminates. It tracks a finite set of variable names and only adds facts about
+possible unassigned paths until no facts change. The `analysis.work` allowance
+can stop a large calculation with a resource diagnostic. Check `result.error()`
+before reading results; an interrupted analysis has no usable partial answers.
+
 
 ### Walk the nodes
 

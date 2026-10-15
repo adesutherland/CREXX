@@ -1,0 +1,48 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2512: ts_llstructuredflow_earley_noopt_rxtvm
+      Start 2514: ts_llstructuredflow_earley_opt_rxtvm
+      Start 2513: ts_llstructuredflow_earley_noopt_rxbvm
+      Start 2515: ts_llstructuredflow_earley_opt_rxbvm
+      Start 2502: ts_llstructuredflow_ll1_opt_rxtvm
+      Start 2504: ts_llstructuredflow_lr1_noopt_rxtvm
+      Start 2506: ts_llstructuredflow_lr1_opt_rxtvm
+      Start 2505: ts_llstructuredflow_lr1_noopt_rxbvm
+ 1/18 Test #2502: ts_llstructuredflow_ll1_opt_rxtvm .........   Passed    8.21 sec
+      Start 2507: ts_llstructuredflow_lr1_opt_rxbvm
+ 2/18 Test #2506: ts_llstructuredflow_lr1_opt_rxtvm .........   Passed    9.94 sec
+      Start 2508: ts_llstructuredflow_packrat_noopt_rxtvm
+ 3/18 Test #2505: ts_llstructuredflow_lr1_noopt_rxbvm .......   Passed   10.01 sec
+      Start 2501: ts_llstructuredflow_ll1_noopt_rxbvm
+ 4/18 Test #2504: ts_llstructuredflow_lr1_noopt_rxtvm .......   Passed   10.46 sec
+      Start 2500: ts_llstructuredflow_ll1_noopt_rxtvm
+ 5/18 Test #2513: ts_llstructuredflow_earley_noopt_rxbvm ....   Passed   14.88 sec
+      Start 2510: ts_llstructuredflow_packrat_opt_rxtvm
+ 6/18 Test #2515: ts_llstructuredflow_earley_opt_rxbvm ......   Passed   14.91 sec
+      Start 2503: ts_llstructuredflow_ll1_opt_rxbvm
+ 7/18 Test #2512: ts_llstructuredflow_earley_noopt_rxtvm ....   Passed   15.36 sec
+      Start 2509: ts_llstructuredflow_packrat_noopt_rxbvm
+ 8/18 Test #2514: ts_llstructuredflow_earley_opt_rxtvm ......   Passed   15.47 sec
+      Start 2511: ts_llstructuredflow_packrat_opt_rxbvm
+ 9/18 Test #2507: ts_llstructuredflow_lr1_opt_rxbvm .........   Passed   10.17 sec
+      Start 2458: levell_generated_rxtvm
+10/18 Test #2501: ts_llstructuredflow_ll1_noopt_rxbvm .......   Passed    8.65 sec
+      Start 2459: levell_generated_rxbvm
+11/18 Test #2508: ts_llstructuredflow_packrat_noopt_rxtvm ...   Passed    9.02 sec
+12/18 Test #2500: ts_llstructuredflow_ll1_noopt_rxtvm .......   Passed    8.90 sec
+13/18 Test #2458: levell_generated_rxtvm ....................   Passed    2.49 sec
+14/18 Test #2459: levell_generated_rxbvm ....................   Passed    2.41 sec
+15/18 Test #2503: ts_llstructuredflow_ll1_opt_rxbvm .........   Passed    7.84 sec
+16/18 Test #2510: ts_llstructuredflow_packrat_opt_rxtvm .....   Passed    8.12 sec
+17/18 Test #2509: ts_llstructuredflow_packrat_noopt_rxbvm ...   Passed    7.71 sec
+18/18 Test #2511: ts_llstructuredflow_packrat_opt_rxbvm .....   Passed    7.76 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Label Time Summary:
+comprehensive       = 167.41 sec*proc (16 tests)
+level-l             = 172.32 sec*proc (18 tests)
+library             = 172.32 sec*proc (18 tests)
+optimizer-parity    = 167.41 sec*proc (16 tests)
+smoke               =   4.91 sec*proc (2 tests)
+
+Total Test time (real) =  23.31 sec

@@ -210,24 +210,53 @@ or optional false child. Sequence/evaluate consume their selected children in
 field/list order. Every child has one execution role; unused text metadata is
 inert. Read/value leaves cannot conceal child computations.
 
-The graph builder walks children first. Each AST node receives an entry event;
-its children's completed flow fragments are connected as specified. Assignment
-adds its write after the value fragment. A branch adds a decision after its
-condition and a join after both arms; an absent false arm supplies a direct
-false edge to the join. A sequence connects each fragment once in order.
-The mapping contains no callback and the builder performs no fixed-point search.
-An N-node tree creates O(N) events and edges and uses O(A + N) indexed records,
-where A is arena capacity (already bounded by the AST entry budget). Source
-handles remain borrowed, including each branch edge's originating AST node.
+The graph builder makes two iterative parents-first walks. The first allocates
+entry and normal-exit ports and records lexical loop owners. Short-circuit
+nodes also receive separate true/false ports. The second connects the ports;
+parents establish each loop's continue target before visiting its descendants.
+The AST's checked one-parent invariant makes each child have exactly one use.
+No mapping callback or fixed-point search runs during graph construction.
 
-The structured source profile generates acyclic flow. It does not yet expose
-loops, returns, exceptions, call effects, bindings or short-circuit semantics.
-A public construction mutation outside the builder is refused; failed graphs
+The construction preserves the following path invariants, inductively over the
+AST structure (loop edges connect the completed finite fragments):
+
+- Assignment's write follows normal completion of its value. Sequence/evaluate
+  connect normal completions in field/list order.
+- Branch tests follow condition evaluation. True and false normal completions
+  join; an absent false arm goes directly to that join.
+- WHILE entry goes to the condition, true to body, false to exit, and body
+  completion/CONTINUE to condition. UNTIL entry goes to body, body completion/
+  CONTINUE to condition, true to exit and false to body. Unconditional loops
+  enter/repeat their body, with no implicit exit edge.
+- BREAK goes directly to the nearest enclosing loop exit. CONTINUE goes to its
+  recorded test/body entry. RETURN evaluates its optional child then stops.
+  Their normal-exit ports have no incoming paths, so syntactic statements after
+  them cannot create a false normal completion. Unreachable jump placement is
+  still validated. Return's boundary is the analysed root, not a call graph.
+- AND routes left-true to right, left-false to false; OR routes left-false to
+  right, left-true to true. Right outcomes are preserved. Tested short-circuit
+  nodes use separate outcome paths, never a merge followed by an independent
+  truth choice. Ordinary value use joins those ports. An opaque expression
+  has two possible outcomes after evaluation; no literal values are assumed.
+
+Thus graph paths model the declared structured execution, including finite
+prefixes of loops, under nondeterministic opaque tests. This is exact for that
+abstract execution contract, not for correlations or constant values omitted
+by the contract. Generic `evaluate` does not forward a child's Boolean value.
+Exceptions, call effects and variable bindings need additional contracts.
+
+For N reachable AST nodes the construction creates O(N) events and edges and
+uses O(A + N) indexed records, where A is the bounded AST arena capacity. Each
+node has at most four initial ports, and each test adds at most two decisions.
+The two walks and connections are finite, irrespective of graph cycles; field
+and mapping lookups add their schema-dependent search costs. The flow entry
+budget counts every event and edge, including disconnected normal-exit ports.
+
+Public construction mutations outside the builder are refused; failed graphs
 publish no start point, dimensions or readable events. Owner identities are
-captured on construction, including before the first query. Graph/result serials prevent an old
-analysis or point view from being reused after replacement, even for another
-graph on the same AST. This increment does not close the wider cyclic-language
-mapping and grouping/lowering acceptance criteria.
+captured before the first query. Graph/result serials invalidate replaced
+analyses and point views even on the same AST. The wider grouping/lowering,
+origin and production-migration criteria remain open.
 
 ## Definite assignment domain and proof
 
@@ -249,7 +278,7 @@ reachability or its incoming set grows. Union and removal of a *fixed* name are
 monotone under subset inclusion. Thus every bit changes at most once, from 0 to
 1, and each point changes from unreachable to reachable at most once. There are
 at most B*V bit additions and B reachability additions. A deduplicated worklist
-therefore terminates. Removing x in a transfer never removes incoming facts,
+therefore terminates, including on cyclic graphs. Removing x in a transfer never removes incoming facts,
 so it does not invalidate this argument.
 
 For a finite graph with these operations the equations characterize existence
@@ -281,5 +310,12 @@ actual graph path reaching the read unassigned. Its branch edges provide the
 explanation. The search visits each reachable event/edge at most once and has
 its own edge allowance; message construction and source-line scanning depend
 on path/source length. Witness exhaustion does not rewrite the completed
-analysis. The tests also enumerate all four paths through two branches for each
-of 16 combinations of writes, providing an independent result control.
+analysis. `reachable()` exposes the separately tracked entry reachability;
+`assigned()` returns false at an unreachable point rather than presenting
+vacuous truth as a usable fact. Both require a completed, current owner.
+The tests enumerate all four paths through two branches for each of 16 write
+configurations, and independently enumerate 16 loop-arm write/break/continue
+configurations. The latter admits an exit only from a breaking arm and requires
+all such arms to write; a backedge cannot repair an unsafe first-iteration exit.
+Additional controls test nested targets, post-test continue, returning branches,
+short-circuit truth correlations, diagnostic paths and exact budget boundaries.

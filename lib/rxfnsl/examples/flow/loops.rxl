@@ -1,0 +1,113 @@
+/* A small rules language. Each statement ends with a semicolon. */
+namespace flowloops
+identifier: token
+number: token
+kw.if: token
+kw.then: token
+kw.else: token
+kw.end: token
+kw.say: token
+kw.while: token
+kw.do: token
+kw.repeat: token
+kw.until: token
+kw.forever: token
+kw.break: token
+kw.continue: token
+kw.return: token
+kw.stop: token
+kw.both: token
+kw.either: token
+kw.set: token
+lparen: token
+rparen: token
+comma: token
+equals: token
+semi: token
+scan: lexer input utf8
+  letter: charset = 'A' to 'Z' | 'a' to 'z' | '_'
+  part: charset = letter | '0' to '9'
+  digit: charset = '0' to '9'
+  space: charset = ' ' | U+0009 | U+000A | U+000D
+  if.word: rule = 'if' then emit kw.if
+  then.word: rule = 'then' then emit kw.then
+  else.word: rule = 'else' then emit kw.else
+  end.word: rule = 'end' then emit kw.end
+  say.word: rule = 'say' then emit kw.say
+  while.word: rule = 'while' then emit kw.while
+  do.word: rule = 'do' then emit kw.do
+  repeat.word: rule = 'repeat' then emit kw.repeat
+  until.word: rule = 'until' then emit kw.until
+  forever.word: rule = 'forever' then emit kw.forever
+  break.word: rule = 'break' then emit kw.break
+  continue.word: rule = 'continue' then emit kw.continue
+  return.word: rule = 'return' then emit kw.return
+  stop.word: rule = 'stop' then emit kw.stop
+  both.word: rule = 'both' then emit kw.both
+  either.word: rule = 'either' then emit kw.either
+  set.word: rule = 'set' then emit kw.set
+  lparen.word: rule = '(' then emit lparen
+  rparen.word: rule = ')' then emit rparen
+  comma.word: rule = ',' then emit comma
+  name.word: rule = letter part* then emit identifier
+  number.word: rule = digit+ then emit number
+  equals.word: rule = '=' then emit equals
+  semi.word: rule = ';' then emit semi
+  spaces: rule = space+ then skip
+parse: parser semantics contextfree input tokens start program backend ll1
+program: rule = (statement as item)*
+  then tree Program(items = item*)
+block: rule = (statement as item)*
+  then tree Block(items = item*)
+statement: rule = assignment | conditional | output | pretest | posttest | forever | exitloop | nextloop | returning | stop
+assignment: rule = identifier as name equals expression as value semi
+  then tree Assignment(name = text(name), value = value)
+conditional: rule = kw.if expression as condition kw.then block as yes (kw.else block as no)? kw.end semi
+  then tree If(condition = condition, yes = yes, no = no?)
+output: rule = kw.say expression as value semi
+  then tree Say(value = value)
+expression: rule = variable | literal | both | either | setting
+variable: rule = identifier as spelling
+  then tree Name(spelling = text(spelling))
+literal: rule = number as spelling
+  then tree Number(spelling = text(spelling))
+
+pretest: rule = kw.while expression as condition kw.do block as body kw.end semi
+  then tree While(condition = condition, body = body)
+posttest: rule = kw.repeat block as body kw.until expression as condition semi
+  then tree Until(body = body, condition = condition)
+forever: rule = kw.forever block as body kw.end semi
+  then tree Forever(body = body)
+exitloop: rule = kw.break semi
+  then tree Break()
+nextloop: rule = kw.continue semi
+  then tree Continue()
+returning: rule = kw.return (expression as value)? semi
+  then tree Return(value = value?)
+stop: rule = kw.stop semi
+  then tree Stop()
+both: rule = kw.both lparen expression as left comma expression as right rparen
+  then tree Both(left = left, right = right)
+either: rule = kw.either lparen expression as left comma expression as right rparen
+  then tree Either(left = left, right = right)
+setting: rule = kw.set lparen identifier as name comma expression as value rparen
+  then tree Set(name = text(name), value = value)
+
+execution: flow
+  Program: sequence items
+  Block: sequence items
+  Assignment: assign name value
+  If: branch condition then yes else no
+  Say: evaluate value
+  Name: read spelling
+  Number: value
+  While: loop while condition do body
+  Until: loop do body until condition
+  Forever: loop do body
+  Break: break
+  Continue: continue
+  Return: return value
+  Stop: return
+  Both: shortcircuit left and right
+  Either: shortcircuit left or right
+  Set: assign name value

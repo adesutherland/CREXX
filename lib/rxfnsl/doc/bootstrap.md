@@ -34,8 +34,10 @@ becomes self-hosted is the **reader of Level L specifications**.
 L0 compiles a bounded handwritten reader from `bootstrap/seed-reader.inc`
 together with common semantic lowering. It has no resynchronization. L1 and
 L2 instead use the generated lexer, a declared keyword/declaration token stage,
-and the generated canonical LR parser. Their expression and charset trees are
-walked into the common grammar. They contain no seed-reader fallback.
+and the generated LL(1) parser. Their expression and charset trees are
+walked into the common grammar. Shared keyword alternatives are factored in
+the self-description; LL(1) admission checks it before generation. They contain
+no seed-reader fallback.
 
 The self-description includes a useful composite stage: `name :` becomes one
 `declarationname` token. This distinguishes the start of a declaration from an

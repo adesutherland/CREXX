@@ -101,6 +101,82 @@ This repairs the observed regression without increasing user budgets.
 
 ### AST infrastructure — implementation approved 13 October 2026
 
+#### Structured loops and exits — approved 14 October 2026
+
+**Vision:** describe ordinary language control flow with a small set of mappings
+from named AST fields, and explain which reads may occur before assignment.
+Loops, early exits and short-circuit expressions must compose correctly, with
+source-linked paths and a checked reachability query. The same Level B services
+serve every admitted parser backend. This increment preserves the existing
+grammar → AST → flow separation and the wider AST programme below.
+
+**Approved surface:** `loop while condition do body`, `loop do body until
+condition`, `loop do body`, `break`, `continue`, `return value` (a required or
+optional child), bare `return`, `shortcircuit left and right`, and `shortcircuit
+left or right`. Break/continue target the nearest enclosing loop; return exits
+the analysed root. `result.before(node).reachable()` reports reachability in
+the constructed graph. Conditions remain source-linked ASTs. Consuming constant
+or proof facts to remove branches is a later increment. Adrian approved local
+implementation on 14 October and commit/push to develop on 15 October 2026.
+
+**Numbered acceptance criteria — locally verified:**
+
+1. **AST6-AC01 — Surface and checks.** All three readers accept the approved
+   forms. Located diagnostics reject unknown fields, wrong child counts,
+   incomplete mappings and invalid qualifiers. Existing grammars still work.
+2. **AST6-AC02 — Composed control.** Pre-test, post-test and unconditional loops,
+   nested break/continue, optional return values and short-circuit outcomes
+   produce the intended graph. Abrupt exits cannot reach following statements.
+   Invalid jump placement fails with the source kind and location.
+3. **AST6-AC03 — Analysis.** Definite assignment and reachability agree with
+   independent path controls, including zero iterations, returning branches,
+   skipped operands and cycles. Diagnostics identify the original read and an
+   actual path without assignment. Stale views and exhausted budgets expose no
+   partial answers. Record termination and storage/work bounds for cyclic graphs.
+4. **AST6-AC04 — Delivery and teaching.** Add a worked example and prebuilt
+   runtime regressions across LL(1), LR(1), PEG and Earley, both VMs and consumer
+   optimization modes. Check source/RXAS providers, Level B bootstrap in both
+   modes and installed wrapper use. Update the manual's grammar/AST/flow
+   walkthrough, flow reference and API, and retain qualification inputs/results.
+
+**Numbered implementation steps:**
+
+1. **AST6-STEP01 (AC01):** extend the shared reader, self grammar and schema
+   checks; preserve generated source and packed-table service contracts.
+2. **AST6-STEP02 (AC02/03; after STEP01):** build loop targets and distinct
+   short-circuit outcomes iteratively; add checked reachability and diagnostics.
+3. **AST6-STEP03 (AC01–03; after STEP02):** add independent path controls,
+   placement/lifecycle/budget regressions and the cyclic analysis argument.
+4. **AST6-STEP04 (AC04; after STEP03):** qualify the toolchain and installed
+   example, finish the guide and record evidence. Leave wider AST obligations
+   and constant-aware analysis explicitly open.
+
+**Status: AST6-AC01–04 and AST6-STEP01–04 locally verified, 14 October 2026.**
+Adrian authorized direct commit/push to `develop` on 15 October 2026. The
+publication base is `9c790a5cb4aa25b04166d30d1c9479d24a9722b0`, which already
+contains the separate mainframe/VM input-failure work. Level L source/test hashes
+remain unchanged. A current product rebuild, 18 focused CTests and 12 refreshed
+installed-wrapper checks pass; the unchanged wider qualification is retained.
+The enclosing commit is the publication payload. Normal automatic CI is expected
+to pass; its actual result is reported in the conversation without a status-only
+commit. Evidence and exact input identities are retained in
+[evidence/ast-structured-flow-20261014](evidence/ast-structured-flow-20261014/README.md).
+
+| Criterion | Verification |
+|---|---|
+| AST6-AC01 | 112 completed surface commands include valid source/RXAS stage parity and 39 exactly located semantic refusals; 12 small malformed probes pass at L0/L1/L2. A missing seed field now reports EOF instead of line 0. |
+| AST6-AC02 | All loop forms, nearest nested jumps, returns and distinct short-circuit outcomes pass on LL(1), LR(1), PEG and Earley, in both consumer modes and VMs. |
+| AST6-AC03 | Independent 16-case cyclic path controls, zero-iteration/return/short-circuit cases, exact witness text, lifecycle and exhaustive insufficient graph allowances pass. AST-CONTRACT.md records construction invariants, finite convergence and resource bounds. |
+| AST6-AC04 | All 64 selected CTests pass; focused reader repair tests pass afterward with unchanged flow bytecode/providers. Both Level B modes have identical L1/L2 syntax output; 34 unoptimized-service checks, nine focused bootstrap checks and 12 final installed checks pass. Recovery passes 24 candidate and 12 preservation cases. The manual, example, reference and links are checked. |
+
+The self grammar factors common name alternatives and explicitly selects the
+existing LL(1) backend, preserving its terminal syntax without increasing user
+resource defaults. Full malformed-example fixtures were reduced after the
+completed surface panel; broad recovery already had independent coverage.
+The final reader-only repair reuses unchanged flow/runtime evidence and has its
+own focused probes and installed readback. Wider AST acceptance criteria remain
+open as recorded below; constant/proof-aware pruning was not part of this step.
+
 #### Sparse properties and simple flow analysis — approved 14 October 2026
 
 **Vision:** attach typed, sparse application information to an immutable AST,
@@ -281,14 +357,15 @@ their wider obligations.
 | AST-AC01 | Simple attached mappings; named text/child fields; required, optional and list counts; located refusals; settings/calculator | None for the reviewed inferred-schema surface. |
 | AST-AC02 | Independent owned results; borrowed handles; request release; exact/composite/derived source ranges; Unicode; stale/foreign-handle rejection; sparse typed properties/defaults; counted budgets | Synthetic and recovered origin infrastructure; broader migration measurements. |
 | AST-AC03 | Iterative walks; field/list access; application folds; checked reconstruction; empty/deep/wide/malformed/shared inputs; atomic failure; opt/noopt and both VMs; explicit traversal bounds | General search/fold convenience services and the wider builder/grouping profiles. |
-| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors; checked structured flow and finite definite assignment with path witnesses | Cyclic-language mapping/qualification, grouping/lowering and their proofs. |
+| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors; checked structured flow, loops/exits/short-circuit outcomes, finite definite assignment and reachability with path witnesses | Constant-aware flow contracts, grouping/lowering and their proofs. |
 | AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; named RexxScript slice, effects/control/error comparisons and retained pre-migration control | Recovered-origin integration. |
 | AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Compiler-shaped builder/validator example and production migration work. |
 
 AST-STEP02/03 and the first-delivery portion of AST-STEP05 are complete within
 the scope above. The acyclic RexxScript increment of AST-STEP04 is implemented;
-its local integration gates are verified above. Cyclic analysis, grouping/lowering
-and the remaining portions of AST-STEP05 stay open.
+its local integration gates are verified above. Restricted cyclic definite
+assignment and reachability are now verified by AST6-AC03. Constant-aware flow,
+grouping/lowering and the remaining portions of AST-STEP05 stay open.
 The complete AST infrastructure programme is not being marked complete.
 
 **Approved first surface:**

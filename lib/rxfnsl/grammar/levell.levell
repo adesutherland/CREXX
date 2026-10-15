@@ -80,6 +80,16 @@ kw.evaluate: token = 76
 kw.read: token = 77
 kw.value: token = 78
 kw.else: token = 79
+kw.loop: token = 80
+kw.while: token = 81
+kw.do: token = 82
+kw.until: token = 83
+kw.break: token = 84
+kw.continue: token = 85
+kw.return: token = 86
+kw.shortcircuit: token = 87
+kw.and: token = 88
+kw.or: token = 89
 notes: comments nested '/*' '*/'
 scan: lexer input utf8bytes
   letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
@@ -113,6 +123,16 @@ classify.declaration: transform stage words state 1 take identifier colon emit d
 classify.properties: transform stage words state 1 take identifier text 'PROPERTIES' emit kw.properties next 1
 classify.property: transform stage words state 1 take identifier text 'PROPERTY' emit kw.property next 1
 classify.default: transform stage words state 1 take identifier text 'DEFAULT' emit kw.default next 1
+classify.loop: transform stage words state 1 take identifier text 'LOOP' emit kw.loop next 1
+classify.while: transform stage words state 1 take identifier text 'WHILE' emit kw.while next 1
+classify.do: transform stage words state 1 take identifier text 'DO' emit kw.do next 1
+classify.until: transform stage words state 1 take identifier text 'UNTIL' emit kw.until next 1
+classify.break: transform stage words state 1 take identifier text 'BREAK' emit kw.break next 1
+classify.continue: transform stage words state 1 take identifier text 'CONTINUE' emit kw.continue next 1
+classify.return: transform stage words state 1 take identifier text 'RETURN' emit kw.return next 1
+classify.shortcircuit: transform stage words state 1 take identifier text 'SHORTCIRCUIT' emit kw.shortcircuit next 1
+classify.and: transform stage words state 1 take identifier text 'AND' emit kw.and next 1
+classify.or: transform stage words state 1 take identifier text 'OR' emit kw.or next 1
 classify.flow: transform stage words state 1 take identifier text 'FLOW' emit kw.flow next 1
 classify.sequence: transform stage words state 1 take identifier text 'SEQUENCE' emit kw.sequence next 1
 classify.assign: transform stage words state 1 take identifier text 'ASSIGN' emit kw.assign next 1
@@ -169,7 +189,7 @@ classify.region: transform stage words state 1 take identifier text 'REGION' emi
 classify.using: transform stage words state 1 take identifier text 'USING' emit kw.using next 1
 classify.open: transform stage words state 1 take identifier text 'OPEN' emit kw.open next 1
 classify.close: transform stage words state 1 take identifier text 'CLOSE' emit kw.close next 1
-parse: parser semantics contextfree input tokens start document
+parse: parser semantics contextfree input tokens start document backend ll1
   document: rule = header declaration+
   header: rule = (kw.options kw.levell)? kw.namespace name
   declaration: rule = declarationname body
@@ -200,7 +220,9 @@ parse: parser semantics contextfree input tokens start document
   properties.declaration: rule = kw.properties
   property.declaration: rule = kw.property type kw.default (string | (minus | plus)? integer)
   flow.declaration: rule = kw.flow
-  flow.operation: rule = kw.sequence name | kw.assign name name | kw.branch name kw.then name kw.else name | kw.evaluate name+ | kw.read name | kw.value
+  flow.operation: rule = kw.sequence name | kw.assign name name | kw.branch name kw.then name kw.else name | kw.evaluate name+ | kw.read name | kw.value | kw.loop loop.body | kw.break | kw.continue | kw.return name? | kw.shortcircuit name shortcircuit.op name
+  loop.body: rule = kw.while name kw.do name | kw.do name (kw.until name)?
+  shortcircuit.op: rule = kw.and | kw.or
   expression: rule = sequence (bar sequence)*
   sequence: rule = term+
   term: rule = bang term | amp term | atom suffix? capture?
@@ -211,7 +233,8 @@ parse: parser semantics contextfree input tokens start document
   set.difference: rule = set.atom (kw.except set.atom)*
   set.atom: rule = scalar.value (kw.to scalar.value)? | set.reference | kw.scalar | lparen set.expression rparen
   scalar.value: rule = codepoint | string
-  name: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.as | kw.properties | kw.property | kw.default | kw.flow | kw.sequence | kw.assign | kw.branch | kw.evaluate | kw.read | kw.value | kw.else
-  reference: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.properties | kw.property | kw.default | kw.flow | kw.sequence | kw.assign | kw.branch | kw.evaluate | kw.read | kw.value | kw.else
-  set.reference: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.emit | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.text | kw.unless | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.properties | kw.property | kw.default | kw.flow | kw.sequence | kw.assign | kw.branch | kw.evaluate | kw.read | kw.value | kw.else
-  take.name: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.then | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.to | kw.except | kw.scalar | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.properties | kw.property | kw.default | kw.flow | kw.sequence | kw.assign | kw.branch | kw.evaluate | kw.read | kw.value | kw.else
+  name: rule = common.name | kw.then | kw.emit | kw.text | kw.unless | kw.to | kw.except | kw.scalar | kw.as
+  reference: rule = common.name | kw.emit | kw.text | kw.unless | kw.to | kw.except | kw.scalar
+  set.reference: rule = common.name | kw.then | kw.emit | kw.text | kw.unless
+  take.name: rule = common.name | kw.then | kw.to | kw.except | kw.scalar
+  common.name: rule = identifier | kw.options | kw.levell | kw.namespace | kw.token | kw.diagnostic | kw.lexer | kw.input | kw.comments | kw.nested | kw.parser | kw.semantics | kw.start | kw.charset | kw.pattern | kw.rule | kw.skip | kw.error | kw.tokenstage | kw.transform | kw.stage | kw.state | kw.take | kw.next | kw.copy | kw.tree | kw.kind | kw.arity | kw.backend | kw.recovery | kw.sync | kw.operators | kw.atom | kw.group | kw.infix | kw.prefix | kw.precedence | kw.region | kw.using | kw.open | kw.close | kw.properties | kw.property | kw.default | kw.flow | kw.sequence | kw.assign | kw.branch | kw.evaluate | kw.read | kw.value | kw.else | kw.loop | kw.while | kw.do | kw.until | kw.break | kw.continue | kw.return | kw.shortcircuit | kw.and | kw.or

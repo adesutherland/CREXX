@@ -62,6 +62,14 @@ mapping: class
         when 'branch' then valid = count = 3
         when 'read' then valid = count = 1
         when 'value' then valid = count = 0
+        when 'while' then valid = count = 2
+        when 'until' then valid = count = 2
+        when 'loop' then valid = count = 1
+        when 'break' then valid = count = 0
+        when 'continue' then valid = count = 0
+        when 'return' then valid = count <= 1
+        when 'and' then valid = count = 2
+        when 'or' then valid = count = 2
         otherwise valid = 0
       end
       if valid = 0 then do
@@ -87,10 +95,19 @@ mapping: class
         text = (op = 'read' | op = 'assign') & i = 1
         if text then valid = schema.mode(found) = 'text'
         else valid = schema.mode(found) <> 'text'
-        if valid = 0 then call fail(kind || '.' || field || ' must be ' || word('a-child text',text + 1),m)
+        if valid = 0 then do
+          if text then call fail(kind || '.' || field || ' must be text',m)
+          else call fail(kind || '.' || field || ' must be a child field',m)
+        end
         card = schema.card(found)
         if op = 'assign' & i = 2 then do
           if card <> 'one' then call fail(kind || '.' || field || ' must contain exactly one child',m)
+        end
+        if wordpos(op,'while until loop and or') > 0 then do
+          if card <> 'one' then call fail(kind || '.' || field || ' must contain exactly one child',m)
+        end
+        if op = 'return' then do
+          if card <> 'one' & card <> 'optional' then call fail(kind || '.' || field || ' must contain one optional or required child',m)
         end
         if op = 'branch' then do
           if card <> 'one' & (i <> 3 | card <> 'optional') then call fail(kind || '.' || field || ' must contain one child (ELSE may be optional)',m)
@@ -138,6 +155,10 @@ graph: class
   _next = .int[]
   _entry = .int[]
   _exit = .int[]
+  _true = .int[]
+  _false = .int[]
+  _loop = .int[]
+  _again = .int[]
   _limit = .int
   _entries = .int
   _start = .int
@@ -176,60 +197,151 @@ graph: class
     if tree.status() <> 0 then call fail(tree.error())
     if mapping.check(tree.contract()) = 0 then call fail(mapping.error())
     if _error <> '' then return
-    walk = tree.walk()
+    /* Allocate ports and bind lexical loop ownership before connecting edges.
+     * Distinct outcome ports retain short-circuit truth through nested tests.
+     * No recursive builder calls and no mutable public graph escape. */
+    node = .llast..node; child = .llast..node; children = .llast..children
+    id = .int; m = .int; op = .string; first = .int; enclosing = .int
+    walk = tree.walk('parents first')
     do while walk.next() & _error = ''
       node = walk.node(); id = node.id(); m = mapping.index(node.kind())
-      if m = 0 then do
-        call fail('LL_FLOW: unmapped AST kind ' || node.kind()); leave
-      end
-      op = mapping.op(m); fields = mapping.fields(m)
+      op = mapping.op(m)
       first = event(node,'enter')
       if first = 0 then leave
-      _entry[id] = first; last = first
-      select op
-        when 'read' then do
+      _entry[id] = first
+      if op = 'value' | op = 'read' then _exit[id] = first
+      else _exit[id] = event(node,'leave')
+      if _error <> '' then leave
+      if op = 'and' | op = 'or' then do
+        _true[id] = event(node,'outcome'); _false[id] = event(node,'outcome')
+      end
+      enclosing = _loop[id]
+      if wordpos(op,'while until loop') > 0 then enclosing = id
+      children = node.each()
+      do while children.next() & _error = ''
+        child = children.node(); _loop[child.id()] = enclosing
+      end
+      if children.error() <> '' then call fail(children.error())
+    end
+    if walk.error() <> '' then call fail(walk.error())
+    walk = tree.walk('parents first')
+    do while walk.next() & _error = ''
+      node = walk.node(); id = node.id(); m = mapping.index(node.kind())
+      op = mapping.op(m); fields = mapping.fields(m)
+      first = _entry[id]; last = _exit[id]
+      select
+        when op = 'read' then do
           _op[first] = 'read'; _name[first] = node.text(word(fields,1))
           if _name[first] = '' | words(_name[first]) <> 1 then call fail('LL_FLOW_NAME: a variable name must be one nonempty word')
         end
-        when 'value' then nop
-        when 'assign' then do
+        when op = 'value' then nop
+        when op = 'assign' then do
           value = node.child(word(fields,2)); ok = edge(first,_entry[value.id()])
-          last = event(node,'write',node.text(word(fields,1)))
-          if last = 0 then leave
+          _op[last] = 'write'; _name[last] = node.text(word(fields,1))
           if _name[last] = '' | words(_name[last]) <> 1 then call fail('LL_FLOW_NAME: a variable name must be one nonempty word')
-          ok = edge(_exit[value.id()],last)
+          call complete(value,last)
         end
-        when 'branch' then do
+        when op = 'branch' then do
           condition = node.child(word(fields,1)); yes = node.child(word(fields,2))
-          ok = edge(first,_entry[condition.id()]); decision = event(node,'branch')
-          if decision = 0 then leave
-          ok = edge(_exit[condition.id()],decision)
-          last = event(node,'join')
-          if last = 0 then leave
-          ok = edge(decision,_entry[yes.id()],'true'); ok = edge(_exit[yes.id()],last)
+          ok = edge(first,_entry[condition.id()]); _op[last] = 'join'
+          noentry = last
           if node.count(word(fields,3)) = 1 then do
-            no = node.child(word(fields,3)); ok = edge(decision,_entry[no.id()],'false'); ok = edge(_exit[no.id()],last)
+            no = node.child(word(fields,3)); noentry = _entry[no.id()]
+            call complete(no,last)
           end
-          else ok = edge(decision,last,'false')
+          call test(condition,_entry[yes.id()],noentry,node)
+          call complete(yes,last)
+        end
+        when op = 'while' | op = 'until' | op = 'loop' then do
+          body = node.child(word(fields,words(fields)))
+          _op[last] = 'join'
+          if op = 'loop' then do
+            _again[id] = _entry[body.id()]
+            ok = edge(first,_again[id]); call complete(body,_again[id])
+          end
+          else do
+            condition = node.child(word(fields,1)); _again[id] = _entry[condition.id()]
+            if op = 'while' then do
+              ok = edge(first,_again[id])
+              call test(condition,_entry[body.id()],last,node)
+            end
+            else do
+              ok = edge(first,_entry[body.id()])
+              call test(condition,last,_entry[body.id()],node)
+            end
+            call complete(body,_again[id])
+          end
+        end
+        when op = 'break' | op = 'continue' then do
+          _op[first] = op; enclosing = _loop[id]
+          if enclosing = 0 then call fail('LL_FLOW_CONTEXT: ' || node.kind() || ' at line ' || node.line() || ', byte ' || node.offset() || ': ' || op || ' requires an enclosing loop')
+          else if op = 'break' then ok = edge(first,_exit[enclosing],'break')
+          else ok = edge(first,_again[enclosing],'continue')
+          /* The normal exit remains disconnected. */
+        end
+        when op = 'return' then do
+          _op[first] = 'return'
+          if fields <> '' then do
+            if node.count(fields) = 1 then do
+              value = node.child(fields); _op[first] = 'enter'
+              ok = edge(first,_entry[value.id()]); terminal = event(node,'return')
+              if terminal > 0 then call complete(value,terminal)
+            end
+          end
+        end
+        when op = 'and' | op = 'or' then do
+          lhs = node.child(word(fields,1)); rhs = node.child(word(fields,2))
+          ok = edge(first,_entry[lhs.id()])
+          if op = 'and' then call test(lhs,_entry[rhs.id()],_false[id],node)
+          else call test(lhs,_true[id],_entry[rhs.id()],node)
+          call test(rhs,_true[id],_false[id],node)
         end
         otherwise do
+          previous = first
           do f = 1 to words(fields)
             children = node.each(word(fields,f))
             do while children.next() & _error = ''
-              child = children.node(); ok = edge(last,_entry[child.id()]); last = _exit[child.id()]
+              child = children.node(); ok = edge(previous,_entry[child.id()])
+              call complete(child,0); previous = _exit[child.id()]
             end
             if children.error() <> '' then call fail(children.error())
           end
-          finish = event(node,'leave')
-          if finish = 0 then leave
-          ok = edge(last,finish); last = finish
+          ok = edge(previous,last)
         end
       end
-      _exit[id] = last
     end
     if walk.error() <> '' then call fail(walk.error())
-    if _error = '' then _start = _entry[_root.id()]
+    if _error = '' then do
+      call complete(_root,0)
+      if _error = '' then _start = _entry[_root.id()]
+    end
     _sealed = 1; _building = 0
+    return
+  /** Use a child as a value: join its Boolean outcomes only at this boundary. */
+  complete: method = .void
+    arg node = .llast..node, destination = .int
+    id = node.id(); ok = .int
+    if _true[id] > 0 then do
+      ok = edge(_true[id],_exit[id]); ok = edge(_false[id],_exit[id])
+    end
+    if destination > 0 then ok = edge(_exit[id],destination)
+    return
+  /** Test a child, preserving distinct outcomes of short-circuit expressions. */
+  test: method = .void
+    arg condition = .llast..node, yes = .int, no = .int, owner = .llast..node
+    ok = .int
+    id = condition.id(); decision = event(owner,'branch')
+    if decision = 0 then return
+    if _true[id] > 0 then do
+      ok = edge(_true[id],decision); ok = edge(decision,yes,'true')
+      decision = event(owner,'branch')
+      if decision = 0 then return
+      ok = edge(_false[id],decision); ok = edge(decision,no,'false')
+    end
+    else do
+      ok = edge(_exit[id],decision)
+      ok = edge(decision,yes,'true'); ok = edge(decision,no,'false')
+    end
     return
   fail: method = .void
     arg message = .string
@@ -475,6 +587,11 @@ result: class
     graph = dereference _graph
     point = graph.before(node)
     return .state(reference self,point)
+  reachable: method = .int
+    arg point = .int
+    call ready()
+    if point < 1 | point > _points then call failaccess('LL_FLOW_POINT: unknown flow point')
+    return _reach[point]
   assigned: method = .int
     arg point = .int, name = .string
     call ready()
@@ -529,7 +646,9 @@ result: class
       if e = 0 then call failaccess('LL_FLOW_WITNESS: diagnostic has no unassigned path')
       if graph.label(e) <> '' then do
         branch = graph.node(graph.from(e))
-        result = 'Take the ' || graph.label(e) || ' branch of ' || branch.kind() || ' on line ' || branch.line() || '. ' || result
+        label = graph.label(e)
+        if label = 'break' | label = 'continue' then result = 'Take ' || label || ' on line ' || branch.line() || '. ' || result
+        else result = 'Take the ' || label || ' branch of ' || branch.kind() || ' on line ' || branch.line() || '. ' || result
       end
       point = graph.from(e)
     end
@@ -555,3 +674,10 @@ state: class
     result = dereference _owner
     if result.identity() <> _identity then call failaccess('LL_FLOW_OWNER: analysis has been replaced')
     return result.assigned(_point,name)
+  reachable: method = .int
+    if <refvalid>(_owner) = 0 then do
+      call failaccess('LL_FLOW_OWNER: analysis has expired'); return 0
+    end
+    result = dereference _owner
+    if result.identity() <> _identity then call failaccess('LL_FLOW_OWNER: analysis has been replaced')
+    return result.reachable(_point)

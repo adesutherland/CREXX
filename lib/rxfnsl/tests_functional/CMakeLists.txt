@@ -230,4 +230,61 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
+# Structured-flow consumers also run directly, without nested builds.
+set(_structured_flow_spec "${CMAKE_CURRENT_SOURCE_DIR}/../examples/flow/loops.rxl")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_structured_flow_spec}")
+file(READ "${_structured_flow_spec}" _structured_flow_text)
+foreach(_backend ll1 lr1 packrat earley)
+  set(_structured_flow_dir "${CMAKE_CURRENT_BINARY_DIR}/structured-flow-${_backend}")
+  file(MAKE_DIRECTORY "${_structured_flow_dir}")
+  string(REPLACE "backend ll1" "backend ${_backend}" _structured_flow_backend_text "${_structured_flow_text}")
+  if(_backend STREQUAL "packrat")
+    string(REPLACE "semantics contextfree" "semantics ordered" _structured_flow_backend_text "${_structured_flow_backend_text}")
+  endif()
+  file(GENERATE OUTPUT "${_structured_flow_dir}/rules.rxl" CONTENT "${_structured_flow_backend_text}")
+  set(_structured_flow_provider "${_structured_flow_dir}/flowloops.rxas")
+  add_custom_command(OUTPUT "${_structured_flow_provider}"
+    COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
+      -DSPEC=${_structured_flow_dir}/rules.rxl -DOUTPUT=${_structured_flow_provider} -DFORMAT=rxas
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    DEPENDS levell_cli "${_structured_flow_dir}/rules.rxl" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    VERBATIM)
+  add_custom_command(OUTPUT "${_structured_flow_dir}/flowloops.rxbin"
+    COMMAND $<TARGET_FILE:rxas> flowloops
+    DEPENDS rxas "${_structured_flow_provider}"
+    WORKING_DIRECTORY "${_structured_flow_dir}" VERBATIM)
+  crexx_add_import_root(levell_structured_flow_${_backend}_imports
+    DIRECTORY "${_structured_flow_dir}/imports" OUTPUT_VARIABLE _structured_flow_imports
+    FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${_structured_flow_dir}/flowloops.rxbin"
+    DEPENDS library rxfnsl)
+  foreach(_mode noopt opt)
+    set(_structured_flow_flags)
+    if(_mode STREQUAL "noopt")
+      list(APPEND _structured_flow_flags -n)
+    endif()
+    set(_structured_flow_name "ts_llstructuredflow_${_backend}_${_mode}")
+    add_custom_command(OUTPUT "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxc> ${_structured_flow_flags} -x --no-exe-import
+        -i "${_structured_flow_dir}/imports"
+        -o "${_structured_flow_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_llstructuredflow.crexx"
+      COMMAND $<TARGET_FILE:rxas> ${_structured_flow_flags} "${_structured_flow_name}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_structured_flow_name}-linked" "${_structured_flow_name}" flowloops
+        "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+      DEPENDS rxc rxas rxlink rxfnsl levell_structured_flow_${_backend}_imports ${_structured_flow_imports} ts_llstructuredflow.crexx
+      WORKING_DIRECTORY "${_structured_flow_dir}" VERBATIM)
+    add_custom_target(${_structured_flow_name} ALL DEPENDS "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin")
+    add_dependencies(testrxfnsl ${_structured_flow_name})
+    foreach(_vm rxtvm rxbvm)
+      if(TARGET ${_vm})
+        add_test(NAME ${_structured_flow_name}_${_vm}
+          COMMAND $<TARGET_FILE:${_vm}> "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin")
+        set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES
+          PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_structured_flow_name}_${_vm} TARGETS ${_structured_flow_name} ${_vm})
+      endif()
+    endforeach()
+  endforeach()
+endforeach()
+
 crexx_finalize_directory_qa_tiers()

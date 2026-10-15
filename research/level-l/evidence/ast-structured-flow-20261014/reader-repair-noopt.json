@@ -1,0 +1,62 @@
+[
+  {
+    "stage": 0,
+    "case": "missing-field",
+    "status": 1,
+    "sha256": "7d150928613a9af9c908201b4c8e4144ef8df2965737b9cde16c9e997d9e84ae"
+  },
+  {
+    "stage": 0,
+    "case": "source",
+    "status": 0,
+    "sha256": "86d775d242813e92dca70c858632200412f0de71f72a61081f490227a65d2525",
+    "matches_retained": true
+  },
+  {
+    "stage": 0,
+    "case": "rxas",
+    "status": 0,
+    "sha256": "eb27e042b3bf2fe46df41290b3a2794bb9dab1d3f1365dc7e2f700df7ddac54a",
+    "matches_retained": true
+  },
+  {
+    "stage": 1,
+    "case": "missing-field",
+    "status": 1,
+    "sha256": "64c56e3c2213484258339bb1eec65347029770f4192c563373df882ffcf252f6"
+  },
+  {
+    "stage": 1,
+    "case": "source",
+    "status": 0,
+    "sha256": "86d775d242813e92dca70c858632200412f0de71f72a61081f490227a65d2525",
+    "matches_retained": true
+  },
+  {
+    "stage": 1,
+    "case": "rxas",
+    "status": 0,
+    "sha256": "eb27e042b3bf2fe46df41290b3a2794bb9dab1d3f1365dc7e2f700df7ddac54a",
+    "matches_retained": true
+  },
+  {
+    "stage": 2,
+    "case": "missing-field",
+    "status": 1,
+    "sha256": "64c56e3c2213484258339bb1eec65347029770f4192c563373df882ffcf252f6"
+  },
+  {
+    "stage": 2,
+    "case": "source",
+    "status": 0,
+    "sha256": "86d775d242813e92dca70c858632200412f0de71f72a61081f490227a65d2525",
+    "matches_retained": true
+  },
+  {
+    "stage": 2,
+    "case": "rxas",
+    "status": 0,
+    "sha256": "eb27e042b3bf2fe46df41290b3a2794bb9dab1d3f1365dc7e2f700df7ddac54a",
+    "matches_retained": true
+  }
+]

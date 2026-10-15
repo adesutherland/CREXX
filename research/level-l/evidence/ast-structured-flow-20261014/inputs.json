@@ -1,0 +1,27 @@
+{
+  "base": "78761cc5affe41c389e4969f18500c01f1e023cd",
+  "sources": {
+    "lib/rxfnsl/rexx/llflow.crexx": "b876ef1851d676e07be780f8fd5c05216c5ab7cb9238372f521ac4b734c2e134",
+    "lib/rxfnsl/rexx/llfront.crexx": "a8c5a4e7872b69539a6719701786c11759f220278d7d4a56e50ac32e45691478",
+    "lib/rxfnsl/grammar/levell.levell": "aeed5a114b3cf43fe27e8f0f8e189cb43a36a63c555ab2fb56162c1ba6921027",
+    "lib/rxfnsl/tests_functional/CMakeLists.txt": "9066f8bd6cbebeb2a4fea9efe3850e40839353c5047170a875d5f21f7ca4d26d",
+    "lib/rxfnsl/tests_functional/ts_llstructuredflow.crexx": "04ebb5c843d6feed0ec39f46bbcf12b713b5b2584ccdd03f43af9ba81ece2f5d",
+    "lib/rxfnsl/tests_functional/check-structured-flow.py": "b18640f92e824a4d56987d6322df632ab3c06fd8c53bfd2e139e3f11f8959879",
+    "lib/rxfnsl/tests_functional/check-structured-flow-delivery.py": "fe20287a983fdd5ac9f05b222c0f8150a46cca9c4d43aec6db9c9c861a6363fc",
+    "lib/rxfnsl/examples/flow/loops.rxl": "31110ed0ecb14d634a31879d9fc10b9c63172b4c56e93bb80896eb7f4107cb01",
+    "lib/rxfnsl/examples/flow/loops.crexx": "8fc415679a646fcb7d9df49cfbe53962c9f1dbcbff76f70f30ce50bb5324f584"
+  },
+  "images": {
+    "cmake-build-levell-integration/bin/rxc": "372c529feca611083d82d0eb897f9016e09fabd2540afca7c45034af93236d41",
+    "cmake-build-levell-integration/bin/rxas": "869726f3d4787bd3dabee1488730155f8f768a101294ecd1114bd19e1053e18e",
+    "cmake-build-levell-integration/bin/rxlink": "a63de32a2023fb5a1058880bed5c0dc220746f7c01d99d63168038da3eec7b13",
+    "cmake-build-levell-integration/bin/rxtvm": "e30b3f24a57f0d5f260fdbdee35e85ea5fa8b5859f46d5672e179e32a8256fe1",
+    "cmake-build-levell-integration/bin/rxbvm": "6e8529b355a88cba58ba7b49c35e8d4393e45b1100b6f6248b2569e80dc6c561",
+    "cmake-build-levell-integration/bin/levell": "cb6ab46756fd0348e48544113cf116a300a0954a43bb6ea4ae96ed475dbbe0d0",
+    "cmake-build-levell-integration/bin/crexx": "a805f79020eedd4025348872ac17640961fd2686ff342cb901df8bb5f9b12b68",
+    "cmake-build-levell-integration/bin/rxfnsl.rxbin": "bc243514f4f40b35988159e7130e68774befbdd04bafdb70cffca3ecd89de0e0",
+    "cmake-build-levell-integration/bin/library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "research/level-l/build/ast5/noopt/bin/rxfnsl.rxbin": "3c5e0efc920b696ce1b6ba2bf931b962ab76dda68a29aed74becb0af8f9bd145",
+    "research/level-l/build/ast6/install/bin/rxfnsl.rxbin": "bc243514f4f40b35988159e7130e68774befbdd04bafdb70cffca3ecd89de0e0"
+  }
+}
