@@ -1,0 +1,213 @@
+# Compiler architecture
+
+**Proposed design for STEP01 review.** The source examples have been checked
+with existing compilers. The new compilers and IR APIs are not implemented.
+[PLAN.md](../PLAN.md) owns scope, acceptance and approval.
+
+## What the pipeline does
+
+A frontend understands one source language. It produces a tree describing what
+the programmer wrote, checks its meaning, then lowers it: translates it into
+smaller, explicit operations. Both frontends lower into Level L's extensible
+intermediate representation, or IR. Shared passes analyse and transform that
+IR. The RXAS backend chooses instructions and registers and writes assembly.
+
+```mermaid
+flowchart TD
+  C[Classic source] --> CP[Classic lexer and parser]
+  G[G source] --> GP[G lexer and parser]
+  CP --> CT[Classic source AST]
+  GP --> GT[G source AST]
+  CT --> CS[Classic binding and semantic checks]
+  GT --> GS[G binding and type checks]
+  CS --> IR[Level L IR with compiler operation families]
+  GS --> IR
+  IR --> V[Verify, analyse and optimise]
+  V --> L[Lower to supported RXAS operations and calls]
+  L --> R[Assign registers and emit RXAS]
+  R --> A[Existing assembler, linker and VM]
+```
+
+An AST owns children, such as an IF's condition and arms. The IR also has
+references: two operations can use the same value, and a loop points back to
+an earlier block. They therefore have different structures. The source AST
+remains available for explanations and diagnostics after lowering.
+
+## Ownership of components
+
+| Component | Owner and responsibility |
+|---|---|
+| AST construction, origins and properties | Existing Level L services. The compiler declares its node shapes through `then tree`. |
+| IR, schemas, compact buffers and views | Level L; specified in the [IR design](../../doc/ir-design.md). |
+| Verification and pass infrastructure | Level L checks structure, reference validity, contracts and pass results. |
+| Common analyses and transformations | Level L implements algorithms using declared operation semantics. |
+| C/G semantic extensions | `compilers/common`, `levelc` and `levelg`: numeric rules, source types, pools, calls, effects and diagnostics. |
+| RXAS backend | `compilers/rxas`: ABI, instructions, register windows, literals and metadata. |
+| Compile service and commands | `compilers/driver`: requests, results, budgets, files and separate tool names. |
+
+The generic IR does not depend on either compiler. Its tests include a small
+non-cREXX operation family. Compiler-specific facts do not become undocumented
+requirements of generic nodes or transformations.
+
+## Proposed frontend algorithms
+
+Use the existing generated DFA lexer and canonical LR(1) parser for each first
+frontend. LR(1) means that grammar construction establishes which action follows
+from the current parser state and one next token. Conflicts are grammar-build
+errors with witnesses, not occasions for silently choosing an interpretation.
+
+Keep expression precedence explicit in the grammar. Use matched/unmatched IF
+rules to associate ELSE with the nearest eligible IF. Keep primary expressions,
+calls and operator levels in the same parser initially. Pratt remains an
+available later expression component; the current delimiter-based regional
+interface is not assumed to parse arbitrary undelimited C/G expressions.
+
+Classic has contextual words: `if = 1` is an assignment. Its lexer retains raw
+word spelling, adjacency, comments and clause separators. A documented token
+classification stage uses assignment/label lookahead and instruction context;
+the parser then constructs the Classic tree. The stage must record why it
+classified a word and preserve the original byte range. No stage manufactures
+a typed B AST. Specific grammar conflicts or missing token-stage services return
+for review; this proposal does not authorise an unreviewed parser replacement.
+
+Source encoding is UTF-8 with exact byte spans. CRLF counts as one line break.
+The initial identifier repertoire is explicit in the scope document; string
+content is Unicode. Recovery can produce a tree for diagnostics, but executable
+compilation requires a clean complete parse and successful semantic checks.
+
+## Compilation request and lifetime
+
+A request supplies source bytes and identity, language/profile, import roots,
+target contract and resource settings. It owns its trees, symbol tables and
+draft IR. A successful result owns its RXAS, source mappings and diagnostics;
+it remains usable after the request is released. The library never exits the
+process or installs output on a failed request. A command writes a completed
+result atomically after validation.
+
+Borrowed handles identify their owner and revision. Passing a handle does not
+copy a tree or module. A transform creates a new validated module; analyses on
+the old revision cannot be attached to the new one accidentally. Stage dumps
+include enough names and source information to explain a failed invariant.
+
+## Bootstrap: native seed to self-hosted B and L
+
+The native C-language B compiler is a seed tool. The intended normal B compiler
+is written in Level B, uses Level L for its frontend and IR, and shares the
+cREXX RXAS backend. It builds the infrastructure and the downstream G/C
+compilers once qualified. The first C/G PoC develops and tests those common
+services; completing that PoC alone does not establish a self-hosting B compiler.
+
+### Build stages
+
+`B0` below means the native seed. `B1`, `B2` and `B3` are generations of the
+same proper B compiler sources, compiled by different preceding tools. They
+are not different language levels or different compiler feature sets.
+
+| Stage | Inputs and work | Output |
+|---|---|---|
+| Seed tools | Build the retained C-language B compiler and existing assembler, linker and VM with their native prerequisites, including re2c where currently required. | B0 and native execution tools. |
+| Seed foundation | B0 compiles the B libraries and all required Level L services. Run Level L's own L0/L1/L2 reader bootstrap. | Complete seed-built Level L and B library closure. |
+| First proper B | Level L generates the B frontend; B0 compiles the authored B compiler/IR/backend sources. Existing tools assemble and link the generated and compiled modules. | B1, the first runnable proper B compiler. |
+| First self-hosted closure | Using B1, rebuild the B libraries, Level L and then the same proper B sources/generated frontend. | L and libraries built by B1; B2 built against that closure. |
+| Convergence check | Repeat that exact source/option sequence using B2. | L and libraries built by B2; B3. Compare with the preceding stage. |
+| Downstream tools | Qualified proper B and Level L build G and C compiler sources, semantic services and generated frontends. | Separate G and C compilers. G can then compile G-authored runtime/library sources. |
+
+The self-hosted stages use their private import roots and newly built libraries,
+not whichever installed module has the same name. Native compiler executables
+and compiler libraries must be unavailable in these stages. The native
+assembler/linker/VM remain available: compiler self-hosting does not rewrite
+those tools. Current B runtime primitives remain the execution foundation.
+
+Level L's **L0/L1/L2** stages regenerate its own specification reader, as
+described in the [current bootstrap guide](../../doc/bootstrap.md). They are
+separate from these B compiler generations. Building L again with B1 checks
+that proper B can build the generator and its libraries. Building the same
+closure with B2 checks whether the products stabilise. This avoids hiding an
+old seed-built library or frontend inside an apparently self-hosted compiler.
+
+Compare corresponding B2/B3 compiler products, B libraries, Level L modules and
+generated grammar outputs. Pin sources, semantic schemas, flags, Unicode data,
+native tools and dependency order. Use byte-identical deterministic outputs
+where possible. If a container has unavoidable build-location metadata, define
+and test a narrowly specified comparison that excludes only that metadata;
+never normalise away code, constants, ABI or meaningful origin differences.
+Retain both original products and the comparison receipt. A mismatch fails the
+qualification and requires diagnosis; do not keep rebuilding until it happens
+to disappear. Independent language regressions and opt/no-opt controls are also
+required, because reproducibility alone does not prove semantic correctness.
+
+This complete sequence is the cold-bootstrap qualification path. An ordinary
+incremental build uses a qualified proper B/L foundation and rebuilds affected
+dependencies. Repeating every generation belongs to changes that invalidate
+bootstrap evidence and the final replacement gate, not every documentation edit.
+
+### Independent compiler hosts, explicit runtime dependencies
+
+The existing Level L core and L0/L1/L2 bootstrap use Level B, `library`, and
+the existing native tools. `lib/rxfnsl/tools/CMakeLists.txt` explicitly excludes
+the embedded Level G VM and compiler exits from that bootstrap.
+
+The current `rxfnsc` package is a different closure: its CMake import stage
+requires `classlib`, compiler exits, `rxfnsg` and stream/filesystem providers.
+Importing that entire package into the new compiler host would defeat the
+intended small Level B bootstrap.
+
+The intended dependency graph is:
+
+```text
+qualified proper B + Level L + B host libraries
+    |-- G compiler host
+    |      `-- G-authored runtime/library products
+    `-- C compiler host
+           `-- Classic programs link the selected Classic runtime
+```
+
+B, Level L and the C compiler host must build and execute without `rxfnsg`,
+compiler exits or native C/G compiler services. The G compiler host is also
+written in B; it does not need a previously built G compiler. B and G may share
+typed frontend code only where their contracts agree, through a B-buildable
+common library. B is an explicit admitted language profile, not an invocation
+of a G compiler that silently brings G runtime services into the bootstrap.
+
+Classic target programs currently link the full Classic runtime package, whose
+build can still require G. Thus G may precede Classic runtime packaging without
+being a prerequisite of the C compiler itself. Making the complete Classic
+runtime B-only would require a separate reviewed packaging/source split. In the
+first PoC, existing built runtime packages supply the target-program services;
+later migration rebuilds them in their declared dependency order.
+
+For Classic constant evaluation, first audit the small existing Level B
+`RexxValue` dependency closure, which directly imports `rxfnsb`. Reuse an
+unchanged, qualified source implementation if that closure is sufficient; do
+not copy its arithmetic into a divergent compiler implementation. If additional
+dependencies enter the host closure, expose them before implementation. The
+full pool/activation/BIF runtime remains a generated-program dependency.
+
+The compiler's own metadata reader is cREXX. It reads prebuilt contracts without
+loading their executable code or invoking an old compiler. Rebuilding a target
+library is a separate build step, not an implicit source-to-RXAS escape route.
+
+## Replacement and INTERPRET
+
+The [scope](poc-scope.md) is a first executable slice. Later migration adds
+classes, references, broader Classic state/control, tooling and full metadata.
+The compile service is reusable from the start; interpreted execution arrives
+only with the caller-activation, resumable-condition and code-lifetime contract
+in STEP08. A normal function call is not that contract.
+
+The current VM has load operations but no public per-module unload operation.
+Bounded resident code ownership remains an explicit future design obligation.
+Production routing changes only at the plan's replacement gate.
+
+Proper B and the full B/L rebuild closure are tracked under STEP07B and AC02.
+The native seed remains available after normal B/C/G routing moves to the new
+compilers. Its removal would require a separate seed-distribution/trust strategy.
+
+## Reading the detailed design
+
+- [PoC scope and coverage inventory](poc-scope.md)
+- [Source trees and semantic tables](trees-and-ir.md)
+- [Level L IR and extension API](../../doc/ir-design.md)
+- [Paired pipeline walkthrough](pipeline-walkthrough.md)
+- [Processing algorithms and proof boundaries](algorithms.md)
+- [Decisions presented for review](design-decisions.md)

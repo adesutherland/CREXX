@@ -1,0 +1,9 @@
+options levelc
+say 01 == 1
+say 0.1 + 0.2
+numeric digits 3
+say 1 / 3
+numeric digits 9
+say 1 / 3
+say unassigned
+exit 0

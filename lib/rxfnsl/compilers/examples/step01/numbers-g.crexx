@@ -1,0 +1,8 @@
+options levelg
+say 01 == 1
+amount = .decimal
+amount = 0.1 + 0.2
+say amount
+count = .int
+say count
+exit 0

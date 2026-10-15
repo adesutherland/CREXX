@@ -1,5 +1,50 @@
 # Level L language tooling research — 10 October 2026
 
+### cREXX C/G compilers and shared IR — STEP01 review, 15 October 2026
+
+Adrian requested a documented plan for separate new C/G compilers written
+entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
+The authoritative compiler subprogramme is
+[`lib/rxfnsl/compilers/PLAN.md`](../../lib/rxfnsl/compilers/PLAN.md).
+It owns `LLCOMP-AC01–15` and `LLCOMP-STEP01–10` (including `STEP07B`), the proposed directory layout,
+two-frontend PoC, full migration, INTERPRET and eventual replacement gates.
+
+The new source-to-RXAS pipeline must not delegate to the C-language compiler
+backend. Adrian clarified that the native Level B compiler remains only the
+seed: build L, then the proper cREXX B compiler, then rebuild/verify the B/L
+closure before building the downstream G and C compiler hosts. AC02 and STEP07B
+now include that self-hosting destination. The proposed C compiler host depends
+only on B/L, while the existing Classic target-runtime package's G dependency
+is tracked separately. Old compilers remain independent test controls until
+replacement is qualified and approved.
+The extensible IR, schemas, storage, views and generic graph/analysis/emission
+services belong to Level L. C/G operation/type extensions and their complete
+language semantics belong in the separate compiler subtree. This supersedes the
+earlier conversational suggestion of using a C-backend adapter for the PoC.
+
+**Status:** Adrian approved the STEP01 design and authorised STEP02.
+The [review packet](../../lib/rxfnsl/compilers/doc/STEP01-REVIEW.md) now defines
+POC-01–10, purposeful C/G source trees, the Level L IR and extension API,
+processing algorithms and bootstrap ownership. Six source controls passed with
+existing tools on both VMs; their exact evidence boundary is recorded.
+STEP02 will implement the Level B-only IR and semantic services, regressions
+and documentation. This commit preserves the design baseline. The complete destination remains recorded
+in STEP07–10. This advances the planning for
+AST-AC02–06 and research AC-26; it does not mark their remaining migration or
+measurement obligations complete. Existing implementation approvals and AST7
+qualification remain as recorded below.
+
+Adrian also requires architecture, purposeful tree/graph schemas, supporting
+structures and processing algorithms to be documented alongside each increment.
+`LLCOMP-AC15` makes that a delivery requirement with a runnable paired C/G
+walkthrough and explicit ownership, invariant and algorithm contracts.
+
+The subplan also records the proposed numeric IR: checked handles over compact
+indexed storage, exact constant/name pools, sparse analysis tables and readable
+text/structured views. Its physical layout and codec contracts are reviewed in
+STEP01 and measured in STEP02; this is not approval of an encoding or an AST
+storage rewrite.
+
 ### Authoring and build refinements — approved 13 October 2026
 
 **Vision:** make a Level L language module a normal part of a cREXX project.

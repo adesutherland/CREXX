@@ -1,0 +1,8 @@
+options levelg
+say 0 & probe()
+say 1 | probe()
+exit 0
+
+probe: procedure = .boolean
+  say 'evaluated'
+  return 1

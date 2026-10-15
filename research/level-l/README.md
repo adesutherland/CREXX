@@ -6,6 +6,18 @@ settings-language example. The
 [diagnostic and recovery assessment](../../lib/rxfnsl/doc/diagnostics.md)
 distinguishes product behavior from the research engines below.
 
+The proposed [cREXX C/G compiler plan](../../lib/rxfnsl/compilers/PLAN.md)
+defines separate compilers under `lib/rxfnsl/compilers/`, written in cREXX with a
+shared extensible Level L IR, C/G semantic extensions, optimisations and RXAS
+backend. It records the two-frontend PoC and
+the later production-replacement/bootstrap gates. STEP02 foundation implementation
+is authorised; the existing compilers remain unchanged. The
+[STEP01 review](../../lib/rxfnsl/compilers/doc/STEP01-REVIEW.md) now supplies the
+paired C/G scope, source trees, generic IR/extension API, algorithms and checked
+source examples. It also records the native B seed -> Level L -> proper B ->
+verified B/L rebuild -> G/C compiler-host sequence, with proper B self-hosting
+tracked explicitly under STEP07B.
+
 **12 October continuation:** resource settings now cover construction and
 recovery, pinned Unicode 17 properties grow the same settings grammar, and
 located diagnostics plus lexical/UTF8 recovery have new native regressions.
