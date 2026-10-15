@@ -4,11 +4,20 @@ options levelb
 import rxfnsb
 main: procedure = .int
   arg args=.string[]
-  if args.0<>5 then do
-    say "usage: mainframe-batch-pack.crexx BATCH_SDK HOST_BUILD SINGLE_BUILD SOURCE BUILD_OUTPUT"
+  if args.0<>5 & args.0<>6 then do
+    say "usage: mainframe-batch-pack.crexx BATCH_SDK HOST_BUILD SINGLE_BUILD SOURCE BUILD_OUTPUT [TOOLS]"
     return 2
   end
   sdk=args.1;host=args.2;single=args.3;source=args.4;out=args.5
+  selected="RXC RXAS RXLINK RXVM";partial=0
+  if args.0=6 then do
+    selected=args.6;partial=1
+    if selected="" then return 2
+    do item=1 to words(selected)
+      if wordpos(word(selected,item),"RXC RXAS RXLINK RXVM")=0 then return 2
+      if wordpos(word(selected,item),selected)<>item then return 2
+    end
+  end
   /* One normal batch build location; never clean a source or SDK input. */
   if left(source,1)<>"/" | pos("..",source)>0 then return 2
   if out<>source||"/build/mainframe-batch" then return 2
@@ -23,13 +32,18 @@ main: procedure = .int
   if rc<>0 then do
     address crexx "run test -f :marker"
     if rc<>0 then return 2
-    address crexx "run cmake -E rm -rf :out"
-    if rc<>0 then return rc
+    if partial=0 then do
+      address crexx "run cmake -E rm -rf :out"
+      if rc<>0 then return rc
+    end
   end
+  else if partial<>0 then return 2
   address crexx "run mkdir -p :out"
   if rc<>0 then return rc
-  call lineout marker,"crexx-mainframe-batch-build-v1"
-  call lineout marker
+  if partial=0 then do
+    call lineout marker,"crexx-mainframe-batch-build-v1"
+    call lineout marker
+  end
   checker=sdk||"/tools/tso_entry_source_check.py"
   entry=sdk||"/native/source/tso31-any-entry.obj"
   check=out||"/batch-entry-check.json"
@@ -37,26 +51,29 @@ main: procedure = .int
   if rc<>0 then return rc
   i=.int;name=.string;target=.string
   originals=.string[];before=.string[];after=.string[]
+  shared=out||"/shared"
   do i=1 to 4
     originals[i]=host||"/bin/"||word("library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin",i)
+    if partial<>0 then originals[i]=shared||"/"||word("library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin",i)
   end
   address crexx "run shasum -a 256 :originals[]" output before
   if rc<>0 then return rc
   recipe=source||"/ports/single-threaded/mainframe-build.crexx"
-  do i=1 to 4
-    name=word("RXC RXAS RXLINK RXVM",i);target=out||"/"||name
+  do i=1 to words(selected)
+    name=word(selected,i);target=out||"/"||name
     address crexx "run crexx -nokeep :recipe --args :sdk TSO :host :single :source :target :name batch"
     if rc<>0 then return rc
   end
-  shared=out||"/shared"
   address crexx "run mkdir -p :shared"
   if rc<>0 then return rc
   inputs=.string[]
   do i=1 to 4
     name=word("library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin",i)
     original=host||"/bin/"||name;destination=shared||"/"||name
-    address crexx "run cmake -E copy :original :destination"
-    if rc<>0 then return rc
+    if partial=0 then do
+      address crexx "run cmake -E copy :original :destination"
+      if rc<>0 then return rc
+    end
     inputs[inputs.0+1]=destination
   end
   address crexx "run shasum -a 256 :originals[]" output after
@@ -80,9 +97,14 @@ main: procedure = .int
   hashes=.string[]
   address crexx "run shasum -a 256 :inputs[]" output hashes
   if rc<>0 then return rc
+  receipt=out||"/batch-inputs.sha256"
+  address crexx "run test ! -L :receipt"
+  if rc<>0 then return 2
+  address crexx "run rm -f :receipt"
+  if rc<>0 then return rc
   do i=1 to hashes.0
-    call lineout out||"/batch-inputs.sha256",hashes[i]
+    call lineout receipt,hashes[i]
   end
-  call lineout out||"/batch-inputs.sha256"
+  call lineout receipt
   say "BATCH PACKAGE BUILT: native TSO31/DD streams; guest qualification remains open."
   return 0

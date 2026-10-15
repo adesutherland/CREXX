@@ -62,6 +62,11 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 5. **Backpatching (after the final optimizer flush)**:
    - Forward references (branches to undefined labels, calls to undefined procedures) are logged as a linked list of references.
    - At the end of the parse, `backptch()` traverses all trees, resolves symbol addresses, updates the binary stream, and applies peephole jump optimizations.
+   - Label threading advances only when the target address changes. Distinct
+     labels may alias the same address, including a self-loop; treating that
+     alias as progress causes nontermination. Terminal labels do not designate
+     a branch instruction. The `rxas_label_cycles` regression preserves loops
+     and finite-chain results with optimization enabled and disabled.
 
 ## 2. Core Internal Data Structures
 
