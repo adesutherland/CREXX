@@ -1,0 +1,88 @@
+/* Source-built TSO31 batch package; the SDK owns DD streams and entry.
+ * This builds and pins native bytes. The Lab owns paired guest qualification. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args=.string[]
+  if args.0<>5 then do
+    say "usage: mainframe-batch-pack.crexx BATCH_SDK HOST_BUILD SINGLE_BUILD SOURCE BUILD_OUTPUT"
+    return 2
+  end
+  sdk=args.1;host=args.2;single=args.3;source=args.4;out=args.5
+  /* One normal batch build location; never clean a source or SDK input. */
+  if left(source,1)<>"/" | pos("..",source)>0 then return 2
+  if out<>source||"/build/mainframe-batch" then return 2
+  if sdk=out | host=out | single=out then return 2
+  if left(sdk,length(out)+1)=out||"/" then return 2
+  if left(host,length(out)+1)=out||"/" then return 2
+  if left(single,length(out)+1)=out||"/" then return 2
+  address crexx "run test ! -L :out"
+  if rc<>0 then return 2
+  marker=out||"/.mainframe-batch-build"
+  address crexx "run test ! -e :out"
+  if rc<>0 then do
+    address crexx "run test -f :marker"
+    if rc<>0 then return 2
+    address crexx "run cmake -E rm -rf :out"
+    if rc<>0 then return rc
+  end
+  address crexx "run mkdir -p :out"
+  if rc<>0 then return rc
+  call lineout marker,"crexx-mainframe-batch-build-v1"
+  call lineout marker
+  checker=sdk||"/tools/tso_entry_source_check.py"
+  entry=sdk||"/native/source/tso31-any-entry.obj"
+  check=out||"/batch-entry-check.json"
+  address crexx "run python3 -B :checker --bits 31 --batch --entry :entry --out :check"
+  if rc<>0 then return rc
+  i=.int;name=.string;target=.string
+  originals=.string[];before=.string[];after=.string[]
+  do i=1 to 4
+    originals[i]=host||"/bin/"||word("library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin",i)
+  end
+  address crexx "run shasum -a 256 :originals[]" output before
+  if rc<>0 then return rc
+  recipe=source||"/ports/single-threaded/mainframe-build.crexx"
+  do i=1 to 4
+    name=word("RXC RXAS RXLINK RXVM",i);target=out||"/"||name
+    address crexx "run crexx -nokeep :recipe --args :sdk TSO :host :single :source :target :name batch"
+    if rc<>0 then return rc
+  end
+  shared=out||"/shared"
+  address crexx "run mkdir -p :shared"
+  if rc<>0 then return rc
+  inputs=.string[]
+  do i=1 to 4
+    name=word("library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin",i)
+    original=host||"/bin/"||name;destination=shared||"/"||name
+    address crexx "run cmake -E copy :original :destination"
+    if rc<>0 then return rc
+    inputs[inputs.0+1]=destination
+  end
+  address crexx "run shasum -a 256 :originals[]" output after
+  if rc<>0 then return rc
+  if before.0<>after.0 then return 2
+  do i=1 to before.0
+    if before[i]<>after[i] then do
+      say "Host libraries changed during batch build; rebuild in place."
+      return 2
+    end
+  end
+  inputs[inputs.0+1]=sdk||"/SDK-MANIFEST.json"
+  inputs[inputs.0+1]=host||"/generated/crexx_version.h"
+  inputs[inputs.0+1]=source||"/ports/single-threaded/mainframe-batch-pack.crexx"
+  do i=1 to 4
+    name=word("RXC RXAS RXLINK RXVM",i)
+    inputs[inputs.0+1]=out||"/"||name||"/"||name||".XMI"
+    inputs[inputs.0+1]=out||"/"||name||"/"||name||".rdw"
+    inputs[inputs.0+1]=out||"/"||name||"/source-before.sha256"
+  end
+  hashes=.string[]
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc<>0 then return rc
+  do i=1 to hashes.0
+    call lineout out||"/batch-inputs.sha256",hashes[i]
+  end
+  call lineout out||"/batch-inputs.sha256"
+  say "BATCH PACKAGE BUILT: native TSO31/DD streams; guest qualification remains open."
+  return 0

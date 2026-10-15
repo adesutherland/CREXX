@@ -173,7 +173,7 @@ static int codec_mode_supported(const char *mode) {
 
 int platform_console_text_write(FILE *stream, const char *text, size_t length) {
     if (!length) return 0;
-#if defined(CREXX_MAINFRAME_ELF)
+#if defined(CREXX_MAINFRAME_ELF) && !defined(CREXX_MAINFRAME_BATCH)
     const uint32_t *native_map;
     crexx_utf8_state state = {0, 0, 0};
     unsigned char chunk[128];
@@ -207,7 +207,7 @@ int platform_console_text_write(FILE *stream, const char *text, size_t length) {
 }
 
 int platform_text_getc(FILE *stream) {
-#if defined(CREXX_MAINFRAME_ELF)
+#if defined(CREXX_MAINFRAME_ELF) && !defined(CREXX_MAINFRAME_BATCH)
     /* Text handlers share stdin's partially emitted scalar. Byte/binary
      * handlers deliberately continue to use raw libc reads. */
     static unsigned char pending[4];

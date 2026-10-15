@@ -43,6 +43,18 @@ if(APPLE AND BUILD_TESTING)
     set_tests_properties(mainframe_stdio PROPERTIES LABELS "platform;text;cms"
         TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-stdio"
         CREXX_PREP_TARGETS test_mainframe_stdio)
+    # Use the same native file mock; batch standard streams reach the SDK in
+    # UTF-8 while named-file codecs keep their existing native policy.
+    add_executable(test_mainframe_batch_stdio tests/test_mainframe_stdio.c ${platform_sources})
+    target_include_directories(test_mainframe_batch_stdio PRIVATE .)
+    target_compile_definitions(test_mainframe_batch_stdio PRIVATE
+        CREXX_CMS_ELF=1 CREXX_CMS_TEXT_IO=1 CREXX_MAINFRAME_BATCH=1)
+    set_property(TARGET test_mainframe_batch_stdio PROPERTY C_STANDARD 99)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-batch-stdio")
+    add_test(NAME mainframe_batch_stdio COMMAND test_mainframe_batch_stdio)
+    set_tests_properties(mainframe_batch_stdio PROPERTIES LABELS "platform;text;batch"
+        TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-batch-stdio"
+        CREXX_PREP_TARGETS test_mainframe_batch_stdio)
 endif()
 add_library(platform platform.h ${platform_sources} rxinteger.h rxinteger.c)
 target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
