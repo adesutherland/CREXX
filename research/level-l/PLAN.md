@@ -1,6 +1,6 @@
 # Level L language tooling research — 10 October 2026
 
-### cREXX C/G compilers and shared IR — STEP02 foundation, 15 October 2026
+### cREXX C/G compilers and shared IR — STEP03 frontends, 15 October 2026
 
 Adrian requested a documented plan for separate new C/G compilers written
 entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
@@ -33,9 +33,15 @@ records checked schemas, numeric storage/codecs, facts, flow analysis, semantic
 callbacks, replacement/lowering and chunked output. Adrian authorised the
 qualified STEP02 increment and existing baseline for publication to `develop`
 on 15 October 2026; hosted results are reported separately by the CI monitor.
-The compiler plan now includes the STEP03 frontend proposal for review.
-STEP03–06 source compilers,
-backend and end-to-end PoC remain open, as does the full STEP07–10 destination.
+Adrian subsequently approved STEP03. Both generated source frontends and their
+Level B semantic mapper/import-contract reader are now locally qualified at the
+source-to-IR boundary. The [STEP03 receipt](../../lib/rxfnsl/compilers/evidence/step03-20261015/README.md)
+records the product build, 24 frontend and 128 existing CTests, B-only bootstrap
+modes and full no-opt frontend delivery. Syntax errors and messages have explicit
+coverage, and the walkthrough now contains generated trees/IR. Publication was
+authorised together with the focused CI preparation repair on 15 October 2026;
+STEP04–06 backend execution, optimisation and complete PoC remain
+open, as does the full STEP07–10 destination.
 This advances the foundation portions of
 AST-AC02–06 and research AC-26; it does not mark their remaining migration or
 measurement obligations complete. Existing implementation approvals and AST7

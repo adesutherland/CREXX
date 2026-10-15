@@ -1,0 +1,78 @@
+Program|0:101|options levelc
+say 0 & probe()
+say 1 | probe()
+exit 0
+
+probe: procedure
+  say 'evaluated'
+  return 1
+
+Sequence|0:101|options levelc
+say 0 & probe()
+say 1 | probe()
+exit 0
+
+probe: procedure
+  say 'evaluated'
+  return 1
+
+Options|0:14|options levelc
+Say|15:30|say 0 & probe()
+Chain|19:30|0 & probe()
+Chain|19:30|0 & probe()
+Chain|19:21|0 
+Chain|19:21|0 
+Chain|19:21|0 
+Chain|19:21|0 
+Number|19:20|0
+Chain|23:30|probe()
+Chain|23:30|probe()
+Chain|23:30|probe()
+Chain|23:30|probe()
+Call|23:30|probe()
+Arguments|29:29|
+Argument|29:29|
+and|21:22|&
+Say|31:46|say 1 | probe()
+Chain|35:46|1 | probe()
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Number|35:36|1
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Call|39:46|probe()
+Arguments|45:45|
+Argument|45:45|
+or|37:38||
+Exit|47:53|exit 0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Number|52:53|0
+CLabel|55:61|probe:
+CProcedure|62:71|procedure
+Say|74:89|say 'evaluated'
+Chain|78:89|'evaluated'
+Chain|78:89|'evaluated'
+Chain|78:89|'evaluated'
+Chain|78:89|'evaluated'
+Chain|78:89|'evaluated'
+Chain|78:89|'evaluated'
+String|78:89|'evaluated'
+Return|92:100|return 1
+Chain|99:100|1
+Chain|99:100|1
+Chain|99:100|1
+Chain|99:100|1
+Chain|99:100|1
+Chain|99:100|1
+Number|99:100|1

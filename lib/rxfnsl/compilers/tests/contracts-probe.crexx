@@ -1,0 +1,17 @@
+/* cREXX License (MIT). Read actual library contracts using the B-only reader. */
+options levelb
+import rxfnsb
+import llcompilercontracts
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 then return 2
+  image = readbinary(argv[1]); catalog = .llcompilercontracts..catalog(image)
+  if catalog.error() <> '' then do
+    say catalog.error(); return 1
+  end
+  item = catalog.lookup(argv[2])
+  say item.error() || '|' || item.name() || '|' || item.result() || '|' || item.arguments()
+  do i = 1 to item.arguments()
+    say i || '|' || item.type(i) || '|' || item.optional(i)
+  end
+  return item.error() <> ''

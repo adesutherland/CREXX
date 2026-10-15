@@ -1,8 +1,9 @@
 # cREXX compilers built with Level L
 
-Status: STEP01 approved; STEP02 foundation implemented and locally qualified,
-15 October 2026. Publication target: `develop`, carrying the design baseline
-`d13a91c1b` and this qualified STEP02 increment. Original planning source baseline: develop
+Status: STEP01 approved; STEP02 published; STEP03 source-to-IR frontends
+implemented and locally qualified, with publication to `develop` authorised
+15 October 2026 alongside the CI preparation repair. STEP03 working baseline:
+`87ee68b317ed751d75eb954c50cfdde20a824d00`. Original planning source baseline:
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
 
 Start with the [STEP01 review](doc/STEP01-REVIEW.md), then the
@@ -737,9 +738,9 @@ Normal Build CREXX and CodeQL workflows are expected to pass; their observed
 results belong to GitHub and the lightweight monitor, not a status-only commit.
 No hosted CI pass is claimed by this local qualification record.
 
-## STEP03 proposal for review
+## STEP03 implementation
 
-**Proposed; implementation awaits Adrian's approval.** The outcome is two real
+**Approved 15 October 2026; F3-STEP01–04 complete and F3-AC01–05 verified locally.** The outcome is two real
 source-to-IR frontends under `compilers/levelc` and `compilers/levelg`, written
 in Level B with Level L grammars. Each keeps its own source semantics and
 produces a checked module in the shared IR. This implements the frontend part
@@ -772,10 +773,11 @@ to an explicitly initialised typed slot and selects typed integer operations.
 C retains the dynamic pool name `TOTAL`, exact literal spelling and explicit
 numeric context. Both use core branch blocks and their language's SAY contract.
 The [paired walkthrough](doc/pipeline-walkthrough.md) shows the larger example
-with a routine, loop and actual library call. Its source controls already run
-with existing tools; its frontend IR remains explanatory until STEP03 generates it.
+with a routine, loop and actual library call. Its source controls run
+with existing tools; its source trees and frontend IR are now generated outputs.
 
-Acceptance for this increment (all **open**):
+Acceptance for this increment (**verified at the source-to-IR boundary**,
+with the [STEP03 receipt](evidence/step03-20261015/README.md)):
 
 1. **F3-AC01 — Two complete admitted grammars.** Generated Level L DFA/LR(1)
    frontends recognise the POC-01–10 source corpus, including Classic contextual
@@ -799,7 +801,10 @@ Acceptance for this increment (all **open**):
    IR and readable dumps. Syntax/type/profile errors, recovered input and
    resource limits yield owned diagnostics without a successful module.
    Evidence: malformed/unsupported inputs, exact source spans, bounded failure
-   tests and repeated independent requests. Use a reusable frontend service;
+   tests and repeated independent requests. Explicitly cover syntax errors and
+   message quality (Adrian, 15 October 2026): missing THEN/END, misplaced ELSE,
+   malformed expressions/calls, unterminated strings/comments, invalid bytes,
+   Unicode/CRLF coordinates and unsupported-profile distinctions. Use a reusable frontend service;
    complete installed compiler CLI/RXAS output remains STEP04.
 5. **F3-AC05 — B-only delivery and explanation.** Both frontend hosts build
    with B/L imports only, run on both concrete VMs in the maintained modes, and
@@ -817,10 +822,54 @@ Implementation sequence, serving LLCOMP-AC03–05/08/09/15:
 | F3-STEP03 | Complete local/recursive calls, argument and RESULT handling, and the required Level B import-contract reader/mapping. | F3-AC02–04; after the corresponding F3-STEP02 contracts. |
 | F3-STEP04 | Qualify all POC rows at the frontend boundary; record generated examples and update architecture/algorithms/manual. | F3-AC01–05; all earlier steps. |
 
+The [STEP03 receipt](evidence/step03-20261015/README.md) records the warning-free
+product build, 24 new and 128 existing distinct CTests, both seed-built B-only
+bootstrap modes, twelve complete no-opt consumer executions and generated
+C/G tree/IR/error examples. The syntax group checks categories, messages and
+exact source coordinates; failed requests expose no successful IR. A focused
+NUMERIC FORM comment regression and readable named IR attributes are included.
+The architecture, schema/algorithm reference, frontend API and user guide now
+describe the implementation. Runtime execution equivalence remains STEP04–06.
+
 No new source syntax, native C compiler logic, default-tool replacement or
 INTERPRET execution is part of this approval. Any newly required public contract
 or architectural change returns for review before implementation. Completing a
 small arithmetic example alone does not close F3-AC01–05 or STEP03.
+
+## STEP03 publication and CI preparation repair
+
+Approved 15 October 2026. Publish the locally qualified STEP03 frontends with a
+narrow repair to the STEP02 test preparation dependency graph. A clean hosted
+optimizer-parity build must produce the linked test images before CTest runs;
+normal product builds must remain valid. Compiler semantics and source syntax
+are unchanged by this repair. Preserve unrelated checkout files.
+
+1. **QA3-AC01:** The optimizer-parity preparation graph contains all STEP02
+   demo/contract and STEP03 frontend test producers for opt/no-opt modes.
+   Verify the generated target graph and rebuild deliberately absent test images
+   through `qa-prep-optimizer-parity`, without invoking their producers directly.
+2. **QA3-AC02:** The eight STEP02 tests and 24 STEP03 tests pass on both VMs
+   after preparation. Verify the product build and the unchanged retained STEP03
+   source/artifact/example hashes; reuse broader unchanged qualification.
+3. **QA3-AC03:** Commit only the repair and approved STEP03 paths, publish to
+   `develop`, verify the remote SHA and switch the existing lightweight monitor
+   to that SHA and its normal Build/CodeQL runs. Hosted success is reported
+   separately from local qualification.
+
+| Step | Work | Acceptance / dependency |
+|---|---|---|
+| QA3-STEP01 | Complete directory QA tier/preparation finalization using the existing repository helper. | QA3-AC01; approved repair scope. |
+| QA3-STEP02 | Recreate absent test images via CI preparation, run focused tests and product build, record evidence. | QA3-AC01/02; after repair. |
+| QA3-STEP03 | Publish the repair and STEP03, verify remote identity and retarget monitoring. | QA3-AC03; after local gates pass. |
+
+Current status: QA3-STEP01/02 and QA3-AC01/02 verified by the
+[repair receipt](evidence/ci-preparation-20261015/README.md): all six absent test
+images rebuilt through CI preparation, 32/32 focused tests and the product
+build passed. Retained STEP03 sources/artifacts/examples match except the
+qualified CMake preparation change. QA3-STEP03 is the authorised publication
+operation for these two commits; its remote SHA and monitor readback are
+reported in the conversation. Normal hosted workflows are expected to pass;
+their observed results remain distinct. No status-only follow-up is planned.
 
 ## Qualification and documentation practice
 
@@ -853,7 +902,8 @@ small arithmetic example alone does not close F3-AC01–05 or STEP03.
 | Architecture direction: cREXX compilers, Level L-owned extensible numeric IR and parallel documentation | Agreed; detailed contracts presented in STEP01. |
 | STEP01 | Reviewed and approved as the STEP02 foundation: scope, architecture, trees, IR/API, algorithms, dependency inventory and six source controls. [Review packet](doc/STEP01-REVIEW.md). |
 | STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
-| STEP03–06 / remaining Phase A | STEP03 proposal above awaits review; F3-AC01–05 open. No frontend/backend implementation claimed. |
+| STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Uncommitted implementation, no hosted result claimed. |
+| STEP04–06 / remaining Phase A | Backend execution, optimisation and complete PoC qualification remain open with their later gates. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
 | LLCOMP-AC01–15 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |

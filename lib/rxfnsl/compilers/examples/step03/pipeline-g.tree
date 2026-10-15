@@ -1,0 +1,192 @@
+Program|0:243|options levelg
+import rxfnsb
+total = .int
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+twice: procedure = .int
+  arg value = .int
+  return value * 2
+
+Sequence|0:181|options levelg
+import rxfnsb
+total = .int
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+
+Options|0:14|options levelg
+GImport|15:28|import rxfnsb
+GDeclare|29:41|total = .int
+Type|37:41|.int
+Assignment|42:55|total = 2 + 3
+Chain|50:55|2 + 3
+Chain|50:55|2 + 3
+Chain|50:55|2 + 3
+Chain|50:55|2 + 3
+Chain|50:55|2 + 3
+Chain|50:52|2 
+Cast|50:52|2 
+Number|50:51|2
+Chain|54:55|3
+Cast|54:55|3
+Number|54:55|3
+plus|52:53|+
+IfElse|56:101|if total > 4 then say twice(total)
+else say 0
+Chain|59:69|total > 4 
+Chain|59:69|total > 4 
+Chain|59:69|total > 4 
+Chain|59:65|total 
+Chain|59:65|total 
+Chain|59:65|total 
+Cast|59:65|total 
+Name|59:64|total
+Chain|67:69|4 
+Chain|67:69|4 
+Chain|67:69|4 
+Cast|67:69|4 
+Number|67:68|4
+gt|65:66|>
+Say|74:91|say twice(total)
+
+Chain|78:91|twice(total)
+
+Chain|78:91|twice(total)
+
+Chain|78:91|twice(total)
+
+Chain|78:91|twice(total)
+
+Chain|78:91|twice(total)
+
+Chain|78:91|twice(total)
+
+Cast|78:91|twice(total)
+
+Call|78:90|twice(total)
+Arguments|84:89|total
+Argument|84:89|total
+Chain|84:89|total
+Chain|84:89|total
+Chain|84:89|total
+Chain|84:89|total
+Chain|84:89|total
+Chain|84:89|total
+Cast|84:89|total
+Name|84:89|total
+Say|96:101|say 0
+Chain|100:101|0
+Chain|100:101|0
+Chain|100:101|0
+Chain|100:101|0
+Chain|100:101|0
+Chain|100:101|0
+Cast|100:101|0
+Number|100:101|0
+While|102:144|do while total > 0
+  total = total - 1
+end
+Chain|111:120|total > 0
+Chain|111:120|total > 0
+Chain|111:120|total > 0
+Chain|111:117|total 
+Chain|111:117|total 
+Chain|111:117|total 
+Cast|111:117|total 
+Name|111:116|total
+Chain|119:120|0
+Chain|119:120|0
+Chain|119:120|0
+Cast|119:120|0
+Number|119:120|0
+gt|117:118|>
+Sequence|123:141|total = total - 1
+
+Assignment|123:140|total = total - 1
+Chain|131:140|total - 1
+Chain|131:140|total - 1
+Chain|131:140|total - 1
+Chain|131:140|total - 1
+Chain|131:140|total - 1
+Chain|131:137|total 
+Cast|131:137|total 
+Name|131:136|total
+Chain|139:140|1
+Cast|139:140|1
+Number|139:140|1
+minus|137:138|-
+Say|145:154|say total
+Chain|149:154|total
+Chain|149:154|total
+Chain|149:154|total
+Chain|149:154|total
+Chain|149:154|total
+Chain|149:154|total
+Cast|149:154|total
+Name|149:154|total
+Say|155:172|say length('cat')
+Chain|159:172|length('cat')
+Chain|159:172|length('cat')
+Chain|159:172|length('cat')
+Chain|159:172|length('cat')
+Chain|159:172|length('cat')
+Chain|159:172|length('cat')
+Cast|159:172|length('cat')
+Call|159:172|length('cat')
+Arguments|166:171|'cat'
+Argument|166:171|'cat'
+Chain|166:171|'cat'
+Chain|166:171|'cat'
+Chain|166:171|'cat'
+Chain|166:171|'cat'
+Chain|166:171|'cat'
+Chain|166:171|'cat'
+Cast|166:171|'cat'
+String|166:171|'cat'
+Exit|173:179|exit 0
+Chain|178:179|0
+Chain|178:179|0
+Chain|178:179|0
+Chain|178:179|0
+Chain|178:179|0
+Chain|178:179|0
+Cast|178:179|0
+Number|178:179|0
+GProcedure|181:243|twice: procedure = .int
+  arg value = .int
+  return value * 2
+
+Type|200:204|.int
+Sequence|207:243|arg value = .int
+  return value * 2
+
+GArg|207:223|arg value = .int
+Parameter|211:223|value = .int
+Type|219:223|.int
+Return|226:242|return value * 2
+Chain|233:242|value * 2
+Chain|233:242|value * 2
+Chain|233:242|value * 2
+Chain|233:242|value * 2
+Chain|233:242|value * 2
+Chain|233:242|value * 2
+Cast|233:239|value 
+Name|233:238|value
+Cast|241:242|2
+Number|241:242|2
+times|239:240|*

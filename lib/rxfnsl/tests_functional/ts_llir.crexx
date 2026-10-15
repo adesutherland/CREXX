@@ -224,6 +224,7 @@ signatures: procedure = .int
   end
   restored = llir..loadbinary(contract,graph.binary()); held = restored.operation(2)
   failures = failures + check(held.results() = 2 & codec.format(held.attribute('tag')) = '42','named attribute and result round trip')
+  failures = failures + check(pos('tag="42"',graph.dump()) > 0,'named attributes in readable dump')
   cases = .string[]
   cases[1] = 'arguments 1 2 2 LL_IR_TYPE'
   cases[2] = 'attributes 1 4 999 LL_IR_ATTRIBUTE'

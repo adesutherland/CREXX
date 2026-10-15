@@ -64,7 +64,10 @@ Names use ASCII letters, digits, underscore and dot. Source-language names and
 source files can contain Unicode. Family registration qualifies a local type or
 operation name, so `integer` above becomes `demo.integer`. Duplicate names,
 foreign types and wrong service interfaces produce `LL_IR_SCHEMA` diagnostics.
-A frozen contract cannot be edited.
+A frozen contract cannot be edited. While registering signatures, `schema.type(name)`
+looks up an already registered type, and `schema.boolean()`/`schema.voidtype()`
+provide the core handles without prematurely freezing the schema. The finished
+contract provides the corresponding read-only lookups.
 
 The default state, failure and termination summaries are `unknown`.
 `state('none')` means no access to mutable state or observable output.
@@ -117,6 +120,9 @@ and arity checks; a verifier adds relationships specific to that operation.
 An evaluator request offers `opcode()`, `operation()`, `size()`, `at(ordinal)`,
 `has(key)`, `get(key)` and `budget()`. `at` returns exact operand bytes.
 `operation()` provides read-only access to typed inputs, results and attributes.
+The readable dump includes extension attributes by name (for example,
+`target="TWICE"`), with the registered type codec formatting their values.
+The versioned text/binary codecs remain the lossless interchange formats.
 A context fact belongs to the input operation in the current module revision.
 
 An evaluator returns `.llir..evaluation(status,message)`:

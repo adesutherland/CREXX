@@ -1,6 +1,6 @@
 # Purposeful source trees and semantic tables
 
-The source-tree designs below are approved for the forthcoming frontends.
+The source trees below are implemented by the C/G frontends.
 The implemented generic IR records and storage are defined in
 the [Level L IR design](../../doc/ir-design.md). This document describes the
 compiler-owned source trees and their relationship to that IR.
@@ -22,103 +22,95 @@ are references in separate checked tables; adding them does not attach a child
 to two parents. Language-specific AST schemas may reuse shapes without sharing
 the meaning of every field or operator.
 
-## Shared source shapes
+## Implemented source schemas
 
-`node` means one owned child, `node?` an optional child, and `node*` an ordered
-list. Text is source spelling; it is not an already-converted number. Every
-node has a source origin using the existing exact/composite/derived/synthetic/
-recovered contract. Absent optional children have zero count, not fake nodes.
+The two `.rxl` files are the schema source of truth. Every child belongs to one
+owned AST; node handles borrow its lifetime. Text retains source spelling. All
+nodes retain exact source byte ranges and origin kind. Nonterminal ranges may
+include trivia before the next token; named token captures retain only their
+spelling, so comments cannot change a semantic field. `?`, `*` and `+` below
+mean optional, zero-or-more and one-or-more children. A missing optional child
+has count zero, rather than a fake value.
 
-| Node | Fields | Meaning |
+| Kind | Fields | Purpose |
 |---|---|---|
-| Program / Block | `items: node*` | Authored order of contained statements/declarations. |
-| Literal | `spelling: text`, `form: text` | Quoted string, integer, decimal-point or explicit decimal form. Source bytes preserve quotes and escapes. |
-| Name | `spelling: text` | A source name before binding or pool resolution. |
-| Assign | `name: text`, `value: node?` | Assignment; missing RHS is admitted only where the source language permits it. |
-| Add / Compare / Logical | `left: node`, `right: node`; operator identity in kind or a declared text field | Source operator and operand order. A Logical node does not imply eager evaluation. |
-| If | `condition: node`, `yes: node`, `no: node?` | Condition expression and its selected instruction/group arms. |
-| While | `condition: node`, `body: node` | Test before each iteration. |
-| Leave / Iterate | no target child in the first profile | A binding table identifies the innermost enclosing loop. |
-| Say | `value: node?` | Output an expression or empty line. |
-| Call | `name: text`, `arguments: node*`, `form: text` | Authored CALL versus expression call; entries preserve omitted positions. |
-| Argument / MissingArgument | `value: node` / no fields | Present value versus omitted argument; empty string is a present value. |
-| Return / Exit | `value: node?` | Return from the current invocation versus terminate the program. |
+| Program | `body: Sequence`; G also `routines: GProcedure*` | Top-level unit; Classic labels remain in the statement sequence. |
+| Sequence / Block | `items: node*` / `body: Sequence` | Authored order / explicit DO group. |
+| Number / String / Name | `spelling: text` | Exact numeral, quoted literal or unresolved name. |
+| Chain | `operands: node+`, `operators: node*` | One precedence level, left-to-right order. Exactly one fewer operator than operand. A zero-operator chain is transparent during lowering. |
+| Operator tokens | no fields; kind is `plus`, `minus`, `times`, `divide`, `assign`, `ne`, `lt`, `le`, `gt`, `ge`, `strict`, `concat`, `blank`, `abut`, `and`, `or`, `xor`, `not` | Operator identity and its original span; `assign` means equality when used in a comparison chain. |
+| Prefix / Group | `operator: node, value: node` / `value: node` | Unary operation / explicit parentheses. |
+| Assignment | `name: text`, `value: node` (optional for C) | Assignment is separate from declaration. Missing C RHS means empty value. |
+| IfThen / IfElse | `condition: node, yes: node`; IfElse adds `no: node` | Matched/unmatched grammar preserves nearest-IF ELSE association. |
+| While | `condition: node, body: Sequence` | Pre-test DO WHILE. |
+| Leave / Iterate / Nop | no fields | Innermost loop transfer / no operation. |
+| Say / Return / Exit | `value: node?` | Optional authored value; each instruction has its own semantics. |
+| Call / Invoke | `name: text, arguments: Arguments` | Expression call / CALL instruction. |
+| Arguments / Argument | `items: Argument+` / `value: node?` | Positional presence. A single empty Argument represents a zero-argument call; two empty entries are two omitted positions. |
+| Options | `level: text` | If present, must select the requested language and start the source. |
 
-The following excerpt uses the existing attached-mapping style. It is a grammar
-fragment: `ifword`, `expression`, `instruction` and other named rules must be
-defined by the complete frontend grammar.
+Each expression precedence level produces a Chain, including transparent
+single-operand levels. These preserve the selected grammar structure; the
+mapper does not emit operations for transparent wrappers. Operator order is
+never inferred from a flattened text expression.
+
+### G nodes
+
+| Kind | Fields |
+|---|---|
+| GDeclare | `name: text, type: Type` |
+| Type | `spelling: text` |
+| Cast | `value: node, targets: Type*`, applied in authored order |
+| GProcedure | `name: text, result: Type, body: Sequence` |
+| GArg / Parameter | `items: Parameter+` / `name: text, type: Type` |
+| GImport | `name: text` |
+
+A procedure's first GArg declares its required parameters. Body intervals and
+parameter/result types are copied into a routine table. G declarations and
+inferred bindings have separate scope/name/type/default records. The mapper
+creates typed IR slots and entry stores, rather than treating a typed declaration
+as an uninitialised C-language variable.
+
+### Classic nodes
+
+| Kind | Fields |
+|---|---|
+| CLabel | `name: text` |
+| CProcedure | no fields |
+| CArg / ArgTarget | `items: ArgTarget+` / `name: text`, empty for omitted target |
+| CNumeric | `setting: text, value: node?` |
+| CForm | `form: text`, the optional SCIENTIFIC/ENGINEERING token spelling; empty means reset |
+
+CLabel and CProcedure remain separate nodes. The routine table recognises an
+admitted label followed immediately by PROCEDURE and records the interval up
+to the next label. It rejects shared-pool labels and reachable fall-through into
+a label. Dynamic source names remain uppercase pool keys. They never become G
+local variables or acquire typed default semantics.
+
+### Where IF's fields come from
+
+The actual matched production is:
 
 ```rexx
-conditional: rule = ifword expression as condition thenword instruction as yes (elseword instruction as no)?
-  then tree If(condition = condition, yes = yes, no = no?)
+if.closed: rule = ifword expression as condition thenword closed.statement as yes elseword closed.statement as no
+  then tree IfElse(condition = condition, yes = yes, no = no)
 ```
 
-`condition`, `yes` and `no` on the right are captures made by this rule. On the
-left of each `=` they name fields in the produced If node. They are neither
-flow node names nor external variables. This teaching fragment omits the
-matched/unmatched productions required for complete ELSE association.
-
-For `if total > 4 then say total else say 0`, the tree is:
-
-```text
-If
-  condition: Greater
-    left:  Name(spelling="total")
-    right: Literal(spelling="4", form="integer")
-  yes: Say
-    value: Name(spelling="total")
-  no: Say
-    value: Literal(spelling="0", form="integer")
-```
-
-An existing Level L `branch condition then yes else no` flow mapping describes
-potential paths through this tree. Compiler lowering additionally emits the
-operations that evaluate `condition`, its language-specific Boolean conversion,
-and an IR branch to explicit blocks. A fact that the condition is true can prune
-an edge; it cannot erase a side-effecting condition evaluation.
-
-## G additions
-
-| Node | Fields and checking |
-|---|---|
-| Declare | `name: text`, `type: node` | Declared type and its default initialisation. A later assignment remains a separate node. |
-| TypeName / Cast | `spelling: text` / `value: node`, `type: node` | Type syntax first, resolved type ID in a side table. |
-| Procedure | `name: text`, `parameters: node*`, `result: node`, `body: node` | Parameter names/types, result type and owned body. |
-| Import | `namespace: text` | Import a prebuilt contract; no implicit invocation of an old compiler. |
-
-Binding assigns stable IDs to declarations and use sites. The first profile's
-explicit locals get `core.slot` identities with the declared initialisation
-semantics. An implicit function's entry and procedures are separate IR
-functions. A typed declaration is not an uninitialised C-language local.
-
-## Classic additions
-
-| Node | Fields and checking |
-|---|---|
-| Label | `name: text` | Authored position in the instruction sequence. |
-| Procedure | `exposures: node*` | A Classic instruction that changes the visible pool. Exposures are outside Phase A. |
-| Arg | `positions: node*` | Simple target or omitted template at each argument position in Phase A. |
-| Numeric | `setting: text`, `value: node?` | Dynamic numeric setting or reset. |
-
-A Classic label and PROCEDURE remain separate nodes in Program.items. Classic
-labels are not intrinsically functions. A semantic routine table recognises
-the admitted label-plus-PROCEDURE entry, its body interval and return sites.
-The first profile diagnoses other routine-entry/fallthrough forms. Later label
-dispatch can extend that analysis without replacing this source tree with a
-fictional G procedure tree.
-
-Classic source variables stay pool names. Reads/writes lower to the Classic
-operation family; they do not acquire the behaviour of typed slots. Unset-name,
-argument presence, caller state and numeric context are retained explicitly.
-Both operands of an eager logical operation are evaluated in source order.
+The right sides `condition`, `yes` and `no` refer to captures in that rule.
+The left sides name fields of the new IfElse node. Each field contains the AST
+produced by the captured rule; it is not a separately declared flow node.
+The condition is an ordinary expression tree. Lowering emits its computation,
+converts the language value to a core Boolean, and creates a branch with two
+block targets. A later checked constant fact can choose an edge without erasing
+observable condition evaluation. See the [generated walkthrough](pipeline-walkthrough.md).
 
 ## Side tables and invariants
 
 | Table | Key, value and invalidation |
 |---|---|
-| Binding | AST owner/revision/node ID -> scope and declaration ID, or dynamic-name descriptor. Invalid after relevant source-tree reconstruction. |
-| Type | AST owner/revision/node ID -> resolved type and required conversion. Missing means unchecked, never a guessed default type. |
-| Routine/loop | AST owner/revision/node ID -> admitted entry/body/target. Targets must belong to the same source unit. |
+| Binding | Request-local scope/name -> stable binding index, type and explicit-declaration flag. G use sites resolve through this table; C retains dynamic keys. Rebuilt for each request. |
+| Type | Inferred G binding types reach a fixed point; expression types/conversions are queried during lowering. Missing is an error, never an arbitrary default. |
+| Routine/loop | Case-insensitive routine name -> signature and body interval; a lowering stack holds innermost LEAVE/ITERATE block targets. |
 | Lowering origins | IR owner/revision/operation ID -> owned source origin and source-AST identity when retained. Remains diagnostically useful if the AST is released. |
 | Analysis | IR owner/revision/pass/semantic profile -> facts and provenance. Missing means unknown. |
 

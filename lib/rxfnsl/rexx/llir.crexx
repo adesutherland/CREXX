@@ -480,6 +480,15 @@ schema: class
     arg name = .string, version = .int
     i = _data.addfamily(name,version)
     return .llir..family(reference _data,i)
+  /** Look up an already registered type while defining extension signatures. */
+  type: method = .llir..typeid
+    arg name = .string
+    return .llir..typeid(_data.identity(),_data.typeindex(name))
+  /** Core type handles are available while registering extension signatures. */
+  boolean: method = .llir..typeid
+    return .llir..typeid(_data.identity(),2)
+  voidtype: method = .llir..typeid
+    return .llir..typeid(_data.identity(),1)
   finish: method = .llir..contract
     ok = _data.freeze()
     return .llir..contract(_data)
@@ -1736,6 +1745,7 @@ module: class
           do i = 1 to _store.get(3,op,5)
             line = line || ' %' || _store.operand(op,i)
           end
+          c = .int; type = .int; codec = .llir..typecodec
           if opcode = 1 then do
             c = _store.get(3,op,12); type = _store.get(8,c,1)
             codec = schema.codec(type) as .llir..typecodec
@@ -1743,6 +1753,15 @@ module: class
           end
           if opcode = 3 | opcode = 4 then line = line || ' slot:' || _store.text(_store.get(5,_store.get(3,op,12),3))
           if opcode = 2 then line = line || ' argument:' || _store.get(3,op,12)
+          if opcode > 16 then do i = 1 to schema.arity(opcode - 16,3)
+            attribute = _store.get(3,op,10) + i - 1
+            c = _store.get(11,attribute,4); type = _store.get(8,c,1)
+            codec = schema.codec(type) as .llir..typecodec
+            text = codec.format(_store.bits(_store.get(8,c,2)))
+            text = changestr('"',text,'""')
+            text = changestr('0d'x,text,'\r'); text = changestr('0a'x,text,'\n')
+            line = line || ' ' || schema.fieldname(opcode - 16,3,i) || '="' || text || '"'
+          end
           do i = 1 to _store.get(3,op,9)
             target = _store.successor(op,i)
             line = line || ' -> ' || _store.text(_store.get(2,target,4))

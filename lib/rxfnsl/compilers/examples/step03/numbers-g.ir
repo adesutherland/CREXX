@@ -1,0 +1,36 @@
+function $MAIN -> crexx.g.int64
+  entry.1:
+    %1 = core.constant 0 : crexx.g.decimal @origin:1
+    core.store %1 slot:AMOUNT @origin:1
+    %2 = core.constant 0 : crexx.g.int64 @origin:1
+    core.store %2 slot:COUNT @origin:1
+    %3 = core.constant  : crexx.g.text @origin:3
+    %4 = core.constant 1 : crexx.g.int64 @origin:11
+    core.store %4 slot:$tmp.1 @origin:6
+    %5 = core.constant 1 : crexx.g.int64 @origin:16
+    %6 = core.load slot:$tmp.1 @origin:6
+    %7 = crexx.g.convert.int64.text %6 @origin:6
+    %8 = crexx.g.convert.int64.text %5 @origin:6
+    %9 = crexx.g.text.strict %7 %8 @origin:6
+    %10 = crexx.g.convert.boolean.text %9 @origin:3
+    crexx.g.say %10 @origin:3
+    %11 = core.constant 0.1 : crexx.g.decimal @origin:26
+    core.store %11 slot:$tmp.2 @origin:23
+    %12 = core.constant 0.2 : crexx.g.decimal @origin:29
+    %13 = core.load slot:$tmp.2 @origin:23
+    %14 = crexx.g.decimal.add %13 %12 @origin:23
+    core.store %14 slot:AMOUNT @origin:18
+    %15 = core.constant  : crexx.g.text @origin:30
+    %16 = core.load slot:AMOUNT @origin:38
+    %17 = crexx.g.convert.decimal.text %16 @origin:30
+    crexx.g.say %17 @origin:30
+    %18 = core.constant  : crexx.g.text @origin:40
+    %19 = core.load slot:COUNT @origin:48
+    %20 = crexx.g.convert.int64.text %19 @origin:40
+    crexx.g.say %20 @origin:40
+    %21 = core.constant 0 : crexx.g.int64 @origin:49
+    %22 = core.constant 0 : crexx.g.int64 @origin:57
+    crexx.g.exit %22 @origin:49
+    %23 = core.constant 0 : crexx.g.int64 @origin:49
+    core.return %23 @origin:49
+

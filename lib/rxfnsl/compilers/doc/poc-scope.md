@@ -1,6 +1,8 @@
 # C/G compiling PoC scope
 
-**Proposed for STEP01 review.** This defines the first slice of both compilers.
+**Approved profile; both source-to-IR frontends implemented in STEP03.**
+This defines the first slice of both compilers. Executable backend validation
+remains STEP04 and the complete compiling PoC remains STEP06.
 The full replacement obligations remain in [PLAN.md](../PLAN.md). Unsupported
 source receives a located profile diagnostic; neither compiler falls back to
 the old frontend or rewrites its input as B source.
@@ -8,7 +10,7 @@ the old frontend or rewrites its input as B source.
 ## Shared first-language profile
 
 The profile uses existing source syntax. It introduces no new C or G syntax.
-G files start with `options levelg`; C files use `options levelc`. The proposed
+G files start with `options levelg`; C files use `options levelc`. The planned STEP04
 commands are `llrxc-g` and `llrxc-c`, with distinct libraries and build targets.
 
 | ID | Included in Phase A | Boundary and required examples |
@@ -30,21 +32,18 @@ already model observable failures, source events and calls conservatively, so
 that adding those constructs does not require changing the meaning of an
 existing operation. No debugger/TRACE parity claim is made from the first slice.
 
-Recognised-but-unadmitted forms get an explanation such as:
-
-```text
-rules.crexx:8:1: LLC_POC_ROUTINE_PROFILE
-This PoC supports local routines that begin with PROCEDURE.
-This label can enter a shared-pool routine; that form is not supported yet.
-```
-
-This is proposed diagnostic wording. Classic language errors retain their
-documented identities; profile refusals are not invented Classic errors.
+Recognised unadmitted instructions and semantic forms report
+`LL_COMPILER_PROFILE` with their source location. Syntax errors use
+`LL_COMPILER_SYNTAX`; source preparation retains `LL_UTF8`/`LL_COMMENT`.
+See the [implemented service and diagnostics](frontends.md). Arbitrary source
+outside the grammar can still receive a syntax error. These grammars declare no
+recovery policy and stop at the first syntax error; the service also rejects
+recovered trees. Full-language diagnostic/recovery parity remains a later gate.
 
 ## Runnable source examples
 
-The examples are inputs for the future compilers and currently run with the
-existing tools. The [check receipt](../evidence/step01-20261015/README.md)
+The examples run with the existing tools and now also produce source trees and
+verified IR through the new frontends. The [check receipt](../evidence/step01-20261015/README.md)
 records exact binary/source identities and the limited verification boundary.
 
 | Pair | What it establishes | Expected stdout |
@@ -54,8 +53,9 @@ records exact binary/source identities and the limited verification boundary.
 | [numbers C](../examples/step01/numbers-c.crexx), [numbers G](../examples/step01/numbers-g.crexx) | Literal identity, decimal arithmetic, numeric context, unset/default variables | C: `0`, `0.3`, `0.333`, `0.333333333`, `UNASSIGNED`. G: `1`, `0.3`, `0`. |
 
 These six controls passed with compiler/assembler optimisation disabled on
-both VMs. Proposed IR dumps and APIs have not run. Compile-time constant
-folding in a new compiler must preserve these outcomes and the timing of
+both VMs. The [generated STEP03 dumps](../examples/step03/README.md) establish source
+admission and mappings, not emitted execution. Compile-time constant
+folding in the new pipeline must preserve these outcomes and the timing of
 observable effects/errors.
 
 ## Required acceptance corpus as the implementation arrives

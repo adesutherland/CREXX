@@ -1,7 +1,8 @@
 # Processing algorithms and their contracts
 
 The foundation algorithms below are implemented in `llir` and `llirservices`.
-Frontend parsing, production optimisation and RXAS selection remain planned.
+The source frontends are implemented; production optimisation and RXAS
+selection remain planned.
 Each implemented stage carries its contract and decisive tests under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
 
 ## Stages and evidence
@@ -10,10 +11,10 @@ Each implemented stage carries its contract and decisive tests under [LLCOMP-AC1
 |---|---|---|
 | Lexing | Generated DFA over UTF-8 input; existing nested-comment stage; exact token spans and retained lexical adjacency. | Malformed UTF-8, CRLF, escaped quotes, nested comments, source origins and keyword-like identifiers. |
 | Contextual token classification | Explicit Classic clause/context state, label/assignment lookahead, documented promotions with provenance. | `if = 1`, nearest ELSE, THEN boundary, nested groups and malformed clauses. No silent B AST manufacturing. |
-| Parsing | Canonical LR(1), explicit expression precedence and matched/unmatched IF productions. | Build-time conflicts with witnesses; whole-source recognition and located recovery. Measure resulting tables before adoption. |
+| Parsing | Canonical LR(1), explicit expression precedence and matched/unmatched IF productions. | Build-time conflicts with witnesses; whole-source recognition and located failure; these grammars do not request recovery. |
 | AST projection | Existing selected-parse projection into named fields/lists. | Cardinality, one owned parent, independent sources/origins, all damage records. |
 | Binding and typing | Iterative source traversal plus scope/routine tables. | Unknown/duplicate declarations, exact conversions, Classic dynamic-name semantics and unsupported routine shapes. |
-| IR construction | Explicit block builder and slot/value IDs; iterative structured-statement lowering. | Function/block ownership, joins, loop targets, short-circuit order and failure/return outcomes. |
+| IR construction | Explicit block builder and slot/value IDs; bounded recursive structured-statement lowering. | Function/block ownership, joins, loop targets, short-circuit order and failure/return outcomes. |
 | Verification | Indexed ownership/type checks plus block order and successor checks; separate slot-initialisation analysis. | Malformed records, cross-block temporaries, missing terminators, wrong signatures and stale references. |
 | Local propagation/folding | Forward block scan, temporary/slot fact map, registered exact constant evaluators. | Unknown contexts/calls, overflow, side effects and dead-path runtime errors. |
 | Branch/reachability | Replace a proved branch edge selection, then graph reachability over admitted outcomes. | Keep observable condition evaluation; recompute after graph change. |
@@ -25,6 +26,59 @@ Each implemented stage carries its contract and decisive tests under [LLCOMP-AC1
 The frontend-stage choices reuse the supported Level L portfolio. Grammar
 construction may expose an admission or resource problem; retain its witness
 and review a remedy instead of silently adding an experimental backend.
+
+## Frontend processing and limits
+
+1. Validate UTF-8 and mask nested comments through Level L, then run the generated
+   DFA. The original bytes remain owned by the request. Lexical failure stops
+   before syntax or semantic processing.
+2. Classify names with clause, parenthesis and IF/THEN state. Assignment/label
+   lookahead protects contextual names. Classify before separator normalization:
+   a variable named THEN must not swallow the following instruction. Normalize
+   separators adjoining actual THEN/ELSE, and physical newlines inside parentheses.
+   Insert zero-width blank/abuttal tokens from retained token adjacency, excluding
+   function-name parentheses and the CALL target/arguments boundary.
+3. Run the generated canonical LR(1) parser and `then tree` projection. The grammar
+   owns precedence and nearest-IF ELSE association. Expected-token messages are
+   translated to source spellings, then formatted with the exact byte location,
+   Unicode column, escaped excerpt and caret. No repaired input is compiled.
+4. Walk the AST iteratively to check the nesting limit before recursive semantic
+   visitors. Inventory routines; collect G bindings; repeatedly infer implicit
+   types until stable. The type order only widens; the pass guard is `5*bindings+1`.
+   Node-visit work accounting also covers expression type queries. Unknown names,
+   unresolved types and duplicate declarations fail before a graph is published.
+5. Register local call signatures and construct the graph. G slots receive defaults
+   and parameter stores at entry. C functions receive argument and numeric packets
+   and create a private pool. A loop stack resolves LEAVE/ITERATE. Each condition
+   produces a core Boolean branch. Values crossing newly created blocks are
+   stored in temporary slots and reloaded; block-local handles never cross joins.
+6. Evaluate call arguments in source order into private slots/packets before
+   building the final operation. C omission bits and result presence are explicit.
+   Read selected external signatures from bounded RXBIN007 data; never execute
+   import metadata. Freeze and verify the complete module, then publish it.
+
+The request defaults to a 1,000,000 source-byte/semantic-visit budget and 512 AST
+nesting levels, both caller-configurable. Grammar wrappers count toward nesting.
+Layout lookahead is capped at sixteen times the request budget. Existing Level L
+scan/parse policies additionally bound generator/runtime work. IR construction
+uses the request entry budget and 64 times that budget for bytes. Metadata reads
+admit at most 16 MiB for B and 64 MiB for the current Classic runtime, including
+expanded sections. These are explicit protection limits, not performance promises.
+
+Flat name/binding tables make lookups linear; repeated inference and duplicate
+checks can be quadratic. A long separator run can also require quadratic
+lookahead, capped by its work limit. The source tree uses the generic iterative
+walker, while semantic lowering is recursive under the prior depth check. The
+first implementation favours visible invariants over an unmeasured indexing
+optimisation. An exhausted budget returns a diagnostic and no successful graph.
+
+The metadata reader checks magic/version, reserved fields, directories, alignment,
+section ranges, expansion budgets, LZSS backreferences, sorted pool-local IDs and
+selected record sizes/references. It resolves strings with binary searches,
+requires a callable export, and retains exact callable/type/argument/member and
+autoload fields. Unsupported required signatures are rejected. Unused executable,
+source and inline-template records are opaque; this is not a full replacement
+for the production metadata conformance reader.
 
 ## First analysis equations
 

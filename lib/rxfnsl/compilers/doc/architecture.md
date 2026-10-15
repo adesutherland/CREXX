@@ -1,8 +1,9 @@
 # Compiler architecture
 
-The Level L IR foundation and its semantic extension API are implemented in
-Level B. The source frontends, complete optimisation pipeline and RXAS backend
-are subsequent compiler stages. The source controls use the existing compilers.
+The Level L IR foundation, semantic extension API and C/G source-to-IR
+frontends are implemented in Level B. The generated grammars use Level L.
+Executable RXAS selection is STEP04; the production optimisation pipeline is
+STEP05. The existing compilers remain the independent execution controls.
 [PLAN.md](../PLAN.md) owns scope, acceptance and approval.
 
 ## What the pipeline does
@@ -87,33 +88,46 @@ The host registers the matching schema and services before loading. Loading an
 image never loads executable callback code. Unknown semantics grant no permission
 to fold or claim a complete flow analysis.
 
-## Proposed frontend algorithms
+## Implemented frontends
 
-Use the existing generated DFA lexer and canonical LR(1) parser for each first
-frontend. LR(1) means that grammar construction establishes which action follows
+Each frontend uses the existing generated DFA lexer and canonical LR(1) parser. LR(1) means that grammar construction establishes which action follows
 from the current parser state and one next token. Conflicts are grammar-build
 errors with witnesses, not occasions for silently choosing an interpretation.
 
-Keep expression precedence explicit in the grammar. Use matched/unmatched IF
-rules to associate ELSE with the nearest eligible IF. Keep primary expressions,
-calls and operator levels in the same parser initially. Pratt remains an
+Expression precedence is explicit in the grammar. Matched/unmatched IF
+rules are used to associate ELSE with the nearest eligible IF. Primary expressions,
+calls and operator levels are in the same parser. Pratt remains an
 available later expression component; the current delimiter-based regional
 interface is not assumed to parse arbitrary undelimited C/G expressions.
 
 Classic has contextual words: `if = 1` is an assignment. Its lexer retains raw
 word spelling, adjacency, comments and clause separators. A documented token
 classification stage uses assignment/label lookahead and instruction context;
-the parser then constructs the Classic tree. The stage must record why it
-classified a word and preserve the original byte range. No stage manufactures
-a typed B AST. Specific grammar conflicts or missing token-stage services return
-for review; this proposal does not authorise an unreviewed parser replacement.
+the parser then constructs the Classic tree. Classification is determined by the documented context and preserves the
+original byte range. Only zero-width concatenation/separation tokens are inserted. No stage manufactures
+a typed B AST. Both grammars pass LR admission. There is no hand-written source parser or
+old-compiler fallback behind the generated grammar.
 
 Source encoding is UTF-8 with exact byte spans. CRLF counts as one line break.
 The initial identifier repertoire is explicit in the scope document; string
-content is Unicode. Recovery can produce a tree for diagnostics, but executable
-compilation requires a clean complete parse and successful semantic checks.
+content is Unicode. These two grammars have no recovery declarations: they report the first
+located error. The reusable service also rejects recovered trees. A clean
+complete parse and successful semantic checks are required for verified IR.
 
 ## Compilation request and lifetime
+
+The implemented `llfrontend.request(level, source, artifacts, filename, budget,
+nesting)` compiles lazily on its first query and retains the result. `status()`,
+`error()`, `offset()` and `diagnostic()` expose failure without terminating the
+host. `ast()` returns the owned source tree; `graph()` returns a verified module
+on success and a failed module on failure. No draft graph escapes on an error.
+The artifact directory is explicit; it is read as data by the B-only RXBIN007
+reader. The compiler host never imports or executes `rxfnsc`. Classic BIF
+contracts in that image are target dependencies, distinct from host imports.
+See the [frontend API and semantic contracts](frontends.md).
+
+The remaining command/backend contract for STEP04 is:
+
 
 A request supplies source bytes and identity, language/profile, import roots,
 target contract and resource settings. It owns its trees, symbol tables and

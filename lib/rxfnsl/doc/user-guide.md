@@ -3065,6 +3065,69 @@ analysis, checked replacement, target lowering, saved forms and the chunk-based
 text emitter. The example constructs IR directly; source-language frontends and
 target instruction selection are applications built on these services.
 
+## Compiling C/G source into shared IR
+
+The C/G frontend examples use Level L to scan, parse, build their source trees
+and construct verified IR. The compiler host modules are written in Level B.
+Classic retains dynamic pool names, exact literal spelling and NUMERIC context;
+G retains typed bindings, defaults and short-circuiting. Both use the same
+Level L graph and checked extension framework.
+
+For example:
+
+```rexx
+/* Classic */
+options levelc
+total = 2 + 3
+if total > 4 then say total
+else say 0
+```
+
+The G version selects `options levelg` and adds `total = .int` before the
+assignment. G lowers the sum to `crexx.g.int64.add` and stores a typed slot.
+Classic lowers it to `crexx.c.add` with an explicit numeric context and stores
+the pool key `TOTAL`. Each lowers the IF expression, converts its result to a
+core Boolean and creates yes/no/join blocks. SAY remains an observable operation.
+
+A Level B consumer uses the reusable frontend service:
+
+```rexx
+request = .llfrontend..request('g', source, artifacts, 'demo.crexx')
+if request.status() <> 0 then say request.diagnostic()
+else do
+  graph = request.graph()
+  say graph.dump()
+end
+```
+
+Here `source` is `.binary`; `artifacts` names the directory containing the
+required runtime metadata images. Import `llfrontend` and `llir` alongside
+`rxfnsb` in the host. Querying the request runs it once and retains an owned
+result. A failed request returns no successful graph. Error messages name the
+file and explain the category, line, Unicode column and exact byte offset, with
+a source excerpt and caret. Missing THEN/END, malformed expressions/calls,
+unterminated strings/comments and invalid encoding have regression coverage.
+These grammars stop at the first syntax error and accept no recovered input.
+
+For a built inspection consumer, from the repository root:
+
+```sh
+cmake-build-levell-integration/bin/rxbvm \
+  cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin \
+  -a g lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx \
+  cmake-build-levell-integration/bin
+```
+
+Change `g` and the example filename to inspect Classic. See the
+[frontend API and admitted language profile](../compilers/doc/frontends.md) and
+[paired walkthrough](../compilers/doc/pipeline-walkthrough.md) for the complete
+source, actual generated trees/IR, calls, loops and numeric differences.
+
+This service currently ends at checked IR. The future backend will select RXAS
+instructions and assign registers in Level B **using Level L's emitter library**.
+The new source compilers do not yet emit executable RXAS; ordinary `rxc` and
+`rxc-c` retain their existing product roles.
+
 ## RexxScript: a larger example
 
 RexxScript demonstrates how the same machinery supports a script interpreter.
