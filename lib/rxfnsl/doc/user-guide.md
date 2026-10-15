@@ -3175,6 +3175,41 @@ printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
 values and short-circuiting. A declared G decimal starts absent and displays
 `nan`, while integer/float/Boolean defaults are zero and text is empty.
 
+The current output uses conservative registers and runtime adapters and has no
+shared IR optimisation yet. Source records carry expression ranges and
+exact/generated provenance. Identical straight-path records are suppressed;
+different expressions and control-flow entries can still need records on the
+same line. These are metadata, not printed TRACE events. Clause ID zero means
+that authored clause grouping is not yet available.
+
+The CLI records the source basename. The service preserves a logical relative
+filename such as `examples/demo.crexx`, while absolute physical paths become
+basenames. This keeps checkout paths out of source metadata. The VM may still
+show the assembler's binary-module identity separately.
+
+For example, compile this once with `options levelc` and once with
+`options levelg`:
+
+```rexx
+options levelc
+say 1
+say 1 / 0
+```
+
+Both print `1`, then fail on line 3. G reports `DIVISION_BY_ZERO` at the expression.
+Classic reports `RXC-LC-42.3` with the authored expression's context and retains
+the original helper fault location. Classic still maintains a diagnostic
+location field because deeper frames unwind before its handler runs; unchanged
+updates are suppressed. Entry/generated context is labelled explicitly rather
+than presented as an exact authored line.
+
+Keep linker metadata for the original fault source. A stripped image falls back
+to module/address (Classic's retained context can still appear in its message).
+The supported relay covers existing fatal string-message conditions, not
+arbitrary condition payloads or complete backtraces. Clause grouping, full TRACE,
+and the other remaining quality work are recorded in the
+[emission-quality review](../compilers/doc/EMISSION-QUALITY-REVIEW.md).
+
 ## RexxScript: a larger example
 
 RexxScript demonstrates how the same machinery supports a script interpreter.

@@ -1,0 +1,6 @@
+PANIC: error-c.crexx:3:5: RXC-LC-42.3 operator="/" operation="/" value="1" value="0" value="9" (SIGNAL CLASSIC_SYNTAX)
+  at module 47 (RexxClassicBifs) address 3989 (0xf95)
+  source: RexxClassicBifs.crexx:505:15:     assembler signal "CLASSIC_SYNTAX", detail
+  called from:
+  at module 1 (/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c.rxas) address 40 (0x28)
+  source: :0:0: 

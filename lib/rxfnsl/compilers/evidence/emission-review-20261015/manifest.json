@@ -1,0 +1,290 @@
+{
+  "date": "2026-10-15",
+  "commit": "bf74c72111fbd466d1f93c421e6d5dadbbedcc2c",
+  "checkout": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "raw_work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-emission-review.hotf9m85",
+  "scope": "static RXAS review and 16 focused execution controls; no timing or implementation changes",
+  "assembler_mode": "-n",
+  "vm": "rxbvm",
+  "tool_and_runtime_inputs": {
+    "rxc": {
+      "sha256": "82132cbe5b98c9c17cc66b6fd0d794e0e9560d6cd30f62449c97fa1f2735d421",
+      "bytes": 5741824
+    },
+    "rxc-c": {
+      "sha256": "a4ce2dbf324845d2d88e5bdfd591b3357f0ee31d4bfcb8c8f12863782cbf5ba4",
+      "bytes": 4319304
+    },
+    "llrxc-c": {
+      "sha256": "b0b6a1b3bdef89e1135f30ec2488969ac92a793cc4bc6a9867c1917d49609278",
+      "bytes": 3009704
+    },
+    "llrxc-g": {
+      "sha256": "a37af0f8fc354e322c207d378f3ebad58a88a3832384c73d87e6923a5601194e",
+      "bytes": 3009704
+    },
+    "rxas": {
+      "sha256": "cb6b0bf96f14615cac4182f26aeacaf9ef419e98c53e8ec8b482103e89f4ebe0",
+      "bytes": 1166696
+    },
+    "rxlink": {
+      "sha256": "a63de32a2023fb5a1058880bed5c0dc220746f7c01d99d63168038da3eec7b13",
+      "bytes": 280712
+    },
+    "rxbvm": {
+      "sha256": "6dd90bbf97762d02e8018a3ba75929044d5e7b150589bb204ef3d1b34caf3b7b",
+      "bytes": 1714600
+    },
+    "library.rxbin": {
+      "sha256": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+      "bytes": 1949002
+    },
+    "rxfnsc.rxbin": {
+      "sha256": "199ff8a8f171d69e38bf2f6034062d76d0e738d65778884108a9cdd3ae33df2a",
+      "bytes": 1794256
+    },
+    "llctarget.rxbin": {
+      "sha256": "b666a5fb0381e91923dd1f4a8fc3cb8122a59d94e5f543ca5315c8d6f69332be",
+      "bytes": 34987
+    },
+    "llcompilers.rxbin": {
+      "sha256": "7e0ee821f45de300f17d3886f30dea5e6e0b57453e9f1b689c26c8c00cbc70df",
+      "bytes": 801490
+    }
+  },
+  "source_inputs": {
+    "sources/literal-b.crexx": "4c5212e0b6bab875c4c8746ab91385b5c19a9c5ec36e2f2a31fa46fca8a8f3ab",
+    "sources/literal-c.crexx": "5d702ddcca2310d27006984d1c738cd9ca562dcdb6af5ad2086390deab7d4a37",
+    "sources/literal-g.crexx": "f382ebc6994909099f04cf0ff25ca75fd90895fb6f16b7b448410ede2ef19ea4",
+    "sources/pipeline-b.crexx": "ded4b01b43393ca688989fbb0a63ff76d10edc87327af4a1dd702d422886e24f",
+    "sources/pipeline-c.crexx": "8df5cfea80e9bcc144ce45d60966f3feda5455bb236c4076dd141fd0917e2888",
+    "sources/pipeline-g.crexx": "8243a65d230ee801971a4e0c0d5dd3bebe017d09dd5d3eac2130b413a9ac0440",
+    "lib/rxfnsl/compilers/rxas/llrxas.crexx": "1233d509b0242d7b713321a7b947f463e5e84414f1909a80c6795e1df1195c5a",
+    "lib/rxfnsl/compilers/rxas/llctarget.crexx": "575e8cd295186b10f38ac317970bd47385b47eb35ab02f1fbdd89bcb2b07ba1d",
+    "lib/rxfnsl/compilers/driver/llfrontend.crexx": "08020424b65b04059c56a73d129b1e83852d07612bac656bfef4cf697c715eab",
+    "lib/rxfnsl/compilers/driver/llcompilercli.crexx": "a8743f89bfa7dc4a4798cebd3a24370d45796ce6741d170bb9e6577b1629b9c4",
+    "lib/rxfnsl/compilers/driver/llcompiler.crexx": "bb5b827bf90bad5a3d59733a6ecaa565079ad67974031377a0205da03c2ad6b6"
+  },
+  "artifacts": {
+    "literal-b-native-opt": {
+      "program.rxas": "600dee64a9bda940594848d85e629bbd89decf9721aa8472c0f063b13b713d14",
+      "program.rxbin": "d03460acdd741e47fa085556b398d428c9504f588c20c1e37f6e23588c5fdafe",
+      "linked.rxbin": "d0dcefbe527209abea7aeb76da2d0efe6725d1f68dd6372aaa6a193ea942905a",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-b-native-noopt": {
+      "program.rxas": "6b3ca7dfc16e2c566ad7ca607705b354fdc73bf6f83510e2114335cea74eade5",
+      "program.rxbin": "d387d9ad095e2b3741c168d90c9a10709f905490ef74fe935aedd62a20a5ee0b",
+      "linked.rxbin": "d387d9ad095e2b3741c168d90c9a10709f905490ef74fe935aedd62a20a5ee0b",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-g-native-opt": {
+      "program.rxas": "4b4f97c8a3b9c69821f0f469a5eb489e9e8b906d953d251ed219440f43d99144",
+      "program.rxbin": "cdd9a63f9552aa6931367f673027449cbfed87740bd6a8599c7527893027259d",
+      "linked.rxbin": "35007c4adbe6217b5d575b38b27c57235a006b3a23f7df9e415f829454a9eea8",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-g-native-noopt": {
+      "program.rxas": "dabb944eea9cbcb33d5f2b44235fa980744f84bd73bd293b62c994c083880d76",
+      "program.rxbin": "9c33c7896c80ccb6a19d698344a914166cb4716c414802b457b6318091ca9d8e",
+      "linked.rxbin": "9c33c7896c80ccb6a19d698344a914166cb4716c414802b457b6318091ca9d8e",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-g-levell": {
+      "program.rxas": "e5f478a2a8575f05c866f7c082fcc8e7e4ccd30bb29a6d8aa3cfc6acb0db1853",
+      "program.rxbin": "46c14cc6eea8d7e6777bc79bf2734cb389f89594565c3477a8757f646ade9499",
+      "linked.rxbin": "46c14cc6eea8d7e6777bc79bf2734cb389f89594565c3477a8757f646ade9499",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-c-native-opt": {
+      "program.rxas": "90a8503016d6116262db21d720e9dd9daba5563d5117bf99fd703dfacdb289cf",
+      "program.rxbin": "ae53ac7ce49a7735f1091bdc830c631a7874efadc1a04fdbd5984f75d93c04f7",
+      "linked.rxbin": "5998c5f79a29bf198d1f65deb1a9ee52a1d59e36fbb4a4720c69688d66f0cd9a",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "43fd56f56bb9bb18bc9c33966325732b2d7e58bfe2504a2c5c164b071c1b8653",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-c-native-noopt": {
+      "program.rxas": "49b5d1bd1b46b002ae2f41f381b69b89fa3af0a83c3519d9a25b3b7f708f89b3",
+      "program.rxbin": "99f18da581f3d4f1238d8ed5cd48fda91f43ec1e777f3f3a827d083bbb01968a",
+      "linked.rxbin": "7a101cf8a7676849399940512e7d3b61c5d7e3df253b01a777be8d0570a589de",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "43fd56f56bb9bb18bc9c33966325732b2d7e58bfe2504a2c5c164b071c1b8653",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "literal-c-levell": {
+      "program.rxas": "c1ed2f55282d77ecf84c3246a8e32f64ae3521bb73d77d48cea02bf926c67cdf",
+      "program.rxbin": "40fe2a207f5e85293b571629db07c5bae4a9aecede4bf4e5dd14ae2cf30eb480",
+      "linked.rxbin": "cc43786a6acd6a711efd99a8686e877b4204d3eace1b4a50abec2d8ad4352b5b",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "43fd56f56bb9bb18bc9c33966325732b2d7e58bfe2504a2c5c164b071c1b8653",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-b-native-opt": {
+      "program.rxas": "a3834faa9956c45721e63f605ac94b86083743ca245dfabd3e71e46a121981c7",
+      "program.rxbin": "366f2fdc584a32a3a4cc6b960ebf58c5379fabb8184a69c46790dde99b46635f",
+      "linked.rxbin": "aa5dcafe18c142466ea39d1d2d401cb91338fa74783f8c21615945e93d39b120",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-b-native-noopt": {
+      "program.rxas": "691fd4e3081b77656c2fcd7d01dde11fb68159b376046a0cc26cb6160b175667",
+      "program.rxbin": "8c1979e39c2b21eb389a6d9ddd97a9c8ef02925049dd9ea0349f40622082394c",
+      "linked.rxbin": "6a7a5b5e955b3a88245d57610510aff64b7c6ec8e5167fc257262f088a76d722",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-g-native-opt": {
+      "program.rxas": "d41824cbe5f15e8c9b83139558e0b6c4f6adf2e108a76c86218f97b83408fb8e",
+      "program.rxbin": "44b59f70dedee910c0b47269500cd3e13af8b1264e5e57ff3db10e804e242444",
+      "linked.rxbin": "d403135d1550d022b4bcd0cda4ee1a434002198c23f4f6f662b0b0287f16c8a0",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-g-native-noopt": {
+      "program.rxas": "9528ca160208fbd520d40bd3164c7ded885c64127cb56affa42e63bf10ce3412",
+      "program.rxbin": "416fd9c956fa8b844a8e8882afe9760305e2943914fb89aa3b87ac374b71422c",
+      "linked.rxbin": "f381fdca9967156fd9b0036d65fa1460185f23ebefdce89de491d5fbbde02694",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-g-levell": {
+      "program.rxas": "b904189b6a70fb2a76e87eaf8c120f74446eabdf97e570f02c375e95e52cb96a",
+      "program.rxbin": "61c661225956fcea830da74bed505cd868006d952a7a7da2b65ef8e0b0adaf91",
+      "linked.rxbin": "f2fd21f832ee7638144434451e3b5f2c9b25711703de30ea7dd94e18c0fc1b3d",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-c-native-opt": {
+      "program.rxas": "f3a30fc81813fdef168e8e76d1fe4a0baafa35026564b4cdc74f98a19d6f7980",
+      "program.rxbin": "050acb68ca51a134b52e9286e6d4a2a5eab400f7c939f48bf0e9460391889e5c",
+      "linked.rxbin": "1d44bb39bb3b2c5273111997e554289a649be93296fe4a1f2f6cf472d2f2d2f3",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-c-native-noopt": {
+      "program.rxas": "a62e5761fccd31264000b410243d0f6812021fa11caf5275ad019248c26bbdf6",
+      "program.rxbin": "0bcdf501bcc79d328fb48e801fa355e8a28051731b74aafd0817b7e8df8f7b0d",
+      "linked.rxbin": "d6218132e7447c8dbb13b411850ae21459846b0a9848deb27c84e6108b14c809",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pipeline-c-levell": {
+      "program.rxas": "20bae4430ffe99ee9200bd50cadb4ba97af8f4eab6368b8a1f7c38e708cab6e7",
+      "program.rxbin": "1eb78a129a5a6cfc5598c90cf3afa45be2befa75996d6c69a7712363164393ec",
+      "linked.rxbin": "a688635eae3de68cd811418489d66c4020ceb9ef7e5067ccb245168e4075955f",
+      "compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "2.stdout": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+      "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "retained_samples": {
+    "literal-b-native-noopt.rxas": "6b3ca7dfc16e2c566ad7ca607705b354fdc73bf6f83510e2114335cea74eade5",
+    "literal-b-native-opt.rxas": "600dee64a9bda940594848d85e629bbd89decf9721aa8472c0f063b13b713d14",
+    "literal-c-levell.rxas": "c1ed2f55282d77ecf84c3246a8e32f64ae3521bb73d77d48cea02bf926c67cdf",
+    "literal-c-native-noopt.rxas": "49b5d1bd1b46b002ae2f41f381b69b89fa3af0a83c3519d9a25b3b7f708f89b3",
+    "literal-g-levell.rxas": "e5f478a2a8575f05c866f7c082fcc8e7e4ccd30bb29a6d8aa3cfc6acb0db1853",
+    "pipeline-c-native-noopt.rxas": "a62e5761fccd31264000b410243d0f6812021fa11caf5275ad019248c26bbdf6",
+    "pipeline-g-native-noopt.rxas": "9528ca160208fbd520d40bd3164c7ded885c64127cb56affa42e63bf10ce3412",
+    "pipeline-g-native-opt.rxas": "d41824cbe5f15e8c9b83139558e0b6c4f6adf2e108a76c86218f97b83408fb8e"
+  },
+  "step04_input_receipt_check": {
+    "matching_tools_and_images": [
+      "rxc",
+      "rxc-c",
+      "llrxc-c",
+      "llrxc-g",
+      "rxas",
+      "rxlink",
+      "rxbvm",
+      "library.rxbin",
+      "rxfnsc.rxbin",
+      "llctarget.rxbin",
+      "llcompilers.rxbin"
+    ],
+    "unmatched_tools_and_images": [],
+    "source_test_build_hash_mismatches": []
+  }
+}

@@ -1,7 +1,20 @@
 /* cREXX License (MIT). Level B import contracts, no native compiler reader. */
 options levelb
-namespace llcompilercontracts expose catalog signature validtype
+namespace llcompilercontracts expose catalog signature validtype sourcename
 import rxfnsb
+
+/** Logical source identity at compiler boundaries. A physical CLI path always
+ * becomes a basename; service callers may retain deliberate relative names.
+ * Recognise both host path spellings independently of the executing platform. */
+sourcename: procedure = .string
+  arg name = .string, physical = 0
+  absolute = left(name,1) = '/' | left(name,1) = '\'
+  if length(name) >= 3 then absolute = absolute | (substr(name,2,1) = ':' & (substr(name,3,1) = '/' | substr(name,3,1) = '\'))
+  if physical | absolute then do
+    split = max(lastpos('/',name),lastpos('\',name))
+    if split > 0 then return substr(name,split + 1)
+  end
+  return name
 
 /** Bounded RXBIN007 metadata view. It reads the portable envelope, expands its
  * constant/metadata sections and resolves their pool-local IDs. Instructions

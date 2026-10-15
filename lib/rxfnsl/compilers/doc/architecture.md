@@ -80,6 +80,21 @@ That foundation example does not compile a source file. The separate
 [STEP04 examples](../examples/step04/README.md) show actual C/G source-to-RXAS
 compilation and execution.
 
+Execution correctness does not establish emitted-code quality. The
+[STEP04 emission review](EMISSION-QUALITY-REVIEW.md) records current source-map,
+path, construction and frame-layout defects separately from later shared
+optimisation and Classic target-contract work. PLAN.md AC16 and its EQ criteria
+own closure; the existing functional receipts do not close those findings.
+
+The [essential condition-provenance correction](CONDITION-PROVENANCE-REVIEW.md)
+keeps the existing function-level Classic handler and necessary location field.
+Source names, ranges, generated origins and redundant updates are corrected;
+B-only message formatting and generated `signalorigin` relays retain the original
+fault. No condition framework, source-map format or stack machinery is added.
+The [backend reference](backend.md) distinguishes the fault from retained authored
+context. Proper clause grouping, full trapping/payload propagation, complete
+stacks and INTERPRET lifetimes remain separate outstanding work in PLAN.md.
+
 An independent test family uses the same APIs without importing compiler
 semantics. Its lowering service produces a pure straight-line target fragment.
 This initial checked profile admits constants and pure target operations;
@@ -132,8 +147,7 @@ contracts in that image are target dependencies, distinct from host imports.
 See the [frontend API and semantic contracts](frontends.md).
 
 The implemented `llcompiler.request` and `llrxc-c`/`llrxc-g` command boundary is
-described in the [backend architecture](backend.md):
-
+described in the [backend architecture](backend.md).
 
 A request supplies source bytes and identity, language/profile, import roots,
 target contract and resource settings. It owns its trees, symbol tables and

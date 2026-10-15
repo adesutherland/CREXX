@@ -6,6 +6,7 @@ import llfrontend
 import llrxas
 import llir
 import llsource
+import llcompilercontracts
 
 /** A request never spawns a compiler, writes a file, prints or exits. The
  * output owns its chunks independently of this request and its source graph. */
@@ -23,7 +24,7 @@ request: class
   _offset = .int
   *: factory
     arg level = .string, source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536
-    _source = source; _filename = filename; _path = artifacts; _level = lower(level)
+    _source = source; _filename = llcompilercontracts..sourcename(filename); _path = artifacts; _level = lower(level)
     _bytes = bytes; _registers = registers; _ready = 0; _error = ''; _offset = 0
     _frontend = .llfrontend..request(_level,source,artifacts,filename,budget,nesting)
     return

@@ -1,0 +1,319 @@
+{
+  "work": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h",
+  "commands": [
+    {
+      "label": "literal-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-c",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/literal-c.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-c-ir",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+        "-a",
+        "c",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/literal-c.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-c-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-c.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-c-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-c-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-c.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsc.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-c-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-c-linked.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-g",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/literal-g.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-g-ir",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+        "-a",
+        "g",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/literal-g.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-g-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-g.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-g-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-g-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-g.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "literal-g-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/literal-g-linked.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-c",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-c-ir",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+        "-a",
+        "c",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-c-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-c.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-c-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-c-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-c.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsc.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-c-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-c-linked.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-g",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-g-ir",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+        "-a",
+        "g",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-g-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-g.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-g-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-g-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-g.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "pipeline-g-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/pipeline-g-linked.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-c",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/error-c.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-c-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-c-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsc.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-c-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-c-linked.rxbin"
+      ],
+      "status": 28
+    },
+    {
+      "label": "error-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/llrxc-g",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step04/error-g.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-g-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g.rxas"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-g-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "label": "error-g-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g-linked.rxbin"
+      ],
+      "status": 5
+    }
+  ],
+  "artifacts": {
+    "lib/rxfnsl/compilers/examples/step04/error-g.rxas": "8c099b7850621dc64ce3ba904225dacc9901db955b3eb9669774193f81f18ead",
+    "lib/rxfnsl/compilers/examples/step04/literal-c.crexx": "5d702ddcca2310d27006984d1c738cd9ca562dcdb6af5ad2086390deab7d4a37",
+    "lib/rxfnsl/compilers/examples/step04/literal-c.out": "43fd56f56bb9bb18bc9c33966325732b2d7e58bfe2504a2c5c164b071c1b8653",
+    "lib/rxfnsl/compilers/examples/step04/literal-g.crexx": "f382ebc6994909099f04cf0ff25ca75fd90895fb6f16b7b448410ede2ef19ea4",
+    "lib/rxfnsl/compilers/examples/step04/literal-c.ir": "5bf6b8b624f52c7b6c5176c716868b254b5d7122cfb7f88796c8637d37444ef0",
+    "lib/rxfnsl/compilers/examples/step04/literal-g.out": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "lib/rxfnsl/compilers/examples/step04/literal-g.ir": "fb71cc9b2097db8d08496cf9389ec79ec7c234217412c9fac6649004f6de81a7",
+    "lib/rxfnsl/compilers/examples/step04/literal-g.rxas": "2758c3143fa24f66f1ba7453fded5c122d7fef626febcc08f32e1329e5e367c1",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-c.rxas": "f882717266be7b3e597a84fda1837bb122c566e260f7bf87d5dc59ab4e477643",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-g.out": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+    "lib/rxfnsl/compilers/examples/step04/error-c.crexx": "52739e05f2953321b27e9350c8f4a23dfc9aef281c44cdfcda2698b9a3938ece",
+    "lib/rxfnsl/compilers/examples/step04/error-c.rxas": "3b1a7bbdaaf71bff2e804c005d0ba0ef0f883398ebaefd382a15e02422fa9b6a",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-c.ir": "15cc657134fd2009e15a316a6d850e9a147d51030377fdd31cd093283bdb46a7",
+    "lib/rxfnsl/compilers/examples/step04/error-g.crexx": "35703a3864862270c70e88885fb1b4aa973e9b5d26f804336bd0938c286c2d98",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-g.ir": "6d62d239c11b7701b7f5063a57aa8c5fe5a34275ab3ac79adfa8effc40a04c81",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-c.out": "60e508cacd81e47397444d9aaef8d574779b3c3fbc2363492c24ed03f8bb12b8",
+    "lib/rxfnsl/compilers/examples/step04/pipeline-g.rxas": "45f260dd0189413d0b6aeaae4fc2dad9bed4221c4a0a2dad7a31f7366bab53ab",
+    "lib/rxfnsl/compilers/examples/step04/literal-c.rxas": "3781a7b28403ce8f030872faabb65d555fd776bdd51ce97efc0d1498b4f3995d"
+  }
+}

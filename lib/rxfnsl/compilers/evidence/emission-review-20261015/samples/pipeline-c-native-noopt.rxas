@@ -1,0 +1,1771 @@
+/*
+ * SOURCE                 : pipeline-c.crexx
+ */
+
+.globals=0
+
+main() .locals=11
+   .meta ".main"="b" ".int" main() ""
+   numsci 18,1,2
+   .srcstep 1 1 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".main.__rxcp_levelc_pool"="b" ".rexxvariablepool" r4
+   load r6,1
+   btoi r6
+   load r5,1
+   settpcall r4,§rexxpool.rexxvariablepool.§factory(),r5,r6,256
+   .srcstep 2 2 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".main.__rxcp_levelc_config"="b" ".rexxclassicconfig" r1
+   load r6,"UTF8"
+   load r5,1
+   settpcall r1,§rexxclassicconfig.rexxclassicconfig.§factory(),r5,r6,768
+   .srcstep 3 3 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".main.__rxcp_levelc_config_ref"="b" "reference .rexxclassicconfig" r2
+   mkref r2,r1
+   .srcstep 4 4 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".main.__rxcp_levelc_activation"="b" ".rexxactivationarguments" r0
+   load r6,0
+   call r0,§rexxactivation.rexxactivationarguments.§factory(),r6
+   .srcstep 5 5 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".main.__rxcp_levelc_main_arg_index_3"="b" ".int" r3
+   load r3,1
+   .srcstep 9 9 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .srcstep 6 6 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   getattrs r6,a1,0
+l101dostart:
+   .srcstep 6 6 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   bcf l101doend,r6
+   .srcstep 7 7 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   getattrs r5,a1,0
+   ichkrng r3,1,r5
+   linkattr1 r5,a1,r3
+   load r7,2
+   settp r0,256
+   swap r8,r0
+   settpswapcall r10,§rexxactivation.rexxactivationarguments.appendtext(),r7,r5,768,r9
+   swap r0,r8
+   swap r5,r9
+   unlink r5
+   .srcstep 8 8 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   iadd r3,r3,1
+l101doinc:
+   .srcstep 10 10 6 "pipeline-c.crexx" 1 9 15 "options levelc"
+   br l101dostart
+l101doend:
+   .srcstep 11 11 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   mkref r7,r4
+   load r10,0
+   settp r7,768
+   settp r2,256
+   settp r0,256
+   call4 r5,__rxcp_levelc_body(),r7,r2,r0,r10
+   .srcstep 12 12 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   load r9,1
+   settpswapcall r8,§rexxactivation.rexxactivationarguments.programreturncode(),r9,r0,256,r10
+   swap r0,r10
+   ret r8
+   .meta ".main.__rxcp_levelc_activation"
+   .meta ".main.__rxcp_levelc_config"
+   .meta ".main.__rxcp_levelc_config_ref"
+   .meta ".main.__rxcp_levelc_main_arg_index_3"
+   .meta ".main.__rxcp_levelc_pool"
+
+__rxcp_levelc_body() .locals=111
+   .meta ".__rxcp_levelc_body"="b" ".void" __rxcp_levelc_body() "__rxcp_levelc_parent_pool_ref=reference .rexxvariablepool,__rxcp_levelc_config_ref=reference .rexxclassicconfig,__rxcp_levelc_activation=.rexxactivationarguments,__rxcp_levelc_entry=.int"
+   .srcstep 359 359 6 "pipeline-c.crexx" 1 1 15 "options levelc"
+   numsci 18,1,2
+   .srcstep 13 13 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parent_pool_ref"="b" "reference .rexxvariablepool" a1
+   .srcstep 14 14 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_config_ref"="b" "reference .rexxclassicconfig" a2
+   .srcstep 15 15 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_activation"="b" ".rexxactivationarguments" a3
+   .srcstep 16 16 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_entry"="b" ".int" a4
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_args_33"="b" ".rexxvalue[*]" r1
+   .srcstep 17 17 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   null r1
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_args_926"="b" ".rexxvalue[*]" r2
+   .srcstep 18 18 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   null r2
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_exists_33"="b" ".int[*]" r5
+   .srcstep 19 19 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   null r5
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_exists_926"="b" ".int[*]" r6
+   .srcstep 20 20 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   null r6
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parse_fields_40"="b" ".string[*]" r29
+   .srcstep 21 21 6 "pipeline-c.crexx" 13 3 6 "  arg value"
+   null r29
+   .srcstep 22 22 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parent_pool"="b" ".rexxvariablepool" r27
+   unlink r27
+   linkref r27,a1
+   .srcstep 23 23 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_pool"="b" ".rexxvariablepool" r31
+   unlink r31
+   linkref r31,a1
+   .srcstep 24 24 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_digits_3"="b" ".int" r11
+   load r35,1
+   settpswapcall r11,§rexxactivation.rexxactivationarguments.numericdigits(),r35,a3,256,r36
+   swap a3,r36
+   .srcstep 25 25 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   setnumdgts r11
+   .srcstep 26 26 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_fuzz_3"="b" ".int" r13
+   load r35,1
+   settpswapcall r13,§rexxactivation.rexxactivationarguments.numericfuzz(),r35,a3,256,r36
+   swap a3,r36
+   .srcstep 27 27 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   setnumfuz r13
+   .srcstep 28 28 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_form_3"="b" ".int" r12
+   load r35,1
+   settpswapcall r12,§rexxactivation.rexxactivationarguments.numericform(),r35,a3,256,r36
+   swap a3,r36
+   .srcstep 29 29 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   setnumfrm r12
+   .srcstep 34 34 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+   ieq r36,a4,1
+   brf l171iffalse,r36
+   .srcstep 35 35 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   .srcstep 32 32 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+   .srcstep 30 30 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+   load r35,1
+l168dostart:
+   .srcstep 30 30 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+   bcf l168doend,r35
+   .srcstep 31 31 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+   br l161frame
+l168doinc:
+   .srcstep 33 33 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   br l168dostart
+l168doend:
+l171iffalse:
+   .srcstep 36 36 65 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .srcstep 37 37 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_options_config_3"="b" ".rexxclassicconfig" r26
+   unlink r26
+   linkref r26,a2
+   .srcstep 38 38 6 "pipeline-c.crexx" 1 1 15 "options levelc"
+   load r40,"LEVELC"
+   load r38,2
+   settp r31,256
+   swap r39,r31
+   settpcall r37,§rexxpool.rexxvariablepool.symbolvalue(),r38,r40,768
+   swap r31,r39
+   .traceevent "V" 6 "R" "O" "r" 37 38 38 1 "LEVELC" ""
+   load r35,2
+   settp r26,256
+   swap r36,r26
+   settpcall r40,§rexxclassicconfig.rexxclassicconfig.applyoptions(),r35,r37,256
+   swap r26,r36
+   .srcstep 39 39 65 "pipeline-c.crexx" 2 7 8 "total = 2 + 3"
+   .srcstep 40 40 6 "pipeline-c.crexx" 2 9 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_6"="b" ".rexxvalue" r16
+   load r40,"2"
+   load r39,1
+   settpcall r16,§rexxvalue.rexxvalue.§factory(),r39,r40,768
+   .traceevent "L" 4 "R" "O" "r" 16 40 40 1 "" ""
+   .srcstep 41 41 6 "pipeline-c.crexx" 2 11 14 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_6"="b" ".rexxvalue" r19
+   load r40,"3"
+   load r39,1
+   settpcall r19,§rexxvalue.rexxvalue.§factory(),r39,r40,768
+   .traceevent "L" 4 "R" "O" "r" 19 41 41 1 "" ""
+   .srcstep 54 54 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r40,7
+   load r38,2
+   settp a3,256
+   swap r39,a3
+   call r37,§rexxactivation.rexxactivationarguments.signalpolicy(),r38
+   swap a3,r39
+   igt r40,r37,0
+   brf l233iffalse,r40
+   .srcstep 55 55 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   .srcstep 52 52 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 42 42 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r38,1
+l230dostart:
+   .srcstep 42 42 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   bcf l230doend,r38
+   .srcstep 43 43 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_6"="b" ".string" r39
+   load r36,1
+   settpswapcall r39,§rexxvalue.rexxvalue.lostdigitsdescription(),r36,r16,256,r37
+   swap r16,r37
+   .srcstep 50 50 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   sne r37,r39,""
+   brf l228iffalse,r37
+   .srcstep 51 51 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   .srcstep 48 48 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 44 44 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r35,1
+l225dostart:
+   .srcstep 44 44 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   bcf l225doend,r35
+   .srcstep 45 45 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_6"="b" ".rexxclassicconditionevent" r36
+   load r42,7
+   load r41,2
+   settpswapcall r36,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r41,r39,256,r43
+   swap r39,r43
+   .srcstep 46 46 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 47 47 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   signal "CLASSIC_CONDITION",r36
+l225doinc:
+   .srcstep 49 49 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   br l225dostart
+l225doend:
+   endlife r36
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_6"
+l228iffalse:
+l230doinc:
+   .srcstep 53 53 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   br l230dostart
+l230doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_6"
+l233iffalse:
+   .srcstep 68 68 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r43,7
+   load r41,2
+   settp a3,256
+   swap r42,a3
+   call r40,§rexxactivation.rexxactivationarguments.signalpolicy(),r41
+   swap a3,r42
+   igt r43,r40,0
+   brf l266iffalse,r43
+   .srcstep 69 69 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   .srcstep 66 66 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 56 56 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r41,1
+l263dostart:
+   .srcstep 56 56 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   bcf l263doend,r41
+   .srcstep 57 57 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_6"="b" ".string" r42
+   load r39,1
+   settpswapcall r42,§rexxvalue.rexxvalue.lostdigitsdescription(),r39,r19,256,r40
+   swap r19,r40
+   .srcstep 64 64 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   sne r40,r42,""
+   brf l261iffalse,r40
+   .srcstep 65 65 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   .srcstep 62 62 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 58 58 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r38,1
+l258dostart:
+   .srcstep 58 58 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   bcf l258doend,r38
+   .srcstep 59 59 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_6"="b" ".rexxclassicconditionevent" r39
+   load r36,7
+   load r35,2
+   settpswapcall r39,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r35,r42,256,r37
+   swap r42,r37
+   .srcstep 60 60 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 61 61 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   signal "CLASSIC_CONDITION",r39
+l258doinc:
+   .srcstep 63 63 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   br l258dostart
+l258doend:
+   endlife r39
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_6"
+l261iffalse:
+l263doinc:
+   .srcstep 67 67 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   br l263dostart
+l263doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_6"
+l266iffalse:
+   .srcstep 70 70 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_6"="b" ".rexxbifcallcontext" r22
+   load r43,"add"
+   load r42,1
+   settpcall r22,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r42,r43,768
+   .srcstep 71 71 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r41,2
+   settp r22,256
+   swap r42,r22
+   settpswapcall r40,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r41,a2,256,r43
+   swap r22,r42
+   swap a2,r43
+   .srcstep 72 72 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_6"="b" ".rexxvalue..rexxvalue" r25
+   mkref r41,r22
+   load r40,3
+   settp r41,768
+   settp r16,256
+   swap r42,r16
+   settpswapcall r25,rexxclassicbifs.rexxclassic_expression_binary(),r40,r19,256,r43
+   swap r16,r42
+   swap r19,r43
+   .traceevent "O" 4 "R" "O" "r" 25 72 72 1 "" ""
+   .srcstep 78 78 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r42,1
+   settpswapcall r41,§rexxclassicbifs.rexxbifcallcontext.haserror(),r42,r22,256,r43
+   swap r22,r43
+   brf l295iffalse,r41
+   .srcstep 79 79 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   .srcstep 76 76 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   .srcstep 73 73 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r43,1
+l292dostart:
+   .srcstep 73 73 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   bcf l292doend,r43
+   .srcstep 74 74 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   load r44,1
+   settpswapcall r42,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r44,r22,256,r45
+   swap r22,r45
+   .srcstep 75 75 6 "pipeline-c.crexx" 2 11 12 "total = 2 + 3"
+   signal "CLASSIC_SYNTAX",r42
+l292doinc:
+   .srcstep 77 77 6 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+   br l292dostart
+l292doend:
+l295iffalse:
+   .srcstep 80 80 6 "pipeline-c.crexx" 2 1 12 "total = 2 + 3"
+   load r45,"TOTAL"
+   .traceevent "A" 6 "R" "O" "r" 25 80 80 1 "TOTAL" ""
+   load r43,3
+   settp r31,256
+   swap r44,r31
+   settp r45,768
+   settpswapcall r41,§rexxpool.rexxvariablepool.setsymbolvalue(),r43,r25,256,r46
+   swap r31,r44
+   swap r25,r46
+   .srcstep 81 81 65 "pipeline-c.crexx" 3 1 3 "if total > 4 then say twice(total)"
+   .srcstep 82 82 6 "pipeline-c.crexx" 3 4 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_11"="b" ".rexxvalue..rexxvalue" r14
+   load r46,"TOTAL"
+   load r44,2
+   settp r31,256
+   swap r45,r31
+   settpcall r14,§rexxpool.rexxvariablepool.symbolvalue(),r44,r46,768
+   swap r31,r45
+   .traceevent "V" 6 "R" "O" "r" 14 82 82 1 "TOTAL" ""
+   .srcstep 83 83 6 "pipeline-c.crexx" 3 10 13 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_11"="b" ".rexxvalue" r17
+   load r46,"4"
+   load r45,1
+   settpcall r17,§rexxvalue.rexxvalue.§factory(),r45,r46,768
+   .traceevent "L" 4 "R" "O" "r" 17 83 83 1 "" ""
+   .srcstep 96 96 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r46,7
+   load r44,2
+   settp a3,256
+   swap r45,a3
+   call r43,§rexxactivation.rexxactivationarguments.signalpolicy(),r44
+   swap a3,r45
+   igt r46,r43,0
+   brf l349iffalse,r46
+   .srcstep 97 97 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 94 94 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 84 84 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r44,1
+l346dostart:
+   .srcstep 84 84 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l346doend,r44
+   .srcstep 85 85 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_11"="b" ".string" r45
+   load r47,1
+   settpswapcall r45,§rexxvalue.rexxvalue.lostdigitsdescription(),r47,r14,256,r48
+   swap r14,r48
+   .srcstep 92 92 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   sne r48,r45,""
+   brf l344iffalse,r48
+   .srcstep 93 93 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 90 90 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 86 86 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r43,1
+l341dostart:
+   .srcstep 86 86 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l341doend,r43
+   .srcstep 87 87 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_11"="b" ".rexxclassicconditionevent" r47
+   load r40,7
+   load r39,2
+   settpswapcall r47,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r39,r45,256,r41
+   swap r45,r41
+   .srcstep 88 88 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 89 89 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   signal "CLASSIC_CONDITION",r47
+l341doinc:
+   .srcstep 91 91 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l341dostart
+l341doend:
+   endlife r47
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_11"
+l344iffalse:
+l346doinc:
+   .srcstep 95 95 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l346dostart
+l346doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_11"
+l349iffalse:
+   .srcstep 110 110 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r48,7
+   load r46,2
+   settp a3,256
+   swap r47,a3
+   call r45,§rexxactivation.rexxactivationarguments.signalpolicy(),r46
+   swap a3,r47
+   igt r48,r45,0
+   brf l382iffalse,r48
+   .srcstep 111 111 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 108 108 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 98 98 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r46,1
+l379dostart:
+   .srcstep 98 98 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l379doend,r46
+   .srcstep 99 99 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_11"="b" ".string" r47
+   load r44,1
+   settpswapcall r47,§rexxvalue.rexxvalue.lostdigitsdescription(),r44,r17,256,r45
+   swap r17,r45
+   .srcstep 106 106 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   sne r45,r47,""
+   brf l377iffalse,r45
+   .srcstep 107 107 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 104 104 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 100 100 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r43,1
+l374dostart:
+   .srcstep 100 100 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l374doend,r43
+   .srcstep 101 101 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_11"="b" ".rexxclassicconditionevent" r44
+   load r40,7
+   load r39,2
+   settpswapcall r44,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r39,r47,256,r41
+   swap r47,r41
+   .srcstep 102 102 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 103 103 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   signal "CLASSIC_CONDITION",r44
+l374doinc:
+   .srcstep 105 105 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l374dostart
+l374doend:
+   endlife r44
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_11"
+l377iffalse:
+l379doinc:
+   .srcstep 109 109 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l379dostart
+l379doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_11"
+l382iffalse:
+   .srcstep 112 112 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_11"="b" ".rexxbifcallcontext" r20
+   load r48,"compareGreaterThan"
+   load r47,1
+   settpcall r20,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r47,r48,768
+   .srcstep 113 113 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r46,2
+   settp r20,256
+   swap r47,r20
+   settpswapcall r45,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r46,a2,256,r48
+   swap r20,r47
+   swap a2,r48
+   .srcstep 114 114 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_11"="b" ".rexxvalue..rexxvalue" r23
+   mkref r46,r20
+   load r45,3
+   settp r46,768
+   settp r14,256
+   swap r47,r14
+   settpswapcall r23,rexxclassicbifs.rexxclassic_expression_binary(),r45,r17,256,r48
+   swap r14,r47
+   swap r17,r48
+   .traceevent "O" 4 "R" "O" "r" 23 114 114 1 "" ""
+   .srcstep 120 120 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r47,1
+   settpswapcall r46,§rexxclassicbifs.rexxbifcallcontext.haserror(),r47,r20,256,r48
+   swap r20,r48
+   brf l411iffalse,r46
+   .srcstep 121 121 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 118 118 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 115 115 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r48,1
+l408dostart:
+   .srcstep 115 115 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l408doend,r48
+   .srcstep 116 116 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r49,1
+   settpswapcall r47,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r49,r20,256,r50
+   swap r20,r50
+   .srcstep 117 117 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   signal "CLASSIC_SYNTAX",r47
+l408doinc:
+   .srcstep 119 119 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l408dostart
+l408doend:
+l411iffalse:
+   .srcstep 122 122 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r50,"logicalIfValue"
+   load r49,1
+   settpcall r20,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r49,r50,768
+   .srcstep 123 123 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r48,2
+   settp r20,256
+   swap r49,r20
+   settpswapcall r46,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r48,a2,256,r50
+   swap r20,r49
+   swap a2,r50
+   .srcstep 124 124 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   mkref r49,r20
+   load r48,2
+   settp r49,768
+   settpswapcall r50,rexxclassicbifs.rexxclassic_expression_unary(),r48,r23,256,r50
+   swap r23,r50
+   .traceevent "P" 4 "R" "O" "r" 23 124 124 1 "" ""
+   .srcstep 130 130 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r49,1
+   settpswapcall r48,§rexxclassicbifs.rexxbifcallcontext.haserror(),r49,r20,256,r50
+   swap r20,r50
+   brf l441iffalse,r48
+   .srcstep 131 131 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 128 128 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   .srcstep 125 125 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r50,1
+l438dostart:
+   .srcstep 125 125 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   bcf l438doend,r50
+   .srcstep 126 126 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   load r51,1
+   settpswapcall r49,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r51,r20,256,r52
+   swap r20,r52
+   .srcstep 127 127 6 "pipeline-c.crexx" 3 10 11 "if total > 4 then say twice(total)"
+   signal "CLASSIC_SYNTAX",r49
+l438doinc:
+   .srcstep 129 129 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   br l438dostart
+l438doend:
+l441iffalse:
+   .srcstep 161 161 6 "pipeline-c.crexx" 3 1 11 "if total > 4 then say twice(total)"
+   load r51,1
+   settpswapcall r50,§rexxvalue.rexxvalue.logicalvalue(),r51,r23,256,r52
+   swap r23,r52
+   brf l530iffalse,r50
+   .srcstep 162 162 6 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+   .srcstep 154 154 6 "pipeline-c.crexx" 3 19 22 "if total > 4 then say twice(total)"
+   .srcstep 132 132 6 "pipeline-c.crexx" 3 19 22 "if total > 4 then say twice(total)"
+   load r51,1
+l515dostart:
+   .srcstep 132 132 6 "pipeline-c.crexx" 3 19 22 "if total > 4 then say twice(total)"
+   bcf l515doend,r51
+   .srcstep 133 133 65 "pipeline-c.crexx" 3 19 22 "if total > 4 then say twice(total)"
+   .srcstep 134 134 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_call_activation_13"="b" ".rexxactivationarguments" r52
+   load r48,0
+   call r52,§rexxactivation.rexxactivationarguments.§factory(),r48
+   .srcstep 135 135 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   mkref r55,a3
+   load r53,2
+   settp r52,256
+   swap r54,r52
+   settpcall r48,§rexxactivation.rexxactivationarguments.inheritsignalpolicy(),r53,r55,768
+   swap r52,r54
+   .srcstep 136 136 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   mkref r55,r31
+   load r53,2
+   settp r52,256
+   swap r54,r52
+   settpcall r48,§rexxactivation.rexxactivationarguments.capturecallerpool(),r53,r55,768
+   swap r52,r54
+   .srcstep 137 137 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   load r54,1
+   settpswapcall r53,§rexxactivation.rexxactivationarguments.begininternalfunction(),r54,r52,256,r55
+   swap r52,r55
+   .srcstep 138 138 6 "pipeline-c.crexx" 3 28 35 "if total > 4 then say twice(total)"
+   load r64,"TOTAL"
+   load r62,2
+   settp r31,256
+   swap r63,r31
+   settpcall r60,§rexxpool.rexxvariablepool.symbolvalue(),r62,r64,768
+   swap r31,r63
+   .traceevent "V" 6 "R" "O" "r" 60 138 138 1 "TOTAL" ""
+   load r61,1
+   load r59,2
+   settp r60,256
+   settpcall r58,§rexxvalue.rexxvalue.asstring(),r59,r61,256
+   load r57,1
+   settpcall r55,§rexxvalue.rexxvalue.§factory(),r57,r58,256
+   load r56,1
+   load r53,3
+   settp r52,256
+   swap r54,r52
+   settp r55,256
+   call r64,§rexxactivation.rexxactivationarguments.append(),r53
+   swap r52,r54
+   .srcstep 139 139 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   mkref r61,r31
+   load r64,1
+   settp r61,768
+   settp a2,256
+   settp r52,256
+   call4 r59,__rxcp_levelc_body(),r61,a2,r52,r64
+   .srcstep 144 144 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   load r63,1
+   settpswapcall r62,§rexxactivation.rexxactivationarguments.programexitrequested(),r63,a3,256,r64
+   swap a3,r64
+   brf l492iffalse,r62
+   .srcstep 145 145 6 "pipeline-c.crexx" 3 28 29 "if total > 4 then say twice(total)"
+   .srcstep 142 142 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   .srcstep 140 140 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   load r64,1
+l489dostart:
+   .srcstep 140 140 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   bcf l489doend,r64
+   .srcstep 141 141 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   ret
+l489doinc:
+   .srcstep 143 143 6 "pipeline-c.crexx" 3 28 29 "if total > 4 then say twice(total)"
+   br l489dostart
+l489doend:
+l492iffalse:
+   .srcstep 151 151 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   load r63,1
+   settpswapcall r62,§rexxactivation.rexxactivationarguments.hasreturnvalue(),r63,r52,256,r64
+   swap r52,r64
+   ieq r64,r62,0
+   brf l506iffalse,r64
+   .srcstep 152 152 6 "pipeline-c.crexx" 3 28 29 "if total > 4 then say twice(total)"
+   .srcstep 149 149 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   .srcstep 146 146 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   load r63,1
+l503dostart:
+   .srcstep 146 146 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   bcf l503doend,r63
+   .srcstep 147 147 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   .srcstep 148 148 6 "pipeline-c.crexx" 3 23 28 "if total > 4 then say twice(total)"
+   signal "CLASSIC_SYNTAX","RXC-LC-44.1: No data returned from function TWICE"
+l503doinc:
+   .srcstep 150 150 6 "pipeline-c.crexx" 3 28 29 "if total > 4 then say twice(total)"
+   br l503dostart
+l503doend:
+l506iffalse:
+   .srcstep 153 153 6 "pipeline-c.crexx" 3 19 28 "if total > 4 then say twice(total)"
+   load r60,1
+   settpswapcall r63,§rexxactivation.rexxactivationarguments.returnvalue(),r60,r52,256,r61
+   swap r52,r61
+   .traceevent "F" 4 "R" "O" "r" 63 153 153 1 "TWICE" ""
+   load r64,1
+   load r62,2
+   settp r63,256
+   settpcall r61,§rexxvalue.rexxvalue.asstring(),r62,r64,256
+   say r61
+l515doinc:
+   .srcstep 155 155 6 "pipeline-c.crexx" 4 1 5 "else say 0"
+   br l515dostart
+l515doend:
+   endlife r52
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_call_activation_13"
+   br l530ifend
+   .srcstep 163 163 6 "pipeline-c.crexx" 4 1 5 "else say 0"
+l530iffalse:
+   .srcstep 159 159 6 "pipeline-c.crexx" 4 6 9 "else say 0"
+   .srcstep 156 156 6 "pipeline-c.crexx" 4 6 9 "else say 0"
+   load r64,1
+l527dostart:
+   .srcstep 156 156 6 "pipeline-c.crexx" 4 6 9 "else say 0"
+   bcf l527doend,r64
+   .srcstep 157 157 65 "pipeline-c.crexx" 4 6 9 "else say 0"
+   .srcstep 158 158 6 "pipeline-c.crexx" 4 6 11 "else say 0"
+   load r60,"0"
+   load r59,1
+   settpcall r62,§rexxvalue.rexxvalue.§factory(),r59,r60,768
+   .traceevent "L" 4 "R" "O" "r" 62 158 158 1 "" ""
+   load r63,1
+   load r61,2
+   settp r62,256
+   settpcall r60,§rexxvalue.rexxvalue.asstring(),r61,r63,256
+   say r60
+l527doinc:
+   .srcstep 160 160 6 "pipeline-c.crexx" 5 1 3 "do while total > 0"
+   br l527dostart
+l527doend:
+l530ifend:
+   .srcstep 164 164 65 "pipeline-c.crexx" 5 1 3 "do while total > 0"
+   .srcstep 261 261 6 "pipeline-c.crexx" 5 1 3 "do while total > 0"
+   .srcstep 165 165 6 "pipeline-c.crexx" 5 1 3 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_loop_29"="b" ".int" r64
+   load r64,1
+l678dostart:
+   .srcstep 218 218 6 "pipeline-c.crexx" 5 4 19 "do while total > 0"
+   .srcstep 217 217 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   .srcstep 166 166 6 "pipeline-c.crexx" 5 10 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_20"="b" ".rexxvalue..rexxvalue" r60
+   load r56,"TOTAL"
+   load r54,2
+   settp r31,256
+   swap r55,r31
+   settpcall r60,§rexxpool.rexxvariablepool.symbolvalue(),r54,r56,768
+   swap r31,r55
+   .traceevent "V" 6 "R" "O" "r" 60 166 166 1 "TOTAL" ""
+   .srcstep 167 167 6 "pipeline-c.crexx" 5 16 19 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_20"="b" ".rexxvalue" r59
+   load r56,"0"
+   load r55,1
+   settpcall r59,§rexxvalue.rexxvalue.§factory(),r55,r56,768
+   .traceevent "L" 4 "R" "O" "r" 59 167 167 1 "" ""
+   .srcstep 180 180 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r56,7
+   load r54,2
+   settp a3,256
+   swap r55,a3
+   call r53,§rexxactivation.rexxactivationarguments.signalpolicy(),r54
+   swap a3,r55
+   igt r56,r53,0
+   brf l579iffalse,r56
+   .srcstep 181 181 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   .srcstep 178 178 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 168 168 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r54,1
+l576dostart:
+   .srcstep 168 168 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   bcf l576doend,r54
+   .srcstep 169 169 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_20"="b" ".string" r55
+   load r52,1
+   settpswapcall r55,§rexxvalue.rexxvalue.lostdigitsdescription(),r52,r60,256,r53
+   swap r60,r53
+   .srcstep 176 176 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   sne r53,r55,""
+   brf l574iffalse,r53
+   .srcstep 177 177 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   .srcstep 174 174 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 170 170 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r51,1
+l571dostart:
+   .srcstep 170 170 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   bcf l571doend,r51
+   .srcstep 171 171 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_20"="b" ".rexxclassicconditionevent" r52
+   load r69,7
+   load r68,2
+   settpswapcall r52,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r68,r55,256,r70
+   swap r55,r70
+   .srcstep 172 172 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 173 173 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   signal "CLASSIC_CONDITION",r52
+l571doinc:
+   .srcstep 175 175 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   br l571dostart
+l571doend:
+   endlife r52
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_20"
+l574iffalse:
+l576doinc:
+   .srcstep 179 179 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   br l576dostart
+l576doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_20"
+l579iffalse:
+   .srcstep 194 194 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r70,7
+   load r68,2
+   settp a3,256
+   swap r69,a3
+   call r56,§rexxactivation.rexxactivationarguments.signalpolicy(),r68
+   swap a3,r69
+   igt r70,r56,0
+   brf l612iffalse,r70
+   .srcstep 195 195 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   .srcstep 192 192 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 182 182 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r68,1
+l609dostart:
+   .srcstep 182 182 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   bcf l609doend,r68
+   .srcstep 183 183 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_20"="b" ".string" r69
+   load r55,1
+   settpswapcall r69,§rexxvalue.rexxvalue.lostdigitsdescription(),r55,r59,256,r56
+   swap r59,r56
+   .srcstep 190 190 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   sne r56,r69,""
+   brf l607iffalse,r56
+   .srcstep 191 191 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   .srcstep 188 188 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 184 184 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r54,1
+l604dostart:
+   .srcstep 184 184 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   bcf l604doend,r54
+   .srcstep 185 185 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_20"="b" ".rexxclassicconditionevent" r55
+   load r52,7
+   load r51,2
+   settpswapcall r55,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r51,r69,256,r53
+   swap r69,r53
+   .srcstep 186 186 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 187 187 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   signal "CLASSIC_CONDITION",r55
+l604doinc:
+   .srcstep 189 189 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   br l604dostart
+l604doend:
+   endlife r55
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_20"
+l607iffalse:
+l609doinc:
+   .srcstep 193 193 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   br l609dostart
+l609doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_20"
+l612iffalse:
+   .srcstep 196 196 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_20"="b" ".rexxbifcallcontext" r66
+   load r70,"compareGreaterThan"
+   load r69,1
+   settpcall r66,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r69,r70,768
+   .srcstep 197 197 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r68,2
+   settp r66,256
+   swap r69,r66
+   settpswapcall r56,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r68,a2,256,r70
+   swap r66,r69
+   swap a2,r70
+   .srcstep 198 198 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_20"="b" ".rexxvalue..rexxvalue" r58
+   mkref r69,r66
+   load r68,3
+   settp r69,768
+   settp r60,256
+   swap r70,r60
+   settpswapcall r58,rexxclassicbifs.rexxclassic_expression_binary(),r68,r59,256,r71
+   swap r60,r70
+   swap r59,r71
+   .traceevent "O" 4 "R" "O" "r" 58 198 198 1 "" ""
+   .srcstep 204 204 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r70,1
+   settpswapcall r69,§rexxclassicbifs.rexxbifcallcontext.haserror(),r70,r66,256,r71
+   swap r66,r71
+   brf l641iffalse,r69
+   .srcstep 205 205 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   .srcstep 202 202 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   .srcstep 199 199 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r71,1
+l638dostart:
+   .srcstep 199 199 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   bcf l638doend,r71
+   .srcstep 200 200 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   load r72,1
+   settpswapcall r70,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r72,r66,256,r73
+   swap r66,r73
+   .srcstep 201 201 6 "pipeline-c.crexx" 5 16 17 "do while total > 0"
+   signal "CLASSIC_SYNTAX",r70
+l638doinc:
+   .srcstep 203 203 6 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+   br l638dostart
+l638doend:
+l641iffalse:
+   .srcstep 206 206 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_21"="b" ".rexxbifcallcontext" r67
+   load r73,"logicalWhileValue"
+   load r72,1
+   settpcall r67,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r72,r73,768
+   .srcstep 207 207 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   load r71,2
+   settp r67,256
+   swap r72,r67
+   settpswapcall r69,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r71,a2,256,r73
+   swap r67,r72
+   swap a2,r73
+   .srcstep 208 208 6 "pipeline-c.crexx" 5 4 17 "do while total > 0"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_21"="b" ".rexxvalue..rexxvalue" r57
+   mkref r72,r67
+   load r71,2
+   settp r72,768
+   settpswapcall r57,rexxclassicbifs.rexxclassic_expression_unary(),r71,r58,256,r73
+   swap r58,r73
+   .traceevent "P" 4 "R" "O" "r" 57 208 208 1 "" ""
+   .srcstep 214 214 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   load r72,1
+   settpswapcall r71,§rexxclassicbifs.rexxbifcallcontext.haserror(),r72,r67,256,r73
+   swap r67,r73
+   brf l671iffalse,r71
+   .srcstep 215 215 6 "pipeline-c.crexx" 5 10 15 "do while total > 0"
+   .srcstep 212 212 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   .srcstep 209 209 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   load r73,1
+l668dostart:
+   .srcstep 209 209 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   bcf l668doend,r73
+   .srcstep 210 210 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   load r74,1
+   settpswapcall r72,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r74,r67,256,r75
+   swap r67,r75
+   .srcstep 211 211 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   signal "CLASSIC_SYNTAX",r72
+l668doinc:
+   .srcstep 213 213 6 "pipeline-c.crexx" 5 10 15 "do while total > 0"
+   br l668dostart
+l668doend:
+l671iffalse:
+   .srcstep 216 216 6 "pipeline-c.crexx" 5 4 9 "do while total > 0"
+   load r74,1
+   settpswapcall r73,§rexxvalue.rexxvalue.logicalvalue(),r74,r57,256,r75
+   swap r57,r75
+   icopy r75,r73
+l675bexprend:
+   endlife r60
+   endlife r59
+   endlife r66
+   endlife r67
+   endlife r58
+   endlife r57
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_20"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_20"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_20"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_21"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_20"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_21"
+   brf l678doend,r75
+   .srcstep 219 219 65 "pipeline-c.crexx" 6 9 10 "  total = total - 1"
+   .srcstep 220 220 6 "pipeline-c.crexx" 6 11 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_25"="b" ".rexxvalue..rexxvalue" r63
+   load r78,"TOTAL"
+   load r76,2
+   settp r31,256
+   swap r77,r31
+   settpcall r63,§rexxpool.rexxvariablepool.symbolvalue(),r76,r78,768
+   swap r31,r77
+   .traceevent "V" 6 "R" "O" "r" 63 220 220 1 "TOTAL" ""
+   .srcstep 221 221 6 "pipeline-c.crexx" 6 17 20 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_25"="b" ".rexxvalue" r62
+   load r78,"1"
+   load r77,1
+   settpcall r62,§rexxvalue.rexxvalue.§factory(),r77,r78,768
+   .traceevent "L" 4 "R" "O" "r" 62 221 221 1 "" ""
+   .srcstep 234 234 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r78,7
+   load r76,2
+   settp a3,256
+   swap r77,a3
+   call r74,§rexxactivation.rexxactivationarguments.signalpolicy(),r76
+   swap a3,r77
+   igt r78,r74,0
+   brf l733iffalse,r78
+   .srcstep 235 235 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   .srcstep 232 232 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 222 222 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r76,1
+l730dostart:
+   .srcstep 222 222 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   bcf l730doend,r76
+   .srcstep 223 223 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_25"="b" ".string" r77
+   load r79,1
+   settpswapcall r77,§rexxvalue.rexxvalue.lostdigitsdescription(),r79,r63,256,r80
+   swap r63,r80
+   .srcstep 230 230 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   sne r80,r77,""
+   brf l728iffalse,r80
+   .srcstep 231 231 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   .srcstep 228 228 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 224 224 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r74,1
+l725dostart:
+   .srcstep 224 224 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   bcf l725doend,r74
+   .srcstep 225 225 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_25"="b" ".rexxclassicconditionevent" r79
+   load r82,7
+   load r81,2
+   settpswapcall r79,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r81,r77,256,r83
+   swap r77,r83
+   .srcstep 226 226 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 227 227 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   signal "CLASSIC_CONDITION",r79
+l725doinc:
+   .srcstep 229 229 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   br l725dostart
+l725doend:
+   endlife r79
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_25"
+l728iffalse:
+l730doinc:
+   .srcstep 233 233 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   br l730dostart
+l730doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_25"
+l733iffalse:
+   .srcstep 248 248 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r83,7
+   load r81,2
+   settp a3,256
+   swap r82,a3
+   call r80,§rexxactivation.rexxactivationarguments.signalpolicy(),r81
+   swap a3,r82
+   igt r83,r80,0
+   brf l766iffalse,r83
+   .srcstep 249 249 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   .srcstep 246 246 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 236 236 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r81,1
+l763dostart:
+   .srcstep 236 236 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   bcf l763doend,r81
+   .srcstep 237 237 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_25"="b" ".string" r82
+   load r79,1
+   settpswapcall r82,§rexxvalue.rexxvalue.lostdigitsdescription(),r79,r62,256,r80
+   swap r62,r80
+   .srcstep 244 244 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   sne r80,r82,""
+   brf l761iffalse,r80
+   .srcstep 245 245 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   .srcstep 242 242 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 238 238 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r78,1
+l758dostart:
+   .srcstep 238 238 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   bcf l758doend,r78
+   .srcstep 239 239 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_25"="b" ".rexxclassicconditionevent" r79
+   load r85,7
+   load r84,2
+   settpswapcall r79,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r84,r82,256,r86
+   swap r82,r86
+   .srcstep 240 240 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 241 241 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   signal "CLASSIC_CONDITION",r79
+l758doinc:
+   .srcstep 243 243 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   br l758dostart
+l758doend:
+   endlife r79
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_25"
+l761iffalse:
+l763doinc:
+   .srcstep 247 247 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   br l763dostart
+l763doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_25"
+l766iffalse:
+   .srcstep 250 250 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_25"="b" ".rexxbifcallcontext" r65
+   load r86,"subtract"
+   load r85,1
+   settpcall r65,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r85,r86,768
+   .srcstep 251 251 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r84,2
+   settp r65,256
+   swap r85,r65
+   settpswapcall r83,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r84,a2,256,r86
+   swap r65,r85
+   swap a2,r86
+   .srcstep 252 252 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_25"="b" ".rexxvalue..rexxvalue" r61
+   mkref r84,r65
+   load r83,3
+   settp r84,768
+   settp r63,256
+   swap r85,r63
+   settpswapcall r61,rexxclassicbifs.rexxclassic_expression_binary(),r83,r62,256,r86
+   swap r63,r85
+   swap r62,r86
+   .traceevent "O" 4 "R" "O" "r" 61 252 252 1 "" ""
+   .srcstep 258 258 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r85,1
+   settpswapcall r84,§rexxclassicbifs.rexxbifcallcontext.haserror(),r85,r65,256,r86
+   swap r65,r86
+   brf l795iffalse,r84
+   .srcstep 259 259 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   .srcstep 256 256 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   .srcstep 253 253 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r86,1
+l792dostart:
+   .srcstep 253 253 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   bcf l792doend,r86
+   .srcstep 254 254 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   load r87,1
+   settpswapcall r85,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r87,r65,256,r88
+   swap r65,r88
+   .srcstep 255 255 6 "pipeline-c.crexx" 6 17 18 "  total = total - 1"
+   signal "CLASSIC_SYNTAX",r85
+l792doinc:
+   .srcstep 257 257 6 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+   br l792dostart
+l792doend:
+l795iffalse:
+   .srcstep 260 260 6 "pipeline-c.crexx" 6 3 18 "  total = total - 1"
+   load r88,"TOTAL"
+   .traceevent "A" 6 "R" "O" "r" 61 260 260 1 "TOTAL" ""
+   load r86,3
+   settp r31,256
+   swap r87,r31
+   settp r88,768
+   settpswapcall r84,§rexxpool.rexxvariablepool.setsymbolvalue(),r86,r61,256,r89
+   swap r31,r87
+   swap r61,r89
+l678doinc:
+   .srcstep 262 262 6 "pipeline-c.crexx" 7 1 4 "end"
+   br l678dostart
+l678doend:
+   endlife r63
+   endlife r62
+   endlife r65
+   endlife r61
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_loop_29"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_25"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_25"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_25"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_25"
+   .srcstep 263 263 65 "pipeline-c.crexx" 8 1 4 "say total"
+   .srcstep 264 264 6 "pipeline-c.crexx" 8 1 10 "say total"
+   load r92,"TOTAL"
+   load r90,2
+   settp r31,256
+   swap r91,r31
+   settpcall r88,§rexxpool.rexxvariablepool.symbolvalue(),r90,r92,768
+   swap r31,r91
+   .traceevent "V" 6 "R" "O" "r" 88 264 264 1 "TOTAL" ""
+   load r89,1
+   load r87,2
+   settp r88,256
+   settpcall r92,§rexxvalue.rexxvalue.asstring(),r87,r89,256
+   say r92
+   .srcstep 265 265 65 "pipeline-c.crexx" 9 1 4 "say length('cat')"
+   .srcstep 266 266 6 "pipeline-c.crexx" 9 11 18 "say length('cat')"
+   minlinkattr1 r92,r1,1
+   load r94,"cat"
+   load r93,1
+   settpcall r88,§rexxvalue.rexxvalue.§factory(),r93,r94,768
+   .traceevent "L" 4 "R" "O" "r" 88 266 266 1 "" ""
+   load r89,1
+   load r87,2
+   settp r88,256
+   settpcall r91,§rexxvalue.rexxvalue.asstring(),r87,r89,256
+   load r90,1
+   settpcall r94,§rexxvalue.rexxvalue.§factory(),r90,r91,256
+   copy r92,r94
+   unlink r92
+   .srcstep 267 267 6 "pipeline-c.crexx" 9 11 18 "say length('cat')"
+   minlinkattr1 r94,r5,1
+   load r93,1
+   isetunlink r94,r93
+   .srcstep 268 268 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_context_33"="b" ".rexxbifcallcontext" r3
+   load r94,"LENGTH"
+   load r93,1
+   settpcall r3,§rexxclassicbifs.rexxbifcallcontext.§factory(),r93,r94,768
+   .srcstep 269 269 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   load r91,3
+   settp r3,256
+   swap r92,r3
+   settp r1,256
+   swap r93,r1
+   settpswapcall r90,§rexxclassicbifs.rexxbifcallcontext.setarguments(),r91,r5,256,r94
+   swap r3,r92
+   swap r1,r93
+   swap r5,r94
+   .srcstep 270 270 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   mkref r94,r31
+   load r92,2
+   settp r3,256
+   swap r93,r3
+   settpcall r91,§rexxclassicbifs.rexxbifcallcontext.setcallerpool(),r92,r94,768
+   swap r3,r93
+   .srcstep 271 271 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   load r92,2
+   settp r3,256
+   swap r93,r3
+   settpswapcall r91,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r92,a2,256,r94
+   swap r3,r93
+   swap a2,r94
+   .srcstep 272 272 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_expr_33"="b" ".rexxvalue..rexxvalue" r9
+   mkref r94,r3
+   load r93,1
+   settpcall r9,rexxclassicbiflength.rexxclassicbif_length(),r93,r94,768
+   .srcstep 278 278 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   load r93,1
+   settpswapcall r92,§rexxclassicbifs.rexxbifcallcontext.haserror(),r93,r3,256,r94
+   swap r3,r94
+   brf l872iffalse,r92
+   .srcstep 279 279 6 "pipeline-c.crexx" 9 11 12 "say length('cat')"
+   .srcstep 276 276 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   .srcstep 273 273 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   load r94,1
+l869dostart:
+   .srcstep 273 273 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   bcf l869doend,r94
+   .srcstep 274 274 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   load r95,1
+   settpswapcall r93,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r95,r3,256,r96
+   swap r3,r96
+   .srcstep 275 275 6 "pipeline-c.crexx" 9 5 11 "say length('cat')"
+   signal "CLASSIC_SYNTAX",r93
+l869doinc:
+   .srcstep 277 277 6 "pipeline-c.crexx" 9 11 12 "say length('cat')"
+   br l869dostart
+l869doend:
+l872iffalse:
+   .srcstep 280 280 6 "pipeline-c.crexx" 9 1 11 "say length('cat')"
+   load r96,1
+   load r94,2
+   settp r9,256
+   swap r95,r9
+   settpcall r92,§rexxvalue.rexxvalue.asstring(),r94,r96,256
+   swap r9,r95
+   say r92
+   .srcstep 281 281 65 "pipeline-c.crexx" 10 1 5 "exit 0"
+   .srcstep 282 282 6 "pipeline-c.crexx" 10 1 7 "exit 0"
+   load r92,"0"
+   load r91,1
+   settpcall r96,§rexxvalue.rexxvalue.§factory(),r91,r92,768
+   .traceevent "L" 4 "R" "O" "r" 96 282 282 1 "" ""
+   load r97,1
+   load r94,3
+   settp a3,256
+   swap r95,a3
+   settp r96,256
+   call r92,§rexxactivation.rexxactivationarguments.requestprogramexit(),r94
+   swap a3,r95
+   .srcstep 283 283 6 "pipeline-c.crexx" 10 1 5 "exit 0"
+   ret
+   .srcstep 284 284 6 "pipeline-c.crexx" 12 1 7 "twice: procedure"
+l161frame:
+   .srcstep 285 285 65 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   .srcstep 291 291 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   load r96,1
+   settpswapcall r95,§rexxactivation.rexxactivationarguments.procedureeligible(),r96,a3,256,r97
+   swap a3,r97
+   ieq r97,r95,0
+   brf l902iffalse,r97
+   .srcstep 292 292 6 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .srcstep 289 289 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   .srcstep 286 286 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   load r96,1
+l899dostart:
+   .srcstep 286 286 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   bcf l899doend,r96
+   .srcstep 287 287 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   .srcstep 288 288 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   signal "CLASSIC_SYNTAX","RXC-LC-17.1: PROCEDURE is valid only as the first instruction of an internal call"
+l899doinc:
+   .srcstep 290 290 6 "pipeline-c.crexx" 13 3 6 "  arg value"
+   br l899dostart
+l899doend:
+l902iffalse:
+   .srcstep 293 293 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   load r96,1
+   settpswapcall r95,§rexxactivation.rexxactivationarguments.enterprocedure(),r96,a3,256,r97
+   swap a3,r97
+   .srcstep 294 294 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_private_pool_38"="b" ".rexxvariablepool" r32
+   load r96,1
+   settpcall r32,§rexxpool.rexxvariablepool.§factory(),r96,r97,0
+   .srcstep 295 295 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   mkref r97,r31
+   load r95,2
+   settp r32,256
+   swap r96,r32
+   settpcall r94,§rexxpool.rexxvariablepool.inheritcommandstatus(),r95,r97,768
+   swap r32,r96
+   .srcstep 296 296 6 "pipeline-c.crexx" 12 8 17 "twice: procedure"
+   mkref r97,r32
+   unlink r31
+   linkref r31,r97
+   .srcstep 297 297 65 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .srcstep 298 298 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   minlinkattr1 r97,r2,1
+   load r103,1
+   load r101,2
+   settp a3,256
+   swap r102,a3
+   call r99,§rexxactivation.rexxactivationarguments.argument(),r101
+   swap a3,r102
+   load r100,1
+   load r98,2
+   settp r99,256
+   settpcall r96,§rexxvalue.rexxvalue.asstring(),r98,r100,256
+   load r95,1
+   settpcall r103,§rexxvalue.rexxvalue.§factory(),r95,r96,256
+   copy r97,r103
+   unlink r97
+   .srcstep 299 299 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   minlinkattr1 r103,r6,1
+   load r102,1
+   isetunlink r103,r102
+   .srcstep 300 300 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_context_926"="b" ".rexxbifcallcontext" r4
+   load r103,"TRANSLATE"
+   load r102,1
+   settpcall r4,§rexxclassicbifs.rexxbifcallcontext.§factory(),r102,r103,768
+   .srcstep 301 301 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   load r100,3
+   settp r4,256
+   swap r101,r4
+   settp r2,256
+   swap r102,r2
+   settpswapcall r99,§rexxclassicbifs.rexxbifcallcontext.setarguments(),r100,r6,256,r103
+   swap r4,r101
+   swap r2,r102
+   swap r6,r103
+   .srcstep 302 302 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   mkref r103,r31
+   load r101,2
+   settp r4,256
+   swap r102,r4
+   settpcall r100,§rexxclassicbifs.rexxbifcallcontext.setcallerpool(),r101,r103,768
+   swap r4,r102
+   .srcstep 303 303 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   load r101,2
+   settp r4,256
+   swap r102,r4
+   settpswapcall r100,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r101,a2,256,r103
+   swap r4,r102
+   swap a2,r103
+   .srcstep 304 304 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_expr_926"="b" ".rexxvalue..rexxvalue" r10
+   mkref r103,r4
+   load r102,1
+   settpcall r10,rexxclassicbiftranslate.rexxclassicbif_translate(),r102,r103,768
+   .srcstep 310 310 33 "pipeline-c.crexx" 13 3 6 "  arg value"
+   load r102,1
+   settpswapcall r101,§rexxclassicbifs.rexxbifcallcontext.haserror(),r102,r4,256,r103
+   swap r4,r103
+   brf l986iffalse,r101
+   .srcstep 311 311 1 "pipeline-c.crexx" 13 7 12 "  arg value"
+   .srcstep 308 308 1 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .srcstep 305 305 1 "pipeline-c.crexx" 13 3 6 "  arg value"
+   load r103,1
+l983dostart:
+   .srcstep 305 305 1 "pipeline-c.crexx" 13 3 6 "  arg value"
+   bcf l983doend,r103
+   .srcstep 306 306 3 "pipeline-c.crexx" 13 3 6 "  arg value"
+   load r104,1
+   settpswapcall r102,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r104,r4,256,r105
+   swap r4,r105
+   .srcstep 307 307 3 "pipeline-c.crexx" 13 3 6 "  arg value"
+   signal "CLASSIC_SYNTAX",r102
+l983doinc:
+   .srcstep 309 309 1 "pipeline-c.crexx" 13 7 12 "  arg value"
+   br l983dostart
+l983doend:
+l986iffalse:
+   .srcstep 312 312 6 "pipeline-c.crexx" 13 3 6 "  arg value"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parse_source_40"="b" ".string" r30
+   load r105,1
+   load r103,2
+   settp r10,256
+   swap r104,r10
+   settpcall r30,§rexxvalue.rexxvalue.asstring(),r103,r105,256
+   swap r10,r104
+   .srcstep 313 313 6 "pipeline-c.crexx" 13 3 6 "  arg value"
+   parseplan r29,r30,"P\x01\b\0\x02\0\x01\0\x03\0\x01\0\0\0\0\0\0\0\x01\x01"
+   .srcstep 314 314 6 "pipeline-c.crexx" 13 7 12 "  arg value"
+   load r105,"VALUE"
+   minlinkattr1 r99,r29,1
+   load r100,1
+   settpswapcall r106,§rexxvalue.rexxvalue.§factory(),r100,r99,256,r101
+   swap r99,r101
+   unlink r99
+   load r103,3
+   settp r31,256
+   swap r104,r31
+   settp r105,768
+   settpcall r101,§rexxpool.rexxvariablepool.setsymbolvalue(),r103,r106,256
+   swap r31,r104
+   .srcstep 315 315 65 "pipeline-c.crexx" 14 3 9 "  return value * 2"
+   .srcstep 316 316 6 "pipeline-c.crexx" 14 10 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_45"="b" ".rexxvalue..rexxvalue" r15
+   load r106,"VALUE"
+   load r104,2
+   settp r31,256
+   swap r105,r31
+   settpcall r15,§rexxpool.rexxvariablepool.symbolvalue(),r104,r106,768
+   swap r31,r105
+   .traceevent "V" 6 "R" "O" "r" 15 316 316 1 "VALUE" ""
+   .srcstep 317 317 6 "pipeline-c.crexx" 14 16 19 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_45"="b" ".rexxvalue" r18
+   load r106,"2"
+   load r105,1
+   settpcall r18,§rexxvalue.rexxvalue.§factory(),r105,r106,768
+   .traceevent "L" 4 "R" "O" "r" 18 317 317 1 "" ""
+   .srcstep 330 330 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r106,7
+   load r104,2
+   settp a3,256
+   swap r105,a3
+   call r103,§rexxactivation.rexxactivationarguments.signalpolicy(),r104
+   swap a3,r105
+   igt r106,r103,0
+   brf l1058iffalse,r106
+   .srcstep 331 331 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   .srcstep 328 328 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 318 318 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r104,1
+l1055dostart:
+   .srcstep 318 318 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   bcf l1055doend,r104
+   .srcstep 319 319 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_45"="b" ".string" r105
+   load r107,1
+   settpswapcall r105,§rexxvalue.rexxvalue.lostdigitsdescription(),r107,r15,256,r108
+   swap r15,r108
+   .srcstep 326 326 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   sne r108,r105,""
+   brf l1053iffalse,r108
+   .srcstep 327 327 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   .srcstep 324 324 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 320 320 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r103,1
+l1050dostart:
+   .srcstep 320 320 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   bcf l1050doend,r103
+   .srcstep 321 321 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_45"="b" ".rexxclassicconditionevent" r107
+   load r100,7
+   load r99,2
+   settpswapcall r107,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r99,r105,256,r101
+   swap r105,r101
+   .srcstep 322 322 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 323 323 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   signal "CLASSIC_CONDITION",r107
+l1050doinc:
+   .srcstep 325 325 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   br l1050dostart
+l1050doend:
+   endlife r107
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_event_45"
+l1053iffalse:
+l1055doinc:
+   .srcstep 329 329 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   br l1055dostart
+l1055doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_loss_45"
+l1058iffalse:
+   .srcstep 344 344 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r108,7
+   load r106,2
+   settp a3,256
+   swap r107,a3
+   call r105,§rexxactivation.rexxactivationarguments.signalpolicy(),r106
+   swap a3,r107
+   igt r108,r105,0
+   brf l1091iffalse,r108
+   .srcstep 345 345 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   .srcstep 342 342 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 332 332 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r106,1
+l1088dostart:
+   .srcstep 332 332 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   bcf l1088doend,r106
+   .srcstep 333 333 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_45"="b" ".string" r107
+   load r104,1
+   settpswapcall r107,§rexxvalue.rexxvalue.lostdigitsdescription(),r104,r18,256,r105
+   swap r18,r105
+   .srcstep 340 340 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   sne r105,r107,""
+   brf l1086iffalse,r105
+   .srcstep 341 341 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   .srcstep 338 338 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 334 334 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r103,1
+l1083dostart:
+   .srcstep 334 334 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   bcf l1083doend,r103
+   .srcstep 335 335 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_45"="b" ".rexxclassicconditionevent" r104
+   load r100,7
+   load r99,2
+   settpswapcall r104,§rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r99,r107,256,r101
+   swap r107,r101
+   .srcstep 336 336 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 337 337 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   signal "CLASSIC_CONDITION",r104
+l1083doinc:
+   .srcstep 339 339 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   br l1083dostart
+l1083doend:
+   endlife r104
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_event_45"
+l1086iffalse:
+l1088doinc:
+   .srcstep 343 343 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   br l1088dostart
+l1088doend:
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_loss_45"
+l1091iffalse:
+   .srcstep 346 346 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_45"="b" ".rexxbifcallcontext" r21
+   load r108,"multiply"
+   load r107,1
+   settpcall r21,§rexxclassicbifs.rexxbifcallcontext.§factory.expression(),r107,r108,768
+   .srcstep 347 347 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r106,2
+   settp r21,256
+   swap r107,r21
+   settpswapcall r105,§rexxclassicbifs.rexxbifcallcontext.setconfig(),r106,a2,256,r108
+   swap r21,r107
+   swap a2,r108
+   .srcstep 348 348 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_45"="b" ".rexxvalue..rexxvalue" r24
+   mkref r106,r21
+   load r105,3
+   settp r106,768
+   settp r15,256
+   swap r107,r15
+   settpswapcall r24,rexxclassicbifs.rexxclassic_expression_binary(),r105,r18,256,r108
+   swap r15,r107
+   swap r18,r108
+   .traceevent "O" 4 "R" "O" "r" 24 348 348 1 "" ""
+   .srcstep 354 354 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r107,1
+   settpswapcall r106,§rexxclassicbifs.rexxbifcallcontext.haserror(),r107,r21,256,r108
+   swap r21,r108
+   brf l1120iffalse,r106
+   .srcstep 355 355 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   .srcstep 352 352 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   .srcstep 349 349 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r108,1
+l1117dostart:
+   .srcstep 349 349 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   bcf l1117doend,r108
+   .srcstep 350 350 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   load r109,1
+   settpswapcall r107,§rexxclassicbifs.rexxbifcallcontext.errordetail(),r109,r21,256,r110
+   swap r21,r110
+   .srcstep 351 351 6 "pipeline-c.crexx" 14 16 17 "  return value * 2"
+   signal "CLASSIC_SYNTAX",r107
+l1117doinc:
+   .srcstep 353 353 6 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+   br l1117dostart
+l1117doend:
+l1120iffalse:
+   .srcstep 356 356 6 "pipeline-c.crexx" 14 3 17 "  return value * 2"
+   load r108,2
+   settp a3,256
+   swap r109,a3
+   settpswapcall r106,§rexxactivation.rexxactivationarguments.setreturnvalue(),r108,r24,256,r110
+   swap a3,r109
+   swap r24,r110
+   .srcstep 357 357 6 "pipeline-c.crexx" 14 3 9 "  return value * 2"
+   ret
+   .srcstep 358 358 6 "pipeline-c.crexx" 1 1 8 "options levelc"
+   ret
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_activation"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_args_33"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_args_926"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_context_33"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_context_926"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_exists_33"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_bif_exists_926"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_config_ref"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_entry"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_expr_33"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_expr_926"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_digits_3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_form_3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_entry_fuzz_3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_11"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_45"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_left_6"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_11"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_45"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_numeric_right_6"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_11"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_45"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_context_6"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_11"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_45"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_operator_result_6"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_options_config_3"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parent_pool"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parent_pool_ref"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parse_fields_40"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_parse_source_40"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_pool"
+   .meta ".__rxcp_levelc_body.__rxcp_levelc_private_pool_38"
+
+/* Imported Declaration from file: RexxClassicBifs@rxfnsc.rxbin */
+
+rexxclassicbifs.rexxclassic_expression_binary() .expose=rexxclassicbifs.rexxclassic_expression_binary
+   .meta "rexxclassicbifs.rexxclassic_expression_binary"="b" ".rexxvalue..rexxvalue" rexxclassicbifs.rexxclassic_expression_binary() "context_ref=reference .rexxbifcallcontext,left=.rexxvalue,right=.rexxvalue"
+   .meta "rexxclassicbifs.rexxclassic_expression_binary"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicBifs@rxfnsc.rxbin */
+
+rexxclassicbifs.rexxclassic_expression_unary() .expose=rexxclassicbifs.rexxclassic_expression_unary
+   .meta "rexxclassicbifs.rexxclassic_expression_unary"="b" ".rexxvalue..rexxvalue" rexxclassicbifs.rexxclassic_expression_unary() "context_ref=reference .rexxbifcallcontext,value=.rexxvalue"
+   .meta "rexxclassicbifs.rexxclassic_expression_unary"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicBifLength@rxfnsc.rxbin */
+
+rexxclassicbiflength.rexxclassicbif_length() .expose=rexxclassicbiflength.rexxclassicbif_length
+   .meta "rexxclassicbiflength.rexxclassicbif_length"="b" ".rexxvalue..rexxvalue" rexxclassicbiflength.rexxclassicbif_length() "context_ref=reference .rexxbifcallcontext"
+   .meta "rexxclassicbiflength.rexxclassicbif_length"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicBifTranslate@rxfnsc.rxbin */
+
+rexxclassicbiftranslate.rexxclassicbif_translate() .expose=rexxclassicbiftranslate.rexxclassicbif_translate
+   .meta "rexxclassicbiftranslate.rexxclassicbif_translate"="b" ".rexxvalue..rexxvalue" rexxclassicbiftranslate.rexxclassicbif_translate() "context_ref=reference .rexxbifcallcontext"
+   .meta "rexxclassicbiftranslate.rexxclassicbif_translate"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxActivationArguments@rxfnsc.rxbin */
+
+§rexxactivation.rexxactivationarguments.§factory() .expose=rexxactivation.rexxactivationarguments.§factory
+   .meta "rexxactivation.rexxactivationarguments.§factory"="b" ".rexxactivation..rexxactivationarguments" §rexxactivation.rexxactivationarguments.§factory() ""
+   .meta "rexxactivation.rexxactivationarguments.§factory"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.inheritsignalpolicy() .expose=rexxactivation.rexxactivationarguments.inheritsignalpolicy
+   .meta "rexxactivation.rexxactivationarguments.inheritsignalpolicy"="b" ".void" §rexxactivation.rexxactivationarguments.inheritsignalpolicy() "parent_ref=reference .rexxactivationarguments"
+   .meta "rexxactivation.rexxactivationarguments.inheritsignalpolicy"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.numericdigits() .expose=rexxactivation.rexxactivationarguments.numericdigits
+   .meta "rexxactivation.rexxactivationarguments.numericdigits"="b" ".int" §rexxactivation.rexxactivationarguments.numericdigits() ""
+   .meta "rexxactivation.rexxactivationarguments.numericdigits"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexxactivationarguments.numericfuzz
+   .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" §rexxactivation.rexxactivationarguments.numericfuzz() ""
+   .meta "rexxactivation.rexxactivationarguments.numericfuzz"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
+   .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" §rexxactivation.rexxactivationarguments.numericform() ""
+   .meta "rexxactivation.rexxactivationarguments.numericform"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.capturecallerpool() .expose=rexxactivation.rexxactivationarguments.capturecallerpool
+   .meta "rexxactivation.rexxactivationarguments.capturecallerpool"="b" ".void" §rexxactivation.rexxactivationarguments.capturecallerpool() "pool_ref=reference .rexxvariablepool"
+   .meta "rexxactivation.rexxactivationarguments.capturecallerpool"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.requestprogramexit() .expose=rexxactivation.rexxactivationarguments.requestprogramexit
+   .meta "rexxactivation.rexxactivationarguments.requestprogramexit"="b" ".void" §rexxactivation.rexxactivationarguments.requestprogramexit() "value=.rexxvalue,present=.boolean"
+   .meta "rexxactivation.rexxactivationarguments.requestprogramexit"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.programexitrequested() .expose=rexxactivation.rexxactivationarguments.programexitrequested
+   .meta "rexxactivation.rexxactivationarguments.programexitrequested"="b" ".boolean" §rexxactivation.rexxactivationarguments.programexitrequested() ""
+   .meta "rexxactivation.rexxactivationarguments.programexitrequested"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.signalpolicy() .expose=rexxactivation.rexxactivationarguments.signalpolicy
+   .meta "rexxactivation.rexxactivationarguments.signalpolicy"="b" ".int" §rexxactivation.rexxactivationarguments.signalpolicy() "condition=.int"
+   .meta "rexxactivation.rexxactivationarguments.signalpolicy"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.append() .expose=rexxactivation.rexxactivationarguments.append
+   .meta "rexxactivation.rexxactivationarguments.append"="b" ".void" §rexxactivation.rexxactivationarguments.append() "value=.rexxvalue,exists=.boolean"
+   .meta "rexxactivation.rexxactivationarguments.append"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.appendtext() .expose=rexxactivation.rexxactivationarguments.appendtext
+   .meta "rexxactivation.rexxactivationarguments.appendtext"="b" ".void" §rexxactivation.rexxactivationarguments.appendtext() "text=.string"
+   .meta "rexxactivation.rexxactivationarguments.appendtext"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.argument() .expose=rexxactivation.rexxactivationarguments.argument
+   .meta "rexxactivation.rexxactivationarguments.argument"="b" ".rexxvalue..rexxvalue" §rexxactivation.rexxactivationarguments.argument() "index=.int"
+   .meta "rexxactivation.rexxactivationarguments.argument"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.setreturnvalue() .expose=rexxactivation.rexxactivationarguments.setreturnvalue
+   .meta "rexxactivation.rexxactivationarguments.setreturnvalue"="b" ".void" §rexxactivation.rexxactivationarguments.setreturnvalue() "value=.rexxvalue"
+   .meta "rexxactivation.rexxactivationarguments.setreturnvalue"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.hasreturnvalue() .expose=rexxactivation.rexxactivationarguments.hasreturnvalue
+   .meta "rexxactivation.rexxactivationarguments.hasreturnvalue"="b" ".boolean" §rexxactivation.rexxactivationarguments.hasreturnvalue() ""
+   .meta "rexxactivation.rexxactivationarguments.hasreturnvalue"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.returnvalue() .expose=rexxactivation.rexxactivationarguments.returnvalue
+   .meta "rexxactivation.rexxactivationarguments.returnvalue"="b" ".rexxvalue..rexxvalue" §rexxactivation.rexxactivationarguments.returnvalue() ""
+   .meta "rexxactivation.rexxactivationarguments.returnvalue"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.programreturncode() .expose=rexxactivation.rexxactivationarguments.programreturncode
+   .meta "rexxactivation.rexxactivationarguments.programreturncode"="b" ".int" §rexxactivation.rexxactivationarguments.programreturncode() ""
+   .meta "rexxactivation.rexxactivationarguments.programreturncode"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.begininternalfunction() .expose=rexxactivation.rexxactivationarguments.begininternalfunction
+   .meta "rexxactivation.rexxactivationarguments.begininternalfunction"="b" ".void" §rexxactivation.rexxactivationarguments.begininternalfunction() ""
+   .meta "rexxactivation.rexxactivationarguments.begininternalfunction"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.enterprocedure() .expose=rexxactivation.rexxactivationarguments.enterprocedure
+   .meta "rexxactivation.rexxactivationarguments.enterprocedure"="b" ".void" §rexxactivation.rexxactivationarguments.enterprocedure() ""
+   .meta "rexxactivation.rexxactivationarguments.enterprocedure"=".autoload" "rxfnsc"
+
+§rexxactivation.rexxactivationarguments.procedureeligible() .expose=rexxactivation.rexxactivationarguments.procedureeligible
+   .meta "rexxactivation.rexxactivationarguments.procedureeligible"="b" ".boolean" §rexxactivation.rexxactivationarguments.procedureeligible() ""
+   .meta "rexxactivation.rexxactivationarguments.procedureeligible"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxValue@rxfnsc.rxbin */
+
+§rexxvalue.rexxvalue.§factory() .expose=rexxvalue.rexxvalue.§factory
+   .meta "rexxvalue.rexxvalue.§factory"="b" ".rexxvalue..rexxvalue" §rexxvalue.rexxvalue.§factory() "value=.string"
+   .meta "rexxvalue.rexxvalue.§factory"=".autoload" "rxfnsc"
+
+§rexxvalue.rexxvalue.asstring() .expose=rexxvalue.rexxvalue.asstring
+   .meta "rexxvalue.rexxvalue.asstring"="b" ".string" §rexxvalue.rexxvalue.asstring() "?classic=.int"
+   .meta "rexxvalue.rexxvalue.asstring"=".autoload" "rxfnsc"
+
+§rexxvalue.rexxvalue.lostdigitsdescription() .expose=rexxvalue.rexxvalue.lostdigitsdescription
+   .meta "rexxvalue.rexxvalue.lostdigitsdescription"="b" ".string" §rexxvalue.rexxvalue.lostdigitsdescription() ""
+   .meta "rexxvalue.rexxvalue.lostdigitsdescription"=".autoload" "rxfnsc"
+
+§rexxvalue.rexxvalue.logicalvalue() .expose=rexxvalue.rexxvalue.logicalvalue
+   .meta "rexxvalue.rexxvalue.logicalvalue"="b" ".boolean" §rexxvalue.rexxvalue.logicalvalue() ""
+   .meta "rexxvalue.rexxvalue.logicalvalue"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicConfig@rxfnsc.rxbin */
+
+§rexxclassicconfig.rexxclassicconfig.§factory() .expose=rexxclassicconfig.rexxclassicconfig.§factory
+   .meta "rexxclassicconfig.rexxclassicconfig.§factory"="b" ".rexxclassicconfig..rexxclassicconfig" §rexxclassicconfig.rexxclassicconfig.§factory() "?requested_profile=.string"
+   .meta "rexxclassicconfig.rexxclassicconfig.§factory"=".autoload" "rxfnsc"
+
+§rexxclassicconfig.rexxclassicconfig.applyoptions() .expose=rexxclassicconfig.rexxclassicconfig.applyoptions
+   .meta "rexxclassicconfig.rexxclassicconfig.applyoptions"="b" ".void" §rexxclassicconfig.rexxclassicconfig.applyoptions() "words=.rexxvalue"
+   .meta "rexxclassicconfig.rexxclassicconfig.applyoptions"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxVariablePool@rxfnsc.rxbin */
+
+§rexxpool.rexxvariablepool.§factory() .expose=rexxpool.rexxvariablepool.§factory
+   .meta "rexxpool.rexxvariablepool.§factory"="b" ".rexxpool..rexxvariablepool" §rexxpool.rexxvariablepool.§factory() "?unicode_names=.int"
+   .meta "rexxpool.rexxvariablepool.§factory"=".autoload" "rxfnsc"
+
+§rexxpool.rexxvariablepool.inheritcommandstatus() .expose=rexxpool.rexxvariablepool.inheritcommandstatus
+   .meta "rexxpool.rexxvariablepool.inheritcommandstatus"="b" ".void" §rexxpool.rexxvariablepool.inheritcommandstatus() "parent=reference .rexxvariablepool"
+   .meta "rexxpool.rexxvariablepool.inheritcommandstatus"=".autoload" "rxfnsc"
+
+§rexxpool.rexxvariablepool.symbolvalue() .expose=rexxpool.rexxvariablepool.symbolvalue
+   .meta "rexxpool.rexxvariablepool.symbolvalue"="b" ".rexxvalue..rexxvalue" §rexxpool.rexxvariablepool.symbolvalue() "name=.string"
+   .meta "rexxpool.rexxvariablepool.symbolvalue"=".autoload" "rxfnsc"
+
+§rexxpool.rexxvariablepool.setsymbolvalue() .expose=rexxpool.rexxvariablepool.setsymbolvalue
+   .meta "rexxpool.rexxvariablepool.setsymbolvalue"="b" ".void" §rexxpool.rexxvariablepool.setsymbolvalue() "name=.string,item=.rexxvalue"
+   .meta "rexxpool.rexxvariablepool.setsymbolvalue"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicBifs@rxfnsc.rxbin */
+
+§rexxclassicbifs.rexxbifcallcontext.§factory() .expose=rexxclassicbifs.rexxbifcallcontext.§factory
+   .meta "rexxclassicbifs.rexxbifcallcontext.§factory"="b" ".rexxclassicbifs..rexxbifcallcontext" §rexxclassicbifs.rexxbifcallcontext.§factory() "name=.string"
+   .meta "rexxclassicbifs.rexxbifcallcontext.§factory"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.§factory.expression() .expose=rexxclassicbifs.rexxbifcallcontext.§factory.expression
+   .meta "rexxclassicbifs.rexxbifcallcontext.§factory.expression"="b" ".rexxclassicbifs..rexxbifcallcontext" §rexxclassicbifs.rexxbifcallcontext.§factory.expression() "name=.string"
+   .meta "rexxclassicbifs.rexxbifcallcontext.§factory.expression"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.setarguments() .expose=rexxclassicbifs.rexxbifcallcontext.setarguments
+   .meta "rexxclassicbifs.rexxbifcallcontext.setarguments"="b" ".void" §rexxclassicbifs.rexxbifcallcontext.setarguments() "args=.rexxvalue[*],exists=.int[*]"
+   .meta "rexxclassicbifs.rexxbifcallcontext.setarguments"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.setcallerpool() .expose=rexxclassicbifs.rexxbifcallcontext.setcallerpool
+   .meta "rexxclassicbifs.rexxbifcallcontext.setcallerpool"="b" ".void" §rexxclassicbifs.rexxbifcallcontext.setcallerpool() "pool=reference .rexxvariablepool"
+   .meta "rexxclassicbifs.rexxbifcallcontext.setcallerpool"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.setconfig() .expose=rexxclassicbifs.rexxbifcallcontext.setconfig
+   .meta "rexxclassicbifs.rexxbifcallcontext.setconfig"="b" ".void" §rexxclassicbifs.rexxbifcallcontext.setconfig() "config=reference .rexxclassicconfig"
+   .meta "rexxclassicbifs.rexxbifcallcontext.setconfig"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.haserror() .expose=rexxclassicbifs.rexxbifcallcontext.haserror
+   .meta "rexxclassicbifs.rexxbifcallcontext.haserror"="b" ".boolean" §rexxclassicbifs.rexxbifcallcontext.haserror() ""
+   .meta "rexxclassicbifs.rexxbifcallcontext.haserror"=".autoload" "rxfnsc"
+
+§rexxclassicbifs.rexxbifcallcontext.errordetail() .expose=rexxclassicbifs.rexxbifcallcontext.errordetail
+   .meta "rexxclassicbifs.rexxbifcallcontext.errordetail"="b" ".string" §rexxclassicbifs.rexxbifcallcontext.errordetail() ""
+   .meta "rexxclassicbifs.rexxbifcallcontext.errordetail"=".autoload" "rxfnsc"
+
+/* Imported Declaration from file: RexxClassicConditionEvent@rxfnsc.rxbin */
+
+§rexxclassicconditionevent.rexxclassicconditionevent.§factory() .expose=rexxclassicconditionevent.rexxclassicconditionevent.§factory
+   .meta "rexxclassicconditionevent.rexxclassicconditionevent.§factory"="b" ".rexxclassicconditionevent..rexxclassicconditionevent" §rexxclassicconditionevent.rexxclassicconditionevent.§factory() "condition_id=.int,detail=.string"
+   .meta "rexxclassicconditionevent.rexxclassicconditionevent.§factory"=".autoload" "rxfnsc"

@@ -1,5 +1,6 @@
 .globals=0
 main() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
 copy r5,a1
 load r4,1
 settp r5,768
@@ -22,67 +23,53 @@ call r1,llctarget.status(),r4
 null r5
 ret r1
 llf1() .locals=77
+.srcstep 0 0 6 "" 0 0 0 ""
 .meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
 numsci 18,1,1
-load r67,"generated Classic entry"
-sigbrv llerror1,r0,"CLASSIC_SYNTAX"
-sigbrv llerror1,r0,"DIVISION_BY_ZERO"
-sigbrv llerror1,r0,"CONVERSION_ERROR"
-sigbrv llerror1,r0,"INVALID_ARGUMENTS"
+load r67,"pipeline-c.crexx: entering $MAIN"
+sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
+sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
+sigbrv llerror1_3,r0,"CONVERSION_ERROR"
+sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
 br llb1
 llb1:
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
+.srcstep 2 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
+load r67,"pipeline-c.crexx: generated code in $MAIN"
 load r68,0
 call r10,llctarget.poolnew(),r68
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 unlink r1
 link r1,r10
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r11,a1
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r3,r11
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r12,a2
-load r67,"../step01/pipeline-c.crexx:1:1"
-.srcstep 1 1 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r2,r12
-load r67,"../step01/pipeline-c.crexx:2:1"
-.srcstep 3 3 17 "../step01/pipeline-c.crexx" 2 1 2 "total = 2 + 3"
+.srcstep 4 0 17 "pipeline-c.crexx" 2 1 14 "total = 2 + 3"
+load r67,"pipeline-c.crexx:2:1"
 load r69,""
 load r68,1
 settp r69,768
 call r13,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:2:9"
-.srcstep 10 10 17 "../step01/pipeline-c.crexx" 2 9 10 "total = 2 + 3"
+.srcstep 11 0 17 "pipeline-c.crexx" 2 9 10 "total = 2 + 3"
+load r67,"pipeline-c.crexx:2:9"
 load r69,"2"
 load r68,1
 settp r69,768
 call r14,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:2:9"
-.srcstep 8 8 17 "../step01/pipeline-c.crexx" 2 9 10 "total = 2 + 3"
+.srcstep 9 0 17 "pipeline-c.crexx" 2 9 14 "total = 2 + 3"
 copy r4,r14
-load r67,"../step01/pipeline-c.crexx:2:13"
-.srcstep 12 12 17 "../step01/pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+.srcstep 13 0 17 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
+load r67,"pipeline-c.crexx:2:13"
 load r69,"3"
 load r68,1
 settp r69,768
 call r15,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:2:9"
-.srcstep 8 8 17 "../step01/pipeline-c.crexx" 2 9 10 "total = 2 + 3"
+.srcstep 9 0 17 "pipeline-c.crexx" 2 9 14 "total = 2 + 3"
+load r67,"pipeline-c.crexx:2:9"
 copy r16,r4
-load r67,"../step01/pipeline-c.crexx:2:9"
-.srcstep 8 8 17 "../step01/pipeline-c.crexx" 2 9 10 "total = 2 + 3"
 copy r17,r2
-load r67,"../step01/pipeline-c.crexx:2:9"
-.srcstep 8 8 17 "../step01/pipeline-c.crexx" 2 9 10 "total = 2 + 3"
 load r69,"add"
 copy r70,r16
 copy r71,r15
@@ -97,12 +84,10 @@ null r69
 null r70
 null r71
 null r72
-load r67,"../step01/pipeline-c.crexx:2:1"
-.srcstep 3 3 17 "../step01/pipeline-c.crexx" 2 1 2 "total = 2 + 3"
+.srcstep 4 0 17 "pipeline-c.crexx" 2 1 14 "total = 2 + 3"
+load r67,"pipeline-c.crexx:2:1"
 unlink r19
 link r19,r1
-load r67,"../step01/pipeline-c.crexx:2:1"
-.srcstep 3 3 17 "../step01/pipeline-c.crexx" 2 1 2 "total = 2 + 3"
 mkref r69,r19
 copy r70,r18
 load r71,"TOTAL"
@@ -114,12 +99,10 @@ call r66,llctarget.poolwrite(),r68
 null r69
 null r70
 null r71
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 20 20 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
+.srcstep 21 0 17 "pipeline-c.crexx" 3 4 9 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:4"
 unlink r20
 link r20,r1
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 20 20 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
 mkref r69,r20
 load r70,"TOTAL"
 load r68,2
@@ -128,24 +111,19 @@ settp r70,768
 call r21,llctarget.poolread(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 16 16 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
+.srcstep 17 0 17 "pipeline-c.crexx" 3 4 14 "if total > 4 then say twice(total)"
 copy r5,r21
-load r67,"../step01/pipeline-c.crexx:3:12"
-.srcstep 24 24 17 "../step01/pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+.srcstep 25 0 17 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:12"
 load r69,"4"
 load r68,1
 settp r69,768
 call r22,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 16 16 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
+.srcstep 17 0 17 "pipeline-c.crexx" 3 4 14 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:4"
 copy r23,r5
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 16 16 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
 copy r24,r2
-load r67,"../step01/pipeline-c.crexx:3:4"
-.srcstep 16 16 17 "../step01/pipeline-c.crexx" 3 4 5 "if total > 4 then say twice(total)"
 load r69,"gt"
 copy r70,r23
 copy r71,r22
@@ -160,45 +138,37 @@ null r69
 null r70
 null r71
 null r72
-load r67,"../step01/pipeline-c.crexx:3:1"
-.srcstep 13 13 17 "../step01/pipeline-c.crexx" 3 1 2 "if total > 4 then say twice(total)"
+.srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:1"
 copy r69,r25
 load r68,1
 settp r69,768
 call r26,llctarget.truth(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:1"
-.srcstep 13 13 17 "../step01/pipeline-c.crexx" 3 1 2 "if total > 4 then say twice(total)"
 brt llb2,r26
 br llb3
 llb2:
-load r67,"../step01/pipeline-c.crexx:3:19"
-.srcstep 25 25 17 "../step01/pipeline-c.crexx" 3 19 20 "if total > 4 then say twice(total)"
+.srcstep 26 0 65 "pipeline-c.crexx" 3 19 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:19"
 load r69,""
 load r68,1
 settp r69,768
 call r27,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
+.srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:23"
 load r68,0
 call r28,llctarget.arguments(),r68
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 copy r6,r28
-load r67,"../step01/pipeline-c.crexx:3:29"
-.srcstep 34 34 17 "../step01/pipeline-c.crexx" 3 29 30 "if total > 4 then say twice(total)"
+.srcstep 35 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:29"
 load r69,""
 load r68,1
 settp r69,768
 call r29,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:29"
-.srcstep 41 41 17 "../step01/pipeline-c.crexx" 3 29 30 "if total > 4 then say twice(total)"
 unlink r30
 link r30,r1
-load r67,"../step01/pipeline-c.crexx:3:29"
-.srcstep 41 41 17 "../step01/pipeline-c.crexx" 3 29 30 "if total > 4 then say twice(total)"
 mkref r69,r30
 load r70,"TOTAL"
 load r68,2
@@ -207,14 +177,12 @@ settp r70,768
 call r31,llctarget.poolread(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
+.srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:23"
 copy r32,r6
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 load r33,1
-load r67,"../step01/pipeline-c.crexx:3:29"
-.srcstep 42 42 17 "../step01/pipeline-c.crexx" 3 29 30 "if total > 4 then say twice(total)"
+.srcstep 43 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:29"
 copy r69,r32
 copy r70,r31
 copy r71,r33
@@ -226,17 +194,11 @@ call r34,llctarget.append(),r68
 null r69
 null r70
 null r71
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
+.srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:23"
 copy r6,r34
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 copy r35,r6
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 copy r36,r2
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 copy r69,r35
 copy r70,r36
 load r68,2
@@ -245,59 +207,55 @@ settp r70,768
 call r37,llf2(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:3:23"
-.srcstep 33 33 17 "../step01/pipeline-c.crexx" 3 23 24 "if total > 4 then say twice(total)"
 copy r69,r37
 load r68,1
 settp r69,768
 call r38,llctarget.requirevalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:19"
-.srcstep 25 25 17 "../step01/pipeline-c.crexx" 3 19 20 "if total > 4 then say twice(total)"
+.srcstep 26 0 65 "pipeline-c.crexx" 3 19 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:19"
 copy r69,r38
 load r68,1
 settp r69,768
 call r66,llctarget.sayvalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:1"
-.srcstep 13 13 17 "../step01/pipeline-c.crexx" 3 1 2 "if total > 4 then say twice(total)"
+.srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:1"
 br llb4
 llb3:
-load r67,"../step01/pipeline-c.crexx:4:6"
-.srcstep 43 43 17 "../step01/pipeline-c.crexx" 4 6 7 "else say 0"
+.srcstep 44 0 17 "pipeline-c.crexx" 4 6 11 "else say 0"
+load r67,"pipeline-c.crexx:4:6"
 load r69,""
 load r68,1
 settp r69,768
 call r39,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:4:10"
-.srcstep 50 50 17 "../step01/pipeline-c.crexx" 4 10 11 "else say 0"
+.srcstep 51 0 17 "pipeline-c.crexx" 4 10 11 "else say 0"
+load r67,"pipeline-c.crexx:4:10"
 load r69,"0"
 load r68,1
 settp r69,768
 call r40,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:4:6"
-.srcstep 43 43 17 "../step01/pipeline-c.crexx" 4 6 7 "else say 0"
+.srcstep 44 0 17 "pipeline-c.crexx" 4 6 11 "else say 0"
+load r67,"pipeline-c.crexx:4:6"
 copy r69,r40
 load r68,1
 settp r69,768
 call r66,llctarget.sayvalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:3:1"
-.srcstep 13 13 17 "../step01/pipeline-c.crexx" 3 1 2 "if total > 4 then say twice(total)"
+.srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
+load r67,"pipeline-c.crexx:3:1"
 br llb4
 llb4:
-load r67,"../step01/pipeline-c.crexx:5:1"
-.srcstep 51 51 17 "../step01/pipeline-c.crexx" 5 1 2 "do while total > 0"
+.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r67,"pipeline-c.crexx:5:1"
 br llb5
 llb5:
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 58 58 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
+.srcstep 59 0 17 "pipeline-c.crexx" 5 10 15 "do while total > 0"
+load r67,"pipeline-c.crexx:5:10"
 unlink r41
 link r41,r1
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 58 58 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
 mkref r69,r41
 load r70,"TOTAL"
 load r68,2
@@ -306,24 +264,19 @@ settp r70,768
 call r42,llctarget.poolread(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 54 54 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
+.srcstep 55 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
 copy r7,r42
-load r67,"../step01/pipeline-c.crexx:5:18"
-.srcstep 62 62 17 "../step01/pipeline-c.crexx" 5 18 19 "do while total > 0"
+.srcstep 63 0 17 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+load r67,"pipeline-c.crexx:5:18"
 load r69,"0"
 load r68,1
 settp r69,768
 call r43,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 54 54 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
+.srcstep 55 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
+load r67,"pipeline-c.crexx:5:10"
 copy r44,r7
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 54 54 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
 copy r45,r2
-load r67,"../step01/pipeline-c.crexx:5:10"
-.srcstep 54 54 17 "../step01/pipeline-c.crexx" 5 10 11 "do while total > 0"
 load r69,"gt"
 copy r70,r44
 copy r71,r43
@@ -338,31 +291,27 @@ null r69
 null r70
 null r71
 null r72
-load r67,"../step01/pipeline-c.crexx:5:1"
-.srcstep 51 51 17 "../step01/pipeline-c.crexx" 5 1 2 "do while total > 0"
+.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r67,"pipeline-c.crexx:5:1"
 copy r69,r46
 load r68,1
 settp r69,768
 call r47,llctarget.truth(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:5:1"
-.srcstep 51 51 17 "../step01/pipeline-c.crexx" 5 1 2 "do while total > 0"
 brt llb6,r47
 br llb7
 llb6:
-load r67,"../step01/pipeline-c.crexx:6:3"
-.srcstep 64 64 17 "../step01/pipeline-c.crexx" 6 3 4 "  total = total - 1"
+.srcstep 65 0 17 "pipeline-c.crexx" 6 3 20 "  total = total - 1"
+load r67,"pipeline-c.crexx:6:3"
 load r69,""
 load r68,1
 settp r69,768
 call r48,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 71 71 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
+.srcstep 72 0 17 "pipeline-c.crexx" 6 11 16 "  total = total - 1"
+load r67,"pipeline-c.crexx:6:11"
 unlink r49
 link r49,r1
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 71 71 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
 mkref r69,r49
 load r70,"TOTAL"
 load r68,2
@@ -371,24 +320,19 @@ settp r70,768
 call r50,llctarget.poolread(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 69 69 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
+.srcstep 70 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
 copy r8,r50
-load r67,"../step01/pipeline-c.crexx:6:19"
-.srcstep 73 73 17 "../step01/pipeline-c.crexx" 6 19 20 "  total = total - 1"
+.srcstep 74 0 17 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+load r67,"pipeline-c.crexx:6:19"
 load r69,"1"
 load r68,1
 settp r69,768
 call r51,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 69 69 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
+.srcstep 70 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
+load r67,"pipeline-c.crexx:6:11"
 copy r52,r8
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 69 69 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
 copy r53,r2
-load r67,"../step01/pipeline-c.crexx:6:11"
-.srcstep 69 69 17 "../step01/pipeline-c.crexx" 6 11 12 "  total = total - 1"
 load r69,"sub"
 copy r70,r52
 copy r71,r51
@@ -403,12 +347,10 @@ null r69
 null r70
 null r71
 null r72
-load r67,"../step01/pipeline-c.crexx:6:3"
-.srcstep 64 64 17 "../step01/pipeline-c.crexx" 6 3 4 "  total = total - 1"
+.srcstep 65 0 17 "pipeline-c.crexx" 6 3 20 "  total = total - 1"
+load r67,"pipeline-c.crexx:6:3"
 unlink r55
 link r55,r1
-load r67,"../step01/pipeline-c.crexx:6:3"
-.srcstep 64 64 17 "../step01/pipeline-c.crexx" 6 3 4 "  total = total - 1"
 mkref r69,r55
 copy r70,r54
 load r71,"TOTAL"
@@ -420,23 +362,21 @@ call r66,llctarget.poolwrite(),r68
 null r69
 null r70
 null r71
-load r67,"../step01/pipeline-c.crexx:5:1"
-.srcstep 51 51 17 "../step01/pipeline-c.crexx" 5 1 2 "do while total > 0"
+.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r67,"pipeline-c.crexx:5:1"
 br llb5
 llb7:
-load r67,"../step01/pipeline-c.crexx:8:1"
-.srcstep 74 74 17 "../step01/pipeline-c.crexx" 8 1 2 "say total"
+.srcstep 75 0 17 "pipeline-c.crexx" 8 1 10 "say total"
+load r67,"pipeline-c.crexx:8:1"
 load r69,""
 load r68,1
 settp r69,768
 call r56,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:8:5"
-.srcstep 81 81 17 "../step01/pipeline-c.crexx" 8 5 6 "say total"
+.srcstep 82 0 17 "pipeline-c.crexx" 8 5 10 "say total"
+load r67,"pipeline-c.crexx:8:5"
 unlink r57
 link r57,r1
-load r67,"../step01/pipeline-c.crexx:8:5"
-.srcstep 81 81 17 "../step01/pipeline-c.crexx" 8 5 6 "say total"
 mkref r69,r57
 load r70,"TOTAL"
 load r68,2
@@ -445,63 +385,59 @@ settp r70,768
 call r58,llctarget.poolread(),r68
 null r69
 null r70
-load r67,"../step01/pipeline-c.crexx:8:1"
-.srcstep 74 74 17 "../step01/pipeline-c.crexx" 8 1 2 "say total"
+.srcstep 75 0 17 "pipeline-c.crexx" 8 1 10 "say total"
+load r67,"pipeline-c.crexx:8:1"
 copy r69,r58
 load r68,1
 settp r69,768
 call r66,llctarget.sayvalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:9:1"
-.srcstep 82 82 17 "../step01/pipeline-c.crexx" 9 1 2 "say length('cat')"
+.srcstep 83 0 17 "pipeline-c.crexx" 9 1 18 "say length('cat')"
+load r67,"pipeline-c.crexx:9:1"
 load r69,""
 load r68,1
 settp r69,768
 call r59,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:9:12"
-.srcstep 97 97 17 "../step01/pipeline-c.crexx" 9 12 13 "say length('cat')"
+.srcstep 98 0 17 "pipeline-c.crexx" 9 12 17 "say length('cat')"
+load r67,"pipeline-c.crexx:9:12"
 load r69,"cat"
 load r68,1
 settp r69,768
 call r60,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:9:5"
-.srcstep 90 90 17 "../step01/pipeline-c.crexx" 9 5 6 "say length('cat')"
+.srcstep 91 0 17 "pipeline-c.crexx" 9 5 18 "say length('cat')"
+load r67,"pipeline-c.crexx:9:5"
 copy r9,r60
-load r67,"../step01/pipeline-c.crexx:9:5"
-.srcstep 90 90 17 "../step01/pipeline-c.crexx" 9 5 6 "say length('cat')"
 copy r61,r9
-load r67,"../step01/pipeline-c.crexx:9:5"
-.srcstep 90 90 17 "../step01/pipeline-c.crexx" 9 5 6 "say length('cat')"
 copy r69,r61
 load r68,1
 settp r69,768
 call r62,llctarget.lengthvalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:9:1"
-.srcstep 82 82 17 "../step01/pipeline-c.crexx" 9 1 2 "say length('cat')"
+.srcstep 83 0 17 "pipeline-c.crexx" 9 1 18 "say length('cat')"
+load r67,"pipeline-c.crexx:9:1"
 copy r69,r62
 load r68,1
 settp r69,768
 call r66,llctarget.sayvalue(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:10:1"
-.srcstep 98 98 17 "../step01/pipeline-c.crexx" 10 1 2 "exit 0"
+.srcstep 99 0 17 "pipeline-c.crexx" 10 1 7 "exit 0"
+load r67,"pipeline-c.crexx:10:1"
 load r69,"0"
 load r68,1
 settp r69,768
 call r63,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:10:6"
-.srcstep 105 105 17 "../step01/pipeline-c.crexx" 10 6 7 "exit 0"
+.srcstep 106 0 17 "pipeline-c.crexx" 10 6 7 "exit 0"
+load r67,"pipeline-c.crexx:10:6"
 load r69,"0"
 load r68,1
 settp r69,768
 call r64,llctarget.literal(),r68
 null r69
-load r67,"../step01/pipeline-c.crexx:10:1"
-.srcstep 98 98 17 "../step01/pipeline-c.crexx" 10 1 2 "exit 0"
+.srcstep 99 0 17 "pipeline-c.crexx" 10 1 7 "exit 0"
+load r67,"pipeline-c.crexx:10:1"
 copy r69,r64
 load r68,1
 settp r69,768
@@ -513,13 +449,22 @@ settp r69,768
 call r66,llctarget.status(),r68
 null r69
 exit r66
-load r67,"../step01/pipeline-c.crexx:10:1"
-.srcstep 98 98 17 "../step01/pipeline-c.crexx" 10 1 2 "exit 0"
 load r68,0
 call r65,llctarget.absent(),r68
-load r67,"../step01/pipeline-c.crexx:10:1"
-.srcstep 98 98 17 "../step01/pipeline-c.crexx" 10 1 2 "exit 0"
 ret r65
+llerror1_1:
+.srcstep 0 0 6 "" 0 0 0 ""
+load r66,1
+br llerror1
+llerror1_2:
+load r66,2
+br llerror1
+llerror1_3:
+load r66,3
+br llerror1
+llerror1_4:
+load r66,4
+br llerror1
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
@@ -530,45 +475,48 @@ copy r70,r67
 load r68,2
 settp r69,768
 settp r70,768
-call r66,llctarget.failure(),r68
+call r67,llctarget.failuremessage(),r68
 null r69
 null r70
+beq llraise1_1,r66,1
+beq llraise1_2,r66,2
+beq llraise1_3,r66,3
+llraise1_4:
+signalorigin "INVALID_ARGUMENTS",r67,r0
+ret
+llraise1_3:
+signalorigin "CONVERSION_ERROR",r67,r0
+ret
+llraise1_2:
+signalorigin "DIVISION_BY_ZERO",r67,r0
+ret
+llraise1_1:
+signalorigin "CLASSIC_SYNTAX",r67,r0
 ret
 llf2() .locals=29
+.srcstep 0 0 6 "" 0 0 0 ""
 .meta "llprogram.TWICE"="b" ".rexxactivation..rexxactivationarguments" llf2() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
 numsci 18,1,1
-load r19,"generated Classic entry"
-sigbrv llerror2,r0,"CLASSIC_SYNTAX"
-sigbrv llerror2,r0,"DIVISION_BY_ZERO"
-sigbrv llerror2,r0,"CONVERSION_ERROR"
-sigbrv llerror2,r0,"INVALID_ARGUMENTS"
+load r19,"pipeline-c.crexx: entering TWICE"
+sigbrv llerror2_1,r0,"CLASSIC_SYNTAX"
+sigbrv llerror2_2,r0,"DIVISION_BY_ZERO"
+sigbrv llerror2_3,r0,"CONVERSION_ERROR"
+sigbrv llerror2_4,r0,"INVALID_ARGUMENTS"
 br llb8
 llb8:
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
+.srcstep 108 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
+load r19,"pipeline-c.crexx: generated code in TWICE"
 load r20,0
 call r5,llctarget.poolnew(),r20
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 unlink r1
 link r1,r5
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r6,a1
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r3,r6
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r7,a2
-load r19,"../step01/pipeline-c.crexx:1:1"
-.srcstep 106 106 17 "../step01/pipeline-c.crexx" 1 1 2 "options levelc"
 copy r2,r7
-load r19,"../step01/pipeline-c.crexx:13:3"
-.srcstep 107 107 17 "../step01/pipeline-c.crexx" 13 3 4 "  arg value"
+.srcstep 109 0 17 "pipeline-c.crexx" 13 3 12 "  arg value"
+load r19,"pipeline-c.crexx:13:3"
 copy r8,r3
-load r19,"../step01/pipeline-c.crexx:13:3"
-.srcstep 107 107 17 "../step01/pipeline-c.crexx" 13 3 4 "  arg value"
 copy r21,r8
 load r22,1
 load r20,2
@@ -577,12 +525,8 @@ settp r22,768
 call r9,llctarget.readarg(),r20
 null r21
 null r22
-load r19,"../step01/pipeline-c.crexx:13:3"
-.srcstep 107 107 17 "../step01/pipeline-c.crexx" 13 3 4 "  arg value"
 unlink r10
 link r10,r1
-load r19,"../step01/pipeline-c.crexx:13:3"
-.srcstep 107 107 17 "../step01/pipeline-c.crexx" 13 3 4 "  arg value"
 mkref r21,r10
 copy r22,r9
 load r23,"VALUE"
@@ -594,12 +538,10 @@ call r18,llctarget.poolwrite(),r20
 null r21
 null r22
 null r23
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 115 115 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
+.srcstep 117 0 17 "pipeline-c.crexx" 14 10 15 "  return value * 2"
+load r19,"pipeline-c.crexx:14:10"
 unlink r11
 link r11,r1
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 115 115 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
 mkref r21,r11
 load r22,"VALUE"
 load r20,2
@@ -608,24 +550,19 @@ settp r22,768
 call r12,llctarget.poolread(),r20
 null r21
 null r22
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 114 114 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
+.srcstep 116 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
 copy r4,r12
-load r19,"../step01/pipeline-c.crexx:14:18"
-.srcstep 116 116 17 "../step01/pipeline-c.crexx" 14 18 19 "  return value * 2"
+.srcstep 118 0 17 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+load r19,"pipeline-c.crexx:14:18"
 load r21,"2"
 load r20,1
 settp r21,768
 call r13,llctarget.literal(),r20
 null r21
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 114 114 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
+.srcstep 116 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
+load r19,"pipeline-c.crexx:14:10"
 copy r14,r4
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 114 114 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
 copy r15,r2
-load r19,"../step01/pipeline-c.crexx:14:10"
-.srcstep 114 114 17 "../step01/pipeline-c.crexx" 14 10 11 "  return value * 2"
 load r21,"mul"
 copy r22,r14
 copy r23,r13
@@ -640,16 +577,27 @@ null r21
 null r22
 null r23
 null r24
-load r19,"../step01/pipeline-c.crexx:14:3"
-.srcstep 108 108 17 "../step01/pipeline-c.crexx" 14 3 4 "  return value * 2"
+.srcstep 110 0 17 "pipeline-c.crexx" 14 3 19 "  return value * 2"
+load r19,"pipeline-c.crexx:14:3"
 copy r21,r16
 load r20,1
 settp r21,768
 call r17,llctarget.present(),r20
 null r21
-load r19,"../step01/pipeline-c.crexx:14:3"
-.srcstep 108 108 17 "../step01/pipeline-c.crexx" 14 3 4 "  return value * 2"
 ret r17
+llerror2_1:
+.srcstep 0 0 6 "" 0 0 0 ""
+load r18,1
+br llerror2
+llerror2_2:
+load r18,2
+br llerror2
+llerror2_3:
+load r18,3
+br llerror2
+llerror2_4:
+load r18,4
+br llerror2
 llerror2:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
@@ -660,9 +608,23 @@ copy r22,r19
 load r20,2
 settp r21,768
 settp r22,768
-call r18,llctarget.failure(),r20
+call r19,llctarget.failuremessage(),r20
 null r21
 null r22
+beq llraise2_1,r18,1
+beq llraise2_2,r18,2
+beq llraise2_3,r18,3
+llraise2_4:
+signalorigin "INVALID_ARGUMENTS",r19,r0
+ret
+llraise2_3:
+signalorigin "CONVERSION_ERROR",r19,r0
+ret
+llraise2_2:
+signalorigin "DIVISION_BY_ZERO",r19,r0
+ret
+llraise2_1:
+signalorigin "CLASSIC_SYNTAX",r19,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "p1=.object"
@@ -696,7 +658,7 @@ llctarget.present() .expose=llctarget.present
   .meta "llctarget.present"="b" ".rexxactivation..rexxactivationarguments" llctarget.present() "p1=.rexxvalue"
 llctarget.absent() .expose=llctarget.absent
   .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
-llctarget.failure() .expose=llctarget.failure
-  .meta "llctarget.failure"="b" ".void" llctarget.failure() "p1=.object,p2=.string"
+llctarget.failuremessage() .expose=llctarget.failuremessage
+  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "p1=.object,p2=.string"
 llctarget.readarg() .expose=llctarget.readarg
   .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "p1=.rexxactivationarguments,p2=.int"

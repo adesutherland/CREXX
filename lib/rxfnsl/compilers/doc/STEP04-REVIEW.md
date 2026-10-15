@@ -1,7 +1,10 @@
 # STEP04 review: executable C/G backend
 
 15 October 2026. **Approved and implemented; F4-STEP01–04 complete and
-F4-AC01–06 verified locally.** The [qualification receipt](../evidence/step04-20261015/README.md)
+F4-AC01–06 originally qualified locally.** The subsequent
+[emission-quality review](EMISSION-QUALITY-REVIEW.md) reopens source-metadata
+portions of F4-AC03/05 and adds open F4-AC07. The
+[qualification receipt](../evidence/step04-20261015/README.md)
 records tests and limits. The [backend reference](backend.md) and
 [actual emitted examples](../examples/step04/README.md) describe the delivered
 implementation; the proposal and illustrative fragments below retain the review
@@ -187,9 +190,10 @@ differences. The tiny example above does not narrow the admitted profile.
 
 ## Numbered acceptance criteria
 
-All six criteria are verified for the admitted local STEP04 scope by the
-[receipt](../evidence/step04-20261015/README.md). Full-programme and hosted
-platform obligations remain open in PLAN.md.
+The original six criteria have local functional evidence in the
+[receipt](../evidence/step04-20261015/README.md). Source-metadata portions of
+AC03/05 are reopened by the emission review; new AC07 is open. Full-programme
+and hosted platform obligations remain open in PLAN.md.
 
 1. **F4-AC01 — Complete admitted executable path.** Both separate compilers
    execute all POC-01–10 features through their existing frontend, checked IR,
@@ -226,6 +230,14 @@ platform obligations remain open in PLAN.md.
    architecture and user guide. Pass product build and focused correctness
    tests, preserve both host compile modes/VMs and CI preparation dependencies,
    and state local versus hosted evidence. Broader unchanged evidence is reused.
+7. **F4-AC07 — Baseline emission quality (open).** Close the direct defects
+   specified by PLAN.md EQ-AC01–03 and EQ-AC05: logical source identities,
+   truthful source/clause/provenance records, nonredundant mapping/location
+   updates, selected defaults only and proportionate call/frame scaffolding.
+   Retain equivalent native B/G/C controls and structural plus semantic
+   regressions. Preserve required ownership, ABI and diagnostic behaviour.
+   Later shared optimisation remains a separate open gate, not an excuse for
+   these construction/emission defects.
 
 ## Numbered implementation steps
 
@@ -235,8 +247,20 @@ platform obligations remain open in PLAN.md.
 | F4-STEP02 | Implement scalar/control selection, stable registers, procedure/call windows, numeric/activation handling and target metadata in Level B. | F4-AC01–03/05; after the contract inventory. |
 | F4-STEP03 | Implement the shared compile service, separate commands and Level L writer-based output/file publication. | F4-AC03–05; reuse the existing writer. |
 | F4-STEP04 | Run paired end-to-end and adverse cases, installed/host-boundary checks; update the walkthrough, architecture, algorithms and guide. | F4-AC01–06; complete all earlier steps. |
+| F4-STEP05 | Complete the emission-quality follow-through specified by PLAN.md EQ-STEP02/05. | Reopened F4-AC03/05 and new F4-AC07; review is authorised, implementation awaits approval. |
 
 Approval recorded 15 October 2026: this bounded unoptimised backend, the simple
 request/command surface and the initial stable-register strategy. Any missing platform contract
 requiring native C or a new language/public IR design returns for a decision;
 it is not silently implemented as a fallback or removed from acceptance.
+
+## Essential provenance correction
+
+The approved bounded CP correction repairs physical source naming, ranges and
+origin flags, suppresses unchanged source/context emissions, and preserves the
+original fatal fault using Level B `signalorigin` emitted through Level L.
+[Its receipt](../evidence/provenance-20261015/README.md) identifies the focused
+proof; [the current examples](../examples/step04/README.md) show actual output.
+Clause grouping and full TRACE fidelity still leave parts of F4-AC03/05 open.
+F4-AC07 also retains the separately scoped construction/frame defects. This
+correction does not establish full code-quality or replacement acceptance.

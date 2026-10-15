@@ -1,0 +1,24 @@
+[ 86%] Building Level G and Unicode with the Level B builder ...
+[ 86%] Built target levell_cli
+[ 86%] Built target llcompiler_cli_imports
+[ 86%] Built target llcompiler_ir_imports
+[ 86%] Staging deterministic compiler imports for llcompiler_llrxas_imports_noopt ...
+[ 86%] Built target llcompiler_llrxas_imports_noopt
+[ 86%] Staging deterministic compiler imports for llcompiler_llcompiler_imports_noopt ...
+[ 86%] Built target llcompiler_llcompiler_imports_noopt
+[ 86%] Staging deterministic compiler imports for llcompiler_llcompilercli_imports_noopt ...
+[ 86%] Built target llcompiler_llcompilercli_imports_noopt
+[ 86%] Staging deterministic compiler imports for llcompiler_consumers_imports_noopt ...
+[ 86%] Built target llcompiler_consumers_imports_noopt
+[ 86%] Built target llcompiler_backend-tests_noopt
+[ 86%] Built target llcompiler_llrxc-g_noopt
+[ 86%] Built target llcompiler_llrxc-c_noopt
+[ 86%] Built target rxfnsg
+[ 90%] Staging immutable rxfnsc compiler imports ...
+[ 90%] Built target rxfnsc_imports
+[100%] Built target rxfnsc
+[100%] Staging deterministic compiler imports for llcompiler_target_imports ...
+[100%] Built target llcompiler_target_imports
+[100%] Built target llcompiler_target_noopt
+PROVENANCE_E2E|failures=0
+[100%] Built target llcompiler_provenance_measure

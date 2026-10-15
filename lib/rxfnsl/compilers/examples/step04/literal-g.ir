@@ -1,9 +1,9 @@
 function $MAIN -> crexx.g.int64
   entry.1:
-    %1 = core.constant  : crexx.g.text @origin:3
-    %2 = core.constant 1 : crexx.g.int64 @origin:11
-    %3 = crexx.g.convert.int64.text %2 @origin:3
-    crexx.g.say %3 @origin:3
-    %4 = core.constant 0 : crexx.g.int64 @origin:1
-    core.return %4 @origin:1
+    %1 = core.constant  : crexx.g.text @origin:4
+    %2 = core.constant 1 : crexx.g.int64 @origin:12
+    %3 = crexx.g.convert.int64.text %2 @origin:4
+    crexx.g.say %3 @origin:4
+    %4 = core.constant 0 : crexx.g.int64 @origin:2
+    core.return %4 @origin:2
 

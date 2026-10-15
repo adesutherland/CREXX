@@ -1,8 +1,16 @@
 # cREXX compilers built with Level L
 
 Status: STEP01 approved; STEP02 and STEP03 published. STEP04 C/G IR-to-RXAS
-compilation implemented and locally qualified, with develop publication and CI
-monitoring authorised on 15 October 2026. STEP04 qualification baseline:
+compilation published as `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`.
+Its local functional qualification is retained; the 15 October emission review
+opens explicit code-quality acceptance and reopens source-metadata fidelity.
+See [the review and repair boundaries](doc/EMISSION-QUALITY-REVIEW.md).
+The approved essential metadata/condition-provenance correction is implemented
+and locally qualified; [receipt](evidence/provenance-20261015/README.md).
+Adrian authorised its develop publication and CI-monitor handover on 15 October
+2026. The known STEP04 package dependency failure remains open separately.
+Wider quality, clause/TRACE and redesign gates remain open.
+STEP04 qualification baseline:
 `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`. Original planning source baseline:
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
 
@@ -18,6 +26,14 @@ recognises its own language and preserves its semantics, then produces a common
 intermediate representation (IR). Shared analyses and optimisations transform
 that IR before a shared backend emits RXAS. The existing assembler, linker and
 VM execute the result.
+
+The result must also be economical and intelligible at the IR/RXAS boundary:
+simple source should not acquire unnecessary setup, misleading source maps or
+accidental host paths. Necessary Classic semantics remain explicit, but the
+existing Classic compiler's expansion is not a quality target. Source fidelity,
+structural code quality and measured replacement budgets accompany functional
+correctness throughout development, rather than being postponed until final
+replacement (AC16).
 
 These compilers are intended to replace the production C-language compiler
 routes when their complete replacement criteria pass. The first PoC covers C
@@ -639,6 +655,20 @@ declared PoC portions only; Phase B–D obligations remain visible.
     paired C/G walkthrough agrees with runnable stage dumps and emitted RXAS.
     Verify documentation/code cross-references and example regeneration in each
     increment. No increment is complete with its design explanation deferred.
+16. **LLCOMP-AC16 — Emitted-code quality.** Retain paired C/G examples and
+    equivalent existing B/G/C compiler controls, with compiler/assembler modes
+    explicit. Verify truthful source ranges, clause/provenance identities and
+    stable logical filenames; no accidental absolute host paths or needless
+    unchanged source/diagnostic-state emission. Simple examples must not create
+    unused default operands or reserve call storage without a target need.
+    Account for executable operations, helper work, calls, copies, branches,
+    frame/register requirements and numeric/activation setup separately from
+    metadata. Preserve required ABI, ownership, errors and TRACE observations.
+    Record and close direct defects before quality acceptance; assign proven
+    optimisation opportunities to named passes with semantic and structural
+    regressions. Existing compiler inefficiency does not excuse new excess.
+    AC13 still owns representative timing/storage budgets and replacement
+    measurements; static shape counts do not establish a speed claim.
 
 ## Numbered implementation steps and gates
 
@@ -647,16 +677,16 @@ declared PoC portions only; Phase B–D obligations remain visible.
 | **LLCOMP-STEP01** | Inventory C/G source/ABI/tooling coverage and bootstrap dependencies; pin paired PoC forms and baselines. Present the smallest grammar, IR dump, graph/value model, numeric storage/view proposal, effect contract and emitter API. | AC01–05/08–15 | Plan approval first. Review new public syntax/API and the exact PoC boundary before implementing them. |
 | **LLCOMP-STEP02** | Implement reusable checked graph/value/effect and emission foundations in Level B, including the extensible IR, approved storage and view/codec contracts; register C/G operation/type extensions in `common`. Preserve AST consumers. | AC01/02/04/05/07/09/13 | STEP01 surface gate. Focused malformed/lifecycle/budget regressions. |
 | **LLCOMP-STEP03** | Build both Level L grammars and semantic mappers for the pinned scalar/control/call profile, with explicit language differences and readable IR. | AC03–05/08/09 | STEP02; neither frontend may delegate to the old compiler. |
-| **LLCOMP-STEP04** | Complete unoptimised cREXX RXAS selection, simple register assignment, ABI calls and separate driver/service entries. Execute both languages end to end. | AC01/03/07–09/12 | STEP03; retain old compiler controls as separate test processes only. |
-| **LLCOMP-STEP05** | Add shared temporary propagation, admitted constant evaluation, branch simplification and safe unused-operation elimination. Verify against the independent IR evaluator and emitted execution. | AC04–07/09/13 | STEP04; pass contracts reviewed before enabling each transformation. |
+| **LLCOMP-STEP04** | Complete unoptimised cREXX RXAS selection, simple register assignment, ABI calls and separate driver/service entries. Execute both languages end to end. Close the direct source-map, construction and emission findings from the emission-quality review. | AC01/03/07–09/12/16 | STEP03; retain old compiler controls as separate test processes only. Functional implementation published; CP essentials approved and completed locally. Wider quality follow-through remains open. |
+| **LLCOMP-STEP05** | Add shared temporary propagation, admitted constant evaluation, branch simplification and safe unused-operation elimination. Verify against the independent IR evaluator and emitted execution, including actual code-shape improvements for both languages. | AC04–07/09/13/16 | STEP04; pass contracts reviewed before enabling each transformation. Do not use optimisation to conceal direct construction/emission defects. |
 | **LLCOMP-STEP06** | Qualify and document the two-frontend PoC: bootstrap, installed tools, both VMs/modes, failure cases, resource measurements and semantic comparisons. | Phase A portions of AC01–09/12–14 | STEP05. **PoC review gate:** assess usefulness and complexity; approve the next coverage increments. This does not authorise production replacement. |
 | **LLCOMP-STEP07** | Expand C/G coverage together through named increments: imports, classes/references and ownership, dynamic Classic constructs, runtime/host contracts, tooling and extensions. | AC03–10/12–14 | STEP06 review; keep the complete coverage matrix current and generic services independent of either language. |
 | **LLCOMP-STEP07B** | Implement the proper B frontend/profile over the shared IR/backend; inventory full B coverage and the self-hosting source closure. Build B1 from the native seed, rebuild B/L/B to B2 and B3, and qualify convergence, semantic behaviour and independence from G/native compiler services. | AC01/02/04–10/12–15 | Shared backend and required typed/metadata coverage from STEP04/07; review the exact B coverage and stage manifest before implementation. Can advance alongside STEP07 once those inputs exist; required before STEP09. |
 | **LLCOMP-STEP08** | Prove and implement the shared compile-service/Classic interpreted-group activation and continuation route, with bounded generated-code ownership. | AC05/09/11–13 | Service foundations from STEP04; required semantic coverage from STEP07. **INTERPRET mechanism gate** before runtime integration; existing LC criteria and no-C constraint remain binding. |
-| **LLCOMP-STEP09** | Close full B/C/G replacement coverage, installed/platform qualification, constrained-host/bootstrap requirements and representative performance budgets. | AC01–15 | STEP07/07B/08; reuse unchanged evidence and keep release/sanitizer gates distinct from ordinary develop publication. |
+| **LLCOMP-STEP09** | Close full B/C/G replacement coverage, installed/platform qualification, constrained-host/bootstrap requirements and representative performance budgets. | AC01–16 | STEP07/07B/08; reuse unchanged evidence and keep release/sanitizer gates distinct from ordinary develop publication. |
 | **LLCOMP-STEP10** | Switch default B/C/G routes, retain the explicit native B seed, and retire superseded production compiler paths/documentation. | AC01/02/10/12/14 | STEP09 plus **Adrian's explicit replacement approval** and a verified rollback procedure. |
 
-**AC15 applies to every step.** STEP01 presents the architecture and purposeful
+**AC15 and AC16 apply throughout the programme.** STEP01 presents the architecture and purposeful
 tree/graph designs for review. STEP02 documents storage, ownership, schemas and
 verifiers; STEP03 documents each frontend and language mapping; STEP04 documents
 emission, registers and ABI; STEP05 documents analyses and transformation
@@ -874,13 +904,22 @@ remain distinct from local qualification; no status-only follow-up is planned.
 
 ## STEP04 executable backend
 
-**Approved 15 October 2026; F4-STEP01–04 complete and F4-AC01–06 verified locally.**
+**Approved and published 15 October 2026; original F4-STEP01–04 implementation
+and local execution evidence retained.** The subsequent emission-quality review
+reopens source-metadata portions of F4-AC03/05 and adds open F4-AC07 / AC16.
 The [STEP04 review](doc/STEP04-REVIEW.md) records the approved compile service,
 RXAS backend structures, simple register assignment, Level L emitter use and
 worked C/G example. Its F4 acceptance criteria and implementation steps refine
 LLCOMP-STEP04 without narrowing POC-01–10 or the broader replacement criteria.
 STEP04 completes the unoptimised executable path; shared optimisation remains
 STEP05, complete PoC qualification STEP06, and INTERPRET STEP08.
+
+The [emission review](doc/EMISSION-QUALITY-REVIEW.md) separates direct defects
+from later optimisation and necessary language/ABI work. Its EQ-01–07 findings
+and the acceptance/step record below are the current disposition. This is an
+approved review and acceptance update, not authorisation to change the backend
+or its public source-identity/activation contracts. All repairs remain Level B
+and continue to use the Level L emitter libraries.
 
 The B-only `llcompiler.request` service and separate installed `llrxc-c` /
 `llrxc-g` commands now compile the admitted sources through shared checked IR
@@ -905,6 +944,133 @@ implementation, documentation and qualification evidence together. Normal
 automatic hosted workflows are expected to pass; their observed results are
 reported separately by the lightweight monitor. Full programme acceptance stays
 open, including shared optimisation, proper B, INTERPRET and replacement.
+
+### Emission-quality follow-through
+
+**Vision:** preserve the working C/G path while making its source maps truthful
+and its baseline output proportionate to the source. Establish structural
+regressions now and use both frontends to drive later shared IR improvements.
+The original functional receipt is evidence for execution, not a code-quality
+pass. The review's small controls are not representative timing measurements.
+
+1. **EQ-AC01 — Source identity and fidelity (open).** Recompiling the same
+   logical source under two physical roots preserves emitted source identity
+   and deterministic output. Test CLI and service, colliding basenames and
+   explicit source mapping, Unicode/CRLF/multiline spans, derived/generated
+   origins and multiple expressions in one clause. Generated setup must not
+   masquerade as exact authored text. Preserve required TRACE/error mappings.
+2. **EQ-AC02 — Source-state emission (verified for the admitted profile).** Structural checks reject redundant
+   unchanged `.srcstep` records and Classic location loads within a straight
+   path. Branch entries, loops, calls and failing/skipped operands still report
+   the correct authored location. Generated entry handling has a documented,
+   meaningful fallback. Do not globally deduplicate address-bearing records.
+3. **EQ-AC03 — Proportionate baseline construction (open).** `SAY expression`
+   and assignments construct only their selected operand/default. Empty `SAY`
+   retains its behaviour. Call windows reflect actual selected target calls,
+   with no fixed eight-argument floor in a call-free body; entry-to-next-label
+   jumps are absent where fall-through is equivalent. Stable distinct value
+   registers remain permitted pending the separately reviewed allocator work.
+4. **EQ-AC04 — Explain and improve real target costs (open).** Paired C/G and
+   native B/G/C controls retain instruction/directive/call/frame counts and
+   representative RXAS, plus expected execution and error results. Explain
+   argument flags/cleanup and numeric snapshots. Inventory work in target
+   helpers; reducing caller text alone cannot close a cost finding. Review the
+   Classic target contract before changing it. Shared passes must demonstrate
+   named redundant operations removed without changing observable semantics.
+5. **EQ-AC05 — Durable qualification (open).** Add permanent structural and
+   semantic regressions for repaired findings, both assembler modes and concrete
+   VMs where affected, with source metadata retained. Keep examples, architecture
+   and user guide current. Reuse unchanged qualification; do not claim runtime
+   speed, full TRACE conformance or hosted success from these bounded checks.
+
+| Step | Criteria / dependencies | State and owner |
+|---|---|---|
+| EQ-STEP01: inspect STEP04 RXAS, compare native B/G/C, retain evidence and classify findings | AC16; identifies EQ-AC01–05 closure evidence | Complete as a review; [report](doc/EMISSION-QUALITY-REVIEW.md). |
+| EQ-STEP02: repair source identity/provenance/grouping, redundant source-state emission, unused default construction and needless frame/entry scaffolding | EQ-AC01–03/05; review source-identity and clause-mapping surface before implementation | CP essentials complete locally. Real clause grouping, unused defaults and frame/entry scaffolding remain open for later approval. |
+| EQ-STEP03: review Classic activation/numeric/helper lowering with paired typed controls | EQ-AC04; inspect actual helper work, error/lifetime obligations and INTERPRET compatibility | Bounded condition-provenance correction completed below; broader numeric/activation work remains open. No automatic native-C/runtime rewrite. |
+| EQ-STEP04: execute approved shared passes and subsequently review liveness/register reuse | EQ-AC04/05; LLCOMP-STEP05 pass gates and EQ-STEP02 baseline | Open; shared IR/backend. Simple stable allocation was approved, not claimed optimal. |
+| EQ-STEP05: retain focused structural/semantic proof and regenerate the walkthrough with each repair | EQ-AC01–05; affected implementation and existing publication rules | Open; compiler regressions/docs. No broad QA merely for this documentation review. |
+
+F4-AC07 is the bounded STEP04 quality gate covering EQ-AC01–03 and EQ-AC05 for
+their direct repairs. EQ-AC04's broader pass/target costs remain open through
+STEP05/06 and AC13/16. Any deliberately retained excess needs an explicit
+reason and closure gate; passing against verbose native Classic output is not
+sufficient.
+
+### Essential metadata and condition-provenance correction
+
+**Vision:** correct misleading source metadata, physical filenames and the
+loss of the original fault during Classic error re-raising, using existing
+Level B facilities and Level L emission. Keep the current diagnostic structure
+and retain needed authored context. No new C/G syntax, condition framework,
+source-map companion, IR format, VM API or stack mechanism is proposed.
+
+The [review design](doc/CONDITION-PROVENANCE-REVIEW.md) provides the exact surface,
+mechanism and paired C/G error example. On 15 October 2026 Adrian authorised the
+design/plan update, then explicitly narrowed its priority to essential
+corrections rather than a wholesale redesign. Accordingly the proposal keeps
+function-level Classic handlers and their necessary location state; new adapter
+handler placement and a source-map companion are not part of this increment.
+Adrian approved implementation of this bounded correction on 15 October 2026.
+CP-STEP01–03 and CP-AC01–06 are verified for this bounded profile. The
+[receipt](evidence/provenance-20261015/README.md) retains actual product,
+structural, error, service and example proof. Adrian subsequently authorised
+commit/push to develop and switching the lightweight CI monitor on 15 October
+2026. This publication reuses the unchanged qualified inputs; it includes the
+emission-quality instructions, review, regressions, examples and documentation.
+Wider redesign, the known STEP04 package dependency repair, hosted results and
+full programme gates remain separate.
+
+1. **CP-AC01 — Logical source names (verified locally).** Use the existing service filename
+   argument and CLI: preserve deliberate logical relative names, convert absolute
+   physical names to basename and retain `<source>` for memory input. The same
+   logical input under two physical roots produces identical source identity
+   and output. Test CLI/service, Unix/Windows path forms and deliberate distinct
+   names for colliding basenames. No new CLI option is required.
+2. **CP-AC02 — Honest source records (verified locally).** Verify complete single-line
+   ranges, Unicode/CRLF, documented first-line multiline projection, truthful
+   authored/generated/inherited/synthetic flags and no previous-routine mapping
+   bleed. Use clause zero when no real authored clause association exists.
+   Proper clause grouping remains open under EQ-AC01/AC09; this correction
+   cannot claim full source/TRACE fidelity or close those broader criteria.
+3. **CP-AC03 — Preserve fault and authored context (verified locally).** Keep the current
+   function-level fatal handler and required location field. Format authored
+   context on the error path and select literal `signalorigin` re-raises with
+   the original bound event, preserving the original fault rather than resetting
+   it to the formatting helper. Prove direct and deep-helper C/G errors, recursion,
+   generated entry, branches/loops and a call followed by a different anchor.
+4. **CP-AC04 — Preserve the admitted error contract (verified locally).** Retain signal
+   name, message/error number, original module/address, failure timing and
+   nonzero status. Audit current fatal string payloads; do not silently generalise
+   to structured conditions. Prevent handler recursion and preserve ignored
+   overflow/lost-digits policy. Full condition trapping, object-payload relay,
+   embedded provenance fields and full backtraces remain later obligations.
+5. **CP-AC05 — Proportionate diagnostic state (verified locally).** Remove redundant
+   unchanged straight-path source records/location writes while preserving
+   required updates at control-flow entries. Replace `generated Classic entry`
+   with a truthful logical-file/routine-entry context, without an invented exact
+   source line. Retain code-shape evidence and explain the remaining location
+   field's role after VM unwinding. No claim that all such state has disappeared,
+   and no unrelated numeric/ABI/register-allocation change.
+6. **CP-AC06 — Focused proof and documentation (verified locally).** Add permanent
+   structural/error regressions, including stripped metadata, untaken failures
+   and independent invocations; run affected checks in both assembler modes
+   and concrete VMs where supported, with normal/no-opt B-host controls where
+   the changed handler code is affected. Reuse unchanged STEP04 qualification.
+   Update architecture, examples and user guide when implemented. Full clause,
+   TRACE, payload and INTERPRET lifetime obligations stay visibly open.
+
+| Step | Criteria / dependencies | State and owner |
+|---|---|---|
+| CP-STEP01: prove origin-preserving relay in the existing fatal handler and audit admitted payloads | CP-AC03/04; approved | Complete; four fatal names preserve original fault/name/status, with a string-payload audit and recursive/helper/error evidence. No C/VM extension. |
+| CP-STEP02: correct logical names, existing source records and entry context; deduplicate redundant state updates | CP-AC01/02/05; approved bounded correction | Complete; B frontend/driver/backend using the Level L writer, focused structural/Unicode/CRLF/identity regressions and retained code-shape comparison. No new map format or condition API. |
+| CP-STEP03: integrate the relay, retain paired structural/error evidence and update examples/manual | CP-AC01–06; CP-STEP01 proof and CP-STEP02 mappings | Complete locally; product build, 31 CTests plus the retained fourth provenance profile, focused Apple ASan proof, reusable-package consumer and regenerated C/G examples. Publication/hosted gates remain separate. |
+
+CP criteria contribute to EQ-AC01/02/05 and LLCOMP-AC09/15/16; they do not fully
+close those wider gates. Real clause grouping, broader provenance and an
+adapter-boundary alternative are named further work in the review. EQ-AC03's
+unused defaults/frame layout, EQ-AC04's numeric/helper costs, STEP05 shared
+optimisation and STEP08/AC11 INTERPRET requirements retain their existing scope.
 
 ## Qualification and documentation practice
 
@@ -938,10 +1104,11 @@ open, including shared optimisation, proper B, INTERPRET and replacement.
 | STEP01 | Reviewed and approved as the STEP02 foundation: scope, architecture, trees, IR/API, algorithms, dependency inventory and six source controls. [Review packet](doc/STEP01-REVIEW.md). |
 | STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
 | STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Published as `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67` with the CI preparation repair. Hosted results are separate. |
-| STEP04 / executable backend | F4-AC01–06 verified locally; [receipt](evidence/step04-20261015/README.md). Approved develop publication includes all implementation/docs/evidence; exact published SHA and hosted results are reported in the conversation and monitor. |
+| STEP04 / executable backend | Published `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`; original [functional receipt](evidence/step04-20261015/README.md) retained. Emission review reopens source-metadata portions of F4-AC03/05; new F4-AC07 and EQ-AC01–05 remain open. Hosted results are separate. |
+| Essential metadata/condition correction | CP-AC01–06 and CP-STEP01–03 verified locally; [receipt](evidence/provenance-20261015/README.md). Approved for develop publication with the lightweight monitor following this commit. Existing diagnostic structure retained; original faults now survive the relay. Wider redesign and hosted outcomes remain separate; the known package dependency failure is still open. |
 | STEP05–06 / remaining Phase A | Shared optimisation and complete PoC qualification remain open with their later gates. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
-| LLCOMP-AC01–15 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions. |
+| LLCOMP-AC01–16 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions; AC16 now explicitly requires emitted-code quality. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |
 | Existing production compilers and bootstrap | Existing routing retained. Seed-built Level L now includes the IR modules; proper B remains STEP07B. |
 

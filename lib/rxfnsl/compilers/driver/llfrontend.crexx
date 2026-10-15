@@ -105,7 +105,7 @@ request: class
   _argsslot = .llir..slot
   *: factory
     arg level = .string, source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
-    _level = lower(level); _source = source; _filename = filename; _rootpath = artifacts
+    _level = lower(level); _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
     _ready = 0; _nesting = nesting; _building = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
@@ -477,7 +477,7 @@ request: class
       _scope = scope
       _current = _routines[_scope] as .routine; _fn = _functions[_scope] as .llir..function
       _blocknumber = 0; _tempnumber = 0; _loops = 0; _terminated = 0; _alive = 1
-      _block = newblock('entry'); origin = at(_current.body())
+      _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
       if _level = 'c' then do
         _poolslot = _fn.slot('$pool',type('pool')); _contextslot = _fn.slot('$numeric',type('numeric')); _argsslot = _fn.slot('$arguments',type('arguments'))
         op = _block.operation(_contract.operation('crexx.c.pool.new'),origin); built = op.finish()

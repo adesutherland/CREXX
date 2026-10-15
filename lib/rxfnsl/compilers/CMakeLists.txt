@@ -86,7 +86,7 @@ foreach(_mode opt noopt)
     endif()
     add_custom_command(OUTPUT "${_dir}/${_module}.rxbin"
       COMMAND $<TARGET_FILE:rxc> ${_flags} -x --no-exe-import
-        -i "${CMAKE_CURRENT_BINARY_DIR}/imports;${_front};${_dir};${CMAKE_CURRENT_BINARY_DIR}/${_mode}"
+        -i "${CMAKE_CURRENT_BINARY_DIR}/imports;${_dir};${_front};${CMAKE_CURRENT_BINARY_DIR}/${_mode}"
         -o ${_module} "${_source}"
       COMMAND $<TARGET_FILE:rxas> ${_flags} ${_module}
       DEPENDS rxc rxas llcompiler_ir_imports ${_compiler_ir_imports} ${_previous}

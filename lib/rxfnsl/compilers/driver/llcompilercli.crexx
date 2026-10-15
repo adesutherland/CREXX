@@ -5,6 +5,7 @@ import rxfnsb
 import rxfs
 import llcompiler
 import llir
+import llcompilercontracts
 
 /** Stream the existing Level L chunks to one owned staging file. */
 filesink: class implements .llir..sink
@@ -81,7 +82,7 @@ run: procedure = .int
   end
   do
     source = readbinary(sourcefile)
-    request = .llcompiler..request(level,source,artifacts,sourcefile)
+    request = .llcompiler..request(level,source,artifacts,llcompilercontracts..sourcename(sourcefile,1))
     if request.status() <> 0 then do; say request.diagnostic(); return 1; end
     message = publish(request.output(),output)
     if message <> '' then do; say message; return 1; end

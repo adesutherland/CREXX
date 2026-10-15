@@ -1,0 +1,7 @@
+options levelc
+n = 2
+do while n > 0
+ n = n - 1
+ if n = 0 then say 1 / n
+end
+say 999

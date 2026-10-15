@@ -48,21 +48,21 @@ own their body and typed parameter/result declarations.
 ```text
 function $MAIN -> crexx.g.int64
   entry.1:
-    %1 = core.constant 0 : crexx.g.int64 @origin:1
-    core.store %1 slot:TOTAL @origin:1
-    %2 = core.constant 2 : crexx.g.int64 @origin:13
-    core.store %2 slot:$tmp.1 @origin:10
-    %3 = core.constant 3 : crexx.g.int64 @origin:16
-    %4 = core.load slot:$tmp.1 @origin:10
-    %5 = crexx.g.int64.add %4 %3 @origin:10
-    core.store %5 slot:TOTAL @origin:5
-    %6 = core.load slot:TOTAL @origin:25
-    core.store %6 slot:$tmp.2 @origin:20
-    %7 = core.constant 4 : crexx.g.int64 @origin:30
-    %8 = core.load slot:$tmp.2 @origin:20
-    %9 = crexx.g.int64.gt %8 %7 @origin:20
-    %10 = crexx.g.truth %9 @origin:17
-    core.branch %10 -> if.yes.2 -> if.no.3 @origin:17
+    %1 = core.constant 0 : crexx.g.int64 @origin:2
+    core.store %1 slot:TOTAL @origin:2
+    %2 = core.constant 2 : crexx.g.int64 @origin:14
+    core.store %2 slot:$tmp.1 @origin:11
+    %3 = core.constant 3 : crexx.g.int64 @origin:17
+    %4 = core.load slot:$tmp.1 @origin:11
+    %5 = crexx.g.int64.add %4 %3 @origin:11
+    core.store %5 slot:TOTAL @origin:6
+    %6 = core.load slot:TOTAL @origin:26
+    core.store %6 slot:$tmp.2 @origin:21
+    %7 = core.constant 4 : crexx.g.int64 @origin:31
+    %8 = core.load slot:$tmp.2 @origin:21
+    %9 = crexx.g.int64.gt %8 %7 @origin:21
+    %10 = crexx.g.truth %9 @origin:18
+    core.branch %10 -> if.yes.2 -> if.no.3 @origin:18
 ```
 
 The saved `$tmp.1` retains the evaluated left operand before lowering the right
@@ -78,30 +78,30 @@ observable output operation.
 ```text
 function $MAIN -> crexx.c.result
   entry.1:
-    %1 = crexx.c.pool.new @origin:1
-    core.store %1 slot:$pool @origin:1
-    %2 = core.argument argument:1 @origin:1
-    core.store %2 slot:$arguments @origin:1
-    %3 = core.argument argument:2 @origin:1
-    core.store %3 slot:$numeric @origin:1
-    %4 = core.constant  : crexx.c.value @origin:3
-    %5 = core.constant 32 : crexx.c.value @origin:10
-    core.store %5 slot:$tmp.1 @origin:8
-    %6 = core.constant 33 : crexx.c.value @origin:12
-    %7 = core.load slot:$tmp.1 @origin:8
-    %8 = core.load slot:$numeric @origin:8
-    %9 = crexx.c.add %7 %6 %8 @origin:8
-    %10 = core.load slot:$pool @origin:3
-    crexx.c.store %10 %9 name="TOTAL" @origin:3
-    %11 = core.load slot:$pool @origin:20
-    %12 = crexx.c.load %11 name="TOTAL" @origin:20
-    core.store %12 slot:$tmp.2 @origin:16
-    %13 = core.constant 34 : crexx.c.value @origin:24
-    %14 = core.load slot:$tmp.2 @origin:16
-    %15 = core.load slot:$numeric @origin:16
-    %16 = crexx.c.gt %14 %13 %15 @origin:16
-    %17 = crexx.c.truth %16 @origin:13
-    core.branch %17 -> if.yes.2 -> if.no.3 @origin:13
+    %1 = crexx.c.pool.new @origin:2
+    core.store %1 slot:$pool @origin:2
+    %2 = core.argument argument:1 @origin:2
+    core.store %2 slot:$arguments @origin:2
+    %3 = core.argument argument:2 @origin:2
+    core.store %3 slot:$numeric @origin:2
+    %4 = core.constant  : crexx.c.value @origin:4
+    %5 = core.constant 32 : crexx.c.value @origin:11
+    core.store %5 slot:$tmp.1 @origin:9
+    %6 = core.constant 33 : crexx.c.value @origin:13
+    %7 = core.load slot:$tmp.1 @origin:9
+    %8 = core.load slot:$numeric @origin:9
+    %9 = crexx.c.add %7 %6 %8 @origin:9
+    %10 = core.load slot:$pool @origin:4
+    crexx.c.store %10 %9 name="TOTAL" @origin:4
+    %11 = core.load slot:$pool @origin:21
+    %12 = crexx.c.load %11 name="TOTAL" @origin:21
+    core.store %12 slot:$tmp.2 @origin:17
+    %13 = core.constant 34 : crexx.c.value @origin:25
+    %14 = core.load slot:$tmp.2 @origin:17
+    %15 = core.load slot:$numeric @origin:17
+    %16 = crexx.c.gt %14 %13 %15 @origin:17
+    %17 = crexx.c.truth %16 @origin:14
+    core.branch %17 -> if.yes.2 -> if.no.3 @origin:14
 ```
 
 `32`, `33` and `34` are hex byte spellings for `2`, `3` and `4`; Classic values

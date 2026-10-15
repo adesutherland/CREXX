@@ -6,6 +6,7 @@ import llrxas
 import llfrontend
 import llcrexxir
 import llir
+import llcompilercontracts
 
 main: procedure = .int expose checks failures artifacts outputfile
   arg argv = .string[]
@@ -14,6 +15,7 @@ main: procedure = .int expose checks failures artifacts outputfile
   artifacts = argv[1]; checks = 0; failures = 0
   call requests()
   call graphs()
+  call provenance()
   if outputfile <> '' then call literals()
   say 'BACKEND|checks=' || checks || '|failures=' || failures
   return failures
@@ -23,6 +25,56 @@ check: procedure = .void expose checks failures
   if condition then return
   failures = failures + 1; say 'FAIL|' || name
   return
+provenance: procedure = .void expose artifacts
+  call check(llcompilercontracts..sourcename('/one/two/demo.rexx') = 'demo.rexx','Unix physical source name')
+  call check(llcompilercontracts..sourcename('C:\one\demo.rexx') = 'demo.rexx','Windows physical source name')
+  call check(llcompilercontracts..sourcename('\\server\share\demo.rexx') = 'demo.rexx','UNC physical source name')
+  call check(llcompilercontracts..sourcename('examples/demo.rexx') = 'examples/demo.rexx','explicit relative source name')
+  call check(llcompilercontracts..sourcename('examples/demo.rexx',1) = 'demo.rexx','CLI relative physical name')
+  call check(llcompilercontracts..sourcename('<source>') = '<source>','in-memory source name')
+  one = .llcompiler..request('g','say 1' as .binary,artifacts,'/root-one/demo.rexx')
+  two = .llcompiler..request('g','say 1' as .binary,artifacts,'C:\root-two\demo.rexx')
+  first = one.output(); second = two.output()
+  call check(one.status() = 0 & two.status() = 0 & first.text() = second.text(),'physical roots produce identical RXAS')
+  one = .llcompiler..request('g','say 1' as .binary,artifacts,'one/demo.rexx')
+  two = .llcompiler..request('g','say 1' as .binary,artifacts,'two/demo.rexx')
+  first = one.output(); second = two.output()
+  call check(first.text() <> second.text(),'logical names disambiguate colliding basenames')
+  one = .llcompiler..request('g','say +' as .binary,artifacts,'/private/root/bad.rexx')
+  call check(pos('bad.rexx:',one.diagnostic()) = 1 & pos('/private',one.diagnostic()) = 0,'diagnostic uses logical source')
+  schema = .llir..schema(); call llcrexxir..registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  text = 'CEB1CEB20D0A'x as .binary || 'say 1+2' as .binary
+  file = builder.source('/physical/unicode.rexx',text)
+  at = file.origin(10,13); derived = at.derive(); composite = file.origin(0,13,'composite')
+  synthetic = builder.synthetic('not an authored filename')
+  fn = builder.function('$MAIN',contract.type('crexx.g.int64')); block = fn.block('entry')
+  a = block.constant(contract.type('crexx.g.int64'),'1',at)
+  b = block.constant(contract.type('crexx.g.int64'),'2',at)
+  c = block.constant(contract.type('crexx.g.int64'),'3',derived)
+  d = block.constant(contract.type('crexx.g.int64'),'4',composite)
+  e = block.constant(contract.type('crexx.g.int64'),'5',synthetic)
+  call block.returnvalue(a,synthetic)
+  graph = builder.finish(); saved = graph.binary()
+  backend = .llrxas..compilation(graph,'g',artifacts); output = backend.output(); assembly = output.text()
+  call check(backend.status() = 0,'provenance graph admitted: ' || backend.error())
+  exact = ' 0 17 "unicode.rexx" 2 5 8 "say 1+2"'
+  call check(pos(exact,assembly) > 0 & occurrences(assembly,exact) = 1,'full exact span, CRLF and unchanged anchor deduplication')
+  call check(pos(' 0 34 "unicode.rexx" 2 5 8 ',assembly) > 0,'derived origin retains generated/inherited flags')
+  call check(pos(' 0 65 "unicode.rexx" 1 1 3 ',assembly) > 0,'multiline composite first-line Unicode range')
+  call check(pos(' 0 6 "" 0 0 0 ""',assembly) > 0,'synthetic source has no authored coordinates')
+  call check(pos('not an authored filename',assembly) = 0,'synthetic description is not a filename')
+  call check(occurrences(assembly,'.srcstep 0 0 6 "" 0 0 0 ""') = 2,'entry and function clear preceding metadata')
+  call check(bin2x(saved) = bin2x(graph.binary()),'backend preserves full IR source ranges')
+  return
+occurrences: procedure = .int
+  arg text = .string, needle = .string
+  count = 0; start = 1
+  do forever
+    found = pos(needle,text,start)
+    if found = 0 then return count
+    count = count + 1; start = found + length(needle)
+  end
 retained: procedure = .llir..output expose artifacts
   request = .llcompiler..request('g',"say 'owned'" as .binary,artifacts,'owned.crexx')
   return request.output()

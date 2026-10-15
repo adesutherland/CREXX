@@ -103,6 +103,14 @@ add_custom_target(llcompiler_backend_measure
   DEPENDS llcompiler_llrxc-c_noopt llcompiler_llrxc-g_noopt llcompiler_target_noopt llcompiler_backend-tests_noopt rxbvm rxas rxlink
   VERBATIM)
 
+# Retained isolated provenance measurement target; normal CTest lanes follow.
+add_custom_target(llcompiler_provenance_measure
+  COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-provenance.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/provenance-measure"
+    --mode noopt --vm rxbvm
+  DEPENDS llcompiler_llrxc-c_noopt llcompiler_llrxc-g_noopt llcompiler_target_noopt llcompiler_backend-tests_noopt rxbvm rxas rxlink
+  VERBATIM)
+
 # Isolated measurements: 89s Debug (29 corpus cases), 263s maintained Apple
 # ASan (31 cases), including nested tools. Serialize whole aggregates; 1800s
 # is a hang guard with room for slower hosted machines, not a speed criterion.
@@ -119,6 +127,22 @@ foreach(_mode opt noopt)
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test}
+        TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
+          llcompiler_backend-tests_${_mode} llcompiler_target_${_mode}
+          library rxfnsc rxas rxlink ${_vm})
+
+      # Isolated 90-command provenance proof: 28s Debug, 90s Apple ASan.
+      # Keep nested tools serialized, with generous whole/inner hang guards.
+      set(_provenance "llcompiler_provenance_${_mode}_${_vm}")
+      add_test(NAME ${_provenance}
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-provenance.py"
+          --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_provenance}"
+          --mode ${_mode} --vm ${_vm})
+      set_tests_properties(${_provenance} PROPERTIES
+        PASS_REGULAR_EXPRESSION "PROVENANCE_E2E[|]failures=0"
+        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_provenance}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-tests_${_mode} llcompiler_target_${_mode}
           library rxfnsc rxas rxlink ${_vm})

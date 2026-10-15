@@ -1,14 +1,14 @@
 function $MAIN -> crexx.c.result
   entry.1:
-    %1 = crexx.c.pool.new @origin:1
-    core.store %1 slot:$pool @origin:1
-    %2 = core.argument argument:1 @origin:1
-    core.store %2 slot:$arguments @origin:1
-    %3 = core.argument argument:2 @origin:1
-    core.store %3 slot:$numeric @origin:1
-    %4 = core.constant  : crexx.c.value @origin:3
-    %5 = core.constant 3031 : crexx.c.value @origin:10
-    crexx.c.say %5 @origin:3
-    %6 = crexx.c.return.absent @origin:1
-    core.return %6 @origin:1
+    %1 = crexx.c.pool.new @origin:2
+    core.store %1 slot:$pool @origin:2
+    %2 = core.argument argument:1 @origin:2
+    core.store %2 slot:$arguments @origin:2
+    %3 = core.argument argument:2 @origin:2
+    core.store %3 slot:$numeric @origin:2
+    %4 = core.constant  : crexx.c.value @origin:4
+    %5 = core.constant 3031 : crexx.c.value @origin:11
+    crexx.c.say %5 @origin:4
+    %6 = crexx.c.return.absent @origin:2
+    core.return %6 @origin:2
 

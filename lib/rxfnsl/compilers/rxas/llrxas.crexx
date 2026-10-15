@@ -59,6 +59,9 @@ compilation: class
   _callbase = .int
   _scratch = .int
   _location = .int
+  _lastsource = .string
+  _lastlocation = .string
+  _routine = .string
   _locals = .int
   _names = .string[]
   _signatures = .object[]
@@ -277,6 +280,7 @@ compilation: class
       call _writer.line('.globals=0')
       _origin = 0; _locals = 16; _callbase = 4; _scratch = 3; _recordbytes = 0
       call emit('main()','.locals=16')
+      call clearsource()
       if _level = 'c' then do
         symbol = imported('llctarget','llctarget.mainargs','.rexxactivation..rexxactivationarguments','.object')
         call argcopy(1,'a1'); call invoke('r1',symbol,1)
@@ -346,6 +350,8 @@ compilation: class
     if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
     _origin = 0
     call emit('llf' || _fn || '()','.locals=' || _locals)
+    call clearsource()
+    _routine = store.text(store.get(1,_fn,1))
     _phase = 'signature'; args = ''; first = store.get(1,_fn,4)
     do i = 1 to store.get(1,_fn,5)
       if i > 1 then args = args || ','
@@ -356,15 +362,20 @@ compilation: class
     /* Default typed profile; Classic helpers install their explicit snapshots. */
     call emit('numsci','18,1,1')
     if _level = 'c' then do
-      call emit('load',reg(_location) || ',' || quote('generated Classic entry' as .binary))
+      filename = ''
+      firstop = store.get(2,store.get(1,_fn,3),2)
+      if firstop > 0 then filename = llcompilercontracts..sourcename(_graph.operation(firstop).origin().filename()) || ': '
+      call emit('load',reg(_location) || ',' || quote((filename || 'entering ' || _routine) as .binary))
       do i = 1 to 4
-        call emit('sigbrv','llerror' || _fn || ',r0,' || quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
       end
     end
     call emit('br','llb' || store.get(1,_fn,3))
     do b = 1 to store.count(2)
       if store.get(2,b,1) <> _fn then iterate
       _origin = 0; call emit('llb' || b || ':')
+      /* Predecessors can carry different dynamic location state. */
+      _lastsource = ''; _lastlocation = ''
       id = store.get(2,b,2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
@@ -374,20 +385,46 @@ compilation: class
       end
     end
     if _level = 'c' then do
-      _origin = 0; call emit('llerror' || _fn || ':')
+      _origin = 0
+      do i = 1 to 4
+        call emit('llerror' || _fn || '_' || i || ':')
+        if i = 1 then call clearsource()
+        call emit('load',reg(_scratch) || ',' || i)
+        call emit('br','llerror' || _fn)
+      end
+      call emit('llerror' || _fn || ':')
       do i = 1 to 4
         call emit('sighalt',quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
       end
-      symbol = imported('llctarget','llctarget.failure','.void','.object .string')
-      call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_scratch),symbol,2)
-      call emit('ret')
+      symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
+      call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
+      do i = 1 to 3
+        call emit('beq','llraise' || _fn || '_' || i || ',' || reg(_scratch) || ',' || i)
+      end
+      do i = 4 to 1 by -1
+        call emit('llraise' || _fn || '_' || i || ':')
+        call emit('signalorigin',quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary) || ',' || reg(_location) || ',r0')
+        call emit('ret')
+      end
     end
     call flush()
     return
+  /** Explicit no-source anchor prevents generated entries/handlers inheriting
+   * the last authored record of a preceding routine. */
+  clearsource: method = .void
+    call emit('.srcstep','0 0 6 "" 0 0 0 ""')
+    _lastsource = ''; _lastlocation = ''
+    return
   source: method = .void
     arg origin = .llir..origin
-    c = .int
-    if origin.id() = 0 then return
+    c = .int; i = .int; key = .string; location = .string
+    if origin.id() = 0 then do; call clearsource(); return; end
+    kind = origin.kind()
+    if kind = 'synthetic' then do
+      key = '6 "" 0 0 0 ""'; location = 'generated code in ' || _routine
+      call sourcerecord(key,location)
+      return
+    end
     bytes = origin.sourcebytes(); offset = origin.first(); line = 1; column = 1; first = 0; previous = -1
     do i = 0 to offset - 1
       c = <at..u8>(i) bytes
@@ -404,8 +441,36 @@ compilation: class
       if c = 10 | c = 13 then leave
       last = last + 1
     end
-    if _level = 'c' then call emit('load',reg(_location) || ',' || quote((origin.filename() || ':' || line || ':' || column) as .binary))
-    call emit('.srcstep',_origin || ' ' || _origin || ' 17 ' || quote(origin.filename() as .binary) || ' ' || line || ' ' || column || ' ' || (column + 1) || ' ' || quote(binsubstr(bytes,first + 1,last - first)))
+    finish = min(last,origin.last()); endcolumn = column
+    do i = offset to finish - 1
+      c = <at..u8>(i) bytes
+      if c < 128 | c >= 192 then endcolumn = endcolumn + 1
+    end
+    flags = 17
+    if kind = 'derived' then flags = 34
+    else if kind = 'composite' then flags = 65
+    if origin.last() > last then do
+      if flags = 17 then flags = 65
+      else if flags = 34 then flags = 98
+    end
+    filename = llcompilercontracts..sourcename(origin.filename())
+    location = filename || ':' || line || ':' || column
+    if kind <> 'exact' then location = filename || ': generated code in ' || _routine
+    key = flags || ' ' || quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || quote(binsubstr(bytes,first + 1,last - first))
+    call sourcerecord(key,location)
+    return
+  /** A source anchor and diagnostic context are independent state. Equal line
+   * numbers alone are insufficient: range, flags and text also identify it. */
+  sourcerecord: method = .void
+    arg key = .string, location = .string
+    if key <> _lastsource then do
+      call emit('.srcstep',_origin || ' 0 ' || key)
+      _lastsource = key
+    end
+    if _level = 'c' & location <> _lastlocation then do
+      call emit('load',reg(_location) || ',' || quote(location as .binary))
+      _lastlocation = location
+    end
     return
   selectop: method = .void
     arg op = .llir..opview

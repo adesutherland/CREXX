@@ -119,22 +119,59 @@ checking. Broader module/type alias resolution remains a later ABI increment.
 
 ## Source and errors
 
-Each selected sequence retains its IR origin ID in Level L output chunks and
-emits `.srcstep` with the original filename, line, Unicode column and source
-line. CRLF is one newline. Synthetic origins remain valid. The simple source
-lookup scans original bytes for each origin; register and block discovery also
-use straightforward scans. Large-program indexing and resource tuning remain
-later work, with no performance claim from this implementation.
+Each selected sequence retains its IR origin ID in Level L output chunks.
+Source steps now use the complete single-line expression range, Unicode columns
+and CRLF-aware lines. The backend translates exact, derived, composite and
+synthetic origins into the existing RXAS flags. Multiline origins display the
+first-line segment with composite provenance; the full byte range stays in IR.
+Frontend-created routine setup and implicit returns carry derived origins.
+Generated wrapper/handler regions explicitly clear the authored source anchor,
+so they cannot inherit the preceding routine's location. The current VM printer
+may display that empty source anchor as `:0:0`; it is not an authored location.
+Improving that presentation is separate from this B-only repair.
+
+The IR has no real authored clause association yet. Source records therefore
+use clause ID zero rather than pretending origin IDs are clause IDs. Full clause
+grouping and TRACE-event fidelity remain open. The backend suppresses identical
+straight-path anchors and location writes, but resets its emission state at
+block entries because control-flow predecessors can leave different dynamic
+location state. Different expressions on one line can still need separate
+records. Debug metadata is address-associated, not an executable TRACE print.
+
+The service preserves deliberate logical relative filenames and `<source>`;
+absolute Unix/Windows/UNC physical names become basenames. The CLI always uses
+the basename of the opened file, even for relative input paths. Hosts can supply
+`examples/demo.crexx` through the existing filename argument to disambiguate
+sources. Module plus local ID is the linked identity, not basename alone. This
+policy concerns compiler source metadata; the assembler/VM can separately show
+physical binary-module names in their diagnostics.
+
+Source lookup scans original bytes for each origin; register/block discovery
+also uses straightforward scans. Large-program indexing remains later work,
+with no performance claim from this correction.
 
 Keep debug metadata when linking (`rxlink -o ...`, without `-s`) for runtime
-source reporting. G failures use the VM's source metadata. Classic's adapter
-can fail several runtime frames away from the authored operation, beyond the
-VM's short panic backtrace. Each Classic function therefore tracks its current
-source location in a separate register. A local fatal-signal handler attaches
-that location and re-raises the same signal name. It covers CLASSIC_SYNTAX,
-DIVISION_BY_ZERO, CONVERSION_ERROR and INVALID_ARGUMENTS; it does not enable
-ignored overflow or lost-digits signals. Complete authored TRACE/condition
-handler parity is outside this first profile.
+source reporting. G direct failures use the VM's original source metadata.
+Classic's deeper runtime helpers can fail after the authored call-site frame
+has unwound, so its existing function-level fatal handler still needs one
+location field. The field names an authored expression, or explicitly describes
+generated work/routine entry; it is not the original fault address.
+
+The handler catches only CLASSIC_SYNTAX, DIVISION_BY_ZERO, CONVERSION_ERROR and
+INVALID_ARGUMENTS. Small per-name entry labels select a literal relay; one
+shared handler disables those catches and calls B `llctarget.failuremessage`
+to format the retained context. That helper only returns text. The generated
+handler uses `signalorigin` with the original VM-bound event, preserving the
+original fault module/address, signal name and nonzero status. It does not
+re-raise an ordinary signal at the formatting helper. Original error text is
+retained after the authored-context prefix. Ignored overflow/lost-digits policy
+is unchanged.
+
+This is the existing standalone string-message fatal profile, not general
+object-payload propagation or complete authored condition trapping. The
+[bounded design](CONDITION-PROVENANCE-REVIEW.md) and PLAN.md's CP criteria retain
+full trapping, clause grouping, stack walking and INTERPRET lifetime as later
+work. No new public condition object, IR format or VM API is introduced.
 
 Compile-time failures distinguish source syntax/type/profile diagnostics from
 IR lowering, import, output and limit failures. Runtime failures stay runtime
@@ -170,6 +207,13 @@ The permanent [corpus](../tests/backend/cases.json),
 [service regressions](../tests/backend-tests.crexx) and
 [orchestration](../tests/check-backend.py) exercise both host modes, both VM
 dispatches, both assembler modes, source/error fidelity and file failures.
-Python only orchestrates tests; it is not a compiler stage. The separate
+The focused [provenance checks](../tests/check-provenance.py) additionally cover
+all four fatal relay arms, recursive/deep helper errors, loops, skipped failures,
+stripping, physical-root independence and straight-path metadata/context
+deduplication. Python only orchestrates tests; it is not a compiler stage. The separate
 [qualification receipt](../evidence/step04-20261015/README.md) identifies the
-actually executed local checks and their platform limits.
+actually executed original local checks and their platform limits. The
+[provenance receipt](../evidence/provenance-20261015/README.md) covers this
+correction. Rebuild compiler tools and `llctarget.rxbin` together: the internal
+adapter contract now returns a formatted message through `failuremessage`;
+the emitted handler owns the origin-preserving raise.

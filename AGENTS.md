@@ -135,6 +135,41 @@ failure. Preserve explicitly required hosted, release and sanitizer closure
 gates; this guidance removes redundant status commits, not required proof.
 Keep this standing publication policy in `AGENTS.md`, not component worklists.
 
+## Emitted-code quality
+
+Compiler acceptance includes the quality of emitted code as well as correct
+execution. For changes to lowering, optimisation, register assignment or
+emission, inspect a small representative set of readable RXAS and retain
+checkable code-shape expectations alongside functional regressions. Include
+simple cases where unnecessary machinery is conspicuous. Reuse existing
+evidence where the qualified inputs are unchanged; this is not a requirement
+for a new broad benchmark or release-qualification run.
+
+- Compare equivalent inputs with the existing compiler's appropriate B, G and
+  C modes, recording compiler and assembler optimisation separately. An old
+  compiler's excess code or defect is a finding, not an acceptance target.
+- Distinguish source/debug records from executable instructions, and caller
+  code from work hidden in helpers or linked libraries. Inspect calls, copies,
+  frame/register requirements, branches, allocations and numeric/context
+  setup. Raw RXAS line counts alone establish neither speed nor total cost.
+- Preserve truthful source spans, clause identities, generated provenance and
+  defined TRACE/error observations. Do not reduce counts by stripping useful
+  metadata. Avoid mechanically repeated unchanged source records and diagnostic
+  state updates, while preserving mappings at control-flow entries. Emitted
+  source names must use stable logical identities rather than accidentally
+  embedding the compiler host's absolute checkout or temporary paths; retain a
+  deliberate source-resolution/mapping mechanism where needed.
+- Identify which excess comes from a current construction/emission defect,
+  necessary language or ownership semantics, an admitted conservative baseline,
+  or a named later optimisation. Do not defer direct emitter/IR-construction
+  defects merely because an optimiser could hide them. Do not remove call ABI,
+  numeric-context or lifetime operations without proving their obligations.
+- Record unresolved quality findings, owners, closure tests and intended steps
+  in the authoritative plan. Correct output alone does not close them. Use
+  structural assertions rather than brittle register-number snapshots where
+  possible; agree representative resource/performance budgets before claiming
+  replacement readiness, under the existing performance governance.
+
 ## Working Rules
 
 - For tasks that change compiler logic, syntax, scoping, or architecture,
