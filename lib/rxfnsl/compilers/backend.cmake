@@ -95,6 +95,15 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/llctarget.rxbin"
   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/llctarget.rxbin" VERBATIM)
 add_custom_target(llctarget ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/llctarget.rxbin")
 install(FILES "${CMAKE_BINARY_DIR}/bin/llctarget.rxbin" DESTINATION bin)
+add_test(NAME llcompiler_product_inventory
+  COMMAND ${CMAKE_COMMAND} "-DBIN_DIRECTORY=${CMAKE_BINARY_DIR}/bin"
+    "-DEXECUTABLE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-product.cmake")
+set_tests_properties(llcompiler_product_inventory PROPERTIES
+  LABELS "essential;library;level-l;packaging" TIMEOUT 30)
+# Keep this tied to the public product selection. Listing the individual
+# producers here would hide a missing stage dependency on a clean CI build.
+crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS stage-product)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_custom_target(llcompiler_backend_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"

@@ -1,0 +1,13 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+    Start 2488: llcompiler_product_inventory
+1/1 Test #2488: llcompiler_product_inventory .....   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+essential    =   0.01 sec*proc (1 test)
+level-l      =   0.01 sec*proc (1 test)
+library      =   0.01 sec*proc (1 test)
+packaging    =   0.01 sec*proc (1 test)
+
+Total Test time (real) =   0.07 sec

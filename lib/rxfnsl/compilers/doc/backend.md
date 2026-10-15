@@ -180,6 +180,13 @@ is not evaluated by this unoptimised compiler.
 
 ## File boundary, build and delivery
 
+`stage-product` selects `stage-l-libraries`, including `llcompilers`,
+`llctarget`, `llrxc-c` and `llrxc-g` alongside `rxfnsl` and `levell_cli`.
+All four compiler delivery products must exist before payload staging or
+`cmake --install`; declaring a producer `ALL` does not include it in an
+explicit stage selection. The `llcompiler_product_inventory` essential test
+uses `stage-product` as its preparation target and checks the four files.
+
 ```sh
 llrxc-g -i /path/to/bin -o demo.rxas demo-g.crexx
 rxas -n demo.rxas

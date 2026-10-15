@@ -8,7 +8,8 @@ See [the review and repair boundaries](doc/EMISSION-QUALITY-REVIEW.md).
 The approved essential metadata/condition-provenance correction is implemented
 and locally qualified; [receipt](evidence/provenance-20261015/README.md).
 Adrian authorised its develop publication and CI-monitor handover on 15 October
-2026. The known STEP04 package dependency failure remains open separately.
+2026. The STEP04 package dependency failure is repaired and locally verified
+below; hosted delivery outcomes remain separate.
 Wider quality, clause/TRACE and redesign gates remain open.
 STEP04 qualification baseline:
 `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`. Original planning source baseline:
@@ -1072,6 +1073,38 @@ adapter-boundary alternative are named further work in the review. EQ-AC03's
 unused defaults/frame layout, EQ-AC04's numeric/helper costs, STEP05 shared
 optimisation and STEP08/AC11 INTERPRET requirements retain their existing scope.
 
+## STEP04 product-stage dependency repair
+
+**Vision:** a normal `stage-product` build must supply every installed Level L
+compiler product before core payload staging or SDK installation. The hosted
+STEP04 failure exposed that `llcompilers` was an `ALL` target but absent from
+the explicit product stage; the two commands and Classic adapter shared the
+same omission. Adrian authorised addressing this delivery defect after the
+provenance publication on 15 October 2026. Compiler semantics are unchanged.
+
+1. **PKG-AC01 — Complete product selection (verified locally).** The Level L product stage
+   includes `llcompilers`, `llctarget`, `llrxc-c` and `llrxc-g`. After their
+   generated delivery files are removed, `stage-product` alone recreates them.
+2. **PKG-AC02 — Installed use (verified locally).** Install to a fresh temporary prefix;
+   verify the four products, run the installed C/G pipeline examples and compile
+   a B service consumer using only installed packages. Retain command evidence.
+3. **PKG-AC03 — Durable delivery check and publication (local proof complete; approved publication).** Add a focused
+   regression for product completeness, document the stage contract, retain
+   exact inputs/results and publish the repair to develop. Switch the existing
+   lightweight CI monitor; hosted platform/signing results remain separate.
+
+| Step | Criteria / dependencies | State |
+|---|---|---|
+| PKG-STEP01: restore the four Level L compiler products to the stage selection | PKG-AC01; failed SDK logs and stage graph | Complete; all four producers now required by the Level L product stage. |
+| PKG-STEP02: check missing-output rebuild, fresh install and installed consumers | PKG-AC01/02; PKG-STEP01 | Complete; old stage reproduced the omission, repaired stage rebuilt all four byte-identically, full install and 13 installed checks passed. |
+| PKG-STEP03: retain regression/docs/evidence and publish with monitor handover | PKG-AC03; PKG-STEP02 | Regression/docs/evidence complete; approved develop publication and lightweight monitor handover. Hosted results reported separately. |
+
+The [repair receipt](evidence/package-stage-20261015/README.md) retains the
+negative control, stage-only build, essential CTest, complete temporary-prefix
+installation and installed C/G/service consumers. No compiler or runtime source
+changed; prior functional qualification remains applicable. This closes the
+local missing-product mechanism, not all platform/signing or SDK ZIP gates.
+
 ## Qualification and documentation practice
 
 - Compare each frontend with its own language semantics and existing compiler;
@@ -1105,7 +1138,8 @@ optimisation and STEP08/AC11 INTERPRET requirements retain their existing scope.
 | STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
 | STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Published as `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67` with the CI preparation repair. Hosted results are separate. |
 | STEP04 / executable backend | Published `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`; original [functional receipt](evidence/step04-20261015/README.md) retained. Emission review reopens source-metadata portions of F4-AC03/05; new F4-AC07 and EQ-AC01–05 remain open. Hosted results are separate. |
-| Essential metadata/condition correction | CP-AC01–06 and CP-STEP01–03 verified locally; [receipt](evidence/provenance-20261015/README.md). Approved for develop publication with the lightweight monitor following this commit. Existing diagnostic structure retained; original faults now survive the relay. Wider redesign and hosted outcomes remain separate; the known package dependency failure is still open. |
+| Essential metadata/condition correction | CP-AC01–06 and CP-STEP01–03 verified locally; [receipt](evidence/provenance-20261015/README.md). Published as `f14d8a569a8ced9420fd27e8d6277db0617825db`. Existing diagnostic structure retained; original faults now survive the relay. Wider redesign and hosted outcomes remain separate. |
+| STEP04 product-stage repair | PKG-AC01/02 verified locally; PKG-AC03 regression/docs/evidence complete and publication approved. [Receipt](evidence/package-stage-20261015/README.md). All four compiler products now belong to the normal product selection; hosted delivery remains separate. |
 | STEP05–06 / remaining Phase A | Shared optimisation and complete PoC qualification remain open with their later gates. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
 | LLCOMP-AC01–16 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions; AC16 now explicitly requires emitted-code quality. |

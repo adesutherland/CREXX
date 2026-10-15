@@ -1,0 +1,4 @@
+CMake Error at lib/rxfnsl/compilers/tests/check-product.cmake:7 (message):
+  Level L product is missing: llcompilers.rxbin
+
+

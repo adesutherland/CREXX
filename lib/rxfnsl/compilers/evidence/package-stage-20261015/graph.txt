@@ -1,0 +1,44 @@
+stage-l-libraries:
+  input: phony
+    bin/levell
+    bin/llrxc-c
+    bin/llrxc-g
+    lib/rxfnsl/compilers/llcompilers
+    lib/rxfnsl/compilers/llctarget
+    lib/rxfnsl/tools/rxfnsl
+  outputs:
+    stage-product
+    CMakeFiles/qa-essential
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-essential
+    CMakeFiles/qa-smoke
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-smoke
+    CMakeFiles/qa-comprehensive
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-comprehensive
+    CMakeFiles/qa-qualification
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-qualification
+qa-prep-essential:
+  input: phony
+    bin/crexx-contract
+    bin/rxas
+    bin/rxc
+    bin/test_compression_workspace
+    bin/test_record_allocation
+    bin/test_rxsha256
+    compiler/tests/test_ast_allocation
+    compiler/tests/test_frame_control_ast
+    compiler/tests/test_import_directory_errors
+    compiler/tests/test_rxpa_allocation
+    compiler/tests/test_symbol_allocation
+    interpreter/test_value_factory_allocation
+    stage-product
+  outputs:
+    qa-prep-smoke
+    qa-essential
+    CMakeFiles/qa-essential
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-essential
+    CMakeFiles/qa-smoke
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-smoke
+    CMakeFiles/qa-comprehensive
+    /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/CMakeFiles/qa-comprehensive
+add_test([=[llcompiler_product_inventory]=] "/opt/homebrew/bin/cmake" "-DBIN_DIRECTORY=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin" "-DEXECUTABLE_SUFFIX=" "-P" "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/check-product.cmake")
+set_tests_properties([=[llcompiler_product_inventory]=] PROPERTIES  CREXX_PREP_TARGETS "stage-product" LABELS "essential;library;level-l;packaging" TIMEOUT "30" _BACKTRACE_TRIPLES "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/backend.cmake;98;add_test;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/backend.cmake;0;;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/CMakeLists.txt;126;include;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/CMakeLists.txt;0;")

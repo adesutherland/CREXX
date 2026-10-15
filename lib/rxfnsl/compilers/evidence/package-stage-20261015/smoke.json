@@ -1,0 +1,154 @@
+[
+  {
+    "label": "installed-inventory",
+    "argv": [
+      "cmake",
+      "-DBIN_DIRECTORY=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/check-product.cmake"
+    ],
+    "exit": 0,
+    "seconds": 0.01
+  },
+  {
+    "label": "pipeline-c-compile",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/llrxc-c",
+      "-i",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin",
+      "-o",
+      "pipeline-c.rxas",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx"
+    ],
+    "exit": 0,
+    "seconds": 2.52
+  },
+  {
+    "label": "pipeline-c-assemble",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxas",
+      "-n",
+      "pipeline-c.rxas"
+    ],
+    "exit": 0,
+    "seconds": 0.291
+  },
+  {
+    "label": "pipeline-c-link",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxlink",
+      "-o",
+      "pipeline-c-linked",
+      "pipeline-c.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/library.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/llctarget.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxfnsc.rxbin"
+    ],
+    "exit": 0,
+    "seconds": 0.638
+  },
+  {
+    "label": "pipeline-c-run",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxbvm",
+      "pipeline-c-linked.rxbin"
+    ],
+    "exit": 0,
+    "seconds": 0.337
+  },
+  {
+    "label": "pipeline-g-compile",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/llrxc-g",
+      "-i",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin",
+      "-o",
+      "pipeline-g.rxas",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx"
+    ],
+    "exit": 0,
+    "seconds": 2.832
+  },
+  {
+    "label": "pipeline-g-assemble",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxas",
+      "-n",
+      "pipeline-g.rxas"
+    ],
+    "exit": 0,
+    "seconds": 0.004
+  },
+  {
+    "label": "pipeline-g-link",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxlink",
+      "-o",
+      "pipeline-g-linked",
+      "pipeline-g.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/library.rxbin"
+    ],
+    "exit": 0,
+    "seconds": 0.034
+  },
+  {
+    "label": "pipeline-g-run",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxbvm",
+      "pipeline-g-linked.rxbin"
+    ],
+    "exit": 0,
+    "seconds": 0.005
+  },
+  {
+    "label": "service-compile",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxc",
+      "-n",
+      "-x",
+      "--no-exe-import",
+      "-i",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/service-imports",
+      "-o",
+      "service",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend-tests.crexx"
+    ],
+    "exit": 0,
+    "seconds": 0.649
+  },
+  {
+    "label": "service-assemble",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxas",
+      "-n",
+      "service.rxas"
+    ],
+    "exit": 0,
+    "seconds": 0.04
+  },
+  {
+    "label": "service-link",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxlink",
+      "-o",
+      "service-linked",
+      "service.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/service-imports/llcompilers.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/service-imports/rxfnsl.rxbin",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/service-imports/library.rxbin"
+    ],
+    "exit": 0,
+    "seconds": 0.861
+  },
+  {
+    "label": "service-run",
+    "argv": [
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin/rxbvm",
+      "service-linked.rxbin",
+      "-a",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces/bin"
+    ],
+    "exit": 0,
+    "seconds": 6.447
+  }
+]

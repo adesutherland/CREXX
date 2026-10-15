@@ -3133,6 +3133,12 @@ The installed commands are `llrxc-g` and `llrxc-c`. They implement the
 [admitted profile](../compilers/doc/poc-scope.md); ordinary `rxc` and `rxc-c`
 retain their existing product roles.
 
+The normal `stage-product` build includes both commands, the reusable
+`llcompilers.rxbin` service and the `llctarget.rxbin` Classic target adapter
+through `stage-l-libraries`. Build that product selection before running
+`cmake --install`; installation copies the generated products without building
+missing ones.
+
 ```sh
 llrxc-g -i /path/to/bin -o demo.rxas demo-g.crexx
 rxas -n demo.rxas

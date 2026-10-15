@@ -1,0 +1,27 @@
+/tmp/levell-step04-ci-macos-arm64.CEC4PR
+2026-10-15T15:58:10.1726760Z CMake Error at /Users/runner/work/_temp/build/lib/rxfnsl/compilers/cmake_install.cmake:41 (file):
+2026-10-15T15:58:10.1727270Z   file INSTALL cannot find
+2026-10-15T15:58:10.1727620Z   "/Users/runner/work/_temp/build/bin/llcompilers.rxbin": No such file or
+2026-10-15T15:58:10.1728040Z   directory.
+2026-10-15T15:58:10.1728350Z Call Stack (most recent call first):
+2026-10-15T15:58:10.1728780Z   /Users/runner/work/_temp/build/lib/rxfnsl/cmake_install.cmake:52 (include)
+2026-10-15T15:58:10.1729380Z   /Users/runner/work/_temp/build/lib/cmake_install.cmake:47 (include)
+2026-10-15T15:58:10.1729870Z   /Users/runner/work/_temp/build/cmake_install.cmake:142 (include)
+/tmp/levell-step04-ci-macos-intel.nw7HRJ
+2026-10-15T16:11:31.5508790Z CMake Error at /Users/runner/work/_temp/build/lib/rxfnsl/compilers/cmake_install.cmake:41 (file):
+2026-10-15T16:11:31.5509950Z   file INSTALL cannot find
+2026-10-15T16:11:31.5510830Z   "/Users/runner/work/_temp/build/bin/llcompilers.rxbin": No such file or
+2026-10-15T16:11:31.5511720Z   directory.
+2026-10-15T16:11:31.5512280Z Call Stack (most recent call first):
+2026-10-15T16:11:31.5513210Z   /Users/runner/work/_temp/build/lib/rxfnsl/cmake_install.cmake:52 (include)
+2026-10-15T16:11:31.5514350Z   /Users/runner/work/_temp/build/lib/cmake_install.cmake:47 (include)
+2026-10-15T16:11:31.5515440Z   /Users/runner/work/_temp/build/cmake_install.cmake:142 (include)
+/tmp/levell-step04-ci-windows.tmGn82
+2026-10-15T16:02:56.0930323Z CMake Error at D:/a/_temp/build/lib/rxfnsl/compilers/cmake_install.cmake:36 (file):
+2026-10-15T16:02:56.0931181Z   file INSTALL cannot find "D:/a/_temp/build/bin/llcompilers.rxbin": File
+2026-10-15T16:02:56.0931782Z   exists.
+2026-10-15T16:02:56.0932101Z Call Stack (most recent call first):
+2026-10-15T16:02:56.0932881Z   D:/a/_temp/build/lib/rxfnsl/cmake_install.cmake:47 (include)
+2026-10-15T16:02:56.0933483Z   D:/a/_temp/build/lib/cmake_install.cmake:42 (include)
+2026-10-15T16:02:56.0934071Z   D:/a/_temp/build/cmake_install.cmake:127 (include)
+2026-10-15T16:02:56.0934439Z 
