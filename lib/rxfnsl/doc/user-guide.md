@@ -1980,10 +1980,10 @@ and comparison nodes. A flow mapping describes when that expression executes.
 An analysis of values answers what it can mean.
 
 The built-in `definiteassignment()` analysis tracks variable reads and writes.
-It considers both branch edges possible, including when the condition is a
-literal. Supplying `flag` as an entry variable says it is assigned; it does not
-supply flag's value. The method does not calculate condition values, propagate
-constants or consume proof assumptions.
+By default it considers both branch edges possible, including when the condition
+is a literal. Supplying `flag` as an entry variable says it is assigned; it does
+not supply flag's value. To exclude an outcome, supply an explicit condition fact
+before building the graph.
 
 Your application can inspect the condition while analysing the graph. For a
 decision in the If mapping above, the graph provides its source If node:
@@ -2011,11 +2011,65 @@ condition evaluation. Knowing the result of a condition does not by itself
 justify removing the work needed to evaluate it. Unknown values retain both
 possible outcomes.
 
-The common AST [analysis service](#calculate-facts-about-a-tree) can store application-defined
-facts against nodes. [RexxScript's constant analysis](#analyse-and-fold-a-script)
-is a worked consumer of that service. Those facts are separate from the current
-flow solver: storing a constant or a sparse property does not automatically
-remove a branch from definite-assignment analysis.
+The common AST [analysis service](#calculate-facts-about-a-tree) can store
+application-defined facts against nodes. [RexxScript's constant
+analysis](#analyse-and-fold-a-script) is a worked consumer. Convert a proven
+Boolean result into a condition fact to use it in flow analysis; storing a
+constant or a sparse property alone does not change the graph.
+
+#### Supply a known condition
+
+A **condition fact** says that an expression has a particular truth value every
+time it completes normally. The application establishes the fact using its
+language's rules. For example, if that language defines literal `1` as true:
+
+```rexx
+facts = .llflow..conditions(reference tree)
+condition = tree.root().child('items',1).child('condition')
+ok = facts.set(condition,'true','Literal 1 is true in this language')
+graph = flowloops..execution(reference tree)
+ok = graph.using(reference facts)
+result = graph.definiteassignment()
+```
+
+For `if 1 then x = 10; end; say x;`, the fact removes the false outcome. The
+analysis now finds that `x` is assigned before `say x`. Expression evaluation
+still happens. A condition such as `set(x,1)` writes `x` even when its result
+is known. Similarly, a false left operand of AND skips the right operand,
+and a true left operand of OR skips it. A fact used inside a loop must remain
+true on every visit to that expression, not just the first iteration.
+
+Use only `true` or `false`; omitted facts mean unknown. Each fact requires a
+nonempty reason for inspection and diagnostics. The library checks ownership,
+conflicting facts and the resource allowance. The application is responsible
+for the truth of its claim: a reason string is an explanation, not a proof
+checked by a theorem solver. Facts about a complete expression can exclude its
+outcome without inferring additional facts about its operands.
+
+Build the complete [conditions example](../examples/flow/conditions.crexx):
+
+```sh
+crexx --program flow-conditions lib/rxfnsl/examples/flow/loops.rxl \
+      lib/rxfnsl/examples/flow/conditions.crexx
+rxvm flow-conditions
+```
+
+It reports two possible unassigned reads without facts, zero with facts,
+`x assigned before SAY: 1`, and `Skipped operand reachable: 0`.
+
+| Condition method | Meaning |
+|---|---|
+| `.llflow..conditions(reference tree,limit)` | Create a fact table for one tree; the default allowance is 1,000,000 stored facts. |
+| `facts.set(node,value,reason)` | Store `true` or `false`. Repeating the same value retains the original reason; a conflicting value fails. |
+| `facts.get(node)` | Return `true`, `false` or `unknown`. |
+| `facts.reason(node)` | Return the stored explanation, or an empty string for an unknown fact. |
+| `facts.size()`, `facts.error()` | Stored fact count and any contract/resource error. |
+| `graph.using(reference facts)` | Attach the table once, before querying the graph or starting analysis. |
+
+The first graph query seals the table. Keep both tree and facts alive while
+using the graph or its results. Replacing either owner, or trying to mutate
+sealed facts, invalidates dependent answers. The `flow.conditions` allowance
+counts facts; it is separate from the graph and solver allowances.
 
 ### Worked example: find a read before assignment
 

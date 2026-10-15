@@ -101,6 +101,73 @@ This repairs the observed regression without increasing user budgets.
 
 ### AST infrastructure — implementation approved 13 October 2026
 
+#### Progressive AST services — approved 15 October 2026
+
+**Vision:** build on the checked structured-flow and owned-AST services so an
+application can supply justified condition facts, lower richer syntax into a
+validated simpler tree, and retain reliable source origins through generation
+and recovery. Ordinary grammars keep their current surface. These are language
+engineering services implemented in Level B, with examples showing application
+semantics separately from library guarantees. Adrian requested sequential
+implementation, commit and publication of steps 1–3 after each step passes.
+
+**Acceptance criteria — open until individually verified:**
+
+1. **AST7-AC01 — Condition facts.** Optional true/false facts are bound to one
+   immutable tree, carry a reason, reject contradictions/foreign or stale owners
+   and obey a counted budget. Absent facts mean unknown. Flow consumes a sealed
+   fact set, excludes only impossible outcome edges, and preserves expression
+   evaluation, writes, short-circuiting and loop behavior. Independent tests
+   cover constant and unknown cases, witnesses and lifecycle failures. Document
+   the conditional soundness argument; supplying a reason is not a theorem proof.
+2. **AST7-AC02 — Checked lowering.** A children-first pass can construct a
+   different declared target schema, combine completed children and publish only
+   a complete validated result. Missing translations, invalid fields/counts,
+   sharing, stale/foreign handles and resource exhaustion fail atomically.
+   A compiler-shaped example lowers a higher-level control construct and tests
+   its observable flow against an independent original-language control.
+3. **AST7-AC03 — Origins and recovery.** Exact, composite, derived, synthetic
+   and recovered origins have validated contracts and useful diagnostic anchors.
+   Recovery exposes an explicitly marked owned AST with original-byte damage
+   records, while ordinary strict parsing and script execution remain guarded.
+   Copies and lowering preserve recovery information; generated nodes cannot
+   silently turn recovered input into a clean tree. Verify Unicode/CRLF/empty
+   spans, original diagnostics, lifetime checks and applicable parser backends.
+4. **AST7-AC04 — Progressive delivery.** Each step includes runnable examples,
+   manual/reference updates, mathematical scope/bounds and permanent focused
+   regressions. Product build, relevant correctness, both VMs/optimization modes,
+   Level B bootstrap and installed use pass for affected inputs. Retain exact
+   qualification identities; commit only this work directly on synchronized
+   develop and verify its pushed SHA. Automatic hosted CI remains a separate
+   result; inspect it lightly and fix actionable failures without broad dispatch.
+
+**Implementation steps:**
+
+1. **AST7-STEP01 (AC01/04):** implement optional condition facts and their graph
+   integration; qualify and publish. Keep default graph behavior unchanged.
+2. **AST7-STEP02 (AC02/04; after STEP01):** implement target-schema lowering and
+   a worked control-flow translation with explicit structural and semantic
+   checks; qualify and publish separately.
+3. **AST7-STEP03 (AC03/04; after STEP02):** add synthetic/recovered source-origin
+   contracts and integrate the existing bounded recovery service; qualify and
+   publish separately. Keep broader emitter and production migration work open.
+
+**Delivery gate:** “green” before each publication means the successful product
+build and focused functional/installed checks required by AGENTS.md. Retain
+unchanged valid evidence rather than rerunning broad suites. Normal Build CREXX
+and CodeQL run automatically after each push; actual hosted results are reported
+separately. No release tag, overnight dispatch or arbitrary proof solver is
+included. The unrelated build directory and mainframe lock files are preserved.
+
+**Status:** AST7-STEP01 and AST7-AC01 locally complete, ready for the first
+separate develop publication. Evidence:
+[`ast-conditions-20261015`](evidence/ast-conditions-20261015/README.md): product
+build, 36 unchanged controls, 16 new matrix tests, both Level B bootstrap modes,
+34 no-opt delivery commands and 12 fresh installed checks. AST7-STEP02/03 and
+AC02/03 remain open. AC04 is satisfied for step 1 locally; subsequent increments
+and their publication remain open. Hosted workflow outcomes are reported in the
+conversation, without a status-only commit.
+
 #### Structured loops and exits — approved 14 October 2026
 
 **Vision:** describe ordinary language control flow with a small set of mappings

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Checked structured flow and finite definite assignment. */
 options levelb
-namespace llflow expose mapping graph result state
+namespace llflow expose mapping graph result state conditions
 import rxfnsb
 import llast
 
@@ -139,6 +139,89 @@ mapping: class
   conflict: method = .int
     return _conflict
 
+/** Application-established Boolean facts for one immutable AST.
+ * A reason records the application's justification; the library checks ownership
+ * and consistency, not the truth of arbitrary application semantics.
+ * @param limit Maximum stored condition facts. Missing facts are unknown.
+ */
+conditions: class
+  _root = .llast..node
+  _value = .string[]
+  _reason = .string[]
+  _count = .int
+  _limit = .int
+  _sealed = .int
+  _identity = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llast..tree, limit = 1000000
+    _identity = next_identity(); _count = 0; _limit = limit; _sealed = 0; _error = ''
+    if limit < 0 then _error = 'LL_FLOW_FACT: condition limit must be nonnegative'
+    if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: condition tree has expired'
+    else do
+      tree = dereference owner
+      if tree.status() <> 0 then _error = tree.error()
+      _root = tree.root()
+    end
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  error: method = .string
+    if initialized(_root) then do
+      if _root.valid() = 0 then call fail('LL_AST_OWNER: condition tree has expired or been replaced')
+    end
+    return _error
+  accepts: method = .int
+    arg node = .llast..node
+    if error() <> '' then return 0
+    if _root.sameowner(node) = 0 then do
+      call fail('LL_AST_OWNER: condition node belongs to another tree'); return 0
+    end
+    return 1
+  set: method = .int
+    arg node = .llast..node, value = .string, reason = .string
+    if accepts(node) = 0 then return 0
+    if _sealed then do
+      call fail('LL_FLOW_FACT_FROZEN: condition facts are sealed'); return 0
+    end
+    if (value <> 'true' & value <> 'false') | strip(reason) = '' then do
+      call fail('LL_FLOW_FACT: use true or false with a nonempty reason'); return 0
+    end
+    id = node.id()
+    if _value[id] <> '' then do
+      if _value[id] <> value then call fail('LL_FLOW_FACT_CONFLICT: contradictory condition at byte ' || node.offset())
+      return _error = ''
+    end
+    if _count >= _limit then do
+      call fail('LL_RESOURCE_LIMIT: flow.conditions limit=' || _limit || ' required=' || (_count + 1)); return 0
+    end
+    _value[id] = value; _reason[id] = reason; _count = _count + 1
+    return 1
+  get: method = .string
+    arg node = .llast..node
+    if accepts(node) = 0 then do
+      call failaccess(_error); return 'unknown'
+    end
+    value = _value[node.id()]
+    if value = '' then return 'unknown'
+    return value
+  reason: method = .string
+    arg node = .llast..node
+    if accepts(node) = 0 then do
+      call failaccess(_error); return ''
+    end
+    return _reason[node.id()]
+  seal: method = .int
+    _sealed = 1
+    return error() = ''
+  identity: method = .int
+    return _identity
+  size: method = .int
+    if error() <> '' then return 0
+    return _count
+
 /** A graph owns events and edges, borrowing its immutable AST.
  * Each mapped AST node gets an entry event; assignments write after their value.
  * @param limit Counted flow entries: events plus edges, not source bytes.
@@ -168,11 +251,14 @@ graph: class
   _building = .int
   _owner = reference .llast..tree
   _mapping = .mapping
+  _conditions = reference .llflow..conditions
+  _conditionidentity = .int
+  _hasconditions = .int
   _ran = .int
   *: factory
     arg owner = reference .llast..tree, mapping = .mapping, limit = 1000000
     _identity = next_identity(); _sealed = 0; _building = 0
-    _owner = owner; _mapping = mapping; _limit = limit; _ran = 0; _error = ''
+    _owner = owner; _mapping = mapping; _limit = limit; _ran = 0; _error = ''; _hasconditions = 0
     if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: flow tree has expired'
     else do
       tree = dereference owner
@@ -180,7 +266,38 @@ graph: class
       _root = tree.root()
     end
     return
+  /** Attach optional facts before the first graph query. The table is borrowed
+   * and sealed when construction starts; it must outlive graph and results. */
+  using: method = .int
+    arg facts = reference .llflow..conditions
+    if _ran | _hasconditions then do
+      call fail('LL_FLOW_FACT_FROZEN: attach conditions once before building the graph'); return 0
+    end
+    if <refvalid>(facts) = 0 then do
+      call fail('LL_AST_OWNER: condition facts have expired'); return 0
+    end
+    table = dereference facts
+    if table.accepts(_root) = 0 then do
+      call fail(table.error()); return 0
+    end
+    _conditions = facts; _conditionidentity = table.identity(); _hasconditions = 1
+    return 1
+  checkconditions: method = .void
+    if _hasconditions = 0 then return
+    if <refvalid>(_conditions) = 0 then do
+      call fail('LL_AST_OWNER: condition facts have expired'); return
+    end
+    table = dereference _conditions
+    if table.identity() <> _conditionidentity then call fail('LL_AST_OWNER: condition facts have been replaced')
+    if table.error() <> '' then call fail(table.error())
+    return
+  knowledge: method = .string
+    arg node = .llast..node
+    if _hasconditions = 0 then return 'unknown'
+    table = dereference _conditions
+    return table.get(node)
   build: method = .void
+    ok = .int
     if _ran then return
     if _error <> '' then return
     _building = 1
@@ -196,6 +313,10 @@ graph: class
     end
     if tree.status() <> 0 then call fail(tree.error())
     if mapping.check(tree.contract()) = 0 then call fail(mapping.error())
+    call checkconditions()
+    if _hasconditions & _error = '' then do
+      table = dereference _conditions; ok = table.seal()
+    end
     if _error <> '' then return
     /* Allocate ports and bind lexical loop ownership before connecting edges.
      * Distinct outcome ports retain short-circuit truth through nested tests.
@@ -322,7 +443,9 @@ graph: class
     arg node = .llast..node, destination = .int
     id = node.id(); ok = .int
     if _true[id] > 0 then do
-      ok = edge(_true[id],_exit[id]); ok = edge(_false[id],_exit[id])
+      known = knowledge(node)
+      if known <> 'false' then ok = edge(_true[id],_exit[id])
+      if known <> 'true' then ok = edge(_false[id],_exit[id])
     end
     if destination > 0 then ok = edge(_exit[id],destination)
     return
@@ -330,17 +453,21 @@ graph: class
   test: method = .void
     arg condition = .llast..node, yes = .int, no = .int, owner = .llast..node
     ok = .int
+    known = knowledge(condition)
     id = condition.id(); decision = event(owner,'branch')
     if decision = 0 then return
     if _true[id] > 0 then do
-      ok = edge(_true[id],decision); ok = edge(decision,yes,'true')
+      ok = edge(_true[id],decision)
+      if known <> 'false' then ok = edge(decision,yes,'true')
       decision = event(owner,'branch')
       if decision = 0 then return
-      ok = edge(_false[id],decision); ok = edge(decision,no,'false')
+      ok = edge(_false[id],decision)
+      if known <> 'true' then ok = edge(decision,no,'false')
     end
     else do
       ok = edge(_exit[id],decision)
-      ok = edge(decision,yes,'true'); ok = edge(decision,no,'false')
+      if known <> 'false' then ok = edge(decision,yes,'true')
+      if known <> 'true' then ok = edge(decision,no,'false')
     end
     return
   fail: method = .void
@@ -382,6 +509,7 @@ graph: class
     return _next[link]
   error: method = .string
     call build()
+    call checkconditions()
     if initialized(_root) then do
       if _root.valid() = 0 then call fail('LL_AST_OWNER: flow tree has expired or been replaced')
     end

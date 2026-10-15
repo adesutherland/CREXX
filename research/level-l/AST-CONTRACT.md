@@ -258,6 +258,37 @@ captured before the first query. Graph/result serials invalidate replaced
 analyses and point views even on the same AST. The wider grouping/lowering,
 origin and production-migration criteria remain open.
 
+## Optional condition facts
+
+A conditions table belongs to one immutable AST identity. A fact `(n,b,r)`
+contains a node, a Boolean outcome and a nonempty explanation. Its semantic
+premise is: whenever n completes normally, its truth under the target language
+is b. The premise must hold on every dynamic visit, including loop iterations.
+Checking the explanation's presence does not establish this premise.
+
+Construction seals the borrowed table and records its identity. Missing facts
+are unknown. Contradictions, invalid values, foreign or expired AST nodes,
+expired/replaced tables and attempted post-seal mutation invalidate dependent
+graphs and analyses. The allowance counts unique stored facts, including facts
+never used as a test. Indexed storage uses O(A) slots for bounded AST capacity A;
+the count allowance is not a claim about total resident bytes.
+
+For a known ordinary test the builder retains evaluation and removes only the
+edge for the opposite outcome. For a short-circuit test it retains distinct
+outcome ports and removes the opposite outgoing edge; ordinary value use joins
+only allowed outcomes. Induction over execution fragments shows that every
+concrete execution satisfying the facts still has a corresponding graph path.
+Consequently definite-assignment answers remain sound under the declared flow
+semantics and supplied premises. No evaluation, read or write is eliminated
+merely because the completed result is known. A fact for a compound expression
+does not propagate constraints backwards through its operands: some impossible
+prefixes can remain and produce conservative diagnostics. This is outcome
+filtering, not a general path-condition solver.
+
+Pruning edges cannot increase graph dimensions or the finite solver bound
+below. Tests separately control literal truth rules, unknown conditions,
+effectful tests, while/until exits, nested short-circuiting and witness paths.
+
 ## Definite assignment domain and proof
 
 Let B be flow events, E edges, and V the finite set of variable spellings found
