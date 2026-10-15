@@ -1,0 +1,37 @@
+/* Build: crexx --program origins records.rxl show.crexx */
+options levelb
+import rxfnsb
+import llrecover
+import llast
+import llsource
+import originlang
+
+source = 'α = 1;' || '0d0a'x || 'bad = ;' || '0d0a'x || 'say α;'
+request = .llrecover..request(originlang..language(),source as .binary)
+status = request.run()
+if status > 1 then do
+  say request.error(); exit 1
+end
+tree = request.ast()
+say 'Tree status:' tree.status()
+say 'Root origin:' tree.root().origin()
+say 'Surviving statements:' tree.root().count('items')
+damage = tree.damage()
+do i = 1 to damage.size()
+  say llsource..diagnostic(tree.source(),damage.offset(i),'INPUT',damage.message(i))
+  say 'Skipped original bytes:' damage.first(i) 'to' damage.last(i)
+end
+/* The tree is for inspection; status 1 must never authorize execution. */
+pass = tree.rewrite()
+do while pass.next()
+  node = pass.node()
+  if node.kind() = 'Number' then do
+    generated = pass.synthetic('Number',node.offset())
+    ok = generated.settext('spelling','42')
+    ok = pass.replace(generated)
+  end
+end
+changed = pass.finish()
+say 'Status after rewrite:' changed.status()
+say 'Generated value origin:' changed.root().child('items',1).child('value').origin()
+say 'Retained damage records:' changed.damage().size()

@@ -1,0 +1,142 @@
+/* cREXX License (MIT). Original-byte provenance and recovery lifetime. */
+options levelb
+import rxfnsb
+import llcore
+import llast
+import llrecover
+import lllanguage
+import llsource
+import llflow
+import originlang
+
+main: procedure = .int
+  failures = 0; node = .llast..node; draft = .llast..draft; raw = .llcore..tree
+  first = 'α = 1;'; prefix = first || '0d0a'x || 'bad = '
+  source = prefix || ';' || '0d0a'x || 'say α;' || '0d0a'x || '@; z = 2;'
+  request = .llrecover..request(originlang..language(),source as .binary)
+  status = request.run()
+  failures = failures + check(status = 1,'two-error recovery')
+  tree = request.ast(); damage = tree.damage()
+  failures = failures + check(tree.status() = 1 & tree.isrecovered() & tree.root().origin() = 'recovered','explicit recovered tree')
+  failures = failures + check(pos('LL_AST_RECOVERED',tree.error()) > 0,'recovered status message')
+  failures = failures + check(tree.source() = source as .binary & damage.size() = 2,'original bytes and damage count')
+  failures = failures + check(damage.offset(1) = <blen>(prefix as .binary),'original syntax byte offset')
+  failures = failures + check(damage.first(1) = <blen>(first as .binary) & damage.last(1) = <blen>((prefix || ';') as .binary),'skipped interval')
+  failures = failures + check(damage.offset(1) < damage.offset(2),'source order after lexical-first discovery')
+  do i = 1 to damage.size()
+    failures = failures + check(damage.message(i) = request.message(i) & damage.offset(i) = request.offset(i),'original diagnostic retained')
+    raw = request.tree(); errornode = request.errornode(i)
+    failures = failures + check(raw.start(errornode) = damage.first(i) & raw.finish(errornode) = damage.last(i),'associated raw error node')
+  end
+  failures = failures + check(tree.root().count('items') = 3,'surviving records')
+  saynode = tree.root().child('items',2)
+  failures = failures + check(saynode.line() = 3 & saynode.child('value').text('spelling') = 'α','CRLF and Unicode spelling')
+  failures = failures + check(saynode.origin() = 'exact','undamaged child remains exact')
+  display = llsource..diagnostic(tree.source(),damage.offset(1),'INPUT',damage.message(1))
+  failures = failures + check(pos('line 2, column 7',display) > 0 & pos('bad = ;',display) > 0,'original diagnostic excerpt')
+  graph = originlang..execution(reference tree)
+  failures = failures + check(graph.points() = 0 & pos('LL_AST_RECOVERED',graph.error()) > 0,'clean-flow gate')
+  conditions = .llflow..conditions(reference tree)
+  failures = failures + check(pos('LL_AST_RECOVERED',conditions.error()) > 0,'clean-fact gate')
+  strict = .lllanguage..request(originlang..language(),source as .binary); status = strict.parse()
+  failed = strict.ast()
+  failures = failures + check(status <> 0 & failed.status() > 1 & failed.root().valid() = 0,'strict parse refuses recovered input')
+  copy = tree; held = copy.root()
+  tree = recovered(source as .binary)
+  failures = failures + check(tree.status() = 1 & held.valid() & copy.damage().size() = 2,'request release and independent copy')
+  detached = tree.damage(); ok = detached.add(0,0,0,0,'extra record')
+  failures = failures + check(detached.size() = 3 & tree.damage().size() = 2,'owned metadata copy')
+  pass = tree.rewrite()
+  do while pass.next()
+    node = pass.node()
+    if node.kind() = 'Number' then do
+      draft = pass.synthetic('Number',node.offset())
+      ok = draft.settext('spelling','42'); ok = pass.replace(draft)
+    end
+  end
+  changed = pass.finish()
+  failures = failures + check(changed.status() = 1 & changed.damage().size() = 2 & changed.source() = tree.source(),'rewrite retains damage')
+  generated = changed.root().child('items',1).child('value')
+  failures = failures + check(generated.origin() = 'synthetic' & generated.start() = generated.finish() & generated.sourcetext() = '' & generated.text('spelling') = '42','zero-width generated origin')
+  lowerpass = changed.lower(changed.contract())
+  do while lowerpass.next()
+    ok = lowerpass.keep()
+  end
+  lowered = lowerpass.finish()
+  failures = failures + check(lowered.status() = 1 & lowered.damage().message(1) = damage.message(1),'lowering retains damage')
+  failures = failures + check(lowered.root().child('items',1).child('value').origin() = 'synthetic','lowering keeps synthetic child')
+  /* Even replacing the recovered root with an empty generated root retains damage. */
+  lowerpass = tree.lower(tree.contract())
+  do while lowerpass.next()
+    if lowerpass.original().kind() = 'Program' then do
+      draft = lowerpass.synthetic('Program',0); ok = lowerpass.replace(draft)
+    end
+    else ok = lowerpass.keep()
+  end
+  reduced = lowerpass.finish()
+  failures = failures + check(reduced.status() = 1 & reduced.root().origin() = 'recovered' & reduced.damage().size() = 2,'root replacement cannot erase damage')
+  clean = parseinput('x = 1;' || '0d0a'x || 'say x;')
+  failures = failures + check(clean.status() = 0 & clean.damage().size() = 0 & clean.isrecovered() = 0,'clean origin contract')
+  lowerpass = clean.lower(clean.contract())
+  do while lowerpass.next()
+    node = lowerpass.original()
+    if node.kind() = 'Name' then do
+      draft = lowerpass.synthetic('Number',<blen>(clean.source())); ok = draft.settext('spelling','9'); ok = lowerpass.replace(draft)
+    end
+    else ok = lowerpass.keep()
+  end
+  synthetic = lowerpass.finish(); node = synthetic.root().child('items',2).child('value')
+  failures = failures + check(synthetic.status() = 0 & node.line() = 2 & node.origin() = 'synthetic' & node.offset() = <blen>(clean.source()),'lowered CRLF synthetic anchor')
+  pass = clean.rewrite(); ok = pass.next(); draft = pass.synthetic('Number',<blen>(clean.source()) + 1); failed = pass.finish()
+  failures = failures + check(failed.status() > 1 & failed.root().valid() = 0,'out-of-range anchor')
+  empty = parseinput(''); lowerpass = empty.lower(empty.contract()); ok = lowerpass.next()
+  draft = lowerpass.synthetic('Program',0); ok = lowerpass.replace(draft); ok = lowerpass.next(); result = lowerpass.finish()
+  failures = failures + check(result.status() = 0 & result.root().origin() = 'synthetic' & result.root().start() = 0,'empty source anchor')
+  store = .llast..storage('x' as .binary,clean.contract())
+  nodeid = store.add(clean.contract().kindindex('Number'),0,1,'exact derived')
+  failures = failures + check(nodeid = 0 & pos('LL_AST_ORIGIN',store.error()) > 0,'unknown origin rejected')
+  store = .llast..storage('x' as .binary,clean.contract())
+  nodeid = store.add(clean.contract().kindindex('Number'),0,1,'synthetic')
+  failures = failures + check(nodeid = 0,'synthetic range must be empty')
+  store = .llast..storage('x' as .binary,clean.contract())
+  nodeid = store.add(clean.contract().kindindex('Number'),0,1,'recovered')
+  failures = failures + check(nodeid = 0,'recovered origin needs records')
+  malformed = ('x = 1;' as .binary) || 'ff'x || (';y = 2;' as .binary)
+  broken = recovered(malformed)
+  failures = failures + check(broken.status() = 1 & broken.source() = malformed & pos('FF',broken.damage().message(1)) > 0,'malformed UTF8 retains original bytes')
+  held = broken.root(); broken = parseinput('')
+  failures = failures + check(held.valid() = 0,'recovered handles invalidate on replacement')
+  raw = .llcore..tree.from_source(source as .binary)
+  root = raw.add(1,'program',0,<blen>(source as .binary),0,0)
+  accepted = .llast..tree.recovered(raw,root,clean.contract(),tree.damage(),4)
+  failures = failures + check(accepted.status() = 1 & accepted.entries() = 4,'exact metadata entry allowance')
+  failed = .llast..tree.recovered(raw,root,clean.contract(),tree.damage(),3)
+  failures = failures + check(failed.status() = 2 & failed.root().valid() = 0,'metadata included in entry allowance')
+  invalid = .llast..damage(); ok = invalid.add(0,<blen>(source as .binary) + 1,0,0,'invalid record')
+  failed = .llast..tree.recovered(raw,root,clean.contract(),invalid)
+  failures = failures + check(failed.status() = 3 & pos('LL_AST_ORIGIN',failed.error()) > 0,'record beyond original source')
+  if originlang..language().backend() = 'regional' then do
+    composite = recovered('a = [1 + 2];bad = [1 + ];z = 3;' as .binary)
+    failures = failures + check(composite.status() = 1 & composite.root().count('items') = 2,'regional recovered AST')
+    expression = composite.root().child('items',1).child('value')
+    failures = failures + check(expression.kind() = 'Add' & expression.child('right').text('spelling') = '2','Pratt region shape and values')
+    failures = failures + check(composite.damage().size() = 1 & composite.damage().first(1) = 12,'regional original interval')
+  end
+  say 'failures=' || failures
+  return failures
+parseinput: procedure = .llast..tree
+  arg source = .string
+  request = .lllanguage..request(originlang..language(),source as .binary)
+  if request.parse() <> 0 then do
+    say request.error(); exit 1
+  end
+  return request.ast()
+recovered: procedure = .llast..tree
+  arg source = .binary
+  request = .llrecover..request(originlang..language(),source)
+  return request.ast()
+check: procedure = .int
+  arg passed = .int, message = .string
+  if passed then return 0
+  say 'FAIL:' message
+  return 1

@@ -1,0 +1,51 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2552: ts_llorigins_lr1_noopt_rxtvm
+      Start 2554: ts_llorigins_lr1_opt_rxtvm
+      Start 2555: ts_llorigins_lr1_opt_rxbvm
+      Start 2553: ts_llorigins_lr1_noopt_rxbvm
+      Start 2560: ts_llorigins_earley_noopt_rxtvm
+      Start 2561: ts_llorigins_earley_noopt_rxbvm
+      Start 2562: ts_llorigins_earley_opt_rxtvm
+      Start 2563: ts_llorigins_earley_opt_rxbvm
+ 1/20 Test #2560: ts_llorigins_earley_noopt_rxtvm .....   Passed    0.32 sec
+      Start 2548: ts_llorigins_ll1_noopt_rxtvm
+ 2/20 Test #2561: ts_llorigins_earley_noopt_rxbvm .....   Passed    0.32 sec
+      Start 2557: ts_llorigins_packrat_noopt_rxbvm
+ 3/20 Test #2563: ts_llorigins_earley_opt_rxbvm .......   Passed    0.33 sec
+      Start 2549: ts_llorigins_ll1_noopt_rxbvm
+ 4/20 Test #2562: ts_llorigins_earley_opt_rxtvm .......   Passed    0.33 sec
+      Start 2556: ts_llorigins_packrat_noopt_rxtvm
+ 5/20 Test #2557: ts_llorigins_packrat_noopt_rxbvm ....   Passed    0.19 sec
+      Start 2558: ts_llorigins_packrat_opt_rxtvm
+ 6/20 Test #2556: ts_llorigins_packrat_noopt_rxtvm ....   Passed    0.19 sec
+      Start 2550: ts_llorigins_ll1_opt_rxtvm
+ 7/20 Test #2548: ts_llorigins_ll1_noopt_rxtvm ........   Passed    0.21 sec
+      Start 2559: ts_llorigins_packrat_opt_rxbvm
+ 8/20 Test #2549: ts_llorigins_ll1_noopt_rxbvm ........   Passed    0.20 sec
+      Start 2551: ts_llorigins_ll1_opt_rxbvm
+ 9/20 Test #2552: ts_llorigins_lr1_noopt_rxtvm ........   Passed    0.55 sec
+      Start 2564: ts_llorigins_regional_noopt_rxtvm
+10/20 Test #2553: ts_llorigins_lr1_noopt_rxbvm ........   Passed    0.56 sec
+      Start 2565: ts_llorigins_regional_noopt_rxbvm
+11/20 Test #2555: ts_llorigins_lr1_opt_rxbvm ..........   Passed    0.57 sec
+      Start 2566: ts_llorigins_regional_opt_rxtvm
+12/20 Test #2554: ts_llorigins_lr1_opt_rxtvm ..........   Passed    0.58 sec
+      Start 2567: ts_llorigins_regional_opt_rxbvm
+13/20 Test #2558: ts_llorigins_packrat_opt_rxtvm ......   Passed    0.18 sec
+14/20 Test #2559: ts_llorigins_packrat_opt_rxbvm ......   Passed    0.18 sec
+15/20 Test #2550: ts_llorigins_ll1_opt_rxtvm ..........   Passed    0.19 sec
+16/20 Test #2551: ts_llorigins_ll1_opt_rxbvm ..........   Passed    0.18 sec
+17/20 Test #2565: ts_llorigins_regional_noopt_rxbvm ...   Passed    1.32 sec
+18/20 Test #2564: ts_llorigins_regional_noopt_rxtvm ...   Passed    1.35 sec
+19/20 Test #2567: ts_llorigins_regional_opt_rxbvm .....   Passed    1.34 sec
+20/20 Test #2566: ts_llorigins_regional_opt_rxtvm .....   Passed    1.35 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Label Time Summary:
+comprehensive       =  10.46 sec*proc (20 tests)
+level-l             =  10.46 sec*proc (20 tests)
+library             =  10.46 sec*proc (20 tests)
+optimizer-parity    =  10.46 sec*proc (20 tests)
+
+Total Test time (real) =   1.99 sec

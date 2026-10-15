@@ -4,9 +4,9 @@ import hashlib, json, os, shutil, subprocess, sys
 section = sys.argv[1] if len(sys.argv) > 1 else "all"
 assert section in ["all", "noopt", "installed"]
 step = sys.argv[2] if len(sys.argv) > 2 else 'conditions'
-assert step in ['conditions', 'lowering']
-provider = 'flowloops' if step == 'conditions' else 'unlesslang'
-extra = [] if step == 'conditions' else [('lowerdemo', 'lib/rxfnsl/examples/lowering/lowering.crexx')]
+assert step in ['conditions', 'lowering', 'origins']
+provider = {'conditions':'flowloops','lowering':'unlesslang','origins':'originlang'}[step]
+extra = [('lowerdemo', 'lib/rxfnsl/examples/lowering/lowering.crexx')] if step == 'lowering' else []
 root=Path.cwd(); build=root/'cmake-build-levell-integration'; binary=build/'bin'
 base=root/f'research/level-l/build/ast7-{step}'; noopt=root/'research/level-l/build/ast5/noopt'; output=base/'delivery'
 output.mkdir(parents=True,exist_ok=True); records=[]
@@ -19,7 +19,7 @@ def run(key, command, required=(), installed=False):
     assert result.returncode==0 and b'Warning in ' not in data,(key,result.returncode,data[-4000:])
     assert all(s.encode() in data for s in required),(key,data,required)
     return result.stdout
-spec=root/('lib/rxfnsl/examples/flow/loops.rxl' if step == 'conditions' else 'lib/rxfnsl/examples/lowering/unless.rxl')
+spec=root/'lib/rxfnsl/examples'/dict(conditions='flow/loops.rxl',lowering='lowering/unless.rxl',origins='origins/records.rxl')[step]
 consumer=root/f'lib/rxfnsl/tests_functional/ts_ll{step}.crexx'
 if section != 'installed':
     for route in ['source','rxas']:
@@ -44,10 +44,12 @@ if section != 'installed':
             run(key+'-assemble',[binary/'rxas',*flags,work/'consumer'])
             run(key+'-link',[binary/'rxlink','-s','-o',work/'linked',work/'consumer',work/provider,*[work/name for name,_ in extra],imports/'rxfnsl',imports/'library'])
             for vm in ['rxtvm','rxbvm']: run(key+'-'+vm,[binary/vm,work/'linked.rxbin'],['failures=0'])
-installed=base/'install/bin'; example=root/('lib/rxfnsl/examples/flow/conditions.crexx' if step == 'conditions' else 'lib/rxfnsl/examples/lowering/show.crexx')
+installed=base/'install/bin'; example=root/'lib/rxfnsl/examples'/dict(conditions='flow/conditions.crexx',lowering='lowering/show.crexx',origins='origins/show.crexx')[step]
 required=['Without condition facts: 2', 'With condition facts: 0', 'x assigned before SAY: 1', 'Skipped operand reachable: 0']
 if step == 'lowering':
     required=['Original: Unless', 'Lowered: If', 'True arm statements: 0', 'False arm statements: 1', 'x may be read before it is assigned.']
+if step == 'origins':
+    required=['Tree status: 1', 'Root origin: recovered', 'Surviving statements: 2', 'line 2, column 7', 'Status after rewrite: 1', 'Generated value origin: synthetic', 'Retained damage records: 1']
 if section != 'noopt':
     for extension in ['rxl','crexx']:
         work=output/('installed-'+extension); work.mkdir(exist_ok=True)

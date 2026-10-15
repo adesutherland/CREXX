@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Application trees, field contracts and checked walks. */
 options levelb
-namespace llast expose schema storage tree node walk rewrite lowering draft analysis facts children
+namespace llast expose schema storage tree node walk rewrite lowering draft analysis facts children damage
 import rxfnsb
 import llcore
 import lltree
@@ -135,6 +135,61 @@ schema: class
     end
     return _error = ''
 
+/** Original-byte recovery records. A tree owns a value copy of these records.
+ * The skipped interval and the narrower diagnostic range are kept separately.
+ */
+damage: class
+  _first = .int[]
+  _last = .int[]
+  _offset = .int[]
+  _finish = .int[]
+  _message = .string[]
+  _error = .string
+  *: factory
+    _error = ''
+    return
+  add: method = .int
+    arg first = .int, last = .int, offset = .int, finish = .int, message = .string
+    if _error <> '' then return 0
+    if first < 0 | last < first | offset < first | finish < offset | finish > last | message = '' then do
+      _error = 'LL_AST_ORIGIN: invalid recovery record'; return 0
+    end
+    i = _first[0] + 1
+    _first[i] = first; _last[i] = last; _offset[i] = offset; _finish[i] = finish; _message[i] = message
+    return 1
+  check: method = .int
+    arg extent = .int
+    do i = 1 to _last[0]
+      if _last[i] > extent then _error = 'LL_AST_ORIGIN: recovery range exceeds original source'
+    end
+    return _error = ''
+  affects: method = .int
+    arg first = .int, last = .int
+    do i = 1 to _first[0]
+      if first < _last[i] & last > _first[i] then return 1
+      if first = last & first >= _first[i] & first < _last[i] then return 1
+    end
+    return 0
+  size: method = .int
+    return _first[0]
+  first: method = .int
+    arg i = .int
+    return _first[i]
+  last: method = .int
+    arg i = .int
+    return _last[i]
+  offset: method = .int
+    arg i = .int
+    return _offset[i]
+  finish: method = .int
+    arg i = .int
+    return _finish[i]
+  message: method = .string
+    arg i = .int
+    return _message[i]
+  error: method = .string
+    return _error
+
 /** Owned arena. Handles and cursors borrow this storage through explicit Level
  * B references; they never copy its arrays. New nodes may link only to earlier
  * nodes, making cycles impossible. The public tree freezes it after validation.
@@ -145,6 +200,7 @@ schema: class
 storage: class
   _identity = .int
   _source = .binary
+  _damage = .llast..damage
   _schema = .llast..schema
   _limit = .int
   _entries = .int
@@ -169,11 +225,16 @@ storage: class
   _child = .int[]
   _next = .int[]
   *: factory
-    arg source = .binary, contract = .llast..schema, limit = 1000000
+    arg source = .binary, contract = .llast..schema, limit = 1000000, ?damage = .llast..damage
     _identity = next_identity()
     _source = source; _schema = contract; _limit = limit
     _entries = 0; _frozen = 0; _error = ''; _root = 0; _generation = 0
     if contract.check() = 0 then _error = contract.error()
+    if ?damage = 0 then damage = .llast..damage()
+    _damage = damage
+    if _error = '' & _damage.check(<blen>(source)) = 0 then _error = _damage.error()
+    _entries = _damage.size()
+    if _error = '' & _entries > limit then _error = lllimits..describe('tree.entries',limit,_entries)
     return
   /** Immutable content identity; references separately identify the owner. */
   identity: method = .int
@@ -199,6 +260,16 @@ storage: class
     if rule < 1 | rule > _schema.size() | start < 0 | finish < start | finish > extent then do
       call fail('LL_AST_NODE: invalid node kind or source range'); return 0
     end
+    if origin <> 'exact' & origin <> 'composite' & origin <> 'derived' & origin <> 'synthetic' & origin <> 'recovered' then do
+      call fail('LL_AST_ORIGIN: unknown source origin ' || origin); return 0
+    end
+    if origin = 'synthetic' & start <> finish then do
+      call fail('LL_AST_ORIGIN: synthetic nodes require a zero-width anchor'); return 0
+    end
+    if origin = 'recovered' & _damage.size() = 0 then do
+      call fail('LL_AST_ORIGIN: recovered nodes require recovery records'); return 0
+    end
+    if _damage.affects(start,finish) then origin = 'recovered'
     fields = 0
     do i = 1 to _schema.fields()
       if _schema.owner(i) = rule then fields = fields + 1
@@ -303,6 +374,7 @@ storage: class
       end
     end
     if _error <> '' then return 0
+    if _damage.size() > 0 then _origin[root] = 'recovered'
     _root = root; _frozen = 1; return 1
   valid: method = .int
     arg id = .int
@@ -364,6 +436,10 @@ storage: class
       occurrence = occurrence - _count[f]
     end
     return 0
+  isrecovered: method = .int
+    return _damage.size() > 0
+  damage: method = .llast..damage
+    return _damage
   schema: method = .llast..schema
     return _schema
   contract: method = reference .llast..schema
@@ -415,6 +491,7 @@ storage: class
       call fail('LL_AST_ORIGIN: invalid enclosing source range'); return
     end
     _start[id] = start; _finish[id] = finish; _origin[id] = 'composite'
+    if _damage.affects(start,finish) then _origin[id] = 'recovered'
     return
   sourcetext: method = .string
     arg id = .int
@@ -658,6 +735,127 @@ walk: class
   error: method = .string
     return _error
 
+/* Shared strict/recovered projection; the result owns its source and metadata. */
+project: procedure = .llast..storage
+  arg source = .llcore..tree, root = .int, contract = .llast..schema, limit = .int, damage = .llast..damage
+  ok = .int
+  _store = .llast..storage(source.source(),contract,limit,damage)
+  if _store.error() <> '' then return _store
+  if contract.size() = 0 then do
+    call _store.fail('LL_AST_SCHEMA: no then tree mappings were declared'); return _store
+  end
+  view = .lltree..view(source,root,limit)
+  if view.error() <> '' then do
+    call _store.fail(view.error()); return _store
+  end
+  raw = .int; lhs = .int; rhs = .int; current = .int; child = .int
+  mapped = .int[]; counts = .int[]
+  reachable = .int[]; pending = .int[]; top = 1; pending[top] = root
+  do while top > 0
+    raw = pending[top]; top = top - 1
+    if reachable[raw] then iterate
+    reachable[raw] = 1
+    lhs = source.left(raw); rhs = source.right(raw)
+    if lhs > 0 then do
+      top = top + 1; pending[top] = lhs
+    end
+    if rhs > 0 then do
+      top = top + 1; pending[top] = rhs
+    end
+  end
+  /* Earlier-child source IDs permit a single bottom-up projection. A
+   * transparent subtree keeps one ID and a saturated count, not a copied
+   * list of all of its descendants. */
+  do raw = 1 to source.size() while _store.error() = ''
+    if reachable[raw] = 0 then iterate
+    lhs = source.left(raw); rhs = source.right(raw)
+    ca = 0; cb = 0; one = 0
+    if lhs > 0 then do
+      ca = counts[lhs]; one = mapped[lhs]
+    end
+    if rhs > 0 then do
+      cb = counts[rhs]
+      if ca = 0 then one = mapped[rhs]
+    end
+    rule = contract.index(source.label(raw))
+    if rule = 0 then do
+      counts[raw] = min(2,ca + cb); mapped[raw] = one
+      if counts[raw] = 1 & source.label(raw) = 'group' then call _store.cover(one,source.start(raw),source.finish(raw))
+      iterate
+    end
+    /* Parser derivations wrap binary productions differently. Read the
+     * projected frontier in source order, stopping at mapped children, so
+     * operand roles mean the same thing for Pratt, LR and Earley. */
+    operands = .int[]; total = 0; top = 0
+    if rhs > 0 then do
+      top = top + 1; pending[top] = rhs
+    end
+    if lhs > 0 then do
+      top = top + 1; pending[top] = lhs
+    end
+    do while top > 0 & total < 3
+      current = pending[top]; top = top - 1
+      if counts[current] = 0 then iterate
+      if counts[current] = 1 then do
+        total = total + 1; operands[total] = mapped[current]
+      end
+      else do
+        child = source.right(current)
+        if child > 0 then do
+          top = top + 1; pending[top] = child
+        end
+        child = source.left(current)
+        if child > 0 then do
+          top = top + 1; pending[top] = child
+        end
+      end
+    end
+    created = _store.add(rule,source.start(raw),source.finish(raw))
+    if created = 0 then leave
+    do f = 1 to contract.fields() while _store.error() = ''
+      if contract.owner(f) <> rule then iterate
+      name = contract.name(f); selector = contract.source(f); mode = contract.mode(f)
+      if mode = 'operand' then do
+        chosen = 0
+        select selector
+          when 'left' then do
+            if total = 2 then chosen = operands[1]
+          end
+          when 'right' then do
+            if total = 2 then chosen = operands[2]
+          end
+          when 'inner' then do
+            if total = 1 then chosen = operands[1]
+          end
+          otherwise nop
+        end
+        if chosen = 0 then call _store.fail('LL_AST_OPERAND: ' || source.label(raw) || '.' || selector || ' must produce one AST node at byte ' || source.start(raw))
+        else ok = _store.append(created,name,chosen)
+      end
+      else if mode = 'text' & selector = '' then ok = _store.settext(created,name,view.text(raw))
+      else do
+        found = 0
+        do c = 1 to view.count(raw) while _store.error() = ''
+          capture = view.child(raw,c)
+          if view.name(capture) <> '@field.' || selector then iterate
+          found = found + 1
+          if mode = 'text' then do
+            if found > 1 then call _store.fail('LL_AST_CARDINALITY: text(' || selector || ') matched more than once at byte ' || source.start(raw))
+            else ok = _store.settext(created,name,view.text(capture))
+          end
+          else if counts[capture] <> 1 then call _store.fail('LL_AST_CAPTURE: ' || selector || ' must produce one AST node at byte ' || source.start(capture))
+          else ok = _store.append(created,name,mapped[capture])
+        end
+      end
+    end
+    ok = _store.validate(created)
+    mapped[raw] = created; counts[raw] = 1
+  end
+  if _store.error() <> '' then return _store
+  if counts[root] <> 1 then call _store.fail('LL_AST_ROOT: mapping must produce exactly one root')
+  else ok = _store.freeze(mapped[root])
+  return _store
+
 /** Frozen application result. A parse request may be released after this tree
  * is constructed. Borrowed node/walk handles remain valid while this owning
  * value stays alive and is not replaced. Copying the tree is an explicit value
@@ -666,122 +864,11 @@ tree: class
   _store = .llast..storage
   *: factory
     arg source = .llcore..tree, root = .int, contract = .llast..schema, limit = 1000000
-    ok = .int
-    _store = .llast..storage(source.source(),contract,limit)
-    if _store.error() <> '' then return
-    if contract.size() = 0 then do
-      call _store.fail('LL_AST_SCHEMA: no then tree mappings were declared'); return
-    end
-    view = .lltree..view(source,root,limit)
-    if view.error() <> '' then do
-      call _store.fail(view.error()); return
-    end
-    raw = .int; lhs = .int; rhs = .int; current = .int; child = .int
-    mapped = .int[]; counts = .int[]
-    reachable = .int[]; pending = .int[]; top = 1; pending[top] = root
-    do while top > 0
-      raw = pending[top]; top = top - 1
-      if reachable[raw] then iterate
-      reachable[raw] = 1
-      lhs = source.left(raw); rhs = source.right(raw)
-      if lhs > 0 then do
-        top = top + 1; pending[top] = lhs
-      end
-      if rhs > 0 then do
-        top = top + 1; pending[top] = rhs
-      end
-    end
-    /* Earlier-child source IDs permit a single bottom-up projection. A
-     * transparent subtree keeps one ID and a saturated count, not a copied
-     * list of all of its descendants. */
-    do raw = 1 to source.size() while _store.error() = ''
-      if reachable[raw] = 0 then iterate
-      lhs = source.left(raw); rhs = source.right(raw)
-      ca = 0; cb = 0; one = 0
-      if lhs > 0 then do
-        ca = counts[lhs]; one = mapped[lhs]
-      end
-      if rhs > 0 then do
-        cb = counts[rhs]
-        if ca = 0 then one = mapped[rhs]
-      end
-      rule = contract.index(source.label(raw))
-      if rule = 0 then do
-        counts[raw] = min(2,ca + cb); mapped[raw] = one
-        if counts[raw] = 1 & source.label(raw) = 'group' then call _store.cover(one,source.start(raw),source.finish(raw))
-        iterate
-      end
-      /* Parser derivations wrap binary productions differently. Read the
-       * projected frontier in source order, stopping at mapped children, so
-       * operand roles mean the same thing for Pratt, LR and Earley. */
-      operands = .int[]; total = 0; top = 0
-      if rhs > 0 then do
-        top = top + 1; pending[top] = rhs
-      end
-      if lhs > 0 then do
-        top = top + 1; pending[top] = lhs
-      end
-      do while top > 0 & total < 3
-        current = pending[top]; top = top - 1
-        if counts[current] = 0 then iterate
-        if counts[current] = 1 then do
-          total = total + 1; operands[total] = mapped[current]
-        end
-        else do
-          child = source.right(current)
-          if child > 0 then do
-            top = top + 1; pending[top] = child
-          end
-          child = source.left(current)
-          if child > 0 then do
-            top = top + 1; pending[top] = child
-          end
-        end
-      end
-      created = _store.add(rule,source.start(raw),source.finish(raw))
-      if created = 0 then leave
-      do f = 1 to contract.fields() while _store.error() = ''
-        if contract.owner(f) <> rule then iterate
-        name = contract.name(f); selector = contract.source(f); mode = contract.mode(f)
-        if mode = 'operand' then do
-          chosen = 0
-          select selector
-            when 'left' then do
-              if total = 2 then chosen = operands[1]
-            end
-            when 'right' then do
-              if total = 2 then chosen = operands[2]
-            end
-            when 'inner' then do
-              if total = 1 then chosen = operands[1]
-            end
-            otherwise nop
-          end
-          if chosen = 0 then call _store.fail('LL_AST_OPERAND: ' || source.label(raw) || '.' || selector || ' must produce one AST node at byte ' || source.start(raw))
-          else ok = _store.append(created,name,chosen)
-        end
-        else if mode = 'text' & selector = '' then ok = _store.settext(created,name,view.text(raw))
-        else do
-          found = 0
-          do c = 1 to view.count(raw) while _store.error() = ''
-            capture = view.child(raw,c)
-            if view.name(capture) <> '@field.' || selector then iterate
-            found = found + 1
-            if mode = 'text' then do
-              if found > 1 then call _store.fail('LL_AST_CARDINALITY: text(' || selector || ') matched more than once at byte ' || source.start(raw))
-              else ok = _store.settext(created,name,view.text(capture))
-            end
-            else if counts[capture] <> 1 then call _store.fail('LL_AST_CAPTURE: ' || selector || ' must produce one AST node at byte ' || source.start(capture))
-            else ok = _store.append(created,name,mapped[capture])
-          end
-        end
-      end
-      ok = _store.validate(created)
-      mapped[raw] = created; counts[raw] = 1
-    end
-    if _store.error() <> '' then return
-    if counts[root] <> 1 then call _store.fail('LL_AST_ROOT: mapping must produce exactly one root')
-    else ok = _store.freeze(mapped[root])
+    _store = project(source,root,contract,limit,.llast..damage())
+    return
+  recovered: factory
+    arg source = .llcore..tree, root = .int, contract = .llast..schema, damage = .llast..damage, limit = 1000000
+    _store = project(source,root,contract,limit,damage)
     return
   loaded: factory
     arg store = .llast..storage
@@ -793,11 +880,17 @@ tree: class
     call _store.fail(message)
     return
   status: method = .int
-    if _store.error() = '' then return 0
+    if _store.error() = '' then return isrecovered()
     if left(_store.error(),18) = 'LL_RESOURCE_LIMIT:' then return 2
     return 3
   error: method = .string
-    return _store.error()
+    if _store.error() <> '' then return _store.error()
+    if isrecovered() then return 'LL_AST_RECOVERED: input contains skipped damage; inspect diagnostics before use'
+    return ''
+  isrecovered: method = .int
+    return _store.isrecovered()
+  damage: method = .llast..damage
+    return _store.damage()
   root: method = .llast..node
     return .llast..node(reference _store,_store.root())
   walk: method = .llast..walk
@@ -882,7 +975,7 @@ rewrite: class
   *: factory
     arg input = reference .llast..storage, order = 'children first'
     _input = input; owner = dereference input; _identity = owner.identity()
-    _output = .llast..storage(owner.source(),owner.schema(),owner.limit())
+    _output = .llast..storage(owner.source(),owner.schema(),owner.limit(),owner.damage())
     _walk = .llast..walk(input,owner.root(),'children first')
     _raw = 0; _current = 0; _done = 0; _finished = 0
     if order <> 'children first' then call _output.fail('LL_AST_ORDER: rewrites require children first')
@@ -930,6 +1023,14 @@ rewrite: class
     else if rule = 0 then call _output.fail('LL_AST_KIND: unknown replacement kind ' || kind)
     else id = _output.add(rule,_output.start(_current),_output.finish(_current),'derived')
     return .llast..draft(reference _output,id)
+  /** Generate a node with no source spelling, anchored at an original byte. */
+  synthetic: method = .llast..draft
+    arg kind = .string, offset = .int
+    id = 0; contract = dereference _output.contract(); rule = contract.kindindex(kind)
+    if _current = 0 | _done | _finished then call _output.fail('LL_AST_LIFECYCLE: synthetic requires a current rewrite node')
+    else if rule = 0 then call _output.fail('LL_AST_KIND: unknown replacement kind ' || kind)
+    else id = _output.add(rule,offset,offset,'synthetic')
+    return .llast..draft(reference _output,id)
   replace: method = .int
     arg replacement = .llast..draft
     if _current = 0 | _done | _finished then do
@@ -975,7 +1076,7 @@ lowering: class
   *: factory
     arg input = reference .llast..storage, contract = .llast..schema, limit = 1000000
     _input = input; owner = dereference input; _identity = owner.identity()
-    _output = .llast..storage(owner.source(),contract,limit)
+    _output = .llast..storage(owner.source(),contract,limit,owner.damage())
     _walk = .llast..walk(input,owner.root())
     _raw = 0; _done = 0; _finished = 0
     if owner.error() <> '' then call _output.fail(owner.error())
@@ -1037,6 +1138,16 @@ lowering: class
         id = _output.add(rule,source.start(),source.finish(),'derived')
         if id > 0 then ok = _output.locate(id,source.offset())
       end
+    end
+    return .llast..draft(reference _output,id)
+  /** Generate a target node with no source spelling at an original byte. */
+  synthetic: method = .llast..draft
+    arg kind = .string, offset = .int
+    id = 0
+    if active() then do
+      contract = dereference _output.contract(); rule = contract.kindindex(kind)
+      if rule = 0 then call _output.fail('LL_AST_KIND: unknown target kind ' || kind)
+      else id = _output.add(rule,offset,offset,'synthetic')
     end
     return .llast..draft(reference _output,id)
   /** Seal an intermediate target node so another draft can use it as a child. */

@@ -58,6 +58,47 @@ serial detects replacement of a live owner variable. Serials are module-local
 and refuse exhaustion before signed-integer wrap. Arena identity rejects foreign
 replacement children. Copying the owning tree remains a value copy.
 
+## Generated and recovered origins
+
+Every arena range satisfies `0 <= start <= offset <= finish <= source bytes`.
+Origin tags are restricted to exact, composite, derived, synthetic and recovered.
+Synthetic nodes require `start = finish`: their explicit source anchor supplies
+a diagnostic position, while their spelling comes solely from their fields.
+An empty source permits only anchor zero. Derived replacements retain the
+original node's range and anchor. Neither operation edits the original bytes.
+
+A recovery record retains a skipped interval [first,last), a diagnostic interval
+[offset,finish) contained in it (including zero-width EOF/separator positions),
+and its nonempty original message. The owned AST validates all ranges against
+its source length and counts one entry per record. Recovery sorts these records
+with the corresponding raw error nodes, preserving association when lexical
+errors were discovered before earlier syntax errors.
+
+The surviving AST is projected using original token spans. Its nodes intersecting
+skipped intervals receive recovered origins; zero-width nodes inside a skipped
+interval are affected too. The root is always marked recovered when any record
+exists, even if skipped leading/trailing input falls outside the surviving root
+range. `status() = 1` and `isrecovered()` are determined by the owned records,
+independently of node labels or the number of surviving statements. Other
+construction failures take precedence over the recovered status.
+
+Rewrites and lowering copy this metadata into their result arenas before
+construction. All accepted nodes still undergo ordinary schema validation.
+Freezing reasserts the recovered root marker. Thus induction over any sequence
+of these services preserves the original damage records and inspection status;
+replacing the root with a synthetic node cannot erase them. Table getters return
+value copies; node handles retain the usual owner/snapshot lifetime contract.
+Strict parsing still rejects damaged input, and common flow/fact construction
+refuses status 1. RexxScript retains its strict parse and AST-status gates.
+
+For D bounded recovery records and N constructed nodes, overlap classification
+adds O(N*D) work and O(D) record storage; it does not rescan or rewrite the source
+per node. Caller-created record tables are validated when attached. Resource
+allowances count stored records and tree entries, not arbitrary caller work or
+message byte lengths. Tests cover Unicode, CRLF, empty/end anchors, malformed
+UTF-8, diagnostic ordering and pairing, exact budgets, metadata independence,
+request release and taint preservation through copying and both pass types.
+
 ## Termination and resource bounds
 
 Let N be reachable AST nodes, F their field slots, E their child links, R raw

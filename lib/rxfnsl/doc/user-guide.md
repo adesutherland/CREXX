@@ -1613,7 +1613,7 @@ silently turn damaged input into a clean program.
 
 | Tree method | Result |
 |---|---|
-| `status()` | 0 for a complete tree, 2 for a resource limit, 3 for a contract failure. |
+| `status()` | 0 for a clean complete tree, 1 for a recovered inspection tree, 2 for a resource limit, 3 for a contract failure. |
 | `error()` | Empty on success; otherwise the diagnostic. |
 | `root()` | A handle to the root; invalid on failure. |
 | `source()` | The complete original bytes, including skipped text. |
@@ -2473,6 +2473,7 @@ false fact for the condition makes that assignment definite.
 | `pass.next()`, `pass.original()` | Advance and obtain the current input node. |
 | `pass.translated(inputNode)` | Obtain the completed output for an earlier input node. |
 | `pass.make(kind)` | Create a target draft using the current input's source range and diagnostic anchor. |
+| `pass.synthetic(kind,offset)` | Create a generated draft with an empty range at an original-byte anchor. |
 | `pass.accept(draft)` | Validate and seal an intermediate target node; return its handle. |
 | `pass.replace(draft)` | Validate the result for the current input node. |
 | `pass.keep()` | Copy its kind, fields and source origin, substituting translated children. |
@@ -2495,12 +2496,92 @@ to the original tree; calculate new facts for the lowered tree.
 
 ### Origins survive rewriting
 
-Nodes created directly by a mapping have an `exact` origin. Removing expression
-parentheses keeps their full range on the surviving node and marks that range
-`composite`. A replacement has a `derived` origin and inherits the replaced
-node's range. Thus a folded `Number` may have spelling `14` while `sourcetext()`
-still returns `2+3*4`. Source bytes are never rewritten by changing a text field.
-This lets diagnostics point back to the expression that produced a value.
+An **origin** explains how a node relates to the original source. Its range is
+half open: `start()` is the first byte and `finish()` is the byte just after it.
+`offset()` is the diagnostic anchor within that range. Offsets count bytes from
+zero; `line()` counts lines from one and treats CRLF as one line ending.
+
+| Origin | Meaning |
+|---|---|
+| `exact` | A grammar mapping produced this node directly from its source range. |
+| `composite` | Projection combined source structure, for example retaining parentheses on their surviving expression node. |
+| `derived` | A rewrite or lowering created a replacement from an original node. It retains that node's source range. |
+| `synthetic` | The application generated a node with no source spelling. Its range is empty at an explicitly chosen original-byte anchor. |
+| `recovered` | The node covers skipped input, or is the root of a tree containing recovery damage. Inspect the tree's damage records. |
+
+A folded `Number` may have spelling `14` while `sourcetext()` still returns
+`2+3*4`. Changing a field never changes the original bytes. Use
+`draft.locate(offset)` to choose a more precise diagnostic anchor within the
+node's retained range.
+
+Both rewriting and lowering offer `synthetic(kind,offset)`:
+
+```rexx
+generated = pass.synthetic('Number',source.offset())
+ok = generated.settext('spelling','42')
+ok = pass.replace(generated)
+```
+
+Here `source` is the current original node. The result has equal start and
+finish offsets, and empty `sourcetext()`. Its field still holds `42`. Use this
+for inserted defaults or generated control nodes. Use `make(kind)` when the
+replacement represents an existing source expression. Anchors must lie between
+zero and the original source length, inclusive; a generated end marker may
+therefore sit just after the last byte.
+
+#### Inspect a recovered AST
+
+`llrecover.request.ast()` creates an owned tree of the surviving records.
+Release the request when convenient: the tree retains the source and diagnostic
+records. Its status is **1 for recovered input**, 0 for clean input, and greater
+than 1 for a construction failure. A recovered tree has a usable root for
+inspection, and `error()` returns an `LL_AST_RECOVERED` explanation. Require
+status 0 before executing a script or applying configuration.
+
+```rexx
+request = .llrecover..request(language,source)
+tree = request.ast()
+if tree.status() > 1 then do
+  say tree.error()
+  return 1
+end
+damage = tree.damage()
+do i = 1 to damage.size()
+  say llsource..diagnostic(tree.source(),damage.offset(i),'INPUT',damage.message(i))
+end
+```
+
+Each damage record keeps two ranges. `first(i)` to `last(i)` is the complete
+skipped record; `offset(i)` to `finish(i)` is the diagnostic location within it.
+For a missing value, the diagnostic may have zero length at a separator.
+`message(i)` preserves the parser or lexer message. Records are numbered from
+one in source order. Unicode and malformed-byte diagnostics use the unchanged
+original bytes. `tree.isrecovered()` reports whether any records exist;
+`tree.damage()` returns an independent value copy of the small record table.
+
+Copying, rewriting or lowering preserves these records and the recovered
+status, even when a transformation replaces the root or discards all surviving
+statements. Children outside damaged ranges keep their more precise origins.
+The root remains recovered so that damage outside its own surviving range is
+still visible. The `tree.entries` allowance includes one entry per damage
+record as well as nodes, fields and links.
+
+The common flow and condition-fact services require a clean tree and report
+`LL_AST_RECOVERED` for inspection trees. Strict `lllanguage.request.ast()` also
+continues to require a successful strict parse. Reparse the corrected source to
+obtain a clean tree.
+
+Run [the complete origins example](../examples/origins/show.crexx):
+
+```sh
+crexx --program origins lib/rxfnsl/examples/origins/records.rxl \
+      lib/rxfnsl/examples/origins/show.crexx
+rxvm origins
+```
+
+It retains two valid statements around a missing value, prints the original
+line-2 diagnostic, generates a Number with a source anchor, and shows that the
+rewritten tree still has status 1 and one damage record.
 
 ### Binary application-tree projection
 
@@ -2689,6 +2770,7 @@ expose a forest when it returns 5.
 | `message(i)` | Diagnostic text, indexed from 1, in source order. |
 | `offset(i)`, `finish(i)` | Original diagnostic byte range; a syntax diagnostic may have zero length. |
 | `tree()`, `root()` | Result tree and root after status 0 or 1. |
+| `ast()` | Run recovery if needed and build an owned AST from `then tree` mappings. Clean and recovered input retain statuses 0 and 1 respectively. |
 | `errornode(i)` | Associated `error.skipped` node when produced. These nodes are stored separately from the successful root's children. |
 | `error()` | Overall reason collection stopped. |
 

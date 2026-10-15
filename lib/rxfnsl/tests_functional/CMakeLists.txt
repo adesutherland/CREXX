@@ -354,4 +354,75 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
+# Source origins and owned recovery inspection across parser backends.
+set(_origins_spec "${CMAKE_CURRENT_SOURCE_DIR}/../examples/origins/records.rxl")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_origins_spec}")
+file(READ "${_origins_spec}" _origins_text)
+foreach(_backend ll1 lr1 packrat earley regional)
+  set(_origins_dir "${CMAKE_CURRENT_BINARY_DIR}/origins-${_backend}")
+  file(MAKE_DIRECTORY "${_origins_dir}")
+  string(REPLACE "backend ll1" "backend ${_backend}" _origins_backend_text "${_origins_text}")
+  if(_backend STREQUAL "packrat")
+    string(REPLACE "semantics contextfree" "semantics ordered" _origins_backend_text "${_origins_backend_text}")
+  endif()
+  if(_backend STREQUAL "regional")
+    string(REPLACE "backend regional" "backend lr1" _origins_backend_text "${_origins_backend_text}")
+    string(REPLACE "variable | literal" "variable | literal | regionexpr" _origins_backend_text "${_origins_backend_text}")
+    string(REPLACE "scan: lexer input utf8" "regionexpr: token\nplus: token\nlparen: token\nrparen: token\nlbracket: token\nrbracket: token\nscan: lexer input utf8" _origins_backend_text "${_origins_backend_text}")
+    string(REPLACE "  spaces: rule" "  plus.lex: rule = '+' then emit plus\n  lparen.lex: rule = '(' then emit lparen\n  rparen.lex: rule = ')' then emit rparen\n  lbracket.lex: rule = '[' then emit lbracket\n  rbracket.lex: rule = ']' then emit rbracket\n  spaces: rule" _origins_backend_text "${_origins_backend_text}")
+    string(APPEND _origins_backend_text "\nmath: operators atom number group lparen rparen\nsum: infix math plus precedence 10 left\n  then tree Add(left = left, right = right)\nregion: region token regionexpr using math open lbracket close rbracket\n")
+    # Every AST kind needs a flow role, including expressions inside the region.
+    string(REPLACE "  Number: value" "  Number: value\n  Add: evaluate left right" _origins_backend_text "${_origins_backend_text}")
+    # Operator atoms are token-level mappings in the region.
+    string(REPLACE "number: token" "number: token then tree Number(spelling = text)" _origins_backend_text "${_origins_backend_text}")
+  endif()
+  file(GENERATE OUTPUT "${_origins_dir}/rules.rxl" CONTENT "${_origins_backend_text}")
+  set(_origins_provider "${_origins_dir}/originlang.rxas")
+  add_custom_command(OUTPUT "${_origins_provider}"
+    COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
+      -DSPEC=${_origins_dir}/rules.rxl -DOUTPUT=${_origins_provider} -DFORMAT=rxas
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    DEPENDS levell_cli "${_origins_dir}/rules.rxl" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    VERBATIM)
+  add_custom_command(OUTPUT "${_origins_dir}/originlang.rxbin"
+    COMMAND $<TARGET_FILE:rxas> originlang
+    DEPENDS rxas "${_origins_provider}"
+    WORKING_DIRECTORY "${_origins_dir}" VERBATIM)
+  crexx_add_import_root(levell_origins_${_backend}_imports
+    DIRECTORY "${_origins_dir}/imports" OUTPUT_VARIABLE _origins_imports
+    FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${_origins_dir}/originlang.rxbin"
+    DEPENDS library rxfnsl)
+  foreach(_flowcase origins)
+  foreach(_mode noopt opt)
+    set(_origins_flags)
+    if(_mode STREQUAL "noopt")
+      list(APPEND _origins_flags -n)
+    endif()
+    set(_origins_name "ts_ll${_flowcase}_${_backend}_${_mode}")
+    add_custom_command(OUTPUT "${_origins_dir}/${_origins_name}-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxc> ${_origins_flags} -x --no-exe-import
+        -i "${_origins_dir}/imports"
+        -o "${_origins_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_ll${_flowcase}.crexx"
+      COMMAND $<TARGET_FILE:rxas> ${_origins_flags} "${_origins_name}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_origins_name}-linked" "${_origins_name}" originlang
+        "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+      DEPENDS rxc rxas rxlink rxfnsl levell_origins_${_backend}_imports ${_origins_imports} ts_ll${_flowcase}.crexx
+      WORKING_DIRECTORY "${_origins_dir}" VERBATIM)
+    add_custom_target(${_origins_name} ALL DEPENDS "${_origins_dir}/${_origins_name}-linked.rxbin")
+    add_dependencies(testrxfnsl ${_origins_name})
+    foreach(_vm rxtvm rxbvm)
+      if(TARGET ${_vm})
+        add_test(NAME ${_origins_name}_${_vm}
+          COMMAND $<TARGET_FILE:${_vm}> "${_origins_dir}/${_origins_name}-linked.rxbin")
+        set_tests_properties(${_origins_name}_${_vm} PROPERTIES
+          PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_origins_name}_${_vm} TARGETS ${_origins_name} ${_vm})
+      endif()
+    endforeach()
+  endforeach()
+  endforeach()
+endforeach()
+
+
 crexx_finalize_directory_qa_tiers()
