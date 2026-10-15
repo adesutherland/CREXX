@@ -122,3 +122,21 @@ structural checks and its transformation contract before replacing a result.
 Register numbering is deliberately absent from source trees. RXAS register
 assignment is a later map from typed slots and temporary values to target
 locations, with separate call-window and cleanup checks.
+
+
+## Implemented target preparation
+
+The [RXAS backend](backend.md#structures-and-algorithm) reads the immutable graph
+in two passes per function. Integer maps assign slots and result IDs to stable
+registers; a separate contiguous window holds calls. Selected instruction
+records carry mnemonic, already checked final operands and source origin. They
+are rendered only through `llir.writer` sections. No target registers or RXAS
+strings are stored in either source tree.
+
+G decimal defaults are represented by `crexx.g.decimal.default`, with one decimal
+result and no inputs. This keeps the VM's absent decimal (`nan` on display)
+distinct from a decimal numeric zero. Exact float constants remain eight-byte
+IR values through target selection. Classic argument, numeric and result packets
+stay different IR types even though the target adapter uses the existing
+activation class for their storage; only the appropriate operations consume
+each type.

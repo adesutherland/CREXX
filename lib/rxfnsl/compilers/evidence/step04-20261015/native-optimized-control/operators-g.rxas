@@ -1,0 +1,274 @@
+/*
+ * SOURCE                 : operators-g.crexx
+ */
+
+.globals=0
+
+main() .locals=2
+   .meta "operators-g.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "operators-g.crexx" 2 1 10 "say 2 + 3"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   iadd r0,r0,3
+   itos r0
+   .traceevent "O" 4 "R" "S" "r" 0 1 1 0 "" ""
+   say r0
+   .srcstep 2 2 17 "operators-g.crexx" 3 1 10 "say 2 - 3"
+   load r0,3
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   isub r0,2,r0
+   itos r0
+   .traceevent "O" 4 "R" "S" "r" 0 2 2 0 "" ""
+   say r0
+   .srcstep 3 3 17 "operators-g.crexx" 4 1 10 "say 2 * 3"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
+   imult r0,r0,3
+   itos r0
+   .traceevent "O" 4 "R" "S" "r" 0 3 3 0 "" ""
+   say r0
+   .srcstep 4 4 17 "operators-g.crexx" 5 1 10 "say 2 / 2"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 4 4 0 "" ""
+   idiv r0,2,r0
+   itos r0
+   .traceevent "O" 4 "R" "S" "r" 0 4 4 0 "" ""
+   say r0
+   .srcstep 5 5 17 "operators-g.crexx" 6 1 10 "say 2 = 2"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 5 5 0 "" ""
+   ieq r0,r0,2
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 5 5 0 "" ""
+   say r0
+   .srcstep 6 6 17 "operators-g.crexx" 7 1 11 "say 2 <> 2"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 6 6 0 "" ""
+   ine r0,r0,2
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 6 6 0 "" ""
+   say r0
+   .srcstep 7 7 17 "operators-g.crexx" 8 1 10 "say 2 < 3"
+   load r0,3
+   .traceevent "L" 4 "R" "I" "r" 0 7 7 0 "" ""
+   ilt r0,2,r0
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 7 7 0 "" ""
+   say r0
+   .srcstep 8 8 17 "operators-g.crexx" 9 1 11 "say 2 <= 2"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 8 8 0 "" ""
+   ilte r0,2,r0
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 8 8 0 "" ""
+   say r0
+   .srcstep 9 9 17 "operators-g.crexx" 10 1 10 "say 2 > 3"
+   load r0,3
+   .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
+   igt r0,2,r0
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   say r0
+   .srcstep 10 10 17 "operators-g.crexx" 11 1 11 "say 2 >= 2"
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 10 10 0 "" ""
+   igte r0,2,r0
+   btos r0
+   .traceevent "O" 4 "R" "S" "r" 0 10 10 0 "" ""
+   say r0
+   .srcstep 11 11 17 "operators-g.crexx" 12 1 11 "say 2 == 2"
+   load r0,2
+   itos r0
+   .traceevent "L" 4 "R" "S" "r" 0 11 11 0 "" ""
+   load r1,2
+   itos r1
+   .traceevent "L" 4 "R" "S" "r" 1 11 11 0 "" ""
+   seq r1,r0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 11 11 0 "" ""
+   say r1
+   .srcstep 12 12 17 "operators-g.crexx" 13 1 12 "say 2.0 + 3"
+   load r1,3
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 12 12 0 "" ""
+   fadd r1,r1,2.0
+   ftos r1
+   .traceevent "O" 4 "R" "S" "r" 1 12 12 0 "" ""
+   say r1
+   .srcstep 13 13 17 "operators-g.crexx" 14 1 12 "say 2.0 - 3"
+   load r1,3
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 13 13 0 "" ""
+   fsub r1,2.0,r1
+   ftos r1
+   .traceevent "O" 4 "R" "S" "r" 1 13 13 0 "" ""
+   say r1
+   .srcstep 14 14 17 "operators-g.crexx" 15 1 12 "say 2.0 * 3"
+   load r1,3
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 14 14 0 "" ""
+   fmult r1,r1,2.0
+   ftos r1
+   .traceevent "O" 4 "R" "S" "r" 1 14 14 0 "" ""
+   say r1
+   .srcstep 15 15 17 "operators-g.crexx" 16 1 12 "say 2.0 / 2"
+   load r1,2
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 15 15 0 "" ""
+   fdiv r1,2.0,r1
+   ftos r1
+   .traceevent "O" 4 "R" "S" "r" 1 15 15 0 "" ""
+   say r1
+   .srcstep 16 16 17 "operators-g.crexx" 17 1 12 "say 2.0 = 2"
+   load r1,2
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 16 16 0 "" ""
+   feq r1,r1,2.0
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 16 16 0 "" ""
+   say r1
+   .srcstep 17 17 17 "operators-g.crexx" 18 1 13 "say 2.0 <> 2"
+   load r1,2
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 17 17 0 "" ""
+   fne r1,r1,2.0
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 17 17 0 "" ""
+   say r1
+   .srcstep 18 18 17 "operators-g.crexx" 19 1 12 "say 2.0 < 3"
+   load r1,3
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 18 18 0 "" ""
+   flt r1,2.0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 18 18 0 "" ""
+   say r1
+   .srcstep 19 19 17 "operators-g.crexx" 20 1 13 "say 2.0 <= 2"
+   load r1,2
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 19 19 0 "" ""
+   flte r1,2.0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 19 19 0 "" ""
+   say r1
+   .srcstep 20 20 17 "operators-g.crexx" 21 1 12 "say 2.0 > 3"
+   load r1,3
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 20 20 0 "" ""
+   fgt r1,2.0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 20 20 0 "" ""
+   say r1
+   .srcstep 21 21 17 "operators-g.crexx" 22 1 13 "say 2.0 >= 2"
+   load r1,2
+   itof r1
+   .traceevent "L" 4 "R" "F" "r" 1 21 21 0 "" ""
+   fgte r1,2.0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 21 21 0 "" ""
+   say r1
+   .srcstep 22 22 17 "operators-g.crexx" 23 1 13 "say 2.0 == 2"
+   load r1,2.0
+   ftos r1
+   .traceevent "L" 4 "R" "S" "r" 1 22 22 0 "" ""
+   load r0,2
+   itos r0
+   .traceevent "L" 4 "R" "S" "r" 0 22 22 0 "" ""
+   seq r1,r1,r0
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 22 22 0 "" ""
+   say r1
+   .srcstep 23 23 17 "operators-g.crexx" 24 1 11 "say 2d + 3"
+   load r1,3
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 23 23 0 "" ""
+   dadd r1,r1,2d
+   dtos r1
+   .traceevent "O" 4 "R" "S" "r" 1 23 23 0 "" ""
+   say r1
+   .srcstep 24 24 17 "operators-g.crexx" 25 1 11 "say 2d - 3"
+   load r1,3
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 24 24 0 "" ""
+   dsub r1,2d,r1
+   dtos r1
+   .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+   say r1
+   .srcstep 25 25 17 "operators-g.crexx" 26 1 11 "say 2d * 3"
+   load r1,3
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 25 25 0 "" ""
+   dmult r1,r1,2d
+   dtos r1
+   .traceevent "O" 4 "R" "S" "r" 1 25 25 0 "" ""
+   say r1
+   .srcstep 26 26 17 "operators-g.crexx" 27 1 11 "say 2d / 2"
+   load r1,2
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 26 26 0 "" ""
+   ddiv r1,2d,r1
+   dtos r1
+   .traceevent "O" 4 "R" "S" "r" 1 26 26 0 "" ""
+   say r1
+   .srcstep 27 27 17 "operators-g.crexx" 28 1 11 "say 2d = 2"
+   load r1,2
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 27 27 0 "" ""
+   deq r1,r1,2d
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 27 27 0 "" ""
+   say r1
+   .srcstep 28 28 17 "operators-g.crexx" 29 1 12 "say 2d <> 2"
+   load r1,2
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 28 28 0 "" ""
+   dne r1,r1,2d
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 28 28 0 "" ""
+   say r1
+   .srcstep 29 29 17 "operators-g.crexx" 30 1 11 "say 2d < 3"
+   load r1,3
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 29 29 0 "" ""
+   dlt r1,2d,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 29 29 0 "" ""
+   say r1
+   .srcstep 30 30 17 "operators-g.crexx" 31 1 12 "say 2d <= 2"
+   load r1,2
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 30 30 0 "" ""
+   dlte r1,2d,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 30 30 0 "" ""
+   say r1
+   .srcstep 31 31 17 "operators-g.crexx" 32 1 11 "say 2d > 3"
+   load r1,3
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 31 31 0 "" ""
+   dgt r1,2d,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 31 31 0 "" ""
+   say r1
+   .srcstep 32 32 17 "operators-g.crexx" 33 1 12 "say 2d >= 2"
+   load r1,2
+   itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 32 32 0 "" ""
+   dgte r1,2d,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 32 32 0 "" ""
+   say r1
+   .srcstep 33 33 17 "operators-g.crexx" 34 1 12 "say 2d == 2"
+   load r1,2d
+   dtos r1
+   .traceevent "L" 4 "R" "S" "r" 1 33 33 0 "" ""
+   load r0,2
+   itos r0
+   .traceevent "L" 4 "R" "S" "r" 0 33 33 0 "" ""
+   seq r1,r1,r0
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 33 33 0 "" ""
+   say r1
+   .srcstep 34 34 1 "operators-g.crexx" 34 12 12 "say 2d == 2"
+   ret

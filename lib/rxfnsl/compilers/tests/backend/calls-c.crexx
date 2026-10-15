@@ -1,0 +1,21 @@
+options levelc
+x = 'caller'
+say factorial(6)
+say mark(1) + mark(2) * mark(3)
+call mark 4
+say result
+call empty
+say result
+say x
+exit 0
+factorial: procedure
+ arg n
+ x = 'private'
+ if n <= 1 then return 1
+ return n * factorial(n - 1)
+mark: procedure
+ arg n
+ say n
+ return n
+empty: procedure
+ return

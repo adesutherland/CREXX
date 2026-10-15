@@ -1,0 +1,4 @@
+# Keep generated displays and byte-hashed executed outputs stable on checkout.
+*.ir text eol=lf whitespace=-blank-at-eof
+*.rxas text eol=lf
+*.out text eol=lf

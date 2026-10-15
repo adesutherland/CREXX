@@ -1,9 +1,9 @@
 # cREXX compilers built with Level L
 
-Status: STEP01 approved; STEP02 published; STEP03 source-to-IR frontends
-implemented and locally qualified, with publication to `develop` authorised
-15 October 2026 alongside the CI preparation repair. STEP03 working baseline:
-`87ee68b317ed751d75eb954c50cfdde20a824d00`. Original planning source baseline:
+Status: STEP01 approved; STEP02 and STEP03 published. STEP04 C/G IR-to-RXAS
+compilation implemented and locally qualified, with develop publication and CI
+monitoring authorised on 15 October 2026. STEP04 qualification baseline:
+`bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`. Original planning source baseline:
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
 
 Start with the [STEP01 review](doc/STEP01-REVIEW.md), then the
@@ -108,10 +108,10 @@ lib/rxfnsl/
     doc/                    compiler usage, IR reference and migration matrix
 ```
 
-The subtree contains the plan, review documents, source controls, initial C/G
-semantic families and IR regression consumers. The forthcoming source compilers
-will use distinct build targets and installed commands, proposed names `llrxc-c` and `llrxc-g` for the
-PoC and `llrxc-b` for the later proper B compiler, with a
+The subtree contains the plan, review documents, source controls, C/G
+semantic families, frontends, backend and regression consumers. The source
+compilers use distinct build targets and installed commands `llrxc-c` and
+`llrxc-g`. `llrxc-b` remains proposed for the later proper B compiler, with a
 private library namespace. Ordinary `rxc`, `rxc-c` and wrapper routing continue
 to select existing products until the replacement gate. No prototype silently
 falls back to an old compiler for unsupported syntax. Product names and exact
@@ -866,10 +866,45 @@ Current status: QA3-STEP01/02 and QA3-AC01/02 verified by the
 [repair receipt](evidence/ci-preparation-20261015/README.md): all six absent test
 images rebuilt through CI preparation, 32/32 focused tests and the product
 build passed. Retained STEP03 sources/artifacts/examples match except the
-qualified CMake preparation change. QA3-STEP03 is the authorised publication
-operation for these two commits; its remote SHA and monitor readback are
-reported in the conversation. Normal hosted workflows are expected to pass;
-their observed results remain distinct. No status-only follow-up is planned.
+qualified CMake preparation change. QA3-STEP03 / QA3-AC03 completed with repair
+`980f0e2ebce9302840bace90dccac2e0a5aedc5d` and frontend publication
+`bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`; local/remote identity was rechecked
+during STEP04. The existing monitor tracks that publication. Hosted results
+remain distinct from local qualification; no status-only follow-up is planned.
+
+## STEP04 executable backend
+
+**Approved 15 October 2026; F4-STEP01–04 complete and F4-AC01–06 verified locally.**
+The [STEP04 review](doc/STEP04-REVIEW.md) records the approved compile service,
+RXAS backend structures, simple register assignment, Level L emitter use and
+worked C/G example. Its F4 acceptance criteria and implementation steps refine
+LLCOMP-STEP04 without narrowing POC-01–10 or the broader replacement criteria.
+STEP04 completes the unoptimised executable path; shared optimisation remains
+STEP05, complete PoC qualification STEP06, and INTERPRET STEP08.
+
+The B-only `llcompiler.request` service and separate installed `llrxc-c` /
+`llrxc-g` commands now compile the admitted sources through shared checked IR
+to RXAS using the existing Level L writer. The installed `llcompilers.rxbin`
+package supports independent service consumers. Stable registers and private
+call windows preserve typed values, Classic pools/arguments/numeric snapshots,
+recursion, source locations and exact literals. The B-only target adapter uses
+the existing Classic runtime, whose G prerequisites remain outside the host.
+
+The [STEP04 receipt](evidence/step04-20261015/README.md) maps the six criteria to
+product, 36 focused CTests, installed service/command checks, independent native
+controls and the required isolated sanitizer scheduling measurement. Four new
+aggregates each execute 31 programs with both assembler modes, 35 service
+assertions and failure cases. The [actual examples](examples/step04/README.md),
+[backend architecture](doc/backend.md) and user guide describe the result.
+
+An independent native-control comparison exposed an existing optimized-assembly
+discrepancy; the receipt retains its failing evidence separately. New-backend
+output passes the corresponding case in both assembler modes and VMs. No native
+compiler/assembler repair is included. This STEP04 publication carries the
+implementation, documentation and qualification evidence together. Normal
+automatic hosted workflows are expected to pass; their observed results are
+reported separately by the lightweight monitor. Full programme acceptance stays
+open, including shared optimisation, proper B, INTERPRET and replacement.
 
 ## Qualification and documentation practice
 
@@ -902,8 +937,9 @@ their observed results remain distinct. No status-only follow-up is planned.
 | Architecture direction: cREXX compilers, Level L-owned extensible numeric IR and parallel documentation | Agreed; detailed contracts presented in STEP01. |
 | STEP01 | Reviewed and approved as the STEP02 foundation: scope, architecture, trees, IR/API, algorithms, dependency inventory and six source controls. [Review packet](doc/STEP01-REVIEW.md). |
 | STEP02 / foundation implementation | IR2-AC01–07 verified locally; [receipt](evidence/step02-20261015/README.md). Approved develop publication includes baseline `d13a91c1b`; hosted outcomes reported separately. |
-| STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Uncommitted implementation, no hosted result claimed. |
-| STEP04–06 / remaining Phase A | Backend execution, optimisation and complete PoC qualification remain open with their later gates. |
+| STEP03 / frontend increment | F3-AC01–05 verified locally; [receipt](evidence/step03-20261015/README.md). Published as `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67` with the CI preparation repair. Hosted results are separate. |
+| STEP04 / executable backend | F4-AC01–06 verified locally; [receipt](evidence/step04-20261015/README.md). Approved develop publication includes all implementation/docs/evidence; exact published SHA and hosted results are reported in the conversation and monitor. |
+| STEP05–06 / remaining Phase A | Shared optimisation and complete PoC qualification remain open with their later gates. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
 | LLCOMP-AC01–15 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |

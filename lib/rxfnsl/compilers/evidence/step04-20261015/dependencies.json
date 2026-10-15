@@ -1,0 +1,160 @@
+{
+  "compiler_host_sources": {
+    "lib/rxfnsl/compilers/common/llcompilercontracts.crexx": [
+      "rxfnsb"
+    ],
+    "lib/rxfnsl/compilers/common/llcrexxir.crexx": [
+      "rxfnsb",
+      "llir"
+    ],
+    "lib/rxfnsl/compilers/driver/llcompiler.crexx": [
+      "rxfnsb",
+      "llfrontend",
+      "llrxas",
+      "llir",
+      "llsource"
+    ],
+    "lib/rxfnsl/compilers/driver/llcompilercli.crexx": [
+      "rxfnsb",
+      "rxfs",
+      "llcompiler",
+      "llir"
+    ],
+    "lib/rxfnsl/compilers/driver/llfrontendparse.crexx": [
+      "rxfnsb",
+      "llcore",
+      "llast",
+      "lllanguage",
+      "lllimits",
+      "llcgrammar",
+      "llggrammar"
+    ],
+    "lib/rxfnsl/compilers/driver/llfrontend.crexx": [
+      "rxfnsb",
+      "llast",
+      "llir",
+      "llsource",
+      "llcrexxir",
+      "llfrontendparse",
+      "llcompilercontracts"
+    ],
+    "lib/rxfnsl/compilers/driver/llrxc-c.crexx": [
+      "llcompilercli"
+    ],
+    "lib/rxfnsl/compilers/driver/llrxc-g.crexx": [
+      "llcompilercli"
+    ],
+    "lib/rxfnsl/compilers/rxas/llrxas.crexx": [
+      "rxfnsb",
+      "llir",
+      "llcrexxir",
+      "llcompilercontracts"
+    ]
+  },
+  "isolated_host_import_roots": {
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/imports-consumers": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompiler.rxbin",
+      "llcompilercli.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/imports-llrxas": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/imports-llcompiler": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/imports-llcompilercli": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompiler.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/imports-consumers": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompiler.rxbin",
+      "llcompilercli.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/imports-llrxas": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/imports-llcompiler": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ],
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/imports-llcompilercli": [
+      "library.rxbin",
+      "llcgrammar.rxbin",
+      "llcompiler.rxbin",
+      "llcompilercontracts.rxbin",
+      "llcrexxir.rxbin",
+      "llfrontend.rxbin",
+      "llfrontendparse.rxbin",
+      "llggrammar.rxbin",
+      "llrxas.rxbin",
+      "rxfnsl.rxbin",
+      "rxfs.rxplugin"
+    ]
+  },
+  "service_package": "llcompilers.rxbin: host modules and grammar tables, excluding llcompilercli; consumers link rxfnsl and library",
+  "target_adapter": "llctarget.crexx: options levelb numeric_classic; executes existing rxfnsc (with G build prerequisites)",
+  "native_boundary": "Native rxc/rxas/rxlink build B host images; rxcpack generates existing VM launchers. Source compilation uses only B/L host logic and rxfs platform I/O for the CLI. Existing RXAS/RXLINK/VM execute emitted programs. No native compiler invocation or fallback in a source request.",
+  "installed_boundary": "Installed commands compile with empty PATH and rxc/rxc-c moved out of installed bin. Reusable service imports only llcompilers, rxfnsl, library."
+}

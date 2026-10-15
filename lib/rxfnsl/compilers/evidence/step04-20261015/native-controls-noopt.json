@@ -1,0 +1,1327 @@
+{
+  "mode": "noopt",
+  "vm": "rxbvm",
+  "seconds": 26.881,
+  "commands": [
+    {
+      "label": "pipeline-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.617
+    },
+    {
+      "label": "pipeline-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.013
+    },
+    {
+      "label": "pipeline-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.414
+    },
+    {
+      "label": "pipeline-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.09
+    },
+    {
+      "label": "evaluation-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/evaluation-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.693
+    },
+    {
+      "label": "evaluation-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.018
+    },
+    {
+      "label": "evaluation-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.467
+    },
+    {
+      "label": "evaluation-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.078
+    },
+    {
+      "label": "numbers-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/numbers-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.623
+    },
+    {
+      "label": "numbers-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.008
+    },
+    {
+      "label": "numbers-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.413
+    },
+    {
+      "label": "numbers-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.078
+    },
+    {
+      "label": "pipeline-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.73
+    },
+    {
+      "label": "pipeline-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "pipeline-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.029
+    },
+    {
+      "label": "pipeline-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/pipeline-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "evaluation-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/evaluation-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.744
+    },
+    {
+      "label": "evaluation-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "evaluation-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.03
+    },
+    {
+      "label": "evaluation-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/evaluation-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "numbers-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step01/numbers-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.738
+    },
+    {
+      "label": "numbers-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "numbers-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.029
+    },
+    {
+      "label": "numbers-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/numbers-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "calls-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/calls-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.737
+    },
+    {
+      "label": "calls-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "calls-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.028
+    },
+    {
+      "label": "calls-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "calls-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/calls-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.635
+    },
+    {
+      "label": "calls-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.019
+    },
+    {
+      "label": "calls-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.429
+    },
+    {
+      "label": "calls-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/calls-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.087
+    },
+    {
+      "label": "loops-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/loops-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/loops-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.645
+    },
+    {
+      "label": "loops-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/loops-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.022
+    },
+    {
+      "label": "loops-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/loops-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/loops-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.418
+    },
+    {
+      "label": "loops-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/loops-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.082
+    },
+    {
+      "label": "arguments-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/arguments-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/arguments-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.627
+    },
+    {
+      "label": "arguments-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/arguments-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.012
+    },
+    {
+      "label": "arguments-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/arguments-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/arguments-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.42
+    },
+    {
+      "label": "arguments-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/arguments-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.082
+    },
+    {
+      "label": "argv-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/argv-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/argv-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.629
+    },
+    {
+      "label": "argv-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/argv-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.008
+    },
+    {
+      "label": "argv-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/argv-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/argv-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.42
+    },
+    {
+      "label": "argv-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/argv-c-noopt-linked.rxbin",
+        "-a",
+        " hi ",
+        "there"
+      ],
+      "status": 0,
+      "seconds": 0.082
+    },
+    {
+      "label": "numeric-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numeric-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/numeric-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.621
+    },
+    {
+      "label": "numeric-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/numeric-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.016
+    },
+    {
+      "label": "numeric-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/numeric-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/numeric-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.421
+    },
+    {
+      "label": "numeric-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/numeric-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.086
+    },
+    {
+      "label": "scalars-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/scalars-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/scalars-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.751
+    },
+    {
+      "label": "scalars-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/scalars-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "scalars-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/scalars-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/scalars-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.027
+    },
+    {
+      "label": "scalars-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/scalars-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "spelling-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/spelling-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.626
+    },
+    {
+      "label": "spelling-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.007
+    },
+    {
+      "label": "spelling-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.411
+    },
+    {
+      "label": "spelling-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-c-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.077
+    },
+    {
+      "label": "spelling-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/spelling-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.776
+    },
+    {
+      "label": "spelling-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "spelling-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.027
+    },
+    {
+      "label": "spelling-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/spelling-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "divide-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/divide-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.63
+    },
+    {
+      "label": "divide-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.006
+    },
+    {
+      "label": "divide-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.43
+    },
+    {
+      "label": "divide-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.079
+    },
+    {
+      "label": "divide-error-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/divide-error-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.749
+    },
+    {
+      "label": "divide-error-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "divide-error-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.026
+    },
+    {
+      "label": "divide-error-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/divide-error-g-noopt-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.004
+    },
+    {
+      "label": "logical-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/logical-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/logical-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.606
+    },
+    {
+      "label": "logical-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/logical-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.005
+    },
+    {
+      "label": "logical-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/logical-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/logical-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.437
+    },
+    {
+      "label": "logical-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/logical-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.079
+    },
+    {
+      "label": "digits-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/digits-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/digits-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.622
+    },
+    {
+      "label": "digits-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/digits-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.005
+    },
+    {
+      "label": "digits-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/digits-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/digits-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.338
+    },
+    {
+      "label": "digits-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/digits-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.072
+    },
+    {
+      "label": "fuzz-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/fuzz-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/fuzz-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.623
+    },
+    {
+      "label": "fuzz-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/fuzz-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.005
+    },
+    {
+      "label": "fuzz-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/fuzz-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/fuzz-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.343
+    },
+    {
+      "label": "fuzz-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/fuzz-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.07
+    },
+    {
+      "label": "result-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/result-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/result-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.623
+    },
+    {
+      "label": "result-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/result-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.006
+    },
+    {
+      "label": "result-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/result-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/result-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.344
+    },
+    {
+      "label": "result-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/result-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.074
+    },
+    {
+      "label": "overflow-error-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/overflow-error-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/overflow-error-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.779
+    },
+    {
+      "label": "overflow-error-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/overflow-error-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "overflow-error-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/overflow-error-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/overflow-error-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.028
+    },
+    {
+      "label": "overflow-error-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/overflow-error-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "conversion-error-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversion-error-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.723
+    },
+    {
+      "label": "conversion-error-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "conversion-error-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.027
+    },
+    {
+      "label": "conversion-error-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-g-noopt-linked.rxbin"
+      ],
+      "status": 6,
+      "seconds": 0.004
+    },
+    {
+      "label": "negative-zero-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/negative-zero-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/negative-zero-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.702
+    },
+    {
+      "label": "negative-zero-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/negative-zero-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "negative-zero-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/negative-zero-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/negative-zero-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.026
+    },
+    {
+      "label": "negative-zero-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/negative-zero-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "origin-error-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/origin-error-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/origin-error-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.714
+    },
+    {
+      "label": "origin-error-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/origin-error-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.003
+    },
+    {
+      "label": "origin-error-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/origin-error-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/origin-error-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.027
+    },
+    {
+      "label": "origin-error-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/origin-error-g-noopt-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.004
+    },
+    {
+      "label": "conversions-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversions-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversions-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.731
+    },
+    {
+      "label": "conversions-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/conversions-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "conversions-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversions-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/conversions-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.027
+    },
+    {
+      "label": "conversions-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/conversions-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "operators-g-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/operators-g.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/operators-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.678
+    },
+    {
+      "label": "operators-g-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/operators-g.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "operators-g-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/operators-g-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/operators-g.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.025
+    },
+    {
+      "label": "operators-g-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/operators-g-noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.004
+    },
+    {
+      "label": "conversion-error-c-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc-c",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-c.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversion-error-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 0.575
+    },
+    {
+      "label": "conversion-error-c-noopt-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "-n",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-c.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.005
+    },
+    {
+      "label": "conversion-error-c-noopt-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-o",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-c-noopt-linked",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-c.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/library.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/llctarget.rxbin",
+        "/private/tmp/levell-step04-native-controls-noopt/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.412
+    },
+    {
+      "label": "conversion-error-c-noopt-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-step04-native-controls-noopt/conversion-error-c-noopt-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.08
+    }
+  ],
+  "inputs": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/cases.json": "cc3bdd29027a8f97305645de5ac7e00ec12f171a6bbd23f8e0f28ccd1b718426",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/check-backend.py": "93b3dbf034f33afcd075af14befb7dac077c4c63983021085ec5f6df93d5e16a",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/digits-error-c.crexx": "824b4ec2501e5c61cf3a05344faf822dbd7bfe8cd3f01f31d6387f05b2a76e24",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversions-g.crexx": "f81f0b876eba17477ed080f1715a6ab3048c99cdc85501123395657042b4355b",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/overflow-error-g.crexx": "f6c2135b7cc304863159bf72d00db5cdd0d68e232aedb56024c41b025344b380",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/origin-error-g.crexx": "07c522b88d298f53e025d06eb37848173975bc78a6c352cb6e8b71610b67a833",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/argv-c.crexx": "375282722c238e3587db8f01655ebc50118f59e6725e677276000d45ee5bd531",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/numeric-c.crexx": "529e56d6d9a177d5231dcce34b067b6d0dcf51bee1aee9170d7633697833783d",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversion-error-c.crexx": "77fdb44af505db7cd83e4af67dd2e6ef54c766cd0b21a7dcb6cd9a2cd918c611",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/arguments-c.crexx": "be430f6dfae47b672078f2a5d4203888d981ad13feb5cecfbc5404fa57f52945",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/calls-g.crexx": "7e0500e3fc3803a4ca2e335c3097023df0ed5b840cd60a297259f2e9f69e748c",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/calls-c.crexx": "fd00e99bb88b0c9bf0007227efe5dfbe66fa7231418f5f96fb58bee2cccb9ba2",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/fuzz-error-c.crexx": "37e5a8331cd2627b98b4eb810317b376dbdea87706f4d7812fd4e86cf6629471",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/negative-zero-g.crexx": "6ee92448f722815101be1a62523be27a828f146a8cb4e94a080d50c997a51183",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/logical-error-c.crexx": "f147a52ac784d2f9696625b29a585eee790cbd2ed9b570fdb8708fbfd74b7fb9",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/conversion-error-g.crexx": "8d2442feaebcea89f05cbc259090c0f2471f2dc2ceb2860f6692b7b48cce4047",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/spelling-g.crexx": "eedca00636620401b0f27fed93f09c18e9a92f9c8d04a685bc466acaa26c0cb0",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/loops-c.crexx": "f19823c661c4d2ef3253acf7ff9baaef752fa696de516f06f445d26407479cb6",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/loops-g.crexx": "18c095ac00671032e55ca6f35104224d23bbdcfbf622d764d4692329d1adce2f",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/spelling-c.crexx": "4fe821b685bc8c206a9f0c633170142d491763fae56cfa08db1a1d1fe9ad7ca2",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/divide-error-g.crexx": "35703a3864862270c70e88885fb1b4aa973e9b5d26f804336bd0938c286c2d98",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/result-error-c.crexx": "9fffa04b71dd33a807b3d636d65a3de60dafd97e2c2ed76538f133625b54ed64",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/divide-error-c.crexx": "52739e05f2953321b27e9350c8f4a23dfc9aef281c44cdfcda2698b9a3938ece",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/scalars-g.crexx": "38433de856144c7063b88dc02c73a91f11dd476726a0f2b2ff15449c1bcda87a",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend/operators-g.crexx": "bed054c081b693c92a56d92cc94e3cdfd83b19f2d1683aec3cb3fbc69638c48c"
+  }
+}

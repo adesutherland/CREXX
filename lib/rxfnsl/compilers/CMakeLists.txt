@@ -51,6 +51,8 @@ foreach(_mode opt noopt)
   endforeach()
 endforeach()
 
+# Backend targets follow the frontend declarations below.
+
 # STEP03 grammars are generated once; compiler hosts import only B and Level L.
 set(_front "${CMAKE_CURRENT_BINARY_DIR}/frontends")
 file(MAKE_DIRECTORY "${_front}")
@@ -67,6 +69,7 @@ foreach(_language c g)
     DEPENDS rxas "${_grammar}.rxas" VERBATIM)
   list(APPEND _front_grammars "${_grammar}.rxbin")
 endforeach()
+
 foreach(_mode opt noopt)
   set(_flags)
   if(_mode STREQUAL "noopt")
@@ -119,3 +122,5 @@ foreach(_mode opt noopt)
     endforeach()
   endforeach()
 endforeach()
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/backend.cmake")

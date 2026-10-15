@@ -522,6 +522,10 @@ request: class
     return
   defaultvalue: method = .llir..valuehandle
     arg name = .string, origin = .llir..origin
+    if name = 'decimal' then do
+      op = _block.operation(_contract.operation('crexx.g.decimal.default'),origin)
+      built = op.finish(); return built.result()
+    end
     if name = 'text' | name = 'value' then return _block.constantbytes(type(name),''x as .binary,origin)
     return _block.constant(type(name),'0',origin)
   statement: method = .void

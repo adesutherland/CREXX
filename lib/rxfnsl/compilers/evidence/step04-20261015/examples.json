@@ -1,0 +1,194 @@
+[
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/llrxc-c",
+      "-i",
+      "/tmp/levell-step04-install/bin",
+      "-o",
+      "literal-c.rxas",
+      "literal-c.crexx"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+      "-a",
+      "c",
+      "literal-c.crexx",
+      "/tmp/levell-step04-install/bin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxas",
+      "-n",
+      "literal-c.rxas"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxlink",
+      "-o",
+      "literal-c-linked",
+      "literal-c.rxbin",
+      "/tmp/levell-step04-install/bin/library.rxbin",
+      "/tmp/levell-step04-install/bin/llctarget.rxbin",
+      "/tmp/levell-step04-install/bin/rxfnsc.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxbvm",
+      "literal-c-linked.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/llrxc-c",
+      "-i",
+      "/tmp/levell-step04-install/bin",
+      "-o",
+      "pipeline-c.rxas",
+      "../step01/pipeline-c.crexx"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+      "-a",
+      "c",
+      "../step01/pipeline-c.crexx",
+      "/tmp/levell-step04-install/bin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxas",
+      "-n",
+      "pipeline-c.rxas"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxlink",
+      "-o",
+      "pipeline-c-linked",
+      "pipeline-c.rxbin",
+      "/tmp/levell-step04-install/bin/library.rxbin",
+      "/tmp/levell-step04-install/bin/llctarget.rxbin",
+      "/tmp/levell-step04-install/bin/rxfnsc.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxbvm",
+      "pipeline-c-linked.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/llrxc-g",
+      "-i",
+      "/tmp/levell-step04-install/bin",
+      "-o",
+      "literal-g.rxas",
+      "literal-g.crexx"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "literal-g.crexx",
+      "/tmp/levell-step04-install/bin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxas",
+      "-n",
+      "literal-g.rxas"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxlink",
+      "-o",
+      "literal-g-linked",
+      "literal-g.rxbin",
+      "/tmp/levell-step04-install/bin/library.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxbvm",
+      "literal-g-linked.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/llrxc-g",
+      "-i",
+      "/tmp/levell-step04-install/bin",
+      "-o",
+      "pipeline-g.rxas",
+      "../step01/pipeline-g.crexx"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/noopt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "../step01/pipeline-g.crexx",
+      "/tmp/levell-step04-install/bin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxas",
+      "-n",
+      "pipeline-g.rxas"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxlink",
+      "-o",
+      "pipeline-g-linked",
+      "pipeline-g.rxbin",
+      "/tmp/levell-step04-install/bin/library.rxbin"
+    ],
+    "status": 0
+  },
+  {
+    "command": [
+      "/tmp/levell-step04-install/bin/rxbvm",
+      "pipeline-g-linked.rxbin"
+    ],
+    "status": 0
+  }
+]

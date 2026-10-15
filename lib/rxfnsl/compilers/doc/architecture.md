@@ -1,10 +1,13 @@
 # Compiler architecture
 
-The Level L IR foundation, semantic extension API and C/G source-to-IR
-frontends are implemented in Level B. The generated grammars use Level L.
-Executable RXAS selection is STEP04; the production optimisation pipeline is
-STEP05. The existing compilers remain the independent execution controls.
+The Level L IR foundation, semantic extension API, C/G frontends and shared
+RXAS backend are implemented in Level B. The generated grammars use Level L;
+output construction uses the Level L writer. Shared IR optimisation remains
+STEP05. The existing compilers remain independent execution controls.
 [PLAN.md](../PLAN.md) owns scope, acceptance and approval.
+The [backend reference](backend.md) describes the implemented service, target
+records and ABI. [STEP04-REVIEW.md](STEP04-REVIEW.md) retains the approved scope
+and links its acceptance evidence.
 
 ## What the pipeline does
 
@@ -73,7 +76,9 @@ operand and has no evaluator until that language contract is implemented.
 `crexx.g.say` and `crexx.c.say` declare output effects. Constant replacement never
 removes SAY. The [worked example](../../examples/ir/demo.crexx) folds its argument,
 shows the IR and prints the resulting constant through the existing Level B host.
-It does not yet compile a C/G source file or emit an executable RXAS program.
+That foundation example does not compile a source file. The separate
+[STEP04 examples](../examples/step04/README.md) show actual C/G source-to-RXAS
+compilation and execution.
 
 An independent test family uses the same APIs without importing compiler
 semantics. Its lowering service produces a pure straight-line target fragment.
@@ -126,7 +131,8 @@ reader. The compiler host never imports or executes `rxfnsc`. Classic BIF
 contracts in that image are target dependencies, distinct from host imports.
 See the [frontend API and semantic contracts](frontends.md).
 
-The remaining command/backend contract for STEP04 is:
+The implemented `llcompiler.request` and `llrxc-c`/`llrxc-g` command boundary is
+described in the [backend architecture](backend.md):
 
 
 A request supplies source bytes and identity, language/profile, import roots,

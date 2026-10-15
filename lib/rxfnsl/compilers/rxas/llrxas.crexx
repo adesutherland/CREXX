@@ -1,0 +1,608 @@
+/* cREXX License (MIT). Checked C/G IR selection; all output uses llir.writer. */
+options levelb
+namespace llrxas expose compilation quote
+import rxfnsb
+import llir
+import llcrexxir
+import llcompilercontracts
+
+/** RXAS escaping is byte-exact, including embedded NUL and Unicode. */
+quote: procedure = .string
+  arg bytes = .binary
+  out = .llir..writer(max(2,<blen>(bytes) * 4 + 2),'')
+  call out.write('"')
+  do i = 0 to <blen>(bytes) - 1
+    c = <at..u8>(i) bytes
+    if c >= 32 & c < 127 & c <> 34 & c <> 92 then call out.write(d2c(c))
+    else call out.write('\x' || right('0' || d2x(c),2))
+  end
+  call out.write('"'); result = out.finish()
+  return result.text()
+
+/** One selected target record, with ordered operands and original origin ID.
+ * All operand strings come from checked registers, internal labels, verified
+ * callable names, exact numeric codecs or quote(). No raw source is RXAS. */
+instruction: class
+  _mnemonic = .string
+  _operands = .string
+  _origin = .int
+  *: factory
+    arg mnemonic = .string, operands = .string, origin = .int
+    _mnemonic = mnemonic; _operands = operands; _origin = origin
+    return
+  text: method = .string
+    if _operands = '' then return _mnemonic
+    return _mnemonic || ' ' || _operands
+  origin: method = .int
+    return _origin
+
+/** A compile owns its source graph and emits only a fully checked output.
+ * Registers are stable per function; the disjoint call window is never shared
+ * with live IR values. Source graph storage is read-only throughout. */
+compilation: class
+  _graph = .llir..module
+  _store = reference .llir..arena
+  _schema = .llir..contract
+  _canonical = .llir..contract
+  _level = .string
+  _path = .string
+  _limit = .int
+  _reglimit = .int
+  _phase = .string
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _origin = .int
+  _fn = .int
+  _registers = .int[]
+  _slots = .int[]
+  _callbase = .int
+  _scratch = .int
+  _location = .int
+  _locals = .int
+  _names = .string[]
+  _signatures = .object[]
+  _packages = .string[]
+  _catalogs = .object[]
+  _records = .object[]
+  _recordbytes = .int
+  _writer = .llir..writer
+  _output = .llir..output
+  *: factory
+    arg graph = .llir..module, level = .string, artifacts = .string, bytes = 67108864, registers = 65536
+    _graph = graph; _level = level; _path = artifacts; _limit = bytes; _reglimit = registers
+    _ready = 0; _error = ''; _origin = 0; _offset = 0
+    return
+  fail: method = .void
+    arg reason = .string
+    if _error = '' then _error = 'LL_COMPILER_' || reason
+    return
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  output: method = .llir..output
+    call run()
+    if _error <> '' then do
+      chunks = .binary[]; origins = .int[]
+      return .llir..output(chunks,origins,0,_error)
+    end
+    return _output
+  emit: method = .void
+    arg mnemonic = .string, operands = ''
+    if _error <> '' then return
+    _recordbytes = _recordbytes + length(mnemonic) + length(operands) + 2
+    if _recordbytes > _limit then do
+      call fail('LIMIT: selected output exceeds output.bytes budget'); return
+    end
+    n = _records[0] + 1
+    _records[n] = .instruction(mnemonic,operands,_origin) as .object
+    return
+  reg: method = .string
+    arg index = .int
+    if index < 0 | index >= _locals then call fail('REGISTER: register outside assigned frame')
+    return 'r' || index
+  input: method = .string
+    arg op = .llir..opview, index = 1
+    return reg(_registers[op.input(index).id()])
+  result: method = .string
+    arg op = .llir..opview
+    if op.results() = 0 then return reg(_scratch)
+    return reg(_registers[op.result().id()])
+  typename: method = .string
+    arg id = .int
+    schema = dereference _schema.data()
+    return schema.typename(id)
+  targettype: method = .string
+    arg id = .int
+    name = typename(id)
+    select
+      when name = 'core.void' then return '.void'
+      when name = 'core.boolean' | name = 'crexx.g.int64' | name = 'crexx.g.boolean' then return '.int'
+      when name = 'crexx.g.text' then return '.string'
+      when name = 'crexx.g.float64' then return '.float'
+      when name = 'crexx.g.decimal' then return '.decimal'
+      when name = 'crexx.c.value' then return '.rexxvalue..rexxvalue'
+      when name = 'crexx.c.pool' then return '.rexxpool..rexxvariablepool'
+      when name = 'crexx.c.numeric' | name = 'crexx.c.arguments' | name = 'crexx.c.result' then return '.rexxactivation..rexxactivationarguments'
+      otherwise call fail('LOWERING: unsupported value type ' || name)
+    end
+    return ''
+  localname: method = .string
+    arg identity = .string
+    store = dereference _store
+    do i = 1 to store.count(1)
+      if store.text(store.get(1,i,1)) = identity then return 'llf' || i
+    end
+    call fail('LOWERING: missing local routine ' || identity)
+    return ''
+  imported: method = .string
+    arg package = .string, name = .string, result = .string, arguments = .string
+    i = .int
+    do i = 1 to _names[0]
+      if _names[i] = name then return name
+    end
+    catalog = .llcompilercontracts..catalog; found = 0
+    do i = 1 to _packages[0]
+      if _packages[i] = package then found = i
+    end
+    if found = 0 then do
+      image = .binary
+      do
+        image = readbinary(_path || '/' || package || '.rxbin')
+      on signal
+        call fail('IMPORT: cannot read ' || package || '.rxbin'); return ''
+      end
+      catalog = .llcompilercontracts..catalog(image,67108864)
+      found = _packages[0] + 1; _packages[found] = package; _catalogs[found] = catalog as .object
+    end
+    else catalog = _catalogs[found] as .llcompilercontracts..catalog
+    signature = catalog.lookup(name)
+    if signature.error() <> '' then call fail('IMPORT: ' || signature.error())
+    else if signature.result() <> result | signature.arguments() <> words(arguments) then call fail('IMPORT: incompatible target signature ' || name)
+    else do i = 1 to words(arguments)
+      expected = word(arguments,i); expected = changestr('@',expected,' ')
+      expected = changestr('.rexxvalue..',expected,'.'); expected = changestr('.rexxpool..',expected,'.'); expected = changestr('.rexxactivation..',expected,'.')
+      if signature.type(i) <> expected | signature.optional(i) then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
+    end
+    if _error <> '' then return ''
+    n = _names[0] + 1; _names[n] = name; _signatures[n] = signature as .object
+    return name
+  /** Args are already in a private contiguous window. The return destination
+   * is distinct; clearing the window after return releases borrowed references. */
+  invoke: method = .void
+    arg destination = .string, name = .string, count = .int
+    i = .int
+    if count < 0 | count > _locals - _callbase - 1 then do
+      call fail('REGISTER: call window exceeds frame'); return
+    end
+    call emit('load',reg(_callbase) || ',' || count)
+    do i = 1 to count
+      call emit('settp',reg(_callbase + i) || ',768')
+    end
+    call emit('call',destination || ',' || name || '(),' || reg(_callbase))
+    do i = 1 to count
+      call emit('null',reg(_callbase + i))
+    end
+    return
+  argcopy: method = .void
+    arg ordinal = .int, value = .string, borrow = 0
+    mnemonic = 'copy'; if borrow then mnemonic = 'mkref'
+    call emit(mnemonic,reg(_callbase + ordinal) || ',' || value)
+    return
+  argtext: method = .void
+    arg ordinal = .int, text = .string
+    call emit('load',reg(_callbase + ordinal) || ',' || quote(text as .binary))
+    return
+  adapter: method = .void
+    arg op = .llir..opview, name = .string, resulttype = .string, types = .string, special = ''
+    symbol = imported('llctarget','llctarget.' || name,resulttype,types)
+    start = 0
+    if special <> '' then do
+      call argtext(1,special); start = 1
+    end
+    do i = 1 to op.inputs()
+      borrow = word(types,start + i) = 'reference@.rexxpool..rexxvariablepool'
+      call argcopy(start + i,input(op,i),borrow)
+    end
+    call invoke(result(op),symbol,words(types))
+    return
+  checkoperation: method = .void
+    arg op = .llir..opview, expected = .llir..contract
+    name = op.name()
+    if (_level = 'g' & left(name,8) = 'crexx.c.') | (_level = 'c' & (left(name,8) = 'crexx.g.' | left(name,12) = 'crexx.calls.')) then do
+      call fail('PROFILE: operation belongs to another language: ' || name); return
+    end
+    if left(name,5) = 'core.' then return
+    if left(name,12) = 'crexx.calls.' then return
+    registry = dereference expected.data(); actual = dereference _schema.data()
+    index = registry.opindex(name); source = actual.opindex(name)
+    if index = 0 then do
+      call fail('LOWERING: unsupported operation ' || name); return
+    end
+    do kind = 1 to 3
+      if registry.arity(index,kind) <> actual.arity(source,kind) then do
+        call fail('LOWERING: incompatible operation shape ' || name); return
+      end
+      do field = 1 to registry.arity(index,kind)
+        if registry.fieldname(index,kind,field) <> actual.fieldname(source,kind,field) | registry.typename(registry.fieldtype(index,kind,field)) <> actual.typename(actual.fieldtype(source,kind,field)) then call fail('LOWERING: incompatible operation field ' || name)
+      end
+    end
+    return
+  checkfunctions: method = .void
+    store = dereference _store
+    if store.count(1) = 0 then do; call fail('LOWERING: missing main function'); return; end
+    if store.text(store.get(1,1,1)) <> '$MAIN' then call fail('LOWERING: first function must be $MAIN')
+    do f = 1 to store.count(1)
+      resulttype = typename(store.get(1,f,2)); count = store.get(1,f,5); first = store.get(1,f,4)
+      if _level = 'c' then do
+        if resulttype <> 'crexx.c.result' | count <> 2 then call fail('LOWERING: Classic function ABI')
+        else if typename(store.get(12,first,2)) <> 'crexx.c.arguments' | typename(store.get(12,first + 1,2)) <> 'crexx.c.numeric' then call fail('LOWERING: Classic parameter ABI')
+      end
+      else do
+        if f = 1 & (resulttype <> 'crexx.g.int64' | count <> 0) then call fail('LOWERING: G main ABI')
+        ignored = targettype(store.get(1,f,2))
+        do a = 1 to count
+          ignored = targettype(store.get(12,first + a - 1,2))
+        end
+      end
+    end
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1; _phase = 'admission'
+    i = .int
+    do
+      if _graph.error() <> '' then do; _error = _graph.error(); return; end
+      if _level <> 'c' & _level <> 'g' then do; call fail('PROFILE: expected c or g'); return; end
+      if _limit < 1 | _reglimit < 16 | _reglimit > 2147483647 then do; call fail('LIMIT: invalid output or register budget'); return; end
+      _store = _graph.storage(); store = dereference _store; contract = dereference store.contract(); _schema = contract
+      call checkfunctions()
+      if _error <> '' then return
+      canonical = .llir..schema(); call llcrexxir..registerfamilies(reference canonical); expected = canonical.finish()
+      _canonical = expected
+      actualschema = dereference _schema.data()
+      do i = 1 to actualschema.familycount()
+        if actualschema.version(i) <> 1 then call fail('LOWERING: unsupported family version ' || actualschema.familyname(i))
+      end
+      if _error <> '' then return
+      do i = 1 to store.count(3)
+        op = _graph.operation(i); _origin = op.origin().id(); _offset = op.origin().first()
+        call checkoperation(op,expected)
+        if _error <> '' then return
+      end
+      _phase = 'entry'; _writer = .llir..writer(_limit)
+      call _writer.line('.globals=0')
+      _origin = 0; _locals = 16; _callbase = 4; _scratch = 3; _recordbytes = 0
+      call emit('main()','.locals=16')
+      if _level = 'c' then do
+        symbol = imported('llctarget','llctarget.mainargs','.rexxactivation..rexxactivationarguments','.object')
+        call argcopy(1,'a1'); call invoke('r1',symbol,1)
+        symbol = imported('llctarget','llctarget.contextnew','.rexxactivation..rexxactivationarguments','')
+        call invoke('r2',symbol,0)
+        call argcopy(1,'r1'); call argcopy(2,'r2'); call invoke('r0','llf1',2)
+        symbol = imported('llctarget','llctarget.status','.int','.rexxactivation..rexxactivationarguments')
+        call argcopy(1,'r0'); call invoke('r1',symbol,1); call emit('ret','r1')
+      end
+      else do
+        call invoke('r0','llf1',0); call emit('ret','r0')
+      end
+      _phase = 'entry flush'; call flush()
+      do f = 1 to store.count(1)
+        _phase = 'function ' || f; _fn = f; call procedurebody()
+        if _error <> '' then return
+      end
+      do i = 1 to _names[0]
+        signature = _signatures[i] as .llcompilercontracts..signature
+        call _writer.line(_names[i] || '() .expose=' || _names[i])
+        args = ''
+        do j = 1 to signature.arguments()
+          if j > 1 then args = args || ','
+          args = args || 'p' || j || '=' || signature.type(j)
+        end
+        call _writer.line('  .meta ' || quote(_names[i] as .binary) || '=' || quote(signature.flags_text() as .binary) || ' ' || quote(signature.result() as .binary) || ' ' || _names[i] || '() ' || quote(args as .binary))
+      end
+      _output = _writer.finish()
+      if _output.error() <> '' then _error = _output.error()
+    on signal as problem
+      if _error = '' then call fail('BACKEND: ' || _phase || ': ' || problem.name() || ' at backend line ' || problem.line() || ': ' || problem.message())
+    end
+    return
+  flush: method = .void
+    section = _writer.section()
+    do i = 1 to _records[0]
+      record = _records[i] as .instruction
+      call section.line(record.text(),record.origin())
+    end
+    part = section.finish(); call _writer.append(reference part)
+    empty = .object[]; _records = empty; _recordbytes = 0
+    if _writer.error() <> '' then _error = _writer.error()
+    return
+  procedurebody: method = .void
+    i = .int; b = .int; id = .int; op = .llir..opview
+    store = dereference _store
+    _phase = 'slot allocation'; next = 1; maxargs = 8
+    do i = 1 to store.count(5)
+      if store.get(5,i,1) = _fn then do
+        _slots[i] = next; next = next + 1
+      end
+    end
+    _phase = 'value allocation'
+    do b = 1 to store.count(2)
+      if store.get(2,b,1) <> _fn then iterate
+      id = store.get(2,b,2)
+      do while id > 0
+        op = _graph.operation(id)
+        maxargs = max(maxargs,op.inputs() + 1)
+        do r = 1 to op.results()
+          _registers[op.result(r).id()] = next; next = next + 1
+        end
+        id = store.get(3,id,3)
+      end
+    end
+    _phase = 'frame limits'; _scratch = next; _location = next + 1; _callbase = next + 2; _locals = _callbase + maxargs + 1
+    if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
+    _origin = 0
+    call emit('llf' || _fn || '()','.locals=' || _locals)
+    _phase = 'signature'; args = ''; first = store.get(1,_fn,4)
+    do i = 1 to store.get(1,_fn,5)
+      if i > 1 then args = args || ','
+      args = args || 'p' || i || '=' || targettype(store.get(12,first + i - 1,2))
+    end
+    _phase = 'metadata'; name = 'llprogram.' || store.text(store.get(1,_fn,1))
+    call emit('.meta',quote(name as .binary) || '="b" ' || quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || quote(args as .binary))
+    /* Default typed profile; Classic helpers install their explicit snapshots. */
+    call emit('numsci','18,1,1')
+    if _level = 'c' then do
+      call emit('load',reg(_location) || ',' || quote('generated Classic entry' as .binary))
+      do i = 1 to 4
+        call emit('sigbrv','llerror' || _fn || ',r0,' || quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+      end
+    end
+    call emit('br','llb' || store.get(1,_fn,3))
+    do b = 1 to store.count(2)
+      if store.get(2,b,1) <> _fn then iterate
+      _origin = 0; call emit('llb' || b || ':')
+      id = store.get(2,b,2)
+      do while id > 0 & _error = ''
+        op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
+        call source(op.origin())
+        call selectop(op)
+        id = store.get(3,id,3)
+      end
+    end
+    if _level = 'c' then do
+      _origin = 0; call emit('llerror' || _fn || ':')
+      do i = 1 to 4
+        call emit('sighalt',quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+      end
+      symbol = imported('llctarget','llctarget.failure','.void','.object .string')
+      call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_scratch),symbol,2)
+      call emit('ret')
+    end
+    call flush()
+    return
+  source: method = .void
+    arg origin = .llir..origin
+    c = .int
+    if origin.id() = 0 then return
+    bytes = origin.sourcebytes(); offset = origin.first(); line = 1; column = 1; first = 0; previous = -1
+    do i = 0 to offset - 1
+      c = <at..u8>(i) bytes
+      if c = 10 | c = 13 then do
+        if c <> 10 | previous <> 13 then line = line + 1
+        column = 1; first = i + 1
+      end
+      else if c < 128 | c >= 192 then column = column + 1
+      previous = c
+    end
+    last = first
+    do while last < (<blen>(bytes))
+      c = <at..u8>(last) bytes
+      if c = 10 | c = 13 then leave
+      last = last + 1
+    end
+    if _level = 'c' then call emit('load',reg(_location) || ',' || quote((origin.filename() || ':' || line || ':' || column) as .binary))
+    call emit('.srcstep',_origin || ' ' || _origin || ' 17 ' || quote(origin.filename() as .binary) || ' ' || line || ' ' || column || ' ' || (column + 1) || ' ' || quote(binsubstr(bytes,first + 1,last - first)))
+    return
+  selectop: method = .void
+    arg op = .llir..opview
+    store = dereference _store; name = op.name(); dest = result(op); id = op.id()
+    select
+      when name = 'core.constant' then do
+        value = op.result(); type = typename(value.type().id()); bytes = value.bytes()
+        if type = 'crexx.c.value' then do
+          call argtext(1,bytes as .string)
+          symbol = imported('llctarget','llctarget.literal','.rexxvalue..rexxvalue','.string')
+          call invoke(dest,symbol,1)
+        end
+        else do
+          schema = dereference _canonical.data(); typeid = schema.typeindex(type)
+          if typeid = 0 then do; call fail('LOWERING: unsupported constant type ' || type); return; end
+          codec = schema.codec(typeid) as .llir..typecodec
+          problem = codec.check(bytes)
+          if problem <> '' then do; call fail('LOWERING: invalid constant bytes: ' || problem); return; end
+          literal = codec.format(bytes)
+          if type = 'core.boolean' then literal = (literal = 'true') as .string
+          if type = 'crexx.g.text' then literal = quote(bytes)
+          if type = 'crexx.g.decimal' then literal = literal || 'd'
+          if type = 'crexx.g.float64' then do
+            /* Bit transport avoids decimal formatting loss, including -0. */
+            call emit('load',dest || ',0x' || bin2x(bytes))
+            call emit('load',reg(_scratch) || ',0')
+            call emit('bgetf64',dest || ',' || dest || ',' || reg(_scratch)); return
+          end
+          call emit('load',dest || ',' || literal)
+        end
+      end
+      when name = 'core.argument' then call emit('copy',dest || ',a' || store.get(3,id,12))
+      when name = 'core.load' then do
+        slot = store.get(3,id,12); mnemonic = 'copy'
+        if typename(store.get(5,slot,2)) = 'crexx.c.pool' then do
+          call emit('unlink',dest); mnemonic = 'link'
+        end
+        call emit(mnemonic,dest || ',' || reg(_slots[slot]))
+      end
+      when name = 'core.store' then do
+        slot = store.get(3,id,12); mnemonic = 'copy'; dest = reg(_slots[slot])
+        if typename(store.get(5,slot,2)) = 'crexx.c.pool' then do
+          call emit('unlink',dest); mnemonic = 'link'
+        end
+        call emit(mnemonic,dest || ',' || input(op))
+      end
+      when name = 'core.jump' then call emit('br','llb' || op.successor(1))
+      when name = 'core.branch' then do
+        call emit('brt','llb' || op.successor(1) || ',' || input(op))
+        call emit('br','llb' || op.successor(2))
+      end
+      when name = 'core.return' then do
+        if op.inputs() then call emit('ret',input(op))
+        else call emit('ret')
+      end
+      otherwise do
+        if left(name,8) = 'crexx.g.' then call typed(op,substr(name,9))
+        else if left(name,8) = 'crexx.c.' then call classic(op,substr(name,9))
+        else if left(name,12) = 'crexx.calls.' then call typedcall(op)
+        else call fail('LOWERING: unsupported operation ' || name)
+      end
+    end
+    return
+  typedcall: method = .void
+    arg op = .llir..opview
+    symbol = .string; i = .int
+    identity = op.attribute('target') as .string; store = dereference _store
+    if left(op.name(),18) = 'crexx.calls.local.' then do
+      symbol = localname(identity)
+      if symbol = '' then return
+      fn = substr(symbol,4) as .int
+      if store.get(1,fn,5) <> op.inputs() then do; call fail('LOWERING: local argument count'); return; end
+      first = store.get(1,fn,4)
+      do i = 1 to op.inputs()
+        if op.input(i).type().id() <> store.get(12,first + i - 1,2) then call fail('LOWERING: local argument type')
+      end
+      resulttype = store.get(1,fn,2)
+      if op.results() = 0 then do
+        if targettype(resulttype) <> '.void' then call fail('LOWERING: local result shape')
+      end
+      else if op.results() <> 1 then call fail('LOWERING: local result count')
+      else if op.result().type().id() <> resulttype then call fail('LOWERING: local result type')
+    end
+    else if op.name() = 'crexx.calls.rxfnsb.length' & identity = 'rxfnsb.length' then do
+      if op.inputs() <> 1 | op.results() <> 1 then do; call fail('LOWERING: LENGTH shape'); return; end
+      if targettype(op.input(1).type().id()) <> '.string' | targettype(op.result().type().id()) <> '.int' then call fail('LOWERING: LENGTH types')
+      symbol = imported('library','rxfnsb.length','.int','.string')
+    end
+    else do; call fail('LOWERING: unsupported callable ' || identity); return; end
+    do i = 1 to op.inputs(); call argcopy(i,input(op,i)); end
+    call invoke(result(op),symbol,op.inputs())
+    return
+  typed: method = .void
+    arg op = .llir..opview, name = .string
+    target = .string
+    dest = result(op); left = ''; if op.inputs() > 0 then left = input(op)
+    if name = 'decimal.default' then do; call emit('null',dest); return; end
+    if name = 'say' then do; call emit('say',left); return; end
+    if name = 'exit' then do; call emit('exit',left); return; end
+    if name = 'truth' then do; call emit('icopy',dest || ',' || left); return; end
+    if name = 'boolean.not' then do; call emit('not',dest || ',' || left); return; end
+    if name = 'boolean.xor' then do; call emit('ixor',dest || ',' || left || ',' || input(op,2)); return; end
+    if name = 'text.concat' then do; call emit('concat',dest || ',' || left || ',' || input(op,2)); return; end
+    if name = 'iadd' then name = 'int64.add'
+    if name = 'itext' then name = 'convert.int64.text'
+    parts = changestr('.',name,' ')
+    if word(parts,1) = 'convert' then do
+      source = word(parts,2); target = word(parts,3)
+      from = word('i s b f d',wordpos(source,'int64 text boolean float64 decimal'))
+      targetcode = word('i s b f d',wordpos(target,'int64 text boolean float64 decimal'))
+      call emit('copy',dest || ',' || left)
+      call emit(from || 'to' || targetcode,dest); return
+    end
+    type = word(parts,1); operation = word(parts,2)
+    prefix = word('i s i f d',wordpos(type,'int64 text boolean float64 decimal'))
+    if type = 'text' & operation <> 'strict' then prefix = 'r'
+    if operation = 'positive' then do; call emit('copy',dest || ',' || left); return; end
+    if operation = 'negative' then do
+      if type = 'float64' then do
+        call emit('load',dest || ',-1.0')
+        call emit('fmult',dest || ',' || dest || ',' || left); return
+      end
+      zero = '0'; if type = 'decimal' then zero = '0d'
+      call emit('load',dest || ',' || zero)
+      call emit(prefix || 'sub',dest || ',' || dest || ',' || left); return
+    end
+    target = operation
+    if operation = 'mul' then target = 'mult'
+    if operation = 'le' then target = 'lte'
+    if operation = 'ge' then target = 'gte'
+    if operation = 'strict' then target = 'eq'
+    if wordpos(operation,'add sub mul div eq ne lt le gt ge strict') = 0 then do; call fail('LOWERING: unsupported typed operation ' || name); return; end
+    call emit(prefix || target,dest || ',' || left || ',' || input(op,2))
+    return
+  classic: method = .void
+    arg op = .llir..opview, name = .string
+    v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
+    if wordpos(name,'add sub mul div eq ne lt le gt ge strict concat blank abut and or xor') then do
+      call adapter(op,'binaryop',v,'.string ' || v || ' ' || v || ' ' || a,name); return
+    end
+    if wordpos(name,'positive negative not') then do
+      call adapter(op,'unaryop',v,'.string ' || v || ' ' || a,name); return
+    end
+    select
+      when name = 'pool.new' then call adapter(op,'poolnew',p,'')
+      when name = 'truth' then call adapter(op,'truth','.int',v)
+      when name = 'say' then call adapter(op,'sayvalue','.void',v)
+      when name = 'arguments.empty' then call adapter(op,'arguments',a,'')
+      when name = 'arguments.append' then call adapter(op,'append',a,a || ' ' || v || ' .int')
+      when name = 'arguments.count' then call adapter(op,'countargs',v,a)
+      when name = 'arguments.exists' then call adapter(op,'existsarg',v,a || ' ' || v || ' ' || v)
+      when name = 'digits' then call adapter(op,'digits',v,a)
+      when name = 'return.present' then call adapter(op,'present',a,v)
+      when name = 'return.absent' then call adapter(op,'absent',a,'')
+      when name = 'requirevalue' then call adapter(op,'requirevalue',v,a)
+      when name = 'setresult' then call adapter(op,'setresult','.void','reference@' || p || ' ' || a)
+      when name = 'length' then call adapter(op,'lengthvalue',v,v)
+      when name = 'load' | name = 'store' then do
+        symbol = 'poolread'; resulttype = v; types = 'reference@' || p || ' .string'; ordinal = 2
+        if name = 'store' then do; symbol = 'poolwrite'; resulttype = '.void'; types = 'reference@' || p || ' ' || v || ' .string'; ordinal = 3; end
+        symbol = imported('llctarget','llctarget.' || symbol,resulttype,types)
+        call argcopy(1,input(op),1)
+        if name = 'store' then call argcopy(2,input(op,2))
+        call argtext(ordinal,op.attribute('name') as .string)
+        call invoke(result(op),symbol,ordinal)
+      end
+      when name = 'arguments.read' then do
+        bytes = op.attribute('ordinal'); ordinal = <at..i64>(0) bytes
+        if ordinal < 1 then do; call fail('LOWERING: invalid ARG position'); return; end
+        symbol = imported('llctarget','llctarget.readarg',v,a || ' .int')
+        call argcopy(1,input(op)); call emit('load',reg(_callbase + 2) || ',' || ordinal)
+        call invoke(result(op),symbol,2)
+      end
+      when name = 'numeric.digits' | name = 'numeric.fuzz' | name = 'numeric.form' then do
+        setting = substr(name,9)
+        if setting = 'form' then do
+          symbol = imported('llctarget','llctarget.literal',v,'.string')
+          call argtext(1,op.attribute('form') as .string); call invoke(reg(_scratch),symbol,1)
+          call argcopy(2,input(op)); call argcopy(3,reg(_scratch))
+        end
+        else do; call argcopy(2,input(op,2)); call argcopy(3,input(op)); end
+        call argtext(1,setting)
+        symbol = imported('llctarget','llctarget.setting',a,'.string ' || a || ' ' || v)
+        call invoke(result(op),symbol,3)
+      end
+      when name = 'call' then do
+        symbol = localname(op.attribute('target') as .string)
+        call argcopy(1,input(op)); call argcopy(2,input(op,2))
+        call invoke(result(op),symbol,2)
+      end
+      when name = 'exit' then do
+        symbol = imported('llctarget','llctarget.present',a,v)
+        call argcopy(1,input(op)); call invoke(reg(_scratch),symbol,1)
+        symbol = imported('llctarget','llctarget.status','.int',a)
+        call argcopy(1,reg(_scratch)); call invoke(reg(_scratch),symbol,1)
+        call emit('exit',reg(_scratch))
+      end
+      otherwise call fail('LOWERING: unsupported Classic operation ' || name)
+    end
+    return

@@ -102,6 +102,7 @@ frontendfamilies: procedure = .void
   types[9] = c.type('arguments',.llir..bytescodec() as .object) as .object
   types[10] = c.type('result',.llir..bytescodec() as .object) as .object
   types[11] = boolean as .object
+  call declare(g,'decimal.default',types,'',5,'','none','none')
   names = 'int64 text boolean float64 decimal'
   i = .int; j = .int; k = .int; name = .string; inputs = .string
   do i = 1 to 5

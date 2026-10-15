@@ -3123,10 +3123,57 @@ Change `g` and the example filename to inspect Classic. See the
 [paired walkthrough](../compilers/doc/pipeline-walkthrough.md) for the complete
 source, actual generated trees/IR, calls, loops and numeric differences.
 
-This service currently ends at checked IR. The future backend will select RXAS
-instructions and assign registers in Level B **using Level L's emitter library**.
-The new source compilers do not yet emit executable RXAS; ordinary `rxc` and
-`rxc-c` retain their existing product roles.
+The frontend service ends at checked IR. The separate `llcompiler` service
+continues through register assignment and RXAS selection. Its implementation is
+Level B code **using Level L's `llir.writer` emitter library**.
+
+## Compiling C/G source to RXAS
+
+The installed commands are `llrxc-g` and `llrxc-c`. They implement the
+[admitted profile](../compilers/doc/poc-scope.md); ordinary `rxc` and `rxc-c`
+retain their existing product roles.
+
+```sh
+llrxc-g -i /path/to/bin -o demo.rxas demo-g.crexx
+rxas -n demo.rxas
+rxlink -o demo-linked demo.rxbin /path/to/bin/library.rxbin
+rxbvm demo-linked.rxbin
+```
+
+For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin` and
+`/path/to/bin/rxfnsc.rxbin` to the link command. Use VM `-a` followed by program
+arguments when needed. Keep linker debug metadata for runtime source locations;
+`rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
+by omitting `-n`; shared compiler IR optimisation is not yet enabled.
+
+A Level B host imports `llcompiler` and `llir`, links the installed
+`llcompilers.rxbin`, `rxfnsl.rxbin` and `library.rxbin` packages, and uses:
+
+```rexx
+request = .llcompiler..request('g', source, artifacts, 'demo.crexx')
+if request.status() <> 0 then say request.diagnostic()
+else do
+  output = request.output()
+  say output.text()
+end
+```
+
+`source` is binary; `artifacts` names the target runtime-image directory.
+The request does not print, write files, exit or invoke another compiler.
+`output` is an owned `.llir..output`, with `text`, `bytes`, `error` and streaming
+support, and remains usable after the request. `graph()` retains IR inspection.
+The optional budgets after the filename are source/semantic work, nesting,
+emitted bytes and registers per function. Defaults and the complete API are in
+the [backend reference](../compilers/doc/backend.md).
+
+The command writes a completed result through a claimed sibling staging
+directory and replaces the destination only after a successful write/close.
+An existing staging directory or failed compilation/write produces a diagnostic
+and preserves prior output. The [paired worked examples](../compilers/examples/step04/README.md)
+show actual source, IR and RXAS, including Classic `say 01` printing `01` and G
+printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
+values and short-circuiting. A declared G decimal starts absent and displays
+`nan`, while integer/float/Boolean defaults are zero and text is empty.
 
 ## RexxScript: a larger example
 

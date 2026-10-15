@@ -1,0 +1,3 @@
+options levelg
+say 'α'
+say 1 / 0

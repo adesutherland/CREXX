@@ -1,0 +1,23 @@
+options levelg
+i = 0
+s = 0
+do while i < 5
+ i = i + 1
+ if i = 2 then iterate
+ j = 0
+ do while j < 3
+  j = j + 1
+  if j = 2 then leave
+  s = s + i
+ end
+ if i = 4 then leave
+end
+do while 0
+ say 99
+end
+say s
+if 0 then say 1 / 0
+else say 'safe'
+if 1 then if 0 then say 'bad' else say 'nearest'
+say (1 < 2) && (3 < 4)
+say \(1 > 2)

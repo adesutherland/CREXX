@@ -1,8 +1,8 @@
 # C/G compiling PoC scope
 
 **Approved profile; both source-to-IR frontends implemented in STEP03.**
-This defines the first slice of both compilers. Executable backend validation
-remains STEP04 and the complete compiling PoC remains STEP06.
+This defines the first slice of both compilers. STEP04 supplies executable RXAS and its [backend qualification](../evidence/step04-20261015/README.md);
+the complete compiling PoC, including optimisation, remains STEP06.
 The full replacement obligations remain in [PLAN.md](../PLAN.md). Unsupported
 source receives a located profile diagnostic; neither compiler falls back to
 the old frontend or rewrites its input as B source.
@@ -10,7 +10,7 @@ the old frontend or rewrites its input as B source.
 ## Shared first-language profile
 
 The profile uses existing source syntax. It introduces no new C or G syntax.
-G files start with `options levelg`; C files use `options levelc`. The planned STEP04
+G files start with `options levelg`; C files use `options levelc`. The STEP04
 commands are `llrxc-g` and `llrxc-c`, with distinct libraries and build targets.
 
 | ID | Included in Phase A | Boundary and required examples |

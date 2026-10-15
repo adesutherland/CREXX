@@ -1,0 +1,92 @@
+/* cREXX License (MIT). Thin B-only command boundary and atomic publication. */
+options levelb
+namespace llcompilercli expose run publish
+import rxfnsb
+import rxfs
+import llcompiler
+import llir
+
+/** Stream the existing Level L chunks to one owned staging file. */
+filesink: class implements .llir..sink
+  _file = .int
+  _error = .string
+  *: factory
+    arg path = .string
+    _file = 0; _error = ''; mode = 'wb'
+    assembler fopen _file,path,mode
+    if _file = 0 then _error = 'cannot create staging file'
+    return
+  write: method = .string
+    arg bytes = .binary
+    if _error <> '' then return _error
+    status = 0
+    assembler fwriteb _file,bytes
+    assembler ferror status,_file
+    if status <> 0 then _error = 'cannot write staging file'
+    return _error
+  close: method = .string
+    if _file = 0 then return _error
+    flushed = 0; closed = 0
+    assembler fflush flushed,_file
+    assembler fclose closed,_file
+    _file = 0
+    if flushed <> 0 | closed <> 0 then _error = 'cannot finish staging file'
+    return _error
+
+/** mkdir claims an exclusive sibling staging directory. A collision never
+ * removes someone else's files. Rename is the sole destination mutation. */
+publish: procedure = .string
+  arg output = .llir..output, destination = .string
+  if output.error() <> '' then return output.error()
+  stage = destination || '.llrxc-stage'; temporary = stage || '/output.rxas'
+  owned = 0; message = ''
+  do
+    if rxfs..mkdir(stage) <> 0 then return 'LL_COMPILER_OUTPUT: cannot claim staging directory ' || stage
+    owned = 1
+    sink = .filesink(temporary)
+    message = output.stream(sink as .llir..sink)
+    closed = sink.close()
+    if message = '' then message = closed
+    if message = '' then do
+      if rxfs..rename(temporary,destination) <> 0 then message = 'cannot replace destination'
+    end
+  on signal as problem
+    message = problem.name() || ': ' || problem.message()
+  end
+  if owned then do
+    ignored = rxfs..delete(temporary); ignored = rxfs..rmdir(stage)
+  end
+  if message <> '' then return 'LL_COMPILER_OUTPUT: ' || message
+  return ''
+
+run: procedure = .int
+  arg level = .string, argv = .string[]
+  artifacts = ''; output = ''; sourcefile = ''; i = 1
+  do while i <= argv[0]
+    option = argv[i]
+    if option = '-i' | option = '-o' then do
+      if i = argv[0] then do; say 'LL_COMPILER_OPTIONS: missing value for ' || option; return 2; end
+      i = i + 1
+      if option = '-i' then artifacts = argv[i]
+      else output = argv[i]
+    end
+    else if left(option,1) = '-' | sourcefile <> '' then do
+      say 'LL_COMPILER_OPTIONS: expected -i directory -o output.rxas source.crexx'; return 2
+    end
+    else sourcefile = option
+    i = i + 1
+  end
+  if sourcefile = '' | output = '' | artifacts = '' then do
+    say 'Usage: llrxc-' || level || ' -i runtime-images -o output.rxas source.crexx'; return 2
+  end
+  do
+    source = readbinary(sourcefile)
+    request = .llcompiler..request(level,source,artifacts,sourcefile)
+    if request.status() <> 0 then do; say request.diagnostic(); return 1; end
+    message = publish(request.output(),output)
+    if message <> '' then do; say message; return 1; end
+  on signal as problem
+    say 'LL_COMPILER_INPUT: ' || sourcefile || ': ' || problem.name() || ': ' || problem.message()
+    return 1
+  end
+  return 0

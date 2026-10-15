@@ -1,0 +1,9 @@
+options levelc
+say '01' = '1'
+say 'a' = 'a '
+say 'a' == 'a '
+say '01' == '1'
+say '10' < '2'
+say 'x' < 'y'
+say '' = ' '
+say 'a' <> 'a '

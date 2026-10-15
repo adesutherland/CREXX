@@ -1,0 +1,13 @@
+options levelc
+call check ' a ',, ''
+exit 0
+check: procedure
+ arg a,b,c
+ say '[' || a || ']'
+ say '[' || b || ']'
+ say '[' || c || ']'
+ say arg()
+ say arg(1,'E')
+ say arg(2,'E')
+ say arg(3,'E')
+ return

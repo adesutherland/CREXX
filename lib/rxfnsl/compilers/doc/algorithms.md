@@ -1,8 +1,9 @@
 # Processing algorithms and their contracts
 
 The foundation algorithms below are implemented in `llir` and `llirservices`.
-The source frontends are implemented; production optimisation and RXAS
-selection remain planned.
+The source frontends and RXAS selection are implemented. Production IR
+optimisation remains planned. The [backend algorithm](backend.md#structures-and-algorithm)
+describes stable registers, checked call windows, literals, source mapping and atomic output.
 Each implemented stage carries its contract and decisive tests under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
 
 ## Stages and evidence
@@ -19,7 +20,7 @@ Each implemented stage carries its contract and decisive tests under [LLCOMP-AC1
 | Local propagation/folding | Forward block scan, temporary/slot fact map, registered exact constant evaluators. | Unknown contexts/calls, overflow, side effects and dead-path runtime errors. |
 | Branch/reachability | Replace a proved branch edge selection, then graph reachability over admitted outcomes. | Keep observable condition evaluation; recompute after graph change. |
 | Unused-operation removal | Use counts and a worklist restricted to proven discardable operations. | Never remove I/O, trace, possible failure/divergence or unknown effects merely because a result is unused. |
-| Target lowering | Registered C/G lowerings into admitted RXAS operations and ABI calls. | All specialised operations handled, exact literals, state/error contracts and generated origins. |
+| Target lowering | Explicit C/G selectors over verified blocks, producing checked RXAS instructions and ABI calls. | All specialised operations handled, exact literals, state/error contracts and generated origins. |
 | Register assignment | Initially distinct locations for slots/temporaries, separate contiguous call windows, explicit cleanup. | Live values survive calls and branches; recursion uses the proper frame; target limits diagnosed. Reuse follows a separately checked liveness implementation. |
 | Emission | Chunk builder, indentation/sections, stream/file sink and source map. | Exact bytes, Unicode/binary quoting, failed writes and no partial successful publication. |
 

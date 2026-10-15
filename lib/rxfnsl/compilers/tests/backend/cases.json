@@ -1,0 +1,253 @@
+[
+  {
+    "name": "pipeline",
+    "level": "c",
+    "source": "../../examples/step01/pipeline-c.crexx",
+    "output": "10\n0\n3\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "evaluation",
+    "level": "c",
+    "source": "../../examples/step01/evaluation-c.crexx",
+    "output": "evaluated\n0\nevaluated\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "numbers",
+    "level": "c",
+    "source": "../../examples/step01/numbers-c.crexx",
+    "output": "0\n0.3\n0.333\n0.333333333\nUNASSIGNED\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "pipeline",
+    "level": "g",
+    "source": "../../examples/step01/pipeline-g.crexx",
+    "output": "10\n0\n3\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "evaluation",
+    "level": "g",
+    "source": "../../examples/step01/evaluation-g.crexx",
+    "output": "0\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "numbers",
+    "level": "g",
+    "source": "../../examples/step01/numbers-g.crexx",
+    "output": "1\n0.3\n0\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "calls",
+    "level": "g",
+    "source": "calls-g.crexx",
+    "output": "720\n1\n2\n3\n7\n4\n8\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "calls",
+    "level": "c",
+    "source": "calls-c.crexx",
+    "output": "720\n1\n2\n3\n7\n4\n4\nRESULT\ncaller\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "loops",
+    "level": "c",
+    "source": "loops-c.crexx",
+    "output": "8\nsafe\nnearest\n0\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "loops",
+    "level": "g",
+    "source": "loops-g.crexx",
+    "output": "8\nsafe\nnearest\n0\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "arguments",
+    "level": "c",
+    "source": "arguments-c.crexx",
+    "output": "[ A ]\n[]\n[]\n3\n1\n0\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "argv",
+    "level": "c",
+    "source": "argv-c.crexx",
+    "output": "[ HI ]\n[THERE]\n2\n",
+    "error": "",
+    "args": [
+      " hi ",
+      "there"
+    ]
+  },
+  {
+    "name": "numeric",
+    "level": "c",
+    "source": "numeric-c.crexx",
+    "output": "1\n0\n4\n0.33\n4\n0.3333\n1.000E+6\n1.000E+6\n9\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "scalars",
+    "level": "g",
+    "source": "scalars-g.crexx",
+    "output": "[]\n0\nnan\n0\n43\n0.5\n0.5\n1\n1\n2\n1.5\n1.5\n-2\n-2.5\n-2.5\nab\n1\n1\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "spelling",
+    "level": "c",
+    "source": "spelling-c.crexx",
+    "output": "2 3 4\nα'β\\path\na2\n[]\n01\n0\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "spelling",
+    "level": "g",
+    "source": "spelling-g.crexx",
+    "output": "α'β\\path\n1\n9223372036854775807\n-9223372036854775808\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "divide-error",
+    "level": "c",
+    "source": "divide-error-c.crexx",
+    "output": "1\n",
+    "error": "RXC-LC-42.3",
+    "args": []
+  },
+  {
+    "name": "divide-error",
+    "level": "g",
+    "source": "divide-error-g.crexx",
+    "output": "1\n",
+    "error": "DIVISION",
+    "args": []
+  },
+  {
+    "name": "logical-error",
+    "level": "c",
+    "source": "logical-error-c.crexx",
+    "output": "",
+    "error": "RXC-LC-34.1",
+    "args": []
+  },
+  {
+    "name": "digits-error",
+    "level": "c",
+    "source": "digits-error-c.crexx",
+    "output": "",
+    "error": "DIGITS",
+    "args": []
+  },
+  {
+    "name": "fuzz-error",
+    "level": "c",
+    "source": "fuzz-error-c.crexx",
+    "output": "",
+    "error": "FUZZ",
+    "args": []
+  },
+  {
+    "name": "result-error",
+    "level": "c",
+    "source": "result-error-c.crexx",
+    "output": "",
+    "error": "RXC-LC-45.1",
+    "args": []
+  },
+  {
+    "name": "overflow-error",
+    "level": "g",
+    "source": "overflow-error-g.crexx",
+    "output": "0\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "conversion-error",
+    "level": "g",
+    "source": "conversion-error-g.crexx",
+    "output": "",
+    "error": "CONVERSION",
+    "args": []
+  },
+  {
+    "name": "negative-zero",
+    "level": "g",
+    "source": "negative-zero-g.crexx",
+    "output": "0\n0\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "origin-error",
+    "level": "g",
+    "source": "origin-error-g.crexx",
+    "output": "α\n",
+    "error": "DIVISION",
+    "args": []
+  },
+  {
+    "name": "conversions",
+    "level": "g",
+    "source": "conversions-g.crexx",
+    "output": "1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "operators",
+    "level": "g",
+    "source": "operators-g.crexx",
+    "output": "5\n-1\n6\n1\n1\n0\n1\n1\n0\n1\n1\n5\n-1\n6\n1\n1\n0\n1\n1\n0\n1\n1\n5\n-1\n6\n1\n1\n0\n1\n1\n0\n1\n1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "conversion-error",
+    "level": "c",
+    "source": "conversion-error-c.crexx",
+    "output": "",
+    "error": "RXC-LC-41.1",
+    "args": []
+  },
+  {
+    "name": "text-comparisons",
+    "level": "g",
+    "source": "text-comparisons-g.crexx",
+    "output": "1\n1\n0\n0\n0\n1\n1\n0\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "text-comparisons",
+    "level": "c",
+    "source": "text-comparisons-c.crexx",
+    "output": "1\n1\n0\n0\n0\n1\n1\n0\n",
+    "error": "",
+    "args": []
+  }
+]
