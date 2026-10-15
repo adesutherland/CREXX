@@ -163,8 +163,11 @@ included. The unrelated build directory and mainframe lock files are preserved.
 separate develop publication. Evidence:
 [`ast-conditions-20261015`](evidence/ast-conditions-20261015/README.md): product
 build, 36 unchanged controls, 16 new matrix tests, both Level B bootstrap modes,
-34 no-opt delivery commands and 12 fresh installed checks. AST7-STEP02/03 and
-AC02/03 remain open. AC04 is satisfied for step 1 locally; subsequent increments
+34 no-opt delivery commands and 12 fresh installed checks. Step 1 was published as `26339d2f01fb379fdd4f51bb4be9255d4d562494`.
+AST7-STEP02 and AST7-AC02 are locally complete, with evidence in
+[`ast-lowering-20261015`](evidence/ast-lowering-20261015/README.md): product build,
+20 existing controls, 16 lowering tests, bootstrap parity and 54 delivery
+commands. Step 2 is ready for its separate publication. STEP03/AC03 remain open. AC04 is satisfied for steps 1 and 2 locally; subsequent increments
 and their publication remain open. Hosted workflow outcomes are reported in the
 conversation, without a status-only commit.
 
@@ -424,9 +427,9 @@ their wider obligations.
 | AST-AC01 | Simple attached mappings; named text/child fields; required, optional and list counts; located refusals; settings/calculator | None for the reviewed inferred-schema surface. |
 | AST-AC02 | Independent owned results; borrowed handles; request release; exact/composite/derived source ranges; Unicode; stale/foreign-handle rejection; sparse typed properties/defaults; counted budgets | Synthetic and recovered origin infrastructure; broader migration measurements. |
 | AST-AC03 | Iterative walks; field/list access; application folds; checked reconstruction; empty/deep/wide/malformed/shared inputs; atomic failure; opt/noopt and both VMs; explicit traversal bounds | General search/fold convenience services and the wider builder/grouping profiles. |
-| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors; checked structured flow, loops/exits/short-circuit outcomes, finite definite assignment and reachability with path witnesses | Constant-aware flow contracts, grouping/lowering and their proofs. |
+| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors; checked structured flow, loops/exits/short-circuit outcomes, finite definite assignment and reachability with path witnesses | Broader application-specific analysis and production migration. Condition facts and the checked Unless-to-If lowering are verified by AST7-STEP01/02. |
 | AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; named RexxScript slice, effects/control/error comparisons and retained pre-migration control | Recovered-origin integration. |
-| AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Compiler-shaped builder/validator example and production migration work. |
+| AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Production migration work; the compiler-shaped Unless lowering example is verified by AST7-STEP02. |
 
 AST-STEP02/03 and the first-delivery portion of AST-STEP05 are complete within
 the scope above. The acyclic RexxScript increment of AST-STEP04 is implemented;

@@ -2400,6 +2400,99 @@ all of the calculator's operators. Build it with the same grammar:
 
 It reports the original expression, the resulting `Number` and `RESULT|11`.
 
+### Lower into a simpler tree
+
+**Lowering** translates a convenient source construct into simpler constructs
+that later compiler passes already understand. For example, the language in
+[examples/lowering](../examples/lowering/) has an `unless` statement:
+
+```rexx
+conditional: rule = kw.unless expression as condition kw.do block as body kw.end semi
+  then tree Unless(condition = condition, body = body)
+```
+
+`unless flag do x = 10; end;` executes its body when `flag` is false. We can
+represent it using an ordinary If:
+
+```text
+Unless                         If
+  condition -> Name(flag)        condition -> Name(flag)
+  body -> Block                  yes -> Block (empty)
+            Assignment(x,10)     no  -> Block
+                                         Assignment(x,10)
+```
+
+The new tree has its own **schema**: the list of kinds, named fields and allowed
+child counts. The example's `target()` procedure declares Program, Block, If,
+Assignment, Say, Name and Number with `.llast..schema()`. There is no Unless in
+that schema. Later passes need only understand If.
+
+```rexx
+pass = tree.lower(target())
+do while pass.next()
+  source = pass.original()
+  if source.kind() = 'Unless' then do
+    empty = pass.make('Block')
+    yes = pass.accept(empty)
+    replacement = pass.make('If')
+    ok = replacement.append('condition',pass.translated(source.child('condition')))
+    ok = replacement.append('yes',yes)
+    ok = replacement.append('no',pass.translated(source.child('body')))
+    ok = pass.replace(replacement)
+  end
+  else ok = pass.keep()
+end
+lowered = pass.finish()
+```
+
+Children are visited before their parents. `source` belongs to the original
+tree; `translated(source.child(...))` retrieves the completed target child.
+`make()` creates a draft in the target schema. `accept()` checks and seals an
+intermediate node so another draft can use it. `replace()` records the result
+for the current source node. `keep()` explicitly copies the current kind and
+fields using the translated children. Every visited source node needs one
+`replace()` or `keep()`; forgetting a case reports its kind and source byte.
+
+Build and run the complete example:
+
+```sh
+crexx --program lower-example lib/rxfnsl/examples/lowering/unless.rxl \
+      lib/rxfnsl/examples/lowering/lowering.crexx \
+      lib/rxfnsl/examples/lowering/show.crexx
+rxvm lower-example
+```
+
+It shows `Unless` becoming `If`, with zero statements in the true arm and one
+in the false arm. Flow analysis then reports that the later `say x` may read an
+unassigned variable: the true arm leaves x untouched. Supplying a justified
+false fact for the condition makes that assignment definite.
+
+| Lowering method | Meaning |
+|---|---|
+| `tree.lower(schema,limit)` | Start a children-first translation; default output allowance is 1,000,000 entries. |
+| `pass.next()`, `pass.original()` | Advance and obtain the current input node. |
+| `pass.translated(inputNode)` | Obtain the completed output for an earlier input node. |
+| `pass.make(kind)` | Create a target draft using the current input's source range and diagnostic anchor. |
+| `pass.accept(draft)` | Validate and seal an intermediate target node; return its handle. |
+| `pass.replace(draft)` | Validate the result for the current input node. |
+| `pass.keep()` | Copy its kind, fields and source origin, substituting translated children. |
+| `pass.finish()` | After traversal, publish one validated owned tree, or a failed tree with no root. |
+| `pass.error()` | Return a construction or ownership error. |
+
+Check `lowered.status()` before using the result. Unknown kinds or fields,
+missing required fields, incorrect child counts and reused children are errors.
+An intermediate has one parent in the final tree; use separate copies when two
+places need equal-looking nodes. Keep the original tree alive until the pass
+finishes. Replacing it invalidates the pass. Drafts belong to one pass and one
+visit; accepted drafts are immutable.
+
+The structural checks establish a well-formed target tree. The author of a
+lowering establishes its meaning. In this example both forms evaluate the same
+condition once and execute the same body exactly when it is false. Regression
+tests compare their execution for both truth values and check the resulting
+assignment analysis. Node properties and previous analysis tables remain tied
+to the original tree; calculate new facts for the lowered tree.
+
 ### Origins survive rewriting
 
 Nodes created directly by a mapping have an `exact` origin. Removing expression

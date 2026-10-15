@@ -289,4 +289,69 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
+# Checked target-schema lowering, using the same module as the worked example.
+set(_lowering_spec "${CMAKE_CURRENT_SOURCE_DIR}/../examples/lowering/unless.rxl")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_lowering_spec}")
+file(READ "${_lowering_spec}" _lowering_text)
+foreach(_backend ll1 lr1 packrat earley)
+  set(_lowering_dir "${CMAKE_CURRENT_BINARY_DIR}/lowering-${_backend}")
+  file(MAKE_DIRECTORY "${_lowering_dir}")
+  string(REPLACE "backend ll1" "backend ${_backend}" _lowering_backend_text "${_lowering_text}")
+  if(_backend STREQUAL "packrat")
+    string(REPLACE "semantics contextfree" "semantics ordered" _lowering_backend_text "${_lowering_backend_text}")
+  endif()
+  file(GENERATE OUTPUT "${_lowering_dir}/rules.rxl" CONTENT "${_lowering_backend_text}")
+  set(_lowering_provider "${_lowering_dir}/unlesslang.rxas")
+  add_custom_command(OUTPUT "${_lowering_provider}"
+    COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
+      -DSPEC=${_lowering_dir}/rules.rxl -DOUTPUT=${_lowering_provider} -DFORMAT=rxas
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    DEPENDS levell_cli "${_lowering_dir}/rules.rxl" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
+    VERBATIM)
+  add_custom_command(OUTPUT "${_lowering_dir}/unlesslang.rxbin"
+    COMMAND $<TARGET_FILE:rxas> unlesslang
+    DEPENDS rxas "${_lowering_provider}"
+    WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
+  add_custom_command(OUTPUT "${_lowering_dir}/lowerdemo.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${CMAKE_BINARY_DIR}/bin"
+      -o lowerdemo "${CMAKE_CURRENT_SOURCE_DIR}/../examples/lowering/lowering.crexx"
+    COMMAND $<TARGET_FILE:rxas> lowerdemo
+    DEPENDS rxc rxas rxfnsl "${CMAKE_CURRENT_SOURCE_DIR}/../examples/lowering/lowering.crexx"
+    WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
+  crexx_add_import_root(levell_lowering_${_backend}_imports
+    DIRECTORY "${_lowering_dir}/imports" OUTPUT_VARIABLE _lowering_imports
+    FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${_lowering_dir}/unlesslang.rxbin" "${_lowering_dir}/lowerdemo.rxbin"
+    DEPENDS library rxfnsl)
+  foreach(_flowcase lowering)
+  foreach(_mode noopt opt)
+    set(_lowering_flags)
+    if(_mode STREQUAL "noopt")
+      list(APPEND _lowering_flags -n)
+    endif()
+    set(_lowering_name "ts_ll${_flowcase}_${_backend}_${_mode}")
+    add_custom_command(OUTPUT "${_lowering_dir}/${_lowering_name}-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxc> ${_lowering_flags} -x --no-exe-import
+        -i "${_lowering_dir}/imports"
+        -o "${_lowering_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_ll${_flowcase}.crexx"
+      COMMAND $<TARGET_FILE:rxas> ${_lowering_flags} "${_lowering_name}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_lowering_name}-linked" "${_lowering_name}" unlesslang lowerdemo
+        "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+      DEPENDS rxc rxas rxlink rxfnsl levell_lowering_${_backend}_imports ${_lowering_imports} ts_ll${_flowcase}.crexx
+      WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
+    add_custom_target(${_lowering_name} ALL DEPENDS "${_lowering_dir}/${_lowering_name}-linked.rxbin")
+    add_dependencies(testrxfnsl ${_lowering_name})
+    foreach(_vm rxtvm rxbvm)
+      if(TARGET ${_vm})
+        add_test(NAME ${_lowering_name}_${_vm}
+          COMMAND $<TARGET_FILE:${_vm}> "${_lowering_dir}/${_lowering_name}-linked.rxbin")
+        set_tests_properties(${_lowering_name}_${_vm} PROPERTIES
+          PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_lowering_name}_${_vm} TARGETS ${_lowering_name} ${_vm})
+      endif()
+    endforeach()
+  endforeach()
+  endforeach()
+endforeach()
+
 crexx_finalize_directory_qa_tiers()

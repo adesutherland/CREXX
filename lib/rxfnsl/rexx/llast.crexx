@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Application trees, field contracts and checked walks. */
 options levelb
-namespace llast expose schema storage tree node walk rewrite draft analysis facts children
+namespace llast expose schema storage tree node walk rewrite lowering draft analysis facts children
 import rxfnsb
 import llcore
 import lltree
@@ -806,6 +806,10 @@ tree: class
   rewrite: method = .llast..rewrite
     arg order = 'children first'
     return .llast..rewrite(reference _store,order)
+  /** Translate into a declared target schema, visiting children first. */
+  lower: method = .llast..lowering
+    arg contract = .llast..schema, limit = 1000000
+    return .llast..lowering(reference _store,contract,limit)
   /** One result per node, with completed children available before parents. */
   analyse: method = .llast..analysis
     arg limit = 1000000
@@ -953,6 +957,146 @@ rewrite: class
     return .llast..tree.loaded(_output)
   error: method = .string
     return _output.error()
+
+/** Children-first translation into a different schema. Each input node must
+ * receive one replacement or an explicit keep(). Completed target children are
+ * borrowed with translated(); finish publishes only a validated complete tree.
+ * @param limit Combined output nodes, fields and child links, including drafts.
+ */
+lowering: class
+  _input = reference .llast..storage
+  _identity = .int
+  _output = .llast..storage
+  _walk = .llast..walk
+  _mapped = .int[]
+  _raw = .int
+  _done = .int
+  _finished = .int
+  *: factory
+    arg input = reference .llast..storage, contract = .llast..schema, limit = 1000000
+    _input = input; owner = dereference input; _identity = owner.identity()
+    _output = .llast..storage(owner.source(),contract,limit)
+    _walk = .llast..walk(input,owner.root())
+    _raw = 0; _done = 0; _finished = 0
+    if owner.error() <> '' then call _output.fail(owner.error())
+    if limit < 0 then call _output.fail('LL_AST_LIMIT: tree.entries must be nonnegative')
+    return
+  error: method = .string
+    if <refvalid>(_input) = 0 then call _output.fail('LL_AST_OWNER: lowering input expired or replaced')
+    else do
+      owner = dereference _input
+      if owner.identity() <> _identity then call _output.fail('LL_AST_OWNER: lowering input replaced')
+    end
+    return _output.error()
+  active: method = .int
+    if error() <> '' then return 0
+    if _raw = 0 | _done | _finished then do
+      call _output.fail('LL_AST_LIFECYCLE: operation requires a current lowering node'); return 0
+    end
+    return 1
+  next: method = .int
+    if error() <> '' | _done | _finished then return 0
+    if _raw > 0 then do
+      if _mapped[_raw] = 0 then do
+        source = original()
+        call _output.fail('LL_AST_LOWERING: missing translation for ' || source.kind() || ' at byte ' || source.offset()); return 0
+      end
+    end
+    call _output.advance()
+    if _walk.next() = 0 then do
+      _done = 1
+      if _walk.error() <> '' then call _output.fail(_walk.error())
+      return 0
+    end
+    _raw = _walk.node().id()
+    return 1
+  original: method = .llast..node
+    if active() = 0 then call badfield(_output.error())
+    return .llast..node(_input,_raw)
+  /** Obtain the completed output for an earlier visited input node. */
+  translated: method = .llast..node
+    arg source = .llast..node
+    id = 0
+    if active() then do
+      if source.belongs(_input) = 0 then call _output.fail('LL_AST_OWNER: translated node belongs to another input')
+      else do
+        id = _mapped[source.id()]
+        if id = 0 then call _output.fail('LL_AST_LOWERING: requested translation is not complete')
+      end
+    end
+    if _output.error() <> '' then id = 0
+    return .llast..node(reference _output,id)
+  make: method = .llast..draft
+    arg kind = .string
+    id = 0
+    if active() then do
+      contract = dereference _output.contract(); rule = contract.kindindex(kind)
+      if rule = 0 then call _output.fail('LL_AST_KIND: unknown target kind ' || kind)
+      else do
+        source = original()
+        id = _output.add(rule,source.start(),source.finish(),'derived')
+        if id > 0 then ok = _output.locate(id,source.offset())
+      end
+    end
+    return .llast..draft(reference _output,id)
+  /** Seal an intermediate target node so another draft can use it as a child. */
+  accept: method = .llast..node
+    arg replacement = .llast..draft
+    id = 0
+    if active() then do
+      if replacement.belongs(reference _output) = 0 then call _output.fail('LL_AST_OWNER: draft belongs to another pass')
+      else if replacement.current() then do
+        if _output.seal(replacement.id()) then id = replacement.id()
+      end
+    end
+    return .llast..node(reference _output,id)
+  replace: method = .int
+    arg replacement = .llast..draft
+    if active() = 0 then return 0
+    if _mapped[_raw] <> 0 then do
+      call _output.fail('LL_AST_LOWERING: current node already translated'); return 0
+    end
+    node = accept(replacement)
+    if _output.error() <> '' then return 0
+    _mapped[_raw] = node.id()
+    return 1
+  /** Preserve the current kind and field names using translated children. */
+  keep: method = .int
+    if active() = 0 then return 0
+    if _mapped[_raw] <> 0 then do
+      call _output.fail('LL_AST_LOWERING: current node already translated'); return 0
+    end
+    owner = dereference _input; source = original()
+    contract = dereference _output.contract(); rule = contract.kindindex(source.kind())
+    if rule = 0 then do
+      call _output.fail('LL_AST_KIND: unknown target kind ' || source.kind()); return 0
+    end
+    id = _output.add(rule,source.start(),source.finish(),source.origin())
+    if id = 0 then return 0
+    ok = _output.locate(id,source.offset())
+    originalschema = dereference owner.contract()
+    do f = owner.firstfield(_raw) to owner.lastfield(_raw) while _output.error() = ''
+      declaration = owner.declaration(f); name = originalschema.name(declaration)
+      if originalschema.mode(declaration) = 'text' then ok = _output.settext(id,name,source.text(name))
+      else do
+        edge = owner.firstedge(f)
+        do while edge > 0 & _output.error() = ''
+          ok = _output.append(id,name,_mapped[owner.edgechild(edge)])
+          edge = owner.nextedge(edge)
+        end
+      end
+    end
+    if _output.seal(id) = 0 then return 0
+    _mapped[_raw] = id
+    return 1
+  finish: method = .llast..tree
+    if _finished then return .llast..tree.failed('LL_AST_LIFECYCLE: lowering already finished')
+    _finished = 1; call _output.advance()
+    if _done = 0 then call _output.fail('LL_AST_LIFECYCLE: finish requires a complete lowering walk')
+    if error() <> '' then return .llast..tree.failed(_output.error())
+    owner = dereference _input
+    if _output.freeze(_mapped[owner.root()]) = 0 then return .llast..tree.failed(_output.error())
+    return .llast..tree.loaded(_output)
 
 /** A completed table of application-defined node results. Values are objects;
  * the language application owns their types and meaning. The table borrows its

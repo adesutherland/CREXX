@@ -102,6 +102,39 @@ The retained regression corpus checks precedence, associativity, prefix minus,
 decimal values and original-source failures; it is not a proof of arbitrary
 numeric codecs or effectful rewrites.
 
+## Target-schema lowering
+
+Lowering visits each original node once in postorder and records one output ID
+per original ID. A missing translation stops traversal with its kind and byte
+location. `translated()` accepts only an owned input node whose result already
+exists. `make()` uses the target schema; `accept()` seals an intermediate and
+`replace()` records the current translation. `keep()` copies the original kind
+and named fields with translated children; ordinary schema checks reject an
+incompatible target. Drafts are bound to one pass generation. A finished pass
+cannot publish a second tree; input replacement or expiry invalidates it.
+
+Every target edge goes from a newer node to an earlier node, excluding cycles.
+Final reachable-tree validation rejects shared children and checks cardinality.
+Only successful complete traversal plus this validation publishes a root. The
+input never changes, and intermediate nodes remain confined to the output arena.
+The output budget counts all nodes, fields and links, including unused drafts.
+
+For N visited input nodes and M constructed output entries, the library's work
+is O(N+M) for a fixed schema, apart from schema/field lookup costs. Indexed
+translation storage is O(A), with A the bounded input arena capacity. Arbitrary
+application loops and repeated calls remain application work; the entry limit
+bounds allocations but does not prove arbitrary callback termination.
+
+Structural validity does not establish semantic equivalence. For the worked
+Unless translation, assume the source construct evaluates c once and executes
+b exactly when c is false. `If(c, empty, b)` evaluates the identical translated
+c once, executes an empty sequence on true and the identical translated b on
+false. Induction on nested statements establishes equal read/write/output
+traces when child translations preserve those traces. The test interpreter
+checks both original and lowered trees against explicit expected outputs for
+both Boolean inputs, then compares definite-assignment outcomes with those
+paths. This is a proof for that declared construct, not arbitrary user lowering.
+
 ## Acyclic analysis and invalidation
 
 `tree.analyse(limit)` schedules the same finite children-first walk. It accepts
