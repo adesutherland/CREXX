@@ -105,6 +105,10 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS rxlink ${RXFNSL_BASE_BINS} "${_ll_root}/verified.stamp" "${_ll_control}"
   VERBATIM)
 add_custom_target(rxfnsl ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+# Make emits the bootstrap file recipes into each consuming target. Order the
+# consumers after their single bootstrap owner to avoid concurrent L2 writers;
+# retain the file dependencies above for freshness and Ninja's dependency graph.
+add_dependencies(rxfnsl levell_bootstrap)
 if(NOT CREXX_LEVEL_L_STANDALONE)
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/levell.c"
   COMMAND $<TARGET_FILE:rxcpack> -o "${CMAKE_CURRENT_BINARY_DIR}/levell" "${_ll_root}/L2/levell-linked"
@@ -128,3 +132,26 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/gennorm2_language.rxbin"
   COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/gennorm2_language" "${_gennorm_rxas}"
   DEPENDS rxas "${_gennorm_rxas}" VERBATIM)
 add_custom_target(levell_unicode_lexer DEPENDS "${CMAKE_BINARY_DIR}/bin/gennorm2_language.rxbin")
+add_dependencies(levell_unicode_lexer levell_bootstrap)
+
+if(UNIX AND NOT CREXX_LEVEL_L_STANDALONE)
+  find_program(_ll_make NAMES gmake make)
+  if(_ll_make)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_custom_target(levell_bootstrap_order_measure
+      COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/check-bootstrap-build.py"
+        --source "${CMAKE_SOURCE_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/order-measure"
+        --cmake "${CMAKE_COMMAND}" --make "${_ll_make}"
+      VERBATIM)
+    # Isolated nested fixture: Debug 15s, maintained Apple ASan tree 15s.
+    # Tool stand-ins test build ordering; real-tool execution is separate proof.
+    add_test(NAME levell_bootstrap_build_order
+      COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/check-bootstrap-build.py"
+        --source "${CMAKE_SOURCE_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/order-check"
+        --cmake "${CMAKE_COMMAND}" --make "${_ll_make}")
+    set_tests_properties(levell_bootstrap_build_order PROPERTIES
+      PASS_REGULAR_EXPRESSION "LEVEL_L_BUILD_ORDER[|]PASS"
+      RUN_SERIAL TRUE TIMEOUT 600 LABELS "level-l;cmake;optimizer-parity;comprehensive")
+    crexx_schedule_directory_qa_tier_finalization()
+  endif()
+endif()

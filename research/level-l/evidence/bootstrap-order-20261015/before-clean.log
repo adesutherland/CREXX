@@ -1,0 +1,37 @@
+[  0%] Built target library
+[  0%] Built target rxfnsl_base
+[  4%] Staging deterministic compiler imports for levell_base_imports ...
+[  4%] Built target levell_base_imports
+[  8%] Generating bootstrap/L0/source/llfront.crexx
+[ 12%] Generating bootstrap/L0/llfront.rxbin
+[ 16%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[ 16%] Built target levell_driver_imports_0
+[ 20%] Generating bootstrap/L0/levell-linked.rxbin
+[ 24%] Generating bootstrap/L1/llsyntax.rxas
+[ 28%] Generating bootstrap/L1/llsyntax.rxbin
+[ 32%] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[ 32%] Built target levell_syntax_imports_1
+[ 36%] Generating bootstrap/L1/source/llfront.crexx
+[ 40%] Generating bootstrap/L1/llfront.rxbin
+[ 44%] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[ 44%] Built target levell_driver_imports_1
+[ 48%] Generating bootstrap/L1/levell-linked.rxbin
+[ 52%] Generating bootstrap/L2/llsyntax.rxas
+[ 56%] Generating bootstrap/L2/llsyntax.rxbin
+[ 60%] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[ 60%] Built target levell_syntax_imports_2
+[ 64%] Generating bootstrap/L2/source/llfront.crexx
+[ 68%] Generating bootstrap/L2/llfront.rxbin
+[ 72%] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[ 72%] Built target levell_driver_imports_2
+[ 80%] Generating bootstrap/L2/levell-linked.rxbin
+[ 80%] Generating bootstrap/L2/levell-linked.rxbin
+DUPLICATE PRODUCER: rxc /private/tmp/levell-build-order-before/build/lib/rxfnsl/tools/bootstrap/L2/levell.rxas
+make[3]: *** [lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin] Error 1
+make[2]: *** [lib/rxfnsl/tools/CMakeFiles/levell_unicode_lexer.dir/all] Error 2
+make[2]: *** Waiting for unfinished jobs....
+[ 84%] Generating bootstrap/verified.stamp
+[ 88%] Generating ../../../bin/rxfnsl.rxbin
+[ 88%] Built target rxfnsl
+make[1]: *** [CMakeFiles/consume.dir/rule] Error 2
+make: *** [consume] Error 2

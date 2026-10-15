@@ -1,0 +1,16 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^levell_bootstrap_build_order\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan
+    Start 2456: levell_bootstrap_build_order
+1/1 Test #2456: levell_bootstrap_build_order .....   Passed   15.53 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+cmake               =  15.53 sec*proc (1 test)
+comprehensive       =  15.53 sec*proc (1 test)
+level-l             =  15.53 sec*proc (1 test)
+optimizer-parity    =  15.53 sec*proc (1 test)
+
+Total Test time (real) =  15.59 sec

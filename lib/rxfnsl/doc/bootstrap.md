@@ -103,6 +103,16 @@ regenerates both generated stages. Changing the shared runtime/generator inputs
 rebuilds the affected foundation and dependent stages. The final library is
 published after the comparison succeeds.
 
+`levell_bootstrap` owns completion of the L0/L1/L2 chain and its comparison.
+Both the public library target and Unicode generator wait for that target;
+the packaged CLI also waits through the public library. File dependencies
+remain in place to detect changed sources or a missing image. This target
+ordering matters for parallel Make, which can otherwise copy the same L2
+recipe into independent consumers and run it twice. The Unix Makefiles
+`levell_bootstrap_build_order` regression exercises clean, missing-image,
+changed-input and no-op builds using the real declarations and instrumented
+stand-in tools; real compiler/bytecode qualification is separate.
+
 `generate.cmake` writes a temporary output and renames it only on success. A bad
 grammar returns nonzero, removes that temporary output and preserves the last
 valid generated artifact and downstream library. Direct shell redirection has
