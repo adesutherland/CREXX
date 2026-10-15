@@ -1,0 +1,159 @@
+.globals=0
+main() .locals=6
+.srcstep 0 0 6 "" 0 0 0 ""
+copy r4,a1
+load r3,1
+settp r4,768
+call r1,llctarget.mainargs(),r3
+null r4
+load r3,0
+call r2,llctarget.contextnew(),r3
+copy r4,r1
+copy r5,r2
+load r3,2
+settp r4,768
+settp r5,768
+call r0,llf1(),r3
+null r4
+null r5
+copy r4,r0
+load r3,1
+settp r4,768
+call r1,llctarget.status(),r3
+null r4
+ret r1
+llf1() .locals=17
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
+numsci 18,1,1
+load r13,"branch-c.crexx: entering $MAIN"
+sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
+sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
+sigbrv llerror1_3,r0,"CONVERSION_ERROR"
+sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+llb1:
+.srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
+load r13,"branch-c.crexx: generated code in $MAIN"
+load r14,0
+call r4,llctarget.poolnew(),r14
+unlink r1
+link r1,r4
+copy r5,a1
+copy r3,r5
+copy r6,a2
+copy r2,r6
+.srcstep 11 0 17 "branch-c.crexx" 2 4 5 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:4"
+load r15,"1"
+load r14,1
+settp r15,768
+call r7,llctarget.literal(),r14
+null r15
+.srcstep 4 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:1"
+copy r15,r7
+load r14,1
+settp r15,768
+call r8,llctarget.truth(),r14
+null r15
+brt llb2,r8
+br llb3
+llb2:
+.srcstep 19 0 17 "branch-c.crexx" 2 15 20 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:15"
+load r15,"yes"
+load r14,1
+settp r15,768
+call r9,llctarget.literal(),r14
+null r15
+.srcstep 12 0 65 "branch-c.crexx" 2 11 20 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:11"
+copy r15,r9
+load r14,1
+settp r15,768
+call r12,llctarget.sayvalue(),r14
+null r15
+.srcstep 4 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:1"
+br llb4
+llb3:
+.srcstep 27 0 17 "branch-c.crexx" 3 10 14 "else say 'no'"
+load r13,"branch-c.crexx:3:10"
+load r15,"no"
+load r14,1
+settp r15,768
+call r10,llctarget.literal(),r14
+null r15
+.srcstep 20 0 17 "branch-c.crexx" 3 6 14 "else say 'no'"
+load r13,"branch-c.crexx:3:6"
+copy r15,r10
+load r14,1
+settp r15,768
+call r12,llctarget.sayvalue(),r14
+null r15
+.srcstep 4 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r13,"branch-c.crexx:2:1"
+llb4:
+.srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
+load r13,"branch-c.crexx: generated code in $MAIN"
+load r14,0
+call r11,llctarget.absent(),r14
+ret r11
+llerror1_1:
+.srcstep 0 0 6 "" 0 0 0 ""
+load r12,1
+br llerror1
+llerror1_2:
+load r12,2
+br llerror1
+llerror1_3:
+load r12,3
+br llerror1
+llerror1_4:
+load r12,4
+llerror1:
+sighalt "CLASSIC_SYNTAX"
+sighalt "DIVISION_BY_ZERO"
+sighalt "CONVERSION_ERROR"
+sighalt "INVALID_ARGUMENTS"
+copy r15,r0
+copy r16,r13
+load r14,2
+settp r15,768
+settp r16,768
+call r13,llctarget.failuremessage(),r14
+null r15
+null r16
+beq llraise1_1,r12,1
+beq llraise1_2,r12,2
+beq llraise1_3,r12,3
+llraise1_4:
+signalorigin "INVALID_ARGUMENTS",r13,r0
+ret
+llraise1_3:
+signalorigin "CONVERSION_ERROR",r13,r0
+ret
+llraise1_2:
+signalorigin "DIVISION_BY_ZERO",r13,r0
+ret
+llraise1_1:
+signalorigin "CLASSIC_SYNTAX",r13,r0
+ret
+llctarget.mainargs() .expose=llctarget.mainargs
+  .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "p1=.object"
+llctarget.contextnew() .expose=llctarget.contextnew
+  .meta "llctarget.contextnew"="b" ".rexxactivation..rexxactivationarguments" llctarget.contextnew() ""
+llctarget.status() .expose=llctarget.status
+  .meta "llctarget.status"="b" ".int" llctarget.status() "p1=.rexxactivationarguments"
+llctarget.poolnew() .expose=llctarget.poolnew
+  .meta "llctarget.poolnew"="b" ".rexxpool..rexxvariablepool" llctarget.poolnew() ""
+llctarget.literal() .expose=llctarget.literal
+  .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "p1=.string"
+llctarget.truth() .expose=llctarget.truth
+  .meta "llctarget.truth"="b" ".int" llctarget.truth() "p1=.rexxvalue"
+llctarget.sayvalue() .expose=llctarget.sayvalue
+  .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "p1=.rexxvalue"
+llctarget.absent() .expose=llctarget.absent
+  .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
+llctarget.failuremessage() .expose=llctarget.failuremessage
+  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "p1=.object,p2=.string"

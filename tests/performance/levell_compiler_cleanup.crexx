@@ -1,0 +1,26 @@
+/* cREXX License (MIT). B-only compiler lifecycle measurement consumer.
+ * Link this unchanged source separately against baseline/candidate products.
+ * The caller alternates binaries in paired rounds; no timing threshold is QA. */
+options levelb
+import rxfnsb
+import llcompiler
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 4 then return 2
+  level = argv[1]; artifacts = argv[2]; count = argv[3] as .int
+  if count < 1 | count > 1000 then return 2
+  source = 'options level' || level || '0A'x
+  if level = 'g' then source = source || 'x = .int' || '0A'x
+  do i = 1 to count
+    source = source || 'x = ' || i || '; say x' || '0A'x
+  end
+  started = time('us')
+  request = .llcompiler..request(level,source as .binary,artifacts,'cleanup.crexx')
+  if request.status() <> 0 then do; say request.diagnostic(); return 1; end
+  output = request.output(); assembly = output.text()
+  elapsed = time('us') - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  if writebinary(argv[4],assembly as .binary) <> output.bytes() then return 1
+  say 'CLEANUP|level=' || level || '|statements=' || count || '|compile_us=' || elapsed || '|rxas_bytes=' || output.bytes()
+  return 0

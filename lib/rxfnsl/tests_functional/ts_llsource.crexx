@@ -1,0 +1,65 @@
+/* cREXX License (MIT). Source-coordinate services independent of compilers. */
+options levelb
+import rxfnsb
+import llsource
+
+main: procedure = .int expose failures checks
+  failures = 0; checks = 0
+  source = 'CEB1CEB20D0A580D590A'x as .binary
+  index = .llsource..index(source)
+  call check(index.error() = '', 'mixed newline index')
+  call point(index,0,1,1,0,4)
+  call point(index,2,1,2,0,4)
+  call point(index,4,1,3,0,4)
+  call point(index,5,2,1,5,5)
+  call point(index,6,2,1,6,7)
+  call point(index,7,2,2,6,7)
+  call point(index,8,3,1,8,9)
+  call point(index,9,3,2,8,9)
+  call point(index,10,4,1,10,10)
+  location = index.position(-1)
+  call check(location.error() <> '', 'negative offset rejected')
+  location = index.position(11)
+  call check(location.error() <> '', 'past EOF rejected')
+  empty = .llsource..index('' as .binary)
+  call point(empty,0,1,1,0,0)
+  limited = .llsource..index(source,3)
+  call check(pos('LIMIT',limited.error()) > 0, 'line-entry budget')
+  location = limited.position(0)
+  call check(location.error() <> '', 'failed index publishes no valid position')
+  limited = .llsource..index(source,4,73)
+  call check(pos('LIMIT',limited.error()) > 0, 'source and index byte budget')
+  limited = .llsource..index(source,4,74)
+  call check(limited.error() = '', 'exact source and index byte budget')
+  limited = .llsource..index(source,4,74,9)
+  call check(pos('LIMIT',limited.error()) > 0, 'construction work budget')
+  limited = .llsource..index(source,4,74,10)
+  call point(limited,8,3,1,8,9)
+  diagnostic = llsource..diagnostic(source,6,'TEST','message')
+  call check(pos('line 2, column 1 (byte 6)',diagnostic) > 0, 'diagnostic shares coordinates')
+  invalid = 'FF0D0A00'x as .binary
+  diagnostic = llsource..diagnostic(invalid,3,'TEST','invalid')
+  call check(pos('line 2, column 1 (byte 3)',diagnostic) > 0 & pos('source bytes:',diagnostic) > 0, 'malformed UTF-8 byte fallback')
+  source = 'replaced' as .binary
+  call point(index,8,3,1,8,9)
+  /* Many independent repeated lookups, including empty lines and EOF. */
+  source = copies('x' || '0A'x,100) as .binary
+  index = .llsource..index(source)
+  do i = 100 to 0 by -1
+    call point(index,i * 2,i + 1,1,i * 2,min(200,i * 2 + 1))
+  end
+  say 'SOURCE_INDEX|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose failures checks
+  arg condition = .int, label = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+point: procedure = .void
+  arg index = .llsource..index, offset = .int, line = .int, column = .int, first = .int, last = .int
+  location = index.position(offset)
+  call check(location.error() = '' & location.line() = line & location.column() = column & location.first() = first & location.last() = last, 'position at byte ' || offset)
+  return

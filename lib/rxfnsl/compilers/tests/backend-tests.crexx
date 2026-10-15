@@ -16,6 +16,7 @@ main: procedure = .int expose checks failures artifacts outputfile
   call requests()
   call graphs()
   call provenance()
+  call cleanup()
   if outputfile <> '' then call literals()
   say 'BACKEND|checks=' || checks || '|failures=' || failures
   return failures
@@ -95,7 +96,7 @@ requests: procedure = .void expose artifacts
   request = .llcompiler..request('g','say 1' as .binary,artifacts,'bounded.crexx',1000000,512,10)
   call check(request.status() <> 0 & pos('LIMIT',request.error()) > 0,'output budget')
   other = request.output(); call check(other.bytes() = 0,'no partial bounded output')
-  request = .llcompiler..request('g','say 1 + 2' as .binary,artifacts,'bounded.crexx',1000000,512,67108864,16)
+  request = .llcompiler..request('g','say 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9' as .binary,artifacts,'bounded.crexx',1000000,512,67108864,16,0)
   call check(request.status() <> 0 & pos('LIMIT',request.error()) > 0,'register budget')
   request = .llcompiler..request('g','say 1' as .binary,artifacts,'bounded.crexx',1)
   call check(request.status() <> 0,'frontend operation budget')
@@ -106,6 +107,26 @@ requests: procedure = .void expose artifacts
   call check(llrxas..quote('00225C0D0ACEB1'x as .binary) = '"\x00\x22\x5C\x0D\x0A\xCE\xB1"','byte exact target quoting')
   request = .llcompiler..request('g','d = .decimal; say d' as .binary,artifacts,'decimal.crexx')
   graph = request.graph(); call check(pos('crexx.g.decimal.default',graph.dump()) > 0,'decimal absence retained in IR')
+  return
+cleanup: procedure = .void expose artifacts
+  request = .llcompiler..request('g','say 1' as .binary,artifacts,'lean.crexx',1000000,512,67108864,16,0)
+  output = request.output(); text = output.text(); graph = request.graph()
+  call check(request.status() = 0,'small program fits minimum register budget')
+  call check(pos('main() .locals=2',text) > 0 & pos('llf1() .locals=4',text) > 0,'call-free body and entry use only needed registers')
+  call check(pos('core.constant  : crexx.g.text',graph.dump()) = 0,'explicit G SAY constructs no empty default')
+  call check(pos('br llb1',text) = 0,'entry falls through to its first block')
+  request = .llcompiler..request('c','x = 1; say x' as .binary,artifacts,'lean.crexx')
+  graph = request.graph(); output = request.output()
+  call check(request.status() = 0 & pos('core.constant  : crexx.c.value',graph.dump()) = 0,'explicit C assignment and SAY construct no unused defaults')
+  do i = 1 to 2
+    level = word('g c',i)
+    request = .llcompiler..request(level,'say' as .binary,artifacts,'blank.crexx')
+    graph = request.graph()
+    call check(request.status() = 0 & pos('core.constant  : ',graph.dump()) > 0,level || ' bare SAY retains empty value')
+  end
+  request = .llcompiler..request('g','s = .string; say s' as .binary,artifacts,'default.crexx')
+  graph = request.graph()
+  call check(request.status() = 0 & pos('core.constant  : crexx.g.text',graph.dump()) > 0,'declared text default retained')
   return
 graphs: procedure = .void expose artifacts
   front = .llfrontend..request('g','say 1' as .binary,artifacts,'stable.crexx')

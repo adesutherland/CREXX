@@ -1,12 +1,12 @@
 # Level L language tooling research — 10 October 2026
 
-### cREXX C/G compilers and shared IR — STEP03 frontends, 15 October 2026
+### cREXX C/G compilers and shared IR — STEP05 review, 15 October 2026
 
 Adrian requested a documented plan for separate new C/G compilers written
 entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
 The authoritative compiler subprogramme is
 [`lib/rxfnsl/compilers/PLAN.md`](../../lib/rxfnsl/compilers/PLAN.md).
-It owns `LLCOMP-AC01–15` and `LLCOMP-STEP01–10` (including `STEP07B`), the proposed directory layout,
+It owns `LLCOMP-AC01–16` and `LLCOMP-STEP01–10` (including `STEP07B`), the proposed directory layout,
 two-frontend PoC, full migration, INTERPRET and eventual replacement gates.
 
 The new source-to-RXAS pipeline must not delegate to the C-language compiler
@@ -40,8 +40,11 @@ records the product build, 24 frontend and 128 existing CTests, B-only bootstrap
 modes and full no-opt frontend delivery. Syntax errors and messages have explicit
 coverage, and the walkthrough now contains generated trees/IR. Publication was
 authorised together with the focused CI preparation repair on 15 October 2026;
-STEP04–06 backend execution, optimisation and complete PoC remain
-open, as does the full STEP07–10 destination.
+STEP04 subsequently delivered the Level B backend using the Level L writer;
+the subplan retains its functional, provenance and product-stage repair
+receipts. STEP05 optimisation and its bounded code-quality follow-through are
+locally qualified; STEP06 complete PoC qualification and the full STEP07–10
+destination remain open.
 This advances the foundation portions of
 AST-AC02–06 and research AC-26; it does not mark their remaining migration or
 measurement obligations complete. Existing implementation approvals and AST7
@@ -57,6 +60,22 @@ indexed storage, exact constant/name pools, sparse analysis tables and readable
 text/structured views. STEP02 retains fixed-width row records after a bounded
 row/column comparison and implements checked text/binary codecs. AST storage is
 unchanged; representative compiler performance remains an open criterion.
+
+The [STEP05 review](../../lib/rxfnsl/compilers/doc/STEP05-REVIEW.md) was approved
+on 15 October. Adrian accepted the cleanup's
+[first Release verdict](../../lib/rxfnsl/compilers/evidence/step05-cleanup-20261015/README.md).
+Shared passes and local qualification are complete; the [receipt](../../lib/rxfnsl/compilers/evidence/step05-20261015/README.md)
+verifies F5-AC01–08. Adrian authorised STEP05 develop publication and monitor
+handover on 15 October; hosted outcomes remain separate. The subplan now also
+records the STEP06 qualification proposal for review before implementation. Adrian then
+clarified that formal performance testing is not required for Level L research;
+root `AGENTS.md` records this scoped exception. Functional, resource and emitted
+code-quality acceptance remain. This increment uses both compiler examples to
+improve Level L: checked batch rewrites, shared indexed analyses/passes and
+reusable source-coordinate lookup. Generic tests use a non-C/G family; C/G
+semantics and RXAS ABI policy stay in the compiler. The existing chunked writer
+is retained. F5-AC01–08/F5-STEP01–04 in the subplan own this bounded increment;
+no duplicate implementation plan or broader redesign is introduced here.
 
 ### Authoring and build refinements — approved 13 October 2026
 

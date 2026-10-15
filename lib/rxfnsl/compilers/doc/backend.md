@@ -3,7 +3,7 @@
 The STEP04 backend completes the unoptimised executable path for the
 [admitted C/G profile](poc-scope.md). `llrxc-c` and `llrxc-g` are separately
 selected commands. The existing `rxc`, `rxc-c` and wrapper routes remain the
-production routes. Shared IR optimisation is STEP05; full replacement and
+production routes. STEP05 supplies shared IR optimisation before this backend; full replacement and
 INTERPRET retain their later gates in [PLAN.md](../PLAN.md).
 
 ## Ownership and public surface
@@ -22,12 +22,17 @@ end
 `source` is binary, preserving exact UTF-8 source bytes. `artifacts` is one
 explicit directory of target import images. The optional arguments after the
 filename are semantic/source budget (1,000,000), nesting (512), emitted bytes
-(67,108,864), and registers per function (65,536). These are protection limits,
+(67,108,864), registers per function (65,536), and `optimise` (1). Zero disables
+shared IR optimisation without disabling construction/emitter cleanup. The
+work and byte limits also bound the optimiser; phases have separate logical
+budgets, not a combined memory/CPU cap. These are protection limits,
 not throughput promises. Exhaustion fails the request and exposes no partial
 successful output. Register budgets below 16 are invalid.
 
 `status`, `error`, `offset`, `diagnostic` and `output` evaluate the request once.
-`graph` retains frontend inspection. The installed `llcompilers.rxbin` package exposes these B services; a consumer
+`graph` retains frontend inspection; `emissiongraph` evaluates the request and
+returns the graph selected for emission. Query successful status before using
+that graph. Its revision may differ from the frontend graph. The installed `llcompilers.rxbin` package exposes these B services; a consumer
 links it with `rxfnsl.rxbin` and `library.rxbin`. The command I/O provider and
 Classic target runtime are absent from that service package.
 
@@ -54,15 +59,22 @@ implicitly grant it RXAS semantics.
 | Import cache | Package catalogs and checked callable signatures | B-only RXBIN007 reader, result/arity/type checks, no optional arguments in this ABI |
 | Output | Level L writer sections and owned origin-tagged chunks | Per-section and total byte budgets, finish/stream error checks |
 
-Selection uses two passes per function: allocate stable locations first, then
-visit its blocks and operations in stored order. This refines the review's
+Selection allocates stable value locations, runs the selector without output
+to determine scratch/call needs, then emits blocks in stored order. This refines the review's
 proposed virtual target records: the source IR itself remains the virtual
 representation, so there is no second set of mutable virtual-value records.
 Selected records already contain checked physical operands. No register reuse,
 liveness allocation, block rewriting or IR optimisation occurs here.
 
-`r0` is reserved. Slots come first, then each operation's result. Two scratch
-locations and a separate call window follow. Main's wrapper has 16 registers.
+`r0` is reserved. Slots come first, then each operation's result. Scratch storage
+is added only when selection uses it; Classic also retains its diagnostic
+location. A separate call window includes the argument-count register and the
+largest selected call's operands. The same selector is used for planning and
+emission, including hidden conversions; Classic's cold failure-message call
+requires two arguments. Main's wrapper uses two registers for G and six for C.
+The public minimum register-budget argument remains 16. No liveness reuse is
+introduced. Jumps to the next emitted block fall through, retaining its label
+and resetting source/context state at that entry.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
@@ -78,6 +90,13 @@ RESULT and clears RESULT when no value is returned. Expression calls require a
 value. Main forwards VM `-a` arguments as an ordered presence packet.
 
 ## Semantics and literals
+
+Source positions use request-owned `llsource.index` instances, one per source
+in the graph. The Level L index also serves diagnostics. It owns line starts
+and ends; lookup preserves byte offsets and Unicode scalar columns without
+repeated whole-prefix scans. The compiler still owns RXAS `.srcstep` flags,
+logical names and control-entry suppression rules; the generic writer only
+transports the selected text and origin tags.
 
 G selects integer, float, decimal, string and Boolean instructions directly.
 Conversions use the matching VM conversion. String `||` uses `concat`, which
@@ -176,7 +195,7 @@ work. No new public condition object, IR format or VM API is introduced.
 Compile-time failures distinguish source syntax/type/profile diagnostics from
 IR lowering, import, output and limit failures. Runtime failures stay runtime
 failures, including division in a taken branch; an untaken failing expression
-is not evaluated by this unoptimised compiler.
+is not evaluated in either compiler mode.
 
 ## File boundary, build and delivery
 

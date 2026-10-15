@@ -104,24 +104,31 @@ frontendfamilies: procedure = .void
   types[11] = boolean as .object
   call declare(g,'decimal.default',types,'',5,'','none','none')
   names = 'int64 text boolean float64 decimal'
-  i = .int; j = .int; k = .int; name = .string; inputs = .string
+  i = .int; j = .int; k = .int; name = .string; inputs = .string; op = .llir..operation
   do i = 1 to 5
     name = word(names,i)
     do j = 1 to 5
-      if i <> j then call declare(g,'convert.' || name || '.' || word(names,j),types,'value:' || i,j,'','none','conversion')
+      if i <> j then do
+        op = declare(g,'convert.' || name || '.' || word(names,j),types,'value:' || i,j,'','none','conversion')
+        if i = 1 & j = 2 then call op.evaluator(.llcrexxir..inttext() as .object)
+        if (i = 1 & j = 3) | (i = 3 & j = 1) then call op.evaluator(.scalarfold('canonical') as .object)
+      end
     end
     do k = 1 to 7
-      call declare(g,name || '.' || word('eq ne lt le gt ge strict',k),types,'left:' || i || ' right:' || i,3)
+      op = declare(g,name || '.' || word('eq ne lt le gt ge strict',k),types,'left:' || i || ' right:' || i,3)
+      if i = 1 then call op.evaluator(.scalarfold(word('eq ne lt le gt ge strict',k)) as .object)
     end
     if i = 1 | i = 3 | i = 4 | i = 5 then do
       do k = 1 to 4
-        call declare(g,name || '.' || word('add sub mul div',k),types,'left:' || i || ' right:' || i,i,'','none','arithmetic')
+        op = declare(g,name || '.' || word('add sub mul div',k),types,'left:' || i || ' right:' || i,i,'','none','arithmetic')
+        if i = 1 & k < 4 then call op.evaluator(.scalarfold(word('add sub mul',k)) as .object)
       end
       call declare(g,name || '.negative',types,'value:' || i,i,'','none','overflow')
       call declare(g,name || '.positive',types,'value:' || i,i)
     end
   end
-  call declare(g,'truth',types,'value:3',11)
+  op = declare(g,'truth',types,'value:3',11)
+  call op.evaluator(.scalarfold('gtruth') as .object)
   call declare(g,'boolean.not',types,'value:3',3)
   call declare(g,'boolean.xor',types,'left:3 right:3',3)
   call declare(g,'text.concat',types,'left:2 right:2',2,'','none','resource')
@@ -136,7 +143,8 @@ frontendfamilies: procedure = .void
   do k = 1 to 3
     call declare(c,word('positive negative not',k),types,'value:6 context:7',6,'','none','conversion.arithmetic')
   end
-  call declare(c,'truth',types,'value:6',11,'','none','logical')
+  op = declare(c,'truth',types,'value:6',11,'','none','logical')
+  call op.evaluator(.scalarfold('ctruth') as .object)
   call declare(c,'numeric.digits',types,'value:6 context:7',7,'','none','numeric')
   call declare(c,'numeric.fuzz',types,'value:6 context:7',7,'','none','numeric')
   call declare(c,'numeric.form',types,'context:7',7,'form:2','none','numeric')
@@ -157,7 +165,7 @@ frontendfamilies: procedure = .void
 
 /** Declarative signature helper; all type handles still belong to the live
  * caller's registry. This is compiler vocabulary, not a generic IR opcode. */
-declare: procedure = .void
+declare: procedure = .llir..operation
   arg family = .llir..family, name = .string, types = .object[], inputs = .string, result = .int, attributes = '', state = 'none', failure = 'none', termination = 'returns'
   op = family.operation(name)
   item = .string; split = .int; type = .llir..typeid; i = .int
@@ -173,7 +181,71 @@ declare: procedure = .void
     call op.attribute(left(item,split - 1),type)
   end
   call op.state(state); call op.failure(failure); call op.termination(termination)
-  return
+  return op
+
+/** The admitted STEP05 rules. Checked scalar arithmetic never changes Classic
+ * numeric context or evaluates a user call. Noncanonical truth and overflow
+ * stay at runtime; core Boolean bytes differ from G's int64 Boolean values. */
+scalarfold: class implements .llir..evaluator
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode; return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','scalar evaluation budget exhausted')
+    left = input.at(1); right = .binary; bits = .binary; a = .int; b = .int; value = .int
+    if _mode = 'ctruth' then do
+      spelling = bin2x(left)
+      if spelling <> '30' & spelling <> '31' then return .llir..evaluation('keep','Classic truth requires exact 0 or 1 bytes')
+      bits = '00'x as .binary
+      if spelling = '31' then bits = '01'x as .binary
+    end
+    else do
+      a = <at..i64>(0) left
+      if _mode = 'canonical' | _mode = 'gtruth' then do
+        if a <> 0 & a <> 1 then return .llir..evaluation('keep','noncanonical Boolean remains runtime work')
+        if _mode = 'canonical' then bits = left
+        else do
+          bits = '00'x as .binary
+          if a = 1 then bits = '01'x as .binary
+        end
+      end
+      else do
+        right = input.at(2); b = <at..i64>(0) right
+        maximum = 9223372036854775807; minimum = -9223372036854775808; overflow = 0
+        select _mode
+          when 'add' then do
+            if b > 0 then overflow = a > maximum - b
+            if b < 0 then overflow = a < minimum - b
+            if overflow = 0 then value = a + b
+          end
+          when 'sub' then do
+            if b > 0 then overflow = a < minimum + b
+            if b < 0 then overflow = a > maximum + b
+            if overflow = 0 then value = a - b
+          end
+          when 'mul' then do
+            if a > 0 & b > 0 then overflow = a > maximum <idiv> b
+            if a > 0 & b < 0 then overflow = b < minimum <idiv> a
+            if a < 0 & b > 0 then overflow = a < minimum <idiv> b
+            if a < 0 & b < 0 then overflow = a < maximum <idiv> b
+            if overflow = 0 then value = a * b
+          end
+          when 'eq' then value = a = b
+          when 'strict' then value = a = b
+          when 'ne' then value = a <> b
+          when 'lt' then value = a < b
+          when 'le' then value = a <= b
+          when 'gt' then value = a > b
+          when 'ge' then value = a >= b
+          otherwise return .llir..evaluation('keep','operation has no admitted scalar rule')
+        end
+        if overflow then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+        call binresize bits,8; <at..i64>(0) bits = value
+      end
+    end
+    result = .llir..evaluation('constant'); call result.add(bits); return result
 
 floatcodec: class implements .llir..typecodec
   *: factory

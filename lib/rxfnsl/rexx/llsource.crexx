@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Source validation and explicitly selected comment stage. */
 options levelb
-namespace llsource expose prepared diagnostic lexeme message
+namespace llsource expose prepared diagnostic lexeme message index position
 import rxfnsb
 import lllimits
 import llcomments
@@ -139,27 +139,105 @@ prepared: class
   error: method = .string
     return _error
 
+/** Immutable coordinate result. first/last delimit the containing line's bytes
+ * without its newline. Errors publish no usable coordinates. */
+position: class
+  _line = .int
+  _column = .int
+  _first = .int
+  _last = .int
+  _error = .string
+  *: factory
+    arg line = 0, column = 0, first = 0, last = 0, error = ''
+    _line = line; _column = column; _first = first; _last = last; _error = error
+    return
+  line: method = .int
+    return _line
+  column: method = .int
+    return _column
+  first: method = .int
+    return _first
+  last: method = .int
+    return _last
+  error: method = .string
+    return _error
+
+/** Request-owned source index. Byte offsets are authoritative; columns count
+ * UTF-8 leading bytes, matching diagnostic's scalar convention. Malformed
+ * bytes are never decoded here. Budgets count source bytes plus 16 logical
+ * index bytes per line, independently of VM container overhead. */
+index: class
+  _source = .binary
+  _starts = .int[]
+  _ends = .int[]
+  _size = .int
+  _work = .int
+  _error = .string
+  *: factory
+    arg source = .binary, entries = 1000000, bytes = 67108864, work = 10000000
+    _source = source; _size = <blen>(source); _work = work; _error = ''
+    if entries < 1 | bytes < 16 | work < 1 then do
+      _error = 'LL_RESOURCE_LIMIT: source index budgets must be positive'; return
+    end
+    if _size > bytes - 16 then do
+      _error = 'LL_RESOURCE_LIMIT: source.index.bytes'; return
+    end
+    if _size > work then do; _error = 'LL_RESOURCE_LIMIT: source.index.work'; return; end
+    n = 1; _starts[n] = 0; i = 0
+    do while i < _size
+      c = <at..u8>(i) _source
+      if c = 13 | c = 10 then do
+        _ends[n] = i
+        if c = 13 & i + 1 < _size then do
+          if (<at..u8>(i + 1) _source) = 10 then i = i + 1
+        end
+        n = n + 1
+        if n > entries then do; _error = 'LL_RESOURCE_LIMIT: source.index.entries'; return; end
+        if n > (bytes - _size) <idiv> 16 then do; _error = 'LL_RESOURCE_LIMIT: source.index.bytes'; return; end
+        _starts[n] = i + 1
+      end
+      i = i + 1
+    end
+    _ends[n] = _size
+    return
+  error: method = .string
+    return _error
+  position: method = .llsource..position
+    arg offset = .int
+    if _error <> '' then return .llsource..position(0,0,0,0,_error)
+    if offset < 0 | offset > _size then return .llsource..position(0,0,0,0,'LL_SOURCE_POSITION: offset outside source')
+    low = 1; high = _starts[0]; steps = 0
+    do while low <= high
+      steps = steps + 1
+      if steps > _work then return .llsource..position(0,0,0,0,'LL_RESOURCE_LIMIT: source.position.work')
+      middle = low + (high - low) <idiv> 2
+      if _starts[middle] <= offset then low = middle + 1
+      else high = middle - 1
+    end
+    /* At the LF byte inside CRLF, the old diagnostic already advanced its
+     * line at CR, but has not consumed LF. Preserve that exact byte boundary. */
+    if offset > 0 & offset < _size then do
+      if (<at..u8>(offset) _source) = 10 & (<at..u8>(offset - 1) _source) = 13 then return .llsource..position(high + 1,1,offset,offset)
+    end
+    column = 1
+    do i = _starts[high] to offset - 1
+      steps = steps + 1
+      if steps > _work then return .llsource..position(0,0,0,0,'LL_RESOURCE_LIMIT: source.position.work')
+      c = <at..u8>(i) _source
+      if c < 128 | c >= 192 then column = column + 1
+    end
+    return .llsource..position(high,column,_starts[high],_ends[high])
+
 /** Diagnostic columns count Unicode scalars; offsets remain exact byte offsets. */
 diagnostic: procedure = .string
   arg source = .binary, offset = .int, code = .string, message = .string, display = 'escaped'
   if display <> 'escaped' & display <> 'unicode' then return 'LL_DIAGNOSTIC_POLICY: display must be escaped or unicode'
-  offset = max(0,min(offset,<blen>(source))); line = 1; column = 1; first = 0; last = <blen>(source)
-  i = .int; c = .int; start = .int; previous = -1
-  do i = 0 to offset - 1
-    c = <at..u8>(i) source
-    if c = 13 | c = 10 then do
-      if c <> 10 | previous <> 13 then line = line + 1
-      column = 1; first = i + 1
-    end
-    else if c < 128 | c >= 192 then column = column + 1
-    previous = c
-  end
-  do i = offset to <blen>(source) - 1
-    c = <at..u8>(i) source
-    if c = 10 | c = 13 then do
-      last = i; leave
-    end
-  end
+  offset = max(0,min(offset,<blen>(source)))
+  positions = .llsource..index(source)
+  at = positions.position(offset)
+  if at.error() <> '' then return code || ' at byte ' || offset || ': ' || message || ' (' || at.error() || ')'
+  line = at.line(); column = at.column(); first = at.first(); last = at.last()
+  i = .int; start = .int
   header = code || ' at line ' || line || ', column ' || column || ' (byte ' || offset || '): ' || message
   checked = .prepared(source,'utf8','','',max(1,<blen>(source)))
   if checked.status() <> 0 then do

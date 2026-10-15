@@ -87,8 +87,8 @@ try:
             command = compiler(case['level'], assembly, source)
         run(stem+'-compile', command, isolated=not args.native_controls)
         assert assembly.exists(), stem
-        # Both assembler modes exercise generated control/call windows. The
-        # compiler itself deliberately has no STEP05 optimisation pipeline yet.
+        # Both assembler modes exercise generated control/call windows. Shared
+        # IR optimisation is on; check-optimise.py covers the compiler -n control.
         for assembler_mode in (['noopt'] if args.native_controls else ['noopt', 'opt']):
             label = stem + '-' + assembler_mode
             command = [tool('rxas')] + (['-n'] if assembler_mode=='noopt' else []) + [str(assembly)]

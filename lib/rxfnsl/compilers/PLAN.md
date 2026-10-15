@@ -11,6 +11,18 @@ Adrian authorised its develop publication and CI-monitor handover on 15 October
 2026. The STEP04 package dependency failure is repaired and locally verified
 below; hosted delivery outcomes remain separate.
 Wider quality, clause/TRACE and redesign gates remain open.
+The [STEP05 design](doc/STEP05-REVIEW.md) defines the completed bounded
+increment, including improvements to Level L driven by both compiler consumers.
+Adrian approved F5-AC01–08 and F5-STEP01–04 on 15 October 2026, starting with
+Level L and emitter cleanup. Adrian accepted the F5-STEP01 [first Release verdict](evidence/step05-cleanup-20261015/README.md)
+and authorised continuation. F5-AC01–08 and F5-STEP01–04 are now verified locally;
+[qualification receipt](evidence/step05-20261015/README.md). Adrian authorised committing and publishing STEP05 to `develop`, with the CI
+monitor switched to that commit, on 15 October 2026. Hosted outcomes remain
+separate. Adrian subsequently clarified that formal
+performance testing is not required for this research project. The scoped
+standing instruction is in root `AGENTS.md`; the second formal Release verdict,
+AC-power and sampling gates no longer apply. Functional/resource/code-quality
+acceptance and the later production-replacement gates remain.
 STEP04 qualification baseline:
 `bcfb068b7abe2f3a2b9a23232fdb4244cc8ffa67`. Original planning source baseline:
 `47ee4e40ccffcb4c3942f477c0820f8e3c02cbd4`.
@@ -680,7 +692,7 @@ declared PoC portions only; Phase B–D obligations remain visible.
 | **LLCOMP-STEP03** | Build both Level L grammars and semantic mappers for the pinned scalar/control/call profile, with explicit language differences and readable IR. | AC03–05/08/09 | STEP02; neither frontend may delegate to the old compiler. |
 | **LLCOMP-STEP04** | Complete unoptimised cREXX RXAS selection, simple register assignment, ABI calls and separate driver/service entries. Execute both languages end to end. Close the direct source-map, construction and emission findings from the emission-quality review. | AC01/03/07–09/12/16 | STEP03; retain old compiler controls as separate test processes only. Functional implementation published; CP essentials approved and completed locally. Wider quality follow-through remains open. |
 | **LLCOMP-STEP05** | Add shared temporary propagation, admitted constant evaluation, branch simplification and safe unused-operation elimination. Verify against the independent IR evaluator and emitted execution, including actual code-shape improvements for both languages. | AC04–07/09/13/16 | STEP04; pass contracts reviewed before enabling each transformation. Do not use optimisation to conceal direct construction/emission defects. |
-| **LLCOMP-STEP06** | Qualify and document the two-frontend PoC: bootstrap, installed tools, both VMs/modes, failure cases, resource measurements and semantic comparisons. | Phase A portions of AC01–09/12–14 | STEP05. **PoC review gate:** assess usefulness and complexity; approve the next coverage increments. This does not authorise production replacement. |
+| **LLCOMP-STEP06** | Qualify and document the two-frontend PoC: bootstrap, installed tools, both VMs/modes, failure cases, explicit resource bounds and semantic comparisons. | Phase A portions of AC01–09/12–16 | STEP05. **PoC review gate:** assess usefulness and complexity; approve the next coverage increments. This does not authorise production replacement. |
 | **LLCOMP-STEP07** | Expand C/G coverage together through named increments: imports, classes/references and ownership, dynamic Classic constructs, runtime/host contracts, tooling and extensions. | AC03–10/12–14 | STEP06 review; keep the complete coverage matrix current and generic services independent of either language. |
 | **LLCOMP-STEP07B** | Implement the proper B frontend/profile over the shared IR/backend; inventory full B coverage and the self-hosting source closure. Build B1 from the native seed, rebuild B/L/B to B2 and B3, and qualify convergence, semantic behaviour and independence from G/native compiler services. | AC01/02/04–10/12–15 | Shared backend and required typed/metadata coverage from STEP04/07; review the exact B coverage and stage manifest before implementation. Can advance alongside STEP07 once those inputs exist; required before STEP09. |
 | **LLCOMP-STEP08** | Prove and implement the shared compile-service/Classic interpreted-group activation and continuation route, with bounded generated-code ownership. | AC05/09/11–13 | Service foundations from STEP04; required semantic coverage from STEP07. **INTERPRET mechanism gate** before runtime integration; existing LC criteria and no-C constraint remain binding. |
@@ -1105,6 +1117,233 @@ installation and installed C/G/service consumers. No compiler or runtime source
 changed; prior functional qualification remains applicable. This closes the
 local missing-product mechanism, not all platform/signing or SDK ZIP gates.
 
+## STEP05 proposal: Level L services and shared optimisation
+
+**Approved and locally complete, 15 October 2026. F5-AC01–08 and F5-STEP01–04
+are verified by the [qualification receipt](evidence/step05-20261015/README.md).
+Develop publication and CI-monitor handover are authorised; overall compiler
+replacement is open.**
+The [review packet](doc/STEP05-REVIEW.md) retains the accepted pass contracts and
+service/CLI design. The [paired examples](examples/step05/README.md) now contain
+actual IR/RXAS generated by the cleaned compiler with the shared passes disabled
+and enabled. All four execute correctly with assembler optimisation off.
+
+### Vision and intended outcome
+
+Make C/G compilation a practical test and improvement of Level L: reusable
+checked graph rewrites, bounded analyses/transformations and source-coordinate
+services must live in Level L, implemented in Level B. Both compilers use the
+same pass algorithms with their own semantic contracts, then emit economical
+RXAS through the existing Level L writer. Generic services must also work with
+a non-C/G family. Preserve the source graph, exact values, effects, errors,
+origins and supported control behaviour, with an explicit unoptimised control.
+
+First close direct default-construction and frame/fall-through defects with
+optimisation disabled. Do not let dead-code removal hide them. Keep the current
+condition machinery, Classic activation/return obligations and origin relay.
+SSA, liveness-based register reuse, inlining, contextual Classic arithmetic
+specialisation, full TRACE and INTERPRET remain later gates already recorded
+above; this bounded increment does not close overall replacement acceptance.
+
+### Numbered acceptance criteria
+
+1. **F5-AC01 — Clean unoptimised construction/emission (verified locally).** Explicit SAY
+   and Classic assignment operands create no unused defaults; bare SAY and
+   required variable defaults retain their meaning. Frames reserve only needed
+   value, scratch, diagnostic and call-window registers, including hidden/cold
+   calls and argument counts. Omit jumps to the next emitted block without
+   losing anchors. Verify opt-off IR/RXAS shape, calls/recursion, register-budget
+   boundaries and semantic/provenance regressions. Serves EQ-AC03/05 and AC16.
+2. **F5-AC02 — Generic Level L services (verified locally).** Shared batch reconstruction,
+   numeric definition/use/successor indexes, contract eligibility and pass
+   driving live in Level L with no compiler imports or C/G-name tests. Preserve
+   existing rewrite/lower interfaces and use one checked reconstruction per
+   pass/batch rather than cloning the graph per fold. A non-C/G fixture uses the
+   same services as both compilers. Inspect dependencies and retain pass-level
+   tests and operation/storage bounds. Serves AC01/04/06/13/15.
+3. **F5-AC03 — Explicit semantic admission (verified locally).** Register evaluators for
+   actual frontend operations, not only the foundation demo names. Initially
+   admit checked G int64 add/subtract/multiply/comparisons, exact int64-to-text
+   and canonical Boolean conversion/truth; C truth admits only exact literal
+   bytes `0` and `1`. Overflow, division, unknown conversions, mutable C NUMERIC
+   context, pool reads and arbitrary calls retain runtime behaviour. Independent
+   expected results and boundary/error cases verify each admitted rule; no
+   generic pass infers semantics from a name. Serves AC05/06.
+4. **F5-AC04 — Safe control and removal (verified locally).** Prove branch edges and remove
+   unreachable blocks from all admitted function entries; preserve effects or
+   failures in condition evaluation. Propagate only nonescaping immutable or
+   uniquely defined block-local private temporaries. Remove reachable unused
+   operations only with proved state/failure/continuation eligibility. Verify
+   joins, loops, skipped/reached errors, short-circuiting, output, cleanup,
+   unknown effects and invalidation at state/call boundaries. Serves AC05/06/09.
+5. **F5-AC05 — Atomic ownership and provenance (verified locally).** Source graphs stay
+   unchanged; operation/value/block mappings account for substitutions and
+   removal. Fresh analyses/facts belong to the candidate revision. Verify exact
+   constants, attributes, derived origins and every candidate before acceptance.
+   `invalid`/`limit` exposes the original graph, never a partial successful
+   transformation. Stale/foreign handles, refused services, budgets and repeated
+   optimisation exercise failure safety, determinism and convergence. Serves
+   AC04/06/09/13.
+6. **F5-AC06 — Useful and independently checked output (verified locally).** Both languages
+   show fewer unnecessary IR operations and RXAS instructions/calls on the
+   paired examples. Compare original/optimised IR with an independent bounded
+   reference evaluator, not the folding callback as oracle, and execute both
+   outputs with assembler optimisation off first. Include appropriate existing
+   B/G/C compiler controls; their inefficiencies are not acceptance targets.
+   Record helpers, frames and metadata separately from executable counts.
+   Keep source/error anchors and logical filenames truthful. Serves AC06/07/16.
+7. **F5-AC07 — Controls, delivery and research qualification (verified locally).** The reviewed
+   compiler `-n` switch and trailing service option select the cleaned baseline;
+   frontend and emission graphs remain inspectable. Preserve existing request
+   arguments, product/install selection and B-only bootstrap. Keep compiler,
+   B-host and assembler optimisation modes distinct. Following Adrian's
+   15 October clarification, formal performance testing and a separate Release
+   verdict are not required for this research increment. Focused/normal suites,
+   resource limits, emitted-code inspection, installed consumers, enduring
+   architecture/user-guide updates and exact-input receipts close the increment;
+   hosted qualification remains separate. Serves AC02/12–16.
+8. **F5-AC08 — Reusable source coordinates and emitter integrity (verified locally).** Move
+   duplicated byte-offset/line/column lookup into a bounded request-owned Level
+   L source index used by diagnostics and C/G emission. Preserve Unicode scalar
+   columns, CRLF/CR/LF, EOF, multiline spans and malformed-byte fallback, with
+   independent Level L tests. Retain the existing writer and prove chunk/section
+   origins, error propagation, output limits and sink failures after graph
+   remapping. Source presentation and RXAS control/ABI policy remain compiler
+   responsibilities. This introduces no TRACE/condition redesign. Serves
+   AC07/09/13/15 and EQ-AC05.
+
+### Numbered implementation steps and gates
+
+| Step | Work and criteria | Dependency / gate |
+|---|---|---|
+| **F5-STEP01 — complete** | Repair direct default/frame/fall-through defects with optimisation off; extract shared source-coordinate lookup. Retain opt-off shape and focused provenance/ABI/diagnostics tests. F5-AC01/08. | Design approved; all code Level B. The first cleanup verdict was accepted; later formal research measurement gates are waived. |
+| **F5-STEP02 — complete** | Extend Level L's rebuild coordinator, indexes and bounded pass driver; prove with a non-C/G fixture and failure/lifecycle tests. Preserve existing service contracts. F5-AC02/04/05/08. | Approved pass/API contracts; generic work must not import the compiler. Integrate only verified candidates. |
+| **F5-STEP03 — complete** | Register the admitted C/G evaluators and wire the shared pipeline, graph access and opt-off controls. Add the independent IR oracle and paired execution/code-shape cases. F5-AC03/06/07. | F5-STEP02; focused correctness and code-quality evidence. Unproved folds remain runtime operations. |
+| **F5-STEP04 — complete** | Complete the relevant normal suite and installed/B-only checks, update architecture and user guide, retain exact-input evidence and acceptance status. F5-AC01–08. | Reuse unchanged valid evidence; measure aggregate scheduling before registering expanded nested tests. Develop publication authorised 15 October. STEP06 and full replacement gates remain open. |
+
+### First cleanup gate — 15 October 2026
+
+The [cleanup receipt](evidence/step05-cleanup-20261015/README.md) records the
+provisional Level B source-index/default/frame/fall-through implementation and
+frozen inputs. Minimum independent Level L, C/G service, backend and provenance
+checks passed. Both normal Release products execute the measurement outputs
+identically. After 36 paired samples per language, C compilation improves by
+2.78% at the paired median; G's interval crosses zero, so its timing is
+inconclusive. Peak RSS does not regress. Both RXAS outputs are structurally
+smaller. These are bounded local observations, not completed STEP05 acceptance.
+
+Adrian accepted this first verdict and authorised continuation on 15 October.
+F5-STEP02/03 shared services/passes and F5-STEP04 local qualification are now
+complete. The new aggregate was registered after isolated Debug and maintained
+Apple ASan measurements. Both B-only bootstrap modes, installed consumers,
+independent Level L tests and the relevant backend/provenance checks passed.
+The [final receipt](evidence/step05-20261015/README.md) maps every F5 criterion
+to its evidence. Develop publication and lightweight CI-monitor handover were
+subsequently authorised on 15 October; no automatic reruns are authorised.
+
+## STEP06 proposal: qualify the complete C/G PoC
+
+**For review, 15 October 2026; implementation not yet authorised.** STEP05
+supplies the working optimised pipeline. STEP06 establishes whether the bounded
+POC-01–10 profile is coherent, usable and a useful test of Level L before
+approving further language coverage. The pipeline stays Level B-only and uses
+the existing Level L emitter. This proposal adds no public language syntax,
+compiler option, IR opcode, native compiler fallback or runtime redesign.
+
+### Vision and intended outcome
+
+A reader can follow a small C and G program from its purposeful source tree,
+through verified original/optimised IR, into readable RXAS and installed
+execution. A single coverage/evidence matrix explains what each language
+preserves, what Level L supplies, how failures are reported, and which platform
+or full-replacement obligations remain open. Both compilers must improve the
+shared services without making those services depend on Classic Rexx.
+
+Reuse the qualified STEP02–05 tests and receipts after checking their input
+identities. Add only missing decisive cases or repair a demonstrated defect.
+Formal performance testing is not required under the standing Level L research
+exception. Work/storage limits, useful output shape and observed pathological
+cost still matter. Full TRACE/conditions, INTERPRET, SSA/register reuse,
+inlining and broader language/ABI coverage remain their named later gates.
+
+### Numbered acceptance criteria
+
+1. **F6-AC01 — Profile and semantics (open).** Map every POC-01–10 row to source,
+   expected behaviour and evidence through AST, IR, optimised IR, RXAS and
+   execution. Include agreement and intentional C/G differences: literal bytes,
+   numeric context, variable defaults/unset reads, eager/skipped operands,
+   calls/arguments and control flow. Reuse independent expected values and the
+   non-C/G oracle; old compiler output alone is not the specification.
+2. **F6-AC02 — Failure and ownership (open).** The same matrix covers syntax,
+   profile/type, malformed source/import, unknown-contract and budget failures,
+   together with reached/skipped runtime errors, Unicode/CRLF origins,
+   repeated requests and owned results. Failure preserves existing destination
+   files and exposes no partial executable. Any discovered gap gains a focused
+   permanent regression before closure.
+3. **F6-AC03 — Emitted-code quality (open).** Retain a few complete before/after
+   examples and structural assertions: meaningful source names/spans, no unused
+   default construction or gratuitous frame/call machinery, and required C ABI,
+   numeric/activation/error work preserved. Separate executable counts, helpers,
+   registers and metadata; classify remaining conservatism against named later
+   passes. Static counts establish no execution-speed claim.
+4. **F6-AC04 — Bootstrap and installed use (open).** Retain the B/L-only compiler
+   host closure, opt/no-opt standalone bootstrap and installed CLI/service
+   evidence. Demonstrate compilation with old compiler commands unavailable to
+   the new drivers. Inventory native seed/binutils, generated launchers and the
+   separate Classic target-runtime dependencies. Proper B self-hosting remains
+   STEP07B; it must not be claimed from this seed-built PoC.
+5. **F6-AC05 — Modes, platforms and resource boundaries (open).** Consolidate
+   B-host, IR and assembler optimisation modes and both supported VMs, keeping
+   each axis distinct. Match local/normal hosted evidence to exact inputs;
+   record unavailable or untested platform cells explicitly, including
+   constrained-host applicability. Close the Phase A supported-path checks
+   without claiming full AC12 platform qualification. Exercise deterministic
+   work/index/byte/register refusals; no formal timing campaign, deep matrix
+   dispatch or new production-replacement gate is implied.
+6. **F6-AC06 — Walkthrough and review decision (open).** Update the enduring
+   architecture/user guide with a reproducible paired example, actual tree/IR/
+   RXAS views, failure variants and installed commands. Summarise improvements
+   and gaps in Level L separately from C/G coverage. Present the resulting PoC
+   assessment and proposed balanced STEP07 increments for approval. All
+   full-replacement criteria remain open beyond their proved Phase A portions.
+
+### Numbered implementation steps
+
+| Step | Work and acceptance | Dependency / decision gate |
+|---|---|---|
+| **F6-STEP01** | Audit existing POC-01–10 coverage, exact input identities and dependency/mode/platform evidence; identify only missing proof. F6-AC01/04/05. | Approval of this bounded proposal; reuse STEP05 qualification. |
+| **F6-STEP02** | Fill decisive semantic/failure/ownership/code-shape gaps with Level B consumers and shared non-C/G tests; fix demonstrated in-scope defects. F6-AC01–05. | F6-STEP01. New language/IR/architecture decisions require separate review. |
+| **F6-STEP03** | Regenerate the paired walkthrough and update architecture, guide and criterion/evidence matrix. F6-AC03/06. | Qualified implementation inputs; do not repeat unchanged broad tests. |
+| **F6-STEP04** | Present the complete Phase A assessment, remaining obligations and proposed STEP07 coverage increments. F6-AC01–06. | PoC review gate; no default compiler replacement or later implementation without approval. |
+
+### Simple proposed acceptance example
+
+Use the following body in two files, prefixed respectively by `options levelc`
+and `options levelg`:
+
+```rexx
+say 01
+if 1 then say 'ok'
+else say 1 / 0
+```
+
+| Observation | C | G |
+|---|---|---|
+| Expected output | `01`, then `ok` | `1`, then `ok` |
+| Source/IR meaning | Preserve the literal's Classic bytes | Convert the typed integer value for SAY |
+| Shared optimisation | Prove literal truth and remove the unreachable division arm | Prove literal truth and remove the unreachable division arm |
+| RXAS | Keep the required Classic runtime/condition setup | Keep the typed entry/return ABI |
+
+This is a proposed qualification case using existing syntax, not a claim of a
+newly executed combined example. The source tree and frontend IR retain the
+ELSE arm. The optimised emission graph can remove it; both `-n` and normal
+compilation must execute without an arithmetic error. Division itself has no
+compile-time evaluator: changing the condition to `0` must retain the reached
+division and report a runtime error at its source location. Removing `THEN`
+must instead fail compilation and preserve any previous output file. These
+three cases demonstrate language distinction, shared control proof and error
+fidelity without adding a new surface.
+
 ## Qualification and documentation practice
 
 - Compare each frontend with its own language semantics and existing compiler;
@@ -1120,7 +1359,9 @@ local missing-product mechanism, not all platform/signing or SDK ZIP gates.
   no status-only publication or routine overnight matrix dispatch is required.
 - Follow [performance governance](../../../performance/PERFORMANCE-GOVERNANCE.md)
   and the [performance instructions](../../../performance/AGENTS.md) for
-  measurements and any production optimisation verdict. Use the existing
+  formal measurements when separately requested or required for later production
+  replacement. The root `AGENTS.md` Level L research exception governs ordinary
+  research increments; formal benchmarking is not their completion gate. Use the existing
   benchmark corpus where applicable; new performance tooling is Level B.
 - Keep the Level L user guide an enduring use manual. Put plans, unresolved
   decisions and qualification receipts here or in linked planning/evidence
@@ -1140,7 +1381,8 @@ local missing-product mechanism, not all platform/signing or SDK ZIP gates.
 | STEP04 / executable backend | Published `bf74c72111fbd466d1f93c421e6d5dadbbedcc2c`; original [functional receipt](evidence/step04-20261015/README.md) retained. Emission review reopens source-metadata portions of F4-AC03/05; new F4-AC07 and EQ-AC01–05 remain open. Hosted results are separate. |
 | Essential metadata/condition correction | CP-AC01–06 and CP-STEP01–03 verified locally; [receipt](evidence/provenance-20261015/README.md). Published as `f14d8a569a8ced9420fd27e8d6277db0617825db`. Existing diagnostic structure retained; original faults now survive the relay. Wider redesign and hosted outcomes remain separate. |
 | STEP04 product-stage repair | PKG-AC01/02 verified locally; PKG-AC03 regression/docs/evidence complete and publication approved. [Receipt](evidence/package-stage-20261015/README.md). All four compiler products now belong to the normal product selection; hosted delivery remains separate. |
-| STEP05–06 / remaining Phase A | Shared optimisation and complete PoC qualification remain open with their later gates. |
+| STEP05 / shared Level L optimisation | F5-AC01–08 and F5-STEP01–04 verified locally; [receipt](evidence/step05-20261015/README.md). Level B-only shared services, C/G integration, independent tests, code-quality examples, B-only bootstrap and installed delivery complete. Formal research performance tests are not required. Develop publication and lightweight CI-monitor handover authorised; hosted outcomes separate. |
+| STEP06 / remaining Phase A | Proposed bounded qualification/usability review below; F6-AC01–06 remain open pending approval and execution. |
 | STEP07–10, including STEP07B / full replacement and INTERPRET | Planned destination; proper B self-hosting is now explicit under AC02. Later gates remain open. |
 | LLCOMP-AC01–16 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions; AC16 now explicitly requires emitted-code quality. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |
@@ -1157,3 +1399,27 @@ local missing-product mechanism, not all platform/signing or SDK ZIP gates.
 - [RXAS](../../../docs/ai-context/RXAS_ASSEMBLER.md),
   [RXLINK](../../../docs/ai-context/RXLINK_LINKER.md) and
   [RXVM](../../../docs/ai-context/RXVM_INTERPRETER.md)
+
+### Shared-pass implementation sequence — accepted cleanup continuation
+
+1. Extend the existing semantic dispatch and reconstruction coordinator with a
+   request-owned indexed batch: forward constant/private-slot facts, known
+   branch successors, entry-rooted reachability and reverse demand marking.
+   Reconstruct and verify once; failed work/storage budgets return the original.
+   Core slots have no address/escape operation in this profile; facts are
+   block-local and invalidated by every extension that accesses mutable state.
+2. Exercise these services with a separate non-C/G family, an independent
+   interpreter and adversarial refusal, effect, provenance and budget cases.
+3. Register only the approved C/G evaluators, then connect the trailing request
+   option, emission graph and CLI -n. Retain cleaned opt-off controls.
+4. Complete focused correctness, code-quality, normal regression and delivery
+   checks. Adrian waived formal performance testing for this research project
+   on 15 October; no general speed claim or publication is implied. The ordinary
+   Release product and pilot executions already passed, but battery-powered
+   pilot timings are observations only, not a formal comparison.
+
+The initial pass computes facts in definition order, then demand in reverse
+block order. It needs no repeated graph cloning or unbounded fixed point.
+Unused core loads are retained unless a preceding same-block store proves a
+substitution; potentially failing extension operations are retained unless
+an exact successful constant evaluation proves that specific instance safe.

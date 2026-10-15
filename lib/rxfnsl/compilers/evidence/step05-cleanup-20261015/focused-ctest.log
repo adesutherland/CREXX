@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+    Start 2493: llcompiler_backend_noopt_rxbvm
+1/2 Test #2493: llcompiler_backend_noopt_rxbvm ......   Passed   85.60 sec
+    Start 2494: llcompiler_provenance_noopt_rxbvm
+2/2 Test #2494: llcompiler_provenance_noopt_rxbvm ...   Passed   29.47 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+compiler-backend    = 115.08 sec*proc (2 tests)
+comprehensive       = 115.08 sec*proc (2 tests)
+level-l             = 115.08 sec*proc (2 tests)
+library             = 115.08 sec*proc (2 tests)
+optimizer-parity    = 115.08 sec*proc (2 tests)
+
+Total Test time (real) = 115.14 sec

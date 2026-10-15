@@ -263,8 +263,12 @@ optimisation pipeline. Create fresh facts after accepting the new graph.
 
 A change reports `changed`, `keep`, `invalid` or `limit`. Its `result()` is the
 verified candidate on `changed`, otherwise the original graph. `operation(oldid)`
-and `value(oldid)` map IDs into that result; zero denotes an operation removed
-without a replacement operation. Failed candidates are never published.
+and `value(oldid)` map IDs into that result. `block(oldid)` maps retained blocks
+and returns zero for removed ones. Zero denotes a removed operation/value with
+no retained replacement. A substituted load has no replacement operation but
+its used result maps to the earlier value. A multi-result fold maps its operation
+to the first retained constant and each used result separately. Failed or kept
+changes have identity mappings. Failed candidates are never published.
 
 `llirservices..lower(reference graph,target_contract)` rebuilds a graph against
 a target contract. Shared types must have matching names and family versions;
@@ -279,6 +283,65 @@ fragments without language failure. New operations must satisfy the same effect
 contract; state operations, terminators, foreign results, type mismatches and
 cross-block results are rejected. This is the foundation for registering richer
 checked lowerings as compiler backends are developed.
+
+## Optimise a frozen module
+
+```rexx
+change = llirservices..optimise(reference graph)
+select change.status()
+  when 'changed' then graph = change.result()
+  when 'keep' then nop
+  otherwise say change.message()
+end
+```
+
+The optional arguments are `budget=1000000`, `entries=1000000` and
+`bytes=67108864`. One private indexed batch performs same-block private-slot
+propagation, exact registered constant evaluation, Boolean branch selection,
+entry-rooted reachability and safe unused-operation removal. It rebuilds once;
+it does not clone the graph for each fold. `keep` is a normal result when
+nothing changes or a continuation contract is unsupported.
+
+Core slots belong to one invocation and have no address/escape operation.
+A load may reuse the most recent same-block stored value; an extension whose
+state contract is not `none` invalidates those facts. Unknown/control-transfer
+continuations keep the original graph. All function entries remain roots,
+including uncalled functions. Unknown branches keep both edges; a known branch
+does not grant permission to remove observable condition evaluation.
+
+Only constants, arguments and extensions with state `none`, failure `none` and
+termination `returns` are intrinsically discardable. A successful checked
+evaluation additionally proves that exact instance replaceable. Reachable
+stores, unsubstituted loads, output, unknown effects, possible failures and
+divergence remain. Pure unused chains are removed in reverse definition order.
+The profile forbids cross-block values, so this needs no repeated fixed point.
+
+Evaluator `request.at(i)` contains the proven operand bytes, including values
+propagated or evaluated earlier in the block. `request.operation()` still views
+the original operation, for its attributes and origins. The evaluator must use
+the request's operand bytes when evaluating; original input views need not be
+literal constants. The same checked callback boundary is used by `evaluate`.
+Missing services and `keep` retain runtime operations. Invalid result counts,
+codecs, consumed facts or signals reject the entire candidate. Callback
+equivalence and compliance with its budget remain the host provider's duty;
+the work limit is not a callback pre-emption clock.
+
+Numeric arrays hold aliases, exact-value flags/bytes, folds, selected edges,
+live blocks, demanded values and previous-operation IDs. Index entry accounting
+is `5*operations + 4*values + 2*blocks + 2*slots`; its logical byte charge is
+eight bytes per entry plus remembered constant bytes. Destination arena limits
+apply separately during reconstruction. These are per-phase logical bounds,
+not a combined peak-RSS cap; VM objects, codec/callback overhead and immutable
+source storage are excluded. Work counts planning visits/operands/results/edges
+and reconstruction records. Existing module verification remains mandatory.
+
+Successful reconstruction retains the source/type/slot/constant tables and
+byte pool, including unused pool entries. It compacts live blocks, operations
+and values. Thus fewer executable records does not imply compacted saved pools.
+Replacement constants/branches have derived origins; retained operations keep
+their attributes and origins. The source graph stays immutable, and analyses
+must be recreated for the returned revision. No externally supplied sparse fact
+is treated as a proof by this pipeline.
 
 ## Saved forms and numeric storage
 

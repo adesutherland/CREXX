@@ -62,7 +62,7 @@ publish: procedure = .string
 
 run: procedure = .int
   arg level = .string, argv = .string[]
-  artifacts = ''; output = ''; sourcefile = ''; i = 1
+  artifacts = ''; output = ''; sourcefile = ''; i = 1; optimise = 1
   do while i <= argv[0]
     option = argv[i]
     if option = '-i' | option = '-o' then do
@@ -71,18 +71,19 @@ run: procedure = .int
       if option = '-i' then artifacts = argv[i]
       else output = argv[i]
     end
+    else if option = '-n' then optimise = 0
     else if left(option,1) = '-' | sourcefile <> '' then do
-      say 'LL_COMPILER_OPTIONS: expected -i directory -o output.rxas source.crexx'; return 2
+      say 'LL_COMPILER_OPTIONS: expected [-n] -i directory -o output.rxas source.crexx'; return 2
     end
     else sourcefile = option
     i = i + 1
   end
   if sourcefile = '' | output = '' | artifacts = '' then do
-    say 'Usage: llrxc-' || level || ' -i runtime-images -o output.rxas source.crexx'; return 2
+    say 'Usage: llrxc-' || level || ' [-n] -i runtime-images -o output.rxas source.crexx'; return 2
   end
   do
     source = readbinary(sourcefile)
-    request = .llcompiler..request(level,source,artifacts,llcompilercontracts..sourcename(sourcefile,1))
+    request = .llcompiler..request(level,source,artifacts,llcompilercontracts..sourcename(sourcefile,1),1000000,512,67108864,65536,optimise)
     if request.status() <> 0 then do; say request.diagnostic(); return 1; end
     message = publish(request.output(),output)
     if message <> '' then do; say message; return 1; end

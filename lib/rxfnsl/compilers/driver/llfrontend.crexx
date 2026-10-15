@@ -558,8 +558,8 @@ request: class
           end
         end
         else do
-          value = defaultvalue('value',origin)
           if node.count('value') then value = expression(node.child('value'))
+          else value = defaultvalue('value',origin)
           if _error = '' then do
             op = _block.operation(_contract.operation('crexx.c.store'),origin)
             call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
@@ -568,9 +568,9 @@ request: class
         end
       end
       when kind = 'Say' then do
-        if _level = 'c' then value = defaultvalue('value',origin)
-        else value = defaultvalue('text',origin)
         if node.count('value') then value = expression(node.child('value'))
+        else if _level = 'c' then value = defaultvalue('value',origin)
+        else value = defaultvalue('text',origin)
         if _error <> '' then return
         if _level = 'g' then do
           value = convert(value,'text',origin)

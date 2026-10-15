@@ -5,6 +5,7 @@ import rxfnsb
 import llir
 import llcrexxir
 import llcompilercontracts
+import llsource
 
 /** RXAS escaping is byte-exact, including embedded NUL and Unicode. */
 quote: procedure = .string
@@ -59,6 +60,11 @@ compilation: class
   _callbase = .int
   _scratch = .int
   _location = .int
+  _sizing = .int
+  _needsscratch = .int
+  _maxargs = .int
+  _fallthrough = .int
+  _sourceindexes = .object[]
   _lastsource = .string
   _lastlocation = .string
   _routine = .string
@@ -96,6 +102,7 @@ compilation: class
   emit: method = .void
     arg mnemonic = .string, operands = ''
     if _error <> '' then return
+    if _sizing then return
     _recordbytes = _recordbytes + length(mnemonic) + length(operands) + 2
     if _recordbytes > _limit then do
       call fail('LIMIT: selected output exceeds output.bytes budget'); return
@@ -105,6 +112,10 @@ compilation: class
     return
   reg: method = .string
     arg index = .int
+    if _sizing then do
+      if index = _scratch then _needsscratch = 1
+      return 'r' || index
+    end
     if index < 0 | index >= _locals then call fail('REGISTER: register outside assigned frame')
     return 'r' || index
   input: method = .string
@@ -112,7 +123,7 @@ compilation: class
     return reg(_registers[op.input(index).id()])
   result: method = .string
     arg op = .llir..opview
-    if op.results() = 0 then return reg(_scratch)
+    if op.results() = 0 then return ''
     return reg(_registers[op.result().id()])
   typename: method = .string
     arg id = .int
@@ -178,6 +189,10 @@ compilation: class
   invoke: method = .void
     arg destination = .string, name = .string, count = .int
     i = .int
+    if destination = '' then destination = reg(_scratch)
+    if _sizing then do
+      _maxargs = max(_maxargs,count); return
+    end
     if count < 0 | count > _locals - _callbase - 1 then do
       call fail('REGISTER: call window exceeds frame'); return
     end
@@ -278,8 +293,10 @@ compilation: class
       end
       _phase = 'entry'; _writer = .llir..writer(_limit)
       call _writer.line('.globals=0')
-      _origin = 0; _locals = 16; _callbase = 4; _scratch = 3; _recordbytes = 0
-      call emit('main()','.locals=16')
+      _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
+      _locals = 2; _callbase = 1
+      if _level = 'c' then do; _locals = 6; _callbase = 3; end
+      call emit('main()','.locals=' || _locals)
       call clearsource()
       if _level = 'c' then do
         symbol = imported('llctarget','llctarget.mainargs','.rexxactivation..rexxactivationarguments','.object')
@@ -326,8 +343,8 @@ compilation: class
     return
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
-    store = dereference _store
-    _phase = 'slot allocation'; next = 1; maxargs = 8
+    store = dereference _store; blocks = .int[]
+    _phase = 'slot allocation'; next = 1
     do i = 1 to store.count(5)
       if store.get(5,i,1) = _fn then do
         _slots[i] = next; next = next + 1
@@ -336,17 +353,36 @@ compilation: class
     _phase = 'value allocation'
     do b = 1 to store.count(2)
       if store.get(2,b,1) <> _fn then iterate
+      blocks[blocks[0] + 1] = b
       id = store.get(2,b,2)
       do while id > 0
         op = _graph.operation(id)
-        maxargs = max(maxargs,op.inputs() + 1)
         do r = 1 to op.results()
           _registers[op.result(r).id()] = next; next = next + 1
         end
         id = store.get(3,id,3)
       end
     end
-    _phase = 'frame limits'; _scratch = next; _location = next + 1; _callbase = next + 2; _locals = _callbase + maxargs + 1
+    /* Use the same selector for planning and emission. Hidden helper calls
+     * therefore participate without a second arity table to maintain. */
+    _phase = 'frame planning'; _scratch = next; _location = next + 1; _callbase = next + 2
+    _maxargs = -1; _needsscratch = 0; _sizing = 1; _fallthrough = 0
+    if _level = 'c' then do; _maxargs = 2; _needsscratch = 1; end
+    do i = 1 to blocks[0] while _error = ''
+      id = store.get(2,blocks[i],2)
+      do while id > 0 & _error = ''
+        op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
+        call selectop(op)
+        id = store.get(3,id,3)
+      end
+    end
+    _sizing = 0
+    if _error <> '' then return
+    _phase = 'frame limits'; _scratch = -1; _location = -1; _callbase = -1
+    if _needsscratch then do; _scratch = next; next = next + 1; end
+    if _level = 'c' then do; _location = next; next = next + 1; end
+    if _maxargs >= 0 then do; _callbase = next; next = next + _maxargs + 1; end
+    _locals = next
     if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
     _origin = 0
     call emit('llf' || _fn || '()','.locals=' || _locals)
@@ -370,9 +406,10 @@ compilation: class
         call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
       end
     end
-    call emit('br','llb' || store.get(1,_fn,3))
-    do b = 1 to store.count(2)
-      if store.get(2,b,1) <> _fn then iterate
+    if store.get(1,_fn,3) <> blocks[1] then call emit('br','llb' || store.get(1,_fn,3))
+    do blockindex = 1 to blocks[0]
+      b = blocks[blockindex]; _fallthrough = 0
+      if blockindex < blocks[0] then _fallthrough = blocks[blockindex + 1]
       _origin = 0; call emit('llb' || b || ':')
       /* Predecessors can carry different dynamic location state. */
       _lastsource = ''; _lastlocation = ''
@@ -390,7 +427,7 @@ compilation: class
         call emit('llerror' || _fn || '_' || i || ':')
         if i = 1 then call clearsource()
         call emit('load',reg(_scratch) || ',' || i)
-        call emit('br','llerror' || _fn)
+        if i < 4 then call emit('br','llerror' || _fn)
       end
       call emit('llerror' || _fn || ':')
       do i = 1 to 4
@@ -417,7 +454,7 @@ compilation: class
     return
   source: method = .void
     arg origin = .llir..origin
-    c = .int; i = .int; key = .string; location = .string
+    key = .string; location = .string
     if origin.id() = 0 then do; call clearsource(); return; end
     kind = origin.kind()
     if kind = 'synthetic' then do
@@ -425,27 +462,22 @@ compilation: class
       call sourcerecord(key,location)
       return
     end
-    bytes = origin.sourcebytes(); offset = origin.first(); line = 1; column = 1; first = 0; previous = -1
-    do i = 0 to offset - 1
-      c = <at..u8>(i) bytes
-      if c = 10 | c = 13 then do
-        if c <> 10 | previous <> 13 then line = line + 1
-        column = 1; first = i + 1
-      end
-      else if c < 128 | c >= 192 then column = column + 1
-      previous = c
+    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    positions = .llsource..index
+    if sourceid <= _sourceindexes[0] then do
+      if _sourceindexes[sourceid] is .llsource..index then positions = _sourceindexes[sourceid] as .llsource..index
     end
-    last = first
-    do while last < (<blen>(bytes))
-      c = <at..u8>(last) bytes
-      if c = 10 | c = 13 then leave
-      last = last + 1
+    bytes = origin.sourcebytes()
+    if initialized(positions) = 0 then do
+      positions = .llsource..index(bytes)
+      _sourceindexes[sourceid] = positions as .object
     end
-    finish = min(last,origin.last()); endcolumn = column
-    do i = offset to finish - 1
-      c = <at..u8>(i) bytes
-      if c < 128 | c >= 192 then endcolumn = endcolumn + 1
-    end
+    at = positions.position(origin.first())
+    if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return; end
+    line = at.line(); column = at.column(); first = at.first(); last = at.last()
+    finish = min(last,origin.last()); ending = positions.position(finish)
+    if ending.error() <> '' then do; call fail('SOURCE: ' || ending.error()); return; end
+    endcolumn = ending.column()
     flags = 17
     if kind = 'derived' then flags = 34
     else if kind = 'composite' then flags = 65
@@ -517,10 +549,12 @@ compilation: class
         end
         call emit(mnemonic,dest || ',' || input(op))
       end
-      when name = 'core.jump' then call emit('br','llb' || op.successor(1))
+      when name = 'core.jump' then do
+        if op.successor(1) <> _fallthrough then call emit('br','llb' || op.successor(1))
+      end
       when name = 'core.branch' then do
         call emit('brt','llb' || op.successor(1) || ',' || input(op))
-        call emit('br','llb' || op.successor(2))
+        if op.successor(2) <> _fallthrough then call emit('br','llb' || op.successor(2))
       end
       when name = 'core.return' then do
         if op.inputs() then call emit('ret',input(op))

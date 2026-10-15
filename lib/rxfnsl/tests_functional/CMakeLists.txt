@@ -88,7 +88,7 @@ crexx_add_import_root(levell_ast_test_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ast-imports" OUTPUT_VARIABLE _ast_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library rxfnsl)
-foreach(_test llast llanalysis llir llirservices)
+foreach(_test llast llanalysis llir llirservices llsource lloptimise)
   foreach(_mode noopt opt)
     set(_ast_flags)
     if(_mode STREQUAL "noopt")

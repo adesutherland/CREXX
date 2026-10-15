@@ -2642,6 +2642,29 @@ the caret with the escaped text. A fifth argument, `'unicode'`, displays Unicode
 glyphs. Malformed UTF-8 is shown with a hexadecimal excerpt. Prefix the result
 with the filename when your application has one.
 
+For repeated coordinate lookups, retain a source index rather than repeatedly
+scanning the source prefix. It owns the original bytes and has no global state:
+
+```rexx
+positions = .llsource..index(source)
+location = positions.position(offset)
+if location.error() = '' then do
+  say location.line() location.column()
+  linebytes = binsubstr(source,location.first() + 1,location.last() - location.first())
+end
+```
+
+`first()` and `last()` are zero-based byte boundaries for the containing line,
+excluding its newline. EOF is a valid position, including an empty final line;
+negative and past-EOF offsets report an error. The constructor's optional limits
+are line entries (1,000,000), logical bytes (64 MiB, including source bytes and
+16 bytes per line) and work (10,000,000). Construction scans bytes once; lookup
+searches line starts and counts scalar-leading bytes within the selected line.
+The work limit applies separately to construction and each lookup. These bounds
+exclude VM container overhead. Check `positions.error()` after construction and
+`location.error()` after lookup. Malformed UTF-8 is never decoded by the index;
+use `diagnostic` for the existing hexadecimal error display.
+
 ## Error messages and recovery
 
 There are two places to handle errors: the specification you build with `levell`,
@@ -3150,7 +3173,10 @@ For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin` and
 `/path/to/bin/rxfnsc.rxbin` to the link command. Use VM `-a` followed by program
 arguments when needed. Keep linker debug metadata for runtime source locations;
 `rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
-by omitting `-n`; shared compiler IR optimisation is not yet enabled.
+by omitting its `-n`. The C/G compilers enable shared IR optimisation by default;
+use `llrxc-g -n` or `llrxc-c -n` for the cleaned unoptimised control. The native
+B seed's `rxc -n`, the new compiler's `-n` and `rxas -n` control three separate
+stages. Use assembler `-n` when inspecting the new compiler's own effects.
 
 A Level B host imports `llcompiler` and `llir`, links the installed
 `llcompilers.rxbin`, `rxfnsl.rxbin` and `library.rxbin` packages, and uses:
@@ -3167,9 +3193,18 @@ end
 `source` is binary; `artifacts` names the target runtime-image directory.
 The request does not print, write files, exit or invoke another compiler.
 `output` is an owned `.llir..output`, with `text`, `bytes`, `error` and streaming
-support, and remains usable after the request. `graph()` retains IR inspection.
+support, and remains usable after the request. `graph()` retains the frontend
+IR; after successful status, `emissiongraph()` shows the graph sent to the
+backend. It is the same graph when optimisation is disabled.
 The optional budgets after the filename are source/semantic work, nesting,
-emitted bytes and registers per function. Defaults and the complete API are in
+emitted bytes and registers per function, followed by `optimise=1`. Append zero
+to select the unoptimised path without changing earlier argument positions:
+
+```rexx
+request = .llcompiler..request('g', source, artifacts, 'demo.crexx', 1000000, 512, 67108864, 65536, 0)
+```
+
+The work/byte budgets also protect the shared optimisation phase. Defaults and the complete API are in
 the [backend reference](../compilers/doc/backend.md).
 
 The command writes a completed result through a claimed sibling staging
@@ -3181,8 +3216,19 @@ printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
 values and short-circuiting. A declared G decimal starts absent and displays
 `nan`, while integer/float/Boolean defaults are zero and text is empty.
 
-The current output uses conservative registers and runtime adapters and has no
-shared IR optimisation yet. Source records carry expression ranges and
+The current output uses stable registers and runtime adapters. Shared Level L
+passes propagate proved private values, evaluate admitted constants, simplify
+Boolean branches and remove safe unused operations. G admits checked int64
+arithmetic/comparisons and canonical conversions; C initially admits only exact
+literal `0`/`1` truth. Classic arithmetic, mutable numeric context and variable
+pools keep runtime semantics. Both languages preserve effects and errors. See
+the [actual before/after example](../compilers/examples/step05/README.md) and
+[generic Level L optimisation API](ir-design.md#optimise-a-frozen-module).
+
+Explicit operands do not construct spare defaults;
+bare SAY and declared-variable defaults remain. Frame planning uses selected
+instructions and hidden helper calls to reserve scratch and call space only
+when needed. Straight jumps to the next emitted block are omitted. Source records carry expression ranges and
 exact/generated provenance. Identical straight-path records are suppressed;
 different expressions and control-flow entries can still need records on the
 same line. These are metadata, not printed TRACE events. Clause ID zero means

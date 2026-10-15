@@ -1,0 +1,19 @@
+CLEANUP|level=g|statements=80|compile_us=1001467|rxas_bytes=24437
+        1.30 real         1.25 user         0.03 sys
+           608403456  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               37306  page reclaims
+                  14  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   1  voluntary context switches
+                 307  involuntary context switches
+         25767812565  instructions retired
+          5358983719  cycles elapsed
+           603456400  peak memory footprint

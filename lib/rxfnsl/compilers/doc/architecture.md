@@ -2,12 +2,18 @@
 
 The Level L IR foundation, semantic extension API, C/G frontends and shared
 RXAS backend are implemented in Level B. The generated grammars use Level L;
-output construction uses the Level L writer. Shared IR optimisation remains
-STEP05. The existing compilers remain independent execution controls.
+output construction uses the Level L writer. STEP05 adds shared IR optimisation.
+The existing compilers remain independent execution controls.
 [PLAN.md](../PLAN.md) owns scope, acceptance and approval.
 The [backend reference](backend.md) describes the implemented service, target
 records and ABI. [STEP04-REVIEW.md](STEP04-REVIEW.md) retains the approved scope
 and links its acceptance evidence.
+The [STEP05 design](STEP05-REVIEW.md) is approved. Its first cleanup increment
+adds reusable Level L source-position lookup and selection-based frame planning.
+Batch reconstruction and shared passes now live in `llirservices`; C/G only
+register their semantic evaluators and select the service. Qualification is
+recorded in the plan. Formal performance testing is not a research completion
+gate, under Adrian's scoped instruction in root `AGENTS.md`.
 
 ## What the pipeline does
 
@@ -107,6 +113,42 @@ The format contains an ordered schema manifest, numeric records and byte pools.
 The host registers the matching schema and services before loading. Loading an
 image never loads executable callback code. Unknown semantics grant no permission
 to fold or claim a complete flow analysis.
+
+## Shared optimisation between the frontend and backend
+
+`llirservices..optimise` owns one request-local batch over a frozen module.
+Numeric arrays index aliases, exact values, folded results, selected successors,
+reachability, demand and the previous operation. A forward scan propagates
+same-block core-slot definitions and asks eligible registered evaluators for
+exact results. Core slots cannot escape; state-accessing extensions invalidate
+the slot facts. It does not track Classic user-variable pools.
+
+A queue follows successors from every function entry. Proven Boolean branches
+have one selected edge. A reverse scan within each reachable block marks values
+needed by retained operations and removes only proved discardable operations.
+Values cannot cross blocks in this IR profile, so reverse definition order
+closes demand without a repeated fixed point. Stores, potentially failing
+loads, output, state operations, failures and divergence stay unless a specific
+successful evaluation proves the replacement. An unknown/transfer continuation
+refuses the batch and keeps the original graph.
+
+The existing reconstruction coordinator applies the batch once, copying exact
+attributes and source records, remapping values/blocks, deriving replacement
+origins and verifying the candidate. Failed budgets or callbacks return the
+original; nothing partly transformed is emitted. The operation/value/block maps
+refer to the returned revision. Existing one-operation rewrite and target
+lowering use the same coordinator. See the [generic API and limits](../../doc/ir-design.md#optimise-a-frozen-module).
+
+G registers exact checked int64 arithmetic/comparisons, int64 formatting and
+canonical Boolean conversions. Overflow, division and unproved conversions
+remain runtime work. C registers truth evaluation only for exact literal `0`
+and `1`; its numeric context, variable pools and arbitrary calls retain runtime
+semantics. Generic algorithms never test a C/G operation name.
+
+The compiler service retains its frontend graph for inspection and owns the
+separate emission graph. `-n` or the trailing service option disables shared
+passes while retaining the construction/source/emitter fixes. The [paired
+example](../examples/step05/README.md) shows both stages and executed RXAS.
 
 ## Implemented frontends
 

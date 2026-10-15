@@ -64,7 +64,7 @@ foreach(_mode opt noopt)
     add_custom_target(llcompilers ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin")
     install(FILES "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin" DESTINATION bin)
   endif()
-  foreach(_consumer backend-probe backend-tests llrxc-c llrxc-g)
+  foreach(_consumer backend-probe backend-tests backend-optimise llrxc-c llrxc-g)
     set(_source "${CMAKE_CURRENT_SOURCE_DIR}/driver/${_consumer}.crexx")
     if(_consumer MATCHES "^backend-")
       set(_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_consumer}.crexx")
@@ -155,6 +155,22 @@ foreach(_mode opt noopt)
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-tests_${_mode} llcompiler_target_${_mode}
           library rxfnsc rxas rxlink ${_vm})
+
+      # STEP05 isolated 33-command aggregate: 32s Debug, 65s Apple ASan.
+      # Compiler IR on/off is independent of the B host's opt/noopt build.
+      set(_optimise "llcompiler_optimise_${_mode}_${_vm}")
+      add_test(NAME ${_optimise}
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-optimise.py"
+          --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_optimise}"
+          --mode ${_mode} --vm ${_vm})
+      set_tests_properties(${_optimise} PROPERTIES
+        PASS_REGULAR_EXPRESSION "OPTIMISE_E2E[|]commands=33[|]failures=0"
+        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_optimise}
+        TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
+          llcompiler_backend-optimise_${_mode} llcompiler_target_${_mode}
+          library rxfnsc classlib rxas rxlink ${_vm})
     endif()
   endforeach()
 endforeach()

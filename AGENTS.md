@@ -276,6 +276,20 @@ the criteria that remain.
 
 ## Performance Programme
 
+### Level L research exception
+
+For the Level L research project, including the experimental B-only C/G
+compilers under `lib/rxfnsl/compilers`, formal performance testing is not a
+completion or publication requirement. Adrian set this scope on 15 October
+2026. Do not gate research increments on a formal Release benchmark, prescribed
+sample counts, AC power, or a separate performance-verdict approval. Focused
+functional tests, explicit resource-limit checks and inspection of emitted-code
+quality remain required. Lightweight timings or counts may inform development;
+label their conditions and do not present them as formal performance claims.
+Investigate observed pathological cost without automatically launching a
+benchmark campaign. This exception does not waive sanitizer findings, measured
+CTest scheduling, or the later explicitly agreed production-replacement gates.
+
 For performance-programme work, read `performance/AGENTS.md` and
 `performance/ROADMAP.md` before changing benchmarks, profiling automation,
 compiler/assembler optimisations, VM execution paths, or recorded performance
@@ -284,7 +298,7 @@ evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
 consolidated plans and essential current evidence in HEAD; recover completed
 programme history and superseded runs from Git when needed.
 
-After an approved production performance edit, follow the mandatory first
+Outside the Level L research exception above, after an approved production performance edit, follow the mandatory first
 Release verdict in `performance/AGENTS.md` before doing broad closeout work.
 Once the minimum focused correctness checks needed for safe measurement pass,
 freeze implementation, build the ordinary profiling-off Release product, run
