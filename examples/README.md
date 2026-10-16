@@ -13,6 +13,12 @@ Reusable component demonstrations are grouped separately:
 - `exits/` contains standalone compiler-exit examples;
 - `plugins/` is reserved for example plugin packages.
 
+[Franz's Lotto examples](franz-lotto/README.md) provide a standalone cREXX ANSI
+form, a NetRexx Swing window and an optional GTK provider kit. They preserve
+compatibility with the released Beta 3 tools; native Windows qualification is
+the next phase. The transport contains source and focused checks, with build/run
+instructions in [its Windows handover](franz-lotto/WINDOWS-HANDOVER.md).
+
 The KeyDB examples include `keydb_traversal.crexx` for active-key traversal and
 `keydb_lookup_benchmark.crexx` for comparing cold and cached lookups.
 

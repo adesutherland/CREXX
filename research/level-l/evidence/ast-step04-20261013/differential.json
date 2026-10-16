@@ -1,0 +1,398 @@
+{
+  "observations": [
+    {
+      "case": "precedence",
+      "implementation": "control",
+      "status": 0,
+      "output": "14\n-4\n512\n",
+      "source_sha256": "12108b386d08fec7775e5c60cee8e0381c606c162f89b8c519cfb9cd767e34aa"
+    },
+    {
+      "case": "precedence",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "14\n-4\n512\n",
+      "source_sha256": "12108b386d08fec7775e5c60cee8e0381c606c162f89b8c519cfb9cd767e34aa"
+    },
+    {
+      "case": "typed",
+      "implementation": "control",
+      "status": 0,
+      "output": "2\n2.5\n0.666666666666667\n0\n1\n",
+      "source_sha256": "5944cdaf5d3fd1bbeb94c0bc599d2550c1843289700159108ae6408c12793f56"
+    },
+    {
+      "case": "typed",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "2\n2.5\n0.666666666666667\n0\n1\n",
+      "source_sha256": "5944cdaf5d3fd1bbeb94c0bc599d2550c1843289700159108ae6408c12793f56"
+    },
+    {
+      "case": "overflow",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 28 (byte 27): invalid conversion or arithmetic/BIF operation\n  ...3372036854775807+(2-1)\n                         ^\n",
+      "source_sha256": "d332159bad2ad6ef10aa741f170c0ec010f8b6eb4bba0eec4b49f6304feae84c"
+    },
+    {
+      "case": "overflow",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 28 (byte 27): invalid conversion or arithmetic/BIF operation\n  ...3372036854775807+(2-1)\n                         ^\n",
+      "source_sha256": "d332159bad2ad6ef10aa741f170c0ec010f8b6eb4bba0eec4b49f6304feae84c"
+    },
+    {
+      "case": "minimum",
+      "implementation": "control",
+      "status": 0,
+      "output": "-9223372036854775808\n",
+      "source_sha256": "e0b0a02a99db4aea08e1735f498ae91d1316488499c54fda062b2babf682e7fb"
+    },
+    {
+      "case": "minimum",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "-9223372036854775808\n",
+      "source_sha256": "e0b0a02a99db4aea08e1735f498ae91d1316488499c54fda062b2babf682e7fb"
+    },
+    {
+      "case": "division",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 10 (byte 9): invalid conversion or arithmetic/BIF operation\n  say 1/(2-2)\n           ^\n",
+      "source_sha256": "edaf947699ae91de85a98b99b4d30ea03fce11643c0e0120928322d5ff6bb639"
+    },
+    {
+      "case": "division",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 10 (byte 9): invalid conversion or arithmetic/BIF operation\n  say 1/(2-2)\n           ^\n",
+      "source_sha256": "edaf947699ae91de85a98b99b4d30ea03fce11643c0e0120928322d5ff6bb639"
+    },
+    {
+      "case": "nested-error",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 12 (byte 11): invalid conversion or arithmetic/BIF operation\n  say 5/(1+1-2)\n             ^\n",
+      "source_sha256": "926192ec564797bb7de28356c4cba3aaf42afb234676365b2a513edb5a67567f"
+    },
+    {
+      "case": "nested-error",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 12 (byte 11): invalid conversion or arithmetic/BIF operation\n  say 5/(1+1-2)\n             ^\n",
+      "source_sha256": "926192ec564797bb7de28356c4cba3aaf42afb234676365b2a513edb5a67567f"
+    },
+    {
+      "case": "prefix-error",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 12 (byte 11): invalid conversion or arithmetic/BIF operation\n  say -('a'||'bc')\n             ^\n",
+      "source_sha256": "279147f15f8a22ab6252aaba54e3626be002b0f050ed3594d6c83e2c0a771bbe"
+    },
+    {
+      "case": "prefix-error",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_VALUE at line 1, column 12 (byte 11): invalid conversion or arithmetic/BIF operation\n  say -('a'||'bc')\n             ^\n",
+      "source_sha256": "279147f15f8a22ab6252aaba54e3626be002b0f050ed3594d6c83e2c0a771bbe"
+    },
+    {
+      "case": "unselected",
+      "implementation": "control",
+      "status": 0,
+      "output": "7\n",
+      "source_sha256": "65ddfd0daf7c2f33099ec8c72ec7c423c47242a6e822897b1f04dd23c7c851eb"
+    },
+    {
+      "case": "unselected",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "7\n",
+      "source_sha256": "65ddfd0daf7c2f33099ec8c72ec7c423c47242a6e822897b1f04dd23c7c851eb"
+    },
+    {
+      "case": "nested-if",
+      "implementation": "control",
+      "status": 0,
+      "output": "2\n",
+      "source_sha256": "e30959491a55e432d5da2d7f3d1188daaa0e00bf90b6ea3a90d90f99efad8991"
+    },
+    {
+      "case": "nested-if",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "2\n",
+      "source_sha256": "e30959491a55e432d5da2d7f3d1188daaa0e00bf90b6ea3a90d90f99efad8991"
+    },
+    {
+      "case": "continued-if",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "8e9f261158e015cf9c6a55c2e2048dd069c6b2b034a7e22995272218e6fec5f7"
+    },
+    {
+      "case": "continued-if",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "8e9f261158e015cf9c6a55c2e2048dd069c6b2b034a7e22995272218e6fec5f7"
+    },
+    {
+      "case": "and",
+      "implementation": "control",
+      "status": 0,
+      "output": "0\n0\n",
+      "source_sha256": "150f447e2900323f2ceb9ddbc4c94ed6ec80d5dc1d11eb8283c6d2d97249a442"
+    },
+    {
+      "case": "and",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "0\n0\n",
+      "source_sha256": "150f447e2900323f2ceb9ddbc4c94ed6ec80d5dc1d11eb8283c6d2d97249a442"
+    },
+    {
+      "case": "or",
+      "implementation": "control",
+      "status": 0,
+      "output": "1\n",
+      "source_sha256": "cfaa39ba4dee2641ff24b1fdcaf997810bebfa2a9081a9657305426cff663bb4"
+    },
+    {
+      "case": "or",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "1\n",
+      "source_sha256": "cfaa39ba4dee2641ff24b1fdcaf997810bebfa2a9081a9657305426cff663bb4"
+    },
+    {
+      "case": "order",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n3\n",
+      "source_sha256": "873dcf2cc9cb0aa42821f0256f126b5c9b94a7ea33ff1d8056ab6e11534cbd6e"
+    },
+    {
+      "case": "order",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n3\n",
+      "source_sha256": "873dcf2cc9cb0aa42821f0256f126b5c9b94a7ea33ff1d8056ab6e11534cbd6e"
+    },
+    {
+      "case": "args",
+      "implementation": "control",
+      "status": 0,
+      "output": "bcd\nBA\n",
+      "source_sha256": "f7250a609d0ace6a6f4490fcfba931073950cc654d8b5684e9de40b6961374ef"
+    },
+    {
+      "case": "args",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "bcd\nBA\n",
+      "source_sha256": "f7250a609d0ace6a6f4490fcfba931073950cc654d8b5684e9de40b6961374ef"
+    },
+    {
+      "case": "bif-error",
+      "implementation": "control",
+      "status": 1,
+      "output": "RXC-LC-40.3 at line 1, column 5 (byte 4): RXC-LC-40.3 bif=\"SUBSTR\" argnumber=\"2\"\n  say substr()\n      ^\n",
+      "source_sha256": "92265da76842c33a6c41fdde0bfcd880e5476ae18e775783c924855963948641"
+    },
+    {
+      "case": "bif-error",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RXC-LC-40.3 at line 1, column 5 (byte 4): RXC-LC-40.3 bif=\"SUBSTR\" argnumber=\"2\"\n  say substr()\n      ^\n",
+      "source_sha256": "92265da76842c33a6c41fdde0bfcd880e5476ae18e775783c924855963948641"
+    },
+    {
+      "case": "host",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_CAPABILITY at line 1, column 5 (byte 4): host/activation service is unavailable: LINEIN\n  say linein('somefile')\n      ^\n",
+      "source_sha256": "e3e7b2e30b12e72ff8f067342604c0b147426a227a9892f3a09a55c5a5ae3019"
+    },
+    {
+      "case": "host",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_CAPABILITY at line 1, column 5 (byte 4): host/activation service is unavailable: LINEIN\n  say linein('somefile')\n      ^\n",
+      "source_sha256": "e3e7b2e30b12e72ff8f067342604c0b147426a227a9892f3a09a55c5a5ae3019"
+    },
+    {
+      "case": "control",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_CONTROL at line 1, column 8 (byte 7): leave.statement outside a loop\n  say 1; leave\n         ^\n",
+      "source_sha256": "367c277d1bff8eb6dfdb8b42264b2ad701683cea8b7807f62867ac02769d64b8"
+    },
+    {
+      "case": "control",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_CONTROL at line 1, column 8 (byte 7): leave.statement outside a loop\n  say 1; leave\n         ^\n",
+      "source_sha256": "367c277d1bff8eb6dfdb8b42264b2ad701683cea8b7807f62867ac02769d64b8"
+    },
+    {
+      "case": "controlled",
+      "implementation": "control",
+      "status": 0,
+      "output": "12\n",
+      "source_sha256": "220380afd600bb1261d61236b7250d36b727a8cf18584acf047608e653abd373"
+    },
+    {
+      "case": "controlled",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "12\n",
+      "source_sha256": "220380afd600bb1261d61236b7250d36b727a8cf18584acf047608e653abd373"
+    },
+    {
+      "case": "descending",
+      "implementation": "control",
+      "status": 0,
+      "output": "6\n",
+      "source_sha256": "527d91ef95bf7839429cb9dc0a77fd14a4a8b81bec1122a5568e4bcf311a7e41"
+    },
+    {
+      "case": "descending",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "6\n",
+      "source_sha256": "527d91ef95bf7839429cb9dc0a77fd14a4a8b81bec1122a5568e4bcf311a7e41"
+    },
+    {
+      "case": "until",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "e6d7bc5051bbe75560d2cb99209ecea00ca86c50cda6c0d587cb6f950bfe29b2"
+    },
+    {
+      "case": "until",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "e6d7bc5051bbe75560d2cb99209ecea00ca86c50cda6c0d587cb6f950bfe29b2"
+    },
+    {
+      "case": "while",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "af843b0e5400e40bdee3ce0c65593eb534e198cd4d5b8b485f7c7a6e3b206f23"
+    },
+    {
+      "case": "while",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "af843b0e5400e40bdee3ce0c65593eb534e198cd4d5b8b485f7c7a6e3b206f23"
+    },
+    {
+      "case": "leave",
+      "implementation": "control",
+      "status": 0,
+      "output": "7\n7\n",
+      "source_sha256": "a78c73e221640bd6a194d9d51a050db1169f4f554d497058be071c2d9d4c82b3"
+    },
+    {
+      "case": "leave",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "7\n7\n",
+      "source_sha256": "a78c73e221640bd6a194d9d51a050db1169f4f554d497058be071c2d9d4c82b3"
+    },
+    {
+      "case": "return",
+      "implementation": "control",
+      "status": 0,
+      "output": "",
+      "source_sha256": "1ff7b34b6adbc51df9221c5781fe8061aa2dd4787418a0000f4a8c2ca7e519f5"
+    },
+    {
+      "case": "return",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "",
+      "source_sha256": "1ff7b34b6adbc51df9221c5781fe8061aa2dd4787418a0000f4a8c2ca7e519f5"
+    },
+    {
+      "case": "comments",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "3d6634898b9218fd7f043ac3c351dbb1447f6ae60a753622f7fa3069e3434209"
+    },
+    {
+      "case": "comments",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "3d6634898b9218fd7f043ac3c351dbb1447f6ae60a753622f7fa3069e3434209"
+    },
+    {
+      "case": "continuation",
+      "implementation": "control",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "ae506ae1f93e79e7aadb6ba85f1aa2d694c3c84e81f2b73f6cc02ecb7a23d2ee"
+    },
+    {
+      "case": "continuation",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "3\n",
+      "source_sha256": "ae506ae1f93e79e7aadb6ba85f1aa2d694c3c84e81f2b73f6cc02ecb7a23d2ee"
+    },
+    {
+      "case": "unicode-error",
+      "implementation": "control",
+      "status": 1,
+      "output": "caf\u00e9\nRS_VALUE at line 1, column 22 (byte 22): invalid conversion or arithmetic/BIF operation\n  ...ay 'caf\\u{E9}'; say 1/(2-2)\n                              ^\n",
+      "source_sha256": "2179087bb1ab357abedc5ca16c1af824ecc5bc90c79367f4120ef3458e2145de"
+    },
+    {
+      "case": "unicode-error",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "caf\u00e9\nRS_VALUE at line 1, column 22 (byte 22): invalid conversion or arithmetic/BIF operation\n  ...ay 'caf\\u{E9}'; say 1/(2-2)\n                              ^\n",
+      "source_sha256": "2179087bb1ab357abedc5ca16c1af824ecc5bc90c79367f4120ef3458e2145de"
+    },
+    {
+      "case": "parse",
+      "implementation": "control",
+      "status": 1,
+      "output": "RS_PARSE at line 1, column 13 (byte 12): unexpected end of input; expected identifier, number, string, plus, minus, open, not, bitnot\n  say 1; x=(2+\n              ^\n",
+      "source_sha256": "631146ea48649b8cc77167c964330d91696d2498769a469493016c357f51af77"
+    },
+    {
+      "case": "parse",
+      "implementation": "candidate",
+      "status": 1,
+      "output": "RS_PARSE at line 1, column 13 (byte 12): unexpected end of input; expected identifier, number, string, plus, minus, open, not, bitnot\n  say 1; x=(2+\n              ^\n",
+      "source_sha256": "631146ea48649b8cc77167c964330d91696d2498769a469493016c357f51af77"
+    },
+    {
+      "case": "empty",
+      "implementation": "control",
+      "status": 0,
+      "output": "",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "empty",
+      "implementation": "candidate",
+      "status": 0,
+      "output": "",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "control_sha256": "a8f62d65cf64a31ef3e6e5135243686251d14ee8fb08ba3d27d12d57d2a0aded",
+  "candidate_sha256": "b97ec7235a5830dbefcfcb3b816ae4094850426801b5944deea0bca6b8344b70"
+}

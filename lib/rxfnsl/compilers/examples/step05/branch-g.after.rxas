@@ -1,0 +1,22 @@
+.globals=0
+main() .locals=2
+.srcstep 0 0 6 "" 0 0 0 ""
+load r1,0
+call r0,llf1(),r1
+ret r0
+llf1() .locals=3
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+llb1:
+.srcstep 31 0 98 "branch-g.crexx" 2 1 20 "if 1 then say 'yes'"
+llb2:
+.srcstep 21 0 17 "branch-g.crexx" 2 15 20 "if 1 then say 'yes'"
+load r1,"yes"
+.srcstep 13 0 65 "branch-g.crexx" 2 11 20 "if 1 then say 'yes'"
+say r1
+.srcstep 4 0 65 "branch-g.crexx" 2 1 20 "if 1 then say 'yes'"
+llb3:
+.srcstep 2 0 98 "branch-g.crexx" 1 1 15 "options levelg"
+load r2,0
+ret r2

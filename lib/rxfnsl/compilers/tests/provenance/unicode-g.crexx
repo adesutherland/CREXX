@@ -1,0 +1,4 @@
+options levelg
+say 'αβ'
+say 1 / 0
+say 999

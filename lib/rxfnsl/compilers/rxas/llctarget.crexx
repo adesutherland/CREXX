@@ -1,0 +1,160 @@
+/* cREXX License (MIT). Target adapters, never linked into the compiler host. */
+options levelb numeric_classic
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue contextnew setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage
+import rxfnsb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassicbifs
+import rexxclassicbifarg
+import rexxclassicbiflength
+
+/** The adapter ABI uses value copies, except the explicitly borrowed pool. */
+literal: procedure = .RexxValue
+  arg text = .string
+  return .RexxValue(text)
+poolnew: procedure = .RexxVariablePool
+  return .RexxVariablePool(1)
+poolread: procedure = .RexxValue
+  arg poolref = reference .RexxVariablePool, name = .string
+  pool = dereference poolref
+  return pool.symbolValue(name)
+poolwrite: procedure = .void
+  arg poolref = reference .RexxVariablePool, value = .RexxValue, name = .string
+  pool = dereference poolref
+  call pool.setSymbolValue(name,value)
+  return
+contextnew: procedure = .RexxActivationArguments
+  return .RexxActivationArguments()
+
+/** Each operation installs its immutable snapshot in its own VM call frame.
+ * Callee return restores the caller's numeric settings automatically. */
+binaryop: procedure = .RexxValue
+  arg operation = .string, left = .RexxValue, right = .RexxValue, context = .RexxActivationArguments
+  digits = context.numericDigits(); fuzz = context.numericFuzz(); form = context.numericForm()
+  assembler setnumdgts digits
+  assembler setnumfuz fuzz
+  assembler setnumfrm form
+  if operation = 'strict' then return left.strictCompareEqual(right)
+  if operation = 'concat' | operation = 'abut' then return left.concat(right)
+  if operation = 'blank' then return left.spaceConcat(right)
+  index = wordpos(operation,'add sub mul div eq ne lt le gt ge and or xor')
+  name = word('ADD SUBTRACT MULTIPLY DIVIDE COMPAREEQUAL COMPARENOTEQUAL COMPARELESSTHAN COMPARELESSOREQUAL COMPAREGREATERTHAN COMPAREGREATEROREQUAL LOGICALAND LOGICALOR LOGICALXOR',index)
+  callcontext = .RexxBifCallContext.expression(name)
+  config = .RexxClassicConfig('UTF8'); call callcontext.setConfig(reference config)
+  result = rexxclassic_expression_binary(reference callcontext,left,right)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+unaryop: procedure = .RexxValue
+  arg operation = .string, value = .RexxValue, context = .RexxActivationArguments
+  digits = context.numericDigits(); fuzz = context.numericFuzz(); form = context.numericForm()
+  assembler setnumdgts digits
+  assembler setnumfuz fuzz
+  assembler setnumfrm form
+  name = word('POSITIVE NEGATE LOGICALNOT',wordpos(operation,'positive negative not'))
+  callcontext = .RexxBifCallContext.expression(name)
+  config = .RexxClassicConfig('UTF8'); call callcontext.setConfig(reference config)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  return rexxclassicbif_checked(reference callcontext,result)
+truth: procedure = .int
+  arg value = .RexxValue
+  context = .RexxBifCallContext.expression('LOGICALIFVALUE')
+  config = .RexxClassicConfig('UTF8'); call context.setConfig(reference config)
+  result = rexxclassic_expression_unary(reference context,value)
+  result = rexxclassicbif_checked(reference context,result)
+  return result.logicalValue() as .int
+
+sayvalue: procedure = .void
+  arg value = .RexxValue
+  say value.asString(1)
+  return
+setting: procedure = .RexxActivationArguments
+  arg operation = .string, context = .RexxActivationArguments, value = .RexxValue
+  result = context
+  config = .RexxClassicConfig('UTF8')
+  message = .string
+  select
+    when operation = 'digits' then message = result.setNumericDigits(value,reference config)
+    when operation = 'fuzz' then message = result.setNumericFuzz(value,reference config)
+    when operation = 'form' then message = result.setNumericForm(value)
+    otherwise message = 'unknown numeric setting'
+  end
+  if message <> '' then call bad(message)
+  return result
+digits: procedure = .RexxValue
+  arg context = .RexxActivationArguments
+  return .RexxValue.fromInt(context.numericDigits())
+arguments: procedure = .RexxActivationArguments
+  return .RexxActivationArguments()
+mainargs: procedure = .RexxActivationArguments
+  arg vector = .object
+  values = .string[]
+  assembler link values,vector
+  result = .RexxActivationArguments()
+  do i = 1 to values[0]
+    call result.appendText(values[i])
+  end
+  return result
+append: procedure = .RexxActivationArguments
+  arg frame = .RexxActivationArguments, value = .RexxValue, present = .int
+  result = frame
+  call result.append(value,present as .boolean)
+  return result
+readarg: procedure = .RexxValue
+  arg frame = .RexxActivationArguments, ordinal = .int
+  value = frame.argument(ordinal)
+  return .RexxValue(upper(value.asString()))
+countargs: procedure = .RexxValue
+  arg frame = .RexxActivationArguments
+  return .RexxValue.fromInt(frame.argumentCount())
+existsarg: procedure = .RexxValue
+  arg frame = .RexxActivationArguments, ordinal = .RexxValue, option = .RexxValue
+  context = .RexxBifCallContext('')
+  values = .RexxValue[]; presence = .int[]
+  values[1] = ordinal; values[2] = option; presence[1] = 1; presence[2] = 1
+  call context.setName('ARG'); call context.setArguments(values,presence)
+  result = rexxclassicbifarg..rexxclassicbif_arg(reference context,reference frame)
+  return rexxclassicbif_checked(reference context,result)
+present: procedure = .RexxActivationArguments
+  arg value = .RexxValue
+  result = .RexxActivationArguments(); call result.setReturnValue(value)
+  return result
+absent: procedure = .RexxActivationArguments
+  return .RexxActivationArguments()
+requirevalue: procedure = .RexxValue
+  arg result = .RexxActivationArguments
+  if result.hasReturnValue() = 0 then call bad('RXC-LC-45.1: Data expected on RETURN instruction because this routine was called as a function')
+  return result.returnValue()
+setresult: procedure = .void
+  arg poolref = reference .RexxVariablePool, result = .RexxActivationArguments
+  pool = dereference poolref
+  call pool.applyCallResult(result.hasReturnValue(),result.returnValue())
+  return
+status: procedure = .int
+  arg result = .RexxActivationArguments
+  return result.programReturnCode()
+lengthvalue: procedure = .RexxValue
+  arg value = .RexxValue
+  context = .RexxBifCallContext('')
+  values = .RexxValue[]; presence = .int[]
+  values[1] = value; presence[1] = 1
+  call context.setName('LENGTH'); call context.setArguments(values,presence)
+  result = rexxclassicbiflength..rexxclassicbif_length(reference context)
+  return rexxclassicbif_checked(reference context,result)
+
+bad: procedure = .void
+  arg message = .string
+  assembler signal "CLASSIC_SYNTAX",message
+  return
+
+/** Format authored context without raising another condition. The generated
+ * fatal handler retains the bound event and relays its original fault using
+ * signalorigin. Only the standalone profile's string-message errors apply.
+ * @param object Original VM-bound signal.
+ * @param location Authored location or explicit generated-entry context.
+ * @return Context followed by the original condition message. */
+failuremessage: procedure = .string
+  arg object = .object, location = .string
+  condition = object as .signal
+  return location || ': ' || condition.message()

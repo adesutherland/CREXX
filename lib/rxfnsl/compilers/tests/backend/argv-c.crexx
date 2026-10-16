@@ -1,0 +1,2 @@
+options levelc
+arg a,b; say '[' || a || ']'; say '[' || b || ']'; say arg()

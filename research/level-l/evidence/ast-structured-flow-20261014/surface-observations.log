@@ -1,0 +1,172 @@
+and-name-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/and-name.rxl: LL_GRAMMAR: line 111, byte 4077: LL_FLOW: Both has no field other; available fields: left right
+
+and-name-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/and-name.rxl: LL_GRAMMAR: line 111, byte 4077: LL_FLOW: Both has no field other; available fields: left right
+
+and-name-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/and-name.rxl: LL_GRAMMAR: line 111, byte 4077: LL_FLOW: Both has no field other; available fields: left right
+
+body-name-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/body-name.rxl: LL_GRAMMAR: line 106, byte 3979: LL_FLOW: Forever has no field items; available fields: body
+
+body-name-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/body-name.rxl: LL_GRAMMAR: line 106, byte 3979: LL_FLOW: Forever has no field items; available fields: body
+
+body-name-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/body-name.rxl: LL_GRAMMAR: line 106, byte 3979: LL_FLOW: Forever has no field items; available fields: body
+
+break-child-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/break-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+break-child-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/break-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+break-child-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/break-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+duplicate-role-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/duplicate-role.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While.condition occurs twice in its flow mapping
+
+duplicate-role-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/duplicate-role.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While.condition occurs twice in its flow mapping
+
+duplicate-role-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/duplicate-role.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While.condition occurs twice in its flow mapping
+
+earley-noopt-rxbvm.log
+failures=0
+
+earley-noopt-rxtvm.log
+failures=0
+
+earley-opt-rxbvm.log
+failures=0
+
+earley-opt-rxtvm.log
+failures=0
+
+ignored-child-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/ignored-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+ignored-child-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/ignored-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+ignored-child-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/ignored-child.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value has no execution role
+
+ll1-noopt-rxbvm.log
+failures=0
+
+ll1-noopt-rxtvm.log
+failures=0
+
+ll1-opt-rxbvm.log
+failures=0
+
+ll1-opt-rxtvm.log
+failures=0
+
+loop-list-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/loop-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain exactly one child
+
+loop-list-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/loop-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain exactly one child
+
+loop-list-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/loop-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain exactly one child
+
+lr1-noopt-rxbvm.log
+failures=0
+
+lr1-noopt-rxtvm.log
+failures=0
+
+lr1-opt-rxbvm.log
+failures=0
+
+lr1-opt-rxtvm.log
+failures=0
+
+optional-loop-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-loop.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+optional-loop-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-loop.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+optional-loop-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-loop.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+optional-operand-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-operand.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+optional-operand-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-operand.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+optional-operand-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/optional-operand.rxl: LL_GRAMMAR: line 109, byte 4039: LL_FLOW: Return.value must contain exactly one child
+
+or-text-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/or-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+or-text-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/or-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+or-text-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/or-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+packrat-noopt-rxbvm.log
+failures=0
+
+packrat-noopt-rxtvm.log
+failures=0
+
+packrat-opt-rxbvm.log
+failures=0
+
+packrat-opt-rxtvm.log
+failures=0
+
+return-list-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain one optional or required child
+
+return-list-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain one optional or required child
+
+return-list-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-list.rxl: LL_GRAMMAR: line 97, byte 3721: LL_FLOW: Program.items must contain one optional or required child
+
+return-text-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+return-text-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+return-text-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/return-text.rxl: LL_GRAMMAR: line 113, byte 4150: LL_FLOW: Set.name must be a child field
+
+until-name-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/until-name.rxl: LL_GRAMMAR: line 105, byte 3941: LL_FLOW: Until has no field test; available fields: body condition
+
+until-name-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/until-name.rxl: LL_GRAMMAR: line 105, byte 3941: LL_FLOW: Until has no field test; available fields: body condition
+
+until-name-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/until-name.rxl: LL_GRAMMAR: line 105, byte 3941: LL_FLOW: Until has no field test; available fields: body condition
+
+while-missing-do-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/while-missing-do.rxl: LL_GRAMMAR: line 104, byte 3931: expected do, found body
+
+while-missing-do-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/while-missing-do.rxl: LL_GRAMMAR: LL_SYNTAX at line 104, column 31 (byte 3931): unexpected 'body'; expected kw.do
+  ...oop while condition body
+                         ^
+
+while-name-L0.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/while-name.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While has no field test; available fields: condition body
+
+while-name-L1.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/while-name.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While has no field test; available fields: condition body
+
+while-name-L2.log
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast6/surface/while-name.rxl: LL_GRAMMAR: line 104, byte 3903: LL_FLOW: While has no field test; available fields: condition body

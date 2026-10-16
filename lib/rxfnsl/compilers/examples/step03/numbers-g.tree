@@ -1,0 +1,78 @@
+Program|0:105|options levelg
+say 01 == 1
+amount = .decimal
+amount = 0.1 + 0.2
+say amount
+count = .int
+say count
+exit 0
+
+Sequence|0:105|options levelg
+say 01 == 1
+amount = .decimal
+amount = 0.1 + 0.2
+say amount
+count = .int
+say count
+exit 0
+
+Options|0:14|options levelg
+Say|15:26|say 01 == 1
+Chain|19:26|01 == 1
+Chain|19:26|01 == 1
+Chain|19:26|01 == 1
+Chain|19:22|01 
+Chain|19:22|01 
+Chain|19:22|01 
+Cast|19:22|01 
+Number|19:21|01
+Chain|25:26|1
+Chain|25:26|1
+Chain|25:26|1
+Cast|25:26|1
+Number|25:26|1
+strict|22:24|==
+GDeclare|27:44|amount = .decimal
+Type|36:44|.decimal
+Assignment|45:63|amount = 0.1 + 0.2
+Chain|54:63|0.1 + 0.2
+Chain|54:63|0.1 + 0.2
+Chain|54:63|0.1 + 0.2
+Chain|54:63|0.1 + 0.2
+Chain|54:63|0.1 + 0.2
+Chain|54:58|0.1 
+Cast|54:58|0.1 
+Number|54:57|0.1
+Chain|60:63|0.2
+Cast|60:63|0.2
+Number|60:63|0.2
+plus|58:59|+
+Say|64:74|say amount
+Chain|68:74|amount
+Chain|68:74|amount
+Chain|68:74|amount
+Chain|68:74|amount
+Chain|68:74|amount
+Chain|68:74|amount
+Cast|68:74|amount
+Name|68:74|amount
+GDeclare|75:87|count = .int
+Type|83:87|.int
+Say|88:97|say count
+Chain|92:97|count
+Chain|92:97|count
+Chain|92:97|count
+Chain|92:97|count
+Chain|92:97|count
+Chain|92:97|count
+Cast|92:97|count
+Name|92:97|count
+Exit|98:104|exit 0
+Chain|103:104|0
+Chain|103:104|0
+Chain|103:104|0
+Chain|103:104|0
+Chain|103:104|0
+Chain|103:104|0
+Cast|103:104|0
+Number|103:104|0

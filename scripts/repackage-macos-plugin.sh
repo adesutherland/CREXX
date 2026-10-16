@@ -32,6 +32,5 @@ python3 "$scripts_dir/package-llama-installer.py" --core "$core" --plugin "$plug
 pkgutil --check-signature "$output"
 xcrun notarytool submit "$output" --apple-id "$APPLE_ID" \
   --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
-xcrun stapler staple "$output"
-xcrun stapler validate "$output"
+bash "$scripts_dir/staple-macos-installer.sh" "$output"
 spctl --assess --type install --verbose=4 "$output"

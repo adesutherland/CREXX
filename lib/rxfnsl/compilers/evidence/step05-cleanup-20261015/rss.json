@@ -1,0 +1,44 @@
+{
+  "baseline-g": {
+    "bytes": [
+      608927744,
+      608911360,
+      608796672
+    ],
+    "median_bytes": 608911360
+  },
+  "baseline-c": {
+    "bytes": [
+      643825664,
+      639172608,
+      639205376
+    ],
+    "median_bytes": 639205376
+  },
+  "candidate-g": {
+    "bytes": [
+      608485376,
+      608485376,
+      608403456
+    ],
+    "median_bytes": 608485376
+  },
+  "candidate-c": {
+    "bytes": [
+      625704960,
+      625639424,
+      626065408
+    ],
+    "median_bytes": 625704960
+  },
+  "g-change": {
+    "bytes": -425984,
+    "pct": -0.06995829409390808,
+    "guard_exceeded": false
+  },
+  "c-change": {
+    "bytes": -13500416,
+    "pct": -2.1120623365971203,
+    "guard_exceeded": false
+  }
+}

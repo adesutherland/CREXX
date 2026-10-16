@@ -6,18 +6,45 @@ options levelb
 import rxfnsb
 main: procedure = .int
   arg args = .string[]
-  if args.0 <> 7 then do
-    say "usage: mainframe-build.crexx SDK CMS|TSO HOST_BUILD SINGLE_BUILD SOURCE_ROOT NEW_OUTPUT RXVM|RXAS|RXLINK|RXC"
+  if args.0 <> 7 & args.0 <> 8 then do
+    say "usage: mainframe-build.crexx SDK CMS|TSO HOST_BUILD SINGLE_BUILD SOURCE_ROOT BUILD_OUTPUT RXVM|RXAS|RXLINK|RXC [batch]"
     return 2
   end
   sdk=args.1; personality=translate(args.2); host=args.3; single=args.4
   source=args.5; out=args.6; tool=translate(args.7)
   if personality <> "CMS" & personality <> "TSO" then return 2
+  if args.0=8 then if args.8<>"batch" | personality<>"TSO" then return 2
   if wordpos(tool,"RXVM RXAS RXLINK RXC") = 0 then return 2
+  if args.0=8 then do
+    if out<>source||"/build/mainframe-batch/"||tool then return 2
+    if pos("..",out)>0 then return 2
+  end
+  if out=source | out=sdk | out=host | out=single then return 2
+  if left(source,length(out)+1)=out||"/" then return 2
+  if left(sdk,length(out)+1)=out||"/" then return 2
+  if left(host,length(out)+1)=out||"/" then return 2
+  if left(single,length(out)+1)=out||"/" then return 2
+  address crexx "run test ! -L :out"
+  if rc<>0 then return 2
+  marker=out||"/.mainframe-tool-build"
   address crexx "run test ! -e :out"
-  if rc <> 0 then return 2
+  if rc<>0 then do
+    address crexx "run test -f :marker"
+    if rc<>0 then return 2
+    address crexx "run cmake -E rm -rf :out"
+    if rc<>0 then return rc
+  end
   address crexx "mkdir -p :out"
   if rc <> 0 then return rc
+  call lineout marker,"crexx-mainframe-tool-build-v1"
+  call lineout marker
+  if args.0=8 then do
+    batchchecker=sdk||"/tools/tso_entry_source_check.py"
+    batchentry=sdk||"/native/source/tso31-any-entry.obj"
+    batchcheck=out||"/batch-entry-check.json"
+    address crexx "run python3 -B :batchchecker --bits 31 --batch --entry :batchentry --out :batchcheck"
+    if rc<>0 then return rc
+  end
   profile="cms20-esa31-v1"
   if personality="TSO" then profile="tso-zos31-v1"
   include=sdk||"/sysroots/"||profile||"/include"
@@ -56,6 +83,7 @@ main: procedure = .int
       call arrayappend flags,word(machine,i)
     end
     call arrayappend flags,"-D__MAINFRAME_LAB_TSO31__=1"
+    if args.0=8 then call arrayappend flags,"-DCREXX_MAINFRAME_BATCH=1"
   end
   units=.string[]
   if tool="RXVM" | tool="RXC" then do

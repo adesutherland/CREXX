@@ -1,0 +1,3 @@
+options levelg
+if 0 then say 1 / 0
+say 2

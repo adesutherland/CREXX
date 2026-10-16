@@ -1,0 +1,206 @@
+/* cREXX License (MIT). Backend contracts, ownership and failure regressions. */
+options levelb
+import rxfnsb
+import llcompiler
+import llrxas
+import llfrontend
+import llcrexxir
+import llir
+import llcompilercontracts
+
+main: procedure = .int expose checks failures artifacts outputfile
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  outputfile = ''; if argv[0] = 2 then outputfile = argv[2]
+  artifacts = argv[1]; checks = 0; failures = 0
+  call requests()
+  call graphs()
+  call provenance()
+  call cleanup()
+  if outputfile <> '' then call literals()
+  say 'BACKEND|checks=' || checks || '|failures=' || failures
+  return failures
+check: procedure = .void expose checks failures
+  arg condition = .int, name = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL|' || name
+  return
+provenance: procedure = .void expose artifacts
+  call check(llcompilercontracts..sourcename('/one/two/demo.rexx') = 'demo.rexx','Unix physical source name')
+  call check(llcompilercontracts..sourcename('C:\one\demo.rexx') = 'demo.rexx','Windows physical source name')
+  call check(llcompilercontracts..sourcename('\\server\share\demo.rexx') = 'demo.rexx','UNC physical source name')
+  call check(llcompilercontracts..sourcename('examples/demo.rexx') = 'examples/demo.rexx','explicit relative source name')
+  call check(llcompilercontracts..sourcename('examples/demo.rexx',1) = 'demo.rexx','CLI relative physical name')
+  call check(llcompilercontracts..sourcename('<source>') = '<source>','in-memory source name')
+  one = .llcompiler..request('g','say 1' as .binary,artifacts,'/root-one/demo.rexx')
+  two = .llcompiler..request('g','say 1' as .binary,artifacts,'C:\root-two\demo.rexx')
+  first = one.output(); second = two.output()
+  call check(one.status() = 0 & two.status() = 0 & first.text() = second.text(),'physical roots produce identical RXAS')
+  one = .llcompiler..request('g','say 1' as .binary,artifacts,'one/demo.rexx')
+  two = .llcompiler..request('g','say 1' as .binary,artifacts,'two/demo.rexx')
+  first = one.output(); second = two.output()
+  call check(first.text() <> second.text(),'logical names disambiguate colliding basenames')
+  one = .llcompiler..request('g','say +' as .binary,artifacts,'/private/root/bad.rexx')
+  call check(pos('bad.rexx:',one.diagnostic()) = 1 & pos('/private',one.diagnostic()) = 0,'diagnostic uses logical source')
+  schema = .llir..schema(); call llcrexxir..registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  text = 'CEB1CEB20D0A'x as .binary || 'say 1+2' as .binary
+  file = builder.source('/physical/unicode.rexx',text)
+  at = file.origin(10,13); derived = at.derive(); composite = file.origin(0,13,'composite')
+  synthetic = builder.synthetic('not an authored filename')
+  fn = builder.function('$MAIN',contract.type('crexx.g.int64')); block = fn.block('entry')
+  a = block.constant(contract.type('crexx.g.int64'),'1',at)
+  b = block.constant(contract.type('crexx.g.int64'),'2',at)
+  c = block.constant(contract.type('crexx.g.int64'),'3',derived)
+  d = block.constant(contract.type('crexx.g.int64'),'4',composite)
+  e = block.constant(contract.type('crexx.g.int64'),'5',synthetic)
+  call block.returnvalue(a,synthetic)
+  graph = builder.finish(); saved = graph.binary()
+  backend = .llrxas..compilation(graph,'g',artifacts); output = backend.output(); assembly = output.text()
+  call check(backend.status() = 0,'provenance graph admitted: ' || backend.error())
+  exact = ' 0 17 "unicode.rexx" 2 5 8 "say 1+2"'
+  call check(pos(exact,assembly) > 0 & occurrences(assembly,exact) = 1,'full exact span, CRLF and unchanged anchor deduplication')
+  call check(pos(' 0 34 "unicode.rexx" 2 5 8 ',assembly) > 0,'derived origin retains generated/inherited flags')
+  call check(pos(' 0 65 "unicode.rexx" 1 1 3 ',assembly) > 0,'multiline composite first-line Unicode range')
+  call check(pos(' 0 6 "" 0 0 0 ""',assembly) > 0,'synthetic source has no authored coordinates')
+  call check(pos('not an authored filename',assembly) = 0,'synthetic description is not a filename')
+  call check(occurrences(assembly,'.srcstep 0 0 6 "" 0 0 0 ""') = 2,'entry and function clear preceding metadata')
+  call check(bin2x(saved) = bin2x(graph.binary()),'backend preserves full IR source ranges')
+  return
+occurrences: procedure = .int
+  arg text = .string, needle = .string
+  count = 0; start = 1
+  do forever
+    found = pos(needle,text,start)
+    if found = 0 then return count
+    count = count + 1; start = found + length(needle)
+  end
+retained: procedure = .llir..output expose artifacts
+  request = .llcompiler..request('g',"say 'owned'" as .binary,artifacts,'owned.crexx')
+  return request.output()
+requests: procedure = .void expose artifacts
+  output = retained()
+  call check(output.error() = '' & pos('owned',output.text()) > 0,'output outlives request')
+  saved = output.text()
+  request = .llcompiler..request; other = .llir..output
+  do i = 1 to 4
+    request = .llcompiler..request('g','say 3' as .binary,artifacts,'three.crexx')
+    call check(request.status() = 0 & request.status() = 0,'idempotent request ' || i)
+    other = request.output(); call check(pos('three.crexx',other.text()) > 0,'independent source identity')
+    call check(output.text() = saved,'previous output unchanged')
+  end
+  request = .llcompiler..request('g','say 1 +' as .binary,artifacts,'bad.crexx')
+  call check(request.status() <> 0 & pos('LL_COMPILER_SYNTAX',request.diagnostic()) > 0,'syntax diagnostic')
+  other = request.output(); call check(other.error() <> '' & other.bytes() = 0,'no partial syntax output')
+  request = .llcompiler..request('g','say 1' as .binary,artifacts,'bounded.crexx',1000000,512,10)
+  call check(request.status() <> 0 & pos('LIMIT',request.error()) > 0,'output budget')
+  other = request.output(); call check(other.bytes() = 0,'no partial bounded output')
+  request = .llcompiler..request('g','say 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9' as .binary,artifacts,'bounded.crexx',1000000,512,67108864,16,0)
+  call check(request.status() <> 0 & pos('LIMIT',request.error()) > 0,'register budget')
+  request = .llcompiler..request('g','say 1' as .binary,artifacts,'bounded.crexx',1)
+  call check(request.status() <> 0,'frontend operation budget')
+  request = .llcompiler..request('c','say 1' as .binary,artifacts || '/missing','missing.crexx')
+  call check(request.status() <> 0,'missing target contract')
+  request = .llcompiler..request('g',"import rxfnsb; say length('x')" as .binary,artifacts || '/missing','missing.crexx')
+  call check(request.status() <> 0 & pos('IMPORT',request.error()) > 0,'missing source import')
+  call check(llrxas..quote('00225C0D0ACEB1'x as .binary) = '"\x00\x22\x5C\x0D\x0A\xCE\xB1"','byte exact target quoting')
+  request = .llcompiler..request('g','d = .decimal; say d' as .binary,artifacts,'decimal.crexx')
+  graph = request.graph(); call check(pos('crexx.g.decimal.default',graph.dump()) > 0,'decimal absence retained in IR')
+  return
+cleanup: procedure = .void expose artifacts
+  request = .llcompiler..request('g','say 1' as .binary,artifacts,'lean.crexx',1000000,512,67108864,16,0)
+  output = request.output(); text = output.text(); graph = request.graph()
+  call check(request.status() = 0,'small program fits minimum register budget')
+  call check(pos('main() .locals=2',text) > 0 & pos('llf1() .locals=4',text) > 0,'call-free body and entry use only needed registers')
+  call check(pos('core.constant  : crexx.g.text',graph.dump()) = 0,'explicit G SAY constructs no empty default')
+  call check(pos('br llb1',text) = 0,'entry falls through to its first block')
+  request = .llcompiler..request('c','x = 1; say x' as .binary,artifacts,'lean.crexx')
+  graph = request.graph(); output = request.output()
+  call check(request.status() = 0 & pos('core.constant  : crexx.c.value',graph.dump()) = 0,'explicit C assignment and SAY construct no unused defaults')
+  do i = 1 to 2
+    level = word('g c',i)
+    request = .llcompiler..request(level,'say' as .binary,artifacts,'blank.crexx')
+    graph = request.graph()
+    call check(request.status() = 0 & pos('core.constant  : ',graph.dump()) > 0,level || ' bare SAY retains empty value')
+  end
+  request = .llcompiler..request('g','s = .string; say s' as .binary,artifacts,'default.crexx')
+  graph = request.graph()
+  call check(request.status() = 0 & pos('core.constant  : crexx.g.text',graph.dump()) > 0,'declared text default retained')
+  return
+graphs: procedure = .void expose artifacts
+  front = .llfrontend..request('g','say 1' as .binary,artifacts,'stable.crexx')
+  graph = front.graph(); before = graph.binary()
+  backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() = 0,'direct backend')
+  call check(bin2x(graph.binary()) = bin2x(before),'IR immutable after selection')
+  backend = .llrxas..compilation(graph,'c',artifacts)
+  call check(backend.status() <> 0,'wrong language ABI')
+  schema = .llir..schema(); call llcrexxir..registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  origin = builder.synthetic('test')
+  fn = builder.function('$MAIN',contract.type('crexx.g.int64')); block = fn.block('entry')
+  value = block.constant(contract.type('crexx.g.int64'),'0',origin)
+  call block.returnvalue(value,origin); graph = builder.finish()
+  backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() = 0,'synthetic source origin')
+  builder = .llir..builder(contract); fn = builder.function('$MAIN',contract.type('crexx.g.int64')); block = fn.block('entry')
+  graph = builder.finish(); backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() <> 0,'unterminated graph rejected')
+  builder = .llir..builder(contract); graph = builder.finish(); backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() <> 0,'empty graph rejected')
+  /* A valid foreign graph with a forged known operation shape. */
+  schema = .llir..schema(); family = schema.family('crexx.g',1)
+  integer = family.type('int64',.llir..intcodec() as .object)
+  declared = family.operation('int64.add'); call declared.input('wrong',integer); call declared.output('value',integer)
+  contract = schema.finish(); builder = .llir..builder(contract); origin = builder.synthetic('forged')
+  fn = builder.function('$MAIN',integer); block = fn.block('entry')
+  value = block.constant(integer,'1',origin); draft = block.operation(contract.operation('crexx.g.int64.add'),origin)
+  call draft.input('wrong',value); op = draft.finish(); call block.returnvalue(op.result(),origin)
+  graph = builder.finish(); call check(graph.error() = '', 'forged graph structurally valid')
+  backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() <> 0 & pos('incompatible operation',backend.error()) > 0,'forged target shape rejected')
+  /* A hostile codec with a familiar type name cannot inject target text. */
+  schema = .llir..schema(); family = schema.family('crexx.g',1)
+  integer = family.type('int64',.injectcodec() as .object); contract = schema.finish()
+  builder = .llir..builder(contract); origin = builder.synthetic('codec')
+  fn = builder.function('$MAIN',integer); block = fn.block('entry')
+  value = block.constantbytes(integer,'0000000000000000'x as .binary,origin)
+  call block.returnvalue(value,origin); graph = builder.finish()
+  backend = .llrxas..compilation(graph,'g',artifacts); output = backend.output()
+  call check(backend.status() = 0 & pos('INJECTED',output.text()) = 0,'canonical target codec ignores foreign formatter')
+  builder = .llir..builder(contract); origin = builder.synthetic('bad codec bytes')
+  fn = builder.function('$MAIN',integer); block = fn.block('entry')
+  value = block.constantbytes(integer,'FF'x as .binary,origin); call block.returnvalue(value,origin)
+  graph = builder.finish(); backend = .llrxas..compilation(graph,'g',artifacts)
+  call check(backend.status() <> 0 & pos('invalid constant bytes',backend.error()) > 0,'canonical codec rejects forged bytes')
+  return
+injectcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bytes = .binary
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return 'INJECTED'
+
+literals: procedure = .void expose artifacts outputfile
+  schema = .llir..schema(); call llcrexxir..registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract); at = builder.synthetic('exact binary literals')
+  fn = builder.function('$MAIN',contract.type('crexx.g.int64')); entry = fn.block('entry')
+  text = entry.constantbytes(contract.type('crexx.g.text'),'410042225CCEB1'x as .binary,at)
+  draft = entry.operation(contract.operation('crexx.g.say'),at); call draft.input('text',text); op = draft.finish()
+  zero = entry.constantbytes(contract.type('crexx.g.float64'),'0000000000000080'x as .binary,at)
+  one = entry.constant(contract.type('crexx.g.float64'),'1',at)
+  value = entry.binary(contract.operation('crexx.g.float64.div'),one,zero,at)
+  draft = entry.operation(contract.operation('crexx.g.convert.float64.text'),at); call draft.input('value',value); op = draft.finish()
+  text = op.result(); draft = entry.operation(contract.operation('crexx.g.say'),at); call draft.input('text',text); op = draft.finish()
+  status = entry.constant(contract.type('crexx.g.int64'),'0',at); call entry.returnvalue(status,at)
+  graph = builder.finish(); backend = .llrxas..compilation(graph,'g',artifacts); output = backend.output()
+  call check(backend.status() = 0,'exact literal graph: ' || backend.error())
+  if backend.status() = 0 then call check(writebinary(outputfile,output.text() as .binary) = output.bytes(),'write exact-literal test output')
+  return

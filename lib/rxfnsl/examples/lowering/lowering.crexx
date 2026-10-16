@@ -1,0 +1,62 @@
+/* cREXX License (MIT). A checked lowering from Unless to If. */
+options levelb
+namespace lowerdemo expose lower target execution
+import llast
+import llflow
+
+/** Declare the simpler tree consumed by later compiler passes. */
+target: procedure = .llast..schema
+  schema = .llast..schema()
+  ok = schema.mapping('program','Program')
+  ok = schema.field('program','items','items','capture','many')
+  ok = schema.mapping('block','Block')
+  ok = schema.field('block','items','items','capture','many')
+  ok = schema.mapping('if','If')
+  ok = schema.field('if','condition','condition','capture','one')
+  ok = schema.field('if','yes','yes','capture','one')
+  ok = schema.field('if','no','no','capture','one')
+  ok = schema.mapping('assignment','Assignment')
+  ok = schema.field('assignment','name','name','text','one')
+  ok = schema.field('assignment','value','value','capture','one')
+  ok = schema.mapping('say','Say')
+  ok = schema.field('say','value','value','capture','one')
+  ok = schema.mapping('name','Name')
+  ok = schema.field('name','spelling','spelling','text','one')
+  ok = schema.mapping('number','Number')
+  ok = schema.field('number','spelling','spelling','text','one')
+  return schema
+
+/** Lower each Unless to If(condition, empty block, original body).
+ * @param input The original owning AST; it is never mutated.
+ * @return A new owned tree, or a failed tree with no root.
+ */
+lower: procedure = .llast..tree
+  arg input = reference .llast..tree, limit = 1000000
+  tree = dereference input
+  pass = tree.lower(target(),limit)
+  do while pass.next()
+    source = pass.original()
+    if source.kind() = 'Unless' then do
+      empty = pass.make('Block')
+      yes = pass.accept(empty)
+      replacement = pass.make('If')
+      ok = replacement.append('condition',pass.translated(source.child('condition')))
+      ok = replacement.append('yes',yes)
+      ok = replacement.append('no',pass.translated(source.child('body')))
+      ok = pass.replace(replacement)
+    end
+    else ok = pass.keep()
+  end
+  return pass.finish()
+
+execution: procedure = .llflow..graph
+  arg tree = reference .llast..tree
+  mapping = .llflow..mapping()
+  ok = mapping.add('Program','sequence','items')
+  ok = mapping.add('Block','sequence','items')
+  ok = mapping.add('If','branch','condition yes no')
+  ok = mapping.add('Assignment','assign','name value')
+  ok = mapping.add('Say','evaluate','value')
+  ok = mapping.add('Name','read','spelling')
+  ok = mapping.add('Number','value','')
+  return .llflow..graph(tree,mapping)

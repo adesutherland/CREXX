@@ -1,0 +1,38 @@
+/* A flat record language for editor recovery and source-origin examples. */
+namespace originlang
+identifier: token
+number: token
+kw.say: token
+equals: token
+semi: token
+scan: lexer input utf8
+  letter: charset = 'A' to 'Z' | 'a' to 'z' | 'α' | '_'
+  part: charset = letter | '0' to '9'
+  digit: charset = '0' to '9'
+  space: charset = ' ' | U+0009 | U+000A | U+000D
+  say.word: rule = 'say' then emit kw.say
+  name.word: rule = letter part* then emit identifier
+  number.word: rule = digit+ then emit number
+  equals.word: rule = '=' then emit equals
+  semi.word: rule = ';' then emit semi
+  spaces: rule = space+ then skip
+parse: parser semantics contextfree input tokens start program backend ll1
+program: rule = (statement as item)*
+  then tree Program(items = item*)
+statement: rule = assignment | output
+assignment: rule = identifier as name equals expression as value semi
+  then tree Assignment(name = text(name), value = value)
+output: rule = kw.say expression as value semi
+  then tree Say(value = value)
+expression: rule = variable | literal
+variable: rule = identifier as spelling
+  then tree Name(spelling = text(spelling))
+literal: rule = number as spelling
+  then tree Number(spelling = text(spelling))
+records.errors: recovery rule program sync semi
+execution: flow
+  Program: sequence items
+  Assignment: assign name value
+  Say: evaluate value
+  Name: read spelling
+  Number: value

@@ -1,0 +1,16 @@
+options levelg
+import rxfnsb
+total = .int
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+twice: procedure = .int
+  arg value = .int
+  return value * 2

@@ -1,0 +1,157 @@
+.globals=0
+main() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
+load r4,0
+call r0,llf1(),r4
+ret r0
+llf1() .locals=57
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+br llb1
+llb1:
+.srcstep 2 0 98 "pipeline-g.crexx" 1 1 15 "options levelg"
+load r8,0
+copy r1,r8
+.srcstep 14 0 17 "pipeline-g.crexx" 4 9 10 "total = 2 + 3"
+load r9,2
+.srcstep 11 0 17 "pipeline-g.crexx" 4 9 14 "total = 2 + 3"
+copy r2,r9
+.srcstep 17 0 17 "pipeline-g.crexx" 4 13 14 "total = 2 + 3"
+load r10,3
+.srcstep 11 0 17 "pipeline-g.crexx" 4 9 14 "total = 2 + 3"
+copy r11,r2
+iadd r12,r11,r10
+.srcstep 6 0 17 "pipeline-g.crexx" 4 1 14 "total = 2 + 3"
+copy r1,r12
+.srcstep 26 0 17 "pipeline-g.crexx" 5 4 9 "if total > 4 then say twice(total)"
+copy r13,r1
+.srcstep 21 0 17 "pipeline-g.crexx" 5 4 14 "if total > 4 then say twice(total)"
+copy r3,r13
+.srcstep 31 0 17 "pipeline-g.crexx" 5 12 13 "if total > 4 then say twice(total)"
+load r14,4
+.srcstep 21 0 17 "pipeline-g.crexx" 5 4 14 "if total > 4 then say twice(total)"
+copy r15,r3
+igt r16,r15,r14
+.srcstep 18 0 65 "pipeline-g.crexx" 5 1 35 "if total > 4 then say twice(total)"
+icopy r17,r16
+brt llb2,r17
+br llb3
+llb2:
+.srcstep 32 0 65 "pipeline-g.crexx" 5 19 35 "if total > 4 then say twice(total)"
+load r18,""
+.srcstep 49 0 17 "pipeline-g.crexx" 5 29 34 "if total > 4 then say twice(total)"
+copy r19,r1
+.srcstep 41 0 17 "pipeline-g.crexx" 5 23 35 "if total > 4 then say twice(total)"
+copy r4,r19
+copy r20,r4
+copy r49,r20
+load r48,1
+settp r49,768
+call r21,llf2(),r48
+null r49
+.srcstep 32 0 65 "pipeline-g.crexx" 5 19 35 "if total > 4 then say twice(total)"
+copy r22,r21
+itos r22
+say r22
+.srcstep 18 0 65 "pipeline-g.crexx" 5 1 35 "if total > 4 then say twice(total)"
+br llb4
+llb3:
+.srcstep 51 0 17 "pipeline-g.crexx" 6 6 11 "else say 0"
+load r23,""
+.srcstep 59 0 17 "pipeline-g.crexx" 6 10 11 "else say 0"
+load r24,0
+.srcstep 51 0 17 "pipeline-g.crexx" 6 6 11 "else say 0"
+copy r25,r24
+itos r25
+say r25
+.srcstep 18 0 65 "pipeline-g.crexx" 5 1 35 "if total > 4 then say twice(total)"
+br llb4
+llb4:
+.srcstep 60 0 65 "pipeline-g.crexx" 7 1 19 "do while total > 0"
+br llb5
+llb5:
+.srcstep 68 0 17 "pipeline-g.crexx" 7 10 15 "do while total > 0"
+copy r26,r1
+.srcstep 63 0 17 "pipeline-g.crexx" 7 10 19 "do while total > 0"
+copy r5,r26
+.srcstep 73 0 17 "pipeline-g.crexx" 7 18 19 "do while total > 0"
+load r27,0
+.srcstep 63 0 17 "pipeline-g.crexx" 7 10 19 "do while total > 0"
+copy r28,r5
+igt r29,r28,r27
+.srcstep 60 0 65 "pipeline-g.crexx" 7 1 19 "do while total > 0"
+icopy r30,r29
+brt llb6,r30
+br llb7
+llb6:
+.srcstep 83 0 17 "pipeline-g.crexx" 8 11 16 "  total = total - 1"
+copy r31,r1
+.srcstep 80 0 17 "pipeline-g.crexx" 8 11 20 "  total = total - 1"
+copy r6,r31
+.srcstep 86 0 17 "pipeline-g.crexx" 8 19 20 "  total = total - 1"
+load r32,1
+.srcstep 80 0 17 "pipeline-g.crexx" 8 11 20 "  total = total - 1"
+copy r33,r6
+isub r34,r33,r32
+.srcstep 75 0 17 "pipeline-g.crexx" 8 3 20 "  total = total - 1"
+copy r1,r34
+.srcstep 60 0 65 "pipeline-g.crexx" 7 1 19 "do while total > 0"
+br llb5
+llb7:
+.srcstep 87 0 17 "pipeline-g.crexx" 10 1 10 "say total"
+load r35,""
+.srcstep 95 0 17 "pipeline-g.crexx" 10 5 10 "say total"
+copy r36,r1
+.srcstep 87 0 17 "pipeline-g.crexx" 10 1 10 "say total"
+copy r37,r36
+itos r37
+say r37
+.srcstep 96 0 17 "pipeline-g.crexx" 11 1 18 "say length('cat')"
+load r38,""
+.srcstep 113 0 17 "pipeline-g.crexx" 11 12 17 "say length('cat')"
+load r39,"cat"
+.srcstep 105 0 17 "pipeline-g.crexx" 11 5 18 "say length('cat')"
+copy r7,r39
+copy r40,r7
+copy r49,r40
+load r48,1
+settp r49,768
+call r41,rxfnsb.length(),r48
+null r49
+.srcstep 96 0 17 "pipeline-g.crexx" 11 1 18 "say length('cat')"
+copy r42,r41
+itos r42
+say r42
+.srcstep 115 0 17 "pipeline-g.crexx" 12 1 7 "exit 0"
+load r43,0
+.srcstep 123 0 17 "pipeline-g.crexx" 12 6 7 "exit 0"
+load r44,0
+.srcstep 115 0 17 "pipeline-g.crexx" 12 1 7 "exit 0"
+exit r44
+load r45,0
+ret r45
+llf2() .locals=20
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.TWICE"="b" ".int" llf2() "p1=.int"
+numsci 18,1,1
+br llb8
+llb8:
+.srcstep 125 0 98 "pipeline-g.crexx" 15 3 19 "  arg value = .int"
+load r3,0
+copy r1,r3
+copy r4,a1
+copy r1,r4
+.srcstep 135 0 17 "pipeline-g.crexx" 16 10 15 "  return value * 2"
+copy r5,r1
+.srcstep 133 0 17 "pipeline-g.crexx" 16 10 19 "  return value * 2"
+copy r2,r5
+.srcstep 137 0 17 "pipeline-g.crexx" 16 18 19 "  return value * 2"
+load r6,2
+.srcstep 133 0 17 "pipeline-g.crexx" 16 10 19 "  return value * 2"
+copy r7,r2
+imult r8,r7,r6
+.srcstep 127 0 17 "pipeline-g.crexx" 16 3 19 "  return value * 2"
+ret r8
+rxfnsb.length() .expose=rxfnsb.length
+  .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "p1=.string"

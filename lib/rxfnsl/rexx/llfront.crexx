@@ -6,6 +6,9 @@ namespace llfront expose document
 import rxfnsb
 import llcore
 import llproject
+import llast
+import llannotation
+import llflow
 import llstage
 import llcharset
 import llcomments
@@ -47,6 +50,11 @@ document: class
   _graph = .llcore..grammar
   _stages = .llstage..rules[]
   _schema = .llproject..schema
+  _ast = .llast..schema
+  _group = .int[]
+  _properties = .llannotation..contract[]
+  _flows = .llflow..mapping[]
+  _astat = .int[]
   _root = .int
   _profile = .string
   _units = .string
@@ -97,6 +105,7 @@ document: class
     _status = 0; _ran = 0; _error = ''; _at = 1; _end = 0; _depth = 0
     _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
     _schema = .llproject..schema()
+    _ast = .llast..schema()
     _encoding = ''; _commentopen = ''; _commentclose = ''
     _comments = .llcomments..rules()
     _malformed = ''; _otherwise = ''; _eof = -1; _lexmode = 0
@@ -125,7 +134,7 @@ document: class
   index: method = .int
     arg name = .string
     do i = 1 to _decls
-      if upper(_name[i]) == upper(name) then return i
+      if _group[i] = 0 & upper(_name[i]) == upper(name) then return i
     end
     return 0
   wordat: method = .string
@@ -150,7 +159,14 @@ document: class
     if _kind[token] <> 'symbol' then do
       call fail('capture requires a field name after as',token); return node
     end
-    return addnode(5,node,0,'@field.' || lower(_text[token]),_line[token])
+    label = '@field.' || lower(_text[token])
+    /* Identical capture wrappers denote the same labelled reduction. Separate
+     * copies would introduce artificial LR reduce/reduce conflicts in shared
+     * prefixes (for example the condition of open/closed IF statements). */
+    do i = 1 to _graph.size()
+      if _graph.op(i) = 5 & _graph.left(i) = node & _graph.label(i) = label then return i
+    end
+    return addnode(5,node,0,label,_line[token])
   run: method = .int
     if _ran then return _status
     _ran = 1
@@ -169,15 +185,24 @@ document: class
     ok = expect('namespace')
     if _kind[_at] <> 'symbol' then call fail('expected module name',_at)
     _module = _text[_at]; _at = _at + 1
+    group = 0
     do while _at < _count & _status = 0
       first = _at; name = _text[_at]
+      type = wordat(_at + 2); parent = 0
+      if group > 0 then do
+        if _type[group] = 'properties' & type = 'property' then parent = group
+        if _type[group] = 'flow' & wordpos(type,'sequence assign branch evaluate read value loop break continue return shortcircuit') > 0 then parent = group
+      end
+      if parent = 0 then group = 0
       if _kind[_at] <> 'symbol' | _kind[_at + 1] <> ':' then do
         call fail('expected name: declaration',_at); leave
       end
-      if index(name) > 0 then do
+      if parent = 0 & index(name) > 0 then do
         call fail('duplicate declaration ' || name,_at); leave
       end
       _decls = _decls + 1; _name[_decls] = name; _type[_decls] = wordat(_at + 2)
+      _group[_decls] = parent
+      if type = 'properties' | type = 'flow' then group = _decls
       _first[_decls] = _at; _at = _at + 3
       do while _at < _count
         if _kind[_at] = 'symbol' & _kind[_at + 1] = ':' then leave
@@ -191,6 +216,8 @@ document: class
       if _type[d] = 'parser' then lexical = 0
       _lexical[d] = lexical & (_type[d] = 'rule' | _type[d] = 'pattern' | _type[d] = 'charset')
     end
+    call astclauses()
+    if _status <> 0 then return _status
     startname = ''; parsers = 0; d = .int; name = .string
     do d = 1 to _decls
       if _type[d] <> 'parser' then iterate
@@ -278,6 +305,20 @@ document: class
         end
         when 'transform' then nop
         when 'tree' then nop
+        when 'properties' then nop
+        when 'property' then nop
+        when 'flow' then nop
+        when 'sequence' then nop
+        when 'assign' then nop
+        when 'branch' then nop
+        when 'evaluate' then nop
+        when 'read' then nop
+        when 'value' then nop
+        when 'loop' then nop
+        when 'break' then nop
+        when 'continue' then nop
+        when 'return' then nop
+        when 'shortcircuit' then nop
         otherwise call fail('unsupported declaration kind ' || _type[d],_first[d] + 2)
       end
     end
@@ -362,6 +403,8 @@ document: class
       end
     end
     call buildoperators()
+    call checkast()
+    call services()
     target = index(startname)
     if parsers = 0 then nop
     else if target = 0 then call fail('undefined start rule ' || startname,1)
@@ -371,6 +414,261 @@ document: class
       _status = 4; _error = lllimits..describe('grammar.clauses',_limit,_graph.size())
     end
     return _status
+  /** Lower optional groups after AST contracts are known. */
+  services: method = .void
+    d = .int; ok = .int; mapping = .llflow..mapping
+    do d = 1 to _decls while _status = 0
+      type = _type[d]; _at = _first[d] + 3; _end = _last[d]
+      if type = 'properties' | type = 'flow' then do
+        if pos('.',_name[d]) > 0 | lower(_name[d]) = 'language' then do
+          call fail('LL_AST_SERVICE: group name must be a simple name other than language',_first[d]); leave
+        end
+        do other = 1 to _decls
+          if _type[other] = 'properties' & lower(_name[d]) = lower(_name[other]) || '_entry' then call fail('LL_AST_SERVICE: name conflicts with generated property view ' || _name[d],_first[d])
+        end
+      end
+      if type = 'properties' then do
+        _properties[d] = .llannotation..contract()
+        if _at <= _end then call fail('LL_PROPERTY: properties takes no qualifiers',_at)
+      end
+      else if type = 'flow' then do
+        _flows[d] = .llflow..mapping()
+        if _at <= _end then call fail('LL_FLOW: flow takes no qualifiers',_at)
+      end
+      else if type = 'property' then do
+        if pos('.',_name[d]) > 0 then call fail('LL_PROPERTY: property name must be a simple name',_first[d])
+        if _group[d] = 0 then do
+          call fail('LL_PROPERTY: property must follow its properties group',_first[d]); leave
+        end
+        declared = wordat(_at); _at = _at + 1; ok = expect('default')
+        value = _text[_at]
+        if declared = '.string' then do
+          if _kind[_at] <> 'string' then call fail('LL_PROPERTY: .string default requires a quoted literal',_at)
+        end
+        else if declared = '.int' then do
+          sign = ''
+          if _kind[_at] = '-' | _kind[_at] = '+' then do
+            sign = _text[_at]; _at = _at + 1
+          end
+          value = sign || _text[_at]
+          if _kind[_at] <> 'integer' then call fail('LL_PROPERTY: .int default requires an integer literal',_at)
+        end
+        else call fail('LL_PROPERTY: supported property types are .string and .int',_at - 2)
+        if _at <> _end then call fail('LL_PROPERTY: unexpected default qualifier',_at + 1)
+        contract = _properties[_group[d]]
+        ok = contract.add(_name[d],declared,value)
+        if ok = 0 then call fail(contract.error(),_first[d])
+        _properties[_group[d]] = contract
+      end
+      else if wordpos(type,'sequence assign branch evaluate read value loop break continue return shortcircuit') > 0 then do
+        if _group[d] = 0 then do
+          call fail('LL_FLOW: operation must follow its flow group',_first[d]); leave
+        end
+        fields = ''; operation = type
+        if type = 'branch' then do
+          fields = flowfield(); ok = expect('then')
+          fields = fields || ' ' || flowfield(); ok = expect('else')
+          fields = fields || ' ' || flowfield()
+        end
+        else if type = 'loop' then do
+          if wordat(_at) = 'while' then do
+            operation = 'while'; _at = _at + 1
+            fields = flowfield(); ok = expect('do')
+            fields = fields || ' ' || flowfield()
+          end
+          else do
+            ok = expect('do'); fields = flowfield()
+            if _at <= _end then do
+              ok = expect('until'); operation = 'until'
+              fields = flowfield() || ' ' || fields
+            end
+          end
+        end
+        else if type = 'shortcircuit' then do
+          fields = flowfield(); operation = wordat(_at)
+          if operation <> 'and' & operation <> 'or' then call fail('LL_FLOW: expected AND or OR between shortcircuit fields',min(_at,_count))
+          _at = _at + 1; fields = fields || ' ' || flowfield()
+        end
+        else do while _at <= _end & _status = 0
+          fields = strip(fields || ' ' || flowfield())
+        end
+        if _status = 0 & _at <> _end + 1 then call fail('LL_FLOW: unexpected mapping qualifier',min(_at,_count))
+        mapping = _flows[_group[d]]; ok = mapping.add(_name[d],operation,fields)
+        if ok = 0 then call fail(mapping.error(),_first[d])
+        _flows[_group[d]] = mapping
+      end
+    end
+    do d = 1 to _decls while _status = 0
+      if _type[d] <> 'flow' then iterate
+      mapping = _flows[d]
+      if mapping.check(_ast) = 0 then do
+        token = _first[d]; nth = mapping.conflict()
+        do f = d + 1 to _decls
+          if _group[f] <> d then iterate
+          nth = nth - 1
+          if nth = 0 then do
+            token = _first[f]; leave
+          end
+        end
+        call fail(mapping.error(),token)
+      end
+      _flows[d] = mapping
+    end
+    return
+  /** A required field must be present before consuming it, including at EOF. */
+  flowfield: method = .string
+    if _status <> 0 then return ''
+    if _at > _end | _kind[_at] <> 'symbol' then do
+      call fail('LL_FLOW: expected an AST field name',min(_at,_count)); return ''
+    end
+    field = _text[_at]; _at = _at + 1
+    return field
+  properties: method = .llannotation..contract
+    arg declaration = .int
+    return _properties[declaration]
+  flow: method = .llflow..mapping
+    arg declaration = .int
+    return _flows[declaration]
+  /** Split an attached construction clause from its recognition declaration.
+   * The full generated syntax reader has already checked the surface; the
+   * identical token lowering also serves the minimal bootstrap reader. */
+  astclauses: method = .void
+    d = .int; t = .int; ok = .int
+    do d = 1 to _decls while _status = 0
+      if _lexical[d] then iterate
+      if wordpos(_type[d],'token rule operators infix prefix') = 0 then iterate
+      t = _first[d] + 3
+      do while t < _last[d]
+        if wordat(t) = 'then' & wordat(t + 1) = 'tree' then leave
+        t = t + 1
+      end
+      if t >= _last[d] then iterate
+      _astat[d] = t; _at = t + 2; _end = _last[d]; _last[d] = t - 1
+      kind = _name[d]
+      if _kind[_at] = 'symbol' then do
+        kind = _text[_at]; _at = _at + 1
+      end
+      ok = _ast.mapping(_name[d],kind)
+      if ok = 0 then call fail(_ast.error(),t)
+      ok = expect('(')
+      do while _at <= _end & _kind[_at] <> ')' & _status = 0
+        at = _at; field = _text[_at]
+        if _kind[_at] <> 'symbol' then call fail('AST field requires a name',_at)
+        _at = _at + 1; ok = expect('=')
+        selector = wordat(_at); mode = 'capture'; card = 'one'
+        if _kind[_at] <> 'symbol' then call fail('AST field requires a capture, operand or text',_at)
+        _at = _at + 1
+        if selector = 'text' then do
+          mode = 'text'; selector = ''
+          if _kind[_at] = '(' then do
+            _at = _at + 1; selector = wordat(_at)
+            if _kind[_at] <> 'symbol' then call fail('text() requires a capture name',_at)
+            _at = _at + 1; ok = expect(')')
+          end
+        end
+        else if _type[d] = 'infix' | _type[d] = 'prefix' | _type[d] = 'operators' then mode = 'operand'
+        select _kind[_at]
+          when '*' then do
+            card = 'many'; _at = _at + 1
+          end
+          when '+' then do
+            card = 'some'; _at = _at + 1
+          end
+          when '?' then do
+            card = 'optional'; _at = _at + 1
+          end
+          otherwise nop
+        end
+        ok = _ast.field(_name[d],field,selector,mode,card)
+        if ok = 0 then call fail(_ast.error(),at)
+        if _kind[_at] = ')' then leave
+        ok = expect(',')
+      end
+      ok = expect(')')
+      if _at <> _end + 1 then call fail('unexpected token after then tree',_at)
+    end
+    return
+  /** Capture multiplicities are computed within the enclosing rule. Named
+   * called rules are boundaries, so recursive language rules do not create
+   * cycles in this local field analysis. Counts saturate at two (many). */
+  capturebound: method = .int
+    arg root = .int, field = .string, maximum = .int
+    todo = .int[]; expanded = .int[]; amounts = .int[]; done = .int[]
+    top = 1; todo[top] = root; expanded[top] = 0
+    do while top > 0
+      id = todo[top]
+      if done[id] then do
+        top = top - 1; iterate
+      end
+      op = _graph.op(id); a = _graph.left(id); b = _graph.right(id)
+      if op = 5 then do
+        amounts[id] = _graph.label(id) = '@field.' || field; done[id] = 1; top = top - 1; iterate
+      end
+      if op <> 2 & op <> 3 & op <> 4 & op <> 7 & op <> 14 & op <> 15 then do
+        amounts[id] = 0; done[id] = 1; top = top - 1; iterate
+      end
+      if expanded[top] = 0 then do
+        expanded[top] = 1
+        if b > 0 & (op = 2 | op = 3 | op = 4) then do
+          top = top + 1; todo[top] = b; expanded[top] = 0
+        end
+        if a > 0 then do
+          top = top + 1; todo[top] = a; expanded[top] = 0
+        end
+        iterate
+      end
+      top = top - 1; done[id] = 1
+      select
+        when op = 2 then amounts[id] = min(2,amounts[a] + amounts[b])
+        when op = 3 | op = 4 then do
+          if maximum then amounts[id] = max(amounts[a],amounts[b])
+          else amounts[id] = min(amounts[a],amounts[b])
+        end
+        otherwise do
+          amounts[id] = 0
+          if maximum & amounts[a] > 0 then amounts[id] = 2
+          if op = 14 & maximum = 0 then amounts[id] = amounts[a]
+          if op = 15 & maximum then amounts[id] = amounts[a]
+        end
+      end
+    end
+    return amounts[root]
+  checkast: method = .void
+    if _status <> 0 then return
+    if _regiontoken >= 0 & _ast.index(_operatorname) > 0 then do
+      call fail('LL_AST_REGION: an embedded expression has no operators wrapper; attach that tree mapping to an enclosing parser rule',_astat[index(_operatorname)])
+      return
+    end
+    do f = 1 to _ast.fields() while _status = 0
+      d = index(_ast.rule(_ast.owner(f))); selector = _ast.source(f); mode = _ast.mode(f)
+      if mode = 'text' & selector = '' then iterate
+      if mode = 'operand' then do
+        allowed = 'inner'
+        if _type[d] = 'infix' then allowed = 'left right'
+        if wordpos(selector,allowed) = 0 then call fail('LL_AST_OPERAND: unknown operand ' || selector || ' in ' || _name[d] || '; available: ' || allowed,_astat[d])
+        if _ast.card(f) <> 'one' then call fail('LL_AST_CARDINALITY: an operator operand is one node',_astat[d])
+        iterate
+      end
+      if _type[d] <> 'rule' then do
+        call fail('LL_AST_CAPTURE: ' || _name[d] || ' has no capture named ' || selector,_astat[d]); iterate
+      end
+      root = _graph.left(_handle[d]); low = capturebound(root,selector,0); high = capturebound(root,selector,1)
+      if high = 0 then call fail('LL_AST_CAPTURE: unknown capture ' || selector || ' in ' || _name[d],_astat[d])
+      card = _ast.card(f)
+      expected = 'exactly one match'
+      if card = 'optional' then expected = 'at most one match'
+      if card = 'some' then expected = 'at least one match'
+      actual = 'may be absent'
+      if high > 1 & card <> 'some' then do
+        if low = 0 & card = 'one' then actual = 'may be absent or may match more than once'
+        else actual = 'may match more than once'
+      end
+      if (card = 'one' & (low <> 1 | high <> 1)) | (card = 'optional' & high > 1) | (card = 'some' & low = 0) then call fail('LL_AST_CARDINALITY: field ' || _name[d] || '.' || _ast.name(f) || ' requires ' || expected || ', but capture ' || selector || ' ' || actual,_astat[d])
+    end
+    if _status = 0 & _ast.check() = 0 then call fail(_ast.error(),_astat[index(_ast.rule(_ast.conflict()))])
+    return
+  astschema: method = .llast..schema
+    return _ast
   /** One optional operator component. Its checked CFG lowering is shared with
    * the Pratt implementation; an outer grammar can instead name a region. */
   buildoperators: method = .void
@@ -850,7 +1148,7 @@ document: class
     return result
 
 /* BEGIN FRONTEND READER */
-  /** Generated lexer, declared token stage and canonical LR parser are the
+  /** Generated lexer, declared token stage and generated LL(1) parser are the
    * sole syntax authority here. The seed reader is absent from L1/L2. */
   scan: method = .void
     language = llsyntax..language(); request = .lllanguage..request(language,_bytes,_limits)
@@ -891,7 +1189,7 @@ document: class
       end
       else do
         select
-          when kind = 'identifier' | left(kind,3) = 'kw.' then kind = 'symbol'
+          when kind = 'identifier' | kind = 'type' | left(kind,3) = 'kw.' then kind = 'symbol'
           when kind = 'string' then do
             quote = left(text,1)
             text = changestr(quote || quote,substr(text,2,length(text) - 2),quote)

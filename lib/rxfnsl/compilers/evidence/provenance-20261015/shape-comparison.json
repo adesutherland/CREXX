@@ -1,0 +1,106 @@
+[
+  {
+    "case": "literal-c",
+    "before": {
+      "instruction_lines": 78,
+      "srcsteps": 11,
+      "location_updates": 12,
+      "numeric_location_updates": 11,
+      "call_sites": 10,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=21"
+      ]
+    },
+    "after": {
+      "instruction_lines": 90,
+      "srcsteps": 8,
+      "location_updates": 6,
+      "numeric_location_updates": 3,
+      "call_sites": 10,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=21"
+      ]
+    }
+  },
+  {
+    "case": "literal-g",
+    "before": {
+      "instruction_lines": 12,
+      "srcsteps": 6,
+      "location_updates": 0,
+      "numeric_location_updates": 0,
+      "call_sites": 1,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=16"
+      ]
+    },
+    "after": {
+      "instruction_lines": 12,
+      "srcsteps": 6,
+      "location_updates": 0,
+      "numeric_location_updates": 0,
+      "call_sites": 1,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=16"
+      ]
+    }
+  },
+  {
+    "case": "pipeline-c",
+    "before": {
+      "instruction_lines": 551,
+      "srcsteps": 99,
+      "location_updates": 101,
+      "numeric_location_updates": 99,
+      "call_sites": 55,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=77",
+        "llf2() .locals=29"
+      ]
+    },
+    "after": {
+      "instruction_lines": 537,
+      "srcsteps": 59,
+      "location_updates": 51,
+      "numeric_location_updates": 47,
+      "call_sites": 55,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=77",
+        "llf2() .locals=29"
+      ]
+    }
+  },
+  {
+    "case": "pipeline-g",
+    "before": {
+      "instruction_lines": 90,
+      "srcsteps": 69,
+      "location_updates": 0,
+      "numeric_location_updates": 0,
+      "call_sites": 3,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=57",
+        "llf2() .locals=20"
+      ]
+    },
+    "after": {
+      "instruction_lines": 90,
+      "srcsteps": 51,
+      "location_updates": 0,
+      "numeric_location_updates": 0,
+      "call_sites": 3,
+      "frames": [
+        "main() .locals=16",
+        "llf1() .locals=57",
+        "llf2() .locals=20"
+      ]
+    }
+  }
+]

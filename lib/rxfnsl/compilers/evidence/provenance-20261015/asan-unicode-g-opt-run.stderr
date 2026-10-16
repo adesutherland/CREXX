@@ -1,0 +1,6 @@
+PANIC: (SIGNAL DIVISION_BY_ZERO)
+  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/provenance-measure/unicode-g.rxas) address 38 (0x26)
+  source: unicode-g.crexx:3:5: say 1 / 0
+  called from:
+  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/provenance-measure/unicode-g.rxas) address 6 (0x6)
+  source: :0:0: 

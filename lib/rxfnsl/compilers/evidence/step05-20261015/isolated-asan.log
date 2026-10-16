@@ -1,0 +1,10 @@
+Command: ctest --test-dir /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step05-asan-isolated-lwwnct4c --output-on-failure --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step05-asan-isolated-lwwnct4c
+    Start 1: step05_isolated
+1/1 Test #1: step05_isolated ..................   Passed   64.73 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =  64.73 sec

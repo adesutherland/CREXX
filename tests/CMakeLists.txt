@@ -31,6 +31,20 @@ set_tests_properties(crexx_expected_failure_contract PROPERTIES LABELS "cmake;ne
 
 set(RXAS_OPTIMIZER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rxas_optimizer)
 
+# Isolated measurement: Debug 0.04 s, Apple ASan 1.78 s (15 October 2026).
+# Deadlines are generous hang guards; serialize the small nested tool check.
+add_test(NAME rxas_label_cycles
+        COMMAND ${CMAKE_COMMAND}
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXDAS=$<TARGET_FILE:rxdas>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}/rxas_optimizer/label_cycles
+            -P ${RXAS_OPTIMIZER_DIR}/label_cycles.cmake)
+set_tests_properties(rxas_label_cycles PROPERTIES
+        LABELS "rxas;optimizer;backpatch"
+        RUN_SERIAL TRUE TIMEOUT 120
+        CREXX_PREP_TARGETS "rxas;rxdas;rxvm")
+
 add_executable(test_rxinteger_contract test_rxinteger_contract.c)
 target_include_directories(test_rxinteger_contract PRIVATE
         ../platform ../interpreter ../rxpa ../binutils/include ${CMAKE_BINARY_DIR}/generated)

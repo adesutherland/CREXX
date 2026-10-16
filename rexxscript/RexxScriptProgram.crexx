@@ -4,6 +4,7 @@ namespace rexxscript1 expose program compile
 import rxfnsb
 import llcore
 import lltree
+import llast
 import lllanguage
 import llsource
 import rexxscriptgrammar
@@ -12,6 +13,7 @@ import rexxscriptgrammar
 program: class
   _source = .binary
   _view = .lltree..view
+  _ast = .llast..tree
   _compiled = .int
   _status = .int
   _error = .string
@@ -84,7 +86,16 @@ program: class
     if _view.error() <> '' then do
       _status = 2; _error = _view.error()
     end
+    if _status = 0 then do
+      _ast = request.ast()
+      if _ast.status() <> 0 then do
+        _status = _ast.status(); _error = _ast.error()
+      end
+    end
     return _status
+  /** Application AST with named fields; returned as an independent owned value. */
+  ast: method = .llast..tree
+    return _ast
   view: method = .lltree..view
     return _view
   source: method = .binary

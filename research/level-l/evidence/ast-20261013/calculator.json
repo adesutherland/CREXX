@@ -1,0 +1,3633 @@
+{
+  "commands": [
+    {
+      "name": "calculator-rxas-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "e516706e8c9824b14c62377bf8b58769fbad11fa00ef6671b46fb4c468b4b065"
+    },
+    {
+      "name": "calculator-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/levell_calculator"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/consumer-opt.rxbin",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/levell_calculator.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "5d31a27bff901f108401252fc8ffa4d51c560f6a905b3b36d24916fc66ce362f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "5d31a27bff901f108401252fc8ffa4d51c560f6a905b3b36d24916fc66ce362f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "4a01e0c9c5d9662f8395e56246ab17d104a1ae781ce4ce1e5d0083d982ca8b92"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "4a01e0c9c5d9662f8395e56246ab17d104a1ae781ce4ce1e5d0083d982ca8b92"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "807590153a86f98bee4a14e5ab3e5f22f67e21ad1df41fad16dbf4aa47c99ed9"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "807590153a86f98bee4a14e5ab3e5f22f67e21ad1df41fad16dbf4aa47c99ed9"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "8ae112eb8e9e9c157eb0363dd4670ed7998503f82b0b079ea7b0d69726e35e54"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "8ae112eb8e9e9c157eb0363dd4670ed7998503f82b0b079ea7b0d69726e35e54"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "6aa6d38f582a53c7489dca517f5314b96ef651393510492ce87f35ec2946fa29"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "6aa6d38f582a53c7489dca517f5314b96ef651393510492ce87f35ec2946fa29"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "bda2d582e034f8b7f7fc7c5d91ae61705400fc0b19b5f69f21b94a651858353d"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "bda2d582e034f8b7f7fc7c5d91ae61705400fc0b19b5f69f21b94a651858353d"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "a22611132a9b36fd79b40339c15fe483b4a95ce765eb1791e7748a89d8c2a49f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "a22611132a9b36fd79b40339c15fe483b4a95ce765eb1791e7748a89d8c2a49f"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "add054ed24d7a9307f6895e76c6f5937470f5c037753efbce5772b01dbb3c949"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "add054ed24d7a9307f6895e76c6f5937470f5c037753efbce5772b01dbb3c949"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxtvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "aa973450eeaa063fa3d8e8ef42e75679e74d8ec59f9b2072e7b34f809167d2f8"
+    },
+    {
+      "name": "calculator-rxas-opt-opt-rxbvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-opt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "aa973450eeaa063fa3d8e8ef42e75679e74d8ec59f9b2072e7b34f809167d2f8"
+    },
+    {
+      "name": "calculator-rxas-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "e516706e8c9824b14c62377bf8b58769fbad11fa00ef6671b46fb4c468b4b065"
+    },
+    {
+      "name": "calculator-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/levell_calculator"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/consumer-noopt.rxbin",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/levell_calculator.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "42ffd1b87d45142af8e3b8ebf66eb3c947b36bd5b50570116f96f5824da3b5f3"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "42ffd1b87d45142af8e3b8ebf66eb3c947b36bd5b50570116f96f5824da3b5f3"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "57502129a35866e2809926e5d874a0dc05fea3262020d559770b786197196003"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "57502129a35866e2809926e5d874a0dc05fea3262020d559770b786197196003"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "bde3991f24aab83c53f901e751325f1717285530d4227d1b7ca42bbfda72e6a9"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "bde3991f24aab83c53f901e751325f1717285530d4227d1b7ca42bbfda72e6a9"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b5c607cc279e963b7458b04120a3cc27e52c08b5074c2cae5b7efdfd13bb1ba5"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b5c607cc279e963b7458b04120a3cc27e52c08b5074c2cae5b7efdfd13bb1ba5"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "f52cdd00bd691e7ec37742630e1a2e42351fc5ce578a9c4232ed7ac602c3be50"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "f52cdd00bd691e7ec37742630e1a2e42351fc5ce578a9c4232ed7ac602c3be50"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b45800367791ccd68e4a9ee9763c6d5e107d1d9104d2f80d28f1665d00fb2582"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b45800367791ccd68e4a9ee9763c6d5e107d1d9104d2f80d28f1665d00fb2582"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "90a580bbde21c2ceecd1b2af22723a94fb961d69480810d0daab6498f9eabec3"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "90a580bbde21c2ceecd1b2af22723a94fb961d69480810d0daab6498f9eabec3"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "4f05074537694b797df28d8feb4cd17800386223b6fec0c82181b385ccded959"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "4f05074537694b797df28d8feb4cd17800386223b6fec0c82181b385ccded959"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxtvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "55add39e045fcc1b024a345b3bd2962e4b0c3b514c864017794dbe35482f6fe1"
+    },
+    {
+      "name": "calculator-rxas-noopt-noopt-rxbvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-rxas-noopt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "55add39e045fcc1b024a345b3bd2962e4b0c3b514c864017794dbe35482f6fe1"
+    },
+    {
+      "name": "calculator-source-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "8ef8aad859e4b4939a92aa8e89b25dad7029402eda12ff0b48500b0e3d633468"
+    },
+    {
+      "name": "calculator-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/levell_calculator",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/levell_calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/levell_calculator"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/consumer-opt.rxbin",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/levell_calculator.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "d9cb1f8e682dc1e5c673f716189468781830ee43157b57718eae38dd44795db2"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "d9cb1f8e682dc1e5c673f716189468781830ee43157b57718eae38dd44795db2"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "34bc29371428173394e7c7c904209b45f49428d55878fbf7189b0a30aca653f4"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "34bc29371428173394e7c7c904209b45f49428d55878fbf7189b0a30aca653f4"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "7c9a6f0523f7be3e8df6d462988cf64c6c400c5c8f95a5efea455970be630ace"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "7c9a6f0523f7be3e8df6d462988cf64c6c400c5c8f95a5efea455970be630ace"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a2cae0113ef6e93e121cd4ea3cd15a7c1108cebc44d481d9206a73e8c4bde79f"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a2cae0113ef6e93e121cd4ea3cd15a7c1108cebc44d481d9206a73e8c4bde79f"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "d571978a0b9fea55dc283de2c767c840e7a4348c494fbeca4fe7ce3484e2655b"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "d571978a0b9fea55dc283de2c767c840e7a4348c494fbeca4fe7ce3484e2655b"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c3c42972e540a7aaa544be5de2f5e55e10a5751ba339276dba1c9dc0509b99aa"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c3c42972e540a7aaa544be5de2f5e55e10a5751ba339276dba1c9dc0509b99aa"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "822ef56be63403f692fbaa8fa49ffd6de720ce2a6a7b18e8851de2b4ce6ad6dc"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "822ef56be63403f692fbaa8fa49ffd6de720ce2a6a7b18e8851de2b4ce6ad6dc"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "bffe31f3a0cb2ed24c6159fee45a3da7eb0b421ba756070c80345c33db4df9ff"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "bffe31f3a0cb2ed24c6159fee45a3da7eb0b421ba756070c80345c33db4df9ff"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxtvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "cfbd09f3a4ae1881922b8c799714281f8d9dacb88fd9e7079e99ffcfdd1d93aa"
+    },
+    {
+      "name": "calculator-source-opt-opt-rxbvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/linked-opt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-opt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "cfbd09f3a4ae1881922b8c799714281f8d9dacb88fd9e7079e99ffcfdd1d93aa"
+    },
+    {
+      "name": "calculator-source-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "8ef8aad859e4b4939a92aa8e89b25dad7029402eda12ff0b48500b0e3d633468"
+    },
+    {
+      "name": "calculator-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/levell_calculator",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/levell_calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/levell_calculator"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/imports",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/consumer-noopt.rxbin",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/levell_calculator.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-precedence",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/precedence.txt"
+      ],
+      "status": 0,
+      "log_sha256": "ccc3a6f6deb8584f9f59ecc6d8d37cf08351332dae8d71a736dda1b6053981f2"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-grouping",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/grouping.txt"
+      ],
+      "status": 0,
+      "log_sha256": "9a1874217325f9fe8cd8f925d054ccd11462c8871239ec75254dfd8759149c61"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-left-subtraction",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/left-subtraction.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-left-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/left-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "37e2358c2796a06c57f2049e270255d70e6dd4ea39d1afee85086524466a3b07"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "4893abd38a0f7c49f9541972e00fb258794708d563a082f871d86376dbb7822d"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-nested-prefix",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/nested-prefix.txt"
+      ],
+      "status": 0,
+      "log_sha256": "cc7365399481afdb29c18b234650b17b395d3ced69027024fc00f7b3dcea8157"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-decimal",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/decimal.txt"
+      ],
+      "status": 0,
+      "log_sha256": "23867149e49d12e5307d2dd0e95975f30ec232269077b03e8e5400e9e2f8a3cb"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-decimal-division",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/decimal-division.txt"
+      ],
+      "status": 0,
+      "log_sha256": "d0af1cb03972301ba911479667f0c03a195d109c386d1bbcbe754c67e2ca421f"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-nested-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/nested-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-multiline-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/multiline-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-unicode-comments",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/unicode-comments.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-crlf-whitespace",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/crlf-whitespace.txt"
+      ],
+      "status": 0,
+      "log_sha256": "430c961a0810cb0ddfe97692f91fc123d42339ec7782594b2316304d1c219309"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-documented",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/documented.txt"
+      ],
+      "status": 0,
+      "log_sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "8607a71203094bae3b2680884f98c69489d564ec22cb2e4c1b3d5a5e0704ac35"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-bad-operator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/bad-operator.txt"
+      ],
+      "status": 1,
+      "log_sha256": "8607a71203094bae3b2680884f98c69489d564ec22cb2e4c1b3d5a5e0704ac35"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "6ee91ec5be308ac9b0139434d81f02c2647f588c5375ec878da8a05afed5f915"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-missing-close",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/missing-close.txt"
+      ],
+      "status": 1,
+      "log_sha256": "6ee91ec5be308ac9b0139434d81f02c2647f588c5375ec878da8a05afed5f915"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c7c892ecaa93762cdeeec600917692c031b29371be1da09c578bf544a7f3a5e2"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-trailing-input",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/trailing-input.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c7c892ecaa93762cdeeec600917692c031b29371be1da09c578bf544a7f3a5e2"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "33af9ac4ab35b8547f9488ce012e2cb0838f77e9b105c62c1ed96999b4bb9b25"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-empty",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/empty.txt"
+      ],
+      "status": 1,
+      "log_sha256": "33af9ac4ab35b8547f9488ce012e2cb0838f77e9b105c62c1ed96999b4bb9b25"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "1522658d297b9111e89e409adbfa91c89cc2a33ac946688849c14267ade54412"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-unclosed-comment",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/unclosed-comment.txt"
+      ],
+      "status": 1,
+      "log_sha256": "1522658d297b9111e89e409adbfa91c89cc2a33ac946688849c14267ade54412"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b440b7281a3539283f1d7b0d5d0f696b4318a7d7239e62d057c9eb6b9d0b4130"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-lexical",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/lexical.txt"
+      ],
+      "status": 1,
+      "log_sha256": "b440b7281a3539283f1d7b0d5d0f696b4318a7d7239e62d057c9eb6b9d0b4130"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "607eab82041b8c1a50251fcce33f15dd9eb91018c73054daaeda903a4427d3a9"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "607eab82041b8c1a50251fcce33f15dd9eb91018c73054daaeda903a4427d3a9"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "c87297b0e03084df60f37042227e08b2eab7a784d410887acf935d0d50124a90"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-computed-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/computed-zero.txt"
+      ],
+      "status": 3,
+      "log_sha256": "c87297b0e03084df60f37042227e08b2eab7a784d410887acf935d0d50124a90"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxtvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c2dacdc242b6df1678959db9d965cf0082855094c370757c400a17f1910c7896"
+    },
+    {
+      "name": "calculator-source-noopt-noopt-rxbvm-parse-before-evaluate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/private/tmp/levell-ast-calculator-final/calculator-source-noopt/parse-before-evaluate.txt"
+      ],
+      "status": 1,
+      "log_sha256": "c2dacdc242b6df1678959db9d965cf0082855094c370757c400a17f1910c7896"
+    }
+  ],
+  "observations": [
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "precedence",
+      "status": 0,
+      "input_sha256": "b9eaf0e98ac7166332fa6e4b1652536d9c834591cc6a4758157d3fa1a630d2c3"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "grouping",
+      "status": 0,
+      "input_sha256": "62249a90b567067481eb70224394b6e874468fd2374c0309ec5fd5de5343a87e"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "left-subtraction",
+      "status": 0,
+      "input_sha256": "25a99c25f7505e447dbd9c2b9591937bd17faea7c04e7d26411fdbfcd20914e6"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "left-division",
+      "status": 0,
+      "input_sha256": "e85f18794747cc9d82d0f9a38764030532e2a40fc072e375e718d0bb7c4640b9"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "prefix",
+      "status": 0,
+      "input_sha256": "f8438f325d83933588ba78916ae8a197192254e3513d580725a0014e474e6cf7"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "nested-prefix",
+      "status": 0,
+      "input_sha256": "7770aa3a461e3407c915483def7a4ac883a5700d8e0d697a4992f534f83d8b47"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "decimal",
+      "status": 0,
+      "input_sha256": "bb76bd54a7ff7052a8651791464cdcbf8eba86fea7cc64fbf62f86188ad5b27f"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "decimal-division",
+      "status": 0,
+      "input_sha256": "1b8b6b56bf9bf6b77e128ddc9222f3b6a2ef26a5bec8d95906fab50a31125e31"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "nested-comments",
+      "status": 0,
+      "input_sha256": "138f1f7a798f597487ae84a0057157e09adc028b5364b1bd61b307cf4fea9920"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "multiline-comments",
+      "status": 0,
+      "input_sha256": "cfb2306b85e3b6b7bdfcf33fe2cd00bee2af945bdd81adc4f28560197ef5e098"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "unicode-comments",
+      "status": 0,
+      "input_sha256": "e4b57d8443099da6e06f730d2f3b526ef3338d381ce026fa338ef5501ec28cbe"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "crlf-whitespace",
+      "status": 0,
+      "input_sha256": "3923cff34178f136bd5e2434c89891b766e47e9988a945cc32b9cfb1980cf0ae"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "documented",
+      "status": 0,
+      "input_sha256": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "bad-operator",
+      "status": 1,
+      "input_sha256": "eb659b6a66a9f73a34d51085c51f886b7039602f9ab9be8f1efccc5ae9457e95"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "missing-close",
+      "status": 1,
+      "input_sha256": "af1768df64a16a260eb215bc367323b225ffb153834eb81f178a30b17465c8d2"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "trailing-input",
+      "status": 1,
+      "input_sha256": "7bd7df1a31049cd71ae13cd2097a04efad83aa634963236227cec39eef3a2588"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "empty",
+      "status": 1,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "unclosed-comment",
+      "status": 1,
+      "input_sha256": "4eb705f0207d305c9822f41514d589bcd9784020c54f4a690254d22396f16c5d"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "lexical",
+      "status": 1,
+      "input_sha256": "c333f96a2b5da6b6f22c3899b6cf3245c55e98bfc5a243f2c80e4859711b07c6"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "zero",
+      "status": 3,
+      "input_sha256": "19b6554daa8a89aac1ab0cf47011177db54f653a08ea38fec7afcb0c893956fc"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "computed-zero",
+      "status": 3,
+      "input_sha256": "d090c94d3f02bd0acac87f0497622ea5f663fad85559c31687e17fae992742e3"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    },
+    {
+      "key": "calculator-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "parse-before-evaluate",
+      "status": 1,
+      "input_sha256": "608997989c67a743d6ad9159d2bf246972fe2429e5b10aac86333f1a04952c2a"
+    }
+  ],
+  "source_sha256": {
+    "lib/rxfnsl/examples/calculator/example.calc": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03",
+    "lib/rxfnsl/examples/calculator/calculator.crexx": "ee681cd317a40a105c4de46e161d15458f6ee7c7df81abe8769803cef69fe7f8",
+    "lib/rxfnsl/examples/calculator/fold.crexx": "e4c5c9b7f293cb4906f21499d9c537a87952cb3e4cc301266e74bde6eba80219",
+    "lib/rxfnsl/examples/calculator/calculator.rxl": "ec140a3abda41285fc3a1550161656b74c86f407625dafcde3d64652170053e9",
+    "lib/rxfnsl/examples/backends/ordered-prefix.levell": "37ba034698c417d9aa692ccaaf2d5f852bf6a398b63347f60c24d6231f4aa582",
+    "lib/rxfnsl/examples/backends/line-comments.levell": "c533f41c50fb3f89c04496205fb14793d9ce4c55e5c271b5b1aa9e5e6eba14c8",
+    "lib/rxfnsl/examples/backends/predictive.levell": "20a936b01c9b1b49a8f6d81dfa4ab70835e2e2db602a5c961efff42a27b274b8",
+    "lib/rxfnsl/examples/backends/ambiguous-arithmetic.levell": "dc91afd8beb9d5432665c1de7ad0f1252737e6cb4561e861806fc20df2d74e51",
+    "lib/rxfnsl/examples/backends/inspect.crexx": "8619076272dbf2546f61dc3358bcff42ae53baffd2a0e0f9c0b2d46105dd6eab",
+    "lib/rxfnsl/examples/backends/left-recursive-list.levell": "40394cff4a7bcf343f27625fabb35f0d7b4a9dc64f89671bb927319c8c8f010a",
+    "lib/rxfnsl/examples/backends/ordered-values.levell": "103ce598133677c7da274d2257eb7399729bb7ef3a051ade600a9a10e480e22b",
+    "lib/rxfnsl/examples/backends/palindrome.levell": "5ec3f4945b6f331194faa7377b7447909418b957f964062048475461c56f0279",
+    "lib/rxfnsl/tests_functional/check-teaching-examples.py": "6839b08c8af9323e48899ab3d81430f2efa625cd2a538edf6f836f9f82efc6db"
+  },
+  "product_sha256": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin": "e2602095cd69c81470b40929cc9e1ae56086e81102622684ddfa75131a31c709",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906"
+  },
+  "scope": "Level L teaching examples; selected part=calculator; source and product identities identify the exercised inputs."
+}

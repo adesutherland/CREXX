@@ -1,0 +1,770 @@
+/* cREXX License (MIT). Generic IR analysis and semantic service coordination. */
+options levelb
+namespace llirservices expose facts analysis analyse evaluate change rewrite lower optimise
+import rxfnsb
+import llir
+
+fail: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Sparse facts belong to one frozen module revision. A caller recording facts
+ * is the semantic authority for them. Recording a fact does not prove it.
+ * Absent and explicit false/empty values remain distinct. */
+facts: class
+  _owner = reference .llir..module
+  _revision = .int
+  _keys = .string[]
+  _domains = .string[]
+  _ids = .int[]
+  _values = .binary[]
+  _limit = .int
+  _bytelimit = .int
+  _bytes = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llir..module, entries = 1000000, bytes = 67108864
+    _owner = owner; graph = dereference owner; _revision = graph.identity()
+    _limit = entries; _bytelimit = bytes; _bytes = 0; _error = graph.error()
+    if entries < 1 | bytes < 1 then _error = 'LL_IR_BUDGET: fact budgets must be positive'
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.identity() = _revision & graph.error() = '' & _error = ''
+  matches: method = .int
+    arg owner = reference .llir..module
+    return valid() & (_owner <refsame> owner)
+  error: method = .string
+    if _error <> '' then return _error
+    if valid() = 0 then return 'LL_IR_FACT: facts belong to an expired or replaced revision'
+    return ''
+  index: method = .int
+    arg domain = .string, id = .int, key = .string
+    if valid() = 0 then call fail(error())
+    do i = 1 to _keys[0]
+      if _domains[i] = domain & _ids[i] = id & _keys[i] = key then return i
+    end
+    return 0
+  has: method = .int
+    arg domain = .string, id = .int, key = .string
+    return index(domain,id,key) > 0
+  get: method = .binary
+    arg domain = .string, id = .int, key = .string
+    i = index(domain,id,key)
+    if i = 0 then call fail('LL_IR_FACT: fact is absent: ' || key)
+    return _values[i]
+  put: method = .void
+    arg domain = .string, id = .int, key = .string, value = .binary
+    if valid() = 0 then call fail(error())
+    graph = dereference _owner; store = dereference graph.storage()
+    tableid = wordpos(domain,'function block operation value slot')
+    if tableid = 0 | id < 1 | key = '' then do
+      _error = 'LL_IR_FACT: invalid entity or key'; return
+    end
+    if id > store.count(tableid) then do
+      _error = 'LL_IR_FACT: entity is outside the module'; return
+    end
+    i = index(domain,id,key); oldbytes = 0; added = 0
+    if i > 0 then oldbytes = <blen>(_values[i])
+    else do
+      i = _keys[0] + 1; added = 1
+      if i > _limit then do
+        _error = 'LL_RESOURCE_LIMIT: ir.facts.entries budget ' || _limit; return
+      end
+    end
+    size = <blen>(value)
+    if added then do
+      domainbytes = domain as .binary; keybytes = key as .binary
+      size = size + <blen>(domainbytes) + <blen>(keybytes)
+    end
+    if size > _bytelimit - _bytes + oldbytes then do
+      _error = 'LL_RESOURCE_LIMIT: ir.facts.bytes budget ' || _bytelimit; return
+    end
+    _keys[i] = key; _domains[i] = domain; _ids[i] = id; _values[i] = value
+    _bytes = _bytes - oldbytes + size
+    return
+  count: method = .int
+    return _keys[0]
+  key: method = .string
+    arg i = .int
+    return _keys[i]
+  domain: method = .string
+    arg i = .int
+    return _domains[i]
+  entity: method = .int
+    arg i = .int
+    return _ids[i]
+
+/** Analysis results publish facts only after the whole analysis succeeds. */
+analysis: class
+  _status = .string
+  _message = .string
+  _facts = .llirservices..facts
+  _issues = .string[]
+  _ops = .int[]
+  *: factory
+    arg status = .string, message = .string, facts = .llirservices..facts
+    _status = status; _message = message; _facts = facts
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  facts: method = .llirservices..facts
+    if _status <> 'ok' then call fail('LL_IR_ANALYSIS: no facts published for ' || _status)
+    return _facts
+  issue: method = .void
+    arg op = .int, message = .string
+    i = _issues[0] + 1; _issues[i] = message; _ops[i] = op
+    return
+  issues: method = .int
+    return _issues[0]
+  diagnostic: method = .string
+    arg i = .int
+    return _issues[i]
+  operation: method = .int
+    arg i = .int
+    return _ops[i]
+
+/** Reachability follows both Boolean edges. Definite assignment intersects
+ * incoming sets, starting from the finite lattice top except at function entry.
+ * No inference about language truth or mutable external state is made. */
+analyse: procedure = .llirservices..analysis
+  arg owner = reference .llir..module, budget = 1000000
+  graph = dereference owner; facts = .llirservices..facts(owner)
+  if graph.error() <> '' then return .llirservices..analysis('invalid',graph.error(),facts)
+  if budget < 1 then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work must be positive',facts)
+  store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+  work = 0; op = .int; b = .int; i = .int; s = .int; f = .int; target = .int; at = .int; opcode = .int; temp = .binary; bytes = .binary
+  do op = 1 to graph.operations()
+    work = work + 1
+    if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+    opcode = store.get(3,op,1)
+    if opcode > 16 then do
+      if schema.effectvalue(opcode - 16,3) <> 'returns' then return .llirservices..analysis('unsupported','LL_IR_CONTROL: incomplete continuation contract for ' || store.opname(opcode),facts)
+      if schema.effectvalue(opcode - 16,1) = 'unknown' then return .llirservices..analysis('unsupported','LL_IR_EFFECT: unknown state effects for ' || store.opname(opcode),facts)
+    end
+  end
+  reachable = .int[]; pending = .int[]; head = 1; tail = 0
+  do f = 1 to graph.functions()
+    b = store.get(1,f,3); reachable[b] = 1; tail = tail + 1; pending[tail] = b
+  end
+  do while head <= tail
+    b = pending[head]; head = head + 1; op = store.get(2,b,3)
+    do i = 1 to store.get(3,op,9)
+      work = work + 1
+      if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      target = store.successor(op,i)
+      if reachable[target] = 0 then do
+        reachable[target] = 1; tail = tail + 1; pending[tail] = target
+      end
+    end
+  end
+  slots = store.count(5); blocks = graph.blocks()
+  if slots > 0 & blocks > (budget - work) <idiv> slots then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work cannot cover the slot lattice',facts)
+  before = .binary; after = .binary; call binresize before,blocks * slots; call binresize after,blocks * slots
+  do b = 1 to blocks
+    f = store.get(2,b,1)
+    do s = 1 to slots
+      at = (b - 1) * slots + s - 1
+      if reachable[b] & store.get(5,s,1) = f & store.get(1,f,3) <> b then <at..u8>(at) after = 1
+    end
+  end
+  changed = 1; pass = 0
+  do while changed
+    changed = 0; pass = pass + 1
+    do b = 1 to blocks
+      if reachable[b] = 0 then iterate
+      f = store.get(2,b,1)
+      do s = 1 to slots
+        work = work + 1
+        if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+        known = 1
+        if store.get(1,f,3) = b | store.get(5,s,1) <> f then known = 0
+        else do p = 1 to blocks
+          if reachable[p] = 0 then iterate
+          last = store.get(2,p,3)
+          do i = 1 to store.get(3,last,9)
+            work = work + 1
+            if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+            if store.successor(last,i) = b then do
+              from = (p - 1) * slots + s - 1
+              known = known & <at..u8>(from) after
+            end
+          end
+        end
+        at = (b - 1) * slots + s - 1; <at..u8>(at) before = known
+      end
+      op = store.get(2,b,2)
+      call binresize temp,slots
+      if slots > 0 then call bincopy temp,0,before,(b - 1) * slots,slots
+      do while op > 0
+        work = work + 1
+        if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+        if store.get(3,op,1) = 4 then do
+          at = store.get(3,op,12) - 1; <at..u8>(at) temp = 1
+        end
+        op = store.get(3,op,3)
+      end
+      do s = 1 to slots
+        at = (b - 1) * slots + s - 1; local = s - 1
+        if <at..u8>(at) after <> <at..u8>(local) temp then changed = 1
+        <at..u8>(at) after = <at..u8>(local) temp
+      end
+    end
+  end
+  result = .llirservices..analysis('ok','',facts)
+  do b = 1 to blocks
+    if reachable[b] then bytes = '01'x as .binary
+    else bytes = '00'x as .binary
+    call facts.put('block',b,'reachable',bytes)
+    if reachable[b] = 0 then iterate
+    call binresize temp,slots
+    if slots > 0 then call bincopy temp,0,before,(b - 1) * slots,slots
+    op = store.get(2,b,2)
+    do while op > 0
+      opcode = store.get(3,op,1)
+      if opcode = 3 | opcode = 4 then do
+        s = store.get(3,op,12); at = s - 1
+        if opcode = 4 then <at..u8>(at) temp = 1
+        else do
+          if <at..u8>(at) temp then bytes = '01'x as .binary
+          else do
+            bytes = '00'x as .binary
+            call result.issue(op,'LL_IR_UNASSIGNED: slot ' || store.text(store.get(5,s,3)) || ' may be read before assignment (operation ' || op || ')')
+          end
+          call facts.put('operation',op,'definitely.assigned',bytes)
+        end
+      end
+      op = store.get(3,op,3)
+    end
+  end
+  if facts.error() <> '' then return .llirservices..analysis('limit',facts.error(),facts)
+  /* Publish the completed fact snapshot while retaining the diagnostics. */
+  final = .llirservices..analysis('ok','',facts)
+  do i = 1 to result.issues()
+    call final.issue(result.operation(i),result.diagnostic(i))
+  end
+  return final
+
+/** Evaluate one operation without changing its module. Exact successful values
+ * are checked against the declared codecs. Effects remain explicit eligibility
+ * conditions, even if a service claims it can compute a constant. */
+evaluate: procedure = .llir..evaluation
+  arg owner = reference .llir..module, opid = .int, facts = .llirservices..facts, budget = 1000000
+  graph = dereference owner
+  if graph.error() <> '' then return .llir..evaluation('invalid',graph.error())
+  if facts.matches(owner) = 0 then return .llir..evaluation('invalid','LL_IR_FACT: facts belong to another module revision')
+  if budget < 1 then return .llir..evaluation('limit','LL_RESOURCE_LIMIT: ir.evaluation.work budget exhausted')
+  if opid < 1 | opid > graph.operations() then return .llir..evaluation('invalid','LL_IR_OPERATION: invalid operation ID')
+  store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+  opcode = store.get(3,opid,1)
+  if opcode <= 16 then return .llir..evaluation('keep','core operation has no extension evaluator')
+  descriptor = opcode - 16
+  if schema.effectvalue(descriptor,1) <> 'none' | schema.effectvalue(descriptor,2) = 'unknown' | schema.effectvalue(descriptor,3) <> 'returns' then return .llir..evaluation('keep','operation effects do not permit constant replacement')
+  service = schema.callback(descriptor,1)
+  if (service is .llir..evaluator) = 0 then return .llir..evaluation('keep','no constant evaluator registered')
+  values = .binary[]; keys = .string[]; context = .binary[]; i = .int
+  operation = graph.operation(opid)
+  do i = 1 to operation.inputs()
+    value = operation.input(i)
+    if value.isconstant() = 0 then return .llir..evaluation('keep','an input is not a literal constant')
+    values[i] = value.bytes()
+  end
+  do i = 1 to facts.count()
+    if facts.domain(i) = 'operation' & facts.entity(i) = opid then do
+      j = keys[0] + 1; keys[j] = facts.key(i); context[j] = facts.get('operation',opid,keys[j])
+    end
+  end
+  return dispatch(graph,opid,values,keys,context,budget)
+
+/** The same checked callback boundary serves literal queries and batch facts.
+ * Values passed in at() are the proven exact operands; operation() retains the
+ * original immutable source view for attributes and provenance. */
+dispatch: procedure = .llir..evaluation
+  arg graph = .llir..module, opid = .int, values = .binary[], keys = .string[], context = .binary[], budget = .int
+  if budget < 1 then return .llir..evaluation('limit','LL_RESOURCE_LIMIT: ir.evaluation.work budget exhausted')
+  store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+  i = .int
+  operation = graph.operation(opid); descriptor = store.get(3,opid,1) - 16
+  if schema.effectvalue(descriptor,1) <> 'none' | schema.effectvalue(descriptor,2) = 'unknown' | schema.effectvalue(descriptor,3) <> 'returns' then return .llir..evaluation('keep','operation effects do not permit constant replacement')
+  service = schema.callback(descriptor,1)
+  if (service is .llir..evaluator) = 0 then return .llir..evaluation('keep','no constant evaluator registered')
+  request = .llir..request(operation.name(),values,keys,context,budget,operation)
+  do
+    evaluator = service as .llir..evaluator
+    result = evaluator.evaluate(request)
+    if wordpos(result.status(),'constant keep invalid limit') = 0 then return .llir..evaluation('invalid','LL_IR_SERVICE: unknown evaluation outcome')
+    if result.status() <> 'constant' then do
+      if result.size() <> 0 then return .llir..evaluation('invalid','LL_IR_SERVICE: nonconstant outcome contains results')
+      return result
+    end
+    if result.size() <> operation.results() then return .llir..evaluation('invalid','LL_IR_SERVICE: constant result count does not match operation')
+    do i = 1 to result.size()
+      type = schema.fieldtype(descriptor,2,i); codec = schema.codec(type) as .llir..typecodec
+      message = codec.check(result.at(i))
+      if message <> '' then return .llir..evaluation('invalid','LL_IR_SERVICE: invalid result ' || i || ': ' || message)
+    end
+    do i = 1 to result.uses()
+      if request.has(result.used(i)) = 0 then return .llir..evaluation('invalid','LL_IR_SERVICE: evaluator consumed an absent fact ' || result.used(i))
+    end
+    return result
+  on signal
+    return .llir..evaluation('invalid','LL_IR_SERVICE: evaluator signalled failure')
+  end
+  return .llir..evaluation('invalid','LL_IR_SERVICE: evaluator did not return')
+
+/** A failed transformation retains the original verified module. Only status
+ * 'changed' publishes a candidate. IDs map into that returned revision. */
+change: class
+  _status = .string
+  _message = .string
+  _graph = .llir..module
+  _ops = .int[]
+  _values = .int[]
+  _blocks = .int[]
+  *: factory
+    arg status = .string, message = .string, graph = .llir..module, ops = .int[], values = .int[], ?blocks = .int[]
+    _status = status; _message = message; _graph = graph; _ops = ops; _values = values; _blocks = blocks
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  result: method = .llir..module
+    return _graph
+  operation: method = .int
+    arg oldid = .int
+    if _status <> 'changed' then return oldid
+    return _ops[oldid]
+  value: method = .int
+    arg oldid = .int
+    if _status <> 'changed' then return oldid
+    return _values[oldid]
+  block: method = .int
+    arg oldid = .int
+    if _status <> 'changed' | _blocks[0] = 0 then return oldid
+    return _blocks[oldid]
+
+/** A private, revision-owned plan. Numeric IDs index definitions, exact facts,
+ * aliases, uses, previous operations and successors. No compiler vocabulary or
+ * graph copies occur during planning. Every successful plan reduces records or
+ * replaces an eligible computation with its exact constant result. */
+batch: class
+  _active = .int
+  _left = .int
+  _space = .int
+  _status = .string
+  _message = .string
+  _changed = .int
+  _aliases = .int[]
+  _known = .int[]
+  _bits = .binary[]
+  _folds = .int[]
+  _answers = .object[]
+  _branches = .int[]
+  _live = .int[]
+  _used = .int[]
+  _removed = .int[]
+  _previous = .int[]
+  *: factory
+    return
+  active: method = .int
+    return _active
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  remaining: method = .int
+    return _left
+  changed: method = .int
+    return _changed
+  spend: method = .void
+    arg work = 1
+    if work > _left then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.optimise.work budget exhausted'
+      call fail(_message)
+    end
+    _left = _left - work
+    return
+  remember: method = .void
+    arg value = .int, bits = .binary
+    if <blen>(bits) > _space then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.optimise.bytes budget exhausted'
+      call fail(_message)
+    end
+    _space = _space - <blen>(bits); _known[value] = 1; _bits[value] = bits
+    return
+  alias: method = .int
+    arg value = .int
+    return _aliases[value]
+  live: method = .int
+    arg block = .int
+    return _live[block]
+  removed: method = .int
+    arg op = .int
+    return _removed[op]
+  folded: method = .int
+    arg op = .int
+    return _folds[op]
+  answer: method = .llir..evaluation
+    arg op = .int
+    return _answers[op] as .llir..evaluation
+  branch: method = .int
+    arg op = .int
+    return _branches[op]
+  used: method = .int
+    arg value = .int
+    return _used[value]
+  prepare: method = .void
+    arg graph = .llir..module, budget = .int, entries = .int, bytes = .int
+    _active = 1; _left = budget; _status = 'ok'
+    store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+    count = store.count(3) * 5 + store.count(4) * 4 + store.count(2) * 2 + store.count(5) * 2
+    if entries < 1 | bytes < 1 | budget < 1 | count > entries | count > bytes <idiv> 8 then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.optimise.index budget exhausted'; return
+    end
+    _space = bytes - count * 8
+    b = .int; op = .int; i = .int; value = .int; opcode = .int; last = .int; slot = .int
+    slotvalue = .int[]; slotepoch = .int[]; epoch = 0; keys = .string[]; context = .binary[]
+    do
+      do value = 1 to store.count(4)
+        call spend(); _aliases[value] = value
+      end
+      do b = 1 to graph.blocks()
+        call spend(); epoch = epoch + 1; last = 0; op = store.get(2,b,2)
+        do while op > 0
+          call spend(1 + store.get(3,op,5) + store.get(3,op,7))
+          _previous[op] = last; last = op; opcode = store.get(3,op,1)
+          select opcode
+            when 1 then call remember(store.result(op),store.bits(store.get(8,store.get(3,op,12),2)))
+            when 3 then do
+              slot = store.get(3,op,12)
+              if slotepoch[slot] = epoch then do
+                value = store.result(op); _aliases[value] = slotvalue[slot]
+                _removed[op] = 1; _changed = 1
+              end
+            end
+            when 4 then do
+              slot = store.get(3,op,12); slotepoch[slot] = epoch
+              slotvalue[slot] = alias(store.operand(op,1))
+            end
+            when 6 then do
+              value = alias(store.operand(op,1))
+              if _known[value] then do
+                bits = _bits[value]; _branches[op] = store.successor(op,2 - <at..u8>(0) bits)
+                _changed = 1
+              end
+            end
+            otherwise do
+              if opcode > 16 then do
+                descriptor = opcode - 16
+                continuation = schema.effectvalue(descriptor,3)
+                if continuation <> 'returns' & continuation <> 'diverges' then do
+                  _status = 'keep'; _message = 'LL_IR_CONTROL: optimiser requires an explicit continuation contract'; return
+                end
+                if schema.effectvalue(descriptor,1) <> 'none' then epoch = epoch + 1
+                values = .binary[]; literals = 1
+                do i = 1 to store.get(3,op,5)
+                  value = alias(store.operand(op,i))
+                  if _known[value] = 0 then do; literals = 0; leave; end
+                  values[i] = _bits[value]
+                end
+                if literals & store.get(3,op,7) > 0 then do
+                  result = dispatch(graph,op,values,keys,context,_left)
+                  if result.status() = 'invalid' | result.status() = 'limit' then do
+                    _status = result.status(); _message = result.message(); return
+                  end
+                  if result.status() = 'constant' then do
+                    _folds[op] = 1; _answers[op] = result as .object; _changed = 1
+                    do i = 1 to result.size()
+                      call remember(store.result(op,i),result.at(i))
+                    end
+                  end
+                end
+              end
+            end
+          end
+          op = store.get(3,op,3)
+        end
+      end
+      /* Every function entry is a root, including functions without callers. */
+      pending = .int[]; head = 1; tail = 0
+      do i = 1 to graph.functions()
+        call spend(); b = store.get(1,i,3); _live[b] = 1
+        tail = tail + 1; pending[tail] = b
+      end
+      do while head <= tail
+        call spend(); b = pending[head]; head = head + 1; op = store.get(2,b,3)
+        edges = store.get(3,op,9)
+        if _branches[op] > 0 then edges = 1
+        do i = 1 to edges
+          call spend(); target = _branches[op]
+          if target = 0 then target = store.successor(op,i)
+          if _live[target] = 0 then do
+            _live[target] = 1; tail = tail + 1; pending[tail] = target
+          end
+        end
+      end
+      /* Values cannot cross blocks. Reverse definition order closes demand in
+       * one pass, including chains of unused pure operations. Stores stay. */
+      do b = 1 to graph.blocks()
+        call spend()
+        if _live[b] = 0 then do; _changed = 1; iterate; end
+        op = store.get(2,b,3)
+        do while op > 0
+          call spend(1 + store.get(3,op,5) + store.get(3,op,7))
+          opcode = store.get(3,op,1); discardable = opcode = 1 | opcode = 2 | _folds[op]
+          if opcode > 16 & _folds[op] = 0 then discardable = pure(schema,opcode - 16)
+          needed = 0
+          do i = 1 to store.get(3,op,7)
+            if _used[store.result(op,i)] then needed = 1
+          end
+          if discardable & needed = 0 then do; _removed[op] = 1; _changed = 1; end
+          if _removed[op] = 0 & _folds[op] = 0 & _branches[op] = 0 then do
+            do i = 1 to store.get(3,op,5)
+              _used[alias(store.operand(op,i))] = 1
+            end
+          end
+          op = _previous[op]
+        end
+      end
+    on signal
+      if _status = 'ok' then do
+        _status = 'invalid'; _message = 'LL_IR_SERVICE: batch planning signalled failure'
+      end
+    end
+    return
+
+/** Optimise a frozen graph atomically. Unknown semantics retain runtime work;
+ * invalid/limit returns the original module with identity mappings. */
+optimise: procedure = .llirservices..change
+  arg owner = reference .llir..module, budget = 1000000, entries = 1000000, bytes = 67108864
+  graph = dereference owner; empty = .int[]
+  if graph.error() <> '' then return .llirservices..change('invalid',graph.error(),graph,empty,empty)
+  plan = .batch(); call plan.prepare(graph,budget,entries,bytes)
+  if plan.status() <> 'ok' then return .llirservices..change(plan.status(),plan.message(),graph,empty,empty)
+  if plan.changed() = 0 then return .llirservices..change('keep','',graph,empty,empty)
+  source = dereference graph.storage(); contract = dereference source.contract()
+  return transform(owner,contract,0,.llir..evaluation(),plan.remaining(),entries,bytes,plan)
+
+rewrite: procedure = .llirservices..change
+  arg owner = reference .llir..module, opid = .int, facts = .llirservices..facts, budget = 1000000, entries = 1000000, bytes = 67108864
+  graph = dereference owner; empty = .int[]
+  result = evaluate(owner,opid,facts,budget)
+  if result.status() <> 'constant' then return .llirservices..change(result.status(),result.message(),graph,empty,empty)
+  source = dereference graph.storage(); contract = dereference source.contract()
+  return transform(owner,contract,opid,result,budget,entries,bytes)
+
+lower: procedure = .llirservices..change
+  arg owner = reference .llir..module, target = .llir..contract, budget = 1000000, entries = 1000000, bytes = 67108864
+  return transform(owner,target,0,.llir..evaluation(),budget,entries,bytes)
+
+/** Copy/rebuild coordinator. It preserves source records and remaps value uses;
+ * no text is parsed in this path. The first lowering profile admits pure,
+ * normally returning straight-line fragments. Richer effect/control mappings
+ * need their own checked obligations before a backend can use them. */
+transform: procedure = .llirservices..change
+  arg owner = reference .llir..module, target = .llir..contract, replace = .int, evaluated = .llir..evaluation, budget = .int, entries = .int, bytes = .int, ?plan = .batch
+  if ?plan = 0 then plan = .batch()
+  graph = dereference owner; empty = .int[]; opmap = .int[]; valuemap = .int[]; blockmap = .int[]
+  if graph.error() <> '' then return .llirservices..change('invalid',graph.error(),graph,empty,empty)
+  if target.error() <> '' then return .llirservices..change('invalid',target.error(),graph,empty,empty)
+  if budget < 1 then return .llirservices..change('limit','LL_RESOURCE_LIMIT: ir.transform.work must be positive',graph,empty,empty)
+  source = dereference graph.storage(); contract = dereference source.contract()
+  schema = dereference contract.data(); targetschema = dereference target.data()
+  dest = .llir..arena(target,entries,bytes); types = .int[]; work = 0; changed = 0
+  i = .int; j = .int; t = .int; row = .int; col = .int; op = .int; b = .int; id = .int
+  value = .llir..valuehandle; type = .llir..typeid; originid = .int; newop = .int; codec = .llir..typecodec
+  original = .int; alias = .int
+  do
+    /* A type name is interpreted by its explicitly versioned host family. */
+    do i = 1 to schema.types()
+      types[i] = targetschema.typeindex(schema.typename(i))
+      if types[i] = 0 then return .llirservices..change('invalid','LL_IR_SCHEMA: target lacks type ' || schema.typename(i),graph,empty,empty)
+      family = ''; version = 0
+      do j = 1 to schema.familycount()
+        prefix = schema.familyname(j) || '.'
+        if left(schema.typename(i),length(prefix)) = prefix & length(prefix) > length(family) then do
+          family = schema.familyname(j); version = schema.version(j)
+        end
+      end
+      agreed = 0
+      do j = 1 to targetschema.familycount()
+        if targetschema.familyname(j) = family & targetschema.version(j) = version then agreed = 1
+      end
+      if agreed = 0 then return .llirservices..change('invalid','LL_IR_SCHEMA: incompatible type family ' || family,graph,empty,empty)
+    end
+    do i = 1 to source.poolsize() while dest.error() = ''
+      work = work + 1
+      if work > budget then return .llirservices..change('limit','LL_RESOURCE_LIMIT: ir.transform.work budget exhausted',graph,empty,empty)
+      id = dest.pool(source.bits(i))
+    end
+    nextblock = 0
+    do b = 1 to source.count(2)
+      blockmap[b] = 0
+      if plan.active() then do
+        if plan.live(b) = 0 then iterate
+      end
+      nextblock = nextblock + 1; blockmap[b] = nextblock
+    end
+    do t = 1 to 13 while dest.error() = ''
+      if wordpos(t,'1 2 5 8 9 10 12 13') = 0 then iterate
+      do row = 1 to source.count(t) while dest.error() = ''
+        work = work + 1
+        if work > budget then return .llirservices..change('limit','LL_RESOURCE_LIMIT: ir.transform.work budget exhausted',graph,empty,empty)
+        if t = 2 & blockmap[row] = 0 then iterate
+        id = dest.add(t)
+        if id = 0 then leave
+        do col = 1 to source.width(t)
+          number = source.get(t,row,col)
+          if (t = 1 & col = 2) | (t = 5 & col = 2) | (t = 8 & col = 1) | (t = 12 & col = 2) then number = types[number]
+          if t = 1 & col = 3 then number = blockmap[number]
+          if t = 2 & (col = 2 | col = 3) then number = 0
+          call dest.put(t,id,col,number)
+        end
+      end
+    end
+    do b = 1 to source.count(2) while dest.error() = ''
+      if blockmap[b] = 0 then iterate
+      destblock = blockmap[b]; op = source.get(2,b,2)
+      do while op > 0 & dest.error() = ''
+        work = work + 1
+        if work > budget then return .llirservices..change('limit','LL_RESOURCE_LIMIT: ir.transform.work budget exhausted',graph,empty,empty)
+        if plan.active() then do
+          do i = 1 to source.get(3,op,7)
+            original = source.result(op,i); alias = plan.alias(original)
+            if alias <> original then valuemap[original] = valuemap[alias]
+          end
+          if plan.removed(op) then do
+            op = source.get(3,op,3); iterate
+          end
+        end
+        inputs = .int[]; outputs = .int[]; edges = .int[]; mapped = .object[]
+        do i = 1 to source.get(3,op,5)
+          original = source.operand(op,i)
+          if plan.active() then original = plan.alias(original)
+          inputs[i] = valuemap[original]
+          mapped[i] = .llir..valuehandle(reference dest,inputs[i]) as .object
+        end
+        do i = 1 to source.get(3,op,7)
+          outputs[i] = types[source.get(4,source.result(op,i),3)]
+        end
+        do i = 1 to source.get(3,op,9)
+          edges[i] = blockmap[source.successor(op,i)]
+        end
+        opcode = source.get(3,op,1); originid = source.get(3,op,11)
+        fold = op = replace; branch = 0
+        if plan.active() then do
+          fold = plan.folded(op); branch = plan.branch(op)
+          if fold then evaluated = plan.answer(op)
+        end
+        if fold then do
+          changed = 1
+          originid = dest.origin(source.get(9,originid,1),source.get(9,originid,2),source.get(9,originid,3),3,originid)
+          do i = 1 to evaluated.size() while dest.error() = ''
+            if plan.active() then do
+              if plan.used(source.result(op,i)) = 0 then iterate
+            end
+            type = .llir..typeid(target.identity(),outputs[i])
+            constid = dest.constant(type,evaluated.at(i)); one = .int[]; one[1] = outputs[i]
+            newop = dest.append(destblock,1,empty,one,empty,originid,constid)
+            if opmap[op] = 0 then opmap[op] = newop
+            valuemap[source.result(op,i)] = dest.result(newop)
+          end
+        end
+        else if branch > 0 then do
+          selected = .int[]; selected[1] = blockmap[branch]
+          originid = dest.origin(source.get(9,originid,1),source.get(9,originid,2),source.get(9,originid,3),3,originid)
+          opmap[op] = dest.append(destblock,5,empty,empty,selected,originid)
+        end
+        else do
+          targetop = opcode
+          if opcode > 16 then targetop = targetschema.opindex(schema.opname(opcode - 16)) + 16
+          if targetop = 16 then do
+            descriptor = opcode - 16; service = schema.callback(descriptor,3)
+            if (service is .llir..lowering) = 0 then return .llirservices..change('keep','LL_IR_LOWERING: no lowering registered for ' || schema.opname(descriptor),graph,empty,empty)
+            if pure(schema,descriptor) = 0 then return .llirservices..change('keep','LL_IR_LOWERING: effect or control mapping is not admitted for ' || schema.opname(descriptor),graph,empty,empty)
+            originid = dest.origin(source.get(9,originid,1),source.get(9,originid,2),source.get(9,originid,3),3,originid)
+            firstop = dest.count(3) + 1
+            request = .llir..lowerrequest(graph.operation(op),.llir..block(reference dest,destblock),mapped,.llir..origin(reference dest,originid),budget - work)
+            lowerer = service as .llir..lowering
+            fragment = lowerer.lower(request)
+            work = work + dest.count(3) - firstop + 1
+            if work > budget then return .llirservices..change('limit','LL_RESOURCE_LIMIT: lowering exceeded ir.transform.work',graph,empty,empty)
+            if wordpos(fragment.status(),'ok keep invalid limit') = 0 then return .llirservices..change('invalid','LL_IR_SERVICE: unknown lowering outcome',graph,empty,empty)
+            if fragment.status() <> 'ok' then return .llirservices..change(fragment.status(),fragment.message(),graph,empty,empty)
+            if fragment.size() <> outputs[0] then return .llirservices..change('invalid','LL_IR_SERVICE: lowering result count mismatch',graph,empty,empty)
+            do i = 1 to fragment.size()
+              value = fragment.at(i)
+              if value.belongs(reference dest) = 0 then return .llirservices..change('invalid','LL_IR_SERVICE: lowering returned a foreign value',graph,empty,empty)
+              type = value.type()
+              if type.id() <> outputs[i] then return .llirservices..change('invalid','LL_IR_SERVICE: lowering result type mismatch',graph,empty,empty)
+              if dest.get(3,dest.get(4,value.id(),1),2) <> destblock then return .llirservices..change('invalid','LL_IR_SERVICE: lowering result crosses a block',graph,empty,empty)
+              valuemap[source.result(op,i)] = value.id()
+            end
+            do i = firstop to dest.count(3)
+              created = dest.get(3,i,1)
+              if dest.get(3,i,2) <> destblock then return .llirservices..change('invalid','LL_IR_SERVICE: lowering changed another block',graph,empty,empty)
+              if created <> 1 then do
+                if created <= 16 then return .llirservices..change('invalid','LL_IR_SERVICE: lowering added a state or control operation',graph,empty,empty)
+                if pure(targetschema,created - 16) = 0 then return .llirservices..change('invalid','LL_IR_SERVICE: lowering introduced unproved effects',graph,empty,empty)
+              end
+            end
+            if dest.count(3) >= firstop then opmap[op] = firstop
+            changed = 1
+          end
+          else do
+            if opcode > 16 then do
+              if signature(schema,opcode - 16,targetschema,targetop - 16) = 0 then return .llirservices..change('invalid','LL_IR_SCHEMA: target changed operation contract ' || schema.opname(opcode - 16),graph,empty,empty)
+            end
+            newop = dest.append(destblock,targetop,inputs,outputs,edges,originid,source.get(3,op,12))
+            opmap[op] = newop
+            if newop = 0 then leave
+            do i = 1 to outputs[0]
+              valuemap[source.result(op,i)] = dest.result(newop,i)
+            end
+            if opcode > 16 then do
+              nattr = schema.arity(opcode - 16,3)
+              if nattr > 0 then call dest.put(3,newop,10,dest.count(11) + 1)
+              do i = 1 to nattr while dest.error() = ''
+                old = source.get(3,op,10) + i - 1; id = dest.add(11)
+                if id = 0 then leave
+                call dest.put(11,id,1,newop); call dest.put(11,id,2,i)
+                call dest.put(11,id,3,types[source.get(11,old,3)]); call dest.put(11,id,4,source.get(11,old,4))
+              end
+            end
+          end
+        end
+        op = source.get(3,op,3)
+      end
+    end
+    ok = dest.freeze(); candidate = .llir..module(dest)
+    if candidate.error() <> '' then do
+      status = 'invalid'
+      if left(candidate.error(),17) = 'LL_RESOURCE_LIMIT' then status = 'limit'
+      return .llirservices..change(status,candidate.error(),graph,empty,empty)
+    end
+    return .llirservices..change('changed','',candidate,opmap,valuemap,blockmap)
+  on signal
+    return .llirservices..change('invalid','LL_IR_SERVICE: transformation or lowering signalled failure',graph,empty,empty)
+  end
+  return .llirservices..change('invalid','LL_IR_SERVICE: transformation did not return',graph,empty,empty)
+
+pure: procedure = .int
+  arg schema = .llir..schema_data, op = .int
+  return schema.effectvalue(op,1) = 'none' & schema.effectvalue(op,2) = 'none' & schema.effectvalue(op,3) = 'returns'
+
+signature: procedure = .int
+  arg source = .llir..schema_data, from = .int, target = .llir..schema_data, dest = .int
+  do mode = 1 to 3
+    if source.effectvalue(from,mode) <> target.effectvalue(dest,mode) then return 0
+    if source.arity(from,mode) <> target.arity(dest,mode) then return 0
+    do i = 1 to source.arity(from,mode)
+      if source.fieldname(from,mode,i) <> target.fieldname(dest,mode,i) then return 0
+      if source.typename(source.fieldtype(from,mode,i)) <> target.typename(target.fieldtype(dest,mode,i)) then return 0
+    end
+  end
+  return 1

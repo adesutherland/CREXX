@@ -25,9 +25,12 @@ exact declaration forms, runtime methods and error handling rules.
 - [Token stages and composite parsing](#token-stages-and-composite-parsing)
 - [Runtime API reference](#runtime-api-reference)
 - [Trees, fields and source locations](#trees-fields-and-source-locations)
+- [Sparse AST properties and defaults](#add-sparse-properties-and-defaults)
+- [Flow mappings and definite assignment](#describe-execution-order-with-flow-mappings)
 - [Error messages and recovery](#error-messages-and-recovery)
 - [Command line and build integration](#command-line-and-build-integration)
 - [Resource limits](#resource-limits)
+- [Intermediate representation and semantic services](#intermediate-representation-and-semantic-services)
 - [RexxScript: a larger example](#rexxscript-a-larger-example)
 - [Troubleshooting](#troubleshooting)
 - [Glossary](#glossary)
@@ -154,18 +157,28 @@ A script interpreter uses the same idea to execute statements. For an IF, it
 evaluates the condition and executes the selected branch. Both branches must
 be syntactically valid, but only the selected branch has effects.
 
-Level L offers two ways to inspect a successful parse:
+Choose the tree representation that fits the application:
 
 | Representation | When to use it |
 |---|---|
 | Raw tree, `.llcore..tree` | Low-level tree operations. It includes helper nodes used to represent the grammar. |
-| Named view, `.lltree..view` | Ordinary application code. It hides internal helper nodes and exposes your named rules and tokens with their ordered children. |
+| Named view, `.lltree..view` | Inspect the grammar structure. It hides internal helper nodes and exposes your named rules and tokens with their ordered children. |
+| Application AST, `request.ast()` | Work with kinds and named fields chosen by `then tree` mappings, such as `Assignment(name, value)`. |
 
-An application may also build its own **abstract syntax tree (AST)**. This is a
-smaller tree organized around what the application does, for example an
-`Assignment` with `name` and `value` fields. The settings reader uses the named
-view directly. A compiler might prefer its own AST for checking names and types
-before generating code.
+An **abstract syntax tree (AST)** is organized around the application's work.
+Add `then tree` mappings when grammar wrappers and punctuation would otherwise
+make your reader cumbersome. The basic settings reader uses the named view;
+the calculator and settings lesson 9 use AST fields, common walks and rewrites.
+The [tree reference](#application-trees-with-then-tree) explains both choices.
+
+An AST field connects a parent to a child or stores text. For example, an `If`
+node can have a `condition` child and two block children called `yes` and `no`.
+Your `then tree` mapping defines those field names. An optional **flow mapping**
+uses the same names to describe which children execute in which order. The
+library can then build a graph of possible execution paths and analyse it.
+The [IF walkthrough](#from-grammar-captures-to-ast-fields) follows these links
+from source text to an assignment diagnostic.
+
 
 ### Where extra stages fit
 
@@ -283,6 +296,12 @@ cmake --build cmake-build-levell-product --target stage-product --parallel 4
 task_bin="$PWD/cmake-build-levell-product/bin"
 ```
 
+Parallel Make builds use the same bootstrap ownership as other generators:
+the library and Unicode generator wait for verified L2 completion. No serial
+build workaround is required for that preparation path. See the
+[bootstrap guide](bootstrap.md#build-lifecycle-and-failure) for dependencies
+and incremental rebuild behaviour.
+
 ### Build and run the reader
 
 The reader imports `levell_settings`, the namespace declared in the grammar.
@@ -365,6 +384,7 @@ Each numbered file is complete. Generate the selected file in place of
 | [06-fields](../examples/settings/06-fields.levell) | Named `name` and `contents` fields | `settings-fields.crexx` |
 | [07-properties](../examples/settings/07-properties.levell) | Unicode identifier properties | `settings-fields.crexx` |
 | [08-comments](../examples/settings/08-comments.levell) | Line, block and nested comments | `settings-fields.crexx` |
+| [09-ast](../examples/settings/09-ast.rxl) | Application nodes and lists with `then tree` | `settings-ast.crexx` |
 
 The [recovery reader](../examples/settings-recover.crexx) and
 [field reader](../examples/settings-fields.crexx) use the same generated
@@ -725,16 +745,24 @@ The [calculator grammar](../examples/calculator/calculator.rxl),
 It accepts decimal numbers, `+ - * /`, prefix minus, parentheses and nested
 `(* ... *)` comments.
 
-The grammar chooses Pratt and declares its operators:
+The grammar chooses Pratt, declares precedence and attaches application nodes
+to the token and operator declarations:
 
 ```rexx
+number: token then tree Number(spelling = text)
+/* Declare the other tokens and lexer rules here; see the complete file. */
 parse: parser start arithmetic backend pratt
 arithmetic: operators atom number group lparen rparen
 sum: infix arithmetic plus precedence 10 left
+  then tree Add(left = left, right = right)
 difference: infix arithmetic minus precedence 10 left
+  then tree Subtract(left = left, right = right)
 product: infix arithmetic times precedence 20 left
+  then tree Multiply(left = left, right = right)
 quotient: infix arithmetic divide precedence 20 left
+  then tree Divide(left = left, right = right)
 negative: prefix arithmetic minus
+  then tree Negate(value = inner)
 ```
 
 **Precedence** controls which operator binds more tightly: multiplication and
@@ -742,21 +770,26 @@ division have 20, while addition and subtraction have 10. **Associativity**
 controls operators at the same level: `left` makes `8-3-1` mean `(8-3)-1`.
 Prefix minus binds more tightly than the infix operators.
 
-For `2+3*4`, the tree is:
+After `request.parse()` succeeds, `request.ast()` constructs this AST for
+`2+3*4`:
 
 ```text
-arithmetic
-└── sum
-    ├── number    "2"
-    └── product
-        ├── number    "3"
-        └── number    "4"
+Add
+├── left: Number(spelling="2")
+└── right: Multiply
+    ├── left: Number(spelling="3")
+    └── right: Number(spelling="4")
 ```
 
-The evaluator visits children before their parent. It converts number text to
-`.decimal` values and stores a result for each node. A `product` multiplies its
-two child values; a `sum` adds them. The `arithmetic` wrapper passes through its
-child's result. Evaluation therefore produces 14.
+`then tree` selects the useful nodes and names their fields. Parentheses,
+operator tokens and grammar wrappers guide parsing; the AST carries operands
+and values. The original parse tree remains available for inspecting the grammar.
+
+The evaluator uses `tree.walk('children first')`. It converts `Number.spelling`
+to a `.decimal` and stores the value under `node.id()`. `Multiply` multiplies
+its `left` and `right` child values; `Add` adds them. The walk visits `2`, `3`,
+`4`, `Multiply`, then `Add`, producing 14. Numeric rules belong to this
+application, so another consumer can use the same AST with different arithmetic.
 
 After preparing the tools, build the calculator and its grammar together:
 
@@ -843,7 +876,8 @@ keywords to type literally.
 | `NAME: region token VIRTUAL using COMPONENT open OPEN close CLOSE` | Embed a Pratt expression in an LR parser. |
 | `NAME: tokenstage start STATE` | Define a token-processing stage. |
 | `NAME: transform stage ...` | Define one action in that stage; see the [stage reference](#token-stages). |
-| `NAME: tree rule RULE kind NUMBER arity NUMBER` | Keep a named rule in an application-tree projection. |
+| `... then tree [KIND](FIELDS)` | Attach application-node construction to a token, parser rule or operator declaration. |
+| `NAME: tree rule RULE kind NUMBER arity NUMBER` | Keep a named rule in the binary application-tree projection. |
 
 Square brackets in this reference table mean an optional part of a declaration.
 Do not include those brackets in the specification. The parser header also
@@ -1372,6 +1406,7 @@ Capture-field lookup is case-insensitive.
 | `tokens()` | Token stream held by the request. |
 | `tree()`, `root()` | Raw tree and root of a successful single-tree result. |
 | `forest()`, `forestroot()` | Earley forest and its root. |
+| `ast()` | Construct an owned application AST from `then tree` mappings. Requires a successful unique parse. |
 | `projection()` | Create the declared application-tree projection. Call its `run()` method to perform it. |
 | `offset()`, `error()` | Error's original byte offset and message. |
 
@@ -1493,9 +1528,1073 @@ node identifiers to avoid passing the entire tree through each recursive call.
 Packed table lookups read the stored tables directly; request construction and
 public value returns can still copy data.
 
-### Application-tree projection
+### Application trees with `then tree`
 
-A **projection** builds a smaller tree by keeping selected named rules and
+An **abstract syntax tree**, or AST, records the parts your application needs.
+Use `then tree` to describe those parts beside the rule that recognizes them:
+
+```rexx
+number: token then tree Number(spelling = text)
+program: rule = (statement as item)*
+  then tree (items = item*)
+statement: rule = identifier as name equals number as value
+  then tree Assignment(name = text(name), value = value)
+```
+
+The token declaration makes a `Number` with its original spelling. The
+`program` rule makes a node with an ordered list called `items`. The statement
+rule makes an `Assignment` with a text field and a child field. `identifier` and
+`equals` do not have mappings, so they do not become application nodes.
+
+The declaration label supplies the default kind: `then tree (...)` on `program`
+creates a kind named `program`. Put a name before the parentheses to choose a
+different kind, as in `then tree Assignment(...)`. Names are case-insensitive;
+the spelling of the declared kind is retained when `kind()` returns it.
+
+| Field expression | Result |
+|---|---|
+| `name = text` | Text covered by this rule or token. |
+| `name = text(capture)` | Text covered by one named capture in this rule. |
+| `name = capture` | One application child from that capture. |
+| `name = capture?` | Zero or one child. |
+| `name = capture*` | An ordered list with zero or more children. |
+| `name = capture+` | An ordered list with at least one child. |
+| `left = left`, `right = right` | The operands of an infix operator. |
+| `value = inner` | The operand of a prefix operator. |
+
+`text` is a selector, not a conversion. `Number(spelling = text)` retains `007`
+as `007`; the application decides whether to convert it to a number. Text from
+a quoted string includes the quotes. There are no application expressions or
+callbacks inside a mapping.
+
+The two uses of `*` have related but distinct jobs. In the rule, `(statement as
+item)*` recognizes repeated statements. In the mapping, `items = item*` collects
+the captured results into a list. Each matched capture must supply one AST
+child. Put the capture inside the repetition to capture every item separately.
+
+Unmapped rules pass their mapped descendants through. This removes wrappers
+such as `value: rule = number | string` without an additional mapping. A mapped
+rule chooses its own fields; descendants that it does not choose are omitted.
+The final result must have one root. An unmapped empty document therefore needs
+a mapped enclosing rule if it is to produce an AST.
+
+Level L infers a **schema**, the contract describing each kind's field names,
+text or child fields, and allowed child counts. Mappings that use the same kind
+must agree on that contract and field order. The grammar checker reports
+unknown captures, duplicate fields, incompatible kind declarations and impossible
+capture counts with a specification line and byte location. Construction also
+checks that every selected child capture produces one application node.
+
+For an embedded expression, put mappings on its tokens and infix/prefix
+operators, or on an enclosing parser rule. The embedded component does not
+retain the `operators` declaration as a wrapper node. A mapping attached to
+that absent wrapper is a build error.
+
+See [settings lesson 9](../examples/settings/09-ast.rxl) and its
+[reader](../examples/settings-ast.crexx) for lists, original Unicode spelling,
+comments and embedded arithmetic in one complete example.
+
+### Construct and read an AST
+
+Import `llast` in the application, then construct the AST after a successful
+parse:
+
+```rexx
+tree = request.ast()
+if tree.status() <> 0 then do
+  say tree.error()
+  return tree.status()
+end
+root = tree.root()
+items = root.each('items')
+do while items.next()
+  assignment = items.node()
+  say assignment.text('name')
+end
+```
+
+The AST owns its source and nodes, so the request can be released after
+construction. `request.ast()` rejects failed parses and ambiguous forests. A
+recovery reader handles its damaged records separately; an AST request does not
+silently turn damaged input into a clean program.
+
+| Tree method | Result |
+|---|---|
+| `status()` | 0 for a clean complete tree, 1 for a recovered inspection tree, 2 for a resource limit, 3 for a contract failure. |
+| `error()` | Empty on success; otherwise the diagnostic. |
+| `root()` | A handle to the root; invalid on failure. |
+| `source()` | The complete original bytes, including skipped text. |
+| `entries()` | Allocated nodes, field slots and child links. |
+| `walk(order)` | An iterative walk; defaults to `children first`. |
+| `rewrite(order)` | A checked reconstruction; accepts `children first`. |
+| `analyse(limit)` | A children-first analysis; defaults to one million visited nodes. |
+
+A **handle** is a small reference to one node. Copying a handle does not copy
+the tree. Keep its owning `tree` alive and do not reassign that tree while using
+its handles or walks. Copying the owning tree itself makes an independent value.
+A handle from the first tree still belongs to that first tree.
+
+| Node method | Result |
+|---|---|
+| `valid()` | Whether the owner and node still exist. |
+| `kind()` | Declared kind, such as `Assignment` or `Number`. |
+| `text(name)` | A text field's value. |
+| `count(name)` | Number of children in a child field. |
+| `child(name,index)` | Child handle; index defaults to 1. Invalid when the optional child or list index is absent. |
+| `start()`, `finish()` | Original half-open byte range. |
+| `offset()` | Diagnostic anchor within that range; initially its start. |
+| `line()` | One-based source line containing the diagnostic anchor; CRLF counts as one line ending. |
+| `children()`, `at(index)` | Child count and indexed access across all fields. |
+| `each(field)` | A linear child cursor; omit `field` to visit all child fields. |
+| `sourcetext()` | Original text covered by that range. |
+| `origin()` | `exact`, `composite` or `derived`, as explained below. |
+| `id()` | Tree-local integer, useful for storing calculated values by node. |
+
+An unknown field, or using `text()` on a child field, raises an `ERROR` signal
+containing `LL_AST_FIELD`. An expired or replaced tree raises an `ERROR` signal containing
+`LL_AST_OWNER`; `valid()` lets you check a handle first. Use `count()` or the returned handle's
+`valid()` when an optional child may be absent.
+
+### Calculate facts about a tree
+
+An **analysis** calculates information about a tree without changing it. For
+example, a calculator can find constant values; a script checker can list the
+variables an expression reads. Level L supplies the traversal and result table.
+Your program supplies the calculation and the class used for each result.
+
+Call `tree.analyse()` and record one object for each node. Children are visited
+before their parent, so a parent can use their completed results. Here is a
+complete calculation of subtree sizes:
+
+```rexx
+sizefact: class
+  _size = .int
+  *: factory
+    arg size = .int
+    _size = size
+    return
+  size: method = .int
+    return _size
+
+/* Inside the procedure that owns tree: */
+pass = tree.analyse()
+do while pass.next()
+  node = pass.node()
+  size = 1
+  children = node.each()
+  do while children.next()
+    child = pass.get(children.node()) as .sizefact
+    size = size + child.size()
+  end
+  ok = pass.put(.sizefact(size) as .object)
+end
+facts = pass.finish()
+if facts.error() <> '' then do
+  say facts.error()
+  return 1
+end
+result = facts.get(tree.root()) as .sizefact
+say result.size()
+```
+
+The cast `as .object` stores the application's class in the common result table.
+The cast `as .sizefact` checks its type when reading it back. `each()` visits
+every child without copying the list. Use `each('items')` for one named list,
+or `child('value')` to read a single field. A cursor has `next()`, `node()` and
+`error()` methods. Indexed access is convenient for a particular item; a cursor
+visits a long list in linear time.
+
+| Analysis method | Meaning |
+|---|---|
+| `next()` | Advance to the next node; zero when finished or failed. |
+| `node()` | Current input node. |
+| `get(node)` | Read a completed dependency's result. |
+| `put(object)` | Record this node's result exactly once. |
+| `finish()` | Publish the complete result table. |
+| `error()` | Empty until a contract or resource check fails. |
+
+The completed table provides `get(node)`, `has(node)`, `size()` and `error()`.
+Keep the input tree alive while using its results. A copied or rewritten tree
+has its own identity and needs its own analysis. Reading another tree's facts
+reports `LL_AST_OWNER`; reading an unfinished dependency reports
+`LL_AST_DEPENDENCY`. An incomplete or failed pass publishes no usable results.
+These checks prevent a transformation from accidentally using stale facts.
+
+`tree.analyse(limit)` bounds the number of visited nodes and result records.
+Exhaustion reports `analysis.nodes`. The calculation and the size of each result
+belong to the application. This pass has no repeated callbacks: each node is
+visited once, and its result must depend on results already available.
+
+### Add sparse properties and defaults
+
+Use **properties** for information your application attaches to nodes: a review
+message, a priority, or the result of a check. Properties are separate from the
+fields that define tree structure. You can add a message to an Assignment
+without changing its required `name` and `value` fields.
+
+Declare a group after the grammar:
+
+```rexx
+notes: properties
+  message: property .string default ''
+  priority: property .int default 0
+```
+
+The group owns the successive `property` declarations. The next declaration of
+another kind ends the group. Indentation makes the relationship easy to read;
+it does not establish scope. Names within a group are case-insensitive. Use
+simple names without dots for groups and properties. The group name becomes
+a generated class or procedure; `language` is reserved for the parser factory.
+
+With namespace `flowdemo`, these declarations generate a `.flowdemo..notes`
+class. Create a draft for your tree, write the properties you need, then finish:
+
+```rexx
+draft = .flowdemo..notes(reference tree)
+call draft.setmessage(node,'Check this assignment')
+call draft.setpriority(node,2)
+notes = draft.finish()
+if notes.error() <> '' then do
+  say notes.error()
+  return 1
+end
+note = notes.at(node)
+say note.getmessage()
+say note.hasmessage()
+```
+
+Each property has `get` and `has` methods on the node view, and a `set` method
+on the draft. Thus `message` generates `getmessage()`, `hasmessage()` and
+`setmessage(node,value)`. The setter returns 1 on success and 0 on failure.
+Unknown accessors and values of the wrong type are diagnosed when compiling
+your cREXX program.
+
+**Sparse** means that the table stores only values you explicitly set. An unset
+priority reads as 0 and `haspriority()` returns 0. Setting priority to 0 makes
+`haspriority()` return 1: the value is now explicit. Reading a default does not
+insert an entry. `size()` counts explicit node/property pairs; setting the same
+pair again replaces its value.
+
+Defaults are literal `.string` or `.int` values. Strings use Rexx quoting and
+integers may have a sign. Each group stores its defaults once. A property group
+can annotate any kind of node in its owning tree.
+
+`finish()` freezes the draft and returns an independent finished group. Check
+its `error()` before reading it. A failed draft cannot publish readable partial
+values. Writing after finish or finishing twice fails. Keep the tree alive
+while using a group, and keep the finished group alive while using an `at(node)`
+view. Another tree, including a copied or rewritten tree, needs its own group.
+Replacing the owning tree with a different snapshot invalidates its groups.
+
+| Generated group operation | Meaning |
+|---|---|
+| `.notes(reference tree,limit)` | Create a draft; `limit` defaults to 1,000,000 explicit entries. |
+| `setmessage(node,value)` | Write or replace a string property. |
+| `setpriority(node,value)` | Write or replace an integer property. |
+| `finish()` | Freeze and return a finished group. |
+| `at(node)` | Borrow a view of one node's properties. |
+| `size()` | Number of explicit entries; reads of defaults do not change it. |
+| `error()` | Empty on success; otherwise the ownership, lifecycle or resource error. |
+| `view.getmessage()`, `view.getpriority()` | Return an explicit value or its declared default. |
+| `view.hasmessage()`, `view.haspriority()` | Whether that property was explicitly set. |
+
+### Describe execution order with flow mappings
+
+A tree describes how source is nested. A **flow graph** describes the order in
+which operations can happen. These are different questions. An IF has a
+condition and two branches in its tree; execution evaluates the condition and
+then follows one branch.
+
+A flow declaration tells the graph builder how each AST kind connects its
+children's execution paths:
+
+```rexx
+execution: flow
+  Program: sequence items
+  Block: sequence items
+  Assignment: assign name value
+  If: branch condition then yes else no
+  Say: evaluate value
+  Name: read spelling
+  Number: value
+```
+
+The declaration is a recipe shared by every node of each named kind. For each
+particular `If` in the parsed source, the builder looks up that node's fields
+and constructs its part of the flow graph. It retains links back to the AST
+and source locations. Your application constructs the graph explicitly:
+
+```rexx
+tree = request.ast()
+graph = flowdemo..execution(reference tree)
+```
+
+Building the graph describes possible execution. It does not run the target
+program or choose an IF branch from a runtime value.
+
+#### From grammar captures to AST fields
+
+Read this declaration as a sentence: "For an If node, branch on its condition
+child; the true arm is its yes child, and the false arm is its no child."
+
+```rexx
+If: branch condition then yes else no
+```
+
+| Part | What it names |
+|---|---|
+| `If` | An AST kind declared by `then tree If(...)`. |
+| `branch` | The library's branching operation. |
+| `condition` | A child field on this If node, containing its expression AST. |
+| `then`, `else` | Keywords in the flow declaration. |
+| `yes`, `no` | Child fields on this If node, containing its two arms. |
+
+`condition`, `yes` and `no` are names chosen by the grammar author. They are
+neither flow-point identifiers nor Boolean values. They are defined on the
+left of the equals signs in `then tree`:
+
+```rexx
+conditional: rule = kw.if expression as test kw.then block as taken (kw.else block as alternative)? kw.end semi
+  then tree If(condition = test, yes = taken, no = alternative?)
+```
+
+There are two sets of names here:
+
+- `as test`, `as taken` and `as alternative` name **captures**: the pieces of
+  this rule's successful match that the AST mapping will use.
+- `condition`, `yes` and `no` name the resulting **AST fields**. For example,
+  `condition = test` puts the expression captured as `test` into the child
+  field called `condition`.
+
+The flow declaration refers to the AST fields. It does not refer directly to
+the captures. Many examples use the same name for both, such as
+`condition = condition`; this is a naming convenience. If you rename the AST
+field, update the flow declaration to use that name too. The grammar checker
+checks this connection before generating the language module.
+
+For the following input:
+
+```text
+if flag then
+  x = 10;
+else
+  x = 20;
+end;
+```
+
+the relevant tree is:
+
+```text
+If
+  condition -> Name
+                 spelling = "flag"
+  yes       -> Block
+                 items[1] -> Assignment
+                               name = "x"
+                               value -> Number(spelling = "10")
+  no        -> Block
+                 items[1] -> Assignment
+                               name = "x"
+                               value -> Number(spelling = "20")
+```
+
+Each arrow above is a child field or list member. `spelling` and `name` hold
+text. If the source has no ELSE, `no` has zero children because its mapping
+uses `alternative?`.
+
+Application code follows exactly these links. Given a handle called `ifNode`:
+
+```rexx
+testNode = ifNode.child('condition')
+thenBlock = ifNode.child('yes')
+if ifNode.count('no') = 1 then elseBlock = ifNode.child('no')
+```
+
+The graph builder does the same lookup using the fields named in the flow
+declaration. It constructs flow for the condition expression and each block,
+then connects them:
+
+```text
+                       true  -> process x = 10 --+
+read flag -> decision <                         +-> join -> following statement
+                       false -> process x = 20 --+
+```
+
+The decision and join are **flow points** created by the builder. They are not
+extra fields declared on the AST. An AST node can contribute several flow
+points: this If contributes entry, decision and join points, while its children
+contribute their own points. The tree records nesting; the graph records
+possible execution order.
+
+#### Flow operation reference
+
+| Mapping | Flow represented |
+|---|---|
+| `Kind: sequence items` | Visit the children of `items` in order. |
+| `Kind: evaluate left right` | Visit the listed child fields in order, and each field's children in order. One or more fields may be listed. |
+| `Kind: assign name value` | Evaluate the one `value` child, then assign the variable in text field `name`. |
+| `Kind: branch condition then yes else no` | Evaluate `condition`, then connect a true path to `yes` and a false path to `no`. Their normal completions join. An absent optional `no` goes straight to the join. |
+| `Kind: read spelling` | Read the variable in the text field `spelling`. |
+| `Kind: value` | A leaf value with no variable reads or writes. |
+| `Kind: loop while condition do body` | Test before each iteration. False leaves the loop; the body may run zero times. |
+| `Kind: loop do body until condition` | Run the body, then test. True leaves the loop; false repeats. |
+| `Kind: loop do body` | Repeat the body until an explicit exit. |
+| `Kind: break` | Leave the nearest enclosing loop. |
+| `Kind: continue` | Start the nearest loop's next test, or its next body for an unconditional loop. |
+| `Kind: return value` | Evaluate the `value` child when present, then leave the analysed root. |
+| `Kind: return` | Leave the analysed root immediately. |
+| `Kind: shortcircuit left and right` | Evaluate `left`; evaluate `right` only on the true path. |
+| `Kind: shortcircuit left or right` | Evaluate `left`; evaluate `right` only on the false path. |
+
+`sequence` is convenient for a statement list; `evaluate` names one or more
+child fields such as operands. Both preserve the specified order. `value`
+means that a leaf has no flow work inside it. It does not calculate a value or
+declare that a condition is true. An assignment's write follows the flow of its
+value child, so `x = x;` reads x before assigning it. `Say: evaluate value`
+describes evaluation of the argument; output remains application behavior.
+
+Every AST kind needs a mapping. Every child field needs a declared execution
+role; text metadata may be left unused. `condition` and `yes` must each contain
+one child. `no` may contain one child or be optional. The grammar checker
+reports unknown kinds, misspelled fields and incompatible field types or
+counts before generating code. For example, using `test` when the actual field
+is `condition` reports the available fields.
+
+Loop conditions, loop bodies and short-circuit operands are single required
+children. A return value may be required or optional. Use a Block with
+`sequence items` to hold several loop statements. `break` and `continue` have
+no child fields. A jump outside a loop reports its AST kind, line and byte
+offset when the graph is built, including when the jump follows a return.
+
+Only paths that finish normally join the following statement. `break` goes to
+the loop exit, `continue` goes to the next test or iteration, and `return`
+ends the current analysis root. Analyse each function body as a separate root;
+these mappings do not model calls between functions. A binary arithmetic node
+whose children always execute can use `evaluate left right`. Give calls and
+other effects an explicit application contract before analysing them.
+
+Short-circuit expressions preserve their true and false outcomes through nested
+short-circuit expressions and into a branch or loop test. When used as an
+ordinary value, both outcomes join after evaluation. `evaluate` describes
+ordered evaluation; it does not declare that the parent's truth value equals
+one of its children's truth values.
+
+#### Conditions and analysis facts
+
+The condition remains an ordinary expression AST. For `if flag`, it is a Name
+node; for a language supporting `if 2 + 3 > 4`, it would contain the arithmetic
+and comparison nodes. A flow mapping describes when that expression executes.
+An analysis of values answers what it can mean.
+
+The built-in `definiteassignment()` analysis tracks variable reads and writes.
+By default it considers both branch edges possible, including when the condition
+is a literal. Supplying `flag` as an entry variable says it is assigned; it does
+not supply flag's value. To exclude an outcome, supply an explicit condition fact
+before building the graph.
+
+Your application can inspect the condition while analysing the graph. For a
+decision in the If mapping above, the graph provides its source If node:
+Check `graph.op(point) = 'branch'` and `graph.node(point).kind() = 'If'`:
+
+```rexx
+ifNode = graph.node(point)
+testNode = ifNode.child('condition')
+```
+
+This example uses the field name declared above. The source link supplies the
+whole expression, not just its text or a branch label. An application analysis
+can combine that expression with facts about the program:
+
+| Kind of fact | Example | How it helps reasoning |
+|---|---|---|
+| Constant expression | `2 + 3 > 4` is true under the language's numeric rules. | The false edge cannot be taken after successful evaluation. |
+| Value at a program point | Every incoming path assigns flag the value 1, and the language treats 1 as true. | This particular test of flag has a known outcome. |
+| Fact on a branch edge | The condition is `x > 0`. | On the true edge, a value analysis can use `x > 0` until an operation changes that knowledge. |
+
+These are different questions from whether x or flag has been assigned. A
+value-aware analysis needs the target language's arithmetic, comparison and
+truth rules. It must account for writes, joins, and any effects or errors in
+condition evaluation. Knowing the result of a condition does not by itself
+justify removing the work needed to evaluate it. Unknown values retain both
+possible outcomes.
+
+The common AST [analysis service](#calculate-facts-about-a-tree) can store
+application-defined facts against nodes. [RexxScript's constant
+analysis](#analyse-and-fold-a-script) is a worked consumer. Convert a proven
+Boolean result into a condition fact to use it in flow analysis; storing a
+constant or a sparse property alone does not change the graph.
+
+#### Supply a known condition
+
+A **condition fact** says that an expression has a particular truth value every
+time it completes normally. The application establishes the fact using its
+language's rules. For example, if that language defines literal `1` as true:
+
+```rexx
+facts = .llflow..conditions(reference tree)
+condition = tree.root().child('items',1).child('condition')
+ok = facts.set(condition,'true','Literal 1 is true in this language')
+graph = flowloops..execution(reference tree)
+ok = graph.using(reference facts)
+result = graph.definiteassignment()
+```
+
+For `if 1 then x = 10; end; say x;`, the fact removes the false outcome. The
+analysis now finds that `x` is assigned before `say x`. Expression evaluation
+still happens. A condition such as `set(x,1)` writes `x` even when its result
+is known. Similarly, a false left operand of AND skips the right operand,
+and a true left operand of OR skips it. A fact used inside a loop must remain
+true on every visit to that expression, not just the first iteration.
+
+Use only `true` or `false`; omitted facts mean unknown. Each fact requires a
+nonempty reason for inspection and diagnostics. The library checks ownership,
+conflicting facts and the resource allowance. The application is responsible
+for the truth of its claim: a reason string is an explanation, not a proof
+checked by a theorem solver. Facts about a complete expression can exclude its
+outcome without inferring additional facts about its operands.
+
+Build the complete [conditions example](../examples/flow/conditions.crexx):
+
+```sh
+crexx --program flow-conditions lib/rxfnsl/examples/flow/loops.rxl \
+      lib/rxfnsl/examples/flow/conditions.crexx
+rxvm flow-conditions
+```
+
+It reports two possible unassigned reads without facts, zero with facts,
+`x assigned before SAY: 1`, and `Skipped operand reachable: 0`.
+
+| Condition method | Meaning |
+|---|---|
+| `.llflow..conditions(reference tree,limit)` | Create a fact table for one tree; the default allowance is 1,000,000 stored facts. |
+| `facts.set(node,value,reason)` | Store `true` or `false`. Repeating the same value retains the original reason; a conflicting value fails. |
+| `facts.get(node)` | Return `true`, `false` or `unknown`. |
+| `facts.reason(node)` | Return the stored explanation, or an empty string for an unknown fact. |
+| `facts.size()`, `facts.error()` | Stored fact count and any contract/resource error. |
+| `graph.using(reference facts)` | Attach the table once, before querying the graph or starting analysis. |
+
+The first graph query seals the table. Keep both tree and facts alive while
+using the graph or its results. Replacing either owner, or trying to mutate
+sealed facts, invalidates dependent answers. The `flow.conditions` allowance
+counts facts; it is separate from the graph and solver allowances.
+
+### Worked example: find a read before assignment
+
+The complete example is in [examples/flow](../examples/flow/). Build it with:
+
+```sh
+crexx --program flow-check lib/rxfnsl/examples/flow/rules.rxl \
+      lib/rxfnsl/examples/flow/check.crexx
+rxvm flow-check
+```
+
+The grammar's assignment rule is ordinary Level L:
+
+```rexx
+assignment: rule = identifier as name equals expression as value semi
+  then tree Assignment(name = text(name), value = value)
+```
+
+Its IF rule captures a condition, a required block and an optional ELSE block:
+
+```rexx
+conditional: rule = kw.if expression as condition kw.then block as yes (kw.else block as no)? kw.end semi
+  then tree If(condition = condition, yes = yes, no = no?)
+```
+
+For this source, the host supplies `flag`:
+
+```text
+if flag then
+  x = 10;
+end;
+say x;
+```
+
+The tree has an If followed by a Say. The If's `yes` child is a Block containing
+an Assignment, and its `no` field is empty. The important execution paths are:
+
+```text
+                 true -> assign x ---+
+read flag ------<                    +--> read x
+                 false --------------+
+```
+
+**Definite assignment** asks whether a variable has been assigned on every path
+that reaches a particular point. Here the false branch reaches `say x` without
+assigning `x`, so the answer for `x` is false.
+
+```rexx
+graph = flowdemo..execution(reference tree)
+result = graph.definiteassignment('flag')
+if result.error() <> '' then do
+  say result.error()
+  return 1
+end
+say result.before(sayNode).assigned('x')  /* 0 */
+```
+
+The argument `'flag'` names variables already assigned at entry. Supply several
+names separated by spaces. Variable names are case-sensitive and retain their
+exact spelling. A language with case-insensitive variables should normalize
+its AST names consistently before constructing flow. This profile uses a
+single variable scope.
+
+A completed result can contain diagnostics. That is distinct from `error()`,
+which means the analysis could not produce a usable answer:
+
+```rexx
+do i = 1 to result.count()
+  node = result.node(i)
+  say llsource..diagnostic(tree.source(),node.offset(),'UNASSIGNED',result.message(i))
+  say result.witness(i)
+end
+```
+
+The example reports:
+
+```text
+UNASSIGNED at line 4, column 5 (byte 32): x may be read before it is assigned.
+  say x;
+      ^
+From entry: Take the false branch of If on line 1. Reach this read without assigning x.
+```
+
+Add `else x = 20;` before `end;` and both paths assign `x`. The diagnostic goes
+away and `assigned('x')` before Say returns 1. An assignment such as `x = x;`
+still reports the read on its right-hand side: the write happens afterwards.
+The checker considers both branches possible; it does not evaluate conditions.
+
+The example also copies each diagnostic message into `notes`, demonstrating
+how calculated facts and application annotations fit together. Flow analysis
+does not change the AST or execute the target program.
+
+| Flow or result method | Meaning |
+|---|---|
+| `execution(reference tree,limit)` | Construct checked flow; `limit` counts events plus edges and defaults to 1,000,000. |
+| `graph.error()` | Construction or ownership error. |
+| `graph.points()`, `graph.edges()`, `graph.entries()` | Successful graph dimensions. |
+| `graph.op(point)` | Operation at a flow point, such as `read`, `write`, `branch` or `join`. Point IDs run from 1 to `points()`. |
+| `graph.node(point)` | The AST node responsible for that flow point. Follow its fields to inspect the corresponding expression or statement. |
+| `graph.from(link)`, `graph.destination(link)` | Source and destination point IDs for an edge. Edge IDs run from 1 to `edges()`. |
+| `graph.label(link)` | `true` or `false` for a branch choice, `break` or `continue` for a jump; empty for an ordinary edge. |
+| `graph.definiteassignment(names,cells,work)` | Analyse with entry names; defaults are 1,000,000 state cells and 10,000,000 work units. |
+| `result.error()` | Empty when the analysis completed successfully. |
+| `result.before(node).reachable()` | Whether entry can reach this node in the flow graph. |
+| `result.before(node).assigned(name)` | Whether the name is definitely assigned on entry to that AST node. Unknown names return 0. |
+| `result.count()` | Number of unsafe reads in a completed result. |
+| `result.node(i)` | Source AST node for diagnostic `i`, numbered from 1. |
+| `result.message(i)` | The unsafe-read message. |
+| `result.witness(i,limit)` | One actual entry-to-read path without an assignment; default 1,000,000 edge visits. |
+| `result.work()` | Work consumed by the analysis. |
+
+Keep the tree, graph and result alive while using their borrowed views.
+Replacing a graph or result invalidates its earlier views. Failed construction,
+exhausted allowances and expired owners expose no usable answers. Resource
+errors name `flow.entries`, `analysis.cells`, `analysis.work` or `witness.work`
+so the caller can increase the relevant allowance.
+
+The analysis tracks names that may still be unassigned. At a join it combines
+those names from the incoming paths. An assignment removes its name from the
+outgoing set. New information only adds possibilities at each point; with a
+finite graph and finite set of names, that process reaches a stable result.
+The guarantee is relative to the execution roles declared in the flow mapping.
+
+### Worked example: loops, exits and skipped operands
+
+Build [loops.rxl](../examples/flow/loops.rxl) with
+[loops.crexx](../examples/flow/loops.crexx):
+
+```sh
+crexx --program flow-loops lib/rxfnsl/examples/flow/loops.rxl \
+      lib/rxfnsl/examples/flow/loops.crexx
+rxvm flow-loops
+```
+
+Start with an ordinary grammar rule that captures the condition and body:
+
+```rexx
+pretest: rule = kw.while expression as condition kw.do block as body kw.end semi
+  then tree While(condition = condition, body = body)
+```
+
+The flow group explains how those children execute:
+
+```rexx
+execution: flow
+  While: loop while condition do body
+  Until: loop do body until condition
+  Forever: loop do body
+  Break: break
+  Continue: continue
+  Return: return value
+```
+
+`While`, `Until` and `Forever` are AST kinds chosen by this grammar. `condition`
+and `body` name their fields. The words `loop`, `while`, `do` and `until` select
+the execution rule. The complete file also contains the mappings for blocks,
+assignments, reads and the other node kinds.
+
+The example analyses this program with `flag` and `other` assigned at entry:
+
+```text
+while flag do
+  if other then break; end;
+  x = 1;
+  continue;
+end;
+say x;
+return;
+say missing;
+```
+
+The first `say` can run without assigning x: the WHILE test might be false
+immediately, or the IF might take BREAK. The diagnostic points to x and shows
+one such path. CONTINUE goes back to the WHILE test. The final `say` cannot be
+reached because RETURN ends the program, so it produces no unsafe-read message.
+
+```rexx
+result = graph.definiteassignment('flag other')
+if result.error() <> '' then do
+  say result.error()
+  return 1
+end
+say result.before(lastSay).reachable()  /* 0 */
+```
+
+`reachable()` means that the constructed graph has a path from entry to this
+node. `assigned('x')` is true when x has been assigned on every path reaching
+it. An unreachable node returns 0 for both queries. Test reachability first
+when presenting assignment information about dead code.
+
+For an UNTIL loop, normal completion and CONTINUE reach the test after the
+body. BREAK skips that test. An unconditional loop has no implicit exit; code
+after it is reachable only through a BREAK. Nested jumps target the innermost
+loop. A RETURN inside any number of loops still leaves the analysis root.
+
+The small example language spells short-circuit expressions as `both(a,b)`
+and `either(a,b)`, and assignment expressions as `set(name,value)`. These make
+execution order visible without adding operator precedence to the lesson:
+
+```rexx
+  Both: shortcircuit left and right
+  Either: shortcircuit left or right
+  Set: assign name value
+```
+
+Compare these inputs:
+
+```text
+say both(flag, set(x, 1));
+say x;
+```
+
+The second statement reports an unsafe read: false flag skips the assignment.
+Now use the expression as a condition:
+
+```text
+if both(flag, set(x, 1)) then
+  say x;
+end;
+```
+
+Reaching the true branch requires evaluating the right operand, so x is
+assigned before that SAY. With `either`, reaching the false branch requires
+evaluating the right operand. This is reasoning about execution paths; the
+analysis does not calculate the truth of the literal 1.
+
+Loops may repeat indefinitely in the target program, but the analysis still
+terminates. It tracks a finite set of variable names and only adds facts about
+possible unassigned paths until no facts change. The `analysis.work` allowance
+can stop a large calculation with a resource diagnostic. Check `result.error()`
+before reading results; an interrupted analysis has no usable partial answers.
+
+
+### Walk the nodes
+
+A walk follows named child fields in their declaration order and list members
+in their input order:
+
+```rexx
+walk = tree.walk('parents first')
+do while walk.next()
+  node = walk.node()
+  say node.kind() || ': ' || node.sourcetext()
+end
+if walk.error() <> '' then say walk.error()
+```
+
+`parents first` visits a node before its children. It is useful for displaying
+the tree or finding declarations. `children first` visits children before their
+parent. It is useful for calculating a parent's value from its children's
+values, as the calculator does. These are also called *preorder* and *postorder*.
+`walk.depth()` gives the current nesting depth: 0 for the root, 1 for its
+children, and so on.
+
+The walk uses an explicit stack, so deeply nested input does not require a
+recursive application procedure. Each reachable node is visited once. For a
+tree with N nodes, F field slots and E child links, walking takes O(N + F + E)
+operations; the cursor stack grows with nesting depth. Here O(...) describes how
+work grows with tree size, not a time in seconds. Each child has one parent;
+construction rejects shared children rather than traversing them repeatedly.
+
+A walk is a structural operation. An interpreter still decides which IF branch
+to execute and when to stop a loop. Walking every node is appropriate for
+inspection and pure calculations, not for executing both branches of an IF.
+
+### Rewrite into a new tree
+
+A **rewrite** replaces selected nodes while preserving the input tree. This
+example folds additions of numeric literals:
+
+```rexx
+pass = tree.rewrite('children first')
+do while pass.next()
+  node = pass.node()
+  if node.kind() = 'Add' then do
+    left = node.child('left')
+    right = node.child('right')
+    if left.kind() = 'Number' & right.kind() = 'Number' then do
+      value = (left.text('spelling') as .decimal) + (right.text('spelling') as .decimal)
+      replacement = pass.make('Number')
+      ok = replacement.settext('spelling',value as .string)
+      ok = pass.replace(replacement)
+    end
+  end
+end
+folded = pass.finish()
+if folded.status() <> 0 then do
+  say folded.error()
+  return folded.status()
+end
+```
+
+At each step, `node` already contains the rewritten children. Replacing a child
+therefore affects what its parent sees later in the same pass. Unchanged nodes
+are copied into the result automatically. Replacement nodes are not revisited.
+Call `finish()` after `next()` returns 0; it validates and publishes a complete
+new tree. The original remains usable after success or failure.
+
+`pass.original()` gives the corresponding input node. Use it to read facts
+calculated before rewriting; `pass.node()` gives the output node with its
+already-rewritten children. Keeping these roles explicit prevents mixing the
+identities of the two trees.
+
+`make(kind)` creates a **draft**, a replacement under construction. The kind
+must occur in the inferred schema. Set text fields with `settext(name,value)`
+and add children with `append(name,child)`. Children must come from the current
+pass's nodes. A draft belongs to the current step; after `replace()` accepts it,
+it cannot be edited. Required fields and child counts are checked. Foreign
+children, cycles, reused children and stale drafts are errors. A failed pass
+publishes no root, and `finish()` can be called only once.
+
+A reconstruction visits each original node once. With a fixed schema and a
+bounded amount of application work per node, its work grows linearly with tree
+size. The `tree.entries` limit also counts replacement nodes, fields and links,
+including intermediates that later become unreachable. Application arithmetic
+and arbitrary callback loops remain the application's responsibility.
+
+The [complete folding calculator](../examples/calculator/fold.crexx) handles
+all of the calculator's operators. Build it with the same grammar:
+
+```sh
+"$task_bin/crexx" --program build/fold \
+  lib/rxfnsl/examples/calculator/fold.crexx \
+  lib/rxfnsl/examples/calculator/calculator.rxl
+"$task_bin/rxvme" build/fold.rxbin \
+  -a lib/rxfnsl/examples/calculator/example.calc
+```
+
+It reports the original expression, the resulting `Number` and `RESULT|11`.
+
+### Lower into a simpler tree
+
+**Lowering** translates a convenient source construct into simpler constructs
+that later compiler passes already understand. For example, the language in
+[examples/lowering](../examples/lowering/) has an `unless` statement:
+
+```rexx
+conditional: rule = kw.unless expression as condition kw.do block as body kw.end semi
+  then tree Unless(condition = condition, body = body)
+```
+
+`unless flag do x = 10; end;` executes its body when `flag` is false. We can
+represent it using an ordinary If:
+
+```text
+Unless                         If
+  condition -> Name(flag)        condition -> Name(flag)
+  body -> Block                  yes -> Block (empty)
+            Assignment(x,10)     no  -> Block
+                                         Assignment(x,10)
+```
+
+The new tree has its own **schema**: the list of kinds, named fields and allowed
+child counts. The example's `target()` procedure declares Program, Block, If,
+Assignment, Say, Name and Number with `.llast..schema()`. There is no Unless in
+that schema. Later passes need only understand If.
+
+```rexx
+pass = tree.lower(target())
+do while pass.next()
+  source = pass.original()
+  if source.kind() = 'Unless' then do
+    empty = pass.make('Block')
+    yes = pass.accept(empty)
+    replacement = pass.make('If')
+    ok = replacement.append('condition',pass.translated(source.child('condition')))
+    ok = replacement.append('yes',yes)
+    ok = replacement.append('no',pass.translated(source.child('body')))
+    ok = pass.replace(replacement)
+  end
+  else ok = pass.keep()
+end
+lowered = pass.finish()
+```
+
+Children are visited before their parents. `source` belongs to the original
+tree; `translated(source.child(...))` retrieves the completed target child.
+`make()` creates a draft in the target schema. `accept()` checks and seals an
+intermediate node so another draft can use it. `replace()` records the result
+for the current source node. `keep()` explicitly copies the current kind and
+fields using the translated children. Every visited source node needs one
+`replace()` or `keep()`; forgetting a case reports its kind and source byte.
+
+Build and run the complete example:
+
+```sh
+crexx --program lower-example lib/rxfnsl/examples/lowering/unless.rxl \
+      lib/rxfnsl/examples/lowering/lowering.crexx \
+      lib/rxfnsl/examples/lowering/show.crexx
+rxvm lower-example
+```
+
+It shows `Unless` becoming `If`, with zero statements in the true arm and one
+in the false arm. Flow analysis then reports that the later `say x` may read an
+unassigned variable: the true arm leaves x untouched. Supplying a justified
+false fact for the condition makes that assignment definite.
+
+| Lowering method | Meaning |
+|---|---|
+| `tree.lower(schema,limit)` | Start a children-first translation; default output allowance is 1,000,000 entries. |
+| `pass.next()`, `pass.original()` | Advance and obtain the current input node. |
+| `pass.translated(inputNode)` | Obtain the completed output for an earlier input node. |
+| `pass.make(kind)` | Create a target draft using the current input's source range and diagnostic anchor. |
+| `pass.synthetic(kind,offset)` | Create a generated draft with an empty range at an original-byte anchor. |
+| `pass.accept(draft)` | Validate and seal an intermediate target node; return its handle. |
+| `pass.replace(draft)` | Validate the result for the current input node. |
+| `pass.keep()` | Copy its kind, fields and source origin, substituting translated children. |
+| `pass.finish()` | After traversal, publish one validated owned tree, or a failed tree with no root. |
+| `pass.error()` | Return a construction or ownership error. |
+
+Check `lowered.status()` before using the result. Unknown kinds or fields,
+missing required fields, incorrect child counts and reused children are errors.
+An intermediate has one parent in the final tree; use separate copies when two
+places need equal-looking nodes. Keep the original tree alive until the pass
+finishes. Replacing it invalidates the pass. Drafts belong to one pass and one
+visit; accepted drafts are immutable.
+
+The structural checks establish a well-formed target tree. The author of a
+lowering establishes its meaning. In this example both forms evaluate the same
+condition once and execute the same body exactly when it is false. Regression
+tests compare their execution for both truth values and check the resulting
+assignment analysis. Node properties and previous analysis tables remain tied
+to the original tree; calculate new facts for the lowered tree.
+
+### Origins survive rewriting
+
+An **origin** explains how a node relates to the original source. Its range is
+half open: `start()` is the first byte and `finish()` is the byte just after it.
+`offset()` is the diagnostic anchor within that range. Offsets count bytes from
+zero; `line()` counts lines from one and treats CRLF as one line ending.
+
+| Origin | Meaning |
+|---|---|
+| `exact` | A grammar mapping produced this node directly from its source range. |
+| `composite` | Projection combined source structure, for example retaining parentheses on their surviving expression node. |
+| `derived` | A rewrite or lowering created a replacement from an original node. It retains that node's source range. |
+| `synthetic` | The application generated a node with no source spelling. Its range is empty at an explicitly chosen original-byte anchor. |
+| `recovered` | The node covers skipped input, or is the root of a tree containing recovery damage. Inspect the tree's damage records. |
+
+A folded `Number` may have spelling `14` while `sourcetext()` still returns
+`2+3*4`. Changing a field never changes the original bytes. Use
+`draft.locate(offset)` to choose a more precise diagnostic anchor within the
+node's retained range.
+
+Both rewriting and lowering offer `synthetic(kind,offset)`:
+
+```rexx
+generated = pass.synthetic('Number',source.offset())
+ok = generated.settext('spelling','42')
+ok = pass.replace(generated)
+```
+
+Here `source` is the current original node. The result has equal start and
+finish offsets, and empty `sourcetext()`. Its field still holds `42`. Use this
+for inserted defaults or generated control nodes. Use `make(kind)` when the
+replacement represents an existing source expression. Anchors must lie between
+zero and the original source length, inclusive; a generated end marker may
+therefore sit just after the last byte.
+
+#### Inspect a recovered AST
+
+`llrecover.request.ast()` creates an owned tree of the surviving records.
+Release the request when convenient: the tree retains the source and diagnostic
+records. Its status is **1 for recovered input**, 0 for clean input, and greater
+than 1 for a construction failure. A recovered tree has a usable root for
+inspection, and `error()` returns an `LL_AST_RECOVERED` explanation. Require
+status 0 before executing a script or applying configuration.
+
+```rexx
+request = .llrecover..request(language,source)
+tree = request.ast()
+if tree.status() > 1 then do
+  say tree.error()
+  return 1
+end
+damage = tree.damage()
+do i = 1 to damage.size()
+  say llsource..diagnostic(tree.source(),damage.offset(i),'INPUT',damage.message(i))
+end
+```
+
+Each damage record keeps two ranges. `first(i)` to `last(i)` is the complete
+skipped record; `offset(i)` to `finish(i)` is the diagnostic location within it.
+For a missing value, the diagnostic may have zero length at a separator.
+`message(i)` preserves the parser or lexer message. Records are numbered from
+one in source order. Unicode and malformed-byte diagnostics use the unchanged
+original bytes. `tree.isrecovered()` reports whether any records exist;
+`tree.damage()` returns an independent value copy of the small record table.
+
+Copying, rewriting or lowering preserves these records and the recovered
+status, even when a transformation replaces the root or discards all surviving
+statements. Children outside damaged ranges keep their more precise origins.
+The root remains recovered so that damage outside its own surviving range is
+still visible. The `tree.entries` allowance includes one entry per damage
+record as well as nodes, fields and links.
+
+The common flow and condition-fact services require a clean tree and report
+`LL_AST_RECOVERED` for inspection trees. Strict `lllanguage.request.ast()` also
+continues to require a successful strict parse. Reparse the corrected source to
+obtain a clean tree.
+
+Run [the complete origins example](../examples/origins/show.crexx):
+
+```sh
+crexx --program origins lib/rxfnsl/examples/origins/records.rxl \
+      lib/rxfnsl/examples/origins/show.crexx
+rxvm origins
+```
+
+It retains two valid statements around a missing value, prints the original
+line-2 diagnostic, generates a Number with a source anchor, and shows that the
+rewritten tree still has status 1 and one damage record.
+
+### Binary application-tree projection
+
+The binary projection API returns integer kinds and at most two children per
+node. Use `then tree` for named fields, lists and common walks. A **projection**
+builds a smaller tree by keeping selected named rules and
 removing other wrappers. For example:
 
 ```rexx
@@ -1548,6 +2647,29 @@ The default excerpt escapes tabs, controls and non-ASCII characters and aligns
 the caret with the escaped text. A fifth argument, `'unicode'`, displays Unicode
 glyphs. Malformed UTF-8 is shown with a hexadecimal excerpt. Prefix the result
 with the filename when your application has one.
+
+For repeated coordinate lookups, retain a source index rather than repeatedly
+scanning the source prefix. It owns the original bytes and has no global state:
+
+```rexx
+positions = .llsource..index(source)
+location = positions.position(offset)
+if location.error() = '' then do
+  say location.line() location.column()
+  linebytes = binsubstr(source,location.first() + 1,location.last() - location.first())
+end
+```
+
+`first()` and `last()` are zero-based byte boundaries for the containing line,
+excluding its newline. EOF is a valid position, including an empty final line;
+negative and past-EOF offsets report an error. The constructor's optional limits
+are line entries (1,000,000), logical bytes (64 MiB, including source bytes and
+16 bytes per line) and work (10,000,000). Construction scans bytes once; lookup
+searches line starts and counts scalar-leading bytes within the selected line.
+The work limit applies separately to construction and each lookup. These bounds
+exclude VM container overhead. Check `positions.error()` after construction and
+`location.error()` after lookup. Malformed UTF-8 is never decoded by the index;
+use `diagnostic` for the existing hexadecimal error display.
 
 ## Error messages and recovery
 
@@ -1678,6 +2800,7 @@ expose a forest when it returns 5.
 | `message(i)` | Diagnostic text, indexed from 1, in source order. |
 | `offset(i)`, `finish(i)` | Original diagnostic byte range; a syntax diagnostic may have zero length. |
 | `tree()`, `root()` | Result tree and root after status 0 or 1. |
+| `ast()` | Run recovery if needed and build an owned AST from `then tree` mappings. Clean and recovered input retain statuses 0 and 1 respectively. |
 | `errornode(i)` | Associated `error.skipped` node when produced. These nodes are stored separately from the successful root's children. |
 | `error()` | Overall reason collection stopped. |
 
@@ -1851,7 +2974,7 @@ number of declarations you wrote.
 | `scan.work` | 10,000,000 | Counted scanning work, separately for comment preparation and lexical scanning. |
 | `parse.work` | 1,000,000 | Counted parser or token-stage operations, including diagnostic work. |
 | `earley.cells` | 8,000,000 | Index capacities for Earley's partial parses and forest. |
-| `tree.entries` | 1,000,000 | Entries used by the named view or application-tree projection. The named view counts named nodes and their child links. |
+| `tree.entries` | 1,000,000 | Entries in each tree construction stage. A named view counts nodes and child links; an AST or rewrite counts nodes, field slots and child links, including discarded intermediates. |
 | `recovery.errors` | 16 | Collected target or specification errors. |
 | `recovery.declarations` | 512 | Declaration intervals inspected during specification recovery. |
 
@@ -1888,6 +3011,296 @@ Reuse a language definition and create fresh requests for input documents.
 Avoid repeatedly copying complete tree views in visitor calls. These practices
 keep application overhead separate from the work of recognition.
 
+## Intermediate representation and semantic services
+
+An AST describes the constructs in a source program: an assignment, an IF, a
+call, or a literal. A compiler often needs a second representation that spells
+out the order of evaluation and the possible transfers of control. That is an
+**intermediate representation**, usually shortened to **IR**.
+
+Level L provides this through `llir` and `llirservices`. They use compact numeric
+records internally and give applications named operations, checked handles and
+readable dumps. You can use them with any language. Register its types and
+operation semantics in ordinary Level B code.
+
+### From a tree to ordered operations
+
+For `say 2+3`, a source tree could contain a Say node whose value is an Add node
+with two literal children. Its IR makes each step explicit:
+
+```text
+%1 = core.constant 2 : crexx.g.int64
+%2 = core.constant 3 : crexx.g.int64
+%3 = crexx.g.iadd %1 %2
+%4 = crexx.g.itext %3
+crexx.g.say %4
+core.return
+```
+
+The numbers identify immutable results. The addition's result feeds conversion
+to text; that result feeds SAY. The compiler registers what addition, conversion
+and output mean. Level L checks their input/result types and preserves their
+order. SAY carries an output effect, which prevents an optimiser from deleting
+it simply because it has no result value.
+
+The [worked example](../examples/ir/demo.crexx) constructs this graph, folds the
+addition and text conversion, displays both graphs, and prints `5` from the
+retained SAY argument. The compiler operation families live in a separate
+Level B library. The wrapper keeps its runtime imports external and supplies
+Level L when linking the program. From the repository root, using installed tools:
+
+```sh
+crexx --library build/ir/semantics lib/rxfnsl/compilers/common/llcrexxir.crexx
+crexx --program build/ir/demo lib/rxfnsl/examples/ir/demo.crexx -i build/ir -l build/ir/semantics
+rxvm build/ir/demo
+```
+
+### Blocks, slots and analysis
+
+A block is a sequence of operations ending in a branch, jump or return.
+Branches join blocks into a graph; a loop is a cycle in that graph. A temporary
+value is local to its block. To carry a value across a branch, store it in a typed
+slot and load it in the destination block. A slot represents mutable local
+storage in one function invocation.
+
+`llirservices..analyse(reference graph)` determines which blocks can be reached
+and whether each slot is assigned on every path to a load. At a join, a slot is
+definitely assigned only when all incoming paths assign it. Both Boolean branch
+edges are considered. The result explains a possible read before assignment
+with its operation ID. This supplements the AST flow mappings: AST mappings
+analyse the source-shaped tree, while IR analysis follows the explicitly lowered
+operations and graph.
+
+### Contracts make transformations checkable
+
+A schema names types, operands, results, attributes and effects. A type codec
+checks exact constant bytes. An application can register a semantic verifier,
+a constant evaluator and a lowering service. These are Level B objects supplied
+by the host application.
+
+A constant evaluator can return a checked value, keep the original operation,
+report invalid input, or report that its work budget ran out. For example, a
+checked integer addition folds `2+3`; an overflowing addition is kept for
+runtime handling. Unknown effects grant no permission to fold an operation.
+
+A transformation builds a new module and verifies it before returning it.
+Failure preserves the original module. Analysis facts belong to one exact
+module revision; recompute them after accepting a rewrite. Source origins survive
+into new operations, including the distinction between authored, generated and
+recovered input.
+
+Use the [IR API reference](ir-design.md) for construction, semantic interfaces,
+analysis, checked replacement, target lowering, saved forms and the chunk-based
+text emitter. The example constructs IR directly; source-language frontends and
+target instruction selection are applications built on these services.
+
+## Compiling C/G source into shared IR
+
+The C/G frontend examples use Level L to scan, parse, build their source trees
+and construct verified IR. The compiler host modules are written in Level B.
+Classic retains dynamic pool names, exact literal spelling and NUMERIC context;
+G retains typed bindings, defaults and short-circuiting. Both use the same
+Level L graph and checked extension framework.
+
+For example:
+
+```rexx
+/* Classic */
+options levelc
+total = 2 + 3
+if total > 4 then say total
+else say 0
+```
+
+The G version selects `options levelg` and adds `total = .int` before the
+assignment. G lowers the sum to `crexx.g.int64.add` and stores a typed slot.
+Classic lowers it to `crexx.c.add` with an explicit numeric context and stores
+the pool key `TOTAL`. Each lowers the IF expression, converts its result to a
+core Boolean and creates yes/no/join blocks. SAY remains an observable operation.
+
+A Level B consumer uses the reusable frontend service:
+
+```rexx
+request = .llfrontend..request('g', source, artifacts, 'demo.crexx')
+if request.status() <> 0 then say request.diagnostic()
+else do
+  graph = request.graph()
+  say graph.dump()
+end
+```
+
+Here `source` is `.binary`; `artifacts` names the directory containing the
+required runtime metadata images. Import `llfrontend` and `llir` alongside
+`rxfnsb` in the host. Querying the request runs it once and retains an owned
+result. A failed request returns no successful graph. Error messages name the
+file and explain the category, line, Unicode column and exact byte offset, with
+a source excerpt and caret. Missing THEN/END, malformed expressions/calls,
+unterminated strings/comments and invalid encoding have regression coverage.
+These grammars stop at the first syntax error and accept no recovered input.
+
+For a built inspection consumer, from the repository root:
+
+```sh
+cmake-build-levell-integration/bin/rxbvm \
+  cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin \
+  -a g lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx \
+  cmake-build-levell-integration/bin
+```
+
+Change `g` and the example filename to inspect Classic. See the
+[frontend API and admitted language profile](../compilers/doc/frontends.md) and
+[paired walkthrough](../compilers/doc/pipeline-walkthrough.md) for the complete
+source, actual generated trees/IR, calls, loops and numeric differences.
+
+The frontend service ends at checked IR. The separate `llcompiler` service
+continues through register assignment and RXAS selection. Its implementation is
+Level B code **using Level L's `llir.writer` emitter library**.
+
+## Compiling C/G source to RXAS
+
+The installed commands are `llrxc-g` and `llrxc-c`. They implement the
+[admitted profile](../compilers/doc/poc-scope.md); ordinary `rxc` and `rxc-c`
+retain their existing product roles.
+
+The normal `stage-product` build includes both commands, the reusable
+`llcompilers.rxbin` service and the `llctarget.rxbin` Classic target adapter
+through `stage-l-libraries`. Build that product selection before running
+`cmake --install`; installation copies the generated products without building
+missing ones.
+
+```sh
+llrxc-g -i /path/to/bin -o demo.rxas demo-g.crexx
+rxas -n demo.rxas
+rxlink -o demo-linked demo.rxbin /path/to/bin/library.rxbin
+rxbvm demo-linked.rxbin
+```
+
+For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin` and
+`/path/to/bin/rxfnsc.rxbin` to the link command. Use VM `-a` followed by program
+arguments when needed. Keep linker debug metadata for runtime source locations;
+`rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
+by omitting its `-n`. The C/G compilers enable shared IR optimisation by default;
+use `llrxc-g -n` or `llrxc-c -n` for the cleaned unoptimised control. The native
+B seed's `rxc -n`, the new compiler's `-n` and `rxas -n` control three separate
+stages. Use assembler `-n` when inspecting the new compiler's own effects.
+
+A Level B host imports `llcompiler` and `llir`, links the installed
+`llcompilers.rxbin`, `rxfnsl.rxbin` and `library.rxbin` packages, and uses:
+
+```rexx
+request = .llcompiler..request('g', source, artifacts, 'demo.crexx')
+if request.status() <> 0 then say request.diagnostic()
+else do
+  output = request.output()
+  say output.text()
+end
+```
+
+`source` is binary; `artifacts` names the target runtime-image directory.
+The request does not print, write files, exit or invoke another compiler.
+`output` is an owned `.llir..output`, with `text`, `bytes`, `error` and streaming
+support, and remains usable after the request. `graph()` retains the frontend
+IR; after successful status, `emissiongraph()` shows the graph sent to the
+backend. It is the same graph when optimisation is disabled.
+The optional budgets after the filename are source/semantic work, nesting,
+emitted bytes and registers per function, followed by `optimise=1`. Append zero
+to select the unoptimised path without changing earlier argument positions:
+
+```rexx
+request = .llcompiler..request('g', source, artifacts, 'demo.crexx', 1000000, 512, 67108864, 65536, 0)
+```
+
+The work/byte budgets also protect the shared optimisation phase. Defaults and the complete API are in
+the [backend reference](../compilers/doc/backend.md).
+
+The command writes a completed result through a claimed sibling staging
+directory and replaces the destination only after a successful write/close.
+An existing staging directory or failed compilation/write produces a diagnostic
+and preserves prior output. The [paired worked examples](../compilers/examples/step04/README.md)
+show actual source, IR and RXAS, including Classic `say 01` printing `01` and G
+printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
+values and short-circuiting. A declared G decimal starts absent and displays
+`nan`, while integer/float/Boolean defaults are zero and text is empty.
+
+The current output uses stable registers and runtime adapters. Shared Level L
+passes propagate proved private values, evaluate admitted constants, simplify
+Boolean branches and remove safe unused operations. G admits checked int64
+arithmetic/comparisons and canonical conversions; C initially admits only exact
+literal `0`/`1` truth. Classic arithmetic, mutable numeric context and variable
+pools keep runtime semantics. Both languages preserve effects and errors. See
+the [actual before/after example](../compilers/examples/step05/README.md) and
+[generic Level L optimisation API](ir-design.md#optimise-a-frozen-module).
+
+Explicit operands do not construct spare defaults;
+bare SAY and declared-variable defaults remain. Frame planning uses selected
+instructions and hidden helper calls to reserve scratch and call space only
+when needed. Straight jumps to the next emitted block are omitted. Source records carry expression ranges and
+exact/generated provenance. Identical straight-path records are suppressed;
+different expressions and control-flow entries can still need records on the
+same line. These are metadata, not printed TRACE events. Clause ID zero means
+that authored clause grouping is not yet available.
+
+The CLI records the source basename. The service preserves a logical relative
+filename such as `examples/demo.crexx`, while absolute physical paths become
+basenames. This keeps checkout paths out of source metadata. The VM may still
+show the assembler's binary-module identity separately.
+
+For example, compile this once with `options levelc` and once with
+`options levelg`:
+
+```rexx
+options levelc
+say 1
+say 1 / 0
+```
+
+Both print `1`, then fail on line 3. G reports `DIVISION_BY_ZERO` at the expression.
+Classic reports `RXC-LC-42.3` with the authored expression's context and retains
+the original helper fault location. Classic still maintains a diagnostic
+location field because deeper frames unwind before its handler runs; unchanged
+updates are suppressed. Entry/generated context is labelled explicitly rather
+than presented as an exact authored line.
+
+Keep linker metadata for the original fault source. A stripped image falls back
+to module/address (Classic's retained context can still appear in its message).
+The supported relay covers existing fatal string-message conditions, not
+arbitrary condition payloads or complete backtraces. Clause grouping, full TRACE,
+and the other remaining quality work are recorded in the
+[emission-quality review](../compilers/doc/EMISSION-QUALITY-REVIEW.md).
+
+### Following a complete C/G compilation
+
+The [paired walkthrough](../compilers/examples/step06/README.md) includes real
+source trees, frontend IR, optimised emission IR and RXAS. It also gives build,
+installed execution and view-regeneration commands. Use the same body with
+`options levelc` or `options levelg`:
+
+```rexx
+say 01
+if 1 then say 'ok'
+else say 1 / 0
+```
+
+C prints `01` then `ok`; G prints `1` then `ok`. Both source trees preserve the
+literal spelling `01`. C's semantic mapping keeps those bytes; G's maps them to
+the integer value 1. Both frontend IRs retain the division arm. Shared Level L
+optimisation proves the condition true and removes the unreachable arm from the
+emission graph. Both default and `-n` compilation execute correctly.
+
+Change `if 1` to `if 0`: division is reached and remains a runtime error, with
+line 4 source context. It is not a compile-time error just because its operands
+are constants. Remove `then` instead: compilation fails with
+`LL_COMPILER_SYNTAX`, and an existing output file is preserved. In this exact
+example the parser reports the unexpected ELSE on line 4, where THEN is still
+required; the diagnostic location is the detection point.
+
+The [profile map](../compilers/doc/poc-coverage.md) gives the exact supported
+language, ownership/error tests and remaining boundaries. Compilation is Level
+B code using Level L libraries all the way through emission. Existing RXAS,
+linker and VM tools still process the result. Full C/G syntax, proper B
+self-hosting, arbitrary imports, full TRACE/condition handlers and INTERPRET
+are outside this admitted compiler slice.
+
 ## RexxScript: a larger example
 
 RexxScript demonstrates how the same machinery supports a script interpreter.
@@ -1905,8 +3318,10 @@ with RexxScript values and function services.
 | 4 | Generated keyword stage | Classify words according to statement context. |
 | 5 | RexxScript concatenation pass | Insert blank/abuttal operators where the language requires implicit concatenation. |
 | 6 | Generated LR parser | Build the statement and expression tree. |
-| 7 | Level L named view | Expose named rules and their ordered children. |
-| 8 | RexxScript validation and execution | Check uses such as `LEAVE` inside loops, then execute with fresh state. |
+| 7 | Level L application AST | Construct named fields from the grammar's `then tree` mappings. |
+| 8 | RexxScript validation | Check control placement and source nesting before executing anything. |
+| 9 | Analysis and checked folding | Calculate constants and replace eligible expressions with exact typed literals. |
+| 10 | RexxScript execution | Execute chosen branches with fresh variable and function state. |
 
 **Abuttal** means adjacent terms without an explicit operator between them.
 RexxScript distinguishes it from blank concatenation and function-call
@@ -1925,12 +3340,12 @@ in one parse.
 Statement sequences use the same list notation as the settings example:
 
 ```rexx
-statements: rule = separator* (statement (separator statement?)*)?
+statements: rule = separator* (statement as item (separator (statement as item)?)*)?
+  then tree Sequence(items = item*)
 ```
 
-The named `statements` node contains its statements and separators in source
-order. Execution visits each statement child, stopping when control flow leaves
-the sequence. No application code follows generated repetition nodes.
+The `Sequence` node contains an ordered `items` list of statements. Execution
+visits each item, stopping when control flow leaves the sequence.
 
 ### How IF statements get their structure
 
@@ -1989,20 +3404,66 @@ rules about what can follow them.
 
 ### Execution follows the chosen structure
 
-The named `if.closed` node has six immediate children:
+The grammar maps `if.closed` and `if.continued` to `IfElse(condition, yes, no)`.
+It maps `if.open` to `IfThen(condition, yes)`. The open/closed distinction still
+resolves ELSE during parsing; the interpreter uses the useful branch fields:
 
-```text
-1 ifword   2 expression   3 thenword
-4 closed.statement       5 elseword   6 closed.statement
+```rexx
+value = expression(node.child('condition'))
+if rexxscriptoperators..truth(value) then call statement(node.child('yes'))
+else if node.kind() = 'IfElse' then call statement(node.child('no'))
 ```
 
-`if.open` has four, with `statement` at position 4. `if.continued` has six,
-with `open.statement` at position 6. The interpreter evaluates child 2, executes
-child 4 if true, or child 6 if false and present.
+A general walk visits every child. Execution instead chooses branches and
+short-circuits logical AND/OR; it must not execute every node it encounters.
+Loop and return behavior remain part of the interpreter.
 
-It does not need to search for an ELSE: the grammar has already attached it.
-Likewise, the expression tree supplies precedence for evaluation. Application
-code can focus on values, names, control flow and effects.
+### Analyse and fold a script
+
+The [analysis example](../../../rexxscript/examples/ast-analysis.crexx) follows
+this script through the full process:
+
+```rexx
+x=2+3*4; if x>10 then say x else say 1/0
+```
+
+`rexxscriptanalysis..analyse(reference tree)` returns facts for each AST node:
+`known()` says whether its constant value was calculated, `value()` returns that
+RexxValue, `reads()` lists variable names used directly in expressions, and
+`effects()` marks possible state changes or function calls. Reads and effects
+include both branches. A function may access additional state, so a call keeps
+its effect flag and stays outside constant folding. The analysis never calls
+a BIF or consults the variable pool.
+
+`rexxscriptanalysis..fold(reference tree)` creates a new checked AST. It changes
+`2+3*4` into a Number with spelling `14`, while retaining the original source
+range. The expression `x>10` depends on a variable and remains an expression.
+The failing calculation `1/0` also remains an expression; the script can run
+successfully because that branch is not selected.
+
+Analysis and execution share RexxScript's numeric operations. A folded literal
+must decode to the same type and exact value. Floating-point spelling is checked
+against the original bits, including signed zero. A value that cannot round-trip
+stays as an expression. Failed arithmetic is left for execution so that folding
+does not introduce errors in an unselected branch.
+
+A replacement keeps the full original range for `sourcetext()`. Its `offset()`
+can retain a more precise diagnostic anchor within that range. This preserves
+the location of a later error even when its operand was folded. Applications
+can set that anchor with `replacement.locate(offset)` before accepting a draft.
+
+Build and run the example using installed tools:
+
+```sh
+crexx --program ast-analysis rexxscript/examples/ast-analysis.crexx
+rxvm ast-analysis.rxbin
+```
+
+The output reports constant value `14`, variable read `X`, the Number replacement
+and original spelling `2+3*4`, followed by the script's output `14`. Execution
+folds by default. Pass `0` as the fourth argument of
+`rexxscript1run..execution(program, fuel, maximum, fold)` to compare ordinary
+execution with folding. Both paths apply the same validation and runtime rules.
 
 See the [RexxScript user guide](../../../rexxscript/doc/user-guide.md#rexxscript-1-modern-level-l-review-implementation)
 for the script language and its value rules.
@@ -2020,7 +3481,9 @@ for the script language and its value rules.
 | Unicode names fail | Use `input utf8` and name rules containing the desired characters or Unicode properties. |
 | Two visually identical names compare differently | Decide whether the application should normalize or case-fold names before comparison. Preserve their original spelling for messages. |
 | A tree has more wrappers than expected | Authored rule names remain in the named view. Use fields or a projection for application access. |
-| A `tree` declaration has no visible effect | Call `request.projection()` and its `run()`; the named view is a separate representation. |
+| `then tree` has no visible effect | Call `request.ast()` after a successful parse; the named view remains a separate representation. |
+| A binary `tree rule` declaration has no visible effect | Call `request.projection()` and its `run()`. |
+| An AST field reports an unexpected child count | Put `as item` inside the repetition and match the mapping suffix to the rule: `item?`, `item*` or `item+`. Each capture supplies one mapped node. |
 | A custom message is not used | Check that it names the rule failing at that position and that the context is unambiguous. |
 | Only one error is shown | Strict requests stop at failure. Use a declared record recovery request for multi-error inspection. |
 | Status 5 is returned | The input was accepted by Earley but has no unique finite tree. Inspect the forest. |

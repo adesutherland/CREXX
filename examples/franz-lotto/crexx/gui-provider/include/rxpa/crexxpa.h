@@ -1,0 +1,748 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+// CREXX/PA (Plugin Architecture) Client Header
+// Version:
+
+#ifndef CREXX_PA_H_
+#define CREXX_PA_H_
+
+#include "crexx_version.h"
+#include <stddef.h>
+#include <stdint.h>
+#include "../platform/rxinteger.h"
+
+// plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
+//    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
+// #define pluginDEBUG 0
+
+// Plugin Support Functions and Macros
+
+// Typedef for attribute value which is an opaque pointer
+typedef void* rxpa_attribute_value;
+
+#ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE 0x00000001u
+
+typedef struct rxvm_native_payload_ops {
+    const char *type_name;
+    void (*copy)(void *dest_value, void *source_value);
+    void (*finalize)(void *value);
+} rxvm_native_payload_ops;
+#endif
+
+typedef rxvm_native_payload_ops rxpa_native_payload_ops;
+
+// Typedef definition of a library function
+// Parameters are the number of arguments, an array of rxpa_attribute_value,
+// and a rxpa_attribute_value return value, and signal value for error handling
+// e.g.
+//void myfunc(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
+typedef void (*rxpa_libfunc)(rxinteger, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
+
+/*
+ * Optional plugin capability query.  The initializer ABI remains unchanged;
+ * old hosts simply ignore the additional exported query symbol.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V1 1u
+#define RXPA_PLUGIN_CAP_PROCESS_REENTRANT 0x00000001u
+#define RXPA_PLUGIN_CAP_KNOWN_V1 RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PLUGIN_QUERY_SYMBOL_V1 "_rxpa_query_v1"
+
+typedef struct rxpa_plugin_manifest_v1 {
+    size_t struct_size;
+    uint32_t abi_version;
+    uint32_t capabilities;
+    const char *plugin_id;
+} rxpa_plugin_manifest_v1;
+
+typedef const rxpa_plugin_manifest_v1 *(*rxpa_plugin_query_v1)(void);
+
+/*
+ * Optional procedure/session query.  V2 is a separate symbol rather than an
+ * extension of rxpa_initctx, so existing hosts continue to load a new dynamic
+ * plugin through _initfuncs and conservatively treat every procedure as
+ * legacy.  A V2-aware host binds the returned procedure flags once at load.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V2 2u
+#define RXPA_PROCEDURE_CAP_PROCESS_REENTRANT \
+    RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PROCEDURE_CAP_SESSION_AFFINE 0x00000002u
+#define RXPA_PROCEDURE_CAP_KNOWN_V2 \
+    (RXPA_PROCEDURE_CAP_PROCESS_REENTRANT | \
+     RXPA_PROCEDURE_CAP_SESSION_AFFINE)
+#define RXPA_PLUGIN_QUERY_SYMBOL_V2 "_rxpa_query_v2"
+
+typedef uint32_t (*rxpa_procedure_capability_query_v2)(
+        const char *procedure_name);
+typedef void *(*rxpa_session_create_v2)(void);
+typedef void (*rxpa_session_destroy_v2)(void *session);
+/* Return zero on success and place the nested-restoration cookie in previous. */
+typedef int (*rxpa_session_enter_v2)(void *session,
+                                     uint32_t procedure_capabilities,
+                                     void **previous);
+typedef void (*rxpa_session_leave_v2)(void *previous);
+
+/* Immutable host services, negotiated independently of the legacy initializer.
+ * A session may retain this table for its lifetime. A string view is read-only,
+ * need not have a trailing NUL, and expires on mutation of that value (including
+ * reentrant calls that mutate it) or native-call return, whichever comes first.
+ * Length counts UTF-8 bytes, including embedded U+0000. No allocation or copy is
+ * made. Callers must own any bytes retained beyond that boundary. */
+#define RXPA_HOST_SERVICES_ABI_V1 1u
+typedef int (*rxpa_string_view_v1)(rxpa_attribute_value value,
+                                   const char **data, size_t *byte_length);
+/* Publish a loaded concrete class on a plugin-built value. This preserves all
+ * payload/attribute data and clears the uninitialized-object flag. On failure
+ * it returns -1 without modifying the value. No factory is invoked. Use only
+ * borrowed value handles in the active VM call; never retain those handles. */
+typedef int (*rxpa_object_set_type_v1)(rxpa_attribute_value value,
+                                      const char *class_name);
+/* Copy exactly byte_length UTF-8 bytes into VM-owned text. No source terminator
+ * or padding is required. Embedded U+0000 is text; length excludes any padding.
+ * NULL data is valid only for empty text. The VM validates/counts codepoints.
+ * Returns -1 for invalid input without modifying the destination. Borrowed
+ * string views, including a view of the destination itself, may be supplied. */
+typedef int (*rxpa_string_set_v1)(rxpa_attribute_value value,
+                                 const char *data, size_t byte_length);
+typedef struct rxpa_host_services_v1 {
+    size_t struct_size;
+    uint32_t abi_version;
+    rxpa_string_view_v1 string_view;
+    rxpa_object_set_type_v1 object_set_type; /* Optional complete sized tail. */
+    rxpa_string_set_v1 string_set; /* Optional complete sized tail. */
+} rxpa_host_services_v1;
+static inline int rxpa_host_has_string_view(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, string_view) + sizeof(host->string_view) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->string_view;
+}
+static inline int rxpa_host_has_object_set_type(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, object_set_type) + sizeof(host->object_set_type) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->object_set_type;
+}
+static inline int rxpa_set_object_type(const rxpa_host_services_v1 *host,
+                                       rxpa_attribute_value value,
+                                       const char *class_name) {
+    return rxpa_host_has_object_set_type(host)
+            ? host->object_set_type(value, class_name) : -1;
+}
+#define SETOBJECTTYPE(host, value, class_name) \
+    rxpa_set_object_type((host), (value), (class_name))
+static inline int rxpa_host_has_string_set(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, string_set) + sizeof(host->string_set) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->string_set;
+}
+static inline int rxpa_set_string(const rxpa_host_services_v1 *host,
+                                  rxpa_attribute_value value,
+                                  const char *data, size_t byte_length) {
+    return rxpa_host_has_string_set(host)
+            ? host->string_set(value, data, byte_length) : -1;
+}
+#define SETSTRINGLENGTH(host, value, data, byte_length) \
+    rxpa_set_string((host), (value), (data), (byte_length))
+typedef void *(*rxpa_session_create_with_host_v1)(const rxpa_host_services_v1 *host);
+
+typedef struct rxpa_plugin_manifest_v2 {
+    size_t struct_size;
+    uint32_t abi_version;
+    const char *plugin_id;
+    rxpa_procedure_capability_query_v2 procedure_capabilities;
+    rxpa_session_create_v2 session_create;
+    rxpa_session_destroy_v2 session_destroy;
+    rxpa_session_enter_v2 session_enter;
+    rxpa_session_leave_v2 session_leave;
+    /* Optional sized tail. Old factories remain mandatory for session plugins;
+     * return NULL there when the plugin requires services unavailable to an old
+     * host. Modern hosts prefer this factory and never retry the old one. */
+    rxpa_session_create_with_host_v1 session_create_with_host;
+} rxpa_plugin_manifest_v2;
+
+typedef const rxpa_plugin_manifest_v2 *(*rxpa_plugin_query_v2)(void);
+
+// Enumeration of Signal Codes
+// These are used to indicate the status of the REXX program
+// NOTE These need to sync with the interpreter rxsignal.h file (they are separate to isolate the plugin from the interpreter)
+typedef enum rxsignal {
+    SIGNAL_NONE = 0,
+    SIGNAL_ERROR = 3,                /* Triggered when a syntax error occurs during the execution of a REXX program */
+    SIGNAL_OVERFLOW_UNDERFLOW = 4,   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
+    SIGNAL_CONVERSION_ERROR = 6,     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
+    SIGNAL_UNKNOWN_INSTRUCTION = 10, /* Triggered when the REXX program attempts to execute an unknown RXAS instruction */
+    SIGNAL_FUNCTION_NOT_FOUND = 11,  /* Triggered when the REXX program attempts to execute an unknown function */
+    SIGNAL_OUT_OF_RANGE = 8,         /* Triggered when the REXX program attempts to access an array element that is out of range */
+    SIGNAL_REFERENCE_INVALID = 14,   /* Triggered when a reference value no longer points to live storage */
+    SIGNAL_OBJECT_NOT_INITIALIZED = 16, /* Triggered when a typed object value is used before an instance is initialized */
+    SIGNAL_RXBIN_CORRUPTION = 17,    /* Triggered when bytecode or a packed runtime constant is malformed */
+    SIGNAL_FAILURE = 2,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
+    SIGNAL_HALT = 20,                /* Triggered when the REXX program receives an external request to halt (term) its execution */
+    SIGNAL_NOTREADY = 15,            /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
+    SIGNAL_INVALID_ARGUMENTS = 7,    /* Triggered when invalid arguments are passed to a function or subroutine */
+    SIGNAL_DIVISION_BY_ZERO = 5,     /* Triggered when the REXX program attempts to divide by zero */
+    SIGNAL_UNICODE_ERROR = 9,        /* Triggered when an unicode error occurs */
+    SIGNAL_OTHER = 30                /* Triggered when an unknown error occurs */
+} rxsignal;
+
+// Plugin Helper Functions
+// The following functions are used to interact with the REXX interpreter
+typedef void (*rxpa_func_addfunc)(rxpa_libfunc func, char* name,
+                                  char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+typedef void (*rxpa_func_addclass)(char* name, char* option, char* type); /* Add class metadata */
+typedef void (*rxpa_func_addinterface)(char* name, char* option, char* type); /* Add interface metadata */
+typedef void (*rxpa_func_addimplements)(char* name, char* interface_name); /* Add class/interface implementation metadata */
+typedef void (*rxpa_func_addmember)(char* owner, char* kind, char* member,
+                                    char* type, char* args); /* Add class/interface member metadata */
+typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
+/* The text is copied during the call; the callback does not mutate or retain it. */
+typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue,
+                                    const char* string); /* Set a string in an attribute value */
+typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
+typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
+typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+typedef int (*rxpa_func_setnativepayload)(rxpa_attribute_value attributeValue,
+                                          const void *payload,
+                                          size_t length,
+                                          const rxpa_native_payload_ops *ops,
+                                          unsigned int flags); /* Set a native binary payload */
+typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
+                                            size_t *out_length,
+                                            const rxpa_native_payload_ops **out_ops,
+                                            unsigned int *out_flags); /* Get a native binary payload */
+typedef int (*rxpa_func_isinitialized)(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
+/* Invoke one method on a live cREXX object. The descriptor uses the canonical
+ * rxsig1 form. Arguments and the result are borrowed RXPA value handles; the
+ * call is synchronous and may only be made from the active plugin call. */
+typedef int (*rxpa_func_callmethod)(rxpa_attribute_value receiver,
+                                    const char *method_descriptor,
+                                    rxinteger argc,
+                                    rxpa_attribute_value *args,
+                                    rxpa_attribute_value result,
+                                    rxpa_attribute_value signal);
+
+// Array / Object Functions - these access the child attributes of an attribute value
+/* Get the number of child attributes */
+typedef rxinteger (*rxpa_func_getnumattrs)(rxpa_attribute_value attributeValue);
+/* Set the number of child attributes */
+typedef void (*rxpa_func_setnumattrs)(rxpa_attribute_value attributeValue, rxinteger numAttrs);
+/* Get the nth child attribute */
+typedef rxpa_attribute_value (*rxpa_func_getattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Insert a child attribute before the nth position - a blank attribute is added that can then be accessed and changed */
+typedef rxpa_attribute_value (*rxpa_func_insertattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Remove the nth child attribute */
+typedef void (*rxpa_func_removeattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Swap the nth child attribute with the mth child attribute */
+typedef void (*rxpa_func_swapattrs)(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
+
+// Exit Functions
+typedef void (*say_exit_func)(char* message);
+typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit function */
+typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
+
+// The initialization context struct
+#ifdef __cplusplus
+#define RXPA_INITCTX_TAG rxpa_initctx
+#else
+#define RXPA_INITCTX_TAG rxpa_initctxptr
+#endif
+typedef struct RXPA_INITCTX_TAG rxpa_initctx;
+typedef rxpa_initctx* rxpa_initctxptr;
+struct RXPA_INITCTX_TAG {
+    rxpa_func_addfunc addfunc;
+    rxpa_func_addclass addclass;
+    rxpa_func_addinterface addinterface;
+    rxpa_func_addimplements addimplements;
+    rxpa_func_addmember addmember;
+    rxpa_func_getstring getstring;
+    rxpa_func_setstring setstring;
+    rxpa_func_setint setint;
+    rxpa_func_getint getint;
+    rxpa_func_setfloat setfloat;
+    rxpa_func_getfloat getfloat;
+    rxpa_func_setnativepayload setnativepayload;
+    rxpa_func_getnativepayload getnativepayload;
+    rxpa_func_getnumattrs getnumattrs;
+    rxpa_func_setnumattrs setnumattrs;
+    rxpa_func_getattr getattr;
+    rxpa_func_insertattr insertattr;
+    rxpa_func_removeattr removeattr;
+    rxpa_func_swapattrs swapattrs;
+    // Exit Function Management
+    rxpa_set_say_exit setsayexit;
+    rxpa_reset_say_exit resetsayexit;
+    /* Appended so existing initializer-field offsets remain stable. */
+    rxpa_func_isinitialized isinitialized;
+    /* Appended nested-call facility; current hosts populate every field. */
+    rxpa_func_callmethod callmethod;
+};
+#undef RXPA_INITCTX_TAG
+
+// Give PLUGIN_ID a default value
+#ifndef PLUGIN_ID
+#define PLUGIN_ID rxplugin
+#endif
+
+// Force macro expansion before concatenation or stringification.
+#define CONCATENATE(a, b) a##b
+#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
+#define RXPA_STRINGIFY_INNER(value) #value
+#define RXPA_STRINGIFY(value) RXPA_STRINGIFY_INNER(value)
+#define RXPA_PLUGIN_MANIFEST_V2_NAME(plugin_id) \
+    EXPAND_AND_CONCATENATE(plugin_id, _manifest_v2)
+
+// Are we building a statically linked library?
+#ifdef BUILD_DLL
+
+// Include header for memcpy
+#include <string.h>
+
+// Global context variable declaration
+static rxpa_initctx _rxpa_initctx;
+static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
+// Macro is used to register a procedure - dynamic linkage
+#define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
+#define ADDCLASS(name) _rxpa_context->addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) _rxpa_context->addclass((name),(option),(type))
+#define ADDINTERFACE(name) _rxpa_context->addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) _rxpa_context->addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) _rxpa_context->addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) _rxpa_context->addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+#define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
+#define PROCRETURN {goto back2caller;}
+#define GETSTRING(attr) _rxpa_context->getstring((attr))
+#define GETSARRAY(pnum,index) GETSTRING(GETATTR(pnum, index))
+#define SETSTRING(attr, str) _rxpa_context->setstring((attr),(str))
+#define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
+//  InsertSarray adds a new entry to an array at a certain position, the entry is added prior to the current entry which is shifted beyond
+#define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
+                                       SETSARRAY(pnum,indx,value);};
+// Push helpers append to the array handle passed by the caller.
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+                                     SETSARRAY(pnum,indx,value);};
+#define RETURNSTR(value) _rxpa_context->setstring(RETURN,(value))
+#define RETURNSTRX(value) {_rxpa_context->setstring(RETURN,(value));PROCRETURN}
+#define SETINT(attr, value) _rxpa_context->setint((attr),(value))
+#define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
+#define PUSHIARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+                                     SETIARRAY(pnum,indx,value);};
+#define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
+#define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
+#define GETINT(attr) _rxpa_context->getint((attr))
+#define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
+#define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
+#define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
+#define GETFLOAT(attr) _rxpa_context->getfloat((attr))
+#define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) _rxpa_context->isinitialized((attr))
+#define CALLMETHODX(receiver, descriptor, argc, args, result, signal) \
+    (_rxpa_context->callmethod \
+        ? _rxpa_context->callmethod((receiver),(descriptor),(argc),(args),(result),(signal)) \
+        : -1)
+#define CALLMETHOD(receiver, descriptor, argc, args, result) \
+    CALLMETHODX((receiver),(descriptor),(argc),(args),(result),SIGNAL)
+#define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
+#define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
+#define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
+#define SETARRAYHI(attr, num) _rxpa_context->setnumattrs((attr),(num))
+#define GETATTR(attr, index) _rxpa_context->getattr((attr),(index))
+#define INSERTATTR(attr, index) _rxpa_context->insertattr((attr),(index))
+#define REMOVEATTR(attr, index) _rxpa_context->removeattr((attr),(index))
+#define SWAPATTRS(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
+#define SWAPARRAY(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
+#define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
+#define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
+
+// The plugin is being built as a DLL
+// INITIALIZER is redefined to be a simple function
+#ifdef __cplusplus
+#define RXPA_EXTERN_C extern "C"
+#else
+#define RXPA_EXTERN_C
+#endif
+// Define EXPORT appropriately for windows
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+// Define EXPORT For OSX
+#elif __APPLE__
+#define EXPORT __attribute__((visibility("default")))
+// Define EXPORT for Linux
+#else
+#define EXPORT
+#endif
+#define INITIALIZER(f) \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context); \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
+#define RXPA_PLUGIN_MANIFEST_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _manifest_v1)
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    static const rxpa_plugin_manifest_v1 RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v1), RXPA_PLUGIN_MANIFEST_ABI_V1, \
+        RXPA_PLUGIN_CAP_PROCESS_REENTRANT, RXPA_STRINGIFY(PLUGIN_ID) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v1 *_rxpa_query_v1(void) { \
+        return &RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0, 0 \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+        enter_function, leave_function, query_function, 0)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function), (host_create_function) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define LOADFUNCS INITIALIZER(_initfuncs)
+#if defined(_MSC_VER)
+#pragma section(".CRT$XTU",read)
+#define RXPA_C_FINALIZER2_(f,p) \
+    static void f(void); \
+    __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+    __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+    static void f(void)
+#ifdef _WIN64
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"") {
+#else
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"_") {
+#endif
+#else
+#define FINALIZER(f) \
+    static void f(void) __attribute__((destructor)); \
+    static void f(void) {
+#endif
+
+#else
+
+// Else Static build
+
+// With thanks to this Initializer/finalizer sample for MSVC and GCC/Clang. 2010-2016 Joe Lowe. Released into the public domain.
+#ifdef __cplusplus
+#define RXPA_CPP_INITIALIZER_EXPANDED(f) \
+        static void f(void); \
+        struct f##_t_ { f##_t_(void) { f(); } }; static f##_t_ f##_; \
+        static void f(void) {
+#define RXPA_CPP_INITIALIZER(f) RXPA_CPP_INITIALIZER_EXPANDED(f)
+#define INITIALIZER(f) RXPA_CPP_INITIALIZER(f)
+#elif defined(_MSC_VER)
+#pragma section(".CRT$XCU",read)
+#pragma section(".CRT$XTU",read)
+#define INITIALIZER2_(f,p) \
+        static void f(void); \
+        __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
+        __pragma(comment(linker,"/include:" p #f "_")) \
+        static void f(void)
+#define FINALIZER2_(f,p) \
+        static void f(void); \
+        __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+        __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+        static void f(void)
+#ifdef _WIN64
+#define INITIALIZER(f) INITIALIZER2_(f,"") {
+#define FINALIZER(f) FINALIZER2_(f,"") {
+#else
+#define INITIALIZER(f) INITIALIZER2_(f,"_") {
+#define FINALIZER(f) FINALIZER2_(f,"_") {
+#endif
+#else
+#define INITIALIZER(f) \
+        static void f(void) __attribute__((constructor)); \
+        static void f(void) {
+#define FINALIZER(f) \
+        static void f(void) __attribute__((destructor)); \
+        static void f(void) {
+#endif
+
+// The LOADFUNCS macro is used to define the initialization function for the library.
+// Create a function name based on the PLUGIN_ID
+// These are designed to force the expansion of macros before concatenation
+// and be compatible with both GCC and MSVC
+// Now create the function name
+#define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _init)
+// Create a unique anchor symbol name for static libraries
+#define UNIQUE_ANCHOR_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _anchor)
+#define UNIQUE_CAPABILITY_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _capability_init)
+// Define the LOADFUNCS macro (function prologue)
+#define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
+
+// Helper functions provided by the REXX interpreter
+#ifdef __cplusplus
+extern "C" {
+#endif
+void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args);
+#ifndef DECL_ONLY
+void rxpa_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
+void rxpa_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest);
+#endif
+void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
+void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
+void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args); /* Add class/interface member metadata */
+char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
+void rxpa_setstring(rxpa_attribute_value attributeValue,
+                    const char* string); /* Copies string into the attribute value */
+void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
+rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
+double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags); /* Set a native binary payload */
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops,
+                            unsigned int *out_flags); /* Get a native binary payload */
+int rxpa_isinitialized(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
+int rxpa_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal); /* Invoke a cREXX object method synchronously */
+rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
+void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
+rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
+rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index); /* Insert a child attribute before the nth position */
+void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index); /* Remove the nth child attribute */
+void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2); /* Swap the nth child attribute with the mth child attribute */
+
+// Exit Functions
+void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
+void rxpa_resetsayexit(); /* Set Say exit function */
+#ifdef __cplusplus
+}
+#endif
+
+#ifndef DECL_ONLY
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_capability( \
+            RXPA_STRINGIFY(PLUGIN_ID), RXPA_PLUGIN_CAP_PROCESS_REENTRANT); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0, 0 \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+        enter_function, leave_function, query_function, 0)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function), (host_create_function) \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#else
+#define RXPA_PLUGIN_PROCESS_REENTRANT
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function)
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function)
+#endif
+
+// Macro is used to register a procedure - static linkage
+#ifndef DECL_ONLY
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+#else
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+#endif
+#define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) rxpa_addclass((name),(option),(type))
+#define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) rxpa_addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+#define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
+#define PROCRETURN {goto back2caller;}
+#define GETSTRING(attr) rxpa_getstring((attr))
+#define SETSTRING(attr, str) rxpa_setstring((attr),(str))
+#define SETINT(attr, value) rxpa_setint((attr),(value))
+#define GETINT(attr) rxpa_getint((attr))
+#define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
+#define GETFLOAT(attr) rxpa_getfloat((attr))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) rxpa_isinitialized((attr))
+#define CALLMETHODX(receiver, descriptor, argc, args, result, signal) \
+    rxpa_callmethod((receiver),(descriptor),(argc),(args),(result),(signal))
+#define CALLMETHOD(receiver, descriptor, argc, args, result) \
+    CALLMETHODX((receiver),(descriptor),(argc),(args),(result),SIGNAL)
+#define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
+#define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
+#define GETATTR(attr, index) rxpa_getattr((attr),(index))
+#define INSERTATTR(attr, index) rxpa_insertattr((attr),(index))
+#define REMOVEATTR(attr, index) rxpa_removeattr((attr),(index))
+#define SWAPATTRS(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
+#define SET_SAY_EXIT(func) rxpa_setsayexit((func))
+#define RESET_SAY_EXIT() rxpa_resetsayexit()
+#define RETURNSTR(value) rxpa_setstring(RETURN,(value))
+#define RETURNSTRX(value) {rxpa_setstring(RETURN,(value));PROCRETURN}
+#define RETURNINT(value) rxpa_setint(RETURN,(value))
+#define RETURNFLOAT(value) rxpa_setfloat(RETURN,(value))
+#define GETARRAYHI(attr) rxpa_getnumattrs((attr))
+#define SETARRAYHI(attr, num) rxpa_setnumattrs((attr),(num))
+#define SWAPARRAY(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
+#define GETSARRAY(pnum,index) GETSTRING(GETATTR(pnum, index))
+#define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
+#define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
+SETSARRAY(pnum,indx,value);};
+// Push helpers append to the array handle passed by the caller.
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+SETSARRAY(pnum,indx,value);};
+#define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
+#define PUSHIARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+SETIARRAY(pnum,indx,value);};
+#define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
+#define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
+#define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
+
+#endif
+
+// Plugin Function Tags
+#define PROCEDURE(p) \
+        static void p(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
+// Arguments
+#define NUM_ARGS _numargs
+#define ARG(n) _arg[(n)]
+// some laziness definitions
+#define ARG0   _arg[(0)]
+#define ARG1   _arg[(1)]
+#define ARG2   _arg[(2)]
+#define ARG3   _arg[(3)]
+#define ARG4   _arg[(4)]
+#define ARG5   _arg[(5)]
+#define ARG6   _arg[(6)]
+#define ARG7   _arg[(7)]
+#define ARG8   _arg[(8)]
+#define ARG9   _arg[(9)]
+
+#define RETURN _return
+#define SIGNAL _signal
+#define REGISTER rxpa_attribute_value
+
+// End of LOADFUNCS
+// Also define a global anchor symbol to ensure the object provides at least one global
+// This avoids empty-TOC warnings when creating static archives on some toolchains
+#ifdef BUILD_DLL
+#define ENDLOADFUNCS }
+#else
+  #if defined(_MSC_VER)
+    #define ENDLOADFUNCS } __declspec(selectany) int UNIQUE_ANCHOR_NAME(PLUGIN_ID) = 0;
+  #else
+    #define ENDLOADFUNCS } __attribute__((used)) int UNIQUE_ANCHOR_NAME(PLUGIN_ID) = 0;
+  #endif
+#endif
+
+/* Declare and bind native members. Owner/member must be string literals;
+ * class types in type/args must be fully qualified. Methods receive the
+ * receiver as ARG0, followed by declared arguments. Factories and match
+ * functions receive only declared arguments; factories construct RETURN.
+ * Keeping the symbol convention here also supports DECL_ONLY consumers. */
+#define ADDMETHODPROC(func, owner, member, type, args) \
+    ADDMETHOD(owner, member, type, args); \
+    ADDPROC(func, owner "." member, "b", type, args)
+#define ADDDEFAULTMETHODPROC(func, owner, member, type, args) \
+    ADDDEFAULTMETHOD(owner, member, type, args); \
+    ADDPROC(func, owner "." member, "b", type, args)
+#define ADDFACTORYPROC(func, owner, type, args) \
+    ADDFACTORY(owner, "*", type, args); \
+    ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+#define ADDNAMEDFACTORYPROC(func, owner, member, type, args) \
+    ADDFACTORY(owner, member, type, args); \
+    ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+#define ADDMATCHPROC(func, owner, args) \
+    ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+#define ADDNAMEDMATCHPROC(func, owner, member, args) \
+    ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+
+// Macro to set the SIGNAL ATTR
+#define RETURNSIGNAL(signal, details) {SETINT(SIGNAL,(signal)); SETSTRING(SIGNAL,(details)); return;}
+
+// Macro to Reset Signal
+#define RESETSIGNAL {SETINT(SIGNAL,SIGNAL_NONE); SETSTRING(SIGNAL, "");}
+
+/* Native method entry supplies the same uninitialized-receiver guard emitted
+ * for Rexx methods. Use this with ADDMETHODPROC/ADDDEFAULTMETHODPROC. Factories
+ * and match functions have no implicit receiver and use PROCEDURE instead. */
+#define METHODPROCEDURE(p) \
+    PROCEDURE(EXPAND_AND_CONCATENATE(_rxpa_method_body_, p)); \
+    PROCEDURE(p) { \
+        if (NUM_ARGS < 1 || !_arg || !ARG0) { \
+            RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "Native method requires a receiver") \
+        } \
+        if (!ISINITIALIZED(ARG0)) { \
+            RETURNSIGNAL(SIGNAL_OBJECT_NOT_INITIALIZED, "Native method receiver is not initialized") \
+        } \
+        EXPAND_AND_CONCATENATE(_rxpa_method_body_, p)(_numargs, _arg, _return, _signal); \
+    } \
+    PROCEDURE(EXPAND_AND_CONCATENATE(_rxpa_method_body_, p))
+
+#endif // CREXX_PA_H_

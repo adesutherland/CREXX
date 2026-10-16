@@ -1,0 +1,6 @@
+PANIC: entry.crexx: entering $MAIN: original-message (SIGNAL INVALID_ARGUMENTS)
+  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/provenance-measure/INVALID_ARGUMENTS.rxas) address 83 (0x53)
+  source: bound-fault.rexx:7:3:   fault
+  called from:
+  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/provenance-measure/INVALID_ARGUMENTS.rxas) address 38 (0x26)
+  source: :0:0: 

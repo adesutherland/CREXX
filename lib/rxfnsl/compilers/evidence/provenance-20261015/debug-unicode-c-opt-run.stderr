@@ -1,0 +1,6 @@
+PANIC: unicode-c.crexx:3:5: RXC-LC-42.3 operator="/" operation="/" value="1" value="0" value="9" (SIGNAL CLASSIC_SYNTAX)
+  at module 47 (RexxClassicBifs) address 3989 (0xf95)
+  source: RexxClassicBifs.crexx:505:15:     assembler signal "CLASSIC_SYNTAX", detail
+  called from:
+  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/compilers/provenance-measure/unicode-c.rxas) address 38 (0x26)
+  source: :0:0: 

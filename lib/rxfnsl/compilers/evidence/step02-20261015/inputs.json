@@ -1,0 +1,57 @@
+{
+  "baseline": "d13a91c1bfe4b47e7164ba16015e2ab00285c322",
+  "branch": "develop",
+  "sources": {
+    "lib/rxfnsl/rexx/llir.crexx": "378553e5459aa79475e171cd8aae8cf2482ba156ad33d235750383c28ec35d0f",
+    "lib/rxfnsl/rexx/llirservices.crexx": "883a7cd0aa10eaf7c5c2f06c9303b1a4c6507440797ec55601597ad543565c54",
+    "lib/rxfnsl/compilers/common/llcrexxir.crexx": "d77b263b62af81a271b647e12a887f2efbdec9fe2a7bb80ce84b0d050b658d55",
+    "lib/rxfnsl/compilers/tests/ir-contracts.crexx": "4bd98bde5a5fcf1e9b872638964019c195367051af2e73e9f794cfb8edced689",
+    "lib/rxfnsl/examples/ir/demo.crexx": "a30c1eaa9adfa46b7b651b3160e995d1917593e71cac70e471a0e748f1429e64",
+    "lib/rxfnsl/tests_functional/ts_llir.crexx": "470ff5fa9f2621c472a4a6efce25f5ca892cc9a6349ebf0b6833b3e7dd2fae71",
+    "lib/rxfnsl/tests_functional/ts_llirservices.crexx": "b1863ba204af5d9e0a5b17855050e6b49cfcdecb770e5ab8ef3f72945f00a5fa",
+    "lib/rxfnsl/CMakeLists.txt": "c2b9dda770c4706e731cce3468a94166bbcf415bc0d074ec12a87fa3113cee2b",
+    "lib/rxfnsl/rexx/CMakeLists.txt": "df5d34754602b1619a5e627fc0585c554becfedf1f56380ec91bec34ec3506ba",
+    "lib/rxfnsl/tests_functional/CMakeLists.txt": "05efa37d2de2f332866933044d6012f0523530380d3c0c77b95f7c629c2b97fc",
+    "lib/rxfnsl/compilers/CMakeLists.txt": "0052d323ff08773bcb142fa2a7a2a95cc86fa5c8b965350db46c441c65714ce3",
+    "tests/performance/levell_ir_storage.crexx": "3dd9591ebcf9758cd8469ecfa8c494c67c90ad1b9f87b4ec15808c1a283d6f58"
+  },
+  "artifacts": {
+    "cmake-build-levell-integration/bin/rxc": "82132cbe5b98c9c17cc66b6fd0d794e0e9560d6cd30f62449c97fa1f2735d421",
+    "cmake-build-levell-integration/bin/rxas": "cb6b0bf96f14615cac4182f26aeacaf9ef419e98c53e8ec8b482103e89f4ebe0",
+    "cmake-build-levell-integration/bin/rxlink": "a63de32a2023fb5a1058880bed5c0dc220746f7c01d99d63168038da3eec7b13",
+    "cmake-build-levell-integration/bin/rxbvm": "6dd90bbf97762d02e8018a3ba75929044d5e7b150589bb204ef3d1b34caf3b7b",
+    "cmake-build-levell-integration/bin/rxtvm": "2e7c75b491e34677a27cc152b002bd2ac990c9479afe8d679f5c6acf3677d045",
+    "cmake-build-levell-integration/bin/crexx": "03e090f9f0847ce81bd0cedfe01dec370d5994b448253b2b5b830c293e999f14",
+    "cmake-build-levell-integration/bin/library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "cmake-build-levell-integration/bin/rxfnsl.rxbin": "dea948e74fe25270de27c31b53580fd74f1592df2e7a25f4b1dea3f38f2e37f8",
+    "build/levell-ir-step02/bootstrap-opt/bin/rxfnsl.rxbin": "393f7216e5742145122c60c6a5239f5edd18b6fafb8e1e5b5e2bf9d1ea7b1af7",
+    "build/levell-ir-step02/bootstrap-opt/tools/bootstrap/L0/levell-linked.rxbin": "f9827a31dfa5e241960b32b1236437fff64c89f19df55b2eae38f475e77daa27",
+    "build/levell-ir-step02/bootstrap-opt/tools/bootstrap/L1/levell-linked.rxbin": "6a37581fa279d6f919a6d30c03e9fd429286745777e6744a43c619ecd1676cbc",
+    "build/levell-ir-step02/bootstrap-opt/tools/bootstrap/L2/levell-linked.rxbin": "2710fde4b8d082357137d9cbce94a76aee8f6b02da1200200aae4bfdf4343637",
+    "build/levell-ir-step02/bootstrap-noopt/bin/rxfnsl.rxbin": "6e610f37852651523718141de78e78b0b0ae613e79ce82468acf15f82afa43a1",
+    "build/levell-ir-step02/bootstrap-noopt/tools/bootstrap/L0/levell-linked.rxbin": "2841a1bba2e393e86b1616b5d1468476c126dfdde69e688b58bd5f175c26a1a4",
+    "build/levell-ir-step02/bootstrap-noopt/tools/bootstrap/L1/levell-linked.rxbin": "8338aa1f75f1ea2a2956442f6284814e385868e5fe2a4259f0510c8541c74804",
+    "build/levell-ir-step02/bootstrap-noopt/tools/bootstrap/L2/levell-linked.rxbin": "d99c5196cae5f51ca9da21a86302a634d9a78f4508b02e63918b9437867a0a83"
+  },
+  "native_input_boundary": "Product build uses the current checkout including pre-existing assembler/rxasassm.c and tests/CMakeLists.txt edits. STEP02 made no C changes. Embedded configured build banner is older than this baseline; hashes identify tested inputs.",
+  "unrelated_tracked": {
+    "assembler/rxasassm.c": "e001e0160e8668c4b92562b9ace74e82bcf0bd199759a82686d8c56f1b35999d",
+    "docs/ai-context/RXAS_ASSEMBLER.md": "83bf3f6ed90d5d498f88ff4cc2cd22826b6062f1f00000bdbce9194283404459",
+    "ports/single-threaded/mainframe-batch-pack.crexx": "b80a72b58a8e7787f9ff88836b5e49f1840dfb6fb4fc8698e2499b0df53bd21b",
+    "tests/CMakeLists.txt": "875dc811a2fd61c98d783ce81e94ee921d3f7ad996ff9cc9af2ef7d472844cd5"
+  },
+  "logs": {
+    "qualification.log": "d77509c06befb44ec8ce46865ba4d7636496db10084ed6135ff53867a8ac4bd5",
+    "bootstrap.log": "a11aef783a6f591266bed5831c6fab01a554ad2d684a2865aced9bd650355dd1"
+  },
+  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83\n",
+  "generator": "Ninja",
+  "product_mode": "Debug; ordinary compiler and assembler optimisations enabled except named noopt consumers; linked tests use rxlink -s",
+  "commands": [
+    "cmake --build cmake-build-levell-integration --parallel 10",
+    "cmake --build cmake-build-levell-integration --parallel 4",
+    "ctest --test-dir cmake-build-levell-integration -R \"^(ts_llir|llcompiler_ir_)\" --output-on-failure --parallel 4",
+    "ctest --test-dir cmake-build-levell-integration -R \"^(ts_llast_|ts_llanalysis_|ast_|ts_llflow_|ts_llstructuredflow_|ts_llcondition|ts_lllower|ts_llorigins_|levell_generated_|ts_tinyexpr)\" --output-on-failure --parallel 10"
+  ]
+}

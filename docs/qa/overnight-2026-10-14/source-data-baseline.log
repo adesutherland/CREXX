@@ -1,0 +1,19 @@
+Source data evidence: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-source-data-qlcpir78
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/source_data_contract.py", line 73, in <module>
+    assert compile_run('imported', source) == b'i\x00m\n'
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/source_data_contract.py", line 37, in compile_run
+    run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         '-o', output, path])
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/source_data_contract.py", line 28, in run
+    raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
+                         + output[-12000:].decode(errors='replace'))
+AssertionError: ['/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc', '-i', '/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-source-data-qlcpir78/imported', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-source-data-qlcpir78/imported.crexx']: exit 2; /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-source-data-qlcpir78/command-6.log
+Warning in imported.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., "source_provider"
+1 warning(s) in source file
+Error in imported.crexx @ 3:5 - #FUNCTION_NOT_FOUND: Function was not found., "get_text"
+1 error(s) in source file
+

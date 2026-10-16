@@ -1,5 +1,89 @@
 # Level L language tooling research — 10 October 2026
 
+### cREXX C/G compilers and shared IR — STEP05 review, 15 October 2026
+
+Adrian requested a documented plan for separate new C/G compilers written
+entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
+The authoritative compiler subprogramme is
+[`lib/rxfnsl/compilers/PLAN.md`](../../lib/rxfnsl/compilers/PLAN.md).
+It owns `LLCOMP-AC01–16` and `LLCOMP-STEP01–10` (including `STEP07B`), the proposed directory layout,
+two-frontend PoC, full migration, INTERPRET and eventual replacement gates.
+
+The new source-to-RXAS pipeline must not delegate to the C-language compiler
+backend. Adrian clarified that the native Level B compiler remains only the
+seed: build L, then the proper cREXX B compiler, then rebuild/verify the B/L
+closure before building the downstream G and C compiler hosts. AC02 and STEP07B
+now include that self-hosting destination. The proposed C compiler host depends
+only on B/L, while the existing Classic target-runtime package's G dependency
+is tracked separately. Old compilers remain independent test controls until
+replacement is qualified and approved.
+The extensible IR, schemas, storage, views and generic graph/analysis/emission
+services belong to Level L. C/G operation/type extensions and their complete
+language semantics belong in the separate compiler subtree. This supersedes the
+earlier conversational suggestion of using a C-backend adapter for the PoC.
+
+**Status:** Adrian approved the STEP01 design and authorised STEP02.
+The [review packet](../../lib/rxfnsl/compilers/doc/STEP01-REVIEW.md) now defines
+POC-01–10, purposeful C/G source trees, the Level L IR and extension API,
+processing algorithms and bootstrap ownership. Six source controls passed with
+existing tools on both VMs; their exact evidence boundary is recorded.
+STEP02 now implements the Level B-only IR and semantic services, including SAY
+registrations and a worked folding example. Its [local qualification receipt](../../lib/rxfnsl/compilers/evidence/step02-20261015/README.md)
+records checked schemas, numeric storage/codecs, facts, flow analysis, semantic
+callbacks, replacement/lowering and chunked output. Adrian authorised the
+qualified STEP02 increment and existing baseline for publication to `develop`
+on 15 October 2026; hosted results are reported separately by the CI monitor.
+Adrian subsequently approved STEP03. Both generated source frontends and their
+Level B semantic mapper/import-contract reader are now locally qualified at the
+source-to-IR boundary. The [STEP03 receipt](../../lib/rxfnsl/compilers/evidence/step03-20261015/README.md)
+records the product build, 24 frontend and 128 existing CTests, B-only bootstrap
+modes and full no-opt frontend delivery. Syntax errors and messages have explicit
+coverage, and the walkthrough now contains generated trees/IR. Publication was
+authorised together with the focused CI preparation repair on 15 October 2026;
+STEP04 subsequently delivered the Level B backend using the Level L writer;
+the subplan retains its functional, provenance and product-stage repair
+receipts. STEP05 optimisation and its bounded code-quality follow-through are
+locally qualified; STEP06 complete PoC qualification and the full STEP07–10
+destination remain open.
+This advances the foundation portions of
+AST-AC02–06 and research AC-26; it does not mark their remaining migration or
+measurement obligations complete. Existing implementation approvals and AST7
+qualification remain as recorded below.
+
+Adrian also requires architecture, purposeful tree/graph schemas, supporting
+structures and processing algorithms to be documented alongside each increment.
+`LLCOMP-AC15` makes that a delivery requirement with a runnable paired C/G
+walkthrough and explicit ownership, invariant and algorithm contracts.
+
+The subplan records the implemented numeric IR foundation: checked handles over compact
+indexed storage, exact constant/name pools, sparse analysis tables and readable
+text/structured views. STEP02 retains fixed-width row records after a bounded
+row/column comparison and implements checked text/binary codecs. AST storage is
+unchanged; representative compiler performance remains an open criterion.
+
+The [STEP05 review](../../lib/rxfnsl/compilers/doc/STEP05-REVIEW.md) was approved
+on 15 October. Adrian accepted the cleanup's
+[first Release verdict](../../lib/rxfnsl/compilers/evidence/step05-cleanup-20261015/README.md).
+Shared passes and local qualification are complete; the [receipt](../../lib/rxfnsl/compilers/evidence/step05-20261015/README.md)
+verifies F5-AC01–08. Adrian authorised STEP05 develop publication and monitor
+handover on 15 October; hosted outcomes remain separate. The subplan now also
+records the STEP06 bounded qualification approved on 15 October: reuse valid
+evidence, close C/G PoC coverage gaps, keep all compiler logic Level B, and
+update architecture and user guidance. F6-AC01–06 are locally qualified for
+the agreed PoC; [receipt](../../lib/rxfnsl/compilers/evidence/step06-20261015/README.md).
+The parallel-Make preparation finding is repaired with a permanent regression
+and byte-identical real-tool rebuilds; [receipt](evidence/bootstrap-order-20261015/README.md).
+Full replacement/platform gates remain open. STEP06 develop publication and
+monitor handover are authorised; STEP07 is proposed for review only. Its F6 criteria remain the authority. Adrian then
+clarified that formal performance testing is not required for Level L research;
+root `AGENTS.md` records this scoped exception. Functional, resource and emitted
+code-quality acceptance remain. This increment uses both compiler examples to
+improve Level L: checked batch rewrites, shared indexed analyses/passes and
+reusable source-coordinate lookup. Generic tests use a non-C/G family; C/G
+semantics and RXAS ABI policy stay in the compiler. The existing chunked writer
+is retained. F5-AC01–08/F5-STEP01–04 in the subplan own this bounded increment;
+no duplicate implementation plan or broader redesign is introduced here.
+
 ### Authoring and build refinements — approved 13 October 2026
 
 **Vision:** make a Level L language module a normal part of a cREXX project.
@@ -99,12 +183,391 @@ This repairs the observed regression without increasing user budgets.
    commands, 13 packaging unit tests and 80 valid guide links. Wider research
    and host-platform qualification criteria below remain unchanged.
 
-### Next-stage recommendation — AST infrastructure, proposed 13 October 2026
+### AST infrastructure — implementation approved 13 October 2026
 
-**Status:** proposal for Adrian's review; no new AST syntax or implementation is
-approved by this entry. The authoring publication above is independent of this
-decision. This advances LANG-AC04/09/10/12/13 and research AC-26 without replacing
+#### Progressive AST services — approved 15 October 2026
+
+**Vision:** build on the checked structured-flow and owned-AST services so an
+application can supply justified condition facts, lower richer syntax into a
+validated simpler tree, and retain reliable source origins through generation
+and recovery. Ordinary grammars keep their current surface. These are language
+engineering services implemented in Level B, with examples showing application
+semantics separately from library guarantees. Adrian requested sequential
+implementation, commit and publication of steps 1–3 after each step passes.
+
+**Acceptance criteria — open until individually verified:**
+
+1. **AST7-AC01 — Condition facts.** Optional true/false facts are bound to one
+   immutable tree, carry a reason, reject contradictions/foreign or stale owners
+   and obey a counted budget. Absent facts mean unknown. Flow consumes a sealed
+   fact set, excludes only impossible outcome edges, and preserves expression
+   evaluation, writes, short-circuiting and loop behavior. Independent tests
+   cover constant and unknown cases, witnesses and lifecycle failures. Document
+   the conditional soundness argument; supplying a reason is not a theorem proof.
+2. **AST7-AC02 — Checked lowering.** A children-first pass can construct a
+   different declared target schema, combine completed children and publish only
+   a complete validated result. Missing translations, invalid fields/counts,
+   sharing, stale/foreign handles and resource exhaustion fail atomically.
+   A compiler-shaped example lowers a higher-level control construct and tests
+   its observable flow against an independent original-language control.
+3. **AST7-AC03 — Origins and recovery.** Exact, composite, derived, synthetic
+   and recovered origins have validated contracts and useful diagnostic anchors.
+   Recovery exposes an explicitly marked owned AST with original-byte damage
+   records, while ordinary strict parsing and script execution remain guarded.
+   Copies and lowering preserve recovery information; generated nodes cannot
+   silently turn recovered input into a clean tree. Verify Unicode/CRLF/empty
+   spans, original diagnostics, lifetime checks and applicable parser backends.
+4. **AST7-AC04 — Progressive delivery.** Each step includes runnable examples,
+   manual/reference updates, mathematical scope/bounds and permanent focused
+   regressions. Product build, relevant correctness, both VMs/optimization modes,
+   Level B bootstrap and installed use pass for affected inputs. Retain exact
+   qualification identities; commit only this work directly on synchronized
+   develop and verify its pushed SHA. Automatic hosted CI remains a separate
+   result; inspect it lightly and fix actionable failures without broad dispatch.
+
+**Implementation steps:**
+
+1. **AST7-STEP01 (AC01/04):** implement optional condition facts and their graph
+   integration; qualify and publish. Keep default graph behavior unchanged.
+2. **AST7-STEP02 (AC02/04; after STEP01):** implement target-schema lowering and
+   a worked control-flow translation with explicit structural and semantic
+   checks; qualify and publish separately.
+3. **AST7-STEP03 (AC03/04; after STEP02):** add synthetic/recovered source-origin
+   contracts and integrate the existing bounded recovery service; qualify and
+   publish separately. Keep broader emitter and production migration work open.
+
+**Delivery gate:** “green” before each publication means the successful product
+build and focused functional/installed checks required by AGENTS.md. Retain
+unchanged valid evidence rather than rerunning broad suites. Normal Build CREXX
+and CodeQL run automatically after each push; actual hosted results are reported
+separately. No release tag, overnight dispatch or arbitrary proof solver is
+included. The unrelated build directory and mainframe lock files are preserved.
+
+**Status:** AST7-STEP01 and AST7-AC01 are complete and published. Evidence:
+[`ast-conditions-20261015`](evidence/ast-conditions-20261015/README.md): product
+build, 36 unchanged controls, 16 new matrix tests, both Level B bootstrap modes,
+34 no-opt delivery commands and 12 fresh installed checks. Step 1 was published as `26339d2f01fb379fdd4f51bb4be9255d4d562494`.
+AST7-STEP02 and AST7-AC02 are locally complete, with evidence in
+[`ast-lowering-20261015`](evidence/ast-lowering-20261015/README.md): product build,
+20 existing controls, 16 lowering tests, bootstrap parity and 54 delivery
+commands. Step 2 was published as `8448fc03d6131606c14cf71c60855f163f30a759`.
+AST7-STEP03 and AST7-AC03 are locally complete and delivered by this third
+separate publication. Evidence:
+[`ast-origins-20261015`](evidence/ast-origins-20261015/README.md): successful product
+build, 112 distinct focused CTests, 160 recovery scenarios, both bootstrap modes,
+34 no-opt delivery commands and 12 installed checks. AST7-AC04 is complete for
+this three-increment local qualification and publication scope; hosted results
+remain separately observable on GitHub. No wider production migration is claimed. All three requested increments have
+satisfied their local delivery gates. Hosted workflow outcomes are reported in
+the conversation, without a status-only commit.
+
+#### Structured loops and exits — approved 14 October 2026
+
+**Vision:** describe ordinary language control flow with a small set of mappings
+from named AST fields, and explain which reads may occur before assignment.
+Loops, early exits and short-circuit expressions must compose correctly, with
+source-linked paths and a checked reachability query. The same Level B services
+serve every admitted parser backend. This increment preserves the existing
+grammar → AST → flow separation and the wider AST programme below.
+
+**Approved surface:** `loop while condition do body`, `loop do body until
+condition`, `loop do body`, `break`, `continue`, `return value` (a required or
+optional child), bare `return`, `shortcircuit left and right`, and `shortcircuit
+left or right`. Break/continue target the nearest enclosing loop; return exits
+the analysed root. `result.before(node).reachable()` reports reachability in
+the constructed graph. Conditions remain source-linked ASTs. Consuming constant
+or proof facts to remove branches is a later increment. Adrian approved local
+implementation on 14 October and commit/push to develop on 15 October 2026.
+
+**Numbered acceptance criteria — locally verified:**
+
+1. **AST6-AC01 — Surface and checks.** All three readers accept the approved
+   forms. Located diagnostics reject unknown fields, wrong child counts,
+   incomplete mappings and invalid qualifiers. Existing grammars still work.
+2. **AST6-AC02 — Composed control.** Pre-test, post-test and unconditional loops,
+   nested break/continue, optional return values and short-circuit outcomes
+   produce the intended graph. Abrupt exits cannot reach following statements.
+   Invalid jump placement fails with the source kind and location.
+3. **AST6-AC03 — Analysis.** Definite assignment and reachability agree with
+   independent path controls, including zero iterations, returning branches,
+   skipped operands and cycles. Diagnostics identify the original read and an
+   actual path without assignment. Stale views and exhausted budgets expose no
+   partial answers. Record termination and storage/work bounds for cyclic graphs.
+4. **AST6-AC04 — Delivery and teaching.** Add a worked example and prebuilt
+   runtime regressions across LL(1), LR(1), PEG and Earley, both VMs and consumer
+   optimization modes. Check source/RXAS providers, Level B bootstrap in both
+   modes and installed wrapper use. Update the manual's grammar/AST/flow
+   walkthrough, flow reference and API, and retain qualification inputs/results.
+
+**Numbered implementation steps:**
+
+1. **AST6-STEP01 (AC01):** extend the shared reader, self grammar and schema
+   checks; preserve generated source and packed-table service contracts.
+2. **AST6-STEP02 (AC02/03; after STEP01):** build loop targets and distinct
+   short-circuit outcomes iteratively; add checked reachability and diagnostics.
+3. **AST6-STEP03 (AC01–03; after STEP02):** add independent path controls,
+   placement/lifecycle/budget regressions and the cyclic analysis argument.
+4. **AST6-STEP04 (AC04; after STEP03):** qualify the toolchain and installed
+   example, finish the guide and record evidence. Leave wider AST obligations
+   and constant-aware analysis explicitly open.
+
+**Status: AST6-AC01–04 and AST6-STEP01–04 locally verified, 14 October 2026.**
+Adrian authorized direct commit/push to `develop` on 15 October 2026. The
+publication base is `9c790a5cb4aa25b04166d30d1c9479d24a9722b0`, which already
+contains the separate mainframe/VM input-failure work. Level L source/test hashes
+remain unchanged. A current product rebuild, 18 focused CTests and 12 refreshed
+installed-wrapper checks pass; the unchanged wider qualification is retained.
+The enclosing commit is the publication payload. Normal automatic CI is expected
+to pass; its actual result is reported in the conversation without a status-only
+commit. Evidence and exact input identities are retained in
+[evidence/ast-structured-flow-20261014](evidence/ast-structured-flow-20261014/README.md).
+
+| Criterion | Verification |
+|---|---|
+| AST6-AC01 | 112 completed surface commands include valid source/RXAS stage parity and 39 exactly located semantic refusals; 12 small malformed probes pass at L0/L1/L2. A missing seed field now reports EOF instead of line 0. |
+| AST6-AC02 | All loop forms, nearest nested jumps, returns and distinct short-circuit outcomes pass on LL(1), LR(1), PEG and Earley, in both consumer modes and VMs. |
+| AST6-AC03 | Independent 16-case cyclic path controls, zero-iteration/return/short-circuit cases, exact witness text, lifecycle and exhaustive insufficient graph allowances pass. AST-CONTRACT.md records construction invariants, finite convergence and resource bounds. |
+| AST6-AC04 | All 64 selected CTests pass; focused reader repair tests pass afterward with unchanged flow bytecode/providers. Both Level B modes have identical L1/L2 syntax output; 34 unoptimized-service checks, nine focused bootstrap checks and 12 final installed checks pass. Recovery passes 24 candidate and 12 preservation cases. The manual, example, reference and links are checked. |
+
+The self grammar factors common name alternatives and explicitly selects the
+existing LL(1) backend, preserving its terminal syntax without increasing user
+resource defaults. Full malformed-example fixtures were reduced after the
+completed surface panel; broad recovery already had independent coverage.
+The final reader-only repair reuses unchanged flow/runtime evidence and has its
+own focused probes and installed readback. Wider AST acceptance criteria remain
+open as recorded below; constant/proof-aware pruning was not part of this step.
+
+#### Sparse properties and simple flow analysis — approved 14 October 2026
+
+**Vision:** attach typed, sparse application information to an immutable AST,
+with declared scalar defaults and familiar named accessors; describe execution
+order separately from tree shape and obtain a checked definite-assignment
+result. A small rules-language example teaches the complete path from grammar
+to diagnostics. These are general language-engineering services built in Level
+B, independent of the selected parser and of RexxScript execution policy.
+
+**Approved surface:** `notes: properties` followed by `message: property .string
+default ''` and `priority: property .int default 0`; generated `getmessage()`,
+`hasmessage()` and `setmessage()` (Adrian's naming correction). Groups borrow
+their tree; `finish()` publishes a checked frozen result. `execution: flow`
+contains kind-labelled `sequence`, `assign`, `branch ... then ... else ...`,
+`evaluate`, `read` and `value` mappings. Indentation remains formatting: a
+properties group owns successive property declarations; a flow group owns
+successive operation declarations. A different declaration ends the group.
+Required AST children keep their structural checks. Collection defaults and
+new language control constructs are outside this increment.
+
+**Numbered acceptance criteria:**
+
+1. **AST5-AC01 — Authoring.** Located checks reject duplicate/unknown properties,
+   invalid literal defaults, unknown kinds/fields, wrong cardinalities and
+   incomplete flow mappings. L0/L1/L2 accept the same valid surface and reject
+   invalid semantic fixtures. Existing basic grammars remain unchanged.
+2. **AST5-AC02 — Sparse properties.** Unset getters return defaults without
+   inserting entries; `has...()` distinguishes explicit default values. Typed
+   writes, freeze, exact/exhausted budgets, stale/foreign/copied/rewritten trees
+   and expired group views are checked. Failed groups publish no usable data.
+3. **AST5-AC03 — Flow.** Validated mappings build a finite source-linked graph
+   with evaluation before assignment, ordered sequence, two branch successors
+   and correct joins including an absent ELSE. Unsupported node effects cannot
+   silently become pure. Resource and ownership failures are atomic.
+4. **AST5-AC04 — Definite assignment.** Entry variables, reads, assignments and
+   joins agree with independent path controls. Results distinguish an analysis
+   failure from a completed result containing unsafe reads. Explain diagnostics
+   with an actual unassigned path. Record the finite monotone domain, transfer
+   equations, termination and resource bounds; do not claim arbitrary program
+   equivalence or richer loop-language support.
+5. **AST5-AC05 — Delivery.** Source and packed RXAS generation, applicable parser
+   backends, Level B bootstrap, both VMs, optimized/unoptimized consumers and
+   installed wrapper use are checked. Add a worked example, runtime regressions,
+   precise negative diagnostics, user-guide/API documentation and proof notes.
+   Preserve all wider AST-AC01–06 obligations.
+
+**Numbered implementation steps:**
+
+1. **AST5-STEP01 (AC01/02):** add property contracts, checked sparse storage and
+   typed generated accessors, extending the shared reader and bootstrap syntax.
+2. **AST5-STEP02 (AC01/03):** check flow mappings against inferred AST schemas;
+   construct the standard graph iteratively with source-node references.
+3. **AST5-STEP03 (AC04):** implement bounded definite assignment and explanatory
+   diagnostics; validate independently enumerated branch paths and failure states.
+4. **AST5-STEP04 (AC01–05):** qualify both generation formats/backends/toolchain,
+   add the complete example, and update the manual and structural contract.
+
+**Status: AST5-AC01–05 and AST5-STEP01–04 locally verified, 14 October 2026.**
+The [evidence record](evidence/ast-properties-flow-20261014/README.md) retains
+exact input identities, commands, results and the two repaired boundary
+findings. Adrian authorized commit/push to `develop` and light CI monitoring on
+14 October. Before publication the checkout was synchronized through
+`0dc462b6d70f2bdca69827c811dedb5e2ae18ea8`. All 13 qualified implementation/test
+inputs and eight recorded tool/library images still matched their hashes.
+The incoming change only adjusts wrapper directory reuse; the product rebuild
+and 12 fresh installed-wrapper checks passed after integration. The enclosing
+commit is the publication payload. Final whitespace cleanup affected one Python
+test line and two retained log copies; Python AST equality and both hashes are
+recorded, so the existing test evidence remains valid. Normal automatic CI is expected to pass;
+actual results are reported in the conversation without a status-only commit.
+
+| Criterion | Verification |
+|---|---|
+| AST5-AC01 | 16 invalid grammar fixtures agree at L0/L1/L2 with exact line, byte and message; two generated-API compile refusals; existing basic-parser tests pass. |
+| AST5-AC02 | Defaults, explicit default values, typed updates, freeze, entry limits and all owner/view lifecycle cases pass in source and packed providers. A rejected stale view leaves its replacement group usable. |
+| AST5-AC03 | All six execution roles, optional ELSE, joins and ordered Pratt evaluation pass. Every smaller graph allowance is refused cleanly; the exact allowance succeeds. |
+| AST5-AC04 | Independent four-path controls over 16 write configurations agree; exact/exhausted state/work budgets, diagnostic locations and path witnesses pass. The finite-domain proof and resource bounds are recorded in AST-CONTRACT.md. |
+| AST5-AC05 | Product and standalone unoptimized Level B builds pass; L1/L2 output agrees across both modes. All 16 new CTests pass, with 34 unchanged relevant passes retained. The surface panel passes 200 commands and the delivery panel 46; installed combined/separate builds and the worked manual example pass. |
+
+The earlier acyclic STEP04 delivery remains verified. This increment adds
+sparse annotations and definite assignment for the reviewed structured flow
+profile. Wider cyclic-language mappings, grouping/lowering, recovered origins
+and production compiler migration remain open below.
+
+#### AST-STEP04 first increment — locally qualified
+
+**Vision:** exercise the common AST in a real script engine, remove positional
+tree plumbing from expressions, assignment, SAY and IF, and make reusable
+analysis and checked constant folding available without adding grammar syntax.
+The enclosing sequence/block/loop wiring uses named fields where required
+to carry this slice; loop algorithms, language rules, BIF effects and Level G
+numeric behavior remain application policy. This is the approved acyclic
+increment of STEP04, not closure of the later cyclic-analysis or recovered-origin
+work. Adrian authorized publication of this increment on 14 October 2026.
+
+**Acceptance criteria for this increment:**
+
+1. **AST4-AC01 — Migration.** RexxScript executes the named AST for expressions,
+   assignment, SAY and IF. Existing language acceptance, values, branch and
+   short-circuit behavior, BIF order/effects and source diagnostics agree with
+   the retained pre-migration implementation. Existing loops, return and
+   control validation continue to work around the migrated slice.
+2. **AST4-AC02 — Analysis.** A Level B children-first service records one
+   application-defined result per node, reads only completed dependencies and
+   publishes only a complete result. Wrong-tree, expired-owner, missing/future
+   dependency, incomplete pass and resource failures have explicit tests.
+   Rewritten/copied trees cannot consume another tree's facts accidentally.
+3. **AST4-AC03 — Meaning-preserving fold.** RexxScript analysis reports known
+   constants and conservative variable reads/effects. Folding calls the same
+   scalar operations as execution, preserves types and exact representable
+   values, never invokes BIFs, and leaves failing/unsupported computations for
+   execution. Folded and ordinary execution agree on results, output, state,
+   effects and reachable-error locations; input ASTs remain usable.
+4. **AST4-AC04 — Structure and limits.** Checked one-pass reconstruction is
+   finite, source ranges survive replacements, and failed analysis/rewrite
+   publishes no partial result. Cover deep/wide/empty trees, fresh runs,
+   cancellation and bounded interpreter work; record the structural proof and
+   separate it from application-equivalence evidence.
+5. **AST4-AC05 — Integration and teaching.** Level B bootstrap, normal product,
+   both VMs, opt/noopt focused tests and installed RexxScript/Level L examples
+   pass. The guide explains the analysis-to-rewrite pipeline and a complete
+   worked example. Preserve wider AST-AC01–06 obligations above/below.
+
+**Implementation steps:**
+
+1. **AST4-STEP01 (AC01/03):** retain the current interpreter as a differential
+   control; map existing grammar rules with captures and `then tree`, preserving
+   recognition and keeping the ordinary source surface unchanged. **Complete.**
+2. **AST4-STEP02 (AC02/04):** implement tree-owned result tables and checked
+   children-first analysis, with lifecycle, dependency and budget regressions.
+   **Complete.**
+3. **AST4-STEP03 (AC01/03/04):** migrate named-field execution and add RexxScript
+   facts and checked folding, sharing numeric/literal operations. Depends on
+   STEP01/02; unsupported or non-round-trippable constants remain unchanged.
+   **Complete.**
+4. **AST4-STEP04 (AC01–05):** compare against retained controls and unfolded
+   execution, qualify affected builds/tests and installed use, and update the
+   guide, contract and evidence. New tests should be prebuilt direct VM tests,
+   not nested aggregate builds. Keep subsequent analysis profiles visibly open.
+   **Complete.**
+
+**Increment status:** AST4-AC01–05 and AST4-STEP01–04 are verified locally on
+macOS ARM64 Debug, based on develop `50926edb8`. Adrian authorized commit/push
+to `develop` and light CI monitoring on 14 October. Before publication the
+checkout was synchronized through `60f58c0a9`; all 20 recorded inputs still
+matched their qualification hashes. Incoming changes concern separate test
+fixtures, their evidence and Apple packaging retries. The enclosing commit is
+the publication payload; only publication documentation changed after those
+checks. [Qualification and exact inputs](evidence/ast-step04-20261013/README.md)
+retain the results and publication reconciliation. Normal automatic CI is
+expected to pass; actual results are reported in the conversation, without a
+status-only commit. The unchanged Level B bootstrap contract is preserved.
+
+| Criterion | Verification |
+|---|---|
+| AST4-AC01 | Existing 60-case RexxScript suite on both VMs; 28 exact command-line comparisons with the retained pre-migration interpreter; named-field execution review. |
+| AST4-AC02 | Dedicated analysis tests cover dependencies, exact/exhausted budgets, early/double finish, missing/duplicate facts, expired/copied/rewritten/reassigned owners and current-cursor access. |
+| AST4-AC03 | 40 new cases compare folded and ordinary output, state, scalar types/values, float bits, short-circuit effects and exact error strings; exact-float and integer replacement shapes checked. |
+| AST4-AC04 | Existing empty, 1,000-item and 2,000-wrapper AST controls; atomic rewrite/analysis failures; source anchors; fresh executions, cancellation and fuel controls; updated structural contract. |
+| AST4-AC05 | Warning-free product; four equal opt/noopt L1/L2 self-descriptions; both VMs and compiler modes; 267 AST surface observations plus 51 unoptimised capture/diagnostic observations; eight installed commands; updated guide and example. |
+
+**Previous delivery:** the reviewed first AST surface is implemented and locally qualified
+on macOS ARM64, based on synchronized develop `ec481f8e6`. It includes attached
+mappings, inferred field contracts, owned trees, reference handles, iterative
+walks, checked one-pass reconstruction, calculator/folding and settings examples.
+[Qualification and scope](evidence/ast-20261013/README.md) retain the results and
+identities. Adrian authorized commit/push to `develop` and light CI monitoring
+on 13 October. The enclosing commit is the publication payload; its qualified
+code and test inputs are unchanged. Normal automatic CI is expected to pass,
+with actual results reported in the conversation rather than a status-only
+commit. This advances LANG-AC04/09/10/12/13 and research AC-26 without closing
 their wider obligations.
+
+**Cumulative criterion status:**
+
+| Criterion | Verified here | Still open in the wider criterion |
+|---|---|---|
+| AST-AC01 | Simple attached mappings; named text/child fields; required, optional and list counts; located refusals; settings/calculator | None for the reviewed inferred-schema surface. |
+| AST-AC02 | Independent owned results; borrowed handles; request release; exact/composite/derived/synthetic/recovered source ranges; owned damage records; Unicode; stale/foreign-handle rejection; sparse typed properties/defaults; counted budgets | Broader migration measurements. |
+| AST-AC03 | Iterative walks; field/list access; application folds; checked reconstruction; empty/deep/wide/malformed/shared inputs; atomic failure; opt/noopt and both VMs; explicit traversal bounds | General search/fold convenience services and the wider builder/grouping profiles. |
+| AST-AC04 | Schema-checked one-pass rewrites; acyclic application facts; owner/snapshot invalidation; checked RexxScript constant folding with exact numeric round trips and diagnostic anchors; checked structured flow, loops/exits/short-circuit outcomes, finite definite assignment and reachability with path witnesses | Broader application-specific analysis and production migration. Condition facts and the checked Unless-to-If lowering are verified by AST7-STEP01/02. |
+| AST-AC05 | Equivalent admitted AST fixtures across general backends; Pratt/LR/Earley expressions; composite settings; explicit ambiguous/failed refusal; named RexxScript slice, effects/control/error comparisons and retained pre-migration control; recovered-origin integration including LR/Pratt regions | Broader language and production migration corpus. |
+| AST-AC06 | Level B bootstrap in both optimization modes; identical L1/L2 output; installed combined/library builds; progressive manual | Production migration work; the compiler-shaped Unless lowering example is verified by AST7-STEP02. |
+
+AST-STEP02/03 and the first-delivery portion of AST-STEP05 are complete within
+the scope above. The acyclic RexxScript increment of AST-STEP04 is implemented;
+its local integration gates are verified above. Restricted cyclic definite
+assignment and reachability are verified by AST6-AC03. Optional condition facts,
+checked target-schema lowering and recovered origins are verified by AST7-AC01–04.
+General convenience algorithms and production migration measurements stay open.
+The complete AST infrastructure programme is not being marked complete.
+
+**Approved first surface:**
+
+```rexx
+program: rule = (statement as item)*
+  then tree (items = item*)
+sum: infix arithmetic plus precedence 10 left
+  then tree Add(left = left, right = right)
+```
+
+- The enclosing label supplies the default AST kind; an explicit kind renames
+  it. Indentation is formatting, not scope. Named captures supply ordinary
+  fields; operator declarations supply left/right/inner operand roles.
+- Text fields retain spelling; application code chooses numeric conversions.
+  `*`, `+` and `?` describe ordered lists and optional fields. Construction is
+  separate from recognition and occurs only for a successful selected parse.
+- Walks offer parents-first and children-first order. A children-first rewrite
+  exposes rewritten children to their parent, visits each original node once,
+  and does not recursively revisit replacement nodes. It preserves its input
+  and publishes only a checked complete result, with origins retained.
+- The worked calculator demonstrates this surface, constant folding in ordinary
+  Level B, and original-source diagnostics. Basic grammars need no AST schema.
+  The first schema is inferred from mappings; richer explicit schema and
+  multiple-projection syntax remain design extensions to review, not silently
+  accepted additions to the source language.
+- Regional component wrapper mappings are rejected with `LL_AST_REGION`, because
+  that wrapper is absent from the grafted result. Token/infix/prefix and enclosing
+  parser-rule mappings remain available; the checker never silently drops a
+  requested wrapper mapping. This admission boundary is documented and tested.
+
+**Implementation sequence for this delivery:**
+
+1. AST-STEP02: mapping grammar/lowering, inferred field contracts and generated
+   definitions; retain L0/L1/L2 bootstrap parity (AST-AC01/02/06).
+2. AST-STEP03: owned result storage, small reference handles, iterative walks,
+   checked builders and one-pass reconstruction (AST-AC02/03/04).
+3. AST-STEP05: calculator and settings examples, positive/negative backend,
+   ownership, origin and rewrite regressions, installed build and guide evidence
+   (AST-AC01–06). **Verified for the first-delivery scope above.** The wider analysis/grouping/RexxScript criteria below stay
+   individually visible; completing this delivery is not their automatic proof.
 
 **Vision and intended outcome:** let a language author turn a successful parse
 into useful application nodes with named fields and lists, then inspect, check
@@ -124,7 +587,7 @@ A new parser should follow a concrete grammar, diagnosis or resource need that
 the current portfolio cannot meet. Pika and Squirrel remain research work;
 there is no proposed change to their support status here.
 
-**Proposed contracts for review:**
+**Infrastructure contracts:**
 
 - Keep the ordinary named tree and captures useful without a schema. An optional
   AST declaration defines named node kinds, required/optional fields and ordered
@@ -153,7 +616,11 @@ there is no proposed change to their support status here.
   Preserve the Level B bootstrap; production rxc/rxas frontend migration remains
   a separately approved programme.
 
-**Numbered acceptance criteria — proposed and open:**
+The implemented count analysis, traversal bounds, ownership rules and rewrite
+transaction are described in [AST-CONTRACT.md](AST-CONTRACT.md). In particular,
+finite structural reconstruction does not prove arbitrary application semantics.
+
+**Numbered acceptance criteria — open until verified:**
 
 1. **AST-AC01 — Shape and simple authoring.** A basic grammar still works without
    AST declarations. Optional schemas express named required/optional fields and
@@ -188,11 +655,12 @@ there is no proposed change to their support status here.
    builder/validator example. Record the remaining cREXX AST/proof migration
    work without claiming a production compiler migration.
 
-**Numbered implementation steps — proposed:**
+**Numbered implementation steps:**
 
 1. **AST-STEP01 (AC01–06):** inventory the product and research tree contracts;
    present small before/after surface examples, ownership rules and diagnostics.
-   **Decision gate:** Adrian approves the AST/API shape before implementation.
+   **Verified:** Adrian approved the calculator walkthrough and attached
+   `then tree` form before requesting implementation. See decisions above.
 2. **AST-STEP02 (AC01–03/06):** implement the reviewed schema, owned storage,
    builders, fields/lists and provenance, retaining existing parse views.
    Depends on STEP01; qualify settings and calculator first.

@@ -1,0 +1,718 @@
+{
+  "mode": "opt",
+  "vm": "rxbvm",
+  "seconds": 109.228,
+  "empty_path": true,
+  "commands": [
+    {
+      "label": "views-c",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/backend-poc-linked.rxbin",
+        "-a",
+        "c",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c"
+      ],
+      "status": 0,
+      "seconds": 6.191
+    },
+    {
+      "label": "walk-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.705
+    },
+    {
+      "label": "walk-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.054
+    },
+    {
+      "label": "walk-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.53
+    },
+    {
+      "label": "walk-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.122
+    },
+    {
+      "label": "reached-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.66
+    },
+    {
+      "label": "reached-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.055
+    },
+    {
+      "label": "reached-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.536
+    },
+    {
+      "label": "reached-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-before-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.116
+    },
+    {
+      "label": "syntax-c-before",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/broken-c.crexx"
+      ],
+      "status": 1,
+      "seconds": 6.865
+    },
+    {
+      "label": "control-c-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 7.395
+    },
+    {
+      "label": "control-c-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.062
+    },
+    {
+      "label": "control-c-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.536
+    },
+    {
+      "label": "control-c-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.143
+    },
+    {
+      "label": "walk-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.704
+    },
+    {
+      "label": "walk-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.056
+    },
+    {
+      "label": "walk-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.531
+    },
+    {
+      "label": "walk-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.115
+    },
+    {
+      "label": "reached-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.771
+    },
+    {
+      "label": "reached-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.054
+    },
+    {
+      "label": "reached-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.54
+    },
+    {
+      "label": "reached-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-c-after-linked.rxbin"
+      ],
+      "status": 28,
+      "seconds": 0.115
+    },
+    {
+      "label": "syntax-c-after",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/broken-c.crexx"
+      ],
+      "status": 1,
+      "seconds": 6.961
+    },
+    {
+      "label": "control-c-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-c-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx"
+      ],
+      "status": 0,
+      "seconds": 8.214
+    },
+    {
+      "label": "control-c-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.061
+    },
+    {
+      "label": "control-c-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/llctarget.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/rxfnsc.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.529
+    },
+    {
+      "label": "control-c-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-c-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.137
+    },
+    {
+      "label": "views-g",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/backend-poc-linked.rxbin",
+        "-a",
+        "g",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g"
+      ],
+      "status": 0,
+      "seconds": 5.77
+    },
+    {
+      "label": "walk-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.533
+    },
+    {
+      "label": "walk-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.056
+    },
+    {
+      "label": "walk-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.072
+    },
+    {
+      "label": "walk-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.055
+    },
+    {
+      "label": "reached-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.492
+    },
+    {
+      "label": "reached-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.051
+    },
+    {
+      "label": "reached-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.069
+    },
+    {
+      "label": "reached-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-before-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.053
+    },
+    {
+      "label": "syntax-g-before",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/broken-g.crexx"
+      ],
+      "status": 1,
+      "seconds": 7.314
+    },
+    {
+      "label": "control-g-before-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 5.32
+    },
+    {
+      "label": "control-g-before-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-before.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.054
+    },
+    {
+      "label": "control-g-before-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-before-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-before.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.071
+    },
+    {
+      "label": "control-g-before-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-before-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.053
+    },
+    {
+      "label": "walk-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.547
+    },
+    {
+      "label": "walk-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.052
+    },
+    {
+      "label": "walk-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.07
+    },
+    {
+      "label": "walk-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.054
+    },
+    {
+      "label": "reached-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 4.568
+    },
+    {
+      "label": "reached-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.055
+    },
+    {
+      "label": "reached-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.07
+    },
+    {
+      "label": "reached-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/reached-g-after-linked.rxbin"
+      ],
+      "status": 5,
+      "seconds": 0.053
+    },
+    {
+      "label": "syntax-g-after",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/walk-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/broken-g.crexx"
+      ],
+      "status": 1,
+      "seconds": 7.455
+    },
+    {
+      "label": "control-g-after-compile",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin",
+        "-a",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx"
+      ],
+      "status": 0,
+      "seconds": 5.399
+    },
+    {
+      "label": "control-g-after-assemble",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-after.rxas"
+      ],
+      "status": 0,
+      "seconds": 0.058
+    },
+    {
+      "label": "control-g-after-link",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxlink",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-after-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-after.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/runtime/library.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.07
+    },
+    {
+      "label": "control-g-after-run",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/poc-measure/control-g-after-linked.rxbin"
+      ],
+      "status": 0,
+      "seconds": 0.053
+    }
+  ],
+  "shapes": {
+    "walk-c-before": {
+      "instructions": 147,
+      "calls": 17,
+      "source_records": 18,
+      "frames": [
+        6,
+        25
+      ],
+      "bytes": 5336
+    },
+    "walk-c-after": {
+      "instructions": 96,
+      "calls": 11,
+      "source_records": 11,
+      "frames": [
+        6,
+        16
+      ],
+      "bytes": 3814
+    },
+    "walk-g-before": {
+      "instructions": 27,
+      "calls": 1,
+      "source_records": 16,
+      "frames": [
+        2,
+        14
+      ],
+      "bytes": 1244
+    },
+    "walk-g-after": {
+      "instructions": 10,
+      "calls": 1,
+      "source_records": 9,
+      "frames": [
+        2,
+        5
+      ],
+      "bytes": 657
+    }
+  },
+  "inputs": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/check-poc.py": "99ee8964a104e6e41601e7882560a1441cfd7d67d88fad22bfc520042c25c0e6",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/backend-poc.crexx": "3fe5132440bb2b6e0f90a21726afd1e717e69b13f9531ae4556d23a784f96bf2",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx": "2158f9ac6d72381505a33c970b422f0b5e6be7181ed0fbf6b82010211aa04450",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx": "28677917d0b7271ac6054ca9fa6cafb20d2ee8bf66704e3778721c943c217981",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-c.crexx": "f186900e9288f7575c26f0710c1bdcec2497a99a902ce00336d98d8ec5b3c2e8",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/tests/poc/control-g.crexx": "a0217a1d42eef7ef3455161dbae26bcc17e7a9b6ce7c6c0088d06328f6c3fd84"
+  }
+}

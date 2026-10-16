@@ -1,0 +1,74 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g78761cc5affe.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261014T172000Z
+-- CREXX Build Commit: 78761cc5affe
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/../DSL-Syntax-Highlighter
+-- C compiler flags:
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always
+-- Linker flags for executables:
+-- Linker flags for shared libs:
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables:
+-- Debug linker flags for shared libs:
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (2.9s)
+-- Generating done (0.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+[0/4] Re-checking globbed directories...
+[1/165] Generating bootstrap/L2/levell-linked.rxbin
+[2/165] Generating bootstrap/verified.stamp
+[3/165] Generating ../../../bin/rxfnsl.rxbin
+[4/165] Staging deterministic compiler imports for llcompiler_ir_imports ...
+[5/164] Staging deterministic compiler imports for llcompiler_cli_imports ...
+[6/164] Generating levell.c
+[7/164] Building C object lib/rxfnsl/tools/CMakeFiles/levell_cli.dir/levell.c.o
+[8/164] Linking C executable bin/levell
+[9/164] Generating gennorm2_language.rxas
+[10/164] Generating ../../../bin/gennorm2_language.rxbin
+[11/164] Building Level G and Unicode with the Level B builder ...
+[12/53] Staging deterministic compiler imports for rexxscript1_imports ...
+[13/49] Generating frontends/llcgrammar.rxas
+[14/49] Generating frontends/llggrammar.rxas
+[15/49] Generating frontends/llcgrammar.rxbin
+[16/49] Generating frontends/llggrammar.rxbin
+[17/49] Generating frontends/opt/llcompilercontracts.rxbin
+[18/49] Generating frontends/opt/llfrontendparse.rxbin
+[19/49] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[20/49] Generating frontends/opt/llfrontend.rxbin
+[21/49] Staging deterministic compiler imports for llcompiler_llrxas_imports_opt ...
+[22/49] Generating backend/opt/llrxas.rxbin
+[23/49] Staging deterministic compiler imports for llcompiler_llcompiler_imports_opt ...
+[24/49] Generating backend/opt/llcompiler.rxbin
+[25/49] Staging deterministic compiler imports for llcompiler_llcompilercli_imports_opt ...
+[26/49] Generating ../../../bin/llcompilers.rxbin
+[27/49] Generating backend/opt/llcompilercli.rxbin
+[28/49] Staging deterministic compiler imports for llcompiler_consumers_imports_opt ...
+[29/49] Generating modern/rexxscriptgrammar.rxbin
+[30/49] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptProgram ...
+[31/49] Generating modern/RexxScriptProgram.rxbin
+[32/49] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptExecution ...
+[33/49] Generating backend/opt/llrxc-g-linked.rxbin
+[34/49] Generating backend/opt/llrxc-c-linked.rxbin
+[35/49] Generating backend/opt/llrxc-g-launcher.c
+[36/49] Generating backend/opt/llrxc-c-launcher.c
+[37/49] Building C object lib/rxfnsl/compilers/CMakeFiles/llrxc-c.dir/backend/opt/llrxc-c-launcher.c.o
+[38/49] Building C object lib/rxfnsl/compilers/CMakeFiles/llrxc-g.dir/backend/opt/llrxc-g-launcher.c.o
+[39/49] Linking C executable bin/llrxc-c
+[40/49] Linking C executable bin/llrxc-g
+[41/49] Generating modern/RexxScriptExecution.rxbin
+[42/49] Generating ../bin/rexxscript1.rxbin
+[43/49] Staging deterministic compiler imports for rexxscript1_driver_imports ...
+[44/49] Generating modern/RexxScript1Runner.c
+[45/49] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+[46/49] Linking C executable bin/rexxscript1

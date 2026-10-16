@@ -1,0 +1,6 @@
+PASS: immediate success
+PASS: temporary service recovery
+PASS: permanent failure
+PASS: retry exhaustion
+PASS: validation refusal
+PASS: validation service failure

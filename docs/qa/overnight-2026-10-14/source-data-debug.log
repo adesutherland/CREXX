@@ -1,0 +1,46 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug
+      Start 1770: source_data_contract_b_opt
+ 1/16 Test #1770: source_data_contract_b_opt ............   Passed    4.17 sec
+      Start 1771: source_data_contract_c_opt
+ 2/16 Test #1771: source_data_contract_c_opt ............   Passed    5.04 sec
+      Start 1772: source_data_contract_g_opt
+ 3/16 Test #1772: source_data_contract_g_opt ............   Passed    4.03 sec
+      Start 1773: source_data_contract_l_opt
+ 4/16 Test #1773: source_data_contract_l_opt ............   Passed    4.14 sec
+      Start 1776: source_data_contract_b_noopt
+ 5/16 Test #1776: source_data_contract_b_noopt ..........   Passed    4.09 sec
+      Start 1777: source_data_contract_c_noopt
+ 6/16 Test #1777: source_data_contract_c_noopt ..........   Passed    4.82 sec
+      Start 1778: source_data_contract_g_noopt
+ 7/16 Test #1778: source_data_contract_g_noopt ..........   Passed    4.58 sec
+      Start 1779: source_data_contract_l_noopt
+ 8/16 Test #1779: source_data_contract_l_noopt ..........   Passed    5.78 sec
+      Start 1782: source_data_contract_b_linked_opt
+ 9/16 Test #1782: source_data_contract_b_linked_opt .....   Passed    5.60 sec
+      Start 1783: source_data_contract_c_linked_opt
+10/16 Test #1783: source_data_contract_c_linked_opt .....   Passed   11.04 sec
+      Start 1784: source_data_contract_g_linked_opt
+11/16 Test #1784: source_data_contract_g_linked_opt .....   Passed    5.95 sec
+      Start 1785: source_data_contract_l_linked_opt
+12/16 Test #1785: source_data_contract_l_linked_opt .....   Passed    6.80 sec
+      Start 1788: source_data_contract_b_linked_noopt
+13/16 Test #1788: source_data_contract_b_linked_noopt ...   Passed    6.60 sec
+      Start 1789: source_data_contract_c_linked_noopt
+14/16 Test #1789: source_data_contract_c_linked_noopt ...   Passed   17.89 sec
+      Start 1790: source_data_contract_g_linked_noopt
+15/16 Test #1790: source_data_contract_g_linked_noopt ...   Passed    9.23 sec
+      Start 1791: source_data_contract_l_linked_noopt
+16/16 Test #1791: source_data_contract_l_linked_noopt ...   Passed    8.75 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+compiler         = 108.51 sec*proc (16 tests)
+comprehensive    = 108.51 sec*proc (16 tests)
+levelb           =  20.46 sec*proc (4 tests)
+levelc           =  38.79 sec*proc (4 tests)
+levelg           =  23.79 sec*proc (4 tests)
+levell           =  25.47 sec*proc (4 tests)
+source           = 108.51 sec*proc (16 tests)
+
+Total Test time (real) = 108.59 sec

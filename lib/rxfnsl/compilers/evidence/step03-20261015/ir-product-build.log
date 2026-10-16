@@ -1,0 +1,196 @@
+[0/2] Re-checking globbed directories...
+[1/562] cREXX compile and assemble llir ...
+[2/562] cREXX compile and assemble llirservices ...
+[3/562] cREXX Linked Level L Library Image ...
+[4/562] Staging deterministic compiler imports for levell_base_imports ...
+[5/562] Generating bootstrap/L0/llfront.rxbin
+[6/562] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[7/562] Generating bootstrap/L0/levell-linked.rxbin
+[8/562] Generating bootstrap/L1/llsyntax.rxas
+[9/562] Generating bootstrap/L1/llsyntax.rxbin
+[10/562] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[11/562] Generating bootstrap/L1/llfront.rxbin
+[12/562] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[13/562] Generating bootstrap/L1/levell-linked.rxbin
+[14/562] Generating bootstrap/L2/llsyntax.rxas
+[15/562] Generating bootstrap/L2/llsyntax.rxbin
+[16/562] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[17/562] Generating bootstrap/L2/llfront.rxbin
+[18/562] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[19/562] Generating bootstrap/L2/levell-linked.rxbin
+[20/562] Generating bootstrap/verified.stamp
+[21/562] Generating ../../../bin/rxfnsl.rxbin
+[22/562] Staging deterministic compiler imports for levell_ast_test_imports ...
+[23/562] Staging deterministic compiler imports for llcompiler_ir_imports ...
+[24/562] Generating levell.c
+[25/562] Generating ts_llast_noopt-linked.rxbin
+[26/562] Generating ts_llanalysis_noopt-linked.rxbin
+[27/562] Building C object lib/rxfnsl/tools/CMakeFiles/levell_cli.dir/levell.c.o
+[28/562] Linking C executable bin/levell
+[29/562] Generating noopt/llcrexxir.rxbin
+[30/562] Generating ts_tinyexpr_noopt.rxbin
+[31/562] Generating ts_tinyexpr_opt.rxbin
+[32/562] Generating ts_llir_noopt-linked.rxbin
+[33/562] Generating opt/llcrexxir.rxbin
+[34/562] Generating ts_llanalysis_opt-linked.rxbin
+[35/562] Generating gennorm2_language.rxas
+[36/562] Generating ../../../bin/gennorm2_language.rxbin
+[37/562] Generating ts_llast_opt-linked.rxbin
+[38/562] Generating ts_llir_opt-linked.rxbin
+[39/562] Generating levell_example.rxas
+[40/562] Generating flow-ll1/flowdemo.rxas
+[41/562] Generating flow-packrat/flowdemo.rxas
+[42/562] Generating flow-lr1/flowdemo.rxas
+[43/562] Generating flow-earley/flowdemo.rxas
+[44/562] Generating structured-flow-ll1/flowloops.rxas
+[45/562] Generating lowering-ll1/unlesslang.rxas
+[46/562] Generating structured-flow-packrat/flowloops.rxas
+[47/562] Generating structured-flow-lr1/flowloops.rxas
+[48/562] Generating structured-flow-earley/flowloops.rxas
+[49/562] Generating lowering-lr1/unlesslang.rxas
+[50/562] Generating lowering-packrat/unlesslang.rxas
+[51/562] Generating lowering-earley/unlesslang.rxas
+[52/562] Generating levell_example.rxbin
+[53/562] Generating origins-ll1/originlang.rxas
+[54/562] Generating origins-lr1/originlang.rxas
+[55/562] Generating origins-packrat/originlang.rxas
+[56/562] Generating origins-earley/originlang.rxas
+[57/562] Generating flow-ll1/flowdemo.rxbin
+[58/562] Generating flow-lr1/flowdemo.rxbin
+[59/562] Generating origins-regional/originlang.rxas
+[60/562] Generating flow-packrat/flowdemo.rxbin
+[61/562] Generating flow-earley/flowdemo.rxbin
+[62/562] Generating ast-ll1/ast_fixture.rxbin
+[63/562] Generating ast-lr1/ast_fixture.rxbin
+[64/562] Generating frontends/llcgrammar.rxas
+[65/562] Generating ast-packrat/ast_fixture.rxbin
+[66/562] Generating ast-earley/ast_fixture.rxbin
+[67/562] Generating structured-flow-ll1/flowloops.rxbin
+[68/562] Generating lowering-ll1/unlesslang.rxbin
+[69/562] Generating structured-flow-lr1/flowloops.rxbin
+[70/562] Generating lowering-lr1/unlesslang.rxbin
+[71/562] Generating lowering-packrat/unlesslang.rxbin
+[72/562] Generating origins-ll1/originlang.rxbin
+[73/562] Generating origins-lr1/originlang.rxbin
+[74/562] Generating lowering-earley/unlesslang.rxbin
+[75/562] Staging deterministic compiler imports for levell_generated_test_imports ...
+[76/562] Staging deterministic compiler imports for levell_ast_ll1_imports ...
+[77/562] Staging deterministic compiler imports for levell_ast_lr1_imports ...
+[78/562] Generating origins-packrat/originlang.rxbin
+[79/562] Staging deterministic compiler imports for levell_ast_packrat_imports ...
+[80/562] Staging deterministic compiler imports for levell_ast_earley_imports ...
+[81/562] Staging deterministic compiler imports for levell_flow_ll1_imports ...
+[82/562] Staging deterministic compiler imports for levell_flow_lr1_imports ...
+[83/562] Generating origins-earley/originlang.rxbin
+[84/562] Staging deterministic compiler imports for levell_flow_packrat_imports ...
+[85/562] Staging deterministic compiler imports for levell_flow_earley_imports ...
+[86/562] Staging deterministic compiler imports for levell_structured_flow_ll1_imports ...
+[87/562] Staging deterministic compiler imports for levell_structured_flow_lr1_imports ...
+[88/562] Staging deterministic compiler imports for levell_lowering_ll1_imports ...
+[89/562] Staging deterministic compiler imports for levell_lowering_lr1_imports ...
+[90/562] Staging deterministic compiler imports for levell_lowering_packrat_imports ...
+[91/562] Staging deterministic compiler imports for levell_lowering_earley_imports ...
+[92/562] Staging deterministic compiler imports for levell_origins_ll1_imports ...
+[93/562] Staging deterministic compiler imports for levell_origins_lr1_imports ...
+[94/562] Staging deterministic compiler imports for levell_origins_packrat_imports ...
+[95/562] Staging deterministic compiler imports for levell_origins_earley_imports ...
+[96/562] Generating frontends/llggrammar.rxas
+[97/562] Generating structured-flow-packrat/flowloops.rxbin
+[98/562] Staging deterministic compiler imports for levell_structured_flow_packrat_imports ...
+[99/562] Generating origins-regional/originlang.rxbin
+[100/562] Generating structured-flow-earley/flowloops.rxbin
+[101/562] Staging deterministic compiler imports for levell_origins_regional_imports ...
+[102/562] Staging deterministic compiler imports for levell_structured_flow_earley_imports ...
+[103/562] Generating noopt/demo-linked.rxbin
+[104/562] Generating noopt/contracts-linked.rxbin
+[105/562] Generating opt/demo-linked.rxbin
+[106/562] Generating ts_llirservices_noopt-linked.rxbin
+[107/562] Generating opt/contracts-linked.rxbin
+[108/562] Building Level G and Unicode with the Level B builder ...
+[109/196] Generating testGenerated-linked.rxbin
+[110/196] Staging deterministic compiler imports for rexxscript1_imports ...
+[111/196] Generating ast-ll1/noopt-linked.rxbin
+[112/196] Generating ast-ll1/opt-linked.rxbin
+[113/196] Generating ast-lr1/noopt-linked.rxbin
+[114/196] Generating ast-lr1/opt-linked.rxbin
+[115/196] Generating modern/RexxScriptOperators.rxbin
+[116/196] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptAnalysis ...
+[117/196] Generating ast-packrat/noopt-linked.rxbin
+[118/196] Generating frontends/llcgrammar.rxbin
+[119/196] Generating ast-packrat/opt-linked.rxbin
+[120/196] Generating ast-earley/noopt-linked.rxbin
+[121/196] Generating ast-earley/opt-linked.rxbin
+[122/196] Generating flow-ll1/ts_llflow_ll1_noopt-linked.rxbin
+[123/196] Generating flow-lr1/ts_llflow_lr1_noopt-linked.rxbin
+[124/196] Generating frontends/llggrammar.rxbin
+[125/196] Generating flow-packrat/ts_llflow_packrat_noopt-linked.rxbin
+[126/196] Generating ts_llirservices_opt-linked.rxbin
+[127/196] Generating flow-earley/ts_llflow_earley_noopt-linked.rxbin
+[128/196] Generating structured-flow-ll1/ts_llstructuredflow_ll1_noopt-linked.rxbin
+[129/196] Generating frontends/noopt/llcompilercontracts.rxbin
+[130/196] Generating frontends/opt/llcompilercontracts.rxbin
+[131/196] Generating structured-flow-ll1/ts_llconditions_ll1_noopt-linked.rxbin
+[132/196] Generating frontends/noopt/llfrontendparse.rxbin
+[133/196] Generating structured-flow-ll1/ts_llconditions_ll1_opt-linked.rxbin
+[134/196] Generating structured-flow-lr1/ts_llstructuredflow_lr1_noopt-linked.rxbin
+[135/196] Generating structured-flow-ll1/ts_llstructuredflow_ll1_opt-linked.rxbin
+[136/196] Generating flow-ll1/ts_llflow_ll1_opt-linked.rxbin
+[137/196] Generating flow-lr1/ts_llflow_lr1_opt-linked.rxbin
+[138/196] Generating flow-packrat/ts_llflow_packrat_opt-linked.rxbin
+[139/196] Generating frontends/opt/llfrontendparse.rxbin
+[140/196] Generating structured-flow-lr1/ts_llconditions_lr1_noopt-linked.rxbin
+[141/196] Generating frontends/noopt/llfrontend.rxbin
+[142/196] Generating structured-flow-packrat/ts_llstructuredflow_packrat_noopt-linked.rxbin
+[143/196] Generating flow-earley/ts_llflow_earley_opt-linked.rxbin
+[144/196] Generating structured-flow-lr1/ts_llconditions_lr1_opt-linked.rxbin
+[145/196] Generating structured-flow-packrat/ts_llconditions_packrat_noopt-linked.rxbin
+[146/196] Generating structured-flow-lr1/ts_llstructuredflow_lr1_opt-linked.rxbin
+[147/196] Generating frontends/noopt/contracts-probe-linked.rxbin
+[148/196] Generating structured-flow-packrat/ts_llconditions_packrat_opt-linked.rxbin
+[149/196] Generating frontends/noopt/frontend-probe-linked.rxbin
+[150/196] Generating frontends/noopt/frontend-tests-linked.rxbin
+[151/196] Generating frontends/noopt/parse-probe-linked.rxbin
+[152/196] Generating structured-flow-packrat/ts_llstructuredflow_packrat_opt-linked.rxbin
+[153/196] Generating structured-flow-earley/ts_llstructuredflow_earley_noopt-linked.rxbin
+[154/196] Generating structured-flow-earley/ts_llconditions_earley_noopt-linked.rxbin
+[155/196] Generating lowering-ll1/ts_lllowering_ll1_noopt-linked.rxbin
+[156/196] Generating lowering-lr1/ts_lllowering_lr1_noopt-linked.rxbin
+[157/196] Generating lowering-packrat/ts_lllowering_packrat_noopt-linked.rxbin
+[158/196] Generating structured-flow-earley/ts_llconditions_earley_opt-linked.rxbin
+[159/196] Generating structured-flow-earley/ts_llstructuredflow_earley_opt-linked.rxbin
+[160/196] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[161/196] Generating lowering-earley/ts_lllowering_earley_noopt-linked.rxbin
+[162/196] Generating origins-ll1/ts_llorigins_ll1_noopt-linked.rxbin
+[163/196] Generating frontends/opt/llfrontend.rxbin
+[164/196] Generating origins-lr1/ts_llorigins_lr1_noopt-linked.rxbin
+[165/196] Generating origins-packrat/ts_llorigins_packrat_noopt-linked.rxbin
+[166/196] Generating frontends/opt/frontend-probe-linked.rxbin
+[167/196] Generating lowering-ll1/ts_lllowering_ll1_opt-linked.rxbin
+[168/196] Generating lowering-lr1/ts_lllowering_lr1_opt-linked.rxbin
+[169/196] Generating frontends/opt/parse-probe-linked.rxbin
+[170/196] Generating frontends/opt/contracts-probe-linked.rxbin
+[171/196] Generating lowering-packrat/ts_lllowering_packrat_opt-linked.rxbin
+[172/196] Generating frontends/opt/frontend-tests-linked.rxbin
+[173/196] Generating origins-earley/ts_llorigins_earley_noopt-linked.rxbin
+[174/196] Generating lowering-earley/ts_lllowering_earley_opt-linked.rxbin
+[175/196] Generating origins-regional/ts_llorigins_regional_noopt-linked.rxbin
+[176/196] Generating origins-ll1/ts_llorigins_ll1_opt-linked.rxbin
+[177/196] Generating origins-lr1/ts_llorigins_lr1_opt-linked.rxbin
+[178/196] Generating modern/rexxscriptgrammar.rxbin
+[179/196] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptProgram ...
+[180/196] Generating origins-packrat/ts_llorigins_packrat_opt-linked.rxbin
+[181/196] Generating modern/RexxScriptAnalysis.rxbin
+[182/196] Generating origins-earley/ts_llorigins_earley_opt-linked.rxbin
+[183/196] Generating modern/RexxScriptProgram.rxbin
+[184/196] Generating modern/RexxScriptBifs.rxbin
+[185/196] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptExecution ...
+[186/196] Generating origins-regional/ts_llorigins_regional_opt-linked.rxbin
+[187/196] Generating modern/RexxScriptExecution.rxbin
+[188/196] Generating ../bin/rexxscript1.rxbin
+[189/196] Staging deterministic compiler imports for rexxscript1_driver_imports ...
+[190/196] Generating modern/testRexxScriptAST_noopt-linked.rxbin
+[191/196] Generating modern/testRexxScriptAST_opt-linked.rxbin
+[192/196] Generating modern/RexxScript1Runner.c
+[193/196] Generating modern/testRexxScript1-linked.rxbin
+[194/196] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+[195/196] Linking C executable bin/rexxscript1

@@ -1,0 +1,59 @@
+/* cREXX License (MIT). The same application AST through each admitted backend. */
+options levelb
+import rxfnsb
+import lllanguage
+import llast
+import ast_fixture
+
+main: procedure = .int
+  arg argv = .string[]
+  bytes = .binary
+  if argv[0] = 0 then bytes = 'é=1; /* β */β=;c=23;' as .binary
+  else bytes = readbinary(argv[1])
+  language = ast_fixture..language()
+  request = .lllanguage..request(language,bytes)
+  status = request.parse()
+  tree = request.ast()
+  say 'PARSE|' || status
+  say 'AST|' || tree.status() || '|' || tree.error()
+  if tree.status() <> 0 then do
+    if argv[0] = 0 then return 3
+    return 0
+  end
+  if argv[0] = 0 then do
+    root = tree.root()
+    if root.kind() <> 'program' | root.count('items') <> 3 then return 3
+    if root.child('items',1).text('name') <> 'é' then return 3
+    if root.child('items',2).count('value') <> 0 then return 3
+    if root.child('items',3).child('value').text('spelling') <> '23' then return 3
+  end
+  /* Replacing the parse request must not affect the owned application result. */
+  request = .lllanguage..request(language,'' as .binary)
+  walk = tree.walk('parents first')
+  do while walk.next()
+    node = walk.node()
+    say 'NODE|' || node.kind() || '|' || node.start() || '|' || node.finish()
+    if node.kind() = 'program' then say 'ITEMS|' || node.count('items')
+    if node.kind() = 'Entry' then say 'ENTRY|' || node.text('name') || '|' || node.count('value')
+    if node.kind() = 'Number' then say 'NUMBER|' || node.text('spelling')
+  end
+  if walk.error() <> '' then do
+    say walk.error(); return 3
+  end
+  pass = tree.rewrite()
+  do while pass.next()
+    nop
+  end
+  copy = pass.finish()
+  say 'COPY|' || copy.status() || '|' || copy.root().kind()
+  if copy.status() <> 0 then do
+    say copy.error(); return 3
+  end
+  if argv[0] = 0 then do
+    bad = .lllanguage..request(language,'a=1' as .binary)
+    if bad.parse() <> 1 then return 3
+    refused = bad.ast()
+    if refused.status() <> 3 | refused.root().valid() then return 3
+    say 'AST_CHECK|OK'
+  end
+  return 0

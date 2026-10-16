@@ -1,0 +1,38 @@
+/* cREXX License (MIT). Read facts, inspect a fold, and execute the script. */
+options levelb
+import rxfnsb
+import llast
+import rexxscript1
+import rexxscript1run
+import rexxscriptanalysis
+
+main: procedure = .int
+  program = rexxscript1..compile('x=2+3*4; if x>10 then say x else say 1/0' as .binary)
+  if program.error() <> '' then do
+    say program.error(); return 1
+  end
+  tree = program.ast()
+  facts = rexxscriptanalysis..analyse(reference tree)
+  if facts.error() <> '' then do
+    say facts.error(); return 1
+  end
+  assignment = tree.root().child('body').child('items')
+  expression = assignment.child('value')
+  info = facts.get(expression) as .rexxscriptanalysis..fact
+  say 'Constant expression:' info.known() 'value:' info.value().asString()
+  info = facts.get(tree.root()) as .rexxscriptanalysis..fact
+  say 'Variables read:' info.reads()
+  changed = rexxscriptanalysis..fold(reference tree)
+  if changed.error() <> '' then do
+    say changed.error(); return 1
+  end
+  replacement = changed.root().child('body').child('items').child('value')
+  say 'Replacement:' replacement.kind() replacement.text('spelling')
+  say 'Original source:' replacement.sourcetext()
+  run = .rexxscript1run..execution(program)
+  status = run.run(); lines = run.output()
+  do i = 1 to lines[0]
+    say lines[i]
+  end
+  if status <> 0 then say run.error()
+  return status

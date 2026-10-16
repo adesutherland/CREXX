@@ -1,0 +1,43 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2504: ts_llconditions_ll1_noopt_rxtvm
+      Start 2505: ts_llconditions_ll1_noopt_rxbvm
+      Start 2506: ts_llconditions_ll1_opt_rxtvm
+      Start 2507: ts_llconditions_ll1_opt_rxbvm
+      Start 2512: ts_llconditions_lr1_noopt_rxtvm
+      Start 2513: ts_llconditions_lr1_noopt_rxbvm
+      Start 2514: ts_llconditions_lr1_opt_rxtvm
+      Start 2515: ts_llconditions_lr1_opt_rxbvm
+      Start 2520: ts_llconditions_packrat_noopt_rxtvm
+      Start 2521: ts_llconditions_packrat_noopt_rxbvm
+ 1/16 Test #2507: ts_llconditions_ll1_opt_rxbvm .........   Passed    2.84 sec
+      Start 2522: ts_llconditions_packrat_opt_rxtvm
+ 2/16 Test #2505: ts_llconditions_ll1_noopt_rxbvm .......   Passed    2.85 sec
+      Start 2523: ts_llconditions_packrat_opt_rxbvm
+ 3/16 Test #2521: ts_llconditions_packrat_noopt_rxbvm ...   Passed    2.91 sec
+      Start 2528: ts_llconditions_earley_noopt_rxtvm
+ 4/16 Test #2520: ts_llconditions_packrat_noopt_rxtvm ...   Passed    2.96 sec
+      Start 2529: ts_llconditions_earley_noopt_rxbvm
+ 5/16 Test #2504: ts_llconditions_ll1_noopt_rxtvm .......   Passed    3.13 sec
+      Start 2530: ts_llconditions_earley_opt_rxtvm
+ 6/16 Test #2506: ts_llconditions_ll1_opt_rxtvm .........   Passed    3.15 sec
+      Start 2531: ts_llconditions_earley_opt_rxbvm
+ 7/16 Test #2512: ts_llconditions_lr1_noopt_rxtvm .......   Passed    3.30 sec
+ 8/16 Test #2513: ts_llconditions_lr1_noopt_rxbvm .......   Passed    3.57 sec
+ 9/16 Test #2515: ts_llconditions_lr1_opt_rxbvm .........   Passed    3.59 sec
+10/16 Test #2514: ts_llconditions_lr1_opt_rxtvm .........   Passed    3.60 sec
+11/16 Test #2523: ts_llconditions_packrat_opt_rxbvm .....   Passed    2.46 sec
+12/16 Test #2522: ts_llconditions_packrat_opt_rxtvm .....   Passed    2.57 sec
+13/16 Test #2529: ts_llconditions_earley_noopt_rxbvm ....   Passed    3.45 sec
+14/16 Test #2528: ts_llconditions_earley_noopt_rxtvm ....   Passed    3.64 sec
+15/16 Test #2531: ts_llconditions_earley_opt_rxbvm ......   Passed    3.45 sec
+16/16 Test #2530: ts_llconditions_earley_opt_rxtvm ......   Passed    3.53 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+comprehensive       =  51.00 sec*proc (16 tests)
+level-l             =  51.00 sec*proc (16 tests)
+library             =  51.00 sec*proc (16 tests)
+optimizer-parity    =  51.00 sec*proc (16 tests)
+
+Total Test time (real) =   6.74 sec

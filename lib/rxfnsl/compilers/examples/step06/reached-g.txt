@@ -1,0 +1,6 @@
+PANIC: (SIGNAL DIVISION_BY_ZERO)
+  at module 1 (/private/tmp/levell-step06-isolated-debug/reached-g-after.rxas) address 27 (0x1b)
+  source: reached-g.crexx:4:10: else say 1 / 0
+  called from:
+  at module 1 (/private/tmp/levell-step06-isolated-debug/reached-g-after.rxas) address 6 (0x6)
+  source: :0:0: 

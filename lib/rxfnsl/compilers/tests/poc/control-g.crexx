@@ -1,0 +1,16 @@
+options levelg
+/* A nested /* lexical */ comment, skipped operands and a loop return. */
+say 0 & (1 | mark())
+say 1 | (0 & mark())
+say once()
+exit 0
+mark: procedure = .int
+ say 'rhs'
+ return 1
+once: procedure = .int
+ i = 0
+ do while i < 1
+  i = i + 1
+  return i
+ end
+ return 0

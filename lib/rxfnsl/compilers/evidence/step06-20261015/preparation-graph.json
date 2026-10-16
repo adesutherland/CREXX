@@ -1,0 +1,8 @@
+{
+  "target": "qa-prep-optimizer-parity",
+  "checked_generated_graph": {
+    "backend/opt/backend-poc-linked.rxbin": true,
+    "backend/noopt/backend-poc-linked.rxbin": true
+  },
+  "operation": "read-only ninja -t graph; no broad QA dispatched"
+}

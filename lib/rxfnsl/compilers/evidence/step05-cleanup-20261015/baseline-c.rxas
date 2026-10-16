@@ -1,0 +1,4511 @@
+.globals=0
+main() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
+copy r5,a1
+load r4,1
+settp r5,768
+call r1,llctarget.mainargs(),r4
+null r5
+load r4,0
+call r2,llctarget.contextnew(),r4
+copy r5,r1
+copy r6,r2
+load r4,2
+settp r5,768
+settp r6,768
+call r0,llf1(),r4
+null r5
+null r6
+copy r5,r0
+load r4,1
+settp r5,768
+call r1,llctarget.status(),r4
+null r5
+ret r1
+llf1() .locals=499
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
+numsci 18,1,1
+load r489,"cleanup.crexx: entering $MAIN"
+sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
+sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
+sigbrv llerror1_3,r0,"CONVERSION_ERROR"
+sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+br llb1
+llb1:
+.srcstep 2 0 98 "cleanup.crexx" 1 1 15 "options levelc"
+load r489,"cleanup.crexx: generated code in $MAIN"
+load r490,0
+call r4,llctarget.poolnew(),r490
+unlink r1
+link r1,r4
+copy r5,a1
+copy r3,r5
+copy r6,a2
+copy r2,r6
+.srcstep 4 0 17 "cleanup.crexx" 2 1 6 "x = 1; say x"
+load r489,"cleanup.crexx:2:1"
+load r491,""
+load r490,1
+settp r491,768
+call r7,llctarget.literal(),r490
+null r491
+.srcstep 11 0 17 "cleanup.crexx" 2 5 6 "x = 1; say x"
+load r489,"cleanup.crexx:2:5"
+load r491,"1"
+load r490,1
+settp r491,768
+call r8,llctarget.literal(),r490
+null r491
+.srcstep 4 0 17 "cleanup.crexx" 2 1 6 "x = 1; say x"
+load r489,"cleanup.crexx:2:1"
+unlink r9
+link r9,r1
+mkref r491,r9
+copy r492,r8
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 12 0 17 "cleanup.crexx" 2 8 13 "x = 1; say x"
+load r489,"cleanup.crexx:2:8"
+load r491,""
+load r490,1
+settp r491,768
+call r10,llctarget.literal(),r490
+null r491
+.srcstep 19 0 17 "cleanup.crexx" 2 12 13 "x = 1; say x"
+load r489,"cleanup.crexx:2:12"
+unlink r11
+link r11,r1
+mkref r491,r11
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r12,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 12 0 17 "cleanup.crexx" 2 8 13 "x = 1; say x"
+load r489,"cleanup.crexx:2:8"
+copy r491,r12
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 20 0 17 "cleanup.crexx" 3 1 6 "x = 2; say x"
+load r489,"cleanup.crexx:3:1"
+load r491,""
+load r490,1
+settp r491,768
+call r13,llctarget.literal(),r490
+null r491
+.srcstep 27 0 17 "cleanup.crexx" 3 5 6 "x = 2; say x"
+load r489,"cleanup.crexx:3:5"
+load r491,"2"
+load r490,1
+settp r491,768
+call r14,llctarget.literal(),r490
+null r491
+.srcstep 20 0 17 "cleanup.crexx" 3 1 6 "x = 2; say x"
+load r489,"cleanup.crexx:3:1"
+unlink r15
+link r15,r1
+mkref r491,r15
+copy r492,r14
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 28 0 17 "cleanup.crexx" 3 8 13 "x = 2; say x"
+load r489,"cleanup.crexx:3:8"
+load r491,""
+load r490,1
+settp r491,768
+call r16,llctarget.literal(),r490
+null r491
+.srcstep 35 0 17 "cleanup.crexx" 3 12 13 "x = 2; say x"
+load r489,"cleanup.crexx:3:12"
+unlink r17
+link r17,r1
+mkref r491,r17
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r18,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 28 0 17 "cleanup.crexx" 3 8 13 "x = 2; say x"
+load r489,"cleanup.crexx:3:8"
+copy r491,r18
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 36 0 17 "cleanup.crexx" 4 1 6 "x = 3; say x"
+load r489,"cleanup.crexx:4:1"
+load r491,""
+load r490,1
+settp r491,768
+call r19,llctarget.literal(),r490
+null r491
+.srcstep 43 0 17 "cleanup.crexx" 4 5 6 "x = 3; say x"
+load r489,"cleanup.crexx:4:5"
+load r491,"3"
+load r490,1
+settp r491,768
+call r20,llctarget.literal(),r490
+null r491
+.srcstep 36 0 17 "cleanup.crexx" 4 1 6 "x = 3; say x"
+load r489,"cleanup.crexx:4:1"
+unlink r21
+link r21,r1
+mkref r491,r21
+copy r492,r20
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 44 0 17 "cleanup.crexx" 4 8 13 "x = 3; say x"
+load r489,"cleanup.crexx:4:8"
+load r491,""
+load r490,1
+settp r491,768
+call r22,llctarget.literal(),r490
+null r491
+.srcstep 51 0 17 "cleanup.crexx" 4 12 13 "x = 3; say x"
+load r489,"cleanup.crexx:4:12"
+unlink r23
+link r23,r1
+mkref r491,r23
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r24,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 44 0 17 "cleanup.crexx" 4 8 13 "x = 3; say x"
+load r489,"cleanup.crexx:4:8"
+copy r491,r24
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 52 0 17 "cleanup.crexx" 5 1 6 "x = 4; say x"
+load r489,"cleanup.crexx:5:1"
+load r491,""
+load r490,1
+settp r491,768
+call r25,llctarget.literal(),r490
+null r491
+.srcstep 59 0 17 "cleanup.crexx" 5 5 6 "x = 4; say x"
+load r489,"cleanup.crexx:5:5"
+load r491,"4"
+load r490,1
+settp r491,768
+call r26,llctarget.literal(),r490
+null r491
+.srcstep 52 0 17 "cleanup.crexx" 5 1 6 "x = 4; say x"
+load r489,"cleanup.crexx:5:1"
+unlink r27
+link r27,r1
+mkref r491,r27
+copy r492,r26
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 60 0 17 "cleanup.crexx" 5 8 13 "x = 4; say x"
+load r489,"cleanup.crexx:5:8"
+load r491,""
+load r490,1
+settp r491,768
+call r28,llctarget.literal(),r490
+null r491
+.srcstep 67 0 17 "cleanup.crexx" 5 12 13 "x = 4; say x"
+load r489,"cleanup.crexx:5:12"
+unlink r29
+link r29,r1
+mkref r491,r29
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r30,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 60 0 17 "cleanup.crexx" 5 8 13 "x = 4; say x"
+load r489,"cleanup.crexx:5:8"
+copy r491,r30
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 68 0 17 "cleanup.crexx" 6 1 6 "x = 5; say x"
+load r489,"cleanup.crexx:6:1"
+load r491,""
+load r490,1
+settp r491,768
+call r31,llctarget.literal(),r490
+null r491
+.srcstep 75 0 17 "cleanup.crexx" 6 5 6 "x = 5; say x"
+load r489,"cleanup.crexx:6:5"
+load r491,"5"
+load r490,1
+settp r491,768
+call r32,llctarget.literal(),r490
+null r491
+.srcstep 68 0 17 "cleanup.crexx" 6 1 6 "x = 5; say x"
+load r489,"cleanup.crexx:6:1"
+unlink r33
+link r33,r1
+mkref r491,r33
+copy r492,r32
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 76 0 17 "cleanup.crexx" 6 8 13 "x = 5; say x"
+load r489,"cleanup.crexx:6:8"
+load r491,""
+load r490,1
+settp r491,768
+call r34,llctarget.literal(),r490
+null r491
+.srcstep 83 0 17 "cleanup.crexx" 6 12 13 "x = 5; say x"
+load r489,"cleanup.crexx:6:12"
+unlink r35
+link r35,r1
+mkref r491,r35
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r36,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 76 0 17 "cleanup.crexx" 6 8 13 "x = 5; say x"
+load r489,"cleanup.crexx:6:8"
+copy r491,r36
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 84 0 17 "cleanup.crexx" 7 1 6 "x = 6; say x"
+load r489,"cleanup.crexx:7:1"
+load r491,""
+load r490,1
+settp r491,768
+call r37,llctarget.literal(),r490
+null r491
+.srcstep 91 0 17 "cleanup.crexx" 7 5 6 "x = 6; say x"
+load r489,"cleanup.crexx:7:5"
+load r491,"6"
+load r490,1
+settp r491,768
+call r38,llctarget.literal(),r490
+null r491
+.srcstep 84 0 17 "cleanup.crexx" 7 1 6 "x = 6; say x"
+load r489,"cleanup.crexx:7:1"
+unlink r39
+link r39,r1
+mkref r491,r39
+copy r492,r38
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 92 0 17 "cleanup.crexx" 7 8 13 "x = 6; say x"
+load r489,"cleanup.crexx:7:8"
+load r491,""
+load r490,1
+settp r491,768
+call r40,llctarget.literal(),r490
+null r491
+.srcstep 99 0 17 "cleanup.crexx" 7 12 13 "x = 6; say x"
+load r489,"cleanup.crexx:7:12"
+unlink r41
+link r41,r1
+mkref r491,r41
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r42,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 92 0 17 "cleanup.crexx" 7 8 13 "x = 6; say x"
+load r489,"cleanup.crexx:7:8"
+copy r491,r42
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 100 0 17 "cleanup.crexx" 8 1 6 "x = 7; say x"
+load r489,"cleanup.crexx:8:1"
+load r491,""
+load r490,1
+settp r491,768
+call r43,llctarget.literal(),r490
+null r491
+.srcstep 107 0 17 "cleanup.crexx" 8 5 6 "x = 7; say x"
+load r489,"cleanup.crexx:8:5"
+load r491,"7"
+load r490,1
+settp r491,768
+call r44,llctarget.literal(),r490
+null r491
+.srcstep 100 0 17 "cleanup.crexx" 8 1 6 "x = 7; say x"
+load r489,"cleanup.crexx:8:1"
+unlink r45
+link r45,r1
+mkref r491,r45
+copy r492,r44
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 108 0 17 "cleanup.crexx" 8 8 13 "x = 7; say x"
+load r489,"cleanup.crexx:8:8"
+load r491,""
+load r490,1
+settp r491,768
+call r46,llctarget.literal(),r490
+null r491
+.srcstep 115 0 17 "cleanup.crexx" 8 12 13 "x = 7; say x"
+load r489,"cleanup.crexx:8:12"
+unlink r47
+link r47,r1
+mkref r491,r47
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r48,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 108 0 17 "cleanup.crexx" 8 8 13 "x = 7; say x"
+load r489,"cleanup.crexx:8:8"
+copy r491,r48
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 116 0 17 "cleanup.crexx" 9 1 6 "x = 8; say x"
+load r489,"cleanup.crexx:9:1"
+load r491,""
+load r490,1
+settp r491,768
+call r49,llctarget.literal(),r490
+null r491
+.srcstep 123 0 17 "cleanup.crexx" 9 5 6 "x = 8; say x"
+load r489,"cleanup.crexx:9:5"
+load r491,"8"
+load r490,1
+settp r491,768
+call r50,llctarget.literal(),r490
+null r491
+.srcstep 116 0 17 "cleanup.crexx" 9 1 6 "x = 8; say x"
+load r489,"cleanup.crexx:9:1"
+unlink r51
+link r51,r1
+mkref r491,r51
+copy r492,r50
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 124 0 17 "cleanup.crexx" 9 8 13 "x = 8; say x"
+load r489,"cleanup.crexx:9:8"
+load r491,""
+load r490,1
+settp r491,768
+call r52,llctarget.literal(),r490
+null r491
+.srcstep 131 0 17 "cleanup.crexx" 9 12 13 "x = 8; say x"
+load r489,"cleanup.crexx:9:12"
+unlink r53
+link r53,r1
+mkref r491,r53
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r54,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 124 0 17 "cleanup.crexx" 9 8 13 "x = 8; say x"
+load r489,"cleanup.crexx:9:8"
+copy r491,r54
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 132 0 17 "cleanup.crexx" 10 1 6 "x = 9; say x"
+load r489,"cleanup.crexx:10:1"
+load r491,""
+load r490,1
+settp r491,768
+call r55,llctarget.literal(),r490
+null r491
+.srcstep 139 0 17 "cleanup.crexx" 10 5 6 "x = 9; say x"
+load r489,"cleanup.crexx:10:5"
+load r491,"9"
+load r490,1
+settp r491,768
+call r56,llctarget.literal(),r490
+null r491
+.srcstep 132 0 17 "cleanup.crexx" 10 1 6 "x = 9; say x"
+load r489,"cleanup.crexx:10:1"
+unlink r57
+link r57,r1
+mkref r491,r57
+copy r492,r56
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 140 0 17 "cleanup.crexx" 10 8 13 "x = 9; say x"
+load r489,"cleanup.crexx:10:8"
+load r491,""
+load r490,1
+settp r491,768
+call r58,llctarget.literal(),r490
+null r491
+.srcstep 147 0 17 "cleanup.crexx" 10 12 13 "x = 9; say x"
+load r489,"cleanup.crexx:10:12"
+unlink r59
+link r59,r1
+mkref r491,r59
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r60,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 140 0 17 "cleanup.crexx" 10 8 13 "x = 9; say x"
+load r489,"cleanup.crexx:10:8"
+copy r491,r60
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 148 0 17 "cleanup.crexx" 11 1 7 "x = 10; say x"
+load r489,"cleanup.crexx:11:1"
+load r491,""
+load r490,1
+settp r491,768
+call r61,llctarget.literal(),r490
+null r491
+.srcstep 155 0 17 "cleanup.crexx" 11 5 7 "x = 10; say x"
+load r489,"cleanup.crexx:11:5"
+load r491,"10"
+load r490,1
+settp r491,768
+call r62,llctarget.literal(),r490
+null r491
+.srcstep 148 0 17 "cleanup.crexx" 11 1 7 "x = 10; say x"
+load r489,"cleanup.crexx:11:1"
+unlink r63
+link r63,r1
+mkref r491,r63
+copy r492,r62
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 156 0 17 "cleanup.crexx" 11 9 14 "x = 10; say x"
+load r489,"cleanup.crexx:11:9"
+load r491,""
+load r490,1
+settp r491,768
+call r64,llctarget.literal(),r490
+null r491
+.srcstep 163 0 17 "cleanup.crexx" 11 13 14 "x = 10; say x"
+load r489,"cleanup.crexx:11:13"
+unlink r65
+link r65,r1
+mkref r491,r65
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r66,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 156 0 17 "cleanup.crexx" 11 9 14 "x = 10; say x"
+load r489,"cleanup.crexx:11:9"
+copy r491,r66
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 164 0 17 "cleanup.crexx" 12 1 7 "x = 11; say x"
+load r489,"cleanup.crexx:12:1"
+load r491,""
+load r490,1
+settp r491,768
+call r67,llctarget.literal(),r490
+null r491
+.srcstep 171 0 17 "cleanup.crexx" 12 5 7 "x = 11; say x"
+load r489,"cleanup.crexx:12:5"
+load r491,"11"
+load r490,1
+settp r491,768
+call r68,llctarget.literal(),r490
+null r491
+.srcstep 164 0 17 "cleanup.crexx" 12 1 7 "x = 11; say x"
+load r489,"cleanup.crexx:12:1"
+unlink r69
+link r69,r1
+mkref r491,r69
+copy r492,r68
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 172 0 17 "cleanup.crexx" 12 9 14 "x = 11; say x"
+load r489,"cleanup.crexx:12:9"
+load r491,""
+load r490,1
+settp r491,768
+call r70,llctarget.literal(),r490
+null r491
+.srcstep 179 0 17 "cleanup.crexx" 12 13 14 "x = 11; say x"
+load r489,"cleanup.crexx:12:13"
+unlink r71
+link r71,r1
+mkref r491,r71
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r72,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 172 0 17 "cleanup.crexx" 12 9 14 "x = 11; say x"
+load r489,"cleanup.crexx:12:9"
+copy r491,r72
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 180 0 17 "cleanup.crexx" 13 1 7 "x = 12; say x"
+load r489,"cleanup.crexx:13:1"
+load r491,""
+load r490,1
+settp r491,768
+call r73,llctarget.literal(),r490
+null r491
+.srcstep 187 0 17 "cleanup.crexx" 13 5 7 "x = 12; say x"
+load r489,"cleanup.crexx:13:5"
+load r491,"12"
+load r490,1
+settp r491,768
+call r74,llctarget.literal(),r490
+null r491
+.srcstep 180 0 17 "cleanup.crexx" 13 1 7 "x = 12; say x"
+load r489,"cleanup.crexx:13:1"
+unlink r75
+link r75,r1
+mkref r491,r75
+copy r492,r74
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 188 0 17 "cleanup.crexx" 13 9 14 "x = 12; say x"
+load r489,"cleanup.crexx:13:9"
+load r491,""
+load r490,1
+settp r491,768
+call r76,llctarget.literal(),r490
+null r491
+.srcstep 195 0 17 "cleanup.crexx" 13 13 14 "x = 12; say x"
+load r489,"cleanup.crexx:13:13"
+unlink r77
+link r77,r1
+mkref r491,r77
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r78,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 188 0 17 "cleanup.crexx" 13 9 14 "x = 12; say x"
+load r489,"cleanup.crexx:13:9"
+copy r491,r78
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 196 0 17 "cleanup.crexx" 14 1 7 "x = 13; say x"
+load r489,"cleanup.crexx:14:1"
+load r491,""
+load r490,1
+settp r491,768
+call r79,llctarget.literal(),r490
+null r491
+.srcstep 203 0 17 "cleanup.crexx" 14 5 7 "x = 13; say x"
+load r489,"cleanup.crexx:14:5"
+load r491,"13"
+load r490,1
+settp r491,768
+call r80,llctarget.literal(),r490
+null r491
+.srcstep 196 0 17 "cleanup.crexx" 14 1 7 "x = 13; say x"
+load r489,"cleanup.crexx:14:1"
+unlink r81
+link r81,r1
+mkref r491,r81
+copy r492,r80
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 204 0 17 "cleanup.crexx" 14 9 14 "x = 13; say x"
+load r489,"cleanup.crexx:14:9"
+load r491,""
+load r490,1
+settp r491,768
+call r82,llctarget.literal(),r490
+null r491
+.srcstep 211 0 17 "cleanup.crexx" 14 13 14 "x = 13; say x"
+load r489,"cleanup.crexx:14:13"
+unlink r83
+link r83,r1
+mkref r491,r83
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r84,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 204 0 17 "cleanup.crexx" 14 9 14 "x = 13; say x"
+load r489,"cleanup.crexx:14:9"
+copy r491,r84
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 212 0 17 "cleanup.crexx" 15 1 7 "x = 14; say x"
+load r489,"cleanup.crexx:15:1"
+load r491,""
+load r490,1
+settp r491,768
+call r85,llctarget.literal(),r490
+null r491
+.srcstep 219 0 17 "cleanup.crexx" 15 5 7 "x = 14; say x"
+load r489,"cleanup.crexx:15:5"
+load r491,"14"
+load r490,1
+settp r491,768
+call r86,llctarget.literal(),r490
+null r491
+.srcstep 212 0 17 "cleanup.crexx" 15 1 7 "x = 14; say x"
+load r489,"cleanup.crexx:15:1"
+unlink r87
+link r87,r1
+mkref r491,r87
+copy r492,r86
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 220 0 17 "cleanup.crexx" 15 9 14 "x = 14; say x"
+load r489,"cleanup.crexx:15:9"
+load r491,""
+load r490,1
+settp r491,768
+call r88,llctarget.literal(),r490
+null r491
+.srcstep 227 0 17 "cleanup.crexx" 15 13 14 "x = 14; say x"
+load r489,"cleanup.crexx:15:13"
+unlink r89
+link r89,r1
+mkref r491,r89
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r90,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 220 0 17 "cleanup.crexx" 15 9 14 "x = 14; say x"
+load r489,"cleanup.crexx:15:9"
+copy r491,r90
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 228 0 17 "cleanup.crexx" 16 1 7 "x = 15; say x"
+load r489,"cleanup.crexx:16:1"
+load r491,""
+load r490,1
+settp r491,768
+call r91,llctarget.literal(),r490
+null r491
+.srcstep 235 0 17 "cleanup.crexx" 16 5 7 "x = 15; say x"
+load r489,"cleanup.crexx:16:5"
+load r491,"15"
+load r490,1
+settp r491,768
+call r92,llctarget.literal(),r490
+null r491
+.srcstep 228 0 17 "cleanup.crexx" 16 1 7 "x = 15; say x"
+load r489,"cleanup.crexx:16:1"
+unlink r93
+link r93,r1
+mkref r491,r93
+copy r492,r92
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 236 0 17 "cleanup.crexx" 16 9 14 "x = 15; say x"
+load r489,"cleanup.crexx:16:9"
+load r491,""
+load r490,1
+settp r491,768
+call r94,llctarget.literal(),r490
+null r491
+.srcstep 243 0 17 "cleanup.crexx" 16 13 14 "x = 15; say x"
+load r489,"cleanup.crexx:16:13"
+unlink r95
+link r95,r1
+mkref r491,r95
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r96,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 236 0 17 "cleanup.crexx" 16 9 14 "x = 15; say x"
+load r489,"cleanup.crexx:16:9"
+copy r491,r96
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 244 0 17 "cleanup.crexx" 17 1 7 "x = 16; say x"
+load r489,"cleanup.crexx:17:1"
+load r491,""
+load r490,1
+settp r491,768
+call r97,llctarget.literal(),r490
+null r491
+.srcstep 251 0 17 "cleanup.crexx" 17 5 7 "x = 16; say x"
+load r489,"cleanup.crexx:17:5"
+load r491,"16"
+load r490,1
+settp r491,768
+call r98,llctarget.literal(),r490
+null r491
+.srcstep 244 0 17 "cleanup.crexx" 17 1 7 "x = 16; say x"
+load r489,"cleanup.crexx:17:1"
+unlink r99
+link r99,r1
+mkref r491,r99
+copy r492,r98
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 252 0 17 "cleanup.crexx" 17 9 14 "x = 16; say x"
+load r489,"cleanup.crexx:17:9"
+load r491,""
+load r490,1
+settp r491,768
+call r100,llctarget.literal(),r490
+null r491
+.srcstep 259 0 17 "cleanup.crexx" 17 13 14 "x = 16; say x"
+load r489,"cleanup.crexx:17:13"
+unlink r101
+link r101,r1
+mkref r491,r101
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r102,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 252 0 17 "cleanup.crexx" 17 9 14 "x = 16; say x"
+load r489,"cleanup.crexx:17:9"
+copy r491,r102
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 260 0 17 "cleanup.crexx" 18 1 7 "x = 17; say x"
+load r489,"cleanup.crexx:18:1"
+load r491,""
+load r490,1
+settp r491,768
+call r103,llctarget.literal(),r490
+null r491
+.srcstep 267 0 17 "cleanup.crexx" 18 5 7 "x = 17; say x"
+load r489,"cleanup.crexx:18:5"
+load r491,"17"
+load r490,1
+settp r491,768
+call r104,llctarget.literal(),r490
+null r491
+.srcstep 260 0 17 "cleanup.crexx" 18 1 7 "x = 17; say x"
+load r489,"cleanup.crexx:18:1"
+unlink r105
+link r105,r1
+mkref r491,r105
+copy r492,r104
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 268 0 17 "cleanup.crexx" 18 9 14 "x = 17; say x"
+load r489,"cleanup.crexx:18:9"
+load r491,""
+load r490,1
+settp r491,768
+call r106,llctarget.literal(),r490
+null r491
+.srcstep 275 0 17 "cleanup.crexx" 18 13 14 "x = 17; say x"
+load r489,"cleanup.crexx:18:13"
+unlink r107
+link r107,r1
+mkref r491,r107
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r108,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 268 0 17 "cleanup.crexx" 18 9 14 "x = 17; say x"
+load r489,"cleanup.crexx:18:9"
+copy r491,r108
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 276 0 17 "cleanup.crexx" 19 1 7 "x = 18; say x"
+load r489,"cleanup.crexx:19:1"
+load r491,""
+load r490,1
+settp r491,768
+call r109,llctarget.literal(),r490
+null r491
+.srcstep 283 0 17 "cleanup.crexx" 19 5 7 "x = 18; say x"
+load r489,"cleanup.crexx:19:5"
+load r491,"18"
+load r490,1
+settp r491,768
+call r110,llctarget.literal(),r490
+null r491
+.srcstep 276 0 17 "cleanup.crexx" 19 1 7 "x = 18; say x"
+load r489,"cleanup.crexx:19:1"
+unlink r111
+link r111,r1
+mkref r491,r111
+copy r492,r110
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 284 0 17 "cleanup.crexx" 19 9 14 "x = 18; say x"
+load r489,"cleanup.crexx:19:9"
+load r491,""
+load r490,1
+settp r491,768
+call r112,llctarget.literal(),r490
+null r491
+.srcstep 291 0 17 "cleanup.crexx" 19 13 14 "x = 18; say x"
+load r489,"cleanup.crexx:19:13"
+unlink r113
+link r113,r1
+mkref r491,r113
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r114,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 284 0 17 "cleanup.crexx" 19 9 14 "x = 18; say x"
+load r489,"cleanup.crexx:19:9"
+copy r491,r114
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 292 0 17 "cleanup.crexx" 20 1 7 "x = 19; say x"
+load r489,"cleanup.crexx:20:1"
+load r491,""
+load r490,1
+settp r491,768
+call r115,llctarget.literal(),r490
+null r491
+.srcstep 299 0 17 "cleanup.crexx" 20 5 7 "x = 19; say x"
+load r489,"cleanup.crexx:20:5"
+load r491,"19"
+load r490,1
+settp r491,768
+call r116,llctarget.literal(),r490
+null r491
+.srcstep 292 0 17 "cleanup.crexx" 20 1 7 "x = 19; say x"
+load r489,"cleanup.crexx:20:1"
+unlink r117
+link r117,r1
+mkref r491,r117
+copy r492,r116
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 300 0 17 "cleanup.crexx" 20 9 14 "x = 19; say x"
+load r489,"cleanup.crexx:20:9"
+load r491,""
+load r490,1
+settp r491,768
+call r118,llctarget.literal(),r490
+null r491
+.srcstep 307 0 17 "cleanup.crexx" 20 13 14 "x = 19; say x"
+load r489,"cleanup.crexx:20:13"
+unlink r119
+link r119,r1
+mkref r491,r119
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r120,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 300 0 17 "cleanup.crexx" 20 9 14 "x = 19; say x"
+load r489,"cleanup.crexx:20:9"
+copy r491,r120
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 308 0 17 "cleanup.crexx" 21 1 7 "x = 20; say x"
+load r489,"cleanup.crexx:21:1"
+load r491,""
+load r490,1
+settp r491,768
+call r121,llctarget.literal(),r490
+null r491
+.srcstep 315 0 17 "cleanup.crexx" 21 5 7 "x = 20; say x"
+load r489,"cleanup.crexx:21:5"
+load r491,"20"
+load r490,1
+settp r491,768
+call r122,llctarget.literal(),r490
+null r491
+.srcstep 308 0 17 "cleanup.crexx" 21 1 7 "x = 20; say x"
+load r489,"cleanup.crexx:21:1"
+unlink r123
+link r123,r1
+mkref r491,r123
+copy r492,r122
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 316 0 17 "cleanup.crexx" 21 9 14 "x = 20; say x"
+load r489,"cleanup.crexx:21:9"
+load r491,""
+load r490,1
+settp r491,768
+call r124,llctarget.literal(),r490
+null r491
+.srcstep 323 0 17 "cleanup.crexx" 21 13 14 "x = 20; say x"
+load r489,"cleanup.crexx:21:13"
+unlink r125
+link r125,r1
+mkref r491,r125
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r126,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 316 0 17 "cleanup.crexx" 21 9 14 "x = 20; say x"
+load r489,"cleanup.crexx:21:9"
+copy r491,r126
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 324 0 17 "cleanup.crexx" 22 1 7 "x = 21; say x"
+load r489,"cleanup.crexx:22:1"
+load r491,""
+load r490,1
+settp r491,768
+call r127,llctarget.literal(),r490
+null r491
+.srcstep 331 0 17 "cleanup.crexx" 22 5 7 "x = 21; say x"
+load r489,"cleanup.crexx:22:5"
+load r491,"21"
+load r490,1
+settp r491,768
+call r128,llctarget.literal(),r490
+null r491
+.srcstep 324 0 17 "cleanup.crexx" 22 1 7 "x = 21; say x"
+load r489,"cleanup.crexx:22:1"
+unlink r129
+link r129,r1
+mkref r491,r129
+copy r492,r128
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 332 0 17 "cleanup.crexx" 22 9 14 "x = 21; say x"
+load r489,"cleanup.crexx:22:9"
+load r491,""
+load r490,1
+settp r491,768
+call r130,llctarget.literal(),r490
+null r491
+.srcstep 339 0 17 "cleanup.crexx" 22 13 14 "x = 21; say x"
+load r489,"cleanup.crexx:22:13"
+unlink r131
+link r131,r1
+mkref r491,r131
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r132,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 332 0 17 "cleanup.crexx" 22 9 14 "x = 21; say x"
+load r489,"cleanup.crexx:22:9"
+copy r491,r132
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 340 0 17 "cleanup.crexx" 23 1 7 "x = 22; say x"
+load r489,"cleanup.crexx:23:1"
+load r491,""
+load r490,1
+settp r491,768
+call r133,llctarget.literal(),r490
+null r491
+.srcstep 347 0 17 "cleanup.crexx" 23 5 7 "x = 22; say x"
+load r489,"cleanup.crexx:23:5"
+load r491,"22"
+load r490,1
+settp r491,768
+call r134,llctarget.literal(),r490
+null r491
+.srcstep 340 0 17 "cleanup.crexx" 23 1 7 "x = 22; say x"
+load r489,"cleanup.crexx:23:1"
+unlink r135
+link r135,r1
+mkref r491,r135
+copy r492,r134
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 348 0 17 "cleanup.crexx" 23 9 14 "x = 22; say x"
+load r489,"cleanup.crexx:23:9"
+load r491,""
+load r490,1
+settp r491,768
+call r136,llctarget.literal(),r490
+null r491
+.srcstep 355 0 17 "cleanup.crexx" 23 13 14 "x = 22; say x"
+load r489,"cleanup.crexx:23:13"
+unlink r137
+link r137,r1
+mkref r491,r137
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r138,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 348 0 17 "cleanup.crexx" 23 9 14 "x = 22; say x"
+load r489,"cleanup.crexx:23:9"
+copy r491,r138
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 356 0 17 "cleanup.crexx" 24 1 7 "x = 23; say x"
+load r489,"cleanup.crexx:24:1"
+load r491,""
+load r490,1
+settp r491,768
+call r139,llctarget.literal(),r490
+null r491
+.srcstep 363 0 17 "cleanup.crexx" 24 5 7 "x = 23; say x"
+load r489,"cleanup.crexx:24:5"
+load r491,"23"
+load r490,1
+settp r491,768
+call r140,llctarget.literal(),r490
+null r491
+.srcstep 356 0 17 "cleanup.crexx" 24 1 7 "x = 23; say x"
+load r489,"cleanup.crexx:24:1"
+unlink r141
+link r141,r1
+mkref r491,r141
+copy r492,r140
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 364 0 17 "cleanup.crexx" 24 9 14 "x = 23; say x"
+load r489,"cleanup.crexx:24:9"
+load r491,""
+load r490,1
+settp r491,768
+call r142,llctarget.literal(),r490
+null r491
+.srcstep 371 0 17 "cleanup.crexx" 24 13 14 "x = 23; say x"
+load r489,"cleanup.crexx:24:13"
+unlink r143
+link r143,r1
+mkref r491,r143
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r144,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 364 0 17 "cleanup.crexx" 24 9 14 "x = 23; say x"
+load r489,"cleanup.crexx:24:9"
+copy r491,r144
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 372 0 17 "cleanup.crexx" 25 1 7 "x = 24; say x"
+load r489,"cleanup.crexx:25:1"
+load r491,""
+load r490,1
+settp r491,768
+call r145,llctarget.literal(),r490
+null r491
+.srcstep 379 0 17 "cleanup.crexx" 25 5 7 "x = 24; say x"
+load r489,"cleanup.crexx:25:5"
+load r491,"24"
+load r490,1
+settp r491,768
+call r146,llctarget.literal(),r490
+null r491
+.srcstep 372 0 17 "cleanup.crexx" 25 1 7 "x = 24; say x"
+load r489,"cleanup.crexx:25:1"
+unlink r147
+link r147,r1
+mkref r491,r147
+copy r492,r146
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 380 0 17 "cleanup.crexx" 25 9 14 "x = 24; say x"
+load r489,"cleanup.crexx:25:9"
+load r491,""
+load r490,1
+settp r491,768
+call r148,llctarget.literal(),r490
+null r491
+.srcstep 387 0 17 "cleanup.crexx" 25 13 14 "x = 24; say x"
+load r489,"cleanup.crexx:25:13"
+unlink r149
+link r149,r1
+mkref r491,r149
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r150,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 380 0 17 "cleanup.crexx" 25 9 14 "x = 24; say x"
+load r489,"cleanup.crexx:25:9"
+copy r491,r150
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 388 0 17 "cleanup.crexx" 26 1 7 "x = 25; say x"
+load r489,"cleanup.crexx:26:1"
+load r491,""
+load r490,1
+settp r491,768
+call r151,llctarget.literal(),r490
+null r491
+.srcstep 395 0 17 "cleanup.crexx" 26 5 7 "x = 25; say x"
+load r489,"cleanup.crexx:26:5"
+load r491,"25"
+load r490,1
+settp r491,768
+call r152,llctarget.literal(),r490
+null r491
+.srcstep 388 0 17 "cleanup.crexx" 26 1 7 "x = 25; say x"
+load r489,"cleanup.crexx:26:1"
+unlink r153
+link r153,r1
+mkref r491,r153
+copy r492,r152
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 396 0 17 "cleanup.crexx" 26 9 14 "x = 25; say x"
+load r489,"cleanup.crexx:26:9"
+load r491,""
+load r490,1
+settp r491,768
+call r154,llctarget.literal(),r490
+null r491
+.srcstep 403 0 17 "cleanup.crexx" 26 13 14 "x = 25; say x"
+load r489,"cleanup.crexx:26:13"
+unlink r155
+link r155,r1
+mkref r491,r155
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r156,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 396 0 17 "cleanup.crexx" 26 9 14 "x = 25; say x"
+load r489,"cleanup.crexx:26:9"
+copy r491,r156
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 404 0 17 "cleanup.crexx" 27 1 7 "x = 26; say x"
+load r489,"cleanup.crexx:27:1"
+load r491,""
+load r490,1
+settp r491,768
+call r157,llctarget.literal(),r490
+null r491
+.srcstep 411 0 17 "cleanup.crexx" 27 5 7 "x = 26; say x"
+load r489,"cleanup.crexx:27:5"
+load r491,"26"
+load r490,1
+settp r491,768
+call r158,llctarget.literal(),r490
+null r491
+.srcstep 404 0 17 "cleanup.crexx" 27 1 7 "x = 26; say x"
+load r489,"cleanup.crexx:27:1"
+unlink r159
+link r159,r1
+mkref r491,r159
+copy r492,r158
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 412 0 17 "cleanup.crexx" 27 9 14 "x = 26; say x"
+load r489,"cleanup.crexx:27:9"
+load r491,""
+load r490,1
+settp r491,768
+call r160,llctarget.literal(),r490
+null r491
+.srcstep 419 0 17 "cleanup.crexx" 27 13 14 "x = 26; say x"
+load r489,"cleanup.crexx:27:13"
+unlink r161
+link r161,r1
+mkref r491,r161
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r162,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 412 0 17 "cleanup.crexx" 27 9 14 "x = 26; say x"
+load r489,"cleanup.crexx:27:9"
+copy r491,r162
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 420 0 17 "cleanup.crexx" 28 1 7 "x = 27; say x"
+load r489,"cleanup.crexx:28:1"
+load r491,""
+load r490,1
+settp r491,768
+call r163,llctarget.literal(),r490
+null r491
+.srcstep 427 0 17 "cleanup.crexx" 28 5 7 "x = 27; say x"
+load r489,"cleanup.crexx:28:5"
+load r491,"27"
+load r490,1
+settp r491,768
+call r164,llctarget.literal(),r490
+null r491
+.srcstep 420 0 17 "cleanup.crexx" 28 1 7 "x = 27; say x"
+load r489,"cleanup.crexx:28:1"
+unlink r165
+link r165,r1
+mkref r491,r165
+copy r492,r164
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 428 0 17 "cleanup.crexx" 28 9 14 "x = 27; say x"
+load r489,"cleanup.crexx:28:9"
+load r491,""
+load r490,1
+settp r491,768
+call r166,llctarget.literal(),r490
+null r491
+.srcstep 435 0 17 "cleanup.crexx" 28 13 14 "x = 27; say x"
+load r489,"cleanup.crexx:28:13"
+unlink r167
+link r167,r1
+mkref r491,r167
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r168,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 428 0 17 "cleanup.crexx" 28 9 14 "x = 27; say x"
+load r489,"cleanup.crexx:28:9"
+copy r491,r168
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 436 0 17 "cleanup.crexx" 29 1 7 "x = 28; say x"
+load r489,"cleanup.crexx:29:1"
+load r491,""
+load r490,1
+settp r491,768
+call r169,llctarget.literal(),r490
+null r491
+.srcstep 443 0 17 "cleanup.crexx" 29 5 7 "x = 28; say x"
+load r489,"cleanup.crexx:29:5"
+load r491,"28"
+load r490,1
+settp r491,768
+call r170,llctarget.literal(),r490
+null r491
+.srcstep 436 0 17 "cleanup.crexx" 29 1 7 "x = 28; say x"
+load r489,"cleanup.crexx:29:1"
+unlink r171
+link r171,r1
+mkref r491,r171
+copy r492,r170
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 444 0 17 "cleanup.crexx" 29 9 14 "x = 28; say x"
+load r489,"cleanup.crexx:29:9"
+load r491,""
+load r490,1
+settp r491,768
+call r172,llctarget.literal(),r490
+null r491
+.srcstep 451 0 17 "cleanup.crexx" 29 13 14 "x = 28; say x"
+load r489,"cleanup.crexx:29:13"
+unlink r173
+link r173,r1
+mkref r491,r173
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r174,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 444 0 17 "cleanup.crexx" 29 9 14 "x = 28; say x"
+load r489,"cleanup.crexx:29:9"
+copy r491,r174
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 452 0 17 "cleanup.crexx" 30 1 7 "x = 29; say x"
+load r489,"cleanup.crexx:30:1"
+load r491,""
+load r490,1
+settp r491,768
+call r175,llctarget.literal(),r490
+null r491
+.srcstep 459 0 17 "cleanup.crexx" 30 5 7 "x = 29; say x"
+load r489,"cleanup.crexx:30:5"
+load r491,"29"
+load r490,1
+settp r491,768
+call r176,llctarget.literal(),r490
+null r491
+.srcstep 452 0 17 "cleanup.crexx" 30 1 7 "x = 29; say x"
+load r489,"cleanup.crexx:30:1"
+unlink r177
+link r177,r1
+mkref r491,r177
+copy r492,r176
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 460 0 17 "cleanup.crexx" 30 9 14 "x = 29; say x"
+load r489,"cleanup.crexx:30:9"
+load r491,""
+load r490,1
+settp r491,768
+call r178,llctarget.literal(),r490
+null r491
+.srcstep 467 0 17 "cleanup.crexx" 30 13 14 "x = 29; say x"
+load r489,"cleanup.crexx:30:13"
+unlink r179
+link r179,r1
+mkref r491,r179
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r180,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 460 0 17 "cleanup.crexx" 30 9 14 "x = 29; say x"
+load r489,"cleanup.crexx:30:9"
+copy r491,r180
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 468 0 17 "cleanup.crexx" 31 1 7 "x = 30; say x"
+load r489,"cleanup.crexx:31:1"
+load r491,""
+load r490,1
+settp r491,768
+call r181,llctarget.literal(),r490
+null r491
+.srcstep 475 0 17 "cleanup.crexx" 31 5 7 "x = 30; say x"
+load r489,"cleanup.crexx:31:5"
+load r491,"30"
+load r490,1
+settp r491,768
+call r182,llctarget.literal(),r490
+null r491
+.srcstep 468 0 17 "cleanup.crexx" 31 1 7 "x = 30; say x"
+load r489,"cleanup.crexx:31:1"
+unlink r183
+link r183,r1
+mkref r491,r183
+copy r492,r182
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 476 0 17 "cleanup.crexx" 31 9 14 "x = 30; say x"
+load r489,"cleanup.crexx:31:9"
+load r491,""
+load r490,1
+settp r491,768
+call r184,llctarget.literal(),r490
+null r491
+.srcstep 483 0 17 "cleanup.crexx" 31 13 14 "x = 30; say x"
+load r489,"cleanup.crexx:31:13"
+unlink r185
+link r185,r1
+mkref r491,r185
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r186,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 476 0 17 "cleanup.crexx" 31 9 14 "x = 30; say x"
+load r489,"cleanup.crexx:31:9"
+copy r491,r186
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 484 0 17 "cleanup.crexx" 32 1 7 "x = 31; say x"
+load r489,"cleanup.crexx:32:1"
+load r491,""
+load r490,1
+settp r491,768
+call r187,llctarget.literal(),r490
+null r491
+.srcstep 491 0 17 "cleanup.crexx" 32 5 7 "x = 31; say x"
+load r489,"cleanup.crexx:32:5"
+load r491,"31"
+load r490,1
+settp r491,768
+call r188,llctarget.literal(),r490
+null r491
+.srcstep 484 0 17 "cleanup.crexx" 32 1 7 "x = 31; say x"
+load r489,"cleanup.crexx:32:1"
+unlink r189
+link r189,r1
+mkref r491,r189
+copy r492,r188
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 492 0 17 "cleanup.crexx" 32 9 14 "x = 31; say x"
+load r489,"cleanup.crexx:32:9"
+load r491,""
+load r490,1
+settp r491,768
+call r190,llctarget.literal(),r490
+null r491
+.srcstep 499 0 17 "cleanup.crexx" 32 13 14 "x = 31; say x"
+load r489,"cleanup.crexx:32:13"
+unlink r191
+link r191,r1
+mkref r491,r191
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r192,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 492 0 17 "cleanup.crexx" 32 9 14 "x = 31; say x"
+load r489,"cleanup.crexx:32:9"
+copy r491,r192
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 500 0 17 "cleanup.crexx" 33 1 7 "x = 32; say x"
+load r489,"cleanup.crexx:33:1"
+load r491,""
+load r490,1
+settp r491,768
+call r193,llctarget.literal(),r490
+null r491
+.srcstep 507 0 17 "cleanup.crexx" 33 5 7 "x = 32; say x"
+load r489,"cleanup.crexx:33:5"
+load r491,"32"
+load r490,1
+settp r491,768
+call r194,llctarget.literal(),r490
+null r491
+.srcstep 500 0 17 "cleanup.crexx" 33 1 7 "x = 32; say x"
+load r489,"cleanup.crexx:33:1"
+unlink r195
+link r195,r1
+mkref r491,r195
+copy r492,r194
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 508 0 17 "cleanup.crexx" 33 9 14 "x = 32; say x"
+load r489,"cleanup.crexx:33:9"
+load r491,""
+load r490,1
+settp r491,768
+call r196,llctarget.literal(),r490
+null r491
+.srcstep 515 0 17 "cleanup.crexx" 33 13 14 "x = 32; say x"
+load r489,"cleanup.crexx:33:13"
+unlink r197
+link r197,r1
+mkref r491,r197
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r198,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 508 0 17 "cleanup.crexx" 33 9 14 "x = 32; say x"
+load r489,"cleanup.crexx:33:9"
+copy r491,r198
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 516 0 17 "cleanup.crexx" 34 1 7 "x = 33; say x"
+load r489,"cleanup.crexx:34:1"
+load r491,""
+load r490,1
+settp r491,768
+call r199,llctarget.literal(),r490
+null r491
+.srcstep 523 0 17 "cleanup.crexx" 34 5 7 "x = 33; say x"
+load r489,"cleanup.crexx:34:5"
+load r491,"33"
+load r490,1
+settp r491,768
+call r200,llctarget.literal(),r490
+null r491
+.srcstep 516 0 17 "cleanup.crexx" 34 1 7 "x = 33; say x"
+load r489,"cleanup.crexx:34:1"
+unlink r201
+link r201,r1
+mkref r491,r201
+copy r492,r200
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 524 0 17 "cleanup.crexx" 34 9 14 "x = 33; say x"
+load r489,"cleanup.crexx:34:9"
+load r491,""
+load r490,1
+settp r491,768
+call r202,llctarget.literal(),r490
+null r491
+.srcstep 531 0 17 "cleanup.crexx" 34 13 14 "x = 33; say x"
+load r489,"cleanup.crexx:34:13"
+unlink r203
+link r203,r1
+mkref r491,r203
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r204,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 524 0 17 "cleanup.crexx" 34 9 14 "x = 33; say x"
+load r489,"cleanup.crexx:34:9"
+copy r491,r204
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 532 0 17 "cleanup.crexx" 35 1 7 "x = 34; say x"
+load r489,"cleanup.crexx:35:1"
+load r491,""
+load r490,1
+settp r491,768
+call r205,llctarget.literal(),r490
+null r491
+.srcstep 539 0 17 "cleanup.crexx" 35 5 7 "x = 34; say x"
+load r489,"cleanup.crexx:35:5"
+load r491,"34"
+load r490,1
+settp r491,768
+call r206,llctarget.literal(),r490
+null r491
+.srcstep 532 0 17 "cleanup.crexx" 35 1 7 "x = 34; say x"
+load r489,"cleanup.crexx:35:1"
+unlink r207
+link r207,r1
+mkref r491,r207
+copy r492,r206
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 540 0 17 "cleanup.crexx" 35 9 14 "x = 34; say x"
+load r489,"cleanup.crexx:35:9"
+load r491,""
+load r490,1
+settp r491,768
+call r208,llctarget.literal(),r490
+null r491
+.srcstep 547 0 17 "cleanup.crexx" 35 13 14 "x = 34; say x"
+load r489,"cleanup.crexx:35:13"
+unlink r209
+link r209,r1
+mkref r491,r209
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r210,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 540 0 17 "cleanup.crexx" 35 9 14 "x = 34; say x"
+load r489,"cleanup.crexx:35:9"
+copy r491,r210
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 548 0 17 "cleanup.crexx" 36 1 7 "x = 35; say x"
+load r489,"cleanup.crexx:36:1"
+load r491,""
+load r490,1
+settp r491,768
+call r211,llctarget.literal(),r490
+null r491
+.srcstep 555 0 17 "cleanup.crexx" 36 5 7 "x = 35; say x"
+load r489,"cleanup.crexx:36:5"
+load r491,"35"
+load r490,1
+settp r491,768
+call r212,llctarget.literal(),r490
+null r491
+.srcstep 548 0 17 "cleanup.crexx" 36 1 7 "x = 35; say x"
+load r489,"cleanup.crexx:36:1"
+unlink r213
+link r213,r1
+mkref r491,r213
+copy r492,r212
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 556 0 17 "cleanup.crexx" 36 9 14 "x = 35; say x"
+load r489,"cleanup.crexx:36:9"
+load r491,""
+load r490,1
+settp r491,768
+call r214,llctarget.literal(),r490
+null r491
+.srcstep 563 0 17 "cleanup.crexx" 36 13 14 "x = 35; say x"
+load r489,"cleanup.crexx:36:13"
+unlink r215
+link r215,r1
+mkref r491,r215
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r216,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 556 0 17 "cleanup.crexx" 36 9 14 "x = 35; say x"
+load r489,"cleanup.crexx:36:9"
+copy r491,r216
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 564 0 17 "cleanup.crexx" 37 1 7 "x = 36; say x"
+load r489,"cleanup.crexx:37:1"
+load r491,""
+load r490,1
+settp r491,768
+call r217,llctarget.literal(),r490
+null r491
+.srcstep 571 0 17 "cleanup.crexx" 37 5 7 "x = 36; say x"
+load r489,"cleanup.crexx:37:5"
+load r491,"36"
+load r490,1
+settp r491,768
+call r218,llctarget.literal(),r490
+null r491
+.srcstep 564 0 17 "cleanup.crexx" 37 1 7 "x = 36; say x"
+load r489,"cleanup.crexx:37:1"
+unlink r219
+link r219,r1
+mkref r491,r219
+copy r492,r218
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 572 0 17 "cleanup.crexx" 37 9 14 "x = 36; say x"
+load r489,"cleanup.crexx:37:9"
+load r491,""
+load r490,1
+settp r491,768
+call r220,llctarget.literal(),r490
+null r491
+.srcstep 579 0 17 "cleanup.crexx" 37 13 14 "x = 36; say x"
+load r489,"cleanup.crexx:37:13"
+unlink r221
+link r221,r1
+mkref r491,r221
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r222,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 572 0 17 "cleanup.crexx" 37 9 14 "x = 36; say x"
+load r489,"cleanup.crexx:37:9"
+copy r491,r222
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 580 0 17 "cleanup.crexx" 38 1 7 "x = 37; say x"
+load r489,"cleanup.crexx:38:1"
+load r491,""
+load r490,1
+settp r491,768
+call r223,llctarget.literal(),r490
+null r491
+.srcstep 587 0 17 "cleanup.crexx" 38 5 7 "x = 37; say x"
+load r489,"cleanup.crexx:38:5"
+load r491,"37"
+load r490,1
+settp r491,768
+call r224,llctarget.literal(),r490
+null r491
+.srcstep 580 0 17 "cleanup.crexx" 38 1 7 "x = 37; say x"
+load r489,"cleanup.crexx:38:1"
+unlink r225
+link r225,r1
+mkref r491,r225
+copy r492,r224
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 588 0 17 "cleanup.crexx" 38 9 14 "x = 37; say x"
+load r489,"cleanup.crexx:38:9"
+load r491,""
+load r490,1
+settp r491,768
+call r226,llctarget.literal(),r490
+null r491
+.srcstep 595 0 17 "cleanup.crexx" 38 13 14 "x = 37; say x"
+load r489,"cleanup.crexx:38:13"
+unlink r227
+link r227,r1
+mkref r491,r227
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r228,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 588 0 17 "cleanup.crexx" 38 9 14 "x = 37; say x"
+load r489,"cleanup.crexx:38:9"
+copy r491,r228
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 596 0 17 "cleanup.crexx" 39 1 7 "x = 38; say x"
+load r489,"cleanup.crexx:39:1"
+load r491,""
+load r490,1
+settp r491,768
+call r229,llctarget.literal(),r490
+null r491
+.srcstep 603 0 17 "cleanup.crexx" 39 5 7 "x = 38; say x"
+load r489,"cleanup.crexx:39:5"
+load r491,"38"
+load r490,1
+settp r491,768
+call r230,llctarget.literal(),r490
+null r491
+.srcstep 596 0 17 "cleanup.crexx" 39 1 7 "x = 38; say x"
+load r489,"cleanup.crexx:39:1"
+unlink r231
+link r231,r1
+mkref r491,r231
+copy r492,r230
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 604 0 17 "cleanup.crexx" 39 9 14 "x = 38; say x"
+load r489,"cleanup.crexx:39:9"
+load r491,""
+load r490,1
+settp r491,768
+call r232,llctarget.literal(),r490
+null r491
+.srcstep 611 0 17 "cleanup.crexx" 39 13 14 "x = 38; say x"
+load r489,"cleanup.crexx:39:13"
+unlink r233
+link r233,r1
+mkref r491,r233
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r234,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 604 0 17 "cleanup.crexx" 39 9 14 "x = 38; say x"
+load r489,"cleanup.crexx:39:9"
+copy r491,r234
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 612 0 17 "cleanup.crexx" 40 1 7 "x = 39; say x"
+load r489,"cleanup.crexx:40:1"
+load r491,""
+load r490,1
+settp r491,768
+call r235,llctarget.literal(),r490
+null r491
+.srcstep 619 0 17 "cleanup.crexx" 40 5 7 "x = 39; say x"
+load r489,"cleanup.crexx:40:5"
+load r491,"39"
+load r490,1
+settp r491,768
+call r236,llctarget.literal(),r490
+null r491
+.srcstep 612 0 17 "cleanup.crexx" 40 1 7 "x = 39; say x"
+load r489,"cleanup.crexx:40:1"
+unlink r237
+link r237,r1
+mkref r491,r237
+copy r492,r236
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 620 0 17 "cleanup.crexx" 40 9 14 "x = 39; say x"
+load r489,"cleanup.crexx:40:9"
+load r491,""
+load r490,1
+settp r491,768
+call r238,llctarget.literal(),r490
+null r491
+.srcstep 627 0 17 "cleanup.crexx" 40 13 14 "x = 39; say x"
+load r489,"cleanup.crexx:40:13"
+unlink r239
+link r239,r1
+mkref r491,r239
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r240,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 620 0 17 "cleanup.crexx" 40 9 14 "x = 39; say x"
+load r489,"cleanup.crexx:40:9"
+copy r491,r240
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 628 0 17 "cleanup.crexx" 41 1 7 "x = 40; say x"
+load r489,"cleanup.crexx:41:1"
+load r491,""
+load r490,1
+settp r491,768
+call r241,llctarget.literal(),r490
+null r491
+.srcstep 635 0 17 "cleanup.crexx" 41 5 7 "x = 40; say x"
+load r489,"cleanup.crexx:41:5"
+load r491,"40"
+load r490,1
+settp r491,768
+call r242,llctarget.literal(),r490
+null r491
+.srcstep 628 0 17 "cleanup.crexx" 41 1 7 "x = 40; say x"
+load r489,"cleanup.crexx:41:1"
+unlink r243
+link r243,r1
+mkref r491,r243
+copy r492,r242
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 636 0 17 "cleanup.crexx" 41 9 14 "x = 40; say x"
+load r489,"cleanup.crexx:41:9"
+load r491,""
+load r490,1
+settp r491,768
+call r244,llctarget.literal(),r490
+null r491
+.srcstep 643 0 17 "cleanup.crexx" 41 13 14 "x = 40; say x"
+load r489,"cleanup.crexx:41:13"
+unlink r245
+link r245,r1
+mkref r491,r245
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r246,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 636 0 17 "cleanup.crexx" 41 9 14 "x = 40; say x"
+load r489,"cleanup.crexx:41:9"
+copy r491,r246
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 644 0 17 "cleanup.crexx" 42 1 7 "x = 41; say x"
+load r489,"cleanup.crexx:42:1"
+load r491,""
+load r490,1
+settp r491,768
+call r247,llctarget.literal(),r490
+null r491
+.srcstep 651 0 17 "cleanup.crexx" 42 5 7 "x = 41; say x"
+load r489,"cleanup.crexx:42:5"
+load r491,"41"
+load r490,1
+settp r491,768
+call r248,llctarget.literal(),r490
+null r491
+.srcstep 644 0 17 "cleanup.crexx" 42 1 7 "x = 41; say x"
+load r489,"cleanup.crexx:42:1"
+unlink r249
+link r249,r1
+mkref r491,r249
+copy r492,r248
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 652 0 17 "cleanup.crexx" 42 9 14 "x = 41; say x"
+load r489,"cleanup.crexx:42:9"
+load r491,""
+load r490,1
+settp r491,768
+call r250,llctarget.literal(),r490
+null r491
+.srcstep 659 0 17 "cleanup.crexx" 42 13 14 "x = 41; say x"
+load r489,"cleanup.crexx:42:13"
+unlink r251
+link r251,r1
+mkref r491,r251
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r252,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 652 0 17 "cleanup.crexx" 42 9 14 "x = 41; say x"
+load r489,"cleanup.crexx:42:9"
+copy r491,r252
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 660 0 17 "cleanup.crexx" 43 1 7 "x = 42; say x"
+load r489,"cleanup.crexx:43:1"
+load r491,""
+load r490,1
+settp r491,768
+call r253,llctarget.literal(),r490
+null r491
+.srcstep 667 0 17 "cleanup.crexx" 43 5 7 "x = 42; say x"
+load r489,"cleanup.crexx:43:5"
+load r491,"42"
+load r490,1
+settp r491,768
+call r254,llctarget.literal(),r490
+null r491
+.srcstep 660 0 17 "cleanup.crexx" 43 1 7 "x = 42; say x"
+load r489,"cleanup.crexx:43:1"
+unlink r255
+link r255,r1
+mkref r491,r255
+copy r492,r254
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 668 0 17 "cleanup.crexx" 43 9 14 "x = 42; say x"
+load r489,"cleanup.crexx:43:9"
+load r491,""
+load r490,1
+settp r491,768
+call r256,llctarget.literal(),r490
+null r491
+.srcstep 675 0 17 "cleanup.crexx" 43 13 14 "x = 42; say x"
+load r489,"cleanup.crexx:43:13"
+unlink r257
+link r257,r1
+mkref r491,r257
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r258,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 668 0 17 "cleanup.crexx" 43 9 14 "x = 42; say x"
+load r489,"cleanup.crexx:43:9"
+copy r491,r258
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 676 0 17 "cleanup.crexx" 44 1 7 "x = 43; say x"
+load r489,"cleanup.crexx:44:1"
+load r491,""
+load r490,1
+settp r491,768
+call r259,llctarget.literal(),r490
+null r491
+.srcstep 683 0 17 "cleanup.crexx" 44 5 7 "x = 43; say x"
+load r489,"cleanup.crexx:44:5"
+load r491,"43"
+load r490,1
+settp r491,768
+call r260,llctarget.literal(),r490
+null r491
+.srcstep 676 0 17 "cleanup.crexx" 44 1 7 "x = 43; say x"
+load r489,"cleanup.crexx:44:1"
+unlink r261
+link r261,r1
+mkref r491,r261
+copy r492,r260
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 684 0 17 "cleanup.crexx" 44 9 14 "x = 43; say x"
+load r489,"cleanup.crexx:44:9"
+load r491,""
+load r490,1
+settp r491,768
+call r262,llctarget.literal(),r490
+null r491
+.srcstep 691 0 17 "cleanup.crexx" 44 13 14 "x = 43; say x"
+load r489,"cleanup.crexx:44:13"
+unlink r263
+link r263,r1
+mkref r491,r263
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r264,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 684 0 17 "cleanup.crexx" 44 9 14 "x = 43; say x"
+load r489,"cleanup.crexx:44:9"
+copy r491,r264
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 692 0 17 "cleanup.crexx" 45 1 7 "x = 44; say x"
+load r489,"cleanup.crexx:45:1"
+load r491,""
+load r490,1
+settp r491,768
+call r265,llctarget.literal(),r490
+null r491
+.srcstep 699 0 17 "cleanup.crexx" 45 5 7 "x = 44; say x"
+load r489,"cleanup.crexx:45:5"
+load r491,"44"
+load r490,1
+settp r491,768
+call r266,llctarget.literal(),r490
+null r491
+.srcstep 692 0 17 "cleanup.crexx" 45 1 7 "x = 44; say x"
+load r489,"cleanup.crexx:45:1"
+unlink r267
+link r267,r1
+mkref r491,r267
+copy r492,r266
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 700 0 17 "cleanup.crexx" 45 9 14 "x = 44; say x"
+load r489,"cleanup.crexx:45:9"
+load r491,""
+load r490,1
+settp r491,768
+call r268,llctarget.literal(),r490
+null r491
+.srcstep 707 0 17 "cleanup.crexx" 45 13 14 "x = 44; say x"
+load r489,"cleanup.crexx:45:13"
+unlink r269
+link r269,r1
+mkref r491,r269
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r270,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 700 0 17 "cleanup.crexx" 45 9 14 "x = 44; say x"
+load r489,"cleanup.crexx:45:9"
+copy r491,r270
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 708 0 17 "cleanup.crexx" 46 1 7 "x = 45; say x"
+load r489,"cleanup.crexx:46:1"
+load r491,""
+load r490,1
+settp r491,768
+call r271,llctarget.literal(),r490
+null r491
+.srcstep 715 0 17 "cleanup.crexx" 46 5 7 "x = 45; say x"
+load r489,"cleanup.crexx:46:5"
+load r491,"45"
+load r490,1
+settp r491,768
+call r272,llctarget.literal(),r490
+null r491
+.srcstep 708 0 17 "cleanup.crexx" 46 1 7 "x = 45; say x"
+load r489,"cleanup.crexx:46:1"
+unlink r273
+link r273,r1
+mkref r491,r273
+copy r492,r272
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 716 0 17 "cleanup.crexx" 46 9 14 "x = 45; say x"
+load r489,"cleanup.crexx:46:9"
+load r491,""
+load r490,1
+settp r491,768
+call r274,llctarget.literal(),r490
+null r491
+.srcstep 723 0 17 "cleanup.crexx" 46 13 14 "x = 45; say x"
+load r489,"cleanup.crexx:46:13"
+unlink r275
+link r275,r1
+mkref r491,r275
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r276,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 716 0 17 "cleanup.crexx" 46 9 14 "x = 45; say x"
+load r489,"cleanup.crexx:46:9"
+copy r491,r276
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 724 0 17 "cleanup.crexx" 47 1 7 "x = 46; say x"
+load r489,"cleanup.crexx:47:1"
+load r491,""
+load r490,1
+settp r491,768
+call r277,llctarget.literal(),r490
+null r491
+.srcstep 731 0 17 "cleanup.crexx" 47 5 7 "x = 46; say x"
+load r489,"cleanup.crexx:47:5"
+load r491,"46"
+load r490,1
+settp r491,768
+call r278,llctarget.literal(),r490
+null r491
+.srcstep 724 0 17 "cleanup.crexx" 47 1 7 "x = 46; say x"
+load r489,"cleanup.crexx:47:1"
+unlink r279
+link r279,r1
+mkref r491,r279
+copy r492,r278
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 732 0 17 "cleanup.crexx" 47 9 14 "x = 46; say x"
+load r489,"cleanup.crexx:47:9"
+load r491,""
+load r490,1
+settp r491,768
+call r280,llctarget.literal(),r490
+null r491
+.srcstep 739 0 17 "cleanup.crexx" 47 13 14 "x = 46; say x"
+load r489,"cleanup.crexx:47:13"
+unlink r281
+link r281,r1
+mkref r491,r281
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r282,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 732 0 17 "cleanup.crexx" 47 9 14 "x = 46; say x"
+load r489,"cleanup.crexx:47:9"
+copy r491,r282
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 740 0 17 "cleanup.crexx" 48 1 7 "x = 47; say x"
+load r489,"cleanup.crexx:48:1"
+load r491,""
+load r490,1
+settp r491,768
+call r283,llctarget.literal(),r490
+null r491
+.srcstep 747 0 17 "cleanup.crexx" 48 5 7 "x = 47; say x"
+load r489,"cleanup.crexx:48:5"
+load r491,"47"
+load r490,1
+settp r491,768
+call r284,llctarget.literal(),r490
+null r491
+.srcstep 740 0 17 "cleanup.crexx" 48 1 7 "x = 47; say x"
+load r489,"cleanup.crexx:48:1"
+unlink r285
+link r285,r1
+mkref r491,r285
+copy r492,r284
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 748 0 17 "cleanup.crexx" 48 9 14 "x = 47; say x"
+load r489,"cleanup.crexx:48:9"
+load r491,""
+load r490,1
+settp r491,768
+call r286,llctarget.literal(),r490
+null r491
+.srcstep 755 0 17 "cleanup.crexx" 48 13 14 "x = 47; say x"
+load r489,"cleanup.crexx:48:13"
+unlink r287
+link r287,r1
+mkref r491,r287
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r288,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 748 0 17 "cleanup.crexx" 48 9 14 "x = 47; say x"
+load r489,"cleanup.crexx:48:9"
+copy r491,r288
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 756 0 17 "cleanup.crexx" 49 1 7 "x = 48; say x"
+load r489,"cleanup.crexx:49:1"
+load r491,""
+load r490,1
+settp r491,768
+call r289,llctarget.literal(),r490
+null r491
+.srcstep 763 0 17 "cleanup.crexx" 49 5 7 "x = 48; say x"
+load r489,"cleanup.crexx:49:5"
+load r491,"48"
+load r490,1
+settp r491,768
+call r290,llctarget.literal(),r490
+null r491
+.srcstep 756 0 17 "cleanup.crexx" 49 1 7 "x = 48; say x"
+load r489,"cleanup.crexx:49:1"
+unlink r291
+link r291,r1
+mkref r491,r291
+copy r492,r290
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 764 0 17 "cleanup.crexx" 49 9 14 "x = 48; say x"
+load r489,"cleanup.crexx:49:9"
+load r491,""
+load r490,1
+settp r491,768
+call r292,llctarget.literal(),r490
+null r491
+.srcstep 771 0 17 "cleanup.crexx" 49 13 14 "x = 48; say x"
+load r489,"cleanup.crexx:49:13"
+unlink r293
+link r293,r1
+mkref r491,r293
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r294,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 764 0 17 "cleanup.crexx" 49 9 14 "x = 48; say x"
+load r489,"cleanup.crexx:49:9"
+copy r491,r294
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 772 0 17 "cleanup.crexx" 50 1 7 "x = 49; say x"
+load r489,"cleanup.crexx:50:1"
+load r491,""
+load r490,1
+settp r491,768
+call r295,llctarget.literal(),r490
+null r491
+.srcstep 779 0 17 "cleanup.crexx" 50 5 7 "x = 49; say x"
+load r489,"cleanup.crexx:50:5"
+load r491,"49"
+load r490,1
+settp r491,768
+call r296,llctarget.literal(),r490
+null r491
+.srcstep 772 0 17 "cleanup.crexx" 50 1 7 "x = 49; say x"
+load r489,"cleanup.crexx:50:1"
+unlink r297
+link r297,r1
+mkref r491,r297
+copy r492,r296
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 780 0 17 "cleanup.crexx" 50 9 14 "x = 49; say x"
+load r489,"cleanup.crexx:50:9"
+load r491,""
+load r490,1
+settp r491,768
+call r298,llctarget.literal(),r490
+null r491
+.srcstep 787 0 17 "cleanup.crexx" 50 13 14 "x = 49; say x"
+load r489,"cleanup.crexx:50:13"
+unlink r299
+link r299,r1
+mkref r491,r299
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r300,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 780 0 17 "cleanup.crexx" 50 9 14 "x = 49; say x"
+load r489,"cleanup.crexx:50:9"
+copy r491,r300
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 788 0 17 "cleanup.crexx" 51 1 7 "x = 50; say x"
+load r489,"cleanup.crexx:51:1"
+load r491,""
+load r490,1
+settp r491,768
+call r301,llctarget.literal(),r490
+null r491
+.srcstep 795 0 17 "cleanup.crexx" 51 5 7 "x = 50; say x"
+load r489,"cleanup.crexx:51:5"
+load r491,"50"
+load r490,1
+settp r491,768
+call r302,llctarget.literal(),r490
+null r491
+.srcstep 788 0 17 "cleanup.crexx" 51 1 7 "x = 50; say x"
+load r489,"cleanup.crexx:51:1"
+unlink r303
+link r303,r1
+mkref r491,r303
+copy r492,r302
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 796 0 17 "cleanup.crexx" 51 9 14 "x = 50; say x"
+load r489,"cleanup.crexx:51:9"
+load r491,""
+load r490,1
+settp r491,768
+call r304,llctarget.literal(),r490
+null r491
+.srcstep 803 0 17 "cleanup.crexx" 51 13 14 "x = 50; say x"
+load r489,"cleanup.crexx:51:13"
+unlink r305
+link r305,r1
+mkref r491,r305
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r306,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 796 0 17 "cleanup.crexx" 51 9 14 "x = 50; say x"
+load r489,"cleanup.crexx:51:9"
+copy r491,r306
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 804 0 17 "cleanup.crexx" 52 1 7 "x = 51; say x"
+load r489,"cleanup.crexx:52:1"
+load r491,""
+load r490,1
+settp r491,768
+call r307,llctarget.literal(),r490
+null r491
+.srcstep 811 0 17 "cleanup.crexx" 52 5 7 "x = 51; say x"
+load r489,"cleanup.crexx:52:5"
+load r491,"51"
+load r490,1
+settp r491,768
+call r308,llctarget.literal(),r490
+null r491
+.srcstep 804 0 17 "cleanup.crexx" 52 1 7 "x = 51; say x"
+load r489,"cleanup.crexx:52:1"
+unlink r309
+link r309,r1
+mkref r491,r309
+copy r492,r308
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 812 0 17 "cleanup.crexx" 52 9 14 "x = 51; say x"
+load r489,"cleanup.crexx:52:9"
+load r491,""
+load r490,1
+settp r491,768
+call r310,llctarget.literal(),r490
+null r491
+.srcstep 819 0 17 "cleanup.crexx" 52 13 14 "x = 51; say x"
+load r489,"cleanup.crexx:52:13"
+unlink r311
+link r311,r1
+mkref r491,r311
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r312,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 812 0 17 "cleanup.crexx" 52 9 14 "x = 51; say x"
+load r489,"cleanup.crexx:52:9"
+copy r491,r312
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 820 0 17 "cleanup.crexx" 53 1 7 "x = 52; say x"
+load r489,"cleanup.crexx:53:1"
+load r491,""
+load r490,1
+settp r491,768
+call r313,llctarget.literal(),r490
+null r491
+.srcstep 827 0 17 "cleanup.crexx" 53 5 7 "x = 52; say x"
+load r489,"cleanup.crexx:53:5"
+load r491,"52"
+load r490,1
+settp r491,768
+call r314,llctarget.literal(),r490
+null r491
+.srcstep 820 0 17 "cleanup.crexx" 53 1 7 "x = 52; say x"
+load r489,"cleanup.crexx:53:1"
+unlink r315
+link r315,r1
+mkref r491,r315
+copy r492,r314
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 828 0 17 "cleanup.crexx" 53 9 14 "x = 52; say x"
+load r489,"cleanup.crexx:53:9"
+load r491,""
+load r490,1
+settp r491,768
+call r316,llctarget.literal(),r490
+null r491
+.srcstep 835 0 17 "cleanup.crexx" 53 13 14 "x = 52; say x"
+load r489,"cleanup.crexx:53:13"
+unlink r317
+link r317,r1
+mkref r491,r317
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r318,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 828 0 17 "cleanup.crexx" 53 9 14 "x = 52; say x"
+load r489,"cleanup.crexx:53:9"
+copy r491,r318
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 836 0 17 "cleanup.crexx" 54 1 7 "x = 53; say x"
+load r489,"cleanup.crexx:54:1"
+load r491,""
+load r490,1
+settp r491,768
+call r319,llctarget.literal(),r490
+null r491
+.srcstep 843 0 17 "cleanup.crexx" 54 5 7 "x = 53; say x"
+load r489,"cleanup.crexx:54:5"
+load r491,"53"
+load r490,1
+settp r491,768
+call r320,llctarget.literal(),r490
+null r491
+.srcstep 836 0 17 "cleanup.crexx" 54 1 7 "x = 53; say x"
+load r489,"cleanup.crexx:54:1"
+unlink r321
+link r321,r1
+mkref r491,r321
+copy r492,r320
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 844 0 17 "cleanup.crexx" 54 9 14 "x = 53; say x"
+load r489,"cleanup.crexx:54:9"
+load r491,""
+load r490,1
+settp r491,768
+call r322,llctarget.literal(),r490
+null r491
+.srcstep 851 0 17 "cleanup.crexx" 54 13 14 "x = 53; say x"
+load r489,"cleanup.crexx:54:13"
+unlink r323
+link r323,r1
+mkref r491,r323
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r324,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 844 0 17 "cleanup.crexx" 54 9 14 "x = 53; say x"
+load r489,"cleanup.crexx:54:9"
+copy r491,r324
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 852 0 17 "cleanup.crexx" 55 1 7 "x = 54; say x"
+load r489,"cleanup.crexx:55:1"
+load r491,""
+load r490,1
+settp r491,768
+call r325,llctarget.literal(),r490
+null r491
+.srcstep 859 0 17 "cleanup.crexx" 55 5 7 "x = 54; say x"
+load r489,"cleanup.crexx:55:5"
+load r491,"54"
+load r490,1
+settp r491,768
+call r326,llctarget.literal(),r490
+null r491
+.srcstep 852 0 17 "cleanup.crexx" 55 1 7 "x = 54; say x"
+load r489,"cleanup.crexx:55:1"
+unlink r327
+link r327,r1
+mkref r491,r327
+copy r492,r326
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 860 0 17 "cleanup.crexx" 55 9 14 "x = 54; say x"
+load r489,"cleanup.crexx:55:9"
+load r491,""
+load r490,1
+settp r491,768
+call r328,llctarget.literal(),r490
+null r491
+.srcstep 867 0 17 "cleanup.crexx" 55 13 14 "x = 54; say x"
+load r489,"cleanup.crexx:55:13"
+unlink r329
+link r329,r1
+mkref r491,r329
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r330,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 860 0 17 "cleanup.crexx" 55 9 14 "x = 54; say x"
+load r489,"cleanup.crexx:55:9"
+copy r491,r330
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 868 0 17 "cleanup.crexx" 56 1 7 "x = 55; say x"
+load r489,"cleanup.crexx:56:1"
+load r491,""
+load r490,1
+settp r491,768
+call r331,llctarget.literal(),r490
+null r491
+.srcstep 875 0 17 "cleanup.crexx" 56 5 7 "x = 55; say x"
+load r489,"cleanup.crexx:56:5"
+load r491,"55"
+load r490,1
+settp r491,768
+call r332,llctarget.literal(),r490
+null r491
+.srcstep 868 0 17 "cleanup.crexx" 56 1 7 "x = 55; say x"
+load r489,"cleanup.crexx:56:1"
+unlink r333
+link r333,r1
+mkref r491,r333
+copy r492,r332
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 876 0 17 "cleanup.crexx" 56 9 14 "x = 55; say x"
+load r489,"cleanup.crexx:56:9"
+load r491,""
+load r490,1
+settp r491,768
+call r334,llctarget.literal(),r490
+null r491
+.srcstep 883 0 17 "cleanup.crexx" 56 13 14 "x = 55; say x"
+load r489,"cleanup.crexx:56:13"
+unlink r335
+link r335,r1
+mkref r491,r335
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r336,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 876 0 17 "cleanup.crexx" 56 9 14 "x = 55; say x"
+load r489,"cleanup.crexx:56:9"
+copy r491,r336
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 884 0 17 "cleanup.crexx" 57 1 7 "x = 56; say x"
+load r489,"cleanup.crexx:57:1"
+load r491,""
+load r490,1
+settp r491,768
+call r337,llctarget.literal(),r490
+null r491
+.srcstep 891 0 17 "cleanup.crexx" 57 5 7 "x = 56; say x"
+load r489,"cleanup.crexx:57:5"
+load r491,"56"
+load r490,1
+settp r491,768
+call r338,llctarget.literal(),r490
+null r491
+.srcstep 884 0 17 "cleanup.crexx" 57 1 7 "x = 56; say x"
+load r489,"cleanup.crexx:57:1"
+unlink r339
+link r339,r1
+mkref r491,r339
+copy r492,r338
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 892 0 17 "cleanup.crexx" 57 9 14 "x = 56; say x"
+load r489,"cleanup.crexx:57:9"
+load r491,""
+load r490,1
+settp r491,768
+call r340,llctarget.literal(),r490
+null r491
+.srcstep 899 0 17 "cleanup.crexx" 57 13 14 "x = 56; say x"
+load r489,"cleanup.crexx:57:13"
+unlink r341
+link r341,r1
+mkref r491,r341
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r342,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 892 0 17 "cleanup.crexx" 57 9 14 "x = 56; say x"
+load r489,"cleanup.crexx:57:9"
+copy r491,r342
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 900 0 17 "cleanup.crexx" 58 1 7 "x = 57; say x"
+load r489,"cleanup.crexx:58:1"
+load r491,""
+load r490,1
+settp r491,768
+call r343,llctarget.literal(),r490
+null r491
+.srcstep 907 0 17 "cleanup.crexx" 58 5 7 "x = 57; say x"
+load r489,"cleanup.crexx:58:5"
+load r491,"57"
+load r490,1
+settp r491,768
+call r344,llctarget.literal(),r490
+null r491
+.srcstep 900 0 17 "cleanup.crexx" 58 1 7 "x = 57; say x"
+load r489,"cleanup.crexx:58:1"
+unlink r345
+link r345,r1
+mkref r491,r345
+copy r492,r344
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 908 0 17 "cleanup.crexx" 58 9 14 "x = 57; say x"
+load r489,"cleanup.crexx:58:9"
+load r491,""
+load r490,1
+settp r491,768
+call r346,llctarget.literal(),r490
+null r491
+.srcstep 915 0 17 "cleanup.crexx" 58 13 14 "x = 57; say x"
+load r489,"cleanup.crexx:58:13"
+unlink r347
+link r347,r1
+mkref r491,r347
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r348,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 908 0 17 "cleanup.crexx" 58 9 14 "x = 57; say x"
+load r489,"cleanup.crexx:58:9"
+copy r491,r348
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 916 0 17 "cleanup.crexx" 59 1 7 "x = 58; say x"
+load r489,"cleanup.crexx:59:1"
+load r491,""
+load r490,1
+settp r491,768
+call r349,llctarget.literal(),r490
+null r491
+.srcstep 923 0 17 "cleanup.crexx" 59 5 7 "x = 58; say x"
+load r489,"cleanup.crexx:59:5"
+load r491,"58"
+load r490,1
+settp r491,768
+call r350,llctarget.literal(),r490
+null r491
+.srcstep 916 0 17 "cleanup.crexx" 59 1 7 "x = 58; say x"
+load r489,"cleanup.crexx:59:1"
+unlink r351
+link r351,r1
+mkref r491,r351
+copy r492,r350
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 924 0 17 "cleanup.crexx" 59 9 14 "x = 58; say x"
+load r489,"cleanup.crexx:59:9"
+load r491,""
+load r490,1
+settp r491,768
+call r352,llctarget.literal(),r490
+null r491
+.srcstep 931 0 17 "cleanup.crexx" 59 13 14 "x = 58; say x"
+load r489,"cleanup.crexx:59:13"
+unlink r353
+link r353,r1
+mkref r491,r353
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r354,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 924 0 17 "cleanup.crexx" 59 9 14 "x = 58; say x"
+load r489,"cleanup.crexx:59:9"
+copy r491,r354
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 932 0 17 "cleanup.crexx" 60 1 7 "x = 59; say x"
+load r489,"cleanup.crexx:60:1"
+load r491,""
+load r490,1
+settp r491,768
+call r355,llctarget.literal(),r490
+null r491
+.srcstep 939 0 17 "cleanup.crexx" 60 5 7 "x = 59; say x"
+load r489,"cleanup.crexx:60:5"
+load r491,"59"
+load r490,1
+settp r491,768
+call r356,llctarget.literal(),r490
+null r491
+.srcstep 932 0 17 "cleanup.crexx" 60 1 7 "x = 59; say x"
+load r489,"cleanup.crexx:60:1"
+unlink r357
+link r357,r1
+mkref r491,r357
+copy r492,r356
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 940 0 17 "cleanup.crexx" 60 9 14 "x = 59; say x"
+load r489,"cleanup.crexx:60:9"
+load r491,""
+load r490,1
+settp r491,768
+call r358,llctarget.literal(),r490
+null r491
+.srcstep 947 0 17 "cleanup.crexx" 60 13 14 "x = 59; say x"
+load r489,"cleanup.crexx:60:13"
+unlink r359
+link r359,r1
+mkref r491,r359
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r360,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 940 0 17 "cleanup.crexx" 60 9 14 "x = 59; say x"
+load r489,"cleanup.crexx:60:9"
+copy r491,r360
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 948 0 17 "cleanup.crexx" 61 1 7 "x = 60; say x"
+load r489,"cleanup.crexx:61:1"
+load r491,""
+load r490,1
+settp r491,768
+call r361,llctarget.literal(),r490
+null r491
+.srcstep 955 0 17 "cleanup.crexx" 61 5 7 "x = 60; say x"
+load r489,"cleanup.crexx:61:5"
+load r491,"60"
+load r490,1
+settp r491,768
+call r362,llctarget.literal(),r490
+null r491
+.srcstep 948 0 17 "cleanup.crexx" 61 1 7 "x = 60; say x"
+load r489,"cleanup.crexx:61:1"
+unlink r363
+link r363,r1
+mkref r491,r363
+copy r492,r362
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 956 0 17 "cleanup.crexx" 61 9 14 "x = 60; say x"
+load r489,"cleanup.crexx:61:9"
+load r491,""
+load r490,1
+settp r491,768
+call r364,llctarget.literal(),r490
+null r491
+.srcstep 963 0 17 "cleanup.crexx" 61 13 14 "x = 60; say x"
+load r489,"cleanup.crexx:61:13"
+unlink r365
+link r365,r1
+mkref r491,r365
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r366,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 956 0 17 "cleanup.crexx" 61 9 14 "x = 60; say x"
+load r489,"cleanup.crexx:61:9"
+copy r491,r366
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 964 0 17 "cleanup.crexx" 62 1 7 "x = 61; say x"
+load r489,"cleanup.crexx:62:1"
+load r491,""
+load r490,1
+settp r491,768
+call r367,llctarget.literal(),r490
+null r491
+.srcstep 971 0 17 "cleanup.crexx" 62 5 7 "x = 61; say x"
+load r489,"cleanup.crexx:62:5"
+load r491,"61"
+load r490,1
+settp r491,768
+call r368,llctarget.literal(),r490
+null r491
+.srcstep 964 0 17 "cleanup.crexx" 62 1 7 "x = 61; say x"
+load r489,"cleanup.crexx:62:1"
+unlink r369
+link r369,r1
+mkref r491,r369
+copy r492,r368
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 972 0 17 "cleanup.crexx" 62 9 14 "x = 61; say x"
+load r489,"cleanup.crexx:62:9"
+load r491,""
+load r490,1
+settp r491,768
+call r370,llctarget.literal(),r490
+null r491
+.srcstep 979 0 17 "cleanup.crexx" 62 13 14 "x = 61; say x"
+load r489,"cleanup.crexx:62:13"
+unlink r371
+link r371,r1
+mkref r491,r371
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r372,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 972 0 17 "cleanup.crexx" 62 9 14 "x = 61; say x"
+load r489,"cleanup.crexx:62:9"
+copy r491,r372
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 980 0 17 "cleanup.crexx" 63 1 7 "x = 62; say x"
+load r489,"cleanup.crexx:63:1"
+load r491,""
+load r490,1
+settp r491,768
+call r373,llctarget.literal(),r490
+null r491
+.srcstep 987 0 17 "cleanup.crexx" 63 5 7 "x = 62; say x"
+load r489,"cleanup.crexx:63:5"
+load r491,"62"
+load r490,1
+settp r491,768
+call r374,llctarget.literal(),r490
+null r491
+.srcstep 980 0 17 "cleanup.crexx" 63 1 7 "x = 62; say x"
+load r489,"cleanup.crexx:63:1"
+unlink r375
+link r375,r1
+mkref r491,r375
+copy r492,r374
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 988 0 17 "cleanup.crexx" 63 9 14 "x = 62; say x"
+load r489,"cleanup.crexx:63:9"
+load r491,""
+load r490,1
+settp r491,768
+call r376,llctarget.literal(),r490
+null r491
+.srcstep 995 0 17 "cleanup.crexx" 63 13 14 "x = 62; say x"
+load r489,"cleanup.crexx:63:13"
+unlink r377
+link r377,r1
+mkref r491,r377
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r378,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 988 0 17 "cleanup.crexx" 63 9 14 "x = 62; say x"
+load r489,"cleanup.crexx:63:9"
+copy r491,r378
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 996 0 17 "cleanup.crexx" 64 1 7 "x = 63; say x"
+load r489,"cleanup.crexx:64:1"
+load r491,""
+load r490,1
+settp r491,768
+call r379,llctarget.literal(),r490
+null r491
+.srcstep 1003 0 17 "cleanup.crexx" 64 5 7 "x = 63; say x"
+load r489,"cleanup.crexx:64:5"
+load r491,"63"
+load r490,1
+settp r491,768
+call r380,llctarget.literal(),r490
+null r491
+.srcstep 996 0 17 "cleanup.crexx" 64 1 7 "x = 63; say x"
+load r489,"cleanup.crexx:64:1"
+unlink r381
+link r381,r1
+mkref r491,r381
+copy r492,r380
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1004 0 17 "cleanup.crexx" 64 9 14 "x = 63; say x"
+load r489,"cleanup.crexx:64:9"
+load r491,""
+load r490,1
+settp r491,768
+call r382,llctarget.literal(),r490
+null r491
+.srcstep 1011 0 17 "cleanup.crexx" 64 13 14 "x = 63; say x"
+load r489,"cleanup.crexx:64:13"
+unlink r383
+link r383,r1
+mkref r491,r383
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r384,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1004 0 17 "cleanup.crexx" 64 9 14 "x = 63; say x"
+load r489,"cleanup.crexx:64:9"
+copy r491,r384
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1012 0 17 "cleanup.crexx" 65 1 7 "x = 64; say x"
+load r489,"cleanup.crexx:65:1"
+load r491,""
+load r490,1
+settp r491,768
+call r385,llctarget.literal(),r490
+null r491
+.srcstep 1019 0 17 "cleanup.crexx" 65 5 7 "x = 64; say x"
+load r489,"cleanup.crexx:65:5"
+load r491,"64"
+load r490,1
+settp r491,768
+call r386,llctarget.literal(),r490
+null r491
+.srcstep 1012 0 17 "cleanup.crexx" 65 1 7 "x = 64; say x"
+load r489,"cleanup.crexx:65:1"
+unlink r387
+link r387,r1
+mkref r491,r387
+copy r492,r386
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1020 0 17 "cleanup.crexx" 65 9 14 "x = 64; say x"
+load r489,"cleanup.crexx:65:9"
+load r491,""
+load r490,1
+settp r491,768
+call r388,llctarget.literal(),r490
+null r491
+.srcstep 1027 0 17 "cleanup.crexx" 65 13 14 "x = 64; say x"
+load r489,"cleanup.crexx:65:13"
+unlink r389
+link r389,r1
+mkref r491,r389
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r390,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1020 0 17 "cleanup.crexx" 65 9 14 "x = 64; say x"
+load r489,"cleanup.crexx:65:9"
+copy r491,r390
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1028 0 17 "cleanup.crexx" 66 1 7 "x = 65; say x"
+load r489,"cleanup.crexx:66:1"
+load r491,""
+load r490,1
+settp r491,768
+call r391,llctarget.literal(),r490
+null r491
+.srcstep 1035 0 17 "cleanup.crexx" 66 5 7 "x = 65; say x"
+load r489,"cleanup.crexx:66:5"
+load r491,"65"
+load r490,1
+settp r491,768
+call r392,llctarget.literal(),r490
+null r491
+.srcstep 1028 0 17 "cleanup.crexx" 66 1 7 "x = 65; say x"
+load r489,"cleanup.crexx:66:1"
+unlink r393
+link r393,r1
+mkref r491,r393
+copy r492,r392
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1036 0 17 "cleanup.crexx" 66 9 14 "x = 65; say x"
+load r489,"cleanup.crexx:66:9"
+load r491,""
+load r490,1
+settp r491,768
+call r394,llctarget.literal(),r490
+null r491
+.srcstep 1043 0 17 "cleanup.crexx" 66 13 14 "x = 65; say x"
+load r489,"cleanup.crexx:66:13"
+unlink r395
+link r395,r1
+mkref r491,r395
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r396,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1036 0 17 "cleanup.crexx" 66 9 14 "x = 65; say x"
+load r489,"cleanup.crexx:66:9"
+copy r491,r396
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1044 0 17 "cleanup.crexx" 67 1 7 "x = 66; say x"
+load r489,"cleanup.crexx:67:1"
+load r491,""
+load r490,1
+settp r491,768
+call r397,llctarget.literal(),r490
+null r491
+.srcstep 1051 0 17 "cleanup.crexx" 67 5 7 "x = 66; say x"
+load r489,"cleanup.crexx:67:5"
+load r491,"66"
+load r490,1
+settp r491,768
+call r398,llctarget.literal(),r490
+null r491
+.srcstep 1044 0 17 "cleanup.crexx" 67 1 7 "x = 66; say x"
+load r489,"cleanup.crexx:67:1"
+unlink r399
+link r399,r1
+mkref r491,r399
+copy r492,r398
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1052 0 17 "cleanup.crexx" 67 9 14 "x = 66; say x"
+load r489,"cleanup.crexx:67:9"
+load r491,""
+load r490,1
+settp r491,768
+call r400,llctarget.literal(),r490
+null r491
+.srcstep 1059 0 17 "cleanup.crexx" 67 13 14 "x = 66; say x"
+load r489,"cleanup.crexx:67:13"
+unlink r401
+link r401,r1
+mkref r491,r401
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r402,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1052 0 17 "cleanup.crexx" 67 9 14 "x = 66; say x"
+load r489,"cleanup.crexx:67:9"
+copy r491,r402
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1060 0 17 "cleanup.crexx" 68 1 7 "x = 67; say x"
+load r489,"cleanup.crexx:68:1"
+load r491,""
+load r490,1
+settp r491,768
+call r403,llctarget.literal(),r490
+null r491
+.srcstep 1067 0 17 "cleanup.crexx" 68 5 7 "x = 67; say x"
+load r489,"cleanup.crexx:68:5"
+load r491,"67"
+load r490,1
+settp r491,768
+call r404,llctarget.literal(),r490
+null r491
+.srcstep 1060 0 17 "cleanup.crexx" 68 1 7 "x = 67; say x"
+load r489,"cleanup.crexx:68:1"
+unlink r405
+link r405,r1
+mkref r491,r405
+copy r492,r404
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1068 0 17 "cleanup.crexx" 68 9 14 "x = 67; say x"
+load r489,"cleanup.crexx:68:9"
+load r491,""
+load r490,1
+settp r491,768
+call r406,llctarget.literal(),r490
+null r491
+.srcstep 1075 0 17 "cleanup.crexx" 68 13 14 "x = 67; say x"
+load r489,"cleanup.crexx:68:13"
+unlink r407
+link r407,r1
+mkref r491,r407
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r408,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1068 0 17 "cleanup.crexx" 68 9 14 "x = 67; say x"
+load r489,"cleanup.crexx:68:9"
+copy r491,r408
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1076 0 17 "cleanup.crexx" 69 1 7 "x = 68; say x"
+load r489,"cleanup.crexx:69:1"
+load r491,""
+load r490,1
+settp r491,768
+call r409,llctarget.literal(),r490
+null r491
+.srcstep 1083 0 17 "cleanup.crexx" 69 5 7 "x = 68; say x"
+load r489,"cleanup.crexx:69:5"
+load r491,"68"
+load r490,1
+settp r491,768
+call r410,llctarget.literal(),r490
+null r491
+.srcstep 1076 0 17 "cleanup.crexx" 69 1 7 "x = 68; say x"
+load r489,"cleanup.crexx:69:1"
+unlink r411
+link r411,r1
+mkref r491,r411
+copy r492,r410
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1084 0 17 "cleanup.crexx" 69 9 14 "x = 68; say x"
+load r489,"cleanup.crexx:69:9"
+load r491,""
+load r490,1
+settp r491,768
+call r412,llctarget.literal(),r490
+null r491
+.srcstep 1091 0 17 "cleanup.crexx" 69 13 14 "x = 68; say x"
+load r489,"cleanup.crexx:69:13"
+unlink r413
+link r413,r1
+mkref r491,r413
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r414,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1084 0 17 "cleanup.crexx" 69 9 14 "x = 68; say x"
+load r489,"cleanup.crexx:69:9"
+copy r491,r414
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1092 0 17 "cleanup.crexx" 70 1 7 "x = 69; say x"
+load r489,"cleanup.crexx:70:1"
+load r491,""
+load r490,1
+settp r491,768
+call r415,llctarget.literal(),r490
+null r491
+.srcstep 1099 0 17 "cleanup.crexx" 70 5 7 "x = 69; say x"
+load r489,"cleanup.crexx:70:5"
+load r491,"69"
+load r490,1
+settp r491,768
+call r416,llctarget.literal(),r490
+null r491
+.srcstep 1092 0 17 "cleanup.crexx" 70 1 7 "x = 69; say x"
+load r489,"cleanup.crexx:70:1"
+unlink r417
+link r417,r1
+mkref r491,r417
+copy r492,r416
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1100 0 17 "cleanup.crexx" 70 9 14 "x = 69; say x"
+load r489,"cleanup.crexx:70:9"
+load r491,""
+load r490,1
+settp r491,768
+call r418,llctarget.literal(),r490
+null r491
+.srcstep 1107 0 17 "cleanup.crexx" 70 13 14 "x = 69; say x"
+load r489,"cleanup.crexx:70:13"
+unlink r419
+link r419,r1
+mkref r491,r419
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r420,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1100 0 17 "cleanup.crexx" 70 9 14 "x = 69; say x"
+load r489,"cleanup.crexx:70:9"
+copy r491,r420
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1108 0 17 "cleanup.crexx" 71 1 7 "x = 70; say x"
+load r489,"cleanup.crexx:71:1"
+load r491,""
+load r490,1
+settp r491,768
+call r421,llctarget.literal(),r490
+null r491
+.srcstep 1115 0 17 "cleanup.crexx" 71 5 7 "x = 70; say x"
+load r489,"cleanup.crexx:71:5"
+load r491,"70"
+load r490,1
+settp r491,768
+call r422,llctarget.literal(),r490
+null r491
+.srcstep 1108 0 17 "cleanup.crexx" 71 1 7 "x = 70; say x"
+load r489,"cleanup.crexx:71:1"
+unlink r423
+link r423,r1
+mkref r491,r423
+copy r492,r422
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1116 0 17 "cleanup.crexx" 71 9 14 "x = 70; say x"
+load r489,"cleanup.crexx:71:9"
+load r491,""
+load r490,1
+settp r491,768
+call r424,llctarget.literal(),r490
+null r491
+.srcstep 1123 0 17 "cleanup.crexx" 71 13 14 "x = 70; say x"
+load r489,"cleanup.crexx:71:13"
+unlink r425
+link r425,r1
+mkref r491,r425
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r426,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1116 0 17 "cleanup.crexx" 71 9 14 "x = 70; say x"
+load r489,"cleanup.crexx:71:9"
+copy r491,r426
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1124 0 17 "cleanup.crexx" 72 1 7 "x = 71; say x"
+load r489,"cleanup.crexx:72:1"
+load r491,""
+load r490,1
+settp r491,768
+call r427,llctarget.literal(),r490
+null r491
+.srcstep 1131 0 17 "cleanup.crexx" 72 5 7 "x = 71; say x"
+load r489,"cleanup.crexx:72:5"
+load r491,"71"
+load r490,1
+settp r491,768
+call r428,llctarget.literal(),r490
+null r491
+.srcstep 1124 0 17 "cleanup.crexx" 72 1 7 "x = 71; say x"
+load r489,"cleanup.crexx:72:1"
+unlink r429
+link r429,r1
+mkref r491,r429
+copy r492,r428
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1132 0 17 "cleanup.crexx" 72 9 14 "x = 71; say x"
+load r489,"cleanup.crexx:72:9"
+load r491,""
+load r490,1
+settp r491,768
+call r430,llctarget.literal(),r490
+null r491
+.srcstep 1139 0 17 "cleanup.crexx" 72 13 14 "x = 71; say x"
+load r489,"cleanup.crexx:72:13"
+unlink r431
+link r431,r1
+mkref r491,r431
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r432,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1132 0 17 "cleanup.crexx" 72 9 14 "x = 71; say x"
+load r489,"cleanup.crexx:72:9"
+copy r491,r432
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1140 0 17 "cleanup.crexx" 73 1 7 "x = 72; say x"
+load r489,"cleanup.crexx:73:1"
+load r491,""
+load r490,1
+settp r491,768
+call r433,llctarget.literal(),r490
+null r491
+.srcstep 1147 0 17 "cleanup.crexx" 73 5 7 "x = 72; say x"
+load r489,"cleanup.crexx:73:5"
+load r491,"72"
+load r490,1
+settp r491,768
+call r434,llctarget.literal(),r490
+null r491
+.srcstep 1140 0 17 "cleanup.crexx" 73 1 7 "x = 72; say x"
+load r489,"cleanup.crexx:73:1"
+unlink r435
+link r435,r1
+mkref r491,r435
+copy r492,r434
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1148 0 17 "cleanup.crexx" 73 9 14 "x = 72; say x"
+load r489,"cleanup.crexx:73:9"
+load r491,""
+load r490,1
+settp r491,768
+call r436,llctarget.literal(),r490
+null r491
+.srcstep 1155 0 17 "cleanup.crexx" 73 13 14 "x = 72; say x"
+load r489,"cleanup.crexx:73:13"
+unlink r437
+link r437,r1
+mkref r491,r437
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r438,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1148 0 17 "cleanup.crexx" 73 9 14 "x = 72; say x"
+load r489,"cleanup.crexx:73:9"
+copy r491,r438
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1156 0 17 "cleanup.crexx" 74 1 7 "x = 73; say x"
+load r489,"cleanup.crexx:74:1"
+load r491,""
+load r490,1
+settp r491,768
+call r439,llctarget.literal(),r490
+null r491
+.srcstep 1163 0 17 "cleanup.crexx" 74 5 7 "x = 73; say x"
+load r489,"cleanup.crexx:74:5"
+load r491,"73"
+load r490,1
+settp r491,768
+call r440,llctarget.literal(),r490
+null r491
+.srcstep 1156 0 17 "cleanup.crexx" 74 1 7 "x = 73; say x"
+load r489,"cleanup.crexx:74:1"
+unlink r441
+link r441,r1
+mkref r491,r441
+copy r492,r440
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1164 0 17 "cleanup.crexx" 74 9 14 "x = 73; say x"
+load r489,"cleanup.crexx:74:9"
+load r491,""
+load r490,1
+settp r491,768
+call r442,llctarget.literal(),r490
+null r491
+.srcstep 1171 0 17 "cleanup.crexx" 74 13 14 "x = 73; say x"
+load r489,"cleanup.crexx:74:13"
+unlink r443
+link r443,r1
+mkref r491,r443
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r444,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1164 0 17 "cleanup.crexx" 74 9 14 "x = 73; say x"
+load r489,"cleanup.crexx:74:9"
+copy r491,r444
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1172 0 17 "cleanup.crexx" 75 1 7 "x = 74; say x"
+load r489,"cleanup.crexx:75:1"
+load r491,""
+load r490,1
+settp r491,768
+call r445,llctarget.literal(),r490
+null r491
+.srcstep 1179 0 17 "cleanup.crexx" 75 5 7 "x = 74; say x"
+load r489,"cleanup.crexx:75:5"
+load r491,"74"
+load r490,1
+settp r491,768
+call r446,llctarget.literal(),r490
+null r491
+.srcstep 1172 0 17 "cleanup.crexx" 75 1 7 "x = 74; say x"
+load r489,"cleanup.crexx:75:1"
+unlink r447
+link r447,r1
+mkref r491,r447
+copy r492,r446
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1180 0 17 "cleanup.crexx" 75 9 14 "x = 74; say x"
+load r489,"cleanup.crexx:75:9"
+load r491,""
+load r490,1
+settp r491,768
+call r448,llctarget.literal(),r490
+null r491
+.srcstep 1187 0 17 "cleanup.crexx" 75 13 14 "x = 74; say x"
+load r489,"cleanup.crexx:75:13"
+unlink r449
+link r449,r1
+mkref r491,r449
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r450,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1180 0 17 "cleanup.crexx" 75 9 14 "x = 74; say x"
+load r489,"cleanup.crexx:75:9"
+copy r491,r450
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1188 0 17 "cleanup.crexx" 76 1 7 "x = 75; say x"
+load r489,"cleanup.crexx:76:1"
+load r491,""
+load r490,1
+settp r491,768
+call r451,llctarget.literal(),r490
+null r491
+.srcstep 1195 0 17 "cleanup.crexx" 76 5 7 "x = 75; say x"
+load r489,"cleanup.crexx:76:5"
+load r491,"75"
+load r490,1
+settp r491,768
+call r452,llctarget.literal(),r490
+null r491
+.srcstep 1188 0 17 "cleanup.crexx" 76 1 7 "x = 75; say x"
+load r489,"cleanup.crexx:76:1"
+unlink r453
+link r453,r1
+mkref r491,r453
+copy r492,r452
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1196 0 17 "cleanup.crexx" 76 9 14 "x = 75; say x"
+load r489,"cleanup.crexx:76:9"
+load r491,""
+load r490,1
+settp r491,768
+call r454,llctarget.literal(),r490
+null r491
+.srcstep 1203 0 17 "cleanup.crexx" 76 13 14 "x = 75; say x"
+load r489,"cleanup.crexx:76:13"
+unlink r455
+link r455,r1
+mkref r491,r455
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r456,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1196 0 17 "cleanup.crexx" 76 9 14 "x = 75; say x"
+load r489,"cleanup.crexx:76:9"
+copy r491,r456
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1204 0 17 "cleanup.crexx" 77 1 7 "x = 76; say x"
+load r489,"cleanup.crexx:77:1"
+load r491,""
+load r490,1
+settp r491,768
+call r457,llctarget.literal(),r490
+null r491
+.srcstep 1211 0 17 "cleanup.crexx" 77 5 7 "x = 76; say x"
+load r489,"cleanup.crexx:77:5"
+load r491,"76"
+load r490,1
+settp r491,768
+call r458,llctarget.literal(),r490
+null r491
+.srcstep 1204 0 17 "cleanup.crexx" 77 1 7 "x = 76; say x"
+load r489,"cleanup.crexx:77:1"
+unlink r459
+link r459,r1
+mkref r491,r459
+copy r492,r458
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1212 0 17 "cleanup.crexx" 77 9 14 "x = 76; say x"
+load r489,"cleanup.crexx:77:9"
+load r491,""
+load r490,1
+settp r491,768
+call r460,llctarget.literal(),r490
+null r491
+.srcstep 1219 0 17 "cleanup.crexx" 77 13 14 "x = 76; say x"
+load r489,"cleanup.crexx:77:13"
+unlink r461
+link r461,r1
+mkref r491,r461
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r462,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1212 0 17 "cleanup.crexx" 77 9 14 "x = 76; say x"
+load r489,"cleanup.crexx:77:9"
+copy r491,r462
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1220 0 17 "cleanup.crexx" 78 1 7 "x = 77; say x"
+load r489,"cleanup.crexx:78:1"
+load r491,""
+load r490,1
+settp r491,768
+call r463,llctarget.literal(),r490
+null r491
+.srcstep 1227 0 17 "cleanup.crexx" 78 5 7 "x = 77; say x"
+load r489,"cleanup.crexx:78:5"
+load r491,"77"
+load r490,1
+settp r491,768
+call r464,llctarget.literal(),r490
+null r491
+.srcstep 1220 0 17 "cleanup.crexx" 78 1 7 "x = 77; say x"
+load r489,"cleanup.crexx:78:1"
+unlink r465
+link r465,r1
+mkref r491,r465
+copy r492,r464
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1228 0 17 "cleanup.crexx" 78 9 14 "x = 77; say x"
+load r489,"cleanup.crexx:78:9"
+load r491,""
+load r490,1
+settp r491,768
+call r466,llctarget.literal(),r490
+null r491
+.srcstep 1235 0 17 "cleanup.crexx" 78 13 14 "x = 77; say x"
+load r489,"cleanup.crexx:78:13"
+unlink r467
+link r467,r1
+mkref r491,r467
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r468,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1228 0 17 "cleanup.crexx" 78 9 14 "x = 77; say x"
+load r489,"cleanup.crexx:78:9"
+copy r491,r468
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1236 0 17 "cleanup.crexx" 79 1 7 "x = 78; say x"
+load r489,"cleanup.crexx:79:1"
+load r491,""
+load r490,1
+settp r491,768
+call r469,llctarget.literal(),r490
+null r491
+.srcstep 1243 0 17 "cleanup.crexx" 79 5 7 "x = 78; say x"
+load r489,"cleanup.crexx:79:5"
+load r491,"78"
+load r490,1
+settp r491,768
+call r470,llctarget.literal(),r490
+null r491
+.srcstep 1236 0 17 "cleanup.crexx" 79 1 7 "x = 78; say x"
+load r489,"cleanup.crexx:79:1"
+unlink r471
+link r471,r1
+mkref r491,r471
+copy r492,r470
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1244 0 17 "cleanup.crexx" 79 9 14 "x = 78; say x"
+load r489,"cleanup.crexx:79:9"
+load r491,""
+load r490,1
+settp r491,768
+call r472,llctarget.literal(),r490
+null r491
+.srcstep 1251 0 17 "cleanup.crexx" 79 13 14 "x = 78; say x"
+load r489,"cleanup.crexx:79:13"
+unlink r473
+link r473,r1
+mkref r491,r473
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r474,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1244 0 17 "cleanup.crexx" 79 9 14 "x = 78; say x"
+load r489,"cleanup.crexx:79:9"
+copy r491,r474
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1252 0 17 "cleanup.crexx" 80 1 7 "x = 79; say x"
+load r489,"cleanup.crexx:80:1"
+load r491,""
+load r490,1
+settp r491,768
+call r475,llctarget.literal(),r490
+null r491
+.srcstep 1259 0 17 "cleanup.crexx" 80 5 7 "x = 79; say x"
+load r489,"cleanup.crexx:80:5"
+load r491,"79"
+load r490,1
+settp r491,768
+call r476,llctarget.literal(),r490
+null r491
+.srcstep 1252 0 17 "cleanup.crexx" 80 1 7 "x = 79; say x"
+load r489,"cleanup.crexx:80:1"
+unlink r477
+link r477,r1
+mkref r491,r477
+copy r492,r476
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1260 0 17 "cleanup.crexx" 80 9 14 "x = 79; say x"
+load r489,"cleanup.crexx:80:9"
+load r491,""
+load r490,1
+settp r491,768
+call r478,llctarget.literal(),r490
+null r491
+.srcstep 1267 0 17 "cleanup.crexx" 80 13 14 "x = 79; say x"
+load r489,"cleanup.crexx:80:13"
+unlink r479
+link r479,r1
+mkref r491,r479
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r480,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1260 0 17 "cleanup.crexx" 80 9 14 "x = 79; say x"
+load r489,"cleanup.crexx:80:9"
+copy r491,r480
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 1268 0 17 "cleanup.crexx" 81 1 7 "x = 80; say x"
+load r489,"cleanup.crexx:81:1"
+load r491,""
+load r490,1
+settp r491,768
+call r481,llctarget.literal(),r490
+null r491
+.srcstep 1275 0 17 "cleanup.crexx" 81 5 7 "x = 80; say x"
+load r489,"cleanup.crexx:81:5"
+load r491,"80"
+load r490,1
+settp r491,768
+call r482,llctarget.literal(),r490
+null r491
+.srcstep 1268 0 17 "cleanup.crexx" 81 1 7 "x = 80; say x"
+load r489,"cleanup.crexx:81:1"
+unlink r483
+link r483,r1
+mkref r491,r483
+copy r492,r482
+load r493,"X"
+load r490,3
+settp r491,768
+settp r492,768
+settp r493,768
+call r488,llctarget.poolwrite(),r490
+null r491
+null r492
+null r493
+.srcstep 1276 0 17 "cleanup.crexx" 81 9 14 "x = 80; say x"
+load r489,"cleanup.crexx:81:9"
+load r491,""
+load r490,1
+settp r491,768
+call r484,llctarget.literal(),r490
+null r491
+.srcstep 1283 0 17 "cleanup.crexx" 81 13 14 "x = 80; say x"
+load r489,"cleanup.crexx:81:13"
+unlink r485
+link r485,r1
+mkref r491,r485
+load r492,"X"
+load r490,2
+settp r491,768
+settp r492,768
+call r486,llctarget.poolread(),r490
+null r491
+null r492
+.srcstep 1276 0 17 "cleanup.crexx" 81 9 14 "x = 80; say x"
+load r489,"cleanup.crexx:81:9"
+copy r491,r486
+load r490,1
+settp r491,768
+call r488,llctarget.sayvalue(),r490
+null r491
+.srcstep 2 0 98 "cleanup.crexx" 1 1 15 "options levelc"
+load r489,"cleanup.crexx: generated code in $MAIN"
+load r490,0
+call r487,llctarget.absent(),r490
+ret r487
+llerror1_1:
+.srcstep 0 0 6 "" 0 0 0 ""
+load r488,1
+br llerror1
+llerror1_2:
+load r488,2
+br llerror1
+llerror1_3:
+load r488,3
+br llerror1
+llerror1_4:
+load r488,4
+br llerror1
+llerror1:
+sighalt "CLASSIC_SYNTAX"
+sighalt "DIVISION_BY_ZERO"
+sighalt "CONVERSION_ERROR"
+sighalt "INVALID_ARGUMENTS"
+copy r491,r0
+copy r492,r489
+load r490,2
+settp r491,768
+settp r492,768
+call r489,llctarget.failuremessage(),r490
+null r491
+null r492
+beq llraise1_1,r488,1
+beq llraise1_2,r488,2
+beq llraise1_3,r488,3
+llraise1_4:
+signalorigin "INVALID_ARGUMENTS",r489,r0
+ret
+llraise1_3:
+signalorigin "CONVERSION_ERROR",r489,r0
+ret
+llraise1_2:
+signalorigin "DIVISION_BY_ZERO",r489,r0
+ret
+llraise1_1:
+signalorigin "CLASSIC_SYNTAX",r489,r0
+ret
+llctarget.mainargs() .expose=llctarget.mainargs
+  .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "p1=.object"
+llctarget.contextnew() .expose=llctarget.contextnew
+  .meta "llctarget.contextnew"="b" ".rexxactivation..rexxactivationarguments" llctarget.contextnew() ""
+llctarget.status() .expose=llctarget.status
+  .meta "llctarget.status"="b" ".int" llctarget.status() "p1=.rexxactivationarguments"
+llctarget.poolnew() .expose=llctarget.poolnew
+  .meta "llctarget.poolnew"="b" ".rexxpool..rexxvariablepool" llctarget.poolnew() ""
+llctarget.literal() .expose=llctarget.literal
+  .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "p1=.string"
+llctarget.poolwrite() .expose=llctarget.poolwrite
+  .meta "llctarget.poolwrite"="b" ".void" llctarget.poolwrite() "p1=reference .rexxvariablepool,p2=.rexxvalue,p3=.string"
+llctarget.poolread() .expose=llctarget.poolread
+  .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "p1=reference .rexxvariablepool,p2=.string"
+llctarget.sayvalue() .expose=llctarget.sayvalue
+  .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "p1=.rexxvalue"
+llctarget.absent() .expose=llctarget.absent
+  .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
+llctarget.failuremessage() .expose=llctarget.failuremessage
+  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "p1=.object,p2=.string"

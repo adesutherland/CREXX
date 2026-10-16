@@ -1,0 +1,90 @@
+OPTIONAL cREXX GTK GUI - MAINTAINER BUILD NOTES
+
+This optional window can be added to the ordinary Beta 3 runtime as a plugin.
+There is no need to rebuild the cREXX compiler or VM. The ordinary Beta 3
+Windows core ZIP does NOT include the GUI plugin or GTK DLLs.
+
+The example uses a single-choice combo box, a numeric text field, Generate,
+Save and Quit, and a scrollable results list. The plugin's combo API is
+zero-based; the example converts its index to the same 1-3 Lotto game IDs.
+Save requires a second click to confirm replacement of Lotto-Tipps-cREXX-GUI.txt.
+
+The source/header files in this folder are copied unchanged from cREXX tag
+v1.0.0-beta.3 (ae1607b8e145174422cee7f3e73fbcc37a65226c):
+  lib/plugins/gui/gui.c
+  rxpa/crexxpa.h
+  platform/rxinteger.h
+
+CMakeLists.txt is a small standalone build wrapper. crexx_version.h is a local
+version stamp for this optional provider. No API or core language change is made.
+
+WINDOWS DEVELOPER SETUP
+
+Use MSYS2's UCRT64 environment with GTK 3 and a matching MinGW compiler.
+The official GTK Windows developer instructions are:
+  https://www.gtk.org/docs/installations/windows/
+  https://www.msys2.org/
+
+After installing/updating MSYS2 according to its instructions, open the
+"MSYS2 UCRT64" shell and install the required packages:
+
+  pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-gtk3
+
+Build only this provider, from the extracted example:
+
+  cd '/c/src/CREXX/examples/franz-lotto/crexx'
+  cmake -S gui-provider -B gui-provider/build-windows -G Ninja -DCMAKE_BUILD_TYPE=Release
+  cmake --build gui-provider/build-windows
+
+The result should be gui-provider/build-windows/rx_gui.rxplugin. Keep it beside
+the example; do not replace the cREXX installation's unrelated files.
+
+BUILD / RUN THE APPLICATION
+
+Return to an ordinary Command Prompt. The GTK dependency path is temporary for
+this shell; it is not a persistent machine PATH change:
+
+  set "CREXX_BIN=C:\Program Files\CREXX\bin"
+  set "PATH=C:\msys64\ucrt64\bin;%PATH%"
+  cd /d "C:\src\CREXX\examples\franz-lotto\crexx"
+  "%CREXX_BIN%\rxc.exe" -v
+  "%CREXX_BIN%\rxc.exe" -o lotto_logic lotto_logic.crexx
+  "%CREXX_BIN%\rxas.exe" -o lotto_logic lotto_logic
+  "%CREXX_BIN%\rxc.exe" -i "gui-provider\build-windows" -o lotto_gui lotto_gui.crexx
+  "%CREXX_BIN%\rxas.exe" -o lotto_gui lotto_gui
+  "%CREXX_BIN%\rxlink.exe" -o lotto_gui_app lotto_gui lotto_logic "%CREXX_BIN%\library"
+  "%CREXX_BIN%\rxvm.exe" lotto_gui_app.rxbin "gui-provider\build-windows\rx_gui.rxplugin"
+
+The commands above build the model and GUI application. Generated .rxbin files
+are not committed; after building, run with the matching Windows native plugin:
+
+  "%CREXX_BIN%\rxvm.exe" lotto_gui_app.rxbin "gui-provider\build-windows\rx_gui.rxplugin"
+
+A bounded widget smoke check is also available:
+
+  "%CREXX_BIN%\rxvm.exe" lotto_gui_app.rxbin "gui-provider\build-windows\rx_gui.rxplugin" -a --self-test
+
+It creates the actual GTK controls, generates 50 tips, rejects an invalid count,
+replaces the results with one tip, and cleans up. It does not exercise physical
+mouse clicks, every combo choice, or the GUI Save button: perform those checks
+manually, including the window X, before giving Franz a Windows GUI bundle.
+
+DELIVERING THE WINDOWS GUI TO FRANZ
+
+First pass the native smoke/manual checks on Windows. Then prepare a separate
+GUI add-on folder with rx_gui.rxplugin, its recursively required GTK/GLib/Pango/
+Cairo/GdkPixbuf/etc. DLLs, required GTK data and schemas, and dependency licenses.
+Follow the GTK distribution guidance linked above and test the bundle on a
+machine/session without MSYS2's development bin folder on PATH. A single extra
+DLL is generally insufficient. Keep the existing Beta 3 core installation.
+
+The native dependency bundle is NOT included here or qualified for Windows.
+Gmail blocks DLLs inside archives; distribute the completed native bundle by a
+download/share link. This source transport branch contains the source build kit only.
+
+LOCAL EVIDENCE
+
+The unchanged Beta 3 provider sources built without warnings on macOS with
+GTK 3.24.52. The application is compiled by the released Beta 3 rxc/rxas/rxlink
+and smoke-tested with the released Beta 3 VM. Windows build and interactive
+qualification remain pending with Adrian. This is an experimental GUI example.

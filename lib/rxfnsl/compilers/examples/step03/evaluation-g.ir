@@ -1,0 +1,48 @@
+function $MAIN -> crexx.g.int64
+  entry.1:
+    %1 = core.constant  : crexx.g.text @origin:3
+    %2 = core.constant 0 : crexx.g.int64 @origin:11
+    %3 = crexx.g.convert.int64.boolean %2 @origin:5
+    core.store %3 slot:$tmp.1 @origin:5
+    %4 = crexx.g.truth %3 @origin:5
+    core.branch %4 -> logical.rhs.2 -> logical.skip.3 @origin:5
+  logical.rhs.2:
+    %5 = crexx.calls.local.probe target="PROBE" @origin:18
+    core.store %5 slot:$tmp.1 @origin:5
+    core.jump -> logical.join.4 @origin:5
+  logical.skip.3:
+    core.jump -> logical.join.4 @origin:5
+  logical.join.4:
+    %6 = core.load slot:$tmp.1 @origin:5
+    %7 = crexx.g.convert.boolean.text %6 @origin:3
+    crexx.g.say %7 @origin:3
+    %8 = core.constant  : crexx.g.text @origin:19
+    %9 = core.constant 1 : crexx.g.int64 @origin:27
+    %10 = crexx.g.convert.int64.boolean %9 @origin:20
+    core.store %10 slot:$tmp.2 @origin:20
+    %11 = crexx.g.truth %10 @origin:20
+    core.branch %11 -> logical.skip.6 -> logical.rhs.5 @origin:20
+  logical.rhs.5:
+    %12 = crexx.calls.local.probe target="PROBE" @origin:35
+    core.store %12 slot:$tmp.2 @origin:20
+    core.jump -> logical.join.7 @origin:20
+  logical.skip.6:
+    core.jump -> logical.join.7 @origin:20
+  logical.join.7:
+    %13 = core.load slot:$tmp.2 @origin:20
+    %14 = crexx.g.convert.boolean.text %13 @origin:19
+    crexx.g.say %14 @origin:19
+    %15 = core.constant 0 : crexx.g.int64 @origin:36
+    %16 = core.constant 0 : crexx.g.int64 @origin:44
+    crexx.g.exit %16 @origin:36
+    %17 = core.constant 0 : crexx.g.int64 @origin:36
+    core.return %17 @origin:36
+function PROBE -> crexx.g.boolean
+  entry.1:
+    %18 = core.constant  : crexx.g.text @origin:46
+    %19 = core.constant evaluated : crexx.g.text @origin:54
+    crexx.g.say %19 @origin:46
+    %20 = core.constant 1 : crexx.g.int64 @origin:63
+    %21 = crexx.g.convert.int64.boolean %20 @origin:55
+    core.return %21 @origin:55
+

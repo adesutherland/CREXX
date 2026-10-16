@@ -1,0 +1,995 @@
+/* cREXX License (MIT). C/G source-to-checked-IR service, implemented in B. */
+options levelb
+namespace llfrontend expose request
+import rxfnsb
+import llast
+import llir
+import llsource
+import llcrexxir
+import llfrontendparse
+import llcompilercontracts
+
+/** Private binding table entry. C routines refer to a source statement interval;
+ * G procedures own their source body. Neither representation imitates the other. */
+routine: class
+  _name = .string
+  _result = .string
+  _body = .llast..node
+  _first = .int
+  _last = .int
+  _parameters = .string[]
+  _types = .string[]
+  *: factory
+    arg identity = .string, type = .string, source = .llast..node, begin = .int, finish = .int
+    _name = identity; _result = type; _body = source; _first = begin; _last = finish
+    return
+  parameter: method = .void
+    arg name = .string, type = .string
+    n = _parameters[0] + 1; _parameters[n] = name; _types[n] = type
+    return
+
+  count: method = .int
+    return _parameters[0]
+  paramname: method = .string
+    arg index = .int
+    return _parameters[index]
+  paramtype: method = .string
+    arg index = .int
+    return _types[index]
+
+  name: method = .string
+    return _name
+  result: method = .string
+    return _result
+  body: method = .llast..node
+    return _body
+  first: method = .int
+    return _first
+  last: method = .int
+    return _last
+  endat: method = .void
+    arg finish = .int
+    _last = finish
+    return
+  resulttype: method = .void
+    arg type = .string
+    _result = type
+    return
+
+/** Atomic compilation request. A successful graph is published only after
+ * source admission, binding, lowering and Level L verification all succeed.
+ * Imports are read from an explicit artifact directory; no tool is spawned. */
+request: class
+  _level = .string
+  _source = .binary
+  _filename = .string
+  _rootpath = .string
+  _nesting = .int
+  _budget = .int
+  _work = .int
+  _ready = .int
+  _building = .int
+  _error = .string
+  _offset = .int
+  _tree = .llast..tree
+  _graph = .llir..module
+  _registry = .llir..schema
+  _contract = .llir..contract
+  _builder = .llir..builder
+  _file = .llir..sourcefile
+  _library = .llcompilercontracts..catalog
+  _classic = .llcompilercontracts..catalog
+  _hasclassic = .int
+  _haslibrary = .int
+  _importb = .int
+  _routines = .object[]
+  _functions = .object[]
+  _current = .routine
+  _scope = .int
+  _fn = .llir..function
+  _block = .llir..block
+  _blocknumber = .int
+  _tempnumber = .int
+  _terminated = .int
+  _alive = .int
+  _loops = .int
+  _breaks = .object[]
+  _continues = .object[]
+  _bindscope = .int[]
+  _bindnames = .string[]
+  _bindtypes = .string[]
+  _explicit = .int[]
+  _slots = .object[]
+  _poolslot = .llir..slot
+  _contextslot = .llir..slot
+  _argsslot = .llir..slot
+  *: factory
+    arg level = .string, source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
+    _level = lower(level); _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
+    _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
+    _ready = 0; _nesting = nesting; _building = 0
+    _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    do
+      parsed = .llfrontendparse..parsed(_level,_source,_budget)
+      if parsed.status() <> 0 then do
+        _error = parsed.error(); _offset = parsed.offset(); return
+      end
+      _tree = parsed.ast()
+      if _tree.isrecovered() then do
+        _error = 'LL_COMPILER_RECOVERED: executable IR requires clean input'; return
+      end
+      walk = _tree.walk('parents first')
+      do while walk.next()
+        if walk.depth() > _nesting then do
+          call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
+        end
+      end
+      _registry = .llir..schema(); call llcrexxir..registerfamilies(reference _registry)
+      call inventory()
+      if _error <> '' then return
+      call callschema()
+      _contract = _registry.finish()
+      if _contract.error() <> '' then do
+        _error = _contract.error(); return
+      end
+      _builder = .llir..builder(_contract,_budget,_budget * 64)
+      _building = 1
+      _file = _builder.source(_filename,_source)
+      call bindall()
+      if _error <> '' then return
+      call lowerall()
+      if _error <> '' then return
+      _graph = _builder.finish()
+      if _graph.error() <> '' then _error = _graph.error()
+    on signal as problem
+      if _building then _error = _builder.error()
+      if _error = '' then _error = 'LL_COMPILER_INVALID: ' || problem.message()
+    end
+    return
+  error: method = .string
+    call run()
+    return _error
+  /** Located user-facing message, with escaped source excerpt and caret. */
+  diagnostic: method = .string
+    call run()
+    if _error = '' then return ''
+    split = pos(':',_error)
+    if split = 0 then return _filename || ': ' || llsource..diagnostic(_source,_offset,'LL_COMPILER_SYNTAX',_error)
+    return _filename || ': ' || llsource..diagnostic(_source,_offset,left(_error,split - 1),strip(substr(_error,split + 1)))
+  status: method = .int
+    call run()
+    return _error <> ''
+  offset: method = .int
+    call run()
+    return _offset
+  ast: method = .llast..tree
+    call run()
+    return _tree
+  graph: method = .llir..module
+    call run()
+    if _error <> '' then do
+      empty = .llir..schema(); contract = empty.finish()
+      return llir..loadbinary(contract,''x as .binary)
+    end
+    return _graph
+  fail: method = .void
+    arg node = .llast..node, reason = .string
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if node.valid() then _offset = node.offset()
+    return
+  tick: method = .int
+    arg node = .llast..node
+    _work = _work + 1
+    if _work > _budget then call fail(node,'LIMIT: frontend work budget exceeded')
+    return _error = ''
+  at: method = .llir..origin
+    arg node = .llast..node
+    return _file.origin(node.start(),node.finish(),node.origin())
+  findroutine: method = .int
+    arg name = .string
+    do i = 1 to _routines[0]
+      item = _routines[i] as .routine
+      if item.name() = upper(name) then return i
+    end
+    return 0
+  inventory: method = .void
+    root = _tree.root(); body = root.child('body')
+    main = .routine('$MAIN','int64',body,1,body.count('items'))
+    if _level = 'c' then call main.resulttype('result')
+    _routines[1] = main as .object
+    item = .routine; node = .llast..node; next = .llast..node; part = .llast..node; parameter = .llast..node
+    name = .string; result = .string; i = .int; j = .int
+    if _level = 'g' then do i = 1 to root.count('routines')
+      node = root.child('routines',i); name = upper(node.text('name'))
+      if findroutine(name) > 0 then do
+        call fail(node,'BIND: duplicate routine ' || name); return
+      end
+      result = typename(node.child('result'),1); part = node.child('body')
+      item = .routine(name,result,part,1,part.count('items'))
+      if part.count('items') > 0 then do
+        next = part.child('items',1)
+        if next.kind() = 'GArg' then do j = 1 to next.count('items')
+          parameter = next.child('items',j)
+          call item.parameter(upper(parameter.text('name')),typename(parameter.child('type')))
+        end
+      end
+      _routines[_routines[0] + 1] = item as .object
+    end
+    else do i = 1 to body.count('items')
+      node = body.child('items',i)
+      if node.kind() <> 'CLabel' then iterate
+      name = upper(node.text('name'))
+      if findroutine(name) > 0 then do
+        call fail(node,'BIND: duplicate routine ' || name); return
+      end
+      if i = body.count('items') then do
+        call fail(node,'PROFILE: Classic label requires PROCEDURE'); return
+      end
+      next = body.child('items',i + 1)
+      if next.kind() <> 'CProcedure' then do
+        call fail(node,'PROFILE: shared-pool labels are outside this profile'); return
+      end
+      item = _routines[_routines[0]] as .routine; call item.endat(i - 1)
+      _routines[_routines[0]] = item as .object
+      item = .routine(name,'result',body,i + 2,body.count('items'))
+      _routines[_routines[0] + 1] = item as .object
+    end
+    return
+  typename: method = .string
+    arg node = .llast..node, allowvoid = 0
+    name = lower(node.text('spelling'))
+    select
+      when name = '.int' then return 'int64'
+      when name = '.string' then return 'text'
+      when name = '.boolean' then return 'boolean'
+      when name = '.float' then return 'float64'
+      when name = '.decimal' then return 'decimal'
+      when name = '.void' & allowvoid then return 'void'
+      otherwise call fail(node,'TYPE: unsupported type ' || name)
+    end
+    return 'void'
+  type: method = .llir..typeid
+    arg name = .string
+    if name = 'void' then return _contract.voidtype()
+    if wordpos(name,'value numeric pool arguments result') > 0 then return _contract.type('crexx.c.' || name)
+    return _contract.type('crexx.g.' || name)
+  schematype: method = .llir..typeid
+    arg name = .string
+    /* Registry handles must precede freeze. Temporary contracts are read-only
+     * descriptors from the already registered base family. */
+    return _registry.type(qualified(name))
+  qualified: method = .string
+    arg name = .string
+    if name = 'void' then return 'core.' || name
+    if wordpos(name,'value numeric pool arguments result') > 0 then return 'crexx.c.' || name
+    return 'crexx.g.' || name
+  callschema: method = .void
+    family = _registry.family('crexx.calls',1)
+    op = .llir..operation
+    do i = 2 to _routines[0]
+      item = _routines[i] as .routine
+      if _level = 'c' then iterate
+      op = family.operation('local.' || lower(item.name()))
+      do j = 1 to item.count()
+        call op.input('arg' || j,schematype(item.paramtype(j)))
+      end
+      if item.result() <> 'void' then call op.output('value',schematype(item.result()))
+      call op.attribute('target',schematype('text'))
+      call op.state('call'); call op.failure('condition'); call op.termination('returns')
+    end
+    /* The only source-library import in this profile is rxfnsb LENGTH. Its
+     * actual metadata is checked when the import/call is resolved. */
+    op = family.operation('rxfnsb.length')
+    call op.input('arg1',schematype('text')); call op.output('value',schematype('int64'))
+    call op.attribute('target',schematype('text'))
+    call op.state('none'); call op.failure('resource'); call op.termination('returns')
+    return
+  binding: method = .int
+    arg name = .string
+    do i = 1 to _bindnames[0]
+      if _bindscope[i] = _scope & _bindnames[i] = upper(name) then return i
+    end
+    return 0
+  addbinding: method = .int
+    arg node = .llast..node, name = .string, type = .string, explicit = 0
+    index = binding(name)
+    if index = 0 then do
+      index = _bindnames[0] + 1; _bindscope[index] = _scope; _bindnames[index] = upper(name)
+      _bindtypes[index] = type; _explicit[index] = explicit
+    end
+    else if explicit then do
+      if _explicit[index] then call fail(node,'BIND: duplicate declaration ' || name)
+      _bindtypes[index] = type; _explicit[index] = 1
+    end
+    return index
+  bindall: method = .void
+    node = .llast..node; index = .int; i = .int; j = .int
+    do scope = 1 to _routines[0] while _error = ''
+      _scope = scope
+      _current = _routines[_scope] as .routine
+      if _level = 'c' then iterate
+      do i = 1 to _current.count()
+        index = addbinding(_current.body(),_current.paramname(i),_current.paramtype(i),1)
+      end
+      do i = _current.first() to _current.last()
+        node = _current.body().child('items',i); call collect(node,0)
+      end
+      changed = 1; pass = 0
+      do while changed & _error = ''
+        changed = 0; pass = pass + 1
+        do i = _current.first() to _current.last()
+          node = _current.body().child('items',i)
+          changed = infer(node) | changed
+        end
+        if pass > _bindnames[0] * 5 + 1 then call fail(_current.body(),'TYPE: unresolved binding cycle')
+      end
+      do j = 1 to _bindnames[0]
+        if _bindscope[j] = _scope & _bindtypes[j] = '' then call fail(_current.body(),'TYPE: cannot infer ' || _bindnames[j])
+      end
+    end
+    return
+  collect: method = .void
+    arg node = .llast..node, depth = .int
+    if tick(node) = 0 then return
+    kind = node.kind(); index = .int
+    if kind = 'GDeclare' then do
+      index = addbinding(node,node.text('name'),typename(node.child('type')),1); return
+    end
+    if kind = 'Assignment' then index = addbinding(node,node.text('name'),'')
+    if kind = 'GImport' then do
+      if _scope <> 1 | depth <> 0 | lower(node.text('name')) <> 'rxfnsb' then call fail(node,'IMPORT: profile admits only top-level import rxfnsb')
+      else do
+        _importb = 1; call importlength(node)
+      end
+    end
+    if kind = 'GArg' then return
+    do i = 1 to node.children()
+      call collect(node.at(i),depth + 1)
+    end
+    return
+  infer: method = .int
+    arg node = .llast..node
+    if tick(node) = 0 then return 0
+    changed = 0
+    if node.kind() = 'Assignment' then do
+      index = binding(node.text('name'))
+      if _explicit[index] then return 0
+      kind = expressiontype(node.child('value'))
+      if kind = '' then return 0
+      if _bindtypes[index] <> '' & _bindtypes[index] <> kind then kind = promote(_bindtypes[index],kind)
+      if kind <> _bindtypes[index] then do
+        _bindtypes[index] = kind; return 1
+      end
+      return 0
+    end
+    do i = 1 to node.children()
+      changed = infer(node.at(i)) | changed
+    end
+    return changed
+  promote: method = .string
+    arg left = .string, right = .string
+    if left = '' | right = '' then return ''
+    if left = 'decimal' | right = 'decimal' then return 'decimal'
+    if left = 'float64' | right = 'float64' | left = 'text' | right = 'text' then return 'float64'
+    if left = 'int64' | right = 'int64' then return 'int64'
+    return 'boolean'
+  expressiontype: method = .string
+    arg node = .llast..node
+    if node.valid() = 0 then return ''
+    if tick(node) = 0 then return ''
+    kind = node.kind()
+    select
+      when kind = 'Number' then do
+        spelling = lower(node.text('spelling'))
+        if right(spelling,1) = 'd' then return 'decimal'
+        if pos('.',spelling) > 0 | pos('e',spelling) > 0 then return 'float64'
+        return 'int64'
+      end
+      when kind = 'String' then return 'text'
+      when kind = 'Name' then do
+        index = binding(node.text('spelling'))
+        if index = 0 then return ''
+        return _bindtypes[index]
+      end
+      when kind = 'Group' then return expressiontype(node.child('value'))
+      when kind = 'Cast' then do
+        if node.count('targets') > 0 then return typename(node.child('targets',node.count('targets')))
+        return expressiontype(node.child('value'))
+      end
+      when kind = 'Prefix' then do
+        if node.child('operator').kind() = 'not' then return 'boolean'
+        return expressiontype(node.child('value'))
+      end
+      when kind = 'Chain' then do
+        result = expressiontype(node.child('operands',1)); op = .string
+        do i = 1 to node.count('operators')
+          op = node.child('operators',i).kind()
+          if wordpos(op,'assign ne lt le gt ge strict and or xor') > 0 then result = 'boolean'
+          else if wordpos(op,'concat blank abut') > 0 then result = 'text'
+          else do
+            result = promote(result,expressiontype(node.child('operands',i + 1)))
+            if result = 'boolean' & op = 'divide' then result = 'float64'
+          end
+        end
+        return result
+      end
+      when kind = 'Call' then do
+        target = findroutine(node.text('name'))
+        if target > 0 then do
+          routine = _routines[target] as .routine; return routine.result()
+        end
+        if upper(node.text('name')) = 'LENGTH' then return 'int64'
+        return ''
+      end
+      otherwise return ''
+    end
+    return ''
+  importlength: method = .void
+    arg node = .llast..node
+    if _haslibrary = 0 then do
+      if _rootpath = '' then do
+        call fail(node,'IMPORT: artifact directory required for rxfnsb'); return
+      end
+      do
+        bytes = readbinary(_rootpath || '/library.rxbin')
+        _library = .llcompilercontracts..catalog(bytes)
+      on signal
+        call fail(node,'IMPORT: cannot read library.rxbin'); return
+      end
+      if _library.error() <> '' then do
+        call fail(node,'IMPORT: ' || _library.error()); return
+      end
+      _haslibrary = 1
+    end
+    signature = _library.lookup('rxfnsb.length')
+    if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
+    else if signature.result() <> '.int' | signature.arguments() <> 1 then call fail(node,'IMPORT: incompatible LENGTH signature')
+    else if signature.type(1) <> '.string' | signature.optional(1) then call fail(node,'IMPORT: incompatible LENGTH argument')
+    return
+  newblock: method = .llir..block
+    arg purpose = .string
+    _blocknumber = _blocknumber + 1
+    return _fn.block(purpose || '.' || _blocknumber)
+  temporary: method = .llir..slot
+    arg type = .llir..typeid
+    _tempnumber = _tempnumber + 1
+    return _fn.slot('$tmp.' || _tempnumber,type)
+  lowerall: method = .void
+    item = .routine; fn = .llir..function; index = .int; i = .int; j = .int
+    slot = .llir..slot; op = .llir..opdraft; built = .llir..opview
+    do i = 1 to _routines[0]
+      item = _routines[i] as .routine
+      fn = _builder.function(item.name(),type(item.result()))
+      if _level = 'c' then do
+        index = fn.argument(type('arguments')); index = fn.argument(type('numeric'))
+      end
+      else do j = 1 to item.count()
+        index = fn.argument(type(item.paramtype(j)))
+      end
+      _functions[i] = fn as .object
+    end
+    do scope = 1 to _routines[0] while _error = ''
+      _scope = scope
+      _current = _routines[_scope] as .routine; _fn = _functions[_scope] as .llir..function
+      _blocknumber = 0; _tempnumber = 0; _loops = 0; _terminated = 0; _alive = 1
+      _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
+      if _level = 'c' then do
+        _poolslot = _fn.slot('$pool',type('pool')); _contextslot = _fn.slot('$numeric',type('numeric')); _argsslot = _fn.slot('$arguments',type('arguments'))
+        op = _block.operation(_contract.operation('crexx.c.pool.new'),origin); built = op.finish()
+        call _block.store(_poolslot,built.result(),origin)
+        call _block.store(_argsslot,_block.readarg(1,origin),origin)
+        call _block.store(_contextslot,_block.readarg(2,origin),origin)
+      end
+      else do
+        do i = 1 to _bindnames[0]
+          if _bindscope[i] <> _scope then iterate
+          slot = _fn.slot(_bindnames[i],type(_bindtypes[i])); _slots[i] = slot as .object
+          initial = defaultvalue(_bindtypes[i],origin)
+          call _block.store(slot,initial,origin)
+        end
+        do i = 1 to _current.count()
+          index = binding(_current.paramname(i)); slot = _slots[index] as .llir..slot
+          call _block.store(slot,_block.readarg(i,origin),origin)
+        end
+      end
+      do i = _current.first() to _current.last() while _error = ''
+        if _terminated then do
+          _block = newblock('unreachable'); _terminated = 0; _alive = 0
+        end
+        call statement(_current.body().child('items',i))
+      end
+      if _error <> '' then return
+      if _level = 'c' & _scope < _routines[0] & _alive & _terminated = 0 then do
+        call fail(_current.body(),'PROFILE: fall-through into a Classic label is outside this profile'); return
+      end
+      if _terminated = 0 then do
+        if _level = 'g' & _scope > 1 & _current.result() <> 'void' & _alive then do
+          call fail(_current.body(),'RETURN: typed routine may finish without a value'); return
+        end
+        if _current.result() = 'void' then call _block.returnvoid(origin)
+        else if _level = 'c' then do
+          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+          call _block.returnvalue(built.result(),origin)
+        end
+        else call _block.returnvalue(defaultvalue(_current.result(),origin),origin)
+      end
+    end
+    return
+  defaultvalue: method = .llir..valuehandle
+    arg name = .string, origin = .llir..origin
+    if name = 'decimal' then do
+      op = _block.operation(_contract.operation('crexx.g.decimal.default'),origin)
+      built = op.finish(); return built.result()
+    end
+    if name = 'text' | name = 'value' then return _block.constantbytes(type(name),''x as .binary,origin)
+    return _block.constant(type(name),'0',origin)
+  statement: method = .void
+    arg node = .llast..node
+    if tick(node) = 0 then return
+    i = .int
+    origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    select
+      when kind = 'Sequence' then do i = 1 to node.count('items') while _error = ''
+        if _terminated then do
+          _block = newblock('unreachable'); _terminated = 0; _alive = 0
+        end
+        call statement(node.child('items',i))
+      end
+      when kind = 'Block' then call statement(node.child('body'))
+      when kind = 'Options' then do
+        root = _tree.root(); body = root.child('body'); first = body.child('items',1)
+        if first.id() <> node.id() | lower(node.text('level')) <> 'level' || _level then call fail(node,'PROFILE: options must select this frontend at the start of the source')
+      end
+      when kind = 'GDeclare' | kind = 'GImport' | kind = 'Nop' then nop
+      when kind = 'GArg' then do
+        if _scope = 1 | node.id() <> _current.body().child('items',1).id() then call fail(node,'PROFILE: typed ARG must begin its procedure body')
+      end
+      when kind = 'Assignment' then do
+        if _level = 'g' then do
+          index = binding(node.text('name')); value = expression(node.child('value'),_bindtypes[index])
+          if _error = '' then do
+            value = convert(value,_bindtypes[index],origin); slot = _slots[index] as .llir..slot
+            call _block.store(slot,value,origin)
+          end
+        end
+        else do
+          if node.count('value') then value = expression(node.child('value'))
+          else value = defaultvalue('value',origin)
+          if _error = '' then do
+            op = _block.operation(_contract.operation('crexx.c.store'),origin)
+            call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
+            call op.attribute('name',upper(node.text('name')) as .binary); built = op.finish()
+          end
+        end
+      end
+      when kind = 'Say' then do
+        if node.count('value') then value = expression(node.child('value'))
+        else if _level = 'c' then value = defaultvalue('value',origin)
+        else value = defaultvalue('text',origin)
+        if _error <> '' then return
+        if _level = 'g' then do
+          value = convert(value,'text',origin)
+          op = _block.operation(_contract.operation('crexx.g.say'),origin); call op.input('text',value)
+        end
+        else do
+          op = _block.operation(_contract.operation('crexx.c.say'),origin); call op.input('value',value)
+        end
+        built = op.finish()
+      end
+      when kind = 'IfThen' | kind = 'IfElse' then do
+        value = expression(node.child('condition')); if _error <> '' then return
+        value = truth(value,origin)
+        yes = newblock('if.yes'); no = newblock('if.no'); join = newblock('if.join')
+        call _block.branch(value,yes,no,origin)
+        incoming = _alive; _block = yes; _terminated = 0
+        call statement(node.child('yes')); yesalive = _alive & _terminated = 0
+        if _terminated = 0 then call _block.jump(join,origin)
+        _block = no; _terminated = 0; _alive = incoming
+        if kind = 'IfElse' then call statement(node.child('no'))
+        noalive = _alive & _terminated = 0
+        if _terminated = 0 then call _block.jump(join,origin)
+        _block = join; _terminated = 0; _alive = yesalive | noalive
+      end
+      when kind = 'While' then do
+        header = newblock('while.test'); bodyblock = newblock('while.body'); after = newblock('while.after')
+        call _block.jump(header,origin); _block = header
+        value = expression(node.child('condition')); if _error <> '' then return
+        value = truth(value,origin); call _block.branch(value,bodyblock,after,origin)
+        _loops = _loops + 1; _breaks[_loops] = after as .object; _continues[_loops] = header as .object
+        incoming = _alive; _block = bodyblock; _terminated = 0
+        call statement(node.child('body'))
+        if _terminated = 0 then call _block.jump(header,origin)
+        _loops = _loops - 1; _block = after; _terminated = 0; _alive = incoming
+      end
+      when kind = 'Leave' | kind = 'Iterate' then do
+        if _loops = 0 then do
+          call fail(node,'FLOW: ' || kind || ' requires a surrounding loop'); return
+        end
+        target = _breaks[_loops] as .llir..block
+        if kind = 'Iterate' then target = _continues[_loops] as .llir..block
+        call _block.jump(target,origin); _terminated = 1; _alive = 0
+      end
+      when kind = 'Return' then do
+        if _level = 'c' then do
+          if node.count('value') then do
+            value = expression(node.child('value')); if _error <> '' then return
+            op = _block.operation(_contract.operation('crexx.c.return.present'),origin); call op.input('value',value)
+          end
+          else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+          built = op.finish(); call _block.returnvalue(built.result(),origin)
+        end
+        else if _current.result() = 'void' then do
+          if node.count('value') then call fail(node,'RETURN: void routine cannot return a value')
+          else call _block.returnvoid(origin)
+        end
+        else if node.count('value') = 0 then call fail(node,'RETURN: typed routine requires a result')
+        else do
+          value = expression(node.child('value'),_current.result())
+          if _error = '' then call _block.returnvalue(convert(value,_current.result(),origin),origin)
+        end
+        _terminated = 1; _alive = 0
+      end
+      when kind = 'Exit' then do
+        name = 'int64'; if _level = 'c' then name = 'value'
+        if _level = 'c' then value = _block.constantbytes(type(name),'0' as .binary,origin)
+        else value = defaultvalue('int64',origin)
+        if node.count('value') then value = expression(node.child('value'),'int64')
+        if _error <> '' then return
+        if _level = 'g' then value = convert(value,'int64',origin)
+        op = _block.operation(_contract.operation('crexx.' || _level || '.exit'),origin); call op.input('value',value); built = op.finish()
+        /* EXIT never returns. The final core terminator closes the structural
+         * block; it is unreachable after this explicitly diverging operation. */
+        if _level = 'c' then do
+          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+          call _block.returnvalue(built.result(),origin)
+        end
+        else if _current.result() = 'void' then call _block.returnvoid(origin)
+        else call _block.returnvalue(defaultvalue(_current.result(),origin),origin)
+        _terminated = 1; _alive = 0
+      end
+      when kind = 'Invoke' then value = invocation(node,0)
+      when kind = 'CArg' then do i = 1 to node.count('items')
+        targetnode = node.child('items',i); name = upper(strip(targetnode.text('name')))
+        if name = '' then iterate
+        op = _block.operation(_contract.operation('crexx.c.arguments.read'),origin)
+        call op.input('arguments',_block.load(_argsslot,origin))
+        codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(i as .string)); built = op.finish(); value = built.result()
+        op = _block.operation(_contract.operation('crexx.c.store'),origin)
+        call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
+        call op.attribute('name',name as .binary); built = op.finish()
+      end
+      when kind = 'CNumeric' then do
+        setting = lower(node.text('setting')); initial = '9'; if setting = 'fuzz' then initial = '0'
+        value = _block.constantbytes(type('value'),initial as .binary,origin)
+        if node.count('value') then value = expression(node.child('value'))
+        if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.numeric.' || setting),origin)
+        call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+        call _block.store(_contextslot,built.result(),origin)
+      end
+      when kind = 'CForm' then do
+        form = upper(node.text('form')); if form = '' then form = 'SCIENTIFIC'
+        op = _block.operation(_contract.operation('crexx.c.numeric.form'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); call op.attribute('form',form as .binary); built = op.finish()
+        call _block.store(_contextslot,built.result(),origin)
+      end
+      otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
+    end
+    return
+  valuetype: method = .string
+    arg value = .llir..valuehandle
+    descriptor = dereference _contract.data()
+    name = descriptor.typename(value.type().id())
+    if left(name,5) = 'core.' then return substr(name,6)
+    return substr(name,9)
+  convert: method = .llir..valuehandle
+    arg value = .llir..valuehandle, target = .string, origin = .llir..origin
+    source = valuetype(value)
+    if target = '' | source = target then return value
+    op = _block.operation(_contract.operation('crexx.g.convert.' || source || '.' || target),origin)
+    call op.input('value',value); built = op.finish(); return built.result()
+  truth: method = .llir..valuehandle
+    arg value = .llir..valuehandle, origin = .llir..origin
+    built = .llir..opview
+    if _level = 'g' then do
+      value = convert(value,'boolean',origin)
+      test = _block.operation(_contract.operation('crexx.g.truth'),origin)
+      call test.input('value',value); built = test.finish(); return built.result()
+    end
+    op = _block.operation(_contract.operation('crexx.c.truth'),origin)
+    call op.input('value',value); built = op.finish(); return built.result()
+  expression: method = .llir..valuehandle
+    arg node = .llast..node, expected = ''
+    invalid = .llir..valuehandle
+    if tick(node) = 0 then return invalid
+    _offset = node.offset()
+    origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    select
+      when kind = 'Number' then do
+        spelling = node.text('spelling')
+        if _level = 'c' then do
+          if right(lower(spelling),1) = 'd' then do
+            call fail(node,'PROFILE: decimal suffix is not Classic syntax'); return invalid
+          end
+          return _block.constantbytes(type('value'),spelling as .binary,origin)
+        end
+        target = expressiontype(node)
+        if target = 'decimal' then spelling = left(spelling,length(spelling) - 1)
+        if expected = 'decimal' & target <> 'int64' then target = 'decimal'
+        return _block.constant(type(target),spelling,origin)
+      end
+      when kind = 'String' then do
+        spelling = node.text('spelling'); quote = left(spelling,1)
+        text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
+        do while i <= length(text)
+          ch = substr(text,i,1); decoded = decoded || ch
+          if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
+          i = i + 1
+        end
+        target = 'text'; if _level = 'c' then target = 'value'
+        return _block.constantbytes(type(target),decoded as .binary,origin)
+      end
+      when kind = 'Name' then do
+        name = upper(node.text('spelling'))
+        if _level = 'c' then do
+          op = _block.operation(_contract.operation('crexx.c.load'),origin)
+          call op.input('pool',_block.load(_poolslot,origin)); call op.attribute('name',name as .binary)
+          built = op.finish(); return built.result()
+        end
+        index = binding(name)
+        if index = 0 then do
+          call fail(node,'BIND: unknown variable ' || name); return invalid
+        end
+        slot = _slots[index] as .llir..slot
+        return _block.load(slot,origin)
+      end
+      when kind = 'Group' then return expression(node.child('value'),expected)
+      when kind = 'Cast' then do
+        target = expected
+        if node.count('targets') > 0 then target = typename(node.child('targets',1))
+        value = expression(node.child('value'),target)
+        if _error <> '' then return invalid
+        do i = 1 to node.count('targets')
+          value = convert(value,typename(node.child('targets',i)),origin)
+        end
+        return value
+      end
+      when kind = 'Prefix' then do
+        name = node.child('operator').kind(); child = node.child('value')
+        /* The minimum signed integer is one literal with a unary sign; avoid
+         * first constructing an unrepresentable positive int64 operand. */
+        if _level = 'g' & name = 'minus' & child.kind() = 'Cast' & child.count('targets') = 0 then child = child.child('value')
+        if _level = 'g' & name = 'minus' & child.kind() = 'Number' & expressiontype(child) = 'int64' then return _block.constant(type('int64'),'-' || child.text('spelling'),origin)
+        value = expression(node.child('value'),expected)
+        if _error <> '' then return invalid
+        if _level = 'g' & name = 'not' then value = convert(value,'boolean',origin)
+        if name = 'plus' then name = 'positive'
+        if name = 'minus' then name = 'negative'
+        if _level = 'g' then do
+          target = valuetype(value)
+          if target = 'text' then do
+            value = convert(value,'float64',origin); target = 'float64'
+          end
+          op = _block.operation(_contract.operation('crexx.g.' || target || '.' || name),origin)
+        end
+        else op = _block.operation(_contract.operation('crexx.c.' || name),origin)
+        call op.input('value',value)
+        if _level = 'c' then call op.input('context',_block.load(_contextslot,origin))
+        built = op.finish(); return built.result()
+      end
+      when kind = 'Chain' then do
+        value = expression(node.child('operands',1),expected)
+        do i = 1 to node.count('operators') while _error = ''
+          operator = node.child('operators',i).kind(); right = node.child('operands',i + 1)
+          if _level = 'g' & (operator = 'and' | operator = 'or') then value = shortcircuit(value,operator,right,origin)
+          else value = binary(value,operator,right,origin,expected)
+        end
+        return value
+      end
+      when kind = 'Call' then return invocation(node,1)
+      otherwise call fail(node,'PROFILE: unsupported expression ' || kind)
+    end
+    return invalid
+  shortcircuit: method = .llir..valuehandle
+    arg left = .llir..valuehandle, operator = .string, right = .llast..node, origin = .llir..origin
+    left = convert(left,'boolean',origin); slot = temporary(type('boolean'))
+    call _block.store(slot,left,origin); test = truth(left,origin)
+    rhs = newblock('logical.rhs'); skip = newblock('logical.skip'); join = newblock('logical.join')
+    if operator = 'and' then call _block.branch(test,rhs,skip,origin)
+    else call _block.branch(test,skip,rhs,origin)
+    _block = skip; call _block.jump(join,origin)
+    _block = rhs; value = expression(right)
+    if _error <> '' then return value
+    value = convert(value,'boolean',origin); call _block.store(slot,value,origin); call _block.jump(join,origin)
+    _block = join; return _block.load(slot,origin)
+  binary: method = .llir..valuehandle
+    arg left = .llir..valuehandle, operator = .string, rightnode = .llast..node, origin = .llir..origin, expected = ''
+    saved = temporary(left.type()); call _block.store(saved,left,origin)
+    target = ''; if _level = 'g' then do
+      if wordpos(operator,'concat blank abut strict') > 0 then target = 'text'
+      else if operator = 'xor' then target = 'boolean'
+      else if expected = 'decimal' & wordpos(operator,'plus minus times divide') > 0 then target = 'decimal'
+      else if (valuetype(left) = 'text' | expressiontype(rightnode) = 'text') & wordpos(operator,'assign ne lt le gt ge strict') > 0 then target = 'text'
+      else target = promote(valuetype(left),expressiontype(rightnode))
+    end
+    right = expression(rightnode,target)
+    if _error <> '' then return right
+    left = _block.load(saved,origin)
+    name = operator
+    if operator = 'assign' then name = 'eq'
+    if operator = 'plus' then name = 'add'
+    if operator = 'minus' then name = 'sub'
+    if operator = 'times' then name = 'mul'
+    if operator = 'divide' then name = 'div'
+    if _level = 'g' then do
+      if target = '' then target = promote(valuetype(left),valuetype(right))
+      if target = 'boolean' & name = 'div' then target = 'float64'
+      left = convert(left,target,origin); right = convert(right,target,origin)
+      if operator = 'blank' then do
+        space = _block.constant(type('text'),' ',origin)
+        left = _block.binary(_contract.operation('crexx.g.text.concat'),left,space,origin)
+      end
+      if operator = 'blank' | operator = 'abut' then name = 'concat'
+      return _block.binary(_contract.operation('crexx.g.' || target || '.' || name),left,right,origin)
+    end
+    op = _block.operation(_contract.operation('crexx.c.' || name),origin)
+    call op.input('left',left); call op.input('right',right); call op.input('context',_block.load(_contextslot,origin))
+    built = op.finish(); return built.result()
+  invocation: method = .llir..valuehandle
+    arg node = .llast..node, expressioncall = .int
+    invalid = .llir..valuehandle; origin = at(node); name = upper(node.text('name'))
+    arguments = node.child('arguments'); count = arguments.count('items')
+    if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
+    target = findroutine(name); argument = .llast..node; value = .llir..valuehandle
+    op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
+    if _level = 'g' then do
+      resulttype = 'int64'; expectedcount = 1; item = .routine
+      if target > 0 then do
+        item = _routines[target] as .routine; expectedcount = item.count(); resulttype = item.result()
+      end
+      else if name = 'LENGTH' then do
+        if _importb = 0 then do
+          call fail(node,'IMPORT: LENGTH requires import rxfnsb'); return invalid
+        end
+        call importlength(node)
+      end
+      else do
+        call fail(node,'CALL: unknown routine ' || name); return invalid
+      end
+      if count <> expectedcount then do
+        call fail(node,'CALL: wrong argument count for ' || name); return invalid
+      end
+      if resulttype = 'void' & expressioncall then do
+        call fail(node,'CALL: void routine used as a value'); return invalid
+      end
+      saved = .object[]; expected = .string
+      do i = 1 to count
+        argument = arguments.child('items',i)
+        if argument.count('value') = 0 then do
+          call fail(argument,'CALL: missing required typed argument'); return invalid
+        end
+        expected = 'text'; if target > 0 then expected = item.paramtype(i)
+        value = expression(argument.child('value'),expected)
+        if _error <> '' then return invalid
+        value = convert(value,expected,at(argument)); slot = temporary(value.type())
+        call _block.store(slot,value,origin); saved[i] = slot as .object
+      end
+      opname = 'crexx.calls.rxfnsb.length'; identity = 'rxfnsb.length'
+      if target > 0 then do
+        opname = 'crexx.calls.local.' || lower(name); identity = name
+      end
+      op = _block.operation(_contract.operation(opname),origin)
+      do i = 1 to count
+        slot = saved[i] as .llir..slot; call op.input('arg' || i,_block.load(slot,origin))
+      end
+      call op.attribute('target',identity as .binary); built = op.finish()
+      if resulttype = 'void' then return invalid
+      return built.result()
+    end
+    result = .llir..valuehandle
+    if target = 0 then do
+      if wordpos(name,'LENGTH ARG DIGITS') = 0 then do
+        call fail(node,'CALL: unknown Classic routine ' || name); return invalid
+      end
+      if (name = 'LENGTH' & count <> 1) | (name = 'DIGITS' & count <> 0) | (name = 'ARG' & count <> 0 & count <> 2) then do
+        call fail(node,'CALL: BIF argument form outside the admitted profile'); return invalid
+      end
+      call classiccontract(node,name)
+      if _error <> '' then return invalid
+      if name = 'DIGITS' then do
+        op = _block.operation(_contract.operation('crexx.c.digits'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); value = built.result()
+      end
+      else if name = 'ARG' & count = 0 then do
+        op = _block.operation(_contract.operation('crexx.c.arguments.count'),origin)
+        call op.input('arguments',_block.load(_argsslot,origin)); built = op.finish(); value = built.result()
+      end
+      else do
+        saved = .object[]
+        do i = 1 to count
+          argument = arguments.child('items',i)
+          if argument.count('value') = 0 then do
+            call fail(argument,'CALL: missing BIF argument'); return invalid
+          end
+          value = expression(argument.child('value'))
+          if _error <> '' then return invalid
+          slot = temporary(type('value')); call _block.store(slot,value,origin); saved[i] = slot as .object
+        end
+        if name = 'LENGTH' then do
+          call classiccontract(node,'LENGTH')
+          if _error <> '' then return invalid
+          op = _block.operation(_contract.operation('crexx.c.length'),origin)
+          slot = saved[1] as .llir..slot; call op.input('value',_block.load(slot,origin))
+        end
+        else do
+          op = _block.operation(_contract.operation('crexx.c.arguments.exists'),origin)
+          call op.input('arguments',_block.load(_argsslot,origin))
+          slot = saved[1] as .llir..slot; call op.input('ordinal',_block.load(slot,origin))
+          slot = saved[2] as .llir..slot; call op.input('option',_block.load(slot,origin))
+        end
+        built = op.finish(); value = built.result()
+      end
+      if expressioncall then return value
+      op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
+      call op.input('value',value); built = op.finish(); result = built.result()
+    end
+    else do
+      op = _block.operation(_contract.operation('crexx.c.arguments.empty'),origin); built = op.finish()
+      packet = temporary(type('arguments')); call _block.store(packet,built.result(),origin)
+      do i = 1 to count
+        argument = arguments.child('items',i); present = argument.count('value') <> 0
+        value = defaultvalue('value',at(argument))
+        if present then value = expression(argument.child('value'))
+        if _error <> '' then return invalid
+        op = _block.operation(_contract.operation('crexx.c.arguments.append'),at(argument))
+        call op.input('arguments',_block.load(packet,origin)); call op.input('value',value)
+        call op.input('present',_block.constant(_contract.boolean(),present as .string,origin)); built = op.finish()
+        call _block.store(packet,built.result(),origin)
+      end
+      op = _block.operation(_contract.operation('crexx.c.call'),origin)
+      call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
+      call op.attribute('target',name as .binary); built = op.finish(); result = built.result()
+    end
+    if expressioncall then do
+      op = _block.operation(_contract.operation('crexx.c.requirevalue'),origin)
+      call op.input('result',result); built = op.finish(); return built.result()
+    end
+    op = _block.operation(_contract.operation('crexx.c.setresult'),origin)
+    call op.input('pool',_block.load(_poolslot,origin)); call op.input('result',result); built = op.finish()
+    return invalid
+  classiccontract: method = .void
+    arg node = .llast..node, name = .string
+    if _rootpath = '' then do
+      call fail(node,'IMPORT: Classic BIF requires the rxfnsc artifact contract'); return
+    end
+    if _hasclassic = 0 then do
+      do
+        image = readbinary(_rootpath || '/rxfnsc.rxbin')
+        _classic = .llcompilercontracts..catalog(image,67108864)
+      on signal
+        call fail(node,'IMPORT: cannot read rxfnsc.rxbin'); return
+      end
+      if _classic.error() <> '' then do
+        call fail(node,'IMPORT: ' || _classic.error()); return
+      end
+      if _classic.field(11,'rexxclassicbifs.rexxbifcallcontext','',2) <> 'b' | _classic.field(12,'rexxclassicbifs.rexxbifcallcontext.bif_arg_count','',3) <> '.int' then do
+        call fail(node,'IMPORT: incompatible Classic BIF context layout'); return
+      end
+      _hasclassic = 1
+    end
+    symbol = 'rexxclassicbiflength.rexxclassicbif_length'; count = 1
+    if name = 'ARG' then do; symbol = 'rexxclassicbifarg.rexxclassicbif_arg'; count = 2; end
+    if name = 'DIGITS' then symbol = 'rexxclassicbifnumeric.rexxclassicbif_digits'
+    signature = _classic.lookup(symbol)
+    if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
+    else if signature.result() <> '.rexxvalue..rexxvalue' | signature.arguments() <> count then call fail(node,'IMPORT: incompatible Classic ' || name || ' contract')
+    else if signature.type(1) <> 'reference .rexxbifcallcontext' then call fail(node,'IMPORT: incompatible Classic BIF context')
+    else if name = 'ARG' then do
+      if signature.type(2) <> 'reference .rexxactivationarguments' then call fail(node,'IMPORT: incompatible Classic activation contract')
+    end
+    return

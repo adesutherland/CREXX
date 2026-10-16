@@ -1,0 +1,2186 @@
+/* cREXX License (MIT). Checked Level B intermediate representation. */
+options levelb
+namespace llir expose schema contract family typeid operation typecodec bytescodec intcodec boolcodec evaluation evaluator verification lowering request fragment lowerrequest schema_data table arena builder module function block valuehandle slot origin sourcefile opview opdraft writer output sink reader textreader loadbinary loadtext
+import rxfnsb
+
+identities: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then do
+    assembler signal "ERROR","LL_IR_IDENTITY: identities exhausted"
+    return 0
+  end
+  serial = serial + 1
+  return serial
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** A compact checked table. Rows and columns are one based; fields are u32.
+ * Capacity grows geometrically. Layout 1 is row-major; layout 2 is column-major.
+ * The latter is retained for storage comparison, not a file-format switch.
+ */
+table: class
+  _data = .binary
+  _width = .int
+  _count = .int
+  _capacity = .int
+  _layout = .int
+  *: factory
+    arg width = .int, layout = 1
+    _width = width; _count = 0; _capacity = 0; _layout = layout
+    if width < 1 | width > 64 | (layout <> 1 & layout <> 2) then call bad('LL_IR_TABLE: invalid record layout')
+    return
+  size: method = .int
+    return _count
+  bytes: method = .int
+    return <blen>(_data)
+  usedbytes: method = .int
+    return _count * _width * 4
+  offset: method = .int
+    arg row = .int, col = .int
+    if row < 1 | row > _count | col < 1 | col > _width then do
+      call bad('LL_IR_TABLE: record or field outside table'); return 0
+    end
+    if _layout = 2 then return ((col - 1) * _capacity + row - 1) * 4
+    return ((row - 1) * _width + col - 1) * 4
+  get: method = .int
+    arg row = .int, col = .int
+    at = offset(row,col)
+    return <at..u32>(at) _data
+  put: method = .void
+    arg row = .int, col = .int, number = .int
+    if number < 0 | number > 4294967295 then do
+      call bad('LL_REPRESENTATION_LIMIT: IR field requires an unsigned 32-bit value'); return
+    end
+    at = offset(row,col)
+    <at..u32>(at) _data = number
+    return
+  add: method = .int
+    c = .int
+    if _count = 4294967295 then do
+      call bad('LL_REPRESENTATION_LIMIT: IR record IDs exhausted'); return 0
+    end
+    if _count = _capacity then do
+      capacity = min(4294967295,max(8,_capacity * 2))
+      if _layout = 1 then call binresize _data,capacity * _width * 4
+      else do
+        fresh = .binary; call binresize fresh,capacity * _width * 4
+        do c = 1 to _width
+          do r = 1 to _count
+            from = ((c - 1) * _capacity + r - 1) * 4
+            dest = ((c - 1) * capacity + r - 1) * 4
+            <at..u32>(dest) fresh = <at..u32>(from) _data
+          end
+        end
+        _data = fresh
+      end
+      _capacity = capacity
+    end
+    _count = _count + 1
+    do c = 1 to _width
+      call put(_count,c,0)
+    end
+    return _count
+
+/** Exact encoding services are supplied explicitly by the host. */
+typecodec: interface
+  parse: method = .binary
+    arg text = .string
+  check: method = .string
+    arg bits = .binary
+  format: method = .string
+    arg bits = .binary
+
+bytescodec: class implements .typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return unhex(text)
+  check: method = .string
+    arg bits = .binary
+    return ''
+  format: method = .string
+    arg bits = .binary
+    return bin2x(bits)
+
+intcodec: class implements .typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    if text = '' then call bad('LL_IR_CONSTANT: expected an integer')
+    first = 1; negative = 0
+    if left(text,1) = '-' then do
+      negative = 1; first = 2
+    end
+    if first > length(text) then call bad('LL_IR_CONSTANT: expected integer digits')
+    number = 0
+    /* Accumulate negatively so the minimum signed integer is representable. */
+    do i = first to length(text)
+      digit = pos(substr(text,i,1),'0123456789') - 1
+      if digit < 0 then call bad('LL_IR_CONSTANT: expected integer digits')
+      if number < -922337203685477580 | (number = -922337203685477580 & digit > 7 + negative) then call bad('LL_IR_CONSTANT: integer exceeds int64')
+      number = number * 10 - digit
+    end
+    if negative = 0 then number = -number
+    result = .binary; call binresize result,8
+    <at..i64>(0) result = number
+    return result
+  check: method = .string
+    arg bits = .binary
+    if <blen>(bits) <> 8 then return 'int64 requires exactly eight bytes'
+    return ''
+  format: method = .string
+    arg bits = .binary
+    if check(bits) <> '' then call bad('LL_IR_CONSTANT: invalid int64 encoding')
+    return <at..i64>(0) bits
+
+boolcodec: class implements .typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    if text = 'true' | text = '1' then return '01'x as .binary
+    if text = 'false' | text = '0' then return '00'x as .binary
+    call bad('LL_IR_CONSTANT: Boolean must be true or false')
+    return ''x as .binary
+  check: method = .string
+    arg bits = .binary
+    if <blen>(bits) <> 1 then return 'Boolean requires one byte'
+    if <at..u8>(0) bits > 1 then return 'Boolean encoding must be zero or one'
+    return ''
+  format: method = .string
+    arg bits = .binary
+    if check(bits) <> '' then call bad('LL_IR_CONSTANT: invalid Boolean encoding')
+    if <at..u8>(0) bits = 1 then return 'true'
+    return 'false'
+
+/** Service outcomes do not turn runtime arithmetic failures into build errors.
+ * Values are exact encodings, in declared result order. */
+evaluation: class
+  _status = .string
+  _message = .string
+  _values = .binary[]
+  _used = .string[]
+  *: factory
+    arg status = 'keep', message = ''
+    _status = status; _message = message
+    return
+  add: method = .void
+    arg bits = .binary
+    _values[_values[0] + 1] = bits
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  size: method = .int
+    return _values[0]
+  at: method = .binary
+    arg i = .int
+    return _values[i]
+
+  use: method = .void
+    arg key = .string
+    _used[_used[0] + 1] = key
+    return
+  uses: method = .int
+    return _used[0]
+  used: method = .string
+    arg i = .int
+    return _used[i]
+
+evaluator: interface
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+verification: interface
+  check: method = .string
+    arg input = .llir..opview
+lowering: interface
+  lower: method = .llir..fragment
+    arg input = .llir..lowerrequest
+
+/** A service receives immutable value copies, never the mutable program pool.
+ * Context keys are explicit proved facts; work is an agreed service budget. */
+request: class
+  _opcode = .string
+  _values = .binary[]
+  _keys = .string[]
+  _facts = .binary[]
+  _budget = .int
+  _operation = .llir..opview
+  *: factory
+    arg opcode = .string, values = .binary[], keys = .string[], context = .binary[], budget = .int, operation = .llir..opview
+    _operation = operation
+    _opcode = opcode; _values = values; _keys = keys; _facts = context; _budget = budget
+    return
+  operation: method = .llir..opview
+    return _operation
+  opcode: method = .string
+    return _opcode
+  size: method = .int
+    return _values[0]
+  at: method = .binary
+    arg i = .int
+    return _values[i]
+  budget: method = .int
+    return _budget
+  has: method = .int
+    arg name = .string
+    do i = 1 to _keys[0]
+      if _keys[i] = name then return 1
+    end
+    return 0
+  get: method = .binary
+    arg name = .string
+    do i = 1 to _keys[0]
+      if _keys[i] = name then return _facts[i]
+    end
+    call bad('LL_IR_FACT: missing semantic context ' || name)
+    return ''x as .binary
+
+/** Mutable registry storage; descriptors borrow it until finish freezes it. */
+schema_data: class
+  _identity = .int
+  _sealed = .int
+  _error = .string
+  _families = .string[]
+  _versions = .int[]
+  _types = .string[]
+  _codecs = .object[]
+  _ops = .string[]
+  _fields = .llir..table
+  _names = .string[]
+  _states = .string[]
+  _failures = .string[]
+  _termination = .string[]
+  _evaluators = .object[]
+  _verifiers = .object[]
+  _lowerers = .object[]
+  *: factory
+    _identity = nextidentity(); _sealed = 0; _error = ''
+    _fields = .llir..table(4)
+    return
+  bootstrap: method = .void
+    id = addfamily('core',1)
+    id = addtype('core.void',.bytescodec() as .object)
+    id = addtype('core.boolean',.boolcodec() as .object)
+    return
+  identity: method = .int
+    return _identity
+  sealed: method = .int
+    return _sealed
+  error: method = .string
+    return _error
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  mutable: method = .int
+    if _sealed then do
+      call bad('LL_IR_SCHEMA: contract is frozen'); return 0
+    end
+    return _error = ''
+  addfamily: method = .int
+    arg name = .string, version = .int
+    if mutable() = 0 then return 0
+    if validname(name) = 0 | version < 1 | version > 4294967295 then do
+      call fail('LL_IR_SCHEMA: invalid family name or version'); return 0
+    end
+    i = .int
+    do i = 1 to _families[0]
+      if _families[i] = name then do
+        call fail('LL_IR_SCHEMA: duplicate family ' || name); return 0
+      end
+    end
+    i = _families[0] + 1; _families[i] = name; _versions[i] = version
+    return i
+  familyname: method = .string
+    arg i = .int
+    return _families[i]
+  familycount: method = .int
+    return _families[0]
+  version: method = .int
+    arg i = .int
+    return _versions[i]
+  addtype: method = .int
+    arg name = .string, codec = .object
+    if mutable() = 0 then return 0
+    if validname(name) = 0 | typeindex(name) > 0 then do
+      call fail('LL_IR_SCHEMA: invalid or duplicate type ' || name); return 0
+    end
+    if (codec is .llir..typecodec) = 0 | initialized(codec) = 0 then do
+      call fail('LL_IR_SCHEMA: type requires a typecodec service'); return 0
+    end
+    i = _types[0] + 1; _types[i] = name; _codecs[i] = codec
+    return i
+  typeindex: method = .int
+    arg name = .string
+    do i = 1 to _types[0]
+      if _types[i] = name then return i
+    end
+    return 0
+  typename: method = .string
+    arg i = .int
+    return _types[i]
+  types: method = .int
+    return _types[0]
+  codec: method = .object
+    arg i = .int
+    return _codecs[i]
+  addop: method = .int
+    arg name = .string
+    if mutable() = 0 then return 0
+    if validname(name) = 0 | opindex(name) > 0 then do
+      call fail('LL_IR_SCHEMA: invalid or duplicate operation ' || name); return 0
+    end
+    i = _ops[0] + 1; _ops[i] = name
+    _states[i] = 'unknown'; _failures[i] = 'unknown'; _termination[i] = 'unknown'
+    return i
+  opindex: method = .int
+    arg name = .string
+    do i = 1 to _ops[0]
+      if _ops[i] = name then return i
+    end
+    return 0
+  opname: method = .string
+    arg i = .int
+    return _ops[i]
+  ops: method = .int
+    return _ops[0]
+  field: method = .void
+    arg op = .int, mode = .int, name = .string, type = .llir..typeid
+    if mutable() = 0 then return
+    if op < 1 | op > _ops[0] | validname(name) = 0 | type.schemaid() <> _identity | type.id() < 2 | type.id() > _types[0] | mode < 1 | mode > 3 then do
+      call fail('LL_IR_SCHEMA: invalid operation field ' || name); return
+    end
+    i = .int
+    do i = 1 to _fields.size()
+      if _fields.get(i,1) = op & _fields.get(i,2) = mode & _names[i] = name then do
+        call fail('LL_IR_SCHEMA: duplicate operation field ' || name); return
+      end
+    end
+    i = _fields.add(); call _fields.put(i,1,op); call _fields.put(i,2,mode)
+    call _fields.put(i,3,type.id()); _names[i] = name
+    return
+  arity: method = .int
+    arg op = .int, mode = .int
+    count = 0
+    do i = 1 to _fields.size()
+      if _fields.get(i,1) = op & _fields.get(i,2) = mode then count = count + 1
+    end
+    return count
+  fieldid: method = .int
+    arg op = .int, mode = .int, ordinal = .int
+    count = 0
+    do i = 1 to _fields.size()
+      if _fields.get(i,1) = op & _fields.get(i,2) = mode then do
+        count = count + 1
+        if count = ordinal then return i
+      end
+    end
+    return 0
+  fieldtype: method = .int
+    arg op = .int, mode = .int, ordinal = .int
+    i = fieldid(op,mode,ordinal)
+    if i = 0 then return 0
+    return _fields.get(i,3)
+  fieldname: method = .string
+    arg op = .int, mode = .int, ordinal = .int
+    i = fieldid(op,mode,ordinal)
+    if i = 0 then return ''
+    return _names[i]
+  effect: method = .void
+    arg op = .int, which = .int, text = .string
+    if mutable() = 0 then return
+    if op < 1 | op > _ops[0] | validname(text) = 0 | which < 1 | which > 3 then do
+      call fail('LL_IR_SCHEMA: invalid effect declaration'); return
+    end
+    if which = 1 then _states[op] = text
+    else if which = 2 then _failures[op] = text
+    else if which = 3 then do
+      if wordpos(text,'unknown returns diverges transfer') = 0 then call fail('LL_IR_SCHEMA: invalid termination declaration')
+      else _termination[op] = text
+    end
+    return
+  effectvalue: method = .string
+    arg op = .int, which = .int
+    if which = 1 then return _states[op]
+    if which = 2 then return _failures[op]
+    return _termination[op]
+  service: method = .void
+    arg op = .int, which = .int, service = .object
+    if mutable() = 0 then return
+    if op < 1 | op > _ops[0] | initialized(service) = 0 then do
+      call fail('LL_IR_SCHEMA: uninitialised semantic service'); return
+    end
+    if which = 1 & service is .llir..evaluator then _evaluators[op] = service
+    else if which = 2 & service is .llir..verification then _verifiers[op] = service
+    else if which = 3 & service is .llir..lowering then _lowerers[op] = service
+    else call fail('LL_IR_SCHEMA: semantic service has the wrong interface')
+    return
+  callback: method = .object
+    arg op = .int, which = .int
+    if which = 1 then return _evaluators[op]
+    if which = 2 then return _verifiers[op]
+    return _lowerers[op]
+  freeze: method = .int
+    _sealed = 1
+    return _error = ''
+  manifest: method = .string
+    i = .int
+    text = 'LLIR-SCHEMA-1' || '0a'x
+    do i = 1 to familycount()
+      text = text || 'family ' || _families[i] || ' ' || _versions[i] || '0a'x
+    end
+    do i = 1 to types()
+      text = text || 'type ' || _types[i] || '0a'x
+    end
+    do i = 1 to ops()
+      text = text || 'operation ' || _ops[i] || ' ' || _states[i] || ' ' || _failures[i] || ' ' || _termination[i] || '0a'x
+      do mode = 1 to 3
+        do j = 1 to arity(i,mode)
+          text = text || mode || ' ' || fieldname(i,mode,j) || ' ' || typename(fieldtype(i,mode,j)) || '0a'x
+        end
+      end
+    end
+    return text
+
+validname: procedure = .int
+  arg name = .string
+  if name = '' then return 0
+  do i = 1 to length(name)
+    if pos(substr(name,i,1),'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.') = 0 then return 0
+  end
+  return 1
+
+typeid: class
+  _schema = .int
+  _id = .int
+  *: factory
+    arg schema = .int, id = .int
+    _schema = schema; _id = id
+    return
+  schemaid: method = .int
+    return _schema
+  id: method = .int
+    return _id
+
+schema: class
+  _data = .llir..schema_data
+  *: factory
+    _data = .llir..schema_data()
+    call _data.bootstrap()
+    return
+  family: method = .llir..family
+    arg name = .string, version = .int
+    i = _data.addfamily(name,version)
+    return .llir..family(reference _data,i)
+  /** Look up an already registered type while defining extension signatures. */
+  type: method = .llir..typeid
+    arg name = .string
+    return .llir..typeid(_data.identity(),_data.typeindex(name))
+  /** Core type handles are available while registering extension signatures. */
+  boolean: method = .llir..typeid
+    return .llir..typeid(_data.identity(),2)
+  voidtype: method = .llir..typeid
+    return .llir..typeid(_data.identity(),1)
+  finish: method = .llir..contract
+    ok = _data.freeze()
+    return .llir..contract(_data)
+  error: method = .string
+    return _data.error()
+
+family: class
+  _data = reference .llir..schema_data
+  _identity = .int
+  _id = .int
+  *: factory
+    arg data = reference .llir..schema_data, id = .int
+    _data = data; store = dereference data; _identity = store.identity(); _id = id
+    return
+  valid: method = .int
+    if <refvalid>(_data) = 0 then return 0
+    store = dereference _data
+    return _identity = store.identity() & _id > 0
+  type: method = .llir..typeid
+    arg name = .string, codec = .object
+    if valid() = 0 then call bad('LL_IR_OWNER: schema family expired')
+    store = dereference _data
+    i = store.addtype(store.familyname(_id) || '.' || name,codec)
+    return .llir..typeid(_identity,i)
+  operation: method = .llir..operation
+    arg name = .string
+    if valid() = 0 then call bad('LL_IR_OWNER: schema family expired')
+    store = dereference _data
+    i = store.addop(store.familyname(_id) || '.' || name)
+    return .llir..operation(_data,i)
+
+operation: class
+  _data = reference .llir..schema_data
+  _identity = .int
+  _id = .int
+  *: factory
+    arg data = reference .llir..schema_data, id = .int
+    _data = data; store = dereference data; _identity = store.identity(); _id = id
+    return
+  schemaid: method = .int
+    return _identity
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_data) = 0 then return 0
+    store = dereference _data
+    return _identity = store.identity() & _id > 0
+  input: method = .void
+    arg name = .string, type = .llir..typeid
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.field(_id,1,name,type)
+    return
+  output: method = .void
+    arg name = .string, type = .llir..typeid
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.field(_id,2,name,type)
+    return
+  attribute: method = .void
+    arg name = .string, type = .llir..typeid
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.field(_id,3,name,type)
+    return
+  state: method = .void
+    arg text = .string
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.effect(_id,1,text)
+    return
+  failure: method = .void
+    arg text = .string
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.effect(_id,2,text)
+    return
+  termination: method = .void
+    arg text = .string
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.effect(_id,3,text)
+    return
+  evaluator: method = .void
+    arg service = .object
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.service(_id,1,service)
+    return
+  verifier: method = .void
+    arg service = .object
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.service(_id,2,service)
+    return
+  lowerer: method = .void
+    arg service = .object
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.service(_id,3,service)
+    return
+
+contract: class
+  _data = .llir..schema_data
+  *: factory
+    arg data = .llir..schema_data
+    _data = data
+    return
+  error: method = .string
+    if _data.sealed() = 0 then return 'LL_IR_SCHEMA: contract is not frozen'
+    return _data.error()
+  identity: method = .int
+    return _data.identity()
+  data: method = reference .llir..schema_data
+    return reference _data
+  type: method = .llir..typeid
+    arg name = .string
+    return .llir..typeid(_data.identity(),_data.typeindex(name))
+  operation: method = .llir..operation
+    arg name = .string
+    return .llir..operation(reference _data,_data.opindex(name))
+  voidtype: method = .llir..typeid
+    return .llir..typeid(_data.identity(),1)
+  boolean: method = .llir..typeid
+    return .llir..typeid(_data.identity(),2)
+  manifest: method = .string
+    return _data.manifest()
+
+/** Owned graph. Only drafts mutate it. All public results are verified/frozen.
+ * Numeric table IDs: functions, blocks, operations, values, slots, operands,
+ * edges, constants, origins, sources, attributes, arguments, origin parents.
+ */
+arena: class
+  _identity = .int
+  _contract = .llir..contract
+  _sealed = .int
+  _error = .string
+  _entries = .int
+  _bytes = .int
+  _entrylimit = .int
+  _bytelimit = .int
+  _pool = .binary[]
+  _t1 = .llir..table
+  _t2 = .llir..table
+  _t3 = .llir..table
+  _t4 = .llir..table
+  _t5 = .llir..table
+  _t6 = .llir..table
+  _t7 = .llir..table
+  _t8 = .llir..table
+  _t9 = .llir..table
+  _t10 = .llir..table
+  _t11 = .llir..table
+  _t12 = .llir..table
+  _t13 = .llir..table
+  *: factory
+    arg contract = .llir..contract, entries = 1000000, bytes = 67108864
+    _identity = nextidentity(); _contract = contract; _sealed = 0; _error = contract.error()
+    _entries = 0; _bytes = 0; _entrylimit = entries; _bytelimit = bytes
+    if entries < 1 | bytes < 1 then _error = 'LL_IR_BUDGET: entries and bytes must be positive'
+    _t1 = .llir..table(6)
+    _t2 = .llir..table(4)
+    _t3 = .llir..table(12)
+    _t4 = .llir..table(4)
+    _t5 = .llir..table(4)
+    _t6 = .llir..table(1)
+    _t7 = .llir..table(1)
+    _t8 = .llir..table(2)
+    _t9 = .llir..table(6)
+    _t10 = .llir..table(2)
+    _t11 = .llir..table(4)
+    _t12 = .llir..table(2)
+    _t13 = .llir..table(1)
+    return
+  identity: method = .int
+    return _identity
+  sealed: method = .int
+    return _sealed
+  error: method = .string
+    return _error
+  contract: method = reference .llir..contract
+    return reference _contract
+  fail: method = .void
+    arg message = .string, op = 0, semanticcheck = 0
+    if _sealed & semanticcheck = 0 then call bad('LL_IR_LIFECYCLE: module is frozen')
+    if _error <> '' then return
+    _error = message
+    if op > 0 & op <= count(3) then do
+      _error = _error || ' (operation ' || op || ')'
+      source = get(3,op,11)
+      if source > 0 & source <= count(9) then do
+        file = get(9,source,1)
+        if file > 0 & file <= count(10) then _error = _error || ' at ' || text(get(10,file,1)) || ':byte ' || get(9,source,2)
+      end
+    end
+    return
+  reserve: method = .int
+    arg entries = .int, bytes = .int
+    if _sealed then do
+      call bad('LL_IR_LIFECYCLE: module is frozen'); return 0
+    end
+    if _error <> '' then return 0
+    if entries < 0 | bytes < 0 then do
+      call fail('LL_IR_BUDGET: negative reservation'); return 0
+    end
+    if entries > _entrylimit - _entries then do
+      call fail('LL_RESOURCE_LIMIT: ir.entries budget ' || _entrylimit || '; increase the host budget'); return 0
+    end
+    if bytes > _bytelimit - _bytes then do
+      call fail('LL_RESOURCE_LIMIT: ir.bytes budget ' || _bytelimit || '; increase the host budget'); return 0
+    end
+    _entries = _entries + entries; _bytes = _bytes + bytes
+    return 1
+  entries: method = .int
+    return _entries
+  bytes: method = .int
+    return _bytes
+  capacity: method = .int
+    total = _bytes
+    total = total + _t1.bytes() - _t1.usedbytes()
+    total = total + _t2.bytes() - _t2.usedbytes()
+    total = total + _t3.bytes() - _t3.usedbytes()
+    total = total + _t4.bytes() - _t4.usedbytes()
+    total = total + _t5.bytes() - _t5.usedbytes()
+    total = total + _t6.bytes() - _t6.usedbytes()
+    total = total + _t7.bytes() - _t7.usedbytes()
+    total = total + _t8.bytes() - _t8.usedbytes()
+    total = total + _t9.bytes() - _t9.usedbytes()
+    total = total + _t10.bytes() - _t10.usedbytes()
+    total = total + _t11.bytes() - _t11.usedbytes()
+    total = total + _t12.bytes() - _t12.usedbytes()
+    total = total + _t13.bytes() - _t13.usedbytes()
+    return total
+  poolsize: method = .int
+    return _pool[0]
+  pool: method = .int
+    arg bits = .binary
+    if reserve(1,<blen>(bits)) = 0 then return 0
+    i = _pool[0] + 1; _pool[i] = bits
+    return i
+  bits: method = .binary
+    arg id = .int
+    if id < 1 | id > _pool[0] then call bad('LL_IR_POOL: invalid byte-pool reference')
+    return _pool[id]
+  text: method = .string
+    arg id = .int
+    return bits(id) as .string
+  count: method = .int
+    arg table = .int
+    select table
+      when 1 then return _t1.size()
+      when 2 then return _t2.size()
+      when 3 then return _t3.size()
+      when 4 then return _t4.size()
+      when 5 then return _t5.size()
+      when 6 then return _t6.size()
+      when 7 then return _t7.size()
+      when 8 then return _t8.size()
+      when 9 then return _t9.size()
+      when 10 then return _t10.size()
+      when 11 then return _t11.size()
+      when 12 then return _t12.size()
+      when 13 then return _t13.size()
+      otherwise call bad('LL_IR_TABLE: unknown table')
+    end
+    return 0
+  width: method = .int
+    arg table = .int
+    return word('6 4 12 4 4 1 1 2 6 2 4 2 1',table) as .int
+  get: method = .int
+    arg table = .int, row = .int, col = .int
+    select table
+      when 1 then return _t1.get(row,col)
+      when 2 then return _t2.get(row,col)
+      when 3 then return _t3.get(row,col)
+      when 4 then return _t4.get(row,col)
+      when 5 then return _t5.get(row,col)
+      when 6 then return _t6.get(row,col)
+      when 7 then return _t7.get(row,col)
+      when 8 then return _t8.get(row,col)
+      when 9 then return _t9.get(row,col)
+      when 10 then return _t10.get(row,col)
+      when 11 then return _t11.get(row,col)
+      when 12 then return _t12.get(row,col)
+      when 13 then return _t13.get(row,col)
+      otherwise call bad('LL_IR_TABLE: unknown table')
+    end
+    return 0
+  put: method = .void
+    arg table = .int, row = .int, col = .int, number = .int
+    if _sealed then do
+      call bad('LL_IR_LIFECYCLE: module is frozen'); return
+    end
+    if _error <> '' then return
+    select table
+      when 1 then call _t1.put(row,col,number)
+      when 2 then call _t2.put(row,col,number)
+      when 3 then call _t3.put(row,col,number)
+      when 4 then call _t4.put(row,col,number)
+      when 5 then call _t5.put(row,col,number)
+      when 6 then call _t6.put(row,col,number)
+      when 7 then call _t7.put(row,col,number)
+      when 8 then call _t8.put(row,col,number)
+      when 9 then call _t9.put(row,col,number)
+      when 10 then call _t10.put(row,col,number)
+      when 11 then call _t11.put(row,col,number)
+      when 12 then call _t12.put(row,col,number)
+      when 13 then call _t13.put(row,col,number)
+      otherwise call bad('LL_IR_TABLE: unknown table')
+    end
+    return
+  add: method = .int
+    arg table = .int
+    if reserve(1,width(table) * 4) = 0 then return 0
+    select table
+      when 1 then return _t1.add()
+      when 2 then return _t2.add()
+      when 3 then return _t3.add()
+      when 4 then return _t4.add()
+      when 5 then return _t5.add()
+      when 6 then return _t6.add()
+      when 7 then return _t7.add()
+      when 8 then return _t8.add()
+      when 9 then return _t9.add()
+      when 10 then return _t10.add()
+      when 11 then return _t11.add()
+      when 12 then return _t12.add()
+      when 13 then return _t13.add()
+      otherwise call bad('LL_IR_TABLE: unknown table')
+    end
+    return 0
+  validtype: method = .int
+    arg type = .llir..typeid, allowvoid = 0
+    schema = dereference _contract.data()
+    if type.schemaid() <> schema.identity() | type.id() < 2 - allowvoid | type.id() > schema.types() then do
+      call fail('LL_IR_TYPE: foreign, absent or invalid type'); return 0
+    end
+    return 1
+  function: method = .int
+    arg name = .string, type = .llir..typeid
+    if validtype(type,1) = 0 then return 0
+    do i = 1 to count(1)
+      if text(get(1,i,1)) = name then do
+        call fail('LL_IR_FUNCTION: duplicate function ' || name); return 0
+      end
+    end
+    if name = '' then do
+      call fail('LL_IR_FUNCTION: function name is empty'); return 0
+    end
+    nameid = pool(name as .binary); id = add(1)
+    if id = 0 then return 0
+    call put(1,id,1,nameid); call put(1,id,2,type.id())
+    return id
+  block: method = .int
+    arg fn = .int, name = .string
+    if fn < 1 | fn > count(1) then do
+      call fail('LL_IR_OWNER: block requires an owning function'); return 0
+    end
+    do i = 1 to count(2)
+      if get(2,i,1) = fn & text(get(2,i,4)) = name then do
+        call fail('LL_IR_BLOCK: duplicate block name ' || name); return 0
+      end
+    end
+    nameid = pool(name as .binary); id = add(2)
+    if id = 0 then return 0
+    call put(2,id,1,fn); call put(2,id,4,nameid)
+    if get(1,fn,3) = 0 then call put(1,fn,3,id)
+    return id
+  slot: method = .int
+    arg fn = .int, name = .string, type = .llir..typeid
+    if validtype(type) = 0 then return 0
+    if fn < 1 | fn > count(1) then do
+      call fail('LL_IR_OWNER: slot requires an owning function'); return 0
+    end
+    do i = 1 to count(5)
+      if get(5,i,1) = fn & text(get(5,i,3)) = name then do
+        call fail('LL_IR_SLOT: duplicate slot name ' || name); return 0
+      end
+    end
+    nameid = pool(name as .binary); id = add(5)
+    if id = 0 then return 0
+    call put(5,id,1,fn); call put(5,id,2,type.id()); call put(5,id,3,nameid)
+    return id
+  argument: method = .int
+    arg fn = .int, type = .llir..typeid
+    if validtype(type) = 0 then return 0
+    if fn < 1 | fn > count(1) then do
+      call fail('LL_IR_OWNER: argument requires an owning function'); return 0
+    end
+    if get(1,fn,3) <> 0 then do
+      call fail('LL_IR_SIGNATURE: declare arguments before blocks'); return 0
+    end
+    ordinal = get(1,fn,5) + 1; id = add(12)
+    if id = 0 then return 0
+    if ordinal = 1 then call put(1,fn,4,id)
+    else if id <> get(1,fn,4) + ordinal - 1 then do
+      call fail('LL_IR_SIGNATURE: finish one argument list before starting another'); return 0
+    end
+    call put(12,id,1,fn); call put(12,id,2,type.id()); call put(1,fn,5,ordinal)
+    return ordinal
+  source: method = .int
+    arg name = .string, bytes = .binary
+    nameid = pool(name as .binary); dataid = pool(bytes); id = add(10)
+    if id = 0 then return 0
+    call put(10,id,1,nameid); call put(10,id,2,dataid)
+    return id
+  origin: method = .int
+    arg source = .int, first = .int, last = .int, kind = 1, parent = 0
+    if source < 1 | source > count(10) | first < 0 | last < first | kind < 1 | kind > 5 then do
+      call fail('LL_IR_ORIGIN: invalid source range or provenance'); return 0
+    end
+    sourcebytes = bits(get(10,source,2)); extent = <blen>(sourcebytes)
+    if last > extent | parent < 0 | parent > count(9) then do
+      call fail('LL_IR_ORIGIN: range or parent is outside its source'); return 0
+    end
+    id = add(9)
+    if id = 0 then return 0
+    call put(9,id,1,source); call put(9,id,2,first); call put(9,id,3,last); call put(9,id,4,kind)
+    if parent > 0 then do
+      link = add(13)
+      if link = 0 then return 0
+      call put(13,link,1,parent); call put(9,id,5,link); call put(9,id,6,1)
+    end
+    return id
+  constant: method = .int
+    arg type = .llir..typeid, bits = .binary
+    if validtype(type) = 0 then return 0
+    schema = dereference _contract.data(); codec = schema.codec(type.id()) as .llir..typecodec
+    message = codec.check(bits)
+    if message <> '' then do
+      call fail('LL_IR_CONSTANT: ' || message); return 0
+    end
+    dataid = pool(bits); id = add(8)
+    if id = 0 then return 0
+    call put(8,id,1,type.id()); call put(8,id,2,dataid)
+    return id
+  append: method = .int
+    arg blockid = .int, opcode = .int, operands = .int[], types = .int[], edges = .int[], originid = .int, aux = 0
+    if blockid < 1 | blockid > count(2) then do
+      call fail('LL_IR_OWNER: operation requires a blockid'); return 0
+    end
+    if originid < 1 | originid > count(9) then do
+      call fail('LL_IR_ORIGIN: operation requires an originid'); return 0
+    end
+    last = get(2,blockid,3)
+    if last > 0 then do
+      previous = get(3,last,1)
+      if previous >= 5 & previous <= 7 then do
+        call fail('LL_IR_TERMINATOR: operation follows a terminator',last); return 0
+      end
+    end
+    id = add(3)
+    if id = 0 then return 0
+    call put(3,id,1,opcode); call put(3,id,2,blockid); call put(3,id,11,originid); call put(3,id,12,aux)
+    if last = 0 then call put(2,blockid,2,id)
+    else call put(3,last,3,id)
+    call put(2,blockid,3,id)
+    call put(3,id,4,count(6) + 1); call put(3,id,5,operands[0])
+    item = .int; i = .int
+    do i = 1 to operands[0]
+      item = add(6)
+      if item = 0 then return 0
+      call put(6,item,1,operands[i])
+    end
+    call put(3,id,6,count(4) + 1); call put(3,id,7,types[0])
+    do i = 1 to types[0]
+      item = add(4)
+      if item = 0 then return 0
+      call put(4,item,1,id); call put(4,item,2,i); call put(4,item,3,types[i])
+    end
+    call put(3,id,8,count(7) + 1); call put(3,id,9,edges[0])
+    do i = 1 to edges[0]
+      item = add(7)
+      if item = 0 then return 0
+      call put(7,item,1,edges[i])
+    end
+    return id
+  operand: method = .int
+    arg op = .int, index = .int
+    if index < 1 | index > get(3,op,5) then call bad('LL_IR_OPERAND: ordinal is outside operation')
+    return get(6,get(3,op,4) + index - 1,1)
+  result: method = .int
+    arg op = .int, index = 1
+    if op = 0 then return 0
+    if index < 1 | index > get(3,op,7) then call bad('LL_IR_RESULT: ordinal is outside operation')
+    return get(3,op,6) + index - 1
+  successor: method = .int
+    arg op = .int, index = .int
+    if index < 1 | index > get(3,op,9) then call bad('LL_IR_EDGE: ordinal is outside operation')
+    return get(7,get(3,op,8) + index - 1,1)
+  opname: method = .string
+    arg opcode = .int
+    if opcode >= 1 & opcode <= 7 then return 'core.' || word('constant argument load store jump branch return',opcode)
+    schema = dereference _contract.data()
+    if opcode > 16 & opcode <= schema.ops() + 16 then return schema.opname(opcode - 16)
+    return '<unknown>'
+  /** Verifies every record, including unreachable blocks. Raw decoding does not
+   * bypass this gate. No successful owner is published on failure. */
+  verify: method = .int
+    if _error <> '' then return 0
+    schema = dereference _contract.data()
+    i = .int; j = .int; k = .int; fn = .int; blockid = .int; op = .int; type = .int
+    name = .string; total = .int; start = .int; last = .int; v = .int; recordid = .int
+    usedinputs = .int[]; usededges = .int[]; usedparents = .int[]
+    totalparents = 0; totalargs = 0
+    if count(1) = 0 then call fail('LL_IR_MODULE: module has no functions')
+    do i = 1 to count(10) while _error = ''
+      name = text(get(10,i,1)); bytes = bits(get(10,i,2))
+      if name = '' then call fail('LL_IR_SOURCE: source identity is empty')
+    end
+    do i = 1 to count(9) while _error = ''
+      source = get(9,i,1); first = get(9,i,2); last = get(9,i,3); kind = get(9,i,4)
+      if source < 1 | source > count(10) | last < first | kind < 1 | kind > 5 then do
+        call fail('LL_IR_ORIGIN: invalid source range or provenance'); leave
+      end
+      sourcebytes = bits(get(10,source,2)); extent = <blen>(sourcebytes)
+      if last > extent then call fail('LL_IR_ORIGIN: source range exceeds input')
+      if kind = 5 then call fail('LL_IR_RECOVERED: recovered input cannot produce an executable module')
+      start = get(9,i,5); total = get(9,i,6)
+      if total = 0 & start <> 0 then call fail('LL_IR_ORIGIN: empty contributor range must have zero start')
+      if total > 0 then do
+        if start < 1 | total > count(13) | start > count(13) - total + 1 then do
+          call fail('LL_IR_ORIGIN: invalid contributing origins'); leave
+        end
+        do j = start to start + total - 1
+          if usedparents[j] then call fail('LL_IR_OWNERSHIP: overlapping origin contributors')
+          usedparents[j] = 1; totalparents = totalparents + 1
+          parent = get(13,j,1)
+          if parent < 1 | parent >= i then call fail('LL_IR_ORIGIN: origin parents must precede their child')
+        end
+      end
+    end
+    do i = 1 to count(8) while _error = ''
+      type = get(8,i,1)
+      if type < 2 | type > schema.types() then do
+        call fail('LL_IR_TYPE: invalid constant type'); leave
+      end
+      codec = schema.codec(type) as .llir..typecodec
+      message = codec.check(bits(get(8,i,2)))
+      if message <> '' then call fail('LL_IR_CONSTANT: ' || message)
+    end
+    do fn = 1 to count(1) while _error = ''
+      name = text(get(1,fn,1)); type = get(1,fn,2); blockid = get(1,fn,3)
+      if name = '' | type < 1 | type > schema.types() | blockid < 1 | blockid > count(2) then do
+        call fail('LL_IR_FUNCTION: invalid name, signature or entry block'); leave
+      end
+      do i = 1 to fn - 1
+        if text(get(1,i,1)) = name then call fail('LL_IR_FUNCTION: duplicate function ' || name)
+      end
+      if get(2,blockid,1) <> fn then call fail('LL_IR_OWNER: entry block belongs to another function')
+      if get(1,fn,6) <> 0 then call fail('LL_IR_RESERVED: nonzero function reserved field')
+      total = get(1,fn,5); start = get(1,fn,4); totalargs = totalargs + total
+      if total = 0 & start <> 0 then call fail('LL_IR_SIGNATURE: empty argument range must have zero start')
+      if total > 0 then do
+        if start < 1 | total > count(12) | start > count(12) - total + 1 then do
+          call fail('LL_IR_SIGNATURE: argument range is outside table'); leave
+        end
+        do i = start to start + total - 1
+          type = get(12,i,2)
+          if get(12,i,1) <> fn | type < 2 | type > schema.types() then call fail('LL_IR_SIGNATURE: invalid argument')
+        end
+      end
+    end
+    do i = 1 to count(5) while _error = ''
+      fn = get(5,i,1); type = get(5,i,2); name = text(get(5,i,3))
+      if get(5,i,4) <> 0 then call fail('LL_IR_RESERVED: nonzero slot reserved field')
+      if fn < 1 | fn > count(1) | type < 2 | type > schema.types() | name = '' then call fail('LL_IR_SLOT: invalid slot')
+      do j = 1 to i - 1
+        if get(5,j,1) = fn & text(get(5,j,3)) = name then call fail('LL_IR_SLOT: duplicate slot ' || name)
+      end
+    end
+    seen = .int[]; totalops = 0; operands = 0; results = 0; edges = 0; attributes = 0
+    do blockid = 1 to count(2) while _error = ''
+      fn = get(2,blockid,1); op = get(2,blockid,2); last = get(2,blockid,3); name = text(get(2,blockid,4))
+      if fn < 1 | fn > count(1) | op < 1 | op > count(3) | last < 1 | last > count(3) | name = '' then do
+        call fail('LL_IR_BLOCK: invalid or unterminated block'); leave
+      end
+      do j = 1 to blockid - 1
+        if get(2,j,1) = fn & text(get(2,j,4)) = name then call fail('LL_IR_BLOCK: duplicate block ' || name)
+      end
+      do while op > 0 & _error = ''
+        if op > count(3) then do
+          call fail('LL_IR_ORDER: operation link is outside table'); leave
+        end
+        if seen[op] then do
+          call fail('LL_IR_ORDER: operation chain is cyclic or shared',op); leave
+        end
+        seen[op] = 1; totalops = totalops + 1
+        if get(3,op,2) <> blockid then do
+          call fail('LL_IR_OWNER: operation belongs to another block',op); leave
+        end
+        opcode = get(3,op,1); originid = get(3,op,11)
+        if originid < 1 | originid > count(9) then call fail('LL_IR_ORIGIN: operation has no valid origin',op)
+        if (opcode < 1 | opcode > 7) & (opcode <= 16 | opcode > schema.ops() + 16) then call fail('LL_IR_OPCODE: unknown operation',op)
+        do k = 1 to 3
+          tableid = word('6 4 7',k) as .int; column = 2 + 2 * k
+          start = get(3,op,column); total = get(3,op,column + 1)
+          if start < 1 | total > count(tableid) | start > count(tableid) - total + 1 then call fail('LL_IR_RANGE: invalid operand/result/edge range',op)
+        end
+        if _error <> '' then leave
+        nin = get(3,op,5); nout = get(3,op,7); nedge = get(3,op,9)
+        operands = operands + nin; results = results + nout; edges = edges + nedge
+        do i = 1 to nin
+          recordid = get(3,op,4) + i - 1
+          if usedinputs[recordid] then call fail('LL_IR_OWNERSHIP: overlapping operand ranges',op)
+          usedinputs[recordid] = 1
+          v = operand(op,i)
+          if v < 1 | v > count(4) then do
+            call fail('LL_IR_VALUE: operand has no definition',op); leave
+          end
+          def = get(4,v,1)
+          if def < 1 | def >= op then do
+            call fail('LL_IR_ORDER: value must be defined earlier',op); leave
+          end
+          if seen[def] = 0 | get(3,def,2) <> blockid then call fail('LL_IR_VALUE: temporary crosses a block; use a typed slot',op)
+        end
+        do i = 1 to nout
+          v = result(op,i); type = get(4,v,3)
+          if get(4,v,4) <> 0 then call fail('LL_IR_RESERVED: nonzero value reserved field',op)
+          if get(4,v,1) <> op | get(4,v,2) <> i | type < 2 | type > schema.types() then call fail('LL_IR_RESULT: invalid result definition',op)
+        end
+        do i = 1 to nedge
+          recordid = get(3,op,8) + i - 1
+          if usededges[recordid] then call fail('LL_IR_OWNERSHIP: overlapping successor ranges',op)
+          usededges[recordid] = 1
+          target = successor(op,i)
+          if target < 1 | target > count(2) then do
+            call fail('LL_IR_EDGE: unknown successor',op); leave
+          end
+          if get(2,target,1) <> fn then call fail('LL_IR_OWNER: successor crosses a function boundary',op)
+        end
+        if _error <> '' then leave
+        aux = get(3,op,12)
+        if opcode >= 5 & aux <> 0 then call fail('LL_IR_RESERVED: nonzero operation auxiliary field',op)
+        if opcode <= 7 & get(3,op,10) <> 0 then call fail('LL_IR_ATTRIBUTE: core operation cannot have attributes',op)
+        select opcode
+          when 1 then do
+            if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > count(8) then call fail('LL_IR_CONSTANT: invalid constant operation',op)
+            else if get(4,result(op),3) <> get(8,aux,1) then call fail('LL_IR_TYPE: constant result has the wrong type',op)
+          end
+          when 2 then do
+            if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > get(1,fn,5) then call fail('LL_IR_SIGNATURE: invalid argument operation',op)
+            else if get(4,result(op),3) <> get(12,get(1,fn,4) + aux - 1,2) then call fail('LL_IR_TYPE: argument result has the wrong type',op)
+          end
+          when 3 then do
+            if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > count(5) then call fail('LL_IR_SLOT: invalid load',op)
+            else if get(5,aux,1) <> fn | get(5,aux,2) <> get(4,result(op),3) then call fail('LL_IR_TYPE: load slot owner/type mismatch',op)
+          end
+          when 4 then do
+            if nin <> 1 | nout <> 0 | nedge <> 0 | aux < 1 | aux > count(5) then call fail('LL_IR_SLOT: invalid store',op)
+            else if get(5,aux,1) <> fn | get(5,aux,2) <> get(4,operand(op,1),3) then call fail('LL_IR_TYPE: store slot owner/type mismatch',op)
+          end
+          when 5 then do
+            if nin <> 0 | nout <> 0 | nedge <> 1 then call fail('LL_IR_TERMINATOR: jump needs one successor',op)
+          end
+          when 6 then do
+            if nin <> 1 | nout <> 0 | nedge <> 2 then call fail('LL_IR_TERMINATOR: branch needs a Boolean and two successors',op)
+            else if get(4,operand(op,1),3) <> 2 then call fail('LL_IR_TYPE: branch requires core.boolean',op)
+          end
+          when 7 then do
+            type = get(1,fn,2)
+            if nout <> 0 | nedge <> 0 | (type = 1 & nin <> 0) | (type <> 1 & nin <> 1) then call fail('LL_IR_SIGNATURE: return does not match function result',op)
+            else if nin = 1 then do
+              if get(4,operand(op,1),3) <> type then call fail('LL_IR_TYPE: return type does not match function result',op)
+            end
+          end
+          otherwise do
+            descriptor = opcode - 16
+            if nin <> schema.arity(descriptor,1) | nout <> schema.arity(descriptor,2) | nedge <> 0 then call fail('LL_IR_ARITY: extension signature mismatch',op)
+            do i = 1 to nin while _error = ''
+              if get(4,operand(op,i),3) <> schema.fieldtype(descriptor,1,i) then call fail('LL_IR_TYPE: extension input ' || schema.fieldname(descriptor,1,i) || ' has the wrong type',op)
+            end
+            do i = 1 to nout while _error = ''
+              if get(4,result(op,i),3) <> schema.fieldtype(descriptor,2,i) then call fail('LL_IR_TYPE: extension result type mismatch',op)
+            end
+            nattr = schema.arity(descriptor,3); start = get(3,op,10)
+            if nattr = 0 & start <> 0 then call fail('LL_IR_ATTRIBUTE: empty attribute range must have zero start',op)
+            if nattr > 0 then do
+              if start < 1 | nattr > count(11) | start > count(11) - nattr + 1 then call fail('LL_IR_ATTRIBUTE: missing extension attributes',op)
+              do i = 1 to nattr while _error = ''
+                a = start + i - 1; constid = get(11,a,4)
+                if get(11,a,1) <> op | get(11,a,2) <> i | constid < 1 | constid > count(8) then call fail('LL_IR_ATTRIBUTE: invalid attribute owner or constant',op)
+                else if get(11,a,3) <> schema.fieldtype(descriptor,3,i) | get(8,constid,1) <> schema.fieldtype(descriptor,3,i) then call fail('LL_IR_TYPE: attribute type mismatch',op)
+              end
+            end
+            attributes = attributes + nattr
+          end
+        end
+        if opcode >= 5 & opcode <= 7 then do
+          if get(3,op,3) <> 0 | op <> last then call fail('LL_IR_TERMINATOR: terminator must end its block',op)
+        end
+        else if op = last | get(3,op,3) = 0 then call fail('LL_IR_TERMINATOR: block requires a terminator',op)
+        op = get(3,op,3)
+      end
+    end
+    if _error = '' then do
+      if totalparents <> count(13) | totalargs <> count(12) then call fail('LL_IR_OWNERSHIP: orphan argument or origin contributor')
+      if totalops <> count(3) | operands <> count(6) | results <> count(4) | edges <> count(7) | attributes <> count(11) then call fail('LL_IR_OWNERSHIP: orphan or overlapping records')
+    end
+    return _error = ''
+  freeze: method = .int
+    if _sealed then return _error = ''
+    ok = 0
+    do
+      ok = verify()
+    on signal
+      call fail('LL_IR_INVALID: invalid record, encoding or semantic service')
+    end
+    _sealed = 1
+    return ok & _error = ''
+
+/** Borrowed function handle. A reference plus owner serial prevents stale reuse. */
+function: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(1)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: function handle expired, replaced or invalid')
+    return
+  block: method = .llir..block
+    arg name = .string
+    call require(); store = dereference _owner
+    id = store.block(_id,name)
+    return .llir..block(_owner,id)
+  slot: method = .llir..slot
+    arg name = .string, type = .llir..typeid
+    call require(); store = dereference _owner
+    id = store.slot(_id,name,type)
+    return .llir..slot(_owner,id)
+  argument: method = .int
+    arg type = .llir..typeid
+    call require(); store = dereference _owner
+    return store.argument(_id,type)
+
+/** Borrowed block handle. A reference plus owner serial prevents stale reuse. */
+block: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(2)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: block handle expired, replaced or invalid')
+    return
+  first: method = .llir..opview
+    call require(); store = dereference _owner
+    return .llir..opview(_owner,store.get(2,_id,2))
+  constant: method = .llir..valuehandle
+    arg type = .llir..typeid, text = .string, at = .llir..origin
+    call require(); store = dereference _owner; contract = dereference store.contract()
+    schema = dereference contract.data(); bits = .binary
+    if store.validtype(type) then do
+      do
+        codec = schema.codec(type.id()) as .llir..typecodec
+        bits = codec.parse(text)
+      on signal
+        call store.fail('LL_IR_CONSTANT: invalid ' || schema.typename(type.id()) || ' literal')
+      end
+    end
+    return constantbytes(type,bits,at)
+  constantbytes: method = .llir..valuehandle
+    arg type = .llir..typeid, bits = .binary, at = .llir..origin
+    call require(); store = dereference _owner
+    id = 0
+    if at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: constant origin belongs to another module')
+    if store.error() = '' then do
+      c = store.constant(type,bits); inputs = .int[]; types = .int[]; edges = .int[]; types[1] = type.id()
+      if c > 0 then id = store.append(_id,1,inputs,types,edges,at.id(),c)
+    end
+    return .llir..valuehandle(_owner,store.result(id))
+  binary: method = .llir..valuehandle
+    arg opcode = .llir..operation, left = .llir..valuehandle, right = .llir..valuehandle, at = .llir..origin
+    call require(); store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
+    id = 0
+    if opcode.schemaid() <> contract.identity() | opcode.id() < 1 | opcode.id() > schema.ops() then call store.fail('LL_IR_SCHEMA: foreign or invalid operation descriptor')
+    if left.belongs(_owner) = 0 | right.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: binary input or origin belongs to another module')
+    if store.error() = '' then do
+      if schema.arity(opcode.id(),1) <> 2 | schema.arity(opcode.id(),2) <> 1 | schema.arity(opcode.id(),3) <> 0 then call store.fail('LL_IR_ARITY: binary shorthand requires two inputs, one result and no attributes')
+      else do
+        inputs = .int[]; types = .int[]; edges = .int[]
+        inputs[1] = left.id(); inputs[2] = right.id(); types[1] = schema.fieldtype(opcode.id(),2,1)
+        id = store.append(_id,16 + opcode.id(),inputs,types,edges,at.id())
+      end
+    end
+    return .llir..valuehandle(_owner,store.result(id))
+  operation: method = .llir..opdraft
+    arg opcode = .llir..operation, at = .llir..origin
+    call require()
+    return .llir..opdraft(_owner,_id,opcode,at)
+  load: method = .llir..valuehandle
+    arg target = .llir..slot, at = .llir..origin
+    call require(); store = dereference _owner; id = 0
+    if target.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: load slot or origin belongs to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; types[1] = store.get(5,target.id(),2)
+      id = store.append(_id,3,inputs,types,edges,at.id(),target.id())
+    end
+    return .llir..valuehandle(_owner,store.result(id))
+  store: method = .void
+    arg target = .llir..slot, input = .llir..valuehandle, at = .llir..origin
+    call require(); data = dereference _owner
+    if target.belongs(_owner) = 0 | input.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call data.fail('LL_IR_OWNER: store operands belong to another module')
+    if data.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; inputs[1] = input.id()
+      id = data.append(_id,4,inputs,types,edges,at.id(),target.id())
+    end
+    return
+  readarg: method = .llir..valuehandle
+    arg ordinal = .int, at = .llir..origin
+    call require(); store = dereference _owner; id = 0; fn = store.get(2,_id,1)
+    if ordinal < 1 | ordinal > store.get(1,fn,5) then call store.fail('LL_IR_SIGNATURE: unknown argument ordinal')
+    if at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: argument origin belongs to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]
+      types[1] = store.get(12,store.get(1,fn,4) + ordinal - 1,2)
+      id = store.append(_id,2,inputs,types,edges,at.id(),ordinal)
+    end
+    return .llir..valuehandle(_owner,store.result(id))
+  jump: method = .void
+    arg target = .llir..block, at = .llir..origin
+    call require(); store = dereference _owner
+    if target.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: jump target or origin belongs to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; edges[1] = target.id()
+      id = store.append(_id,5,inputs,types,edges,at.id())
+    end
+    return
+  branch: method = .void
+    arg condition = .llir..valuehandle, yes = .llir..block, no = .llir..block, at = .llir..origin
+    call require(); store = dereference _owner
+    if condition.belongs(_owner) = 0 | yes.belongs(_owner) = 0 | no.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: branch operands belong to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; inputs[1] = condition.id(); edges[1] = yes.id(); edges[2] = no.id()
+      id = store.append(_id,6,inputs,types,edges,at.id())
+    end
+    return
+  returnvoid: method = .void
+    arg at = .llir..origin
+    call require(); store = dereference _owner
+    if at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: return origin belongs to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]
+      id = store.append(_id,7,inputs,types,edges,at.id())
+    end
+    return
+  returnvalue: method = .void
+    arg input = .llir..valuehandle, at = .llir..origin
+    call require(); store = dereference _owner
+    if input.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: return value or origin belongs to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; inputs[1] = input.id()
+      id = store.append(_id,7,inputs,types,edges,at.id())
+    end
+    return
+
+/** Borrowed valuehandle handle. A reference plus owner serial prevents stale reuse. */
+valuehandle: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(4)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: valuehandle handle expired, replaced or invalid')
+    return
+  type: method = .llir..typeid
+    call require(); store = dereference _owner; contract = dereference store.contract()
+    return .llir..typeid(contract.identity(),store.get(4,_id,3))
+
+  isconstant: method = .int
+    call require(); store = dereference _owner
+    return store.get(3,store.get(4,_id,1),1) = 1
+  bytes: method = .binary
+    call require(); store = dereference _owner
+    if isconstant() = 0 then call bad('LL_IR_CONSTANT: value is not a literal constant')
+    op = store.get(4,_id,1); constid = store.get(3,op,12)
+    return store.bits(store.get(8,constid,2))
+
+/** Borrowed slot handle. A reference plus owner serial prevents stale reuse. */
+slot: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(5)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: slot handle expired, replaced or invalid')
+    return
+
+/** Borrowed origin handle. A reference plus owner serial prevents stale reuse. */
+origin: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(9)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: origin handle expired, replaced or invalid')
+    return
+  derive: method = .llir..origin
+    arg kind = 'derived'
+    call require(); store = dereference _owner
+    id = store.origin(store.get(9,_id,1),store.get(9,_id,2),store.get(9,_id,3),wordpos(kind,'exact composite derived synthetic recovered'),_id)
+    return .llir..origin(_owner,id)
+  first: method = .int
+    call require(); store = dereference _owner
+    return store.get(9,_id,2)
+  last: method = .int
+    call require(); store = dereference _owner
+    return store.get(9,_id,3)
+
+  kind: method = .string
+    call require(); store = dereference _owner
+    return word('exact composite derived synthetic recovered',store.get(9,_id,4))
+  filename: method = .string
+    call require(); store = dereference _owner
+    return store.text(store.get(10,store.get(9,_id,1),1))
+  sourcebytes: method = .binary
+    call require(); store = dereference _owner
+    return store.bits(store.get(10,store.get(9,_id,1),2))
+  parents: method = .int
+    call require(); store = dereference _owner
+    return store.get(9,_id,6)
+  parent: method = .llir..origin
+    arg ordinal = .int
+    call require(); store = dereference _owner
+    if ordinal < 1 | ordinal > parents() then call bad('LL_IR_ORIGIN: invalid parent ordinal')
+    id = store.get(13,store.get(9,_id,5) + ordinal - 1,1)
+    return .llir..origin(_owner,id)
+
+/** Borrowed sourcefile handle. A reference plus owner serial prevents stale reuse. */
+sourcefile: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(10)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: sourcefile handle expired, replaced or invalid')
+    return
+  origin: method = .llir..origin
+    arg first = .int, last = .int, kind = 'exact'
+    call require(); store = dereference _owner
+    id = store.origin(_id,first,last,wordpos(kind,'exact composite derived synthetic recovered'))
+    return .llir..origin(_owner,id)
+
+/** Borrowed opview handle. A reference plus owner serial prevents stale reuse. */
+opview: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..arena, id = .int
+    _owner = owner; store = dereference owner; _identity = store.identity(); _id = id
+    return
+  id: method = .int
+    return _id
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    return _identity = store.identity() & _id > 0 & _id <= store.count(3)
+  belongs: method = .int
+    arg owner = reference .llir..arena
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_OWNER: opview handle expired, replaced or invalid')
+    return
+  name: method = .string
+    call require(); store = dereference _owner
+    return store.opname(store.get(3,_id,1))
+  inputs: method = .int
+    call require(); store = dereference _owner
+    return store.get(3,_id,5)
+  input: method = .llir..valuehandle
+    arg ordinal = .int
+    call require(); store = dereference _owner
+    return .llir..valuehandle(_owner,store.operand(_id,ordinal))
+  results: method = .int
+    call require(); store = dereference _owner
+    return store.get(3,_id,7)
+  result: method = .llir..valuehandle
+    arg ordinal = 1
+    call require(); store = dereference _owner
+    return .llir..valuehandle(_owner,store.result(_id,ordinal))
+  origin: method = .llir..origin
+    call require(); store = dereference _owner
+    return .llir..origin(_owner,store.get(3,_id,11))
+  next: method = .llir..opview
+    call require(); store = dereference _owner
+    return .llir..opview(_owner,store.get(3,_id,3))
+
+  schema: method = .llir..contract
+    call require(); store = dereference _owner
+    result = dereference store.contract()
+    return result
+  blockid: method = .int
+    call require(); store = dereference _owner
+    return store.get(3,_id,2)
+  successors: method = .int
+    call require(); store = dereference _owner
+    return store.get(3,_id,9)
+  successor: method = .int
+    arg ordinal = .int
+    call require(); store = dereference _owner
+    return store.successor(_id,ordinal)
+  attribute: method = .binary
+    arg name = .string
+    call require(); store = dereference _owner
+    contract = dereference store.contract(); schema = dereference contract.data()
+    descriptor = store.get(3,_id,1) - 16
+    do i = 1 to schema.arity(descriptor,3)
+      if schema.fieldname(descriptor,3,i) = name then do
+        recordid = store.get(3,_id,10) + i - 1
+        return store.bits(store.get(8,store.get(11,recordid,4),2))
+      end
+    end
+    call bad('LL_IR_ATTRIBUTE: unknown attribute ' || name)
+    return ''x as .binary
+  namedresult: method = .llir..valuehandle
+    arg name = .string
+    call require(); store = dereference _owner
+    contract = dereference store.contract(); schema = dereference contract.data()
+    descriptor = store.get(3,_id,1) - 16
+    do i = 1 to schema.arity(descriptor,2)
+      if schema.fieldname(descriptor,2,i) = name then return result(i)
+    end
+    call bad('LL_IR_RESULT: unknown result ' || name)
+    return .llir..valuehandle(_owner,0)
+
+/** A named extension-operation draft. No graph mutation until finish. */
+opdraft: class
+  _owner = reference .llir..arena
+  _identity = .int
+  _block = .int
+  _op = .int
+  _origin = .int
+  _inputs = .int[]
+  _attributes = .binary[]
+  _present = .int[]
+  _done = .int
+  *: factory
+    arg owner = reference .llir..arena, blockid = .int, opcode = .llir..operation, at = .llir..origin
+    _owner = owner; store = dereference owner; _identity = store.identity()
+    _block = blockid; _op = opcode.id(); _origin = at.id(); _done = 0
+    contract = dereference store.contract(); schema = dereference contract.data()
+    if opcode.schemaid() <> contract.identity() | _op < 1 | _op > schema.ops() | at.belongs(owner) = 0 then call store.fail('LL_IR_SCHEMA: invalid extension draft contract or origin')
+    return
+  require: method = .void
+    if <refvalid>(_owner) = 0 then call bad('LL_IR_OWNER: extension draft expired')
+    store = dereference _owner
+    if store.identity() <> _identity | _done then call bad('LL_IR_LIFECYCLE: extension draft expired or finished')
+    return
+  input: method = .void
+    arg name = .string, input = .llir..valuehandle
+    call require(); store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
+    if input.belongs(_owner) = 0 then do
+      call store.fail('LL_IR_OWNER: extension operand belongs to another module'); return
+    end
+    do i = 1 to schema.arity(_op,1)
+      if schema.fieldname(_op,1,i) = name then do
+        if _inputs[i] <> 0 then call store.fail('LL_IR_INPUT: duplicate input ' || name)
+        _inputs[i] = input.id(); return
+      end
+    end
+    call store.fail('LL_IR_INPUT: unknown input ' || name)
+    return
+  attribute: method = .void
+    arg name = .string, bits = .binary
+    call require(); store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
+    do i = 1 to schema.arity(_op,3)
+      if schema.fieldname(_op,3,i) = name then do
+        if _present[i] then call store.fail('LL_IR_ATTRIBUTE: duplicate attribute ' || name)
+        _attributes[i] = bits; _present[i] = 1; return
+      end
+    end
+    call store.fail('LL_IR_ATTRIBUTE: unknown attribute ' || name)
+    return
+  finish: method = .llir..opview
+    call require(); _done = 1; store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
+    id = 0; i = .int
+    do i = 1 to schema.arity(_op,1)
+      if _inputs[i] = 0 then call store.fail('LL_IR_INPUT: missing input ' || schema.fieldname(_op,1,i))
+    end
+    do i = 1 to schema.arity(_op,3)
+      if _present[i] = 0 then call store.fail('LL_IR_ATTRIBUTE: missing attribute ' || schema.fieldname(_op,3,i))
+    end
+    if store.error() = '' then do
+      types = .int[]; edges = .int[]
+      do i = 1 to schema.arity(_op,2)
+        types[i] = schema.fieldtype(_op,2,i)
+      end
+      id = store.append(_block,16 + _op,_inputs,types,edges,_origin)
+      if id > 0 & schema.arity(_op,3) > 0 then do
+        call store.put(3,id,10,store.count(11) + 1)
+        do i = 1 to schema.arity(_op,3)
+          type = .llir..typeid(contract.identity(),schema.fieldtype(_op,3,i))
+          c = store.constant(type,_attributes[i]); a = store.add(11)
+          if a = 0 then leave
+          call store.put(11,a,1,id); call store.put(11,a,2,i); call store.put(11,a,3,type.id()); call store.put(11,a,4,c)
+        end
+      end
+    end
+    return .llir..opview(_owner,id)
+
+builder: class
+  _store = .llir..arena
+  *: factory
+    arg contract = .llir..contract, entries = 1000000, bytes = 67108864
+    _store = .llir..arena(contract,entries,bytes)
+    return
+  function: method = .llir..function
+    arg name = .string, type = .llir..typeid
+    id = _store.function(name,type)
+    return .llir..function(reference _store,id)
+  source: method = .llir..sourcefile
+    arg name = .string, bytes = .binary
+    id = _store.source(name,bytes)
+    return .llir..sourcefile(reference _store,id)
+  synthetic: method = .llir..origin
+    arg description = 'generated'
+    source = _store.source(description,''x as .binary)
+    id = _store.origin(source,0,0,4)
+    return .llir..origin(reference _store,id)
+  finish: method = .llir..module
+    ok = _store.freeze()
+    return .llir..module(_store)
+  error: method = .string
+    return _store.error()
+
+/** Immutable published graph; returning handles does not copy record buffers. */
+module: class
+  _store = .llir..arena
+  *: factory
+    arg store = .llir..arena
+    _store = store
+    if _store.sealed() = 0 then call _store.fail('LL_IR_LIFECYCLE: only verified frozen modules may be published')
+    if _store.error() = '' then call verifyservices(reference _store)
+    return
+  error: method = .string
+    return _store.error()
+  identity: method = .int
+    return _store.identity()
+  storage: method = reference .llir..arena
+    return reference _store
+  functions: method = .int
+    if error() <> '' then return 0
+    return _store.count(1)
+  blocks: method = .int
+    if error() <> '' then return 0
+    return _store.count(2)
+  operations: method = .int
+    if error() <> '' then return 0
+    return _store.count(3)
+  operation: method = .llir..opview
+    arg id = .int
+    if error() <> '' then call bad(error())
+    return .llir..opview(reference _store,id)
+  block: method = .llir..block
+    arg id = .int
+    if error() <> '' then call bad(error())
+    return .llir..block(reference _store,id)
+  bytes: method = .int
+    return _store.bytes()
+  capacity: method = .int
+    return _store.capacity()
+  binary: method = .binary
+    if error() <> '' then return ''x as .binary
+    return encode(reference _store)
+  text: method = .string
+    if error() <> '' then return ''
+    return encodetext(reference _store)
+  dump: method = .string
+    arg functionid = 0, blockid = 0
+    if error() <> '' then return ''
+    contract = dereference _store.contract(); schema = dereference contract.data()
+    out = .llir..writer(max(1024,_store.bytes() * 8 + 2048))
+    do f = 1 to _store.count(1)
+      if functionid <> 0 & functionid <> f then iterate
+      call out.line('function ' || _store.text(_store.get(1,f,1)) || ' -> ' || schema.typename(_store.get(1,f,2)))
+      call out.indent()
+      do b = 1 to _store.count(2)
+        if _store.get(2,b,1) <> f | (blockid <> 0 & blockid <> b) then iterate
+        call out.line(_store.text(_store.get(2,b,4)) || ':')
+        call out.indent()
+        op = _store.get(2,b,2)
+        do while op > 0
+          line = ''; i = .int
+          do i = 1 to _store.get(3,op,7)
+            if i > 1 then line = line || ', '
+            line = line || '%' || _store.result(op,i)
+          end
+          if line <> '' then line = line || ' = '
+          opcode = _store.get(3,op,1)
+          line = line || _store.opname(opcode)
+          do i = 1 to _store.get(3,op,5)
+            line = line || ' %' || _store.operand(op,i)
+          end
+          c = .int; type = .int; codec = .llir..typecodec
+          if opcode = 1 then do
+            c = _store.get(3,op,12); type = _store.get(8,c,1)
+            codec = schema.codec(type) as .llir..typecodec
+            line = line || ' ' || codec.format(_store.bits(_store.get(8,c,2))) || ' : ' || schema.typename(type)
+          end
+          if opcode = 3 | opcode = 4 then line = line || ' slot:' || _store.text(_store.get(5,_store.get(3,op,12),3))
+          if opcode = 2 then line = line || ' argument:' || _store.get(3,op,12)
+          if opcode > 16 then do i = 1 to schema.arity(opcode - 16,3)
+            attribute = _store.get(3,op,10) + i - 1
+            c = _store.get(11,attribute,4); type = _store.get(8,c,1)
+            codec = schema.codec(type) as .llir..typecodec
+            text = codec.format(_store.bits(_store.get(8,c,2)))
+            text = changestr('"',text,'""')
+            text = changestr('0d'x,text,'\r'); text = changestr('0a'x,text,'\n')
+            line = line || ' ' || schema.fieldname(opcode - 16,3,i) || '="' || text || '"'
+          end
+          do i = 1 to _store.get(3,op,9)
+            target = _store.successor(op,i)
+            line = line || ' -> ' || _store.text(_store.get(2,target,4))
+          end
+          call out.line(line || ' @origin:' || _store.get(3,op,11))
+          op = _store.get(3,op,3)
+        end
+        call out.dedent()
+      end
+      call out.dedent()
+    end
+    result = out.finish()
+    if result.error() <> '' then call bad(result.error())
+    return result.text()
+
+/** Append-only text chunks. Indentation is applied by line(); write is exact.
+ * A section is another writer. Finish checks balanced indentation. */
+writer: class
+  _chunks = .binary[]
+  _origins = .int[]
+  _bytes = .int
+  _limit = .int
+  _depth = .int
+  _indent = .string
+  _error = .string
+  *: factory
+    arg bytes = 67108864, indent = '  '
+    _bytes = 0; _limit = bytes; _depth = 0; _indent = indent; _error = ''
+    if bytes < 1 then _error = 'LL_IR_BUDGET: output.bytes must be positive'
+    return
+  write: method = .void
+    arg text = .string, originid = 0
+    if _error <> '' then return
+    data = text as .binary; size = <blen>(data)
+    if size > _limit - _bytes then do
+      _error = 'LL_RESOURCE_LIMIT: output.bytes budget ' || _limit || '; increase the host budget'; return
+    end
+    if size = 0 then return
+    i = _chunks[0] + 1; _chunks[i] = data; _origins[i] = originid; _bytes = _bytes + size
+    return
+  line: method = .void
+    arg text = '', originid = 0
+    call write(copies(_indent,_depth) || text || '0a'x,originid)
+    return
+  indent: method = .void
+    if _error <> '' then return
+    data = _indent as .binary
+    if _depth >= _limit <idiv> max(1,<blen>(data)) then _error = 'LL_RESOURCE_LIMIT: output indentation exceeds output.bytes budget'
+    else _depth = _depth + 1
+    return
+  dedent: method = .void
+    if _depth = 0 then _error = 'LL_IR_EMITTER: indentation underflow'
+    else _depth = _depth - 1
+    return
+  section: method = .llir..writer
+    return .llir..writer(_limit,_indent)
+  append: method = .void
+    arg section = reference .llir..output
+    if _error <> '' then return
+    part = dereference section
+    if part.error() <> '' then do
+      _error = part.error(); return
+    end
+    if part.bytes() > _limit - _bytes then do
+      _error = 'LL_RESOURCE_LIMIT: output.bytes budget ' || _limit || '; increase the host budget'; return
+    end
+    do i = 1 to part.chunks()
+      at = _chunks[0] + 1; _chunks[at] = part.chunk(i); _origins[at] = part.origin(i)
+    end
+    _bytes = _bytes + part.bytes()
+    return
+  finish: method = .llir..output
+    if _depth <> 0 & _error = '' then _error = 'LL_IR_EMITTER: unclosed indentation'
+    return .llir..output(_chunks,_origins,_bytes,_error)
+  error: method = .string
+    return _error
+
+sink: interface
+  write: method = .string
+    arg bytes = .binary
+
+output: class
+  _chunks = .binary[]
+  _origins = .int[]
+  _bytes = .int
+  _error = .string
+  *: factory
+    arg chunks = .binary[], origins = .int[], bytes = .int, error = .string
+    _error = error; _bytes = 0
+    if error = '' then do
+      _chunks = chunks; _origins = origins; _bytes = bytes
+    end
+    return
+  error: method = .string
+    return _error
+  bytes: method = .int
+    return _bytes
+  chunks: method = .int
+    return _chunks[0]
+  chunk: method = .binary
+    arg i = .int
+    return _chunks[i]
+  origin: method = .int
+    arg i = .int
+    return _origins[i]
+  text: method = .string
+    data = .binary; call binresize data,_bytes
+    at = 0
+    do i = 1 to _chunks[0]
+      part = _chunks[i]; size = <blen>(part)
+      call bincopy data,at,part,0,size
+      at = at + size
+    end
+    return data as .string
+  stream: method = .string
+    arg sink = .llir..sink
+    if _error <> '' then return _error
+    message = .string
+    do i = 1 to _chunks[0]
+      do
+        message = sink.write(_chunks[i])
+      on signal
+        return 'LL_IR_OUTPUT: sink signalled failure'
+      end
+      if message <> '' then return 'LL_IR_OUTPUT: ' || message
+    end
+    return ''
+
+/** Portable envelope. Numeric records remain encoded u32 little endian. */
+encode: procedure = .binary
+  arg input = reference .llir..arena
+  store = dereference input; contract = dereference store.contract()
+  manifest = contract.manifest() as .binary
+  size = 8 + 4 + <blen>(manifest) + 13 * 8 + 4
+  t = .int; i = .int; bytes = .binary
+  do t = 1 to 13
+    size = size + store.count(t) * store.width(t) * 4
+  end
+  do i = 1 to store.poolsize()
+    bytes = store.bits(i); size = size + 4 + <blen>(bytes)
+  end
+  result = .binary; call binresize result,size
+  <at..u32>(0) result = 1380535372
+  <at..u32>(4) result = 1
+  <at..u32>(8) result = <blen>(manifest)
+  call bincopy result,12,manifest,0,<blen>(manifest)
+  at = 12 + <blen>(manifest)
+  do t = 1 to 13
+    <at..u32>(at) result = store.count(t); at = at + 4
+    <at..u32>(at) result = store.width(t); at = at + 4
+    do i = 1 to store.count(t)
+      do c = 1 to store.width(t)
+        <at..u32>(at) result = store.get(t,i,c); at = at + 4
+      end
+    end
+  end
+  <at..u32>(at) result = store.poolsize(); at = at + 4
+  do i = 1 to store.poolsize()
+    bytes = store.bits(i); size = <blen>(bytes)
+    <at..u32>(at) result = size; at = at + 4
+    call bincopy result,at,bytes,0,size; at = at + size
+  end
+  return result
+
+/** A bounded reader validates a span before every access. */
+reader: class
+  _bytes = reference .binary
+  _at = .int
+  *: factory
+    arg bytes = reference .binary
+    _bytes = bytes; _at = 0
+    return
+  left: method = .int
+    bytes = dereference _bytes
+    return <blen>(bytes) - _at
+  u32: method = .int
+    bytes = dereference _bytes
+    if left() < 4 then call bad('LL_IR_IMAGE: truncated integer')
+    result = <at..u32>(_at) bytes; _at = _at + 4
+    return result
+  blob: method = .binary
+    size = u32(); bytes = dereference _bytes
+    if size > left() then call bad('LL_IR_IMAGE: truncated byte sequence')
+    result = binsubstr(bytes,_at + 1,size); _at = _at + size
+    return result
+
+loadbinary: procedure = .llir..module
+  arg contract = .llir..contract, bytes = .binary, entries = 1000000, budget = 67108864
+  store = .llir..arena(contract,entries,budget)
+  do
+    if <blen>(bytes) > budget then call store.fail('LL_RESOURCE_LIMIT: ir.image.bytes exceeds host budget ' || budget)
+    reader = .llir..reader(reference bytes)
+    if store.error() = '' then do
+      if reader.u32() <> 1380535372 | reader.u32() <> 1 then call store.fail('LL_IR_IMAGE: unsupported magic or version')
+    end
+    if store.error() = '' then do
+      manifest = reader.blob() as .string
+      if manifest <> contract.manifest() then call store.fail('LL_IR_SCHEMA: image requires a different schema or semantic family version')
+    end
+    t = .int; i = .int; count = .int; id = .int
+    do t = 1 to 13 while store.error() = ''
+      count = reader.u32(); width = reader.u32()
+      if width <> store.width(t) then do
+        call store.fail('LL_IR_IMAGE: unsupported table width'); leave
+      end
+      if count > reader.left() <idiv> (width * 4) then do
+        call store.fail('LL_IR_IMAGE: table extent exceeds input'); leave
+      end
+      do i = 1 to count while store.error() = ''
+        id = store.add(t)
+        if id = 0 then leave
+        do c = 1 to width
+          call store.put(t,id,c,reader.u32())
+        end
+      end
+    end
+    if store.error() = '' then do
+      count = reader.u32()
+      if count > reader.left() <idiv> 4 then call store.fail('LL_IR_IMAGE: pool extent exceeds input')
+      do i = 1 to count while store.error() = ''
+        id = store.pool(reader.blob())
+      end
+      if reader.left() <> 0 then call store.fail('LL_IR_IMAGE: trailing bytes')
+    end
+  on signal
+    call store.fail('LL_IR_IMAGE: truncated or invalid encoded data')
+  end
+  ok = store.freeze()
+  return .llir..module(store)
+
+tablename: procedure = .string
+  arg t = .int
+  return word('functions blocks operations values slots operands edges constants origins sources attributes arguments contributors',t)
+
+encodetext: procedure = .string
+  arg input = reference .llir..arena
+  store = dereference input; contract = dereference store.contract()
+  out = .llir..writer(max(1024,store.bytes() * 8 + length(contract.manifest()) * 4 + 2048))
+  call out.line('LLIR-TEXT-1')
+  call out.line('schema ' || bin2x(contract.manifest() as .binary))
+  t = .int; i = .int
+  do t = 1 to 13
+    call out.line(tablename(t) || ' ' || store.count(t) || ' ' || store.width(t))
+    do i = 1 to store.count(t)
+      line = ''
+      do c = 1 to store.width(t)
+        if c > 1 then line = line || ' '
+        line = line || store.get(t,i,c)
+      end
+      call out.line(line)
+    end
+  end
+  call out.line('pool ' || store.poolsize())
+  do i = 1 to store.poolsize()
+    call out.line('bytes ' || bin2x(store.bits(i)))
+  end
+  result = out.finish()
+  if result.error() <> '' then call bad(result.error())
+  return result.text()
+
+textreader: class
+  _text = .string[]
+  _position = .int
+  *: factory
+    arg text = .string
+    _position = 0; start = 1
+    do i = 1 to length(text)
+      if substr(text,i,1) = '0a'x then do
+        _text[_text[0] + 1] = substr(text,start,i - start); start = i + 1
+      end
+    end
+    if start <= length(text) then _text[_text[0] + 1] = substr(text,start)
+    return
+  line: method = .string
+    _position = _position + 1
+    if _position > _text[0] then call bad('LL_IR_TEXT: unexpected end of input')
+    return _text[_position]
+  left: method = .int
+    return _text[0] - _position
+
+natural: procedure = .int
+  arg text = .string
+  if text = '' then call bad('LL_IR_TEXT: missing count')
+  number = 0
+  do i = 1 to length(text)
+    digit = pos(substr(text,i,1),'0123456789') - 1
+    if digit < 0 | number > 429496729 | (number = 429496729 & digit > 5) then call bad('LL_IR_TEXT: invalid u32 field')
+    number = number * 10 + digit
+  end
+  return number
+
+unhex: procedure = .binary
+  arg text = .string
+  if length(text) <mod> 2 <> 0 then call bad('LL_IR_TEXT: incomplete hexadecimal byte')
+  do i = 1 to length(text)
+    if pos(substr(text,i,1),'0123456789ABCDEF') = 0 then call bad('LL_IR_TEXT: invalid hexadecimal byte')
+  end
+  return x2bin(text)
+
+loadtext: procedure = .llir..module
+  arg contract = .llir..contract, text = .string, entries = 1000000, budget = 67108864
+  store = .llir..arena(contract,entries,budget)
+  do
+    source = text as .binary
+    if <blen>(source) > budget then call store.fail('LL_RESOURCE_LIMIT: ir.image.bytes exceeds host budget ' || budget)
+    if store.error() = '' then do
+      reader = .llir..textreader(text)
+      if reader.line() <> 'LLIR-TEXT-1' then call store.fail('LL_IR_TEXT: unsupported text version')
+      line = reader.line()
+      if word(line,1) <> 'schema' | words(line) <> 2 then call store.fail('LL_IR_TEXT: expected schema')
+      manifest = unhex(word(line,2)) as .string
+      if manifest <> contract.manifest() then call store.fail('LL_IR_SCHEMA: text requires a different semantic contract')
+      t = .int; i = .int; count = .int; id = .int
+      do t = 1 to 13 while store.error() = ''
+        line = reader.line()
+        if word(line,1) <> tablename(t) | words(line) <> 3 then do
+          call store.fail('LL_IR_TEXT: expected ' || tablename(t) || ' table'); leave
+        end
+        count = natural(word(line,2)); width = natural(word(line,3))
+        if width <> store.width(t) | count > reader.left() then do
+          call store.fail('LL_IR_TEXT: invalid table width or extent'); leave
+        end
+        do i = 1 to count while store.error() = ''
+          line = reader.line()
+          if words(line) <> width then do
+            call store.fail('LL_IR_TEXT: wrong field count'); leave
+          end
+          id = store.add(t)
+          if id = 0 then leave
+          do c = 1 to width
+            call store.put(t,id,c,natural(word(line,c)))
+          end
+        end
+      end
+      if store.error() = '' then do
+        line = reader.line()
+        if word(line,1) <> 'pool' | words(line) <> 2 then call store.fail('LL_IR_TEXT: expected byte pool')
+        count = natural(word(line,2))
+        if count > reader.left() then call store.fail('LL_IR_TEXT: pool extent exceeds input')
+        do i = 1 to count while store.error() = ''
+          line = reader.line()
+          if left(line,6) <> 'bytes ' then do
+            call store.fail('LL_IR_TEXT: expected exact hexadecimal bytes'); leave
+          end
+          id = store.pool(unhex(substr(line,7)))
+        end
+        if reader.left() <> 0 then call store.fail('LL_IR_TEXT: trailing records')
+      end
+    end
+  on signal
+    call store.fail('LL_IR_TEXT: invalid or truncated text image')
+  end
+  ok = store.freeze()
+  return .llir..module(store)
+
+/** Run host-registered semantic checks only after structural verification. */
+verifyservices: procedure = .void
+  arg owner = reference .llir..arena
+  store = dereference owner; contract = dereference store.contract(); schema = dereference contract.data()
+  do i = 1 to store.count(3) while store.error() = ''
+    opcode = store.get(3,i,1)
+    if opcode > 16 then do
+      service = schema.callback(opcode - 16,2)
+      if service is .llir..verification then do
+        do
+          verifier = service as .llir..verification
+          message = verifier.check(.llir..opview(owner,i))
+          if message <> '' then call store.fail('LL_IR_SEMANTIC: ' || message,i,1)
+        on signal
+          call store.fail('LL_IR_SEMANTIC: verifier signalled failure',i,1)
+        end
+      end
+    end
+  end
+  return
+
+/** Lowering results are borrowed destination values, never source values. */
+fragment: class
+  _status = .string
+  _message = .string
+  _values = .object[]
+  *: factory
+    arg status = 'keep', message = ''
+    _status = status; _message = message
+    return
+  add: method = .void
+    arg value = .llir..valuehandle
+    _values[_values[0] + 1] = value as .object
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  size: method = .int
+    return _values[0]
+  at: method = .llir..valuehandle
+    arg ordinal = .int
+    return _values[ordinal] as .llir..valuehandle
+
+/** A lowering service constructs its fragment in this destination block.
+ * The coordinator validates ownership, types, effects and the final graph. */
+lowerrequest: class
+  _source = .llir..opview
+  _block = .llir..block
+  _values = .object[]
+  _origin = .llir..origin
+  _budget = .int
+  *: factory
+    arg source = .llir..opview, destination = .llir..block, values = .object[], at = .llir..origin, budget = .int
+    _source = source; _block = destination; _values = values; _origin = at; _budget = budget
+    return
+  source: method = .llir..opview
+    return _source
+  destination: method = .llir..block
+    return _block
+  input: method = .llir..valuehandle
+    arg ordinal = .int
+    return _values[ordinal] as .llir..valuehandle
+  origin: method = .llir..origin
+    return _origin
+  budget: method = .int
+    return _budget

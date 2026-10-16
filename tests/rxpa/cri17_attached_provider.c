@@ -18,7 +18,6 @@ static LONG cri17_decrement(cri17_counter *counter) {
 static LONG cri17_read(cri17_counter *counter) {
     return InterlockedCompareExchange(counter, 0, 0);
 }
-#define CRI17_THREAD_LOCAL __declspec(thread)
 static void cri17_session_call_enter(void) {
     AcquireSRWLockExclusive(&cri17_session_call_lock);
 }
@@ -47,7 +46,6 @@ static int cri17_decrement(cri17_counter *counter) {
 static int cri17_read(cri17_counter *counter) {
     return __atomic_load_n(counter, __ATOMIC_SEQ_CST);
 }
-#define CRI17_THREAD_LOCAL __thread
 static void cri17_session_call_enter(void) {
     (void)pthread_mutex_lock(&cri17_session_call_lock);
 }
@@ -61,6 +59,14 @@ static void cri17_session_call_wait(void) {
 static void cri17_session_call_broadcast(void) {
     (void)pthread_cond_broadcast(&cri17_session_call_condition);
 }
+#endif
+
+/* TLS spelling belongs to the compiler, independently of Windows locking.
+ * MinGW GCC ignores __declspec(thread), turning this into shared state. */
+#if defined(_MSC_VER)
+#define CRI17_THREAD_LOCAL __declspec(thread)
+#else
+#define CRI17_THREAD_LOCAL __thread
 #endif
 
 typedef struct cri17_session {

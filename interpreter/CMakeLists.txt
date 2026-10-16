@@ -324,6 +324,10 @@ endif()
 # Bare Interpreter
 # Portable switch-dispatch version.
 add_executable(rxbvm rxvmmain.c $<TARGET_OBJECTS:rxbvm_core_objects>)
+add_test(NAME rxvm_cli_input_failure_bytecode
+    COMMAND ${CMAKE_COMMAND} -DVM=$<TARGET_FILE:rxbvm> -DKIND=bytecode
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli_input_failure.cmake)
+set_tests_properties(rxvm_cli_input_failure_bytecode PROPERTIES TIMEOUT 60 LABELS "smoke;mainframe")
 target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
@@ -334,6 +338,10 @@ set(CREXX_CONCRETE_VM_TARGETS rxbvm)
 # compile this GNU/Clang extension.
 if(CREXX_THREADED_VM_SUPPORTED)
     add_executable(rxtvm rxvmmain.c $<TARGET_OBJECTS:rxtvm_core_objects>)
+    add_test(NAME rxvm_cli_input_failure_threaded
+        COMMAND ${CMAKE_COMMAND} -DVM=$<TARGET_FILE:rxtvm> -DKIND=threaded
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli_input_failure.cmake)
+    set_tests_properties(rxvm_cli_input_failure_threaded PROPERTIES TIMEOUT 60 LABELS "smoke;mainframe")
     target_link_libraries(rxtvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
     target_include_directories(rxtvm PRIVATE . ./rxvmplugin
             ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
@@ -2641,4 +2649,8 @@ crexx_label_smoke_tests(
             test_db_decimal_archive_link_bin
 )
 
+crexx_label_smoke_tests(rxvm_cli_input_failure_bytecode PREP_TARGETS rxbvm)
+if(TARGET rxtvm)
+    crexx_label_smoke_tests(rxvm_cli_input_failure_threaded PREP_TARGETS rxtvm)
+endif()
 crexx_finalize_directory_qa_tiers()

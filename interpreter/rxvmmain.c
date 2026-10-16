@@ -432,7 +432,9 @@ int main(int argc, char *argv[]) {
         /* Load Module */
         if (rxldmod(&context, file_name) <= 0) {
             fprintf(stderr, "ERROR reading module file %s\n", file_name);
-            exit(-1);
+            /* CLI input failure follows the other invocation errors. A
+             * negative setup status becomes 255/4095 on host/z/OS. */
+            exit(2);
         }
     }
 

@@ -150,6 +150,9 @@ time and peak memory.  Preserve negative window-size evidence.
 
 ### Mandatory first Release verdict after a production performance edit
 
+The Level L research exception in the repository-root `AGENTS.md` applies to
+the experimental Level L/compiler work; this formal gate does not apply there.
+
 This is a hard sequencing gate, not a late closeout check. A selected
 production implementation remains provisional and revertable until this gate
 is reviewed:

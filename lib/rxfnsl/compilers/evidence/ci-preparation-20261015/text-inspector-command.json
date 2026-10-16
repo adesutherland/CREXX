@@ -1,0 +1,14 @@
+{
+  "command": [
+    "ctest",
+    "--test-dir",
+    "cmake-build-levell-integration",
+    "--output-on-failure",
+    "--parallel",
+    "2",
+    "-R",
+    "^text_inspector_(core|tui)_(opt|noopt)$"
+  ],
+  "exit": 0,
+  "seconds": 0.45635841705370694
+}

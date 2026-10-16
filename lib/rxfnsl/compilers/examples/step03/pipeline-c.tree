@@ -1,0 +1,163 @@
+Program|0:202|options levelc
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+twice: procedure
+  arg value
+  return value * 2
+
+Sequence|0:202|options levelc
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+twice: procedure
+  arg value
+  return value * 2
+
+Options|0:14|options levelc
+Assignment|15:28|total = 2 + 3
+Chain|23:28|2 + 3
+Chain|23:28|2 + 3
+Chain|23:28|2 + 3
+Chain|23:28|2 + 3
+Chain|23:28|2 + 3
+Chain|23:25|2 
+Number|23:24|2
+Chain|27:28|3
+Number|27:28|3
+plus|25:26|+
+IfElse|29:74|if total > 4 then say twice(total)
+else say 0
+Chain|32:42|total > 4 
+Chain|32:42|total > 4 
+Chain|32:42|total > 4 
+Chain|32:38|total 
+Chain|32:38|total 
+Chain|32:38|total 
+Name|32:37|total
+Chain|40:42|4 
+Chain|40:42|4 
+Chain|40:42|4 
+Number|40:41|4
+gt|38:39|>
+Say|47:64|say twice(total)
+
+Chain|51:64|twice(total)
+
+Chain|51:64|twice(total)
+
+Chain|51:64|twice(total)
+
+Chain|51:64|twice(total)
+
+Chain|51:64|twice(total)
+
+Chain|51:64|twice(total)
+
+Call|51:63|twice(total)
+Arguments|57:62|total
+Argument|57:62|total
+Chain|57:62|total
+Chain|57:62|total
+Chain|57:62|total
+Chain|57:62|total
+Chain|57:62|total
+Chain|57:62|total
+Name|57:62|total
+Say|69:74|say 0
+Chain|73:74|0
+Chain|73:74|0
+Chain|73:74|0
+Chain|73:74|0
+Chain|73:74|0
+Chain|73:74|0
+Number|73:74|0
+While|75:117|do while total > 0
+  total = total - 1
+end
+Chain|84:93|total > 0
+Chain|84:93|total > 0
+Chain|84:93|total > 0
+Chain|84:90|total 
+Chain|84:90|total 
+Chain|84:90|total 
+Name|84:89|total
+Chain|92:93|0
+Chain|92:93|0
+Chain|92:93|0
+Number|92:93|0
+gt|90:91|>
+Sequence|96:114|total = total - 1
+
+Assignment|96:113|total = total - 1
+Chain|104:113|total - 1
+Chain|104:113|total - 1
+Chain|104:113|total - 1
+Chain|104:113|total - 1
+Chain|104:113|total - 1
+Chain|104:110|total 
+Name|104:109|total
+Chain|112:113|1
+Number|112:113|1
+minus|110:111|-
+Say|118:127|say total
+Chain|122:127|total
+Chain|122:127|total
+Chain|122:127|total
+Chain|122:127|total
+Chain|122:127|total
+Chain|122:127|total
+Name|122:127|total
+Say|128:145|say length('cat')
+Chain|132:145|length('cat')
+Chain|132:145|length('cat')
+Chain|132:145|length('cat')
+Chain|132:145|length('cat')
+Chain|132:145|length('cat')
+Chain|132:145|length('cat')
+Call|132:145|length('cat')
+Arguments|139:144|'cat'
+Argument|139:144|'cat'
+Chain|139:144|'cat'
+Chain|139:144|'cat'
+Chain|139:144|'cat'
+Chain|139:144|'cat'
+Chain|139:144|'cat'
+Chain|139:144|'cat'
+String|139:144|'cat'
+Exit|146:152|exit 0
+Chain|151:152|0
+Chain|151:152|0
+Chain|151:152|0
+Chain|151:152|0
+Chain|151:152|0
+Chain|151:152|0
+Number|151:152|0
+CLabel|154:160|twice:
+CProcedure|161:170|procedure
+CArg|173:182|arg value
+ArgTarget|177:182|value
+Return|185:201|return value * 2
+Chain|192:201|value * 2
+Chain|192:201|value * 2
+Chain|192:201|value * 2
+Chain|192:201|value * 2
+Chain|192:201|value * 2
+Chain|192:201|value * 2
+Name|192:197|value
+Number|200:201|2
+times|198:199|*

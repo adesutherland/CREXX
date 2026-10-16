@@ -1456,6 +1456,7 @@ return normalized
 
 projectMakeDirectory: procedure = .int
 arg path = .string
+if rxfs..isdir(path) <> 0 then return 0
 captured = .string[]
 errors = .string[]
 address crexx "mkdir -p :path" output captured error errors

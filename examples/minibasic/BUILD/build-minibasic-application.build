@@ -1,0 +1,24 @@
+/* Build MiniBASIC source into one standalone application RXBIN. */
+
+COMPILE GRAMMAR
+  OUTPUT_DIR = "cmake-build-release/minibasic/application"
+  SOURCE = "examples/minibasic/grammar/minibasic.levell"
+  OUTPUT = "minibasicgrammar";
+
+COMPILE READER
+  OUTPUT_DIR = "cmake-build-release/minibasic/application"
+  SOURCE = "examples/minibasic/minibasic_compiler.crexx"
+  DEPENDS_ON = "minibasicgrammar"
+  OUTPUT = "minibasic_compiler";
+
+COMPILE APPLICATION
+  OUTPUT_DIR = "cmake-build-release/minibasic/application"
+  SOURCE = "examples/minibasic/basic1.bas"
+  DEPENDS_ON = "minibasicgrammar"
+  COMPILER = "minibasic_compiler"
+  OUTPUT = "basic1";
+
+RUN
+  WORK_DIR = "cmake-build-release/minibasic/application"
+  PROGRAM = "basic1"
+  STDIN = "5";

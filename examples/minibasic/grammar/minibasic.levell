@@ -1,0 +1,366 @@
+/*
+ * MiniBASIC version 1 grammar.
+ *
+ * Supported:
+ *   - mandatory line numbers
+ *   - REM comments
+ *   - LET assignments, with optional LET
+ *   - integer and string values
+ *   - arithmetic and comparison expressions
+ *   - PRINT
+ *   - INPUT
+ *   - IF ... THEN line-number
+ *   - GOTO line-number
+ *   - END
+ *
+ * Deliberately postponed:
+ *   - arrays
+ *   - FOR / NEXT
+ *   - subroutines
+ *   - real numbers
+ *   - multiple statements per line
+ */
+
+options levell
+
+namespace minibasicgrammar
+
+
+/* ---------------------------------------------------------
+ * Tokens
+ * ---------------------------------------------------------
+ */
+
+identifier: token = 1
+integer: token = 2
+string: token = 3
+separator: token = 4
+
+plus: token = 5
+minus: token = 6
+multiply: token = 7
+divide: token = 8
+
+equals: token = 9
+not_equals: token = 10
+less: token = 11
+greater: token = 12
+less_equal: token = 13
+greater_equal: token = 14
+
+lparen: token = 15
+rparen: token = 16
+comma: token = 17
+
+remword: token = 18
+letword: token = 19
+printword: token = 20
+inputword: token = 21
+ifword: token = 22
+thenword: token = 23
+gotoword: token = 24
+endword: token = 25
+
+
+/* ---------------------------------------------------------
+ * Lexer
+ * ---------------------------------------------------------
+ */
+
+scan: lexer input utf8
+
+  digit: charset = U+0030 to U+0039
+
+  letter: charset =
+       U+0041 to U+005A
+     | U+0061 to U+007A
+     | U+005F
+
+  hspace: charset = U+0009 | U+0020
+
+  string.body: charset =
+       U+0020 to U+0021
+     | U+0023 to U+00FF
+     | U+0009
+
+  line.character: charset = scalar except (U+000A | U+000D)
+
+  integer.pattern: pattern = digit+
+
+  name.pattern: pattern =
+    letter (letter | digit)*
+
+  whitespace: rule =
+    hspace+ then skip
+
+  integer.literal: rule =
+    integer.pattern then emit integer
+
+  string.literal: rule =
+    '"' (string.body | '""')* '"' then emit string
+
+  newline: rule =
+    U+000D U+000A | U+000D | U+000A then emit separator
+
+  plus.sign: rule =
+    "+" then emit plus
+
+  minus.sign: rule =
+    "-" then emit minus
+
+  multiply.sign: rule =
+    "*" then emit multiply
+
+  divide.sign: rule =
+    "/" then emit divide
+
+  equals.sign: rule =
+    "=" then emit equals
+
+  not.equals.sign: rule =
+    "<>" then emit not_equals
+
+  less.equal.sign: rule =
+    "<=" then emit less_equal
+
+  greater.equal.sign: rule =
+    ">=" then emit greater_equal
+
+  less.sign: rule =
+    "<" then emit less
+
+  greater.sign: rule =
+    ">" then emit greater
+
+  left.parenthesis: rule =
+    "(" then emit lparen
+
+  right.parenthesis: rule =
+    ")" then emit rparen
+
+  comma.sign: rule =
+    "," then emit comma
+
+  rem.comment: rule = "REM" hspace line.character* then emit remword
+  let.keyword: rule = "LET" then emit letword
+  print.keyword: rule = "PRINT" then emit printword
+  input.keyword: rule = "INPUT" then emit inputword
+  if.keyword: rule = "IF" then emit ifword
+  then.keyword: rule = "THEN" then emit thenword
+  goto.keyword: rule = "GOTO" then emit gotoword
+  end.keyword: rule = "END" then emit endword
+
+  name.literal: rule =
+    name.pattern then emit identifier
+
+
+/* ---------------------------------------------------------
+ * Parser
+ * ---------------------------------------------------------
+ */
+
+parse: parser semantics contextfree input tokens start program
+
+  program:
+    rule = separator* (line separator*)+
+
+  line:
+    rule = integer statement
+
+  statement:
+      rule = rem.statement
+            | let.statement
+            | assignment.statement
+            | print.statement
+            | input.statement
+            | if.statement
+            | goto.statement
+            | end.statement
+
+  /*
+   * REM is recognized lexically as a line comment. This prevents integers
+   * inside a comment from being mistaken for the next numbered source line.
+   */
+  rem.statement:
+    rule = remword
+
+  /*
+   * LET is optional.
+   */
+  let.statement:
+    rule = letword assignment.statement
+
+  assignment.statement:
+    rule = variable equals expression
+
+  print.statement:
+    rule = printword expression.list
+
+  expression.list:
+    rule = expression (comma expression)*
+
+  input.statement:
+    rule = inputword variable
+
+  if.statement:
+    rule = ifword expression thenword integer
+
+  goto.statement:
+    rule = gotoword integer
+
+  end.statement:
+    rule = endword
+
+  variable:
+    rule = identifier
+
+  expression:
+    rule = comparison
+
+  comparison:
+    rule = additive
+           ((equals
+           | not_equals
+           | less
+           | greater
+           | less_equal
+           | greater_equal)
+           additive)?
+
+  additive:
+    rule = multiplicative
+           ((plus | minus) multiplicative)*
+
+  multiplicative:
+    rule = unary
+           ((multiply | divide) unary)*
+
+  unary:
+    rule = (plus | minus)? primary
+
+  primary:
+      rule = integer
+            | string
+            | variable
+            | group
+
+  group:
+    rule = lparen expression rparen
+
+
+/* ---------------------------------------------------------
+ * Keyword classification
+ *
+ * Keywords are case-insensitive. They remain identifiers in
+ * the lexer and are converted here when appropriate.
+ * ---------------------------------------------------------
+ */
+
+classify: tokenstage start 1
+
+word.line:
+  transform stage classify
+  state 1
+  take integer
+  emit copy
+  next 1
+
+word.rem:
+  transform stage classify
+  state 1
+  take identifier
+  text "REM"
+  emit remword
+  next 2
+
+word.let:
+  transform stage classify
+  state 1
+  take identifier
+  text "LET"
+  emit letword
+  next 2
+
+word.print:
+  transform stage classify
+  state 1
+  take identifier
+  text "PRINT"
+  emit printword
+  next 2
+
+word.input:
+  transform stage classify
+  state 1
+  take identifier
+  text "INPUT"
+  emit inputword
+  next 2
+
+word.if:
+  transform stage classify
+  state 1
+  take identifier
+  text "IF"
+  emit ifword
+  next 2
+
+word.then:
+  transform stage classify
+  state 1
+  take identifier
+  text "THEN"
+  emit thenword
+  next 2
+
+word.goto:
+  transform stage classify
+  state 1
+  take identifier
+  text "GOTO"
+  emit gotoword
+  next 2
+
+word.end:
+  transform stage classify
+  state 1
+  take identifier
+  text "END"
+  emit endword
+  next 2
+
+word.separator:
+  transform stage classify
+  state 0
+  take separator
+  emit copy
+  next 1
+
+word.separator.after:
+  transform stage classify
+  state 2
+  take separator
+  emit copy
+  next 1
+
+word.then.after:
+  transform stage classify
+  state 2
+  take identifier
+  text "THEN"
+  emit thenword
+  next 2
+
+word.other.after:
+  transform stage classify
+  state 2
+  take any
+  emit copy
+  next 2
+
+word.other:
+  transform stage classify
+  state 1
+  take any
+  emit copy
+  next 2

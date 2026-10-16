@@ -1,0 +1,54 @@
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.7379630Z Current status: In Progress.....
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.7381810Z Current status: Accepted......Processing complete
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.7383430Z   id: d681fded-4afc-47d5-a34e-0a3d8ed7a620
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.7384650Z   status: Accepted
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.7411380Z 
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.8066750Z ##[group]Run set -euo pipefail
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.8068110Z ^[[36;1mset -euo pipefail^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.8069620Z ^[[36;1m# Both inputs already have verified signatures and final manifests.^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.8071070Z ^[[36;1m# Keep the .pkg out of release-assets until notarization succeeds.^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:19.8072340Z ^[[36;1mpkg="${RUNNER_TEMP}/llama.rexx-macos-x86_64-cpu.pkg"^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:56.7899010Z Current status: In Progress......
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:56.7905100Z Current status: Accepted.......Processing complete
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:56.7930670Z   id: fa6d11d1-323c-4d18-b6e8-6b2fefb14eeb
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:56.7932050Z   status: Accepted
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:56.7932700Z 
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:35:58.0109900Z Processing: /Users/runner/work/_temp/llama.rexx-macos-x86_64-cpu.pkg
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7030720Z error is Error Domain=NSURLErrorDomain Code=-1005 "The network connection was lost." UserInfo={_kCFStreamErrorCodeKey=-4, NSUnderlyingError=0x6000011ace40 {Error Domain=kCFErrorDomainCFNetwork Code=-1005 "(null)" UserInfo={NSErrorPeerAddressKey=<CFData 0x600003ca0550 [0x7ff8563234e0]>{length = 16, capacity = 16, bytes = 0x100201bb11f8f50f0000000000000000}, _kCFStreamErrorCodeKey=-4, _kCFStreamErrorDomainKey=4}}, _NSURLErrorFailingURLSessionTaskErrorKey=LocalDataTask <592F4661-DA06-4674-AA66-4CE175D5A1FE>.<1>, _NSURLErrorRelatedURLSessionTaskErrorKey=(
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7039370Z     "LocalDataTask <592F4661-DA06-4674-AA66-4CE175D5A1FE>.<1>"
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7047920Z ), NSLocalizedDescription=The network connection was lost., NSErrorFailingURLStringKey=https://api.apple-cloudkit.com/database/1/com.apple.gk.ticket-delivery/production/public/records/lookup, NSErrorFailingURLKey=https://api.apple-cloudkit.com/database/1/com.apple.gk.ticket-delivery/production/public/records/lookup, _kCFStreamErrorDomainKey=4}
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7052970Z CloudKit's response is inconsistent with expections: (null)
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7054730Z The staple and validate action failed! Error 68.
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7066460Z ##[error]Process completed with exit code 68.
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7218930Z ##[group]Run set -euo pipefail
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7219900Z ^[[36;1mset -euo pipefail^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7220760Z ^[[36;1mif [ -n "${APPLE_SIGNING_KEYCHAIN:-}" ]; then^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7221960Z ^[[36;1m  security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true^[[0m
+Plugin macOS x86_64 CPU	UNKNOWN STEP	2026-10-13T21:36:04.7223020Z ^[[36;1mfi^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7092240Z Current status: In Progress.....
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7141490Z Current status: Accepted......Processing complete
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7142510Z   id: ed2ba46a-4715-42c5-974f-a4ea1180c30e
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7142990Z   status: Accepted
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7143250Z 
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7449150Z ##[group]Run set -euo pipefail
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7449730Z ^[[36;1mset -euo pipefail^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7450190Z ^[[36;1m# Both inputs already have verified signatures and final manifests.^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7450750Z ^[[36;1m# Keep the .pkg out of release-assets until notarization succeeds.^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:06.7451310Z ^[[36;1mpkg="${RUNNER_TEMP}/llama.rexx-macos-arm64-metal.pkg"^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:33.7766920Z Current status: In Progress.....
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:33.7768060Z Current status: Accepted......Processing complete
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:33.7768880Z   id: c906981e-c870-4d95-8382-ec291f286ae0
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:33.7789710Z   status: Accepted
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:33.7790650Z 
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:34.5226960Z Processing: /Users/runner/work/_temp/llama.rexx-macos-arm64-metal.pkg
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7836210Z error is Error Domain=NSURLErrorDomain Code=-1005 "The network connection was lost." UserInfo={_kCFStreamErrorCodeKey=-4, NSUnderlyingError=0x6000004482a0 {Error Domain=kCFErrorDomainCFNetwork Code=-1005 "(null)" UserInfo={NSErrorPeerAddressKey=<CFData 0x600002941220 [0x20856ff78]>{length = 16, capacity = 16, bytes = 0x100201bb11f8c0030000000000000000}, _kCFStreamErrorCodeKey=-4, _kCFStreamErrorDomainKey=4}}, _NSURLErrorFailingURLSessionTaskErrorKey=LocalDataTask <8F950D70-2282-41DC-8C49-112337373ACA>.<1>, _NSURLErrorRelatedURLSessionTaskErrorKey=(
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7841470Z     "LocalDataTask <8F950D70-2282-41DC-8C49-112337373ACA>.<1>"
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7843450Z ), NSLocalizedDescription=The network connection was lost., NSErrorFailingURLStringKey=https://api.apple-cloudkit.com/database/1/com.apple.gk.ticket-delivery/production/public/records/lookup, NSErrorFailingURLKey=https://api.apple-cloudkit.com/database/1/com.apple.gk.ticket-delivery/production/public/records/lookup, _kCFStreamErrorDomainKey=4}
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7845080Z CloudKit's response is inconsistent with expections: (null)
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7845650Z The staple and validate action failed! Error 68.
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.7861920Z ##[error]Process completed with exit code 68.
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.8048890Z ##[group]Run set -euo pipefail
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.8050200Z ^[[36;1mset -euo pipefail^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.8051230Z ^[[36;1mif [ -n "${APPLE_SIGNING_KEYCHAIN:-}" ]; then^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.8052550Z ^[[36;1m  security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true^[[0m
+Plugin macOS arm64 Metal	UNKNOWN STEP	2026-10-13T21:23:41.8053730Z ^[[36;1mfi^[[0m

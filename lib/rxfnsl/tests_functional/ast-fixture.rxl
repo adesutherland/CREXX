@@ -1,0 +1,20 @@
+options levell
+namespace ast_fixture
+name: token
+number: token then tree Number(spelling = text)
+equals: token
+semi: token
+notes: comments nested '/*' '*/'
+scan: lexer
+  letter: charset = 'a' to 'z' | U+00E9 | U+03B2
+  digit: charset = '0' to '9'
+  space: charset = ' ' | U+0009 | U+000A | U+000D
+  word.lex: rule = letter+ then emit name
+  number.lex: rule = digit+ then emit number
+  equal.lex: rule = '=' then emit equals
+  semi.lex: rule = ';' then emit semi
+  spaces: rule = space+ then skip
+parse: parser start program backend lr1
+program: rule = (statement as item)* then tree (items = item*)
+statement: rule = name as key equals (number as value)? semi
+  then tree Entry(name = text(key), value = value?)

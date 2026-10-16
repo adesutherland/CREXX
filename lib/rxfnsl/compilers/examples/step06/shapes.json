@@ -1,0 +1,42 @@
+{
+  "walk-c-before": {
+    "instructions": 147,
+    "calls": 17,
+    "source_records": 18,
+    "frames": [
+      6,
+      25
+    ],
+    "bytes": 5336
+  },
+  "walk-c-after": {
+    "instructions": 96,
+    "calls": 11,
+    "source_records": 11,
+    "frames": [
+      6,
+      16
+    ],
+    "bytes": 3814
+  },
+  "walk-g-before": {
+    "instructions": 27,
+    "calls": 1,
+    "source_records": 16,
+    "frames": [
+      2,
+      14
+    ],
+    "bytes": 1244
+  },
+  "walk-g-after": {
+    "instructions": 10,
+    "calls": 1,
+    "source_records": 9,
+    "frames": [
+      2,
+      5
+    ],
+    "bytes": 657
+  }
+}

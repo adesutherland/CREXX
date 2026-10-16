@@ -1,0 +1,2 @@
+# Exact CRLF bytes are part of the source-range regression.
+unicode-*.crexx -text -whitespace

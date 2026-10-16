@@ -1,0 +1,54 @@
+/* cREXX License (MIT). Initial C/G semantic families and SAY effects. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcrexxir
+
+main: procedure = .int
+  schema = .llir..schema(); call llcrexxir..registerfamilies(reference schema)
+  contract = schema.finish(); failures = check(contract.error() = '','compiler contract')
+  input = .string[]; expected = .string[]
+  input[1] = '9223372036854775807 1'; expected[1] = 'keep'
+  input[2] = '-9223372036854775808 -1'; expected[2] = 'keep'
+  input[3] = '9223372036854775806 1'; expected[3] = 'constant'
+  input[4] = '-9223372036854775807 -1'; expected[4] = 'constant'
+  input[5] = '-9223372036854775808 9223372036854775807'; expected[5] = 'constant'
+  graph = .llir..module; facts = .llirservices..facts; result = .llir..evaluation
+  draft = .llir..builder; at = .llir..origin; fn = .llir..function; entry = .llir..block
+  do i = 1 to input[0]
+    draft = .llir..builder(contract); at = draft.synthetic('integer boundary')
+    fn = draft.function('boundary',contract.voidtype()); entry = fn.block('entry')
+    type = contract.type('crexx.g.int64')
+    a = entry.constant(type,word(input[i],1),at); b = entry.constant(type,word(input[i],2),at)
+    value = entry.binary(contract.operation('crexx.g.iadd'),a,b,at); call entry.returnvoid(at)
+    graph = draft.finish(); facts = .llirservices..facts(reference graph)
+    result = llirservices..evaluate(reference graph,3,facts)
+    failures = failures + check(result.status() = expected[i],'checked integer boundary ' || i)
+    if i = 5 & result.status() = 'constant' then do
+      codec = .llir..intcodec()
+      failures = failures + check(codec.format(result.at(1)) = '-1','mixed extreme sum')
+    end
+  end
+  draft = .llir..builder(contract); at = draft.synthetic('Classic SAY')
+  fn = draft.function('classic',contract.voidtype()); entry = fn.block('entry')
+  literal = entry.constantbytes(contract.type('crexx.c.value'),'686900FF'x as .binary,at)
+  statement = entry.operation(contract.operation('crexx.c.say'),at)
+  call statement.input('value',literal); op = statement.finish(); call entry.returnvoid(at)
+  graph = draft.finish(); facts = .llirservices..facts(reference graph)
+  result = llirservices..evaluate(reference graph,2,facts)
+  failures = failures + check(graph.error() = '' & result.status() = 'keep','Classic SAY preserves arbitrary literal bytes and output effect')
+  saved = graph.binary(); decoded = llir..loadbinary(contract,saved)
+  failures = failures + check(decoded.error() = '' & bin2x(decoded.binary()) = bin2x(saved),'Classic exact bytes survive image')
+  textcodec = .llcrexxir..textcodec()
+  failures = failures + check(textcodec.check(x2bin('FF')) <> '', 'invalid UTF-8 text rejected')
+  failures = failures + check(textcodec.check(x2bin('C080')) <> '', 'overlong UTF-8 text rejected')
+  failures = failures + check(textcodec.check(x2bin('CEB100')) = '', 'Unicode text with embedded NUL accepted')
+  say 'failures=' || failures
+  return failures
+
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL: ' || description
+  return 1

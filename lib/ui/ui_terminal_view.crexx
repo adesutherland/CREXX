@@ -31,10 +31,17 @@ uiterminal_canvas: class
   _width = .int[]
   _ids = .string[]
   _count = .int
+  _choice_nodes = .string[]
+  _choice_items = .string[]
+  _choice_x = .int[]
+  _choice_y = .int[]
+  _choice_width = .int[]
+  _choice_count = .int
   *: factory
     _columns = 80
     _rows = 24
     _count = 0
+    _choice_count = 0
     return
   /** @param columns visible cell width @param rows visible cell height */
   resize: method = .void
@@ -53,6 +60,7 @@ uiterminal_canvas: class
     esc = '1B'x
     result = esc || "[?25l" || esc || "[0m" || esc || "[2J" || esc || "[H"
     _count = 0
+    _choice_count = 0
     title = terminal_text(view.title())
     result = result || esc || "[1;36m" || left(title, max(0, _columns - 1)) || esc || "[0m"
     if small() then do
@@ -72,7 +80,7 @@ uiterminal_canvas: class
     end
     do i = 1 to view.count()
       column = view.node_column(i) + 1
-      text = terminal_text(view.node_text(i))
+      text = control_text(view, i)
       size = min(max(8, (_columns - 4) <idiv> max_column - 1), length(text) + 4)
       widths[column] = max(widths[column], size)
     end
@@ -85,10 +93,11 @@ uiterminal_canvas: class
       y = view.node_row(i) + 2
       if y >= _rows - 1 | x >= _columns - 1 then iterate
       kind = view.node_kind(i)
-      text = terminal_text(view.node_text(i))
+      text = control_text(view, i)
       if kind = "line" then text = copies("-", _columns - x - 1)
       if kind = "button" then text = "[ " || text || " ]"
       if kind = "input" then text = "> " || text
+      if kind = "integer" then text = "[ " || text || " ]"
       available = _columns - x - 1
       /* A wide label must not paint over a sibling or leave a stale hit area. */
       do sibling = 1 to view.count()
@@ -98,12 +107,28 @@ uiterminal_canvas: class
       result = result || esc || "[" || (y + 1) || ";" || (x + 1) || "H"
       if view.node_id(i) = focus then result = result || esc || "[7m"
       result = result || text || esc || "[0m"
-      if kind = "button" | kind = "input" then do
+      if kind = "button" | kind = "input" | kind = "integer" | kind = "choice" then do
         _count = _count + 1
         _ids[_count] = view.node_id(i)
         _x[_count] = x
         _y[_count] = y
         _width[_count] = length(text)
+      end
+      if kind = "choice" then do
+        offset = 0
+        do option = 1 to view.node_option_count(i)
+          segment_width = 4 + length(terminal_text(view.node_option_text(i, option)))
+          visible_width = min(segment_width, length(text) - offset)
+          if visible_width >= 4 then do
+            _choice_count = _choice_count + 1
+            _choice_nodes[_choice_count] = view.node_id(i)
+            _choice_items[_choice_count] = view.node_option_id(i, option)
+            _choice_x[_choice_count] = x + offset
+            _choice_y[_choice_count] = y
+            _choice_width[_choice_count] = visible_width
+          end
+          offset = offset + segment_width + 1
+        end
       end
     end
     result = result || esc || "[" || _rows || ";1H" || left("Tab: focus  Enter: activate  Esc: cancel  Ctrl-C: close", _columns - 1)
@@ -117,6 +142,28 @@ uiterminal_canvas: class
       if y = _y[i] & x >= _x[i] & x < _x[i] + _width[i] then return _ids[i]
     end
     return ""
+  /** @param x cell column @param y cell row
+   * @return stable choice item ID only for the actual visible option geometry */
+  choice_item: method = .string
+    arg x = .int, y = .int
+    do i = 1 to _choice_count
+      if y = _choice_y[i] & x >= _choice_x[i] & x < _choice_x[i] + _choice_width[i] then return _choice_items[i]
+    end
+    return ""
+
+  /** @param view shared logical view @param index node index
+   * @return terminal-safe projection of an ordinary node or exclusive choice */
+  control_text: method = .string
+    arg view = .uiview, index = .int
+    if view.node_kind(index) \= "choice" then return terminal_text(view.node_text(index))
+    result = ""
+    do option = 1 to view.node_option_count(index)
+      if option > 1 then result = result || " "
+      marker = "( ) "
+      if view.node_option_id(index, option) = view.node_value(index) then marker = "(*) "
+      result = result || marker || terminal_text(view.node_option_text(index, option))
+    end
+    return result
   /** @param current stable focused ID @param delta +/-1 @return next drawn control */
   next_focus: method = .string
     arg current = .string, delta = 1

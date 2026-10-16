@@ -1,0 +1,817 @@
+.globals=0
+main() .locals=2
+.srcstep 0 0 6 "" 0 0 0 ""
+load r1,0
+call r0,llf1(),r1
+ret r0
+llf1() .locals=244
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+llb1:
+.srcstep 2 0 98 "cleanup.crexx" 1 1 15 "options levelg"
+load r2,0
+copy r1,r2
+.srcstep 13 0 17 "cleanup.crexx" 3 5 6 "x = 1; say x"
+load r3,1
+.srcstep 5 0 17 "cleanup.crexx" 3 1 6 "x = 1; say x"
+copy r1,r3
+.srcstep 22 0 17 "cleanup.crexx" 3 12 13 "x = 1; say x"
+copy r4,r1
+.srcstep 14 0 17 "cleanup.crexx" 3 8 13 "x = 1; say x"
+copy r5,r4
+itos r5
+say r5
+.srcstep 31 0 17 "cleanup.crexx" 4 5 6 "x = 2; say x"
+load r6,2
+.srcstep 23 0 17 "cleanup.crexx" 4 1 6 "x = 2; say x"
+copy r1,r6
+.srcstep 40 0 17 "cleanup.crexx" 4 12 13 "x = 2; say x"
+copy r7,r1
+.srcstep 32 0 17 "cleanup.crexx" 4 8 13 "x = 2; say x"
+copy r8,r7
+itos r8
+say r8
+.srcstep 49 0 17 "cleanup.crexx" 5 5 6 "x = 3; say x"
+load r9,3
+.srcstep 41 0 17 "cleanup.crexx" 5 1 6 "x = 3; say x"
+copy r1,r9
+.srcstep 58 0 17 "cleanup.crexx" 5 12 13 "x = 3; say x"
+copy r10,r1
+.srcstep 50 0 17 "cleanup.crexx" 5 8 13 "x = 3; say x"
+copy r11,r10
+itos r11
+say r11
+.srcstep 67 0 17 "cleanup.crexx" 6 5 6 "x = 4; say x"
+load r12,4
+.srcstep 59 0 17 "cleanup.crexx" 6 1 6 "x = 4; say x"
+copy r1,r12
+.srcstep 76 0 17 "cleanup.crexx" 6 12 13 "x = 4; say x"
+copy r13,r1
+.srcstep 68 0 17 "cleanup.crexx" 6 8 13 "x = 4; say x"
+copy r14,r13
+itos r14
+say r14
+.srcstep 85 0 17 "cleanup.crexx" 7 5 6 "x = 5; say x"
+load r15,5
+.srcstep 77 0 17 "cleanup.crexx" 7 1 6 "x = 5; say x"
+copy r1,r15
+.srcstep 94 0 17 "cleanup.crexx" 7 12 13 "x = 5; say x"
+copy r16,r1
+.srcstep 86 0 17 "cleanup.crexx" 7 8 13 "x = 5; say x"
+copy r17,r16
+itos r17
+say r17
+.srcstep 103 0 17 "cleanup.crexx" 8 5 6 "x = 6; say x"
+load r18,6
+.srcstep 95 0 17 "cleanup.crexx" 8 1 6 "x = 6; say x"
+copy r1,r18
+.srcstep 112 0 17 "cleanup.crexx" 8 12 13 "x = 6; say x"
+copy r19,r1
+.srcstep 104 0 17 "cleanup.crexx" 8 8 13 "x = 6; say x"
+copy r20,r19
+itos r20
+say r20
+.srcstep 121 0 17 "cleanup.crexx" 9 5 6 "x = 7; say x"
+load r21,7
+.srcstep 113 0 17 "cleanup.crexx" 9 1 6 "x = 7; say x"
+copy r1,r21
+.srcstep 130 0 17 "cleanup.crexx" 9 12 13 "x = 7; say x"
+copy r22,r1
+.srcstep 122 0 17 "cleanup.crexx" 9 8 13 "x = 7; say x"
+copy r23,r22
+itos r23
+say r23
+.srcstep 139 0 17 "cleanup.crexx" 10 5 6 "x = 8; say x"
+load r24,8
+.srcstep 131 0 17 "cleanup.crexx" 10 1 6 "x = 8; say x"
+copy r1,r24
+.srcstep 148 0 17 "cleanup.crexx" 10 12 13 "x = 8; say x"
+copy r25,r1
+.srcstep 140 0 17 "cleanup.crexx" 10 8 13 "x = 8; say x"
+copy r26,r25
+itos r26
+say r26
+.srcstep 157 0 17 "cleanup.crexx" 11 5 6 "x = 9; say x"
+load r27,9
+.srcstep 149 0 17 "cleanup.crexx" 11 1 6 "x = 9; say x"
+copy r1,r27
+.srcstep 166 0 17 "cleanup.crexx" 11 12 13 "x = 9; say x"
+copy r28,r1
+.srcstep 158 0 17 "cleanup.crexx" 11 8 13 "x = 9; say x"
+copy r29,r28
+itos r29
+say r29
+.srcstep 175 0 17 "cleanup.crexx" 12 5 7 "x = 10; say x"
+load r30,10
+.srcstep 167 0 17 "cleanup.crexx" 12 1 7 "x = 10; say x"
+copy r1,r30
+.srcstep 184 0 17 "cleanup.crexx" 12 13 14 "x = 10; say x"
+copy r31,r1
+.srcstep 176 0 17 "cleanup.crexx" 12 9 14 "x = 10; say x"
+copy r32,r31
+itos r32
+say r32
+.srcstep 193 0 17 "cleanup.crexx" 13 5 7 "x = 11; say x"
+load r33,11
+.srcstep 185 0 17 "cleanup.crexx" 13 1 7 "x = 11; say x"
+copy r1,r33
+.srcstep 202 0 17 "cleanup.crexx" 13 13 14 "x = 11; say x"
+copy r34,r1
+.srcstep 194 0 17 "cleanup.crexx" 13 9 14 "x = 11; say x"
+copy r35,r34
+itos r35
+say r35
+.srcstep 211 0 17 "cleanup.crexx" 14 5 7 "x = 12; say x"
+load r36,12
+.srcstep 203 0 17 "cleanup.crexx" 14 1 7 "x = 12; say x"
+copy r1,r36
+.srcstep 220 0 17 "cleanup.crexx" 14 13 14 "x = 12; say x"
+copy r37,r1
+.srcstep 212 0 17 "cleanup.crexx" 14 9 14 "x = 12; say x"
+copy r38,r37
+itos r38
+say r38
+.srcstep 229 0 17 "cleanup.crexx" 15 5 7 "x = 13; say x"
+load r39,13
+.srcstep 221 0 17 "cleanup.crexx" 15 1 7 "x = 13; say x"
+copy r1,r39
+.srcstep 238 0 17 "cleanup.crexx" 15 13 14 "x = 13; say x"
+copy r40,r1
+.srcstep 230 0 17 "cleanup.crexx" 15 9 14 "x = 13; say x"
+copy r41,r40
+itos r41
+say r41
+.srcstep 247 0 17 "cleanup.crexx" 16 5 7 "x = 14; say x"
+load r42,14
+.srcstep 239 0 17 "cleanup.crexx" 16 1 7 "x = 14; say x"
+copy r1,r42
+.srcstep 256 0 17 "cleanup.crexx" 16 13 14 "x = 14; say x"
+copy r43,r1
+.srcstep 248 0 17 "cleanup.crexx" 16 9 14 "x = 14; say x"
+copy r44,r43
+itos r44
+say r44
+.srcstep 265 0 17 "cleanup.crexx" 17 5 7 "x = 15; say x"
+load r45,15
+.srcstep 257 0 17 "cleanup.crexx" 17 1 7 "x = 15; say x"
+copy r1,r45
+.srcstep 274 0 17 "cleanup.crexx" 17 13 14 "x = 15; say x"
+copy r46,r1
+.srcstep 266 0 17 "cleanup.crexx" 17 9 14 "x = 15; say x"
+copy r47,r46
+itos r47
+say r47
+.srcstep 283 0 17 "cleanup.crexx" 18 5 7 "x = 16; say x"
+load r48,16
+.srcstep 275 0 17 "cleanup.crexx" 18 1 7 "x = 16; say x"
+copy r1,r48
+.srcstep 292 0 17 "cleanup.crexx" 18 13 14 "x = 16; say x"
+copy r49,r1
+.srcstep 284 0 17 "cleanup.crexx" 18 9 14 "x = 16; say x"
+copy r50,r49
+itos r50
+say r50
+.srcstep 301 0 17 "cleanup.crexx" 19 5 7 "x = 17; say x"
+load r51,17
+.srcstep 293 0 17 "cleanup.crexx" 19 1 7 "x = 17; say x"
+copy r1,r51
+.srcstep 310 0 17 "cleanup.crexx" 19 13 14 "x = 17; say x"
+copy r52,r1
+.srcstep 302 0 17 "cleanup.crexx" 19 9 14 "x = 17; say x"
+copy r53,r52
+itos r53
+say r53
+.srcstep 319 0 17 "cleanup.crexx" 20 5 7 "x = 18; say x"
+load r54,18
+.srcstep 311 0 17 "cleanup.crexx" 20 1 7 "x = 18; say x"
+copy r1,r54
+.srcstep 328 0 17 "cleanup.crexx" 20 13 14 "x = 18; say x"
+copy r55,r1
+.srcstep 320 0 17 "cleanup.crexx" 20 9 14 "x = 18; say x"
+copy r56,r55
+itos r56
+say r56
+.srcstep 337 0 17 "cleanup.crexx" 21 5 7 "x = 19; say x"
+load r57,19
+.srcstep 329 0 17 "cleanup.crexx" 21 1 7 "x = 19; say x"
+copy r1,r57
+.srcstep 346 0 17 "cleanup.crexx" 21 13 14 "x = 19; say x"
+copy r58,r1
+.srcstep 338 0 17 "cleanup.crexx" 21 9 14 "x = 19; say x"
+copy r59,r58
+itos r59
+say r59
+.srcstep 355 0 17 "cleanup.crexx" 22 5 7 "x = 20; say x"
+load r60,20
+.srcstep 347 0 17 "cleanup.crexx" 22 1 7 "x = 20; say x"
+copy r1,r60
+.srcstep 364 0 17 "cleanup.crexx" 22 13 14 "x = 20; say x"
+copy r61,r1
+.srcstep 356 0 17 "cleanup.crexx" 22 9 14 "x = 20; say x"
+copy r62,r61
+itos r62
+say r62
+.srcstep 373 0 17 "cleanup.crexx" 23 5 7 "x = 21; say x"
+load r63,21
+.srcstep 365 0 17 "cleanup.crexx" 23 1 7 "x = 21; say x"
+copy r1,r63
+.srcstep 382 0 17 "cleanup.crexx" 23 13 14 "x = 21; say x"
+copy r64,r1
+.srcstep 374 0 17 "cleanup.crexx" 23 9 14 "x = 21; say x"
+copy r65,r64
+itos r65
+say r65
+.srcstep 391 0 17 "cleanup.crexx" 24 5 7 "x = 22; say x"
+load r66,22
+.srcstep 383 0 17 "cleanup.crexx" 24 1 7 "x = 22; say x"
+copy r1,r66
+.srcstep 400 0 17 "cleanup.crexx" 24 13 14 "x = 22; say x"
+copy r67,r1
+.srcstep 392 0 17 "cleanup.crexx" 24 9 14 "x = 22; say x"
+copy r68,r67
+itos r68
+say r68
+.srcstep 409 0 17 "cleanup.crexx" 25 5 7 "x = 23; say x"
+load r69,23
+.srcstep 401 0 17 "cleanup.crexx" 25 1 7 "x = 23; say x"
+copy r1,r69
+.srcstep 418 0 17 "cleanup.crexx" 25 13 14 "x = 23; say x"
+copy r70,r1
+.srcstep 410 0 17 "cleanup.crexx" 25 9 14 "x = 23; say x"
+copy r71,r70
+itos r71
+say r71
+.srcstep 427 0 17 "cleanup.crexx" 26 5 7 "x = 24; say x"
+load r72,24
+.srcstep 419 0 17 "cleanup.crexx" 26 1 7 "x = 24; say x"
+copy r1,r72
+.srcstep 436 0 17 "cleanup.crexx" 26 13 14 "x = 24; say x"
+copy r73,r1
+.srcstep 428 0 17 "cleanup.crexx" 26 9 14 "x = 24; say x"
+copy r74,r73
+itos r74
+say r74
+.srcstep 445 0 17 "cleanup.crexx" 27 5 7 "x = 25; say x"
+load r75,25
+.srcstep 437 0 17 "cleanup.crexx" 27 1 7 "x = 25; say x"
+copy r1,r75
+.srcstep 454 0 17 "cleanup.crexx" 27 13 14 "x = 25; say x"
+copy r76,r1
+.srcstep 446 0 17 "cleanup.crexx" 27 9 14 "x = 25; say x"
+copy r77,r76
+itos r77
+say r77
+.srcstep 463 0 17 "cleanup.crexx" 28 5 7 "x = 26; say x"
+load r78,26
+.srcstep 455 0 17 "cleanup.crexx" 28 1 7 "x = 26; say x"
+copy r1,r78
+.srcstep 472 0 17 "cleanup.crexx" 28 13 14 "x = 26; say x"
+copy r79,r1
+.srcstep 464 0 17 "cleanup.crexx" 28 9 14 "x = 26; say x"
+copy r80,r79
+itos r80
+say r80
+.srcstep 481 0 17 "cleanup.crexx" 29 5 7 "x = 27; say x"
+load r81,27
+.srcstep 473 0 17 "cleanup.crexx" 29 1 7 "x = 27; say x"
+copy r1,r81
+.srcstep 490 0 17 "cleanup.crexx" 29 13 14 "x = 27; say x"
+copy r82,r1
+.srcstep 482 0 17 "cleanup.crexx" 29 9 14 "x = 27; say x"
+copy r83,r82
+itos r83
+say r83
+.srcstep 499 0 17 "cleanup.crexx" 30 5 7 "x = 28; say x"
+load r84,28
+.srcstep 491 0 17 "cleanup.crexx" 30 1 7 "x = 28; say x"
+copy r1,r84
+.srcstep 508 0 17 "cleanup.crexx" 30 13 14 "x = 28; say x"
+copy r85,r1
+.srcstep 500 0 17 "cleanup.crexx" 30 9 14 "x = 28; say x"
+copy r86,r85
+itos r86
+say r86
+.srcstep 517 0 17 "cleanup.crexx" 31 5 7 "x = 29; say x"
+load r87,29
+.srcstep 509 0 17 "cleanup.crexx" 31 1 7 "x = 29; say x"
+copy r1,r87
+.srcstep 526 0 17 "cleanup.crexx" 31 13 14 "x = 29; say x"
+copy r88,r1
+.srcstep 518 0 17 "cleanup.crexx" 31 9 14 "x = 29; say x"
+copy r89,r88
+itos r89
+say r89
+.srcstep 535 0 17 "cleanup.crexx" 32 5 7 "x = 30; say x"
+load r90,30
+.srcstep 527 0 17 "cleanup.crexx" 32 1 7 "x = 30; say x"
+copy r1,r90
+.srcstep 544 0 17 "cleanup.crexx" 32 13 14 "x = 30; say x"
+copy r91,r1
+.srcstep 536 0 17 "cleanup.crexx" 32 9 14 "x = 30; say x"
+copy r92,r91
+itos r92
+say r92
+.srcstep 553 0 17 "cleanup.crexx" 33 5 7 "x = 31; say x"
+load r93,31
+.srcstep 545 0 17 "cleanup.crexx" 33 1 7 "x = 31; say x"
+copy r1,r93
+.srcstep 562 0 17 "cleanup.crexx" 33 13 14 "x = 31; say x"
+copy r94,r1
+.srcstep 554 0 17 "cleanup.crexx" 33 9 14 "x = 31; say x"
+copy r95,r94
+itos r95
+say r95
+.srcstep 571 0 17 "cleanup.crexx" 34 5 7 "x = 32; say x"
+load r96,32
+.srcstep 563 0 17 "cleanup.crexx" 34 1 7 "x = 32; say x"
+copy r1,r96
+.srcstep 580 0 17 "cleanup.crexx" 34 13 14 "x = 32; say x"
+copy r97,r1
+.srcstep 572 0 17 "cleanup.crexx" 34 9 14 "x = 32; say x"
+copy r98,r97
+itos r98
+say r98
+.srcstep 589 0 17 "cleanup.crexx" 35 5 7 "x = 33; say x"
+load r99,33
+.srcstep 581 0 17 "cleanup.crexx" 35 1 7 "x = 33; say x"
+copy r1,r99
+.srcstep 598 0 17 "cleanup.crexx" 35 13 14 "x = 33; say x"
+copy r100,r1
+.srcstep 590 0 17 "cleanup.crexx" 35 9 14 "x = 33; say x"
+copy r101,r100
+itos r101
+say r101
+.srcstep 607 0 17 "cleanup.crexx" 36 5 7 "x = 34; say x"
+load r102,34
+.srcstep 599 0 17 "cleanup.crexx" 36 1 7 "x = 34; say x"
+copy r1,r102
+.srcstep 616 0 17 "cleanup.crexx" 36 13 14 "x = 34; say x"
+copy r103,r1
+.srcstep 608 0 17 "cleanup.crexx" 36 9 14 "x = 34; say x"
+copy r104,r103
+itos r104
+say r104
+.srcstep 625 0 17 "cleanup.crexx" 37 5 7 "x = 35; say x"
+load r105,35
+.srcstep 617 0 17 "cleanup.crexx" 37 1 7 "x = 35; say x"
+copy r1,r105
+.srcstep 634 0 17 "cleanup.crexx" 37 13 14 "x = 35; say x"
+copy r106,r1
+.srcstep 626 0 17 "cleanup.crexx" 37 9 14 "x = 35; say x"
+copy r107,r106
+itos r107
+say r107
+.srcstep 643 0 17 "cleanup.crexx" 38 5 7 "x = 36; say x"
+load r108,36
+.srcstep 635 0 17 "cleanup.crexx" 38 1 7 "x = 36; say x"
+copy r1,r108
+.srcstep 652 0 17 "cleanup.crexx" 38 13 14 "x = 36; say x"
+copy r109,r1
+.srcstep 644 0 17 "cleanup.crexx" 38 9 14 "x = 36; say x"
+copy r110,r109
+itos r110
+say r110
+.srcstep 661 0 17 "cleanup.crexx" 39 5 7 "x = 37; say x"
+load r111,37
+.srcstep 653 0 17 "cleanup.crexx" 39 1 7 "x = 37; say x"
+copy r1,r111
+.srcstep 670 0 17 "cleanup.crexx" 39 13 14 "x = 37; say x"
+copy r112,r1
+.srcstep 662 0 17 "cleanup.crexx" 39 9 14 "x = 37; say x"
+copy r113,r112
+itos r113
+say r113
+.srcstep 679 0 17 "cleanup.crexx" 40 5 7 "x = 38; say x"
+load r114,38
+.srcstep 671 0 17 "cleanup.crexx" 40 1 7 "x = 38; say x"
+copy r1,r114
+.srcstep 688 0 17 "cleanup.crexx" 40 13 14 "x = 38; say x"
+copy r115,r1
+.srcstep 680 0 17 "cleanup.crexx" 40 9 14 "x = 38; say x"
+copy r116,r115
+itos r116
+say r116
+.srcstep 697 0 17 "cleanup.crexx" 41 5 7 "x = 39; say x"
+load r117,39
+.srcstep 689 0 17 "cleanup.crexx" 41 1 7 "x = 39; say x"
+copy r1,r117
+.srcstep 706 0 17 "cleanup.crexx" 41 13 14 "x = 39; say x"
+copy r118,r1
+.srcstep 698 0 17 "cleanup.crexx" 41 9 14 "x = 39; say x"
+copy r119,r118
+itos r119
+say r119
+.srcstep 715 0 17 "cleanup.crexx" 42 5 7 "x = 40; say x"
+load r120,40
+.srcstep 707 0 17 "cleanup.crexx" 42 1 7 "x = 40; say x"
+copy r1,r120
+.srcstep 724 0 17 "cleanup.crexx" 42 13 14 "x = 40; say x"
+copy r121,r1
+.srcstep 716 0 17 "cleanup.crexx" 42 9 14 "x = 40; say x"
+copy r122,r121
+itos r122
+say r122
+.srcstep 733 0 17 "cleanup.crexx" 43 5 7 "x = 41; say x"
+load r123,41
+.srcstep 725 0 17 "cleanup.crexx" 43 1 7 "x = 41; say x"
+copy r1,r123
+.srcstep 742 0 17 "cleanup.crexx" 43 13 14 "x = 41; say x"
+copy r124,r1
+.srcstep 734 0 17 "cleanup.crexx" 43 9 14 "x = 41; say x"
+copy r125,r124
+itos r125
+say r125
+.srcstep 751 0 17 "cleanup.crexx" 44 5 7 "x = 42; say x"
+load r126,42
+.srcstep 743 0 17 "cleanup.crexx" 44 1 7 "x = 42; say x"
+copy r1,r126
+.srcstep 760 0 17 "cleanup.crexx" 44 13 14 "x = 42; say x"
+copy r127,r1
+.srcstep 752 0 17 "cleanup.crexx" 44 9 14 "x = 42; say x"
+copy r128,r127
+itos r128
+say r128
+.srcstep 769 0 17 "cleanup.crexx" 45 5 7 "x = 43; say x"
+load r129,43
+.srcstep 761 0 17 "cleanup.crexx" 45 1 7 "x = 43; say x"
+copy r1,r129
+.srcstep 778 0 17 "cleanup.crexx" 45 13 14 "x = 43; say x"
+copy r130,r1
+.srcstep 770 0 17 "cleanup.crexx" 45 9 14 "x = 43; say x"
+copy r131,r130
+itos r131
+say r131
+.srcstep 787 0 17 "cleanup.crexx" 46 5 7 "x = 44; say x"
+load r132,44
+.srcstep 779 0 17 "cleanup.crexx" 46 1 7 "x = 44; say x"
+copy r1,r132
+.srcstep 796 0 17 "cleanup.crexx" 46 13 14 "x = 44; say x"
+copy r133,r1
+.srcstep 788 0 17 "cleanup.crexx" 46 9 14 "x = 44; say x"
+copy r134,r133
+itos r134
+say r134
+.srcstep 805 0 17 "cleanup.crexx" 47 5 7 "x = 45; say x"
+load r135,45
+.srcstep 797 0 17 "cleanup.crexx" 47 1 7 "x = 45; say x"
+copy r1,r135
+.srcstep 814 0 17 "cleanup.crexx" 47 13 14 "x = 45; say x"
+copy r136,r1
+.srcstep 806 0 17 "cleanup.crexx" 47 9 14 "x = 45; say x"
+copy r137,r136
+itos r137
+say r137
+.srcstep 823 0 17 "cleanup.crexx" 48 5 7 "x = 46; say x"
+load r138,46
+.srcstep 815 0 17 "cleanup.crexx" 48 1 7 "x = 46; say x"
+copy r1,r138
+.srcstep 832 0 17 "cleanup.crexx" 48 13 14 "x = 46; say x"
+copy r139,r1
+.srcstep 824 0 17 "cleanup.crexx" 48 9 14 "x = 46; say x"
+copy r140,r139
+itos r140
+say r140
+.srcstep 841 0 17 "cleanup.crexx" 49 5 7 "x = 47; say x"
+load r141,47
+.srcstep 833 0 17 "cleanup.crexx" 49 1 7 "x = 47; say x"
+copy r1,r141
+.srcstep 850 0 17 "cleanup.crexx" 49 13 14 "x = 47; say x"
+copy r142,r1
+.srcstep 842 0 17 "cleanup.crexx" 49 9 14 "x = 47; say x"
+copy r143,r142
+itos r143
+say r143
+.srcstep 859 0 17 "cleanup.crexx" 50 5 7 "x = 48; say x"
+load r144,48
+.srcstep 851 0 17 "cleanup.crexx" 50 1 7 "x = 48; say x"
+copy r1,r144
+.srcstep 868 0 17 "cleanup.crexx" 50 13 14 "x = 48; say x"
+copy r145,r1
+.srcstep 860 0 17 "cleanup.crexx" 50 9 14 "x = 48; say x"
+copy r146,r145
+itos r146
+say r146
+.srcstep 877 0 17 "cleanup.crexx" 51 5 7 "x = 49; say x"
+load r147,49
+.srcstep 869 0 17 "cleanup.crexx" 51 1 7 "x = 49; say x"
+copy r1,r147
+.srcstep 886 0 17 "cleanup.crexx" 51 13 14 "x = 49; say x"
+copy r148,r1
+.srcstep 878 0 17 "cleanup.crexx" 51 9 14 "x = 49; say x"
+copy r149,r148
+itos r149
+say r149
+.srcstep 895 0 17 "cleanup.crexx" 52 5 7 "x = 50; say x"
+load r150,50
+.srcstep 887 0 17 "cleanup.crexx" 52 1 7 "x = 50; say x"
+copy r1,r150
+.srcstep 904 0 17 "cleanup.crexx" 52 13 14 "x = 50; say x"
+copy r151,r1
+.srcstep 896 0 17 "cleanup.crexx" 52 9 14 "x = 50; say x"
+copy r152,r151
+itos r152
+say r152
+.srcstep 913 0 17 "cleanup.crexx" 53 5 7 "x = 51; say x"
+load r153,51
+.srcstep 905 0 17 "cleanup.crexx" 53 1 7 "x = 51; say x"
+copy r1,r153
+.srcstep 922 0 17 "cleanup.crexx" 53 13 14 "x = 51; say x"
+copy r154,r1
+.srcstep 914 0 17 "cleanup.crexx" 53 9 14 "x = 51; say x"
+copy r155,r154
+itos r155
+say r155
+.srcstep 931 0 17 "cleanup.crexx" 54 5 7 "x = 52; say x"
+load r156,52
+.srcstep 923 0 17 "cleanup.crexx" 54 1 7 "x = 52; say x"
+copy r1,r156
+.srcstep 940 0 17 "cleanup.crexx" 54 13 14 "x = 52; say x"
+copy r157,r1
+.srcstep 932 0 17 "cleanup.crexx" 54 9 14 "x = 52; say x"
+copy r158,r157
+itos r158
+say r158
+.srcstep 949 0 17 "cleanup.crexx" 55 5 7 "x = 53; say x"
+load r159,53
+.srcstep 941 0 17 "cleanup.crexx" 55 1 7 "x = 53; say x"
+copy r1,r159
+.srcstep 958 0 17 "cleanup.crexx" 55 13 14 "x = 53; say x"
+copy r160,r1
+.srcstep 950 0 17 "cleanup.crexx" 55 9 14 "x = 53; say x"
+copy r161,r160
+itos r161
+say r161
+.srcstep 967 0 17 "cleanup.crexx" 56 5 7 "x = 54; say x"
+load r162,54
+.srcstep 959 0 17 "cleanup.crexx" 56 1 7 "x = 54; say x"
+copy r1,r162
+.srcstep 976 0 17 "cleanup.crexx" 56 13 14 "x = 54; say x"
+copy r163,r1
+.srcstep 968 0 17 "cleanup.crexx" 56 9 14 "x = 54; say x"
+copy r164,r163
+itos r164
+say r164
+.srcstep 985 0 17 "cleanup.crexx" 57 5 7 "x = 55; say x"
+load r165,55
+.srcstep 977 0 17 "cleanup.crexx" 57 1 7 "x = 55; say x"
+copy r1,r165
+.srcstep 994 0 17 "cleanup.crexx" 57 13 14 "x = 55; say x"
+copy r166,r1
+.srcstep 986 0 17 "cleanup.crexx" 57 9 14 "x = 55; say x"
+copy r167,r166
+itos r167
+say r167
+.srcstep 1003 0 17 "cleanup.crexx" 58 5 7 "x = 56; say x"
+load r168,56
+.srcstep 995 0 17 "cleanup.crexx" 58 1 7 "x = 56; say x"
+copy r1,r168
+.srcstep 1012 0 17 "cleanup.crexx" 58 13 14 "x = 56; say x"
+copy r169,r1
+.srcstep 1004 0 17 "cleanup.crexx" 58 9 14 "x = 56; say x"
+copy r170,r169
+itos r170
+say r170
+.srcstep 1021 0 17 "cleanup.crexx" 59 5 7 "x = 57; say x"
+load r171,57
+.srcstep 1013 0 17 "cleanup.crexx" 59 1 7 "x = 57; say x"
+copy r1,r171
+.srcstep 1030 0 17 "cleanup.crexx" 59 13 14 "x = 57; say x"
+copy r172,r1
+.srcstep 1022 0 17 "cleanup.crexx" 59 9 14 "x = 57; say x"
+copy r173,r172
+itos r173
+say r173
+.srcstep 1039 0 17 "cleanup.crexx" 60 5 7 "x = 58; say x"
+load r174,58
+.srcstep 1031 0 17 "cleanup.crexx" 60 1 7 "x = 58; say x"
+copy r1,r174
+.srcstep 1048 0 17 "cleanup.crexx" 60 13 14 "x = 58; say x"
+copy r175,r1
+.srcstep 1040 0 17 "cleanup.crexx" 60 9 14 "x = 58; say x"
+copy r176,r175
+itos r176
+say r176
+.srcstep 1057 0 17 "cleanup.crexx" 61 5 7 "x = 59; say x"
+load r177,59
+.srcstep 1049 0 17 "cleanup.crexx" 61 1 7 "x = 59; say x"
+copy r1,r177
+.srcstep 1066 0 17 "cleanup.crexx" 61 13 14 "x = 59; say x"
+copy r178,r1
+.srcstep 1058 0 17 "cleanup.crexx" 61 9 14 "x = 59; say x"
+copy r179,r178
+itos r179
+say r179
+.srcstep 1075 0 17 "cleanup.crexx" 62 5 7 "x = 60; say x"
+load r180,60
+.srcstep 1067 0 17 "cleanup.crexx" 62 1 7 "x = 60; say x"
+copy r1,r180
+.srcstep 1084 0 17 "cleanup.crexx" 62 13 14 "x = 60; say x"
+copy r181,r1
+.srcstep 1076 0 17 "cleanup.crexx" 62 9 14 "x = 60; say x"
+copy r182,r181
+itos r182
+say r182
+.srcstep 1093 0 17 "cleanup.crexx" 63 5 7 "x = 61; say x"
+load r183,61
+.srcstep 1085 0 17 "cleanup.crexx" 63 1 7 "x = 61; say x"
+copy r1,r183
+.srcstep 1102 0 17 "cleanup.crexx" 63 13 14 "x = 61; say x"
+copy r184,r1
+.srcstep 1094 0 17 "cleanup.crexx" 63 9 14 "x = 61; say x"
+copy r185,r184
+itos r185
+say r185
+.srcstep 1111 0 17 "cleanup.crexx" 64 5 7 "x = 62; say x"
+load r186,62
+.srcstep 1103 0 17 "cleanup.crexx" 64 1 7 "x = 62; say x"
+copy r1,r186
+.srcstep 1120 0 17 "cleanup.crexx" 64 13 14 "x = 62; say x"
+copy r187,r1
+.srcstep 1112 0 17 "cleanup.crexx" 64 9 14 "x = 62; say x"
+copy r188,r187
+itos r188
+say r188
+.srcstep 1129 0 17 "cleanup.crexx" 65 5 7 "x = 63; say x"
+load r189,63
+.srcstep 1121 0 17 "cleanup.crexx" 65 1 7 "x = 63; say x"
+copy r1,r189
+.srcstep 1138 0 17 "cleanup.crexx" 65 13 14 "x = 63; say x"
+copy r190,r1
+.srcstep 1130 0 17 "cleanup.crexx" 65 9 14 "x = 63; say x"
+copy r191,r190
+itos r191
+say r191
+.srcstep 1147 0 17 "cleanup.crexx" 66 5 7 "x = 64; say x"
+load r192,64
+.srcstep 1139 0 17 "cleanup.crexx" 66 1 7 "x = 64; say x"
+copy r1,r192
+.srcstep 1156 0 17 "cleanup.crexx" 66 13 14 "x = 64; say x"
+copy r193,r1
+.srcstep 1148 0 17 "cleanup.crexx" 66 9 14 "x = 64; say x"
+copy r194,r193
+itos r194
+say r194
+.srcstep 1165 0 17 "cleanup.crexx" 67 5 7 "x = 65; say x"
+load r195,65
+.srcstep 1157 0 17 "cleanup.crexx" 67 1 7 "x = 65; say x"
+copy r1,r195
+.srcstep 1174 0 17 "cleanup.crexx" 67 13 14 "x = 65; say x"
+copy r196,r1
+.srcstep 1166 0 17 "cleanup.crexx" 67 9 14 "x = 65; say x"
+copy r197,r196
+itos r197
+say r197
+.srcstep 1183 0 17 "cleanup.crexx" 68 5 7 "x = 66; say x"
+load r198,66
+.srcstep 1175 0 17 "cleanup.crexx" 68 1 7 "x = 66; say x"
+copy r1,r198
+.srcstep 1192 0 17 "cleanup.crexx" 68 13 14 "x = 66; say x"
+copy r199,r1
+.srcstep 1184 0 17 "cleanup.crexx" 68 9 14 "x = 66; say x"
+copy r200,r199
+itos r200
+say r200
+.srcstep 1201 0 17 "cleanup.crexx" 69 5 7 "x = 67; say x"
+load r201,67
+.srcstep 1193 0 17 "cleanup.crexx" 69 1 7 "x = 67; say x"
+copy r1,r201
+.srcstep 1210 0 17 "cleanup.crexx" 69 13 14 "x = 67; say x"
+copy r202,r1
+.srcstep 1202 0 17 "cleanup.crexx" 69 9 14 "x = 67; say x"
+copy r203,r202
+itos r203
+say r203
+.srcstep 1219 0 17 "cleanup.crexx" 70 5 7 "x = 68; say x"
+load r204,68
+.srcstep 1211 0 17 "cleanup.crexx" 70 1 7 "x = 68; say x"
+copy r1,r204
+.srcstep 1228 0 17 "cleanup.crexx" 70 13 14 "x = 68; say x"
+copy r205,r1
+.srcstep 1220 0 17 "cleanup.crexx" 70 9 14 "x = 68; say x"
+copy r206,r205
+itos r206
+say r206
+.srcstep 1237 0 17 "cleanup.crexx" 71 5 7 "x = 69; say x"
+load r207,69
+.srcstep 1229 0 17 "cleanup.crexx" 71 1 7 "x = 69; say x"
+copy r1,r207
+.srcstep 1246 0 17 "cleanup.crexx" 71 13 14 "x = 69; say x"
+copy r208,r1
+.srcstep 1238 0 17 "cleanup.crexx" 71 9 14 "x = 69; say x"
+copy r209,r208
+itos r209
+say r209
+.srcstep 1255 0 17 "cleanup.crexx" 72 5 7 "x = 70; say x"
+load r210,70
+.srcstep 1247 0 17 "cleanup.crexx" 72 1 7 "x = 70; say x"
+copy r1,r210
+.srcstep 1264 0 17 "cleanup.crexx" 72 13 14 "x = 70; say x"
+copy r211,r1
+.srcstep 1256 0 17 "cleanup.crexx" 72 9 14 "x = 70; say x"
+copy r212,r211
+itos r212
+say r212
+.srcstep 1273 0 17 "cleanup.crexx" 73 5 7 "x = 71; say x"
+load r213,71
+.srcstep 1265 0 17 "cleanup.crexx" 73 1 7 "x = 71; say x"
+copy r1,r213
+.srcstep 1282 0 17 "cleanup.crexx" 73 13 14 "x = 71; say x"
+copy r214,r1
+.srcstep 1274 0 17 "cleanup.crexx" 73 9 14 "x = 71; say x"
+copy r215,r214
+itos r215
+say r215
+.srcstep 1291 0 17 "cleanup.crexx" 74 5 7 "x = 72; say x"
+load r216,72
+.srcstep 1283 0 17 "cleanup.crexx" 74 1 7 "x = 72; say x"
+copy r1,r216
+.srcstep 1300 0 17 "cleanup.crexx" 74 13 14 "x = 72; say x"
+copy r217,r1
+.srcstep 1292 0 17 "cleanup.crexx" 74 9 14 "x = 72; say x"
+copy r218,r217
+itos r218
+say r218
+.srcstep 1309 0 17 "cleanup.crexx" 75 5 7 "x = 73; say x"
+load r219,73
+.srcstep 1301 0 17 "cleanup.crexx" 75 1 7 "x = 73; say x"
+copy r1,r219
+.srcstep 1318 0 17 "cleanup.crexx" 75 13 14 "x = 73; say x"
+copy r220,r1
+.srcstep 1310 0 17 "cleanup.crexx" 75 9 14 "x = 73; say x"
+copy r221,r220
+itos r221
+say r221
+.srcstep 1327 0 17 "cleanup.crexx" 76 5 7 "x = 74; say x"
+load r222,74
+.srcstep 1319 0 17 "cleanup.crexx" 76 1 7 "x = 74; say x"
+copy r1,r222
+.srcstep 1336 0 17 "cleanup.crexx" 76 13 14 "x = 74; say x"
+copy r223,r1
+.srcstep 1328 0 17 "cleanup.crexx" 76 9 14 "x = 74; say x"
+copy r224,r223
+itos r224
+say r224
+.srcstep 1345 0 17 "cleanup.crexx" 77 5 7 "x = 75; say x"
+load r225,75
+.srcstep 1337 0 17 "cleanup.crexx" 77 1 7 "x = 75; say x"
+copy r1,r225
+.srcstep 1354 0 17 "cleanup.crexx" 77 13 14 "x = 75; say x"
+copy r226,r1
+.srcstep 1346 0 17 "cleanup.crexx" 77 9 14 "x = 75; say x"
+copy r227,r226
+itos r227
+say r227
+.srcstep 1363 0 17 "cleanup.crexx" 78 5 7 "x = 76; say x"
+load r228,76
+.srcstep 1355 0 17 "cleanup.crexx" 78 1 7 "x = 76; say x"
+copy r1,r228
+.srcstep 1372 0 17 "cleanup.crexx" 78 13 14 "x = 76; say x"
+copy r229,r1
+.srcstep 1364 0 17 "cleanup.crexx" 78 9 14 "x = 76; say x"
+copy r230,r229
+itos r230
+say r230
+.srcstep 1381 0 17 "cleanup.crexx" 79 5 7 "x = 77; say x"
+load r231,77
+.srcstep 1373 0 17 "cleanup.crexx" 79 1 7 "x = 77; say x"
+copy r1,r231
+.srcstep 1390 0 17 "cleanup.crexx" 79 13 14 "x = 77; say x"
+copy r232,r1
+.srcstep 1382 0 17 "cleanup.crexx" 79 9 14 "x = 77; say x"
+copy r233,r232
+itos r233
+say r233
+.srcstep 1399 0 17 "cleanup.crexx" 80 5 7 "x = 78; say x"
+load r234,78
+.srcstep 1391 0 17 "cleanup.crexx" 80 1 7 "x = 78; say x"
+copy r1,r234
+.srcstep 1408 0 17 "cleanup.crexx" 80 13 14 "x = 78; say x"
+copy r235,r1
+.srcstep 1400 0 17 "cleanup.crexx" 80 9 14 "x = 78; say x"
+copy r236,r235
+itos r236
+say r236
+.srcstep 1417 0 17 "cleanup.crexx" 81 5 7 "x = 79; say x"
+load r237,79
+.srcstep 1409 0 17 "cleanup.crexx" 81 1 7 "x = 79; say x"
+copy r1,r237
+.srcstep 1426 0 17 "cleanup.crexx" 81 13 14 "x = 79; say x"
+copy r238,r1
+.srcstep 1418 0 17 "cleanup.crexx" 81 9 14 "x = 79; say x"
+copy r239,r238
+itos r239
+say r239
+.srcstep 1435 0 17 "cleanup.crexx" 82 5 7 "x = 80; say x"
+load r240,80
+.srcstep 1427 0 17 "cleanup.crexx" 82 1 7 "x = 80; say x"
+copy r1,r240
+.srcstep 1444 0 17 "cleanup.crexx" 82 13 14 "x = 80; say x"
+copy r241,r1
+.srcstep 1436 0 17 "cleanup.crexx" 82 9 14 "x = 80; say x"
+copy r242,r241
+itos r242
+say r242
+.srcstep 2 0 98 "cleanup.crexx" 1 1 15 "options levelg"
+load r243,0
+ret r243

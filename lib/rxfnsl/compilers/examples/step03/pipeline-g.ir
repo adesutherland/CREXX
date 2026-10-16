@@ -1,0 +1,80 @@
+function $MAIN -> crexx.g.int64
+  entry.1:
+    %1 = core.constant 0 : crexx.g.int64 @origin:1
+    core.store %1 slot:TOTAL @origin:1
+    %2 = core.constant 2 : crexx.g.int64 @origin:13
+    core.store %2 slot:$tmp.1 @origin:10
+    %3 = core.constant 3 : crexx.g.int64 @origin:16
+    %4 = core.load slot:$tmp.1 @origin:10
+    %5 = crexx.g.int64.add %4 %3 @origin:10
+    core.store %5 slot:TOTAL @origin:5
+    %6 = core.load slot:TOTAL @origin:25
+    core.store %6 slot:$tmp.2 @origin:20
+    %7 = core.constant 4 : crexx.g.int64 @origin:30
+    %8 = core.load slot:$tmp.2 @origin:20
+    %9 = crexx.g.int64.gt %8 %7 @origin:20
+    %10 = crexx.g.truth %9 @origin:17
+    core.branch %10 -> if.yes.2 -> if.no.3 @origin:17
+  if.yes.2:
+    %11 = core.constant  : crexx.g.text @origin:31
+    %12 = core.load slot:TOTAL @origin:48
+    core.store %12 slot:$tmp.3 @origin:40
+    %13 = core.load slot:$tmp.3 @origin:40
+    %14 = crexx.calls.local.twice %13 target="TWICE" @origin:40
+    %15 = crexx.g.convert.int64.text %14 @origin:31
+    crexx.g.say %15 @origin:31
+    core.jump -> if.join.4 @origin:17
+  if.no.3:
+    %16 = core.constant  : crexx.g.text @origin:50
+    %17 = core.constant 0 : crexx.g.int64 @origin:58
+    %18 = crexx.g.convert.int64.text %17 @origin:50
+    crexx.g.say %18 @origin:50
+    core.jump -> if.join.4 @origin:17
+  if.join.4:
+    core.jump -> while.test.5 @origin:59
+  while.test.5:
+    %19 = core.load slot:TOTAL @origin:67
+    core.store %19 slot:$tmp.4 @origin:62
+    %20 = core.constant 0 : crexx.g.int64 @origin:72
+    %21 = core.load slot:$tmp.4 @origin:62
+    %22 = crexx.g.int64.gt %21 %20 @origin:62
+    %23 = crexx.g.truth %22 @origin:59
+    core.branch %23 -> while.body.6 -> while.after.7 @origin:59
+  while.body.6:
+    %24 = core.load slot:TOTAL @origin:82
+    core.store %24 slot:$tmp.5 @origin:79
+    %25 = core.constant 1 : crexx.g.int64 @origin:85
+    %26 = core.load slot:$tmp.5 @origin:79
+    %27 = crexx.g.int64.sub %26 %25 @origin:79
+    core.store %27 slot:TOTAL @origin:74
+    core.jump -> while.test.5 @origin:59
+  while.after.7:
+    %28 = core.constant  : crexx.g.text @origin:86
+    %29 = core.load slot:TOTAL @origin:94
+    %30 = crexx.g.convert.int64.text %29 @origin:86
+    crexx.g.say %30 @origin:86
+    %31 = core.constant  : crexx.g.text @origin:95
+    %32 = core.constant cat : crexx.g.text @origin:112
+    core.store %32 slot:$tmp.6 @origin:104
+    %33 = core.load slot:$tmp.6 @origin:104
+    %34 = crexx.calls.rxfnsb.length %33 target="rxfnsb.length" @origin:104
+    %35 = crexx.g.convert.int64.text %34 @origin:95
+    crexx.g.say %35 @origin:95
+    %36 = core.constant 0 : crexx.g.int64 @origin:114
+    %37 = core.constant 0 : crexx.g.int64 @origin:122
+    crexx.g.exit %37 @origin:114
+    %38 = core.constant 0 : crexx.g.int64 @origin:114
+    core.return %38 @origin:114
+function TWICE -> crexx.g.int64
+  entry.1:
+    %39 = core.constant 0 : crexx.g.int64 @origin:123
+    core.store %39 slot:VALUE @origin:123
+    %40 = core.argument argument:1 @origin:123
+    core.store %40 slot:VALUE @origin:123
+    %41 = core.load slot:VALUE @origin:133
+    core.store %41 slot:$tmp.1 @origin:131
+    %42 = core.constant 2 : crexx.g.int64 @origin:135
+    %43 = core.load slot:$tmp.1 @origin:131
+    %44 = crexx.g.int64.mul %43 %42 @origin:131
+    core.return %44 @origin:125
+

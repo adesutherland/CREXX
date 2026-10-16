@@ -1,0 +1,3 @@
+options levelg
+say 1
+say 1 / 0

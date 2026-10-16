@@ -1,0 +1,17 @@
+options binary
+import javax.swing.SwingUtilities
+
+class LottoGuiTests
+  method main(args=String[]) static
+    SwingUtilities.invokeAndWait(LottoGuiTestRunner())
+    System.out.println('PASS: NetRexx Swing controls, generation, validation, save, recovery, Quit')
+
+class LottoGuiTestRunner private implements Runnable
+  method run
+    window=LottoWindow()
+    do
+      window.setVisible(1)
+      window.exerciseControls()
+    finally
+      window.dispose()
+    end

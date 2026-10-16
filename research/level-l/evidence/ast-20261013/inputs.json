@@ -1,0 +1,150 @@
+{
+  "recorded_utc": "2026-10-13T17:46:49.120295+00:00",
+  "checkout": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage",
+  "branch": "develop",
+  "base_head": "ec481f8e64a53abc184857a66c61b8b0e17ff264",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "qualification": "Local macOS ARM64 Debug; publication to develop authorized; hosted CI monitored separately; no sanitizer or other-platform qualification claimed",
+  "changed_source_sha256": {
+    "lib/rxfnsl/doc/user-guide.md": "8f9fff19fb17c52de4978dd6cad4212c7d733fe48be0fef6711528e4e1281138",
+    "lib/rxfnsl/examples/calculator/calculator.crexx": "ee681cd317a40a105c4de46e161d15458f6ee7c7df81abe8769803cef69fe7f8",
+    "lib/rxfnsl/examples/calculator/calculator.rxl": "ec140a3abda41285fc3a1550161656b74c86f407625dafcde3d64652170053e9",
+    "lib/rxfnsl/examples/calculator/fold.crexx": "e4c5c9b7f293cb4906f21499d9c537a87952cb3e4cc301266e74bde6eba80219",
+    "lib/rxfnsl/examples/settings-ast.crexx": "c8d825cef992a14ab8d68d750d664dafd21ffc253da9e8879d192932365c2dd7",
+    "lib/rxfnsl/examples/settings/09-ast.rxl": "3a8d8ec7cb747c71f60545d556e67c12efbee96e0f82dede15c95419f1152d62",
+    "lib/rxfnsl/grammar/levell.levell": "5cc98bbbc093d36b9b3f77184d844034da27a6f24cd6af7d5386b73a4fe39455",
+    "lib/rxfnsl/rexx/CMakeLists.txt": "614fea3ea49ba7f6044aa278419ac088ccb159a380054477925f706be2eb9968",
+    "lib/rxfnsl/rexx/llast.crexx": "f88161c1eff8c6d90431d02c1d3290087b58de478350589b6189f762599ea094",
+    "lib/rxfnsl/rexx/llfront.crexx": "8cbdaf66a276f444830c39768329390350e9d6e5ef2e720dd26b7c07c73188c2",
+    "lib/rxfnsl/rexx/lllanguage.crexx": "25bd04bc6154ffa268772d47e27b57686de5faf84ec039bef9c288f1a61a410f",
+    "lib/rxfnsl/tests_functional/CMakeLists.txt": "0f272833115722b4a3cc60dc5542082bb98cca10b1ef711933515a460a7df5dd",
+    "lib/rxfnsl/tests_functional/ast-fixture.rxl": "af62673756adef38b8ac43dc146fb5d06f49842682f6e205a8f2b1032b16a8d9",
+    "lib/rxfnsl/tests_functional/ast-probe.crexx": "18b834561ae995406f16b7db01a908daf8b6012bc45fcbfc29a77af6970fe2ef",
+    "lib/rxfnsl/tests_functional/check-ast-surface.py": "6c3f7cdc5dc077da184a16736fcd0018a9e6633a47bb532661dff313db3be127",
+    "lib/rxfnsl/tests_functional/ts_llast.crexx": "04952d9c96c180394c828dfbd2ec7abf4e8a87d7ba43ae89ca204bcf618bc511",
+    "lib/rxfnsl/tools/levell.crexx": "91fd2de305f5a01f61eb725506a6ab3c3add2f29697dc2f35bcc4f84a28248f4",
+    "research/level-l/AST-CONTRACT.md": "487540e3d0af9641e5a857360071b72e2009bba3af67e54c4aa07068f54fb9d9",
+    "research/level-l/PLAN.md": "07957776027a54f785ba659d91ccb9a495f7d301b722a33ad5e2c3b0d524b221"
+  },
+  "build_tools_sha256": {
+    "cmake-build-levell-integration/bin/levell": "a70331e8a1d68224577997c81bd3ffe5fbbe2fdaa374e7e8dcf0a2f0c8384a88",
+    "cmake-build-levell-integration/bin/rxc": "04d623a6cb53dd0221b0d496cbb1d0d858fa1d56dd3c40d47eb9aead060f4a53",
+    "cmake-build-levell-integration/bin/rxas": "71e09bccb4e71e214e73995a62e84a8b5e5b51c9ffd89b95bfe9ddadf3d2c834",
+    "cmake-build-levell-integration/bin/rxlink": "1606ac66593ae8e50b0d7c12fcabf77b9d1ce6dd00012bd4d22635bd72cb44b2",
+    "cmake-build-levell-integration/bin/rxtvm": "3f01772a637378d96814845cdb587da4c5241438cc8a710987e357fd512bcf60",
+    "cmake-build-levell-integration/bin/rxbvm": "40b0ea817aad0620c686391fd9f5ccff8186b1893f6b91e6f387fcaf5f0c0119",
+    "cmake-build-levell-integration/bin/crexx": "c3dc6579d4f472330549e4f57278a5a9043dabe33bf6acf3e0a0531099d1c119",
+    "cmake-build-levell-integration/bin/rxfnsl.rxbin": "6102cfe1ab6a122b930a32b9e3639d049ce203ab1b7cb86e8099ecf5248b381a"
+  },
+  "bootstrap_sha256": {
+    "opt": {
+      "L0": {
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell.rxas": "cfac5b97d4a12eca9b2de2767aa945472481da77cf19f851ab04da1898ffaf2e",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/llfront.rxas": "beaee75721ffc66226431816e2203ee80453cba16743658bb9320694aab62509",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin": "b59271e3fef6adda993463820ec1f15fa33bf0be26d47caa5206c3c3c748a353",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell.rxbin": "0b1b3333d5b896b421d447376c4d662c3d33eefac6e9ab9ce23d2a1fb3d7519d",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/llfront.rxbin": "bd71eab37260ad40610ccaae810d011dae9accd4a9a513fab53667380b7e08c4"
+      },
+      "L1": {
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell.rxas": "abcb61fddffa3dacebd28af55ae4847e2ab5d3a759b053d0bd098ccf55a99b86",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/llfront.rxas": "0ec2a8fc34cf3febd08791df6826bdd78163bae34d8e6e33a5845df3bd2cc054",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin": "5571e5b45312c36c852a86283a9e2210770c7dc543f052814c2d39a4bd7f9ccd",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell.rxbin": "b059a8e0e832c90f958c891fff44c8269d86162393b3d23fd9cb1078372fe6ca",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/llfront.rxbin": "ef141d189f33aff11ae9f99a4b471678bd7216510a1cc70e9eea8b62c88263a1",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/llsyntax.rxbin": "eac271097db9b21c0662174d9cb9dc68dea3114b903e1be6e5e37d5c912d6eb4"
+      },
+      "L2": {
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell.rxas": "1f8cef09cc39ebb4facf41e8cf9c1a1ecc4a623c43435bcd5559c55186ce7586",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/llfront.rxas": "a172565f7406aeafb06d206aca5e545a6ca56ee671aaefaff337fcf23fc6a66f",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin": "0a892ee6476b313877d9127922674d5ffa671f52d127effe1e09a5145597356b",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell.rxbin": "056e17f20e7bab119d1e6b1878cddb76287041cd6bdba36020c9797696d3a149",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/llfront.rxbin": "c53b6e9ae2537befe72fbb3ce2c50af6a2e27b94cb6b4bd6f3f31db052d49ee8",
+        "cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/llsyntax.rxbin": "4ddfed0033b5dd2f01904f61a07209e3fd66336cbcf5d19aba91464f4e548a0e"
+      }
+    },
+    "noopt": {
+      "L0": {
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L0/levell.rxas": "4aa87443ad7ed09358fcaaa3edd7607889afed584c013f370ee53d105d632f96",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L0/llfront.rxas": "e2cf662350e0acd51bd0a296e84021af6ff852ab4674f6e9b4f5c128d49263cf",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L0/levell-linked.rxbin": "381a6b89f53423b1e5d3110d8a41618e5e4022be1302fb03ebf56707bcfe4ecd",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L0/levell.rxbin": "2cf3d80067ace461fbc1bc01d31572f0d4ce6905f0a2440863cfc9802e7c7710",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L0/llfront.rxbin": "93442b682a4be213f46b4605ed6209e4e868315ff87b00ef4cc53d98edb03c2c"
+      },
+      "L1": {
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/levell.rxas": "4dd47004babed88862beea022d467915e9a07a7e8a11cb789b5123fbadb73f2c",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/llfront.rxas": "02c5bbc7ac06ac099d9d91d38d95e3411d5e79f8207b5df2e1ba8fce3aeaa381",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/levell-linked.rxbin": "c8d0f9e8ad9aa0b0fde6fad21789960a689cec5663a955d270b6eaaa124a362c",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/levell.rxbin": "9af0632c919b850944b9bf3f25cfb02b0eb38d568bb79c2e4dfb8dce5019e6b2",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/llfront.rxbin": "b38c6ece6cebe22780280552031e20895f06e5b95ad379585189c6b17a2d9882",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L1/llsyntax.rxbin": "34e568ff42936be2e37e354d6909f7e4fc4d1f5f60e79f98d1b220de4565c683"
+      },
+      "L2": {
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/levell.rxas": "b268ed3543f832260fcf20288550ece765f8a403cccb7d4eb77d03ca26fd1281",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/llfront.rxas": "b4270dfc64f93c9e8c3571e1df8aba2577be25e8f28cf14fd8e1a5b4467dd425",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/llsyntax.rxas": "56660484be2c1c8d7a5e3e8507718a23a553c008f441d3d1d599e6bc676c0203",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/levell-linked.rxbin": "5e9a55d0c0179641102804c1c4c547f749c1df52fab3b76a385c83c6152e4be1",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/levell.rxbin": "0f740ae7f043360ff39ae9072c5e9fad9eed335a9ac32992909642aa4af980ea",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/llfront.rxbin": "59feec0543da7bfa42b10fa90afd15abd0b5973b2719421f6039b6f8cc9af89d",
+        "research/level-l/build/ast-20261013/noopt/tools/bootstrap/L2/llsyntax.rxbin": "a36a1dc557f584c4d93005a29148431704f9ed8cb9b799c7b01659ce62721b55"
+      }
+    }
+  },
+  "grammar_source_sha256": "5cc98bbbc093d36b9b3f77184d844034da27a6f24cd6af7d5386b73a4fe39455",
+  "retained_checks": {
+    "windows_path_guard_unit_tests": {
+      "command": "python3 -m unittest scripts.tests.test_windows_checkout",
+      "passed": 3
+    },
+    "guide_local_links": 85,
+    "focused_ctest_passed": 26
+  },
+  "evidence_sha256": {
+    "README.md": "047933873b3b5914385c3ccd16800091673ac7cde8909af8d1e50ad500ad3c22",
+    "admission-build.log": "d87a41c529434272eb25d3a8f67c757d5303dc98cdd584ed7abbee75eb00bf1e",
+    "admission-noopt-build.log": "b8254bfb18f3de74876b818c6ec0a4dbe9f4598b9c6138dfd69aabed5f572c17",
+    "binary-projection.json": "1a5f0cf1907e3b57f677101a1da281a015304a9252e1bc258dadd0eab7cd2e97",
+    "calculator.json": "30ed5d76ff0962a4ea5f04bb968d3cc2af320607b1017b9e4c9197ebd79b3561",
+    "check-installed.py": "7cf155ffa9e1000e3c16487ba90c5e531d3384e0593a4428310e58ec8fa4bef6",
+    "diagnostics-noopt.json": "ad4b4d41c9f70d25fee6e8c9d13b28526184005aedb897d7f490aa7d3a5df3cc",
+    "diagnostics-opt.json": "776e0274767cfd671a76b3da1d00d82414f9eb4947d94a8f4679050e36d24eb2",
+    "final-calculator-rxbvm.log": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc",
+    "final-calculator-rxtvm.log": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc",
+    "final-controls.json": "56e31b2eace69a0c8784b4683a7f89256d43a05d500995e15bab416ee23a522e",
+    "final-earley-rxas-opt.log": "a4479baa25dfe43cfd30e386be21f95c47ca53a281d9cd4e6d069ffd3f6dd6ea",
+    "final-fold-rxbvm.log": "7e06fbcdf01c44f36015701115950f3159b1e7f8db6668e3cf3b71a418a44e42",
+    "final-fold-rxtvm.log": "7e06fbcdf01c44f36015701115950f3159b1e7f8db6668e3cf3b71a418a44e42",
+    "final-install.log": "c6a8c58cd4253b6bd08cbdc6eda0f9bc750097ee3b0cae4c8f7f0229d4761106",
+    "final-installed-reject.log": "3c06cf9371ac96f5235e2b2eb10ebe65f5fe9919046ebb7798d2dcf021cce821",
+    "final-ll1-rxas-opt.log": "2e52a76b03877f1acf94bd3fd7d8eda44bc5dfe6a1279287461305292ced7cd4",
+    "final-lr1-rxas-opt.log": "ecf67785ffcaf4f298434a5b72da716221fe952cfc77b40dc0c0f51894a346ec",
+    "final-packrat-rxas-opt.log": "0907bad88f27ba529b20d0dc2ccfcc267bb6dbcfdc2ce41c02f5fc62a22215aa",
+    "final-pratt-calculator.log": "e516706e8c9824b14c62377bf8b58769fbad11fa00ef6671b46fb4c468b4b065",
+    "final-settings-rxbvm.log": "191a6581dd347de8d1190afd4f9e26e0e2482a073cd79952e50188f28d6d6858",
+    "final-settings-rxtvm.log": "191a6581dd347de8d1190afd4f9e26e0e2482a073cd79952e50188f28d6d6858",
+    "inspection.json": "20916161d90a7402bd216cde17ea140baef796409415419fdeac5931d16ca936",
+    "install.log": "a76e5534aa165beca4ffa3adac9638d58bd05f1f16a28a50dcba739d8d87572f",
+    "installed.json": "020c7d5f637be88328be911b1492423563b56aa8e087d4b39a527cb5a9daa9ca",
+    "noopt-build.log": "6fcaa323165c730f1e6479ae65620888f42e661596ba1f78209f7922a16491aa",
+    "product-build.log": "9ffdb635cc0d49262d21c150cbe9a01b91bb3de0d18e49475352f364c0c2b4c1",
+    "runtime-components.json": "29fe616da0556408ccdea9614d2704476b4938b9ecb4c2273ff1d1d86f4919bc",
+    "runtime-noopt.json": "ac88fec661086b20e72007c8c858e34530d0b0095fa73ff68cfb40abb8be5712",
+    "runtime-tests.log": "c86dc4af2e88c33ef236c2d757ab92f7b2d6e6edff8769575d03a631cfc58704",
+    "surface-noopt.json": "ab5a5fdbed5dce4cc3b3bd1a64c6bf155a6587ffe661a92a382f1bcd8f8253bc",
+    "surface-opt.json": "453173dc70e53bb9f503de415928eded3c8fe13a952568e672e0ed8c1946a301"
+  },
+  "publication_preflight": {
+    "recorded_utc": "2026-10-13T19:18:09.976372+00:00",
+    "origin_develop": "ec481f8e64a53abc184857a66c61b8b0e17ff264",
+    "qualified_product_test_inputs_unchanged": true,
+    "documentation_only_updates": [
+      "research/level-l/PLAN.md",
+      "research/level-l/evidence/ast-20261013/README.md"
+    ],
+    "expected_ci": "Normal automatic workflows expected to pass; observe actual results after publication.",
+    "log_normalization": "Removed trailing horizontal whitespace from product-build.log; diagnostic text is unchanged."
+  }
+}

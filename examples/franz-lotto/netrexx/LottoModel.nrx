@@ -1,0 +1,90 @@
+/* NetRexx Lotto teaching example, MIT License; see ../LICENSE.txt.
+ * The three games and 1-50 limit follow Franz Marx's LottoV41.
+ * This class is independent of Swing and can be tested without a display.
+ */
+options binary
+import java.util.Random
+import java.util.Arrays
+import java.io.PrintWriter
+import java.io.FileWriter
+import java.io.IOException
+
+class LottoModel
+  method gameName(game=int) static returns String
+    if game=1 then return 'Austria: 6 from 45'
+    if game=2 then return 'Germany: 6 from 49'
+    if game=3 then return 'Euro-Lotto: 5 from 50 + 2 from 12'
+    return 'Invalid game'
+
+  -- Validate the field before converting it to an integer.
+  method parseCount(text=String) static returns int
+    if text.length<1 | text.length>2 then return 0
+    digits=String '0123456789'
+    loop i=0 to text.length-1
+      if digits.indexOf(text.charAt(i))<0 then return 0
+    end
+    count=Integer.parseInt(text)
+    if count<1 | count>50 then return 0
+    return count
+
+  -- Sample without replacement, then sort. Java arrays are ZERO-based.
+  method pickNumbers(maximum=int, needed=int, rng=java.util.Random) static returns String
+    pool=int[maximum]
+    picked=int[needed]
+    loop i=0 to maximum-1
+      pool[i]=i+1
+    end
+    loop i=0 to needed-1
+      slot=i+rng.nextInt(maximum-i)
+      picked[i]=pool[slot]
+      pool[slot]=pool[i]
+    end
+    Arrays.sort(picked)
+    text=StringBuilder()
+    loop i=0 to needed-1
+      if i>0 then text.append(' ')
+      if picked[i]<10 then text.append('0')
+      text.append(picked[i])
+    end
+    return text.toString
+
+  method generate(game=int, count=int, rng=java.util.Random) static returns String[]
+    if game<1 | game>3 | count<1 | count>50 then return String[0]
+    maximum=int 45
+    needed=int 6
+    if game=2 then maximum=49
+    if game=3 then do
+      maximum=50
+      needed=5
+    end
+    tips=String[count]
+    loop i=0 to count-1
+      line=pickNumbers(maximum,needed,rng)
+      if game=3 then line=line || ' + ' || pickNumbers(12,2,rng)
+      tips[i]=line
+    end
+    return tips
+
+  method format(game=int, tips=String[]) static returns String
+    text=StringBuilder()
+    text.append('Lotto starter - ').append(gameName(game))
+    text.append(' - ').append(tips.length).append(' tips').append('\r\n')
+    loop i=0 to tips.length-1
+      if i+1<10 then text.append('0')
+      text.append(i+1).append(': ').append(tips[i]).append('\r\n')
+    end
+    return text.toString
+
+  -- FileWriter replaces the chosen outputFile. The caller confirms replacement.
+  -- PrintWriter reports late disk errors through checkError(). Always close.
+  method save(path=String, game=int, tips=String[]) static
+    if tips.length=0 then signal IOException('Generate some tips first.')
+    writer=PrintWriter(FileWriter(path))
+    do
+      writer.print(format(game,tips))
+      writer.flush()
+      if writer.checkError then signal IOException('Cannot write the selected outputFile.')
+    finally
+      writer.close()
+    end
+    if writer.checkError then signal IOException('Cannot close the selected outputFile.')

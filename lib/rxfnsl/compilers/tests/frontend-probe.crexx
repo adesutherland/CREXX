@@ -1,0 +1,14 @@
+/* cREXX License (MIT). Inspect the source-to-IR service without target codegen. */
+options levelb
+import rxfnsb
+import llfrontend
+import llir
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 3 then return 2
+  source = readbinary(argv[2]); request = .llfrontend..request(argv[1],source,argv[3],argv[2])
+  if request.status() <> 0 then do
+    say 'ERROR|' || request.offset() || '|' || request.error(); say request.diagnostic(); return 1
+  end
+  graph = request.graph(); say graph.dump()
+  return 0

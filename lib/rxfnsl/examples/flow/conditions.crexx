@@ -1,0 +1,37 @@
+/* Build: crexx --program flow-conditions loops.rxl conditions.crexx */
+options levelb
+import rxfnsb
+import flowloops
+import lllanguage
+import llast
+import llflow
+
+/* This example language defines literal 0 as false and literal 1 as true. */
+source = 'if 1 then x = 10; end; say x; say both(0,missing);'
+request = .lllanguage..request(flowloops..language(),source as .binary)
+if request.parse() <> 0 then do
+  say request.error(); exit 1
+end
+tree = request.ast()
+ordinary = flowloops..execution(reference tree)
+before = ordinary.definiteassignment()
+say 'Without condition facts:' before.count() 'possible unassigned reads'
+
+facts = .llflow..conditions(reference tree)
+walk = tree.walk()
+do while walk.next()
+  node = walk.node()
+  if node.kind() <> 'Number' then iterate
+  spelling = node.text('spelling')
+  if spelling = '0' then ok = facts.set(node,'false','Literal 0 is false in this language')
+  if spelling = '1' then ok = facts.set(node,'true','Literal 1 is true in this language')
+end
+graph = flowloops..execution(reference tree)
+ok = graph.using(reference facts)
+after = graph.definiteassignment()
+if after.error() <> '' then do
+  say after.error(); exit 1
+end
+say 'With condition facts:' after.count() 'possible unassigned reads'
+say 'x assigned before SAY:' after.before(tree.root().child('items',2)).assigned('x')
+say 'Skipped operand reachable:' after.before(tree.root().child('items',3).child('value').child('right')).reachable()

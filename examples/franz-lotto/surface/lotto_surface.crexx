@@ -1,0 +1,183 @@
+/* One Level G Lotto feature for the shared ANSI, line and GTK UI hosts.
+ * The existing Level B lotto_logic module supplies the same game rules.
+ * Native controls, file operations and event loops belong to the hosts.
+ */
+options levelg
+namespace lotto_surface expose lotto_component make_lotto_session
+import rxfnsb
+import ui
+import ui_contract
+import lotto_logic
+
+/** Compose the same feature and commands for any supporting host.
+ * @param id owning session identity @param caps host's implemented services
+ * @return configured session; control input uses standard catalogue events
+ */
+make_lotto_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  rc = session.add_component("root", .lotto_component())
+  if rc < 0 then exit 1
+  events = "lotto.generate lotto.save lotto.previous lotto.next"
+  do i = 1 to words(events)
+    rc = session.register_event(word(events, i))
+    if rc < 0 then exit 1
+  end
+  rc = session.register_command(.uicommand("lotto.generate", "Generate", "root", "lotto.generate", "g"))
+  if rc < 0 then exit 1
+  rc = session.register_command(.uicommand("lotto.save", "Save", "root", "lotto.save", "s"))
+  if rc < 0 then exit 1
+  rc = session.register_command(.uicommand("lotto.previous", "Previous", "root", "lotto.previous", "p"))
+  if rc < 0 then exit 1
+  rc = session.register_command(.uicommand("lotto.next", "Next", "root", "lotto.next", "n"))
+  if rc < 0 then exit 1
+  rc = session.register_command(.uicommand("lotto.quit", "Quit", "root", "ui.close.requested", "q"))
+  if rc < 0 then exit 1
+  return session
+
+/** Model/update/view; the feature never opens a window or writes a file. */
+lotto_component: class implements .uicomponent
+  _selected = .string
+  _count_text = .string
+  _generated_game = .int
+  _tips = .string[]
+  _page = .int
+  _status = .string
+  _save_phase = .int
+  _save_records = .string[]
+  _save_resource = .uiresource
+
+  /** Construct the initial application state; startup performs no I/O. */
+  *: factory
+    _selected = "AT"
+    _count_text = "10"
+    _generated_game = 1
+    _page = 0
+    _status = "Choose a game and 1-50 tips, then Generate."
+    _save_phase = 0
+    return
+
+  /** @param event validated input or correlated effect outcome
+   * @return requested work; generation changes only feature-owned state
+   */
+  update: method = .uieffects
+    arg event = .uimessage
+    name = event.name()
+    body = event.body()
+    effects = .uieffects()
+    request = .uipayload
+    if name = "widget.selection.changed" & body.text("node") = "game" then do
+      items = body.texts("items")
+      if items[0] = 1 then do
+        if items[1] = "AT" | items[1] = "DE" | items[1] = "EU" then do
+          _selected = items[1]
+          _status = "Game selected. Generate to update results."
+        end
+      end
+    end
+    if (name = "widget.value.changed" | name = "widget.value.committed") & body.text("node") = "tips" then do
+      _count_text = body.text("value")
+      if name = "widget.value.committed" then call generate()
+    end
+    if name = "lotto.generate" then call generate()
+    if name = "lotto.previous" then _page = max(0, _page - 1)
+    if name = "lotto.next" then _page = min(max(0, (_tips[0] - 1) <idiv> 8), _page + 1)
+    if name = "lotto.save" then do
+      if _tips[0] = 0 then _status = "Generate some tips before saving."
+      else if _save_phase > 0 then _status = "A Save request is already active."
+      else do
+        /* Snapshot complete generated results, including off-screen pages.
+         * A later selection or queued edit cannot relabel this Save request. */
+        call arraydrop _save_records
+        _save_records[1] = "Lotto starter - " || game_name(_generated_game) || " - " || _tips[0] || " tips"
+        do i = 1 to _tips[0]
+          _save_records[i + 1] = right(i, 2, "0") || ": " || _tips[i]
+        end
+        request = .uipayload()
+        call request.put_text("title", "Save the generated Lotto tips")
+        call request.put_text("purpose", "save")
+        call effects.add(.uimessage("ui.resource.choose", request, "root", "effect"))
+        _save_phase = 1
+        _status = "Choose where to save the generated tips."
+      end
+    end
+    if name = "ui.resource.selected" & _save_phase = 1 then do
+      _save_resource = body.resource("resource")
+      request = .uipayload()
+      call request.put_text("title", "Confirm Save")
+      call request.put_text("message", "Save these tips? Existing file contents will be replaced.")
+      call effects.add(.uimessage("ui.dialog.confirm", request, "root", "effect"))
+      _save_phase = 2
+      _status = "Confirm Save, or Cancel to keep the existing file."
+    end
+    if name = "ui.dialog.accepted" & _save_phase = 2 then do
+      request = .uipayload()
+      call request.put_resource("resource", _save_resource)
+      call request.put_texts("records", _save_records)
+      call effects.add(.uimessage("io.text.write", request, "root", "effect"))
+      _save_phase = 3
+      _status = "Saving the complete generated result."
+    end
+    if name = "io.text.write.completed" & _save_phase = 3 then do
+      _save_phase = 0
+      _status = "Saved the complete generated result to the selected file."
+    end
+    if name = "ui.effect.cancelled" & _save_phase > 0 then do
+      _save_phase = 0
+      _status = "Save cancelled. Results kept."
+    end
+    if name = "ui.effect.failed" & _save_phase > 0 then do
+      _save_phase = 0
+      _status = "Save failed. Results kept: " || body.text("message")
+    end
+    if name = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), "root", "effect"))
+    return effects
+
+  /** Validate text before conversion; use the model shared with both baselines. */
+  generate: method = .void
+    count = parse_count(_count_text)
+    if count = 0 then do
+      _status = "Enter a whole number from 1 to 50. Results kept."
+      return
+    end
+    game = 1
+    if _selected = "DE" then game = 2
+    if _selected = "EU" then game = 3
+    _tips = generate_tips(game, count)
+    _generated_game = game
+    _page = 0
+    _status = "Generated " || count || " tips. Save explicitly; use Previous/Next."
+    return
+
+  /** @return the same logical controls and paging view for every host */
+  view: method = .uiview
+    view = .ui..uiview_impl("cREXX Lotto - one app, console and GTK")
+    call view.add_label("heading", "The same cREXX application through two UI hosts.", "root")
+    call view.add_label("rules", "AT 6/45; DE 6/49; Euro 5/50 plus 2/12.")
+    ids = .string[]
+    labels = .string[]
+    ids[1] = "AT"
+    ids[2] = "DE"
+    ids[3] = "EU"
+    labels[1] = "Austria 6/45"
+    labels[2] = "Germany 6/49"
+    labels[3] = "Euro 5+2"
+    rc = view.add_choice("game", ids, labels, _selected, "below", "rules")
+    call view.add_label("count-label", "Tips (1-50):", "below", "game")
+    rc = view.add_integer("tips", _count_text, 1, 50, 1, "right", "count-label")
+    call view.add_button("generate", "Generate", "lotto.generate", "g", "below", "count-label")
+    call view.add_button("save", "Save...", "lotto.save", "s", "right", "generate")
+    call view.add_button("quit", "Quit", "lotto.quit", "q", "right", "save")
+    call view.add_button("previous", "Previous", "lotto.previous", "p", "below", "generate")
+    call view.add_button("next", "Next", "lotto.next", "n", "right", "previous")
+    call view.add_label("status", _status, "below", "previous")
+    summary = "No generated tips yet."
+    if _tips[0] > 0 then summary = game_name(_generated_game) || " - tips " || (_page * 8 + 1) || "-" || min(_tips[0], _page * 8 + 8) || " of " || _tips[0]
+    call view.add_label("summary", summary, "below", "status")
+    do i = 1 to 8
+      line = ""
+      number = _page * 8 + i
+      if number <= _tips[0] then line = right(number, 2, "0") || ": " || _tips[number]
+      call view.add_label("tip" || i, line)
+    end
+    return view

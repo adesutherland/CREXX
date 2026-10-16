@@ -1,0 +1,22 @@
+{
+  "command": [
+    "cmake",
+    "--build",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+    "--target",
+    "qa-prep-optimizer-parity",
+    "--parallel",
+    "6"
+  ],
+  "status": 0,
+  "seconds": 1.0966762090101838,
+  "before": {
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/backend-tests-linked.rxbin": "968edbef129bfb7524c5a97b53d110b842216cc68344060c8e4e0006791a8970",
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin": "94c8dc0c9a207e80a06e94da585a704f5419d24bbac1f0f7d96c15df41aecdd3"
+  },
+  "after": {
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/noopt/backend-tests-linked.rxbin": "968edbef129bfb7524c5a97b53d110b842216cc68344060c8e4e0006791a8970",
+    "cmake-build-levell-integration/lib/rxfnsl/compilers/backend/opt/llrxc-g-linked.rxbin": "94c8dc0c9a207e80a06e94da585a704f5419d24bbac1f0f7d96c15df41aecdd3"
+  },
+  "byte_identical": true
+}

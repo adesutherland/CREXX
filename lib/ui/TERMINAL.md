@@ -2,7 +2,7 @@
 
 The full-screen driver uses the same Text Inspector feature and UI contract as
 the GTK and line-TUI tracer. It adds a standard confirmation dialog and an
-Open-file selector. This is a bounded first terminal UI, not a complete curses
+Open/Save file selector. This is a bounded first terminal UI, not a complete curses
 replacement, debugger frontend, or finished cross-platform GUI toolkit.
 
 ## Responsibilities and lifecycle
@@ -12,7 +12,7 @@ replacement, debugger frontend, or finished cross-platform GUI toolkit.
 | Level B `rxconsole`, implemented in C | Terminal lease, raw input, timed reads, UTF-8/VT decoding, mouse/resize, output batches, restoration | Widgets, JSON, application callbacks, dialog policy |
 | Level G `ui_terminal_view` | Cell projection, layout, frame output, focus traversal and hit geometry | Native console state or application model |
 | Level G `ui_dialogs` | Confirmation and file-picker state, editing, directory navigation, logical views | Native windows or an event loop |
-| Level G `ui_local_resources` | Session-local file grants and text-read execution | Application word-count policy |
+| Level G `ui_local_resources` | Session-local read/write grants and bounded text execution | Application policy |
 | Level G `ui_ansi` | One owner loop, input routing, modal lifetime, effect execution and correlation | Text Inspector-specific actions or counters |
 | Application component | Model, update, view, requested work | Terminal escape sequences and filesystem handles |
 
@@ -46,9 +46,9 @@ foreground ownership still apply.
 - `ui.dialog.confirm` produces the first standard OK/Cancel dialog. OK completes
   `ui.dialog.accepted` with response `ok`; Cancel/Escape produces
   `ui.effect.cancelled`.
-- `ui.resource.choose` with purpose `open` produces the local file selector.
+- `ui.resource.choose` with purpose `open` or `save` produces the local file selector.
   Acceptance becomes `ui.resource.selected` with an opaque resource grant.
-  The resulting `io.text.read` is resolved through the grant registry, never by
+  The resulting `io.text.read`/`io.text.write` is resolved through the grant registry, never by
   trusting a display name supplied in a request.
 
 The current catalogue names remain authoritative. No terminal-specific event
@@ -69,8 +69,17 @@ parent navigation, scrolling, editable filename/path, Open and Cancel. Use
 arrows/PageUp/PageDown to select entries, type or paste a filename, and press
 Enter to open it. Tab/Shift-Tab traverses visible controls; mouse clicks select
 entries and operate buttons. Clicking a directory enters it; selecting a file
-fills the filename field. Save, multi-select, file deletion and creation are
-outside this increment. Browsing never changes the process working directory.
+fills the filename field. Save accepts a new filename or an existing regular
+file; the feature requests confirmation before replacement. Multi-select and
+file management remain outside this increment. Browsing never changes the
+process working directory.
+
+Logical choices use Left/Right or a pointer press/release on the same visible
+item. Tab reaches bounded integer editors; the first typed value replaces the
+previous value, Backspace/Delete edit, Up/Down increment within bounds, and
+Enter posts a committed value. Application shortcuts apply outside the integer
+editor; typed/pasted text remains input while editing. GTK projects the same
+view as radio buttons and a spin control.
 
 `UI_NODE` now also accepts the logical `input` kind used by the selector.
 `UI_LAUNCHER` generates the same session/host composition for every driver.

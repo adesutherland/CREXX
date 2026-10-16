@@ -1,0 +1,16 @@
+function $MAIN -> crexx.c.result
+  entry.1:
+    %1 = crexx.c.pool.new @origin:2
+    core.store %1 slot:$pool @origin:2
+    %2 = core.argument argument:1 @origin:2
+    core.store %2 slot:$arguments @origin:2
+    %3 = core.argument argument:2 @origin:2
+    core.store %3 slot:$numeric @origin:2
+    core.jump -> if.yes.2 @origin:28
+  if.yes.2:
+    %4 = core.constant 796573 : crexx.c.value @origin:19
+    crexx.c.say %4 @origin:12
+    core.jump -> if.join.4 @origin:4
+  if.join.4:
+    %5 = crexx.c.return.absent @origin:2
+    core.return %5 @origin:2

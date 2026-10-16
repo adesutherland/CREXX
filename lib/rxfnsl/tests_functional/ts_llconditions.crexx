@@ -1,0 +1,120 @@
+/* cREXX License (MIT). Condition facts, exact owner and outcome contracts. */
+options levelb
+import rxfnsb
+import llflow
+import llast
+import lllanguage
+import flowloops
+
+main: procedure = .int
+  failures = 0
+  failures = failures + scenario('if 1 then x = 1; end; say x;',0,1,1)
+  failures = failures + scenario('if 0 then say missing; else x = 1; end; say x;',0,1,1)
+  failures = failures + scenario('if flag then x = 1; end; say x;',1,1,0)
+  failures = failures + scenario('while 0 do say missing; end; stop;',0,1,0)
+  failures = failures + scenario('while 1 do x = 1; break; end; say x;',0,1,1)
+  failures = failures + scenario('while 1 do continue; end; say missing;',0,0,0)
+  failures = failures + scenario('repeat x = 1; until 1; say x;',0,1,1)
+  failures = failures + scenario('repeat continue; until 0; say missing;',0,0,0)
+  failures = failures + scenario('say both(0,missing); stop;',0,1,0)
+  failures = failures + scenario('say either(1,missing); stop;',0,1,0)
+  failures = failures + scenario('say both(1,set(x,1)); say x;',0,1,1)
+  failures = failures + scenario('say either(0,set(x,1)); say x;',0,1,1)
+  failures = failures + scenario('if both(1,either(0,set(x,1))) then say x; end; stop;',0,1,1)
+  failures = failures + scenario('if either(0,both(1,0)) then say missing; end; stop;',0,1,0)
+  tree = parseinput('if set(x,1) then say x; else say missing; end; say x;')
+  facts = .llflow..conditions(reference tree,1)
+  condition = tree.root().child('items',1).child('condition')
+  ok = facts.set(condition,'true','SET yields its literal 1 after writing x')
+  failures = failures + check(ok & facts.size() = 1,'exact fact budget')
+  failures = failures + check(facts.reason(condition) = 'SET yields its literal 1 after writing x','reason retained')
+  graph = flowloops..execution(reference tree); ok = graph.using(reference facts)
+  result = graph.definiteassignment()
+  failures = failures + check(result.error() = '' & result.count() = 0,'condition write preserved')
+  failures = failures + check(result.before(condition.child('value')).reachable(),'value evaluation preserved')
+  failures = failures + check(result.before(condition.child('value')).assigned('x') = 0,'write follows value')
+  last = tree.root().child('items',2)
+  failures = failures + check(result.before(last).assigned('x'),'write reaches following statement')
+  ok = facts.set(condition,'true','same fact after seal')
+  failures = failures + check(ok = 0 & pos('FROZEN',facts.error()) > 0,'sealed facts reject mutation')
+  failures = failures + check(graph.points() = 0,'invalid facts expose no graph')
+  caught = 0
+  do
+    answer = result.before(last).reachable()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'invalid facts invalidate borrowed result')
+  facts = .llflow..conditions(reference tree)
+  ok = facts.set(condition,'false','first justification')
+  ok = facts.set(condition,'true','contradiction')
+  failures = failures + check(ok = 0 & pos('CONFLICT',facts.error()) > 0,'contradiction refused')
+  facts = .llflow..conditions(reference tree,0); ok = facts.set(condition,'true','reason')
+  failures = failures + check(ok = 0 & pos('flow.conditions limit=0 required=1',facts.error()) > 0,'fact allowance')
+  facts = .llflow..conditions(reference tree); ok = facts.set(condition,'true','')
+  failures = failures + check(ok = 0 & pos('nonempty reason',facts.error()) > 0,'reason required')
+  facts = .llflow..conditions(reference tree); ok = facts.set(condition,'yes','reason')
+  failures = failures + check(ok = 0,'invalid outcome')
+  foreign = parseinput('stop;'); facts = .llflow..conditions(reference tree)
+  ok = facts.set(foreign.root(),'true','reason')
+  failures = failures + check(ok = 0 & pos('LL_AST_OWNER',facts.error()) > 0,'foreign node')
+  facts = .llflow..conditions(reference foreign); graph = flowloops..execution(reference tree)
+  ok = graph.using(reference facts)
+  failures = failures + check(ok = 0 & graph.points() = 0,'foreign fact table')
+  facts = .llflow..conditions(reference tree); graph = flowloops..execution(reference tree)
+  ok = graph.using(reference facts); points = graph.points()
+  facts = .llflow..conditions(reference tree)
+  failures = failures + check(points > 0 & graph.points() = 0 & pos('LL_AST_OWNER: condition facts',graph.error()) > 0,'replaced fact table')
+  graph = expiredfacts(reference tree)
+  failures = failures + check(graph.points() = 0 & pos('expired',graph.error()) > 0,'expired fact table')
+  facts = .llflow..conditions(reference tree)
+  tree = parseinput('stop;')
+  failures = failures + check(pos('LL_AST_OWNER',facts.error()) > 0,'replaced AST')
+  /* Default behavior is conservative even for literal spelling 1. */
+  tree = parseinput('if 1 then x = 1; end; say x;'); graph = flowloops..execution(reference tree)
+  result = graph.definiteassignment()
+  failures = failures + check(result.count() = 1,'default unchanged')
+  say 'failures=' || failures
+  return failures
+
+scenario: procedure = .int
+  arg source = .string, problems = .int, reachable = .int, assigned = .int
+  tree = parseinput(source); facts = literals(reference tree)
+  graph = flowloops..execution(reference tree); ok = graph.using(reference facts)
+  result = graph.definiteassignment('flag')
+  if result.error() <> '' then return check(0,result.error())
+  last = tree.root().child('items',tree.root().count('items'))
+  failures = check(result.count() = problems,source || ' diagnostics=' || result.count())
+  failures = failures + check(result.before(last).reachable() = reachable,source || ' reachability')
+  failures = failures + check(result.before(last).assigned('x') = assigned,source || ' assigned')
+  if problems then failures = failures + check(pos('Reach this read without assigning x.',result.witness(1)) > 0,'feasible witness')
+  return failures
+
+literals: procedure = .llflow..conditions
+  arg owner = reference .llast..tree
+  tree = dereference owner; facts = .llflow..conditions(owner); walk = tree.walk()
+  do while walk.next()
+    node = walk.node()
+    if node.kind() <> 'Number' then iterate
+    spelling = node.text('spelling')
+    if spelling = '0' then ok = facts.set(node,'false','Rule-language literal 0 is false')
+    if spelling = '1' then ok = facts.set(node,'true','Rule-language literal 1 is true')
+  end
+  return facts
+parseinput: procedure = .llast..tree
+  arg source = .string
+  request = .lllanguage..request(flowloops..language(),source as .binary)
+  if request.parse() <> 0 then do
+    say request.error(); exit 1
+  end
+  return request.ast()
+expiredfacts: procedure = .llflow..graph
+  arg tree = reference .llast..tree
+  facts = .llflow..conditions(tree); graph = flowloops..execution(tree)
+  ok = graph.using(reference facts)
+  return graph
+check: procedure = .int
+  arg passed = .int, message = .string
+  if passed then return 0
+  say 'FAIL:' message
+  return 1

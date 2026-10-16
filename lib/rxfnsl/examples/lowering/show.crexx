@@ -1,0 +1,32 @@
+/* Build: crexx --program lower-example unless.rxl lowering.crexx show.crexx */
+options levelb
+import rxfnsb
+import llast
+import lllanguage
+import llflow
+import unlesslang
+import lowerdemo
+
+request = .lllanguage..request(unlesslang..language(),'unless flag do x = 10; end; say x;' as .binary)
+if request.parse() <> 0 then do
+  say request.error(); exit 1
+end
+original = request.ast()
+tree = lowerdemo..lower(reference original)
+if tree.status() <> 0 then do
+  say tree.error(); exit 1
+end
+say 'Original:' original.root().child('items',1).kind()
+node = tree.root().child('items',1)
+say 'Lowered:' node.kind()
+say 'True arm statements:' node.child('yes').count('items')
+say 'False arm statements:' node.child('no').count('items')
+graph = lowerdemo..execution(reference tree)
+result = graph.definiteassignment('flag')
+if result.error() <> '' then do
+  say result.error(); exit 1
+end
+do i = 1 to result.count()
+  say result.message(i)
+  say result.witness(i)
+end

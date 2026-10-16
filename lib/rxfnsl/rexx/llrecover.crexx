@@ -7,6 +7,7 @@ import lllanguage
 import llmunch
 import llsource
 import lllimits
+import llast
 
 /** Strict parsing remains lllanguage.request. This separate request collects
  * damage and skips an entire synchronization interval, never executes input.
@@ -158,17 +159,31 @@ request: class
     return _tree
   root: method = .int
     return _root
+  /** An owned inspection tree. Status 1 and damage records survive all passes. */
+  ast: method = .llast..tree
+    status = run()
+    if status > 1 | _root = 0 then return .llast..tree.failed('LL_AST_PARSE: recovery did not produce a unique inspectable tree; ' || _error)
+    if status = 0 then return .llast..tree(_tree,_root,_language.astschema(),_limits.limit('tree.entries'))
+    call order()
+    damage = .llast..damage()
+    do i = 1 to _messages[0]
+      ok = damage.add(_skipfirst[i],_skiplast[i],_offsets[i],_ends[i],_messages[i])
+    end
+    return .llast..tree.recovered(_tree,_root,_language.astschema(),damage,_limits.limit('tree.entries'))
   /** Report diagnostics in source order, irrespective of pipeline discovery. */
   order: method = .void
     if _ordered then return
     _ordered = 1
-    i = .int; j = .int; first = .int; last = .int; node = .int; text = .string
+    i = .int; j = .int; first = .int; last = .int; node = .int; text = .string; skipfirst = .int; skiplast = .int
     do i = 2 to _messages[0]
       first = _offsets[i]; last = _ends[i]; node = _nodes[i]; text = _messages[i]; j = i - 1
+      skipfirst = _skipfirst[i]; skiplast = _skiplast[i]
       do while j > 0 & _offsets[j] > first
         _offsets[j + 1] = _offsets[j]; _ends[j + 1] = _ends[j]; _nodes[j + 1] = _nodes[j]; _messages[j + 1] = _messages[j]
+        _skipfirst[j + 1] = _skipfirst[j]; _skiplast[j + 1] = _skiplast[j]
         j = j - 1
       end
+      _skipfirst[j + 1] = skipfirst; _skiplast[j + 1] = skiplast
       _offsets[j + 1] = first; _ends[j + 1] = last; _nodes[j + 1] = node; _messages[j + 1] = text
     end
     return
@@ -189,6 +204,7 @@ request: class
     return _ends[i]
   errornode: method = .int
     arg i = .int
+    call order()
     return _nodes[i]
   error: method = .string
     return _error

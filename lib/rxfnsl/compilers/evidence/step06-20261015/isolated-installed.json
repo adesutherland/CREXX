@@ -1,0 +1,70 @@
+{
+  "root": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv",
+  "copied_from": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step05-install-22ksal6k/installed prefix",
+  "manifest": {
+    "llrxc-c": "b9a0c40262573e9cf39e6e8387698d1b15f587bc210339f0344693f393b52cb6",
+    "llrxc-g": "b97230053839d6470056ac1f7ef93c2b7ae696c01362912a8ba74319d2d11d67",
+    "library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "rxfnsc.rxbin": "199ff8a8f171d69e38bf2f6034062d76d0e738d65778884108a9cdd3ae33df2a",
+    "classlib.rxbin": "cb1a8da416eb878e810c26ff1faa8888bc30c446c767c5941b4b42a0ad8f633f",
+    "llctarget.rxbin": "a508fde4d1a9b51ce6af4e9d0e25a0e16f7cf9ba6e883f7e4cdf135f6c305198"
+  },
+  "path": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin",
+  "commands": [
+    {
+      "command": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin/llrxc-c",
+        "-n",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/walk-c-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "sha256": "dee778b4baf9775447398b0d66de31b272c9c14900c48a6aa06b896d6bad1cc4",
+      "matches": "lib/rxfnsl/compilers/examples/step06/walk-c.before.rxas"
+    },
+    {
+      "command": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin/llrxc-c",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/walk-c-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-c.crexx"
+      ],
+      "status": 0,
+      "sha256": "509291b2129cfb50cf0d00cd426c47cfb59c214a5262e7bbe49b3ee8dbdffe69",
+      "matches": "lib/rxfnsl/compilers/examples/step06/walk-c.after.rxas"
+    },
+    {
+      "command": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin/llrxc-g",
+        "-n",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/walk-g-before.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "sha256": "9789b8c490ee1b55533c8f15e20d2067260f064013a04ef63429dd19f891826c",
+      "matches": "lib/rxfnsl/compilers/examples/step06/walk-g.before.rxas"
+    },
+    {
+      "command": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin/llrxc-g",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/installed bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-step06-standalone-mnkts_fv/walk-g-after.rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/compilers/examples/step06/walk-g.crexx"
+      ],
+      "status": 0,
+      "sha256": "5785119e5d459664f8f7e6badb3cc918b533d81d1c701d0c3f2a3e2e59f87324",
+      "matches": "lib/rxfnsl/compilers/examples/step06/walk-g.after.rxas"
+    }
+  ],
+  "result": "4 installed compiler requests succeeded with no old compiler commands in this prefix or PATH; outputs exactly match the executed service/CLI examples"
+}

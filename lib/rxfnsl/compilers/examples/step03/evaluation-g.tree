@@ -1,0 +1,88 @@
+Program|0:112|options levelg
+say 0 & probe()
+say 1 | probe()
+exit 0
+
+probe: procedure = .boolean
+  say 'evaluated'
+  return 1
+
+Sequence|0:55|options levelg
+say 0 & probe()
+say 1 | probe()
+exit 0
+
+
+Options|0:14|options levelg
+Say|15:30|say 0 & probe()
+Chain|19:30|0 & probe()
+Chain|19:30|0 & probe()
+Chain|19:21|0 
+Chain|19:21|0 
+Chain|19:21|0 
+Chain|19:21|0 
+Cast|19:21|0 
+Number|19:20|0
+Chain|23:30|probe()
+Chain|23:30|probe()
+Chain|23:30|probe()
+Chain|23:30|probe()
+Cast|23:30|probe()
+Call|23:30|probe()
+Arguments|29:29|
+Argument|29:29|
+and|21:22|&
+Say|31:46|say 1 | probe()
+Chain|35:46|1 | probe()
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Chain|35:37|1 
+Cast|35:37|1 
+Number|35:36|1
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Chain|39:46|probe()
+Cast|39:46|probe()
+Call|39:46|probe()
+Arguments|45:45|
+Argument|45:45|
+or|37:38||
+Exit|47:53|exit 0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Chain|52:53|0
+Cast|52:53|0
+Number|52:53|0
+GProcedure|55:112|probe: procedure = .boolean
+  say 'evaluated'
+  return 1
+
+Type|74:82|.boolean
+Sequence|85:112|say 'evaluated'
+  return 1
+
+Say|85:100|say 'evaluated'
+Chain|89:100|'evaluated'
+Chain|89:100|'evaluated'
+Chain|89:100|'evaluated'
+Chain|89:100|'evaluated'
+Chain|89:100|'evaluated'
+Chain|89:100|'evaluated'
+Cast|89:100|'evaluated'
+String|89:100|'evaluated'
+Return|103:111|return 1
+Chain|110:111|1
+Chain|110:111|1
+Chain|110:111|1
+Chain|110:111|1
+Chain|110:111|1
+Chain|110:111|1
+Cast|110:111|1
+Number|110:111|1

@@ -1,0 +1,14 @@
+options levelc
+total = 2 + 3
+if total > 4 then say twice(total)
+else say 0
+do while total > 0
+  total = total - 1
+end
+say total
+say length('cat')
+exit 0
+
+twice: procedure
+  arg value
+  return value * 2

@@ -1,0 +1,5 @@
+options levelc
+say empty()
+exit 0
+empty: procedure
+ return

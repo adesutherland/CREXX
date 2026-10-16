@@ -1,0 +1,29 @@
+/* Build: crexx --program flow-loops loops.rxl loops.crexx
+ * A small analysis language: both(a,b) and either(a,b) short-circuit;
+ * set(name,value) evaluates value, writes name, then yields that value. */
+options levelb
+import rxfnsb
+import flowloops
+import lllanguage
+import llast
+import llflow
+import llsource
+
+source = 'while flag do' || '0a'x || '  if other then break; end;' || '0a'x || '  x = 1;' || '0a'x || '  continue;' || '0a'x || 'end;' || '0a'x || 'say x;' || '0a'x || 'return;' || '0a'x || 'say missing;'
+language = flowloops..language(); request = .lllanguage..request(language,source as .binary)
+if request.parse() <> 0 then do
+  say request.error(); exit 1
+end
+tree = request.ast(); graph = flowloops..execution(reference tree)
+result = graph.definiteassignment('flag other')
+if result.error() <> '' then do
+  say result.error(); exit 1
+end
+do i = 1 to result.count()
+  node = result.node(i)
+  say llsource..diagnostic(tree.source(),node.offset(),'UNASSIGNED',result.message(i))
+  say result.witness(i)
+end
+root = tree.root()
+say 'Final SAY reachable:' result.before(root.child('items',4)).reachable()
+say 'x assigned before first SAY:' result.before(root.child('items',2)).assigned('x')

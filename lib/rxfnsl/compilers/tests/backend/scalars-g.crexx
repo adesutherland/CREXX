@@ -1,0 +1,24 @@
+options levelg
+s = .string
+f = .float
+d = .decimal
+b = .boolean
+say '[' || s || ']'
+say f
+say d
+say b
+say ('42' as .int) + 1
+say (1 as .float) / 2.0
+say (1 as .decimal) / 2d
+say ('1' as .boolean) & 1
+say (1 as .boolean) as .string
+say (2.0 as .int)
+say (1.5d as .float)
+say (1.5 as .decimal)
+say +(-2)
+say +(-2.5d)
+say +(-2.5)
+say 'a' || 'b'
+say 'a' < 'b'
+say 2.5 >= 2.0
+say 2.5d <> 2.0d

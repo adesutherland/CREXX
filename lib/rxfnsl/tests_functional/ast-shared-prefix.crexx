@@ -1,0 +1,20 @@
+options levelb
+import rxfnsb
+import lllanguage
+import llast
+import ast_shared_prefix
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1])
+  definition = ast_shared_prefix..language()
+  request = .lllanguage..request(definition,source)
+  status = request.parse()
+  if status <> 0 then do
+    say request.error(); return status
+  end
+  tree = request.ast()
+  if tree.status() <> 0 then do
+    say tree.error(); return tree.status()
+  end
+  say tree.root().kind() || '|' || tree.root().child('value').text('spelling')
+  return 0

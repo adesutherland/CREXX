@@ -1,0 +1,34 @@
+=== installed-inventory ===
+-- Level L compiler product inventory: PASS
+
+=== pipeline-c-compile ===
+
+=== pipeline-c-assemble ===
+
+=== pipeline-c-link ===
+
+=== pipeline-c-run ===
+10
+0
+3
+
+=== pipeline-g-compile ===
+
+=== pipeline-g-assemble ===
+
+=== pipeline-g-link ===
+
+=== pipeline-g-run ===
+10
+0
+3
+
+=== service-compile ===
+
+=== service-assemble ===
+
+=== service-link ===
+
+=== service-run ===
+BACKEND|checks=50|failures=0
+

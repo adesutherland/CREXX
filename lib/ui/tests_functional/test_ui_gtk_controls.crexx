@@ -1,0 +1,115 @@
+/* Real GTK signals, exclusive choices, editing and silent model projection. */
+options levelg
+namespace ui_gtk_controls_test
+import rxfnsb
+import ui
+import ui_contract
+import ui_gtk
+import ui_gtk_test
+
+main: procedure = .int
+  journal = ""
+  driver = .gtkdriver()
+  /* Reuse one native driver twice to prove controls release their callbacks. */
+  do round = 1 to 2
+    journal = ""
+    session = .uisession("gtk-controls-" || round, ui_gtk..capabilities())
+    rc = session.add_component("root", .controls_probe(reference journal))
+    rc = session.register_event("probe.project")
+    rc = session.register_command(.uicommand("probe.project", "Project", "root", "probe.project", "p"))
+    rc = session.register_command(.uicommand("probe.quit", "Quit", "root", "ui.close.requested", "q"))
+    steps = .string[]
+    steps[1] = "expect|status|Ready"
+    steps[2] = "choice-edit-commit|game|DE|tips|17"
+    steps[3] = "expect-choice|game|DE"
+    steps[4] = "expect-value|tips|17"
+    steps[5] = "expect|status|Committed 17"
+    steps[6] = "expect|status|Committed 17"
+    steps[7] = "click|project"
+    steps[8] = "expect|status|Projected"
+    steps[9] = "expect-choice|game|EU"
+    steps[10] = "expect-value|tips|12"
+    steps[11] = "expect-choice|other|first"
+    steps[12] = "spin|tips|1"
+    steps[13] = "expect-value|tips|13"
+    steps[14] = "click|quit"
+    rc = ui_gtk_test..start(steps)
+    if rc < 0 then return 1
+    run_rc = driver.run(session)
+    test_rc = ui_gtk_test..finish()
+    if run_rc \= 0 | test_rc \= 0 | pos("select:DE ", journal) = 0 | pos("commit:17 ", journal) = 0 | pos("edit:13 ", journal) = 0 then do
+      say "FAIL: GTK controls" round run_rc test_rc driver.error() journal
+      return 1
+    end
+    if pos("select:EU ", journal) > 0 | pos("edit:12 ", journal) > 0 | pos("select:AT ", journal) > 0 | pos("edit:10 ", journal) > 0 then do
+      say "FAIL: GTK rendering echoed user input" journal
+      return 1
+    end
+    if right(journal, length("ui.closed ")) \= "ui.closed " then return 1
+  end
+  say "PASS: GTK choice, integer, silent rendering and reuse"
+  return 0
+
+controls_probe: class implements .uicomponent
+  _selected = .string
+  _value = .string
+  _status = .string
+  _journal = reference .string
+  *: factory
+    arg journal = reference .string
+    _journal = journal
+    _selected = "AT"
+    _value = "10"
+    _status = "Ready"
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    name = event.name()
+    body = event.body()
+    journal = dereference _journal
+    if name = "widget.selection.changed" then do
+      items = body.texts("items")
+      _selected = items[1]
+      journal = journal || "select:" || _selected || " "
+    end
+    else if name = "widget.value.changed" then do
+      _value = body.text("value")
+      journal = journal || "edit:" || _value || " "
+    end
+    else if name = "widget.value.committed" then do
+      _value = body.text("value")
+      _status = "Committed " || _value
+      journal = journal || "commit:" || _value || " "
+    end
+    else journal = journal || name || " "
+    if name = "probe.project" then do
+      _selected = "EU"
+      _value = "12"
+      _status = "Projected"
+    end
+    effects = .uieffects()
+    if name = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), "root", "effect"))
+    return effects
+  view: method = .uiview
+    result = .ui..uiview_impl("GTK control conformance")
+    ids = .string[]
+    labels = .string[]
+    ids[1] = "AT"
+    ids[2] = "DE"
+    ids[3] = "EU"
+    labels[1] = "Austria"
+    labels[2] = "Germany"
+    labels[3] = "Euro"
+    rc = result.add_choice("game", ids, labels, _selected, "root")
+    rc = result.add_integer("tips", _value, 1, 50, 1, "below", "game")
+    call arraydrop ids
+    call arraydrop labels
+    ids[1] = "first"
+    ids[2] = "second"
+    labels[1] = "First"
+    labels[2] = "Second"
+    rc = result.add_choice("other", ids, labels, "first")
+    call result.add_label("status", _status)
+    call result.add_button("project", "Project", "probe.project", "p")
+    call result.add_button("quit", "Quit", "probe.quit", "q", "right", "project")
+    return result

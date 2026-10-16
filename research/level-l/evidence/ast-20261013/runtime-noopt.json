@@ -1,0 +1,118 @@
+{
+  "commands": [
+    {
+      "key": "opt-compile",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/ts_llast.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "opt-assemble",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "opt-link",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "opt-rxtvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt-linked.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "56a0439c7f83593637d9a6792802ca382b83a009283bdec21931757e74c54dbc"
+    },
+    {
+      "key": "opt-rxbvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/opt-linked.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "56a0439c7f83593637d9a6792802ca382b83a009283bdec21931757e74c54dbc"
+    },
+    {
+      "key": "noopt-compile",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/ts_llast.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "noopt-assemble",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "noopt-link",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt-linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/imports/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "noopt-rxtvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "56a0439c7f83593637d9a6792802ca382b83a009283bdec21931757e74c54dbc"
+    },
+    {
+      "key": "noopt-rxbvm",
+      "args": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-surface/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/noopt-runtime/noopt-linked.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "56a0439c7f83593637d9a6792802ca382b83a009283bdec21931757e74c54dbc"
+    }
+  ]
+}

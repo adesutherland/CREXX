@@ -1,0 +1,23 @@
+.globals=0
+main() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
+load r4,0
+call r0,llf1(),r4
+ret r0
+llf1() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+br llb1
+llb1:
+.srcstep 4 0 17 "literal-g.crexx" 2 1 7 "say 01"
+load r1,""
+.srcstep 12 0 17 "literal-g.crexx" 2 5 7 "say 01"
+load r2,1
+.srcstep 4 0 17 "literal-g.crexx" 2 1 7 "say 01"
+copy r3,r2
+itos r3
+say r3
+.srcstep 2 0 98 "literal-g.crexx" 1 1 15 "options levelg"
+load r4,0
+ret r4

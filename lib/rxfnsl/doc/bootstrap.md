@@ -34,8 +34,10 @@ becomes self-hosted is the **reader of Level L specifications**.
 L0 compiles a bounded handwritten reader from `bootstrap/seed-reader.inc`
 together with common semantic lowering. It has no resynchronization. L1 and
 L2 instead use the generated lexer, a declared keyword/declaration token stage,
-and the generated canonical LR parser. Their expression and charset trees are
-walked into the common grammar. They contain no seed-reader fallback.
+and the generated LL(1) parser. Their expression and charset trees are
+walked into the common grammar. Shared keyword alternatives are factored in
+the self-description; LL(1) admission checks it before generation. They contain
+no seed-reader fallback.
 
 The self-description includes a useful composite stage: `name :` becomes one
 `declarationname` token. This distinguishes the start of a declaration from an
@@ -100,6 +102,16 @@ A no-op build does not regenerate or rewrite images. Changing the specification
 regenerates both generated stages. Changing the shared runtime/generator inputs
 rebuilds the affected foundation and dependent stages. The final library is
 published after the comparison succeeds.
+
+`levell_bootstrap` owns completion of the L0/L1/L2 chain and its comparison.
+Both the public library target and Unicode generator wait for that target;
+the packaged CLI also waits through the public library. File dependencies
+remain in place to detect changed sources or a missing image. This target
+ordering matters for parallel Make, which can otherwise copy the same L2
+recipe into independent consumers and run it twice. The Unix Makefiles
+`levell_bootstrap_build_order` regression exercises clean, missing-image,
+changed-input and no-op builds using the real declarations and instrumented
+stand-in tools; real compiler/bytecode qualification is separate.
 
 `generate.cmake` writes a temporary output and renames it only on success. A bad
 grammar returns nonzero, removes that temporary output and preserves the last

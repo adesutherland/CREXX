@@ -1,0 +1,23 @@
+/* Minimal rxbuild plan: no variables and no iteration. */
+
+COMPILE GRAMMAR
+  OUTPUT_DIR = "cmake-build-release/build/simple"
+  SOURCE = "tools/build/grammar/build.levell"
+  OUTPUT = "rxbuildgrammar";
+
+COMPILE READER
+  OUTPUT_DIR = "cmake-build-release/build/simple"
+  SOURCE = "tools/build/build_reader.crexx"
+  DEPENDS_ON = "rxbuildgrammar"
+  OUTPUT = "simple_reader";
+
+COMPILE PROGRAM
+  OUTPUT_DIR = "cmake-build-release/build/simple"
+  SOURCE = "tools/build/build_demo.crexx"
+  OUTPUT = "build_demo";
+
+RUN
+  WORK_DIR = "cmake-build-release/build/simple"
+  PROGRAM = "build_demo"
+  ARGUMENT = "-a" "tools/build/simple.build"
+  STDIN = "";

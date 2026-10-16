@@ -1,0 +1,294 @@
+/* cREXX License (MIT). Compiler-owned IR families; the host is Level B only. */
+options levelb
+namespace llcrexxir expose registerfamilies intadd inttext textcodec
+import rxfnsb
+import llir
+
+/** Register the initial scalar C/G contracts. The host never imports the G
+ * compiler or changes a Classic runtime's ambient numeric context. */
+registerfamilies: procedure = .void
+  arg registry = reference .llir..schema
+  schema = dereference registry
+  g = schema.family('crexx.g',1)
+  integer = g.type('int64',.llir..intcodec() as .object)
+  text = g.type('text',.llcrexxir..textcodec() as .object)
+  op = g.operation('iadd')
+  call op.input('left',integer); call op.input('right',integer); call op.output('value',integer)
+  call op.state('none'); call op.failure('overflow'); call op.termination('returns')
+  call op.evaluator(.llcrexxir..intadd() as .object)
+  op = g.operation('itext')
+  call op.input('value',integer); call op.output('text',text)
+  call op.state('none'); call op.failure('none'); call op.termination('returns')
+  call op.evaluator(.llcrexxir..inttext() as .object)
+  op = g.operation('say')
+  call op.input('text',text)
+  call op.state('output'); call op.failure('io'); call op.termination('returns')
+  c = schema.family('crexx.c',1)
+  value = c.type('value',.llir..bytescodec() as .object)
+  context = c.type('numeric',.llir..bytescodec() as .object)
+  op = c.operation('add')
+  call op.input('left',value); call op.input('right',value); call op.input('context',context)
+  call op.output('value',value)
+  call op.state('none'); call op.failure('arithmetic'); call op.termination('returns')
+  /* No Classic evaluator is registered until its exact contextual operation
+   * contract is implemented. A cached host numeric setting is never a fact. */
+  op = c.operation('say')
+  call op.input('value',value)
+  call op.state('output'); call op.failure('conversion.io'); call op.termination('returns')
+  call frontendfamilies(g,c,integer,text,schema.boolean(),value,context)
+  return
+
+/** UTF-8 text literals, stored as exact bytes. Binary/Classic literal values use
+ * bytescodec and are not forced through Unicode decoding. */
+textcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bits = .binary
+    do
+      text = bits as .string
+      if bin2x(text as .binary) <> bin2x(bits) then return 'text does not round-trip as UTF-8'
+      return ''
+    on signal
+      return 'invalid UTF-8 text'
+    end
+    return 'invalid UTF-8 text'
+  format: method = .string
+    arg bits = .binary
+    return bits as .string
+
+/** Checked int64 addition. Overflow keeps the operation for runtime handling. */
+intadd: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','integer evaluation budget exhausted')
+    left = input.at(1); right = input.at(2)
+    a = <at..i64>(0) left; b = <at..i64>(0) right
+    if b > 0 then do
+      if a > 9223372036854775807 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    if b < 0 then do
+      if a < -9223372036854775808 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    bytes = .binary; call binresize bytes,8; <at..i64>(0) bytes = a + b
+    result = .llir..evaluation('constant'); call result.add(bytes)
+    return result
+
+inttext: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    codec = .llir..intcodec(); text = codec.format(input.at(1))
+    result = .llir..evaluation('constant'); call result.add(text as .binary)
+    return result
+
+/** Scalar/control/call extensions for the admitted frontend profile. Context
+ * values are immutable snapshots. Pool values denote activation-owned mutable
+ * pools. No evaluator is granted for a contextual or effectful operation. */
+frontendfamilies: procedure = .void
+  arg g = .llir..family, c = .llir..family, integer = .llir..typeid, text = .llir..typeid, boolean = .llir..typeid, value = .llir..typeid, context = .llir..typeid
+  types = .object[]
+  types[1] = integer as .object; types[2] = text as .object; types[3] = g.type('boolean',.llir..intcodec() as .object) as .object
+  types[4] = g.type('float64',.llcrexxir..floatcodec() as .object) as .object
+  types[5] = g.type('decimal',.llcrexxir..decimalcodec() as .object) as .object
+  types[6] = value as .object; types[7] = context as .object
+  types[8] = c.type('pool',.llir..bytescodec() as .object) as .object
+  types[9] = c.type('arguments',.llir..bytescodec() as .object) as .object
+  types[10] = c.type('result',.llir..bytescodec() as .object) as .object
+  types[11] = boolean as .object
+  call declare(g,'decimal.default',types,'',5,'','none','none')
+  names = 'int64 text boolean float64 decimal'
+  i = .int; j = .int; k = .int; name = .string; inputs = .string; op = .llir..operation
+  do i = 1 to 5
+    name = word(names,i)
+    do j = 1 to 5
+      if i <> j then do
+        op = declare(g,'convert.' || name || '.' || word(names,j),types,'value:' || i,j,'','none','conversion')
+        if i = 1 & j = 2 then call op.evaluator(.llcrexxir..inttext() as .object)
+        if (i = 1 & j = 3) | (i = 3 & j = 1) then call op.evaluator(.scalarfold('canonical') as .object)
+      end
+    end
+    do k = 1 to 7
+      op = declare(g,name || '.' || word('eq ne lt le gt ge strict',k),types,'left:' || i || ' right:' || i,3)
+      if i = 1 then call op.evaluator(.scalarfold(word('eq ne lt le gt ge strict',k)) as .object)
+    end
+    if i = 1 | i = 3 | i = 4 | i = 5 then do
+      do k = 1 to 4
+        op = declare(g,name || '.' || word('add sub mul div',k),types,'left:' || i || ' right:' || i,i,'','none','arithmetic')
+        if i = 1 & k < 4 then call op.evaluator(.scalarfold(word('add sub mul',k)) as .object)
+      end
+      call declare(g,name || '.negative',types,'value:' || i,i,'','none','overflow')
+      call declare(g,name || '.positive',types,'value:' || i,i)
+    end
+  end
+  op = declare(g,'truth',types,'value:3',11)
+  call op.evaluator(.scalarfold('gtruth') as .object)
+  call declare(g,'boolean.not',types,'value:3',3)
+  call declare(g,'boolean.xor',types,'left:3 right:3',3)
+  call declare(g,'text.concat',types,'left:2 right:2',2,'','none','resource')
+  call declare(g,'exit',types,'value:1',0,'','process','exit','diverges')
+  call declare(c,'pool.new',types,'',8,'','allocation','resource')
+  call declare(c,'load',types,'pool:8',6,'name:2','pool','condition')
+  call declare(c,'store',types,'pool:8 value:6',0,'name:2','pool','resource')
+  do k = 1 to 16
+    name = word('sub mul div eq ne lt le gt ge strict concat blank abut and or xor',k)
+    call declare(c,name,types,'left:6 right:6 context:7',6,'','none','conversion.arithmetic')
+  end
+  do k = 1 to 3
+    call declare(c,word('positive negative not',k),types,'value:6 context:7',6,'','none','conversion.arithmetic')
+  end
+  op = declare(c,'truth',types,'value:6',11,'','none','logical')
+  call op.evaluator(.scalarfold('ctruth') as .object)
+  call declare(c,'numeric.digits',types,'value:6 context:7',7,'','none','numeric')
+  call declare(c,'numeric.fuzz',types,'value:6 context:7',7,'','none','numeric')
+  call declare(c,'numeric.form',types,'context:7',7,'form:2','none','numeric')
+  call declare(c,'digits',types,'context:7',6)
+  call declare(c,'arguments.empty',types,'',9)
+  call declare(c,'arguments.append',types,'arguments:9 value:6 present:11',9,'','none','resource')
+  call declare(c,'arguments.read',types,'arguments:9',6,'ordinal:1','none','argument')
+  call declare(c,'arguments.count',types,'arguments:9',6)
+  call declare(c,'arguments.exists',types,'arguments:9 ordinal:6 option:6',6,'','none','argument')
+  call declare(c,'return.present',types,'value:6',10)
+  call declare(c,'return.absent',types,'',10)
+  call declare(c,'requirevalue',types,'result:10',6,'','none','missing.result')
+  call declare(c,'setresult',types,'pool:8 result:10',0,'','pool','resource')
+  call declare(c,'call',types,'arguments:9 context:7',10,'target:2','pool.numeric.output','condition')
+  call declare(c,'length',types,'value:6',6,'','none','conversion')
+  call declare(c,'exit',types,'value:6',0,'','process','exit','diverges')
+  return
+
+/** Declarative signature helper; all type handles still belong to the live
+ * caller's registry. This is compiler vocabulary, not a generic IR opcode. */
+declare: procedure = .llir..operation
+  arg family = .llir..family, name = .string, types = .object[], inputs = .string, result = .int, attributes = '', state = 'none', failure = 'none', termination = 'returns'
+  op = family.operation(name)
+  item = .string; split = .int; type = .llir..typeid; i = .int
+  do i = 1 to words(inputs)
+    item = word(inputs,i); split = pos(':',item)
+    type = types[substr(item,split + 1) as .int] as .llir..typeid
+    call op.input(left(item,split - 1),type)
+  end
+  if result > 0 then call op.output('value',types[result] as .llir..typeid)
+  do i = 1 to words(attributes)
+    item = word(attributes,i); split = pos(':',item)
+    type = types[substr(item,split + 1) as .int] as .llir..typeid
+    call op.attribute(left(item,split - 1),type)
+  end
+  call op.state(state); call op.failure(failure); call op.termination(termination)
+  return op
+
+/** The admitted STEP05 rules. Checked scalar arithmetic never changes Classic
+ * numeric context or evaluates a user call. Noncanonical truth and overflow
+ * stay at runtime; core Boolean bytes differ from G's int64 Boolean values. */
+scalarfold: class implements .llir..evaluator
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode; return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','scalar evaluation budget exhausted')
+    left = input.at(1); right = .binary; bits = .binary; a = .int; b = .int; value = .int
+    if _mode = 'ctruth' then do
+      spelling = bin2x(left)
+      if spelling <> '30' & spelling <> '31' then return .llir..evaluation('keep','Classic truth requires exact 0 or 1 bytes')
+      bits = '00'x as .binary
+      if spelling = '31' then bits = '01'x as .binary
+    end
+    else do
+      a = <at..i64>(0) left
+      if _mode = 'canonical' | _mode = 'gtruth' then do
+        if a <> 0 & a <> 1 then return .llir..evaluation('keep','noncanonical Boolean remains runtime work')
+        if _mode = 'canonical' then bits = left
+        else do
+          bits = '00'x as .binary
+          if a = 1 then bits = '01'x as .binary
+        end
+      end
+      else do
+        right = input.at(2); b = <at..i64>(0) right
+        maximum = 9223372036854775807; minimum = -9223372036854775808; overflow = 0
+        select _mode
+          when 'add' then do
+            if b > 0 then overflow = a > maximum - b
+            if b < 0 then overflow = a < minimum - b
+            if overflow = 0 then value = a + b
+          end
+          when 'sub' then do
+            if b > 0 then overflow = a < minimum + b
+            if b < 0 then overflow = a > maximum + b
+            if overflow = 0 then value = a - b
+          end
+          when 'mul' then do
+            if a > 0 & b > 0 then overflow = a > maximum <idiv> b
+            if a > 0 & b < 0 then overflow = b < minimum <idiv> a
+            if a < 0 & b > 0 then overflow = a < minimum <idiv> b
+            if a < 0 & b < 0 then overflow = a < maximum <idiv> b
+            if overflow = 0 then value = a * b
+          end
+          when 'eq' then value = a = b
+          when 'strict' then value = a = b
+          when 'ne' then value = a <> b
+          when 'lt' then value = a < b
+          when 'le' then value = a <= b
+          when 'gt' then value = a > b
+          when 'ge' then value = a >= b
+          otherwise return .llir..evaluation('keep','operation has no admitted scalar rule')
+        end
+        if overflow then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+        call binresize bits,8; <at..i64>(0) bits = value
+      end
+    end
+    result = .llir..evaluation('constant'); call result.add(bits); return result
+
+floatcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    value = text as .float
+    bytes = .binary; call binresize bytes,8; <at..f64>(0) bytes = value
+    return bytes
+  check: method = .string
+    arg bytes = .binary
+    if <blen>(bytes) <> 8 then return 'float64 needs eight bytes'
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return (<at..f64>(0) bytes) as .string
+
+/** Decimal constants retain validated source digits, avoiding a binary float
+ * round trip. Runtime conversion applies the declared G numeric contract. */
+decimalcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bytes = .binary
+    if <blen>(bytes) = 0 then return 'empty decimal'
+    text = bytes as .string; i = 1; digits = 0; dot = 0; exponent = 0
+    if left(text,1) = '+' | left(text,1) = '-' then i = 2
+    do while i <= length(text)
+      ch = substr(text,i,1)
+      if pos(ch,'0123456789') > 0 then digits = digits + 1
+      else if ch = '.' & dot = 0 & exponent = 0 then dot = 1
+      else if (ch = 'e' | ch = 'E') & exponent = 0 & digits > 0 then do
+        exponent = 1; digits = 0
+        if substr(text,i + 1,1) = '+' | substr(text,i + 1,1) = '-' then i = i + 1
+      end
+      else return 'invalid decimal spelling'
+      i = i + 1
+    end
+    if digits = 0 then return 'decimal needs digits'
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return bytes as .string

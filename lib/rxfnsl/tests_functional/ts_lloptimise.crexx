@@ -1,0 +1,222 @@
+/* cREXX License (MIT). Independent non-C/G optimisation contracts and oracle. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  graph = .llir..module; original = .llir..module; change = .llirservices..change; mode = .int
+  do mode = 0 to 4
+    graph = fixture(mode); saved = graph.binary()
+    call check(graph.error() = '', 'fixture ' || mode || ': ' || graph.error())
+    change = llirservices..optimise(reference graph)
+    result = change.result()
+    call check(change.status() = 'changed', 'changed ' || mode || ': ' || change.message())
+    call check(result.error() = '', 'verified candidate')
+    call check(rungraph(graph) = rungraph(result), 'independent interpreter agreement ' || mode)
+    expectedoutput = 'observe:7;return:7'
+    if mode = 4 then expectedoutput = 'DIVERGES'
+    call check(rungraph(result) = expectedoutput, 'independent expected result ' || mode)
+    call check(bin2x(saved) = bin2x(graph.binary()), 'source remains immutable')
+    call check(result.operations() < graph.operations(), 'fewer operations')
+    call check(change.block(3) = 0, 'unreachable failure block removed')
+    call check(change.block(1) = 1 & change.block(4) = 3, 'entry and join mapped')
+    call check(change.operation(3) > 0 & change.value(3) > 0, 'folded operation/value maps')
+    op = result.operation(change.operation(3)); origin = op.origin()
+    call check(origin.kind() = 'derived' & origin.parents() > 0, 'folded source provenance')
+    again = llirservices..optimise(reference result); stable = again.result()
+    call check(again.status() = 'keep' & stable.identity() = result.identity(), 'converged in one reconstruction')
+    if mode > 0 then call check(pos('fixture.barrier',result.dump()) > 0, 'observable/uncertain operation retained')
+    if mode = 1 then call check(pos('core.load',result.dump()) > 0, 'state barrier prevents slot substitution')
+    do limit = 1 to 3
+      if limit = 1 then refused = llirservices..optimise(reference graph,1)
+      if limit = 2 then refused = llirservices..optimise(reference graph,1000000,1)
+      if limit = 3 then refused = llirservices..optimise(reference graph,1000000,1000000,1)
+      original = refused.result()
+      call check(refused.status() = 'limit', 'work/storage refusal ' || limit)
+      call check(original.identity() = graph.identity() & bin2x(original.binary()) = bin2x(saved), 'atomic budget failure')
+    end
+  end
+  /* Bad or refusing callbacks cannot publish partial work, even after earlier
+   * substitutions have been planned. Unknown control keeps the original. */
+  do i = 1 to 5
+    refusal = word('invalid limit signal wrongbits unknown',i)
+    graph = fixture(0,refusal); change = llirservices..optimise(reference graph); original = change.result()
+    expected = 'invalid'
+    if refusal = 'limit' then expected = 'limit'
+    if refusal = 'unknown' then expected = 'keep'
+    call check(change.status() = expected, 'callback outcome ' || refusal || ': ' || change.message())
+    call check(original.identity() = graph.identity(), 'callback refusal retains source')
+  end
+  call looptest()
+  call multiresult()
+  say 'OPTIMISE|checks=' || checks || '|failures=' || failures
+  return failures
+
+fixture: procedure = .llir..module
+  arg mode = .int, evaluation = 'ok'
+  schema = .llir..schema(); family = schema.family('fixture',1)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  add = family.operation('add')
+  call add.input('a',integer); call add.input('b',integer); call add.output('sum',integer)
+  call add.state('none'); call add.failure('none'); call add.termination('returns')
+  call add.evaluator(.addition(evaluation) as .object)
+  positive = family.operation('positive')
+  call positive.input('value',integer); call positive.output('truth',schema.boolean())
+  call positive.state('none'); call positive.failure('none'); call positive.termination('returns')
+  call positive.evaluator(.positivity() as .object)
+  observe = family.operation('observe'); call observe.input('value',integer)
+  call observe.attribute('label',integer)
+  call observe.state('output'); call observe.failure('none'); call observe.termination('returns')
+  bad = family.operation('failure'); call bad.state('none'); call bad.failure('error'); call bad.termination('returns')
+  barrier = family.operation('barrier')
+  call barrier.state(word('none unknown none none none',mode + 1))
+  call barrier.failure(word('none none possible unknown none',mode + 1))
+  continuation = 'returns'
+  if mode = 4 then continuation = 'diverges'
+  if evaluation = 'unknown' then continuation = 'unknown'
+  call barrier.termination(continuation)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  source = builder.source('fixture.test','1234567890' as .binary); at = source.origin(2,5)
+  fn = builder.function('main',integer); slot = fn.slot('private',integer)
+  entry = fn.block('entry'); yes = fn.block('yes'); no = fn.block('no'); join = fn.block('join')
+  draft = .llir..opdraft; ignored = .llir..opview
+  a = entry.constant(integer,'2',at); b = entry.constant(integer,'3',at)
+  sum = entry.binary(add,a,b,at); call entry.store(slot,sum,at)
+  if mode > 0 | evaluation = 'unknown' then do
+    draft = entry.operation(barrier,at); ignored = draft.finish()
+  end
+  loaded = entry.load(slot,at); total = entry.binary(add,sum,a,at)
+  call entry.store(slot,total,at)
+  unused = entry.binary(add,a,b,at)
+  draft = entry.operation(positive,at); call draft.input('value',total); ignored = draft.finish()
+  condition = ignored.result(); call entry.branch(condition,yes,no,at)
+  shown = yes.load(slot,at); draft = yes.operation(observe,at)
+  call draft.input('value',shown); call draft.attribute('label',(.llir..intcodec()).parse('42')); ignored = draft.finish()
+  call yes.jump(join,at)
+  draft = no.operation(bad,at); ignored = draft.finish(); call no.jump(join,at)
+  result = join.load(slot,at); call join.returnvalue(result,at)
+  return builder.finish()
+
+addition: class implements .llir..evaluator
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode; return
+  evaluate: method = .llir..evaluation
+    arg request = .llir..request
+    if _mode = 'invalid' | _mode = 'limit' then return .llir..evaluation(_mode,'fixture refusal')
+    if _mode = 'signal' then assembler signal "ERROR","fixture callback"
+    result = .llir..evaluation('constant')
+    if _mode = 'wrongbits' then do; call result.add('FF'x as .binary); return result; end
+    a = request.at(1); b = request.at(2); bits = .binary; call binresize bits,8
+    <at..i64>(0) bits = <at..i64>(0) a + <at..i64>(0) b
+    call result.add(bits); return result
+
+positivity: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg request = .llir..request
+    input = request.at(1); bits = '00'x as .binary
+    if <at..i64>(0) input > 0 then bits = '01'x as .binary
+    result = .llir..evaluation('constant'); call result.add(bits); return result
+
+/** Reference execution deliberately does not call evaluators or optimiser
+ * helpers. It interprets the fixture language, slots and control directly. */
+rungraph: procedure = .string
+  arg graph = .llir..module
+  store = dereference graph.storage(); values = .int[]; slots = .int[]
+  block = store.get(1,1,3); op = store.get(2,block,2); output = ''; steps = 0
+  do while op > 0 & steps < 1000
+    steps = steps + 1; code = store.get(3,op,1); next = store.get(3,op,3)
+    select code
+      when 1 then do
+        id = store.result(op); bits = store.bits(store.get(8,store.get(3,op,12),2))
+        if store.get(4,id,3) = 2 then values[id] = <at..u8>(0) bits
+        else values[id] = <at..i64>(0) bits
+      end
+      when 3 then values[store.result(op)] = slots[store.get(3,op,12)]
+      when 4 then slots[store.get(3,op,12)] = values[store.operand(op,1)]
+      when 5 then next = store.get(2,store.successor(op,1),2)
+      when 6 then next = store.get(2,store.successor(op,2 - values[store.operand(op,1)]),2)
+      when 7 then return output || 'return:' || values[store.operand(op,1)]
+      otherwise select store.opname(code)
+        when 'fixture.add' then values[store.result(op)] = values[store.operand(op,1)] + values[store.operand(op,2)]
+        when 'fixture.positive' then values[store.result(op)] = values[store.operand(op,1)] > 0
+        when 'fixture.observe' then do
+          view = graph.operation(op); label = view.attribute('label')
+          if <at..i64>(0) label <> 42 then return 'wrong attribute'
+          output = output || 'observe:' || values[store.operand(op,1)] || ';'
+        end
+        when 'fixture.failure' then return 'ERROR'
+        when 'fixture.barrier' then do
+          contract = dereference store.contract(); schema = dereference contract.data()
+          if schema.effectvalue(code - 16,3) = 'diverges' then return 'DIVERGES'
+        end
+        otherwise return 'UNKNOWN'
+      end
+    end
+    op = next
+  end
+  return 'LIMIT'
+
+looptest: procedure = .void
+  schema = .llir..schema(); contract = schema.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('loop'); fn = builder.function('main',contract.voidtype())
+  entry = fn.block('entry'); loopblock = fn.block('loop'); done = fn.block('done')
+  call entry.jump(loopblock,at); test = loopblock.constant(contract.boolean(),'false',at)
+  call loopblock.branch(test,loopblock,done,at); call done.returnvoid(at)
+  /* A second function is independently rooted even when never called. */
+  second = builder.function('unused',contract.voidtype()); block = second.block('entry'); call block.returnvoid(at)
+  graph = builder.finish(); change = llirservices..optimise(reference graph); result = change.result()
+  call check(change.status() = 'changed' & result.blocks() = 4 & result.functions() = 2, 'loop exit and all function roots')
+  call check(pos('core.branch',result.dump()) = 0, 'false loop branch simplified')
+  return
+
+multiresult: procedure = .void
+  schema = .llir..schema(); family = schema.family('pair',1)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  op = family.operation('values'); call op.output('first',integer); call op.output('second',integer)
+  call op.state('none'); call op.failure('none'); call op.termination('returns')
+  call op.evaluator(.pairvalues() as .object)
+  contract = schema.finish(); builder = .llir..builder(contract); at = builder.synthetic('pair')
+  fn = builder.function('pair',integer); entry = fn.block('entry'); draft = entry.operation(op,at)
+  pair = draft.finish(); first = pair.result(1); second = pair.result(2); call entry.returnvalue(second,at)
+  graph = builder.finish(); change = llirservices..optimise(reference graph); result = change.result()
+  call check(change.status() = 'changed' & result.operations() = 2,'only demanded multi-result constant survives')
+  call check(change.value(first.id()) = 0 & change.value(second.id()) > 0,'multi-result maps omit unused result')
+  view = result.operation(change.operation(pair.id())); value = view.result(); bits = value.bytes()
+  call check(<at..i64>(0) bits = 22,'second result remaps to its own exact value')
+  /* A budget sufficient for planning but not reconstruction still publishes
+   * the original graph and identity maps. Find that boundary deterministically. */
+  found = 0
+  do budget = 1 to 1000
+    refused = llirservices..optimise(reference graph,budget)
+    if refused.status() = 'changed' then leave
+    if pos('ir.transform',refused.message()) > 0 then do
+      original = refused.result()
+      call check(refused.status() = 'limit' & original.identity() = graph.identity(),'atomic reconstruction budget failure')
+      call check(refused.operation(pair.id()) = pair.id() & refused.value(second.id()) = second.id(),'failed reconstruction maps remain identity')
+      found = 1; leave
+    end
+  end
+  call check(found,'reconstruction budget boundary exercised')
+  return
+
+pairvalues: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg request = .llir..request
+    result = .llir..evaluation('constant'); codec = .llir..intcodec()
+    call result.add(codec.parse('11')); call result.add(codec.parse('22'))
+    return result
+
+check: procedure = .void expose checks failures
+  arg condition = .int, message = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL: ' || message
+  return

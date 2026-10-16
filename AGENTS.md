@@ -135,6 +135,41 @@ failure. Preserve explicitly required hosted, release and sanitizer closure
 gates; this guidance removes redundant status commits, not required proof.
 Keep this standing publication policy in `AGENTS.md`, not component worklists.
 
+## Emitted-code quality
+
+Compiler acceptance includes the quality of emitted code as well as correct
+execution. For changes to lowering, optimisation, register assignment or
+emission, inspect a small representative set of readable RXAS and retain
+checkable code-shape expectations alongside functional regressions. Include
+simple cases where unnecessary machinery is conspicuous. Reuse existing
+evidence where the qualified inputs are unchanged; this is not a requirement
+for a new broad benchmark or release-qualification run.
+
+- Compare equivalent inputs with the existing compiler's appropriate B, G and
+  C modes, recording compiler and assembler optimisation separately. An old
+  compiler's excess code or defect is a finding, not an acceptance target.
+- Distinguish source/debug records from executable instructions, and caller
+  code from work hidden in helpers or linked libraries. Inspect calls, copies,
+  frame/register requirements, branches, allocations and numeric/context
+  setup. Raw RXAS line counts alone establish neither speed nor total cost.
+- Preserve truthful source spans, clause identities, generated provenance and
+  defined TRACE/error observations. Do not reduce counts by stripping useful
+  metadata. Avoid mechanically repeated unchanged source records and diagnostic
+  state updates, while preserving mappings at control-flow entries. Emitted
+  source names must use stable logical identities rather than accidentally
+  embedding the compiler host's absolute checkout or temporary paths; retain a
+  deliberate source-resolution/mapping mechanism where needed.
+- Identify which excess comes from a current construction/emission defect,
+  necessary language or ownership semantics, an admitted conservative baseline,
+  or a named later optimisation. Do not defer direct emitter/IR-construction
+  defects merely because an optimiser could hide them. Do not remove call ABI,
+  numeric-context or lifetime operations without proving their obligations.
+- Record unresolved quality findings, owners, closure tests and intended steps
+  in the authoritative plan. Correct output alone does not close them. Use
+  structural assertions rather than brittle register-number snapshots where
+  possible; agree representative resource/performance budgets before claiming
+  replacement readiness, under the existing performance governance.
+
 ## Working Rules
 
 - For tasks that change compiler logic, syntax, scoping, or architecture,
@@ -241,6 +276,20 @@ the criteria that remain.
 
 ## Performance Programme
 
+### Level L research exception
+
+For the Level L research project, including the experimental B-only C/G
+compilers under `lib/rxfnsl/compilers`, formal performance testing is not a
+completion or publication requirement. Adrian set this scope on 15 October
+2026. Do not gate research increments on a formal Release benchmark, prescribed
+sample counts, AC power, or a separate performance-verdict approval. Focused
+functional tests, explicit resource-limit checks and inspection of emitted-code
+quality remain required. Lightweight timings or counts may inform development;
+label their conditions and do not present them as formal performance claims.
+Investigate observed pathological cost without automatically launching a
+benchmark campaign. This exception does not waive sanitizer findings, measured
+CTest scheduling, or the later explicitly agreed production-replacement gates.
+
 For performance-programme work, read `performance/AGENTS.md` and
 `performance/ROADMAP.md` before changing benchmarks, profiling automation,
 compiler/assembler optimisations, VM execution paths, or recorded performance
@@ -249,7 +298,7 @@ evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
 consolidated plans and essential current evidence in HEAD; recover completed
 programme history and superseded runs from Git when needed.
 
-After an approved production performance edit, follow the mandatory first
+Outside the Level L research exception above, after an approved production performance edit, follow the mandatory first
 Release verdict in `performance/AGENTS.md` before doing broad closeout work.
 Once the minimum focused correctness checks needed for safe measurement pass,
 freeze implementation, build the ordinary profiling-off Release product, run

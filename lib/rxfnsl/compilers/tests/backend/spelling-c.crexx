@@ -1,0 +1,11 @@
+options levelc
+/* outer /* nested */ end */
+if = 2; then = 3; else = 4
+say if then else
+say 'α''β' || '\path'
+say 'a'(2)
+x =
+say '[' || x || ']'
+say 01
+say '01' == '1'
+say '01' = '1'

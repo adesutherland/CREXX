@@ -115,7 +115,11 @@ static void text_files(void) {
     errno = 0; assert(fclose(file) == EOF && errno == EILSEQ);
 }
 static void console(void) {
+#if defined(CREXX_MAINFRAME_BATCH)
+    static const unsigned char input[] = {0xff, 0x00, 'A', 0xc3, 0xa9, 0x0a, 0x0a, 'B'};
+#else
     static const unsigned char input[] = {0xff, 0x00, 0xc1, 0x51, 0x0a, 0x0a, 0xc2};
+#endif
     static const unsigned char text[] = "A\xc3\xa9\n\nB";
     unsigned char expected[512];
     char long_text[301];
@@ -131,20 +135,41 @@ static void console(void) {
     for (i = 0; i < sizeof(text)-1; ++i) assert(platform_text_getc(stdin) == text[i]);
     assert(platform_text_getc(stdin) == EOF && !ferror(stdin));
     assert(printf("%s", "A\xc3\xa9\n") == 4);
+#if defined(CREXX_MAINFRAME_BATCH)
+    memcpy(expected + count, "A\xc3\xa9\n", 4); count += 4;
+    assert(fputs("B", stdout) >= 0); expected[count++] = 'B';
+#else
     expected[count++] = 0xc1; expected[count++] = 0x51; expected[count++] = 0x0a;
     assert(fputs("B", stdout) >= 0); expected[count++] = 0xc2;
+#endif
     assert(puts("") >= 0); expected[count++] = 0x0a;
+#if defined(CREXX_MAINFRAME_BATCH)
+    assert(platform_text_putc('{', stdout) == '{'); expected[count++] = '{';
+#else
     assert(platform_text_putc('{', stdout) == '{'); expected[count++] = 0xc0;
+#endif
     memset(long_text, 'A', sizeof(long_text)-1); long_text[300] = 0;
     assert(printf("%s", long_text) == 300);
-    memset(expected + count, 0xc1, 300); count += 300;
+    memset(expected + count,
+#if defined(CREXX_MAINFRAME_BATCH)
+           'A',
+#else
+           0xc1,
+#endif
+           300); count += 300;
     /* Raw character/byte writes remain byte operations. */
     assert(fputc(0x81, stdout) == 0x81); expected[count++] = 0x81;
     assert(fwrite(input, 1, 2, stdout) == 2);
     expected[count++] = 0xff; expected[count++] = 0x00;
     assert(!platform_console_text_write(stdout, NULL, 0));
     errno = 0;
+#if defined(CREXX_MAINFRAME_BATCH)
+    /* UTF-8 reaches the SDK intact; native representability belongs there. */
+    assert(fprintf(stdout, "%s", "\xe2\x82\xac") == 3);
+    memcpy(expected + count, "\xe2\x82\xac", 3); count += 3;
+#else
     assert(fprintf(stdout, "%s", "\xe2\x82\xac") < 0 && errno == EILSEQ);
+#endif
     assert(fprintf(stderr, "%s", "B\xc3\xa9\n") == 4);
     assert(variadic_output(stderr, "%s", "A\n") == 2);
     assert(!fflush(stdout) && !fflush(stderr));
@@ -152,7 +177,11 @@ static void console(void) {
     close(saved_in); close(saved_out); close(saved_err);
     clearerr(stdin);
     expect_raw("stdout.dat", expected, count);
+#if defined(CREXX_MAINFRAME_BATCH)
+    expect_raw("stderr.dat", (const unsigned char *)"B\xc3\xa9\nA\n", 6);
+#else
     expect_raw("stderr.dat", (const unsigned char *)"\xc2\x51\x0a\xc1\x0a", 5);
+#endif
 }
 int main(void) {
     text_files();

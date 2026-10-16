@@ -1,0 +1,82 @@
+/* cREXX License (MIT). Complete Level L calculator: checked constant folding. */
+options levelb
+import rxfnsb
+import lllanguage
+import llsource
+import llast
+import levell_calculator
+
+/** Parse the whole file before evaluating. Decimal arithmetic belongs to this
+ * example, not the grammar or parser. The rewrite visits children first, so an
+ * operator sees folded Number children. The input AST remains available.
+ * @param argv One input filename.
+ * @return 0 on success; a parser status or 3 for an application/value failure.
+ */
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: fold expression.calc'; return 3
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'CALC_IO: cannot read ' || argv[1]; return 3
+  end
+  language = levell_calculator..language()
+  request = .lllanguage..request(language,source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())
+    return status
+  end
+  tree = request.ast()
+  if tree.error() <> '' then do
+    say 'CALC_TREE: ' || tree.error(); return 3
+  end
+  pass = tree.rewrite('children first')
+  ok = .int
+  node = .llast..node
+  a = .decimal; b = .decimal; value = .decimal
+  do
+    do while pass.next()
+      node = pass.node()
+      select node.kind()
+        when 'Number' then iterate
+        when 'Negate' then value = -(node.child('value').text('spelling') as .decimal)
+        otherwise do
+          a = node.child('left').text('spelling') as .decimal
+          b = node.child('right').text('spelling') as .decimal
+          select node.kind()
+            when 'Add' then value = a + b
+            when 'Subtract' then value = a - b
+            when 'Multiply' then value = a * b
+            when 'Divide' then do
+              if b = 0 then do
+                say argv[1] || ': ' || llsource..diagnostic(source,node.child('right').start(),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')
+                return 3
+              end
+              value = a / b
+            end
+            otherwise do
+              say 'CALC_TREE: unexpected kind ' || node.kind(); return 3
+            end
+          end
+        end
+      end
+      replacement = pass.make('Number')
+      ok = replacement.settext('spelling',value as .string)
+      ok = pass.replace(replacement)
+    end
+  on signal
+    say argv[1] || ': ' || llsource..diagnostic(source,node.start(),'CALC_VALUE','Decimal conversion or arithmetic failed.')
+    return 3
+  end
+  folded = pass.finish()
+  if folded.error() <> '' then do
+    say 'CALC_TREE: ' || folded.error(); return 3
+  end
+  say 'ORIGINAL|' || tree.root().sourcetext()
+  say 'FOLDED|' || folded.root().kind() || '|' || folded.root().origin()
+  say 'RESULT|' || (folded.root().text('spelling') as .decimal)
+  return 0

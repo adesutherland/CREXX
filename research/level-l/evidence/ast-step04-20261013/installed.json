@@ -1,0 +1,95 @@
+{
+  "commands": [
+    {
+      "name": "analysis-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/examples/ast-analysis.crexx"
+      ],
+      "status": 0,
+      "output": "WAVE: project compile/assemble jobs=1\nSTART: project member ast-analysis\nBUILT: project member ast-analysis\nBARRIER: link program\nPUBLISHED: program /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis.rxbin\n",
+      "sha256": "3829b7b39c8a9c435c897f040ed794590d1d4ec6d0e6afec4652bf4fb810e779"
+    },
+    {
+      "name": "analysis-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis.rxbin"
+      ],
+      "status": 0,
+      "output": "Constant expression: 1 value: 14\nVariables read: X\nReplacement: Number 14\nOriginal source: 2+3*4\n14\n",
+      "sha256": "93ed00dc3034e67d2e66a87234f46dd1c7b3ac698b5659676383ed65506f45a1"
+    },
+    {
+      "name": "analysis-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis.rxbin"
+      ],
+      "status": 0,
+      "output": "Constant expression: 1 value: 14\nVariables read: X\nReplacement: Number 14\nOriginal source: 2+3*4\n14\n",
+      "sha256": "93ed00dc3034e67d2e66a87234f46dd1c7b3ac698b5659676383ed65506f45a1"
+    },
+    {
+      "name": "analysis-noop",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/examples/ast-analysis.crexx"
+      ],
+      "status": 0,
+      "output": "SKIP: project current /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/ast-analysis.rxbin\n",
+      "sha256": "a87dd92dafef130a042b9f7c9632612455b7d5d0f1e3725ab7cbc1ce672c8b24"
+    },
+    {
+      "name": "native-script",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/rexxscript1",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/script.rexx"
+      ],
+      "status": 0,
+      "output": "14\n",
+      "sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25"
+    },
+    {
+      "name": "calculator-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/calculator",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "output": "START: grammar calculator_grammar\nBUILT: grammar calculator_grammar\nWAVE: project compile/assemble jobs=1\nSTART: project member calculator\nBUILT: project member calculator\nBARRIER: link program\nPUBLISHED: program /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/calculator.rxbin\n",
+      "sha256": "c3ee9b082661125e627135bab1df21e08ebb357837aa514675fd39b7e9c4ee2b"
+    },
+    {
+      "name": "calculator-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "output": "RESULT|11\n",
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-step04/installed-check/calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "output": "RESULT|11\n",
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    }
+  ]
+}

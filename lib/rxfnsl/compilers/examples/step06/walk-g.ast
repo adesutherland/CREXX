@@ -1,0 +1,59 @@
+Program|0:56|options levelg
+say 01
+if 1 then say 'ok'
+else say 1 / 0
+
+Sequence|0:56|options levelg
+say 01
+if 1 then say 'ok'
+else say 1 / 0
+
+Options|0:14|options levelg
+Say|15:21|say 01
+Chain|19:21|01
+Chain|19:21|01
+Chain|19:21|01
+Chain|19:21|01
+Chain|19:21|01
+Chain|19:21|01
+Cast|19:21|01
+Number|19:21|01
+IfElse|22:55|if 1 then say 'ok'
+else say 1 / 0
+Chain|25:27|1 
+Chain|25:27|1 
+Chain|25:27|1 
+Chain|25:27|1 
+Chain|25:27|1 
+Chain|25:27|1 
+Cast|25:27|1 
+Number|25:26|1
+Say|32:41|say 'ok'
+
+Chain|36:41|'ok'
+
+Chain|36:41|'ok'
+
+Chain|36:41|'ok'
+
+Chain|36:41|'ok'
+
+Chain|36:41|'ok'
+
+Chain|36:41|'ok'
+
+Cast|36:41|'ok'
+
+String|36:40|'ok'
+Say|46:55|say 1 / 0
+Chain|50:55|1 / 0
+Chain|50:55|1 / 0
+Chain|50:55|1 / 0
+Chain|50:55|1 / 0
+Chain|50:55|1 / 0
+Chain|50:55|1 / 0
+Cast|50:52|1 
+Number|50:51|1
+Cast|54:55|0
+Number|54:55|0
+divide|52:53|/

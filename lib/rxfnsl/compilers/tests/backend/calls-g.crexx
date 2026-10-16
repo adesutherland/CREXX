@@ -1,0 +1,20 @@
+options levelg
+say factorial(6)
+say mark(1) + mark(2) * mark(3)
+call mark(4)
+say early(8)
+exit 0
+factorial: procedure = .int
+ arg n = .int
+ if n <= 1 then return 1
+ return n * factorial(n - 1)
+mark: procedure = .int
+ arg n = .int
+ say n
+ return n
+early: procedure = .int
+ arg n = .int
+ do while n > 0
+   return n
+ end
+ return 0

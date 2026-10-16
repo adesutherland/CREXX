@@ -1,0 +1,165 @@
+/* cREXX License (MIT). Checked lowering and independent execution controls. */
+options levelb
+import rxfnsb
+import llast
+import llcore
+import llflow
+import lllanguage
+import unlesslang
+import lowerdemo
+
+main: procedure = .int
+  failures = 0; tree = .llast..tree; lowered = .llast..tree; ok = .int
+  do flag = 0 to 1
+    tree = parseinput('unless flag do x = 10; end; say x;')
+    lowered = lowerdemo..lower(reference tree)
+    failures = failures + check(lowered.status() = 0,lowered.error())
+    originalrun = .interpreter(flag); call originalrun.visit(tree.root())
+    targetrun = .interpreter(flag); call targetrun.visit(lowered.root())
+    expected = '10;'
+    if flag then expected = 'unassigned:x;'
+    failures = failures + check(originalrun.output() = expected,'source language control')
+    failures = failures + check(targetrun.output() = expected,'lowered execution')
+    facts = .llflow..conditions(reference lowered)
+    value = 'false'; if flag then value = 'true'
+    ok = facts.set(lowered.root().child('items',1).child('condition'),value,'flag is fixed for this run')
+    graph = lowerdemo..execution(reference lowered); ok = graph.using(reference facts)
+    result = graph.definiteassignment('flag')
+    failures = failures + check(result.error() = '' & result.count() = flag,'lowered flow agrees with concrete control')
+    failures = failures + check(result.before(lowered.root().child('items',2)).assigned('x') = (flag = 0),'lowered assignment fact')
+    failures = failures + check(tree.root().child('items',1).kind() = 'Unless','original unchanged')
+    failures = failures + check(lowered.root().child('items',1).origin() = 'derived','lowered source origin')
+    tree = parseinput('unless 0 do unless flag do x = 10; end; end; say x;')
+    lowered = lowerdemo..lower(reference tree)
+    originalrun = .interpreter(flag); call originalrun.visit(tree.root())
+    targetrun = .interpreter(flag); call targetrun.visit(lowered.root())
+    failures = failures + check(originalrun.output() = expected & targetrun.output() = expected,'nested lowering')
+  end
+  tree = parseinput('unless flag do x = 10; end; say x;')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); ok = pass.next()
+  bad = pass.finish()
+  failures = failures + check(pos('missing translation for Name',bad.error()) > 0 & bad.root().valid() = 0,'missing translation atomic')
+  pass = tree.lower(lowerdemo..target()); bad = pass.finish()
+  failures = failures + check(bad.status() <> 0 & bad.root().valid() = 0,'early finish')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); node = pass.translated(tree.root())
+  bad = pass.finish()
+  failures = failures + check(pos('not complete',bad.error()) > 0,'forward translation refused')
+  foreign = tree; pass = tree.lower(lowerdemo..target()); ok = pass.next()
+  node = pass.translated(foreign.root()); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_OWNER',bad.error()) > 0,'foreign input refused')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); draft = pass.make('Missing'); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_KIND',bad.error()) > 0,'unknown target kind')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); draft = pass.make('Number')
+  ok = pass.replace(draft); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_CARDINALITY',bad.error()) > 0,'missing required text')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); draft = pass.make('Number')
+  ok = draft.settext('bogus','1'); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_FIELD',bad.error()) > 0,'unknown target field')
+  other = tree.lower(lowerdemo..target()); ok = other.next(); draft = other.make('Block')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); ok = pass.replace(draft); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_OWNER',bad.error()) > 0,'foreign draft')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); draft = pass.make('Block')
+  ok = pass.keep(); ok = pass.next(); ok = pass.replace(draft); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_LIFECYCLE',bad.error()) > 0,'stale draft')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); draft = pass.make('Block')
+  node = pass.accept(draft); ok = draft.append('items',node); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_FROZEN',bad.error()) > 0,'accepted intermediate immutable')
+  pass = tree.lower(lowerdemo..target())
+  do while pass.next()
+    source = pass.original()
+    if source.kind() = 'Unless' then do
+      draft = pass.make('If')
+      ok = draft.append('condition',pass.translated(source.child('condition')))
+      body = pass.translated(source.child('body'))
+      ok = draft.append('yes',body); ok = draft.append('no',body)
+      ok = pass.replace(draft)
+    end
+    else ok = pass.keep()
+  end
+  bad = pass.finish()
+  failures = failures + check(pos('LL_AST_SHARED',bad.error()) > 0 & bad.root().valid() = 0,'shared child refused atomically')
+  bad = lowerdemo..lower(reference tree,0)
+  failures = failures + check(bad.status() = 2 & pos('tree.entries',bad.error()) > 0,'output budget')
+  pass = tree.lower(lowerdemo..target()); ok = pass.next(); tree = parseinput('say 1;')
+  bad = pass.finish()
+  failures = failures + check(bad.status() <> 0 & bad.root().valid() = 0,'replaced input')
+  pass = expiredpass(); ok = pass.next(); bad = pass.finish()
+  failures = failures + check(pos('LL_AST_OWNER',bad.error()) > 0,'expired input')
+  pass = tree.lower(lowerdemo..target())
+  do while pass.next()
+    ok = pass.keep()
+  end
+  lowered = pass.finish(); again = pass.finish()
+  failures = failures + check(lowered.status() = 0 & pos('already finished',again.error()) > 0,'single finish')
+  /* A deep tree is walked with an explicit cursor stack, not recursive lowering. */
+  schema = .llast..schema(); ok = schema.mapping('leaf','Leaf'); ok = schema.mapping('wrap','Wrap')
+  ok = schema.field('wrap','value','inner','operand','one')
+  raw = .llcore..tree.from_source('x' as .binary); root = raw.add(1,'leaf',0,1,0,0)
+  do i = 1 to 2000
+    root = raw.add(1,'wrap',0,1,root,0)
+  end
+  deep = .llast..tree(raw,root,schema); pass = deep.lower(schema); count = 0
+  do while pass.next()
+    count = count + 1; ok = pass.keep()
+  end
+  lowered = pass.finish()
+  failures = failures + check(lowered.status() = 0 & count = 2001,'deep lowering')
+  say 'failures=' || failures
+  return failures
+
+parseinput: procedure = .llast..tree
+  arg text = .string
+  request = .lllanguage..request(unlesslang..language(),text as .binary)
+  if request.parse() <> 0 then do
+    say request.error(); exit 1
+  end
+  return request.ast()
+expiredpass: procedure = .llast..lowering
+  tree = parseinput('say 1;')
+  return tree.lower(lowerdemo..target())
+check: procedure = .int
+  arg passed = .int, message = .string
+  if passed then return 0
+  say 'FAIL:' message
+  return 1
+
+/* Independent interpreter: Unless executes its body on false, If chooses an
+ * arm. Expected traces above are also asserted directly for each flag value. */
+interpreter: class
+  _flag = .int
+  _x = .string
+  _assigned = .int
+  _output = .string
+  *: factory
+    arg flag = .int
+    _flag = flag; _assigned = 0; _output = ''
+    return
+  value: method = .string
+    arg node = .llast..node
+    if node.kind() = 'Number' then return node.text('spelling')
+    if node.text('spelling') = 'flag' then return _flag as .string
+    if _assigned then return _x
+    return 'unassigned:x'
+  visit: method = .void
+    arg node = .llast..node
+    kind = node.kind()
+    select
+      when kind = 'Program' | kind = 'Block' then do i = 1 to node.count('items')
+        call visit(node.child('items',i))
+      end
+      when kind = 'Unless' then do
+        if value(node.child('condition')) = '0' then call visit(node.child('body'))
+      end
+      when kind = 'If' then do
+        if value(node.child('condition')) = '0' then call visit(node.child('no'))
+        else call visit(node.child('yes'))
+      end
+      when kind = 'Assignment' then do
+        _x = value(node.child('value')); _assigned = 1
+      end
+      when kind = 'Say' then _output = _output || value(node.child('value')) || ';'
+      otherwise nop
+    end
+    return
+  output: method = .string
+    return _output

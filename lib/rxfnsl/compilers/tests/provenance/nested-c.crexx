@@ -1,0 +1,7 @@
+options levelc
+say descend(3)
+exit 0
+descend: procedure
+ arg n
+ if n > 0 then return descend(n - 1)
+ return 1 / n

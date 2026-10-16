@@ -1,0 +1,158 @@
+/* cREXX License (MIT). Acyclic RexxScript facts and checked constant folding. */
+options levelb numeric_common
+namespace rexxscriptanalysis expose fact analyse fold
+import rxfnsb
+import llast
+import rexxvalue
+import rexxscriptoperators
+
+/** Facts describe syntax conservatively, without looking up variables or
+ * invoking a BIF. Reads include both branches and short-circuited operands.
+ * A known constant has been calculated with the interpreter's scalar rules.
+ */
+fact: class
+  _known = .int
+  _value = .RexxValue
+  _reads = .string
+  _effects = .int
+  _offset = .int
+  *: factory
+    _known = 0; _value = .RexxValue(''); _reads = ''; _effects = 0; _offset = 0
+    return
+  locate: method = .void
+    arg offset = .int
+    _offset = offset
+    return
+  offset: method = .int
+    return _offset
+  constant: method = .void
+    arg value = .RexxValue
+    _value = value; _known = 1
+    return
+  read: method = .void
+    arg name = .string
+    name = upper(strip(name))
+    if wordpos(name,_reads) = 0 then _reads = strip(_reads || ' ' || name)
+    return
+  effect: method = .void
+    _effects = 1
+    return
+  include: method = .void
+    arg other = .rexxscriptanalysis..fact
+    do i = 1 to words(other.reads())
+      call read(word(other.reads(),i))
+    end
+    if other.effects() then _effects = 1
+    return
+  known: method = .int
+    return _known
+  value: method = .RexxValue
+    return _value
+  reads: method = .string
+    return _reads
+  effects: method = .int
+    return _effects
+
+/** Analyse each node once; no variable or host state is observed or changed.
+ * @param tree Owning tree kept alive while the returned facts are used.
+ * @param limit Maximum analysis nodes.
+ * @return Complete owner-checked facts, or an explicit analysis error.
+ */
+analyse: procedure = .llast..facts
+  arg tree = reference .llast..tree, limit = 1000000
+  input = dereference tree
+  ok = .int
+  pass = input.analyse(limit)
+  do while pass.next()
+    node = pass.node(); result = .rexxscriptanalysis..fact()
+    call result.locate(node.offset())
+    children = node.each()
+    do while children.next()
+      childfact = pass.get(children.node()) as .rexxscriptanalysis..fact
+      call result.include(childfact)
+    end
+    name = node.kind()
+    if name = 'Name' then call result.read(node.text('spelling'))
+    if wordpos(name,'Call Assignment Say Collect Invoke Return Leave Iterate Controlled') > 0 then call result.effect()
+    /* Failure is not a compile error: the program may never execute this node.
+     * Leave it unknown so runtime still reports its original error location. */
+    do
+      select name
+        when 'Number' then call result.constant(rexxscriptoperators..number(node.text('spelling')))
+        when 'String' then call result.constant(rexxscriptoperators..stringliteral(node.text('spelling')))
+        when 'Group' then do
+          operand = pass.get(node.child('value')) as .rexxscriptanalysis..fact
+          if operand.known() then do
+            call result.constant(operand.value()); call result.locate(operand.offset())
+          end
+        end
+        when 'Prefix' then do
+          op = node.child('operator').kind(); child = node.child('value')
+          operand = pass.get(child) as .rexxscriptanalysis..fact
+          if op = 'minus' & strip(child.sourcetext()) = '9223372036854775808' then call result.constant(.RexxValue.fromInt(-9223372036854775808))
+          else if operand.known() then do
+            call result.constant(rexxscriptoperators..unary(op,operand.value()))
+            call result.locate(operand.offset())
+          end
+        end
+        when 'Chain' then do
+          operands = node.each('operands'); operators = node.each('operators')
+          ok = operands.next(); operand = pass.get(operands.node()) as .rexxscriptanalysis..fact
+          known = operand.known(); value = operand.value(); anchor = operand.offset()
+          do while operators.next() & known
+            ok = operands.next(); op = operators.node().kind()
+            if op = 'and' then do
+              if rexxscriptoperators..truth(value) = 0 then do
+                value = .RexxValue.fromInt(0); iterate
+              end
+            end
+            if op = 'or' then do
+              if rexxscriptoperators..truth(value) then do
+                value = .RexxValue.fromInt(1); iterate
+              end
+            end
+            operand = pass.get(operands.node()) as .rexxscriptanalysis..fact
+            known = operand.known()
+            if known then do
+              value = rexxscriptoperators..binary(op,value,operand.value()); anchor = operand.offset()
+            end
+          end
+          if known & result.effects() = 0 then do
+            call result.constant(value); call result.locate(anchor)
+          end
+        end
+        otherwise nop
+      end
+    on signal
+      nop
+    end
+    ok = pass.put(result as .object)
+  end
+  return pass.finish()
+
+/** Fold only successful pure scalar expressions with an exact typed literal.
+ * Source ranges and input ownership are preserved by the common rewrite.
+ * Floating values that cannot round-trip through a literal remain expressions.
+ * @param tree Original tree, borrowed for this finite pass.
+ * @param limit Analysis node allowance.
+ * @return A complete independent AST, or a failed result with no root.
+ */
+fold: procedure = .llast..tree
+  arg tree = reference .llast..tree, limit = 1000000
+  input = dereference tree
+  facts = analyse(tree,limit)
+  if facts.error() <> '' then return .llast..tree.failed(facts.error())
+  pass = input.rewrite()
+  do while pass.next()
+    original = pass.original()
+    info = facts.get(original) as .rexxscriptanalysis..fact
+    if info.known() = 0 | info.effects() then iterate
+    if wordpos(original.kind(),'Chain Prefix Group') = 0 then iterate
+    value = info.value(); spelling = rexxscriptoperators..literal(value)
+    if spelling = '' then iterate
+    replacement = pass.make('Number')
+    ok = replacement.settext('spelling',spelling)
+    ok = replacement.locate(info.offset())
+    ok = pass.replace(replacement)
+  end
+  return pass.finish()

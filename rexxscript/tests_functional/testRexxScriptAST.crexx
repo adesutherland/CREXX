@@ -1,0 +1,128 @@
+/* cREXX License (MIT). Named AST, acyclic analysis and folding equivalence. */
+options levelb numeric_common
+import rexxscript1
+import rexxscript1run
+import rexxscriptanalysis
+import rexxvalue
+import llast
+
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  call check('precedence','x=2+3*4; say x; return x','14','')
+  call check('float precision','return 0.1+0.2','','')
+  call check('float strictness','say 0.1+0.2=0.3; return 0.1+0.2','0','')
+  call check('decimal','say 0.1d+0.2d; return 0.1d+0.2d','0.3','')
+  call check('integer quotient','return 5/2','','')
+  call check('float quotient','return 5.0/2','','')
+  call check('string quotient',"return '2'/3",'','')
+  call check('signed minimum','return -9223372036854775808','','')
+  call check('negative zero','return -0.0','','')
+  call check('integer bits','return 0x10 <or> 1','','')
+  call check('power','return -2**2+2**3**2','','')
+  call check('untaken error','if 0 then say 1/0 else say 7','7','')
+  call check('nested branch','if 1 then if 0 then say 1/0 else say 2 else say unknown','2','')
+  call check('and skips error','say 0 & (1/0)','0','')
+  call check('or skips undefined','say 1 | unknown','1','')
+  call check('short circuit effect',"x=0; say 0 & value('x',1); say x; return x",'0|0','')
+  call check('left to right',"x=1; say value('x',2)+value('x',3); say x; return x",'3|3','')
+  call check('unselected effect',"x=1; if 0 then call value('x',4); say x; return x",'1','')
+  call check('unknown', 'say 2+unknown','','RS_UNDEFINED')
+  call check('division source','say 1/(2-2)','','RS_VALUE')
+  call check('error after fold','say 5/(1+1-2)','','RS_VALUE')
+  call check('bad truth source',"if 'a'||'bc' then say 7",'','RS_VALUE')
+  call check('overflow source','return 9223372036854775807+(2-1)','','RS_VALUE')
+  call check('bad exponent','return 2**(1/0)','','RS_VALUE')
+  call check('BIF error','say substr()','','RXC-LC-40.3')
+  call check('missing args',"say substr('abcd',2,,'.')",'bcd','')
+  call check('unicode origins',"say 'café'; say 1/(2-2)",'café','RS_VALUE')
+  call check('loops carry AST','x=0; do i=1 to 5; if i=3 then iterate; x=x+i; end; say x; return x','12','')
+  call check('until','x=0; do until x=3; x=x+1; end; say x','3','')
+  call check('return stops branch','if 1 then return 42 else say 1/0; say unknown','','')
+  call check('empty','','','')
+  call check('control validation','say 1; leave','','RS_CONTROL')
+  call check('parse before effects',"call value('x',1); say (2+",'','RS_PARSE')
+  program = rexxscript1..compile('x=2+3*4; if x>10 then say x else say 1/0' as .binary)
+  tree = program.ast(); facts = rexxscriptanalysis..analyse(reference tree)
+  assignment = tree.root().child('body').child('items')
+  info = facts.get(assignment.child('value')) as .rexxscriptanalysis..fact
+  cases = cases + 1
+  if info.known() = 0 | info.value().asInt() <> 14 | info.reads() <> '' | info.effects() then do
+    failures = failures + 1; say 'FAIL constant analysis'
+  end
+  info = facts.get(tree.root()) as .rexxscriptanalysis..fact
+  cases = cases + 1
+  if info.reads() <> 'X' | info.effects() = 0 then do
+    failures = failures + 1; say 'FAIL conservative read/effect analysis'
+  end
+  folded = rexxscriptanalysis..fold(reference tree)
+  cases = cases + 1
+  if folded.status() <> 0 then do
+    failures = failures + 1; say 'FAIL fold' folded.error()
+  end
+  else do
+    value = folded.root().child('body').child('items').child('value')
+    if value.kind() <> 'Number' | value.text('spelling') <> '14' | value.sourcetext() <> '2+3*4' | value.origin() <> 'derived' then do
+      failures = failures + 1; say 'FAIL folded shape/source'
+    end
+  end
+  cases = cases + 1
+  if assignment.child('value').kind() <> 'Chain' then do
+    failures = failures + 1; say 'FAIL input changed'
+  end
+  limited = rexxscriptanalysis..fold(reference tree,1)
+  cases = cases + 1
+  if limited.status() <> 2 | limited.root().valid() then do
+    failures = failures + 1; say 'FAIL atomic analysis allowance'
+  end
+  copied = tree; cases = cases + 1
+  if facts.has(copied.root()) then do
+    failures = failures + 1; say 'FAIL foreign analysis results'
+  end
+  floating = rexxscript1..compile('return 1.5+2.25' as .binary)
+  ftree = floating.ast(); ffold = rexxscriptanalysis..fold(reference ftree)
+  literal = ffold.root().child('body').child('items').child('value')
+  cases = cases + 1
+  if literal.kind() <> 'Number' | literal.text('spelling') <> '3.75' then do
+    failures = failures + 1; say 'FAIL exact float should fold'
+  end
+  say 'rexxscript_ast_cases=' || cases
+  say 'rexxscript_ast_failures=' || failures
+  return failures
+
+check: procedure = .void expose failures cases
+  arg name = .string, source = .string, expected = .string, code = .string
+  i = .int
+  cases = cases + 1
+  program = rexxscript1..compile(source as .binary)
+  ordinary = .rexxscript1run..execution(program,100000,1048576,0)
+  folded = .rexxscript1run..execution(program,100000,1048576,1)
+  a = ordinary.run(); b = folded.run()
+  left = ordinary.output(); right = folded.output(); text = ''; other = ''
+  do i = 1 to left[0]
+    if i > 1 then text = text || '|'
+    text = text || left[i]
+  end
+  do i = 1 to right[0]
+    if i > 1 then other = other || '|'
+    other = other || right[i]
+  end
+  av = ordinary.result(); bv = folded.result()
+  equal = av.hasInt() = bv.hasInt() & av.hasFloat() = bv.hasFloat() & av.hasDecimal() = bv.hasDecimal()
+  if av.hasInt() & bv.hasInt() then equal = equal & av.asInt() = bv.asInt()
+  if av.hasDecimal() & bv.hasDecimal() then equal = equal & av.asDecimal() = bv.asDecimal()
+  if av.hasFloat() & bv.hasFloat() then do
+    aa = '0000000000000000'x as .binary; bb = aa
+    <packed..float>(0) aa = av.asFloat()
+    <packed..float>(0) bb = bv.asFloat()
+    abits = <packed..int>(0) aa; bbits = <packed..int>(0) bb
+    equal = equal & abits = bbits
+  end
+  av = ordinary.value('X'); bv = folded.value('X')
+  equal = equal & av.asString() == bv.asString()
+  if a <> b | ordinary.code() <> code | folded.code() <> code | text <> expected | other <> expected | equal = 0 | ordinary.error() <> folded.error() then do
+    say 'FAIL' name 'status' a b 'output ['text'] ['other']'
+    say 'ordinary:' ordinary.error()
+    say 'folded:' folded.error()
+    failures = failures + 1
+  end
+  return

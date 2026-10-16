@@ -4,6 +4,50 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 
 add_custom_target(ui_functional_tests ALL)
 
+crexx_add_rexx_opt_matrix(
+        NAME ui_controls RUNNER rxvm
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_controls.crexx
+        TARGET_GROUP ui_functional_tests
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ui
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/ui ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS "library;ui;controls;classes"
+        REQUIRED_OUTPUT_REGEX "PASS: shared UI choice and integer views"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+crexx_add_rexx_opt_matrix(
+        NAME ui_scoped_write RUNNER rxvm
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_write.crexx
+        TARGET_GROUP ui_functional_tests
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ui ui_contract ui_catalog ui_local_resources
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/ui_local_resources
+                ${CMAKE_BINARY_DIR}/bin/ui_contract ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                ${CMAKE_BINARY_DIR}/bin/ui ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS "library;ui;resource;effects;classes"
+        REQUIRED_OUTPUT_REGEX "PASS: shared UI scoped text writes"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+set_tests_properties(ui_scoped_write_noopt ui_scoped_write_opt PROPERTIES
+        RESOURCE_LOCK crexx_ui_write_fixture)
+
+if(ENABLE_GTK)
+    crexx_add_rexx_opt_matrix(
+            NAME ui_gtk_controls RUNNER rxvm
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_gtk_controls.crexx
+            TARGET_GROUP ui_functional_tests
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS ui ui_contract ui_gtk _ui_gtk_native _ui_gtk_test
+            RUNTIME_ARGS $<TARGET_FILE:_ui_gtk_native> $<TARGET_FILE:_ui_gtk_test>
+                    ${CMAKE_BINARY_DIR}/bin/ui_gtk ${CMAKE_BINARY_DIR}/bin/ui_local_resources
+                    ${CMAKE_BINARY_DIR}/bin/ui_contract ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                    ${CMAKE_BINARY_DIR}/bin/ui ${CMAKE_BINARY_DIR}/bin/library
+            TEST_LABELS "library;ui;gtk;controls;callback"
+            REQUIRED_OUTPUT_REGEX "PASS: GTK choice, integer, silent rendering and reuse"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+    set_tests_properties(ui_gtk_controls_noopt ui_gtk_controls_opt PROPERTIES
+            TIMEOUT 60 RESOURCE_LOCK crexx_gtk_surface)
+endif()
+
 # One test-only observer shared by direct line and GTK host scenarios.
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/ui_driver_probe.rxbin"
         COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${CMAKE_BINARY_DIR}/bin"

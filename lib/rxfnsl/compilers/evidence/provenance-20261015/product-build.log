@@ -1,0 +1,53 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g78761cc5affe.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261014T172000Z
+-- CREXX Build Commit: 78761cc5affe
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/../DSL-Syntax-Highlighter
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (2.8s)
+-- Generating done (0.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+[0/4] Re-checking globbed directories...
+[1/28] Generating backend/opt/llctarget.rxbin
+[2/28] Generating ../../../bin/llctarget.rxbin
+[3/28] Generating frontends/noopt/frontend-probe-linked.rxbin
+[4/28] Generating frontends/opt/llcompilercontracts.rxbin
+[5/28] Generating frontends/noopt/frontend-tests-linked.rxbin
+[6/28] Generating frontends/opt/llfrontendparse.rxbin
+[7/28] Generating frontends/opt/llfrontend.rxbin
+[8/28] Staging deterministic compiler imports for llcompiler_llrxas_imports_opt ...
+[9/28] Generating frontends/opt/frontend-tests-linked.rxbin
+[10/28] Generating backend/opt/llrxas.rxbin
+[11/28] Staging deterministic compiler imports for llcompiler_llcompiler_imports_opt ...
+[12/28] Generating backend/opt/llcompiler.rxbin
+[13/28] Staging deterministic compiler imports for llcompiler_llcompilercli_imports_opt ...
+[14/28] Generating ../../../bin/llcompilers.rxbin
+[15/28] Generating backend/opt/llcompilercli.rxbin
+[16/28] Staging deterministic compiler imports for llcompiler_consumers_imports_opt ...
+[17/28] Generating backend/opt/llrxc-c-linked.rxbin
+[18/28] Generating backend/opt/llrxc-g-linked.rxbin
+[19/28] Generating backend/opt/llrxc-c-launcher.c
+[20/28] Generating backend/opt/llrxc-g-launcher.c
+[21/28] Generating backend/opt/backend-tests-linked.rxbin
+[22/28] Building C object lib/rxfnsl/compilers/CMakeFiles/llrxc-g.dir/backend/opt/llrxc-g-launcher.c.o
+[23/28] Building C object lib/rxfnsl/compilers/CMakeFiles/llrxc-c.dir/backend/opt/llrxc-c-launcher.c.o
+[24/28] Linking C executable bin/llrxc-g
+[25/28] Linking C executable bin/llrxc-c

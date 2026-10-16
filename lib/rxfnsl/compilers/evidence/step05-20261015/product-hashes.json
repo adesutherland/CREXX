@@ -1,0 +1,32 @@
+{
+  "cmake-build-levell-integration": {
+    "rxfnsc.rxbin": "199ff8a8f171d69e38bf2f6034062d76d0e738d65778884108a9cdd3ae33df2a",
+    "library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "rxc": "82132cbe5b98c9c17cc66b6fd0d794e0e9560d6cd30f62449c97fa1f2735d421",
+    "rxas": "cb6b0bf96f14615cac4182f26aeacaf9ef419e98c53e8ec8b482103e89f4ebe0",
+    "rxbvm": "6dd90bbf97762d02e8018a3ba75929044d5e7b150589bb204ef3d1b34caf3b7b",
+    "llctarget.rxbin": "a508fde4d1a9b51ce6af4e9d0e25a0e16f7cf9ba6e883f7e4cdf135f6c305198",
+    "rxlink": "a63de32a2023fb5a1058880bed5c0dc220746f7c01d99d63168038da3eec7b13",
+    "llrxc-c": "b9a0c40262573e9cf39e6e8387698d1b15f587bc210339f0344693f393b52cb6",
+    "rxtvm": "2e7c75b491e34677a27cc152b002bd2ac990c9479afe8d679f5c6acf3677d045",
+    "rxfnsl.rxbin": "15e03ae585a29101a66e2d6b1aa81e657610084b33a2f8efef439a323db6b2b8",
+    "classlib.rxbin": "cb1a8da416eb878e810c26ff1faa8888bc30c446c767c5941b4b42a0ad8f633f",
+    "llcompilers.rxbin": "f896386679aee047ac753c8d67db4cdfb787320492b826346fc9aeab1b76615a",
+    "llrxc-g": "b97230053839d6470056ac1f7ef93c2b7ae696c01362912a8ba74319d2d11d67"
+  },
+  "cmake-build-release": {
+    "rxfnsc.rxbin": "3c17365fb4cfb57a4ae78b6fefe607054c6acd09ce734182cc600ac4bdcb7ab9",
+    "library.rxbin": "1a87d03241ca08b885fc07349dfaa999e8cf85b7f7aa242af766d1f23d50f29e",
+    "rxc": "cd672408d9e13a564d1a73022b84b3ef7ba6e7235affcecff6415f81e83ea078",
+    "rxas": "6b3ca0d87cdeaef8e7b816f6e5a0672cbb41bf8cb109b3f87ce800c212edfded",
+    "rxbvm": "0cabdb2dec831f507605b0373422a3f8aa30c2e385cda30793edae7b58696b68",
+    "llctarget.rxbin": "a508fde4d1a9b51ce6af4e9d0e25a0e16f7cf9ba6e883f7e4cdf135f6c305198",
+    "rxlink": "5f477cb9e4fb238bac34e63557141c868ab8aac50d6c0b1e2b8e203200f062f6",
+    "llrxc-c": "ce5f4a08964165539489d6d483928373b0c44aafb45db2f191deeda7be4a4a77",
+    "rxtvm": "839042975cd33aae026dc530573049d32929dabc0cb1f763c1e5a8b08dd240e5",
+    "rxfnsl.rxbin": "6371ab282dd6267c7a8c837369e427bba030c7646e56c1d9b07b1cf522840736",
+    "classlib.rxbin": "8c80b38ffd58b20b359e25ae576342cc7d384bc3a0b0535c956a2511a6377cd7",
+    "llcompilers.rxbin": "5a0be2455669417ff7559ab1b32b0f223f1ad3019ad0fd06f3f658dd1823fb9c",
+    "llrxc-g": "1845226843d6255adf05b472da13c650150082250c2a80aff5d9f6125041df3f"
+  }
+}

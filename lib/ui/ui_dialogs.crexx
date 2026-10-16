@@ -61,7 +61,7 @@ uiconfirm_dialog: class implements .uidialog
   selection: method = .string
     return ""
 
-/** Open-one-file dialog. It owns directory/navigation/editing policy, not I/O
+/** Open/save-one-file dialog. It owns directory/navigation/editing policy, not I/O
  * authority in the application. No chdir: browsing never changes process cwd.
  * Current filesystem-provider limits, including Windows path encoding, apply.
  */
@@ -78,9 +78,11 @@ uifile_dialog: class implements .uidialog
   _result = .string
   _path = .string
   _loaded = .int
-  /** @param title caption @param directory initial local directory */
+  _purpose = .string
+  /** @param title caption @param directory initial local directory
+   * @param purpose open requires an existing file; save permits a new path */
   *: factory
-    arg title = .string, directory = .string
+    arg title = .string, directory = .string, purpose = "open"
     _title = title
     _directory = directory
     _filename = ""
@@ -92,6 +94,7 @@ uifile_dialog: class implements .uidialog
     _result = ""
     _path = ""
     _loaded = 0
+    _purpose = purpose
     return
 
   load_directory: method = .void
@@ -134,7 +137,7 @@ uifile_dialog: class implements .uidialog
     end
     path = resolve(_filename)
     if rxfs..isdir(path) then call load_directory(path)
-    else if rxfs..isfile(path) then do
+    else if rxfs..isfile(path) | _purpose = "save" then do
       _path = path
       _result = "ok"
     end
@@ -224,7 +227,9 @@ uifile_dialog: class implements .uidialog
     if _entries[0] = 0 then call view.add_label("dialog.empty", "(no entries)")
     call view.add_input("dialog.filename", left(_filename, _cursor) || "|" || substr(_filename, _cursor + 1))
     call view.add_label("dialog.error", _error)
-    call view.add_button("dialog.open", "Open", "dialog.open", "", "below")
+    action_text = "Open"
+    if _purpose = "save" then action_text = "Save"
+    call view.add_button("dialog.open", action_text, "dialog.open", "", "below")
     call view.add_button("dialog.cancel", "Cancel", "dialog.cancel", "", "right", "dialog.open")
     return view
   result: method = .string

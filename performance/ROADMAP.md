@@ -16,6 +16,52 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
+[compiler plan F5-STEP01](../lib/rxfnsl/compilers/PLAN.md#step05-proposal-level-l-services-and-shared-optimisation)
+owns this bounded Level B change. Hypothesis: shared indexed source-position
+lookup avoids repeated prefix scans; lazy defaults and selection-derived call
+windows remove unnecessary compiler work and emitted state without changing
+execution. Risks are CRLF/Unicode boundary changes, undersized hidden/cold call
+windows, lost control-entry anchors and changed default semantics. The initial
+experiment froze after focused independent source-index and C/G checks, then
+compared ordinary profiling-off Release products with retained `afcde7f6`
+products. A Level B consumer measured paired C/G compiler lifecycles, with
+source/binary identities and serial samples. Compile latency, RXAS/frame shape
+and memory were recorded separately; static counts are not speed claims. This
+cell has no corresponding RexxCPS workload. That first verdict preceded broader
+QA and shared-pass implementation under the policy then in force. It establishes
+neither production replacement nor a portfolio-wide performance claim.
+The [first verdict](../lib/rxfnsl/compilers/evidence/step05-cleanup-20261015/README.md)
+now retains 36 paired samples per language: C paired median -2.78%, G timing
+inconclusive, smaller RXAS/frames in both and no peak-RSS regression. Adrian accepted this cleanup verdict on 15 October and authorised continuation.
+The shared-pass increment is now locally qualified under F5-STEP02–04, with
+fewer runtime computations/branches and helper calls on the paired examples;
+[receipt](../lib/rxfnsl/compilers/evidence/step05-20261015/README.md). This does not
+establish a compiler-latency or memory improvement. Adrian subsequently clarified on 15 October that
+formal performance testing is not required for this research project. The root
+`AGENTS.md` now scopes the exception; no second formal Release verdict, AC-power
+or prescribed-sampling gate applies. The Release product and focused checks
+passed. Battery-powered pilots are retained as non-formal observations only;
+functional/resource/code-quality and later production-replacement criteria remain.
+
+**LEVEL-L-IR-01 — numeric IR storage screen (15 October).** The approved
+[compiler foundation plan](../lib/rxfnsl/compilers/PLAN.md#step02-implementation-record)
+compares fixed-width record and column storage before retaining its first
+layout. Hypothesis: row records favour append and whole-operation handling;
+columns may favour field scans. Risks are incorrect growth copies, changed IDs,
+width/extent overflow and misleading omission of side-table/pool costs.
+The Level B [harness](../tests/performance/levell_ir_storage.crexx) checks identical
+values before measuring construction, scans and field rewrites. This is a
+non-representative storage mechanism screen, not a compiler speed or memory
+qualification. RexxCPS has no corresponding IR arena workload and is inapplicable.
+The [STEP02 receipt](../lib/rxfnsl/compilers/evidence/step02-20261015/README.md) retains
+serial Release observations: all fields/checksums agree, rows favour construction
+and columns slightly favour the single-field scan/update. The initial foundation
+retains row records. Warmup trends and excluded VM overhead are explicit. This
+bounded screen is complete; representative compiler measurements remain open.
+No production compiler/VM optimisation is selected.
+
+
 **LEVEL-L-PARSER-01 — experimental language-tooling research (10 October).**
 The [local research plan](../research/level-l/PLAN.md) owns the wide source audit,
 native Thompson-NFA/DFA and grammar-generator PoCs, re2c wrapping, actual Pika

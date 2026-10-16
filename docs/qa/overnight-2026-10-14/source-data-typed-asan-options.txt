@@ -1,0 +1,15 @@
+phase=ctest
+build_dir=cmake-build-debugasan
+build_jobs=4
+test_jobs=8
+build_leaks=on
+test_leaks=off
+stop_on_failure=0
+regex=^source_data_contract_(b|g|l)_
+exclude_regex=
+exclude_regex_file=
+exclude_label=
+ctest_index=
+fixture_exclude_setup=
+fixture_exclude_any=
+base_asan_options=

@@ -74,7 +74,9 @@ crexx_add_build_stage(stage-g-library
 
 crexx_add_build_stage(stage-l-libraries
         DESCRIPTION "L Level L language tools and libraries"
-        REQUIRED_TARGETS rxfnsl levell_cli)
+        # CI selects stage-product explicitly; ALL alone does not build the
+        # installed compiler service, target adapter or separate command tools.
+        REQUIRED_TARGETS rxfnsl levell_cli llcompilers llctarget llrxc-c llrxc-g)
 
 crexx_add_build_stage(stage-product
         DESCRIPTION "Assembled cREXX product"

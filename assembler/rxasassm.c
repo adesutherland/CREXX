@@ -391,14 +391,19 @@ static void optimise_labels(Assembler_Context *context) {
                                        struct string_wrapper, index_node) {
             patch = (struct backpatching *) (i->value);
 
-            if (patch->defined != 0) { /* Note that unknown Symbol Errors handled later */
+            if (patch->defined != 0 &&
+                patch->index + 1 < context->binary.inst_size) {
+                /* Unknown symbols are handled later. End labels do not
+                   designate an instruction with a branch operand. */
 
                 /* Check if the destination is an unconditional branch */
                 if (context->binary.binary[patch->index].instruction.opcode == br->opcode) {
                     /* Yes - find the patch index for this jump source */
                     p = find_patch_index(context, patch->index + 1);
-                    if (p && p != patch && p->defined) {
-                        /* if found, and if not self referring, and if defined */
+                    if (p && p != patch && p->defined &&
+                        p->index != patch->index) {
+                        /* Distinct labels can alias the same address. Only
+                           an actual address change advances convergence. */
                         /* Otherwise, an error - the optimiser should duck out */
                         patch->index = p->index; /* make the target of this label the next
                                                   * branch target */

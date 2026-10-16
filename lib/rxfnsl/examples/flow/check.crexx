@@ -1,0 +1,40 @@
+/* Build: crexx --program check rules.rxl check.crexx; run: rxvm check
+ * The host supplies flag; the source does not assign x on every branch. */
+options levelb
+import flowdemo
+import lllanguage
+import llast
+import llflow
+import llsource
+
+i = .int; node = .llast..node
+language = flowdemo..language()
+source = 'if flag then' || '0a'x || '  x = 10;' || '0a'x || 'end;' || '0a'x || 'say x;'
+request = .lllanguage..request(language,source as .binary)
+if request.parse() <> 0 then do
+  say request.error(); exit 1
+end
+tree = request.ast()
+graph = flowdemo..execution(reference tree)
+result = graph.definiteassignment('flag')
+if result.error() <> '' then do
+  say result.error(); exit 1
+end
+draft = .flowdemo..notes(reference tree)
+do i = 1 to result.count()
+  node = result.node(i)
+  call draft.setmessage(node,result.message(i))
+  call draft.setpriority(node,1)
+end
+notes = draft.finish()
+if notes.error() <> '' then do
+  say notes.error(); exit 1
+end
+do i = 1 to result.count()
+  node = result.node(i); note = notes.at(node)
+  if note.hasmessage() then say llsource..diagnostic(tree.source(),node.offset(),'UNASSIGNED',note.getmessage())
+  say result.witness(i)
+end
+say 'Stored notes:' notes.size()
+say 'Root priority:' notes.at(tree.root()).getpriority()
+say 'Root has explicit priority:' notes.at(tree.root()).haspriority()

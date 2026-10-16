@@ -1,0 +1,27 @@
+[
+  {
+    "label": "ctest",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "-R",
+      "^llcompiler_product_inventory$",
+      "--output-on-failure"
+    ],
+    "exit": 0,
+    "seconds": 0.092
+  },
+  {
+    "label": "install",
+    "argv": [
+      "cmake",
+      "--install",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "--prefix",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-package-fix-2qeywubf/installed with spaces"
+    ],
+    "exit": 0,
+    "seconds": 0.096
+  }
+]

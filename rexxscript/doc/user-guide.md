@@ -327,7 +327,7 @@ attach ELSE, and how the interpreter walks the result, read the
 It also distinguishes generated token stages from RexxScript's handwritten
 layout and concatenation passes.
 
-The local `levell` branch adds an explicitly selected modern implementation:
+The modern implementation is selected explicitly:
 `rexxscript1`, `rexxscript1.rxbin`, namespaces `rexxscript1` and `rexxscript1run`.
 It uses a [Level L grammar](../grammar/rexxscript.levell), Level G
 NUMERIC_COMMON expressions and typed RexxValue values. It is for review and has
@@ -340,7 +340,7 @@ cmake --build cmake-build-levell-product --target rexxscript1_cli
 cmake-build-levell-product/bin/rexxscript1 rexxscript/examples/modern.rexx
 ```
 
-The example prints `total: 46`, `café`, `ok` and returns a typed result of46
+The example prints `total: 46`, `café`, `ok` and returns a typed result of 46
 through the reusable API. The CLI exit code is execution status, not the script
 RETURN value. It prints captured SAY output and a located diagnostic on failure.
 
@@ -387,9 +387,39 @@ malformed UTF-8 uses a safe byte excerpt. Resource exhaustion is distinct from
 invalid syntax (`RS_PARSE_LIMIT`, `RS_FUEL`, `RS_DEPTH`, `RS_VALUE_LIMIT`,
 `RS_OUTPUT_LIMIT`); cancellation is `RS_CANCELLED`.
 
-Default limits are1MiB source,1,000,000 parser actions, nesting128,100,000
-execution ticks,1MiB output/value extent and10,000 output lines. Selected
+Default limits are 1 MiB source, 1,000,000 parser actions, nesting 128, 100,000
+execution ticks, 1 MiB output/value extent and 10,000 output lines. Selected
 expanding BIF requests are checked before allocation; this is not a hard bound
 on every allocation or arbitrary shared/host library work. Cancellation is
 currently a synchronous run flag, tested before running. An asynchronous
 cross-worker cancellation/host API has not been selected or qualified.
+
+### Application trees, analysis and folding
+
+`rexxscript1..compile(source)` returns a reusable parsed program. Call
+`program.ast()` to obtain an owned application tree with named fields. An
+assignment has `name` and `value`; an IF has `condition`, `yes`, and an optional
+branch represented by the `IfElse` kind's `no` field. The interpreter uses these
+fields instead of parser child positions. `program.view()` retains the named
+parse view for inspection.
+
+The `rexxscriptanalysis` module uses Level L's children-first analysis service.
+Its `analyse(reference tree)` function calculates constants and conservative
+direct variable-read/effect information. Calls are marked as potential effects.
+Its `fold(reference tree)` function returns a
+new, checked tree with eligible constant expressions replaced by exact typed
+literals. Keep the original tree alive while using its analysis results; a
+copied or rewritten tree needs its own results.
+
+Execution validates control placement and nesting before folding, then follows
+only the selected branches. Analysis never invokes a BIF. Arithmetic that fails
+or cannot be represented by an exact literal stays in the tree, so an unselected
+`1/0` does not become a preparation error. Folding preserves numeric types,
+floating-point bits and original diagnostic locations.
+
+The constructor `execution(program, fuel, maximum, fold)` enables folding by
+default. Set the fourth argument to `0` to inspect ordinary execution. Both
+paths have the same language and function behavior. Folding can reduce the
+number of execution ticks needed. The [worked analysis
+example](../examples/ast-analysis.crexx) and [Level L analysis guide](../../lib/rxfnsl/doc/user-guide.md#calculate-facts-about-a-tree)
+show the complete pipeline and the common result-table API.

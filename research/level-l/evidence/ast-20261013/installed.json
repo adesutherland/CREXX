@@ -1,0 +1,166 @@
+{
+  "commands": [
+    {
+      "name": "calculator-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/calculator",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "sha256": "030797c24834354bf8e0c26da611fa37138d2f7fa883564df9731fecc8e82e2d"
+    },
+    {
+      "name": "calculator-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "calculator-noop",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/calculator",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "sha256": "030d795aeac450faed2d7ae86450eabdd9e0bdbfd153a5a8b0406e5e0b710b39"
+    },
+    {
+      "name": "fold-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/fold",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/fold.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "sha256": "0de658983c70c5d06129fa97b7c8ed7fb36291b986f3299386187f235dbebc37"
+    },
+    {
+      "name": "fold-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/fold.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "7e06fbcdf01c44f36015701115950f3159b1e7f8db6668e3cf3b71a418a44e42"
+    },
+    {
+      "name": "fold-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/fold.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "7e06fbcdf01c44f36015701115950f3159b1e7f8db6668e3cf3b71a418a44e42"
+    },
+    {
+      "name": "settings-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/settings-ast.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/settings/09-ast.rxl"
+      ],
+      "status": 0,
+      "sha256": "c8d3806332c6870ab78ffa8ae306e94ed20ae6a0de02478ba5117278194c71dc"
+    },
+    {
+      "name": "settings-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/settings.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/settings/expressions.settings"
+      ],
+      "status": 0,
+      "sha256": "191a6581dd347de8d1190afd4f9e26e0e2482a073cd79952e50188f28d6d6858"
+    },
+    {
+      "name": "settings-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/settings.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/settings/expressions.settings"
+      ],
+      "status": 0,
+      "sha256": "191a6581dd347de8d1190afd4f9e26e0e2482a073cd79952e50188f28d6d6858"
+    },
+    {
+      "name": "library-build",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/libraries/calc",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "sha256": "2dee8ffbaf2cdc764897faa2a951083f21b356956fa0d57d3c38695a6020a547"
+    },
+    {
+      "name": "library-consumer",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/library-calculator",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/libraries",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/libraries/calc"
+      ],
+      "status": 0,
+      "sha256": "0f8f08e3af8a2e9ecdacf4edcdf36c87e2164c5d025956f9144fd6c3d164cee0"
+    },
+    {
+      "name": "library-rxtvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/library-calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    },
+    {
+      "name": "library-rxbvm",
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/ast-20261013/installed-check/library-calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "sha256": "f751bd03ef3fdadb7269b796fde446d281e54bf882a7276a646f54cd7abd93dc"
+    }
+  ]
+}

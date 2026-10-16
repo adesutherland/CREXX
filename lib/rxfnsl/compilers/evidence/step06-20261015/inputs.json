@@ -1,0 +1,9 @@
+{
+  "lib/rxfnsl/compilers/backend.cmake": "cedff9fc42b68bb998500123c4a897aea8e77ed2b8fbcb23091c693197791820",
+  "lib/rxfnsl/compilers/examples/step06/walk-c.crexx": "2158f9ac6d72381505a33c970b422f0b5e6be7181ed0fbf6b82010211aa04450",
+  "lib/rxfnsl/compilers/examples/step06/walk-g.crexx": "28677917d0b7271ac6054ca9fa6cafb20d2ee8bf66704e3778721c943c217981",
+  "lib/rxfnsl/compilers/tests/backend-poc.crexx": "3fe5132440bb2b6e0f90a21726afd1e717e69b13f9531ae4556d23a784f96bf2",
+  "lib/rxfnsl/compilers/tests/check-poc.py": "99ee8964a104e6e41601e7882560a1441cfd7d67d88fad22bfc520042c25c0e6",
+  "lib/rxfnsl/compilers/tests/poc/control-c.crexx": "f186900e9288f7575c26f0710c1bdcec2497a99a902ce00336d98d8ec5b3c2e8",
+  "lib/rxfnsl/compilers/tests/poc/control-g.crexx": "a0217a1d42eef7ef3455161dbae26bcc17e7a9b6ce7c6c0088d06328f6c3fd84"
+}

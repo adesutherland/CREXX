@@ -1,0 +1,53 @@
+[0/2] Re-checking globbed directories...
+[1/21] Generating lowering-packrat/ts_lllowering_packrat_noopt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[2/21] Generating lowering-ll1/ts_lllowering_ll1_noopt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[3/21] Generating lowering-lr1/ts_lllowering_lr1_noopt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[4/21] Generating lowering-earley/ts_lllowering_earley_noopt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[5/21] Generating lowering-packrat/ts_lllowering_packrat_opt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[6/21] Generating lowering-lr1/ts_lllowering_lr1_opt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[7/21] Generating lowering-ll1/ts_lllowering_ll1_opt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[8/21] Generating lowering-earley/ts_lllowering_earley_opt-linked.rxbin
+Warning in ts_lllowering.crexx @ 38:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 5. Declare this binding explicitly if intentional., "tree"
+Warning in ts_lllowering.crexx @ 39:43 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 25, column 5. Declare this binding explicitly if intentional., "ok"
+Warning in ts_lllowering.crexx @ 92:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 15, column 5. Declare this binding explicitly if intentional., "lowered"
+3 warning(s) in source file
+[9/21] Generating modern/rexxscriptgrammar.rxbin
+[10/21] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptProgram ...
+[11/21] Generating modern/RexxScriptAnalysis.rxbin
+[12/21] Generating modern/RexxScriptProgram.rxbin
+[13/21] Generating modern/RexxScriptBifs.rxbin
+[14/21] Staging deterministic compiler imports for rexxscript1_module_imports_RexxScriptExecution ...
+[15/21] Generating modern/RexxScriptExecution.rxbin
+[16/21] Generating ../bin/rexxscript1.rxbin
+[17/21] Staging deterministic compiler imports for rexxscript1_driver_imports ...
+[18/21] Generating modern/RexxScript1Runner.c
+[19/21] Building C object rexxscript/CMakeFiles/rexxscript1_cli.dir/modern/RexxScript1Runner.c.o
+[20/21] Linking C executable bin/rexxscript1

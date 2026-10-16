@@ -1,0 +1,60 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 2464: llcompiler_frontend_syntax_opt_rxtvm
+      Start 2476: llcompiler_frontend_syntax_noopt_rxtvm
+      Start 2477: llcompiler_frontend_syntax_noopt_rxbvm
+      Start 2465: llcompiler_frontend_syntax_opt_rxbvm
+ 1/24 Test #2464: llcompiler_frontend_syntax_opt_rxtvm ........   Passed   44.89 sec
+      Start 2478: llcompiler_frontend_grammar_noopt_rxtvm
+ 2/24 Test #2465: llcompiler_frontend_syntax_opt_rxbvm ........   Passed   44.97 sec
+      Start 2466: llcompiler_frontend_grammar_opt_rxtvm
+ 3/24 Test #2476: llcompiler_frontend_syntax_noopt_rxtvm ......   Passed   45.04 sec
+      Start 2479: llcompiler_frontend_grammar_noopt_rxbvm
+ 4/24 Test #2477: llcompiler_frontend_syntax_noopt_rxbvm ......   Passed   45.05 sec
+      Start 2467: llcompiler_frontend_grammar_opt_rxbvm
+ 5/24 Test #2478: llcompiler_frontend_grammar_noopt_rxtvm .....   Passed   10.19 sec
+      Start 2483: llcompiler_frontend_calls_noopt_rxbvm
+ 6/24 Test #2479: llcompiler_frontend_grammar_noopt_rxbvm .....   Passed   10.08 sec
+      Start 2470: llcompiler_frontend_calls_opt_rxtvm
+ 7/24 Test #2467: llcompiler_frontend_grammar_opt_rxbvm .......   Passed   10.09 sec
+      Start 2482: llcompiler_frontend_calls_noopt_rxtvm
+ 8/24 Test #2466: llcompiler_frontend_grammar_opt_rxtvm .......   Passed   10.23 sec
+      Start 2480: llcompiler_frontend_mapping_noopt_rxtvm
+ 9/24 Test #2480: llcompiler_frontend_mapping_noopt_rxtvm .....   Passed    7.26 sec
+      Start 2468: llcompiler_frontend_mapping_opt_rxtvm
+10/24 Test #2483: llcompiler_frontend_calls_noopt_rxbvm .......   Passed    8.54 sec
+      Start 2481: llcompiler_frontend_mapping_noopt_rxbvm
+11/24 Test #2470: llcompiler_frontend_calls_opt_rxtvm .........   Passed    8.54 sec
+      Start 2471: llcompiler_frontend_calls_opt_rxbvm
+12/24 Test #2482: llcompiler_frontend_calls_noopt_rxtvm .......   Passed    8.87 sec
+      Start 2469: llcompiler_frontend_mapping_opt_rxbvm
+13/24 Test #2468: llcompiler_frontend_mapping_opt_rxtvm .......   Passed    7.42 sec
+      Start 2484: llcompiler_frontend_contracts_noopt_rxtvm
+14/24 Test #2481: llcompiler_frontend_mapping_noopt_rxbvm .....   Passed    7.34 sec
+      Start 2485: llcompiler_frontend_contracts_noopt_rxbvm
+15/24 Test #2469: llcompiler_frontend_mapping_opt_rxbvm .......   Passed    7.28 sec
+      Start 2472: llcompiler_frontend_contracts_opt_rxtvm
+16/24 Test #2471: llcompiler_frontend_calls_opt_rxbvm .........   Passed    8.13 sec
+      Start 2486: llcompiler_frontend_lifecycle_noopt_rxtvm
+17/24 Test #2484: llcompiler_frontend_contracts_noopt_rxtvm ...   Passed    5.59 sec
+      Start 2474: llcompiler_frontend_lifecycle_opt_rxtvm
+18/24 Test #2486: llcompiler_frontend_lifecycle_noopt_rxtvm ...   Passed    4.01 sec
+      Start 2487: llcompiler_frontend_lifecycle_noopt_rxbvm
+19/24 Test #2485: llcompiler_frontend_contracts_noopt_rxbvm ...   Passed    5.49 sec
+      Start 2475: llcompiler_frontend_lifecycle_opt_rxbvm
+20/24 Test #2472: llcompiler_frontend_contracts_opt_rxtvm .....   Passed    5.20 sec
+      Start 2473: llcompiler_frontend_contracts_opt_rxbvm
+21/24 Test #2474: llcompiler_frontend_lifecycle_opt_rxtvm .....   Passed    4.37 sec
+22/24 Test #2487: llcompiler_frontend_lifecycle_noopt_rxbvm ...   Passed    4.27 sec
+23/24 Test #2475: llcompiler_frontend_lifecycle_opt_rxbvm .....   Passed    4.22 sec
+24/24 Test #2473: llcompiler_frontend_contracts_opt_rxbvm .....   Passed    4.99 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Label Time Summary:
+compiler-frontends    = 322.05 sec*proc (24 tests)
+comprehensive         = 322.05 sec*proc (24 tests)
+level-l               = 322.05 sec*proc (24 tests)
+library               = 322.05 sec*proc (24 tests)
+optimizer-parity      = 322.05 sec*proc (24 tests)
+
+Total Test time (real) =  81.55 sec

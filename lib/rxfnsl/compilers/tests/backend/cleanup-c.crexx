@@ -1,0 +1,12 @@
+options levelc
+say
+x = 'kept'
+say x
+numeric digits 4
+numeric form engineering
+say 1 / 3
+say many(1,2,3,4,5,6,7,8,9,10)
+exit 0
+many: procedure
+ arg a,b,c,d,e,f,g,h,i,j
+ return a + j

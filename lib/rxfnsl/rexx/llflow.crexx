@@ -1,0 +1,811 @@
+/* cREXX License (MIT). Checked structured flow and finite definite assignment. */
+options levelb
+namespace llflow expose mapping graph result state conditions
+import rxfnsb
+import llast
+
+failaccess: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Execution roles for AST kinds, independent of parser derivations. */
+identities: initialiser expose flow_serial
+  flow_serial = 0
+  return
+next_identity: procedure = .int expose flow_serial
+  if flow_serial = 9223372036854775807 then call failaccess('LL_AST_IDENTITY: flow identities exhausted')
+  flow_serial = flow_serial + 1
+  return flow_serial
+
+mapping: class
+  _kind = .string[]
+  _op = .string[]
+  _fields = .string[]
+  _error = .string
+  _conflict = .int
+  *: factory
+    _error = ''; _conflict = 0
+    return
+  fail: method = .void
+    arg message = .string, conflict = .int
+    if _error = '' then do
+      _error = 'LL_FLOW: ' || message; _conflict = conflict
+    end
+    return
+  add: method = .int
+    arg kind = .string, op = .string, fields = ''
+    if index(kind) > 0 then do
+      call fail('duplicate mapping for ' || kind,_kind[0] + 1); return 0
+    end
+    n = _kind[0] + 1; _kind[n] = kind; _op[n] = lower(op); _fields[n] = lower(fields)
+    return n
+  index: method = .int
+    arg kind = .string
+    do i = 1 to _kind[0]
+      if lower(kind) = lower(_kind[i]) then return i
+    end
+    return 0
+  check: method = .int
+    arg schema = .llast..schema
+    f = .int
+    do m = 1 to _kind[0] while _error = ''
+      kind = _kind[m]; op = _op[m]; fields = _fields[m]; rule = schema.kindindex(kind)
+      if rule = 0 then do
+        call fail('unknown AST kind ' || kind,m); leave
+      end
+      count = words(fields)
+      select op
+        when 'sequence' then valid = count = 1
+        when 'evaluate' then valid = count >= 1
+        when 'assign' then valid = count = 2
+        when 'branch' then valid = count = 3
+        when 'read' then valid = count = 1
+        when 'value' then valid = count = 0
+        when 'while' then valid = count = 2
+        when 'until' then valid = count = 2
+        when 'loop' then valid = count = 1
+        when 'break' then valid = count = 0
+        when 'continue' then valid = count = 0
+        when 'return' then valid = count <= 1
+        when 'and' then valid = count = 2
+        when 'or' then valid = count = 2
+        otherwise valid = 0
+      end
+      if valid = 0 then do
+        call fail('invalid ' || op || ' mapping for ' || kind,m); leave
+      end
+      available = ''
+      do f = 1 to schema.fields()
+        if schema.owner(f) = rule then available = strip(available || ' ' || schema.name(f))
+      end
+      used = ''
+      do i = 1 to count while _error = ''
+        field = word(fields,i); found = 0
+        if wordpos(field,used) > 0 then call fail(kind || '.' || field || ' occurs twice in its flow mapping',m)
+        used = strip(used || ' ' || field)
+        do f = 1 to schema.fields()
+          if schema.owner(f) = rule & schema.name(f) = field then do
+            found = f; leave
+          end
+        end
+        if found = 0 then do
+          call fail(kind || ' has no field ' || field || '; available fields: ' || available,m); leave
+        end
+        text = (op = 'read' | op = 'assign') & i = 1
+        if text then valid = schema.mode(found) = 'text'
+        else valid = schema.mode(found) <> 'text'
+        if valid = 0 then do
+          if text then call fail(kind || '.' || field || ' must be text',m)
+          else call fail(kind || '.' || field || ' must be a child field',m)
+        end
+        card = schema.card(found)
+        if op = 'assign' & i = 2 then do
+          if card <> 'one' then call fail(kind || '.' || field || ' must contain exactly one child',m)
+        end
+        if wordpos(op,'while until loop and or') > 0 then do
+          if card <> 'one' then call fail(kind || '.' || field || ' must contain exactly one child',m)
+        end
+        if op = 'return' then do
+          if card <> 'one' & card <> 'optional' then call fail(kind || '.' || field || ' must contain one optional or required child',m)
+        end
+        if op = 'branch' then do
+          if card <> 'one' & (i <> 3 | card <> 'optional') then call fail(kind || '.' || field || ' must contain one child (ELSE may be optional)',m)
+        end
+      end
+      /* Every child needs an explicit execution role. Text metadata is inert. */
+      do f = 1 to schema.fields() while _error = ''
+        if schema.owner(f) <> rule | schema.mode(f) = 'text' then iterate
+        if wordpos(schema.name(f),used) = 0 then call fail(kind || '.' || schema.name(f) || ' has no execution role',m)
+      end
+    end
+    do r = 1 to schema.size() while _error = ''
+      if index(schema.kind(r)) = 0 then call fail('missing mapping for AST kind ' || schema.kind(r),0)
+    end
+    return _error = ''
+  size: method = .int
+    return _kind[0]
+  kind: method = .string
+    arg i = .int
+    return _kind[i]
+  op: method = .string
+    arg i = .int
+    return _op[i]
+  fields: method = .string
+    arg i = .int
+    return _fields[i]
+  error: method = .string
+    return _error
+  conflict: method = .int
+    return _conflict
+
+/** Application-established Boolean facts for one immutable AST.
+ * A reason records the application's justification; the library checks ownership
+ * and consistency, not the truth of arbitrary application semantics.
+ * @param limit Maximum stored condition facts. Missing facts are unknown.
+ */
+conditions: class
+  _root = .llast..node
+  _value = .string[]
+  _reason = .string[]
+  _count = .int
+  _limit = .int
+  _sealed = .int
+  _identity = .int
+  _error = .string
+  *: factory
+    arg owner = reference .llast..tree, limit = 1000000
+    _identity = next_identity(); _count = 0; _limit = limit; _sealed = 0; _error = ''
+    if limit < 0 then _error = 'LL_FLOW_FACT: condition limit must be nonnegative'
+    if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: condition tree has expired'
+    else do
+      tree = dereference owner
+      if tree.status() <> 0 then _error = tree.error()
+      _root = tree.root()
+    end
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    return
+  error: method = .string
+    if initialized(_root) then do
+      if _root.valid() = 0 then call fail('LL_AST_OWNER: condition tree has expired or been replaced')
+    end
+    return _error
+  accepts: method = .int
+    arg node = .llast..node
+    if error() <> '' then return 0
+    if _root.sameowner(node) = 0 then do
+      call fail('LL_AST_OWNER: condition node belongs to another tree'); return 0
+    end
+    return 1
+  set: method = .int
+    arg node = .llast..node, value = .string, reason = .string
+    if accepts(node) = 0 then return 0
+    if _sealed then do
+      call fail('LL_FLOW_FACT_FROZEN: condition facts are sealed'); return 0
+    end
+    if (value <> 'true' & value <> 'false') | strip(reason) = '' then do
+      call fail('LL_FLOW_FACT: use true or false with a nonempty reason'); return 0
+    end
+    id = node.id()
+    if _value[id] <> '' then do
+      if _value[id] <> value then call fail('LL_FLOW_FACT_CONFLICT: contradictory condition at byte ' || node.offset())
+      return _error = ''
+    end
+    if _count >= _limit then do
+      call fail('LL_RESOURCE_LIMIT: flow.conditions limit=' || _limit || ' required=' || (_count + 1)); return 0
+    end
+    _value[id] = value; _reason[id] = reason; _count = _count + 1
+    return 1
+  get: method = .string
+    arg node = .llast..node
+    if accepts(node) = 0 then do
+      call failaccess(_error); return 'unknown'
+    end
+    value = _value[node.id()]
+    if value = '' then return 'unknown'
+    return value
+  reason: method = .string
+    arg node = .llast..node
+    if accepts(node) = 0 then do
+      call failaccess(_error); return ''
+    end
+    return _reason[node.id()]
+  seal: method = .int
+    _sealed = 1
+    return error() = ''
+  identity: method = .int
+    return _identity
+  size: method = .int
+    if error() <> '' then return 0
+    return _count
+
+/** A graph owns events and edges, borrowing its immutable AST.
+ * Each mapped AST node gets an entry event; assignments write after their value.
+ * @param limit Counted flow entries: events plus edges, not source bytes.
+ */
+graph: class
+  _root = .llast..node
+  _node = .llast..node[]
+  _op = .string[]
+  _name = .string[]
+  _from = .int[]
+  _destination = .int[]
+  _label = .string[]
+  _head = .int[]
+  _next = .int[]
+  _entry = .int[]
+  _exit = .int[]
+  _true = .int[]
+  _false = .int[]
+  _loop = .int[]
+  _again = .int[]
+  _limit = .int
+  _entries = .int
+  _start = .int
+  _error = .string
+  _identity = .int
+  _sealed = .int
+  _building = .int
+  _owner = reference .llast..tree
+  _mapping = .mapping
+  _conditions = reference .llflow..conditions
+  _conditionidentity = .int
+  _hasconditions = .int
+  _ran = .int
+  *: factory
+    arg owner = reference .llast..tree, mapping = .mapping, limit = 1000000
+    _identity = next_identity(); _sealed = 0; _building = 0
+    _owner = owner; _mapping = mapping; _limit = limit; _ran = 0; _error = ''; _hasconditions = 0
+    if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: flow tree has expired'
+    else do
+      tree = dereference owner
+      if tree.status() <> 0 then _error = tree.error()
+      _root = tree.root()
+    end
+    return
+  /** Attach optional facts before the first graph query. The table is borrowed
+   * and sealed when construction starts; it must outlive graph and results. */
+  using: method = .int
+    arg facts = reference .llflow..conditions
+    if _ran | _hasconditions then do
+      call fail('LL_FLOW_FACT_FROZEN: attach conditions once before building the graph'); return 0
+    end
+    if <refvalid>(facts) = 0 then do
+      call fail('LL_AST_OWNER: condition facts have expired'); return 0
+    end
+    table = dereference facts
+    if table.accepts(_root) = 0 then do
+      call fail(table.error()); return 0
+    end
+    _conditions = facts; _conditionidentity = table.identity(); _hasconditions = 1
+    return 1
+  checkconditions: method = .void
+    if _hasconditions = 0 then return
+    if <refvalid>(_conditions) = 0 then do
+      call fail('LL_AST_OWNER: condition facts have expired'); return
+    end
+    table = dereference _conditions
+    if table.identity() <> _conditionidentity then call fail('LL_AST_OWNER: condition facts have been replaced')
+    if table.error() <> '' then call fail(table.error())
+    return
+  knowledge: method = .string
+    arg node = .llast..node
+    if _hasconditions = 0 then return 'unknown'
+    table = dereference _conditions
+    return table.get(node)
+  build: method = .void
+    ok = .int
+    if _ran then return
+    if _error <> '' then return
+    _building = 1
+    _ran = 1; owner = _owner; mapping = _mapping; limit = _limit
+    _limit = limit; _entries = 0; _start = 0; _error = ''
+    if limit < 0 then call fail('LL_FLOW_LIMIT: flow.entries must be nonnegative')
+    if <refvalid>(owner) = 0 then do
+      call fail('LL_AST_OWNER: flow tree has expired'); return
+    end
+    tree = dereference owner
+    if _root.valid() = 0 then do
+      call fail('LL_AST_OWNER: flow tree has expired or been replaced'); return
+    end
+    if tree.status() <> 0 then call fail(tree.error())
+    if mapping.check(tree.contract()) = 0 then call fail(mapping.error())
+    call checkconditions()
+    if _hasconditions & _error = '' then do
+      table = dereference _conditions; ok = table.seal()
+    end
+    if _error <> '' then return
+    /* Allocate ports and bind lexical loop ownership before connecting edges.
+     * Distinct outcome ports retain short-circuit truth through nested tests.
+     * No recursive builder calls and no mutable public graph escape. */
+    node = .llast..node; child = .llast..node; children = .llast..children
+    id = .int; m = .int; op = .string; first = .int; enclosing = .int
+    walk = tree.walk('parents first')
+    do while walk.next() & _error = ''
+      node = walk.node(); id = node.id(); m = mapping.index(node.kind())
+      op = mapping.op(m)
+      first = event(node,'enter')
+      if first = 0 then leave
+      _entry[id] = first
+      if op = 'value' | op = 'read' then _exit[id] = first
+      else _exit[id] = event(node,'leave')
+      if _error <> '' then leave
+      if op = 'and' | op = 'or' then do
+        _true[id] = event(node,'outcome'); _false[id] = event(node,'outcome')
+      end
+      enclosing = _loop[id]
+      if wordpos(op,'while until loop') > 0 then enclosing = id
+      children = node.each()
+      do while children.next() & _error = ''
+        child = children.node(); _loop[child.id()] = enclosing
+      end
+      if children.error() <> '' then call fail(children.error())
+    end
+    if walk.error() <> '' then call fail(walk.error())
+    walk = tree.walk('parents first')
+    do while walk.next() & _error = ''
+      node = walk.node(); id = node.id(); m = mapping.index(node.kind())
+      op = mapping.op(m); fields = mapping.fields(m)
+      first = _entry[id]; last = _exit[id]
+      select
+        when op = 'read' then do
+          _op[first] = 'read'; _name[first] = node.text(word(fields,1))
+          if _name[first] = '' | words(_name[first]) <> 1 then call fail('LL_FLOW_NAME: a variable name must be one nonempty word')
+        end
+        when op = 'value' then nop
+        when op = 'assign' then do
+          value = node.child(word(fields,2)); ok = edge(first,_entry[value.id()])
+          _op[last] = 'write'; _name[last] = node.text(word(fields,1))
+          if _name[last] = '' | words(_name[last]) <> 1 then call fail('LL_FLOW_NAME: a variable name must be one nonempty word')
+          call complete(value,last)
+        end
+        when op = 'branch' then do
+          condition = node.child(word(fields,1)); yes = node.child(word(fields,2))
+          ok = edge(first,_entry[condition.id()]); _op[last] = 'join'
+          noentry = last
+          if node.count(word(fields,3)) = 1 then do
+            no = node.child(word(fields,3)); noentry = _entry[no.id()]
+            call complete(no,last)
+          end
+          call test(condition,_entry[yes.id()],noentry,node)
+          call complete(yes,last)
+        end
+        when op = 'while' | op = 'until' | op = 'loop' then do
+          body = node.child(word(fields,words(fields)))
+          _op[last] = 'join'
+          if op = 'loop' then do
+            _again[id] = _entry[body.id()]
+            ok = edge(first,_again[id]); call complete(body,_again[id])
+          end
+          else do
+            condition = node.child(word(fields,1)); _again[id] = _entry[condition.id()]
+            if op = 'while' then do
+              ok = edge(first,_again[id])
+              call test(condition,_entry[body.id()],last,node)
+            end
+            else do
+              ok = edge(first,_entry[body.id()])
+              call test(condition,last,_entry[body.id()],node)
+            end
+            call complete(body,_again[id])
+          end
+        end
+        when op = 'break' | op = 'continue' then do
+          _op[first] = op; enclosing = _loop[id]
+          if enclosing = 0 then call fail('LL_FLOW_CONTEXT: ' || node.kind() || ' at line ' || node.line() || ', byte ' || node.offset() || ': ' || op || ' requires an enclosing loop')
+          else if op = 'break' then ok = edge(first,_exit[enclosing],'break')
+          else ok = edge(first,_again[enclosing],'continue')
+          /* The normal exit remains disconnected. */
+        end
+        when op = 'return' then do
+          _op[first] = 'return'
+          if fields <> '' then do
+            if node.count(fields) = 1 then do
+              value = node.child(fields); _op[first] = 'enter'
+              ok = edge(first,_entry[value.id()]); terminal = event(node,'return')
+              if terminal > 0 then call complete(value,terminal)
+            end
+          end
+        end
+        when op = 'and' | op = 'or' then do
+          lhs = node.child(word(fields,1)); rhs = node.child(word(fields,2))
+          ok = edge(first,_entry[lhs.id()])
+          if op = 'and' then call test(lhs,_entry[rhs.id()],_false[id],node)
+          else call test(lhs,_true[id],_entry[rhs.id()],node)
+          call test(rhs,_true[id],_false[id],node)
+        end
+        otherwise do
+          previous = first
+          do f = 1 to words(fields)
+            children = node.each(word(fields,f))
+            do while children.next() & _error = ''
+              child = children.node(); ok = edge(previous,_entry[child.id()])
+              call complete(child,0); previous = _exit[child.id()]
+            end
+            if children.error() <> '' then call fail(children.error())
+          end
+          ok = edge(previous,last)
+        end
+      end
+    end
+    if walk.error() <> '' then call fail(walk.error())
+    if _error = '' then do
+      call complete(_root,0)
+      if _error = '' then _start = _entry[_root.id()]
+    end
+    _sealed = 1; _building = 0
+    return
+  /** Use a child as a value: join its Boolean outcomes only at this boundary. */
+  complete: method = .void
+    arg node = .llast..node, destination = .int
+    id = node.id(); ok = .int
+    if _true[id] > 0 then do
+      known = knowledge(node)
+      if known <> 'false' then ok = edge(_true[id],_exit[id])
+      if known <> 'true' then ok = edge(_false[id],_exit[id])
+    end
+    if destination > 0 then ok = edge(_exit[id],destination)
+    return
+  /** Test a child, preserving distinct outcomes of short-circuit expressions. */
+  test: method = .void
+    arg condition = .llast..node, yes = .int, no = .int, owner = .llast..node
+    ok = .int
+    known = knowledge(condition)
+    id = condition.id(); decision = event(owner,'branch')
+    if decision = 0 then return
+    if _true[id] > 0 then do
+      ok = edge(_true[id],decision)
+      if known <> 'false' then ok = edge(decision,yes,'true')
+      decision = event(owner,'branch')
+      if decision = 0 then return
+      ok = edge(_false[id],decision)
+      if known <> 'true' then ok = edge(decision,no,'false')
+    end
+    else do
+      ok = edge(_exit[id],decision)
+      if known <> 'false' then ok = edge(decision,yes,'true')
+      if known <> 'true' then ok = edge(decision,no,'false')
+    end
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = message
+    _start = 0
+    return
+  identity: method = .int
+    return _identity
+  reserve: method = .int
+    if _sealed | _building = 0 then call fail('LL_FLOW_FROZEN: flow events are constructed only by the checked mapping')
+    if _error <> '' then return 0
+    if _entries >= _limit then do
+      call fail('LL_RESOURCE_LIMIT: flow.entries limit=' || _limit || ' required=' || (_entries + 1)); return 0
+    end
+    _entries = _entries + 1
+    return 1
+  event: method = .int
+    arg node = .llast..node, op = .string, name = ''
+    if reserve() = 0 then return 0
+    i = _node[0] + 1; _node[i] = node; _op[i] = op; _name[i] = name
+    return i
+  edge: method = .int
+    arg from = .int, destination = .int, label = ''
+    if reserve() = 0 then return 0
+    if from < 1 | destination < 1 then do
+      call fail('LL_FLOW_STRUCTURE: edge requires completed child flow'); return 0
+    end
+    i = _from[0] + 1; _from[i] = from; _destination[i] = destination; _label[i] = label
+    _next[i] = _head[from]; _head[from] = i
+    return i
+  firstedge: method = .int
+    arg point = .int
+    call checkpoint(point)
+    return _head[point]
+  nextedge: method = .int
+    arg link = .int
+    call checkedge(link)
+    return _next[link]
+  error: method = .string
+    call build()
+    call checkconditions()
+    if initialized(_root) then do
+      if _root.valid() = 0 then call fail('LL_AST_OWNER: flow tree has expired or been replaced')
+    end
+    return _error
+  accepts: method = .int
+    arg node = .llast..node
+    if error() <> '' then return 0
+    return _root.sameowner(node)
+  before: method = .int
+    arg node = .llast..node
+    if accepts(node) = 0 then do
+      call failaccess('LL_AST_OWNER: flow node belongs to another or expired tree'); return 0
+    end
+    return _entry[node.id()]
+  points: method = .int
+    if error() <> '' then return 0
+    return _node[0]
+  edges: method = .int
+    if error() <> '' then return 0
+    return _from[0]
+  entries: method = .int
+    if error() <> '' then return 0
+    return _entries
+  start: method = .int
+    if error() <> '' then return 0
+    return _start
+  node: method = .llast..node
+    arg point = .int
+    call checkpoint(point)
+    return _node[point]
+  op: method = .string
+    arg point = .int
+    call checkpoint(point)
+    return _op[point]
+  name: method = .string
+    arg point = .int
+    call checkpoint(point)
+    return _name[point]
+  from: method = .int
+    arg link = .int
+    call checkedge(link)
+    return _from[link]
+  destination: method = .int
+    arg link = .int
+    call checkedge(link)
+    return _destination[link]
+  label: method = .string
+    arg link = .int
+    call checkedge(link)
+    return _label[link]
+  checkpoint: method = .void
+    arg point = .int
+    if error() <> '' then call failaccess(_error)
+    if point < 1 | point > _node[0] then call failaccess('LL_FLOW_POINT: unknown flow point')
+    return
+  checkedge: method = .void
+    arg link = .int
+    if error() <> '' then call failaccess(_error)
+    if link < 1 | link > _from[0] then call failaccess('LL_FLOW_EDGE: unknown flow edge')
+    return
+  definiteassignment: method = .result
+    arg assigned = '', cells = 1000000, work = 10000000
+    return .result(reference self,assigned,cells,work)
+
+/** Forward may-unassigned analysis. A fact is published only at convergence.
+ * Variable spelling is exact and case-sensitive. Entry names are space-separated.
+ * An unsafe read is a diagnostic, distinct from failure to complete the analysis.
+ */
+result: class
+  _graph = reference .graph
+  _root = .llast..node
+  _names = .string[]
+  _unassigned = .binary
+  _reach = .int[]
+  _problems = .int[]
+  _variables = .int
+  _points = .int
+  _error = .string
+  _complete = .int
+  _work = .int
+  _limit = .int
+  _identity = .int
+  _graphidentity = .int
+  _initial = .string
+  _cells = .int
+  _ran = .int
+  *: factory
+    arg owner = reference .graph, assigned = '', cells = 1000000, work = 10000000
+    _identity = next_identity()
+    _graph = owner; _initial = assigned; _cells = cells; _limit = work; _ran = 0; _complete = 0; _error = ''
+    if <refvalid>(owner) = 0 then _error = 'LL_FLOW_OWNER: flow graph has expired'
+    else do
+      graph = dereference owner; _graphidentity = graph.identity()
+    end
+    return
+  run: method = .void
+    if _ran then return
+    if _error <> '' then return
+    _ran = 1; p = .int; v = .int; ok = .int
+    owner = _graph; assigned = _initial; cells = _cells; work = _limit
+    _graph = owner; _error = ''; _complete = 0; _work = 0; _limit = work
+    if <refvalid>(owner) = 0 then do
+      _error = 'LL_FLOW_OWNER: flow graph has expired'; return
+    end
+    graph = dereference owner
+    if graph.identity() <> _graphidentity then do
+      _error = 'LL_FLOW_OWNER: flow graph has been replaced'; return
+    end
+    if graph.error() <> '' then do
+      _error = graph.error(); return
+    end
+    _points = graph.points(); _root = graph.node(graph.start())
+    if cells < 0 | work < 0 then do
+      _error = 'LL_FLOW_LIMIT: analysis.cells and analysis.work must be nonnegative'; return
+    end
+    do p = 1 to _points while _error = ''
+      if graph.name(p) <> '' then ok = variable(graph.name(p),1)
+    end
+    do i = 1 to words(assigned) while _error = ''
+      ok = variable(word(assigned,i),1)
+    end
+    if _error <> '' then return
+    _variables = _names[0]
+    if _points > cells / max(1,_variables) then do
+      _error = 'LL_RESOURCE_LIMIT: analysis.cells limit=' || cells || ' required=' || _points || '*' || max(1,_variables); return
+    end
+    call binresize _unassigned,_points * max(1,_variables)
+    first = graph.start(); _reach[first] = 1
+    do v = 1 to _variables
+      if wordpos(_names[v],assigned) = 0 then <at..u8>((first - 1) * _variables + v - 1) _unassigned = 1
+    end
+    /* A queued point is revisited only when reachability or a fact grows. */
+    pending = .int[]; queued = .int[]; head = 1; tail = 1; pending[1] = first; queued[first] = 1
+    do while head <= tail & _error = ''
+      from = pending[head]; head = head + 1; queued[from] = 0
+      killed = 0
+      if graph.op(from) = 'write' then killed = variable(graph.name(from))
+      e = graph.firstedge(from)
+      do while e > 0 & _error = ''
+        if charge() = 0 then leave
+        destination = graph.destination(e); e = graph.nextedge(e); changed = _reach[destination] = 0; _reach[destination] = 1
+        do v = 1 to _variables while _error = ''
+          if charge() = 0 then leave
+          if v = killed then iterate
+          src = (from - 1) * _variables + v - 1; dst = (destination - 1) * _variables + v - 1
+          if <at..u8>(src) _unassigned & <at..u8>(dst) _unassigned = 0 then do
+            <at..u8>(dst) _unassigned = 1; changed = 1
+          end
+        end
+        if changed & queued[destination] = 0 then do
+          tail = tail + 1; pending[tail] = destination; queued[destination] = 1
+        end
+      end
+    end
+    if _error <> '' then return
+    do p = 1 to _points
+      if graph.op(p) <> 'read' | _reach[p] = 0 then iterate
+      v = variable(graph.name(p))
+      if _error <> '' then return
+      if <at..u8>((p - 1) * _variables + v - 1) _unassigned then _problems[_problems[0] + 1] = p
+    end
+    _complete = 1
+    return
+  variable: method = .int
+    arg name = .string, create = 0
+    i = .int
+    do i = 1 to _names[0]
+      if _complete = 0 then do
+        if charge() = 0 then return 0
+      end
+      if _names[i] == name then return i
+    end
+    if create then do
+      if _complete then do
+        _error = 'LL_FLOW_FROZEN: completed analysis cannot add variables'; return 0
+      end
+      i = _names[0] + 1; _names[i] = name; return i
+    end
+    return 0
+  charge: method = .int
+    if _work >= _limit then do
+      _error = 'LL_RESOURCE_LIMIT: analysis.work limit=' || _limit || ' required=' || (_work + 1); return 0
+    end
+    _work = _work + 1
+    return 1
+  error: method = .string
+    call run()
+    if <refvalid>(_graph) = 0 then _error = 'LL_FLOW_OWNER: flow graph has expired'
+    else if initialized(_root) then do
+      graph = dereference _graph
+      if graph.accepts(_root) = 0 | graph.identity() <> _graphidentity then _error = 'LL_FLOW_OWNER: flow graph or AST has been replaced'
+    end
+    return _error
+  identity: method = .int
+    return _identity
+  ready: method = .void
+    if error() <> '' then call failaccess(_error)
+    if _complete = 0 then call failaccess('LL_FLOW_INCOMPLETE: analysis is not complete')
+    return
+  before: method = .state
+    arg node = .llast..node
+    call ready()
+    graph = dereference _graph
+    point = graph.before(node)
+    return .state(reference self,point)
+  reachable: method = .int
+    arg point = .int
+    call ready()
+    if point < 1 | point > _points then call failaccess('LL_FLOW_POINT: unknown flow point')
+    return _reach[point]
+  assigned: method = .int
+    arg point = .int, name = .string
+    call ready()
+    if point < 1 | point > _points then call failaccess('LL_FLOW_POINT: unknown flow point')
+    if _reach[point] = 0 then return 0
+    v = variable(name)
+    if v = 0 then return 0
+    return <at..u8>((point - 1) * _variables + v - 1) _unassigned = 0
+  count: method = .int
+    if error() <> '' | _complete = 0 then return 0
+    return _problems[0]
+  node: method = .llast..node
+    arg diagnostic = .int
+    call ready()
+    if diagnostic < 1 | diagnostic > _problems[0] then call failaccess('LL_FLOW_DIAGNOSTIC: unknown diagnostic')
+    graph = dereference _graph
+    return graph.node(_problems[diagnostic])
+  message: method = .string
+    arg diagnostic = .int
+    item = node(diagnostic); graph = dereference _graph
+    return graph.name(_problems[diagnostic]) || ' may be read before it is assigned.'
+  /** An actual entry-to-read witness, stopping propagation at assignments.
+   * Branch edges on that path explain why the join could not prove assignment.
+   */
+  witness: method = .string
+    arg diagnostic = .int, limit = 1000000
+    e = .int; steps = 0
+    targetitem = node(diagnostic); graph = dereference _graph
+    target = _problems[diagnostic]; name = graph.name(target)
+    previous = .int[]; seen = .int[]; pending = .int[]
+    first = graph.start(); pending[1] = first; seen[first] = 1; head = 1; tail = 1
+    do while head <= tail & seen[target] = 0 & _error = ''
+      from = pending[head]; head = head + 1
+      if graph.op(from) = 'write' & graph.name(from) == name then iterate
+      e = graph.firstedge(from)
+      do while e > 0
+        if steps >= limit then do
+          call failaccess('LL_RESOURCE_LIMIT: witness.work limit=' || limit || ' required=' || (steps + 1)); return ''
+        end
+        steps = steps + 1
+        link = e; e = graph.nextedge(e); destination = graph.destination(link)
+        if seen[destination] then iterate
+        seen[destination] = 1; previous[destination] = link; tail = tail + 1; pending[tail] = destination
+      end
+    end
+    if _error <> '' then do
+      call failaccess(_error); return ''
+    end
+    result = ''; point = target
+    do while point <> first
+      e = previous[point]
+      if e = 0 then call failaccess('LL_FLOW_WITNESS: diagnostic has no unassigned path')
+      if graph.label(e) <> '' then do
+        branch = graph.node(graph.from(e))
+        label = graph.label(e)
+        if label = 'break' | label = 'continue' then result = 'Take ' || label || ' on line ' || branch.line() || '. ' || result
+        else result = 'Take the ' || label || ' branch of ' || branch.kind() || ' on line ' || branch.line() || '. ' || result
+      end
+      point = graph.from(e)
+    end
+    return 'From entry: ' || result || 'Reach this read without assigning ' || name || '.'
+  work: method = .int
+    return _work
+
+/** Borrowed point view; keep the completed analysis alive. */
+state: class
+  _owner = reference .result
+  _point = .int
+  _identity = .int
+  *: factory
+    arg owner = reference .result, point = .int
+    _owner = owner; _point = point
+    result = dereference owner; _identity = result.identity()
+    return
+  assigned: method = .int
+    arg name = .string
+    if <refvalid>(_owner) = 0 then do
+      call failaccess('LL_FLOW_OWNER: analysis has expired'); return 0
+    end
+    result = dereference _owner
+    if result.identity() <> _identity then call failaccess('LL_FLOW_OWNER: analysis has been replaced')
+    return result.assigned(_point,name)
+  reachable: method = .int
+    if <refvalid>(_owner) = 0 then do
+      call failaccess('LL_FLOW_OWNER: analysis has expired'); return 0
+    end
+    result = dereference _owner
+    if result.identity() <> _identity then call failaccess('LL_FLOW_OWNER: analysis has been replaced')
+    return result.reachable(_point)

@@ -1,0 +1,158 @@
+/* cREXX License (MIT). Structured paths, cyclic analysis and reachability. */
+options levelb
+import rxfnsb
+import lllanguage
+import llast
+import llflow
+import flowloops
+
+main: procedure = .int
+  failures = 0; allowance = .int
+  failures = failures + scenario('while flag do x = 1; end; say x;',1,1,0,'zero iterations')
+  failures = failures + scenario('repeat x = 1; until flag; say x;',0,1,1,'at least one iteration')
+  failures = failures + scenario('forever x = 1; break; end; say x;',0,1,1,'break reaches loop exit')
+  failures = failures + scenario('forever continue; end; say missing;',0,0,0,'unconditional cycle has no exit')
+  failures = failures + scenario('while flag do continue; say missing; end; say x;',1,1,0,'continue skips remainder')
+  failures = failures + scenario('repeat continue; x = 1; until x; say x;',2,1,0,'post-test continue reaches test')
+  failures = failures + scenario('repeat x = 1; continue; until x; say x;',0,1,1,'post-test continue retains writes')
+  failures = failures + scenario('while set(x,1) do continue; end; say x;',0,1,1,'pre-test continue retests condition')
+  failures = failures + scenario('forever forever break; end; x = 1; break; end; say x;',0,1,1,'break chooses inner loop')
+  failures = failures + scenario('forever forever continue; end; break; end; say x;',0,0,0,'continue chooses inner loop')
+  failures = failures + scenario('if flag then return; else x = 1; end; say x;',0,1,1,'returning branch does not join')
+  failures = failures + scenario('if flag then return; else stop; end; say missing;',0,0,0,'both branches return')
+  failures = failures + scenario('return missing; say missing;',1,0,0,'return evaluates value before exit')
+  failures = failures + scenario('forever return; end; say missing;',0,0,0,'return leaves all loops')
+  failures = failures + scenario('say both(flag,set(x,1)); say x;',1,1,0,'AND may skip right operand')
+  failures = failures + scenario('say either(flag,set(x,1)); say x;',1,1,0,'OR may skip right operand')
+  failures = failures + scenario('if both(flag,set(x,1)) then say x; end; stop;',0,1,0,'AND true implies right evaluation')
+  failures = failures + scenario('if either(flag,set(x,1)) then stop; else say x; end; stop;',0,1,1,'OR false implies right evaluation')
+  failures = failures + scenario('if both(flag,set(x,1)) then stop; else say x; end; stop;',1,1,0,'AND false can skip assignment')
+  failures = failures + scenario('if either(flag,set(x,1)) then say x; end; stop;',1,1,0,'OR true can skip assignment')
+  failures = failures + scenario('if both(other,either(flag,set(x,1))) then stop; else say x; end; stop;',1,1,0,'nested outcomes stay distinct')
+  failures = failures + scenario('if either(other,both(flag,set(x,1))) then say x; end; stop;',1,1,0,'nested true has short path')
+  failures = failures + scenario('if both(either(flag,other),set(x,1)) then say x; end; stop;',0,1,0,'nested left followed by mandatory right')
+  failures = failures + scenario('while both(flag,set(x,1)) do say x; break; end; say x;',1,1,0,'short circuit loop condition')
+  failures = failures + scenario('repeat continue; until either(flag,set(x,1)); say x;',1,1,0,'short circuit post-test exit')
+  failures = failures + scenario('if 1 then x = 1; end; say x;',1,1,0,'constants do not prune branches')
+  failures = failures + scenario('say both(0,missing); stop;',1,1,0,'literals have no assumed truth contract')
+  failures = failures + scenario('return; while flag do break; end;',0,0,0,'unreachable loop')
+
+  /* Independent structural controls: each loop is entered once, then either
+   * arm breaks or continues. An exit can come only from a break arm; x is
+   * guaranteed there exactly when every such arm writes. Backedges add paths,
+   * but cannot repair the first iteration's unsafe exit. */
+  do mask = 0 to 15
+    awrite = mask % 2; bwrite = (mask / 2) % 2
+    abreak = (mask / 4) % 2; bbreak = (mask / 8) % 2
+    a = 'continue;'; b = 'continue;'
+    if abreak then a = 'break;'
+    if bbreak then b = 'break;'
+    if awrite then a = 'x = 1; ' || a
+    if bwrite then b = 'x = 1; ' || b
+    reachable = abreak | bbreak
+    assigned = reachable & (abreak = 0 | awrite) & (bbreak = 0 | bwrite)
+    failures = failures + scenario('forever if flag then ' || a || ' else ' || b || ' end; end; say x;',reachable & assigned = 0,reachable,assigned,'loop path control ' || mask)
+  end
+
+  language = flowloops..language(); depth = 30
+  if language.backend() = 'earley' then depth = 5
+  failures = failures + scenario(copies('forever ',depth) || copies('break; end; ',depth) || 'x = 1; say x;',0,1,1,'deep nested loop targets')
+
+  tree = parseinput('while flag do if other then break; else continue; end; end; say x;')
+  graph = flowloops..execution(reference tree); result = graph.definiteassignment('flag other')
+  failures = failures + check(result.count() = 1,'cyclic diagnostic')
+  failures = failures + check(result.witness(1) = 'From entry: Take the false branch of While on line 1. Reach this read without assigning x.','zero-iteration witness')
+  used = graph.entries(); exact = flowloops..execution(reference tree,used)
+  failures = failures + check(exact.error() = '' & exact.entries() = used,'exact cyclic graph allowance')
+  do allowance = 0 to used - 1
+    small = flowloops..execution(reference tree,allowance)
+    failures = failures + check(small.points() = 0 & pos('flow.entries',small.error()) > 0,'atomic cyclic graph boundary ' || allowance)
+  end
+  sc = parseinput('if both(flag,either(other,set(x,1))) then return x; end; say x;')
+  scgraph = flowloops..execution(reference sc); scused = scgraph.entries()
+  do allowance = 0 to scused - 1
+    scsmall = flowloops..execution(reference sc,allowance)
+    failures = failures + check(scsmall.points() = 0 & pos('flow.entries',scsmall.error()) > 0,'atomic outcome-port boundary ' || allowance)
+  end
+  scexact = flowloops..execution(reference sc,scused)
+  failures = failures + check(scexact.error() = '' & scexact.entries() = scused,'exact outcome-port allowance')
+  exits = parseinput('forever break; end; say x;'); exitgraph = flowloops..execution(reference exits); exitresult = exitgraph.definiteassignment()
+  failures = failures + check(exitresult.witness(1) = 'From entry: Take break on line 1. Reach this read without assigning x.','break witness')
+  repeats = parseinput('repeat continue; until x;'); repeatgraph = flowloops..execution(reference repeats); repeatresult = repeatgraph.definiteassignment()
+  failures = failures + check(repeatresult.witness(1) = 'From entry: Take continue on line 1. Reach this read without assigning x.','continue witness')
+  cells = graph.points() * 3; used = result.work()
+  exactresult = graph.definiteassignment('flag other',cells,used)
+  failures = failures + check(exactresult.error() = '' & exactresult.count() = 1,'exact cyclic analysis allowances')
+  smallresult = graph.definiteassignment('flag other',cells,used - 1)
+  failures = failures + check(pos('analysis.work',smallresult.error()) > 0 & smallresult.count() = 0,'cyclic work exhaustion')
+  smallresult = graph.definiteassignment('flag other',cells - 1)
+  failures = failures + check(pos('analysis.cells',smallresult.error()) > 0,'cyclic cell exhaustion')
+  caught = 0; answer = .int
+  do
+    answer = smallresult.before(tree.root()).reachable()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'failed analysis exposes no reachability')
+  held = result.before(tree.root()); result = graph.definiteassignment('flag other'); caught = 0
+  do
+    answer = held.reachable()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'replaced analysis invalidates reachability')
+  held = expiredstate(); caught = 0
+  do
+    answer = held.reachable()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'expired reachability owner')
+  other = parseinput('stop;'); caught = 0
+  do
+    answer = result.before(other.root()).reachable()
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught & result.error() = '','foreign node does not poison result')
+  do operationindex = 1 to 2
+    operation = word('break continue',operationindex)
+    invalid = parseinput('stop;' || '0d0a'x || operation || ';')
+    invalidgraph = flowloops..execution(reference invalid)
+    kind = 'Break'; if operation = 'continue' then kind = 'Continue'
+    expected = 'LL_FLOW_CONTEXT: ' || kind || ' at line 2, byte 7: ' || operation || ' requires an enclosing loop'
+    failures = failures + check(invalidgraph.error() = expected & invalidgraph.points() = 0,'located ' || operation || ' outside loop even when unreachable')
+  end
+  say 'failures=' || failures
+  return failures
+
+scenario: procedure = .int
+  arg source = .string, problems = .int, reachable = .int, assigned = .int, description = .string
+  tree = parseinput(source); graph = flowloops..execution(reference tree)
+  result = graph.definiteassignment('flag other')
+  if result.error() <> '' then return check(0,description || ': ' || result.error())
+  last = tree.root().child('items',tree.root().count('items'))
+  failures = check(result.count() = problems,description || ' diagnostic count=' || result.count())
+  failures = failures + check(result.before(last).reachable() = reachable,description || ' reachability')
+  failures = failures + check(result.before(last).assigned('x') = assigned,description || ' assigned x')
+  do i = 1 to result.count()
+    item = result.node(i)
+    failures = failures + check(item.kind() = 'Name' & pos(item.text('spelling'),result.message(i)) = 1,description || ' read location')
+    failures = failures + check(pos('Reach this read without assigning ' || item.text('spelling') || '.',result.witness(i)) > 0,description || ' path witness')
+  end
+  return failures
+parseinput: procedure = .llast..tree
+  arg source = .string
+  language = flowloops..language(); request = .lllanguage..request(language,source as .binary)
+  if request.parse() <> 0 then do
+    say 'PARSE FAILED:' request.error(); exit 1
+  end
+  return request.ast()
+expiredstate: procedure = .llflow..state
+  tree = parseinput('stop;'); graph = flowloops..execution(reference tree); result = graph.definiteassignment()
+  return result.before(tree.root())
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL:' description
+  return 1

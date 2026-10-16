@@ -1,0 +1,140 @@
+[
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/pipeline-c.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/evaluation-c.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/evaluation-c.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/numbers-c.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "c",
+      "lib/rxfnsl/compilers/examples/step01/numbers-c.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/pipeline-g.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/evaluation-g.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/evaluation-g.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/parse-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/numbers-g.crexx"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step01/numbers-g.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cmake-build-levell-integration/bin/rxbvm",
+      "cmake-build-levell-integration/lib/rxfnsl/compilers/frontends/opt/frontend-probe-linked.rxbin",
+      "-a",
+      "g",
+      "lib/rxfnsl/compilers/examples/step03/syntax-error-g.crexx",
+      "cmake-build-levell-integration/bin"
+    ],
+    "exit": 1,
+    "expected_exit": 1
+  }
+]
