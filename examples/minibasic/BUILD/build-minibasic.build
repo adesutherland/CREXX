@@ -1,0 +1,19 @@
+/* Build plan consumed directly by rxbuild. */
+
+COMPILE
+   GRAMMAR OUTPUT_DIR = "cmake-build-release/minibasic"
+   SOURCE = "examples/minibasic/grammar/minibasic.levell"
+   OUTPUT = "minibasicgrammar"
+;
+COMPILE
+    READER OUTPUT_DIR = "cmake-build-release/minibasic"
+    SOURCE = "examples/minibasic/minibasic_reader.crexx"
+    DEPENDS_ON = "minibasicgrammar"
+    OUTPUT = "minibasic_reader"
+;
+RUN
+    WORK_DIR = "cmake-build-release/minibasic"
+    PROGRAM = "minibasic_reader"
+    ARGUMENT = "-a" "examples/minibasic/basic1.bas"
+    STDIN = "5"
+;

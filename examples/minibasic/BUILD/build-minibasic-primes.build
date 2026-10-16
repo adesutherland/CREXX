@@ -1,0 +1,29 @@
+/* Build the MiniBASIC prime-number application. */
+
+COMPILE GRAMMAR
+  OUTPUT_DIR = "cmake-build-release/minibasic/primes"
+  SOURCE = "examples/minibasic/grammar/minibasic.levell"
+  OUTPUT = "minibasicgrammar";
+
+COMPILE READER
+  OUTPUT_DIR = "cmake-build-release/minibasic/primes"
+  SOURCE = "examples/minibasic/minibasic_compiler.crexx"
+  DEPENDS_ON = "minibasicgrammar"
+  OUTPUT = "minibasic_compiler";
+
+COMPILE APPLICATION
+  OUTPUT_DIR = "cmake-build-release/minibasic/primes"
+  SOURCE = "examples/minibasic/prime.bas"
+  DEPENDS_ON = "minibasicgrammar"
+  COMPILER = "minibasic_compiler"
+  OUTPUT = "prime";
+
+CREATE EXE
+  OUTPUT_DIR = "cmake-build-release/minibasic/primes"
+  APPLICATION = "prime"
+  OUTPUT = "prime";
+
+RUN
+  WORK_DIR = "cmake-build-release/minibasic/primes"
+  PROGRAM = "prime"
+  STDIN = "";

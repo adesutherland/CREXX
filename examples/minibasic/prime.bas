@@ -1,0 +1,16 @@
+10 REM Print the prime numbers from 1 to 100
+20 LET N = 2
+30 LET D = 2
+40 IF D * D > N THEN 90
+50 LET Q = N / D
+60 IF Q * D = N THEN 100
+70 LET D = D + 1
+80 GOTO 40
+
+90 PRINT N
+100 LET N = N + 1
+110 IF N > 100 THEN 130
+120 LET D = 2
+125 GOTO 40
+
+130 END

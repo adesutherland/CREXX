@@ -1,0 +1,23 @@
+/* Small second grammar used by the rxbuild file-selection example. */
+
+options levell
+
+namespace tinygrammar
+
+identifier: token
+
+scan: lexer input utf8bytes
+
+  letter: charset =
+      U+0061 to U+007A |
+      U+0041 to U+005A
+
+  name.pattern: pattern = letter+
+
+  name.literal:
+    rule = name.pattern then emit identifier
+
+parse: parser semantics contextfree input tokens start program
+
+  program:
+    rule = identifier*

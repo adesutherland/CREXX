@@ -1,0 +1,202 @@
+/* MiniBASIC Level L reader and first interpreter slice.
+ *
+ * Reads a numbered BASIC source file, parses it with minibasicgrammar, and
+ * executes LET, PRINT, INPUT, IF, GOTO, REM, and END statements.
+ */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import llsource
+import lltree
+import minibasicgrammar
+
+state: initialiser expose mb_name mb_value mb_count mb_line mb_node mb_line_count
+  mb_name = .string[]
+  mb_value = .string[]
+  mb_count = 0
+  mb_line = .int[]
+  mb_node = .int[]
+  mb_line_count = 0
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: minibasic_reader basic-source.bas'; return 2
+  end
+
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'MINIBASIC_IO: cannot read ' || argv[1]; return 2
+  end
+
+  request = .lllanguage..request(minibasicgrammar..language(),source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'MINIBASIC_PARSE',request.error())
+    return status
+  end
+
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'MINIBASIC_TREE: ' || tree.error(); return 3
+  end
+
+  return execute_program(tree)
+
+execute_program: procedure = .int expose mb_name mb_value mb_count mb_line mb_node mb_line_count
+  arg tree = .lltree..view
+  mb_count = 0; mb_line_count = 0
+  root = tree.root()
+  line = .int
+
+  do i = 1 to tree.count(root)
+    line = tree.child(root,i)
+    if tree.name(line) <> 'line' then iterate
+    mb_line_count = mb_line_count + 1
+    mb_line[mb_line_count] = tree.text(tree.child(line,1)) as .int
+    mb_node[mb_line_count] = line
+  end
+
+  pc = 1
+  do while pc <= mb_line_count
+    line = mb_node[pc]
+    statement = tree.child(line,2)
+    if tree.name(statement) = 'statement' then statement = tree.child(statement,1)
+    name = tree.name(statement)
+
+    select
+      when name = 'rem.statement' then nop
+      when name = 'let.statement' then call execute_assignment tree,tree.child(statement,2)
+      when name = 'assignment.statement' then call execute_assignment tree,statement
+      when name = 'print.statement' then call execute_print tree,statement
+      when name = 'input.statement' then call execute_input tree,statement
+      when name = 'if.statement' then do
+        condition = eval_node(tree,tree.child(statement,2)) as .float
+        if condition <> 0 then do
+          target = tree.text(tree.child(statement,4)) as .int
+          pc = find_line(target)
+          if pc = 0 then return exec_failure('IF target line not found',target)
+          iterate
+        end
+      end
+      when name = 'goto.statement' then do
+        target = tree.text(tree.child(statement,2)) as .int
+        pc = find_line(target)
+        if pc = 0 then return exec_failure('GOTO target line not found',target)
+        iterate
+      end
+      when name = 'end.statement' then return 0
+      otherwise return exec_failure('unsupported statement',name)
+    end
+    pc = pc + 1
+  end
+  return 0
+
+execute_assignment: procedure = .void expose mb_name mb_value mb_count
+  arg tree = .lltree..view, statement = .int
+  target = tree.child(statement,1)
+  value = eval_node(tree,tree.child(statement,3))
+  call store_variable variable_name(tree,target),value
+
+execute_print: procedure = .void
+  arg tree = .lltree..view, statement = .int
+  list = tree.child(statement,2); output = ''
+  do i = 1 to tree.count(list)
+    item = tree.child(list,i)
+    if tree.name(item) <> 'expression' then iterate
+    if output <> '' then output = output || ' '
+    raw = strip(tree.text(item))
+    if left(raw,1) = '"' then value = raw
+    else value = eval_node(tree,item)
+    output = output || value
+  end
+  say output
+
+execute_input: procedure = .void expose mb_name mb_value mb_count
+  arg tree = .lltree..view, statement = .int
+  target = variable_name(tree,tree.child(statement,2))
+  say target || '?'
+  input_value = pull()
+  call store_variable target,input_value
+
+eval_node: procedure = .string expose mb_name mb_value mb_count
+  arg tree = .lltree..view, node = .int
+  name = tree.name(node)
+  operator = .string
+  if name = 'integer' then return tree.text(node)
+  if name = 'string' then do
+    return tree.text(node)
+  end
+  if name = 'identifier' then return lookup_variable(translate(tree.text(node)))
+  if name = 'variable' then return lookup_variable(variable_name(tree,node))
+  if name = 'group' then return eval_node(tree,tree.child(node,2))
+  if name = 'primary' | name = 'unary' then do
+    if tree.count(node) = 1 then return eval_node(tree,tree.child(node,1))
+    if tree.name(tree.child(node,1)) = 'minus' then return 0 - (eval_node(tree,tree.child(node,2)) as .float)
+    return eval_node(tree,tree.child(node,2))
+  end
+  if name = 'expression' | name = 'comparison' then do
+    left = eval_node(tree,tree.child(node,1))
+    if tree.count(node) = 1 then return left
+    operator = tree.name(tree.child(node,2)); right = eval_node(tree,tree.child(node,3))
+    left_number = left as .float; right_number = right as .float
+    select
+      when operator = 'equals' then return (left_number = right_number)
+      when operator = 'not_equals' then return (left_number <> right_number)
+      when operator = 'less' then return (left_number < right_number)
+      when operator = 'greater' then return (left_number > right_number)
+      when operator = 'less_equal' then return (left_number <= right_number)
+      when operator = 'greater_equal' then return (left_number >= right_number)
+      otherwise return left
+    end
+  end
+  if name = 'additive' | name = 'multiplicative' then do
+    result = eval_node(tree,tree.child(node,1)) as .float
+    i = 2
+    do while i <= tree.count(node)
+      operator = tree.name(tree.child(node,i)); operand = eval_node(tree,tree.child(node,i + 1)) as .float
+      if operator = 'plus' then result = result + operand
+      else if operator = 'minus' then result = result - operand
+      else if operator = 'multiply' then result = result * operand
+      else if operator = 'divide' then result = result / operand
+      i = i + 2
+    end
+    return result
+  end
+  return eval_node(tree,tree.child(node,1))
+
+variable_name: procedure = .string
+  arg tree = .lltree..view, node = .int
+  return translate(tree.text(tree.child(node,1)))
+
+store_variable: procedure = .void expose mb_name mb_value mb_count
+  arg name = .string, value = .string
+  do i = 1 to mb_count
+    if mb_name[i] = name then do
+      mb_value[i] = value; return
+    end
+  end
+  mb_count = mb_count + 1
+  mb_name[mb_count] = name; mb_value[mb_count] = value
+
+lookup_variable: procedure = .string expose mb_name mb_value mb_count
+  arg name = .string
+  do i = 1 to mb_count
+    if mb_name[i] = name then return mb_value[i]
+  end
+  return 0
+
+find_line: procedure = .int expose mb_line mb_line_count
+  arg wanted = .int
+  do i = 1 to mb_line_count
+    if mb_line[i] = wanted then return i
+  end
+  return 0
+
+exec_failure: procedure = .int
+  arg message = .string, detail = .string
+  say 'MINIBASIC_EXEC: ' || message || ' ' || detail
+  return 4

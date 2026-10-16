@@ -9,6 +9,7 @@ add_subdirectory(exits/pprint)
 add_subdirectory(ui/text-inspector)
 add_subdirectory(franz-lotto)
 add_subdirectory(fortran)
+add_subdirectory(fortran_iv)
 add_subdirectory(forth)
 
 add_custom_target(crexx-examples)

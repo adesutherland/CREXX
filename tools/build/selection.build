@@ -1,0 +1,22 @@
+/* File selection and iteration example. */
+
+GRAMMAR_DIR = "tools/build/grammar";
+OUT_DIR = "cmake-build-release/build/selected";
+GRAMMARS = FILES IN "${GRAMMAR_DIR}" RECURSIVE EXTENSION ".levell" BASENAMES;
+
+DO OVER GRAMMARS AS item
+  COMPILE GRAMMAR OUTPUT_DIR = "${OUT_DIR}" SOURCE = "${GRAMMAR_DIR}/${item}.levell" OUTPUT = "${item}";
+END;
+
+COMPILE  READER
+  OUTPUT_DIR = "${OUT_DIR}"
+  SOURCE = "tools/build/build_reader.crexx"
+  DEPENDS_ON = "build"
+  OUTPUT = "selected_reader"
+;
+RUN
+  WORK_DIR = "cmake-build-release/build"
+  PROGRAM = "build_demo"
+  ARGUMENT = "-a" "tools/build/selection.build"
+  STDIN = ""
+;
