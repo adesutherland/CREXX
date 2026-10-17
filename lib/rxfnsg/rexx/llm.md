@@ -25,7 +25,7 @@ HTTP diagnostics retain `generateJson`, `buildBody`, `buildRequest`, `extractBod
 `extractText`, `lastJson` and `lastHttp`. Native calls to those methods return
 unsupported-operation status `-4`; `generateJson` is not constrained generation.
 
-The [ADDRESS demo](../../../demos/llm/README.md) uses the common client for
+The [ADDRESS demo](../../../examples/llm/README.md) uses the common client for
 `GENERATE`, preserves existing aliases and HTTP helpers, and adds `LLM_NATIVE`
 with explicit local model configuration. `CLOSE` releases its persistent client.
 

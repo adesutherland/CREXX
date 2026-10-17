@@ -31,5 +31,5 @@ main: procedure = .int
     if gsurface..erroroffset() <> level_l_tinyexpr..level_l_tinyexpr_error_offset() then return 1
     if gsurface..errormessage() <> level_l_tinyexpr..level_l_tinyexpr_error_message() then return 1
   end
-  say 'PASS: established Rexx-like Level L surface -> native DFA and direct re2c/cREXX; kinds/spans/EOF/diagnostics agree'
+  say 'PASS: established Rexx-like Level L surface -> native DFA and direct third_party/re2c/cREXX; kinds/spans/EOF/diagnostics agree'
   return 0

@@ -25,7 +25,7 @@ set(vm_sources
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decContext.c
-    platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c avl_tree/avl_tree.c rxpa/rxpa.c
+    platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c third_party/avl_tree/avl_tree.c rxpa/rxpa.c
     binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c binutils/rxcontract.c
     binutils/rxsha256.c binutils/rxgraph.c)
 list(TRANSFORM vm_sources PREPEND "${CREXX_SOURCE}/")
@@ -36,8 +36,8 @@ target_include_directories(rxvm_single_core PUBLIC
     "${CREXX_GENERATED_DIR}" "${CREXX_SOURCE}/interpreter"
     "${CREXX_SOURCE}/interpreter/rxvmplugin" "${CREXX_SOURCE}/assembler"
     "${CREXX_SOURCE}/binutils/include" "${CREXX_SOURCE}/rxpa"
-    "${CREXX_SOURCE}/platform" "${CREXX_SOURCE}/avl_tree"
-    "${CREXX_SOURCE}/utf8" "${CREXX_SOURCE}/inc"
+    "${CREXX_SOURCE}/platform" "${CREXX_SOURCE}/third_party/avl_tree"
+    "${CREXX_SOURCE}/third_party/utf8" "${CREXX_SOURCE}/interpreter/rxvml"
     "${CREXX_SOURCE}/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber")
 target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     NTHREADED=1 CREXX_VM_HANDLER_PANEL=20 MANUAL_PLUGIN_LINK=1

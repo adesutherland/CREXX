@@ -1,9 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-numeric digits 5
-  arg argv = .string[]
-f = 1.000001
-i = .int
-i = f as .int
-say i
-return 0

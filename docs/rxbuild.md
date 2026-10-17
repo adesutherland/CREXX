@@ -106,8 +106,8 @@ is platform-specific even though the `.rxbin` is portable.
 
 ~~~text
 BUILD_DIR = "cmake-build-release/build";
-GRAMMAR_SOURCE = "tools/build/grammar/build.levell";
-READER_SOURCE = "tools/build/build_reader.crexx";
+GRAMMAR_SOURCE = "tools/rxbuild/grammar/build.levell";
+READER_SOURCE = "tools/rxbuild/build_reader.crexx";
 
 COMPILE GRAMMAR
   OUTPUT_DIR = "${BUILD_DIR}"
@@ -123,7 +123,7 @@ COMPILE READER
 RUN
   WORK_DIR = "${BUILD_DIR}"
   PROGRAM = "build_demo"
-  ARGUMENT = "-a" "tools/build/example.build"
+  ARGUMENT = "-a" "tools/rxbuild/example.build"
   STDIN = "";
 ~~~
 
@@ -136,7 +136,7 @@ A plan can assign string variables:
 
 ~~~text
 OUT_DIR = "cmake-build-release/build";
-GRAMMAR = "tools/build/grammar/build.levell";
+GRAMMAR = "tools/rxbuild/grammar/build.levell";
 ~~~
 
 Use ${NAME} inside quoted attribute values:
@@ -155,7 +155,7 @@ FILES selects regular files from a directory. BASENAMES removes the selected
 extension from each result:
 
 ~~~text
-GRAMMAR_DIR = "tools/build/grammar";
+GRAMMAR_DIR = "tools/rxbuild/grammar";
 OUT_DIR = "cmake-build-release/build/selected";
 GRAMMARS = FILES IN "${GRAMMAR_DIR}" EXTENSION ".levell" BASENAMES;
 
@@ -238,5 +238,5 @@ Common diagnostics include:
   compiler from a grammar or source extension.
 - Relative source paths should be written for the selected project root.
 
-See [tools/build/README.md](../tools/build/README.md) and the runnable
-plans in [tools/build](../tools/build/).
+See [tools/rxbuild/README.md](../tools/rxbuild/README.md) and the runnable
+plans in [tools/build](../tools/rxbuild).

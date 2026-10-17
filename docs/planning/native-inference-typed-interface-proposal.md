@@ -4,7 +4,7 @@ Status: implementation and normal local F-AC-01–04 verification complete,
 14 September 2026; captured in the requested 15 September baseline. The
 implemented public contract is retained in the 15 September STEP-04 closure
 after the accepted factory-cleanup/regression report. The subsequent
-[QA01/QA02 repair and factory cleanup](../qa/native-inference-qa01/README.md)
+[historical QA01/QA02 repair and factory cleanup](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md)
 completes ordinary local regression coverage for all 2,347 tests using the full
 run and affected rechecks. Platform/sanitizer qualification remains STEP-06.
 The presented names/return contracts are unchanged.
@@ -118,7 +118,7 @@ choice no longer requires a Rexx construction shim or a separate facade library.
 
 - [x] **F-02 / S4-05c:** Add ordinary typed configuration/embedding acceptance
   consumers before implementation; retain missing-class failures in
-  `docs/qa/native-inference-typed/`. Existing passing native controls remain in
+  [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed). Existing passing native controls remain in
   the STEP-04 closeout bundle.
 - [x] **F-03 / S4-05c:** Complete and verify C bindings for all documented types,
   full strings, durable diagnostics, failed constructors, atomic convenience
@@ -159,7 +159,7 @@ Two ordinary toolchain findings were exposed by the complete public consumers:
 
 Neither finding changes language syntax, inference algorithms, model defaults,
 the accepted timing verdict or the STEP-06 sanitizer hold. All local F-04 and
-S4-05d work is now evidenced in the [completion bundle](../qa/native-inference-typed/README.md).
+S4-05d work is now evidenced in the [historical completion bundle](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md).
 
 | Criterion | Disposition |
 | --- | --- |
@@ -185,7 +185,7 @@ This proposal selects ordinary typed owners and existing status semantics.
 
 RXPA already supports class/interface/factory/method metadata, including dynamic
 and static declarations. The proposed public surface is therefore not tied to
-Rexx-written declarations. A [focused review](../qa/native-inference-native-surface-review/README.md)
+Rexx-written declarations. A [historical focused review](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-native-surface-review/README.md)
 established that the then-remaining gap was supported pure-C construction of
 objects with correct runtime class identity; declaration and native payload
 publication alone do not establish it. At that checkpoint the stats native

@@ -396,3 +396,4 @@ add_custom_target(rxfnsc ALL
 add_dependencies(rxfnsc library classlib)
 
 add_subdirectory(tests_functional)
+crexx_install_bytecode(rxfnsc "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")

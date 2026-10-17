@@ -1,7 +1,0 @@
-argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/package-core/bin/crexx', '--program', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/provider-native/consumer', '/Users/adrian/CLionProjects/CREXX-hotfix/tests/rxpa/core-native-package/consumer.crexx', '--jobs', '1', '--native']
-WAVE: project compile/assemble jobs=1
-START: project member consumer
-BUILT: project member consumer
-BARRIER: link program
-PUBLISHED: program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/provider-native/consumer.rxbin
-PUBLISHED: native program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/provider-native/consumer

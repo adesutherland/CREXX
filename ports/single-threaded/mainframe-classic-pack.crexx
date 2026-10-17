@@ -47,7 +47,7 @@ main: procedure = .int
     if rc<>0 then return rc
     call arrayappend inputs,destination
   end
-  files="interpreter/rxvmload.c lib/plugins/cstream/rxcstream.c ports/single-threaded/mainframe_fs.c ports/single-threaded/CMakeLists.txt ports/single-threaded/mainframe-build.crexx ports/single-threaded/mainframe-classic-pack.crexx ports/single-threaded/classic_provider_smoke.rexx docs/qa/mainframe-address-2026-10-12-classic-provider-review.md"
+  files="interpreter/rxvmload.c lib/plugins/cstream/rxcstream.c ports/single-threaded/mainframe_fs.c ports/single-threaded/CMakeLists.txt ports/single-threaded/mainframe-build.crexx ports/single-threaded/mainframe-classic-pack.crexx ports/single-threaded/classic_provider_smoke.rexx ports/single-threaded/README.md"
   do i=1 to words(files)
     call arrayappend inputs,root||"/"||word(files,i)
   end

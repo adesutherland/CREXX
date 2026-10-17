@@ -225,7 +225,7 @@ This is QA finding **SAN-QA-017**, not a new product-memory defect.
     they are not a new routine development-publication requirement. No
     suppression, exclusion, product/design change or timeout increase is needed.
 
-Evidence directory: `docs/qa/overnight-2026-09-21/`.
+Evidence directory: [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-09-21).
 
 Reproduction evidence: `baseline-vector.log` fails with the hosted assertion;
 `baseline-prep.txt` records the missing codec dependency and `repaired-prep.txt`

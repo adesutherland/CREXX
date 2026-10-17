@@ -166,6 +166,8 @@ is searched for same-extension imports.
 
 ## Contributing
 
+For the source-directory ownership map, see [DOCS_MAP.md](docs/DOCS_MAP.md#source-ownership).
+
 For repository-specific working rules, start with [AGENTS.md](AGENTS.md). It
 lists the current implementation references to trust before changing compiler
 logic, syntax, runtime behaviour, or Level B source.

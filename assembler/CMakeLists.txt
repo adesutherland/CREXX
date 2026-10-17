@@ -12,8 +12,8 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rxasscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h re2c
+        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../platform -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rxasscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../platform/encoding.re ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h re2c
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxasscan.c
         COMMENT "Create REXX ASSEMBLER Lexer..."
 )
@@ -31,11 +31,11 @@ add_library(rxaslib STATIC rxastoke.c rxaseror.c ${CMAKE_CURRENT_BINARY_DIR}/rxa
         rxas_flow_proof.c rxas_flow_proof.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
-        ../avl_tree/rxastree.h
-        ../utf8/utf.h ../binutils/include/rxbin.h ../binutils/include/rxopeffects.h
+        ../third_party/avl_tree/rxastree.h
+        ../third_party/utf8/utf.h ../binutils/include/rxbin.h ../binutils/include/rxopeffects.h
         ../binutils/rxopmeta.c rxaslib.c rxas_dsl.c)
 add_dependencies(rxaslib re2c lemon avl_tree platform)
-target_include_directories(rxaslib PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platform ../avl_tree ../utf8 ../binutils/include)
+target_include_directories(rxaslib PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platform ../third_party/avl_tree ../third_party/utf8 ../binutils/include)
 target_link_libraries(rxaslib rxbin)
 
 if (ENABLE_PARSER_MODE)
@@ -55,3 +55,6 @@ if (ENABLE_PARSER_MODE)
     target_link_libraries(rxas_test_flatten DSLSH::parser)
     add_subdirectory(parsingtests)
 endif()
+
+# Published products owned by this component.
+crexx_install_targets(rxas rxaslib)

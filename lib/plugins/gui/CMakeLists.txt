@@ -28,3 +28,5 @@ if(BUILD_TESTING)
             FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     set_tests_properties(gui_test_noopt gui_test_opt PROPERTIES TIMEOUT 30)
 endif()
+
+crexx_install_targets(_gui)

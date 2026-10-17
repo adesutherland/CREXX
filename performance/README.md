@@ -27,7 +27,7 @@ The project-wide [roadmap](../docs/ROADMAP.md) and
 Keep portable workloads in `tests/benchmarks/`, focused comparisons in
 `tests/performance/`, and user-facing profiling guidance in the
 [programming guide](../docs/books/crexx_programming_guide/profiling.md).
-The compact [Stage 5 baseline](evidence/2026-08-18-performance-closeout-stage5/)
+The compact [qualification summary](RESULTS.md)
 remains because its exact-commit Linux QA-C disposition is open. Other dated
 captures are recovered from Git when needed; do not copy them back into HEAD
 merely to preserve investigation history.

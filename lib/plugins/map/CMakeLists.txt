@@ -34,3 +34,5 @@ crexx_label_smoke_tests(map_test_noopt)
 #     ${CMAKE_SOURCE_DIR}/lib/include
 #     ${CMAKE_SOURCE_DIR}/rxpa
 # )
+
+crexx_install_targets(_map)

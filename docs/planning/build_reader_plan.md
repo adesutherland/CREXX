@@ -23,7 +23,7 @@ definition; it is not compiled into or wrapped by `.rxpp`.
   reader printed all three `RXBUILD` records.
 - AC-04: **Met.** Build instructions keep generated grammar, reader, and
   linker artifacts under the CMake build tree. Evidence:
-  `tools/build/README.md` and the focused build output.
+  `tools/rxbuild/README.md` and the focused build output.
 - AC-05: **Met.** A valid `.build` plan drives grammar compilation, reader
   compilation, and program execution directly from the new `build_reader`
   process and returns each phase status. Evidence: successful end-to-end

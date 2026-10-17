@@ -12,8 +12,8 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re rxcposcn.re ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h re2c
+        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../platform -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../platform/encoding.re rxcposcn.re ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h re2c
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c
         COMMENT "Create Options Lexer..."
 )
@@ -29,8 +29,8 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbscn.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re rxcpbscn.re ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h re2c
+        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../platform -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbscn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../platform/encoding.re rxcpbscn.re ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h re2c
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c
         COMMENT "Create REXX B Lexer..."
 )
@@ -43,8 +43,8 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcscn.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re rxcpcscn.re rxcp_tokens.h re2c
+        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../platform -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcscn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../platform/encoding.re rxcpcscn.re rxcp_tokens.h re2c
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c
         COMMENT "Create REXX C Lexer..."
 )
@@ -125,7 +125,7 @@ set(RXCP_BACKEND_SOURCES
     ../platform/oom.c
     ../platform/rxinteger.h
     ../platform/rxinteger.c
-    ../utf8/utf.h
+    ../third_party/utf8/utf.h
     rxcpfunc.c
     rxcp_import_report.c
     rxcp_import_report.h
@@ -154,8 +154,8 @@ add_library(rxc_typed_objects OBJECT
 foreach(component IN ITEMS rxc_backend_objects rxc_classic_objects rxc_typed_objects)
     target_include_directories(${component} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/generated
-        ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/binutils/include)
     target_link_libraries(${component} PRIVATE rxaslib rxbvml rxbin)
@@ -235,3 +235,7 @@ set_tests_properties(classic_frontend_parity PROPERTIES
 crexx_schedule_directory_qa_tier_finalization()
 endif()
 add_subdirectory(exits)
+
+# Published products owned by this component.
+crexx_install_targets(rxc rxc-c rxclib rxcc_lib)
+crexx_install_bytecode(compiler_exit_bin "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")

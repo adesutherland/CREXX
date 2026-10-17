@@ -1,8 +1,0 @@
-argv=['D:/a/_temp/msys64/mingw64/bin/python.exe', 'D:/a/CREXX/CREXX/tests/native-inference/package_acceptance.py', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-0qtivh30/package-core/bin/crexx-provider-package.exe', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-0qtivh30/package-core/bin/providers/rxcore_package.native.json']
-Traceback (most recent call last):
-  File "D:/a/CREXX/CREXX/tests/native-inference/package_acceptance.py", line 34, in <module>
-    first = fingerprint(True)
-  File "D:/a/CREXX/CREXX/tests/native-inference/package_acceptance.py", line 29, in fingerprint
-    assert (result.returncode == 0) == success, result.stdout + result.stderr
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError

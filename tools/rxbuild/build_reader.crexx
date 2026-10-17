@@ -1,0 +1,799 @@
+/* Reader for the small rxBuild Level L grammar.
+ *
+ * Reads a .build plan, compiles its declared artifacts, and runs the declared
+ * program. The .build file is the build interface; no .rxpp wrapper is
+ * involved.
+ */
+options levelb
+import rxfnsb
+import lllanguage
+import llsource
+import lltree
+import rxfs
+import rxbuildgrammar
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: build_reader build-plan.build'
+    return 2
+  end
+
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'RXBUILD_IO: cannot read ' || argv[1]
+    return 2
+  end
+
+  request = .lllanguage..request(rxbuildgrammar..language(),source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'RXBUILD_PARSE',request.error())
+    return status
+  end
+
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'RXBUILD_TREE: ' || tree.error()
+    return 3
+  end
+
+  return execute_plan(tree)
+
+execute_plan: procedure = .int
+  arg tree = .lltree..view
+  variables = .string[]
+  selections = .string[]
+  actions = .string[]
+  i = .int
+  fields = .string[]
+  kind = .string
+  rc = .int
+  selection_index = .int
+  separator = .int
+  root = tree.root()
+  rc = collect_node(tree,root,variables,selections,actions)
+  if rc <> 0 then return rc
+  grammar_count = 0
+  reader_count = 0
+  application_count = 0
+  exe_count = 0
+  execution_count = 0
+  do i = 1 to actions[0]
+    fields = action_fields(actions[i])
+    kind = fields[1]
+    if kind = 'GRAMMAR' then grammar_count = grammar_count + 1
+    if kind = 'READER' then reader_count = reader_count + 1
+    if kind = 'APPLICATION' then application_count = application_count + 1
+    if kind = 'EXE' then exe_count = exe_count + 1
+    if kind = 'RUN' then execution_count = execution_count + 1
+  end
+  if grammar_count = 0 | reader_count = 0 | execution_count = 0 then do
+    say 'RXBUILD: plan must contain COMPILE GRAMMAR, COMPILE READER, and RUN'
+    return 4
+  end
+  if exe_count <> 0 & application_count = 0 then do
+    say 'RXBUILD: CREATE EXE requires COMPILE APPLICATION'
+    return 4
+  end
+  rc = check_substitution_errors(actions)
+  if rc <> 0 then return rc
+  do i = 1 to actions[0]
+    fields = action_fields(actions[i])
+    kind = fields[1]
+    if kind = 'GRAMMAR' then rc = compile_grammar(action_value(fields,2),action_value(fields,3),action_value(fields,4))
+    if kind = 'READER' then rc = compile_reader(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5))
+    if kind = 'PROGRAM' then rc = compile_program(action_value(fields,2),action_value(fields,3),action_value(fields,4))
+    if kind = 'APPLICATION' then rc = compile_application(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5),action_value(fields,6))
+    if kind = 'EXE' then rc = create_exe(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5))
+    if kind = 'RUN' then rc = execute_program(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5),action_value(fields,6))
+    if rc <> 0 then return rc
+  end
+  return 0
+
+collect_node: procedure = .int
+  arg tree = .lltree..view, container = .int, expose variables = .string[], expose selections = .string[], expose actions = .string[]
+  i = .int
+  node = .int
+  statement = .int
+  kind = .string
+  rc = .int
+  attrs = .int
+  dir = .string
+  source = .string
+  output = .string
+  grammar_output = .string
+  do i = 1 to tree.count(container)
+    node = tree.child(container,i)
+    if tree.name(node) <> 'statement' then iterate
+    if tree.count(node) <> 1 then do
+      say 'RXBUILD: malformed statement node'
+      return 4
+    end
+    statement = tree.child(node,1)
+    kind = statement_kind(tree,statement)
+    if kind = 'ASSIGN' then do
+      if tree.count(statement) <> 4 then do
+        say 'RXBUILD: malformed variable assignment'
+        return 4
+      end
+      variable_name = upper(strip(tree.text(tree.child(statement,1))))
+      variable_value = substitute_value(unquote(tree.text(tree.child(statement,3))),variables)
+      if substitution_error(variable_value) then do
+        say 'RXBUILD: ' || variable_value
+        return 4
+      end
+      call set_variable variables,variable_name,variable_value
+      iterate
+    end
+    if kind = 'SELECT' then do
+      rc = collect_selection(tree,statement,variables,selections)
+      if rc <> 0 then return rc
+      iterate
+    end
+    if kind = 'LOOP' then do
+      if tree.count(statement) <> 8 then do
+        say 'RXBUILD: malformed DO OVER statement'
+        return 4
+      end
+      selection_name = upper(strip(tree.text(tree.child(statement,3))))
+      loop_name = upper(strip(tree.text(tree.child(statement,5))))
+      selection = ''
+      do selection_index = 1 to selections[0]
+        separator = pos('0a'x,selections[selection_index])
+        if separator = length(selection_name) + 1 & left(selections[selection_index],separator - 1) = selection_name then do
+          selection = substr(selections[selection_index],separator + 1)
+          leave
+        end
+      end
+      if selection = '' then do
+        say 'RXBUILD: unknown file selection ' || selection_name
+        return 4
+      end
+      items = selection_items(selection)
+      if items[0] = 0 then do
+        say 'RXBUILD: file selection is empty: ' || selection_name
+        return 4
+      end
+      body = tree.child(statement,6)
+      do item_index = 1 to items[0]
+        call set_variable variables,loop_name,items[item_index]
+        rc = collect_node(tree,body,variables,selections,actions)
+        if rc <> 0 then return rc
+      end
+      iterate
+    end
+    say 'RXBUILD ' || kind || ': ' || tree.text(statement)
+    if kind = 'COMPILE GRAMMAR' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      source = attribute_value(tree,attrs,'source.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      call append_action actions,'GRAMMAR',dir,source,output,'',''
+      call report_grammar dir,source,output
+    end
+    else if kind = 'COMPILE READER' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      source = attribute_value(tree,attrs,'source.attribute',1,variables)
+      grammar_output = attribute_value(tree,attrs,'depends.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      call append_action actions,'READER',dir,source,dir || '/' || grammar_output,output,''
+      call report_reader dir,source,grammar_output,output
+    end
+    else if kind = 'COMPILE PROGRAM' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      source = attribute_value(tree,attrs,'source.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      call append_action actions,'PROGRAM',dir,source,output,'',''
+      call report_program dir,source,output
+    end
+    else if kind = 'COMPILE APPLICATION' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      source = attribute_value(tree,attrs,'source.attribute',1,variables)
+      grammar_output = attribute_value(tree,attrs,'depends.attribute',1,variables)
+      compiler = attribute_value(tree,attrs,'compiler.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      call append_action actions,'APPLICATION',dir,source,dir || '/' || grammar_output,compiler,output
+      call report_application dir,source,dir || '/' || grammar_output,compiler,output
+    end
+    else if kind = 'CREATE EXE' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      application = attribute_value(tree,attrs,'application.reference.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      generated_source = find_application_source(actions,application)
+      if generated_source = '' then do
+        say 'RXBUILD: CREATE EXE references unknown application ' || application
+        return 4
+      end
+      call append_action actions,'EXE',dir,application,output,generated_source,''
+      call report_exe dir,application,generated_source,output
+    end
+    else if kind = 'RUN' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'work.dir.attribute',1,variables)
+      program = attribute_value(tree,attrs,'program.attribute',1,variables)
+      argument = attribute_value(tree,attrs,'argument.attribute',1,variables)
+      argument_value = attribute_value(tree,attrs,'argument.attribute',2,variables)
+      input = attribute_value(tree,attrs,'stdin.attribute',1,variables)
+      call append_action actions,'RUN',dir,program,argument,argument_value,input
+      call report_run dir,program,argument,argument_value,input
+    end
+    else do
+      say 'RXBUILD: unsupported statement ' || kind
+      return 4
+    end
+  end
+  return 0
+
+report_grammar: procedure
+  arg dir = .string, source = .string, output = .string
+  say 'RXBUILD RESOLVED: COMPILE GRAMMAR OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" OUTPUT = "' || project_path(dir || '/' || output || '.rxbin') || '";'
+
+report_reader: procedure
+  arg dir = .string, source = .string, grammar = .string, output = .string
+  say 'RXBUILD RESOLVED: COMPILE READER OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" DEPENDS_ON = "' || project_path(dir || '/' || grammar || '.rxbin') || '" OUTPUT = "' || project_path(dir || '/' || output || '.rxbin') || '";'
+
+report_program: procedure
+  arg dir = .string, source = .string, output = .string
+  say 'RXBUILD RESOLVED: COMPILE PROGRAM OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" OUTPUT = "' || project_path(dir || '/' || output || '.rxbin') || '";'
+
+report_application: procedure
+  arg dir = .string, source = .string, grammar = .string, compiler = .string, output = .string
+  say 'RXBUILD RESOLVED: COMPILE APPLICATION OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" DEPENDS_ON = "' || project_path(grammar || '.rxbin') || '" COMPILER = "' || project_path(dir || '/' || compiler || '.rxbin') || '" OUTPUT = "' || project_path(dir || '/' || output || '.rxbin') || '";'
+
+report_exe: procedure
+  arg dir = .string, application = .string, source = .string, output = .string
+  say 'RXBUILD RESOLVED: CREATE EXE OUTPUT_DIR = "' || project_path(dir) || '" APPLICATION = "' || application || '" SOURCE = "' || project_path(source) || '" OUTPUT = "' || native_executable_path(project_path(dir || '/' || output)) || '";'
+
+report_run: procedure
+  arg dir = .string, program = .string, argument = .string, argument_value = .string, input = .string
+  line = 'RXBUILD RESOLVED: RUN WORK_DIR = "' || project_path(dir) || '" PROGRAM = "' || project_path(dir || '/' || program || '.rxbin') || '"'
+  if argument <> '' then do
+    line = line || ' ARGUMENT = "' || argument || '"'
+    if argument_value <> '' then line = line || ' "' || argument_value || '"'
+  end
+  line = line || ' STDIN = "' || input || '";'
+  say line
+
+collect_selection: procedure = .int
+  arg tree = .lltree..view, statement = .int, variables = .string[], expose selections = .string[]
+  recursive = 0
+  selection_count = tree.count(statement)
+  if selection_count <> 9 & selection_count <> 10 then do
+    say 'RXBUILD: malformed FILES selection'
+    return 4
+  end
+  if selection_count = 10 & upper(strip(tree.text(tree.child(statement,6)))) = 'RECURSIVE' then recursive = 1
+  name = upper(strip(tree.text(tree.child(statement,1))))
+  directory = substitute_value(unquote(tree.text(tree.child(statement,5))),variables)
+  extension_index = 7
+  if recursive <> 0 then extension_index = 8
+  extension = substitute_value(unquote(tree.text(tree.child(statement,extension_index))),variables)
+  if substitution_error(directory) then do
+    say 'RXBUILD: ' || directory
+    return 4
+  end
+  if substitution_error(extension) then do
+    say 'RXBUILD: ' || extension
+    return 4
+  end
+  items = select_files(directory,extension,recursive)
+  if selection_error(items) then do
+    say 'RXBUILD: ' || items
+    return 4
+  end
+  if items = '' then do
+    say 'RXBUILD: RXBUILD selection error: no matching files in ' || project_path(directory)
+    return 4
+  end
+  call set_selection selections,name,items
+  say 'RXBUILD SELECT: ' || tree.text(statement)
+  return 0
+
+select_files: procedure = .string
+  arg directory = .string, extension = .string, recursive = .int
+  path = project_path(directory)
+  if .rxfs..pathkind(path) <> 2 then return 'RXBUILD selection error: directory not found ' || path
+  results = .string[]
+  error_path = collect_files(path,'',extension,recursive,results)
+  if error_path <> '' then return 'RXBUILD selection error: cannot list directory ' || error_path
+  call arraysort results
+  result = ''
+  do i = 1 to results[0]
+    if result = '' then result = results[i]
+    else result = result || '0a'x || results[i]
+  end
+  return result
+
+collect_files: procedure = .string
+  arg path = .string, relative = .string, extension = .string, recursive = .int, expose results = .string[]
+  entries = .string[]
+  count = .rxfs..listdir(path,entries)
+  if count < 0 then return path
+  call arraysort entries
+  wanted = upper(extension)
+  do i = 1 to entries[0]
+    entry = entries[i]
+    full_path = path || '/' || entry
+    kind = .rxfs..pathkind(full_path)
+    if kind = 2 then do
+      if recursive = 0 then iterate
+      nested = entry
+      if relative <> '' then nested = relative || '/' || entry
+      error_path = collect_files(full_path,nested,extension,recursive,results)
+      if error_path <> '' then return error_path
+      iterate
+    end
+    if kind <> 1 then iterate
+    if right(upper(entry),length(wanted)) <> wanted then iterate
+    item = source_stem(entry)
+    if relative <> '' then item = relative || '/' || item
+    results[results[0] + 1] = item
+  end
+  return ''
+
+selection_error: procedure = .int
+  arg value = .string
+  return left(value,24) = 'RXBUILD selection error:'
+
+set_selection: procedure
+  arg expose selections = .string[], name = .string, items = .string
+  record = name || '0a'x || items
+  do i = 1 to selections[0]
+    separator = pos('0a'x,selections[i])
+    if separator <> length(name) + 1 | left(selections[i],separator - 1) <> name then iterate
+    selections[i] = record
+    return
+  end
+  selections[selections[0] + 1] = record
+
+selection_items: procedure = .string[]
+  arg value = .string
+  items = .string[]
+  start = 1
+  do while start <= length(value)
+    ending = pos('0a'x,value,start)
+    if ending = 0 then do
+      if substr(value,start) <> '' then items[items[0] + 1] = substr(value,start)
+      leave
+    end
+    if substr(value,start,ending - start) <> '' then items[items[0] + 1] = substr(value,start,ending - start)
+    start = ending + 1
+  end
+  return items
+
+append_action: procedure
+  arg expose actions = .string[], kind = .string, field1 = .string, field2 = .string, field3 = .string, field4 = .string, field5 = .string
+  marker = '__RXBUILD_EMPTY__'
+  if field1 = '' then field1 = marker
+  if field2 = '' then field2 = marker
+  if field3 = '' then field3 = marker
+  if field4 = '' then field4 = marker
+  if field5 = '' then field5 = marker
+  record = kind || '0a'x || field1 || '0a'x || field2 || '0a'x || field3 || '0a'x || field4 || '0a'x || field5
+  actions[actions[0] + 1] = record
+
+find_application_source: procedure = .string
+  arg actions = .string[], application = .string
+  do i = actions[0] to 1 by -1
+    fields = action_fields(actions[i])
+    if fields[1] <> 'APPLICATION' then iterate
+    if action_value(fields,6) <> application then iterate
+    dir = action_value(fields,2)
+    source = action_value(fields,3)
+    output = action_value(fields,6)
+    return project_path(dir || '/../.rxbuild-generated/' || output || '/' || source_stem(source) || '_generated.crexx')
+  end
+  return ''
+
+action_fields: procedure = .string[]
+  arg record = .string
+  fields = .string[]
+  start = 1
+  do while start <= length(record)
+    ending = pos('0a'x,record,start)
+    if ending = 0 then do
+      fields[fields[0] + 1] = substr(record,start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(record,start,ending - start)
+    start = ending + 1
+  end
+  return fields
+
+action_value: procedure = .string
+  arg fields = .string[], index = .int
+  if index > fields[0] then return ''
+  if fields[index] = '__RXBUILD_EMPTY__' then return ''
+  return fields[index]
+
+append_line: procedure
+  arg expose lines = .string[], value = .string
+  lines[lines[0] + 1] = value
+
+attribute_list: procedure = .int
+  arg tree = .lltree..view, statement = .int
+  do i = 1 to tree.count(statement)
+    child = tree.child(statement,i)
+    if right(tree.name(child),11) = '.attributes' then return child
+  end
+  return -1
+
+attribute_value: procedure = .string
+  arg tree = .lltree..view, attrs = .int, wanted = .string, occurrence = .int, variables = .string[]
+  if occurrence = '' then occurrence = 1
+  seen = 0
+  if attrs < 0 then return ''
+  do i = 1 to tree.count(attrs)
+    wrapper = tree.child(attrs,i)
+    if tree.name(wrapper) <> 'grammar.attribute' & tree.name(wrapper) <> 'reader.attribute' & tree.name(wrapper) <> 'program.compile.attribute' & tree.name(wrapper) <> 'program.attribute' & tree.name(wrapper) <> 'application.attribute' & tree.name(wrapper) <> 'exe.attribute' & tree.name(wrapper) <> 'run.attribute' then iterate
+    node = tree.child(wrapper,1)
+    if tree.name(node) <> wanted then iterate
+    if wanted = 'argument.attribute' then return substitute_value(unquote(tree.text(tree.child(node,2 + occurrence))),variables)
+    seen = seen + 1
+    if seen <> occurrence then iterate
+    return substitute_value(unquote(tree.text(tree.child(node,3))),variables)
+  end
+  return ''
+
+set_variable: procedure
+  arg expose variables = .string[], name = .string, value = .string
+  do i = 1 to variables[0] by 2
+    if variables[i] <> name then iterate
+    variables[i + 1] = value
+    return
+  end
+  variables[variables[0] + 1] = name
+  variables[variables[0] + 1] = value
+
+variable_value: procedure = .string
+  arg variables = .string[], name = .string
+  do i = 1 to variables[0] by 2
+    if variables[i] = name then return variables[i + 1]
+  end
+  return ''
+
+substitute_value: procedure = .string
+  arg value = .string, variables = .string[]
+  result = ''
+  start = 1
+  do while start <= length(value)
+    opening = pos('${',value,start)
+    if opening = 0 then do
+      result = result || substr(value,start)
+      leave
+    end
+    result = result || substr(value,start,opening - start)
+    closing = pos('}',value,opening + 2)
+    if closing = 0 then return 'RXBUILD substitution error: missing } in "' || value || '"'
+    name = upper(strip(substr(value,opening + 2,closing - opening - 2)))
+    if name = '' then return 'RXBUILD substitution error: empty variable name'
+    if variable_defined(variables,name) = 0 then return 'RXBUILD substitution error: undefined variable ' || name
+    result = result || variable_value(variables,name)
+    start = closing + 1
+  end
+  return result
+
+variable_defined: procedure = .int
+  arg variables = .string[], name = .string
+  do i = 1 to variables[0] by 2
+    if variables[i] = name then return 1
+  end
+  return 0
+
+substitution_error: procedure = .int
+  arg value = .string
+  return left(value,26) = 'RXBUILD substitution error:'
+
+check_substitution_errors: procedure = .int
+  arg lines = .string[]
+  do i = 1 to lines[0]
+    if substitution_error(lines[i]) | pos('RXBUILD substitution error:',lines[i]) > 0 then do
+      say 'RXBUILD: ' || lines[i]
+      return 4
+    end
+  end
+  return 0
+
+unquote: procedure = .string
+  arg value = .string
+  if length(value) >= 2 & left(value,1) = '"' & right(value,1) = '"' then
+    return substr(value,2,length(value)-2)
+  return value
+
+word_value: procedure = .string
+  arg line = .string
+  value = strip(subword(line,2))
+  if length(value) >= 2 & left(value,1) = '"' & right(value,1) = '"' then
+    return substr(value,2,length(value)-2)
+  return value
+
+project_root: procedure = .string
+  root = .rxfs..cwd()
+  do i = 1 to 8
+    if (.rxfs..isdir(root || '/driver') | .rxfs..isdir(root || '/bin')) & .rxfs..isdir(root || '/examples') then return root
+    parent = .rxfs..abspath(root || '/..')
+    if parent = root then leave
+    root = parent
+  end
+  return .rxfs..cwd()
+
+project_path: procedure = .string
+  arg path = .string
+  if left(path,1) = '/' | (length(path) >= 2 & substr(path,2,1) = ':') then
+    return .rxfs..abspath(path)
+  return .rxfs..abspath(project_root() || '/' || path)
+
+tool: procedure = .string
+  arg name = .string
+  version = ''
+  assembler rxvers version
+  executable = name
+  if upper(word(version,1)) = 'WINDOWS' then executable = executable || '.exe'
+  path = .rxfs..loadpath()
+  if right(path,1) <> '/' & right(path,1) <> '\\' then path = path || '/'
+  return path || executable
+
+native_executable_path: procedure = .string
+  arg base = .string
+  version = ''
+  assembler rxvers version
+  if upper(word(version,1)) = 'WINDOWS' then return base || '.exe'
+  return base
+
+run_command: procedure = .int
+  arg label = .string, argv = .string[], input_lines = .string[]
+  captured = .string[]
+  errors = .string[]
+  i = .int
+  address crexx "run :argv[]" input input_lines output captured error errors
+  result = rc
+  if result <> 0 then do
+    say 'FAILED:' label 'rc=' || result
+    do i = 1 to captured[0]
+      say captured[i]
+    end
+    do i = 1 to errors[0]
+      say errors[i]
+    end
+  end
+  return result
+
+compile_grammar: procedure = .int
+  arg dir = .string, source = .string, output = .string
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  grammar_root = project_path(dir) || '/' || output || '.crexx-build/grammars'
+  rc = ensure_directory(grammar_root)
+  if rc <> 0 then return rc
+  grammar_root = grammar_root || '/' || grammar_stem(source)
+  rc = ensure_directory(grammar_root)
+  if rc <> 0 then return rc
+  rc = ensure_directory(grammar_root || '/pending')
+  if rc <> 0 then return rc
+  argv = .string[]
+  argv[1] = tool('crexx')
+  argv[2] = '--library'
+  argv[3] = project_path(dir) || '/' || output
+  argv[4] = project_path(source)
+  input_lines = .string[]
+  say 'BUILD GRAMMAR:' project_path(source)
+  return run_command('grammar',argv,input_lines)
+
+compile_reader: procedure = .int
+  arg dir = .string, source = .string, grammar = .string, output = .string
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  member_root = project_path(dir) || '/' || output || '.crexx-build/members/' || source_stem(source)
+  rc = ensure_directory(member_root)
+  if rc <> 0 then return rc
+  argv = .string[]
+  argv[1] = tool('crexx')
+  argv[2] = '--program'
+  argv[3] = project_path(dir) || '/' || output
+  argv[4] = project_path(source)
+  argv[5] = '-i'
+  argv[6] = project_path(dir)
+  argv[7] = '-l'
+  argv[8] = project_path(grammar)
+  input_lines = .string[]
+  say 'BUILD READER:' project_path(source)
+  return run_command('reader',argv,input_lines)
+
+compile_program: procedure = .int
+  arg dir = .string, source = .string, output = .string
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  member_root = project_path(dir) || '/' || output || '.crexx-build/members/' || source_stem(source)
+  rc = ensure_directory_tree(member_root)
+  if rc <> 0 then return rc
+  argv = .string[]
+  argv[1] = tool('crexx')
+  argv[2] = '--program'
+  argv[3] = project_path(dir) || '/' || output
+  argv[4] = project_path(source)
+  input_lines = .string[]
+  say 'BUILD PROGRAM:' project_path(source)
+  return run_command('program',argv,input_lines)
+
+compile_application: procedure = .int
+  arg dir = .string, source = .string, grammar = .string, compiler = .string, output = .string
+  assemble_argv = .string[]
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  generated_root = project_path(dir || '/../.rxbuild-generated/' || output)
+  rc = ensure_directory_tree(generated_root)
+  if rc <> 0 then return rc
+  generated_source = generated_root || '/' || source_stem(source) || '_generated.crexx'
+
+  argv = .string[]
+  argv[1] = tool('rxtvm')
+  argv[2] = project_path(dir) || '/' || compiler || '.rxbin'
+  argv[3] = '-a'
+  argv[4] = project_path(source)
+  argv[5] = generated_source
+  input_lines = .string[]
+  say 'BUILD APPLICATION:' project_path(source)
+  rc = run_command('application compiler',argv,input_lines)
+  if rc <> 0 then return rc
+
+  argv = .string[]
+  argv[1] = tool('rxc')
+  argv[2] = '--no-exe-import'
+  argv[3] = '-i'
+  argv[4] = .rxfs..loadpath()
+  argv[5] = '-o'
+  argv[6] = project_path(dir) || '/' || output
+  argv[7] = generated_source
+  rc = run_command('application compile',argv,input_lines)
+  if rc <> 0 then return rc
+
+  assemble_argv[1] = tool('rxas')
+  assemble_argv[2] = '-o'
+  assemble_argv[3] = project_path(dir) || '/' || output
+  assemble_argv[4] = project_path(dir) || '/' || output
+  say 'BUILD APPLICATION RXBIN:' project_path(dir || '/' || output || '.rxbin')
+  return run_command('application assemble',assemble_argv,input_lines)
+
+create_exe: procedure = .int
+  arg dir = .string, application = .string, output = .string, generated_source = .string
+  if generated_source = '' then do
+    say 'RXBUILD: CREATE EXE has no generated application source for ' || application
+    return 4
+  end
+  source = project_path(generated_source)
+  if .rxfs..isfile(source) = 0 then do
+    say 'RXBUILD: generated application source does not exist: ' || source
+    return 4
+  end
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  staged_source = project_path(dir || '/../.rxbuild-generated/' || application || '/' || output || '.crexx')
+  rc = copy_binary(source,staged_source)
+  if rc <> 0 then return rc
+  argv = .string[]
+  argv[1] = tool('crexx')
+  argv[2] = '--native'
+  argv[3] = staged_source
+  input_lines = .string[]
+  say 'CREATE EXE:' native_executable_path(project_path(dir || '/' || output))
+  rc = run_command('native executable',argv,input_lines)
+  if rc <> 0 then return rc
+  native_exe = staged_source
+  dot = lastpos('.',native_exe)
+  if dot > 0 then native_exe = left(native_exe,dot - 1)
+  native_exe = native_executable_path(native_exe)
+  if .rxfs..isfile(native_exe) = 0 then do
+    say 'RXBUILD: native driver did not create ' || native_exe
+    return 1
+  end
+  destination = native_executable_path(project_path(dir || '/' || output))
+  rc = copy_binary(native_exe,destination)
+  if rc <> 0 then return rc
+  say 'BUILD EXE:' destination
+  return 0
+
+copy_binary: procedure = .int
+  arg source = .string, destination = .string
+  data = .binary
+  do
+    data = readbinary(source)
+  on signal
+    say 'RXBUILD: cannot read ' || source
+    return 1
+  end
+  written = writebinary(destination,data)
+  if written <> binlength(data) then do
+    say 'RXBUILD: cannot write ' || destination
+    return 1
+  end
+  return 0
+
+execute_program: procedure = .int
+  arg dir = .string, program = .string, argument = .string, value = .string, input = .string
+  argv = .string[]
+  argv[1] = tool('rxtvm')
+  argv[2] = project_path(dir) || '/' || program || '.rxbin'
+  if argument <> '' then do
+    argv[3] = argument
+    argv[4] = value
+  end
+  input_lines = .string[]
+  if input <> '' then input_lines[1] = input
+  say 'EXECUTE:' program
+  return run_command('execute',argv,input_lines)
+
+ensure_project_directories: procedure = .int
+  arg dir = .string, output = .string
+  base = project_path(dir)
+  rc = ensure_directory_tree(base)
+  if rc <> 0 then return rc
+  project = base || '/' || output || '.crexx-build'
+  rc = ensure_directory_tree(project)
+  if rc <> 0 then return rc
+  do child = 1 to 2
+    name = 'members'
+    if child = 2 then name = 'publish'
+    path = project || '/' || name
+    if .rxfs..isdir(path) = 0 then do
+      if .rxfs..mkdir(path) <> 0 then do
+        say 'RXBUILD: cannot create project directory ' || path
+        return 1
+      end
+    end
+  end
+  return 0
+
+ensure_directory_tree: procedure = .int
+  arg path = .string
+  if path = '' then return 1
+  captured = .string[]
+  errors = .string[]
+  address crexx "mkdir -p :path" output captured error errors
+  if rc = 0 then return 0
+  say 'RXBUILD: cannot create directory ' || path
+  return 1
+
+ensure_directory: procedure = .int
+  arg path = .string
+  if .rxfs..isdir(path) <> 0 then return 0
+  if .rxfs..mkdir(path) <> 0 then do
+    say 'RXBUILD: cannot create directory ' || path
+    return 1
+  end
+  return 0
+
+grammar_stem: procedure = .string
+  arg source = .string
+  return source_stem(source) || '_grammar'
+
+source_stem: procedure = .string
+  arg source = .string
+  slash = lastpos('/',source)
+  backslash = lastpos('\\',source)
+  if backslash > slash then slash = backslash
+  name = source
+  if slash > 0 then name = substr(source,slash + 1)
+  dot = lastpos('.',name)
+  if dot > 0 then name = left(name,dot - 1)
+  return name
+
+statement_kind: procedure = .string
+  arg tree = .lltree..view, node = .int
+  name = tree.name(node)
+  if name = 'assignment.statement' then return 'ASSIGN'
+  if name = 'file.selection.statement' then return 'SELECT'
+  if name = 'loop.statement' then return 'LOOP'
+  if name = 'compile.grammar.statement' then return 'COMPILE GRAMMAR'
+  if name = 'compile.reader.statement' then return 'COMPILE READER'
+  if name = 'compile.program.statement' then return 'COMPILE PROGRAM'
+  if name = 'compile.application.statement' then return 'COMPILE APPLICATION'
+  if name = 'create.exe.statement' then return 'CREATE EXE'
+  if name = 'run.statement' then return 'RUN'
+  return 'UNKNOWN'

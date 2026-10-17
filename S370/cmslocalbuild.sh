@@ -10,12 +10,12 @@
 export MSYS2_ARG_CONV_EXCL="vm370:;/opt"
 
 # Build Lexers / Parsers
-../cmake-build-release/re2c/re2c -I . -o ./rxasscan.c ../assembler/rxasscan.re
-../cmake-build-release/lemon/lemon -c -d. ../assembler/rxasgrmr.y
-../cmake-build-release/re2c/re2c -I . -o ./rxcposcn.c ../compiler/rxcposcn.re
-../cmake-build-release/lemon/lemon -c -d. ../compiler/rxcpopgr.y
-../cmake-build-release/re2c/re2c -I . -o ./rexbscan.c ../compiler/rxcpbscn.re
-../cmake-build-release/lemon/lemon -c -d. ../compiler/rxcpbgmr.y
+../cmake-build-release/third_party/re2c/re2c -I . -o ./rxasscan.c ../assembler/rxasscan.re
+../cmake-build-release/third_party/lemon/lemon -c -d. ../assembler/rxasgrmr.y
+../cmake-build-release/third_party/re2c/re2c -I . -o ./rxcposcn.c ../compiler/rxcposcn.re
+../cmake-build-release/third_party/lemon/lemon -c -d. ../compiler/rxcpopgr.y
+../cmake-build-release/third_party/re2c/re2c -I . -o ./rexbscan.c ../compiler/rxcpbscn.re
+../cmake-build-release/third_party/lemon/lemon -c -d. ../compiler/rxcpbgmr.y
 
 # Start Docker
 docker kill vm370
@@ -24,7 +24,8 @@ docker run --rm -d -p 3270:3270 -p 8038:8038 -p 3505:3505 --name vm370 adriansut
 
 # Copy files to Docker
 docker cp "../S370" "vm370:/opt/hercules/vm370/io"
-docker cp "../avl_tree" "vm370:/opt/hercules/vm370/io"
+docker exec vm370 mkdir -p /opt/hercules/vm370/io/third_party
+docker cp "../third_party/avl_tree" "vm370:/opt/hercules/vm370/io/third_party"
 docker cp "../platform" "vm370:/opt/hercules/vm370/io"
 docker cp "../assembler" "vm370:/opt/hercules/vm370/io"
 docker cp "../compiler" "vm370:/opt/hercules/vm370/io"

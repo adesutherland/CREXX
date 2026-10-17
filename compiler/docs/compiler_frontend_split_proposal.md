@@ -5,7 +5,7 @@ extraction on 2026-10-10; that bounded implementation and local qualification
 are complete and published to `origin/develop` in the authorized 10 October
 development batch. SAN-011/012 remain release-blocking,
 with full closure explicitly assigned to Codex at the next Release 1 release-QA
-gate. The [local receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
+gate. The [historical local receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md)
 records the physical split, reusable metadata reader and qualification limits. Original architecture review, 2026-10-08:
 `36bced2418092029f76a06aa2acdadcdaf8a87c7`.
 Level C status and proposed C-first sequencing refreshed 2026-10-10 against
@@ -205,8 +205,8 @@ contains several independent unimplemented contracts. No split may silently
 turn them into exclusions or weaken the existing completion criteria.
 
 Retained proof comes from the [LC-CLOSE receipt](../../docs/planning/release-1/levelc-closeout-evidence-20261009.json),
-[LC-UNICODE receipt](../../docs/qa/levelc-unicode-2026-10-09/README.md) and
-[10 October package/integer repair receipt](../../docs/qa/ci-core-stream-packaging-2026-10-10/README.md).
+[historical LC-UNICODE receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md) and
+[historical 10 October package/integer repair receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-core-stream-packaging-2026-10-10/README.md).
 They qualify their recorded inputs and cases, not complete Classic conformance.
 This review inspects source and receipts; it does not rerun builds or broad QA.
 

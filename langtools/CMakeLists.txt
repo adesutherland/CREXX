@@ -145,3 +145,7 @@ if(NOT CREXX_LEVEL_L_STANDALONE)
   add_subdirectory(examples)
   add_subdirectory(tests)
 endif()
+
+# Published products owned by this component.
+crexx_install_targets(rxlang)
+crexx_install_bytecode(rxlanglib "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin")

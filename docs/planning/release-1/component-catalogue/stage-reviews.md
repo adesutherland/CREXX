@@ -101,7 +101,7 @@ State: complete; reviewed before Stage 6 began.
 ### Completeness checks
 
 - The assessment separates test evidence, documentation, performance risk, confidence, source composition, and runtime call path; it assigns no composite score.
-- Language/compiler surfaces, all 129 Level B selectors, all 36 classlib selectors, G/C/L libraries, RexxScript, `veclib`, all 27 RXPA directories, both VM decimal plugins, native DES, all 16 exits, residual sources, demos/examples, and PoCs are covered either directly or by a documented source/package inheritance rule.
+- Language/compiler surfaces, all 129 Level B selectors, all 36 classlib selectors, G/C/L libraries, RexxScript, `veclib`, all 27 RXPA directories, both VM decimal plugins, native DES, all 16 exits, residual sources, examples/examples, and PoCs are covered either directly or by a documented source/package inheritance rule.
 - Dependency/blast-radius relationships are explicit, including the Level B-to-classlib-to-Level C-to-RexxScript chain and RXPP's four linked runtime inputs.
 - Performance findings distinguish source-review risk from measured speed. Hot-path, repeated-scan/copy, manual-memory/registry, stateful I/O, and external-service concerns are recorded without inventing benchmark numbers.
 - Use of cREXX features is reviewed separately for B, G, C-runtime implementation, L, classlib, RexxScript, and RXPA packages.

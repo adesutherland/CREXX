@@ -3,7 +3,7 @@
 Status: audit complete; imported-inline and status-bit boundaries accepted by
 Adrian on 2026-09-18. Entry-alias repair is implemented, locally qualified and
 published to develop in `f7a8b08c1`; combined-head hosted checks are tracked in
-the [selected defect batch](../../qa/beta3-defect-batch-2026-09-18/README.md).
+the [historical selected defect batch](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-defect-batch-2026-09-18/README.md).
 Requested by Adrian on 2026-09-18. This records
 existing behavior and proposals for review; it does not approve new language,
 assembly, ABI, optimization or architecture contracts beyond the explicit
@@ -429,7 +429,7 @@ could provide more information; invisible assumptions cannot.
 ## 6. Evidence, limitations and handoff
 
 Permanent evidence is in
-[`docs/qa/optimization-boundary-audit-2026-09-18`](../../qa/optimization-boundary-audit-2026-09-18/README.md):
+[historical `docs/qa/optimization-boundary-audit-2026-09-18`](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/optimization-boundary-audit-2026-09-18/README.md):
 source revision and tool hashes, build log, full 23-test CTest log, exact probe
 commands/results, source/assembly fixtures, both disassemblies and the accepted
 but incorrect proof diagnostic. The probe harness can recreate the examples in

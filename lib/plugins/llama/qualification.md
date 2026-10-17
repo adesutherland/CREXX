@@ -9,15 +9,15 @@ the broad local Apple-ASan gate now passes 2,349/2,349 tests. STEP-06 remains op
 for the remaining platform and acceptance conditions below.
 Documentation readiness is not release acceptance. The authoritative repository
 plan is `docs/planning/native-inference-backlog.md`; current coverage and review
-are tracked in `docs/qa/native-inference-step07/README.md` and the live
-`docs/qa/native-inference-step06/README.md` qualification ledger.
+are tracked in [historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md) and the live
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step06/README.md) qualification ledger.
 
 The delivery qualified on `temp/llama-release-combined` was integrated into
 `develop`; final promotion checks passed at `59fc02eb9`. It supplies prebuilt
 CPU/GPU delivery and a generated-fixture smoke test. Its numbered outcomes and criteria are tracked in
-`docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#consolidated-delivery-result)
+`docs/planning/native-inference-ci.md`; the [historical current build-status table](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md#consolidated-delivery-result)
 distinguishes tested revisions and outstanding integration/release work.
-The later [17 September Windows snapshot installer change](../../../docs/qa/windows-snapshot-2026-09-17/README.md)
+The later [historical 17 September Windows snapshot installer change](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/windows-snapshot-2026-09-17/README.md)
 has its own evidence and pending hosted/signing checks. A result on an earlier
 candidate does not close those later checks.
 Routine CI downloads no trained model: its sub-5-MiB fixture checks engine
@@ -31,7 +31,7 @@ on unavailable GPUs. Development integration is not full release acceptance.
 The follow-on common API and general GGUF profiles are documented in
 [the common guide](common.md) and [model configuration](models.md). Their
 source-checkout acceptance record is `docs/planning/llm-provider-interface.md`;
-results and artifact identities are in `docs/qa/llm-interface-review-20260917/`.
+results and artifact identities are in [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/llm-interface-review-20260917).
 These changes preserve the original exact BGE/Smol presets and qualification
 history below. Additional local compatibility checks cover 64-dimensional tiny
 generation, 768-dimensional BGE-base F16/Q4_K_M embeddings, and user-provisioned
@@ -153,7 +153,7 @@ generation evidence does not repair it. These are indicative fixed-workload
 figures, not claims that cREXX accelerates the engine, model throughput rankings
 or a reason to tune upstream code. Raw evidence is in repository
 [`performance/evidence/2026-09-15-ni-s5-first-release`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-15-ni-s5-first-release) and
-`docs/qa/native-inference-step04`.
+[historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step04).
 
 With one/four private generation contexts, recorded cREXX process peak RSS was
 approximately 0.97/1.47 GiB on CPU and 0.61/1.10 GiB on Metal. All direct/bridge/VM

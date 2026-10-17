@@ -1,5 +1,0 @@
-float-decimal-local noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n"}
-float-decimal-local-rounded-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
-decimal-float-local-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
-decimal-bool-huge noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
-integer-bool-large-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: "compiler exit 2: Error in integer-bool-large-control-levelb.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""; "compiler exit 2: Error in integer-bool-large-control-levelg.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""

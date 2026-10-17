@@ -154,8 +154,8 @@ retain ASan/UBSan and do not claim leak qualification.
 
 ## CMS file discovery
 
-For the selected CMS31/TSO31 ADDRESS build and its exact qualification status,
-see [the mainframe runtime checkpoint](../../docs/qa/mainframe-address-2026-10-12-runtime-qualification.md).
+The selected CMS31/TSO31 ADDRESS build retains the native guest qualification
+boundaries described above.
 Native TSO file operands passed to Rexx file operations use an explicit
 native spelling such as `DSN:MFA12.INPUT`, a parenthesized PDS member or a
 leading quoted dataset name. Bare `NAME.TYPE` is cREXX logical naming and
@@ -191,3 +191,26 @@ its separately packaged executable. Historical RXC `-X`/RXAS/RXVM demonstrations
 do not establish 31-bit application execution, compiler-exit memory fit or
 release packaging; small 31-bit runtime/text fixtures establish only their
 tested service boundaries.
+
+## Classic provider closure and guest qualification
+
+The native Classic image requires `rxcstream`, the private `rxfs` subset
+(`abspath`, `isfile`, `loadpath`), and the matching `classlib.rxbin` alongside
+`library`, `rxfnsc`, and `rxfnsg`. Use `rxlink -p` to inspect that closure.
+CLI and embedding initialization share per-VM provider sessions; the constrained
+implementation is single-threaded and requires neither TLS nor constructors.
+Native record FILEs are sequential and non-positionable: do not probe them with
+`fileno`/`fstat` or claim positional replacement. Native `isfile` uses the
+logical-name/binary boundary. Unsupported absolute/executable path discovery
+signals FAILURE; it must not invent POSIX names. This is dependency support,
+not qualification of every Classic STREAM operation.
+
+PDOS fixtures use `VERSION` through `ADDRESS PDOS`. `VER` belongs to PCOMM;
+using it through PDOS caused RC14 and was misclassified as a console watchdog.
+Keep capture, nonzero child result, contained fault, subsequent recovery, the
+64 KiB caller-file tail, wide guard, and Classic RC/.RC/.RS/handler assertions.
+The Classic and PDOS packers include this maintained contract. A host build or
+syntax check does not establish guest acceptance: native compile, assemble,
+link and execute with the canonical libraries on each named personality remain
+the gate. Existing CMS31/TSO31 and PDOS results belong to their qualified
+revisions; this directory cleanup does not repeat or extend those results.

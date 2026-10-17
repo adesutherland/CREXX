@@ -19,7 +19,7 @@ sanitizer handoffs; their numbers no longer indicate execution order.
 The 15 September full-regression
 preparation exposed NI-S4-QA01 in existing HTTP consumers. Its compiler repair,
 the authorized C factory cleanup and the separate QA02 static archive dependency
-repair now have [complete ordinary local coverage](../qa/native-inference-qa01/README.md)
+repair now have [historical complete ordinary local coverage](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md)
 for all 2,347 selected tests through the broad run and affected rechecks. Remaining
 sanitizer and platform qualification is assigned to STEP-06.
 The original requirements were captured on 10–11 September 2026. Adrian's
@@ -374,7 +374,7 @@ results are assessed; they cannot be relaxed retrospectively to make a pass.
 | AC-09 | Cancellation, failed loads, failed inference, explicit close and worker/VM teardown release resources without stale handles, cross-request diagnostics or use-after-free. | Normal and maintained sanitizer focused runs, load/close cycles, cancellation at preparation/prefill/decode/batch boundaries and measured GPU cancellation/drain latency. Covers OUT-03/04/05, NI-03/06/07. |
 | AC-10 | Exact weights, conversion, tokenizer, preparation, dimensions, quantization, runtime build and backend settings are inspectable and reproducible. | Pinned artifact hashes/manifests; incompatible architecture/pooling/options and altered-artifact tests; model licence/notices in provisioning records. Covers OUT-05, NI-05. |
 | AC-11 | Dynamic and native consumers resolve provider and backend dependencies from canonical trusted package locations on every target OS, including CPU-only hosts. | Clean external-consumer install/package checks, missing/wrong backend/provider diagnostics, Windows runtime-dependency inspection and no sibling-checkout dependency. Covers OUT-01/05, NI-04. |
-| AC-12 | The cREXX integration preserves useful hardware use, persistent processing and batching without unexplained glue overhead. | Indicative ordinary Release cold/warm figures and small matched direct-library comparisons at fixed model/device/thread/batch settings; inspect avoidable reloads, copies, serialization and duplicated weights. Retain identities/raw samples and diagnose wrapper tripwires. No model-quality study, upstream speed investigation, backend tuning sweep or requirement to prove the globally fastest configuration. Covers OUT-02/03/04/05, NI-06. |
+| AC-12 | The cREXX integration preserves useful hardware use, persistent processing and batching without unexplained glue overhead. | Indicative ordinary Release cold/warm figures and small matched direct-library comparisons at fixed model/device/thread/batch settings; inspect avoidable reloads, copies, serialization and duplicated weights. Record identities, summarized sample statistics and wrapper-tripwire diagnoses; delete raw captures after analysis. No model-quality study, upstream speed investigation, backend tuning sweep or requirement to prove the globally fastest configuration. Covers OUT-02/03/04/05, NI-06. |
 | AC-13 | The full toolchain, both applicable VM modes, supported optimization modes and existing HTTP/vector/concurrency contracts pass their relevant checks. | Regression coverage established before implementation; focused normal Debug and maintained sanitizer runs, required broader gates and exact-head hosted qualification before publication. GPU correctness still needs real-device evidence. Covers OUT-05, NI-01/06/07. |
 | AC-14 | Documentation and examples demonstrate preparation, persistent batches, generation, hardware selection, concurrent ownership and shutdown with truthful qualification status. | Runnable installed examples, source documentation tags, capability matrix and evidence links; all unmet ACs and user decisions retained in this plan. Covers OUT-01 through OUT-05, NI-01 through NI-07. |
 
@@ -486,7 +486,7 @@ acceptance criteria or GPU/platform work.
 Status: sequencing and STEP-07 commencement approved by Adrian, 15 September
 2026. Adrian approved the completed documentation/examples on 15 September;
 all six readiness criteria and four execution tasks are complete. The coverage and evidence
-ledger is [the STEP-07 handoff](../qa/native-inference-step07/README.md).
+ledger is [historical STEP-07 handoff](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md).
 
 The outcome is a complete, usable and reviewed account of the intended product
 that a new user can follow and the QA owner can turn into coverage. These
@@ -532,7 +532,7 @@ review evidence is linked in the handoff.
 
 Focused example/recipe checks during STEP-07 do not start the full QA campaign.
 S7-AC-01–05 evidence is linked by criterion in the
-[STEP-07 guide/coverage/check ledger](../qa/native-inference-step07/README.md).
+[historical STEP-07 guide/coverage/check ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md).
 S7-AC-06 is approved; the checked readiness items do not close parent
 AC-01–14 or claim Windows/Linux/sanitizer qualification.
 Documentation-only changes do not invalidate unchanged full regression evidence.
@@ -568,8 +568,8 @@ contracts, and retains honest coverage for takeover. Unavailable hardware and
 unresolved model provenance remain open requirements. This is integration and
 product QA, not model-quality evaluation or an upstream tuning programme.
 
-Use the [approved coverage map](../qa/native-inference-step07/README.md) and
-[live STEP-06 evidence ledger](../qa/native-inference-step06/README.md) together.
+Use the [historical approved coverage map](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md) and
+[historical live STEP-06 evidence ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step06/README.md) together.
 Do not replace a parent criterion with a smaller local test list.
 
 Adrian subsequently authorized [release-pipeline and remote-branch qualification](native-inference-ci.md):
@@ -759,7 +759,7 @@ concurrent sharing are separate facts to verify.
 - **STEP-04 functional closeout progress, 2026-09-14:** Normal local request
   boundaries, CPU/Metal layout parity, four real workers' isolated/concurrent
   outputs, rxvector integration, both VM/optimization modes and installed/native
-  embedding consumers pass. See the [evidence](../qa/native-inference-step04-closeout/README.md).
+  embedding consumers pass. See the [historical evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step04-closeout/README.md).
   The typed facade and persistent public examples remain open, with
   [S4-D03](native-inference-typed-interface-proposal.md) prepared for the final
   public class spelling/return-contract review reserved in STEP-01. No native
@@ -787,7 +787,7 @@ concurrent sharing are separate facts to verify.
   finish the documented tasks, S4-D03 now implements the unchanged presented
   typed C contract and installs persistent/shared-worker examples. All F-AC-01–04,
   S4-AC-01–06 and S4-05a–d local work is ticked with
-  [retained evidence](../qa/native-inference-typed/README.md): 28 Debug and
+  [historical retained evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md): 28 Debug and
   42 installed/relocated-native Release typed runs, plus current generic
   compiler/RXPA/executor/SDK controls. Two ordinary generic defects exposed by
   those consumers gained permanent regressions and repairs. Public-contract
@@ -844,7 +844,7 @@ latest completed implementation dependency.
   The full run completed 2,337 passes, nine failures and one timeout; corrections
   and affected rechecks now account for all 2,347 tests (2,305 unchanged broad
   passes plus 42 distinct rechecked tests). No test was disabled or assertion
-  weakened. [The evidence](../qa/native-inference-qa01/README.md) ticks S4-B-02
+  weakened. [historical evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md) ticks S4-B-02
   and all numbered QA01/QA02 criteria. Adrian accepted the report and STEP-04
   is recorded as closed. STEP-05 is unstarted and STEP-06 retains SAN-009,
   maintained sanitizers, platform and release qualification.
@@ -864,7 +864,7 @@ latest completed implementation dependency.
 
 STEP-05 is locally complete. This supersedes the STEP-04-only disposition above;
 it adds generation evidence without replacing the full-product criteria or
-claiming unavailable platforms. The [phase evidence](../qa/native-inference-step05/README.md)
+claiming unavailable platforms. The [historical phase evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step05/README.md)
 retains commands, identities, failures, isolated replay and the complete ordinary
 regression result. All S5-AC-01–06 and S5-01–06 are checked in the phase plan.
 
@@ -906,8 +906,8 @@ STEP-06 retains full qualification and the final evidence/status reconciliation,
 including any documentation corrections discovered by QA. Missing hardware may
 keep individual cells open; neither documentation readiness nor this sequencing
 change closes them. Adrian subsequently approved this sequence and STEP-07 work.
-The [completed guide and coverage pack](../qa/native-inference-step07/README.md)
-now satisfies all S7-AC-01–06 and S7-01–04: Adrian approved the completed pack on
+The completed documentation pack
+satisfies all S7-AC-01–06 and S7-01–04: Adrian approved the completed pack on
 15 September 2026. STEP-07 is closed and STEP-06 qualification is now authorized
 and in progress. No full QA or sanitizer run occurred during the documentation
 phase; the earlier sanitizer hold ends at this approved STEP-06 handoff.
@@ -915,9 +915,8 @@ phase; the earlier sanitizer hold ends at this approved STEP-06 handoff.
 ## STEP-06 parent acceptance disposition — 15 September 2026
 
 This updates the earlier phase snapshots without replacing OUT-01–05, AC-01–14
-or the initial platform matrix. The [STEP-06 evidence ledger](../qa/native-inference-step06/README.md)
-retains exact commands, raw results, source/model identities and the two repaired
-QA findings. The full local Apple-ASan gate passes 2,349/2,349 tests; all
+or the initial platform matrix. This section records the qualification result
+and remaining obligations; temporary captures have been deleted. The full local Apple-ASan gate passes 2,349/2,349 tests; all
 full-product criteria remain open pending the conditions below. Codex owns the remaining qualification
 under Adrian's direction; actual external host/device access is pending.
 
@@ -1003,4 +1002,4 @@ full-product conditions. Remaining trained-model OS/device, resource-failure,
 sharing/drain and provenance acceptance stays open as above. Reuse the retained
 same-baseline Deep/core sanitizer gates and approved focused #701/#699 integration
 proof; promotion does not require another unchanged broad campaign. Exact run
-and artifact identities are in [the pipeline ledger](../qa/native-inference-ci/README.md).
+and artifact identities are in [historical pipeline ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md).

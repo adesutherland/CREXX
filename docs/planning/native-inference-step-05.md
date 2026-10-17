@@ -115,7 +115,7 @@ and sanitizer scheduling evidence; no sanitizer execution is authorized now.
 ## Closure and takeover — 15 September 2026
 
 All S5-AC-01–06 and S5-01–06 are complete locally. The
-[ordinary qualification bundle](../qa/native-inference-step05/README.md) retains
+[historical ordinary qualification bundle](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step05/README.md) retains
 commands, identities, the complete coverage ledger and failed controls with their
 dispositions. The [parent disposition](native-inference-backlog.md#step-05-parent-acceptance-disposition--15-september-2026)
 adds these results to the unchanged OUT-01–05, CREXX-NI-01–07 and AC-01–14.

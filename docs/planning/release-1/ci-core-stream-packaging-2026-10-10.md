@@ -102,7 +102,7 @@ implemented Classic contract; no syntax or language-design decision is needed.
 The failing full job log is `/tmp/crexx-ci-failure.a8oRah`. The downloaded
 macOS ARM64 core ZIP is under `/tmp/crexx-ci-artifacts.LftFtu/`.
 The permanent development receipt is
-`docs/qa/ci-core-stream-packaging-2026-10-10/README.md`.
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-core-stream-packaging-2026-10-10/README.md).
 
 The receipt now retains original/repaired/final ZIP controls and exact input
 hashes. Final Debug and Release product builds pass; all 24 changed sources'
@@ -195,7 +195,7 @@ at roughly ten-minute intervals while independent useful work continues.
 **Local checkpoint before publication:** collision control and numeric enum identity control pass;
 normal Debug and maintained Apple ASan frontend/contract panels pass 4/4
 (48.17 s / 119.26 s). The repair receipt is
-[ci-windows-classic-broker-2026-10-10](../../qa/ci-windows-classic-broker-2026-10-10/README.md).
+[historical ci-windows-classic-broker-2026-10-10](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-windows-classic-broker-2026-10-10/README.md).
 The substantive fix is ready for the first push with expected green normal
 publication and explicitly requested full sanitizer/deep workflows. Actual
 hosted proof and AC-10–13 remain open until verified. Thread heartbeat
@@ -253,7 +253,7 @@ remain unchanged. Keep the existing Unicode filename regression enabled.
     original platform inputs are unaffected by Windows-only execution changes.
 
 The Windows host-text repair receipt is
-`docs/qa/ci-windows-hosttext-2026-10-10/README.md`. Expected first-push status is
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-windows-hosttext-2026-10-10/README.md). Expected first-push status is
 green normal Build/CodeQL with the paired Windows-only Deep replay launched.
 Actual hosted acceptance remains open, with exact run IDs in active-runs.json.
 Existing full Unix sanitizer proof plus the newly added focused helper covers

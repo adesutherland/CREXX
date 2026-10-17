@@ -27,9 +27,9 @@ if(NOT CREXX_LEVEL_G_BUILD_JOBS MATCHES "^[1-9][0-9]*$")
 endif()
 
 set(_stage_g_controller_source
-  "${CMAKE_SOURCE_DIR}/tools/build-system/build_stage_g.crexx")
+  "${CMAKE_SOURCE_DIR}/tools/build-system/levelg/build_stage_g.crexx")
 set(_stage_g_worker_source
-  "${CMAKE_SOURCE_DIR}/tools/build-system/build_stage_g_worker.crexx")
+  "${CMAKE_SOURCE_DIR}/tools/build-system/levelg/build_stage_g_worker.crexx")
 set(_stage_g_controller_copy
   "${_stage_g_bootstrap_root}/controller-source/build_stage_g.crexx")
 set(_stage_g_worker_copy

@@ -131,7 +131,7 @@ The complete dispositions and repair record are in
   to port `0` during this audit.
 - [x] Produce exact Linux and Windows validation commands and expected-result
   rules before either slow host is used. The fail-closed runners, evidence
-  contract and defect-return policy are in [`qa/`](qa/).
+  contract and defect-return policy are in [`qa/`](qa).
 
 Focused Mac evidence for the first two items: build targets
 `testConcurrency` and `testTaskContextEndpoint`; then CTest selected
@@ -175,7 +175,7 @@ six stress tests repeated 20 times each; complete ordinary profiling-off
 Release build; Release concurrency matrix 180/180; and a 156-file isolated
 install whose installed `rxc`, `rxas`, `rxlink`, `rxbvm` and `rxtvm` compile,
 link and run the documented basic concurrency program. Evidence is retained in
-[`evidence/2026-08-16-mac-closeout`](evidence/2026-08-16-mac-closeout/).
+[historical `evidence/2026-08-16-mac-closeout`](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/concurrency/evidence/2026-08-16-mac-closeout).
 
 The requested task-launch and seven-workload single-thread comparison reached
 the 36-pair noise ceiling and retained an unchanged Richards confirmation. It
@@ -216,18 +216,18 @@ handling, a missing system-plugin `errno` include, and correct Clang/MinGW TLS
 storage. No language, RXAS/RXBIN, public ABI or architecture changed.
 
 Commands, logs, inventories, results and digests are retained in
-[`evidence/2026-08-17-windows-qualification`](evidence/2026-08-17-windows-qualification/README.md).
+[historical `evidence/2026-08-17-windows-qualification`](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/concurrency/evidence/2026-08-17-windows-qualification/README.md).
 The binary ZIPs remain in the external artifact directories named by the
 retained `RESULT.txt` files.
 
-## Independent continuation
+## Remaining qualification
 
-[`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md) is the
-paste-ready brief for a fresh agent. It requires an independent SP-01 through
-SP-09 evidence review, formal execution of the frozen Linux runner, and review
-of the completed Mac QA-B and Windows QA-D evidence. Windows
-does not need another qualification run without a concrete evidence
-inconsistency or a new source candidate.
+Use the current [qualification guide](qa/README.md) and solution-point ledger
+for any separately authorized continuation. SP-01–09 and Linux QA-C retain their
+existing dispositions above, including the delegated GitHub closeout; this
+cleanup neither reopens nor closes a gate. Reuse valid Mac QA-B and Windows QA-D results unless inputs or
+a concrete inconsistency require requalification. Capture logs temporarily and
+keep only the current result, failed mechanism and outstanding obligations here.
 
 ## Deferred feature proposals
 

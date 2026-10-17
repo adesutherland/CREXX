@@ -1,6 +1,0 @@
-options levelb numeric_common
-main: procedure = .int
-numeric digits 5
-  arg argv = .string[]
-say 9007199254740992 + 1 = 9007199254740993
-return 0

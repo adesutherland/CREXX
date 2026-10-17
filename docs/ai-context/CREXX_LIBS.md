@@ -329,12 +329,12 @@ body available. Hosted providers are also Rexx implementations: they use
 environment-variable API keys by default, build provider-specific JSON request
 bodies and authentication headers, and send through the same pooled client with
 TLS enabled. Each provider closes its owned HTTP pool through `close()`.
-`demos/llm/llm_address_environment.crexx` layers a Rexx ADDRESS
+`examples/llm/llm_address_environment.crexx` layers a Rexx ADDRESS
 provider over these clients so scripts can use model-shaped environments such
 as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 `ADDRESS GEMMA4_LATEST`; the provider caches by environment instance and routes
 through a small driver registry of exact aliases and prefixes. See
-`lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
+`lib/rxfnsg/rexx/llm.md` and `examples/llm/`.
 
 `lib/rxfnsg/rexx/http.crexx` and `httpserver.crexx` are the initial Level
 G HTTP surface. The transferable
@@ -1053,7 +1053,7 @@ human/agent contract. The [qualification page](../../lib/plugins/llama/qualifica
 distinguishes trained-model CPU/Metal evidence, multi-platform fixture/package
 checks and remaining real-device/model acceptance. SAN-009 is closed in the
 sanitizer worklist; its old STEP-06 handoff is historical. The
-[STEP-07 ledger](../qa/native-inference-step07/README.md) retains documentation
+[historical STEP-07 ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md) retains documentation
 coverage and [STEP-05](../planning/native-inference-step-05.md) retains the local
 generation evidence. Preserve those evidence boundaries at takeover.
 Do not interpret the historical STEP-01 Rexx-facade proposal as authority to add
@@ -1112,7 +1112,7 @@ and verify a matching installed core before copying plugin-owned files. Track
 INST-AC-01–05 in the pipeline plan; native Mac lifecycle evidence exists for
 ARM and Intel. Later retained candidate checks also cover signed/notarized Mac
 installers, fresh-host offline Gatekeeper and signed Windows lifecycle; use the
-[pipeline evidence ledger](../qa/native-inference-ci/README.md) for exact inputs
+[historical pipeline evidence ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md) for exact inputs
 and results rather than treating an older pending note as current. Staple the Mac package
 ticket; do not disable quarantine/Gatekeeper or promise no Apple network access.
 Windows coexistence is approved: both variants are stored separately with one

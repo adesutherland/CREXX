@@ -75,7 +75,7 @@ and binary provenance. This is a non-representative, single-mechanism research
 screen; RexxCPS cannot measure this parser mechanism and is intentionally absent.
 No production compiler/VM change or performance verdict is selected.
 The research proof is now executed: the established Rexx-like `.levell` AST
-feeds native DFA and retained direct re2c/cREXX backends, with four opt/no-opt/VM
+feeds native DFA and retained direct third_party/re2c/cREXX backends, with four opt/no-opt/VM
 surface comparisons passing. Native token-first counts and raw paired screens
 are retained, alongside actual Pika mixed-recursion and quadratic live-object
 counterexamples and a quadratic maximal-munch rollback witness. Production
@@ -125,7 +125,7 @@ records **OPT-BOUNDARY-01, repaired and published to develop**: shared SSA queri
 now account for possible incoming argument/global aliases. The original probe
 returns `42` in both modes and 102 affected tests pass. Repair `f7a8b08c1` was
 published in the selected defect batch; its
-[execution record](../docs/qa/beta3-defect-batch-2026-09-18/README.md)
+[qualification summary](../docs/ROADMAP.md)
 tracks normal combined-head hosted checks. No no-alias calling restriction was introduced.
 Adrian accepted OPT-BOUNDARY-02's RXC-only imported-inline boundary and
 OPT-BOUNDARY-03's public status-bit contract. The audit owns those decisions
@@ -200,8 +200,8 @@ Focused Release and Debug pass 78 checks each; all 3,129 normal Release checks
 are verified, including focused replay of two repaired upstream RXPP fixtures.
 Current matched startup observations retain about 79% extended and 63–65% bare
 elapsed reduction. Fine-grained contributor cost remains noisy as disclosed in
-the accepted first verdict. The [final review/receipts](evidence/2026-10-12-vm-startup-repair/README.md)
-and [scope record](VM-STARTUP-REVIEW-WORKLIST.md) cover the findings, ownership
+the accepted first verdict. The [qualification summary](RESULTS.md)
+and [scope record](DECISIONS.md#vm-startup-01-accepted-registry-lookup-indexes) cover the findings, ownership
 repair, architecture review and limits. No public layout, RXBIN, graph or dispatch
 change. Normal automatic publication workflows are expected to succeed; their
 live run records provide hosted results. No release is cut. These are local, non-representative startup
@@ -299,7 +299,7 @@ are recorded here or appeared in the completed programme ledger:
 PERF3 and POSTPERF-01 through POSTPERF-05 are complete. Accepted mechanisms,
 negative decisions and reopening triggers are consolidated in
 [DECISIONS.md](DECISIONS.md). The
-[Stage 5 baseline](evidence/2026-08-18-performance-closeout-stage5/) retains
+[qualification summary](RESULTS.md) retains
 its final samples and identities while the formal Linux QA-C criterion is open.
 It does not qualify a later release candidate.
 

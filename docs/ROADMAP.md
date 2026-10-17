@@ -60,7 +60,7 @@ Use this authority split:
   found **OPT-BOUNDARY-01**, an RXAS incoming-argument alias defect, now repaired
   with permanent regressions and 102 passing affected tests. Repair `f7a8b08c1`
   is published to develop; normal combined-head hosted gates are tracked in
-  [the defect-batch execution record](qa/beta3-defect-batch-2026-09-18/README.md).
+  [historical defect-batch execution record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-defect-batch-2026-09-18/README.md).
   Adrian accepted the RXC-owned imported-inline and public
   RXAS status-bit boundaries. The follow-up maintainability/fusion-ownership
   mechanisms remain unselected individually; the Beta 6 phase below records
@@ -121,7 +121,7 @@ RexxScript [#612](https://github.com/adesutherland/CREXX/issues/612), class-libr
 principles [#616](https://github.com/adesutherland/CREXX/issues/616), plugin policy
 [#617](https://github.com/adesutherland/CREXX/issues/617), plugin inventory
 [#622](https://github.com/adesutherland/CREXX/issues/622), package validation
-[#624](https://github.com/adesutherland/CREXX/issues/624), and demos/tutorials
+[#624](https://github.com/adesutherland/CREXX/issues/624), and examples/tutorials
 [#625](https://github.com/adesutherland/CREXX/issues/625). Shared BIF issue
 [#615](https://github.com/adesutherland/CREXX/issues/615) is already closed and
 is not another release-policy task. The formerly active
@@ -437,7 +437,7 @@ VM code reclamation retain their existing criteria and decision gates; this
 phase supplies a prerequisite.
 
 **Numbered phase acceptance criteria:** evidence is retained in the
-[local qualification receipt](qa/classic-frontend-split-2026-10-10/README.md).
+[historical local qualification receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md).
 
 1. **CP-C-AC-01 — physical boundary (verified):** C scanner/glue/grammar/
    diagnostics/validation/lowering form one frontend feeding shared backend
@@ -595,7 +595,7 @@ Final follow-up evidence: the unchanged minimal source succeeds after runtime
 publication; absent-output scheduling at 32 jobs publishes `rxfnsc` before all
 four fixtures. Full existing Debug and Release `all` builds pass, and five
 RexxCPS runtime/register controls pass in 14.41 seconds. Only the two consumer
-build prerequisites changed. The [follow-up receipt](qa/classic-frontend-split-2026-10-10/clion-clean-rebuild.md)
+build prerequisites changed. The [historical follow-up receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/clion-clean-rebuild.md)
 retains final inputs/log hashes; source/metadata semantics and the assigned SAN
 closure gates are unchanged. Delivery remains local, unpublished.
 
@@ -655,8 +655,8 @@ error/source/output assertions. Debug and Release `all` rebuilds pass with zero
 warnings or custom successful builder chatter; 37 affected controls pass in
 each profile. Real quiet success, explicit verbose replay and controlled
 failure diagnostic/status preservation pass. The
-[stdin receipt](qa/quiet-build-stdin-2026-10-10/stdin-repair.md) and
-[quiet-build receipt](qa/quiet-build-stdin-2026-10-10/quiet-build.md) retain final
+[historical stdin receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/quiet-build-stdin-2026-10-10/stdin-repair.md) and
+[historical quiet-build receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/quiet-build-stdin-2026-10-10/quiet-build.md) retain final
 input/log hashes. Ordinary build-tool progress remains; all RexxDoc blocks,
 metadata formats and call semantics are preserved. The earlier full CLion run
 also lacked optional QA fixtures after its product-only rebuild, so it is not
@@ -729,7 +729,7 @@ images without changing import formats or compiler semantics. The ignored local
 CLion `All CTest` configuration now names `qa-prep-all`, retaining its Build
 before-launch task, test selection and visible-output arguments. The full
 3,326-test Release replay passes with zero failures in 917.77 seconds;
-AC-04/05 are verified by that proof, the final preparation controls and receipt. The [current receipt](qa/clion-qa-preparation-2026-10-10/README.md)
+AC-04/05 are verified by that proof, the final preparation controls and receipt. The [historical current receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/clion-qa-preparation-2026-10-10/README.md)
 owns final evidence. No hosted or new broad sanitizer run is claimed.
 
 The final preparation audit found two C-first unit executables outside their
@@ -1078,4 +1078,4 @@ prototype has been qualified by this roadmap update.
   [`../rexxscript/doc/user-guide.md`](../rexxscript/doc/user-guide.md) and
   [`../rexxscript/doc/developer-guide.md`](../rexxscript/doc/developer-guide.md)
 - Pipes contribution proposal:
-  [`../contrib/crexx-pipes/ARCHITECTURE_PROPOSAL.md`](../contrib/crexx-pipes/ARCHITECTURE_PROPOSAL.md)
+  [`../research/pipes/ARCHITECTURE_PROPOSAL.md`](../research/pipes/ARCHITECTURE_PROPOSAL.md)

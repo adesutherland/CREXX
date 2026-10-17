@@ -16,7 +16,7 @@ not the identity or hosted QA result of the final candidate.
   `6a09f7786b79c025981bda5d7a891982f8304dc0`.
 - Delivery: the documentation/evidence-only child on origin/develop. Resolve
   its exact SHA from the publication receipt before tagging; compare the
-  [frozen product hashes](../../qa/beta3-mainframe-2026-09-30/product-inputs.json)
+  [historical frozen product hashes](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-mainframe-2026-09-30/product-inputs.json)
   and inspect any later develop changes rather than silently moving the candidate.
 - Curated [release notes](../../releases/v1.0.0-beta.3.md), README, installation
   and security guidance, documentation entry points and packaging examples are
@@ -25,7 +25,7 @@ not the identity or hosted QA result of the final candidate.
   beta tag/release at preparation; public copy does not close the gates below.
 - Local proof: Debug core/staged tools and prerequisites build;
   2,293/2,293 normal correctness; 8/8 focused Apple ASan; 13/13 packaging
-  guard unit tests. See [permanent review receipts](../../qa/beta3-mainframe-2026-09-30/README.md).
+  guard unit tests. See [historical permanent review receipts](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-mainframe-2026-09-30/README.md).
 
 ## Develop-only release execution — 30 September 2026
 
@@ -138,7 +138,7 @@ console-signal follow-up or modern z/OS HIGH. The Lab's published criterion reco
 The qualified delivery/package SHA is
 `e15392da705c5e9e0e1e57b70586b53fc8cb64ed`; its Build CREXX and CodeQL runs
 are terminal and successful. The mutable development snapshot currently points
-at it. [The publication receipt](../../qa/beta3-mainframe-2026-09-30/publication.json)
+at it. [historical publication receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-mainframe-2026-09-30/publication.json)
 records all four core-package digests, actual smoke summaries, terminal jobs,
 existing alert numbers and the late Lab update. The final documentation-only
 child records these results and preserves every qualified product input. Formal

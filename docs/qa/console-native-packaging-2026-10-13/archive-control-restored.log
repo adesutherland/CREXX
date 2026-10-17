@@ -1,6 +1,0 @@
-WAVE: project compile/assemble jobs=1
-START: project member test_console
-BUILT: project member test_console
-BARRIER: link program
-PUBLISHED: program /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/restored/console.rxbin
-PUBLISHED: native program /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/restored/console

@@ -6,7 +6,7 @@ if [[ -z "${LEVEL_L_RUN_ROOT:-}" ]]; then
 fi
 task_root=$(git -C "$task_dir" rev-parse --show-toplevel)
 task_bin=${CREXX_BIN_DIR:-"$task_root/cmake-build-release/bin"}
-task_re2c=${CREXX_RE2C:-"$task_bin/../re2c/re2c"}
+task_re2c=${CREXX_RE2C:-"$task_bin/../third_party/re2c/re2c"}
 task_build="$LEVEL_L_RUN_ROOT/build/opt"
 task_log=$(mktemp "$LEVEL_L_RUN_ROOT"/crexx-levell-re2c.XXXXXX)
 printf 're2c build log: %s\n' "$task_log"

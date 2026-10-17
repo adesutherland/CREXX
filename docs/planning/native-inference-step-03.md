@@ -125,7 +125,7 @@ overlap it as already approved.
   native transport, foreign-handle rejection and four actual cREXX workers
   sharing each real model with private preparation on CPU/Metal, alongside the
   retained dynamic/package/cache controls. See
-  [post-approval evidence](../qa/native-inference-s3d01/README.md). Broader normal
+  [historical post-approval evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-s3d01/README.md). Broader normal
   Debug passes 2,314/2,314 in 900.23 seconds after `qa-prep`, excluding the
   `performance-measurement` label. Prior sanitizer results predate the VM repair;
   no sanitizer build or test has been run since Adrian's hold.
@@ -201,7 +201,7 @@ requirements. The current implementation is uncommitted; baseline HEAD remains
 `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`. Do not reset it, weaken request
 acceptance or reopen already approved upstream numeric debates.
 
-The [evidence index](../qa/native-inference-step03/README.md) retains source
+The [historical evidence index](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step03/README.md) retains source
 hashes, commands, package controls and failures alongside passes. Reproduce the functional package matrix with
 `cmake --build cmake-build-debug --target rxllama_package_measure`; use
 `tools/asan-run.sh --build-dir cmake-build-debugasan --phase build --build-target

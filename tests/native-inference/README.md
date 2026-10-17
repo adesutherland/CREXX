@@ -1,7 +1,7 @@
 # Native inference acceptance controls
 
 Current documentation and QA coverage are mapped in the
-[STEP-07 handoff](../../docs/qa/native-inference-step07/README.md). Use the
+[historical STEP-07 handoff](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md). Use the
 [installed guide and examples](../../lib/plugins/llama/README.md) for user
 workflows. STEP-07 precedes full STEP-06 QA; source/model control history below
 does not replace the current product contract or authorize another timing panel.
@@ -9,7 +9,7 @@ does not replace the current product contract or authorize another timing panel.
 ## STEP-06 maintained qualification
 
 STEP-07 is approved and STEP-06 sanitizer qualification is authorized. The
-[live ledger](../../docs/qa/native-inference-step06/README.md) tracks completed
+[historical live ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step06/README.md) tracks completed
 commands, retained inputs, scheduling measurements and open platform gates.
 Use the maintained runner for instrumented build and test execution:
 
@@ -78,7 +78,7 @@ Build the explicit optional provider targets before the scratch install.
 These are explicit functional QA aggregates, unregistered until STEP-06 has
 normal/sanitizer scheduling evidence. No sanitizer run or timing replay is
 implied. See [STEP-05](../../docs/planning/native-inference-step-05.md) and its
-[qualification evidence](../../docs/qa/native-inference-step05/README.md).
+[historical qualification evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step05/README.md).
 
 ## Typed STEP-04 continuation
 
@@ -95,7 +95,7 @@ installation; the examples/demo `stage-optional` target does not select them.
 
 These scripts remain explicit, unregistered aggregates until STEP-06 establishes
 sanitizer scheduling. They are functional integration checks and do not repeat
-the accepted timing panel. [Typed evidence](../../docs/qa/native-inference-typed/README.md)
+the accepted timing panel. [historical Typed evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md)
 and the [S4-D03 checklist](../../docs/planning/native-inference-typed-interface-proposal.md)
 track acceptance; the generic C RXPA dependency alone does not close STEP-04.
 
@@ -113,7 +113,7 @@ The STEP-04 embedding controls are `embedding_acceptance.crexx`,
 `embedding_bridge.cpp` and `step04_toolchain.cmake`. They remain explicit tests;
 `embedding_text_boundary.crexx` retains the original S4-D01 failure and now passes
 after the approved length-aware host-service correction. See
-the [S4-D01 evidence](../../docs/qa/native-inference-s4d01/README.md) and
+the [historical S4-D01 evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-s4d01/README.md) and
 [live plan](../../docs/planning/native-inference-step-04.md) before continuing.
 
 Configure the main build with `ENABLE_LLAMA`, the verified source archive and
@@ -382,8 +382,8 @@ so attached workers need no ambient bytecode search directory.
 `step04_package_consumer.py` checks copied sources through a scratch installed
 product and relocated native CPU/GPU executables. These remain explicit normal
 checks, with no new aggregate CTest registration or early sanitizer execution.
-See [retained evidence](../../docs/qa/native-inference-step04-closeout/README.md).
+See [historical retained evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step04-closeout/README.md).
 The subsequent [S4-D03 C interface](../../docs/planning/native-inference-typed-interface-proposal.md)
-and [typed examples](../../docs/qa/native-inference-typed/README.md) are now
+and [historical typed examples](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md) are now
 implemented with normal local qualification. STEP-05 adds generation and
 STEP-07 provides the current installed documentation; STEP-06 retains full QA.

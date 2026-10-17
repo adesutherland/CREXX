@@ -38,11 +38,11 @@ product="$work/product/bin"
 export PATH="$product:$PATH"
 port="$work/port"
 {
-  "$product/rxc" -i "$product" -o "$port/imports/bookhighlight" docs/texttools/bookhighlight.crexx
+  "$product/rxc" -i "$product" -o "$port/imports/bookhighlight" tools/texttools/bookhighlight.crexx
   "$product/rxas" -o "$port/imports/bookhighlight" "$port/imports/bookhighlight"
-  "$product/rxc" -i "$port/imports;$product" -o "$port/imports/texttools" docs/texttools/texttools.crexx
+  "$product/rxc" -i "$port/imports;$product" -o "$port/imports/texttools" tools/texttools/texttools.crexx
   "$product/rxas" -o "$port/imports/texttools" "$port/imports/texttools"
-  "$product/rxc" -i "$port/imports;$product" -o "$port/generate-books" docs/generate-books.crexx
+  "$product/rxc" -i "$port/imports;$product" -o "$port/generate-books" tools/texttools/generate-books.crexx
   "$product/rxas" -o "$port/generate-books" "$port/generate-books"
   "$product/rxlink" -o "$port/generate-books-linked" \
     "$port/generate-books.rxbin" "$port/imports/texttools.rxbin" \

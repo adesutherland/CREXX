@@ -34,3 +34,5 @@ target_include_directories(_stack_static PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
 )
+
+crexx_install_targets(_stack _stack_static)

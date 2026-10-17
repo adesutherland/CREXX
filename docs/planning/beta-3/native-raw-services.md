@@ -112,7 +112,7 @@ Three backend details still need an exact joint implementation receipt:
    call in standalone tool mains is proposed; embedding APIs and ordinary C
    clients must retain their host-owned streams. No FILE-slot assignment is
    part of the current accepted implementation.
-   The [host console probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+   The [historical host console probe](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
    additionally confirms that the current cookie adapter cannot make a partial
    prompt visible through `fflush`, and only reports deferred raw flush errors
    at close. The binding/flush design must make a prompt visible before input
@@ -138,7 +138,7 @@ Three backend details still need an exact joint implementation receipt:
 The approved behavior is prompt visibility before native console input,
 observable `fflush` errors, unchanged file-record boundaries and host-owned
 embedding streams. No new runtime ABI or generic-newlib fork is selected here.
-The [host probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+The [historical host probe](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
 establishes the gap in the current cookie adapter. The read-only lab source
 at `dc2fad44259d4a81e4e147af5f1f078d0cd9eb6f`
 (`build/compilers/libc-poc/newlib/source/newlib/libc/stdio/fflush.c`) invokes

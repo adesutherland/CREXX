@@ -286,3 +286,9 @@ if(ENABLE_GTK)
 endif()
 
 crexx_finalize_directory_qa_tiers()
+
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
+    text_inspector_module_artifact text_inspector_tui_artifact text_inspector_ansi_artifact)
+if(ENABLE_GTK)
+    set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS example_text_inspector_gtk)
+endif()

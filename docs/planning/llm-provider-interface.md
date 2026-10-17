@@ -80,7 +80,7 @@ then explains configuration, lifecycle and limitations.
    restriction. The review corrects these current guides and links their status
    to retained evidence; historical QA records are preserved.
 
-[Review evidence](../qa/llm-interface-review-20260917/README.md) contains the
+[historical Review evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/llm-interface-review-20260917/README.md) contains the
 bounded compiler/runtime checks and their limitations. Existing HTTP tests pass;
 their coverage does not assert common-interface substitution. No hosted inference,
 model download, new hardware qualification or broad suite was needed for review.
@@ -325,7 +325,7 @@ locally. STEP-01–04 and all local STEP-05 checks are complete. Delivery accept
 is governed by the normal automatic checks on the published revision, as set out
 in the linked qualification record; a missing or failed platform check leaves
 that delivery criterion open.
-Evidence is retained in [the qualification record](../qa/llm-interface-review-20260917/qualification.md)
+Evidence is retained in [historical qualification record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/llm-interface-review-20260917/qualification.md)
 and its linked command/source manifests.
 
 | Criterion | Current verification |
@@ -423,7 +423,7 @@ qualified change on 18 September; the delivery extension below tracks that work.
 PATH-STEP-01–04 are complete locally: normal common-driver and two-model CPU
 lifecycle checks passed, followed by the same focused checks in the maintained
 Apple ASan build. Evidence and unchanged input hashes are in
-[the path-only qualification record](../qa/llm-path-only-20260918/README.md).
+[historical path-only qualification record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/llm-path-only-20260918/README.md).
 At implementation closeout the change was local only. Apple LeakSanitizer is
 unsupported; no new cross-platform/GPU/release qualification is claimed.
 

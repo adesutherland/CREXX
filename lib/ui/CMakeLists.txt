@@ -79,7 +79,7 @@ foreach(module IN ITEMS ui_catalog ui_contract)
             VERBATIM)
     add_custom_target(${module} ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
     add_dependencies(${module} ${module_dependencies})
-    install(FILES "${CMAKE_BINARY_DIR}/bin/${module}.rxbin" DESTINATION bin)
+    crexx_install_bytecode(${module} "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
 endforeach()
 install(FILES contracts/catalogue.json contracts/README.md contracts/conformance.jsonl
         "${CREXX_UI_CONTRACT_DIR}/ui-contract.ts"
@@ -114,7 +114,7 @@ foreach(module IN ITEMS ui_dialogs ui_terminal_view ui_local_resources ui_ansi)
             BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${module}.rxas"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
     add_custom_target(${module} ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
-    install(FILES "${CMAKE_BINARY_DIR}/bin/${module}.rxbin" DESTINATION bin)
+    crexx_install_bytecode(${module} "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
 endforeach()
 
 if(ENABLE_GTK)
@@ -158,3 +158,8 @@ install(FILES README.md TERMINAL.md EXTENDING.md DESTINATION share/crexx/ui)
 install(DIRECTORY rxpp/ui DESTINATION share/crexx/ui/rxpp)
 
 crexx_finalize_directory_qa_tiers()
+
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS ui ui_tui)
+if(ENABLE_GTK)
+    set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS ui_gtk _ui_gtk_native_static)
+endif()

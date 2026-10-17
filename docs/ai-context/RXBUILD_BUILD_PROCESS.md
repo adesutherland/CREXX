@@ -25,7 +25,7 @@ configured build tree's `bin` directory:
 
 ```text
 build.levell
-    -> levell
+    -> rxlang
     -> rxbuildgrammar.rxas
     -> rxbuildgrammar.rxbin
 
@@ -55,7 +55,7 @@ platforms.
 
 ## Runtime flow
 
-For `rxbuild tools/build/example.build`, the reader:
+For `rxbuild tools/rxbuild/example.build`, the reader:
 
 1. reads the file as binary input;
 2. creates an `lllanguage` request from `rxbuildgrammar`;
@@ -106,7 +106,7 @@ case-insensitive `${NAME}` substitution in quoted attribute values:
 
 ```text
 BUILD_DIR = "cmake-build-release/build";
-GRAMMAR = "tools/build/grammar/build.levell";
+GRAMMAR = "tools/rxbuild/grammar/build.levell";
 
 COMPILE GRAMMAR OUTPUT_DIR = "${BUILD_DIR}"
   SOURCE = "${GRAMMAR}" OUTPUT = "rxbuildgrammar";
@@ -118,7 +118,7 @@ them. Undefined variables and malformed `${...}` references are reported by
 iteration are supported as a separate expansion layer:
 
 ```text
-GRAMMAR_DIR = "tools/build/grammar";
+GRAMMAR_DIR = "tools/rxbuild/grammar";
 OUT_DIR = "cmake-build-release/build/selected";
 GRAMMARS = FILES IN "${GRAMMAR_DIR}" RECURSIVE EXTENSION ".levell" BASENAMES;
 
@@ -137,7 +137,7 @@ subdirectory names are preserved relative to the selected directory.
 per selected item, after variable substitution, and nested output directories
 are created as needed. Missing directories and empty selections stop the plan
 before tools are invoked. The complete example is
-[`tools/build/selection.build`](../../tools/build/selection.build).
+[`tools/rxbuild/selection.build`](../../tools/rxbuild/selection.build).
 
 For each expanded action, `rxbuild` also prints an `RXBUILD RESOLVED` line
 showing the absolute output, source, dependency, or program paths that will be
@@ -158,7 +158,7 @@ belong in the CMake build tree. They should not be committed beside the
 ## Example
 
 The complete working example is in
-[`tools/build`](../../tools/build):
+[`tools/build`](../../tools/rxbuild):
 
 ```powershell
 & .\cmake-build-release\bin\rxbuild.exe `

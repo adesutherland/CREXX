@@ -1,6 +1,0 @@
-options levelb numeric_common
-main: procedure = .int
-  arg argv = .string[]
-a = argv[1] as .float
-say (1.0 / 0.0) + a
-return 0

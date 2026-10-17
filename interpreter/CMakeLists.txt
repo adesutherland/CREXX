@@ -100,9 +100,9 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmstem.h
         rxvmload.c
         interrupt.c
-        ../avl_tree/rxastree.h
+        ../third_party/avl_tree/rxastree.h
         rxsignal.h
-        ../utf8/utf.h
+        ../third_party/utf8/utf.h
         ../binutils/include/rxbin.h
         ../binutils/include/rxsignature.h
         rxspawn.c
@@ -142,9 +142,9 @@ function(crexx_add_rxvm_core_objects target_name)
             ../binutils/include
             ${CMAKE_SOURCE_DIR}/rxpa
             ../platform
-            ../avl_tree
-            ../utf8
-            ../inc
+            ../third_party/avl_tree
+            ../third_party/utf8
+            ../interpreter/rxvml
             rxvmplugin/rxvmplugins/mc_decimal/decnumber)
     # These objects are also archived into rxvml, which is linked into
     # libcrexxsaa.so on ELF platforms.
@@ -164,9 +164,9 @@ function(crexx_add_rxvm_platform_objects target_name)
             ../binutils/include
             ${CMAKE_SOURCE_DIR}/rxpa
             ../platform
-            ../avl_tree
-            ../utf8
-            ../inc
+            ../third_party/avl_tree
+            ../third_party/utf8
+            ../interpreter/rxvml
             rxvmplugin/rxvmplugins/mc_decimal/decnumber)
     # These objects are also archived into rxvml, which is linked into
     # libcrexxsaa.so on ELF platforms.
@@ -330,7 +330,7 @@ add_test(NAME rxvm_cli_input_failure_bytecode
 set_tests_properties(rxvm_cli_input_failure_bytecode PROPERTIES TIMEOUT 60 LABELS "smoke;mainframe")
 target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
-        ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 set(CREXX_CONCRETE_VM_TARGETS rxbvm)
 
@@ -344,7 +344,7 @@ if(CREXX_THREADED_VM_SUPPORTED)
     set_tests_properties(rxvm_cli_input_failure_threaded PROPERTIES TIMEOUT 60 LABELS "smoke;mainframe")
     target_link_libraries(rxtvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
     target_include_directories(rxtvm PRIVATE . ./rxvmplugin
-            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
     list(APPEND CREXX_CONCRETE_VM_TARGETS rxtvm)
 endif()
 
@@ -380,13 +380,13 @@ message(STATUS
 
 # Offline second-stage analyser for dynamic instruction-sequence profiles.
 add_executable(rxseq rxseqmain.c rxseqfile.c)
-target_include_directories(rxseq PRIVATE . ../binutils/include ../platform ../inc)
+target_include_directories(rxseq PRIVATE . ../binutils/include ../platform ../interpreter/rxvml)
 target_link_libraries(rxseq PRIVATE rxbin)
 
 if(BUILD_TESTING)
     add_executable(test_rxseqfile tests/test_rxseqfile.c rxseqfile.c)
     target_include_directories(test_rxseqfile PRIVATE
-            . ../binutils/include ../platform ../inc)
+            . ../binutils/include ../platform ../interpreter/rxvml)
     add_test(NAME rxseqfileformat COMMAND test_rxseqfile)
     set_tests_properties(rxseqfileformat PROPERTIES
             LABELS "interpreter;profiling;sequence")
@@ -396,14 +396,14 @@ if(BUILD_TESTING)
     add_executable(rxbvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
     target_link_libraries(rxbvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
     target_include_directories(rxbvm_instrumented PRIVATE . ./rxvmplugin
-            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
     target_compile_definitions(rxbvm_instrumented PRIVATE NTHREADED=1)
 
     if(CREXX_THREADED_VM_SUPPORTED)
         add_executable(rxtvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxtvm_instrumented_core_objects>)
         target_link_libraries(rxtvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
         target_include_directories(rxtvm_instrumented PRIVATE . ./rxvmplugin
-                ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+                ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
     endif()
 
     if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm")
@@ -425,7 +425,7 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
             ../assembler
             ../binutils/include
             ../platform
-            ../avl_tree
+            ../third_party/avl_tree
             ${CMAKE_SOURCE_DIR}/rxpa)
     target_compile_definitions(test_rxvmprofile PRIVATE CREXX_VM_PROFILING=1)
     if(CREXX_DEFAULT_VM_USES_SWITCH)
@@ -487,7 +487,7 @@ endif()
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 target_link_libraries(rxvme rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxvme PRIVATE . ./rxvmplugin
-		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 add_dependencies(rxvme packed_library)
 
 # Bytecode Version
@@ -495,7 +495,7 @@ add_executable(rxbvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_
 target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 target_link_libraries(rxbvme rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvme PRIVATE . ./rxvmplugin
-		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 add_dependencies(rxbvme packed_library)
 
 ##########################################
@@ -512,13 +512,13 @@ endif()
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 target_link_libraries(rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(rxvml PRIVATE . ./rxvmplugin
-		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 
 # Bytecode Version
 add_library(rxbvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin
-		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
 function(crexx_enable_vm_platform target_name)
@@ -543,7 +543,7 @@ if(BUILD_TESTING)
     add_executable(test_rxspawn_inheritance tests/test_rxspawn_inheritance.c)
     target_include_directories(test_rxspawn_inheritance PRIVATE
             . ./rxvmplugin ../assembler ../binutils/include
-            ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+            ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
     target_link_libraries(test_rxspawn_inheritance PRIVATE rxvml Threads::Threads)
     add_test(NAME rxspawn_resource_inheritance COMMAND test_rxspawn_inheritance)
     set_tests_properties(rxspawn_resource_inheritance PROPERTIES
@@ -560,7 +560,7 @@ if(BUILD_TESTING)
                 tests/test_rxspawn_inheritance.c)
         target_include_directories(test_rxspawn_inheritance_baseline PRIVATE
                 . ./rxvmplugin ../assembler ../binutils/include
-                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
         target_compile_definitions(test_rxspawn_inheritance_baseline PRIVATE
                 RXSPAWN_TEST_SOURCE="${RXSPAWN_BASELINE_SOURCE}"
                 RXSPAWN_TEST_BASELINE=1)
@@ -570,7 +570,7 @@ if(BUILD_TESTING)
     add_executable(test_rxcrexxcmd_flush tests/test_rxcrexxcmd_flush.c)
     target_include_directories(test_rxcrexxcmd_flush PRIVATE
             . ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-            ../platform ../avl_tree ../utf8 ../inc)
+            ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
     target_link_libraries(test_rxcrexxcmd_flush PRIVATE rxvml)
     add_test(NAME crexx_address_unredirected_flush COMMAND test_rxcrexxcmd_flush)
     set_tests_properties(crexx_address_unredirected_flush PROPERTIES
@@ -590,7 +590,7 @@ if(BUILD_TESTING)
                 tests/test_rxspawn_diagnostics.c)
         target_include_directories(test_rxspawn_diagnostics PRIVATE
                 . ./rxvmplugin ../assembler ../binutils/include
-                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
         target_link_libraries(test_rxspawn_diagnostics PRIVATE rxvml)
         add_test(NAME rxspawn_posix_launch_diagnostic
                 COMMAND test_rxspawn_diagnostics)
@@ -629,9 +629,9 @@ target_include_directories(crexxsaa PUBLIC
         ../binutils/include
         ${CMAKE_SOURCE_DIR}/rxpa
         ../platform
-        ../avl_tree
-        ../utf8
-        ../inc)
+        ../third_party/avl_tree
+        ../third_party/utf8
+        ../interpreter/rxvml)
 set_target_properties(crexxsaa PROPERTIES
         OUTPUT_NAME crexxsaa
         POSITION_INDEPENDENT_CODE ON)
@@ -668,7 +668,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 add_executable(test_value_factory_allocation tests/test_value_factory_allocation.c)
-target_include_directories(test_value_factory_allocation PRIVATE . ../utf8 ../platform ../binutils/include)
+target_include_directories(test_value_factory_allocation PRIVATE . ../third_party/utf8 ../platform ../binutils/include)
 target_link_libraries(test_value_factory_allocation PRIVATE rxvmref platform ${CREXX_MATH_LIBRARY})
 add_test(NAME value_factory_allocation_failure COMMAND test_value_factory_allocation)
 set_tests_properties(value_factory_allocation_failure PROPERTIES
@@ -676,18 +676,18 @@ set_tests_properties(value_factory_allocation_failure PROPERTIES
 
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
-target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
+target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../third_party/utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester rxvmref platform ${CREXX_MATH_LIBRARY})
 
 add_executable(test_rxvmstem tests/test_rxvmstem.c rxvalue.h rxvmvars.h rxvmstem.h)
-target_include_directories(test_rxvmstem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
+target_include_directories(test_rxvmstem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../third_party/utf8 ../platform ../binutils/include)
 target_link_libraries(test_rxvmstem rxvmref platform ${CREXX_MATH_LIBRARY})
 
 add_executable(test_rxvmstem_allocator_family
         tests/test_rxvmstem_allocator_family.c
         rxvalue.h rxvmvars.h rxvmstem.h)
 target_include_directories(test_rxvmstem_allocator_family PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
+        ${CMAKE_CURRENT_SOURCE_DIR} . ../third_party/utf8 ../platform ../binutils/include)
 target_link_libraries(test_rxvmstem_allocator_family
         rxvmref platform ${CREXX_MATH_LIBRARY})
 
@@ -703,51 +703,51 @@ add_executable(test_rxvmchannel_registry
         tests/test_rxvmchannel_registry.c)
 target_include_directories(test_rxvmchannel_registry PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../inc ../assembler ../binutils/include ../platform ../avl_tree
-        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ../interpreter/rxvml ../assembler ../binutils/include ../platform ../third_party/avl_tree
+        ../third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_registry PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmchannel_process
         tests/test_rxvmchannel_process.c)
 target_include_directories(test_rxvmchannel_process PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../inc ../assembler ../binutils/include ../platform ../avl_tree
-        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ../interpreter/rxvml ../assembler ../binutils/include ../platform ../third_party/avl_tree
+        ../third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_process PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmbyteendpoint tests/test_rxvmbyteendpoint.c)
 target_include_directories(test_rxvmbyteendpoint PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../inc ../assembler ../binutils/include ../platform ../avl_tree
-        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ../interpreter/rxvml ../assembler ../binutils/include ../platform ../third_party/avl_tree
+        ../third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmbyteendpoint PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmchannel_byte tests/test_rxvmchannel_byte.c)
 target_include_directories(test_rxvmchannel_byte PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../inc ../assembler ../binutils/include ../platform ../avl_tree
-        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ../interpreter/rxvml ../assembler ../binutils/include ../platform ../third_party/avl_tree
+        ../third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_byte PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmchannel_lifetime tests/test_rxvmchannel_lifetime.c)
 target_include_directories(test_rxvmchannel_lifetime PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../inc ../assembler ../binutils/include ../platform ../avl_tree
-        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ../interpreter/rxvml ../assembler ../binutils/include ../platform ../third_party/avl_tree
+        ../third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_lifetime PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-        ../platform ../avl_tree ../utf8 ../inc)
+        ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxvmactive PRIVATE rxvml Threads::Threads)
 
 add_executable(test_rxvmplugin_context tests/test_rxvmplugin_context.c)
 target_include_directories(test_rxvmplugin_context PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-        ../platform ../avl_tree ../utf8 ../inc)
+        ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxvmplugin_context PRIVATE
         rxvml rxvmplugin mc_decimal_manual Threads::Threads)
 add_dependencies(test_rxvmplugin_context mc_decimal_dynamic)
@@ -756,14 +756,14 @@ add_executable(test_rxpa_concurrency tests/test_rxpa_concurrency.c)
 target_include_directories(test_rxpa_concurrency PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-        ../platform ../avl_tree ../utf8 ../inc)
+        ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
 
 # Direct S4-D01 ABI/text tests: no nested builds or model inference.
 add_executable(test_rxpa_host_services tests/test_rxpa_host_services.c)
 target_include_directories(test_rxpa_host_services PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR} ./rxvmplugin ../assembler ../binutils/include
-        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxpa_host_services rxvml Threads::Threads)
 foreach(kind IN ITEMS modern old)
     add_library(rxpa_host_fixture_${kind} MODULE tests/rxpa_host_service_fixture.c)
@@ -787,7 +787,7 @@ add_executable(test_rxpa_worker_startup tests/test_rxpa_worker_startup.c)
 target_include_directories(test_rxpa_worker_startup PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-        ../platform ../avl_tree ../utf8 ../inc)
+        ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxpa_worker_startup rxvml Threads::Threads)
 foreach(mode IN ITEMS attached callback)
     add_test(NAME rxpa_worker_startup_${mode}
@@ -803,7 +803,7 @@ add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
 target_include_directories(test_rxpa_odbc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
-        ../platform ../avl_tree ../utf8 ../inc)
+        ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 target_link_libraries(test_rxpa_odbc rxvml Threads::Threads)
 
 add_executable(test_rxpa_odbc_old_host tests/test_rxpa_odbc_old_host.c)
@@ -844,9 +844,9 @@ target_include_directories(test_rxpa_utf_validation PRIVATE
         ../binutils/include
         ${CMAKE_SOURCE_DIR}/rxpa
         ../platform
-        ../avl_tree
-        ../utf8
-        ../inc)
+        ../third_party/avl_tree
+        ../third_party/utf8
+        ../interpreter/rxvml)
 target_link_libraries(test_rxpa_utf_validation rxvmref platform ${CREXX_MATH_LIBRARY})
 
 # Enable testing
@@ -2004,7 +2004,7 @@ add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
 target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)
 target_include_directories(test_rxvmlinkindex PRIVATE
         . ./rxvmplugin ../assembler ../binutils/include
-        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
 add_dependencies(test_rxvmlinkindex run_tests_interfaces)
 add_test(NAME rxvm_link_index_fallback_context
         COMMAND test_rxvmlinkindex ${CMAKE_CURRENT_BINARY_DIR}/tests_interfaces.rxbin)
@@ -2050,7 +2050,7 @@ add_custom_command(
 add_custom_target(test_reentrancy_bin ALL DEPENDS test_reentrancy.rxbin)
 
 add_executable(test_reentrancy tests/test_reentrancy.c)
-target_include_directories(test_reentrancy PRIVATE ${CMAKE_SOURCE_DIR}/inc)
+target_include_directories(test_reentrancy PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
 target_link_libraries(test_reentrancy rxvml)
 add_dependencies(test_reentrancy test_reentrancy_bin)
 
@@ -2108,13 +2108,13 @@ function(crexx_configure_module_initializer_test TARGET_NAME)
     target_include_directories(${TARGET_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvml
             ${CMAKE_SOURCE_DIR}/assembler
             ${CMAKE_SOURCE_DIR}/binutils/include
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/avl_tree
-            ${CMAKE_SOURCE_DIR}/utf8)
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/utf8)
     add_dependencies(${TARGET_NAME} test_module_initializer_bins)
     add_test(
             NAME ${TARGET_NAME}
@@ -2180,13 +2180,13 @@ function(crexx_configure_program_generation_control TARGET_NAME)
     target_include_directories(${TARGET_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvml
             ${CMAKE_SOURCE_DIR}/assembler
             ${CMAKE_SOURCE_DIR}/binutils/include
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/avl_tree
-            ${CMAKE_SOURCE_DIR}/utf8)
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/utf8)
     add_dependencies(${TARGET_NAME} test_program_generation_control_bins)
     add_test(
             NAME ${TARGET_NAME}
@@ -2306,13 +2306,13 @@ if(BUILD_TESTING AND
         target_include_directories(${TARGET_NAME} PRIVATE
                 ${CMAKE_CURRENT_SOURCE_DIR}
                 ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-                ${CMAKE_SOURCE_DIR}/inc
+                ${CMAKE_SOURCE_DIR}/interpreter/rxvml
                 ${CMAKE_SOURCE_DIR}/assembler
                 ${CMAKE_SOURCE_DIR}/binutils/include
                 ${CMAKE_SOURCE_DIR}/rxpa
                 ${CMAKE_SOURCE_DIR}/platform
-                ${CMAKE_SOURCE_DIR}/avl_tree
-                ${CMAKE_SOURCE_DIR}/utf8)
+                ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+                ${CMAKE_SOURCE_DIR}/third_party/utf8)
         target_link_libraries(${TARGET_NAME} Threads::Threads)
         configure_linker_for_static_lib(${TARGET_NAME} _e5native)
         target_link_libraries(${TARGET_NAME} rxpashim)
@@ -2543,7 +2543,7 @@ if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
     target_include_directories(test_db_decimal_archive_link PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/inc)
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
     target_link_libraries(test_db_decimal_archive_link
             rxvml
             rxpashim
@@ -2579,7 +2579,7 @@ else()
                     -O0
                     -I${CMAKE_CURRENT_SOURCE_DIR}
                     -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
-                    -I${CMAKE_SOURCE_DIR}/inc
+                    -I${CMAKE_SOURCE_DIR}/interpreter/rxvml
                     -o ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_db_decimal_archive_link.c
                     $<TARGET_FILE:rxvml>
@@ -2654,3 +2654,10 @@ if(TARGET rxtvm)
     crexx_label_smoke_tests(rxvm_cli_input_failure_threaded PREP_TARGETS rxtvm)
 endif()
 crexx_finalize_directory_qa_tiers()
+
+# Published products owned by this component.
+crexx_install_targets(rxbvm rxseq rxvme rxbvme rxvml rxbvml rxvmref rxvmmemory rxpashim)
+if(TARGET rxtvm)
+    crexx_install_targets(rxtvm)
+endif()
+install(PROGRAMS "${CREXX_RXVM_EXECUTABLE}" DESTINATION bin)

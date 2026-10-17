@@ -130,8 +130,8 @@ allocation/RSS evidence establish local direct-library sharing feasibility;
 they do not implement provider registry, VM ownership or memory admission.
 An independent upstream Jinja oracle validates the pinned Smol template and
 token IDs. No public comprehensive context-allocation API was found in the
-pinned llama.h; retain upstream buffer logs and process measurements rather
-than inventing precise per-owner GPU accounting.
+pinned llama.h; summarize upstream buffer observations and process measurements
+with their limits, then discard raw logs. Do not invent precise per-owner GPU accounting.
 
 Normal Debug and maintained-runner Apple ASan each pass eleven isolated tests,
 plus the separately added four-thread Smol CPU control (25.95/36.21 seconds).

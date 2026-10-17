@@ -1,4 +1,0 @@
-options levelb numeric_common
-numeric digits 5
-say 0.1d + 0.2d = 0.3d
-say 1.23456789d + 0.0d

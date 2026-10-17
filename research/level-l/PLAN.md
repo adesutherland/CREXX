@@ -1051,7 +1051,7 @@ inside the same LR grammar. Pratt is an optional generated specialization,
 admitted only with a proved boundary/tree mapping; it is not required to launch.
 Finite-context token passes, a nested-comment counter where required, and pure
 source-tree passes supply the composite infrastructure. They do not require a
-second general parser or arbitrary fixed-point evaluation. Keep re2c/Lemon as
+second general parser or arbitrary fixed-point evaluation. Keep third_party/re2c/Lemon as
 established comparison/transition tools; the native PoCs still need product
 qualification. LALR compaction is optional and must reject merge-only conflicts.
 No native IELR project is required for this first consumer.
@@ -1293,7 +1293,7 @@ the current API does not let a borrowed object escape its owner.
    ABI/compiler changes and publication are separate maintainer decisions.
 7. **STEP-07 (AC-11, AC-02, AC-04, AC-09).** Add a backend-only adapter from
    the existing validated Level L AST; reproduce the authored TinyExpr proof
-   through native DFA and retained direct re2c/cREXX emission. Depends on the
+   through native DFA and retained direct third_party/re2c/cREXX emission. Depends on the
    established syntax and existing backend proofs; do not edit the Unicode
    checkout or reinterpret Unicode input contracts as ASCII contracts.
 
@@ -1682,7 +1682,7 @@ not a proved universal claim that PEG is more natural.
     controls and lexers.** Extend native lexical backends; implement LL/Pratt,
     LR(1)/LALR and Earley/forest engines. Establish end-to-end tree correctness,
     UTF-8/profile boundaries and certificates before optimization. Reuse
-    unchanged re2c/native evidence, extending only for new obligations.
+    unchanged third_party/re2c/native evidence, extending only for new obligations.
 11. **STEP-11 (AC-14, AC-15, AC-18, AC-20, AC-23) — Audit and port Pika and
     Squirrel.** Execute pinned upstream references, including Squirrel c14;
     reproduce positive and adversarial cases. Port algorithms with explicit

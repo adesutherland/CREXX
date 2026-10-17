@@ -82,7 +82,7 @@ to hotfix and develop. No language, compiler architecture or release change.
 Scheduled workflow metadata names master 77ba820c, but their assurance gate
 checks out develop 50926edb8. The actual failures belong to that develop source.
 The compact permanent receipt and failed excerpts are retained in
-[docs/qa/overnight-2026-10-14/](../qa/overnight-2026-10-14/README.md).
+[historical docs/qa/overnight-2026-10-14/](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-14/README.md).
 Sanitizer failures are functional fixture
 failures, not SAN findings. Linux's stop-on-failure means its full CTest coverage
 is incomplete; no sanitizer-clean or release-ready claim is made.

@@ -7,8 +7,8 @@ the generic dependency of [S4-D03](native-inference-typed-interface-proposal.md)
 not a replacement for the full [native-inference plan](native-inference-backlog.md).
 Baseline HEAD: `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`, with existing
 STEP-03/04 work retained at that capture. Adrian requested the baseline commit
-on 15 September; the later [broad regression attempt](../qa/native-inference-baseline/README.md)
-exposed NI-S4-QA01. The subsequent [QA01/QA02 repair](../qa/native-inference-qa01/README.md)
+on 15 September; the later [historical broad regression attempt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-baseline/README.md)
+exposed NI-S4-QA01. The subsequent [historical QA01/QA02 repair](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md)
 now accounts for all 2,347 ordinary Debug tests through the full run and affected
 rechecks. It also removes the obsolete `rxstats.linearfit` Rexx construction
 shim in favor of its C provider. The original focused results below remain
@@ -83,12 +83,12 @@ separate evidence; platform/sanitizer/release qualification is still open.
 ## Current handoff
 
 - NO-STEP-01–04 implementation, normal local verification and documentation
-  are complete. [Retained evidence](../qa/rxpa-native-objects/README.md) records
+  are complete. [historical Retained evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/rxpa-native-objects/README.md) records
   failures before each repair, source identity and passing delivery checks.
 - Declaration-only macros remain metadata-only; new binding macros plus the
   checked host type service provide C construction. Before implementation,
   C payload publication alone did not establish class identity: see the retained
-  [stats diagnostic](../qa/native-inference-native-surface-review/README.md).
+  [historical stats diagnostic](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-native-surface-review/README.md).
 - The chosen compatibility route is the existing sized host services. Native
   code publishes concrete identity after constructing its own representation;
   failure must leave the destination's identity/contents untouched.
@@ -106,7 +106,7 @@ separate evidence; platform/sanitizer/release qualification is still open.
 | NO-AC-06 | Complete: SDK binding/construction/ownership/callback documentation, runnable C fixture and S4-D03 native implementation handoff. Typed llama implementation now passes its own normal local acceptance/delivery checks; final public contract remains reviewable. |
 | NO-AC-07 | Open: Windows/Linux, maintained sanitizers and full-product STEP-06 qualification; SAN-009 remains release-blocking with the named owner above. No sanitizer rerun in this phase. |
 
-The [typed llama completion](../qa/native-inference-typed/README.md) exposed
+The [historical typed llama completion](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md) exposed
 and repaired two additional generic defects: missing native-provider dependencies
 for interface-only factories, and a returned string's physical integer field
 being mistaken for worker/callback execution failure. Both have minimal ordinary

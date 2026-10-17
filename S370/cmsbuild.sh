@@ -6,8 +6,8 @@ set -e
 
 # Collate Source
 mkdir src
-cp ../avl_tree/*.c src
-cp ../avl_tree/*.h src
+cp ../third_party/avl_tree/*.c src
+cp ../third_party/avl_tree/*.h src
 cp ../binutils/include/*.h src
 cp ../binutils/include/*.c src
 cp ../interpreter/*.c src

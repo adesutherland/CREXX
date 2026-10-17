@@ -228,3 +228,6 @@ crexx_label_smoke_tests(
 )
 
 crexx_finalize_directory_qa_tiers()
+
+# Published products owned by this component.
+crexx_install_targets(rxdas)

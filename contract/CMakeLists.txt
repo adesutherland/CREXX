@@ -25,3 +25,6 @@ endif()
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+# Published products owned by this component.
+crexx_install_targets(crexx-contract)

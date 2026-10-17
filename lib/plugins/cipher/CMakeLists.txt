@@ -32,3 +32,5 @@ target_include_directories(_cipher_static PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
 )
+
+crexx_install_targets(_cipher _cipher_static)

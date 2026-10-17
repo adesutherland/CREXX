@@ -4,8 +4,8 @@ set -eu
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 POC_DIR="$ROOT/compiler/pocs/levelc_lemon_fallback"
 BUILD_DIR="$POC_DIR/build"
-LEMON="$ROOT/cmake-build-debug/lemon/lemon"
-LEMPAR="$ROOT/lemon/lempar.c"
+LEMON="$ROOT/cmake-build-debug/third_party/lemon/lemon"
+LEMPAR="$ROOT/third_party/lemon/lempar.c"
 
 mkdir -p "$BUILD_DIR"
 

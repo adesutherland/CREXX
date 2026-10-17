@@ -411,7 +411,7 @@ prepared image should fail closed.
 The research implementation established the proved D-form shape before the
 product generator and executor adopted its prepared-data conclusions. The
 maintained sources are now under
-[`lib/rxfnsg/unicode/tools`](../../../lib/rxfnsg/unicode/tools/) and the public
+[`lib/rxfnsg/unicode/tools`](../../../lib/rxfnsg/unicode/tools) and the public
 surface is generated through
 [`lib/rxfnsg/rexx/CMakeLists.txt`](../../../lib/rxfnsg/rexx/CMakeLists.txt).
 The figures below describe the historical correctness and operation-shape
@@ -446,7 +446,7 @@ an inversion. A long adversarial fixture proves that fallback is exercised.
 The first hand-written string path used an experimental raw string-byte RXAS
 surface. Its rough Release result was materially slower than the scalar NFD
 baseline, so that instruction experiment was rolled back. A later generated
-re2c/Level L route proved the prepared scalar partition but was rejected as the
+third_party/re2c/Level L route proved the prepared scalar partition but was rejected as the
 runtime shape. The production executor instead lets RXVM decode `.string`
 codepoints with `STRCHAR`, reads one compiler-shared prepared constant, and
 emits directly with `APPENDCHAR`; it makes no input `.binary` copy.

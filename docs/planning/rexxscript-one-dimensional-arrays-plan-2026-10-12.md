@@ -70,7 +70,7 @@ unrelated local work; no language or architectural change is intended.
    configuration error from the hosted logs and a local reproduction.
    Release target reproduction failed with the same `-x` syntax error; enabling
    exits makes both array modes pass. The retained reproduction is in the
-   [qualification receipt](../qa/rexxscript-ci-2026-10-12/README.md).
+   [historical qualification receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/rexxscript-ci-2026-10-12/README.md).
 2. **CI-AC02 — verified:** The array sample builds and reports its full array
    round-trip success in both compiler/assembler modes. Retain focused Release
    and Debug CTest results; keep the ordinary API tests independent of exits.

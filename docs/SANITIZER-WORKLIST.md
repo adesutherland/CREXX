@@ -102,7 +102,7 @@ QA immediately. The completed proof below fulfills that renewed request.
   Run `20261010-155050-full` stops during class-library generation with
   2,628 leaked bytes in 32 allocations rooted in `source_semantic_f`, copied
   type/dimension strings and `source_tree_sync_semantics`.
-- Permanent diagnostic: [san-012-original.log](qa/classic-frontend-split-2026-10-10/san-012-original.log).
+- Diagnostic mechanism and scope: [historical san-012-original.log](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/san-012-original.log).
   Full retained Linux log: `/tmp/crexx-san012-linux-original-build.log`.
 - Cause: semantic cleanup walks the visible SourceNode tree. Owned detached
   metadata anchors are on the Context's allocation list and can receive
@@ -116,7 +116,7 @@ QA immediately. The completed proof below fulfills that renewed request.
   `/tmp/crexx-san012-debug-regression.DpMWbE`; maintained Apple ASan
   `20261010-171147-ctest` and Linux ASan/LSan `20261010-161146-ctest` each pass
   `compiler_contract_builder` 1/1. Linux keeps leaks enabled. Apple LSan is
-  unsupported. The [local receipt](qa/classic-frontend-split-2026-10-10/README.md)
+  unsupported. The [historical local receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md)
   retains hashes, final code/test/build identity and the final 84-test controls.
 - Full Apple `20261010-171343-full` passed build/preparation and was stopped at
   CTest; Linux `20261010-161345-full` was stopped during preparation after
@@ -142,7 +142,7 @@ request for immediate full sanitizer and Deep QA. That proof is now complete.
   `source_tree_clear_context_links`, `rxcp_source_tree.c:39`, during teardown.
   Apple LSan is unsupported; leaks-off is that capability limit.
 - Retained full log: `cmake-build-debugasan/asan-logs/20261010-160024-build/build.log`.
-  Permanent diagnostic: [san-011-original.log](qa/classic-frontend-split-2026-10-10/san-011-original.log).
+  Diagnostic mechanism and scope: [historical san-011-original.log](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/san-011-original.log).
 - Cause: source contract anchors are allocated in the declaration Context;
   AST duplication borrows that SourceNode into other contexts. Class-registry
   teardown can free its owner before another Context clears those links.
@@ -156,7 +156,7 @@ request for immediate full sanitizer and Deep QA. That proof is now complete.
   `20261010-161341-build`; the expanded 109-command target passes at
   `20261010-164844-build`. The final regression, extended for SAN-012, passes
   Apple ASan `20261010-171147-ctest` and Linux ASan/LSan
-  `20261010-161146-ctest`. The [receipt](qa/classic-frontend-split-2026-10-10/README.md)
+  `20261010-161146-ctest`. The [historical receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md)
   records final-input coverage and the intentionally stopped full runs.
 - Closure: the unchanged owner-first teardown regression passes in the retained
   focused Debug/Apple/Linux commands and both hosted full gates. Fresh hosted
@@ -201,7 +201,7 @@ QA. The completed proof below fulfills that renewed request.
   All complete RexxDoc blocks remain unchanged.
 - Normal Debug BIF correctness passes 169/169 (294.94 seconds). Generated Debug
   and Release ARG procedures use `stoi` rather than the lossy float sequence.
-  The [development receipt](qa/ci-core-stream-packaging-2026-10-10/README.md)
+  The [historical development receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-core-stream-packaging-2026-10-10/README.md)
   owns exact final-input focused normal/maintained-ASan evidence.
 - Closure: the retained matching six-test Debug/Apple-ASan panel and all four
   permanent integer-limit modes pass. Both fresh full sanitizer gates build
@@ -253,7 +253,7 @@ macOS hashes are
 Final product revision `5e8275768355fa3dc84c24e815de91d6d63a6ca3` changes only
 Windows execution of the broker and its process manifest, plus the separately
 qualified portable quoting helper. The
-[Windows host-text receipt](qa/ci-windows-hosttext-2026-10-10/README.md) proves
+[historical Windows host-text receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-windows-hosttext-2026-10-10/README.md) proves
 byte-identical Unix broker preprocessing and unchanged existing QA selections;
 the helper passes nine vectors in Debug and maintained Apple ASan. This
 retains the full Unix proof for the final product inputs. Both Windows full
@@ -284,7 +284,7 @@ the local Level C closeout `b1b8bed2d` still needs the same cleanup repair.
   with build/test `detect_leaks=1`. The run stops at `frame_control_ast`;
   unexecuted cases are not passes. The macOS ASan lane passes but cannot supply
   LSan proof.
-- Retained original log: [linux-sanitizer-ctest.log](qa/overnight-2026-10-09/failed/linux-sanitizer-ctest.log).
+- The original diagnostic is summarized above; its temporary capture has been deleted.
 - Permanent reproducer/closure test: existing CTest `frame_control_ast`. Repair
   must release output/AST/symbol/scope/flow ownership through canonical Context
   cleanup, preserving all frame-node emission assertions and source bounds.
@@ -301,8 +301,8 @@ the local Level C closeout `b1b8bed2d` still needs the same cleanup repair.
   rerun after that production input change without using partial passes as an
   exclusion list. No suppression or unsupported leak-off claim was used.
 - Full normal Debug passes 3,320/3,320 with affected DB consumers requalified
-  after their repair. [Qualification receipt](qa/overnight-2026-10-09/qualification.json)
-  and [full supported summary](qa/overnight-2026-10-09/linux-full/summary.log)
+  after their repair. [historical Qualification receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09/qualification.json)
+  and [historical full supported summary](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09/linux-full/summary.log)
   identify final input fingerprints, commands, platform and retained full logs.
   This closes SAN-010, not wider Release 1 platform or language compatibility.
 
@@ -333,7 +333,7 @@ no sanitizer suppression was used.
   Linux 2,340/2,340 tests (4,493.34 s, build/test leaks on), Apple 2,340/2,340
   (4,506.68 s, unsupported Apple LSan off). Build, preparation and CTest logs
   contain no sanitizer diagnostic. Retained logs/settings/job identities are
-  under `docs/qa/native-inference-ci/remote/21666b6bc/sanitizer-{linux,macos}/`.
+  under [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci).
   The bridge/CPU residency repair is unchanged; intervening Windows packaging
   and helper-variable fixes do not alter it. This closes SAN-009, not overall
   native-inference delivery or real-GPU qualification.
@@ -369,7 +369,7 @@ no sanitizer suppression was used.
 - **Focused STEP-06 proof, 2026-09-15:** current `rxllama_backend_probe_cycle`
   and `rxpa_host_text_services` pass together in normal Debug (2/2, 0.74 s)
   and Apple ASan (2/2, 1.80 s). Sustained generation CPU/Metal controls also
-  pass under ASan. [Current evidence](qa/native-inference-step06/README.md)
+  pass under ASan. [historical Current evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step06/README.md)
   retains commands/logs. The expanded package/native matrix now passes Apple
   ASan (385.991 s, `20260915-150153-build`), including native foreign-handle
   rejection and four-worker BGE/Smol CPU/Metal ownership after S3-D01. Installed
@@ -389,7 +389,7 @@ no sanitizer suppression was used.
   backstop from 30 to 1,800 seconds after observing a roughly 70-second cold
   Intel consumer in the package campaign. The unchanged permanent probe passes
   normal Debug (0.66 s) and Apple ASan (1.02 s); see
-  [pipeline guard evidence](qa/native-inference-ci/README.md#cold-backend-initialization-guard).
+  [historical pipeline guard evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md#cold-backend-initialization-guard).
   This is not a suppression or an explanation of the separate original Intel
   engine stall. SAN-009 still requires supported Linux ASan/LSan closure.
 
@@ -421,7 +421,7 @@ no sanitizer suppression was used.
   four-tool lifecycle all pass (8/8 in each build). The full scratch-install,
   native relocation and dynamic-worker matrices also pass in both builds.
   The existing native-project contract passes in both builds. See
-  [the retained evidence index](qa/native-inference-step03/README.md).
+  [historical retained evidence index](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step03/README.md).
   These observations do not close broader platform gates.
 - Follow-up review, 2026-09-14, after Adrian's sanitizer hold: inspected
   `cpu_score()`, engine cleanup, the permanent probe-cycle control, the retained
@@ -751,7 +751,7 @@ ASan/LSan memory diagnostic in retained failing artifacts.
   both platforms; no sanitizer diagnostic appears in the complete retained
   build/preparation/test logs. Apple LeakSanitizer is unavailable and Linux
   supplies leak qualification. No suppression, exclusion or timeout change.
-- Evidence: `docs/qa/overnight-2026-09-21/`, including full logs, terminal
+- Evidence: [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-09-21), including full logs, terminal
   workflow metadata and `hosted/verdict.json`. No remaining action for this item.
 
 
@@ -773,7 +773,7 @@ repair and delivery criteria are CI-F20 / F20-AC-01–04 in
 - Cause: `03bf7855b` added the VM-session-owned `rxfs.fileguard` and converted
   rxfs to its documented mixed V2 procedure policy. The test still expects the
   old blanket process-reentrant capability. The library handle count is valid.
-- Retained logs and run metadata: `docs/qa/overnight-2026-09-17/`.
+- Retained logs and run metadata: [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-09-17).
 - Focused qualification: Debug 16/16 (0.91 s) and maintained Apple ASan 16/16
   (2.58 s) pass, including all bundled plugin concurrency checks, session-load
   rollback and all four filesystem VM/optimization cells. Three deliberately
@@ -796,7 +796,7 @@ passes for all 2,271 applicable macOS sanitizer checks. Owner: RXC-PROJECT-01
 (Adrian/Codex). This is not Linux or cross-platform sanitizer closure.
 
 - Affected revision: e0e67ad3e plus the local RXC-PROJECT-01 compiler/wrapper
-  and expanded `bin/tests/crexx_project_build.cmake` matrix, 2026-09-06.
+  and expanded `driver/tests/crexx_project_build.cmake` matrix, 2026-09-06.
 - Reproducer: `tools/asan-run.sh --build-dir ../build-debugasan --phase full
   --build-jobs 4 --test-jobs 8 --build-leaks off --leaks off
   --exclude-label performance-measurement --no-live-tail`, from the isolated

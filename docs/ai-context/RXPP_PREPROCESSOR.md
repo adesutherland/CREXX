@@ -142,7 +142,7 @@ Recent additions separate macro discovery from output placement:
   live in separate directories; `##LOADMACRO` does not switch to the input
   source directory. `rxpp_loadmacro` retains a conflicting source-relative
   package to exercise that distinction.
-- `##BUILDDIR path` is consumed by `bin/crexx.crexx`, which scans the first
+- `##BUILDDIR path` is consumed by `driver/crexx.crexx`, which scans the first
   64 source lines and resolves it relative to the command's working directory.
   RXPP suppresses the directive in generated cREXX but does not itself move
   build products. Direct CMake recipes should keep their explicit `-o` paths.

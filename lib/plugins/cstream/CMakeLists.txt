@@ -7,4 +7,6 @@ add_static_plugin_target(cstream rxcstream.c)
 foreach(target cstream cstream_static)
   target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/platform)
 endforeach()
-add_rxpa_provider_package(cstream)
+add_rxpa_provider_package(cstream INSTALL)
+
+crexx_install_targets(cstream cstream_static)

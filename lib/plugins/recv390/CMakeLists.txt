@@ -27,3 +27,5 @@ target_include_directories(_recv390_static PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
 )
+
+crexx_install_targets(_recv390 _recv390_static)

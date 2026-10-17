@@ -1,7 +1,0 @@
-argv=['/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/crexx', '--program', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-tqhxfb30/console-native/console', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-tqhxfb30/console.crexx', '--jobs', '1', '--native']
-WAVE: project compile/assemble jobs=1
-START: project member console
-BUILT: project member console
-BARRIER: link program
-PUBLISHED: program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-tqhxfb30/console-native/console.rxbin
-PUBLISHED: native program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-tqhxfb30/console-native/console

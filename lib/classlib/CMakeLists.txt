@@ -527,3 +527,5 @@ crexx_label_concurrency_tests(SP09 gate_f_levelb_bridge_inspection)
 add_subdirectory(tests_functional)
 
 crexx_finalize_directory_qa_tiers()
+crexx_install_bytecode(classlib "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
+crexx_install_bytecode(classlib_native "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin")

@@ -42,7 +42,7 @@ main: procedure = .int
   end
   call arrayappend inputs,manifest
   call arrayappend inputs,root||"/ports/single-threaded/mainframe-pdos-qa-pack.crexx"
-  call arrayappend inputs,root||"/docs/qa/mainframe-address-2026-10-12-pdos-fixture-review.md"
+  call arrayappend inputs,root||"/ports/single-threaded/README.md"
   call arrayappend inputs,root||"/lib/plugins/mainframe_address/tests/native_address.crexx"
   call arrayappend inputs,root||"/lib/plugins/mainframe_address/tests/native_address_classic.rexx"
   call arrayappend inputs,rxc; call arrayappend inputs,rxas

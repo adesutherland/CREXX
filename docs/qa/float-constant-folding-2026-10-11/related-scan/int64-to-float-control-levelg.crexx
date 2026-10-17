@@ -1,2 +1,0 @@
-options levelg numeric_common
-say (9007199254740993 as .float) = 9007199254740992.0

@@ -11,7 +11,7 @@ two Euro pools are independent. These are recreational programming examples.
 - [NetRexx Swing](netrexx/LottoWindow.nrx): desktop window with three exclusive
   radio buttons, numeric entry and a scrollable result pane.
 - [Optional cREXX GTK](crexx/lotto_gui.crexx): desktop alternative using the
-  existing `gui` plugin and a single-choice combo. The [provider build kit](crexx/gui-provider/)
+  existing `gui` plugin and a single-choice combo. The [provider build kit](crexx/gui-provider)
   contains unchanged Beta 3 source/headers; a native plugin and GTK 3 runtime
   closure must be built separately for Windows.
 - [Shared cREXX UI](surface/README.md): one Level G component, model, session

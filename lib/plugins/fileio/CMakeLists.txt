@@ -32,3 +32,5 @@ add_test(NAME fileio_test
         COMMAND ${CREXX_RXVM_EXECUTABLE} fileio_test rx_fileio ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
+
+crexx_install_targets(_fileio)

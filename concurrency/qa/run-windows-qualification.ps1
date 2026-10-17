@@ -7,7 +7,7 @@ param(
     [string]$BuildDirectory,
 
     [Parameter(Mandatory = $true)]
-    [string]$EvidenceDirectory,
+    [string]$WorkspaceParent,
 
     [ValidateRange(1, 64)]
     [int]$BuildJobs = 4,
@@ -134,40 +134,34 @@ if (@(git status --porcelain --untracked-files=all).Count -ne 0) {
 
 $repositoryRoot = [IO.Path]::GetFullPath($repositoryRoot)
 $buildFull = [IO.Path]::GetFullPath($BuildDirectory)
-$evidenceFull = [IO.Path]::GetFullPath($EvidenceDirectory)
-$artifactFull = "$evidenceFull-artifacts"
-if ($buildFull -eq $evidenceFull) {
-    throw 'build and evidence directories must differ'
-}
-if ($buildFull -eq $artifactFull) {
-    throw 'build and artifact directories must differ'
-}
 $repositoryPrefix = $repositoryRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-if ($buildFull.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase) -or
-    $evidenceFull.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase) -or
-    $artifactFull.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'build, evidence and artifact directories must be outside the repository'
+if ($buildFull.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'build directory must be outside the repository'
 }
-foreach ($directory in @($buildFull, $evidenceFull, $artifactFull)) {
-    if (Test-Path -LiteralPath $directory) {
-        if ((Get-ChildItem -Force -LiteralPath $directory | Measure-Object).Count -ne 0) {
-            throw "qualification directory is not empty: $directory"
-        }
+if (Test-Path -LiteralPath $buildFull) {
+    if ((Get-ChildItem -Force -LiteralPath $buildFull | Measure-Object).Count -ne 0) {
+        throw "build directory is not empty: $buildFull"
     }
-    else {
-        New-Item -ItemType Directory -Force -Path $directory | Out-Null
-    }
+} else { New-Item -ItemType Directory -Path $buildFull | Out-Null }
+$workspaceParentFull = [IO.Path]::GetFullPath($WorkspaceParent)
+if ($workspaceParentFull.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'workspace parent must be outside the repository'
 }
+$workspaceTool = Join-Path $repositoryRoot 'tools/qa_workspace.py'
+$evidenceFull = (& python $workspaceTool create --parent $WorkspaceParent).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'could not create QA workspace' }
+$artifactFull = Join-Path $evidenceFull 'artifacts'
+New-Item -ItemType Directory -Path $artifactFull | Out-Null
+$completed = $false
 
 $labelDirectory = Join-Path $evidenceFull 'labels'
 $installDirectory = Join-Path $evidenceFull 'install'
 $packageDirectory = Join-Path $evidenceFull 'package'
 New-Item -ItemType Directory -Force -Path $labelDirectory, $installDirectory, $packageDirectory | Out-Null
 $transcriptStarted = $false
-Start-Transcript -LiteralPath (Join-Path $evidenceFull 'qualification-transcript.txt') | Out-Null
-$transcriptStarted = $true
-
 try {
+    Start-Transcript -LiteralPath (Join-Path $evidenceFull 'qualification-transcript.txt') | Out-Null
+    $transcriptStarted = $true
     $env:CREXX_HTTP_TLS_LIVE_VERIFY = '1'
     if (-not $env:CREXX_HTTP_TLS_LIVE_HOST) {
         $env:CREXX_HTTP_TLS_LIVE_HOST = 'example.com'
@@ -308,20 +302,20 @@ try {
 
     Stop-Transcript | Out-Null
     $transcriptStarted = $false
-    $checksumLines = Get-ChildItem -Recurse -File -LiteralPath $evidenceFull |
-        Where-Object { $_.Name -ne 'SHA256SUMS' } |
-        Sort-Object FullName |
-        ForEach-Object {
-            $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName
-            $relative = [IO.Path]::GetRelativePath($evidenceFull, $_.FullName).Replace('\', '/')
-            "$($hash.Hash.ToLowerInvariant())  ./$relative"
-        }
-    $checksumLines | Set-Content -LiteralPath (Join-Path $evidenceFull 'SHA256SUMS')
+    Get-Content -LiteralPath (Join-Path $evidenceFull 'RESULT.txt')
+    $completed = $true
+    Write-Host 'PASS: Windows qualification; temporary captures removed.'
 
-    Write-Host "PASS: Windows qualification evidence retained at $evidenceFull"
 }
 finally {
     if ($transcriptStarted) {
         Stop-Transcript | Out-Null
     }
+    if ($completed) {
+        & python $workspaceTool cleanup $evidenceFull
+        if ($LASTEXITCODE -ne 0) { throw 'QA workspace cleanup failed' }
+    } else {
+        Write-Warning "Active failure workspace: $evidenceFull. After diagnosis: python `"$workspaceTool`" cleanup `"$evidenceFull`""
+    }
+
 }

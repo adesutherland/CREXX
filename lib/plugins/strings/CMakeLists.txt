@@ -24,3 +24,5 @@ crexx_add_rexx_opt_matrix(
 
 enable_testing()
 crexx_label_smoke_tests(strings_test_noopt)
+
+crexx_install_targets(_strings)

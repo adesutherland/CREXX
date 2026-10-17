@@ -11,6 +11,20 @@
 before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
 does not run RXPP internally.
 
+The [repository ownership map](../DOCS_MAP.md#source-ownership) separates the
+`driver/` implementation of `crexx` from `tools/rxbuild/`, which owns the build-plan
+reader, grammar and command. TextTools belongs to `tools/texttools/`; user demos
+belong to categorized `examples/`, and pipe prototypes to `research/pipes/`.
+Root-level vendor sources live under `third_party/`; the first-party scanner
+fragment is `platform/encoding.re` and the VM lifecycle header is
+`interpreter/rxvml/rxvm.h`.
+
+Components register their installed native targets and bytecode explicitly.
+`stage-product` depends on those selected producers, while provider manifests
+name and hash-check their dependency closure. Installation does not harvest the
+shared build `bin/` directory. The installed `bin/` layout, native support
+archives, RXPP helper and mathematical compatibility aliases are preserved.
+
 The opt-in [single-threaded port](../../ports/single-threaded/README.md) builds
 the same compiler with a constrained embedded VM, retaining compiler exits.
 It leaves the normal desktop configuration and language contracts intact.
@@ -635,8 +649,8 @@ values, legacy caller declarations and incompatible or incomplete contracts.
 
 ### Project member invalidation and declaration lookup
 
-`bin/crexx.crexx` owns project/member action keys, worker selection and atomic
-link publication. `bin/crexx_build_worker.crexx` constructs the same compiler
+`driver/crexx.crexx` owns project/member action keys, worker selection and atomic
+link publication. `driver/crexx_build_worker.crexx` constructs the same compiler
 argv for compilation and dependency checking. A successful member compile uses
 `rxc --project-dependencies path`; `--check-project-dependencies path` checks
 that snapshot without compiling bodies or loading executable providers.

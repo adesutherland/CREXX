@@ -15,7 +15,7 @@ function(crexx_classic_u32_hex value output)
 endfunction()
 
 function(crexx_classic_unicode_source output)
-    set(input "${CMAKE_SOURCE_DIR}/re2c/include/unicode_categories.re")
+    set(input "${CMAKE_SOURCE_DIR}/third_party/re2c/include/unicode_categories.re")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${input}")
     file(STRINGS "${input}" categories)
     set(header "")

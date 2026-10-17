@@ -1,3 +1,0 @@
-options levelg numeric_common
-say (0.0 / 0.0) >= 1.0
-say (0.0 / 0.0) <= 1.0

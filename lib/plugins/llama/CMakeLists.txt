@@ -180,7 +180,7 @@ if(MSVC)
     file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke-msvc-runtime-files.txt"
         CONTENT "${_llama_msvc_runtime_inventory}\n")
 endif()
-add_rxpa_provider_package(llama_provider PROVIDER_ID rxllama
+add_rxpa_provider_package(llama_provider INSTALL PROVIDER_ID rxllama
     LINK_TARGETS crexx_llama_bridge
     RUNTIME_TARGETS crexx_llama_bridge ${_llama_runtime}
     ENGINE_ID "${_llama_sha}"
@@ -371,3 +371,5 @@ endif()
 # Publish the registered test prerequisites to qa-prep; otherwise an existing
 # lifecycle executable can retain an older internal bridge argument layout.
 crexx_finalize_directory_qa_tiers()
+
+crexx_install_targets(llama_provider llama_provider_static)

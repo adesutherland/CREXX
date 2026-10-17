@@ -23,3 +23,5 @@ crexx_add_rexx_opt_matrix(
 )
 
 enable_testing()
+
+crexx_install_targets(_getpi)

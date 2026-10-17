@@ -162,11 +162,10 @@ The [closeout plan](PERFORMANCE-CLOSEOUT-PLAN.md) keeps formal exact-commit
 Linux QA-C, compact-baseline verification and weak-row dispositions visibly
 open. This scorecard describes `81f15918676d92a7d3e88954d94779ed759e9db8` on the
 recorded Apple host. Current release status is determined by tags and the
-[release notes](../docs/releases/); it is not inferred from this measurement.
+[release notes](../docs/releases); it is not inferred from this measurement.
 
 ## Detailed sources
 
-- [Stage 5 scorecard and retained evidence](evidence/2026-08-18-performance-closeout-stage5/README.md)
 - [Portfolio and comparison contract](portfolio/manifest-v3.md)
 - [Performance roadmap](ROADMAP.md)
 - [Performance closeout plan](PERFORMANCE-CLOSEOUT-PLAN.md)

@@ -205,3 +205,22 @@ The following are not reopening triggers by themselves:
 The rejected candidate sources, calibration runs and temporary worklists are
 available in Git history. This decision and its reopening triggers remain in
 HEAD; no rejected decimal backend is part of the normal product build.
+
+## VM-STARTUP-01: accepted registry lookup indexes
+
+The registry-index repair was accepted on 12 October 2026. Per-context indexes
+accelerate lookup while canonical metadata remains the authority. Cleanup uses
+the owning allocator worker scope and restores the caller's worker. Permanent
+regressions check actual successful frees, partial allocation failures while a
+different context is active, canonical registry targets and final teardown.
+No public layout, graph or dispatch policy changes were made.
+
+The accepted paired local Release observations showed about 79% extended and
+63–65% bare startup elapsed reduction, with host activity and short-process
+variance disclosed. This is startup evidence, not general throughput or
+cross-platform performance. Focused Release/Debug each passed 78 tests; normal
+Release covered 3,129 tests through 3,127 passes plus replay of two upstream
+fixture corrections (FORTRAN collection input and RexxScript dotted stem).
+AC-01–09 closed for that bounded repair. This does not establish a new sanitizer,
+release or platform result. Raw samples and the completed review worklist are
+removed; the lifecycle harness and regression sources remain reproducible.

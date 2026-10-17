@@ -47,3 +47,4 @@ if(BUILD_TESTING)
     ts_unicode_codec
     ts_unicode_normalization)
 endif()
+crexx_install_bytecode(rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin")

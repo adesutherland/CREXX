@@ -222,7 +222,7 @@ add_test(NAME binary_forward_dependencies
         -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_forward_dependencies_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_forward_dependencies.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_forward_dependencies.cmake)
 set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
@@ -278,7 +278,7 @@ add_test(NAME binary_global_import_types
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_global_import_types.crexx
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_global_import_types_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_global_import_types.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_global_import_types.cmake)
 set_tests_properties(binary_global_import_types PROPERTIES
     LABELS "compiler;imports;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
@@ -294,7 +294,7 @@ add_test(NAME binary_storage_selector_dependencies
         -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_storage_selector_dependencies_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_storage_selector_dependencies.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_storage_selector_dependencies.cmake)
 set_tests_properties(binary_storage_selector_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;binary;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib;compiler_exit_bin")
@@ -3991,7 +3991,7 @@ add_crexx_run_args_test(arg_compat_no_vargs rexx_src/arg_compat_no_vargs.crexx a
 
 set(CRXC_NOARGS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crxc_noargs.cmake")
 set(CRXC_NOARGS_CONTENT "set(full_out \"\")\n")
-string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" --level levelb --import rxfnsb -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_NOOPT_FLAG} -o \"crxc_noargs_run\" \"${CMAKE_SOURCE_DIR}/bin/crxc.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" --level levelb --import rxfnsb -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_NOOPT_FLAG} -o \"crxc_noargs_run\" \"${CMAKE_SOURCE_DIR}/driver/crxc.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CRXC_NOARGS_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND CRXC_NOARGS_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
 string(APPEND CRXC_NOARGS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"crxc_noargs_run.rxbin\" \"crxc_noargs_run\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -8402,7 +8402,7 @@ add_custom_target(stub_plugin_bin DEPENDS stub_plugin.rxbin)
 
 add_executable(test_bridge src/test_bridge.c)
 target_link_libraries(test_bridge PRIVATE rxvml rxpashim)
-target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_bridge PRIVATE
         CREXX_TEST_LIBRARY_MODULE="${CMAKE_BINARY_DIR}/bin/library.rxbin"
         CREXX_TEST_RXCEXITS_MODULE="${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
@@ -8410,15 +8410,15 @@ add_dependencies(test_bridge stub_plugin_bin library)
 
 add_executable(test_address_bridge src/test_address_bridge.c)
 target_link_libraries(test_address_bridge PRIVATE rxvml rxpashim)
-target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_address_bridge PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_CMS_ADDRESS_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin"
         CREXX_TEST_CMS_ADDRESS_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin")
 
-set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/cms")
-set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/llm")
-set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/kv")
+set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/examples/cms")
+set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/examples/llm")
+set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/examples/native/kv")
 add_custom_command(
         OUTPUT address_cms_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
@@ -8499,7 +8499,7 @@ add_custom_target(native_kv_address_demo_bin DEPENDS native_kv_address_demo.rxbi
 
 add_executable(native_kv_address_demo ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.c)
 target_link_libraries(native_kv_address_demo PRIVATE rxvml rxpashim)
-target_include_directories(native_kv_address_demo PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(native_kv_address_demo PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(native_kv_address_demo PRIVATE
         CREXX_NATIVE_KV_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_NATIVE_KV_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_kv_address_demo.rxbin")
@@ -8518,7 +8518,7 @@ add_custom_target(address_callback_host_bin DEPENDS address_callback_host.rxbin)
 
 add_executable(test_address_callback_host src/test_address_callback_host.c)
 target_link_libraries(test_address_callback_host PRIVATE rxvml rxpashim)
-target_include_directories(test_address_callback_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_address_callback_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_address_callback_host PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_ADDRESS_CALLBACK_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_callback_host.rxbin")
@@ -8537,7 +8537,7 @@ add_custom_target(e2_active_context_bin DEPENDS e2_active_context.rxbin)
 
 add_executable(test_e2_active_context src/test_e2_active_context.c)
 target_link_libraries(test_e2_active_context PRIVATE rxvml rxpashim Threads::Threads)
-target_include_directories(test_e2_active_context PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_e2_active_context PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_e2_active_context PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_E2_ACTIVE_MODULE="${CMAKE_CURRENT_BINARY_DIR}/e2_active_context.rxbin"
@@ -8555,7 +8555,7 @@ add_custom_command(
 add_custom_target(say_bytes_host_bin DEPENDS say_bytes_host.rxbin)
 add_executable(test_say_bytes_host src/test_say_bytes_host.c)
 target_link_libraries(test_say_bytes_host PRIVATE rxvml rxpashim)
-target_include_directories(test_say_bytes_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_say_bytes_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_say_bytes_host PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_SAY_BYTES_MODULE="${CMAKE_CURRENT_BINARY_DIR}/say_bytes_host.rxbin")
@@ -8571,7 +8571,7 @@ add_custom_command(
 add_custom_target(levelc_say_host_output_bin DEPENDS levelc_say_host_output.rxbin)
 add_executable(test_levelc_say_host_output src/test_levelc_say_host_output.c)
 target_link_libraries(test_levelc_say_host_output PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_say_host_output PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_say_host_output PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_say_host_output PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
@@ -8589,7 +8589,7 @@ add_custom_command(
 add_custom_target(levelc_address_host_callback_bin DEPENDS levelc_address_host_callback.rxbin)
 add_executable(test_levelc_address_host_callback src/test_levelc_address_host_callback.c)
 target_link_libraries(test_levelc_address_host_callback PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_address_host_callback PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_address_host_callback PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_address_host_callback PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
@@ -8607,7 +8607,7 @@ add_custom_command(
 add_custom_target(levelc_arg_host_entry_bin DEPENDS levelc_arg_host_entry.rxbin)
 add_executable(test_levelc_arg_host_entry src/test_levelc_arg_host_entry.c)
 target_link_libraries(test_levelc_arg_host_entry PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_arg_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_arg_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_arg_host_entry PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
@@ -8632,7 +8632,7 @@ add_custom_command(
 add_custom_target(levelc_call_host_entry_bin DEPENDS levelc_call_host_provider.rxbin levelc_call_host_entry.rxbin)
 add_executable(test_levelc_call_host_entry src/test_levelc_call_host_entry.c)
 target_link_libraries(test_levelc_call_host_entry PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_call_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_call_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_call_host_entry PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
@@ -8658,7 +8658,7 @@ add_custom_command(
 add_custom_target(levelc_return_status7_bin DEPENDS levelc_return_status7.rxbin)
 add_executable(test_levelc_return_host_entry src/test_levelc_completion_host_entry.c)
 target_link_libraries(test_levelc_return_host_entry PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_return_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_return_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_return_host_entry PRIVATE
         CREXX_TEST_BINDIR="${CMAKE_BINARY_DIR}/bin"
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -8677,7 +8677,7 @@ add_custom_command(
 add_custom_target(levelc_exit_status7_bin DEPENDS levelc_exit_status7.rxbin)
 add_executable(test_levelc_exit_host_entry src/test_levelc_completion_host_entry.c)
 target_link_libraries(test_levelc_exit_host_entry PRIVATE rxvml rxpashim)
-target_include_directories(test_levelc_exit_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_levelc_exit_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_exit_host_entry PRIVATE
         CREXX_TEST_BINDIR="${CMAKE_BINARY_DIR}/bin"
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -8709,7 +8709,7 @@ add_custom_target(dynamic_load_fixture_bin DEPENDS dynamic_load_provider.rxbin d
 
 add_executable(test_dynamic_load src/test_dynamic_load.c)
 target_link_libraries(test_dynamic_load PRIVATE rxvml rxpashim)
-target_include_directories(test_dynamic_load PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_dynamic_load PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_dynamic_load PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_DYNAMIC_LOAD_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_host.rxbin"
@@ -8774,7 +8774,7 @@ endif()
 
 add_executable(test_rxvml_utf_boundaries src/test_rxvml_utf_boundaries.c)
 target_link_libraries(test_rxvml_utf_boundaries PRIVATE rxvml rxpashim)
-target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 
 add_custom_command(
         OUTPUT crexxsaa_variables_host.rxbin
@@ -8837,9 +8837,9 @@ target_include_directories(test_source_provenance PRIVATE
         ${CMAKE_SOURCE_DIR}/compiler
         ${CMAKE_BINARY_DIR}/compiler
         ${CMAKE_SOURCE_DIR}/assembler
-        ${CMAKE_SOURCE_DIR}/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/avl_tree
         ${CMAKE_SOURCE_DIR}/platform
-        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/third_party/utf8
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -8851,9 +8851,9 @@ target_include_directories(test_levelc_tree_boundary PRIVATE
         ${CMAKE_SOURCE_DIR}/compiler
         ${CMAKE_BINARY_DIR}/compiler
         ${CMAKE_SOURCE_DIR}/assembler
-        ${CMAKE_SOURCE_DIR}/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/avl_tree
         ${CMAKE_SOURCE_DIR}/platform
-        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/third_party/utf8
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -8867,9 +8867,9 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/compiler
             ${CMAKE_BINARY_DIR}/compiler
             ${CMAKE_SOURCE_DIR}/assembler
-            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/utf8
+            ${CMAKE_SOURCE_DIR}/third_party/utf8
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -8882,9 +8882,9 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/compiler
             ${CMAKE_BINARY_DIR}/compiler
             ${CMAKE_SOURCE_DIR}/assembler
-            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/utf8
+            ${CMAKE_SOURCE_DIR}/third_party/utf8
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -8899,9 +8899,9 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/compiler
             ${CMAKE_BINARY_DIR}/compiler
             ${CMAKE_SOURCE_DIR}/assembler
-            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/utf8
+            ${CMAKE_SOURCE_DIR}/third_party/utf8
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -9747,8 +9747,8 @@ set_tests_properties(classic_unicode_contract_opt PROPERTIES
 add_executable(test_classic_stream_lifecycle src/test_classic_stream_lifecycle.c)
 target_link_libraries(test_classic_stream_lifecycle PRIVATE rxvml rxpashim)
 target_include_directories(test_classic_stream_lifecycle PRIVATE
-    ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree
-    ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa
+    ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+    ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/rxpa
     ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_classic_stream_lifecycle library classlib rxfnsc rxfnsg cstream)
 add_test(NAME classic_stream_lifecycle COMMAND test_classic_stream_lifecycle

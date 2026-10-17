@@ -1,7 +1,0 @@
-options levelb numeric_common
-main: procedure = .int
-numeric digits 18
-  arg argv = .string[]
-i = 9223372036854775807
-say i = 9223372036854775807
-return 0

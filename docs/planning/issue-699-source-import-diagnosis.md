@@ -57,7 +57,7 @@ main CREXX/llama checkout or the downstream RAG checkout; no model workloads.
   loading exposes unfinished contracts; the array shape oscillates and a class
   is exported with its unresolved interface relationship missing.
 - **STEP-04 (AC-04):** retain diagnosis/evidence and propose next repair scope.
-  Complete: [assessment, commands, limits and repair recommendation](../qa/issue-699-20260916/README.md).
+  Complete: [historical assessment, commands, limits and repair recommendation](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/issue-699-20260916/README.md).
   No broad build/test or hosted qualification was needed for assessment.
 
 **Assessment status:** AC-01 through AC-04 complete. Repair/delivery now authorized;
@@ -84,7 +84,7 @@ AC-05 through AC-07 complete. The historical assessment evidence remains valid.
   both completed successfully for that exact revision. Release product/smoke/package
   jobs passed on Linux x64, Windows MinGW x64 and both macOS architectures;
   Linux optimizer parity passed 742/742. Terminal JSON and job logs are retained
-  in the [repair report](../qa/issue-699-20260916/repair.md). No extra hosted matrix
+  in the [historical repair report](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/issue-699-20260916/repair.md). No extra hosted matrix
   was dispatched. The evidence-only closeout retains identical qualified inputs.
 
 ## Initial evidence

@@ -28,3 +28,5 @@ target_include_directories(_treemap_static PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
 )
+
+crexx_install_targets(_treemap _treemap_static)

@@ -102,7 +102,7 @@ passes; negotiated host services and old-host/old-plugin controls pass. CPU and
 Metal four-tool acceptance passes on both VMs, including owned complete input,
 100 singles/20 batches and packed output lifetime. CPU/Metal direct numeric,
 token/layout/boundary and cleanup controls also pass in ordinary Release.
-See [S4-D01 evidence](../qa/native-inference-s4d01/README.md).
+See [historical S4-D01 evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-s4d01/README.md).
 
 S4-04 presented the first decision gate. The
 [first Release panel](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-first-release/README.md)
@@ -142,7 +142,7 @@ these timings or investigate upstream performance. S4-05 functional closeout is
 now authorized. All platform and complete-product requirements remain open.
 
 S4-05a and the native-interface portion of S4-05b now pass the
-[normal local closeout checks](../qa/native-inference-step04-closeout/README.md):
+[historical normal local closeout checks](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step04-closeout/README.md):
 request boundaries, CPU/GPU query/document parity at layouts 1/4/8, four real
 workers running 20 batches each against isolated baselines, rxvector consumption,
 both VMs/optimization modes and scratch-installed/relocated native consumers.
@@ -153,7 +153,7 @@ with durable diagnostics, failed-construction values, complete text, ordered
 `add_all`, owned packed results and explicit closure. Installed public examples
 cover twenty persistent batches and four workers sharing weights with private
 sessions. Its own preimplementation failures and delivery evidence are retained
-in the [typed completion bundle](../qa/native-inference-typed/README.md).
+in the [historical typed completion bundle](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md).
 At this capture, final public-contract and phase-closure review remained with
 Adrian; the 15 September closure below supersedes that pending status. No new
 API alternative, model default or language syntax has been selected.
@@ -191,7 +191,7 @@ still open in the parent plan and is not included in these STEP-04 ticks.
 
 | Criterion | Local disposition and retained evidence |
 | --- | --- |
-| [x] S4-AC-01 | Native ownership/state/cancellation/recovery controls pass; typed failed constructors, diagnostics, parent/child and copied-owner close, one active request and partial-add cancellation pass in Debug and installed/native Release. [Native](../qa/native-inference-step04-closeout/README.md), [typed](../qa/native-inference-typed/README.md). |
+| [x] S4-AC-01 | Native ownership/state/cancellation/recovery controls pass; typed failed constructors, diagnostics, parent/child and copied-owner close, one active request and partial-add cancellation pass in Debug and installed/native Release. [historical Native](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step04-closeout/README.md), [historical typed](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-typed/README.md). |
 | [x] S4-AC-02 | Native exact row/token/byte limits, query prefix, 512/513 boundaries and complete UTF-8 inputs pass. Typed full NUL-bearing embedding text and selector rejection preserve the same contract. Bridge inputs are unchanged. |
 | [x] S4-AC-03 | Layouts 1/4/8, row order, one-decode noncausal batches, complete-only publication, owned packed results surviving request close and rxvector consumption pass. Typed values are independent owned copies. |
 | [x] S4-AC-04 | Repeated requests (native 100 singles/20 batches), CPU/Metal tripwires and four real workers with private outputs/one shared model load pass. Typed examples perform 20 batches per session and correct teardown. STEP-06 platform/sanitizer proof remains open. |
@@ -256,11 +256,11 @@ It does not advance generation or the held STEP-06 sanitizer/platform gate.
    distinguish local regression evidence from later platform/sanitizer/release
    qualification. Do not push or repeat unchanged timing/sanitizer workloads.
 
-Live evidence: [baseline regression record](../qa/native-inference-baseline/README.md).
+Live evidence: [historical baseline regression record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-baseline/README.md).
 
 
 **Current broad qualification result:** S4-B-02 is complete through the
-[QA01/QA02 repair and factory-cleanup evidence](../qa/native-inference-qa01/README.md).
+[historical QA01/QA02 repair and factory-cleanup evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md).
 The task lowerer now waits for imported call types before mutating the AST;
 existing HTTP compilation and all four permanent imported-task controls pass.
 The initial full Debug invocation completed with 2,337 passes, nine failures
@@ -348,14 +348,14 @@ existing whole-archive/init-symbol linking and platform behavior.
    identities. Preserve the Step 6 sanitizer/platform gate and its owner.
 
 Evidence and final disposition are retained with the
-[QA01/QA02 record](../qa/native-inference-qa01/README.md). This does not reopen
+[historical QA01/QA02 record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md). This does not reopen
 accepted inference performance work or start STEP-05.
 
 
 ### Final follow-up acceptance, 15 September 2026
 
 All QA01/QA02 checkboxes above are backed by the
-[retained diagnosis, before/after controls and per-test ledger](../qa/native-inference-qa01/README.md).
+[historical retained diagnosis, before/after controls and per-test ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-qa01/README.md).
 The native `linearfit` factory/accessors replace the former Rexx construction
 workaround without changing statistical kernels or public spelling. Human and
 agent references now use executable C bindings; historical evidence is labelled.

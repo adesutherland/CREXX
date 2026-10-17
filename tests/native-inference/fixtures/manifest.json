@@ -18,5 +18,5 @@
   "platform": "macOS arm64, macOS 26.5 SDK",
   "kind": "upstream-generated random weights; no trained model downloaded",
   "portable_identity": "Use the recorded byte hash. std::hash and normal_distribution do not promise identical output across toolchains.",
-  "retained_origin": "performance/evidence/2026-09-14-native-inference-step02/completion/frozen-identities.json"
+  "purpose": "Permanent random-weight model fixture consumed by the native inference regression suite"
 }

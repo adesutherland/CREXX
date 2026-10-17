@@ -32,3 +32,5 @@ add_test(NAME rxml_test
         COMMAND ${CREXX_RXVM_EXECUTABLE} rxml_test rx_rxml ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
+
+crexx_install_targets(_rxml)

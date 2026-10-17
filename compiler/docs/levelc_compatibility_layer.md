@@ -2053,6 +2053,6 @@ This review updates current claims where their owning implementation/evidence ha
 
 ### 12.3 Historical research and external references
 
-[Runtime-value design](levelc_rexx_runtime_values.md), [remapping target](levelc_remapping_target.md), [remapping tracer log](levelc_remapping_tracer_worklog.md) and the [early syntax-highlighting milestone](levelc_syntax_highlighting.md) retain useful design history. Their early slice limits and proposed steps do not describe current execution status. Later approved decisions and receipts in the worklist take precedence.
+[Runtime-value design](levelc_rexx_runtime_values.md), [remapping target](levelc_remapping_target.md), [maintained contract](levelc_working_architecture.md) and the [early syntax-highlighting milestone](levelc_syntax_highlighting.md) retain useful design history. Their early slice limits and proposed steps do not describe current execution status. Later approved decisions and receipts in the worklist take precedence.
 
 The reference guides are normalized extracts of the public Classic specification, not claims of a certified ANSI implementation. Worklist IBM/Regina probes explain selected comparisons and approved departures. Each comparison must be read with its version, exact tested input and documented cREXX boundary. No new external specification, operating-system assumption or unrun gate is treated as qualification in this review.

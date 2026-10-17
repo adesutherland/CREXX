@@ -219,7 +219,7 @@ if (ENABLE_PARSER_MODE)
                 ${CMAKE_BINARY_DIR}/compiler
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${CMAKE_SOURCE_DIR}/platform
-                ${CMAKE_SOURCE_DIR}/utf8)
+                ${CMAKE_SOURCE_DIR}/third_party/utf8)
         target_link_libraries(rxpp_sh PRIVATE rxclib)
         add_dependencies(rxpp_sh rxpp)
         install(TARGETS rxpp_sh DESTINATION bin)
@@ -227,3 +227,6 @@ endif()
 
 # Tests for the rxpp preprocessor tool
 add_subdirectory(tests)
+
+# Published products owned by this component.
+crexx_install_targets(rxpp precomp precomp_static)

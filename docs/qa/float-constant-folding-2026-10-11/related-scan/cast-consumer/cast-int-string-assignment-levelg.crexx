@@ -1,7 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-  arg argv = .string[]
-s = .string
-s = (1.5 as .int)
-say s
-return 0

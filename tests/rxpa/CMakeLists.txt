@@ -132,13 +132,13 @@ function(crexx_configure_cri17_attached_control TARGET_NAME)
     target_include_directories(${TARGET_NAME} PRIVATE
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvml
             ${CMAKE_SOURCE_DIR}/assembler
             ${CMAKE_SOURCE_DIR}/binutils/include
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/avl_tree
-            ${CMAKE_SOURCE_DIR}/utf8)
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/utf8)
     target_link_libraries(${TARGET_NAME} PRIVATE Threads::Threads)
     add_dependencies(${TARGET_NAME}
             cri17_attached_provider_noopt_artifact
@@ -311,7 +311,7 @@ foreach(engine IN ITEMS rxbvm rxtvm)
             ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
             ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/assembler
             ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/platform
-            ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/inc)
+            ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
 endforeach()
 
 # Individual VM regressions build their artifacts through the normal QA prep
@@ -447,9 +447,9 @@ target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
-        ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8
-        ${CMAKE_SOURCE_DIR}/inc)
+        ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/utf8
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
 
 add_custom_target(rxpa_dynlink_run ALL)
 crexx_add_rexx_opt_matrix(
@@ -576,9 +576,9 @@ target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
-        ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8
-        ${CMAKE_SOURCE_DIR}/inc)
+        ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/utf8
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
 
 add_custom_target(rxpa_callmethod_static_run ALL)
 crexx_add_rexx_opt_matrix(

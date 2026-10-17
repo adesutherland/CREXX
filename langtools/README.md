@@ -17,7 +17,7 @@ on generator implementation and qualification details.
 
 Level L is reusable language-engineering infrastructure. RexxScript 1 is its
 first product consumer; the library has no dependency on RexxScript values,
-compiler AST classes or compiler globals. The product compiler's re2c/Lemon frontends are maintained separately.
+compiler AST classes or compiler globals. The product compiler's third_party/re2c/Lemon frontends are maintained separately.
 
 Build and run from the repository root:
 

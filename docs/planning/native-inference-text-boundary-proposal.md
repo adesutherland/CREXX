@@ -103,6 +103,6 @@ Debug and ordinary Release correctness pass; S4-D01-04 rejoins STEP-04 at its
 [first Release decision](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-first-release/README.md).
 CPU figures are within variation; Adrian accepted NI-S4-P01's indicative Metal
 overhead and variation after the later replay. Its cause remains unresolved. The
-[evidence bundle](../qa/native-inference-s4d01/README.md) and STEP-04 handoff retain
+[historical evidence bundle](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-s4d01/README.md) and STEP-04 handoff retain
 all remaining work. Normal functional closeout resumed after that acceptance;
 maintained sanitizer/platform proof remains STEP-06.

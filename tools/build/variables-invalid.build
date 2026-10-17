@@ -1,5 +1,0 @@
-/* Undefined substitutions must be rejected before any tool is invoked. */
-
-COMPILE GRAMMAR OUTPUT_DIR = "${MISSING_DIR}" SOURCE = "tools/build/grammar/build.levell" OUTPUT = "rxbuildgrammar";
-COMPILE READER OUTPUT_DIR = "cmake-build-release/build" SOURCE = "tools/build/build_reader.crexx" DEPENDS_ON = "rxbuildgrammar" OUTPUT = "build_reader";
-RUN WORK_DIR = "cmake-build-release/build" PROGRAM = "build_demo" ARGUMENT = "-a" "tools/build/example.build" STDIN = "";

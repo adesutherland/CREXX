@@ -12,7 +12,7 @@ target_link_libraries(vector PRIVATE ${CREXX_MATH_LIBRARY})
 add_static_plugin_target(vector rxvector.c rxvector_index.c)
 target_link_libraries(vector_static PRIVATE ${CREXX_MATH_LIBRARY})
 
-add_rxpa_provider_package(vector)
+add_rxpa_provider_package(vector INSTALL)
 
 # The provider remains part of the default product build.  Keep it independent
 # of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
@@ -58,3 +58,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_install_targets(vector vector_static)

@@ -9,7 +9,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 # The core platform target already owns the natural CMake name.
 add_dynamic_plugin_target(_platform PROVIDER_ID rxplatform rxplatform.c)
 add_static_plugin_target(_platform PROVIDER_ID rxplatform rxplatform.c)
-add_rxpa_provider_package(_platform PROVIDER_ID rxplatform)
+add_rxpa_provider_package(_platform INSTALL PROVIDER_ID rxplatform)
 
 if(BUILD_TESTING)
     add_custom_target(rxplatform_test ALL)
@@ -31,3 +31,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_install_targets(_platform _platform_static)
