@@ -282,11 +282,21 @@ The `.pkg` workflow implements the recommended flow above:
    for the payload and `productbuild` for the final branded installer package.
 4. Sign the final product package with `Developer ID Installer`.
 5. Submit the package to notarization with `xcrun notarytool submit --wait`.
-6. Staple the notarization ticket with `xcrun stapler staple`.
+6. Staple and validate the notarization ticket with
+   `bash scripts/staple-macos-installer.sh installer.pkg`.
 7. Verify with `spctl --assess --type install`.
 8. Upload the `.pkg` alongside the existing ZIP.
 
 Keep ZIP assets even after `.pkg` assets exist.
+
+The core, plugin and retained-plugin packaging paths share the stapling helper.
+It retries only ticket-service exit 68, independently for `staple` and
+`validate`: at most four attempts per action, with 15, 30 and 45 second delays.
+A validation retry does not repeat successful stapling. Other errors or exhausted
+retries fail packaging, and the subsequent Gatekeeper assessment remains required.
+Notarization acceptance alone does not establish that these checks passed.
+`python3 -B scripts/test-macos-stapling.py` checks the retry and failure policy
+with controlled commands, without signing credentials or Apple service access.
 
 ## Sources
 

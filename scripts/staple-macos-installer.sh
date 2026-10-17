@@ -7,19 +7,24 @@ if [[ $# -ne 1 ]]; then
   exit 64
 fi
 
-for attempt in 1 2 3 4; do
-  if xcrun stapler staple "$1"; then
-    xcrun stapler validate "$1"
-    exit 0
-  else
-    result=$?
-  fi
-  # EX_NOHOST (68) is stapler's ticket-service failure. Other errors require
-  # repair, and exhausted retries must still fail the packaging job.
-  if [[ $result -ne 68 || $attempt -eq 4 ]]; then
-    exit "$result"
-  fi
-  delay=$((15 * attempt))
-  echo "Apple ticket service unavailable; retrying stapling in ${delay}s (attempt $((attempt + 1))/4)." >&2
-  sleep "$delay"
-done
+stapler_with_retry() {
+  local action="$1" package="$2" attempt result delay
+  for attempt in 1 2 3 4; do
+    if xcrun stapler "$action" "$package"; then
+      return 0
+    else
+      result=$?
+    fi
+    # EX_NOHOST (68) is stapler's ticket-service failure. Other errors require
+    # repair, and exhausted retries must still fail the packaging job.
+    if [[ $result -ne 68 || $attempt -eq 4 ]]; then
+      return "$result"
+    fi
+    delay=$((15 * attempt))
+    echo "Apple ticket service unavailable during ${action}; retrying in ${delay}s (attempt $((attempt + 1))/4)." >&2
+    sleep "$delay"
+  done
+}
+
+stapler_with_retry staple "$1"
+stapler_with_retry validate "$1"
