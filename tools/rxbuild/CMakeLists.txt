@@ -39,7 +39,10 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas>
                 -o "${_crexx_rxbuild_root}/rxbuild"
                 "${_crexx_rxbuild_reader_rxas}"
-        DEPENDS rxc rxas ${_crexx_rxbuild_grammar_rxbin}
+        DEPENDS rxc rxas library compiler_exit_bin
+                "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                ${_crexx_rxbuild_grammar_rxbin}
                 "${_crexx_rxbuild_source}"
         VERBATIM)
 add_custom_command(
@@ -54,7 +57,12 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas>
                 -o "${CMAKE_BINARY_DIR}/build/build_demo"
                 "${_crexx_rxbuild_demo_rxas}"
-        DEPENDS rxc rxas "${_crexx_rxbuild_demo_source}"
+        # Ordinary compilation loads the library and certified exits. Order
+        # both producers and track their images for incremental recompilation.
+        DEPENDS rxc rxas library compiler_exit_bin
+                "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                "${_crexx_rxbuild_demo_source}"
         VERBATIM)
 add_custom_command(
         OUTPUT ${_crexx_rxbuild_linked_rxbin}
@@ -88,6 +96,23 @@ crexx_install_targets(rxbuild)
 
 if(BUILD_TESTING)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    if(UNIX AND CMAKE_GENERATOR MATCHES "^(Ninja|Unix Makefiles)$")
+        set(_rxbuild_order_command ${Python3_EXECUTABLE}
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-demo-build.py"
+            --source "${CMAKE_SOURCE_DIR}" --bin "$<TARGET_FILE_DIR:rxc>"
+            --cmake "${CMAKE_COMMAND}" --generator "${CMAKE_GENERATOR}"
+            --make-program "${CMAKE_MAKE_PROGRAM}")
+        # Measure with already prepared tools, without timing their rebuild.
+        add_custom_target(rxbuild_demo_order_measure
+            COMMAND ${_rxbuild_order_command} VERBATIM)
+        # Isolated fixture: Debug/Ninja 6s, prepared Apple-ASan/Make tools 17s.
+        # Serialize nested builds; the timeout is generous hang protection.
+        add_test(NAME rxbuild_demo_build_order COMMAND ${_rxbuild_order_command})
+        set_tests_properties(rxbuild_demo_build_order PROPERTIES
+            PASS_REGULAR_EXPRESSION "RXBUILD_DEMO_BUILD[|]PASS"
+            RUN_SERIAL TRUE TIMEOUT 600 LABELS "tools;rxbuild;cmake;essential"
+            CREXX_PREP_TARGETS "rxc;rxas;rxbvm;library;compiler_exit_bin")
+    endif()
     foreach(_case missing blocked)
         add_test(NAME rxbuild_directory_${_case}
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check-paths.py

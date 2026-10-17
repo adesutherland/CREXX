@@ -42,6 +42,11 @@ cmake --build cmake-build-release --target rxbuild --parallel 1
 The reader prints one `RXBUILD` line for each top-level statement. Generated
 files stay under the CMake build tree.
 
+To build just the demo, use `cmake --build cmake-build-release --target
+rxbuild_example --parallel 8`. CMake prepares the required Level B library and
+certified compiler exits first; changes to either import rebuild the demo.
+The full `rxbuild` target also packages the command and grammar.
+
 To exercise diagnostics, run `rxbuild` against a malformed `.build` file. The
 command returns a non-zero status and reports `RXBUILD_PARSE`.
 

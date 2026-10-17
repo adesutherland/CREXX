@@ -44,6 +44,14 @@ The packaged command contains the grammar, reader, Level L runtime modules,
 and the native filesystem/platform providers needed by the reader. A `.build`
 file remains an external runtime input.
 
+Both ordinary Level B compilation rules (reader and demo) depend on the
+`library` and `compiler_exit_bin` producers and on their `library.rxbin` and
+`rxcexits.rxbin` files. These are required even for the small demo: its normal
+compiler invocation loads the base library and certified exits. Target edges
+provide clean-build ordering; file edges rebuild consumers when imports change.
+The `rxbuild_example` target must therefore build from a clean tree on its own,
+without depending on another product target to happen to prepare its imports.
+
 Build the command with:
 
 ```powershell
@@ -158,11 +166,11 @@ belong in the CMake build tree. They should not be committed beside the
 ## Example
 
 The complete working example is in
-[`tools/build`](../../tools/rxbuild):
+[`tools/rxbuild`](../../tools/rxbuild):
 
 ```powershell
 & .\cmake-build-release\bin\rxbuild.exe `
-  tools\build\example.build
+  tools\rxbuild\example.build
 ```
 
 The same pattern is used by the MiniBASIC plan at
