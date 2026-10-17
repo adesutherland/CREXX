@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.24)
+
 # Fast inventory check after the owning producer stage; no nested build.
 foreach(product rxfnsl.rxbin rxlanglib.rxbin rxlang${SUFFIX})
   if(NOT EXISTS "${BUILD}/bin/${product}")

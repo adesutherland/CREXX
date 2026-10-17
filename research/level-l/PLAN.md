@@ -340,6 +340,36 @@ This completes the Level L ownership/naming refinement. Whole-repository
 cleanup, full compiler replacement and hosted/platform qualification are separate
 work; existing open criteria elsewhere in these plans are unchanged.
 
+### Product-inventory script compatibility
+
+The Linux smoke job for `c087788cb7f1291a8fa5027033e7a1c2caa97625`
+exposed a gap in RA-AC07: the standalone inventory script did not establish
+CMake's policy baseline, so CMake 3.x rejected its research-selection `IN_LIST`
+condition. Local CMake 4.x had masked the omission. All other 204 smoke tests
+passed, including the repaired rxbuild build-order test. The
+[failing job](https://github.com/adesutherland/CREXX/actions/runs/39055903770/job/117468173602)
+is the hosted reproduction; no compiler or runtime failure was observed.
+
+The intended result is the same default and selected C/G inventory contract on
+the repository's supported CMake versions. RA-AC07 remains the acceptance
+criterion: the existing default and research inventory regressions must pass,
+and a missing Classic adapter must still fail. RA-STEP08's compatibility repair
+establishes the root project's CMake 3.24 policy baseline in the script; no
+compiler, product-stage or packaging behaviour changes.
+
+Local verification on the same base with this two-line script change reproduced
+the original failure using CMake 3.24.3. After the fix, both 3.24.3 and local
+4.3.2 pass `cmake -DBUILD=<build> -DRESEARCH=ON '-DLANGUAGES=C;G'
+-P langtools/tests/check-products.cmake`, plus default, C-only, G-only and
+lowercase selections. Both reject an isolated inventory missing `llctarget.rxbin`.
+`ctest --test-dir cmake-build-debug -R '^(levell|llcompiler)_product_inventory$'
+passes both existing regressions. `cmake --build cmake-build-debug --target
+stage-product --parallel 8` also passes without warnings; unchanged functional
+qualification is reused. These checks close the
+local compatibility gap in RA-AC07/RA-STEP08; hosted verification remains the
+normal push-triggered workflows. Temporary tools and diagnostics are deleted
+after verification.
+
 ### Reorganisation verification and remaining scope
 
 Qualified in the main `develop` checkout against base
