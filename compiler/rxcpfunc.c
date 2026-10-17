@@ -1301,14 +1301,6 @@ void fre_ftre(Context *context) {
     *root = 0;
 }
 
-static void dump_error_ast(Context *context) {
-#ifndef __CMS__
-    if (context->debug_mode >= 2) {
-//        pdot_tree(context->ast, "error", context->file_name);
-    }
-#endif
-}
-
 static char error_in_node(ASTNode* node) {  // NOLINT
     if (node->node_type == ERROR) return 1;
     node = node->child;
@@ -2937,12 +2929,6 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     free(parent_context->master_context->loading_files[parent_context->master_context->loading_files_count - 1]);
     parent_context->master_context->loading_files_count--;
     /* No need to realloc down, it's fine */
-
-#ifndef __CMS__
-    if (parent_context->debug_mode >= 2) {
-//        pdot_tree(context->ast, "astimport", context->file_name);
-    }
-#endif
 
     ast_wlkr(context->ast, procedure_signature_walker, context);
 

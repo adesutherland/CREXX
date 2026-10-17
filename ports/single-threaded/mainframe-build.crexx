@@ -56,7 +56,7 @@ main: procedure = .int
   flags=.string[]
   native=.string; item=.string; writer=.string; product=.string
   manifest=.string[]
-  dirs="platform interpreter interpreter/rxvmplugin assembler binutils/include avl_tree utf8 inc rxpa compiler interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber"
+  dirs="platform interpreter interpreter/rxvmplugin assembler binutils/include third_party/avl_tree third_party/utf8 interpreter/rxvml rxpa compiler interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber"
   i=.int; j=.int
   do i=1 to words(dirs)
     call arrayappend flags,"-I"||source||"/"||word(dirs,i)

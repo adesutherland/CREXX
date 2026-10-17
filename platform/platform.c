@@ -485,7 +485,7 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
     }
 }
 
-#if !defined(_WIN32) && !defined(__CMS__) && !defined(CREXX_MAINFRAME_ELF)
+#if !defined(_WIN32) && !defined(CREXX_MAINFRAME_ELF)
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>

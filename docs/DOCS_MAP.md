@@ -90,10 +90,11 @@ select their dependency closure. Files left in a shared build output directory
 do not thereby become installable products. Native support archives deliberately
 remain in installed `bin/` for `crexx -native`.
 
-`S370` remains an explicitly held legacy VM/370 entry point: its external Docker,
-Hercules and guest workflow has not been qualified or replaced by this cleanup.
-Use `ports/single-threaded` for the maintained constrained-host build. Removing
-or redesigning the external legacy entry requires a separate consumer decision.
+`ports/single-threaded` owns the maintained CMS/TSO build and package recipes;
+`platform` owns their shared services and explicit target selection. The obsolete
+S370 Docker/GCCLIB route and its legacy compiler hooks are retired. No archive
+or duplicate `ports/cms` subtree replaces them. Guest qualification remains
+separate from desktop and source-layout checks.
 
 Current plans, supported documentation, maintained inputs and concise results
 belong in HEAD. Raw logs and completed run bundles do not. Book-local symlinks,

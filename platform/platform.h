@@ -70,11 +70,6 @@
 # warning "Functions may not be inlined as intended"
 #endif
 
-/* Load Platform Specific Headers */
-#ifdef __CMS__
-#include "cms.h"
-#endif
-
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define RX_FUNCTION_NAME __func__
 #elif defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)

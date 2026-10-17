@@ -383,8 +383,8 @@ They are not automatically beta 3 requirements because their files live under
 the already repaired #702 shell-name issue. Current `develop` preserves const
 through lookup instead. Recommend reconciling the PR as superseded rather than
 merging the old implementation. [PR #662](https://github.com/adesutherland/CREXX/pull/662)
-is the still-applicable `tiem` to `time` comment correction in `S370/cms.h`;
-it can be handled as a separate trivial contribution. Neither was changed here.
+corrects a comment in the obsolete S370 compatibility header; retirement of that
+route supersedes the proposed correction. Neither PR is changed by this cleanup.
 
 ## Recommended agreement
 

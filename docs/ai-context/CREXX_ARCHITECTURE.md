@@ -19,6 +19,11 @@ Root-level vendor sources live under `third_party/`; the first-party scanner
 fragment is `platform/encoding.re` and the VM lifecycle header is
 `interpreter/rxvml/rxvm.h`.
 
+Maintained CMS/TSO build recipes belong to `ports/single-threaded`; shared
+services use the explicit profiles in `platform/platform_config.h`. The old
+S370 Docker/GCCLIB route and its `__CMS__` hooks are retired; they are not part
+of the maintained native-platform contract.
+
 Components register their installed native targets and bytecode explicitly.
 `stage-product` depends on those selected producers, while provider manifests
 name and hash-check their dependency closure. Installation does not harvest the

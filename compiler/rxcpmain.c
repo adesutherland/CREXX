@@ -897,21 +897,10 @@ int rxcp_driver_main(int argc, char *argv[], const RxcpFrontend *frontend) {
      * optimisation passes may re-run it after rewriting the tree. */
     mark_const_args(context);
 
-#ifndef __CMS__
-    if (debug_mode >= 2) {
-        // pdot_tree(context->ast, "astgraph1", context->file_name);
-    }
-#endif
-
     /* Optimise AST Tree */
     if (context->optimise) {
         if (debug_mode >= 2) fprintf(stderr, "Optimising AST Tree\n");
         optimise(context);
-#ifndef __CMS__
-        if (debug_mode >= 2) {
-            // pdot_tree(context->ast, "astgraph2", context->file_name);
-        }
-#endif
     }
 
     /* Explicit C-style SELECT is a dispatch construct in both no-opt and
@@ -962,12 +951,6 @@ int rxcp_driver_main(int argc, char *argv[], const RxcpFrontend *frontend) {
     }
     if (debug_mode >= 2) fprintf(stderr, "Generating Assembler file %s\n", output_file_name);
     emit(context, outFile);
-
-#ifndef __CMS__
-    if (debug_mode >= 2) {
-        // pdot_tree(context->ast, "astgraph3", context->file_name);
-    }
-#endif
 
     finish:
 
