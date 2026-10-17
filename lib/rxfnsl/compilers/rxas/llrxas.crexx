@@ -56,6 +56,7 @@ compilation: class
   _origin = .int
   _fn = .int
   _registers = .int[]
+  _deferred = .int[]
   _slots = .int[]
   _callbase = .int
   _scratch = .int
@@ -134,7 +135,8 @@ compilation: class
     name = typename(id)
     select
       when name = 'core.void' then return '.void'
-      when name = 'core.boolean' | name = 'crexx.g.int64' | name = 'crexx.g.boolean' then return '.int'
+      when name = 'core.boolean' | name = 'crexx.g.int64' then return '.int'
+      when name = 'crexx.g.boolean' then return '.boolean'
       when name = 'crexx.g.text' then return '.string'
       when name = 'crexx.g.float64' then return '.float'
       when name = 'crexx.g.decimal' then return '.decimal'
@@ -152,22 +154,22 @@ compilation: class
     end
     call fail('LOWERING: missing local routine ' || identity)
     return ''
-  imported: method = .string
-    arg package = .string, name = .string, result = .string, arguments = .string
+  importsignature: method = .llcompilercontracts..signature
+    arg package = .string, name = .string
     i = .int
     do i = 1 to _names[0]
-      if _names[i] = name then return name
+      if _names[i] = name then return _signatures[i] as .llcompilercontracts..signature
     end
-    catalog = .llcompilercontracts..catalog; found = 0
+    catalog = .llcompilercontracts..catalog; image = .binary; found = 0
     do i = 1 to _packages[0]
       if _packages[i] = package then found = i
     end
     if found = 0 then do
-      image = .binary
       do
         image = readbinary(_path || '/' || package || '.rxbin')
       on signal
-        call fail('IMPORT: cannot read ' || package || '.rxbin'); return ''
+        call fail('IMPORT: cannot read ' || package || '.rxbin')
+        return .llcompilercontracts..signature.failed(_error)
       end
       catalog = .llcompilercontracts..catalog(image,67108864)
       found = _packages[0] + 1; _packages[found] = package; _catalogs[found] = catalog as .object
@@ -175,19 +177,26 @@ compilation: class
     else catalog = _catalogs[found] as .llcompilercontracts..catalog
     signature = catalog.lookup(name)
     if signature.error() <> '' then call fail('IMPORT: ' || signature.error())
-    else if signature.result() <> result | signature.arguments() <> words(arguments) then call fail('IMPORT: incompatible target signature ' || name)
+    if _error = '' then do
+      n = _names[0] + 1; _names[n] = name; _signatures[n] = signature as .object
+    end
+    return signature
+  imported: method = .string
+    arg package = .string, name = .string, result = .string, arguments = .string
+    signature = importsignature(package,name)
+    if _error <> '' then return ''
+    if signature.result() <> result | signature.arguments() <> words(arguments) then call fail('IMPORT: incompatible target signature ' || name)
     else do i = 1 to words(arguments)
       expected = word(arguments,i); expected = changestr('@',expected,' ')
       expected = changestr('.rexxvalue..',expected,'.'); expected = changestr('.rexxpool..',expected,'.'); expected = changestr('.rexxactivation..',expected,'.')
       if signature.type(i) <> expected | signature.optional(i) then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
     end
     if _error <> '' then return ''
-    n = _names[0] + 1; _names[n] = name; _signatures[n] = signature as .object
     return name
   /** Args are already in a private contiguous window. The return destination
    * is distinct; clearing the window after return releases borrowed references. */
   invoke: method = .void
-    arg destination = .string, name = .string, count = .int
+    arg destination = .string, name = .string, count = .int, ?presence = .binary
     i = .int
     if destination = '' then destination = reg(_scratch)
     if _sizing then do
@@ -198,7 +207,11 @@ compilation: class
     end
     call emit('load',reg(_callbase) || ',' || count)
     do i = 1 to count
-      call emit('settp',reg(_callbase + i) || ',768')
+      flags = 768
+      if ?presence then do
+        if <at..u8>(i - 1) presence = 0 then flags = 512
+      end
+      call emit('settp',reg(_callbase + i) || ',' || flags)
     end
     call emit('call',destination || ',' || name || '(),' || reg(_callbase))
     do i = 1 to count
@@ -250,9 +263,20 @@ compilation: class
     end
     return
   checkfunctions: method = .void
+    f = .int
     store = dereference _store
     if store.count(1) = 0 then do; call fail('LOWERING: missing main function'); return; end
-    if store.text(store.get(1,1,1)) <> '$MAIN' then call fail('LOWERING: first function must be $MAIN')
+    if _level = 'c' & store.text(store.get(1,1,1)) <> '$MAIN' then call fail('LOWERING: first Classic function must be $MAIN')
+    hasexport = 0
+    do f = 1 to store.count(1)
+      if store.get(1,f,6) > 0 then do
+        hasexport = 1; identity = store.text(store.get(1,f,6)); split = pos('.',identity)
+        if split < 2 | split = length(identity) | pos('.',identity,split + 1) > 0 then call fail('LOWERING: invalid export identity')
+        else if verify(identity,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.') <> 0 then call fail('LOWERING: invalid export identity')
+        else if verify(left(identity,1) || substr(identity,split + 1,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') <> 0 then call fail('LOWERING: invalid export identity')
+      end
+    end
+    if store.text(store.get(1,1,1)) <> '$MAIN' & hasexport = 0 then call fail('LOWERING: library requires an export')
     do f = 1 to store.count(1)
       resulttype = typename(store.get(1,f,2)); count = store.get(1,f,5); first = store.get(1,f,4)
       if _level = 'c' then do
@@ -260,7 +284,7 @@ compilation: class
         else if typename(store.get(12,first,2)) <> 'crexx.c.arguments' | typename(store.get(12,first + 1,2)) <> 'crexx.c.numeric' then call fail('LOWERING: Classic parameter ABI')
       end
       else do
-        if f = 1 & (resulttype <> 'crexx.g.int64' | count <> 0) then call fail('LOWERING: G main ABI')
+        if store.text(store.get(1,f,1)) = '$MAIN' & (resulttype <> 'crexx.g.int64' | count <> 0) then call fail('LOWERING: G main ABI')
         ignored = targettype(store.get(1,f,2))
         do a = 1 to count
           ignored = targettype(store.get(12,first + a - 1,2))
@@ -296,6 +320,7 @@ compilation: class
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 2; _callbase = 1
       if _level = 'c' then do; _locals = 6; _callbase = 3; end
+      if store.text(store.get(1,1,1)) = '$MAIN' then do
       call emit('main()','.locals=' || _locals)
       call clearsource()
       if _level = 'c' then do
@@ -311,6 +336,7 @@ compilation: class
         call invoke('r0','llf1',0); call emit('ret','r0')
       end
       _phase = 'entry flush'; call flush()
+      end
       do f = 1 to store.count(1)
         _phase = 'function ' || f; _fn = f; call procedurebody()
         if _error <> '' then return
@@ -321,7 +347,8 @@ compilation: class
         args = ''
         do j = 1 to signature.arguments()
           if j > 1 then args = args || ','
-          args = args || 'p' || j || '=' || signature.type(j)
+          if signature.optional(j) then args = args || '?'
+          args = args || signature.paramname(j) || '=' || signature.type(j)
         end
         call _writer.line('  .meta ' || quote(_names[i] as .binary) || '=' || quote(signature.flags_text() as .binary) || ' ' || quote(signature.result() as .binary) || ' ' || _names[i] || '() ' || quote(args as .binary))
       end
@@ -344,6 +371,19 @@ compilation: class
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
     store = dereference _store; blocks = .int[]
+    _phase = 'default planning'
+    uses = .int[]; valueid = .int; name = .string
+    do i = 1 to store.count(4); uses[i] = 0; end
+    do i = 1 to store.count(3); _deferred[i] = 0; end
+    do i = 1 to store.count(6)
+      valueid = store.get(6,i,1); uses[valueid] = uses[valueid] + 1
+    end
+    do i = 1 to store.count(3)
+      if store.get(3,i,1) <> 9 then iterate
+      valueid = store.operand(i,1); producer = store.get(4,valueid,1)
+      name = store.opname(store.get(3,producer,1))
+      if uses[valueid] = 1 & (name = 'core.constant' | name = 'crexx.g.decimal.default') then _deferred[producer] = i
+    end
     _phase = 'slot allocation'; next = 1
     do i = 1 to store.count(5)
       if store.get(5,i,1) = _fn then do
@@ -385,15 +425,19 @@ compilation: class
     _locals = next
     if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
     _origin = 0
-    call emit('llf' || _fn || '()','.locals=' || _locals)
+    declaration = '.locals=' || _locals
+    if store.get(1,_fn,6) > 0 then declaration = declaration || ' .expose=' || store.text(store.get(1,_fn,6))
+    call emit('llf' || _fn || '()',declaration)
     call clearsource()
     _routine = store.text(store.get(1,_fn,1))
     _phase = 'signature'; args = ''; first = store.get(1,_fn,4)
     do i = 1 to store.get(1,_fn,5)
       if i > 1 then args = args || ','
+      if store.get(12,first + i - 1,3) then args = args || '?'
       args = args || 'p' || i || '=' || targettype(store.get(12,first + i - 1,2))
     end
     _phase = 'metadata'; name = 'llprogram.' || store.text(store.get(1,_fn,1))
+    if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',quote(name as .binary) || '="b" ' || quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || quote(args as .binary))
     /* Default typed profile; Classic helpers install their explicit snapshots. */
     call emit('numsci','18,1,1')
@@ -416,7 +460,7 @@ compilation: class
       id = store.get(2,b,2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
-        call source(op.origin())
+        if _deferred[id] = 0 then call source(op.origin())
         call selectop(op)
         id = store.get(3,id,3)
       end
@@ -507,6 +551,7 @@ compilation: class
   selectop: method = .void
     arg op = .llir..opview
     store = dereference _store; name = op.name(); dest = result(op); id = op.id()
+    if _deferred[id] > 0 then return
     select
       when name = 'core.constant' then do
         value = op.result(); type = typename(value.type().id()); bytes = value.bytes()
@@ -535,6 +580,23 @@ compilation: class
         end
       end
       when name = 'core.argument' then call emit('copy',dest || ',a' || store.get(3,id,12))
+      when name = 'core.hasarg' then do
+        call emit('getandtp',dest || ',a' || store.get(3,id,12) || ',256')
+      end
+      when name = 'core.optionalargument' then do
+        label = 'llarg' || id; ordinal = store.get(3,id,12)
+        call emit('brtpandt',label || '_present,a' || ordinal || ',256')
+        producer = store.get(4,op.input(1).id(),1)
+        if _deferred[producer] = id then do
+          _deferred[producer] = 0
+          call selectop(_graph.operation(producer))
+          _deferred[producer] = id
+        end
+        call emit('copy',dest || ',' || input(op))
+        call emit('br',label || '_done')
+        call emit(label || '_present:'); call emit('copy',dest || ',a' || ordinal)
+        call emit(label || '_done:')
+      end
       when name = 'core.load' then do
         slot = store.get(3,id,12); mnemonic = 'copy'
         if typename(store.get(5,slot,2)) = 'crexx.c.pool' then do
@@ -570,37 +632,69 @@ compilation: class
     return
   typedcall: method = .void
     arg op = .llir..opview
-    symbol = .string; i = .int
-    identity = op.attribute('target') as .string; store = dereference _store
-    if left(op.name(),18) = 'crexx.calls.local.' then do
+    symbol = .string; resulttype = .int; view = .llir..function
+    store = dereference _store; actual = dereference _schema.data(); descriptor = actual.opindex(op.name())
+    if actual.arity(descriptor,3) <> 3 then do; call fail('LOWERING: call attributes'); return; end
+    if actual.fieldname(descriptor,3,1) <> 'target' | actual.fieldname(descriptor,3,2) <> 'package' | actual.fieldname(descriptor,3,3) <> 'presence' then do; call fail('LOWERING: call attribute names'); return; end
+    if typename(actual.fieldtype(descriptor,3,1)) <> 'crexx.g.text' | typename(actual.fieldtype(descriptor,3,2)) <> 'crexx.g.text' | typename(actual.fieldtype(descriptor,3,3)) <> 'crexx.calls.presence' then do; call fail('LOWERING: call attribute types'); return; end
+    if actual.effectvalue(descriptor,1) <> 'call' | actual.effectvalue(descriptor,2) <> 'condition' | actual.effectvalue(descriptor,3) <> 'returns' then do; call fail('LOWERING: call effects'); return; end
+    identity = op.attribute('target') as .string; package = op.attribute('package') as .string; mask = op.attribute('presence')
+    count = <blen>(mask); fn = 0; signature = .llcompilercontracts..signature
+    if package = '' then do
       symbol = localname(identity)
       if symbol = '' then return
-      fn = substr(symbol,4) as .int
-      if store.get(1,fn,5) <> op.inputs() then do; call fail('LOWERING: local argument count'); return; end
-      first = store.get(1,fn,4)
-      do i = 1 to op.inputs()
-        if op.input(i).type().id() <> store.get(12,first + i - 1,2) then call fail('LOWERING: local argument type')
-      end
-      resulttype = store.get(1,fn,2)
-      if op.results() = 0 then do
-        if targettype(resulttype) <> '.void' then call fail('LOWERING: local result shape')
-      end
-      else if op.results() <> 1 then call fail('LOWERING: local result count')
-      else if op.result().type().id() <> resulttype then call fail('LOWERING: local result type')
+      fn = substr(symbol,4) as .int; view = _graph.function(fn)
+      if view.arguments() <> count then do; call fail('LOWERING: local argument count'); return; end
+      resulttype = view.resulttype().id()
     end
-    else if op.name() = 'crexx.calls.rxfnsb.length' & identity = 'rxfnsb.length' then do
-      if op.inputs() <> 1 | op.results() <> 1 then do; call fail('LOWERING: LENGTH shape'); return; end
-      if targettype(op.input(1).type().id()) <> '.string' | targettype(op.result().type().id()) <> '.int' then call fail('LOWERING: LENGTH types')
-      symbol = imported('library','rxfnsb.length','.int','.string')
+    else do
+      if verify(package,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 | package = '' then do; call fail('IMPORT: invalid module identity'); return; end
+      if package <> 'library' & left(identity,length(package) + 1) <> package || '.' then do; call fail('IMPORT: target is outside selected module'); return; end
+      if package = 'library' & identity <> 'rxfnsb.length' then do; call fail('IMPORT: unsupported library callable'); return; end
+      member = substr(identity,pos('.',identity) + 1)
+      if verify(left(package,1) || left(member,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') <> 0 | member = '' | verify(member,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then do; call fail('IMPORT: invalid callable identity'); return; end
+      signature = importsignature(package,identity); symbol = identity
+      if _error <> '' then return
+      if signature.arguments() <> count then do; call fail('IMPORT: argument count changed'); return; end
+      if signature.flags_text() <> 'b' & signature.flags_text() <> 'g' then do; call fail('IMPORT: unsupported callable flags'); return; end
+      resulttype = importtype(signature.result())
     end
-    else do; call fail('LOWERING: unsupported callable ' || identity); return; end
-    do i = 1 to op.inputs(); call argcopy(i,input(op,i)); end
-    call invoke(result(op),symbol,op.inputs())
+    supplied = 0; i = .int; expected = .int; optional = .int
+    do i = 1 to count
+      present = <at..u8>(i - 1) mask
+      if present > 1 then do; call fail('LOWERING: invalid presence byte'); return; end
+      if fn > 0 then do; expected = view.argumenttype(i).id(); optional = view.optional(i); end
+      else do; expected = importtype(signature.type(i)); optional = signature.optional(i); end
+      if present = 0 & optional = 0 then do; call fail('LOWERING: missing required argument'); return; end
+      if present then do
+        supplied = supplied + 1
+        if supplied > op.inputs() then do; call fail('LOWERING: missing supplied input'); return; end
+        if op.input(supplied).type().id() <> expected then call fail('LOWERING: argument type')
+        if actual.fieldname(descriptor,1,supplied) <> 'arg' || i then call fail('LOWERING: argument position')
+        call argcopy(i,input(op,supplied))
+      end
+    end
+    if supplied <> op.inputs() then call fail('LOWERING: excess supplied inputs')
+    if resulttype = 1 then do
+      if op.results() <> 0 then call fail('LOWERING: void call result')
+    end
+    else if op.results() <> 1 then call fail('LOWERING: call result count')
+    else if op.result().type().id() <> resulttype then call fail('LOWERING: call result type')
+    if _error <> '' then return
+    call invoke(result(op),symbol,count,mask)
     return
+  importtype: method = .int
+    arg name = .string
+    index = wordpos(name,'.void .int .string .boolean .float .decimal')
+    if index = 0 then do; call fail('IMPORT: unsupported scalar type ' || name); return 0; end
+    if index = 1 then return 1
+    type = _schema.type('crexx.g.' || word('void int64 text boolean float64 decimal',index))
+    return type.id()
   typed: method = .void
     arg op = .llir..opview, name = .string
     target = .string
     dest = result(op); left = ''; if op.inputs() > 0 then left = input(op)
+    if name = 'fromtruth' then do; call emit('copy',dest || ',' || left); return; end
     if name = 'decimal.default' then do; call emit('null',dest); return; end
     if name = 'say' then do; call emit('say',left); return; end
     if name = 'exit' then do; call emit('exit',left); return; end

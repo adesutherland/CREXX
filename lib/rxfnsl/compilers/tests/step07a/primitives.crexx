@@ -1,0 +1,18 @@
+options levelg
+namespace primitives expose truth text real decimal emit
+truth: procedure = .boolean
+  arg ?value=.boolean
+  return value
+text: procedure = .string
+  arg value='fallback'
+  return value
+real: procedure = .float
+  arg value=-0.25
+  return value
+decimal: procedure = .decimal
+  arg value=0.125d
+  return value
+emit: procedure = .void
+  arg value='empty'
+  say value
+  return

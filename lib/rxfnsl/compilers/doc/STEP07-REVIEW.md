@@ -1,10 +1,17 @@
 # STEP07 proposal: expand call and module contracts
 
-**For review, not implemented or authorised by STEP06 publication.** Full
-STEP07/STEP07B obligations remain in [PLAN.md](../PLAN.md). This proposes a
-small first increment, STEP07A, with all compiler algorithms in Level B using
-Level L grammar, AST, IR, analysis and emitter libraries. Existing production
-language syntax is the reference; this introduces no new source language.
+**STEP07A and its exact API approved.** Adrian approved the bounded increment
+on 15 October and its [public API](STEP07A-CONTRACTS.md) on 16 October 2026.
+Implementation uses Level B and the Level L grammar, AST, IR, analysis and
+writer libraries. Existing production syntax remains the reference. Develop
+publication was authorised on 17 October; full STEP07/STEP07B obligations remain in
+[PLAN.md](../PLAN.md).
+
+**Local completion, 16 October 2026:** F7A-AC01–06 and F7A-STEP01–04 are
+verified for this bounded increment. The [validation summary](../PLAN.md#step07a-validation)
+maps the criteria to independent Level L, C/G, installed and sanitizer evidence.
+The implementation is included in the authorised develop delivery; CI monitoring
+remains paused and hosted outcomes are separate.
 
 ## Vision and intended outcome
 
@@ -24,7 +31,7 @@ not fall back to the native compiler.
 
 ## Simple paired source example
 
-Proposed new G coverage, using existing typed syntax:
+Implemented G coverage, using existing typed syntax:
 
 ```rexx
 options levelg
@@ -62,9 +69,9 @@ from each language contract, not matching output in this one example.
 The [procedure reference](../../../../docs/books/crexx_language_reference/procedures_and_arguments.md)
 defines typed defaults and presence; current Classic
 [argument tests](../tests/backend/arguments-c.crexx) distinguish omitted/empty
-values. G optional/default source forms are **outside the current PoC**, so
-this is a proposed admission test, not a runnable new-tool claim. The C control
-uses existing PoC forms.
+values. G optional/default source forms extend the original PoC in STEP07A. Both
+examples now compile through the new tools; their executed outputs and RXAS
+are retained with the qualification receipt.
 
 ## Tree, IR and emission responsibilities
 
@@ -111,17 +118,34 @@ records; the IR remains compact rather than text-based.
    Formal research performance tests are not required. Proper B and full
    replacement remain open.
 
-## Proposed sequence and gates
+## Approved sequence and gates
 
 | Step | Work | Gate / acceptance |
 |---|---|---|
-| **F7A-STEP01** | Pin signatures/presence/default/export metadata and paired corpus; show exact tree/IR/API deltas | STEP07A approval, then any public API decision; AC01 |
-| **F7A-STEP02** | Add required shared checks/views, G admission and C contract tests | AC02/04, independent Level L regression |
-| **F7A-STEP03** | Carry contracts through separate G modules and C runtime imports to the existing backend | AC03/05, no old-compiler delegation |
-| **F7A-STEP04** | Qualify focused semantic/error/shape/installed paths, document remaining gaps | AC01–06; publication separately authorised |
+| **F7A-STEP01 — complete** | Pin signatures/presence/default/export metadata and paired corpus; show exact tree/IR/API deltas | Exact API approved 16 October; AC01 verified |
+| **F7A-STEP02 — complete** | Add required shared checks/views, G admission and C contract tests | AC02/04 verified, including independent Level L regression |
+| **F7A-STEP03 — complete** | Carry contracts through separate G modules and C runtime imports to the existing backend | AC03/05 verified, no old-compiler delegation |
+| **F7A-STEP04 — locally complete** | Qualify focused semantic/error/shape/installed paths, document remaining gaps | AC01–06 verified locally; develop publication authorised 17 October |
 
-Next propose reference/alias and ownership facts alongside Classic pool
-exposure, then wider structured loops and language forms. A proper B source/ABI
-inventory can progress alongside these slices; STEP07B/self-hosting
-implementation remains separately reviewed. Conditions, TRACE and INTERPRET
-retain their existing gates.
+**Next delivery priority, approved 16 October:** complete Level C before
+STEP07B. The [C-first milestone](../PLAN.md#c-first-delivery-milestone) supersedes
+the earlier balanced C/G expansion sequence. Adrian's subsequent direction is
+to review instructions one at a time, starting with SAY, and leave STEP08
+INTERPRET and its mechanism review until later. Each instruction records its
+semantics, errors, RXAS and shared dependencies; eventual complete C still
+requires Classic host/condition/TRACE coverage and INTERPRET. G remains
+maintained at current coverage; proper B/self-hosting and further G expansion
+are deferred with their criteria intact. Actual RXAS quality and independent
+semantic expectations are required throughout; native C output may be faulty
+or inefficient. Exact public API and architectural decision gates remain.
+
+## F7A-STEP01 checkpoint
+
+The [contract and tree proposal](STEP07A-CONTRACTS.md) records the source-form
+inventory, minimal public additions, numeric format transition, call matching,
+metadata and emission obligations. The [native controls](../PLAN.md#step07a-validation)
+ran 38 focused commands, including 14 executions on both VMs. B/G/C optional
+defaults and presence, separately compiled G metadata and a missing-required
+argument diagnostic are pinned. They validate the reference behaviour only.
+That design checkpoint was reference evidence. The separate implementation
+receipt now closes the approved increment; STEP07B remains separately gated.

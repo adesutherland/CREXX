@@ -48,13 +48,27 @@ parsed: class
     kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; pendingif = 0; after = ''
-    previous = -1; term = 0
+    previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
       kind = layout.symbol(i); first = layout.start(i); last = layout.finish(i + 1)
       spelling = upper(binsubstr(source,first + 1,last - first) as .string)
       word = ''; next = layout.symbol(i + 1)
+      /* Classic radix suffixes are whole adjacent symbols, not concatenated
+       * variables. Keep the original bytes in one String token and let the
+       * semantic mapper validate/decode them; G retains its own contract. */
+      if level = 'c' & kind = language.tokenid('string') & next = id & layout.start(i + 1) = last then do
+        suffixend = layout.finish(i + 2)
+        suffix = upper(binsubstr(source,last + 1,suffixend - last) as .string)
+        if suffix = 'X' | suffix = 'B' then do
+          last = suffixend; i = i + 1; next = layout.symbol(i + 1)
+        end
+      end
+      if kind = sep then do; namespaceclause = 0; exports = 0; end
       if kind = id then do
-        if next = colon then kind = language.tokenid('labelname')
+        if level = 'g' & exports then kind = language.tokenid('exportname')
+        else if level = 'g' & namespaceclause & spelling = 'EXPOSE' then do; word = 'EXPOSE'; exports = 1; end
+        else if level = 'g' & clause & spelling = 'NAMESPACE' & next <> equals then do; word = 'NAMESPACE'; namespaceclause = 1; end
+        else if next = colon then kind = language.tokenid('labelname')
         else if depth = 0 then do
           if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
           else if after = 'DO' & spelling = 'WHILE' then word = 'WHILE'
@@ -120,8 +134,9 @@ parsed: class
     callword = language.tokenid('callword')
     do i = 0 to normalized.size() - 1
       kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
-      leftterm = previous = id | previous = number | previous = string | previous = closing
-      rightterm = kind = id | kind = number | kind = string | kind = opening
+      if level = 'g' & beforeprevious = callword & previous = id & kind = opening then kind = language.tokenid('callopen')
+      leftterm = previous = id | previous = number | previous = string | previous = closing | (level = 'g' & previous = language.tokenid('presence'))
+      rightterm = kind = id | kind = number | kind = string | kind = opening | (level = 'g' & kind = language.tokenid('presence'))
       function = previous = id & kind = opening & previousend = first
       if leftterm & rightterm & function = 0 & beforeprevious <> callword then do
         token = language.tokenid('abut')
@@ -159,7 +174,7 @@ select_language: procedure = .lllanguage..definition expose cgrammar ggrammar
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))

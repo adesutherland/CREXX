@@ -1,0 +1,8 @@
+options levelc
+say scale(7)
+say scale(7,3)
+exit 0
+scale: procedure
+  arg value, factor
+  if \arg(2,'E') then factor = 2
+  return value * factor

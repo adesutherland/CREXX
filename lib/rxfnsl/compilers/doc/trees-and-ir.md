@@ -36,7 +36,7 @@ has count zero, rather than a fake value.
 |---|---|---|
 | Program | `body: Sequence`; G also `routines: GProcedure*` | Top-level unit; Classic labels remain in the statement sequence. |
 | Sequence / Block | `items: node*` / `body: Sequence` | Authored order / explicit DO group. |
-| Number / String / Name | `spelling: text` | Exact numeral, quoted literal or unresolved name. |
+| Number / String / Name | `spelling: text` | Exact numeral, quoted literal (including an adjacent Classic X/B suffix) or unresolved name. |
 | Chain | `operands: node+`, `operators: node*` | One precedence level, left-to-right order. Exactly one fewer operator than operand. A zero-operator chain is transparent during lowering. |
 | Operator tokens | no fields; kind is `plus`, `minus`, `times`, `divide`, `assign`, `ne`, `lt`, `le`, `gt`, `ge`, `strict`, `concat`, `blank`, `abut`, `and`, `or`, `xor`, `not` | Operator identity and its original span; `assign` means equality when used in a comparison chain. |
 | Prefix / Group | `operator: node, value: node` / `value: node` | Unary operation / explicit parentheses. |
@@ -62,11 +62,18 @@ never inferred from a flattened text expression.
 | Type | `spelling: text` |
 | Cast | `value: node, targets: Type*`, applied in authored order |
 | GProcedure | `name: text, result: Type, body: Sequence` |
-| GArg / Parameter | `items: Parameter+` / `name: text, type: Type` |
+| GArg | `items: node+` containing the parameter alternatives below |
+| Parameter / OptionalParameter | `name: text, type: Type` (required / primitive default) |
+| DefaultParameter | `name: text, value: Number/String/Prefix` (literal default) |
+| Presence | `spelling: text`, retaining `?name` |
+| GNamespace / Export | `name: text, exports: Export+` / `name: text` |
 | GImport | `name: text` |
 
-A procedure's first GArg declares its required parameters. Body intervals and
-parameter/result types are copied into a routine table. G declarations and
+A procedure's first GArg declares its positional parameters. Body intervals,
+parameter/result types, optional flags, default parameter nodes and export
+identities are kept in the routine table. Namespace exports are child nodes,
+not a second text-list representation. The call inventory records only observed
+target/presence shapes and their selected scalar contracts. G declarations and
 inferred bindings have separate scope/name/type/default records. The mapper
 creates typed IR slots and entry stores, rather than treating a typed declaration
 as an uninitialised C-language variable.

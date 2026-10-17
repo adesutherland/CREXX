@@ -22,7 +22,7 @@ commands are `llrxc-g` and `llrxc-c`, with distinct libraries and build targets.
 | POC-04 | Assignment, SAY, NOP, simple DO/END groups, nested IF/THEN/ELSE | Empty optional ELSE and nearest-IF association; Classic keyword-as-name assignment. SAY operands retain each language's conversion and spacing rules. |
 | POC-05 | Pre-test `DO WHILE`; unnamed LEAVE and ITERATE | Zero, one and several iterations; nested loops; early return from a loop. Post-test, counted, named and combined loop forms follow in Phase B. |
 | POC-06 | Named local routines, CALL, expression calls, RETURN and top-level EXIT | Recursive calls and argument evaluation order are included. G has explicit scalar parameter/result types and `.void`. C routine entries are label followed immediately by PROCEDURE; shared-pool label-only routines/fallthrough are diagnosed as outside this profile. Main must terminate before such routine entries. |
-| POC-07 | C ARG with one simple target per comma-separated argument position, omitted actual arguments, `ARG()`/`ARG(n,'E')`, CALL RESULT handling | Use the existing activation and Classic ARG uppercase/parse semantics. RETURN without a value clears the CALL result according to the current contract. G CALL discards a returned value. G optional/default/vararg and source EXPOSE contracts follow later. |
+| POC-07 | C ARG with one simple target per comma-separated argument position, omitted actual arguments, `ARG()`/`ARG(n,'E')`, CALL RESULT handling | Use the existing activation and Classic ARG uppercase/parse semantics. RETURN without a value clears the CALL result according to the current contract. G CALL discards a returned value. STEP07A now adds scalar G optional defaults and presence; varargs and procedure EXPOSE remain later. |
 | POC-08 | C NUMERIC DIGITS/FUZZ and FORM SCIENTIFIC/ENGINEERING, including reset and expression-valued DIGITS/FUZZ | Evaluate operands once; preserve inherited/restored call context and runtime errors. G uses existing default context plus contextual decimal literals; broader G NUMERIC/options profiles follow in Phase B. |
 | POC-09 | Library call/import path | G `import rxfnsb` and LENGTH; C LENGTH, ARG and DIGITS direct BIF routes through existing runtime contracts. Read the required callable/type/member/argument/autoload metadata in cREXX. C's runtime may need object/member contracts internally even though authored classes are outside the slice. |
 | POC-10 | Clean-input gate, syntax/type/profile diagnostics, source origins, runtime error locations | Compilation reports multiple syntax errors where existing recovery supports it; repaired input never produces a successful executable. Plain syntax failure and valid-but-unsupported source have distinct codes. |
@@ -89,8 +89,8 @@ whole fixture passes through the PoC.
 
 | Area | Existing contract owner | Later obligation |
 |---|---|---|
-| Proper B and self-hosting | [B implementation contract](../../../../docs/ai-context/CREXX_LEVELB_AUTHORING.md), [bootstrap architecture](architecture.md#bootstrap-native-seed-to-self-hosted-b-and-l) | STEP07B inventories full B language/ABI coverage and the compiler/library source closure. Native B seeds proper B through L; proper B rebuilds B libraries, L and itself with stage comparison and independent regressions. |
-| Complete Classic instructions/BIFs | [Classic worklist](../../../../docs/planning/release-1/levelc-compatibility-worklist.md), [working architecture](../../../../compiler/docs/levelc_working_architecture.md) | All supported instructions and catalogued BIFs, stems/exposure, full ARG/PARSE, label dispatch, SIGNAL, conditions, TRACE, ADDRESS and streams. INTERPRET remains STEP08 and existing LC acceptance. |
+| Proper B and self-hosting | [B implementation contract](../../../../docs/ai-context/CREXX_LEVELB_AUTHORING.md), [bootstrap architecture](architecture.md#bootstrap-native-seed-to-self-hosted-b-and-l) | STEP07B is deferred until after the C-first milestone, retaining full B language/ABI and compiler/library closure criteria. Native B seeds proper B through L; proper B rebuilds B libraries, L and itself with stage comparison and independent regressions. |
+| Complete Classic instructions/BIFs | [Classic worklist](../../../../docs/planning/release-1/levelc-compatibility-worklist.md), [working architecture](../../../../compiler/docs/levelc_working_architecture.md) | Active C-first priority: all agreed instructions and catalogued BIFs, stems/exposure, full ARG/PARSE, label dispatch, SIGNAL, conditions, TRACE, ADDRESS and streams. Review proceeds instruction by instruction. STEP08 INTERPRET and its mechanism review are deferred until later, retaining existing LC acceptance and eventual C-completion scope. |
 | G language | [Language reference](../../../../docs/books/crexx_language_reference/statements.md), [types](../../../../docs/books/crexx_language_reference/data_types.md), [classes](../../../../docs/books/crexx_language_reference/classes_and_interfaces.md) | Classes/interfaces, references, arrays, complete numerics/options, initialisers, namespace exposure, all routine forms and extensions/tasks. |
 | Module ABI | [Metadata conformance](../../../../compiler/docs/metadata_conformance.md) | Full imports, exports, providers/autoload, layouts, optional defaults, source and supported inline templates. Phase A emits no optional inline body and refuses unsupported required contracts explicitly. |
 | Tools | [Compiler architecture](../../../../docs/ai-context/CREXX_ARCHITECTURE.md) | Wrappers, project builds, diagnostics/localisation, editors, source imports and host services. Existing commands keep their routing until replacement. |
@@ -99,3 +99,13 @@ whole fixture passes through the PoC.
 STEP07 turns this category inventory into a feature-by-feature disposition
 before claiming replacement coverage. Newly added upstream features must enter
 that inventory; the PoC scope is not a frozen definition of the full language.
+
+## STEP07A admission beyond the original PoC
+
+The [approved call contract](STEP07A-CONTRACTS.md) adds scalar literal/primitive
+optional formals, original-presence queries, positional holes and declaration-only
+G namespace providers with checked qualified imports. C keeps its existing ARG
+semantics and runtime-call allowlist with stronger signature checks. Arbitrary
+default expressions, classes/references/arrays, provider initialisers, source
+imports, general C external loading and INTERPRET remain open. This extension
+does not close the full migration categories above.

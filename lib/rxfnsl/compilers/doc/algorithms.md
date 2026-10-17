@@ -34,7 +34,9 @@ and review a remedy instead of silently adding an experimental backend.
    DFA. The original bytes remain owned by the request. Lexical failure stops
    before syntax or semantic processing.
 2. Classify names with clause, parenthesis and IF/THEN state. Assignment/label
-   lookahead protects contextual names. Classify before separator normalization:
+   lookahead protects contextual names. For C, combine a string and its adjacent
+   single-symbol X/B suffix into one original-source token before inserting any
+   concatenation. Longer/spaced symbols remain separate. Classify before separator normalization:
    a variable named THEN must not swallow the following instruction. Normalize
    separators adjoining actual THEN/ELSE, and physical newlines inside parentheses.
    Insert zero-width blank/abuttal tokens from retained token adjacency, excluding
@@ -44,17 +46,23 @@ and review a remedy instead of silently adding an experimental backend.
    translated to source spellings, then formatted with the exact byte location,
    Unicode column, escaped excerpt and caret. No repaired input is compiled.
 4. Walk the AST iteratively to check the nesting limit before recursive semantic
-   visitors. Inventory routines; collect G bindings; repeatedly infer implicit
+   visitors. Inventory routines, exports and explicit imports; collect G bindings; repeatedly infer implicit
    types until stable. The type order only widens; the pass guard is `5*bindings+1`.
    Node-visit work accounting also covers expression type queries. Unknown names,
    unresolved types and duplicate declarations fail before a graph is published.
-5. Register local call signatures and construct the graph. G slots receive defaults
+5. Register only observed target/presence call signatures and construct the graph. G slots receive defaults
    and parameter stores at entry. C functions receive argument and numeric packets
    and create a private pool. A loop stack resolves LEAVE/ITERATE. Each condition
    produces a core Boolean branch. Values crossing newly created blocks are
    stored in temporary slots and reloaded; block-local handles never cross joins.
+   C ordinal literals validate grouped digits and use B `b2x`/`x2c` at compilation
+   to construct exact Unicode text constants, without runtime conversion. Original
+   spelling/ranges remain in the AST. Validation and decoding scan the bounded
+   literal; malformed digits/groups fail before publishing successful IR.
 6. Evaluate call arguments in source order into private slots/packets before
-   building the final operation. C omission bits and result presence are explicit.
+   building the final operation. C omission bits and result presence are explicit. G masks contain one 0/1
+   byte per formal, and inputs only for supplied positions. Every required
+   position is checked, including those after optional formals.
    Read selected external signatures from bounded RXBIN007 data; never execute
    import metadata. Freeze and verify the complete module, then publish it.
 
@@ -196,3 +204,26 @@ concatenation. Benchmark the
 actual output workload before adding tree balancing. Emit N bytes with bounded
 chunk overhead and one final materialisation or streaming traversal; do not
 repeatedly concatenate the entire accumulated string.
+
+## STEP07A contract processing
+
+Each observed G call resolves a local or selected imported signature before
+schema freeze. Cache keys include target and presence pattern. The operand
+order is ascending formal position and source order; missing positions never
+create a default expression in the caller. Signature matching is linear in
+formal count after the existing linear symbol lookup. The number of call
+schemas is bounded by observed source calls and schema/IR budgets; there is no
+power-set expansion. Duplicate selected metadata records are ambiguous, even
+if they otherwise have matching types. Whole-literal validation distinguishes
+legacy defaults from type names and never evaluates metadata as source code.
+
+Per-function emission scans uses to defer only a sole-use pure constant (or
+primitive decimal default) feeding an optional read. The constant is emitted
+inside that read's missing branch. A multi-use or nonliteral fallback retains
+its original eager evaluation. Presence reads do not modify argument registers;
+private-slot assignments therefore cannot change presence, including recursion.
+Shared reverse demand can remove unused hasarg/optional-read operations, while
+conservative call effects prevent propagation through unknown callee state.
+Export validation precedes target text publication. These scans use bounded
+IR tables; repeated per-function scans are not a claim of globally linear
+compile complexity or an optimised register allocator.

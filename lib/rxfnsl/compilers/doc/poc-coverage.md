@@ -99,17 +99,20 @@ entry fallthrough jumps, false authored provenance and physical source paths.
 | Classic call flag/count/copy/null groups | Required argument presence, borrowing and cleanup under the current ABI | Compiler RXAS target adapter; later specialised call lowering must preserve ownership and error behaviour. |
 | Classic numeric/context/pool helpers | Context can change at runtime; generic passes have no licence to guess Classic arithmetic or pool facts | Compiler semantic services and target adapter; later guarded facts/specialisation, with context mutation/recursion/error tests. |
 | Clause ID zero, full TRACE and conditions | Truthful absence of authored grouping; current essential range/origin and fatal-message relay only | Source-event/condition gate before broad TRACE, handler or INTERPRET claims. |
-| Narrow imports and scalar types | Deliberate Phase A contracts | Balanced STEP07 coverage; no arbitrary module/class/ref/source-import support claimed. |
+| Narrow imports and scalar types | Deliberate Phase A contracts | C-first STEP07 coverage and checked Classic call contracts; wider G/module/class/ref/source-import support remains later. |
 
 The PoC demonstrates that Level L can host both deliberately different
 frontends, generic checked transformations and real target emission. Its useful
 shared outputs are the numeric IR/contracts, reconstruction and proof-aware
-passes, source index, owned failures and writer. The next review should start
-with **typed/local call and module contracts for G/B alongside Classic
-argument/activation contracts**, using independent Level L tests wherever a
-reusable contract is added. Inventory optional arguments, explicit presence,
-return values and import errors before choosing a surface. Follow with
-reference/alias effects and Classic pool exposure, then structured loop forms.
-Proper B's source/ABI inventory can proceed alongside this work; implementation
-and INTERPRET mechanism changes need their own review. No STEP07 surface is
-approved by completion of this bounded STEP06 qualification.
+passes, source index, owned failures and writer. STEP07A now extends those services with optional-input/export views and scalar
+call/module coverage. Its [contract](STEP07A-CONTRACTS.md) and
+[validation summary](../PLAN.md#step07a-validation) own the new coverage; the STEP06
+results above remain historical qualification for their exact inputs.
+The approved [C-first milestone](../PLAN.md#c-first-delivery-milestone) now
+prioritises complete Classic coverage, including pool exposure and wider forms,
+conditions/TRACE, hosts and STEP08 INTERPRET. Its full crosswalk remains open;
+this historical PoC map does not replace it. Proper B and G expansion are
+deferred, while existing G and independent Level L regression coverage remains
+required for shared changes. Adrian directed instruction-by-instruction review,
+starting with SAY; INTERPRET and its mechanism review are deferred until later
+and remain open for eventual C completion.

@@ -2,6 +2,7 @@
 options levelb
 namespace llcompilercontracts expose catalog signature validtype sourcename
 import rxfnsb
+import llir
 
 /** Logical source identity at compiler boundaries. A physical CLI path always
  * becomes a basename; service callers may retain deliberate relative names.
@@ -211,6 +212,7 @@ catalog: class
     call run()
     result = .llcompilercontracts..signature.failed('imported callable not found: ' || name)
     if _error <> '' then return .llcompilercontracts..signature.failed(_error)
+    matches = 0
     do i = _constantcount + 1 to _keys[0]
       if _kind[i] <> 7 then iterate
       at = _start[i]
@@ -222,8 +224,9 @@ catalog: class
       type = text(_pool[i],<at..u32>(at + 24) _metadata)
       arguments = text(_pool[i],<at..u32>(at + 32) _metadata)
       if _error <> '' then return .llcompilercontracts..signature.failed(_error)
+      matches = matches + 1
+      if matches > 1 then return .llcompilercontracts..signature.failed('ambiguous callable: ' || name)
       result = .llcompilercontracts..signature(symbol,type,arguments,flags_text)
-      return result
     end
     return result
   exported: method = .int
@@ -311,8 +314,18 @@ signature: class
         name = strip(left(item,split - 1)); type = lower(strip(substr(item,split + 1)))
         optional = left(name,1) = '?'
         if optional then name = substr(name,2)
+        if validtype(type) = 0 then do
+          type = literaltype(type)
+          if type <> '' then optional = 1
+        end
         if validtype(type) = 0 | type = '.void' | name = '' | verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then do
           _error = 'unsupported or invalid argument contract'; return
+        end
+        if verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') <> 0 then do
+          _error = 'invalid formal name'; return
+        end
+        do j = 1 to _names[0]
+          if upper(_names[j]) == upper(name) then do; _error = 'duplicate formal name'; return; end
         end
         n = _types[0] + 1; _types[n] = type; _names[n] = name; _optional[n] = optional
       end
@@ -334,6 +347,9 @@ signature: class
   type: method = .string
     arg ordinal = .int
     return _types[ordinal]
+  paramname: method = .string
+    arg ordinal = .int
+    return _names[ordinal]
   optional: method = .int
     arg ordinal = .int
     return _optional[ordinal]
@@ -355,4 +371,55 @@ validtype: procedure = .int
     if part = '' | verify(part,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then return 0
     rest = substr(rest,split + 2)
   end
-  return rest <> '' & verify(rest,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
+  return rest <> '' & verify(left(rest,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 & verify(rest,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
+
+/** Legacy metadata contains literal defaults, never general expressions. */
+literaltype: procedure = .string
+  arg text = .string
+  if text = '' then return ''
+  i = .int
+  quote = left(text,1)
+  if quote = "'" | quote = '"' then do
+    i = 2
+    do while i <= length(text)
+      if substr(text,i,1) = quote then do
+        if i = length(text) then return '.string'
+        if substr(text,i + 1,1) <> quote then return ''
+        i = i + 1
+      end
+      i = i + 1
+    end
+    return ''
+  end
+  folded = lower(text)
+  if left(folded,1) = '+' | left(folded,1) = '-' then folded = substr(folded,2)
+  if folded == 'inf' | folded == 'nan' then return '.float'
+  if left(folded,4) = 'nan(' & right(folded,1) = ')' then do
+    bits = substr(folded,5,length(folded) - 5)
+    if length(bits) <> 16 | verify(bits,'0123456789abcdef') <> 0 then return ''
+    /* IEEE payload must be a NaN, not infinity or a finite value. */
+    if wordpos(left(bits,3),'7ff fff') = 0 | verify(substr(bits,4),'0') = 0 then return ''
+    return '.float'
+  end
+  i = 1; digits = 0; dot = 0; exponent = 0
+  if left(text,1) = '+' | left(text,1) = '-' then i = 2
+  do while i <= length(text)
+    ch = substr(text,i,1)
+    if pos(ch,'0123456789') > 0 then digits = digits + 1
+    else if ch = '.' & dot = 0 & exponent = 0 then dot = 1
+    else if ch = 'e' & exponent = 0 & digits > 0 then do
+      exponent = 1; digits = 0
+      if substr(text,i + 1,1) = '+' | substr(text,i + 1,1) = '-' then i = i + 1
+    end
+    else return ''
+    i = i + 1
+  end
+  if digits = 0 then return ''
+  if dot | exponent then return '.float'
+  do
+    if left(text,1) = '+' then text = substr(text,2)
+    codec = .llir..intcodec(); ignored = codec.parse(text)
+  on signal
+    return ''
+  end
+  return '.int'

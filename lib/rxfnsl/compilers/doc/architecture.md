@@ -62,6 +62,29 @@ self-hosting, arbitrary imports/classes, full TRACE/conditions and INTERPRET
 remain their later review gates. Generic Level L proof continues to use
 independent non-C/G consumers, not only these compiler examples.
 
+STEP07A implements its approved [call and module API](STEP07A-CONTRACTS.md):
+optional scalar arguments, original presence and separately compiled G exports.
+The architecture below includes this bounded extension. Native reference
+controls remain separate from new-compiler qualification. Defaults and cREXX metadata semantics remain in the
+compiler; generic argument structure and preserved export identity belong in
+Level L.
+
+The approved delivery order now completes C before proper B/self-hosting.
+The existing native B seed builds the Level B implementation and Level L;
+compiling a new C input uses the Level L pipeline shown above. The
+[C-first milestone](../PLAN.md#c-first-delivery-milestone) includes Classic
+host/condition/TRACE integration and eventual STEP08 INTERPRET. Work proceeds
+instruction by instruction, starting with SAY; INTERPRET and its activation/
+code-lifetime mechanism review are deferred until later at Adrian's direction. G remains a maintained consumer of the
+shared services; further G expansion and STEP07B follow C completion. The final
+self-hosted build order and combined replacement criteria remain unchanged.
+
+Each increment inspects actual IR/RXAS and helper costs as well as execution.
+Native C is an independent comparison control: language contracts and explicit
+expected results decide correctness when it disagrees, and its expansion does
+not set an efficiency target. Reusable improvements belong in Level L with
+independent tests; Classic-specific state and ABI obligations stay here.
+
 ## Ownership of components
 
 | Component | Owner and responsibility |
@@ -326,6 +349,43 @@ full pool/activation/BIF runtime remains a generated-program dependency.
 The compiler's own metadata reader is cREXX. It reads prebuilt contracts without
 loading their executable code or invoking an old compiler. Rebuilding a target
 library is a separate build step, not an implicit source-to-RXAS escape route.
+
+## STEP07A optional arguments and separate modules
+
+The [approved contract](STEP07A-CONTRACTS.md) extends the generic Level L IR
+with per-formal optionality, original-presence reads, typed fallback reads and
+export views. These are numeric records and generic checks, implemented in
+Level B. Source defaults, metadata syntax, conversion and calling conventions
+remain in the compiler libraries. No new native helper or metadata format is
+introduced.
+
+G declaration inventory precedes schema freeze. It resolves local formals and
+explicit imported scalar signatures, then registers only observed target/mask
+call shapes. Each shape contains supplied operands in formal order and a checked
+byte-per-formal presence mask. It does not enumerate possible optional subsets.
+Supplied expressions and conversions run once in source order. The callee
+initialises its private formal slots from required reads or optional reads;
+subsequent assignment cannot alter the original argument-presence flags.
+
+The shared optimiser treats hasarg and fallback reads as pure values, preserves
+their types/signatures and removes them only when unused. It cannot assume a
+call's optional argument was supplied. Calls retain conservative state/failure
+contracts. The RXAS backend validates local/imported signatures again, including
+attribute names/types, required positions, result types and export syntax.
+Failed selection exposes no partial output and never mutates the frozen IR.
+
+RXAS callers set supplied positions to the existing by-value flag 768 and
+missing positions to 512, with the necessary call-window cleanup. They construct
+no empty placeholder or default for missing actuals. The callee tests bit 256;
+a sole-use literal fallback is emitted only on its missing path. Other generic
+fallback computations retain their eager semantics. `getandtp` reads original
+presence without writing argument registers. Provider files have no main;
+`.expose` and `.meta` retain optional flags, while provider-owned code implements
+the default. Relinking a changed default does not require recompiling a caller.
+
+See the [executed examples](../examples/step07a/README.md),
+[generic API/format reference](../../doc/ir-design.md) and
+[validation summary](../PLAN.md#step07a-validation).
 
 ## Replacement and INTERPRET
 

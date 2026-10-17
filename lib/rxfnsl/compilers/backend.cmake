@@ -64,7 +64,7 @@ foreach(_mode opt noopt)
     add_custom_target(llcompilers ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin")
     install(FILES "${CMAKE_BINARY_DIR}/bin/llcompilers.rxbin" DESTINATION bin)
   endif()
-  foreach(_consumer backend-probe backend-tests backend-optimise backend-poc llrxc-c llrxc-g)
+  foreach(_consumer backend-probe backend-tests backend-optimise backend-poc backend-step07 llrxc-c llrxc-g)
     set(_source "${CMAKE_CURRENT_SOURCE_DIR}/driver/${_consumer}.crexx")
     if(_consumer MATCHES "^backend-")
       set(_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_consumer}.crexx")
@@ -105,6 +105,20 @@ set_tests_properties(llcompiler_product_inventory PROPERTIES
 # producers here would hide a missing stage dependency on a clean CI build.
 crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS stage-product)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_custom_target(llcompiler_say_measure
+  COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/say-measure"
+    --mode opt --vm rxbvm
+  DEPENDS llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt llcompiler_target_opt
+    rxas rxlink rxbvm library rxfnsc
+  USES_TERMINAL VERBATIM)
+add_custom_target(llcompiler_step07_measure
+  COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/step07-measure"
+    --mode opt --vm rxbvm --native-controls
+  DEPENDS llcompiler_backend-step07_opt llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt
+    llcompiler_target_opt library rxfnsc rxbvm rxas rxlink
+  VERBATIM)
 add_custom_target(llcompiler_poc_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-poc.py"
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/poc-measure"
@@ -133,6 +147,20 @@ add_custom_target(llcompiler_provenance_measure
 foreach(_mode opt noopt)
   foreach(_vm rxbvm rxtvm)
     if(TARGET ${_vm})
+      # SAY: isolated 40 commands measured at 24s Debug / 84s Apple ASan.
+      # Serialize nested tools; deadlines are generous hang guards only.
+      set(_say "llcompiler_say_${_mode}_${_vm}")
+      add_test(NAME ${_say}
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"
+          --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_say}"
+          --mode ${_mode} --vm ${_vm})
+      set_tests_properties(${_say} PROPERTIES
+        PASS_REGULAR_EXPRESSION "SAY PASS: 40 commands"
+        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_say}
+        TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
+          llcompiler_target_${_mode} library rxfnsc rxas rxlink ${_vm})
       set(_test "llcompiler_backend_${_mode}_${_vm}")
       add_test(NAME ${_test}
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"
@@ -194,6 +222,23 @@ foreach(_mode opt noopt)
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-poc_${_mode} llcompiler_target_${_mode}
           library rxfnsc classlib rxas rxlink ${_vm})
+
+      # STEP07A: isolated Debug / maintained Apple ASan measured before
+      # registration (see PLAN.md, STEP07A validation). Serial whole tests;
+      # 300s inner / 1800s outer limits are hang guards, not speed criteria.
+      set(_step07 "llcompiler_step07_${_mode}_${_vm}")
+      add_test(NAME ${_step07}
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
+          --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_step07}"
+          --mode ${_mode} --vm ${_vm})
+      set_tests_properties(${_step07} PROPERTIES
+        PASS_REGULAR_EXPRESSION "STEP07_E2E[|]commands=99[|]failures=0"
+        TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_step07}
+        TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
+          llcompiler_backend-step07_${_mode} llcompiler_target_${_mode}
+          library rxfnsc rxas rxlink ${_vm})
     endif()
   endforeach()
 endforeach()

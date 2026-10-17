@@ -97,8 +97,11 @@ positive magnitude.
 
 G bindings are scoped per routine. Explicit declarations and inferred bindings
 receive their language-defined default at entry. Type propagation reaches a
-bounded fixed point before lowering. Parameters are typed required scalars;
-optional/default/vararg, arrays, references and EXPOSE are outside this slice.
+bounded fixed point before lowering. Parameters admit required scalars, scalar literal defaults and primitive
+`?name=type` defaults. `?name` observes original formal presence. Arbitrary
+default expressions, varargs, arrays and references remain outside this slice.
+STEP07A adds declaration-only `namespace name expose routine` providers and
+explicit qualified calls; procedure pool EXPOSE remains outside this slice.
 Numeric promotion and explicit `as` conversions select typed compiler operations.
 Loose text comparison follows G's numeric-aware/padded comparison contract;
 strict `==` compares converted text and therefore retains G's literal
@@ -129,6 +132,17 @@ Classic literals retain exact spelling as `crexx.c.value`; a name is a
 case-insensitive dynamic-pool key. An unset read remains a pool read and can
 produce the name according to Classic's default policy. Empty assignment stores
 an empty value. It is not converted into a G typed local or declaration default.
+
+Classic quoted literals immediately followed by a single `X`/`B` symbol use
+the existing ordinal syntax, case-insensitively. Token layout preserves the
+whole spelling in one `String` node. Lowering checks digit/group boundaries
+and uses the Level B `x2c`/`b2x` helpers to create a constant: every decoded byte
+maps to U+0000–U+00FF. `'C3A9'x` therefore contains two characters, while `'é'`
+contains one. The first group may be short; leading/trailing blanks and invalid
+digits/grouping fail with a located `LL_COMPILER_SYNTAX` diagnostic. A space,
+comment or longer identifier after the quote retains ordinary concatenation.
+G's admitted literal syntax is unchanged. Decoding adds no target operation or
+runtime helper call. See the [SAY instruction review](LEVELC-INSTRUCTION-REVIEW.md).
 
 Each function receives an argument packet and an immutable numeric-context
 snapshot, and creates a private pool for the admitted PROCEDURE profile. NUMERIC
@@ -176,8 +190,13 @@ production metadata conformance.
 G LENGTH must resolve to `rxfnsb.length`, returning `.int` with one required
 `.string`. The Classic LENGTH/DIGITS/ARG routes check their actual exported
 runtime signatures, including the B-hosted BIF context and ARG activation
-argument type. The catalog is cached within a request. Unsupported required
-argument forms or missing/wrong contracts fail instead of inventing an ABI.
+argument type. Required/optional flags are checked, including the required Classic context
+and optional ARG activation parameter. A request caches imported catalogs and
+selected signatures. G scalar exports are read from an explicit module RXBIN
+and matched per position; missing/private/ambiguous exports, duplicate formal
+names, malformed literal-default metadata and unsupported types fail with a
+source location. Defaults remain in the provider; imported metadata supplies
+optionality, not a value to insert in the caller.
 Runtime packages are metadata inputs; they are separate from the compiler's
 B/L host imports. Full Classic packaging still has its existing G build
 prerequisite, which this frontend does not import.

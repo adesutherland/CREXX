@@ -127,6 +127,7 @@ frontendfamilies: procedure = .void
       call declare(g,name || '.positive',types,'value:' || i,i)
     end
   end
+  call declare(g,'fromtruth',types,'value:11',3)
   op = declare(g,'truth',types,'value:3',11)
   call op.evaluator(.scalarfold('gtruth') as .object)
   call declare(g,'boolean.not',types,'value:3',3)

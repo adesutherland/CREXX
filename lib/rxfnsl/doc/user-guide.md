@@ -3301,6 +3301,106 @@ linker and VM tools still process the result. Full C/G syntax, proper B
 self-hosting, arbitrary imports, full TRACE/condition handlers and INTERPRET
 are outside this admitted compiler slice.
 
+### Classic SAY and ordinal literals
+
+`llrxc-c` supports bare SAY and SAY with an expression. The expression is
+evaluated once before its line is written; a failed expression writes no line
+for that SAY. For example:
+
+```rexx
+options levelc
+say
+say 'hello'
+say '41 42'x
+say '01000011'b
+```
+
+This writes an empty line, `hello`, `AB`, then `C`. An adjacent `x` or `b`
+suffix is case-insensitive. Hex groups contain pairs of digits and binary groups
+contain groups of four bits; only the first group may be shorter. Empty
+literals are valid. Leading/trailing blanks, invalid digits or broken groups
+produce a located syntax diagnostic and leave an existing output file intact.
+Every decoded byte maps to the Unicode character with the same ordinal:
+`'80FF'x` is U+0080 followed by U+00FF; `'00'x` preserves NUL. `'C3A9'x` contains
+two characters and differs from ordinary `'é'`. No runtime decoder is emitted.
+
+`'41' x` remains a string followed by a blank and variable X; `'41'xyz` uses
+abuttal with variable XYZ. This adds no G literal syntax or general Classic BIF
+support. Full expression, host and TRACE coverage remains described by the
+[instruction review](../compilers/doc/LEVELC-INSTRUCTION-REVIEW.md).
+
+## Optional arguments and separate G modules
+
+STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:
+
+```rexx
+options levelg
+say scale(7)
+say scale(7,3)
+exit 0
+scale: procedure = .int
+  arg value = .int, factor = 2
+  return value * factor
+```
+
+The output is `14`, then `21`. A literal default determines the scalar type.
+`?name = .int` declares an optional integer with its primitive zero default;
+string defaults are empty, Boolean/float defaults are zero and a primitive
+optional decimal retains the existing absent decimal value. `?name` in an
+expression tests original presence, even after assignment. A supplied empty
+string is present and undergoes the ordinary parameter conversion; it is not
+an omitted argument. Positional holes such as `f(,3)` are allowed only for
+optional formals. A required formal after an optional formal still needs its
+actual value.
+
+Classic retains its explicit equivalent:
+
+```rexx
+options levelc
+say scale(7)
+say scale(7,3)
+exit 0
+scale: procedure
+  arg value, factor
+  if \arg(2,'E') then factor = 2
+  return value * factor
+```
+
+For separate G compilation, put `namespace scalelib expose scale` after the
+provider's OPTIONS line and keep only routine declarations. In the consumer,
+write `import scalelib` and call `scalelib..scale(7)`. Compile and assemble the
+provider first, supply its directory with `-i` when compiling the consumer,
+then link both RXBIN files with `library.rxbin`. See the
+[complete commands and actual IR/RXAS](../compilers/examples/step07a/README.md).
+The provider owns the default; changing it only requires rebuilding the
+provider and relinking, not recompiling its callers.
+
+A Level B IR consumer can use the same generic facilities without C/G modules:
+
+```rexx
+fn = builder.function('choose',integer)
+call fn.exportas('demo.choose')
+ordinal = fn.argument(integer,1)
+entry = fn.block('entry')
+present = entry.hasarg(ordinal,origin)
+fallback = entry.constant(integer,'2',origin)
+value = entry.readarg(ordinal,origin,fallback)
+call entry.returnvalue(value,origin)
+```
+
+A required formal uses `argument(integer)` and the two-argument `readarg`.
+`module.function(id)` exposes checked signature/export views. Optional fallback
+values are already evaluated in generic IR; the C/G slice admits only pure
+literal or primitive defaults. Saved IR writers use version 2, with checked
+version-1 reader compatibility. See the [IR reference](ir-design.md).
+
+Malformed imports, non-exported/ambiguous callables, missing required actuals,
+unsupported parameter types and invalid default forms produce located errors
+and preserve an existing output file. Arbitrary default expressions, references,
+classes, arrays, module initialisers, source imports and general Classic external
+loading remain outside this increment. Compiler code remains Level B and uses
+Level L's grammar, IR, transformation and writer libraries throughout.
+
 ## RexxScript: a larger example
 
 RexxScript demonstrates how the same machinery supports a script interpreter.

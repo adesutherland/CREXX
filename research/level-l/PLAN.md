@@ -1,5 +1,294 @@
 # Level L language tooling research — 10 October 2026
 
+## Repository architecture and cleanup proposal
+
+**Status: reviewed, awaiting Adrian's approval for structural implementation.**
+This section owns the repository/layout refactor; the compiler subplan remains
+`lib/rxfnsl/compilers/PLAN.md` until the approved move. The review covers the
+current develop checkout and its STEP07A/SAY work. No compiler,
+build, install or source-location change is implemented by this review.
+Adrian clarified that B and G should share most of their compiler implementation.
+C-first delivery, Level B implementation, deferred INTERPRET and paused CI
+monitoring remain unchanged. On 17 October Adrian separately authorised
+publication of the completed STEP07A/SAY work and these review documents from
+the main CLion develop checkout. That does not approve this structural refactor.
+
+The repository-wide documentation/output rule in `AGENTS.md` is already
+instructed by Adrian and takes effect now: only enduring documentation belongs
+in the tree. Delete logs, raw runs, receipts and obsolete notes after extracting
+useful conclusions; do not keep them in evidence directories or external
+archives. This rule applies to all initiatives, not just this refactor.
+
+### Vision and intended outcome
+
+Make Level L a clearly owned, reusable toolchain and SDK, independent of the
+experimental source languages. Keep the general Level L libraries under
+`lib/rxfnsl`; give the Level L command and its callable tool implementation a
+normal tool directory. Put development of the new compilers under research.
+Classic has an independent frontend and compiler service. B and G share a typed
+compiler core, with explicit language profiles and their own commands/services.
+Reusable backend and file/metadata utilities are shared through libraries, not
+through a common application main or a dispatcher that owns every language.
+
+The completed tree should contain maintained source, tests/fixtures/examples,
+current architecture/contracts/guides/plans and lasting decisions. It should
+not accumulate run output or dated narrative. Keep current correctness and RXAS
+quality while changing ownership; this is not new language coverage, a default
+compiler replacement, a new runtime or an INTERPRET design.
+
+### Findings from the source and build review
+
+| ID | Current finding | Consequence / proposed correction |
+|---|---|---|
+| RA-F01 | `lib/rxfnsl/CMakeLists.txt` adds `rexx`, `tools`, `compilers` and tests. `tools/CMakeLists.txt` owns bootstrap, the final `rxfnsl` library, the executable and a Unicode consumer grammar. | A library directory owns tools and experimental compilers. Separate their source and CMake owners; keep one producer for every bootstrap output. |
+| RA-F02 | `tools/levell.crexx` combines CLI parsing/file I/O, admission, table construction and both source/RXAS generation. Its emission routines print with SAY. | Extract a callable Level L generation service using Level L output/writer services, then make the command handle options, I/O and reporting. Library clients must not call main or capture stdout. |
+| RA-F03 | `driver/llrxc-c.crexx` and `llrxc-g.crexx` call `llcompilercli..run(level,argv)`, which calls `llcompiler..request(level,...)`. `llfrontendparse` imports and initialises both grammars. `llfrontend` interleaves C/G binding, type, expression, call and statement decisions. | Separate Classic and typed frontends/services. Sharing an argument parser or output publisher is fine; the common language-selecting application is removed. |
+| RA-F04 | `common/llcrexxir` registers both semantic families. `rxas/llrxas` combines generic target mechanics with C entry/context/error code and typed operations, controlled by `_level`. | Separate language family registration and selectors from reusable target mechanics. Keep Classic policy with C and typed policy in the B/G core. |
+| RA-F05 | Both command link lists contain both grammars/frontends; `llcompilers.rxbin` combines their reusable services. There is no implemented new B frontend. | Command names currently overstate isolation. Split linked service products and verify their actual transitive closures. Prepare a B/G common core without claiming B implementation/self-hosting. |
+| RA-F06 | `stage-l-libraries` requires the experimental services, target adapter and C/G commands. Root install copies the build `bin/` directory broadly. | Separate library/tool/research stages and prevent old or disabled research outputs leaking into product installs. |
+| RA-F07 | Generic Level L IR/AST/passes/writer modules are already independent of C/G. Classic `llctarget` is separately built against the target runtime and is not linked into the compiler host. | Preserve these good boundaries. Do not move C/G semantic policy into Level L or merge target runtime with compiler-host libraries. |
+| RA-F08 | Research contains 14 source symlinks to maintained L library modules; these are not independent implementations. The L library's `examples/ir/demo.crexx` imports compiler-owned `llcrexxir`. | Point maintained research runners at canonical modules; remove redundant source aliases once callers migrate. Move the compiler-specific demo into compiler research; keep genuinely generic examples in L. |
+| RA-F09 | The tracked `research/level-l/evidence` tree has 16,198 files, about 129.6 MiB, including 12,154 logs and 671 RXAS dumps. Compiler evidence adds 199 tracked files, about 3.2 MiB; current untracked qualification output also exists. | Delete disposable output and obsolete narrative. Keep lasting conclusions in current docs; do not relocate this bulk into another evidence/archive tree. |
+| RA-F10 | Some things called evidence are live inputs: `check-gennorm2-compat.py` reads `bootstrap/reference-gennorm2.crexx`; research cases read oracle/corpus text from evidence. Several guides describe stale phases/layouts. | Move real inputs into owned fixtures with provenance, update callers, then delete the old evidence trees. Consolidate current guides/plans rather than keeping parallel histories. |
+
+Static inspection verifies these ownership findings, not the proposed new
+implementation. The working checkout and remote develop both named
+`e4ee47528fe60e76a81f6d18a7849aa8aa663037` at review. STEP07A/SAY publication
+was subsequently authorised. No product tests were rerun for the architecture review.
+
+### Proposed directory and product ownership
+
+Use **`langtools/` as Level L itself**, as Adrian clarified. It includes lexer
+generation, parsers, source and tree services, IR and emission; `parser` would
+understate the scope. Do not add a redundant `langtools/level-l/` subtree.
+
+```text
+langtools/                  Level L itself; no second level-l subtree
+  common/                  B-only tool support libraries; no language frontend
+  cli/                     levell command options, I/O and diagnostics
+  rexx/                    llfront and callable grammar-generation/emission service
+  grammar/                 the Level L language's own grammar
+  bootstrap/               seed reader, L0/L1/L2 construction and verification
+  tests/                   generator, CLI, bootstrap and delivery regressions
+  doc/                     maintained tool/service/bootstrap documentation
+lib/rxfnsl/
+  rexx/                    generic lexer/parser engines, AST, IR, passes, writer
+  unicode/                 library-owned pinned property data and its generation
+  tests_functional/        independent library consumers and contract tests
+  examples/                maintained general Level L examples
+  doc/                     SDK contracts/reference and library user guidance
+research/level-l/
+  PLAN.md                  this programme and repository refactor
+  compilers/
+    PLAN.md                moved compiler plan and C instruction ledger links
+    common/                shared cREXX compiler/ABI facilities only
+    typed/                 substantial shared B/G grammar/frontend/types/lowering
+    levelb/                B profile, service and command when STEP07B is implemented
+    levelg/                G profile/extensions, service and command
+    levelc/                Classic grammar, token policy, semantics and service
+      runtime/             llctarget adapter, separate from compiler host
+    tests/ examples/ doc/   compiler-owned maintained assets
+```
+
+Library-owned tests, docs and examples remain beside libraries; "libraries
+only" means no application toolchain, experimental compilers or run archives
+under `lib/rxfnsl`. It does not remove independent library qualification.
+Research engines still serving open research questions remain in research;
+this review does not promote unfinished Pika/Squirrel/recovery experiments.
+
+**Move/split map:**
+
+- `lib/rxfnsl/tools` and `bootstrap` move to the Level L tool owner. Split the
+  current generator command into its real CLI and callable implementation.
+  Move `llfront.crexx` and `grammar/levell.levell` with that implementation.
+- Build the generic SDK as `rxfnsl.rxbin`, without the Level L specification
+  compiler. Build that compiler's library separately as **`levelllib.rxbin`**,
+  retaining the `llfront` namespace and providing the extracted generation
+  service. Consumers of `llfront` must explicitly use the tool library. This is
+  an intentional package boundary change, not an unexplained missing import.
+- `grammar/gennorm2.levell` belongs to its Unicode consumer under
+  `lib/rxfnsg/unicode`; `tinyexpr.levell` belongs with its library example.
+  Keep generated syntax/table products in the build tree, not in source.
+- Move the compiler subtree, plan, instruction ledger and maintained examples
+  to `research/level-l/compilers`, then split the mixed implementation as above.
+  Preserve the STEP07A/SAY fixes and regression fixtures in the move.
+- Split general RXBIN envelope/metadata reading, RXAS literal escaping and file
+  loading/publication utilities into `langtools/common` only where they have a
+  demonstrated shared use. The semantic interpretation of C/B/G metadata and
+  source rules stays with the owning compiler. Do not promote the entire
+  current `llcompilercontracts`, `llcrexxir` or `llrxas` module as generic L.
+- Keep AST/IR/source/origin/writer infrastructure and generic transformations in
+  `lib/rxfnsl`. Shared tool helpers may use these; they may not import research.
+  Extract the smallest concrete utilities, not a speculative universal backend
+  framework or a new IR/file-format redesign.
+
+### Frontend and service boundaries
+
+**B/G share most implementation.** `typed/` owns their common lexical/grammar
+machinery, tree construction, scopes, binding, types, defaults/presence,
+imports, calls, semantic checks and lowering as those capabilities are added.
+G composes that core with G-specific additions; B selects its defined profile
+without importing G extensions. Use one maintained representation of common
+rules, not copied B/G grammars that drift. A profile does not promise that every
+G feature is valid B. Exact source contracts and their negative tests decide.
+STEP07B still owns implementing and qualifying B; the refactor does not invent
+B coverage or implement self-hosting.
+
+**Classic C is independent.** It owns contextual token rules, AST schema,
+variable pools, numeric state, calls, condition/TRACE semantics and target
+lowering. It shares general L machinery and proven target/IO utilities with the
+typed core, but does not import a typed frontend or use a common C/G parser.
+
+Each command owns the orchestration for its language and calls its own reusable
+service: proposed `llccompiler..request(source,...)` and
+`llgcompiler..request(source,...)`, with `llbcompiler` later. Retain existing
+source-length, logical-name, budget, request/result lifetime, no-output-on-error
+and optimisation controls. These services do not print, exit, publish files or
+call an application main. Shared helpers parse common options and publish owned
+output; they do not choose the source language or discover/load another compiler.
+
+Replace the experimental combined `llcompilers.rxbin` with **`llccompiler.rxbin`**
+and **`llgcompiler.rxbin`** and explicit shared dependencies. Migrate repository
+service clients and docs together; retire `request(level,...)` rather than
+keeping a compatibility multiplexer that restores the coupling. Preserve the
+CLI names `llrxc-c` and `llrxc-g` and their existing options. The future B entry
+composes the typed core, not the G command. Generated C VM launchers remain
+packaging glue; all compiler algorithms and extracted helpers remain Level B.
+
+The shared backend receives verified IR and explicit target/ABI contracts.
+Compiler-specific family verifiers and selectors are supplied by that compiler;
+the target engine does not select C/G semantics by command name. Preserve
+existing operation identities and metadata meaning during extraction. Any new
+public extension protocol beyond the already reviewed L services needs its
+own concrete API review; this is not authority for a new language design.
+
+### Build, install and consumer boundaries
+
+The intended dependency order is:
+
+```text
+existing native B seed + B runtime
+  -> generic rxfnsl
+  -> Level L L0 -> L1 -> L2 -> levelllib + levell
+  -> generated language modules and ordinary consumers
+  -> explicitly selected experimental C / typed-G compiler products
+```
+
+No SDK or Level L tool dependency points back into compiler research. The seed
+remains a build prerequisite; new source requests never invoke it. The existing
+Classic target-runtime package's G dependency is separately documented and is
+not removed or hidden by this host-compiler refactor.
+
+Propose `stage-l-libraries` for the SDK, `stage-l-tools` for `levelllib`/`levell`,
+and `stage-research-compilers` for experimental services/commands/adapters.
+The normal `stage-product` includes the first two. Research builds/install are
+explicitly selected with a proposed `CREXX_BUILD_RESEARCH_COMPILERS` option,
+**default OFF**, and a `ResearchCompilers` install component. A language selection
+allows C-only or G-only preparation; B is unavailable until implemented. Normal
+CI must explicitly enable and exercise maintained C/G tests so opt-in packaging
+does not silently remove coverage. This is a proposed delivery-policy change
+requiring approval; current published experimental commands are not silently
+removed by this review.
+
+Research outputs must use their own build/output directory; root's broad `bin/`
+install must not scoop up disabled or stale experimental files. Explicitly
+exclude retired related filenames from incremental product installs, update
+product inventory tests, wrapper generator paths, package preparation and QA
+producer registration. Do not delete unrelated files from existing install
+prefixes. Prove fresh and incremental installs separately.
+
+Move generator-dependent tests to the tool owner; pure SDK tests must not
+require `levelllib` or research compilers. Preserve existing Make producer-order
+and Ninja freshness fixes. Test missing-output recovery and no-op rebuilds;
+relocation must not reintroduce duplicate L2 production or absent install files.
+Generated modules, the `crexx` build grammar, Unicode consumer and installed
+Level L examples are integration consumers, not evidence to delete.
+
+### Cleanup policy and concrete disposition
+
+No archive tree, dated replacement reports or committed cleanup manifest is
+proposed. Apply the root standing rule to current and future work:
+
+| Material | Disposition |
+|---|---|
+| Generic library source, maintained research engines, compiler source, regression cases, licenses and pinned upstream data | Keep with the correct owner; move only for the approved split. |
+| Live oracle/corpus inputs hidden in `research/level-l/evidence` | Move into `cases/fixtures` or the owning tool/library test fixtures; update every reader and preserve required attribution. Includes config/consumer/recovery/lexrecovery/script oracles, migration fixtures and the old gennorm2 control. |
+| Logs, stdout/stderr captures, timing files, generated run dumps, raw samples, run JSON/receipts and per-run hash bundles | Delete after extracting any still-useful result into the current plan/contract; do not track or archive them. Do not indiscriminately delete authored RXAS tests or binary-format fixtures. |
+| Historical STEP review notes, dated evidence READMEs, completed handoffs and repeated status narration | Consolidate lasting decisions/contracts, active findings and current validation facts into maintained docs; delete the obsolete originals and update links. |
+| STEP07A/SAY qualification output | The 109 untracked run files were deleted after consolidation into the compiler plan during the local checkout transfer. Keep the maintained source/tests and concise qualification boundary. |
+| The 14 research source aliases and old build wrappers | Migrate active readers to canonical source; remove aliases/obsolete wrappers once their tests and documented workflows use the owner. |
+| Unrelated root `build/`, mainframe driver locks or another task's running outputs | Outside this cleanup's ownership; preserve them. |
+
+Keep one compiler plan/ledger, current architecture/API guides and runnable
+examples. Condense both existing plans' historical narration while preserving
+open acceptance IDs, accepted language decisions, deferred work and current
+qualification limitations. Reused tests remain valid for unchanged inputs;
+rename-only results and changed build/package proof are distinguished. Where a
+raw result cannot support a current claim, narrow the claim rather than retain
+junk or claim an unverified pass.
+
+Update scripts that currently write results into tracked evidence paths to use
+per-invocation temporary/ignored build directories and delete disposable output
+when finished. Add a scoped tracked-file hygiene check and import/build-boundary
+checks with explicit maintained-fixture exceptions. Do not blanket-ignore source
+extensions or hide tracked junk with ignore rules.
+
+### Numbered acceptance criteria
+
+**RA-AC01–10 remain open until the approved refactor is verified.** These
+supplement, and do not close or weaken, the compiler and wider research criteria.
+
+1. **RA-AC01 — ownership:** paths, CMake declarations and install owners match
+   the approved split; `lib/rxfnsl` contains only SDK-owned source/docs/tests/examples.
+   Verify a source/target inventory and no imports from L into compiler research.
+2. **RA-AC02 — tool service:** Level L generation has a callable B-only service
+   returning owned output/diagnostics through L writer/sinks, with no main/stdout
+   dependency. Check library and CLI success/error/budget/source/RXAS parity.
+3. **RA-AC03 — compiler separation:** C-only builds and runs with typed/G grammar
+   and frontend inputs absent; G-only builds and runs without C frontend/adapter.
+   Inspect transitive imports and linked namespaces, not just executable names.
+4. **RA-AC04 — typed sharing:** one shared B/G typed core and explicit profile
+   boundaries; G regressions remain valid. B is visibly unimplemented/deferred,
+   with no G-only dependencies admitted into its intended bootstrap closure.
+5. **RA-AC05 — reusable infrastructure:** generic L tests and an independent
+   non-C/G helper consumer prove the extracted utility boundaries; C/typed rules
+   stay in their owners. No new native compiler logic or hidden fallback.
+6. **RA-AC06 — bootstrap/build:** required L0/L1/L2 convergence, B-only bootstrap
+   modes, Make single-producer and Ninja freshness/no-op/missing-output checks
+   pass for changed inputs. Retained identical semantic results are reused.
+7. **RA-AC07 — delivery:** default product, opt-in research and C/G-selected
+   products have correct fresh/incremental install inventories and isolated
+   service/CLI examples, including a prefix with spaces and stale old outputs.
+   CI preparation still selects every affected producer and regression.
+8. **RA-AC08 — semantics and RXAS:** STEP07A/SAY plus affected C/G/L regressions,
+   source/error/atomic-output tests and representative IR/RXAS/helper inspections
+   pass. No unexplained executable expansion, metadata drift or scope change.
+9. **RA-AC09 — clean tree:** logs/raw runs/receipts/obsolete notes are removed;
+   real fixtures have owners and consumers. Scripts/checks prevent new tracked
+   junk. No external archive or history-preservation commit substitutes for cleanup.
+10. **RA-AC10 — current documentation:** one maintained account of boundaries,
+    builds, APIs and qualification; all affected links work. Preserve every open
+    language/platform/INTERPRET criterion and distinguish local from hosted proof.
+
+### Numbered implementation sequence and approval boundary
+
+| Step | Work | Criteria / gate |
+|---|---|---|
+| **RA-STEP01 — review complete; approval pending** | Review actual code/build owners; select paths, service split, B/G sharing, package changes and cleanup policy. | AC01–10; approval of this architecture is required before structural changes. The global no-junk instruction is already authorised. |
+| **RA-STEP02 — proposed** | Move canonical owners and update path consumers; extract the Level L service and tool support, preserving bootstrap dependencies and namespace meaning. | AC01/02/05/06; dependency: STEP01 approval. Check each coherent change before proceeding. |
+| **RA-STEP03 — proposed** | Split C from the typed core; replace common language-dispatch main/service; split family registration/target policy and service products. | AC03–05/08; preserve B deferral, G semantics and all current C fixes. |
+| **RA-STEP04 — proposed** | Separate product/research stages, outputs and install components; update wrapper, Unicode, inventory, CI and test preparation owners. | AC06/07; no silent loss of tests or reliance on stale outputs. |
+| **RA-STEP05 — proposed** | Promote genuine fixtures, consolidate durable docs, remove obsolete files/run output and migrate output-writing scripts. | AC09/10; check references before deletion; no archive requirement. |
+| **RA-STEP06 — proposed** | Run the smallest decisive affected build/tests/install/closure checks; reuse unchanged proof and inspect RXAS. Update current docs and delete temporary results. | AC01–10; new/expanded nested test aggregates need isolated Debug/sanitizer scheduling checks. Broader QA only for an identified gap; publication is a separate instruction. |
+
+**Approval requested:** the `langtools` / SDK / research ownership split; an
+independent C compiler alongside a mostly shared B/G typed core; separate callable
+tool/compiler products and migration of the combined experimental API; and the
+explicit opt-in research delivery policy. No new source-language syntax, B
+implementation, runtime redesign, default replacement or INTERPRET work is
+included. The standing no-junk rule is not conditional on this approval.
+
+
 ### cREXX C/G compilers and shared IR — STEP05 review, 15 October 2026
 
 Adrian requested a documented plan for separate new C/G compilers written
@@ -74,10 +363,30 @@ the agreed PoC; [receipt](../../lib/rxfnsl/compilers/evidence/step06-20261015/RE
 The parallel-Make preparation finding is repaired with a permanent regression
 and byte-identical real-tool rebuilds; [receipt](evidence/bootstrap-order-20261015/README.md).
 Full replacement/platform gates remain open. STEP06 develop publication and
-monitor handover are authorised; STEP07 is proposed for review only. Its F6 criteria remain the authority. Adrian then
+monitor handover are complete at `4eca26ac8335a22dd74f84250696ba68303c9958`.
+Adrian approved bounded STEP07A on 15 October: scalar defaults/presence and
+separate G modules, keeping compiler logic Level B. The [exact public API](../../lib/rxfnsl/compilers/doc/STEP07A-CONTRACTS.md)
+was approved on 16 October and is implemented and locally qualified;
+[validation summary](../../lib/rxfnsl/compilers/PLAN.md#step07a-validation).
+Develop publication was authorised on 17 October; hosted outcomes remain separate.
+Level L now owns optional input/export views and v2 persistence with
+checked v1 compatibility; C/G semantics remain in the compiler libraries. F7A-AC01–06 in the compiler subplan own this increment, while F6 criteria
+retain the completed PoC boundary. On 16 October Adrian approved completing
+the new Level C compiler before STEP07B. The subplan's
+[C-first milestone](../../lib/rxfnsl/compilers/PLAN.md#c-first-delivery-milestone)
+owns CFC-AC01–08 and its delivery steps. Adrian subsequently directed an
+instruction-by-instruction review, starting with SAY and leaving INTERPRET
+and its mechanism review until later. Host/condition/TRACE integration and
+eventual INTERPRET remain required for complete C qualification. Existing native B remains the seed for the Level B implementation;
+current G behaviour and independent Level L consumers remain regression gates.
+Proper B/self-hosting and wider G expansion are deferred, with all existing
+criteria retained. Inspect actual RXAS and helper costs in each increment;
+native C behaviour and code size are comparison evidence, not semantic or
+efficiency authorities. These are priority/acceptance changes, not new coverage
+or a default compiler switch. Adrian previously
 clarified that formal performance testing is not required for Level L research;
 root `AGENTS.md` records this scoped exception. Functional, resource and emitted
-code-quality acceptance remain. This increment uses both compiler examples to
+code-quality acceptance remain. STEP05 used both compiler examples to
 improve Level L: checked batch rewrites, shared indexed analyses/passes and
 reusable source-coordinate lookup. Generic tests use a non-C/G family; C/G
 semantics and RXAS ABI policy stay in the compiler. The existing chunked writer
@@ -734,7 +1043,8 @@ after the following gates pass, preserving unrelated checkouts and work.
 
 1. **PUB-AC01 — Product closure.** `stage-product` builds `levell`,
    `rexxscript1` and their libraries from a fresh build directory. Inspect the
-   generated dependency graph and retain the successful product build log.
+   generated dependency graph and record the command, input identity and
+   successful result here; delete the temporary build log after inspection.
 2. **PUB-AC02 — QA closure.** Standard QA preparation builds the generated
    Level L and modern RexxScript test images and concrete VM prerequisites.
    Existing tests execute in the smoke/correctness tiers on the combined tree.
@@ -788,8 +1098,9 @@ has been observed in this work; ordinary publication/overnight policy applies.
 **Vision:** the Level L user guide is the enduring first reference for a
 programmer learning language tools. It teaches the source-to-result process,
 provides runnable examples, and states the implemented syntax and API in clear
-English. History, qualification receipts, decisions and future work belong in
-the existing planning and implementation documents. This is a documentation
+English. Current validation summaries, decisions and future work belong in
+the existing planning and implementation documents; obsolete notes and raw
+receipts are deleted. This is a documentation
 review of the approved language, not a change to its semantics or wider scope.
 
 **Acceptance criteria:**
@@ -873,12 +1184,11 @@ checkout and matched. The retained functional results below therefore remain
 applicable; this safety checkpoint does not rerun unchanged qualification or
 claim hosted, cross-platform or sanitizer results. Build directories, downloaded
 reference repositories, bytecode and Python caches remain outside the commit.
-Recorded textual generated outputs, binary test inputs, raw logs and historical
-failed attempts are deliberately retained with their receipts and dispositions.
-Git text conversion is disabled for retained evidence so CR/CRLF inputs and raw
-observations keep their original bytes. The staged whitespace check identifies
-raw-log/fixture whitespace and six pre-existing source/test whitespace findings;
-these are preserved with the qualified input snapshot, not runtime failures.
+That historical checkpoint included generated outputs, raw logs and receipts.
+The current cleanup removes those disposable files after consolidating useful
+conclusions; this checkpoint is not an instruction to retain them. Genuine
+binary/CRLF test fixtures keep their exact bytes in their owning test directory.
+The checkpoint's whitespace findings did not represent runtime failures.
 The private inbox URL has been removed from the source audit; pinned public
 repository references retain the research provenance.
 
@@ -2175,9 +2485,9 @@ the style does not approve arbitrary new declaration kinds or semantics.
    Execute maximal-munch/ordered-choice and contextual-token counterexamples.
    State complexity assumptions and adversarial limitations explicitly.
 8. **AC-08 — Measured experiments.** Correctness-gated, reproducible serial
-   character/token comparisons retain operation counts and raw timings,
+   character/token comparisons record operation counts and timing summaries,
    including lexing cost, short/long identifiers, strings/comments and
-   malformed inputs. Label these single-workload research observations,
+   malformed inputs. Inspect then delete raw samples. Label these single-workload research observations,
    not a representative product performance verdict.
 9. **AC-09 — Toolchain and reproducibility.** Exercise rxc, rxas, rxlink and
    rxvm; compare optimized/no-opt and both concrete VMs on relevant native
@@ -2607,10 +2917,11 @@ not a proved universal claim that PEG is more natural.
     CFG or a composite for each dialect without claiming full replacement.
 22. **AC-22 — End-to-end cost and lifecycle.** Freeze inputs and compare
     generation/initialization, decoding/lexing, recognition, tree creation,
-    transformations and recovery separately and together. Retain raw serial
+    transformations and recovery separately and together. Summarize serial
     measurements and counters for work, retained objects and peak/storage
     behavior, including repeated small-after-large and interleaved owned
-    contexts. State stack/resource limits and actual platform scope.
+    contexts. State stack/resource limits and actual platform scope; delete raw
+    samples after checking the summary.
 23. **AC-23 — Toolchain and reproducibility.** Native modules use rxc, rxas,
     rxlink and both concrete VMs; focused optimized/no-opt parity covers new
     semantics. Check deterministic generation and negative exits. Preserve
@@ -2852,8 +3163,8 @@ silently discarded. This does not establish a Bison recognizer defect.
 
 The existing `evidence/toolkit-provenance.json` is a frozen checkpoint for the
 shared-model/Squirrel/LR tranche. Subsequent Earley/lexer sources are not
-retroactively covered by it; retain an additional exact tranche receipt after
-those focused checks. All expanded AC remain open for their complete portfolio,
+retroactively covered by it; summarize their exact inputs and results in the
+current plan after those focused checks. All expanded AC remain open for their complete portfolio,
 consumer, diagnostics, proofs and migration obligations.
 
 ### Implementation checkpoint — Pika port and pruning refinement
@@ -3376,7 +3687,7 @@ normal product VM selection is unchanged. Construction is still the native
 cREXX Level L implementation, not a foreign parser generator.
 
 Next: finish the expanded cases and optimizer/VM parity, qualify the CMake
-runner and another generated consumer, retain exact input hashes and receipts,
+runner and another generated consumer, record input identities and result summaries,
 and complete product docs/feature limits. Host registration/exposure/write-back
 and the seven research criteria remain open under the existing agreed scope.
 

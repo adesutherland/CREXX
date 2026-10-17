@@ -1,0 +1,7 @@
+options levelg
+say choose()
+say choose('bad')
+exit 0
+choose: procedure = .int
+  arg value=2
+  return value

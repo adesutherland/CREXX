@@ -56,7 +56,7 @@ implicitly grant it RXAS semantics.
 | Register maps | Integer arrays indexed by IR slot ID and value ID | Every function gets a fresh frame; all emitted register operands checked against its bound |
 | Call window | Count followed by contiguous argument registers, outside every live slot/value | Maximum call arity measured before selection; result and arguments are disjoint |
 | Selected instruction | Mnemonic, final ordered operand text and origin ID | Constructed only by fixed selectors, checked registers/labels/call names and exact literal quoting |
-| Import cache | Package catalogs and checked callable signatures | B-only RXBIN007 reader, result/arity/type checks, no optional arguments in this ABI |
+| Import cache | Package catalogs and checked callable signatures | B-only RXBIN007 reader, result/arity/type/optional checks and per-position presence masks |
 | Output | Level L writer sections and owned origin-tagged chunks | Per-section and total byte budgets, finish/stream error checks |
 
 Selection allocates stable value locations, runs the selector without output
@@ -80,8 +80,12 @@ identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
 all Classic routines use argument/numeric packets and a result-presence packet.
 
-Arguments are copied into the private window, their ABI flags set, and the call
-writes a distinct result register. The window is cleared after return. Classic
+Supplied arguments are copied into the private window with flag 768; omitted
+optional positions get flag 512 without constructing a placeholder value. The call
+writes a distinct result register. The window is cleared after return. G callee reads test original presence
+before selecting their fallback; sole-use literal defaults emit only on the
+missing branch. Qualified G exports retain optional flags in `.meta`, and
+provider-only files have no synthetic main. Classic
 pool arguments are explicit references: pool loads/stores use links, and adapter
 calls borrow the same activation pool. Numeric and argument packets are value
 snapshots. Callee NUMERIC updates do not modify its caller's state. Each Classic

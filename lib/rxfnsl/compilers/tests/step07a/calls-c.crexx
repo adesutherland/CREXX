@@ -1,0 +1,26 @@
+options levelc
+say holes(,3,)
+say holes(4,3,5)
+say recurse(3)
+call pair mark(1),mark(2)
+exit 0
+holes: procedure
+  arg a,b,c
+  say arg(1,'E'); say arg(2,'E'); say arg(3,'E')
+  if \arg(3,'E') then c=7
+  a=99
+  say arg(1,'E')
+  return b+c
+recurse: procedure
+  arg n,step
+  if \arg(2,'E') then step=2
+  if n=0 then return step
+  return recurse(n-1)+step
+mark: procedure
+  arg n
+  say n
+  return n
+pair: procedure
+  arg a,b
+  say a*10+b
+  return

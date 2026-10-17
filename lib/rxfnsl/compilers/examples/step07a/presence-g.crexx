@@ -1,0 +1,12 @@
+options levelg
+call probe()
+call probe('')
+call probe('given')
+exit 0
+probe: procedure = .void
+  arg text = 'default'
+  say ?text
+  say '[' || text || ']'
+  text = 'changed'
+  say ?text
+  return

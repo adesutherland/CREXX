@@ -19,14 +19,14 @@ remaining adapter/platform acceptance and the worklist for SAN-009's retained
 sanitizer findings.  Every first-party finding receives a stable `SAN-nnn`
 entry as soon as it is observed, including defects exposed while testing an
 unrelated activity.  "Independent" and "pre-existing" are attribution labels,
-not dispositions.  Dated evidence may support an entry but may not replace it.
+not dispositions. Record the finding in the current worklist, not a dated note.
 
 An open `SAN-nnn` item blocks cross-platform sanitizer-clean and release
 completion claims. A bounded implementation phase may close only after Adrian
 explicitly assigns its outstanding platform proof to a named later release-QA
 gate. That handoff must name the live item, current repair evidence and the
 release-QA owner; it does not close or downgrade the item. The entry must retain
-the exact failing command and log, affected revision, smallest permanent
+the exact failing command and concise diagnostic, affected revision, smallest permanent
 reproducer, owner or next action, and closure checks.
 
 Closure requires all of the following:
@@ -47,7 +47,10 @@ until the underlying defect is repaired and requalified.
 
 ## Runner
 
-The runner keeps every command in a timestamped log directory:
+The runner writes temporary command logs in a timestamped build directory.
+Inspect them during the run, summarize outcomes and diagnostics in the current
+worklist, then delete the run directory after its processes finish. Do not
+track, copy or archive these logs; the root documentation/output rules apply.
 
 ```sh
 tools/asan-run.sh --phase focused-lsan

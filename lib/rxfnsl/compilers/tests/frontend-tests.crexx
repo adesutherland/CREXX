@@ -17,6 +17,8 @@ main: procedure = .int expose failures checks artifacts examples
     when 'mapping' then call mapping()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
+    when 'optional' then call optionaltests()
+    when 'literals' then call literals()
     when 'lifecycle' then call lifecycle()
     otherwise return 2
   end
@@ -76,6 +78,68 @@ syntax: procedure = .void
   call bad('c','numeric form wrong' as .binary,'LL_COMPILER_SYNTAX:','SCIENTIFIC',13)
   call bad('g','x = ' as .binary,'LL_COMPILER_SYNTAX:','number')
   call bad('g','x = .unknown' as .binary,'LL_COMPILER_TYPE:','unsupported type',4)
+  return
+
+/** C source ordinals are Unicode scalar constants, not raw UTF-8 byte casts. */
+ordinalcase: procedure = .void expose artifacts
+  arg spelling = .string, expected = .binary
+  request = .llfrontend..request('c',('say ' || spelling) as .binary,artifacts,'literal.crexx')
+  call check(request.status() = 0,'ordinal accepted ' || spelling || ': ' || request.error())
+  if request.status() <> 0 then return
+  tree = request.ast(); body = tree.root().child('body'); saynode = body.child('items',1)
+  node = saynode.child('value')
+  walk = tree.walk('parents first'); found = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() <> 'String' then iterate
+    call check(node.text('spelling') = spelling,'ordinal authored spelling retained')
+    call check(node.start() = 4 & node.finish() = 4 + <blen>(spelling as .binary),'ordinal byte extent includes suffix')
+    found = found + 1
+  end
+  call check(found = 1,'one String node for ordinal literal')
+  graph = request.graph(); found = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    call check(op.name() <> 'crexx.c.load','no suffix variable read')
+    if op.name() <> 'crexx.c.say' then iterate
+    value = op.input(1)
+    call check(value.isconstant() & value.bytes() = expected,'exact ordinal text bytes')
+    found = found + 1
+  end
+  call check(found = 1,'one SAY operation')
+  return
+
+literals: procedure = .void
+  call ordinalcase("'410042'x",'410042'x as .binary)
+  call ordinalcase('"80fF"X','C280C3BF'x as .binary)
+  call ordinalcase("'C3A9'x",'C383C2A9'x as .binary)
+  call ordinalcase("'F FF'x",'0FC3BF'x as .binary)
+  call ordinalcase("'41  42'x",'4142'x as .binary)
+  call ordinalcase("''x",''x as .binary)
+  call ordinalcase("'1 1111'b",'1F'x as .binary)
+  call ordinalcase('"10000000 11111111"B','C280C3BF'x as .binary)
+  call ordinalcase("''b",''x as .binary)
+  digits = '0123456789ABCDEF'; allhex = ''; expected = ''
+  do ordinal = 0 to 255
+    allhex = allhex || substr(digits,ordinal / 16 + 1,1) || substr(digits,ordinal % 16 + 1,1)
+    assembler appendchar expected,ordinal
+  end
+  call ordinalcase("'" || allhex || "'x",expected as .binary)
+  do i = 1 to 4
+    source = word("'GG'x '2'b '41'B 'é'x",i)
+    call bad('c',('say ' || source) as .binary,'LL_COMPILER_SYNTAX:','invalid digit',4)
+  end
+  call bad('c',"say ' 41'x" as .binary,'LL_COMPILER_SYNTAX:','grouping',4)
+  call bad('c',"say '41 'x" as .binary,'LL_COMPILER_SYNTAX:','grouping',4)
+  call bad('c',"say '4 1'x" as .binary,'LL_COMPILER_SYNTAX:','grouping',4)
+  call bad('c',"say '1 1'b" as .binary,'LL_COMPILER_SYNTAX:','grouping',4)
+  call bad('c',("say '41" || ('09'x as .string) || "42'x") as .binary,'LL_COMPILER_SYNTAX:','invalid digit',4)
+  call bad('c',"if 0 then say 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',14)
+  text = good('c',"say '41' x",'crexx.c.blank')
+  text = good('c',"say '41'xyz",'crexx.c.abut')
+  text = good('c',"say '41'/* gap */x",'crexx.c.blank')
+  text = good('c',"x = 1; say x",'crexx.c.load')
+  call bad('g',"say '41'x" as .binary,'LL_COMPILER_BIND:','unknown variable X')
   return
 
 grammar: procedure = .void expose examples
@@ -166,15 +230,15 @@ mapping: procedure = .void
   return
 
 calls: procedure = .void
-  text = good('g','say f(2); exit 0; f: procedure = .int; arg n = .int; if n = 0 then return 1; return f(n - 1)','crexx.calls.local.f')
+  text = good('g','say f(2); exit 0; f: procedure = .int; arg n = .int; if n = 0 then return 1; return f(n - 1)','crexx.calls.site.')
   call check(pos('target="F"',text) > 0,'local call target visible in IR')
   text = good('g','call p; exit 0; p: procedure = .void; say ''done''; return','core.return','crexx.c.setresult')
-  text = good('g','import rxfnsb; say length(''α'')','crexx.calls.rxfnsb.length')
+  text = good('g','import rxfnsb; say length(''α'')','crexx.calls.site.')
   text = good('c','call p 1,,3; say result; exit 0; p: procedure; arg a,b,c; say arg(); say arg(2,''E''); return','crexx.c.return.absent')
   call check(pos('crexx.c.arguments.append',text) > 0 & pos('crexx.c.setresult',text) > 0,'omission packet and RESULT explicit')
   text = good('c','say p(2); exit 0; p: procedure; arg n; numeric digits 3; if n = 0 then return 1; return p(n - 1)','crexx.c.call')
   text = good('c','call length ''abc''; say result','crexx.c.length')
-  call bad('g','say f(); exit 0; f: procedure = .int; arg n=.int; return n' as .binary,'LL_COMPILER_CALL:','wrong argument count')
+  call bad('g','say f(); exit 0; f: procedure = .int; arg n=.int; return n' as .binary,'LL_COMPILER_CALL:','missing required typed argument')
   call bad('g','say f(,); exit 0; f: procedure = .int; arg n=.int,m=.int; return n' as .binary,'LL_COMPILER_CALL:','missing required typed argument')
   call bad('g','say p(); exit 0; p: procedure = .void; return' as .binary,'LL_COMPILER_CALL:','void routine used as a value')
   call bad('g','exit 0; p: procedure = .int; nop' as .binary,'LL_COMPILER_RETURN:','may finish without a value')
@@ -182,7 +246,7 @@ calls: procedure = .void
   call bad('c','say 1; p: procedure; return 2' as .binary,'LL_COMPILER_PROFILE:','fall-through')
   call bad('c','say missing()' as .binary,'LL_COMPILER_CALL:','unknown Classic routine')
   call bad('g','say length(''a'')' as .binary,'LL_COMPILER_IMPORT:','requires import')
-  call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','only top-level')
+  call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','cannot read nonexistent.rxbin')
   return
 
 contracts: procedure = .void expose artifacts
@@ -233,4 +297,34 @@ lifecycle: procedure = .void expose artifacts
   call check(pos('LL_COMPILER_IMPORT:',absent.error()) = 1,'no ambient import fallback')
   wrongfile = .llfrontend..request('g','import rxfnsb' as .binary,artifacts || '/missing')
   call check(pos('LL_COMPILER_IMPORT:',wrongfile.error()) = 1,'missing import file')
+  return
+
+optionaltests: procedure = .void
+  text = good('g','say f(7); exit 0; f: procedure = .int; arg n=.int,k=2; return n*k','core.optionalargument')
+  text = good('g','call p(); call p(,3); exit 0; p: procedure = .void; arg a=1,b=2; say ?a; return','core.hasarg')
+  text = good('g','say f(,3); exit 0; f: procedure = .int; arg a=2,b=.int; return a*b','core.optionalargument')
+  text = good('g','say f(); exit 0; f: procedure = .string; arg a=''''; return a','core.optionalargument')
+  text = good('g','say f(); exit 0; f: procedure = .int; arg ?a=.int; return a','core.optionalargument')
+  text = good('g','namespace demo expose f; f: procedure = .int; arg a=2; return a','function F','function $MAIN')
+  call bad('g','say ?missing' as .binary,'LL_COMPILER_BIND:','formal argument')
+  call bad('g','say f(); exit 0; f: procedure = .int; arg a=2,b=.int; return b' as .binary,'LL_COMPILER_CALL:','required typed argument B')
+  call bad('g','exit 0; f: procedure = .int; arg a=1+2; return a' as .binary,'LL_COMPILER_SYNTAX:','unexpected')
+  call bad('g','exit 0; f: procedure = .int; arg a=1,a=2; return a' as .binary,'LL_COMPILER_BIND:','duplicate formal')
+  call bad('g','namespace demo expose absent; f: procedure = .int; return 1' as .binary,'LL_COMPILER_BIND:','no local routine')
+  call bad('g','namespace demo expose f; say 1; f: procedure = .int; return 1' as .binary,'LL_COMPILER_PROFILE:','declarations only')
+  call bad('g','exit 0; f: procedure = .int; namespace demo expose f; return 1' as .binary,'LL_COMPILER_PROFILE:','top-level')
+  call bad('g','exit 0; a..f: procedure = .int; return 1' as .binary,'LL_COMPILER_BIND:','simple routine')
+  call bad('g','a..value=1; say a..value' as .binary,'LL_COMPILER_PROFILE:','qualified variables')
+  cases = .string[]
+  cases[1] = 'x=1'; cases[2] = 'x=-2'; cases[3] = 'x=2.5e-3'; cases[4] = "x='a''b'"; cases[5] = 'x=inf'; cases[6] = 'x=nan(7ff8000000000001)'
+  signature = .llcompilercontracts..signature; i = .int
+  do i = 1 to cases[0]
+    signature = .llcompilercontracts..signature('f','.int',cases[i])
+    call check(signature.error() = '' & signature.optional(1) & signature.paramname(1) = 'x','legacy default ' || cases[i])
+  end
+  cases[1] = 'x=1+2'; cases[2] = 'x=1e'; cases[3] = "x='unterminated"; cases[4] = 'x=.int,X=.int'; cases[5] = 'x=nan(7ff0000000000000)'; cases[6] = 'x=2.3tail'
+  do i = 1 to cases[0]
+    signature = .llcompilercontracts..signature('f','.int',cases[i])
+    call check(signature.error() <> '','malformed signature ' || cases[i])
+  end
   return

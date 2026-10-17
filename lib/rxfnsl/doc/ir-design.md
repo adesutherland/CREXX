@@ -175,7 +175,7 @@ recovered origin prevents successful executable-module publication.
 `finish()` freezes and verifies the complete draft, including unreachable
 blocks. On failure the result reports an error and exposes no successful graph
 or encoded output. Existing published modules remain usable. A published module
-supports `functions`, `blocks`, `operations`, `operation(id)`, `block(id)`,
+supports `functions`, `function(id)`, `blocks`, `operations`, `operation(id)`, `block(id)`,
 `dump`, `text`, `binary`, `bytes`, `capacity` and `identity`.
 
 ### Construction reference
@@ -183,8 +183,8 @@ supports `functions`, `blocks`, `operations`, `operation(id)`, `block(id)`,
 | Owner | Methods |
 |---|---|
 | Builder | `function(name,resulttype)`, `source(name,bytes)`, `synthetic(description)`, `finish()`, `error()`. |
-| Function | `argument(type)` before creating blocks; `block(name)`; `slot(name,type)`. The first block is the entry. |
-| Block | `constant`, `constantbytes`, `readarg(ordinal,origin)`, `load(slot,origin)`, `store(slot,value,origin)`. |
+| Function | `argument(type,optional=0)` before creating blocks; `exportas(name)`; `block(name)`; `slot(name,type)`. The first block is the entry. |
+| Block | `constant`, `constantbytes`, `readarg(ordinal,origin,fallback)`, `hasarg(ordinal,origin)`, `load(slot,origin)`, `store(slot,value,origin)`. |
 | Block | `binary(descriptor,left,right,origin)` for two inputs, one result and no attributes; `operation(descriptor,origin)` for a named draft. |
 | Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
 | Operation draft | `input(name,value)`, `attribute(name,bits)`, `finish()`. Every declared field must be supplied once. |
@@ -196,11 +196,26 @@ by its declared name. Read operations in a block with `block.first()` and
 `op.next()` until `op.valid()` is false. Function results currently have one
 value or `core.void`; extension operations may have multiple results.
 
-The seven core operations are constant, argument, load, store, jump, branch and
-return. A branch consumes exactly `core.boolean`, with true then false
+The nine core operations are constant, argument, load, store, jump, branch,
+return, hasarg and optionalargument. A branch consumes exactly `core.boolean`, with true then false
 successors. A return matches its owning function's result. Edges stay within one
 function. A block has one final jump, branch or return. Extension operations in
 this profile are straight-line operations; graph control uses the core forms.
+
+Optionality is exactly 0 or 1 per formal, including optional positions before
+required ones. `readarg(ordinal,origin)` reads a required formal. An optional
+formal requires a fallback handle of the same type, defined earlier in the same
+block. The fallback is an already evaluated value: arbitrary lazy defaults
+require explicit control flow. `hasarg` returns `core.boolean` for original
+invocation presence, independently of value reads and assignments. The caller's
+language/target contract remains responsible for passing valid required values.
+
+`module.function(id)` returns a borrowed function view with `name`, `resulttype`,
+`arguments`, `argumenttype(n)`, `optional(n)` and `exportname`. Exports must be
+nonempty and unique; consumer-specific symbol syntax is outside Level L.
+Mutation of a frozen owner fails without changing its saved image. Unknown,
+foreign and expired handles are rejected. The display dump includes signature
+and export lines; it is still a view, not the lossless interchange format.
 
 Handles borrow their owner through checked Level B references. Appending records
 does not invalidate them. Destroying or replacing the owner does. A handle from
@@ -353,10 +368,10 @@ The manifest includes ordered family versions, type names, operation names,
 effects and field signatures. Changing registration order changes the manifest.
 The host is responsible for versioning changes to codecs or semantic services.
 
-Binary version 1 begins with magic bytes `4C4C4952`, then u32 version 1 and a
+Binary version 2 begins with magic bytes `4C4C4952`, then u32 version 2 and a
 length-prefixed UTF-8 manifest. Thirteen tables follow, each with u32 count and
 width, then little-endian u32 fields in row order. A length-prefixed byte pool
-follows. Each byte-pool item has its own u32 length. Text version 1 uses the same
+follows. Each byte-pool item has its own u32 length. Text version 2 uses the same
 record structure, decimal fields and hexadecimal byte strings. It preserves
 embedded zeros, non-UTF-8 constants and exact source bytes. Both loaders reject
 truncation, incompatible schemas, unknown versions, invalid ranges and trailing
@@ -364,7 +379,7 @@ data before publishing a graph.
 
 | Table | Fields, in order |
 |---|---|
-| Functions (6) | name pool ID, result type, entry block, argument start/count, reserved zero |
+| Functions (6) | name pool ID, result type, entry block, argument start/count, export-name pool ID (zero for private) |
 | Blocks (4) | function, first/last operation, name pool ID |
 | Operations (12) | opcode, block, next, operand start/count, result start/count, edge start/count, attribute start, origin, auxiliary ID |
 | Values (4) | defining operation, result ordinal, type, reserved zero |
@@ -374,12 +389,18 @@ data before publishing a graph.
 | Origins (6) | source, first/last byte, kind, contributor start/count |
 | Sources (2) | name pool ID, source-bytes pool ID |
 | Attributes (4) | operation, ordinal, type, constant ID |
-| Arguments (2) | function, type |
+| Arguments (3) | function, type, optional flag (0 or 1) |
 | Contributors (1) | earlier origin ID |
 
-Core opcode IDs are 1–7 in the order listed above. Extension IDs are 16 plus
+Core opcode IDs are 1–9 in the order listed above. Extension IDs are 16 plus
 registration ordinal. Numeric IDs are not pointers, persisted callbacks or VM
 registers. Zero represents absence only in the fields that permit it.
+
+Writers emit version 2. Readers also accept version 1 with argument rows of
+width 2, all required, and private functions. They validate v1's reserved zero
+export field and reject opcodes 8/9 in a v1 image. Neither old reserved fields
+nor unknown future versions silently acquire new semantics. Clone/rewrite and
+optimisation retain signature flags and exports, subject to normal budgets.
 
 Working tables use fixed-width binary records, growing geometrically. An
 operation header occupies 48 bytes. `bytes()` counts used record bytes and

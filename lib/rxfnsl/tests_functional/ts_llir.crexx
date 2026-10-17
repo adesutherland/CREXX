@@ -2,6 +2,7 @@
 options levelb
 import rxfnsb
 import llir
+import llirservices
 
 main: procedure = .int
   s = .llir..schema()
@@ -43,7 +44,7 @@ main: procedure = .int
   if restored.error() <> '' then say restored.error()
   failures = failures + check(restored.error() = '' & restored.text() = saved,'text round trip')
   failures = failures + check(pos('demo.add',graph.dump()) > 0,'named dump')
-  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures()
+  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments()
   say 'failures=' || failures
   return failures
 
@@ -71,7 +72,7 @@ refusals: procedure = .int
   cases[6] = 'values 3 4 1 LL_IR_RESERVED'
   cases[7] = 'operations 5 3 1 LL_IR_TERMINATOR'
   cases[8] = 'slots 1 4 1 LL_IR_RESERVED'
-  cases[9] = 'functions 1 6 1 LL_IR_RESERVED'
+  cases[9] = 'functions 1 6 999 LL_IR_EXPORT'
   cases[10] = 'origins 1 4 5 LL_IR_RECOVERED'
   cases[11] = 'origins 1 3 1 LL_IR_ORIGIN'
   cases[12] = 'operands 1 1 999 LL_IR_VALUE'
@@ -236,3 +237,177 @@ signatures: procedure = .int
     failures = failures + check(pos(word(item,5),restored.error()) > 0,'signature refusal ' || item)
   end
   return failures
+
+/* Independent language-neutral invocation contract and wire compatibility. */
+optionalarguments: procedure = .int
+  mode = .int
+  registry = .llir..schema(); family = registry.family('independent',1)
+  integer = family.type('integer',.llir..intcodec() as .object); contract = registry.finish()
+  draft = .llir..builder(contract); at = draft.synthetic('optional fixture')
+  fn = draft.function('choose',integer); call fn.exportas('independent.choose')
+  ordinal = fn.argument(integer,1); required = fn.argument(integer)
+  entry = fn.block('entry'); fallback = entry.constant(integer,'7',at)
+  present = entry.hasarg(ordinal,at); value = entry.readarg(ordinal,at,fallback)
+  original = entry.readarg(required,at); call entry.returnvalue(value,at)
+  graph = draft.finish(); failures = check(graph.error() = '','optional graph')
+  if graph.error() <> '' then do
+    say graph.error(); return failures
+  end
+  view = graph.function(1)
+  failures = failures + check(view.name() = 'choose' & view.exportname() = 'independent.choose','function identity view')
+  failures = failures + check(view.arguments() = 2 & view.optional(1) = 1 & view.optional(2) = 0,'per-position optional view')
+  resulttype = view.resulttype(); argtype = view.argumenttype(1)
+  failures = failures + check(resulttype.id() = integer.id() & argtype.id() = integer.id(),'function type views')
+  restored = llir..loadbinary(contract,graph.binary())
+  failures = failures + check(restored.error() = '' & restored.text() = graph.text(),'optional binary round trip')
+  restored = llir..loadtext(contract,graph.text())
+  failures = failures + check(restored.error() = '' & restored.text() = graph.text(),'optional text round trip')
+  change = .llirservices..change; rewritten = .llir..module
+  change = llirservices..optimise(reference graph); rewritten = change.result()
+  failures = failures + check(rewritten.error() = '' & rewritten.functions() = 1,'optional optimisation')
+  view = rewritten.function(1)
+  failures = failures + check(view.exportname() = 'independent.choose' & view.optional(1) & view.optional(2) = 0,'rewrite preserves signature')
+  failures = failures + check(pos('core.optionalargument',rewritten.dump()) > 0,'used optional read retained')
+  cases = .string[]
+  cases[1] = 'arguments 1 3 2 LL_IR_SIGNATURE'
+  cases[2] = 'operations 2 12 3 LL_IR_SIGNATURE'
+  cases[3] = 'operations 3 12 2 LL_IR_SIGNATURE'
+  cases[4] = 'operations 4 12 1 LL_IR_SIGNATURE'
+  cases[5] = 'values 2 3 3 LL_IR_TYPE'
+  do i = 1 to cases[0]
+    item = cases[i]
+    restored = llir..loadtext(contract,corrupt(graph.text(),word(item,1),word(item,2) as .int,word(item,3) as .int,word(item,4)))
+    failures = failures + check(pos(word(item,5),restored.error()) > 0,'optional malformed ' || item)
+  end
+  rejected = 0
+  do
+    view = graph.function(0)
+  on signal
+    rejected = 1
+  end
+  failures = failures + check(rejected,'unknown function view rejected')
+  rejected = 0
+  do
+    view = graph.function(1); call view.exportas('replacement')
+  on signal
+    rejected = 1
+  end
+  failures = failures + check(rejected,'frozen export rejected')
+  before = graph.binary()
+  do mode = 1 to 3
+    rejected = 0
+    do
+      view = graph.function(1); block = graph.block(1)
+      if mode = 1 then ignored = view.argument(integer,2)
+      if mode = 2 then value = block.readarg(999,at)
+      if mode = 3 then present = block.hasarg(999,at)
+    on signal
+      rejected = 1
+    end
+    failures = failures + check(rejected & bin2x(graph.binary()) = bin2x(before),'frozen optional API atomic ' || mode)
+  end
+  stale = expiredfunction(contract,integer)
+  failures = failures + check(stale.valid() = 0,'expired function view')
+  exactdraft = .llir..builder(contract); exactat = exactdraft.synthetic('exact exports')
+  do n = 1 to 2
+    exactfn = exactdraft.function('export' || n,integer)
+    spelling = '1'; if n = 2 then spelling = '01'
+    call exactfn.exportas(spelling); exactblock = exactfn.block('entry')
+    exactvalue = exactblock.constant(integer,'0',exactat); call exactblock.returnvalue(exactvalue,exactat)
+  end
+  exactgraph = exactdraft.finish()
+  failures = failures + check(exactgraph.error() = '' & exactgraph.functions() = 2,'export identities use exact text equality')
+  restored = llir..loadbinary(contract,graph.binary(),1)
+  failures = failures + check(pos('LL_RESOURCE_LIMIT',restored.error()) > 0 & restored.text() = '','optional image entry budget')
+  restored = llir..loadbinary(contract,graph.binary(),1000000,graph.bytes() - 1)
+  failures = failures + check(pos('LL_RESOURCE_LIMIT',restored.error()) > 0 & restored.text() = '','optional image byte budget')
+  otherdraft = .llir..builder(contract); otherat = otherdraft.synthetic('foreign')
+  otherfn = otherdraft.function('foreign',integer); otherblock = otherfn.block('entry')
+  foreign = otherblock.constant(integer,'9',otherat)
+  do mode = 1 to 4
+    draft = .llir..builder(contract); at = draft.synthetic('fallback refusal')
+    fn = draft.function('f',integer); ordinal = fn.argument(integer,1)
+    entry = fn.block('entry'); fallback = entry.constant(integer,'0',at)
+    if mode = 1 then value = entry.readarg(1,at,foreign)
+    if mode = 2 then do
+      wrong = entry.constant(contract.type('core.boolean'),'1',at)
+      value = entry.readarg(1,at,wrong)
+    end
+    if mode = 3 then do
+      second = fn.block('second'); value = second.readarg(1,at,fallback)
+      call second.returnvalue(value,at)
+    end
+    if mode = 4 then present = entry.hasarg(1,otherat)
+    call entry.returnvalue(fallback,at); restored = draft.finish()
+    failures = failures + check(restored.error() <> '' & restored.text() = '','fallback ownership/type ' || mode)
+  end
+  do mode = 1 to 5
+    draft = .llir..builder(contract); at = draft.synthetic('refusal')
+    fn = draft.function('f',integer); ordinal = fn.argument(integer,mode = 1)
+    entry = fn.block('entry'); fallback = entry.constant(integer,'0',at)
+    if mode = 1 then value = entry.readarg(1,at)
+    if mode = 2 then value = entry.readarg(1,at,fallback)
+    if mode = 3 then present = entry.hasarg(2,at)
+    if mode = 4 then call fn.exportas('')
+    if mode = 5 then do
+      call fn.exportas('same'); call fn.exportas('same')
+    end
+    call entry.returnvalue(fallback,at); restored = draft.finish()
+    failures = failures + check(restored.error() <> '' & restored.text() = '','builder contract refusal ' || mode)
+  end
+  /* Retained v1 encoding is independently constructed from a required-only graph. */
+  draft = .llir..builder(contract); at = draft.synthetic('old image')
+  fn = draft.function('legacy',integer); ordinal = fn.argument(integer)
+  entry = fn.block('entry'); value = entry.readarg(1,at); call entry.returnvalue(value,at)
+  oldgraph = draft.finish(); oldtext = legacytext(oldgraph.text())
+  restored = llir..loadtext(contract,oldtext)
+  failures = failures + check(restored.error() = '' & restored.text() = oldgraph.text(),'v1 required/private text accepted')
+  oldimage = legacybinary(oldgraph.binary()); restored = llir..loadbinary(contract,oldimage)
+  failures = failures + check(restored.error() = '' & restored.text() = oldgraph.text(),'v1 required/private binary accepted')
+  restored = llir..loadtext(contract,corrupt(oldtext,'functions',1,6,'1'))
+  failures = failures + check(pos('LL_IR_RESERVED',restored.error()) > 0,'v1 reserved field remains rejected')
+  restored = llir..loadtext(contract,corrupt(oldtext,'operations',1,1,'8'))
+  failures = failures + check(pos('LL_IR_OPCODE',restored.error()) > 0,'v1 cannot admit new opcodes')
+  return failures
+
+expiredfunction: procedure = .llir..function
+  arg contract = .llir..contract, integer = .llir..typeid
+  draft = .llir..builder(contract)
+  return draft.function('expired',integer)
+
+legacytext: procedure = .string
+  arg text = .string
+  reader = .llir..textreader(text); out = .llir..writer(100000)
+  call out.line('LLIR-TEXT-1'); ignored = reader.line(); call out.line(reader.line())
+  do t = 1 to 13
+    header = reader.line(); count = word(header,2) as .int
+    if t = 12 then header = word(header,1) || ' ' || count || ' 2'
+    call out.line(header)
+    do i = 1 to count
+      row = reader.line()
+      if t = 12 then row = subword(row,1,2)
+      call out.line(row)
+    end
+  end
+  do while reader.left() > 0
+    call out.line(reader.line())
+  end
+  result = out.finish()
+  return result.text()
+
+legacybinary: procedure = .binary
+  arg image = .binary
+  at = 12 + <at..u32>(8) image; result = binsubstr(image,1,at)
+  <at..u32>(4) result = 1
+  do t = 1 to 13
+    count = <at..u32>(at) image; width = <at..u32>(at + 4) image
+    header = binsubstr(image,at + 1,8); at = at + 8
+    if t = 12 then <at..u32>(4) header = 2
+    result = result || header
+    do i = 1 to count
+      size = width * 4
+      if t = 12 then size = 8
+      result = result || binsubstr(image,at + 1,size); at = at + width * 4
+    end
+  end
+  return result || binsubstr(image,at + 1)

@@ -1,0 +1,10 @@
+options levelg
+import primitives
+say primitives..truth()
+say primitives..truth(1 as .boolean)
+say primitives..text()
+say '[' || primitives..text('') || ']'
+say primitives..real()
+say primitives..decimal()
+call primitives..emit()
+exit 0

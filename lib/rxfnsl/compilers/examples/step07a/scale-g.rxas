@@ -1,0 +1,75 @@
+.globals=0
+main() .locals=2
+.srcstep 0 0 6 "" 0 0 0 ""
+load r1,0
+call r0,llf1(),r1
+ret r0
+llf1() .locals=16
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.$MAIN"="b" ".int" llf1() ""
+numsci 18,1,1
+llb1:
+.srcstep 21 0 17 "scale-g.crexx" 2 11 12 "say scale(7)"
+load r4,7
+.srcstep 13 0 17 "scale-g.crexx" 2 5 13 "say scale(7)"
+copy r1,r4
+copy r14,r4
+load r13,2
+settp r14,768
+settp r15,512
+call r5,llf2(),r13
+null r14
+null r15
+.srcstep 4 0 17 "scale-g.crexx" 2 1 13 "say scale(7)"
+copy r6,r5
+itos r6
+say r6
+.srcstep 40 0 17 "scale-g.crexx" 3 11 12 "say scale(7,3)"
+load r7,7
+.srcstep 32 0 17 "scale-g.crexx" 3 5 15 "say scale(7,3)"
+copy r2,r7
+.srcstep 49 0 17 "scale-g.crexx" 3 13 14 "say scale(7,3)"
+load r8,3
+.srcstep 32 0 17 "scale-g.crexx" 3 5 15 "say scale(7,3)"
+copy r3,r8
+copy r14,r7
+copy r15,r8
+load r13,2
+settp r14,768
+settp r15,768
+call r9,llf2(),r13
+null r14
+null r15
+.srcstep 23 0 17 "scale-g.crexx" 3 1 15 "say scale(7,3)"
+copy r10,r9
+itos r10
+say r10
+.srcstep 59 0 17 "scale-g.crexx" 4 6 7 "exit 0"
+load r11,0
+.srcstep 51 0 17 "scale-g.crexx" 4 1 7 "exit 0"
+exit r11
+load r12,0
+ret r12
+llf2() .locals=8
+.srcstep 0 0 6 "" 0 0 0 ""
+.meta "llprogram.SCALE"="b" ".int" llf2() "p1=.int,?p2=.int"
+numsci 18,1,1
+llb2:
+.srcstep 61 0 98 "scale-g.crexx" 6 3 31 "  arg value = .int, factor = 2"
+copy r4,a1
+copy r1,r4
+.srcstep 63 0 17 "scale-g.crexx" 6 30 31 "  arg value = .int, factor = 2"
+brtpandt llarg20_present,a2,256
+load r5,2
+copy r6,r5
+br llarg20_done
+llarg20_present:
+copy r6,a2
+llarg20_done:
+.srcstep 61 0 98 "scale-g.crexx" 6 3 31 "  arg value = .int, factor = 2"
+copy r2,r6
+.srcstep 72 0 17 "scale-g.crexx" 7 10 24 "  return value * factor"
+copy r3,r4
+imult r7,r4,r6
+.srcstep 66 0 17 "scale-g.crexx" 7 3 24 "  return value * factor"
+ret r7

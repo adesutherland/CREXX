@@ -651,7 +651,7 @@ arena: class
     _t9 = .llir..table(6)
     _t10 = .llir..table(2)
     _t11 = .llir..table(4)
-    _t12 = .llir..table(2)
+    _t12 = .llir..table(3)
     _t13 = .llir..table(1)
     return
   identity: method = .int
@@ -748,7 +748,7 @@ arena: class
     return 0
   width: method = .int
     arg table = .int
-    return word('6 4 12 4 4 1 1 2 6 2 4 2 1',table) as .int
+    return word('6 4 12 4 4 1 1 2 6 2 4 3 1',table) as .int
   get: method = .int
     arg table = .int, row = .int, col = .int
     select table
@@ -864,7 +864,11 @@ arena: class
     call put(5,id,1,fn); call put(5,id,2,type.id()); call put(5,id,3,nameid)
     return id
   argument: method = .int
-    arg fn = .int, type = .llir..typeid
+    arg fn = .int, type = .llir..typeid, optional = 0
+    if reserve(0,0) = 0 then return 0
+    if optional <> 0 & optional <> 1 then do
+      call fail('LL_IR_SIGNATURE: optional flag must be 0 or 1'); return 0
+    end
     if validtype(type) = 0 then return 0
     if fn < 1 | fn > count(1) then do
       call fail('LL_IR_OWNER: argument requires an owning function'); return 0
@@ -878,7 +882,7 @@ arena: class
     else if id <> get(1,fn,4) + ordinal - 1 then do
       call fail('LL_IR_SIGNATURE: finish one argument list before starting another'); return 0
     end
-    call put(12,id,1,fn); call put(12,id,2,type.id()); call put(1,fn,5,ordinal)
+    call put(12,id,1,fn); call put(12,id,2,type.id()); call put(12,id,3,optional); call put(1,fn,5,ordinal)
     return ordinal
   source: method = .int
     arg name = .string, bytes = .binary
@@ -972,7 +976,7 @@ arena: class
     return get(7,get(3,op,8) + index - 1,1)
   opname: method = .string
     arg opcode = .int
-    if opcode >= 1 & opcode <= 7 then return 'core.' || word('constant argument load store jump branch return',opcode)
+    if opcode >= 1 & opcode <= 9 then return 'core.' || word('constant argument load store jump branch return hasarg optionalargument',opcode)
     schema = dereference _contract.data()
     if opcode > 16 & opcode <= schema.ops() + 16 then return schema.opname(opcode - 16)
     return '<unknown>'
@@ -1030,7 +1034,19 @@ arena: class
         if text(get(1,i,1)) = name then call fail('LL_IR_FUNCTION: duplicate function ' || name)
       end
       if get(2,blockid,1) <> fn then call fail('LL_IR_OWNER: entry block belongs to another function')
-      if get(1,fn,6) <> 0 then call fail('LL_IR_RESERVED: nonzero function reserved field')
+      exportid = get(1,fn,6)
+      if exportid > 0 then do
+        if exportid > poolsize() then do
+          call fail('LL_IR_EXPORT: invalid export name'); leave
+        end
+        if text(exportid) = '' then call fail('LL_IR_EXPORT: empty export name')
+        do i = 1 to fn - 1
+          otherexport = get(1,i,6)
+          if otherexport > 0 then do
+            if text(otherexport) == text(exportid) then call fail('LL_IR_EXPORT: duplicate export name')
+          end
+        end
+      end
       total = get(1,fn,5); start = get(1,fn,4); totalargs = totalargs + total
       if total = 0 & start <> 0 then call fail('LL_IR_SIGNATURE: empty argument range must have zero start')
       if total > 0 then do
@@ -1039,7 +1055,7 @@ arena: class
         end
         do i = start to start + total - 1
           type = get(12,i,2)
-          if get(12,i,1) <> fn | type < 2 | type > schema.types() then call fail('LL_IR_SIGNATURE: invalid argument')
+          if get(12,i,1) <> fn | type < 2 | type > schema.types() | get(12,i,3) > 1 then call fail('LL_IR_SIGNATURE: invalid argument')
         end
       end
     end
@@ -1073,7 +1089,7 @@ arena: class
         end
         opcode = get(3,op,1); originid = get(3,op,11)
         if originid < 1 | originid > count(9) then call fail('LL_IR_ORIGIN: operation has no valid origin',op)
-        if (opcode < 1 | opcode > 7) & (opcode <= 16 | opcode > schema.ops() + 16) then call fail('LL_IR_OPCODE: unknown operation',op)
+        if (opcode < 1 | opcode > 9) & (opcode <= 16 | opcode > schema.ops() + 16) then call fail('LL_IR_OPCODE: unknown operation',op)
         do k = 1 to 3
           tableid = word('6 4 7',k) as .int; column = 2 + 2 * k
           start = get(3,op,column); total = get(3,op,column + 1)
@@ -1113,8 +1129,8 @@ arena: class
         end
         if _error <> '' then leave
         aux = get(3,op,12)
-        if opcode >= 5 & aux <> 0 then call fail('LL_IR_RESERVED: nonzero operation auxiliary field',op)
-        if opcode <= 7 & get(3,op,10) <> 0 then call fail('LL_IR_ATTRIBUTE: core operation cannot have attributes',op)
+        if ((opcode >= 5 & opcode <= 7) | opcode > 16) & aux <> 0 then call fail('LL_IR_RESERVED: nonzero operation auxiliary field',op)
+        if opcode <= 9 & get(3,op,10) <> 0 then call fail('LL_IR_ATTRIBUTE: core operation cannot have attributes',op)
         select opcode
           when 1 then do
             if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > count(8) then call fail('LL_IR_CONSTANT: invalid constant operation',op)
@@ -1122,6 +1138,7 @@ arena: class
           end
           when 2 then do
             if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > get(1,fn,5) then call fail('LL_IR_SIGNATURE: invalid argument operation',op)
+            else if get(12,get(1,fn,4) + aux - 1,3) <> 0 then call fail('LL_IR_SIGNATURE: optional argument requires fallback',op)
             else if get(4,result(op),3) <> get(12,get(1,fn,4) + aux - 1,2) then call fail('LL_IR_TYPE: argument result has the wrong type',op)
           end
           when 3 then do
@@ -1144,6 +1161,18 @@ arena: class
             if nout <> 0 | nedge <> 0 | (type = 1 & nin <> 0) | (type <> 1 & nin <> 1) then call fail('LL_IR_SIGNATURE: return does not match function result',op)
             else if nin = 1 then do
               if get(4,operand(op,1),3) <> type then call fail('LL_IR_TYPE: return type does not match function result',op)
+            end
+          end
+          when 8 then do
+            if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > get(1,fn,5) then call fail('LL_IR_SIGNATURE: invalid presence operation',op)
+            else if get(4,result(op),3) <> 2 then call fail('LL_IR_TYPE: presence requires core.boolean',op)
+          end
+          when 9 then do
+            if nin <> 1 | nout <> 1 | nedge <> 0 | aux < 1 | aux > get(1,fn,5) then call fail('LL_IR_SIGNATURE: invalid optional argument operation',op)
+            else do
+              formal = get(1,fn,4) + aux - 1; type = get(12,formal,2)
+              if get(12,formal,3) <> 1 then call fail('LL_IR_SIGNATURE: required argument cannot have fallback',op)
+              if get(4,result(op),3) <> type | get(4,operand(op,1),3) <> type then call fail('LL_IR_TYPE: fallback and argument types must agree',op)
             end
           end
           otherwise do
@@ -1223,9 +1252,52 @@ function: class
     id = store.slot(_id,name,type)
     return .llir..slot(_owner,id)
   argument: method = .int
-    arg type = .llir..typeid
+    arg type = .llir..typeid, optional = 0
     call require(); store = dereference _owner
-    return store.argument(_id,type)
+    return store.argument(_id,type,optional)
+  /** Export identity is structural; target naming rules belong to the consumer. */
+  exportas: method = .void
+    arg name = .string
+    call require(); store = dereference _owner
+    if store.reserve(0,0) = 0 then return
+    if name = '' then call store.fail('LL_IR_EXPORT: empty export name')
+    if store.get(1,_id,6) <> 0 then call store.fail('LL_IR_EXPORT: function already exported')
+    do i = 1 to store.count(1)
+      other = store.get(1,i,6)
+      if other > 0 then do
+        if store.text(other) == name then call store.fail('LL_IR_EXPORT: duplicate export name')
+      end
+    end
+    if store.error() = '' then do
+      id = store.pool(name as .binary); call store.put(1,_id,6,id)
+    end
+    return
+  name: method = .string
+    call require(); store = dereference _owner
+    return store.text(store.get(1,_id,1))
+  resulttype: method = .llir..typeid
+    call require(); store = dereference _owner; contract = dereference store.contract()
+    return .llir..typeid(contract.identity(),store.get(1,_id,2))
+  arguments: method = .int
+    call require(); store = dereference _owner
+    return store.get(1,_id,5)
+  formal: method = .int
+    arg ordinal = .int
+    call require(); store = dereference _owner
+    if ordinal < 1 | ordinal > store.get(1,_id,5) then call bad('LL_IR_SIGNATURE: unknown argument ordinal')
+    return store.get(1,_id,4) + ordinal - 1
+  argumenttype: method = .llir..typeid
+    arg ordinal = .int
+    row = formal(ordinal); store = dereference _owner; contract = dereference store.contract()
+    return .llir..typeid(contract.identity(),store.get(12,row,2))
+  optional: method = .int
+    arg ordinal = .int
+    row = formal(ordinal); store = dereference _owner
+    return store.get(12,row,3)
+  exportname: method = .string
+    call require(); store = dereference _owner; id = store.get(1,_id,6)
+    if id = 0 then return ''
+    return store.text(id)
 
 /** Borrowed block handle. A reference plus owner serial prevents stale reuse. */
 block: class
@@ -1311,15 +1383,36 @@ block: class
       id = data.append(_id,4,inputs,types,edges,at.id(),target.id())
     end
     return
+  /** Read the invocation value without changing original presence. */
   readarg: method = .llir..valuehandle
+    arg ordinal = .int, at = .llir..origin, ?fallback = .llir..valuehandle
+    call require(); store = dereference _owner; id = 0; fn = store.get(2,_id,1)
+    if store.reserve(0,0) = 0 then return .llir..valuehandle(_owner,0)
+    if ordinal < 1 | ordinal > store.get(1,fn,5) then call store.fail('LL_IR_SIGNATURE: unknown argument ordinal')
+    if at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: argument origin belongs to another module')
+    if ?fallback then do
+      if fallback.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: foreign fallback value')
+    end
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]
+      row = store.get(1,fn,4) + ordinal - 1
+      types[1] = store.get(12,row,2); opcode = 2
+      if store.get(12,row,3) <> ?fallback then call store.fail('LL_IR_SIGNATURE: fallback must match argument optionality')
+      if ?fallback then do
+        inputs[1] = fallback.id(); opcode = 9
+      end
+      if store.error() = '' then id = store.append(_id,opcode,inputs,types,edges,at.id(),ordinal)
+    end
+    return .llir..valuehandle(_owner,store.result(id))
+  hasarg: method = .llir..valuehandle
     arg ordinal = .int, at = .llir..origin
     call require(); store = dereference _owner; id = 0; fn = store.get(2,_id,1)
+    if store.reserve(0,0) = 0 then return .llir..valuehandle(_owner,0)
     if ordinal < 1 | ordinal > store.get(1,fn,5) then call store.fail('LL_IR_SIGNATURE: unknown argument ordinal')
     if at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: argument origin belongs to another module')
     if store.error() = '' then do
-      inputs = .int[]; types = .int[]; edges = .int[]
-      types[1] = store.get(12,store.get(1,fn,4) + ordinal - 1,2)
-      id = store.append(_id,2,inputs,types,edges,at.id(),ordinal)
+      inputs = .int[]; types = .int[]; edges = .int[]; types[1] = 2
+      id = store.append(_id,8,inputs,types,edges,at.id(),ordinal)
     end
     return .llir..valuehandle(_owner,store.result(id))
   jump: method = .void
@@ -1695,6 +1788,11 @@ module: class
   functions: method = .int
     if error() <> '' then return 0
     return _store.count(1)
+  function: method = .llir..function
+    arg id = .int
+    if error() <> '' then call bad(error())
+    handle = .llir..function(reference _store,id); call handle.require()
+    return handle
   blocks: method = .int
     if error() <> '' then return 0
     return _store.count(2)
@@ -1728,6 +1826,12 @@ module: class
       if functionid <> 0 & functionid <> f then iterate
       call out.line('function ' || _store.text(_store.get(1,f,1)) || ' -> ' || schema.typename(_store.get(1,f,2)))
       call out.indent()
+      if _store.get(1,f,6) > 0 then call out.line('export ' || _store.text(_store.get(1,f,6)))
+      do a = 1 to _store.get(1,f,5)
+        row = _store.get(1,f,4) + a - 1; required = 'required'
+        if _store.get(12,row,3) then required = 'optional'
+        call out.line('argument ' || a || ' ' || schema.typename(_store.get(12,row,2)) || ' ' || required)
+      end
       do b = 1 to _store.count(2)
         if _store.get(2,b,1) <> f | (blockid <> 0 & blockid <> b) then iterate
         call out.line(_store.text(_store.get(2,b,4)) || ':')
@@ -1752,7 +1856,7 @@ module: class
             line = line || ' ' || codec.format(_store.bits(_store.get(8,c,2))) || ' : ' || schema.typename(type)
           end
           if opcode = 3 | opcode = 4 then line = line || ' slot:' || _store.text(_store.get(5,_store.get(3,op,12),3))
-          if opcode = 2 then line = line || ' argument:' || _store.get(3,op,12)
+          if opcode = 2 | opcode = 8 | opcode = 9 then line = line || ' argument:' || _store.get(3,op,12)
           if opcode > 16 then do i = 1 to schema.arity(opcode - 16,3)
             attribute = _store.get(3,op,10) + i - 1
             c = _store.get(11,attribute,4); type = _store.get(8,c,1)
@@ -1905,7 +2009,7 @@ encode: procedure = .binary
   end
   result = .binary; call binresize result,size
   <at..u32>(0) result = 1380535372
-  <at..u32>(4) result = 1
+  <at..u32>(4) result = 2
   <at..u32>(8) result = <blen>(manifest)
   call bincopy result,12,manifest,0,<blen>(manifest)
   at = 12 + <blen>(manifest)
@@ -1950,12 +2054,13 @@ reader: class
 
 loadbinary: procedure = .llir..module
   arg contract = .llir..contract, bytes = .binary, entries = 1000000, budget = 67108864
-  store = .llir..arena(contract,entries,budget)
+  store = .llir..arena(contract,entries,budget); version = 0
   do
     if <blen>(bytes) > budget then call store.fail('LL_RESOURCE_LIMIT: ir.image.bytes exceeds host budget ' || budget)
     reader = .llir..reader(reference bytes)
     if store.error() = '' then do
-      if reader.u32() <> 1380535372 | reader.u32() <> 1 then call store.fail('LL_IR_IMAGE: unsupported magic or version')
+      magic = reader.u32(); version = reader.u32()
+      if magic <> 1380535372 | (version <> 1 & version <> 2) then call store.fail('LL_IR_IMAGE: unsupported magic or version')
     end
     if store.error() = '' then do
       manifest = reader.blob() as .string
@@ -1964,7 +2069,9 @@ loadbinary: procedure = .llir..module
     t = .int; i = .int; count = .int; id = .int
     do t = 1 to 13 while store.error() = ''
       count = reader.u32(); width = reader.u32()
-      if width <> store.width(t) then do
+      expectedwidth = store.width(t)
+      if version = 1 & t = 12 then expectedwidth = 2
+      if width <> expectedwidth then do
         call store.fail('LL_IR_IMAGE: unsupported table width'); leave
       end
       if count > reader.left() <idiv> (width * 4) then do
@@ -1974,7 +2081,10 @@ loadbinary: procedure = .llir..module
         id = store.add(t)
         if id = 0 then leave
         do c = 1 to width
-          call store.put(t,id,c,reader.u32())
+          number = reader.u32()
+          if version = 1 & t = 1 & c = 6 & number <> 0 then call store.fail('LL_IR_RESERVED: nonzero version 1 reserved field')
+          if version = 1 & t = 3 & c = 1 & (number = 8 | number = 9) then call store.fail('LL_IR_OPCODE: version 1 core opcode')
+          call store.put(t,id,c,number)
         end
       end
     end
@@ -2000,7 +2110,7 @@ encodetext: procedure = .string
   arg input = reference .llir..arena
   store = dereference input; contract = dereference store.contract()
   out = .llir..writer(max(1024,store.bytes() * 8 + length(contract.manifest()) * 4 + 2048))
-  call out.line('LLIR-TEXT-1')
+  call out.line('LLIR-TEXT-2')
   call out.line('schema ' || bin2x(contract.manifest() as .binary))
   t = .int; i = .int
   do t = 1 to 13
@@ -2063,13 +2173,16 @@ unhex: procedure = .binary
 
 loadtext: procedure = .llir..module
   arg contract = .llir..contract, text = .string, entries = 1000000, budget = 67108864
-  store = .llir..arena(contract,entries,budget)
+  store = .llir..arena(contract,entries,budget); version = 0
   do
     source = text as .binary
     if <blen>(source) > budget then call store.fail('LL_RESOURCE_LIMIT: ir.image.bytes exceeds host budget ' || budget)
     if store.error() = '' then do
       reader = .llir..textreader(text)
-      if reader.line() <> 'LLIR-TEXT-1' then call store.fail('LL_IR_TEXT: unsupported text version')
+      header = reader.line()
+      if header = 'LLIR-TEXT-1' then version = 1
+      else if header = 'LLIR-TEXT-2' then version = 2
+      else call store.fail('LL_IR_TEXT: unsupported text version')
       line = reader.line()
       if word(line,1) <> 'schema' | words(line) <> 2 then call store.fail('LL_IR_TEXT: expected schema')
       manifest = unhex(word(line,2)) as .string
@@ -2081,7 +2194,9 @@ loadtext: procedure = .llir..module
           call store.fail('LL_IR_TEXT: expected ' || tablename(t) || ' table'); leave
         end
         count = natural(word(line,2)); width = natural(word(line,3))
-        if width <> store.width(t) | count > reader.left() then do
+        expectedwidth = store.width(t)
+        if version = 1 & t = 12 then expectedwidth = 2
+        if width <> expectedwidth | count > reader.left() then do
           call store.fail('LL_IR_TEXT: invalid table width or extent'); leave
         end
         do i = 1 to count while store.error() = ''
@@ -2092,7 +2207,10 @@ loadtext: procedure = .llir..module
           id = store.add(t)
           if id = 0 then leave
           do c = 1 to width
-            call store.put(t,id,c,natural(word(line,c)))
+            number = natural(word(line,c))
+            if version = 1 & t = 1 & c = 6 & number <> 0 then call store.fail('LL_IR_RESERVED: nonzero version 1 reserved field')
+            if version = 1 & t = 3 & c = 1 & (number = 8 | number = 9) then call store.fail('LL_IR_OPCODE: version 1 core opcode')
+            call store.put(t,id,c,number)
           end
         end
       end
