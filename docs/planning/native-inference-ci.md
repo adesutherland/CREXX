@@ -1,5 +1,46 @@
 # Native inference release pipeline and branch qualification
 
+## CI-F22 — Core inventory and the Ollama HTTP example
+
+**Outcome:** retain the core-owned `examples/llm/ollama_generate.crexx`
+demonstration while rejecting native llama payloads and GGUF models. The
+reorganisation moved this HTTP-service example into the packaged examples tree;
+the old `*llama*` check mistook its name for a native provider leak. On
+`4f37a4f7347a29336d134afabc17ea36b8e1aee2`, all four core smoke suites and
+MinGW passed before this packaging check failed; CodeQL passed. The
+[Linux job](https://github.com/adesutherland/CREXX/actions/runs/39058722352/job/117484364338)
+shows the common mechanism. No compiler/runtime change or provider enablement
+is required. This repair serves CI-AC-02/05/08 under the approved CI-repair scope.
+
+1. [x] **F22-AC-01:** the actual Ollama source survives archive/extraction and
+   passes inventory validation at its exact owned path. An identically named
+   file elsewhere or a similarly named binary is not exempt.
+2. [x] **F22-AC-02:** native llama files/directories and GGUF models still fail,
+   including mixed-case names; diagnostics identify the rejected relative path.
+3. [x] **F22-AC-03:** focused split-package regressions pass; unchanged product
+   build and functional evidence is reused. Normal hosted packaging remains
+   separately unverified until the new workflows pass.
+
+1. [x] **F22-01:** extract the inventory check, admit only the owned HTTP-example
+   source, and add archive and rejection controls (AC-01/02).
+2. [x] **F22-02:** run focused checks, update the owning guidance and prepare
+   the authorised repair publication and normal CI retarget; delete temporary
+   diagnostics (AC-03).
+
+Local qualification against the above base plus this script/test/documentation
+repair: `python3 -B -m unittest discover -s scripts/tests -p test_split_release.py
+-v` passes all 21 tests, including five new archive/inventory controls. An actual
+ZIP round trip of the current example sources plus `example-artifacts` also
+passes inventory validation (177 files); only the permitted HTTP source matches
+the llama-name check. The old smoke reproduces its false positive with that
+source alone. Source/build diff inspection confirms unchanged product inputs,
+so the prior warning-free Debug `stage-product` build and the five hosted core
+smoke results are reused. No fresh full package, signing, native execution or
+cross-platform qualification is claimed for this Python-only repair. Normal
+push-triggered workflows own that verification; their links belong in the CI
+monitor and conversation. Temporary fixtures and diagnostics are deleted after
+extracting these conclusions.
+
 ## CI-F21 — Windows snapshot llama installers
 
 Approved by Adrian on 17 September after inspecting the missing setup assets.

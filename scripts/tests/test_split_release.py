@@ -2,6 +2,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -38,6 +39,66 @@ class SplitPackageTests(unittest.TestCase):
         values = {k:self.manifest[k] for k in ('commit', 'platform', 'toolchain')}
         values.update(changes)
         return plugin.verify_core(self.base, **values)
+
+    def add_http_example(self):
+        source = Path(__file__).resolve().parents[2] / 'examples/llm/ollama_generate.crexx'
+        target = self.base / 'examples/llm/ollama_generate.crexx'
+        target.parent.mkdir(parents=True)
+        shutil.copy2(source, target)
+        return target
+
+    def test_core_allows_owned_http_example_after_zip_extraction(self):
+        example = self.add_http_example()
+        archive = self.root / 'core.zip'
+        core.archive(self.base, archive)
+        core.extract(archive, self.root / 'extracted')
+        extracted = self.root / 'extracted' / self.base.name
+        self.assertEqual((extracted / example.relative_to(self.base)).read_bytes(), example.read_bytes())
+        core.verify_core_inventory(extracted)
+
+    def test_core_rejects_llama_payloads_and_lookalikes_despite_http_example(self):
+        self.add_http_example()
+        for name in ('bin/rxllama.rxplugin', 'bin/providers/libllama.dylib',
+                     'bin/providers/LLAMA.dll', 'bin/providers/rxllama.native.json',
+                     'bin/ollama_generate.crexx', 'examples/llm/ollama_generate.rxbin',
+                     'examples/llm/ollama_generate.crexx.rxplugin'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory(dir=self.root) as temporary:
+                prefix = Path(temporary) / 'core'
+                shutil.copytree(self.base, prefix)
+                leak = prefix / name
+                leak.parent.mkdir(parents=True, exist_ok=True)
+                leak.write_bytes(b'optional payload')
+                with self.assertRaises(ValueError) as raised:
+                    core.verify_core_inventory(prefix)
+                self.assertEqual(str(raised.exception), 'llama component leaked into core: ' + name)
+
+    def test_core_rejects_models_despite_http_example(self):
+        self.add_http_example()
+        for name in ('model.gguf', 'MODEL.GGUF'):
+            with self.subTest(name=name):
+                model = self.base / name
+                model.write_bytes(b'GGUF')
+                with self.assertRaises(ValueError) as raised:
+                    core.verify_core_inventory(self.base)
+                self.assertEqual(str(raised.exception), 'model leaked into core: ' + name)
+                model.unlink()
+
+    def test_core_rejects_llama_directories_including_the_exception_path(self):
+        for name in ('share/llama', 'examples/llm/ollama_generate.crexx'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory(dir=self.root) as temporary:
+                prefix = Path(temporary)
+                (prefix / name).mkdir(parents=True)
+                with self.assertRaises(ValueError) as raised:
+                    core.verify_core_inventory(prefix)
+                self.assertEqual(str(raised.exception), 'llama component leaked into core: ' + name)
+
+    @unittest.skipIf(os.name == 'nt', 'Unix symlink control')
+    def test_http_example_exception_rejects_symlinks(self):
+        example = self.add_http_example()
+        example.unlink()
+        example.symlink_to('../../bin/rxbvm')
+        with self.assertRaisesRegex(ValueError, 'llama component leaked into core: examples/llm/'):
+            core.verify_core_inventory(self.base)
 
     def test_matching_core_passes_but_other_commit_or_toolchain_does_not(self):
         self.verify()

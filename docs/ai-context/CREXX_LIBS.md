@@ -1086,6 +1086,11 @@ Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
 approved release design first builds four llama-free core archives, then builds
 only the optional provider/dependency/helper targets and tests them against
 those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
+Core inventory permits the owned `examples/llm/ollama_generate.crexx` HTTP-service
+source example; its name does not imply a native llama dependency. The exception
+applies only to that regular source file at that exact path. Native llama
+payloads, similarly named binaries and GGUF models remain rejected, with the
+offending package-relative path in the diagnostic.
 CI-D03 makes Vulkan the general Windows/Linux download and CUDA an optional
 separate download that remains mandatory to build/package/smoke for every full
 release build, including beta. Otherwise CUDA runs only on explicit manual

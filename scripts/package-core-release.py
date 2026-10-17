@@ -65,6 +65,19 @@ def windows_execution_environment(env):
     return runtime
 
 
+def verify_core_inventory(prefix):
+    # This core rxfnsg example calls an HTTP server; it does not ship native
+    # llama. Keep the exception exact so similarly named provider files fail.
+    http_example = 'examples/llm/ollama_generate.crexx'
+    for path in sorted(prefix.rglob('*')):
+        relative = path.relative_to(prefix).as_posix()
+        if 'llama' in path.name.lower():
+            if relative != http_example or not path.is_file() or path.is_symlink():
+                raise ValueError('llama component leaked into core: ' + relative)
+        if path.suffix.lower() == '.gguf':
+            raise ValueError('model leaked into core: ' + relative)
+
+
 def smoke_level_l(prefix, source, work, run, extension):
     """Exercise the installed generator, library and modern script command."""
     binary = prefix / 'bin'
@@ -197,8 +210,7 @@ def smoke(prefix, source, preferred_vm, logs, build):
         return output
 
     try:
-        assert not list(prefix.rglob('*llama*')), 'llama component leaked into core'
-        assert not list(prefix.rglob('*.gguf')), 'model leaked into core'
+        verify_core_inventory(prefix)
         entry = prefix / 'bin' / ('rxvm' + extension)
         selected = prefix / 'bin' / (preferred_vm + extension)
         assert selected.is_file() and entry.is_file()
