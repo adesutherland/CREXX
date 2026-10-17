@@ -686,10 +686,11 @@ crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tinyexpr_dispatch_compare.crexx
         TARGET_GROUP performance_tinyexpr_dispatch
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/langtools/examples
         RXC_FLAGS -x
-        DEPENDS library rxfnsl compiler_exit_bin
-        RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsl
+        DEPENDS library rxlang_example_tinyexpr compiler_exit_bin
+            "${CMAKE_BINARY_DIR}/langtools/examples/tinyexpr.rxbin"
+        RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/langtools/examples/tinyexpr
         TEST_LABELS "performance;dispatch;level-l"
 )
 foreach(_crexx_mode IN ITEMS noopt opt)

@@ -18,7 +18,7 @@ with a Level L grammar and a Level B reader/interpreter.
 - `IF ... THEN` and `GOTO`;
 - `END`.
 
-The grammar is compiled by `levell` into the generated module
+The grammar is compiled by `rxlang` into the generated module
 `minibasicgrammar.rxbin`. The generated module is a build artifact and should
 not be committed as source.
 

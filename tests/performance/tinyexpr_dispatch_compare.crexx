@@ -1,7 +1,7 @@
 /* Observational benchmark for compiler-assisted dispatch in the Level L demo. */
 options levell comments_dash
 import rxfnsb
-import rxfnsl
+import tinyexpr
 
 arg argv = .string[]
 

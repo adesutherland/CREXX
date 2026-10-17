@@ -1,0 +1,4 @@
+ERROR|26|LL_COMPILER_SYNTAX: unexpected end of input; expected name, number, quoted string, '(', '+', '-', '\'
+research/level-l/compilers/examples/step03/syntax-error-g.crexx: LL_COMPILER_SYNTAX at line 2, column 10 (byte 26): unexpected end of input; expected name, number, quoted string, '(', '+', '-', '\'
+  say '\u{3B1}' +
+                 ^

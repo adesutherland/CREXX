@@ -1,0 +1,76 @@
+/* cREXX License (MIT). Owned source-to-RXAS service, implemented in Level B. */
+options levelb
+namespace llgcompiler expose request
+import rxfnsb
+import lltfrontend
+import lltrxas
+import llir
+import llirservices
+import llsource
+import llcompilercontracts
+
+/** A request never spawns a compiler, writes a file, prints or exits. The
+ * output owns its chunks independently of this request and its source graph. */
+request: class
+  _frontend = .lltfrontend..request
+  _backend = .lltrxas..compilation
+  _source = .binary
+  _filename = .string
+  _path = .string
+  _bytes = .int
+  _registers = .int
+  _budget = .int
+  _optimise = .int
+  _emission = .llir..module
+  _ready = .int
+  _error = .string
+  _offset = .int
+  *: factory
+    arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1
+    _source = source; _filename = llcompilercontracts..sourcename(filename); _path = artifacts
+    _bytes = bytes; _registers = registers; _ready = 0; _error = ''; _offset = 0
+    _budget = budget; _optimise = optimise
+    _frontend = .lltfrontend..request(source,artifacts,filename,budget,nesting)
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if _frontend.status() <> 0 then do
+      _error = _frontend.error(); _offset = _frontend.offset(); return
+    end
+    _emission = _frontend.graph()
+    if _optimise then do
+      change = llirservices..optimise(reference _emission,_budget,1000000,_bytes)
+      if change.status() = 'invalid' | change.status() = 'limit' then do
+        _error = change.message(); return
+      end
+      _emission = change.result()
+    end
+    _backend = .lltrxas..compilation(_emission,_path,_bytes,_registers)
+    if _backend.status() <> 0 then do
+      _error = _backend.error(); _offset = _backend.offset()
+    end
+    return
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  diagnostic: method = .string
+    call run()
+    if _error = '' then return ''
+    split = pos(':',_error)
+    if split = 0 then return _filename || ': ' || _error
+    return _filename || ': ' || llsource..diagnostic(_source,_offset,left(_error,split - 1),strip(substr(_error,split + 1)))
+  output: method = .llir..output
+    call run()
+    if _error <> '' then do
+      chunks = .binary[]; origins = .int[]
+      return .llir..output(chunks,origins,0,_error)
+    end
+    return _backend.output()
+  graph: method = .llir..module
+    return _frontend.graph()
+  emissiongraph: method = .llir..module
+    call run(); return _emission

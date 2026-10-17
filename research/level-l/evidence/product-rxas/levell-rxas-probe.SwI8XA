@@ -1,4 +1,0 @@
-Warning in levell.crexx @ 83:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 65, column 6. Declare this binding explicitly if intentional., "i"
-1 warning(s) in source file
-small_rxas_assembled
-full_rxas_assembled

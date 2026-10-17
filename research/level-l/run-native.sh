@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 task_dir=$(cd "$(dirname "$0")" && pwd)
+if [[ -z "${LEVEL_L_RUN_ROOT:-}" ]]; then
+  exec "$task_dir/run-clean.sh" "$0" "$@"
+fi
 task_root=$(git -C "$task_dir" rev-parse --show-toplevel)
 task_bin=${CREXX_BIN_DIR:-"$task_root/cmake-build-release/bin"}
 if [[ ! -x "$task_bin/rxc" ]]; then
-  task_bin=${CREXX_BIN_DIR:-"$task_root/../CREXX/cmake-build-release/bin"}
+  task_bin=${CREXX_BIN_DIR:-"$task_root/cmake-build-release/bin"}
 fi
 task_mode=${1:-opt}
-task_build="$task_dir/build/$task_mode"
+task_build="$LEVEL_L_RUN_ROOT/build/$task_mode"
 mkdir -p "$task_build/imports"
-task_log=$(mktemp /tmp/crexx-levell-native.XXXXXX)
+task_log=$(mktemp "$LEVEL_L_RUN_ROOT"/crexx-levell-native.XXXXXX)
 printf 'Build log: %s\n' "$task_log"
 task_flags=(--no-exe-import)
 if [[ "$task_mode" == noopt ]]; then task_flags=(--no-exe-import -n); fi

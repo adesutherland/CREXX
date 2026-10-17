@@ -1,3 +1,0 @@
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/teaching-current/calculator-source-noopt/computed-zero.txt: CALC_DIVIDE_BY_ZERO at line 1, column 3 (byte 2): The denominator evaluates to zero.
-  7/(3-3)
-    ^

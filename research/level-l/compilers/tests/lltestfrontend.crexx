@@ -1,0 +1,40 @@
+/* cREXX License (MIT). Test-only cross-language corpus adapter.
+ * Never included in compiler products or installed libraries. */
+options levelb
+namespace lltestfrontend expose request
+import rxfnsb
+import llir
+import llast
+import llcfrontend
+import lltfrontend
+
+request: class
+  _level = .string
+  _c = .llcfrontend..request
+  _g = .lltfrontend..request
+  *: factory
+    arg level = .string, source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
+    _level = lower(level)
+    if _level = 'c' then _c = .llcfrontend..request(source,artifacts,filename,budget,nesting)
+    else _g = .lltfrontend..request(source,artifacts,filename,budget,nesting)
+    return
+  status: method = .int
+    if _level <> 'c' & _level <> 'g' then return 1
+    if _level = 'c' then return _c.status()
+    return _g.status()
+  error: method = .string
+    if _level <> 'c' & _level <> 'g' then return 'LL_COMPILER_PROFILE: test corpus supports C/G only'
+    if _level = 'c' then return _c.error()
+    return _g.error()
+  offset: method = .int
+    if _level = 'c' then return _c.offset()
+    return _g.offset()
+  diagnostic: method = .string
+    if _level = 'c' then return _c.diagnostic()
+    return _g.diagnostic()
+  ast: method = .llast..tree
+    if _level = 'c' then return _c.ast()
+    return _g.ast()
+  graph: method = .llir..module
+    if _level = 'c' then return _c.graph()
+    return _g.graph()

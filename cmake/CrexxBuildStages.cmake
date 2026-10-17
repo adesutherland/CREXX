@@ -73,10 +73,16 @@ crexx_add_build_stage(stage-g-library
         OPTIONAL_TARGETS ui_gtk)
 
 crexx_add_build_stage(stage-l-libraries
-        DESCRIPTION "L Level L language tools and libraries"
-        # CI selects stage-product explicitly; ALL alone does not build the
-        # installed compiler service, target adapter or separate command tools.
-        REQUIRED_TARGETS rxfnsl levell_cli llcompilers llctarget llrxc-c llrxc-g)
+        DESCRIPTION "Level L SDK libraries"
+        REQUIRED_TARGETS rxfnsl)
+crexx_add_build_stage(stage-l-tools
+        DESCRIPTION "Level L generator and callable tooling"
+        REQUIRED_TARGETS rxlanglib rxlang llrxastext llfileoutput llbinmeta)
+if(CREXX_BUILD_RESEARCH_COMPILERS)
+    crexx_add_build_stage(stage-research-compilers
+        DESCRIPTION "Explicitly selected experimental compilers"
+        OPTIONAL_TARGETS llccompiler llgcompiler llctarget llrxc-c llrxc-g)
+endif()
 
 crexx_add_build_stage(stage-product
         DESCRIPTION "Assembled cREXX product"
@@ -86,6 +92,7 @@ crexx_add_build_stage(stage-product
             stage-c-rexx-tools
             stage-g-library
             stage-l-libraries
+            stage-l-tools
             crexx
             rexxscript_cli
             rexxscript1_cli

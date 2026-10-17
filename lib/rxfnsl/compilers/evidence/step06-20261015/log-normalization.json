@@ -1,9 +1,0 @@
-{
-  "operation": "Only trailing line whitespace removed for Git storage; diagnostic content unchanged. Original run logs remain at the paths recorded in the receipt.",
-  "logs": {
-    "product-build.log": {
-      "original_sha256": "b84fe059041ad3c3c307f8277cfe508b4dd7166a76dbcc9bda63c56a3ac2070e",
-      "retained_sha256": "99d4b7730c5bda283edcf3d6d200345968d0de22d812b0ae6c633a5015243653"
-    }
-  }
-}

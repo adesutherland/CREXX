@@ -1,5 +1,0 @@
-PANIC: nested-c.crexx:7:9: RXC-LC-42.3 operator="/" operation="/" value="1" value="0" value="9" (SIGNAL CLASSIC_SYNTAX)
-  at module 47 (RexxClassicBifs) address 3989 (0xf95)
-  called from:
-  at module 1 (/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-debugasan/lib/rxfnsl/compilers/provenance-measure/nested-c.rxas) address 893 (0x37d)
-  source: nested-c.crexx:6:23:  if n > 0 then return descend(n - 1)

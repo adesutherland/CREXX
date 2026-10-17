@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Frozen B/G/C initial trees; actual compiler diagnostics remain evidence."""
 from pathlib import Path
-import hashlib,json,os,re,subprocess,tempfile
-R=Path(__file__).resolve().parents[1];B=Path(os.environ.get('CREXX_BIN_DIR',R/'build/frozen-tools-20261010'))
-E=R/'evidence/rexxfront';E.mkdir(exist_ok=True);C=R/'cases/rexxfront';C.mkdir(exist_ok=True)
+import hashlib,json,os,re,subprocess,tempfile,atexit,sys
+R=Path(__file__).resolve().parents[1];B=Path(os.environ.get('CREXX_BIN_DIR',R.parents[1]/'cmake-build-debug/bin'))
+owned=tempfile.TemporaryDirectory(prefix='crexx-rexxfront-');atexit.register(owned.cleanup)
+E=Path(owned.name);C=E/'sources';C.mkdir()
 cases={
  'c-soft-assign':('c',"if=3;then=4;else=5;say if then else\n"),
  'c-soft-label':('c',"if:;say 'label'\n"),
@@ -43,8 +44,8 @@ def stage(log,name):
 manifest=[]
 for name,(level,body) in cases.items():
  source=f'options level{level}\n'+body;p=C/(name+'.rexx');p.write_text(source)
- fd,tmp=tempfile.mkstemp(prefix='crexx-levell-rexxfront-',suffix='.log');os.close(fd)
- cmd=[str(B/'rxc'),'-x','-d1','-dp','-n','--no-exe-import','-i',str(B),'-o',str(R/'build'/name),str(p)]
+ fd,tmp=tempfile.mkstemp(dir=E,suffix='.log');os.close(fd)
+ cmd=[str(B/'rxc'),'-x','-d1','-dp','-n','--no-exe-import','-i',str(B),'-o',str(E/name),str(p)]
  with open(tmp,'wb') as f:run=subprocess.run(cmd,stdout=f,stderr=f)
  raw=Path(tmp).read_bytes();(E/(name+'.log')).write_bytes(raw);text=raw.decode(errors='replace')
  tree=stage(text,'STAGE_RAW');(E/(name+'.json')).write_text(json.dumps(tree,indent=2)+'\n')
@@ -52,3 +53,4 @@ for name,(level,body) in cases.items():
  manifest.append({'id':name,'level':level,'source':source,'source_sha256':hashlib.sha256(source.encode()).hexdigest(),'compiler_exit':run.returncode,'errors':errors,'raw_present':tree is not None,'command':cmd})
  print(name,'exit='+str(run.returncode),'raw='+str(tree is not None))
 (E/'manifest.json').write_text(json.dumps({'rxc_sha256':hashlib.sha256((B/'rxc').read_bytes()).hexdigest(),'scope':'Raw initial AST and diagnostics only; -dp stops before full compilation, exits disabled. Not execution qualification.','cases':manifest},indent=2)+'\n')
+subprocess.run([sys.executable,str(R/'cases/rexxfront-projection.py'),str(E),*(['--update'] if '--update' in sys.argv else [])],check=True)

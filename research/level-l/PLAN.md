@@ -1,17 +1,16 @@
 # Level L language tooling research — 10 October 2026
 
-## Repository architecture and cleanup proposal
+## Repository architecture and cleanup
 
-**Status: reviewed, awaiting Adrian's approval for structural implementation.**
-This section owns the repository/layout refactor; the compiler subplan remains
-`lib/rxfnsl/compilers/PLAN.md` until the approved move. The review covers the
-current develop checkout and its STEP07A/SAY work. No compiler,
-build, install or source-location change is implemented by this review.
-Adrian clarified that B and G should share most of their compiler implementation.
-C-first delivery, Level B implementation, deferred INTERPRET and paused CI
-monitoring remain unchanged. On 17 October Adrian separately authorised
-publication of the completed STEP07A/SAY work and these review documents from
-the main CLion develop checkout. That does not approve this structural refactor.
+**Status: reorganisation and final naming/library-only refinement verified locally; authorised for publication to develop.**
+This section owns the repository/layout refactor. The compiler subplan moves to
+`research/level-l/compilers/PLAN.md` with its implementation. Work uses the main
+CLion `develop` checkout. B and G share the typed compiler core; Classic is
+independent. C-first delivery, Level B implementation, deferred INTERPRET and
+paused CI monitoring remain unchanged. Approval covers the directory, service,
+build/install and cleanup changes below. Adrian authorised committing and pushing
+the completed work on 17 October 2026, followed by a whole-repository review.
+That wider review must present its proposal for approval before implementation.
 
 The repository-wide documentation/output rule in `AGENTS.md` is already
 instructed by Adrian and takes effect now: only enduring documentation belongs
@@ -42,7 +41,7 @@ compiler replacement, a new runtime or an INTERPRET design.
 |---|---|---|
 | RA-F01 | `lib/rxfnsl/CMakeLists.txt` adds `rexx`, `tools`, `compilers` and tests. `tools/CMakeLists.txt` owns bootstrap, the final `rxfnsl` library, the executable and a Unicode consumer grammar. | A library directory owns tools and experimental compilers. Separate their source and CMake owners; keep one producer for every bootstrap output. |
 | RA-F02 | `tools/levell.crexx` combines CLI parsing/file I/O, admission, table construction and both source/RXAS generation. Its emission routines print with SAY. | Extract a callable Level L generation service using Level L output/writer services, then make the command handle options, I/O and reporting. Library clients must not call main or capture stdout. |
-| RA-F03 | `driver/llrxc-c.crexx` and `llrxc-g.crexx` call `llcompilercli..run(level,argv)`, which calls `llcompiler..request(level,...)`. `llfrontendparse` imports and initialises both grammars. `llfrontend` interleaves C/G binding, type, expression, call and statement decisions. | Separate Classic and typed frontends/services. Sharing an argument parser or output publisher is fine; the common language-selecting application is removed. |
+| RA-F03 | `driver/llrxc-c.crexx` and `llrxc-g.crexx` call `llcompilercli..run(level,argv)`, which calls `llcompiler..request(level,...)`. `llcparse` imports and initialises both grammars. `llfrontend` interleaves C/G binding, type, expression, call and statement decisions. | Separate Classic and typed frontends/services. Sharing an argument parser or output publisher is fine; the common language-selecting application is removed. |
 | RA-F04 | `common/llcrexxir` registers both semantic families. `rxas/llrxas` combines generic target mechanics with C entry/context/error code and typed operations, controlled by `_level`. | Separate language family registration and selectors from reusable target mechanics. Keep Classic policy with C and typed policy in the B/G core. |
 | RA-F05 | Both command link lists contain both grammars/frontends; `llcompilers.rxbin` combines their reusable services. There is no implemented new B frontend. | Command names currently overstate isolation. Split linked service products and verify their actual transitive closures. Prepare a B/G common core without claiming B implementation/self-hosting. |
 | RA-F06 | `stage-l-libraries` requires the experimental services, target adapter and C/G commands. Root install copies the build `bin/` directory broadly. | Separate library/tool/research stages and prevent old or disabled research outputs leaking into product installs. |
@@ -56,7 +55,7 @@ implementation. The working checkout and remote develop both named
 `e4ee47528fe60e76a81f6d18a7849aa8aa663037` at review. STEP07A/SAY publication
 was subsequently authorised. No product tests were rerun for the architecture review.
 
-### Proposed directory and product ownership
+### Approved directory and product ownership
 
 Use **`langtools/` as Level L itself**, as Adrian clarified. It includes lexer
 generation, parsers, source and tree services, IR and emission; `parser` would
@@ -65,18 +64,17 @@ understate the scope. Do not add a redundant `langtools/level-l/` subtree.
 ```text
 langtools/                  Level L itself; no second level-l subtree
   common/                  B-only tool support libraries; no language frontend
-  cli/                     levell command options, I/O and diagnostics
+  rxlang.crexx             rxlang command options, I/O and diagnostics
+  cmake/                   generation/build adapter
   rexx/                    llfront and callable grammar-generation/emission service
   grammar/                 the Level L language's own grammar
   bootstrap/               seed reader, L0/L1/L2 construction and verification
-  tests/                   generator, CLI, bootstrap and delivery regressions
-  doc/                     maintained tool/service/bootstrap documentation
+  tests/                   tool/bootstrap/delivery and independent library regressions
+  examples/                all maintained general Level L examples
+  doc/                     SDK/tool/service/bootstrap reference and user guides
 lib/rxfnsl/
   rexx/                    generic lexer/parser engines, AST, IR, passes, writer
   unicode/                 library-owned pinned property data and its generation
-  tests_functional/        independent library consumers and contract tests
-  examples/                maintained general Level L examples
-  doc/                     SDK contracts/reference and library user guidance
 research/level-l/
   PLAN.md                  this programme and repository refactor
   compilers/
@@ -90,9 +88,9 @@ research/level-l/
     tests/ examples/ doc/   compiler-owned maintained assets
 ```
 
-Library-owned tests, docs and examples remain beside libraries; "libraries
-only" means no application toolchain, experimental compilers or run archives
-under `lib/rxfnsl`. It does not remove independent library qualification.
+All general Level L guides, examples and independent library tests live in
+`langtools`. Only library implementation and required build data remain under
+`lib/rxfnsl`; independent library qualification is preserved in its new location.
 Research engines still serving open research questions remain in research;
 this review does not promote unfinished Pika/Squirrel/recovery experiments.
 
@@ -102,7 +100,7 @@ this review does not promote unfinished Pika/Squirrel/recovery experiments.
   current generator command into its real CLI and callable implementation.
   Move `llfront.crexx` and `grammar/levell.levell` with that implementation.
 - Build the generic SDK as `rxfnsl.rxbin`, without the Level L specification
-  compiler. Build that compiler's library separately as **`levelllib.rxbin`**,
+  compiler. Build that compiler's library separately as **`rxlanglib.rxbin`**,
   retaining the `llfront` namespace and providing the extracted generation
   service. Consumers of `llfront` must explicitly use the tool library. This is
   an intentional package boundary change, not an unexplained missing import.
@@ -169,7 +167,7 @@ The intended dependency order is:
 ```text
 existing native B seed + B runtime
   -> generic rxfnsl
-  -> Level L L0 -> L1 -> L2 -> levelllib + levell
+  -> Level L L0 -> L1 -> L2 -> rxlanglib + rxlang
   -> generated language modules and ordinary consumers
   -> explicitly selected experimental C / typed-G compiler products
 ```
@@ -179,16 +177,15 @@ remains a build prerequisite; new source requests never invoke it. The existing
 Classic target-runtime package's G dependency is separately documented and is
 not removed or hidden by this host-compiler refactor.
 
-Propose `stage-l-libraries` for the SDK, `stage-l-tools` for `levelllib`/`levell`,
+Propose `stage-l-libraries` for the SDK, `stage-l-tools` for `rxlanglib`/`rxlang`,
 and `stage-research-compilers` for experimental services/commands/adapters.
 The normal `stage-product` includes the first two. Research builds/install are
 explicitly selected with a proposed `CREXX_BUILD_RESEARCH_COMPILERS` option,
 **default OFF**, and a `ResearchCompilers` install component. A language selection
 allows C-only or G-only preparation; B is unavailable until implemented. Normal
 CI must explicitly enable and exercise maintained C/G tests so opt-in packaging
-does not silently remove coverage. This is a proposed delivery-policy change
-requiring approval; current published experimental commands are not silently
-removed by this review.
+does not silently remove coverage. This delivery-policy change was approved with the reorganisation. Experimental
+commands remain available through the explicit research component.
 
 Research outputs must use their own build/output directory; root's broad `bin/`
 install must not scoop up disabled or stale experimental files. Explicitly
@@ -198,7 +195,7 @@ producer registration. Do not delete unrelated files from existing install
 prefixes. Prove fresh and incremental installs separately.
 
 Move generator-dependent tests to the tool owner; pure SDK tests must not
-require `levelllib` or research compilers. Preserve existing Make producer-order
+require `rxlanglib` or research compilers. Preserve existing Make producer-order
 and Ninja freshness fixes. Test missing-output recovery and no-op rebuilds;
 relocation must not reintroduce duplicate L2 production or absent install files.
 Generated modules, the `crexx` build grammar, Unicode consumer and installed
@@ -235,11 +232,12 @@ extensions or hide tracked junk with ignore rules.
 
 ### Numbered acceptance criteria
 
-**RA-AC01–10 remain open until the approved refactor is verified.** These
+**RA-AC01–10 were verified for the first local reorganisation.** The naming
+and library-only refinement below reopens affected path/build checks. These
 supplement, and do not close or weaken, the compiler and wider research criteria.
 
 1. **RA-AC01 — ownership:** paths, CMake declarations and install owners match
-   the approved split; `lib/rxfnsl` contains only SDK-owned source/docs/tests/examples.
+   the approved split; `lib/rxfnsl` contains only library implementation and required build data.
    Verify a source/target inventory and no imports from L into compiler research.
 2. **RA-AC02 — tool service:** Level L generation has a callable B-only service
    returning owned output/diagnostics through L writer/sinks, with no main/stdout
@@ -274,14 +272,14 @@ supplement, and do not close or weaken, the compiler and wider research criteria
 
 | Step | Work | Criteria / gate |
 |---|---|---|
-| **RA-STEP01 — review complete; approval pending** | Review actual code/build owners; select paths, service split, B/G sharing, package changes and cleanup policy. | AC01–10; approval of this architecture is required before structural changes. The global no-junk instruction is already authorised. |
-| **RA-STEP02 — proposed** | Move canonical owners and update path consumers; extract the Level L service and tool support, preserving bootstrap dependencies and namespace meaning. | AC01/02/05/06; dependency: STEP01 approval. Check each coherent change before proceeding. |
-| **RA-STEP03 — proposed** | Split C from the typed core; replace common language-dispatch main/service; split family registration/target policy and service products. | AC03–05/08; preserve B deferral, G semantics and all current C fixes. |
-| **RA-STEP04 — proposed** | Separate product/research stages, outputs and install components; update wrapper, Unicode, inventory, CI and test preparation owners. | AC06/07; no silent loss of tests or reliance on stale outputs. |
-| **RA-STEP05 — proposed** | Promote genuine fixtures, consolidate durable docs, remove obsolete files/run output and migrate output-writing scripts. | AC09/10; check references before deletion; no archive requirement. |
-| **RA-STEP06 — proposed** | Run the smallest decisive affected build/tests/install/closure checks; reuse unchanged proof and inspect RXAS. Update current docs and delete temporary results. | AC01–10; new/expanded nested test aggregates need isolated Debug/sanitizer scheduling checks. Broader QA only for an identified gap; publication is a separate instruction. |
+| **RA-STEP01 — approved** | Review actual code/build owners; select paths, service split, B/G sharing, package changes and cleanup policy. | AC01–10; Adrian approved implementation on 17 October 2026. The global no-junk instruction is already authorised. |
+| **RA-STEP02 — complete locally** | Move canonical owners and update path consumers; extract the Level L service and tool support, preserving bootstrap dependencies and namespace meaning. | AC01/02/05/06; dependency: STEP01 approval. Check each coherent change before proceeding. |
+| **RA-STEP03 — complete locally** | Split C from the typed core; replace common language-dispatch main/service; split family registration/target policy and service products. | AC03–05/08; preserve B deferral, G semantics and all current C fixes. |
+| **RA-STEP04 — complete locally** | Separate product/research stages, outputs and install components; update wrapper, Unicode, inventory, CI and test preparation owners. | AC06/07; no silent loss of tests or reliance on stale outputs. |
+| **RA-STEP05 — complete locally** | Promote genuine fixtures, consolidate durable docs, remove obsolete files/run output and migrate output-writing scripts. | AC09/10; check references before deletion; no archive requirement. |
+| **RA-STEP06 — complete locally** | Run the smallest decisive affected build/tests/install/closure checks; reuse unchanged proof and inspect RXAS. Update current docs and delete temporary results. | AC01–10; new/expanded nested test aggregates need isolated Debug/sanitizer scheduling checks. Broader QA only for an identified gap; publication is a separate instruction. |
 
-**Approval requested:** the `langtools` / SDK / research ownership split; an
+**Approved scope:** the `langtools` / SDK / research ownership split; an
 independent C compiler alongside a mostly shared B/G typed core; separate callable
 tool/compiler products and migration of the combined experimental API; and the
 explicit opt-in research delivery policy. No new source-language syntax, B
@@ -289,109 +287,89 @@ implementation, runtime redesign, default replacement or INTERPRET work is
 included. The standing no-junk rule is not conditional on this approval.
 
 
-### cREXX C/G compilers and shared IR — STEP05 review, 15 October 2026
+### Final naming and library-only refinement
 
-Adrian requested a documented plan for separate new C/G compilers written
-entirely in cREXX, using Level L and a common optimised IR before RXAS emission.
-The authoritative compiler subprogramme is
-[`lib/rxfnsl/compilers/PLAN.md`](../../lib/rxfnsl/compilers/PLAN.md).
-It owns `LLCOMP-AC01–16` and `LLCOMP-STEP01–10` (including `STEP07B`), the proposed directory layout,
-two-frontend PoC, full migration, INTERPRET and eventual replacement gates.
+**Approved direction, 17 October 2026:** use `rxlang` for the Level L generator
+command, target and `langtools/rxlang.crexx`. Remove the generic `cli/` directory;
+put its CMake generation adapter under `langtools/cmake/`. Name the callable tool
+package `rxlanglib.rxbin`; preserve `llfront`/`llgenerate` APIs and the authored
+`options levell` language. Update build, driver, install and documentation users
+together. Do not retain an installed duplicate of the old `levell` command.
 
-The new source-to-RXAS pipeline must not delegate to the C-language compiler
-backend. Adrian clarified that the native Level B compiler remains only the
-seed: build L, then the proper cREXX B compiler, then rebuild/verify the B/L
-closure before building the downstream G and C compiler hosts. AC02 and STEP07B
-now include that self-hosting destination. The proposed C compiler host depends
-only on B/L, while the existing Classic target-runtime package's G dependency
-is tracked separately. Old compilers remain independent test controls until
-replacement is qualified and approved.
-The extensible IR, schemas, storage, views and generic graph/analysis/emission
-services belong to Level L. C/G operation/type extensions and their complete
-language semantics belong in the separate compiler subtree. This supersedes the
-earlier conversational suggestion of using a C-backend adapter for the PoC.
+**Outcome:** `langtools/doc` and `langtools/examples` own all general Level L
+learning and reference material. Independent library regressions move to
+`langtools/tests/library`. `lib/rxfnsl` contains only library implementation and
+required Unicode build inputs. The TinyExpr demonstration implementation moves
+out of the SDK package into its example and is compiled separately for its test.
+Compiler research retains its language-specific plans, examples and regression
+fixtures. This is the last Level L layout refinement before a separately scoped
+whole-repository review. Publication is now authorised as recorded above; the
+wider review is separate from this completed implementation.
 
-**Status:** Adrian approved the STEP01 design and authorised STEP02.
-The [review packet](../../lib/rxfnsl/compilers/doc/STEP01-REVIEW.md) now defines
-POC-01–10, purposeful C/G source trees, the Level L IR and extension API,
-processing algorithms and bootstrap ownership. Six source controls passed with
-existing tools on both VMs; their exact evidence boundary is recorded.
-STEP02 now implements the Level B-only IR and semantic services, including SAY
-registrations and a worked folding example. Its [local qualification receipt](../../lib/rxfnsl/compilers/evidence/step02-20261015/README.md)
-records checked schemas, numeric storage/codecs, facts, flow analysis, semantic
-callbacks, replacement/lowering and chunked output. Adrian authorised the
-qualified STEP02 increment and existing baseline for publication to `develop`
-on 15 October 2026; hosted results are reported separately by the CI monitor.
-Adrian subsequently approved STEP03. Both generated source frontends and their
-Level B semantic mapper/import-contract reader are now locally qualified at the
-source-to-IR boundary. The [STEP03 receipt](../../lib/rxfnsl/compilers/evidence/step03-20261015/README.md)
-records the product build, 24 frontend and 128 existing CTests, B-only bootstrap
-modes and full no-opt frontend delivery. Syntax errors and messages have explicit
-coverage, and the walkthrough now contains generated trees/IR. Publication was
-authorised together with the focused CI preparation repair on 15 October 2026;
-STEP04 subsequently delivered the Level B backend using the Level L writer;
-the subplan retains its functional, provenance and product-stage repair
-receipts. STEP05 optimisation and its bounded code-quality follow-through are
-locally qualified; STEP06 complete PoC qualification and the full STEP07–10
-destination remain open.
-This advances the foundation portions of
-AST-AC02–06 and research AC-26; it does not mark their remaining migration or
-measurement obligations complete. Existing implementation approvals and AST7
-qualification remain as recorded below.
+1. **RA-NAME-AC01 (verified locally):** `rxlang`, its source and target, and `rxlanglib` are
+   canonical; no `cli/` source owner or stale installed `levell` products. Build,
+   command/service parity, driver generation and fresh/incremental install prove
+   the naming change; `options levell` and grammar suffixes remain compatible.
+2. **RA-NAME-AC02 (verified locally):** no examples, standalone guides or tests remain under
+   `lib/rxfnsl`; canonical paths, links, independent tests and runnable examples
+   work under `langtools`. Inline API documentation remains with source.
+3. **RA-NAME-AC03 (verified locally):** research C/typed/G boundaries remain intact; relevant
+   regression and generated RXAS results agree. Reuse the previous refactor's
+   unchanged semantic qualification. Keep main develop, unrelated work, paused
+   CI monitoring and the no-junk rule intact.
 
-Adrian also requires architecture, purposeful tree/graph schemas, supporting
-structures and processing algorithms to be documented alongside each increment.
-`LLCOMP-AC15` makes that a delivery requirement with a runnable paired C/G
-walkthrough and explicit ownership, invariant and algorithm contracts.
+| Step | Work and gate |
+|---|---|
+| RA-STEP07 — complete locally | Rename the command/package/adapter and move documentation, examples and tests; AC01/02. Uses Adrian's requested refinement. |
+| RA-STEP08 — complete locally | Verify changed producers, wrappers, selected regressions, links and install names; update the existing guides/plan and delete temporary outputs; AC01–03. |
 
-The subplan records the implemented numeric IR foundation: checked handles over compact
-indexed storage, exact constant/name pools, sparse analysis tables and readable
-text/structured views. STEP02 retains fixed-width row records after a bounded
-row/column comparison and implements checked text/binary codecs. AST storage is
-unchanged; representative compiler performance remains an open criterion.
+### Final naming and library-only verification
 
-The [STEP05 review](../../lib/rxfnsl/compilers/doc/STEP05-REVIEW.md) was approved
-on 15 October. Adrian accepted the cleanup's
-[first Release verdict](../../lib/rxfnsl/compilers/evidence/step05-cleanup-20261015/README.md).
-Shared passes and local qualification are complete; the [receipt](../../lib/rxfnsl/compilers/evidence/step05-20261015/README.md)
-verifies F5-AC01–08. Adrian authorised STEP05 develop publication and monitor
-handover on 15 October; hosted outcomes remain separate. The subplan now also
-records the STEP06 bounded qualification approved on 15 October: reuse valid
-evidence, close C/G PoC coverage gaps, keep all compiler logic Level B, and
-update architecture and user guidance. F6-AC01–06 are locally qualified for
-the agreed PoC; [receipt](../../lib/rxfnsl/compilers/evidence/step06-20261015/README.md).
-The parallel-Make preparation finding is repaired with a permanent regression
-and byte-identical real-tool rebuilds; [receipt](evidence/bootstrap-order-20261015/README.md).
-Full replacement/platform gates remain open. STEP06 develop publication and
-monitor handover are complete at `4eca26ac8335a22dd74f84250696ba68303c9958`.
-Adrian approved bounded STEP07A on 15 October: scalar defaults/presence and
-separate G modules, keeping compiler logic Level B. The [exact public API](../../lib/rxfnsl/compilers/doc/STEP07A-CONTRACTS.md)
-was approved on 16 October and is implemented and locally qualified;
-[validation summary](../../lib/rxfnsl/compilers/PLAN.md#step07a-validation).
-Develop publication was authorised on 17 October; hosted outcomes remain separate.
-Level L now owns optional input/export views and v2 persistence with
-checked v1 compatibility; C/G semantics remain in the compiler libraries. F7A-AC01–06 in the compiler subplan own this increment, while F6 criteria
-retain the completed PoC boundary. On 16 October Adrian approved completing
-the new Level C compiler before STEP07B. The subplan's
-[C-first milestone](../../lib/rxfnsl/compilers/PLAN.md#c-first-delivery-milestone)
-owns CFC-AC01–08 and its delivery steps. Adrian subsequently directed an
-instruction-by-instruction review, starting with SAY and leaving INTERPRET
-and its mechanism review until later. Host/condition/TRACE integration and
-eventual INTERPRET remain required for complete C qualification. Existing native B remains the seed for the Level B implementation;
-current G behaviour and independent Level L consumers remain regression gates.
-Proper B/self-hosting and wider G expansion are deferred, with all existing
-criteria retained. Inspect actual RXAS and helper costs in each increment;
-native C behaviour and code size are comparison evidence, not semantic or
-efficiency authorities. These are priority/acceptance changes, not new coverage
-or a default compiler switch. Adrian previously
-clarified that formal performance testing is not required for Level L research;
-root `AGENTS.md` records this scoped exception. Functional, resource and emitted
-code-quality acceptance remain. STEP05 used both compiler examples to
-improve Level L: checked batch rewrites, shared indexed analyses/passes and
-reusable source-coordinate lookup. Generic tests use a non-C/G family; C/G
-semantics and RXAS ABI policy stay in the compiler. The existing chunked writer
-is retained. F5-AC01–08/F5-STEP01–04 in the subplan own this bounded increment;
-no duplicate implementation plan or broader redesign is introduced here.
+Verified on the same main `develop` base recorded below, with the final working
+source/build/test inputs. These unchanged results qualify the authorised
+publication; they do not establish hosted workflow success.
+
+| Criteria | Local verification |
+|---|---|
+| RA-NAME-AC01 | `stage-product`, `stage-research-compilers`, `testlangtools` and the affected TinyExpr comparison/C/G PoC targets build. The renamed bootstrap passes its Make producer-order regression and a real Ninja no-op. The callable `rxlanglib` bytes equal the previous tool-library bytes; command usage and driver lookup now name `rxlang`. |
+| RA-NAME-AC01/02 | Fresh and repeated installs into a prefix with spaces contain the new command/package and exclude stale `levell`, `levelllib`, TinyExpr and experimental compiler products. Old tool products deliberately present in the build bin do not leak into either install. The installed `check-authoring-build.py` panel passes 56 commands, including source forms, L0/L1/L2 parity, moved settings/calculator examples, combined/separate libraries, native packaging, incremental rebuilds and last-good-output preservation. |
+| RA-NAME-AC02/03 | Forty-four focused CTests pass: relocated independent SDK tests, generated/tool service consumers, TinyExpr functional and binary-code-shape tests, its existing dispatch workload correctness checks, downstream Unicode, repository/product inventory, bootstrap ordering and the 54-command C/G PoC. This is correctness evidence, not a formal performance comparison. |
+| RA-NAME-AC02/03 | `rxfnsl` no longer contains the TinyExpr teaching implementation; its separate `tinyexpr` namespace/module lives in `langtools/examples`. The C/G compiler service and Classic target package bytes are unchanged. Earlier independent frontend-isolation and broader semantic qualification remain valid. Current ownership, Python syntax, affected Markdown links and obsolete-path checks pass. Temporary logs, inventories and diagnostic workspaces were deleted after extracting these results. |
+
+This completes the Level L ownership/naming refinement. Whole-repository
+cleanup, full compiler replacement and hosted/platform qualification are separate
+work; existing open criteria elsewhere in these plans are unchanged.
+
+### Reorganisation verification and remaining scope
+
+Qualified in the main `develop` checkout against base
+`06a548321662e6dc4e91899363eb12831b4d952c`, with the source/build/test changes in
+this working tree. The following results cover this refactor, not full compiler
+replacement, release or hosted platform qualification. Generated diagnostic
+workspaces and logs were deleted after extracting these conclusions.
+
+| Criteria | Decisive local checks and observations |
+|---|---|
+| RA-AC01/04/05/09 | `python3 langtools/tests/check-layout.py`: ownership/import/Level B and no-disposable-output rules pass. C has no typed/G imports; typed/G has no C imports. SDK/tool source has no research dependency. Independent service tests cover literal escaping, instruction origins, RXBIN metadata validation and atomic file publication. B remains explicitly deferred. |
+| RA-AC02/05/08 | `stage-product` and selected research products build successfully. Eighty focused SDK/tool CTests passed, including all four host-mode/VM independent service tests. CLI and service bytes agree; syntax, malformed metadata, budgets and last-good-output failures are covered. Source-emission oracle harness passes 160 cases in four mode/VM cells. |
+| RA-AC03/07 | `check-compiler-isolation.py --build cmake-build-debug` builds and executes C with typed/G sources absent, then G with C sources/adapter absent. Both print 5. Separate installed command and B service consumers pass. |
+| RA-AC06 | Optimized L0/L1/L2 converges in the product graph; a clean temporary standalone no-opt bootstrap also converges. Ninja no-op and missing-L2 recovery preserve output bytes. The real-declaration Make fixture passes clean/missing-image/changed-input/no-op cases in Debug and through the maintained ASan runner, about 16 seconds isolated; it is a scheduling proof, not native sanitizer qualification. |
+| RA-AC07 | Default research-OFF product graph builds without a research stage. Fresh and repeated installs to paths with spaces exclude deliberately stale old/new research names in global bin. Explicit C-only and G-only install components contain exactly the selected products even when opposite products remain in the build. Both-language installed pipelines/services pass; normal CI explicitly opts in and registers producers. |
+| RA-AC08 | Optimized C/G backend, provenance, optimisation, PoC, SAY and STEP07A suites passed. No-opt frontend groups, SAY and STEP07A passed. Final pruned-owner build passed eight IR demo/contract cells, both product inventories and the 99-command STEP07A suite; direct PoC execution passes all 54 commands with a zero process exit. Counts overlap earlier checks and are not summed as distinct tests. |
+| RA-AC08 | Four final walkthrough RXAS instruction/source streams exactly match their prior examples: C frames 6/25 before and 6/16 after, with 17/11 calls; G frames 2/14 and 2/5, one wrapper call. Classic parameter metadata was refreshed to the existing STEP07A names. Calls, cleanup windows, condition relay and logical filenames remain unchanged. This is no expansion and no new performance claim; full Classic TRACE/allocation quality remains open in the compiler plan. |
+| RA-AC09/10 | Over 16,000 disposable files deleted; real oracle inputs moved to owned fixtures. Research/test runners use temporary workspaces and clean them. The narrow toolkit runner passes both VMs; its two stale diagnostic expectations now match the current resource/name contract. The 84-case configuration and 121-case LR-repair independent oracles still match their maintained fixtures. Owned Python/shell syntax and documentation links pass. |
+
+Architecture, bootstrap, service, user and example guides now describe the
+three owners and explicit research install. Historical acceptance IDs below
+remain for continuity; obsolete run-path references do not define current
+storage or publication policy. Existing research experiments beyond the changed
+runners were not broadly requalified. Native compiler behavior, complete C/G/B,
+INTERPRET, cross-target bootstrap and hosted packaging remain their own gates.
+The first substantive publication includes this qualification summary and the
+current guides. Normal automatic workflows are expected to pass; their actual
+results remain separate hosted evidence. CI monitoring remains stopped.
+
+
 
 ### Authoring and build refinements — approved 13 October 2026
 
@@ -406,7 +384,7 @@ the wider research and language criteria remain unchanged.
 **Status:** Adrian approved the source forms, wrapper integration, list cleanup,
 regression tests and guide update. A combined program build includes its grammar
 modules directly; creating a separate library is optional. **UX-AC01–05 are
-locally verified** by [the qualification receipt](evidence/authoring-20261013/README.md).
+locally verified** by [current plan](PLAN.md).
 The existing `develop` checkout was fast-forwarded to `54b610b95` before editing;
 incoming Fortran/Forth work was preserved. Before publication, develop packaging
 fixes through `1031ef530` were integrated and their combined installed workflow
@@ -553,16 +531,16 @@ separately. No release tag, overnight dispatch or arbitrary proof solver is
 included. The unrelated build directory and mainframe lock files are preserved.
 
 **Status:** AST7-STEP01 and AST7-AC01 are complete and published. Evidence:
-[`ast-conditions-20261015`](evidence/ast-conditions-20261015/README.md): product
+[current plan](PLAN.md): product
 build, 36 unchanged controls, 16 new matrix tests, both Level B bootstrap modes,
 34 no-opt delivery commands and 12 fresh installed checks. Step 1 was published as `26339d2f01fb379fdd4f51bb4be9255d4d562494`.
 AST7-STEP02 and AST7-AC02 are locally complete, with evidence in
-[`ast-lowering-20261015`](evidence/ast-lowering-20261015/README.md): product build,
+[current plan](PLAN.md): product build,
 20 existing controls, 16 lowering tests, bootstrap parity and 54 delivery
 commands. Step 2 was published as `8448fc03d6131606c14cf71c60855f163f30a759`.
 AST7-STEP03 and AST7-AC03 are locally complete and delivered by this third
 separate publication. Evidence:
-[`ast-origins-20261015`](evidence/ast-origins-20261015/README.md): successful product
+[current plan](PLAN.md): successful product
 build, 112 distinct focused CTests, 160 recovery scenarios, both bootstrap modes,
 34 no-opt delivery commands and 12 installed checks. AST7-AC04 is complete for
 this three-increment local qualification and publication scope; hosted results
@@ -629,7 +607,7 @@ installed-wrapper checks pass; the unchanged wider qualification is retained.
 The enclosing commit is the publication payload. Normal automatic CI is expected
 to pass; its actual result is reported in the conversation without a status-only
 commit. Evidence and exact input identities are retained in
-[evidence/ast-structured-flow-20261014](evidence/ast-structured-flow-20261014/README.md).
+[current plan](PLAN.md).
 
 | Criterion | Verification |
 |---|---|
@@ -704,7 +682,7 @@ new language control constructs are outside this increment.
    add the complete example, and update the manual and structural contract.
 
 **Status: AST5-AC01–05 and AST5-STEP01–04 locally verified, 14 October 2026.**
-The [evidence record](evidence/ast-properties-flow-20261014/README.md) retains
+The [current plan](PLAN.md) retains
 exact input identities, commands, results and the two repaired boundary
 findings. Adrian authorized commit/push to `develop` and light CI monitoring on
 14 October. Before publication the checkout was synchronized through
@@ -794,7 +772,7 @@ checkout was synchronized through `60f58c0a9`; all 20 recorded inputs still
 matched their qualification hashes. Incoming changes concern separate test
 fixtures, their evidence and Apple packaging retries. The enclosing commit is
 the publication payload; only publication documentation changed after those
-checks. [Qualification and exact inputs](evidence/ast-step04-20261013/README.md)
+checks. [current plan](PLAN.md)
 retain the results and publication reconciliation. Normal automatic CI is
 expected to pass; actual results are reported in the conversation, without a
 status-only commit. The unchanged Level B bootstrap contract is preserved.
@@ -811,7 +789,7 @@ status-only commit. The unchanged Level B bootstrap contract is preserved.
 on macOS ARM64, based on synchronized develop `ec481f8e6`. It includes attached
 mappings, inferred field contracts, owned trees, reference handles, iterative
 walks, checked one-pass reconstruction, calculator/folding and settings examples.
-[Qualification and scope](evidence/ast-20261013/README.md) retain the results and
+[current plan](PLAN.md) retain the results and
 identities. Adrian authorized commit/push to `develop` and light CI monitoring
 on 13 October. The enclosing commit is the publication payload; its qualified
 code and test inputs are unchanged. Normal automatic CI is expected to pass,
@@ -990,1183 +968,6 @@ bounded recursion from general repeated rewriting. These are reference designs,
 not dependencies or proofs for Level L. Reuse and requalify the local `llgroup`
 and `llschedule` research controls where their restricted contracts fit.
 
-### Develop CI repair — approved 12 October 2026
-
-**Vision:** make the published Level L checkpoint build and check out on all
-maintained platforms, then verify the normal `develop` workflows are green.
-This repairs the approved implementation without changing the language surface.
-
-**Acceptance criteria:**
-
-1. **CI-AC01 — Portable checkout.** Remove Windows device names from tracked
-   evidence and generated comment fixtures, preserving their bytes. A permanent
-   path guard runs in the existing publication safeguards; Windows checkout
-   succeeds in the resulting hosted run.
-2. **CI-AC02 — Native linkage.** The modern RexxScript runner links its static
-   providers before their RXPA implementation, as the existing `crexx` runner
-   does. Local product and runner checks pass; Linux Release and CodeQL builds
-   confirm GNU linker closure.
-3. **CI-AC03 — Green publication.** Commit the repair and evidence together,
-   push to `develop`, and inspect the resulting Build CREXX and CodeQL runs.
-   Diagnose remaining failures; retry service failures when the logs establish
-   that cause. Report actual green results in the conversation, with no
-   status-only follow-up commit.
-
-**Steps:**
-
-1. **CI-STEP01 (CI-AC01/02):** retain failed-job evidence and identify causes.
-   **Verified:** `bb973735f` Build run `38298866712` fails Windows checkout on
-   `nul.txt` and Linux linkage on RXPA symbols. CodeQL `38298866314` hits the
-   same linkage failure. macOS ARM product/QA/package checks pass; Apple accepts
-   the installer but ticket retrieval loses its network connection (Error 68).
-2. **CI-STEP02 (CI-AC01/02):** repair fixture paths and runner link order, add
-   the path regression, and run focused local checks. **Locally verified:**
-   product build, four CTests, native runner checks, 586 comment-panel
-   observations, Windows/path and package guards pass. All renamed input bytes
-   and 3,169 retained panel hashes match. See [the repair receipt](evidence/develop-ci-20261012/README.md).
-3. **CI-STEP03 (CI-AC03):** publish the qualified repair and follow normal
-   hosted CI to completion. **The enclosing commit is the approved repair
-   payload.** Hosted Windows/GNU link and final green-workflow evidence follows
-   publication and is reported in the conversation. Depends on STEP02.
-
-### Develop publication — approved 12 October 2026
-
-**Vision:** publish the implemented Level L toolkit, modern RexxScript consumer
-and reviewed manual on `develop`. A clean product build must deliver both new
-commands, normal QA must prepare their generated inputs, and an installed
-consumer must generate and execute a parser without using build-tree tools.
-This integrates the supported checkpoint; the wider LANG/research obligations
-below remain open. Adrian explicitly authorizes integration and publication
-after the following gates pass, preserving unrelated checkouts and work.
-
-**Acceptance criteria:**
-
-1. **PUB-AC01 — Product closure.** `stage-product` builds `levell`,
-   `rexxscript1` and their libraries from a fresh build directory. Inspect the
-   generated dependency graph and record the command, input identity and
-   successful result here; delete the temporary build log after inspection.
-2. **PUB-AC02 — QA closure.** Standard QA preparation builds the generated
-   Level L and modern RexxScript test images and concrete VM prerequisites.
-   Existing tests execute in the smoke/correctness tiers on the combined tree.
-3. **PUB-AC03 — Integration correctness.** Commit the reviewed manual/examples,
-   integrate current `develop`, and pass product smoke plus the affected Level L,
-   legacy/modern RexxScript, compiler-exit, RXPP and Unicode correctness tests.
-   Reuse unchanged deeper backend evidence with explicit input boundaries.
-4. **PUB-AC04 — Installed tools.** In an isolated install prefix, generate a
-   grammar, compile/assemble/link its consumer and run it on available concrete
-   VMs. Run modern RexxScript with Unicode, expressions and BIFs; check syntax
-   failure prevents execution. Retain permanent package smoke coverage.
-5. **PUB-AC05 — Reviewable publication.** Include receipts and current plan in
-   the substantive publication, push the qualified descendant to `develop`
-   without force, and verify the remote commit. Normal automatic publication
-   CI follows; no new release tag or full-programme completion is claimed.
-
-**Steps:**
-
-1. **PUB-STEP01 (PUB-AC01/02/04):** repair stage and QA dependencies; add
-   installed-consumer checks. **Verified.** No language-design change.
-2. **PUB-STEP02 (PUB-AC03):** commit the manual and merge current `develop`
-   into the authorized `levell` checkout. **Verified:** manual `fb4972050`, clean
-   merge `2121969ce` includes `a415090dc`. Depends on STEP01.
-3. **PUB-STEP03 (PUB-AC01–04):** fresh product/QA build, relevant correctness
-   runs and installed checks; fix reproduced integration defects. **Verified**
-   by [the integration receipt](evidence/develop-integration-20261012/README.md).
-4. **PUB-STEP04 (PUB-AC05):** record exact inputs/results, commit and publish
-   only after STEP03 passes; verify remote state. **Local publication payload
-   complete; approved delivery is the fast-forward push of the enclosing commit
-   to `develop`.** Remote identity and actual CI state are reported in the
-   conversation, without a status-only follow-up commit.
-
-**PUB-AC01–04 verified:** fresh product and QA dependency closures, byte-identical
-L1/L2 generated RXAS, 249/249 normal correctness tests, six backend/diagnostic/
-recovery/comment/Unicode panels and 24 installed-product commands pass. The
-initial install attempt needed the optional example artifacts; preparing the
-same targets as the publication workflow resolved it without a product edit.
-The reviewed guide has 80 valid links. Adrian additionally requested a PDF while
-QA ran; the 46-page local artifact was rendered and checked, with embedded
-Unicode fonts. The receipt records exact inputs, outputs and qualification
-boundaries. Wider research and full LANG criteria remain open.
-
-Readiness inspection found missing product dependencies for both new commands
-and missing QA preparation dependencies for their test images. The committed
-tips merge cleanly; current `develop` is `a415090dc379c79ed62ef31298d183d93be7cc91`.
-The latest registered sanitizer findings are closed. No new sanitizer finding
-has been observed in this work; ordinary publication/overnight policy applies.
-
-### User-manual editorial review — 12 October 2026
-
-**Vision:** the Level L user guide is the enduring first reference for a
-programmer learning language tools. It teaches the source-to-result process,
-provides runnable examples, and states the implemented syntax and API in clear
-English. Current validation summaries, decisions and future work belong in
-the existing planning and implementation documents; obsolete notes and raw
-receipts are deleted. This is a documentation
-review of the approved language, not a change to its semantics or wider scope.
-
-**Acceptance criteria:**
-
-1. **DOC-AC01 — Learning sequence.** Explain lexer, token, grammar, parser and
-   tree before relying on those terms; put the first runnable example before
-   advanced backend/composition material. Verify by reading the whole guide.
-2. **DOC-AC02 — Accurate reference.** Check declarations, defaults, tree/API
-   contracts, all request outcomes and resource settings against owning source.
-   Retain practical restrictions with the relevant operation, and explain what
-   the reader should do. Check links and execute changed tutorial commands.
-3. **DOC-AC03 — Enduring prose.** Remove dated delivery/QA/roadmap statements,
-   repetitive qualification provisos and unexplained specialist vocabulary.
-   Preserve needed usage constraints without making claims beyond the code.
-4. **DOC-AC04 — Reviewable closeout.** Record corrected documentation errors,
-   validation and remaining product scope here. Production code and retained
-   implementation qualification remain unchanged unless a separately justified
-   repair becomes necessary.
-
-**Steps:**
-
-1. **DOC-STEP01 (DOC-AC01–03):** audit the current guide and owning code, then
-   arrange introduction, tutorial, progressive examples and reference. **Verified.**
-2. **DOC-STEP02 (DOC-AC01–03):** rewrite the manual and fill reference gaps. **Verified.**
-   Adrian additionally asks for practical first-use cases for each backend.
-   Include a runnable PEG configuration-value example, using existing syntax,
-   with priority, reversed-priority and CFG controls in the focused teaching
-   panel. This changes examples/tests, not the Level L language or runtime.
-3. **DOC-STEP03 (DOC-AC02–04):** check internal links, current source contracts
-   and executable instructions; record the results and present the revised guide.
-   **Verified** by [the manual-review receipt](evidence/manual-review-20261012/README.md).
-
-**DOC-AC01–04 verified for this editorial increment.** The guide now leads from
-tokens/grammar/trees to a complete scalar-UTF-8 settings tutorial, then grows
-that example and supplies a separate declaration/API reference and glossary.
-Practical first projects explain DFA, LL(1), LR(1), PEG, Pratt and Earley. The
-new PEG configuration-value lesson demonstrates deliberate priority, its
-reversal, and the corresponding CFG ambiguity. The manual contains no dated
-qualification diary, acceptance ledger, roadmap or repeated proof caveats.
-Needed restrictions remain beside the affected operation.
-
-Correctness review added the missing strict-request status 5, the separate
-recovery statuses/API, token-boundary forest coordinates, runtime name-lookup
-case behavior, exact charset subtraction precedence, and the two-token meaning
-of `unless next`. It documents the basic example's actual multiline strings,
-Pratt message restrictions, projection child counts and both scanning uses of
-`scan.work`. Adjacent tool notes now refer to the complete current resource
-reference instead of stale NFA/DFA defaults and a six-setting policy.
-
-Validation: 80 guide links resolve; the complete printed specification matches
-the checked-in basic example; all 18 printed defaults match `levell --limits`.
-Three copied tutorial command sequences pass, with matching output on both VMs.
-The projection example passes both VMs. The new focused `--part priorities`
-panel passes 72 runtime observations and two expected LL/LR build refusals
-through source/RXAS and optimized/unoptimized generated consumers, on both VMs.
-The product `levell_cli` build passes. Production generator/runtime code is
-unchanged; earlier implementation evidence remains applicable. The documentation/example update has been reviewed and approved for the
-`develop` integration recorded above.
-
-The complete LANG and research acceptance criteria below remain unchanged.
-
-**Overall status: expanded programme approved by Adrian on 10 October 2026;
-implementation in progress.** The
-initial pilot below is complete. The new strategy, mathematical work and
-implementation programme in the second part of this document are now authorized
-and are not covered by that completion claim. This file remains the single
-authoritative scope and acceptance record.
-
-### Remote safety checkpoint — 11 October 2026
-
-Adrian has requested a local commit and remote backup on the existing `levell`
-branch. This checkpoint includes the implementation, worked examples, guides,
-research sources, mathematical notes and retained qualification evidence, plus
-the corresponding Level L entry in `performance/ROADMAP.md`. The intended
-destination is `origin/levell` in `adesutherland/CREXX`; merge to `develop` and
-release remain subject to the previously agreed end-of-work review.
-
-Before committing, all 80 source hashes and 29 artifact hashes in
-`evidence/common-surface/host-budget-inputs.json` were checked against the
-checkout and matched. The retained functional results below therefore remain
-applicable; this safety checkpoint does not rerun unchanged qualification or
-claim hosted, cross-platform or sanitizer results. Build directories, downloaded
-reference repositories, bytecode and Python caches remain outside the commit.
-That historical checkpoint included generated outputs, raw logs and receipts.
-The current cleanup removes those disposable files after consolidating useful
-conclusions; this checkpoint is not an instruction to retain them. Genuine
-binary/CRLF test fixtures keep their exact bytes in their owning test directory.
-The checkpoint's whitespace findings did not represent runtime failures.
-The private inbox URL has been removed from the source audit; pinned public
-repository references retain the research provenance.
-
-Expected delivery is one source-and-evidence commit pushed to `origin/levell`.
-The conversation will report the actual commit and remote verification; no
-status-only follow-up commit is needed. No acceptance criterion is closed by
-this backup. Earlier dated statements that work was unpublished describe their
-historical checkpoint, before this explicit remote-backup authorization.
-
-### Continuation authorized — 12 October 2026
-
-Adrian directs continuation on `levell`: finish clean user-facing resource
-limits, then Unicode, diagnostic reporting and resynchronization, with additional
-regressions across backends and synchronized guide/plan updates. The complete
-vision and LANG-AC01–14 below remain unchanged. This increment serves
-LANG-STEP02/04/05/07/08 and does not close the broader programme by itself.
-
-1. **CONT-AC01 (LANG-AC05/10/11/13):** every remaining construction or recovery
-   safeguard is a connected optional host budget or a named, checked format/
-   stack ceiling. Tiny budgets produce resource outcomes, raised successful
-   budgets preserve artifacts, loaders accept valid artifacts independently of
-   build defaults, and overflow fails before index/allocation arithmetic.
-2. **CONT-AC02 (LANG-AC03/11/12):** compile pinned Unicode 17 property sets using
-   Level B inputs without Level G; exercise identifiers and scalar boundaries
-   against independently read raw data, retaining exact source-byte spans.
-   Comparison-key and display policies retain their full LANG-AC03 obligations.
-3. **CONT-AC03 (LANG-AC06/07/08/14):** regress diagnostic category, expected
-   tokens, authored context, byte/line coordinates and later valid structure
-   across admitted backends; keep resource failure distinct from syntax,
-   recovery and ambiguity, and preserve no-execution/last-good-output contracts.
-4. **CONT-AC04 (LANG-AC12/13):** retain exact test inputs/tool identities and
-   update runnable examples, guide and this plan with measured scope and gaps.
-
-1. **CONT-STEP01 (CONT-AC01/04):** inventory fixed limits and connect remaining
-   construction/recovery settings; preserve safe stack/format ceilings, add
-   loader/overflow/budget regressions and qualify the Level B bootstrap.
-2. **CONT-STEP02 (CONT-AC02/04):** after STEP01, generate pinned property ranges,
-   add optional charset property references, extend the same settings example
-   and qualify scalar/data/build provenance without a Level G cycle.
-3. **CONT-STEP03 (CONT-AC03/04):** after the relevant STEP01/02 services, improve
-   accurate contextual/Unicode diagnostics and grammar/target resync; add
-   backend-specific regressions and retain failures honestly.
-4. **CONT-STEP04 (CONT-AC01–04):** reconcile acceptance evidence and update the
-   guide and status. New language semantics beyond approved LANG-D03–10 still
-   require maintainer review; routine lowering and test details are authorized.
-
-All CONT criteria start open. Existing evidence is reused only for unchanged
-inputs. No new aggregate CTest is registered by this increment; focused scripts
-provide the additional qualification without expanding broad-suite scheduling.
-
-**12 October checkpoint — verified native increment:** CONT-STEP01–04 and
-CONT-AC01–04 are verified for their stated bounded continuation scope. The
-complete LANG-AC01–14 and original seven research criteria remain open.
-
-| Continuation criterion | Current evidence and boundary |
-|---|---|
-| CONT-AC01 | Eighteen connected host settings, discoverable defaults/ceilings, checked dynamic LR item membership, fixed stack/format messages and independent loaders. `resource-cleanup/limits-fixed` and `limits-noopt`: 35 commands each plus 24 boundary/loader checks each; 114 request cases + seven build controls in each complete library mode. Defaults remain engineering safeguards; global memory/time and workload calibration are not established. |
-| CONT-AC02 | Level B compiles 45 pinned Unicode 17 sets from three checksummed raw files. Independent raw-data comparison passes four native cells per library mode. XID lexer: 12,523 inputs in eight cells, including every interval edge/neighbor, random scalars, NUL and byte spans; wrong-profile/unknown-property refusals. The seventh settings lesson executes source/RXAS on both VMs. No normalization/folding key or terminal-cell service is claimed. |
-| CONT-AC03 | 78 located/message/speculation cases per complete library mode across all six parser routes. 160 record-recovery cases per mode, including malformed UTF-8 and source ordering. Eight origin checks retain original bytes and associate sorted diagnostics with error nodes. L1/L2 declaration candidates: 24 cases + twelve last-good-output checks per library mode across quote/comment/group damage. Strict parsing and execution remain strict; nested/token-stage recovery and unclosed target comments retain their stated limits. |
-| CONT-AC04 | User guide, diagnostic assessment, mathematics and progressive example updated. `evidence/continuation-20261012/` records inputs and logs; current Level B-only cold/no-op property bootstrap runs three cases with zero re2c calls and no Level G source tree. Exact L1/L2 and opt/no-opt self-description agree. Current consumer checks, six native CLI controls and unoptimized 60-case interpreter cells pass. |
-
-The constructor now uses binary membership masks, queue closure and sorted
-sparse state keys. The full worked XID language has 2,993 DFA states; the 4,096
-DFA default admits it without extra settings. The independent XID probe has
-16,127 NFA states and 2,954 DFA states. The 65,536 NFA/lexical-clause defaults
-accommodate these larger lexical graphs separately from dense parser analysis.
-MATH.md records the preservation argument and remaining construction costs;
-this is not a formal speed verdict.
-
-**CONT-F01, repaired:** the regular builder overwrote NFA exhaustion with
-"no lexical rules". Named-budget refusal regression is permanent.
-**CONT-F02, repaired:** stale linked RexxScript drivers/tests supplied an obsolete
-four-argument diagnostic prototype during native packing. Module and driver
-imports now stage exact current dependencies. The permanent import-isolation
-probe leaves an obsolete export beside outputs, forces consumer compilation,
-and passes native packing plus both interpreter consumers. Generated Level L
-consumer tests use the same exact-import discipline.
-
-Earlier compiler warnings and a scalar-in-pattern test-fixture error are retained
-as intermediate failures, not passes. Final optimized/unoptimized builds are
-warning-free. After replacing a shadowed seed-array declaration with an explicit
-empty-value reset, all 32 retained coordinate/recovery/property artifacts
-regenerate byte-identically. Runtime sources did not change, so their retained
-execution evidence remains valid for those artifacts. No source/test input is
-silently normalized merely to qualify it.
-
-**Delivery checkpoint:** source, guides and qualification receipts are prepared
-for a further safety commit on `origin/levell`, within Adrian's authorized
-branch-review scope. Actual local/remote commit verification is reported in the
-conversation. Integration and release remain separate; no acceptance criterion
-is closed merely by pushing this checkpoint.
-
-### Teaching examples and comment/migration review — 12 October 2026
-
-Adrian requests a commit and clearer backend selection, success/error-path
-explanations, an end-to-end calculator, generalized comments, and a review of
-handwritten RexxScript code. The preceding continuation is already committed
-and remotely backed up as `13041b644`. This extension preserves the complete
-vision and all open original/LANG obligations; examples do not close them.
-
-**Vision:** a reader can choose a backend by intended language semantics,
-understand a selected tree versus a forest, and build a complete calculator
-whose visitor supplies meaning. RexxScript is explained as the larger example
-of that same pattern. Comment handling should eventually be a shared,
-source-preserving facility for configurable line, nonnested block and nested
-block forms, with explicit quoting, delimiter and newline policies. General
-stages should replace consumer syntax mechanics when their contracts are
-implemented and equivalent; application semantics and required legacy paths
-must retain their owners.
-
-1. **EX-AC01 (LANG-AC02/03/09/13):** inventory implemented comment behavior and
-   record a concrete generalized-comment proposal with boundaries, admission,
-   diagnostics and tests. New spellings/semantics require Adrian's decision;
-   proposal preparation is not implementation or acceptance of that feature.
-2. **EX-AC02 (LANG-AC01/05/07/12/13/14):** runnable small grammars demonstrate
-   predictive admission, left recursion, common-prefix/ordered choice and
-   genuinely ambiguous arithmetic. Verify admitted/refused engines, complete
-   input, forest multiplicity and honest error messages on both VMs and
-   optimized/unoptimized consumer builds. Explain that a failed parse path
-   is not itself a user error, and a conflict is not proof of ambiguity.
-3. **EX-AC03 (LANG-AC04/07/12/13):** a complete calculator includes grammar,
-   generated module, Level B tree evaluator, input, build instructions and
-   expected results. Test precedence, associativity, grouping, decimals,
-   alternative comment delimiters, malformed input and located division by
-   zero. Parsing must succeed before evaluation; invalid input emits no result.
-4. **EX-AC04 (LANG-AC09/12/13):** reconcile modern and legacy RexxScript guides
-   against their sources; inventory syntax mechanics that can migrate and
-   semantics that remain handwritten. No legacy removal or forced Pratt
-   conversion without consumer/semantic proof and maintainer direction.
-
-1. **EX-STEP01 (EX-AC01/04):** inspect source and prepare the comment/migration
-   review. Record remaining decisions before changing language architecture.
-2. **EX-STEP02 (EX-AC02):** add backend selection examples/probe and guide
-   walkthrough using existing syntax. No automatic fallback or new resolver.
-3. **EX-STEP03 (EX-AC03):** implement the calculator using existing operator,
-   lexer/comment and source-tree APIs; qualify its complete toolchain.
-4. **EX-STEP04 (EX-AC02–04):** qualify focused teaching regressions, retain
-   exact inputs, correct guide drift and commit the concrete increment.
-5. **EX-STEP05 (EX-AC01):** after approval of the concrete generalized-comment
-   contract, implement it in the common model/runtime/emitters/bootstrap and
-   qualify quoting, prefixes, nesting, newline and recovery behavior across
-   admitted backends. Pending design approval; no implication that teaching
-   example completion satisfies this step.
-
-**Current status:** EX-STEP01–04 delivered for review; EX-AC02–04 verified in
-the bounded native increment. EX-AC01's inventory/concrete proposal is ready,
-The generalized-comment design was subsequently approved and EX-STEP05
-is tracked to closure by COM-AC01–05 below.
-SURFACE.md records the proposed `line`, `block`, `nested`, optional shielding
-pattern and newline contracts. At that earlier checkpoint, the one-pair frontend incompletely rejected
-duplicate declarations. The generalized-comment increment below repairs this
-comment-specific gap; the wider LANG-AC02/05 obligations remain open.
-
-`evidence/teaching-20261012/` retains 808 runtime checks and 16 expected build
-refusals across complete opt/no-opt Level L builds and both VMs, with source/RXAS
-calculator emission and both consumer compiler modes. A separate seven-command
-guide replay prints exactly `RESULT|11` on both VMs. All checks are warning-free;
-local links/fences pass, and all 64 checked prior core-source/artifact identities
-match. No aggregate CTest is added/expanded, product core is unchanged, and its
-qualified evidence is reused. This increment adds six backend grammars, an
-end-to-end calculator and modern/legacy/migration guidance; it does not close
-full LANG or original research obligations. Source/examples/evidence are
-prepared for the requested commit and existing authorized remote safety branch.
-
-### Generalized comments implementation — approved 12 October 2026
-
-Adrian approves the complete generalized-comment contract in SURFACE.md and
-instructs implementation, simple defaults, backend regressions and updated
-plan/guide. This opens EX-STEP05; no further approval of the same contract is
-required. Preserve the programme vision and all wider open criteria above.
-
-**Vision:** one Level B source coordinator implements named line, block and
-nested forms for every generated backend. Several forms compose coherently,
-quote shielding is explicit when advanced patterns are needed, original bytes
-and newline policy survive, and unsupported/damaged inputs produce accurate
-build/runtime/recovery outcomes. Source and RXAS carry identical checked
-metadata. Existing nested declarations and the acyclic L0/L1/L2 bootstrap keep
-working. No compiler/assembler re2c migration or RexxScript semantic change.
-
-1. **COM-AC01 (EX-AC01, LANG-AC02/05/13):** the three forms, distinct custom
-   delimiters, optional `outside PATTERN` and `newlines keep` execute. Multiple
-   forms choose longest opener and reject duplicate openers with related source
-   locations. Unknown/empty/invalid/recursive/nullable shielding and unsupported
-   qualifiers fail admission; no ignored declaration.
-2. **COM-AC02 (LANG-AC03/04/07/10):** a shared coordinator keeps exact original
-   bytes/spans, preserves line-comment CR/LF and declared block newlines, honors
-   quote/regular-pattern opacity and same-form nesting/close priority. Named
-   unterminated diagnostics point to the original opener. UTF-8, source/work
-   limits and contract errors remain distinct; scanning progresses or exhausts.
-3. **COM-AC03 (LANG-AC08/09/14):** strict/recovery routes use the same comment
-   policy; delimiters/separators inside opaque regions cannot trigger spurious
-   comments or record recovery. Unclosed blocks never become clean/executable.
-   Recovery and later valid structure remain checked within admitted profiles.
-4. **COM-AC04 (LANG-AC11/12):** source/RXAS, both VMs and complete opt/no-opt
-   Level L builds pass focused independent comment panels. L0/L1/L2 agree,
-   current settings/calculator/RexxScript consumers pass, and the required
-   Level B-only bootstrap remains independent of Level G/re2c. Reuse unchanged
-   broader proof; no new nested aggregate CTest.
-5. **COM-AC05 (LANG-AC12/13):** grow the existing worked example, document simple
-   and advanced contracts/limits, retain exact test/tool identities and reconcile
-   COM/EX progress without closing unrelated LANG/research obligations.
-
-1. **COM-STEP01 (AC01/02):** implement checked common descriptors/coordinator and
-   preserve the legacy prepared/definition constructors. Add focused native
-   preparation tests before broad integration.
-2. **COM-STEP02 (AC01/04):** extend shared lowering/self-grammar, compile shielding
-   patterns through the existing regular builder, emit descriptors/packed images
-   identically in source/RXAS, and rebuild/verify all bootstrap stages.
-3. **COM-STEP03 (AC02/03):** connect strict/recovery/source-author routes and test
-   original spans, errors, newline boundaries, speculative quote patterns and
-   lowered budgets. Depends on STEP01/02.
-4. **COM-STEP04 (AC01–05):** run backend/consumer/optimization panels and focused
-   build lifecycle checks, update guide/plan/receipts and preserve remaining
-   programme scope. Depends on the relevant preceding implementation steps.
-
-**Current native checkpoint:** COM-STEP01–04, COM-AC01–05 and EX-STEP05 are
-verified for the approved comment profile. EX-AC01's proposal/admission scope is verified. The full LANG and original
-research programme remain open. `evidence/comments-20261012/` owns the receipts.
-
-- Common descriptors and one coordinator execute all three forms, custom
-  delimiters, form-specific regular opacity and optional kept newlines. Duplicate
-  openers, empty/equal delimiters, invalid qualifiers and nullable/recursive/
-  overlapping outside patterns are refused; no comment declaration is ignored.
-- Independent original-byte/mask oracle and generated LL/LR/PEG/Earley, Pratt,
-  region and DFA routes pass: 2,300 comment runtime cases, 28 expected build
-  refusals, 96 standalone lexer cases and 19 native contract assertions in
-  eight optimizer/VM cells. Source/RXAS preserves original token/owned-tree
-  data, including Unicode, NUL/control markers, numeric spelling distinction,
-  nesting/close priority, quote shielding, recovery containment and exact first
-  exhaustion reporting. Target unclosed blocks remain unrecoverable.
-- Six L0/L1/L2 × VM cells produce identical new comment artifacts and a failed
-  duplicate declaration preserves the prior output. Complete opt/no-opt
-  self-description artifacts agree; the earlier frontend's 17 controls × three
-  stages pass. Current three-case cold/no-op Level B-only bootstrap has no G
-  source tree or re2c invocation. No new aggregate CTest was registered.
-- The eighth Unicode/field/region settings lesson passes in eight cells. Current
-  generated-language/RexxScript CTests pass on both VMs, the 404-case teaching
-  runtime panel and eight refusals pass, and retained unchanged-path Unicode/
-  unoptimized interpreter controls are recorded with their exact boundaries.
-  Final product/standalone builds are warning-free; guide/source links pass.
-
-**COM-F01, repaired:** RXAS emission reread the frontend's earlier descriptor
-value after custom shielding was added to a local value. Pass the completed
-checked policy to both emitters; metadata and escaped-quote regressions remain.
-**COM-F02, repaired:** optional integer RXAS arguments lacked `REGTP_VAL`, so
-`newlines keep` could become its default on some backend routes. Every occupied
-literal argument now has explicit call-ABI presence flags. The minimal fix and
-cross-backend metadata/consumer regressions are retained.
-**COM-F03, repaired:** dispatch continued after shielding work exhaustion and
-replaced the first count/location. Stop and retain the first resource outcome;
-the unproductive-prefix regression requires budget 100 / lower bound 101.
-**COM-F04, repaired:** loose string equality treated `01` and `1` as equal
-comment delimiters. Literal identity now uses strict comparison; numeric
-spelling controls execute in both emission formats.
-**COM-F05, repaired:** unescaped NUL/control delimiters produced invalid RXAS.
-The Level L emitter uses supported C-style hexadecimal escapes; source/RXAS
-NUL/control/Unicode-marker lexer controls execute. No rxc/rxas C scanner edit.
-
-The failed reproductions and fixture corrections remain dispositioned in the
-receipt. All remaining Unicode comparison/display, general nested/token-stage
-recovery, broader pipeline/tree contracts, cost/default calibration and original
-research/support-reconciliation obligations stay open. Native evidence does not
-claim hosted, install/package, Windows/Linux or sanitizer qualification.
-Surface implementation restrictions remain explicit admission errors.
-
-### Current step status — latest review
-
-| Original step | Current state |
-|---|---|
-| STEP-01–07 | Initial pilot complete; AC-01–11 verified. |
-| STEP-08 | Approved strategy, semantic/source inventory and corpus established. |
-| STEP-09 | Shared analysis, capability contracts and independent controls implemented/tested; final certificate audit open. |
-| STEP-10 | Required traditional parser/lexer implementations execute; final portfolio/evidence reconciliation open. |
-| STEP-11 | Faithful native Pika/Squirrel/c14 ports and distinct refinements execute; final bounds/cost audit open. |
-| STEP-12 | Representative stages, tree migration, useful-language and composite consumers execute; applicability matrix drafted. |
-| STEP-13 | Grammar-author and recovery representative gates verified, including held-out lexical damage. |
-| STEP-14 | Lifecycle correctness passes in four cells. First timing block is inconclusive; corrected release boundary passes, uncontended serial measurements remain. COST.md and tranches17/18. |
-| STEP-15 | REPORT.md/AUDIT.md drafted; final acceptance reconciliation and cost interpretation open. |
-| RS-STEP01–02 | Product tool, packed RXAS generation, UTF-8 source services and actual RexxScript grammar implemented and locally verified. |
-| RS-STEP03 | Interpreter implemented; historical four-cell evidence retained, and the 60-case panel passes both VMs after develop integration. RS-F01 is closed and RS-AC04 verified for the declared scalar profile. |
-| RS-STEP04 | CMake/library/native runner, dual-format artifacts, second language, negative exits and local toolchain checks verified within the documented scope. |
-| RS-STEP05 | Local implementation and review guides delivered; qualification limitation and original research obligations remain explicit. |
-| GUIDE-STEP01–03 | Comprehensive Level L guide, runnable settings language and diagnostic audit delivered; GUIDE-AC01–03 verified locally. This row records the earlier guide checkpoint; the current recovery increment is below. LL-D01–06 remain open for their full obligations. |
-| BOOT-STEP01–05 | Checkpoint 1 implemented and verified locally: Level B foundation, L0/L1/L2 bootstrap, native Unicode lexing and retained consumer/lifecycle evidence. BOOT-AC01–08 verified within the stated native-host scope; unmerged for review. |
-| LANG-STEP01 | Portfolio and proposed common-surface direction approved; one settings language is the progressive worked example. |
-| LANG-STEP02–08 | In progress: all six components have authored product routes. Shared messages, declaration resync, flat-record recovery, Pratt/LR regions and tree projection have executable increments and bounded evidence below. Captures, eighteen host budgets, pinned property classes, escaped coordinates and lexical/UTF8 recovery have bounded functional evidence under CONT-STEP01–04. Full Unicode comparison/display policies, wider composition/recovery contracts, default calibration and final qualification remain open. |
-
-The original research acceptance audit has 19 verified criteria and seven still open.
-Implemented/tested steps do not automatically close every cross-cutting
-criterion they serve. Remote branch backup is now authorized as recorded above;
-the implementation remains unmerged and the full programme remains open.
-
-### Approved initial backend set and common-surface checkpoint — 11 October
-
-Adrian approves the established-algorithm portfolio and explicitly requires
-**LL(1) and Earley initially**, alongside DFA, canonical LR(1), ordinary packrat
-PEG and Pratt. This supersedes suggestions to keep LL(1) internal or deliver
-Earley only in a later phase. It expands the initial general-toolkit scope;
-the existing RexxScript consumer and bootstrap may continue using DFA/LR.
-An implementation sequence is not permission to drop any of these six from
-the initial delivery. Research controls do not by themselves satisfy product
-support. Pika/Squirrel/c14 remain research options; ALL(*) is reserved, and
-IELR is possible later LR table compaction rather than an initial requirement.
-
-Adrian authorizes proceeding with the common surface, error reporting and
-resynchronization, and requests discussion of the surface, Unicode complexities
-and declarative composite approaches. The backend decision is settled. The
-concrete new spellings and Unicode/composition policies in
-[SURFACE.md](SURFACE.md#common-surface-unicode-and-composition-review--11-october)
-are a review proposal, not an assertion that those features already execute.
-Implement agreed contracts without re-requesting portfolio approval; obtain the
-requested language-design decision before adopting new syntax or semantics.
-
-**Implementation approval, 11 October:** Adrian accepts the proposed easy
-`diagnostic rule ... = '...'` form and instructs implementation, keeping the
-basic surface simple and growing one worked example through custom messages,
-Unicode, recovery and composite parsing. LANG-D03–10 now guide the authorized
-implementation; routine spelling/lowering details can be resolved consistently
-with that proposal. No further approval of the same contracts is required.
-Document actual delivered syntax and keep substantive departures reviewable.
-The worked example will remain the settings language, with numbered runnable
-increments rather than unrelated demonstrations. LANG-STEP02 is in progress;
-all acceptance criteria remain open until their recorded evidence is complete.
-
-**Vision and intended outcome:** a Level B-based language-engineering tool
-whose Rexx-like declarations describe source policies, lexical rules, parser
-rules, operators, tree construction and checked stages. Each of the six initial
-components consumes the appropriate common model and explains its admission
-limits. A grammar author can understand why a specification cannot be built;
-a target-language user receives located, contextual diagnostics and can inspect
-later valid structure after recoverable damage. Recovery preserves original
-source, reports damage explicitly and never permits RexxScript execution.
-The same infrastructure serves configuration, binary/text formats, embedded
-languages and future compiler frontends without depending on their ASTs.
-Unicode and composition must preserve the completed acyclic bootstrap and
-source-ownership contracts. Packed tables remain shared by reference.
-
-**Adrian's subsequent surface requirement:** keep the ordinary language simple,
-with more complicated capabilities available as options and a gentle learning
-curve. This is a product requirement, not optional guide polish. A small grammar
-must not require the author to understand backend theory, pipeline contracts,
-Unicode normalization or a separate tree schema. Advanced capability must be
-added to the same grammar in place. The candidate short forms and defaults in
-SURFACE.md require deliberate review; simplicity cannot hide semantic changes.
-Adrian further requires bespoke, context-aware error messages to be easy in
-that beginner surface. A named rule must be able to supply useful wording
-without first introducing a custom recovery algorithm, tree schema or callback.
-Source location and relevant parsing context are supplied by Level L.
-
-| Component | Initial obligation |
-|---|---|
-| DFA | Regular byte/Unicode-scalar lexing with declared longest-match/priority, progress and source-span policy. |
-| LL(1) | Explicit selectable predictive CFG backend; build-time FIRST/FOLLOW admission and named conflicts. |
-| Canonical LR(1) | Deterministic CFG backend with named conflicts, verified expectations and recovery integration. |
-| Ordinary packrat PEG | Ordered-choice backend with a declared pure, progressing profile; reject unsupported left recursion and unsupported predicates/actions explicitly. |
-| Pratt | Operator-expression specialization, shared operator/AST contracts and checked embedding boundaries. |
-| Earley | General CFG recognition and shared forests, explicit ambiguity handling and bounded resource/recovery behavior. Ambiguity is not silently resolved by production order. |
-
-**Decision ledger:**
-
-| ID | Status | Decision / proposal |
-|---|---|---|
-| LANG-D01 | Approved | All six components above are initial supported-delivery requirements. No Pika/Squirrel dependency and no ALL(*) implementation in this checkpoint. |
-| LANG-D02 | Existing contract retained | Rexx-like named declarations; grammar meaning separate from backend choice; no silent CFG/PEG conversion. New common spellings below remain reviewable. |
-| LANG-D03 | Approved direction; implementation in progress | Preserve `utf8` scalar, `bytes` and explicit `utf8bytes` compatibility profiles; version property data; separate identifier recognition from normalization/case comparison. No implicit source rewrite or Level G bootstrap dependency. |
-| LANG-D04 | Approved direction; implementation in progress | Named captures/fields and list-aware tree construction; explicit forest versus selected-tree results, error nodes and original/composite/synthetic origins. Retain existing views during migration. |
-| LANG-D05 | Approved direction; implementation in progress | Named stage pipelines, finite token passes, declared nested regions/parser boundaries and pure tree passes. No inference of arbitrary handwritten fixups or unrestricted stage feedback. |
-| LANG-D06 | Approved direction; implementation in progress | One diagnostic/result contract, grammar-owned expectation and synchronization declarations; backend-owned recovery mechanisms. Strict parsing remains available; collection/recovery is explicit, and any error prevents build publication or script execution. |
-| LANG-D07 | Approved direction; implementation in progress | Retain `semantics contextfree` / `semantics ordered` with context-dependent `|`; lexer choice retains longest match then priority. Reject wrong-profile features rather than silently reinterpret them. |
-| LANG-D08 | Approved direction; implementation in progress | Token grammars use named tokens; any quoted token spelling requires an explicit unique token binding. Never lower such spelling to its numeric byte value. |
-| LANG-D09 | Approved; defaults implemented | Simple core with optional advanced declarations and a gentle learning curve. Useful default trees and diagnostics; no mandatory backend, pipeline, schema or Unicode-policy boilerplate for a small grammar. Version and explain defaults; advanced features extend the same file without changing unrelated rules. |
-| LANG-D10 | Approved; core spelling implemented | Easy bespoke messages attached to rules or expectation sites, with built-in context placeholders and automatic locations. Richer capture/opener context is optional. Message customization must not alter recognition or require recovery configuration. |
-
-**Numbered acceptance criteria — all open until implementation evidence is retained:**
-
-1. **LANG-AC01 — Six integrated components.** Generate and execute useful
-   specifications through DFA, LL(1), LR(1), packrat PEG, Pratt and Earley using
-   the product tool/library, not research-only entry points. Record admitted
-   profiles, expected refusals, explicit selection and artifact identities.
-2. **LANG-AC02 — Consistent common surface.** Implement the reviewed rule,
-   operator, token, tree and diagnostic declarations with named source ranges.
-   Every accepted declaration affects the artifact or checked metadata; no
-   ignored annotation or literal/token-ID reinterpretation. Exercise shared CFG
-   examples across LL/LR/Earley and operator examples across applicable engines;
-   preserve ordered semantics separately. Covers remaining LL-D01/LL-D03 gaps.
-3. **LANG-AC03 — Unicode/source policy.** Preserve scalar and byte contracts,
-   malformed-input locations, NUL-as-data and original spans. Implement the
-   reviewed property/identifier/comparison/display profile with pinned data
-   and no dependency on generated Level G services. Independently test scalar
-   boundaries, combining sequences, supplementary characters, case expansions,
-   normalization differences, tabs and line endings under each admitted policy.
-   Unsupported policies reject explicitly; no silent fallback to ASCII.
-4. **LANG-AC04 — Trees, forests and ownership.** Preserve named captures,
-   list structure, trivia/source references and agreed application-tree shape
-   through lowering and backend changes. Earley exposes ambiguity/forest
-   results until an explicit selection is made. Recovered nodes and edits
-   retain origins. Verify independent/interleaved requests, release behavior
-   and shared packed tables without per-request table copies.
-5. **LANG-AC05 — Grammar-author explanation.** Report undefined/duplicate
-   declarations, empty tokens, recursion/progress failures, LL and LR conflicts,
-   unsupported profile features and construction exhaustion at original rules.
-   Include related ranges, contextual wording and bounded witnesses where
-   available; an exhausted witness search does not prove unambiguity.
-6. **LANG-AC06 — Specification resynchronization.** The proper generated
-   frontend collects two independent errors and retains a valid later
-   declaration across the agreed quote/comment/group recovery boundaries.
-   Suppress consequences of already-invalid declarations. Any error returns
-   failure and preserves the last good generated artifact. L0 remains minimal.
-7. **LANG-AC07 — Target diagnostics.** Present unexpected input, meaningful
-   expectations, construct context and related openers consistently across
-   backends. Verify LR expectations against the stack and distinguish exact
-   facts from bounded hypotheses. Unify filenames, byte ranges and agreed
-   display coordinates. Covers LL-D02, LL-D04 and LL-D06.
-8. **LANG-AC08 — Target resynchronization.** All initial components integrate
-   the common recovery contract within their admitted profiles, including
-   lexical damage before parsing, nested boundaries, EOF and repeated errors.
-   Test clean-input invariance, two independent errors plus later structure,
-   inserted/skipped origins, bounded progress, exhaustion and no execution of
-   recovered RexxScript. Do not require identical repairs across algorithms or
-   claim global optimality. Covers LL-D05 together with LANG-AC06.
-9. **LANG-AC09 — Declarative composition.** Implement the reviewed surface for
-   token-stage pipelines, parser regions and tree passes. Exercise a layout or
-   contextual-word stage, Pratt inside an outer parser, an embedded-language
-   boundary and a structural tree pass. Verify source/AST projection, delimiter
-   ownership, recovery containment and rejected unsafe composition. Forests
-   cannot flow into a single-tree consumer without explicit resolution.
-10. **LANG-AC10 — Admission and bound honesty.** Shared analysis supplies facts;
-    providers own algorithm checks and implementation-specific cost claims.
-    Composition additionally checks input units, contexts, progress, result
-    multiplicity and boundaries. Retain negative certificate/proof cases and
-    explicit unknown/resource outcomes. Keep host resource budgets outside
-    grammar meaning, reconcile constructors and loaders with representation
-    checks, and retain overflow-safe preflight and measured default rationale.
-    Finite fuel is a work limit, not proof
-    of correct recovery, successful parsing or a grammar-specific speed bound.
-11. **LANG-AC11 — Bootstrap and build continuity.** Retain Level B-only required
-    closure, minimal L0, L1/L2 deterministic regeneration, packed RXAS emission,
-    clean/no-op/incremental/failure build behavior and Level L's re2c-free
-    boundary. New property tables must be generated from pinned raw data using
-    the bootstrap foundation. Existing rxc/rxas and their re2c uses remain out
-    of scope. Cross-host/target limits remain explicit rather than implied.
-12. **LANG-AC12 — Consumer and guide qualification.** Extend the settings,
-    RexxScript and Unicode consumers plus independent backend fixtures. Run
-    affected rxc/rxas/rxlink and both-VM checks, with opt/no-opt coverage of new
-    semantics. Retain exact inputs and limits, reuse unchanged evidence and
-    update runnable guides/capability tables. Report this checkpoint separately
-    from open research criteria, full frontend migration and publication.
-13. **LANG-AC13 — Simple surface and progressive learning.** Deliver one small
-    complete grammar with only token/lexer/parser concepts, useful default
-    tree output and located errors. Grow that same example through captures,
-    expressions, recovery, Unicode policies and composition without a rewrite
-    into a different notation. Exact defaults are documented and versioned;
-    omitted options never trigger an undocumented semantic change. Review the
-    introductory sequence with Adrian before calling the surface settled.
-    Runnable before/after examples and targeted grammar-writer feedback are
-    evidence; an arbitrary line-count target is not a usability proof.
-14. **LANG-AC14 — Easy contextual messages.** The beginner example adds a
-    bespoke rule message with a single small declaration and no host callback,
-    custom tree or recovery configuration. Retain rendered filename/location,
-    unexpected lexeme/EOF and context examples, plus an optional captured-name
-    or related-opener example. Reject unknown template fields at generation;
-    never invent an unavailable or ambiguous context value. Exercise nested
-    rules, PEG alternatives/predicates, Earley alternatives and recovery to
-    show speculative failures do not produce misleading final messages.
-    Enabling a message changes presentation, not clean acceptance or tree shape.
-
-**Numbered implementation steps:**
-
-1. **LANG-STEP01 (AC01–14):** record the approved portfolio, reconcile existing
-   product/research contracts, and present concrete surface/Unicode/composition
-   choices around a progressively extended beginner example. Portfolio recorded;
-   proposal prepared; new design decisions pending
-   the requested discussion. No existing acceptance criterion is closed here.
-2. **LANG-STEP02 (AC02–05, AC10–11, AC13–14):** after surface review, establish the
-   common versioned declaration model, source/result/diagnostic contracts and
-   admission checks; repair ignored annotations and token-literal traps.
-3. **LANG-STEP03 (AC01–04, AC10–11):** integrate all six components behind the
-   common model, including product LL(1)/Earley and operator lowering. Qualify
-   deterministic/shared CFG and ordered examples; expose forest multiplicity.
-   Depends on STEP02. Delivery is not complete after any partial backend subset.
-4. **LANG-STEP04 (AC03–05, AC07, AC11):** implement reviewed Unicode property,
-   source-map and display behavior using Level B/bootstrap-safe inputs. Can
-   proceed beside STEP03 after STEP02; no implicit normalization or G cycle.
-5. **LANG-STEP05 (AC05–08, AC14):** connect easy contextual authored messages,
-   structured explanations and implement
-   specification recovery, then whole-pipeline target recovery for every
-   admitted backend profile. Depends on STEP02 and the relevant STEP03/04
-   services; preserve clean recognition and strict execution/build boundaries.
-6. **LANG-STEP06 (AC02, AC04, AC08–10):** implement reviewed pipeline/region/tree
-   declarations and backend-specific composition checks. Test equivalent
-   unstaged cases and unsafe boundaries, including recovery ownership.
-7. **LANG-STEP07 (AC01–14):** qualify backend/Unicode/recovery/composite cases,
-   build lifecycle and affected consumers. Measure new aggregate scheduling
-   before registering or expanding aggregate CTests, per AGENTS.md; do not add
-   redundant broad or performance runs to a documentation/design checkpoint.
-8. **LANG-STEP08 (AC12–14):** reconcile every criterion, update user/developer
-   guides and retain review evidence. Keep incomplete criteria open and report
-   exact native-host limits. Work remains on `levell`, with remote safety backup
-   authorized above; integration and release follow the previously agreed
-   end-of-work review boundary.
-
-**Implementation in progress, 11 October:** short lexer/parser headers,
-explicit backend selection, rule messages and token-literal rejection are in
-the seed and proper readers. All six components now have product routes:
-DFA, canonical LR(1), LL(1), ordinary PEG, Pratt and Earley. Both packed RXAS
-and Level B source emission execute. Earley exposes ambiguous forests and
-refuses arbitrary tree selection. A declared Pratt expression region embeds
-inside LR with delimiter/virtual-token admission checks.
-
-The settings language grows through six files in `lib/rxfnsl/examples/settings`:
-basic grammar, authored messages, explicit Unicode ranges, record recovery,
-embedded expressions, then named fields. Named captures also survive the Pratt/LR region in the final worked example. Explicit Unicode ranges are not full XID/property support.
-Parser messages currently support `{found}`, `{expected}`, `{rule}` and escaped
-braces. Actual LR stack trials determine expected next tokens. Ambiguous/shared
-contexts retain generic wording; PEG negative predicates suppress child messages.
-Full speculative-context qualification remains open.
-
-Retained local evidence under `evidence/common-surface`:
-
-- `lr-retained.json`: 128 LR observations from an interrupted early panel.
-- `backend-panel/receipt.json`: 384 LL/PEG/Earley observations and 21 negative
-  stage cases, both VMs and artifact routes, optimized/unoptimized generated
-  modules and consumers. This predates subsequent runtime edits.
-- `composite-panel/receipt.json`: 96 execution observations and six admission
-  refusals: precedence/grouping, standalone Pratt, LR regions, Earley ambiguity,
-  shared LR contexts and PEG predicate suppression. Optimized library, both
-  VMs and artifact routes, optimized/unoptimized generated modules/consumers.
-- `recovery-smoke/receipt.json`: 28 LR recovery observations and two proper
-  reader multi-error cases. Broader panels exposed an Earley tree-span defect
-  after skipping an EOF-damaged record. Parent spans now include empty child
-  positions across original-source gaps; a relinked minimal reproducer retains
-  the earlier valid assignment. The repaired optimized and unoptimized panels below pass.
-- `tree-noopt/receipt.json`: 64 observations of emitted tree schemas, checked
-  arity failures, rejected projection after parse failure, source/origin
-  ownership, both artifact routes/VMs and all four general parser backends.
-  The complete Level L library was built without optimization for this panel.
-
-`tested-build-inputs.json` identifies the earlier baseline. The no-opt fixture
-`build/surface-noopt-host/inputs.json` records its selected runtime and tool
-images. The first no-opt recovery rerun used a stale consolidated library after
-an intervening base-module rebuild; it is not evidence against the repair.
-Rebuild and rerun the consolidated product before claiming the repaired gate.
-
-Proper specification readers now collect syntax errors at lexically proved
-declaration boundaries, retaining good later names without producing an
-artifact. L0 remains minimal. Explicit `llrecover.request` reports/skips damaged
-records and keeps later structure with nonzero status; malformed UTF-8/unclosed
-comments and token-stage reset contracts remain limits. `tree` declarations
-now configure an explicit source-preserving projection, instead of being ignored.
-
-Named fields use `term as fieldname`, with repeated/optional occurrences and
-lookup in the named view. The first self-grammar spelling allowed all keywords
-as field names and exceeded the inherited 4096 canonical-state budget. A
-temporary identifier-only restriction was removed following Adrian's direction
-below. Keyword field names, including `as`, now have a passing 80-case panel
-across all four general parser backends, both artifact routes and both VMs
-(`keyword-fields/receipt.json`); three lexical-capture refusals also pass.
-
-**Resource-policy direction accepted, 11 October:** Adrian wants a clean user
-surface rather than restrictions introduced to fit arbitrary implementation
-ceilings. Restore the normal field-name vocabulary; keep grammar meaning and
-provider admission independent of host resource policy. Implement one optional
-budget object for build/request APIs, with ordinary defaults and clear exhausted
-resource/limit/usage reports. Basic grammars require no budget declarations.
-Expose advanced build overrides through the tool, not as a dialect change.
-Distinguish representable image/index dimensions from defaults: loaders must
-accept valid generated images within checked representation limits, not silently
-reapply a smaller generator default. Centralize and thread budgets incrementally,
-retaining unconverted limits visibly until qualified. Raising a cap must not be
-reported as a proof or a calibrated default. This serves LANG-STEP02/07 and
-LANG-AC02/05/10/11/13; it adds no algorithm to the approved set.
-
-**Limit audit prompted by Adrian, 11 October:** the 4,096 canonical-state
-ceiling is an inherited resource safeguard, not a theoretical LR(1) boundary
-or a measured default. The guide now distinguishes numerical resource policy,
-representation/index constraints and semantic/provider restrictions. LANG-AC10
-also requires reconciling centralized configurable budgets, loader agreement,
-overflow-safe preflight estimates and measured/default rationale. Work fuel is
-not a global resident-memory or elapsed-time guarantee. The temporary narrower
-grammar built 3,732 canonical states, versus 3,707 before captures. That
-restriction was withdrawn: the full field-name vocabulary builds 4,291 states
-and passes execution tests. No LR-theory limitation justified narrowing it.
-
-Resource-policy integration now restores keyword capture names (including
-`as`), rather than imposing the provisional naming restriction. The initial
-optional `lllimits.policy` connects `lr.states`, `source.bytes`, `scan.work`,
-`parse.work`, `earley.cells` and `tree.entries`; `--limit name=count` is an
-advanced host-tool option. Default LR construction allows 8,192 states; image
-loading separately checks packed-key dimensions and the reserved accept action.
-The restored self-grammar constructs 4,291 states. Optimized and unoptimized
-L1/L2 builds agree byte-for-byte. `budget-final/receipt.json` and
-`budget-noopt/receipt.json` each pass 114 runtime cases and seven tool controls,
-covering all parser routes, recovery budget propagation, exact source-size
-boundaries, invalid settings and explicit exhaustion. A larger successful budget
-emits identical artifacts; a conflicting grammar still fails LR admission.
-Connected exhaustion messages identify the setting, limit and an observed lower
-bound where available. Fixed recursive-depth failures are reported separately.
-
-Changing the frontend factory exposed stale metadata from an older linked
-stage driver in its binary import directory. Import tracing identified the
-old embedded factory despite selection of the new standalone frontend module.
-Stage imports now use exact private syntax/driver roots, excluding linked
-outputs. The common module metadata was correct; no compiler C edit is made.
-`lifecycle-budgets/receipt.json` passes nine isolated build cases: configure,
-cold build, no-op, an extended frontend factory signature while all older
-linked drivers remain, its settled no-op, grammar edit, runtime edit, invalid
-grammar with artifact preservation, and restoration. No re2c invocation or
-Level G source tree was available to this build. Its copied fixture predates
-the final resource-message and integer-division refinements; private import/build edges are
-identical. The current optimized/unoptimized product builds and 17 independent
-specification controls across all three stages also pass
-(`frontend-budgets/receipt.json`). LANG-AC11 remains open for its wider new
-property-data and platform obligations, not because this regression is pending.
-
-Latest repaired runtime evidence: `recovery-fixed/receipt.json` passes all
-112 recovery cases and both proper-reader syntax-resync cases. The EOF Earley
-span repair is included. `capture-panel/receipt.json` passes 80 field/list/
-optional/message cases plus three lexical-capture refusals; the first attempt
-caught a test-probe scoping warning, corrected before retaining the pass.
-Both panels use the main optimized runtime, both VMs and artifact routes.
-They precede the resource-policy integration. Current unoptimized-library
-receipts `capture-final-noopt/receipt.json` and
-`recovery-final-noopt/receipt.json` pass 80 field cases, three lexical-capture
-refusals, four executions of the actual composite/field example, 112 recovery
-cases and two specification-resync cases.
-
-The current Unicode adapter retains matching token/record/error observations
-across 17 inputs and eight VM/consumer-optimization cells, apart from the already
-documented NUL correction (`unicode-budgets/receipt.json`). Both Level L and
-RexxScript consumer CTests pass on both VMs, and the rebuilt native interpreter
-passes six CLI controls (`rexxscript-cli/receipt.json`). The RexxScript CMake generation path
-now explicitly depends on the verified L2 bytecode; it no longer uses a stale
-pre-bootstrap tool that happened to exist in an incremental build directory.
-
-Pinned Unicode properties/comparison policies, richer application-node/list
-shaping, general pipelines, complete nested/lexical recovery, wider contextual
-message controls, wider runtime optimization parity and affected consumer/
-lifecycle qualification remain required work for their wider obligations. No C compiler/assembler scanner
-has been changed. All work remains local for review.
-
-LANG-AC01–14 and LANG-STEP02–08 remain open for their complete obligations.
-Original AC-14, AC-15, AC-18 and AC-22–25 remain open independently. No scope is
-removed by delivering these increments. Existing bootstrap/develop evidence is
-retained for its original inputs; the expanded checkpoint is local/unmerged.
-
-### Develop integration and numeric parity — 11 October
-
-Adrian requests merging current `develop` into the local `levell` checkout and
-testing the decimal/float optimisation repair. The intended outcome is to
-retain all local Level L/RexxScript work on the updated toolchain, establish
-whether RS-F01 is repaired here, and keep the earlier evidence as historical
-rather than silently relabelling it. This integrates upstream; it does not
-publish the experimental Level L work or merge it back into `develop`.
-
-1. **SYNC-AC01 — Preserve and integrate.** Record the exact upstream revision,
-   preserve tracked and untracked local inputs, merge it into `levell`, and
-   inspect any overlap. Verify the unrelated roadmap edit and local source
-   inventory remain present. Evidence: merge log and before/after hashes.
-2. **SYNC-AC02 — Numeric repair.** Rebuild the native tools from the integrated
-   sources. Run the permanent numeric/float contract regressions, the original
-   RS-F01 reproducer and the 28-case compiler/RexxScript scalar comparison with
-   optimized/unoptimized compilation on both VMs. No remaining optimizer
-   disagreement is admitted as a pass.
-3. **SYNC-AC03 — Consumer continuity.** Rebuild the Level L three-stage tool,
-   verify deterministic stage agreement, and run focused generated-language,
-   RexxScript and Unicode normalization consumer checks. Preserve scope limits
-   and record actual source/tool identities. Update RS-F01 status only from
-   these observations; do not close unrelated research criteria.
-
-1. **SYNC-STEP01 (AC01):** fetch/pin `origin/develop`, retain a local-work
-   manifest and tracked patch, integrate upstream and restore/verify changes.
-2. **SYNC-STEP02 (AC02):** rebuild tools and consumer prerequisites, then run
-   the focused numeric controls and scalar overlap. Depends on STEP01.
-3. **SYNC-STEP03 (AC03):** execute affected consumer/stage checks, reconcile
-   evidence and update the guide/plan. Depends on STEP02; report unexpected
-   regressions before expanding the scope.
-
-**SYNC-STEP01–03 and SYNC-AC01–03 verified locally.** `levell` fast-forwarded
-from `91313bcc5` to `54f736804`; tracked changes restored without conflicts and
-979 preserved inputs were byte-identical immediately after integration. The
-build driver retains both upstream and local changes. Subsequent local edits
-are the strict scalar regression check, reproducer comment and status/docs.
-
-| Criterion | Retained result |
-|---|---|
-| SYNC-AC01 | `evidence/develop-integration/merge.json`: pinned upstream, no conflicts, before/after preservation checks and tracked patch backup; no publication or merge back into develop. |
-| SYNC-AC02 | Fresh native tools; both numeric contracts pass (632 tool commands, 264 VM executions). Original reproducer returns 0 in four cells. All 28 scalar cases match RexxScript and optimized/unoptimized Level G on both VMs, with zero accepted disagreements. RS-F01 closed; RS-AC04 verified for the declared profile. |
-| SYNC-AC03 | Warning-free consumer build; rebuilt L1/L2 RXAS identical to each other and the prior artifact. Eight consumer CTests pass: generated language on both VMs, RexxScript's 60-case panel on both VMs, four normalization cells. Six native CLI checks pass. Logical generated normalization source unchanged. |
-
-The [integration receipt](evidence/develop-integration/README.md) records exact
-inputs, tools, commands and retained limits. The original broad research and
-bootstrap receipts remain historical; this focused integration run does not
-claim a new full no-opt Level L matrix, release, sanitizer or platform sweep.
-
-### User guide and diagnostic audit — 11 October
-
-Adrian requests a comprehensive, clear user guide and an assessment of error
-reporting and resynchronization for both grammar authors and target-language
-users. The intended outcome is a usable, runnable guide to the current local
-product, with an evidence-backed account of what its diagnostics can and cannot
-do. Research recovery engines must remain visibly distinct from the product.
-This documentation/example increment does not authorize new recovery syntax,
-change language semantics, or close the wider research criteria.
-
-1. **GUIDE-AC01 — Usable guide.** Explain installation/build assumptions,
-   complete language authoring, generation/linking, lexer-only and supplied-token
-   use, trees/source ownership, finite token stages, limits and troubleshooting.
-   Verify its worked example through rxc, rxas, rxlink and both VMs.
-2. **GUIDE-AC02 — Diagnostic evidence.** Exercise malformed specifications and
-   target inputs, including two independent errors and a valid later statement.
-   Record actual messages, exit status and whether processing resumes; inspect
-   claimed diagnostic customization against the generated artifact/runtime.
-3. **GUIDE-AC03 — Honest recovery assessment.** Reconcile retained research
-   measurements with their exact denominators, document current product gaps,
-   and recommend a staged improvement path without implying it is implemented.
-
-1. **GUIDE-STEP01 (AC01–02):** inspect the current frontend/runtime; add a
-   small independent tutorial language and consumer, plus bounded diagnostic
-   probes. Reuse valid earlier product qualification.
-2. **GUIDE-STEP02 (AC01–03):** write the owning guide under `lib/rxfnsl/doc/`,
-   link existing entry points, and retain a diagnostic/recovery assessment with
-   exact evidence. Depends on STEP01; new language-design choices remain for
-   review.
-3. **GUIDE-STEP03 (AC01–03):** execute the tutorial and diagnostic probes,
-   check documentation links/examples, and record criterion outcomes here.
-
-**Current status: GUIDE-STEP01–03 and GUIDE-AC01–03 verified for this local
-guide/audit increment.** The owning guide is `lib/rxfnsl/doc/user-guide.md`,
-with the assessment and open LL-D01–06 findings in
-`lib/rxfnsl/doc/diagnostics.md`. Evidence:
-
-| Criterion | Observable result |
-|---|---|
-| GUIDE-AC01 | Complete settings specification/reader/input under `lib/rxfnsl/examples`; rxc/rxas/rxlink and both VM runs produce the documented output. Guide covers the authoring/API/ownership/build/limit topics. |
-| GUIDE-AC02 | `evidence/user-guide/receipt.json`: 46 bounded command checks, including ten damaged settings inputs on both VMs, grammar failures, two independent errors, inactive custom diagnostic/tree declarations and the actual RexxScript no-execution boundary. No new recovery code was implemented. |
-| GUIDE-AC03 | `cases/reconcile-guide-recovery.py` rereads retained results and verifies the lexical output hash against tranche16 provenance. `evidence/user-guide/recovery-counts.json` separates damaged-only retention from clean controls; RECOVERY.md now uses consistent damaged-only denominators. The diagnostic assessment recommends staged improvements with explicit design gates and closure evidence. |
-
-At that earlier guide checkpoint, the tutorial/audit used the then-current
-optimized local product tools; it did not claim a new optimizer/sanitizer/platform
-matrix. At that point the existing product
-code/build/test inputs remain unchanged: all 58 entries in the previous final
-source manifest still match. The new guide, tutorial and audit files are
-additional inputs outside that manifest. Reuse that earlier product
-qualification. The broader research acceptance criteria, RS-F01/RS-AC04 and
-new LL-D01–06 findings remain open. All work remains local and unpublished.
-
-**Overview clarification requested by Adrian:** extend GUIDE-AC01 with a
-conceptual introduction that explains generation versus use, the declaration
-groups, optional token passes, raw/named/application trees, walking versus
-transformation, and the exact RexxScript IF/composite pipeline. The intended
-outcome is that a new reader can decide which component owns each language
-problem before learning the API. Acceptance evidence: inspect real token/tree
-output for the settings example and IF attachment, verify explanations against
-the owning grammar/program/execution sources, and check guide links. This is
-documentation of current behavior, not an architectural change.
-
-1. **GUIDE-STEP04 (GUIDE-AC01):** trace representative source through tokens,
-   named tree and application handling; retain bounded inspection output.
-2. **GUIDE-STEP05 (GUIDE-AC01):** add an overview before the command tutorial,
-   using one running example, pipeline diagrams, the IF derivation, and a
-   component-selection checklist; verify it against STEP04.
-
-**Overview extension complete: GUIDE-STEP04–05 verified locally.** The guide
-now separates build/use, declaration groups, token passes, grammar categories,
-raw/named/application trees and application walks. Its IF explanation uses the
-actual closed/open/continued rules and interpreter child positions. The
-bounded `cases/overview-inspect.crexx` probe builds without warnings and emits
-identical settings token/tree and two nested-IF tree observations on both VMs.
-`evidence/overview-guide/` retains the outputs and verification receipt.
-Earlier guide/audit evidence remains valid; no recovery or broader programme
-criterion is closed by this extension.
-
-### Approved checkpoint: Level B bootstrap and re2c retirement
-
-Adrian's 11 October direction is to establish the final build shape first:
-Level L must be based on Level B, preferably without any required final Level G
-phase because Level G may itself use Level L. Build a minimal seed frontend,
-use it to generate the proper frontend, then regenerate with that frontend.
-Existing Unicode workloads must work without re2c. Improved error reporting,
-resynchronization and the supported backend portfolio follow this checkpoint.
-Adrian subsequently clarified that re2c retirement in this checkpoint applies
-only to Level L and its workloads. The existing rxc/rxas/etc. are unchanged
-bootstrap prerequisites. Their later migration away from re2c requires a
-separate bootstrap strategy that has not yet been developed. This entry records
-that agreed boundary and implementation details. Adrian approved implementation
-on `levell`, with merge deferred until the end. The implementation and current
-verification status are recorded below; historical gaps describe the state
-before this checkpoint.
-
-**Vision and intended outcome:** an acyclic, reproducible Level L build from a
-small Level B foundation, with its own lexer/parser described in Level L and
-verified by regeneration. Level L supplies the language tools needed by later
-Unicode/Level G builds; it never requires the completed Level G library to
-build itself. Existing lexer contracts and Unicode consumers retain their
-behavior while their re2c-dependent generation paths are replaced. The seed is
-a deliberately small permanent bootstrap input, not an alternative evolving
-product frontend. The fixed Level B machinery includes source/token/tree
-services, grammar analysis, DFA/LR construction, emission and the runtime;
-self-hosting first replaces the Level L specification frontend, rather than
-implying that the Level B compiler or all generator algorithms are themselves
-generated from grammar rules.
-
-The three stages use one authoritative lexer/parser specification G:
-
-1. Compile the minimal handwritten Level B frontend and shared Level B
-   generator/runtime into **L0**. It must parse the subset actually used by G,
-   lower it correctly and stop safely on errors; resynchronization is absent.
-2. Run **L0(G)** to produce the generated frontend and assemble/link it with
-   the fixed Level B machinery into **L1**. L1 is the first self-hosted tool
-   with the complete selected language surface and basic diagnostics.
-3. Run **L1(G)** to produce **L2** through the same build pipeline. Compare
-   L1 and L2 generated images/metadata and behavior. Require exact
-   identity for deterministic artifacts, explicitly accounting for any
-   nonsemantic build metadata. L2 becomes the delivered tool for downstream
-   builds. Agreement is a reproducibility check, not independent proof of
-   correctness; separate fixtures and consumer controls remain necessary.
-
-Use the already selected DFA + canonical LR machinery for this bootstrap.
-Its selection is not a decision to ship all research backends. A later optional
-Level G facade may depend on the finished Level L core; neither core generation
-nor its required CLI may depend on that facade or any generated Level G service.
-For cross builds, generation runs using host tools and the target artifacts
-must not accidentally be invoked as host executables.
-
-**Baseline gaps inspected before implementation (now addressed below):**
-
-- `lib/rxfnsl/rexx/CMakeLists.txt` currently imports the base `library` and
-  Level L modules, but many implementation files say `options levell`.
-  Establish an explicit Level B implementation contract and trace transitive
-  dependencies, including native packaging and compiler exits; import spelling
-  alone is not a clean-build proof.
-- `llfront` is still handwritten; there is no current L0/L1/L2 self-host chain.
-- The historical authored `gennorm2.levell` at pinned revision
-  `9a86fb37c0d0d7b9cd395d676e8a0a3ef45e39b8` uses automatic token IDs,
-  `scalar except (...)`, codepoint atoms, EOF and named error actions. The
-  current byte-only product frontend cannot serve as an equivalent replacement.
-  `lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx` is a retained generated
-  scanner, not a newly reproducible native Level L generation path.
-- Preserve the established Unicode-scalar meaning of the historical `utf8`
-  profile, byte spans, longest match/priority and NUL-as-data boundary. The
-  PoC's `utf8` byte-charset interpretation is a compatibility discrepancy to
-  resolve explicitly, not silently reinterpret. Choose and document the
-  lowering/compatibility plan before migrating existing product specifications.
-  The implementation uses sorted scalar intervals and UTF-8 byte-DFA lowering,
-  with the proof argument in `lib/rxfnsl/doc/bootstrap.md`. Historical `utf8`
-  scalar meaning is preserved; existing PoC byte rules explicitly use
-  `utf8bytes`. This needs no Level G Unicode tables or duplicate decoder.
-- Keep normalization/casing/grapheme executors on the existing RXVM codepoint
-  substrate. Lexer replacement must not import the Level G Unicode facade,
-  duplicate the runtime decoder or silently alter Unicode versions/policies.
-- Outside this checkpoint, `compiler/CMakeLists.txt` and
-  `assembler/CMakeLists.txt` invoke re2c for four C scanners, and
-  `cmake/CrexxClassicUnicode.cmake` reads categories from
-  `re2c/include/unicode_categories.re`. These existing toolchain dependencies
-  remain unchanged; do not claim a repository-wide re2c-free build.
-
-**Confirmed checkpoint boundary:** build the existing C tools in their normal
-way, then prove that Level L and the migrated Unicode generation workloads do
-not invoke re2c or consume its templates/data as their generator implementation.
-Keeping re2c in the repository for rxc/rxas is permitted and expected. Tests must
-distinguish prerequisite tool construction from Level L generation itself.
-No C-scanner output backend, rxc/rxas migration, C bootstrap seed or production
-compiler frontend change is included here. Those require the later, separately
-developed strategy identified by Adrian; they are not implicitly the immediate
-next step after this checkpoint.
-
-Checkpoint acceptance criteria (retain all outcomes; evidence ledger follows):
-
-1. **BOOT-AC01 — Level B foundation.** Clean-build the required Level L core,
-   seed, generator and CLI with no transitive dependency on `rxfnsg` or generated
-   Level G services. Retain the actual dependency graph and build trace.
-2. **BOOT-AC02 — Three-stage bootstrap.** Build L0, L1 and L2 from the
-   authoritative specification, with stage-isolated outputs and checked
-   dependency order. The seed has safe bounded failure and enough syntax for G.
-3. **BOOT-AC03 — Regeneration agreement.** L1/L2 canonical generated
-   artifacts agree, and both tools agree on a positive/negative grammar corpus,
-   token/rule/tree contracts and downstream generated languages. State the
-   independent correctness controls and their coverage separately.
-4. **BOOT-AC04 — Unicode lexer compatibility.** Regenerate and execute the
-   historical TinyExpr/gennorm2 workloads natively, preserving observable tokens,
-   spans, EOF, basic error identities and semantic records. Test scalar/range
-   boundaries, subtraction, multibyte characters, supplementary scalars,
-   malformed UTF-8 and embedded NUL with the explicitly agreed source policy.
-   Document rather than conceal any necessary compatibility adapter.
-5. **BOOT-AC05 — Unicode consumer qualification.** Inventory current Unicode
-   generation consumers and replace the affected retained scanner/generation
-   paths. Preserve pinned input hashes, generated logical table contents and
-   runtime contracts; run the owning conformance gates for changed data/tool
-   inputs. Unchanged valid evidence may be reused. No new G-to-L cycle is added.
-6. **BOOT-AC06 — re2c retirement boundary.** No re2c invocation, template,
-   category-file or other hidden generator dependency remains in Level L or the
-   migrated workload generation steps. After building the unchanged prerequisite
-   C toolchain, exercise a fresh Level L generation/build with re2c unavailable
-   to that phase and retain its command/input trace. Existing C-toolchain uses
-   remain allowed and are explicitly outside this criterion.
-7. **BOOT-AC07 — Build lifecycle and consumers.** Cold build, no-op rebuild,
-   grammar edit and runtime edit produce the intended regeneration/relinking;
-   failure preserves the last valid artifact and returns nonzero. Run the
-   generated settings and RexxScript consumers on both VMs. Account for host
-   generator versus target artifacts in supported build configurations.
-8. **BOOT-AC08 — Reviewable delivery.** Update the guide/build documentation,
-   record stage identities, Unicode/data provenance and retained checks, and
-   report this checkpoint for review. Basic rejection and named lexical actions
-   work now; rich explanation, repair and multi-error recovery remain the next
-   checkpoint. Original research and any unresolved conformance obligations remain explicit. RS-F01 was subsequently closed by the develop integration recorded above.
-
-Numbered implementation steps, **approved; STEP01–05 implemented and verified locally**:
-
-1. **BOOT-STEP01 (AC01, AC04–06):** freeze the dependency/Unicode workload
-   inventory under the confirmed retirement boundary; present the scalar/byte
-   compatibility details and Level B seed contracts before implementation.
-2. **BOOT-STEP02 (AC01–02):** factor the Level B-only foundation and minimal
-   seed, with isolated import roots and stage outputs. Depends on STEP01.
-3. **BOOT-STEP03 (AC02–04):** author Level L's lexer/parser specification and
-   implement its tree-to-common-IR lowering; generate L1, then L2, and check
-   agreement. Add the Unicode lexical capability required by the frozen
-   workloads without Level G services. Depends on STEP02.
-4. **BOOT-STEP04 (AC04–06):** migrate affected Unicode generation workloads,
-   replacing Level L's re2c-generated artifacts and generator-data dependencies
-   with the native tool. Preserve independent references and qualification;
-   leave existing C scanners and their toolchain dependencies unchanged.
-5. **BOOT-STEP05 (AC03, AC05–08):** verify the clean acyclic build, stage
-   agreement, incremental/failure behavior and affected consumer conformance;
-   update documentation and deliver checkpoint 1 for review.
-
-### Bootstrap implementation and bounded qualification — 11 October
-
-**BOOT-AC01–08 and BOOT-STEP01–05 are verified for this local checkpoint.**
-[The checkpoint evidence index](evidence/bootstrap/README.md) records exact
-inputs/results, reused evidence and scope limits. This closes the bootstrap
-checkpoint, not the overall programme.
-
-The current implementation has a Level B foundation and an isolated seed reader.
-The authoritative `lib/rxfnsl/grammar/levell.levell` generates a 50-state DFA and
-1,969-state canonical LR parser. A declared finite token stage recognizes
-`name :` declaration starts before parsing; ordinary keyword stages preserve the
-Rexx-like surface. The shipped library contains the generated reader, with no
-seed fallback. A standalone CMake graph imports only existing C tools and the
-Level B library, while the normal native CLI packages L2 without `rxvme`/Level G.
-
-The Unicode workload inventory found one retained Level L scanner in the
-normalization generator. It is now a small Level B ABI adapter over the native
-gennorm2 grammar; the typed-record parser and all normalization/casing/grapheme
-executors remain unchanged. Historical TinyExpr is an independent lexer-only
-control. `rxc`, `rxas`, re2c and Classic Unicode build inputs are untouched.
-
-| Criterion | Implementation / retained local evidence |
-|---|---|
-| BOOT-AC01 | Standalone cold build from a source snapshot containing neither Level G nor re2c; exact command trace and tool hashes in `evidence/bootstrap/lifecycle-final/receipt.json`. Native CLI dependency inspection and product build exclude Level G. |
-| BOOT-AC02 | Stage-isolated L0/L1/L2 graph; seed expression/set nesting limits and generated frontend; `frontend/receipt.json` records 17 positive/negative cases through all three stages. |
-| BOOT-AC03 | L1/L2 generated RXAS are byte-identical; optimized/fully unoptimized bootstrap agreement. Five independent lexical panels also agree across all three generators, with decoded-scalar/regex oracles and both VMs. |
-| BOOT-AC04 | `controls/receipt.json` and `noopt-controls/receipt.json`: 2,700 cases per core configuration, four probe/VM cells; scalar boundaries/subtraction, bounded Unicode expressions, TinyExpr and gennorm2. `gennorm2-compat/receipt.json`: 17 owning token/typed-record/error cases in eight old/new × optimizer × VM cells. NUL correction below is explicit. |
-| BOOT-AC05 | Level G normalization generation consumes the new image through the adapter; regeneration leaves the logical normalization source unchanged. Four owning Unicode-normalization conformance cells pass. Pinned Unicode 17.0.0 data/manifests and current source identities are retained with checkpoint evidence. |
-| BOOT-AC06 | Seven isolated lifecycle phases with a failing re2c executable first in PATH; zero invocations, no Level G/re2c source present. Current C-toolchain dependencies are outside this proof. |
-| BOOT-AC07 | Cold/no-op/grammar-edit/runtime-edit/failure/restoration phases pass; failure preserves prior generated artifacts and downstream library. Settings guide/diagnostic checks run both VMs; generated-language and 60-case RexxScript panels pass both VMs. Native host build qualified locally; cross builds reject explicitly and host/target packaging remains unqualified. |
-| BOOT-AC08 | Bootstrap guide, authoring guide and diagnostic assessment updated. Current source/tool/stage/Unicode hashes and command receipts are in `evidence/bootstrap/receipt.json`; source/RXAS emission also passes 160 inputs in four cells. All work remains local and unmerged. Rich recovery/backend selection, RS-F01 and the original open research criteria remain separate. |
-
-**Observable compatibility correction:** the legacy gennorm2 lexer accepts NUL
-inside a comment as an EOF sentinel. The native scanner correctly treats it as
-input and returns the existing invalid-character status at its original byte
-position. All other observations in the owning comparison agree, including
-accepted-prefix tokens on failure and EOF only on success. No failure is hidden
-by removing the NUL case from the comparison.
-
-This checkpoint is macOS ARM64 local functional qualification. It is not a
-release, installation, sanitizer or cross-platform result. Seven original
-research criteria (AC-14, AC-15, AC-18, AC-22–25) and the complete LL-D01–06
-diagnostic work remain open. At this bootstrap checkpoint RS-F01/RS-AC04 were
-also open; the later develop integration above closes that compiler blocker.
-The local Level L implementation has not been published or merged into develop.
-
-After checkpoint 1, design and implement the shared diagnostic/recovery
-contracts for grammar authors and target-language users. The initial supported
-portfolio is now decided in LANG-D01 above, including LL(1) and Earley; qualify
-all six components against those contracts and retained evidence.
-Allow error-node/provenance/result-status representation to be reserved now so
-that later recovery does not require replacing the core interfaces, but do not
-turn rich recovery into an unstated prerequisite for this first checkpoint.
 
 ## Vision and intended outcomes
 
@@ -2302,7 +1103,7 @@ Adrian's subsequent instruction to implement the tool, grammar and connected
 interpreter authorizes this concrete implementation for review. The accepted
 RS-D baseline above applies; no further approval is needed to implement it.
 The exact surface is now delivered as executable examples for careful review,
-not declared a released language. All work stays local on `levell`.
+not declared a released language. All work stays local on `rxlang`.
 
 **Vision:** a reusable Level L command compiles one Rexx-style specification
 into checked native DFA and canonical LR tables and source-owned trees. A
@@ -2377,21 +1178,19 @@ seven open research criteria, including the corrected lifecycle measurements.
 
 ### Product acceptance audit — local implementation for review
 
-The implementation is available for review on `levell`; **complete qualification
-is not claimed**. Evidence is retained in `evidence/product-rxas/final/`, including
-the precise source/tool/artifact hashes, commands and the known compiler finding.
-Scope is macOS ARM64 Debug with the existing local toolchain, not a release,
-installation, sanitizer or cross-platform qualification.
+This table summarizes the original local product qualification. Current ownership
+and reorganisation checks are above. Historical passes do not qualify later
+changed inputs or establish release, sanitizer or cross-platform status.
 
 | Criterion | Current status and retained evidence |
 |---|---|
 | RS-AC01 | **Verified locally.** Native tool emits deterministic RXAS for RexxScript and a second language. Nine generator cases cover named admission failures, unsupported semantics, construction exhaustion, UTF-8/I/O and atomic preservation of an old output after failure. Packed source/RXAS images match byte-for-byte. |
 | RS-AC02 | **Verified for the documented profile.** UTF-8 source/strings, nested comments, spans, layout, continuations and damage are exercised in the 60-case interpreter matrix and CLI negatives. ASCII identifier restrictions and unavailable wider Level G lexical forms remain explicit. |
 | RS-AC03 | **Verified.** Actual grammar: 149 DFA states, 1,612 native canonical LR states; independent Bison admits the identical common graph without conflicts (1,613 states including its final EOF state). Structured statements and exclusions execute in the functional matrix. |
-| RS-AC04 | **Verified locally for the declared scalar NUMERIC_COMMON profile.** After integration of develop `54f736804`, all 28 compiler/interpreter scalar comparisons agree in optimized/unoptimized modes on both VMs. The original reproducer returns 0 in all four cells; permanent upstream numeric contracts pass. `evidence/develop-integration/` closes RS-F01 without claiming complete Level G compatibility. Historical discrepancy outputs remain intact. |
+| RS-AC04 | **Verified locally for the declared scalar NUMERIC_COMMON profile.** After integration of develop `54f736804`, all 28 compiler/interpreter scalar comparisons agree in optimized/unoptimized modes on both VMs. The original reproducer returns 0 in all four cells; permanent upstream numeric contracts pass. RS-F01 was closed for that integrated input without claiming complete Level G compatibility. |
 | RS-AC05 | **Verified for the accepted initial boundary.** Shared rxfnsc bodies, call context, presence flags and fresh pool/config exercised by nested/omitted calls, typed values, VALUE effects, Unicode and BIF failures. Native Unicode/stream/provider dependencies linked. Host-dependent calls fail explicitly; the deferred host contract remains undecided. |
 | RS-AC06 | **Verified for the documented synchronous API.** Sixty cases per complete opt/no-opt module build on each VM include owned program reuse/fresh runs, control and early return, parse-before-execute, failure codes/locations, source/depth/fuel/output/value limits and pre-run cancellation. No asynchronous cancellation or universal BIF allocation bound is asserted. |
-| RS-AC07 | **Verified local review delivery; RS-F01 subsequently repaired and integrated.** CMake product targets and four current product CTests pass. Six standalone CLI cases pass. Second-language/image/ownership tests pass 4,725 assertions in each of four cells. Source-emitted grammar also runs all 60 interpreter cases on both VMs. Unchanged legacy correctness evidence is retained and reused; product docs/examples describe compatibility and limits. No publication. |
+| RS-AC07 | **Verified local review delivery; RS-F01 subsequently repaired and integrated.** CMake product targets and four current product CTests pass. Six standalone CLI cases pass. Second-language/image/ownership tests pass 4,725 assertions in each of four cells. Source-emitted grammar also runs all 60 interpreter cases on both VMs. Unchanged legacy correctness evidence is retained and reused; product docs/examples describe compatibility and limits. Publication history is separate from this bounded qualification. |
 
 **RS-F01 — compiler scalar folding disagreement, closed after local integration.**
 The pre-integration `rexxscript/tests_functional/float-comparison-reproducer.rexx`
@@ -2424,33 +1223,6 @@ cost, not a claim that tables are shared without copies across all requests.
 Further borrowing/shared-definition work needs a clear owner-lifetime contract;
 the current API does not let a borrowed object escape its owner.
 
-### Completed initial pilot
-
-Give Adrian executable evidence for a useful Level L language-engineering
-toolkit: native lexer and parser generators, an economical re2c integration,
-and an honest assessment of Pika parsing, diagnostics, recovery and lex-first
-optimization. Mike Beer's eight published language repositories, Prolog and
-the current RexxScript runtime supply practical requirements. This is broad
-research and runnable proofs, not adoption of a new cREXX grammar or a
-production compiler architecture. Keep both positive and negative results.
-
-Work in local branch `levell`, based on `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`
-(exact base also recorded in evidence).
-Reuse `/Users/adrian/CLionProjects/CREXX-level-l-inline-storage`; preserve its
-historical `temp/level-l-inline-storage` branch and the unrelated dirty develop
-checkout. No publication is requested. Existing `options levell` and the
-`rxfnsl` library are the implementation substrate; no new source language
-syntax is implied by an experimental grammar specification.
-
-**Accepted steering, 10 October:** Adrian specifies the Rexx-like surface of
-the existing re2c wrapper as the intended Level L authoring style. Reuse the
-documented `symbol: kind ...` declarations and named token/charset/pattern/rule
-actions from the existing `.levell` bootstrap, retained at Unicode branch commit
-`9a86fb37c0d0d7b9cd395d676e8a0a3ef45e39b8`. Numeric `.lex` and PEG files in this
-research are internal experiment formats, not the selected authored surface.
-Connect the existing frontend AST to a native backend without changing that
-syntax. Parser-maker spelling remains a later language-design gate; accepting
-the style does not approve arbitrary new declaration kinds or semantics.
 
 ## Initial-pilot acceptance criteria
 
@@ -2525,34 +1297,6 @@ the style does not approve arbitrary new declaration kinds or semantics.
    established syntax and existing backend proofs; do not edit the Unicode
    checkout or reinterpret Unicode input contracts as ASCII contracts.
 
-## Initial-pilot status and evidence
-
-**Initial research delivery complete; STEP-01 through STEP-07 and AC-01 through
-AC-11 verified.** This closes the initial research/PoC scope, not the overall Level L
-product, a complete Pika port, a production replacement or release qualification.
-No publication is selected. Adrian's Rexx-like surface direction is preserved.
-
-| Criterion | Verification and retained evidence |
-|---|---|
-| AC-01 | SOURCE-AUDIT.md; evidence/mike-sources.json; all eight repository front ends plus owning local Prolog and RexxScript sources inspected. |
-| AC-02 | tools/lexgen.crexx and src/lllex/lldfabuild/lldfa; four evidence/native-*-*.out cells cover longest match, priority, all 127 non-NUL ASCII byte probes, spans, trivia, strings and malformed input. |
-| AC-03 | tools/parsegen.crexx; expression/statement/array/indirect/character grammars; precedence-tier memo queries, full-input rejection and the mixed-LR limitation/factored fixture in the same four native cells. Scope is the explicitly documented reduced recognizer. |
-| AC-04 | evidence/re2c-*.out and surface-*-*.out; both external C transport and established direct cREXX re2c emission executed; README/SURFACE document custom syntax backends and limits. |
-| AC-05 | evidence/pika-reference.out; unmodified pinned Java reference compiled and run, including recursion, ordered choice, recovery and source-acknowledged counterexamples. |
-| AC-06 | Native output retains line/column, unexpected token, contextual expectations, hints, EOF and two valid later islands; actual Pika memo-table explanation points at both missing constructs. |
-| AC-07 | MATH.md; live reference object counts, native rollback transition counts, PEG priority and hard/soft-keyword counterexamples. Recognition-equivalence assumptions and cost bounds are explicit. |
-| AC-08 | evidence/measure-{rxtvm,rxbvm}.csv and summary-*.md; one warmup plus six balanced serial pairs on five equivalent fixtures, including full native lex cost. Not a representative/formal product verdict. |
-| AC-09 | Native and authored-surface opt/no-opt tests on both VMs; all four product tools exercised. evidence/provenance.json and source-hashes.json identify actual inputs and local platform limits. |
-| AC-10 | README.md, SOURCE-AUDIT.md, MATH.md, SURFACE.md and run-*.sh; ranked follow-ons and maintainer decision gates are reviewable. |
-| AC-11 | Existing bootstrap and authored TinyExpr source recovered unchanged from pinned Git objects. Native DFA/direct re2c logical kind/span/EOF/diagnostic comparisons pass in four cells; Unicode backend limits reject explicitly. |
-
-The timing image retained SHA-256
-`943c2d7aa784ee7d7df8eb00aada1447941c1abd181ed1516fa6abccd3288ff9`
-after later functional and surface additions. No timing rerun was needed.
-Existing tool binaries carry older dirty build versions; their hashes pin the
-actual experiment tools, and no exact-current-head product qualification is
-claimed. The requested local branch remains local and preserves the historical
-Level L branch and unrelated develop work.
 
 ## Expanded programme proposed for approval
 
@@ -2588,44 +1332,12 @@ Level L branch and unrelated develop work.
    of the shared Level L infrastructure, including applicable AST invariants
    and proof obligations. Do not bake today's compiler layout into the shared
    model or leave migration feasibility as an untested aspiration.
-6. Stay on local `levell` in the existing checkout. Approval of this programme
+6. Stay on local `rxlang` in the existing checkout. Approval of this programme
    authorizes research implementations, provisional surface examples and local
    comparisons; it does not adopt a production grammar, replace Lemon/re2c,
    change B/G/C syntax or publish the work. A negative result is useful evidence,
    but does not excuse an unimplemented required comparison.
 
-### Source reconciliation performed for this proposal
-
-- The existing `.levell` lexer contract remains pinned as recorded above. Its
-  parser declaration examples are extension sketches, not a complete contract.
-- `docs/books/crexx_vm_spec/Logical-Grammar-Specification.tex` is an earlier
-  review-stage PEG proposal. It contains custom repetition, whitespace,
-  abuttal, case and tree conventions. Inventory those requirements and resolve
-  discrepancies with standard PEG semantics rather than treating that document
-  as an already executable specification or replacing it without approval.
-- Current `compiler/docs/parsing_pipeline_anatomy.md`, B/G glue
-  `compiler/rxcpbpar.c`, Classic glue `compiler/rxcpcpar.c`, source-tree handling
-  and validation orchestration confirm that the present frontends are staged.
-  Token normalization, context-dependent token classification, structural tree
-  grouping and symbol/type iteration have different responsibilities.
-- The main `develop` checkout contains concurrent uncommitted frontend
-  extraction work, including `compiler/rxcc.h`. It was inspected read-only.
-  Its internal parsed/mapped-unit service is not a completed general compilation
-  service. Pin the actual source/build inputs used for later comparisons and
-  coordinate with the owning work before any production integration.
-- Pika's pilot counterexamples remain retained. Squirrel is pinned for this
-  proposal at `bb1ae84701060462636c07c814286ac2875e0568`. Its repository
-  manuscript is newer than the arXiv HTML: it acknowledges an adversarial
-  quadratic case and specifies greedy seed-growth semantics. The packaged
-  `dart/lib/src/parser/parser.dart` performs recognition without active repair;
-  `dart/experiments/recovery/c14.dart` is the separately documented standing
-  recovery engine. Audit and run these separately. Upstream results are not
-  local qualification.
-- Fetching origin for this planning update left `origin/develop` and the
-  research base at `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`. The pilot's code,
-  generated images and measured evidence are unchanged. Its source-hash
-  snapshot includes the earlier PLAN/README text; this later planning edit
-  does not refresh or misrepresent that historical snapshot.
 
 ### Hypotheses and decisive experiments
 
@@ -2952,23 +1664,6 @@ not a proved universal claim that PEG is more natural.
     consumers, including lifecycle and semantic gaps. Keep full migration open
     for the later production programme; generic parsing alone is insufficient.
 
-### Current acceptance audit — completed representative gates
-
-Historical checkpoints below describe their state at the time. This audit
-supersedes their blanket “all expanded criteria open” statements without
-removing any requirement. Overall research remains in progress.
-
-| Criterion | Current status and evidence |
-|---|---|
-| AC-12 | **Verified for the research contract.** SEMANTICS/SURFACE; unchanged established lexer frontend; llfront ordered packrat/tabulation and contextfree LR/Earley pairs; located capability, unknown-proof and construction failures in toolkit/front; tranches 1 and 5. Provisional syntax is not product adoption. |
-| AC-13 | **Verified inventory.** SOURCE-AUDIT frontend responsibility/migration table and owning source paths; SURFACE historical-convention reconciliation; uncovered semantic/integration obligations remain explicit. The broader executable corpus is assessed separately under AC-21 below. |
-| AC-16 | **Verified representative generated mechanisms.** llstage normalization/context classification and independent pass oracle (1,555 generated cases); llgroup declaration grouping versus three B/G snapshots; llregional Pratt-in-LR versus whole CFG (789 cases plus multi-region and unsafe composition controls). MATH STAGE/TREE/COMP arguments, provenance and tranches 5–6. |
-| AC-26 | **Verified migration-feasibility slice.** llcore builder/contracts, llgroup traversal/rewrite, origin classifications, positive/invalid spans and mutation/revalidation, independent B/G compiler adapter in cases/migration-reference.py; tranche 6. SOURCE-AUDIT states the adapter's exact projection and staged semantic/lifecycle migration gaps. Full migration remains a later programme. |
-| AC-19 | **Verified representative author explanations.** Tranche 8; exact lexer winning-rule proof, bounded same-input CFG/PEG witnesses, actual cycle path, nonprogress/LL failures. Earlier LR controls distinguish LALR-only conflicts from ambiguity. SURFACE walkthrough avoids state dumps and identifies language-changing edits. |
-| AC-17 | **Verified stated-domain gate.** Tranche 10 retains 46 faithful Pika character/token cases with named spans, trivia ownership, NUL and UTF-8 ingress refusal; llboundary issues identity-bound CFG regular-substitution certificates for immediate-stop boundaries, rejects unsafe adjacency/predicates/implicit trivia and separates construction exhaustion. LEX-04 supplies the sufficient proof. Earlier reverse-munch bounds, byte/span and Unicode capability refusals remain in force; this does not certify arbitrary tokenization or Unicode parsing. |
-| AC-21 | **Verified representative frontend gate.** C02 complete config source/tree/visitor (tranche12); C06 actual RexxScript value/error control and48 native cases (tranche14); C08 twenty B/G/C initial-tree observations plus earlier procedure grouping (tranches15/6). CONSUMERS gives dialect-specific algorithm evidence, exact projection/subset and source-span limits. Full frontend replacement remains outside this research gate. |
-| AC-20 | **Verified comparative research gate.** Frozen array and lexical-damage panels (tranches11/16), held-out splits, independent byte-edit oracle, exact native checks, bad label/local-repair cases, source excerpts and later-island observations. RECOVERY.md states incomparable objectives and Q020 equal-cost tree change. This is not a user study or globally optimal recovery claim. |
-| AC-14, AC-15, AC-18, AC-22–25 | **Open for their complete obligations.** Implemented subsets and historical evidence remain valid; finish certificate audit, lifecycle/cost and final support report. |
 
 ### Expanded implementation steps and gates
 
@@ -3056,687 +1751,479 @@ were performed merely to prepare this approval plan.
   [PEG labeled-failure recovery](https://arxiv.org/abs/1806.11150)
   and [automatic PEG recovery annotations](https://arxiv.org/abs/1905.02145).
 
-### Historical continuity note — before the implementation checkpoints
 
-The overall expanded programme is **approved and in progress**. AC-01 through
-AC-11 remain verified for the pilot; AC-12 through AC-26 and STEP-08 through
-STEP-15 are open. The current action is STEP-08's semantics/source
-inventory and corpus manifest, followed by STEP-09. Do not restart the pilot,
-discard its counterexamples or silently promote provisional syntax. The user's
-"Approved" authorizes the programme above, including the general toolkit and
-eventual AST/invariant migration direction. Production adoption and publication
-remain separate decisions. STEP-08 is active; all new criteria remain open
-until their complete evidence is recorded.
 
-
-### Implementation checkpoint — shared analysis and backend contracts
-
-STEP-08/09 are active. `SEMANTICS.md` and `CORPUS.json` record the initial
-research contract and workload purposes. `llcore` now supplies owned grammar,
-binary/token source and revision-checked tree arenas. `llcheck` computes
-backend-independent facts; `llcap` dispatches a provider's admission check and
-separates support, missing proof, malformed grammar and construction limits.
-This incorporates Adrian's question about plugin ownership without changing
-the accepted semantics or selecting a production plugin ABI.
-
-`llpeg` executes ordinary packrat, a predictive control and a preliminary
-Squirrel seed-growth mode. The latter is not yet a faithful full port: reference
-mismatch trees and rule-body memo identity require separate correspondence.
-Packrat repetition tails are memoized explicitly; an iterative suffix scan
-would not justify the claimed normalized-clause bound. `run-toolkit.sh opt`
-and `run-toolkit.sh noopt` passed on both concrete VMs, including grammar
-identity/revision checks, source/tree invariants, backend-specific rejection,
-unknown cost versus required bound, construction limits, PEG priority,
-independent requests and direct seed growth. Outputs are currently in ignored
-`build/toolkit-{opt,noopt}`; freeze durable provenance with the next expanded
-conformance tranche. These focused results do not close any whole AC-12..26.
-
-Next: run the pinned Dart core and c14 recovery references, retain canonical
-success/failure trees, and implement the full native correspondence. Continue
-the other required algorithms and corpus obligations; no portfolio entry is
-removed by this checkpoint.
-
-
-### Implementation checkpoint — independent Squirrel core and LR controls
-
-`llsquirrel` is now the separate reference-corresponding core port. It memoizes
-rule **bodies**, passes failed references through without wrapping, retains
-mismatch frontiers/children and follows the pinned expansion/version protocol.
-`llhistory` keeps failure evidence separate from selected syntax-tree invariants.
-The shared IR has literal, optional, plus and set clauses so the reference's
-shape/frontier semantics need not be lost through an unverified rewrite.
-`llpeg`'s earlier Squirrel mode remains a preliminary control, not this port.
-
-The pinned Dart core and c14 execute under local SDK 3.13.5. Reference records
-are `evidence/squirrel-reference.jsonl`, `squirrel-expected.txt` and
-`squirrel-runtime.txt`; the probe and native comparator are versioned. All 486
-core cases agree in opt/no-opt on both VMs, including exhaustive length-0..4
-inputs over two small alphabets, direct/indirect/mixed recursion, shared bodies,
-full failure trees, nullable repetition, predicates, sets and NUL. The c14
-reference handles six clean/damaged array cases; its native port remains open.
-The native history arena retains all allocated attempts until disposal, unlike
-Dart GC; selected live memory and compaction remain research obligations.
-
-`llcfg` supplies pure CFG productions. `lllr` constructs canonical LR(1) tables,
-merges equal cores for LALR, reports conflicts and executes source-tree reductions.
-Focused opt/no-opt runs on both VMs pass for left-recursive arithmetic, syntax
-failure, a grammar that is canonical LR(1) but not LALR, four distinct contexts,
-and an ambiguous concatenation conflict. The message names A/B and source
-lines and states that LALR merging introduced the conflict. This is not yet
-an ambiguity witness generator or a complete production-quality diagnostic.
-The system Bison is 2.3; a modern canonical/IELR independent control is pending.
-
-STEP-09/10/11 are active; whole expanded acceptance criteria remain open.
-Next: Earley with packed forests and cyclic-derivation handling, faithful Pika,
-c14 port, declarative composites, the general consumer corpus, remaining maths
-and measurements. Do not reduce the portfolio to engines already implemented.
-
-### Implementation checkpoint — Earley, reverse lexing and independent CFG controls
-
-`llearley` and `llforest` execute Earley items with binary packed families,
-nullable completion in both orders and explicit cyclic derivations. Focused
-opt/no-opt tests pass on both VMs: finite Catalan ambiguity, nullable placement,
-empty input, infinite nullable derivations, invalid input and resource limits.
-The dense family index has a conservative cubic-in-input space bound for fixed
-grammar; it is deliberately not advertised as an ordinary quadratic-space
-Earley implementation. `MATH.md` records the implementation-specific argument.
-
-`llmunch` owns scanner requests and implements ordinary maximal munch plus a
-reverse-tabulation alternative consuming the unchanged generated DFA tables.
-It uses two state columns plus one root result per input position. The backward
-induction argument and q*n transition bound are recorded as LEX-02 in MATH.md.
-Both build modes/VMs pass token/span/status comparisons over the existing
-useful lexical fixture, malformed strings, byte probes, source priority,
-skipped trivia, explicit legacy high-byte rejection and generic binary NUL.
-The rollback adversary takes 8,256 ordinary versus 512 reverse transitions at
-n=128 with q=4. These are operation counts, not timing/product verdicts. The
-complete-buffer requirement is explicit; streaming remains a separate profile.
-
-Local Bison 3.8.2 was built under ignored `build/bison-runtime` and executed by
-`run-cfg-reference.sh`. Canonical LR and IELR accept all four distinguishing
-contexts; LALR has two reduction conflicts, agreeing with the native family
-comparison. A bounded GLR set-of-trees oracle agrees on 1,1,2,5,14 distinct
-concatenation trees at input lengths 1..5. The first additive `%merge` control
-returned 16 at length 5 and was rejected as a distinct-tree-count oracle;
-its source and failed output are retained as `glr-additive-control` rather than
-silently discarded. This does not establish a Bison recognizer defect.
-
-The existing `evidence/toolkit-provenance.json` is a frozen checkpoint for the
-shared-model/Squirrel/LR tranche. Subsequent Earley/lexer sources are not
-retroactively covered by it; summarize their exact inputs and results in the
-current plan after those focused checks. All expanded AC remain open for their complete portfolio,
-consumer, diagnostics, proofs and migration obligations.
-
-### Implementation checkpoint — Pika port and pruning refinement
-
-Adrian's follow-up asks whether Pika needs algorithmic or implementation
-refinement and whether safer pruning/scoring is feasible. This steers STEP-11:
-preserve the faithful reference control, then test dependency invalidation and
-candidate frontiers separately. It does not authorize redefining PEG choice
-or adopting a production algorithm. `MATH.md` PRUNE-01 records the semantic
-gate and hypotheses; all original portfolio/consumer obligations remain open.
-
-`llpika` is now a native operational evaluator of explicit ranked Pika normal
-forms. `PikaCoreProbe.java` exports upstream-normalized graphs and independent
-raw-tree/counter expectations. All 508 cases agree in opt/no-opt on both VMs,
-including recursion, predicates, precedence-expanded input, empty behavior,
-ASCII case folding and binary bytes. Java supplies normalization only for these
-conformance fixtures; native rule/precedence/AST-label lowering and optimized
-variants remain open. Start's empty-placeholder defect is reproduced, and
-`MATH.md` PIKA-03 gives a conservative conditional quadratic scheduling bound
-with an executable acyclic-unconditional-edge checker. This is not full PEG
-semantic qualification or a linear bound.
-
-`lltabpeg` is a separate right-to-left, settled-dependency experiment. The
-acyclic same-position profile has an induction proof and a linear input bound;
-154 acceptance/tree cases agree with the ordinary packrat control. Extended
-clauses, EOF, binary input, trailing-trivia provenance and resource/build errors
-are exercised too. Recursive candidate refinement is still open.
-
-The packrat control gained a minimal regression for cached failure first visited
-under negative lookahead. A memo-based diagnostic traversal now explains the
-later required token; recognition caching no longer suppresses that evidence.
-Returned packrat/LR tree arenas now retain original bytes independently.
-
-`llc14cost` ports c14's reading totals and seven-key comparator, not yet its
-recovery evaluator. The pinned Dart algebra and native code reproduce a rank
-reversal after a common continuation (REC-03). This exposes a proof obligation
-for best-per-end pruning; grammar-level reachability and global recovery impact were initially open;
-the subsequent checkpoint below resolves that particular counterexample. Do not confuse this repair ranking with Pika recognition.
-
-Next required work still includes native Pika lowering/refinement, the full c14
-port, Pratt, exact repair oracle, generated composites and invariants, authored
-parser surface, useful general/B/G/C consumers, diagnostics, measurement and
-the final support/migration report. None of AC-12..26 is closed by this tranche.
-
-### Implementation checkpoint — operator specialization and generic tree pass
-
-`llpratt` now implements ALG-02's explicit operator specialization and emits a
-shared CFG from the same declaration. Native LR consumes that CFG independently.
-`llproject` executes a declarative named-node/arity projection, retaining source
-ownership and origin handles. Seven arithmetic/tree examples and 781 generated
-inputs agree between Pratt and LR in opt/no-opt on both VMs. Malformed input,
-mixed associativity, stale specialization identity, tree contract violation and
-work/map limits have distinct negative checks. OP-01 records the equivalence,
-termination and cost arguments. This is a useful existing-token consumer and
-part of the generic transformation foundation; it does not yet close the full
-regional composite, authored surface or cREXX AST-adapter criteria.
-
-Remaining next work: native Pika lowering/refinement, full c14 evaluator and
-repair oracle, token/context stages and regional composite execution, complete
-general-language/format/embedding examples, B/G/C and RexxScript comparisons,
-grammar witnesses, detailed measurement and the final support/migration report.
-All expanded acceptance criteria remain open until their full evidence exists.
-
-### Implementation checkpoint — reachable recovery-pruning counterexample
-
-REC-03 now has a concrete grammar and input, executed by the pinned c14 Dart
-engine: two engine-produced readings reach the same endpoint, the locally
-preferred reading is selected, and appending the same final token makes the
-pruned reading rank better by c14's own comparator. The retained output is
-`evidence/c14-pruning-reference.out`; this is a ranking counterexample, not a
-claim about human repair intent or Pika recognition.
-
-The native `llc14cost` experiment now has a conservative componentwise dominance
-frontier and 2,016 continuation checks, passing opt/no-opt on both VMs. REC-04
-proves its algebraic common-continuation property and identifies the remaining
-whole-search and tree-tie obligations. The full native c14 evaluator remains
-required; implement it faithfully before separately experimenting with pruning.
-All AC-12..26 remain open for their complete agreed obligations.
-
-### Implementation checkpoint — complete native c14 search and independent oracle
-
-`llc14` now ports the complete c14 search over explicit n-ary byte-domain
-reference graphs: plain rule memoization, repair cells and seed clocks,
-budget-zero diversion, best-per-end folds, literal repair, delete-ahead and
-restricted substitution, evidence/preference gates, repetition, EOF charging
-and selected error-tree materialization. It deliberately retains c14's
-ranking and pruning. The reference-normalized n-ary graph is kept explicit;
-regrouping a sequence is not assumed recovery-equivalent. Shared authored-IR
-lowering, general Unicode and optimized storage remain separate obligations.
-
-All 237 reference cases agree on status, cost and complete raw error tree in
-opt/no-opt on both concrete VMs. These include mixed/indirect/right recursion,
-predicates, literals, nullable repetition, binary bytes, a deterministic held-out
-array mutation set and REC-03's pruning failure. This establishes the executed
-byte-profile port, not global optimality or general termination. Fuel and memo
-construction limits have distinct negative tests. Request-owned temporary
-arenas retain more history than the Dart GC reference; lifecycle measurements remain open. Candidate-frontier integration is recorded
-in the subsequent checkpoint.
-
-The first optimized port exposed a compiler-dependent failure at the nested
-indexed assignment `_plain[key] = one(cleanreading(...)) + 1`. Splitting the
-mutating calls into statements yields conformance without disabling optimization.
-The failing source/input/output are retained under `evidence/c14-first-opt-failure`;
-a production compiler repair is not claimed. Continue reducing the reproducer
-before proposing a core change; do not edit the concurrently active develop
-checkout as part of this research.
-
-`llrepair` now executes as a separate exact bounded weighted byte-edit oracle,
-using Dijkstra search and Earley acceptance. Its cost model is deliberately
-explicit and differs from c14's missing-construct/evidence ranking. Completion
-of this checkpoint does not close the remaining authored surfaces, composite
-passes, useful consumers, usability, migration or measurement criteria.
-
-
-### Implementation checkpoint — pruning controls and exact byte repair
-
-The c14 `frontier-experiment` now runs inside the complete native evaluator.
-On all 237 retained inputs it gives one better ranking (REC-03), zero worse,
-236 ties and zero resource failures; all 42 clean trees remain identical.
-The largest measured operation/allocation ratios in this panel are 1.264/1.311.
-These are counters, not timing or general frontier-width bounds. REC-04 proves
-only common-continuation dominance, not global search optimality.
-
-The separate weighted byte-edit oracle passes 480 independent finite-language
-Wagner-Fischer comparisons, ambiguous-repair forest, NUL, no-repair-within-bound,
-invalid-cost and resource cases in both modes/VMs. Its objective differs from
-c14's ranking; matching numerical costs is not asserted.
-
-Pika `longest-choice-experiment` repairs the mixed-operator example but reverses
-ordinary PEG acceptance in both directions on two nonrecursive controls.
-The faithful default still passes all 508 reference cases in all four cells.
-PRUNE-02 rejects local longest-choice as a semantics-preserving repair; recursive
-dependency refinement remains open. Retained evidence is tranche-4.
-
-Next, STEP-12/AC-12/16/25 adds an explicitly provisional parser declaration
-frontend in the accepted Rexx style (`name: kind ...`). It will lower named
-rules to the common IR, preserve declaration locations, explicitly select ordered
-or contextfree meaning, and exercise two admitted backend pairs. The unchanged
-established lexer frontend remains the lexer contract. This is within the
-approved research spelling experiments, not adoption of production syntax.
-Generated token/context/tree stages and regional composition follow. All
-AC-12..26 remain open until their full obligations are verified.
-
-### Implementation checkpoint — authored rules, generated passes and regions
-
-`llfront` now executes provisional parser declarations in the accepted Rexx
-style. Named rules and source locations lower into the shared basic graph;
-ordered and contextfree alternatives are explicit profiles. Two backend pairs
-consume the same authored declarations: packrat/settled tabulation for a complete
-TinyConfig format, and LR/Earley for an independently supplied token list.
-The unchanged established lexer bootstrap remains the lexical contract.
-Undefined names, unsupported input units, lexical errors, source nesting and
-construction limits have distinct located failures. Parser spelling remains
-provisional under the programme's existing approval.
-
-A handwritten independent TinyConfig reader supplies 84 valid/mutated inputs
-and named source-tree expectations. These join other controls for 125 frontend
-cases. Configuration strings, escaped quotes/backslashes, nested arrays, numbers,
-booleans and malformed/NUL/non-ASCII contents are exercised. This is a complete
-small defined format, not JSON or general Unicode qualification.
-
-`llstage` executes declared finite-context token transductions. The staged
-fragment generates comma/newline deletion, terminator mapping and clause-start
-SAY classification with an assignment guard. Original bytes and composed input
-maps survive. It agrees with an independent direct pass over 1,555 generated
-sequences plus useful positive/negative examples. Authored tree declarations
-project assignment/command subtrees with checked arity and source ownership.
-This is not yet the complete B/G/C context or structural migration comparison.
-
-`llregional` supplies an actual checked composite: disjoint delimiter-bounded
-operator regions run through Pratt inside an LR outer grammar. The planner also
-generates the unspecialized whole CFG. Their semantic trees/spans agree on 789
-inputs; a repeated grammar exercises two independently owned regions. Shared
-boundary alphabets and reserved virtual ingress reject explicitly; fuel tests
-include every budget below a completed example's charged work. COMP-01 gives
-the interface and local substitution proof. General ambiguous/contextual hybrid
-calls remain outside this admitted profile.
-
-The authoring/stage/regional groups pass in optimized and no-opt builds on both
-VMs with identical outputs. Durable source/tool/image/output hashes are retained
-in `evidence/tranche-5/provenance.json`. No whole
-expanded criterion closes here: the broader syntax/corpus, B/G/C AST/invariant
-adapter, attribute/rewrite scheduling, Pika lowering/refinement, diagnostics and
-recovery comparisons, lifecycle measurements and final support report remain
-required. Next work proceeds against those obligations, without discarding the
-completed pilot or promoting research syntax to production.
-
-### Implementation checkpoint — representative AST grouping migration
-
-`llgroup` now reconstructs declared marker/member regions over shared owned
-source trees. A frozen compiler control supplies B/G raw/fixup snapshots for two
-explicit procedures and an implicit-main variant. The native builder, visitor
-and grouping rewrite reproduce selected node/value/order observations. Exact,
-composite and synthetic origins remain distinguishable; deliberately invalid
-spans fail, mutation invalidates certificates, and repaired spans require fresh
-certification. Compiler exits are disabled for these fixtures and no callback,
-full type, source-span or whole-frontend equivalence is inferred.
-
-The group passes in optimized and no-opt builds on both VMs, including
-provenance classification and fresh revalidation after restoring a bad span.
-TREE-02 records the local partition/provenance proof and bounds. SOURCE-AUDIT.md
-now maps current stage responsibilities and the later source-tree, sidecar,
-semantic-IR and proof-consumer migration route. SURFACE.md inventories historical
-logical-grammar conventions that need an explicit semantics decision, including
-non-greedy star, quote case policy, trivia/abuttal and arbitrary tree rewrites.
-These additions do not adopt a production syntax or change the current compiler.
-
-The broader B/G/C initial-AST corpus, automatic attribute/rewrite scheduling,
-Pika normalization/refinement, diagnostics/recovery comparison, lifecycle/cost
-measurements and support report remain open under their original acceptance
-criteria. Review AC-16/26 against the complete retained record after this
-verification; do not infer closure of the whole expanded programme.
-
-### Implementation checkpoint — automatic attribute schedules
-
-`llschedule` executes declared pure Boolean-join equations. It generates a
-static topological schedule for acyclic dependencies and can automatically
-select a finite-height worklist for cycles. A strict DAG request returns an
-actual named dependency-cycle witness. Unsupported negation rejects, partial
-resource-limited evaluation has no certificate, and graph mutation invalidates
-previous facts. A source-tree consumer synthesizes a declared descendant-kind
-attribute without importing compiler internals.
-
-All 4,096 three-variable graph/seed combinations agree with independent
-relational closure in optimized and no-opt builds on both VMs. Exact migration
-and schedule inputs, tools, images and outputs are retained in
-`evidence/tranche-6/provenance.json`. ATTR-01 gives the least-fixed-point/termination/cost proof. The equation
-language is intentionally explicit and restricted. It cannot establish
-termination of arbitrary host callbacks, type inference or compiler exits.
-The broader programme remains open; these results satisfy representative
-mechanisms rather than silently reducing the requested portfolio or corpus.
-
-
-### Implementation checkpoint — native Pika lowering and expressive-power control
-
-`llpikalower` now translates the common binary IR, removes named references,
-interns finite expressions, expands EBNF and emits deterministic clause ranks.
-An explicit `pika` profile prevents this operational engine being silently
-substituted for ordinary PEG. Upstream HashSet root/cycle ordering is not a
-specified semantic contract; the native profile uses stable terminal-first
-source-order DFS. Pika's documented counterexamples remain in the faithful core.
-
-The current pass includes explicit authored precedence tiers and a selected
-source-tree projection with owned bytes and original-history origins. Interned
-rule aliases are exposed together rather than pretending distinct wrappers
-survived. The upstream precedence-number shorthand and arbitrary edge-label
-syntax are not the common surface; wider capture declarations remain an
-explicit product-design obligation. This does not claim every ordinary PEG
-normalization is valid under recursive Pika operational semantics.
-
-The independent a^n b^n c^n oracle has 707 inputs (block counts 0..6 and all
-abc words through length 5). A separate Java probe runs the unmodified upstream
-clause evaluator with native-produced ranks, comparing full raw trees, zero
-flags and allocation/update counts. Its first 977-case panel passes optimized
-and no-opt builds on both VMs. POWER-01
-proves the language example independently of execution. POWER-02 distinguishes
-new external separation claims and their trust assumptions from local proofs.
-
-A new complemented-set test exposed a double inversion in `lltabpeg`; membership
-is now used once. All 256 byte values plus EOF are checked directly, alongside
-the prior 154 PEG acceptance/tree comparisons. All four cells, 125 authored
-frontend regressions and the unchanged 508-case reference behavior pass.
-Exact provenance is frozen in `evidence/tranche-7/provenance.json`. No existing
-historical receipt is retroactively relabelled.
-
-
-### Implementation checkpoint — grammar-author witnesses
-
-`lllexplain` proves winning-rule reachability on complete generated DFA tables
-with distinct rule IDs and supplies shortest positive examples. `llwitness`
-finds CFG ambiguity only from multiple complete derivations of the same word,
-and supplies a bounded PEG-versus-unordered priority counterexample. It also
-explains a real conservative same-position cycle through source rule names.
-No witness within a finite bound remains inconclusive; resource exhaustion is
-separate. All focused checks pass in four cells, retained in tranche 8.
-DIAG-01 gives the arguments, and SURFACE supplies a concrete repair walkthrough.
-Together with the retained LR(1)-versus-LALR evidence this verifies AC-19's
-representative gate, not universal diagnostic quality or a human user study.
-
-The next active work is the distinct LR local-recovery control and comparison
-against the same frozen/held-out damage corpus. Remaining useful-language,
-Rexx-specific and lifecycle/cost obligations are still open. CORPUS C02's
-original section/comment requirements must also be covered explicitly; the
-current TinyConfig source handles assignments and nested arrays, not sections.
-
-
-### Implementation checkpoint — substantive LR local-repair control
-
-`lllrrepair` now performs cost-bucket search over actual LR stacks, including
-reduction-only and single-shift successors, unit insert/delete edits, complete
-minimum-cost local candidate sets and forward-progress ranking. It reproduces
-the published six-repair `2 3 +` example, with integer tokens represented by a.
-The implementation is a CPCT+-style control, not a Rust port or speed claim.
-
-All four cells pass 121 independent finite-language edit distances, eight array
-cases, the six-repair reference example, local-versus-full acceptance, token
-origins and resource/invalid/no-repair paths. Tranche 9 freezes exact evidence;
-REC-08 documents the actual shortest-path domain and quadratic bookkeeping.
-The `[aa]` example retains both atom deletion and comma insertion: equally
-cheap repairs need not preserve the author's intended content equally well.
-Original bytes and untouched later tokens are retained. A local repair does
-not silently become clean acceptance, and no global optimum is asserted.
-
-AC-20 remains open for the shared frozen/held-out comparison including PEG
-labels, Pika explanations and Squirrel/c14. This component does not close the
-broader useful-language/Rexx corpus or lifecycle/cost programme.
-
-### Implementation checkpoint — Pika dependency pruning and lex-first proof
-
-The separately named `reachable-reference` policy preserves all 508 reference
-selected histories in four cells while excluding clauses outside the requested
-root's dependency closure. PIKA-04 proves the projected event trace argument;
-this is not a heuristic length/repair-score pruning claim. Whole-chart island
-consumers must retain the rules they need. The original reference policy and
-known recursive/priority counterexamples remain intact.
-
-Forty-six character/token assignment fixtures now pass all four cells, including
-long names/numbers, comments, damage, NUL and an explicit UTF-8 DFA refusal.
-Named name/integer/assignment spans agree; both trees own the original trivia.
-The projection was repaired to omit zero-width recognition machinery from its
-consumed-syntax view, while full histories remain available. The initial failure
-is retained separately. Counters include lexer transitions; no new wall-time
-speed verdict is claimed. Source projection and Pika lowering regressions also
-pass. Tranche 10 retains exact tools, inputs, output and image identities.
-
-`llboundary` checks a sufficient immediate-stop condition for pure token CFGs
-expanded by the DFA's winning languages. It certifies compact assignments,
-locates the unsafe identifier/number boundary (`a` plus `1` becomes `a1`), and
-refuses to erase implicit trivia or predicates. Its identity check rejects
-changed grammars/DFAs. LEX-04 states the proof and construction/storage bounds.
-AC-17's stated-domain gate is verified; the wider useful-language, recovery,
-lifecycle and report obligations remain open. Active work is now the labeled
-PEG control and the frozen/held-out cross-family recovery comparison.
-
-### Implementation checkpoint — frozen cross-family recovery comparison
-
-Tranche 11 retains 40 common inputs (27 development,13 held out), an independent
-recognizer/edit BFS, three native exact-oracle cross-checks, and identical
-complete output in all four mode/VM cells. The native labeled PEG control
-covers throw propagation, predicate suppression, explicit recovery and a
-misplaced-label clean-language counterexample. A separate positive-clause Pika
-chart explainer reports anchored expectations without changing recognition.
-
-The panel keeps negative results: labels recover 22/33 damaged inputs; local
-LR reaches a full edited parse on31/33; two local successes leave later errors.
-Pika retains all29 designated later arrays as islands, and LR/c14 retain them
-in their respective recovered observations. Local LR costs3 for a globally
-cost1 repair; the c14 frontier adds work without improving this panel. README,
-MATH REC-09/10 and evidence/recovery-summary.json preserve the distinctions.
-No held-out grammar or ranking tuning was performed.
-
-Exact presentation parity exposed an additional frozen optimized-tool finding.
-It is retained in evidence/recovery-diagnostic-opt-failure with a runnable
-reproducer and negative reductions. The parser's full label message is correct;
-the renderer now presents that message with a stable category. No core compiler
-repair or current-develop reproduction is claimed. This is separate from the
-older c14 indexed-call finding until a common cause is established.
-
-AC-20 remains open for the lexical-damage/consumer assessment, rather than
-silently treating this small byte-array panel as all language diagnostics.
-The complete section/comment configuration consumer is under qualification;
-its original C02 requirements remain in scope. Wider Mike/RexxScript/B/G/C
-fragments, lifecycle measurements, certificate audit and support report remain
-open under the existing criteria.
-
-### Implementation checkpoint — complete section/comment configuration consumer
-
-C02 now includes its originally requested nested sections, assignments, quoted
-values and comments, plus nested arrays and booleans. `config-sections.levell`
-is an ordinary PEG consumer; `config-sections-tokens.levell` is an independently
-lexed CFG consumer, with keyword-like names admitted explicitly. The native
-lexer, packrat, settled tabulator and canonical LR run the same63 independent
-Python-oracle fixtures in all four cells. They agree on acceptance and a useful
-source-tree visitor that emits dotted paths and original value spellings,
-including comments inside array values. Each tree retains the original source.
-
-Tranche12 records exact provenance and full output parity. Cases cover section
-nesting, malformed comments/strings/delimiters, escaped quotes, keyword names,
-NUL in comments, explicit rejection outside the7-bit source profile and
-truncations/mutations. This is a complete stated small format, not a claim of
-Unicode or another existing configuration standard. C02's earlier coverage gap
-is closed. Other C06–C08 consumer fragments, lexical recovery assessment,
-lifecycle/cost work and final support/certificate audit remain open.
-
-### Implementation checkpoint — five contrasting language consumers
-
-C07 now executes selected pinned-source fragments for Pascal, PL/M, BASIC,
-Lisp and Prolog. Tranche13 freezes347 cases with independent lexical and
-recursive-reader controls. Native generated scanners, token stages, packrat,
-reverse tabulation and canonical LR agree on acceptance, raw/staged token
-spans and named consuming-syntax extents in all four optimized/no-opt VM cells.
-`CONSUMERS.md` records the exact subset and exclusions for every language.
-
-The retained BASIC LR conflict is resolved by a declared leading-line-number
-normalizer, preserving raw positioned tokens and source. A shared raw nullable
-span convention was exposed by trailing comment trivia; the explicitly stated
-selected-tree adapter uses the hull of consuming leaves. Raw trees are retained
-and validated, not claimed to have identical minimal spans. Prolog clause-dot
-boundary validation is an explicit consumer condition. These findings feed the
-composite and source-tree recommendations; no external language is refactored.
-
-C06 actual RexxScript value/error observations and C08 broader B/G/C comparisons
-are next. Their full obligations, lexical recovery assessment, lifecycle/cost
-and final certificate/support audit remain open.
-
-### Implementation checkpoint — actual RexxScript observations
-
-C06 now has50 frozen observations from the owning evaluator, compiled with the
-frozen tools and explicitly hashed existing rxfnsc/classlib dependencies. Three
-read-only probe getters expose existing diagnostic fields; implementation bodies
-remain unchanged. Four reference outputs agree. The Level L assignment/SAY,
-integer/string and LENGTH/SUBSTR subset compares48 of those cases through a
-native lexer, contextual classification, packrat/tabulation/LR and a delayed
-tree visitor. Four complete native outputs agree on recognition, values, output
-and selected semantic-error codes. IF/SIGNAL observations remain reference-only
-here and do not close C08's broader initial-AST requirement.
-
-Tranche14 and CONSUMERS record the observed left-to-right arithmetic, equal blank
-and abuttal concatenation, omitted arguments, error coordinate differences,
-factoring needed for LR admission and the retained unterminated-quote host
-signal from comment stripping. This is representative consumer evidence, not
-full RexxScript semantic/sandbox compatibility or a production change. C08,
-lexical recovery assessment, cost/lifecycle and final proof/support audit remain
-open under their existing criteria.
-
-### Implementation checkpoint — representative B/G/C initial trees
-
-Tranche15 freezes20 actual raw compiler observations:16 syntax-clean trees and
-four explicit syntax errors. The generated lexer, parameterized comment counter,
-declared token stages and packrat/reverse-tabulation source-to-tree controls
-match the closed-corpus kind/value/order/structure projection in four identical
-outputs. Soft assignment/label priority, concatenation, nested comments,
-continuations, final clauses, IF/ELSE and PARSE templates join the earlier
-procedure/declaration grouping evidence. CONSUMERS states the exact restricted
-profile and frontend recommendation; MATH STAGE-02 gives masking invariants and
-its conservative copying-cost limit.
-
-The raw compiler dumps lack locations and Classic runs lack runtime imports
-needed by later semantic checks. Those limitations and the resulting post-parse
-errors remain explicit; no full compiler/runtime or general span-equivalence
-claim is made. Native source/span invariants pass independently. An attempted
-empty synthetic source token was rejected; final-clause closure is now explicit
-in the grammar without weakening the common stream contract.
-
-AC-21 is verified for its stated representative gate. Next: finish the frozen
-lexical-damage recovery comparison, then lifecycle/cost measurements and the
-certificate/portfolio/support audit. AC-14/15/18/20/22–25 remain open in the
-current audit; production syntax/adoption/migration is still a later decision.
-
-### Implementation checkpoint — lexical damage and recovery boundary
-
-Tranche16 freezes34 quoted-record/comment cases, including13 held out. All four
-outputs agree after correcting the independent oracle to count UTF-8 bytes;
-original evidence and the unit mismatch are retained separately. Fixtures,
-splits, grammars and ranking policies did not change. Twenty-eight damaged
-inputs include24 that stop the standalone lexer. Raw-input LR repair reaches
-a full repaired parse on28; labels on12; Pika islands and c14 histories retain
-all20 designated later records, versus8 for label recovery. These are different
-observations and objectives, not a single quality score.
-
-The frontier changes Q020's tree at equal cost, with more work; neither intended
-repair quality nor global optimality follows. RECOVERY.md assesses all required
-quality dimensions and retains bad outcomes. AC-20's comparative gate is
-verified. STEP-14 now measures the frozen native portfolio's request lifecycle,
-fused recognition/tree cost, selected-tree extraction, passes and recovery,
-without a product-performance claim. AC-22 and final audits remain open.
-
-### Implementation checkpoint — lifecycle measurement boundary review
-
-Tranche17 completed four correctness cells and serial timing/RSS runs, but
-review found an outer timer that included release of the preceding candidate's
-owned observation. Both host snapshots also show unrelated compiler activity.
-Timings remain inconclusive; all samples are retained. The approximately2.9GB
-whole-process peak needs attribution, not a per-engine or leak-free claim.
-COST.md records the interpretation limits.
-
-Corrected measuredrequest releases its own context and returns scalar metrics.
-Tranche18 retains four passing correctness cells, unchanged counter observations,
-four synthetic summary checks and21 negative exits. No engine/library changed.
-The Level B summary now covers generation, lexer and specialist phases as well
-as requests. Uncontended corrected timing and final cost/certificate/report
-reconciliation remain open under STEP-14/15. Preserve other active builds;
-do not run a knowingly contended timing block or silently close AC-22.
-
-
-### Product checkpoint — generated grammar and first interpreter run
-
-RS-STEP01–03 are implemented locally and under qualification; all RS acceptance
-criteria remain open until the expanded matrix and integration checks finish.
-The shared core now lives in `lib/rxfnsl/rexx` with research-source symlinks.
-The tool emits DFA/LR images and reconstructible common grammar metadata from
-`rexxscript/grammar/rexxscript.levell`; the modern interpreter is explicitly
-selected through `rexxscript1` / `rexxscript1run` and `rexxscript1_cli`.
-
-The first complete non-optimized native control admits 112 DFA states and 1,609
-LR states. Independent Bison canonical-LR construction of the exact common
-parser graph has no conflicts (its extra final EOF state gives 1,610 states).
-A false native conflict was traced to retained scratch arrays: bare `.int[]`
-declarations are not executable resets. Explicit empty-array value assignments
-repair suffix-FIRST/active-symbol scratch and authored-rule attribution. A
-nullable-list fixture and existing LR/LALR separation controls exercise this.
-Unsupported recursion is diagnosed as a backend limitation, without incorrectly
-claiming the language is mathematically nonregular. Rejection messages identify
-named rules and lines, nullable tokens, conflicts and required semantics.
-
-The first 34 interpreter cases now pass on both concrete VMs with non-optimized
-Level L/interpreter modules. Initial float-literal and UTF-8 BIF configuration
-failures were corrected. The example executes and prints `total: 46`, `café`,
-`ok`. An immutable generated definition is initialized once per module instance;
-programs own parsed source/tree and runs own mutable pools. A Level G compiler
-control confirms logical AND/OR short-circuiting; the interpreter implements
-that behavior and an expanded failure/lifecycle corpus is running.
-
-CMake integration and optimized full-grammar construction are still being
-checked. The latter is materially slower than the non-optimized control and
-must not yet be described as qualified. Tool output now uses larger binary
-literal chunks to avoid thousands of needless generated AST statements.
-Build-generation uses the supported threaded VM when available, while the
-normal product VM selection is unchanged. Construction is still the native
-cREXX Level L implementation, not a foreign parser generator.
-
-Next: finish the expanded cases and optimizer/VM parity, qualify the CMake
-runner and another generated consumer, record input identities and result summaries,
-and complete product docs/feature limits. Host registration/exposure/write-back
-and the seven research criteria remain open under the existing agreed scope.
-
-### Product output decision — packed RXAS, 10 October
-
-Adrian suggests RXAS emission and points out the packed tables already exist;
-he cautions that direct RXBIN emission would be a step too far. Under RS-STEP04,
-add an RXAS artifact path using the existing DFA/LR packed images and public
-library loader calls. RXAS retains grammar names/locations and the same exported
-`language()` contract. The assembler continues to own RXBIN serialization.
-Keep generated Level B source as a differential control during review. Verify
-image equality, source-tree/diagnostic behavior, compiler imports, assembler
-optimization, linking and both VMs before selecting RXAS for the product build.
-This changes artifact transport, not grammar semantics or admission decisions.
-
-### Product checkpoint — RXAS and table ownership
-
-The RXAS path assembles, imports through rxc, links and passes the first55
-interpreter cases on both VMs with optimized/no-opt assembler output. The
-original DFA image is21,200 bytes and LR image291,580 bytes; their bytes match
-Level B emission exactly (`evidence/product-rxas/initial-image-parity.json`).
-This first receipt predates the later scalar-literal/operator conformance edits.
-
-Optimized construction was isolated to action-table population: inlined getters
-retained copies of the entire receiver across writes. Direct internal reads
-remove those copies without changing LR decisions; image emission similarly
-avoids repeated receiver copies. New loaded tables retain immutable packed
-images instead of expanding every cell to a boxed integer. LR lookup uses a
-16-byte/state directory and scoped `reference .binary`/`dereference` views;
-no weak reference escapes its owning table. DFA lookups read encoded offsets.
-The existing portable little-endian image format stays distinct from host-native
-`<packed..int>` storage. RXAS remains the serialization boundary; direct RXBIN
-emission is not part of this work. Qualification of these ownership changes
-and the complete current product matrix remains open.
-
-Ownership correction: ordinary VM binary/object value copies duplicate storage;
-they are not copy-on-write. Earlier conversational/checkpoint COW descriptions
-were incorrect. See `docs/ai-context/RXVM_INTERPRETER.md`, value-transfer paths.
-Scoped references avoid payload copies only while their owner remains alive.
-Public owned results may still copy deliberately. Audit the actual emitted RXAS
-and complete lifecycle checks before claiming request-level table sharing.
-
-The first per-lookup weak-reference version was functionally progressing but
-unacceptably expensive: a native sample attributed the hot path to MKREF's
-lifetime-owner tree search. The final private lookup helper uses synchronous
-`arg expose image, expose directory` borrowing; its body is read-only and no
-alias escapes. Both images remain owned by the loaded table. This avoids the
-per-lookup weak-reference creation as well as binary copies. With this change,
-57 interpreter cases and4,724 second-language/image/ownership assertions pass
-in all four optimizer/VM cells. A later signed-minimum scalar repair and its
-expanded matrix are still under qualification. There is no general zero-copy
-claim for public owned program/tree values or all initialization paths.
+## Retained acceptance contracts
+
+These accepted criteria and step IDs remain binding. Completed build/documentation
+increments are historical; unverified language, platform and replacement gates
+remain open. The reorganisation does not reopen unchanged semantic results or
+claim a new platform pass. Current ownership is described above.
+
+1. **CI-AC01 — Portable checkout.** Remove Windows device names from tracked
+   evidence and generated comment fixtures, preserving their bytes. A permanent
+   path guard runs in the existing publication safeguards; Windows checkout
+   succeeds in the resulting hosted run.
+2. **CI-AC02 — Native linkage.** The modern RexxScript runner links its static
+   providers before their RXPA implementation, as the existing `crexx` runner
+   does. Local product and runner checks pass; Linux Release and CodeQL builds
+   confirm GNU linker closure.
+3. **CI-AC03 — Green publication.** Commit the repair and evidence together,
+   push to `develop`, and inspect the resulting Build CREXX and CodeQL runs.
+   Diagnose remaining failures; retry service failures when the logs establish
+   that cause. Report actual green results in the conversation, with no
+   status-only follow-up commit.
+
+1. **CI-STEP01 (CI-AC01/02):** retain failed-job evidence and identify causes.
+   **Verified:** `bb973735f` Build run `38298866712` fails Windows checkout on
+   `nul.txt` and Linux linkage on RXPA symbols. CodeQL `38298866314` hits the
+   same linkage failure. macOS ARM product/QA/package checks pass; Apple accepts
+   the installer but ticket retrieval loses its network connection (Error 68).
+2. **CI-STEP02 (CI-AC01/02):** repair fixture paths and runner link order, add
+   the path regression, and run focused local checks. **Locally verified:**
+   product build, four CTests, native runner checks, 586 comment-panel
+   observations, Windows/path and package guards pass. All renamed input bytes
+   and 3,169 retained panel hashes match. See [current validation](#current-validation).
+3. **CI-STEP03 (CI-AC03):** publish the qualified repair and follow normal
+   hosted CI to completion. **The enclosing commit is the approved repair
+   payload.** Hosted Windows/GNU link and final green-workflow evidence follows
+   publication and is reported in the conversation. Depends on STEP02.
+
+1. **PUB-AC01 — Product closure.** `stage-product` builds `rxlang`,
+   `rexxscript1` and their libraries from a fresh build directory. Inspect the
+   generated dependency graph and record the command, input identity and
+   successful result here; delete the temporary build log after inspection.
+2. **PUB-AC02 — QA closure.** Standard QA preparation builds the generated
+   Level L and modern RexxScript test images and concrete VM prerequisites.
+   Existing tests execute in the smoke/correctness tiers on the combined tree.
+3. **PUB-AC03 — Integration correctness.** Commit the reviewed manual/examples,
+   integrate current `develop`, and pass product smoke plus the affected Level L,
+   legacy/modern RexxScript, compiler-exit, RXPP and Unicode correctness tests.
+   Reuse unchanged deeper backend evidence with explicit input boundaries.
+4. **PUB-AC04 — Installed tools.** In an isolated install prefix, generate a
+   grammar, compile/assemble/link its consumer and run it on available concrete
+   VMs. Run modern RexxScript with Unicode, expressions and BIFs; check syntax
+   failure prevents execution. Retain permanent package smoke coverage.
+5. **PUB-AC05 — Reviewable publication.** Include receipts and current plan in
+   the substantive publication, push the qualified descendant to `develop`
+   without force, and verify the remote commit. Normal automatic publication
+   CI follows; no new release tag or full-programme completion is claimed.
+
+1. **PUB-STEP01 (PUB-AC01/02/04):** repair stage and QA dependencies; add
+   installed-consumer checks. **Verified.** No language-design change.
+2. **PUB-STEP02 (PUB-AC03):** commit the manual and merge current `develop`
+   into the authorized `rxlang` checkout. **Verified:** manual `fb4972050`, clean
+   merge `2121969ce` includes `a415090dc`. Depends on STEP01.
+3. **PUB-STEP03 (PUB-AC01–04):** fresh product/QA build, relevant correctness
+   runs and installed checks; fix reproduced integration defects. **Verified**
+   by [current validation](#current-validation).
+4. **PUB-STEP04 (PUB-AC05):** record exact inputs/results, commit and publish
+   only after STEP03 passes; verify remote state. **Local publication payload
+   complete; approved delivery is the fast-forward push of the enclosing commit
+   to `develop`.** Remote identity and actual CI state are reported in the
+   conversation, without a status-only follow-up commit.
+
+1. **DOC-AC01 — Learning sequence.** Explain lexer, token, grammar, parser and
+   tree before relying on those terms; put the first runnable example before
+   advanced backend/composition material. Verify by reading the whole guide.
+2. **DOC-AC02 — Accurate reference.** Check declarations, defaults, tree/API
+   contracts, all request outcomes and resource settings against owning source.
+   Retain practical restrictions with the relevant operation, and explain what
+   the reader should do. Check links and execute changed tutorial commands.
+3. **DOC-AC03 — Enduring prose.** Remove dated delivery/QA/roadmap statements,
+   repetitive qualification provisos and unexplained specialist vocabulary.
+   Preserve needed usage constraints without making claims beyond the code.
+4. **DOC-AC04 — Reviewable closeout.** Record corrected documentation errors,
+   validation and remaining product scope here. Production code and retained
+   implementation qualification remain unchanged unless a separately justified
+   repair becomes necessary.
+
+1. **DOC-STEP01 (DOC-AC01–03):** audit the current guide and owning code, then
+   arrange introduction, tutorial, progressive examples and reference. **Verified.**
+2. **DOC-STEP02 (DOC-AC01–03):** rewrite the manual and fill reference gaps. **Verified.**
+   Adrian additionally asks for practical first-use cases for each backend.
+   Include a runnable PEG configuration-value example, using existing syntax,
+   with priority, reversed-priority and CFG controls in the focused teaching
+   panel. This changes examples/tests, not the Level L language or runtime.
+3. **DOC-STEP03 (DOC-AC02–04):** check internal links, current source contracts
+   and executable instructions; record the results and present the revised guide.
+   **Verified** by [current validation](#current-validation).
+
+1. **CONT-AC01 (LANG-AC05/10/11/13):** every remaining construction or recovery
+   safeguard is a connected optional host budget or a named, checked format/
+   stack ceiling. Tiny budgets produce resource outcomes, raised successful
+   budgets preserve artifacts, loaders accept valid artifacts independently of
+   build defaults, and overflow fails before index/allocation arithmetic.
+2. **CONT-AC02 (LANG-AC03/11/12):** compile pinned Unicode 17 property sets using
+   Level B inputs without Level G; exercise identifiers and scalar boundaries
+   against independently read raw data, retaining exact source-byte spans.
+   Comparison-key and display policies retain their full LANG-AC03 obligations.
+3. **CONT-AC03 (LANG-AC06/07/08/14):** regress diagnostic category, expected
+   tokens, authored context, byte/line coordinates and later valid structure
+   across admitted backends; keep resource failure distinct from syntax,
+   recovery and ambiguity, and preserve no-execution/last-good-output contracts.
+4. **CONT-AC04 (LANG-AC12/13):** retain exact test inputs/tool identities and
+   update runnable examples, guide and this plan with measured scope and gaps.
+
+1. **CONT-STEP01 (CONT-AC01/04):** inventory fixed limits and connect remaining
+   construction/recovery settings; preserve safe stack/format ceilings, add
+   loader/overflow/budget regressions and qualify the Level B bootstrap.
+2. **CONT-STEP02 (CONT-AC02/04):** after STEP01, generate pinned property ranges,
+   add optional charset property references, extend the same settings example
+   and qualify scalar/data/build provenance without a Level G cycle.
+3. **CONT-STEP03 (CONT-AC03/04):** after the relevant STEP01/02 services, improve
+   accurate contextual/Unicode diagnostics and grammar/target resync; add
+   backend-specific regressions and retain failures honestly.
+4. **CONT-STEP04 (CONT-AC01–04):** reconcile acceptance evidence and update the
+   guide and status. New language semantics beyond approved LANG-D03–10 still
+   require maintainer review; routine lowering and test details are authorized.
+
+| Continuation criterion | Current evidence and boundary |
+|---|---|
+| CONT-AC01 | Eighteen connected host settings, discoverable defaults/ceilings, checked dynamic LR item membership, fixed stack/format messages and independent loaders. `resource-cleanup/limits-fixed` and `limits-noopt`: 35 commands each plus 24 boundary/loader checks each; 114 request cases + seven build controls in each complete library mode. Defaults remain engineering safeguards; global memory/time and workload calibration are not established. |
+| CONT-AC02 | Level B compiles 45 pinned Unicode 17 sets from three checksummed raw files. Independent raw-data comparison passes four native cells per library mode. XID lexer: 12,523 inputs in eight cells, including every interval edge/neighbor, random scalars, NUL and byte spans; wrong-profile/unknown-property refusals. The seventh settings lesson executes source/RXAS on both VMs. No normalization/folding key or terminal-cell service is claimed. |
+| CONT-AC03 | 78 located/message/speculation cases per complete library mode across all six parser routes. 160 record-recovery cases per mode, including malformed UTF-8 and source ordering. Eight origin checks retain original bytes and associate sorted diagnostics with error nodes. L1/L2 declaration candidates: 24 cases + twelve last-good-output checks per library mode across quote/comment/group damage. Strict parsing and execution remain strict; nested/token-stage recovery and unclosed target comments retain their stated limits. |
+| CONT-AC04 | User guide, diagnostic assessment, mathematics and progressive example updated. current Level B-only cold/no-op property bootstrap runs three cases with zero re2c calls and no Level G source tree. Exact L1/L2 and opt/no-opt self-description agree. Current consumer checks, six native CLI controls and unoptimized 60-case interpreter cells pass. |
+
+1. **EX-AC01 (LANG-AC02/03/09/13):** inventory implemented comment behavior and
+   record a concrete generalized-comment proposal with boundaries, admission,
+   diagnostics and tests. New spellings/semantics require Adrian's decision;
+   proposal preparation is not implementation or acceptance of that feature.
+2. **EX-AC02 (LANG-AC01/05/07/12/13/14):** runnable small grammars demonstrate
+   predictive admission, left recursion, common-prefix/ordered choice and
+   genuinely ambiguous arithmetic. Verify admitted/refused engines, complete
+   input, forest multiplicity and honest error messages on both VMs and
+   optimized/unoptimized consumer builds. Explain that a failed parse path
+   is not itself a user error, and a conflict is not proof of ambiguity.
+3. **EX-AC03 (LANG-AC04/07/12/13):** a complete calculator includes grammar,
+   generated module, Level B tree evaluator, input, build instructions and
+   expected results. Test precedence, associativity, grouping, decimals,
+   alternative comment delimiters, malformed input and located division by
+   zero. Parsing must succeed before evaluation; invalid input emits no result.
+4. **EX-AC04 (LANG-AC09/12/13):** reconcile modern and legacy RexxScript guides
+   against their sources; inventory syntax mechanics that can migrate and
+   semantics that remain handwritten. No legacy removal or forced Pratt
+   conversion without consumer/semantic proof and maintainer direction.
+
+1. **EX-STEP01 (EX-AC01/04):** inspect source and prepare the comment/migration
+   review. Record remaining decisions before changing language architecture.
+2. **EX-STEP02 (EX-AC02):** add backend selection examples/probe and guide
+   walkthrough using existing syntax. No automatic fallback or new resolver.
+3. **EX-STEP03 (EX-AC03):** implement the calculator using existing operator,
+   lexer/comment and source-tree APIs; qualify its complete toolchain.
+4. **EX-STEP04 (EX-AC02–04):** qualify focused teaching regressions, retain
+   exact inputs, correct guide drift and commit the concrete increment.
+5. **EX-STEP05 (EX-AC01):** after approval of the concrete generalized-comment
+   contract, implement it in the common model/runtime/emitters/bootstrap and
+   qualify quoting, prefixes, nesting, newline and recovery behavior across
+   admitted backends. Pending design approval; no implication that teaching
+   example completion satisfies this step.
+
+1. **COM-AC01 (EX-AC01, LANG-AC02/05/13):** the three forms, distinct custom
+   delimiters, optional `outside PATTERN` and `newlines keep` execute. Multiple
+   forms choose longest opener and reject duplicate openers with related source
+   locations. Unknown/empty/invalid/recursive/nullable shielding and unsupported
+   qualifiers fail admission; no ignored declaration.
+2. **COM-AC02 (LANG-AC03/04/07/10):** a shared coordinator keeps exact original
+   bytes/spans, preserves line-comment CR/LF and declared block newlines, honors
+   quote/regular-pattern opacity and same-form nesting/close priority. Named
+   unterminated diagnostics point to the original opener. UTF-8, source/work
+   limits and contract errors remain distinct; scanning progresses or exhausts.
+3. **COM-AC03 (LANG-AC08/09/14):** strict/recovery routes use the same comment
+   policy; delimiters/separators inside opaque regions cannot trigger spurious
+   comments or record recovery. Unclosed blocks never become clean/executable.
+   Recovery and later valid structure remain checked within admitted profiles.
+4. **COM-AC04 (LANG-AC11/12):** source/RXAS, both VMs and complete opt/no-opt
+   Level L builds pass focused independent comment panels. L0/L1/L2 agree,
+   current settings/calculator/RexxScript consumers pass, and the required
+   Level B-only bootstrap remains independent of Level G/re2c. Reuse unchanged
+   broader proof; no new nested aggregate CTest.
+5. **COM-AC05 (LANG-AC12/13):** grow the existing worked example, document simple
+   and advanced contracts/limits, retain exact test/tool identities and reconcile
+   COM/EX progress without closing unrelated LANG/research obligations.
+
+1. **COM-STEP01 (AC01/02):** implement checked common descriptors/coordinator and
+   preserve the legacy prepared/definition constructors. Add focused native
+   preparation tests before broad integration.
+2. **COM-STEP02 (AC01/04):** extend shared lowering/self-grammar, compile shielding
+   patterns through the existing regular builder, emit descriptors/packed images
+   identically in source/RXAS, and rebuild/verify all bootstrap stages.
+3. **COM-STEP03 (AC02/03):** connect strict/recovery/source-author routes and test
+   original spans, errors, newline boundaries, speculative quote patterns and
+   lowered budgets. Depends on STEP01/02.
+4. **COM-STEP04 (AC01–05):** run backend/consumer/optimization panels and focused
+   build lifecycle checks, update guide/plan/receipts and preserve remaining
+   programme scope. Depends on the relevant preceding implementation steps.
+
+| Original step | Current state |
+|---|---|
+| STEP-01–07 | Initial pilot complete; AC-01–11 verified. |
+| STEP-08 | Approved strategy, semantic/source inventory and corpus established. |
+| STEP-09 | Shared analysis, capability contracts and independent controls implemented/tested; final certificate audit open. |
+| STEP-10 | Required traditional parser/lexer implementations execute; final portfolio/evidence reconciliation open. |
+| STEP-11 | Faithful native Pika/Squirrel/c14 ports and distinct refinements execute; final bounds/cost audit open. |
+| STEP-12 | Representative stages, tree migration, useful-language and composite consumers execute; applicability matrix drafted. |
+| STEP-13 | Grammar-author and recovery representative gates verified, including held-out lexical damage. |
+| STEP-14 | Lifecycle correctness passes in four cells. First timing block is inconclusive; corrected release boundary passes, uncontended serial measurements remain. COST.md and tranches17/18. |
+| STEP-15 | REPORT.md/AUDIT.md drafted; final acceptance reconciliation and cost interpretation open. |
+| RS-STEP01–02 | Product tool, packed RXAS generation, UTF-8 source services and actual RexxScript grammar implemented and locally verified. |
+| RS-STEP03 | Interpreter implemented; historical four-cell evidence retained, and the 60-case panel passes both VMs after develop integration. RS-F01 is closed and RS-AC04 verified for the declared scalar profile. |
+| RS-STEP04 | CMake/library/native runner, dual-format artifacts, second language, negative exits and local toolchain checks verified within the documented scope. |
+| RS-STEP05 | Local implementation and review guides delivered; qualification limitation and original research obligations remain explicit. |
+| GUIDE-STEP01–03 | Comprehensive Level L guide, runnable settings language and diagnostic audit delivered; GUIDE-AC01–03 verified locally. This row records the earlier guide checkpoint; the current recovery increment is below. LL-D01–06 remain open for their full obligations. |
+| BOOT-STEP01–05 | Checkpoint 1 implemented and verified locally: Level B foundation, L0/L1/L2 bootstrap, native Unicode lexing and retained consumer/lifecycle evidence. BOOT-AC01–08 verified within the stated native-host scope; unmerged for review. |
+| LANG-STEP01 | Portfolio and proposed common-surface direction approved; one settings language is the progressive worked example. |
+| LANG-STEP02–08 | In progress: all six components have authored product routes. Shared messages, declaration resync, flat-record recovery, Pratt/LR regions and tree projection have executable increments and bounded evidence below. Captures, eighteen host budgets, pinned property classes, escaped coordinates and lexical/UTF8 recovery have bounded functional evidence under CONT-STEP01–04. Full Unicode comparison/display policies, wider composition/recovery contracts, default calibration and final qualification remain open. |
+
+1. **LANG-AC01 — Six integrated components.** Generate and execute useful
+   specifications through DFA, LL(1), LR(1), packrat PEG, Pratt and Earley using
+   the product tool/library, not research-only entry points. Record admitted
+   profiles, expected refusals, explicit selection and artifact identities.
+2. **LANG-AC02 — Consistent common surface.** Implement the reviewed rule,
+   operator, token, tree and diagnostic declarations with named source ranges.
+   Every accepted declaration affects the artifact or checked metadata; no
+   ignored annotation or literal/token-ID reinterpretation. Exercise shared CFG
+   examples across LL/LR/Earley and operator examples across applicable engines;
+   preserve ordered semantics separately. Covers remaining LL-D01/LL-D03 gaps.
+3. **LANG-AC03 — Unicode/source policy.** Preserve scalar and byte contracts,
+   malformed-input locations, NUL-as-data and original spans. Implement the
+   reviewed property/identifier/comparison/display profile with pinned data
+   and no dependency on generated Level G services. Independently test scalar
+   boundaries, combining sequences, supplementary characters, case expansions,
+   normalization differences, tabs and line endings under each admitted policy.
+   Unsupported policies reject explicitly; no silent fallback to ASCII.
+4. **LANG-AC04 — Trees, forests and ownership.** Preserve named captures,
+   list structure, trivia/source references and agreed application-tree shape
+   through lowering and backend changes. Earley exposes ambiguity/forest
+   results until an explicit selection is made. Recovered nodes and edits
+   retain origins. Verify independent/interleaved requests, release behavior
+   and shared packed tables without per-request table copies.
+5. **LANG-AC05 — Grammar-author explanation.** Report undefined/duplicate
+   declarations, empty tokens, recursion/progress failures, LL and LR conflicts,
+   unsupported profile features and construction exhaustion at original rules.
+   Include related ranges, contextual wording and bounded witnesses where
+   available; an exhausted witness search does not prove unambiguity.
+6. **LANG-AC06 — Specification resynchronization.** The proper generated
+   frontend collects two independent errors and retains a valid later
+   declaration across the agreed quote/comment/group recovery boundaries.
+   Suppress consequences of already-invalid declarations. Any error returns
+   failure and preserves the last good generated artifact. L0 remains minimal.
+7. **LANG-AC07 — Target diagnostics.** Present unexpected input, meaningful
+   expectations, construct context and related openers consistently across
+   backends. Verify LR expectations against the stack and distinguish exact
+   facts from bounded hypotheses. Unify filenames, byte ranges and agreed
+   display coordinates. Covers LL-D02, LL-D04 and LL-D06.
+8. **LANG-AC08 — Target resynchronization.** All initial components integrate
+   the common recovery contract within their admitted profiles, including
+   lexical damage before parsing, nested boundaries, EOF and repeated errors.
+   Test clean-input invariance, two independent errors plus later structure,
+   inserted/skipped origins, bounded progress, exhaustion and no execution of
+   recovered RexxScript. Do not require identical repairs across algorithms or
+   claim global optimality. Covers LL-D05 together with LANG-AC06.
+9. **LANG-AC09 — Declarative composition.** Implement the reviewed surface for
+   token-stage pipelines, parser regions and tree passes. Exercise a layout or
+   contextual-word stage, Pratt inside an outer parser, an embedded-language
+   boundary and a structural tree pass. Verify source/AST projection, delimiter
+   ownership, recovery containment and rejected unsafe composition. Forests
+   cannot flow into a single-tree consumer without explicit resolution.
+10. **LANG-AC10 — Admission and bound honesty.** Shared analysis supplies facts;
+    providers own algorithm checks and implementation-specific cost claims.
+    Composition additionally checks input units, contexts, progress, result
+    multiplicity and boundaries. Retain negative certificate/proof cases and
+    explicit unknown/resource outcomes. Keep host resource budgets outside
+    grammar meaning, reconcile constructors and loaders with representation
+    checks, and retain overflow-safe preflight and measured default rationale.
+    Finite fuel is a work limit, not proof
+    of correct recovery, successful parsing or a grammar-specific speed bound.
+11. **LANG-AC11 — Bootstrap and build continuity.** Retain Level B-only required
+    closure, minimal L0, L1/L2 deterministic regeneration, packed RXAS emission,
+    clean/no-op/incremental/failure build behavior and Level L's re2c-free
+    boundary. New property tables must be generated from pinned raw data using
+    the bootstrap foundation. Existing rxc/rxas and their re2c uses remain out
+    of scope. Cross-host/target limits remain explicit rather than implied.
+12. **LANG-AC12 — Consumer and guide qualification.** Extend the settings,
+    RexxScript and Unicode consumers plus independent backend fixtures. Run
+    affected rxc/rxas/rxlink and both-VM checks, with opt/no-opt coverage of new
+    semantics. Retain exact inputs and limits, reuse unchanged evidence and
+    update runnable guides/capability tables. Report this checkpoint separately
+    from open research criteria, full frontend migration and publication.
+13. **LANG-AC13 — Simple surface and progressive learning.** Deliver one small
+    complete grammar with only token/lexer/parser concepts, useful default
+    tree output and located errors. Grow that same example through captures,
+    expressions, recovery, Unicode policies and composition without a rewrite
+    into a different notation. Exact defaults are documented and versioned;
+    omitted options never trigger an undocumented semantic change. Review the
+    introductory sequence with Adrian before calling the surface settled.
+    Runnable before/after examples and targeted grammar-writer feedback are
+    evidence; an arbitrary line-count target is not a usability proof.
+14. **LANG-AC14 — Easy contextual messages.** The beginner example adds a
+    bespoke rule message with a single small declaration and no host callback,
+    custom tree or recovery configuration. Retain rendered filename/location,
+    unexpected lexeme/EOF and context examples, plus an optional captured-name
+    or related-opener example. Reject unknown template fields at generation;
+    never invent an unavailable or ambiguous context value. Exercise nested
+    rules, PEG alternatives/predicates, Earley alternatives and recovery to
+    show speculative failures do not produce misleading final messages.
+    Enabling a message changes presentation, not clean acceptance or tree shape.
+
+1. **LANG-STEP01 (AC01–14):** record the approved portfolio, reconcile existing
+   product/research contracts, and present concrete surface/Unicode/composition
+   choices around a progressively extended beginner example. Portfolio recorded;
+   proposal prepared; new design decisions pending
+   the requested discussion. No existing acceptance criterion is closed here.
+2. **LANG-STEP02 (AC02–05, AC10–11, AC13–14):** after surface review, establish the
+   common versioned declaration model, source/result/diagnostic contracts and
+   admission checks; repair ignored annotations and token-literal traps.
+3. **LANG-STEP03 (AC01–04, AC10–11):** integrate all six components behind the
+   common model, including product LL(1)/Earley and operator lowering. Qualify
+   deterministic/shared CFG and ordered examples; expose forest multiplicity.
+   Depends on STEP02. Delivery is not complete after any partial backend subset.
+4. **LANG-STEP04 (AC03–05, AC07, AC11):** implement reviewed Unicode property,
+   source-map and display behavior using Level B/bootstrap-safe inputs. Can
+   proceed beside STEP03 after STEP02; no implicit normalization or G cycle.
+5. **LANG-STEP05 (AC05–08, AC14):** connect easy contextual authored messages,
+   structured explanations and implement
+   specification recovery, then whole-pipeline target recovery for every
+   admitted backend profile. Depends on STEP02 and the relevant STEP03/04
+   services; preserve clean recognition and strict execution/build boundaries.
+6. **LANG-STEP06 (AC02, AC04, AC08–10):** implement reviewed pipeline/region/tree
+   declarations and backend-specific composition checks. Test equivalent
+   unstaged cases and unsafe boundaries, including recovery ownership.
+7. **LANG-STEP07 (AC01–14):** qualify backend/Unicode/recovery/composite cases,
+   build lifecycle and affected consumers. Measure new aggregate scheduling
+   before registering or expanding aggregate CTests, per AGENTS.md; do not add
+   redundant broad or performance runs to a documentation/design checkpoint.
+8. **LANG-STEP08 (AC12–14):** reconcile every criterion, update user/developer
+   guides and retain review evidence. Keep incomplete criteria open and report
+   exact native-host limits. Work remains on `rxlang`, with remote safety backup
+   authorized above; integration and release follow the previously agreed
+   end-of-work review boundary.
+
+1. **SYNC-AC01 — Preserve and integrate.** Record the exact upstream revision,
+   preserve tracked and untracked local inputs, merge it into `rxlang`, and
+   inspect any overlap. Verify the unrelated roadmap edit and local source
+   inventory remain present. Evidence: merge log and before/after hashes.
+2. **SYNC-AC02 — Numeric repair.** Rebuild the native tools from the integrated
+   sources. Run the permanent numeric/float contract regressions, the original
+   RS-F01 reproducer and the 28-case compiler/RexxScript scalar comparison with
+   optimized/unoptimized compilation on both VMs. No remaining optimizer
+   disagreement is admitted as a pass.
+3. **SYNC-AC03 — Consumer continuity.** Rebuild the Level L three-stage tool,
+   verify deterministic stage agreement, and run focused generated-language,
+   RexxScript and Unicode normalization consumer checks. Preserve scope limits
+   and record actual source/tool identities. Update RS-F01 status only from
+   these observations; do not close unrelated research criteria.
+
+1. **SYNC-STEP01 (AC01):** fetch/pin `origin/develop`, retain a local-work
+   manifest and tracked patch, integrate upstream and restore/verify changes.
+2. **SYNC-STEP02 (AC02):** rebuild tools and consumer prerequisites, then run
+   the focused numeric controls and scalar overlap. Depends on STEP01.
+3. **SYNC-STEP03 (AC03):** execute affected consumer/stage checks, reconcile
+   evidence and update the guide/plan. Depends on STEP02; report unexpected
+   regressions before expanding the scope.
+
+| Criterion | Retained result |
+|---|---|
+| SYNC-AC01 | The integration retained local changes against the selected upstream revision without conflicts. This historical sync result does not describe the current checkout; the reorganisation uses main develop. |
+| SYNC-AC02 | Fresh native tools; both numeric contracts pass (632 tool commands, 264 VM executions). Original reproducer returns 0 in four cells. All 28 scalar cases match RexxScript and optimized/unoptimized Level G on both VMs, with zero accepted disagreements. RS-F01 closed; RS-AC04 verified for the declared profile. |
+| SYNC-AC03 | Warning-free consumer build; rebuilt L1/L2 RXAS identical to each other and the prior artifact. Eight consumer CTests pass: generated language on both VMs, RexxScript's 60-case panel on both VMs, four normalization cells. Six native CLI checks pass. Logical generated normalization source unchanged. |
+
+1. **GUIDE-AC01 — Usable guide.** Explain installation/build assumptions,
+   complete language authoring, generation/linking, lexer-only and supplied-token
+   use, trees/source ownership, finite token stages, limits and troubleshooting.
+   Verify its worked example through rxc, rxas, rxlink and both VMs.
+2. **GUIDE-AC02 — Diagnostic evidence.** Exercise malformed specifications and
+   target inputs, including two independent errors and a valid later statement.
+   Record actual messages, exit status and whether processing resumes; inspect
+   claimed diagnostic customization against the generated artifact/runtime.
+3. **GUIDE-AC03 — Honest recovery assessment.** Reconcile retained research
+   measurements with their exact denominators, document current product gaps,
+   and recommend a staged improvement path without implying it is implemented.
+
+1. **GUIDE-STEP01 (AC01–02):** inspect the current frontend/runtime; add a
+   small independent tutorial language and consumer, plus bounded diagnostic
+   probes. Reuse valid earlier product qualification.
+2. **GUIDE-STEP02 (AC01–03):** write the owning guide under `langtools/doc/`,
+   link existing entry points, and retain a diagnostic/recovery assessment with
+   exact evidence. Depends on STEP01; new language-design choices remain for
+   review.
+3. **GUIDE-STEP03 (AC01–03):** execute the tutorial and diagnostic probes,
+   check documentation links/examples, and record criterion outcomes here.
+
+| Criterion | Observable result |
+|---|---|
+| GUIDE-AC01 | Complete settings specification/reader/input under `langtools/examples`; rxc/rxas/rxlink and both VM runs produce the documented output. Guide covers the authoring/API/ownership/build/limit topics. |
+| GUIDE-AC02 | 46 bounded command checks, including ten damaged settings inputs on both VMs, grammar failures, two independent errors, inactive custom diagnostic/tree declarations and the actual RexxScript no-execution boundary. No new recovery code was implemented. |
+| GUIDE-AC03 | RECOVERY.md separates damaged-only retention from clean controls using consistent denominators. The completed one-off reconciliation script and run output were removed. The diagnostic assessment recommends staged improvements with explicit design gates and closure evidence. |
+
+1. **GUIDE-STEP04 (GUIDE-AC01):** trace representative source through tokens,
+   named tree and application handling; retain bounded inspection output.
+2. **GUIDE-STEP05 (GUIDE-AC01):** add an overview before the command tutorial,
+   using one running example, pipeline diagrams, the IF derivation, and a
+   component-selection checklist; verify it against STEP04.
+
+1. **BOOT-AC01 — Level B foundation.** Clean-build the required Level L core,
+   seed, generator and CLI with no transitive dependency on `rxfnsg` or generated
+   Level G services. Retain the actual dependency graph and build trace.
+2. **BOOT-AC02 — Three-stage bootstrap.** Build L0, L1 and L2 from the
+   authoritative specification, with stage-isolated outputs and checked
+   dependency order. The seed has safe bounded failure and enough syntax for G.
+3. **BOOT-AC03 — Regeneration agreement.** L1/L2 canonical generated
+   artifacts agree, and both tools agree on a positive/negative grammar corpus,
+   token/rule/tree contracts and downstream generated languages. State the
+   independent correctness controls and their coverage separately.
+4. **BOOT-AC04 — Unicode lexer compatibility.** Regenerate and execute the
+   historical TinyExpr/gennorm2 workloads natively, preserving observable tokens,
+   spans, EOF, basic error identities and semantic records. Test scalar/range
+   boundaries, subtraction, multibyte characters, supplementary scalars,
+   malformed UTF-8 and embedded NUL with the explicitly agreed source policy.
+   Document rather than conceal any necessary compatibility adapter.
+5. **BOOT-AC05 — Unicode consumer qualification.** Inventory current Unicode
+   generation consumers and replace the affected retained scanner/generation
+   paths. Preserve pinned input hashes, generated logical table contents and
+   runtime contracts; run the owning conformance gates for changed data/tool
+   inputs. Unchanged valid evidence may be reused. No new G-to-L cycle is added.
+6. **BOOT-AC06 — re2c retirement boundary.** No re2c invocation, template,
+   category-file or other hidden generator dependency remains in Level L or the
+   migrated workload generation steps. After building the unchanged prerequisite
+   C toolchain, exercise a fresh Level L generation/build with re2c unavailable
+   to that phase and retain its command/input trace. Existing C-toolchain uses
+   remain allowed and are explicitly outside this criterion.
+7. **BOOT-AC07 — Build lifecycle and consumers.** Cold build, no-op rebuild,
+   grammar edit and runtime edit produce the intended regeneration/relinking;
+   failure preserves the last valid artifact and returns nonzero. Run the
+   generated settings and RexxScript consumers on both VMs. Account for host
+   generator versus target artifacts in supported build configurations.
+8. **BOOT-AC08 — Reviewable delivery.** Update the guide/build documentation,
+   record stage identities, Unicode/data provenance and retained checks, and
+   report this checkpoint for review. Basic rejection and named lexical actions
+   work now; rich explanation, repair and multi-error recovery remain the next
+   checkpoint. Original research and any unresolved conformance obligations remain explicit. RS-F01 was subsequently closed by the develop integration recorded above.
+
+1. **BOOT-STEP01 (AC01, AC04–06):** freeze the dependency/Unicode workload
+   inventory under the confirmed retirement boundary; present the scalar/byte
+   compatibility details and Level B seed contracts before implementation.
+2. **BOOT-STEP02 (AC01–02):** factor the Level B-only foundation and minimal
+   seed, with isolated import roots and stage outputs. Depends on STEP01.
+3. **BOOT-STEP03 (AC02–04):** author Level L's lexer/parser specification and
+   implement its tree-to-common-IR lowering; generate L1, then L2, and check
+   agreement. Add the Unicode lexical capability required by the frozen
+   workloads without Level G services. Depends on STEP02.
+4. **BOOT-STEP04 (AC04–06):** migrate affected Unicode generation workloads,
+   replacing Level L's re2c-generated artifacts and generator-data dependencies
+   with the native tool. Preserve independent references and qualification;
+   leave existing C scanners and their toolchain dependencies unchanged.
+5. **BOOT-STEP05 (AC03, AC05–08):** verify the clean acyclic build, stage
+   agreement, incremental/failure behavior and affected consumer conformance;
+   update documentation and deliver checkpoint 1 for review.
+
+| Criterion | Implementation / retained local evidence |
+|---|---|
+| BOOT-AC01 | Standalone cold build from a source snapshot containing neither Level G nor re2c; the maintained `langtools/tests/check-bootstrap-lifecycle.py` owns reproduction. Native CLI dependency inspection and product build exclude Level G. |
+| BOOT-AC02 | Stage-isolated L0/L1/L2 graph; seed expression/set nesting limits and generated frontend; the frontend harness covers 17 positive/negative cases through all three stages. |
+| BOOT-AC03 | L1/L2 generated RXAS are byte-identical; optimized/fully unoptimized bootstrap agreement. Five independent lexical panels also agree across all three generators, with decoded-scalar/regex oracles and both VMs. |
+| BOOT-AC04 | Independent lexical oracle coverage: 2,700 cases per core configuration, four probe/VM cells; scalar boundaries/subtraction, bounded Unicode expressions, TinyExpr and gennorm2. The gennorm2 compatibility harness covers 17 owning token/typed-record/error cases in eight old/new × optimizer × VM cells. NUL correction below is explicit. |
+| BOOT-AC05 | Level G normalization generation consumes the new image through the adapter; regeneration leaves the logical normalization source unchanged. Four owning Unicode-normalization conformance cells pass. Pinned Unicode 17.0.0 data/manifests remain maintained build inputs. |
+| BOOT-AC06 | Seven isolated lifecycle phases with a failing re2c executable first in PATH; zero invocations, no Level G/re2c source present. Current C-toolchain dependencies are outside this proof. |
+| BOOT-AC07 | Cold/no-op/grammar-edit/runtime-edit/failure/restoration phases pass; failure preserves prior generated artifacts and downstream library. Settings guide/diagnostic checks run both VMs; generated-language and 60-case RexxScript panels pass both VMs. Native host build qualified locally; cross builds reject explicitly and host/target packaging remains unqualified. |
+| BOOT-AC08 | Bootstrap guide, authoring guide and diagnostic assessment updated. The current source-emission check passes 160 inputs in four cells. Historical bootstrap work is integrated; the reorganisation qualification above is local and unpublished. Rich recovery/backend selection, RS-F01 and the original open research criteria remain separate. |

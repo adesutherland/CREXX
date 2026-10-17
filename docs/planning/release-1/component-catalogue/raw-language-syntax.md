@@ -9,7 +9,7 @@ Stage 2 discovery data. “Observed state” records repository evidence and is 
 | `SYN-TYPED-OPTIONS` | Leading `OPTIONS` instruction | `compiler/rxcposcn.re`; `docs/books/crexx_language_reference/options.md` | Parsed by the options pre-scan. |
 | `SYN-TYPED-LEVELB-OPTION` | `options levelb` selection | `compiler/rxcposcn.re`; `compiler/rxcpbgmr.y` | Selects the typed front end. |
 | `SYN-TYPED-LEVELG-OPTION` | `options levelg` selection | `compiler/rxcposcn.re`; `lib/rxfnsg/rexx/llm.crexx` | Accepted for the typed derived surface. |
-| `SYN-TYPED-LEVELL-OPTION` | `options levell` selection | `compiler/rxcposcn.re`; `lib/rxfnsl/rexx/tinyexpr.crexx` | Accepted for the language-engineering derived surface. |
+| `SYN-TYPED-LEVELL-OPTION` | `options levell` selection | `compiler/rxcposcn.re`; `langtools/examples/tinyexpr/tinyexpr.crexx` | Accepted for the language-engineering derived surface. |
 | `SYN-TYPED-NUMERIC-COMMON` | `numeric_common` parser mode | `compiler/rxcposcn.re`; `docs/books/crexx_language_reference/options.md` | Typed default. |
 | `SYN-TYPED-NUMERIC-CLASSIC` | `numeric_classic` parser mode | `compiler/rxcposcn.re`; `docs/books/crexx_language_reference/options.md` | Accepted file-level parsing mode. |
 | `SYN-TYPED-COMMENT-OPTIONS` | Hash, slash, and dash single-line comment options | `compiler/rxcposcn.re`; `docs/books/crexx_language_reference/options.md` | Parsed file options. |

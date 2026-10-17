@@ -34,7 +34,7 @@ main: procedure = .int expose failures
   need = findrule(lg,'needed.item'); close = findrule(lg,'close'); needarray = findrule(lg,'needed.array')
   ritem = findrule(lg,'recover.item'); rclose = findrule(lg,'recover.close'); rarray = findrule(lg,'recover.array')
   pg = pikaDoc.grammar(); arrayrank = lower.rank(findrule(pg,'array'))
-  path = 'research/level-l/evidence/recovery-corpus.txt'
+  path = 'research/level-l/cases/fixtures/recovery-corpus.txt'
   do while lines(path)
     row = linein(path); id = word(row,1); split = word(row,2); hex = word(row,3)
     clean = word(row,4) as .int; exact = word(row,5) as .int; later = word(row,6) as .int

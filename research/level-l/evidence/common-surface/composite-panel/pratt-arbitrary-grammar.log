@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-LL_PRATT_ADMISSION: start must name an operators declaration; arbitrary rules cannot select Pratt

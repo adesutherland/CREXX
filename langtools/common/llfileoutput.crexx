@@ -1,0 +1,59 @@
+/* cREXX License (MIT). Atomic Level L output publication. */
+options levelb
+namespace llfileoutput expose publish
+import rxfnsb
+import rxfs
+import llir
+
+/** Stream the existing Level L chunks to one owned staging file. */
+filesink: class implements .llir..sink
+  _file = .int
+  _error = .string
+  *: factory
+    arg path = .string
+    _file = 0; _error = ''; mode = 'wb'
+    assembler fopen _file,path,mode
+    if _file = 0 then _error = 'cannot create staging file'
+    return
+  write: method = .string
+    arg bytes = .binary
+    if _error <> '' then return _error
+    status = 0
+    assembler fwriteb _file,bytes
+    assembler ferror status,_file
+    if status <> 0 then _error = 'cannot write staging file'
+    return _error
+  close: method = .string
+    if _file = 0 then return _error
+    flushed = 0; closed = 0
+    assembler fflush flushed,_file
+    assembler fclose closed,_file
+    _file = 0
+    if flushed <> 0 | closed <> 0 then _error = 'cannot finish staging file'
+    return _error
+
+/** mkdir claims an exclusive sibling staging directory. A collision never
+ * removes someone else's files. Rename is the sole destination mutation. */
+publish: procedure = .string
+  arg output = .llir..output, destination = .string
+  if output.error() <> '' then return output.error()
+  stage = destination || '.llrxc-stage'; temporary = stage || '/output.rxas'
+  owned = 0; message = ''
+  do
+    if rxfs..mkdir(stage) <> 0 then return 'LL_COMPILER_OUTPUT: cannot claim staging directory ' || stage
+    owned = 1
+    sink = .filesink(temporary)
+    message = output.stream(sink as .llir..sink)
+    closed = sink.close()
+    if message = '' then message = closed
+    if message = '' then do
+      if rxfs..rename(temporary,destination) <> 0 then message = 'cannot replace destination'
+    end
+  on signal as problem
+    message = problem.name() || ': ' || problem.message()
+  end
+  if owned then do
+    ignored = rxfs..delete(temporary); ignored = rxfs..rmdir(stage)
+  end
+  if message <> '' then return 'LL_COMPILER_OUTPUT: ' || message
+  return ''

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Independent complete TinyConfig consumer, not derived from llfront's graph."""
 from pathlib import Path
+from fixture_support import write_fixture
 class Invalid(Exception): pass
 class Reader:
     def __init__(self, text): self.s=text; self.i=0
@@ -68,5 +69,5 @@ for text in sorted(cases):
     try: tree=Reader(text).document(); status=0
     except Invalid: tree=''; status=1
     rows.append(f'{text.encode().hex().upper()}|{status}|{tree}\n')
-out=Path(__file__).resolve().parents[1]/'evidence/config-reference.txt'
-out.write_text(''.join(rows)); print(f'{len(rows)} independent TinyConfig cases')
+out=Path(__file__).resolve().parents[1]/'cases/fixtures/config-reference.txt'
+write_fixture(out,''.join(rows)); print(f'{len(rows)} independent TinyConfig cases')

@@ -153,7 +153,7 @@ for a new broad benchmark or release-qualification run.
 ## Level L compiler delivery priority
 
 Adrian approved completing the new Level C compiler before proper Level B
-self-hosting on 16 October 2026. `lib/rxfnsl/compilers/PLAN.md` owns the C-first
+self-hosting on 16 October 2026. `research/level-l/compilers/PLAN.md` owns the C-first
 milestone, its coverage crosswalk and acceptance. Keep `LLCOMP-STEP07B` and its
 criteria open and deferred; preserve the eventual B/G/full-replacement scope.
 The existing native B seed builds the Level B compiler implementation and
@@ -303,7 +303,7 @@ the criteria that remain.
 ### Level L research exception
 
 For the Level L research project, including the experimental B-only C/G
-compilers under `lib/rxfnsl/compilers`, formal performance testing is not a
+compilers under `research/level-l/compilers`, formal performance testing is not a
 completion or publication requirement. Adrian set this scope on 15 October
 2026. Do not gate research increments on a formal Release benchmark, prescribed
 sample counts, AC power, or a separate performance-verdict approval. Focused

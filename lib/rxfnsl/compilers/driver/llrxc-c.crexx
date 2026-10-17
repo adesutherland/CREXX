@@ -1,6 +1,0 @@
-/* cREXX License (MIT). Separate Classic compiler command. */
-options levelb
-import llcompilercli
-main: procedure = .int
-  arg argv = .string[]
-  return llcompilercli..run('c',argv)

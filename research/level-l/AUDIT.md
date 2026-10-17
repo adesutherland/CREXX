@@ -64,15 +64,13 @@ snapshots, so a caller's later mutation cannot change an admitted request.
 
 ## Remaining product and tool findings
 
-The two frozen optimized-tool observations are preserved under
-`evidence/c14-first-opt-failure/` and
-`evidence/recovery-diagnostic-opt-failure/`. Split evaluation and stable diagnostic
-categories allow the research comparisons; these are not compiler fixes or
-proof of current-develop behavior. The lifecycle harness's early copy/select/
-identity-stage errors are retained separately as harness failures. Neither
-research test success nor this audit closes those frozen-tool investigations.
+Earlier optimized-tool observations affected c14 evaluation and recovery diagnostic
+stability. The research uses split evaluation and stable diagnostic categories;
+these workarounds do not establish a native compiler repair. Reproduce against
+the current product before attributing a current defect. Lifecycle copy/select/
+identity-stage mistakes were harness errors and do not qualify product behavior.
 No sanitizer-clean, cross-platform, release or production-readiness claim is made.
 
 AC-22/23 and the final AC-24/25 decision matrix remain open until their own
-retained evidence is complete. This audit does not close them by describing
+qualification is complete. This audit does not close them by describing
 work still to be done.

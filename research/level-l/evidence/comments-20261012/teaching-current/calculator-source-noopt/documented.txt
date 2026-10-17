@@ -1,2 +1,0 @@
-(* A different delimiter pair; nested (* notes *) are allowed. *)
-2 + 3 * (4 - 1)

@@ -7,7 +7,7 @@ main: procedure = .int expose failures
   failures = 0; names = .string[]
   names[1] = 'procedures-b'; names[2] = 'procedures-g'; names[3] = 'implicit-b'
   do fixture = 1 to names[0]
-    prefix = 'research/level-l/evidence/migration/' || names[fixture]
+    prefix = 'research/level-l/cases/fixtures/migration/' || names[fixture]
     path = prefix || '.tree'; bytes = x2bin(linein(path)); root = linein(path) as .int
     tree = .llcore..tree.from_source(bytes)
     do while lines(path)

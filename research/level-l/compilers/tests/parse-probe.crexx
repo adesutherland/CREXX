@@ -1,0 +1,18 @@
+/* cREXX License (MIT). Standalone source-tree inspection. */
+options levelb
+import rxfnsb
+import lltestparse
+import llast
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 then return 2
+  source = readbinary(argv[2]); parsed = .lltestparse..parsed(argv[1],source)
+  if parsed.status() <> 0 then do
+    say 'ERROR|' || parsed.offset() || '|' || parsed.error(); return 1
+  end
+  tree = parsed.ast(); walk = tree.walk('parents first')
+  do while walk.next()
+    node = walk.node()
+    say node.kind() || '|' || node.start() || ':' || node.finish() || '|' || node.sourcetext()
+  end
+  return 0

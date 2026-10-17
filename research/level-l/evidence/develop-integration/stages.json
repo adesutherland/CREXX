@@ -1,9 +1,0 @@
-{
-  "current_develop_bootstrap": {
-    "L1": "b51533a152b81879d5b6dd30ff1b5654d1d119fccb9ef2967c1dc1356982b58e",
-    "L2": "b51533a152b81879d5b6dd30ff1b5654d1d119fccb9ef2967c1dc1356982b58e"
-  },
-  "matches_pre_integration_artifact": true,
-  "reference_sha256": "b51533a152b81879d5b6dd30ff1b5654d1d119fccb9ef2967c1dc1356982b58e",
-  "scope": "Both current optimized L1/L2 stages rebuilt with integrated tools; historical noopt controls are not rerun here."
-}

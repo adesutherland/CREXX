@@ -1,0 +1,31 @@
+/* cREXX License (MIT). Test-only cross-language corpus adapter.
+ * Never included in compiler products or installed libraries. */
+options levelb
+namespace lltestparse expose parsed
+import rxfnsb
+import llast
+import llcparse
+import lltparse
+
+parsed: class
+  _level = .string
+  _c = .llcparse..parsed
+  _g = .lltparse..parsed
+  *: factory
+    arg level = .string, source = .binary, limit = 1000000
+    _level = lower(level)
+    if _level = 'c' then _c = .llcparse..parsed(source,limit)
+    else _g = .lltparse..parsed(source,limit)
+    return
+  status: method = .int
+    if _level = 'c' then return _c.status()
+    return _g.status()
+  error: method = .string
+    if _level = 'c' then return _c.error()
+    return _g.error()
+  offset: method = .int
+    if _level = 'c' then return _c.offset()
+    return _g.offset()
+  ast: method = .llast..tree
+    if _level = 'c' then return _c.ast()
+    return _g.ast()

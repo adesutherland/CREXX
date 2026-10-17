@@ -54,7 +54,7 @@ main: procedure = .int expose failures cases
   doc = .llfront..document(source); status = doc.run()
   table = .lllr..tables(doc.grammar(),doc.root(),'lr1')
   call check status = 0 & table.status() = 0,'finite oracle grammar'
-  path = 'research/level-l/evidence/lrrepair-finite-oracle.txt'
+  path = 'research/level-l/cases/fixtures/lrrepair-finite-oracle.txt'
   do while lines(path)
     row = linein(path); hex = word(row,1); text = '' as .binary
     if hex <> '-' then text = x2bin(hex)

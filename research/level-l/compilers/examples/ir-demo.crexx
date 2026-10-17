@@ -1,0 +1,48 @@
+/* cREXX License (MIT). Construct, fold and inspect IR, preserving SAY. */
+options levelb
+import llir
+import llirservices
+import lltir
+
+main: procedure = .int
+  schema = .llir..schema(); call lltir..registerfamilies(reference schema)
+  contract = schema.finish(); integer = contract.type('crexx.g.int64')
+  draft = .llir..builder(contract); origin = draft.synthetic('worked IR example')
+  fn = draft.function('main',contract.voidtype()); entry = fn.block('entry')
+  left = entry.constant(integer,'2',origin); right = entry.constant(integer,'3',origin)
+  sum = entry.binary(contract.operation('crexx.g.iadd'),left,right,origin)
+  conversion = entry.operation(contract.operation('crexx.g.itext'),origin)
+  call conversion.input('value',sum); converted = conversion.finish()
+  statement = entry.operation(contract.operation('crexx.g.say'),origin)
+  call statement.input('text',converted.namedresult('text')); said = statement.finish()
+  call entry.returnvoid(origin)
+  graph = draft.finish()
+  if graph.error() <> '' then do
+    say graph.error(); return 1
+  end
+  say 'Before:'; say graph.dump()
+  facts = .llirservices..facts(reference graph)
+  changed = llirservices..rewrite(reference graph,3,facts)
+  if changed.status() <> 'changed' then do
+    say changed.message(); return 1
+  end
+  graph = changed.result()
+  facts = .llirservices..facts(reference graph)
+  changed = llirservices..rewrite(reference graph,4,facts)
+  if changed.status() <> 'changed' then do
+    say changed.message(); return 1
+  end
+  graph = changed.result()
+  say 'After:'; say graph.dump()
+  facts = .llirservices..facts(reference graph)
+  output = graph.operation(5)
+  refusal = llirservices..rewrite(reference graph,5,facts)
+  if output.name() <> 'crexx.g.say' | refusal.status() <> 'keep' then return 1
+  text = output.input(1)
+  if text.isconstant() = 0 then return 1
+  /* This demonstration executes the now-constant SAY argument. The source
+   * compilers and general RXAS backend are subsequent programme steps. */
+  say text.bytes() as .string
+  if text.bytes() as .string <> '5' then return 1
+  say 'IR_DEMO|OK'
+  return 0

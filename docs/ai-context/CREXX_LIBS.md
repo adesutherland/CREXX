@@ -359,16 +359,22 @@ outside the current contract. See the
 [concurrent HTTP client/server guide](../books/crexx_library_reference/concurrent_http.md)
 and the both-VM `lib/rxfnsg/tests_functional/ts_http_*` fixtures.
 
-`lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
-language-engineering proving slice. It is deliberately not a lexer generator or
-parser generator yet. Instead, it is hand-written in the shape that a future
-generator might emit: a packed binary character-class table, fixed-width binary
-token records, an exposed declaration procedure for generated token/layout
-constants, direct binary-memory reads/writes, a zero-copy lexeme compare helper,
-and a tiny precedence parser over the packed token stream. The purpose is to
-learn whether the Rexx/RXAS binary-memory surface is usable for generated
-language tooling before porting a tool such as re2c or changing a generator
-backend to emit this style directly. See `lib/rxfnsl/rexx/tinyexpr.md`.
+`langtools/examples/tinyexpr/tinyexpr.crexx` is the hand-written generated-shape
+teaching example for packed tables, binary token records and a small precedence
+parser. It is compiled separately as `tinyexpr.rxbin`, with namespace `tinyexpr`,
+and is not part of the SDK. The actual generator is `rxlang`; see the
+[TinyExpr explanation](../../langtools/examples/tinyexpr/README.md).
+
+## Level L ownership
+
+The generic Level L SDK is `lib/rxfnsl/`, delivered as `rxfnsl.rxbin`. Tool
+implementation, bootstrap and command code live in `langtools/`; clients of
+`llfront` or `llgenerate` explicitly import/link `rxlanglib.rxbin`. Generic tool
+helpers have their own `llrxastext`, `llbinmeta` and `llfileoutput` packages.
+Experimental C/G compiler packages belong to `research/level-l/compilers/` and
+are not dependencies of the SDK or generator. See the
+[SDK user guide](../../langtools/doc/user-guide.md) and
+[research build/install instructions](../../research/level-l/compilers/README.md).
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 

@@ -1,6 +1,0 @@
-options levell
-namespace numeric
-notes: comments block '01' '1'
-scan: lexer
-number: token
-item: rule = 'x' then emit number

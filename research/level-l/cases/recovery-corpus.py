@@ -2,6 +2,7 @@
 """Freeze D01 before engine comparison; independent recognizer + edit BFS."""
 from collections import deque
 from pathlib import Path
+from fixture_support import write_fixture
 import hashlib, json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,16 +82,16 @@ def main():
                     'selected clean later array retains exact source interval','bad recovery retained'],
                 intent_warning='Minimum edit cost does not establish intended syntax; heldout labels are fixed before engine results.',
                 cases=rows)
-    target = ROOT/'evidence/recovery-corpus.json'
+    target = ROOT/'cases/fixtures/recovery-corpus.json'
     text = json.dumps(meta, indent=2)+'\n'
     if target.exists() and target.read_text() != text:
         raise SystemExit('Frozen corpus differs: do not silently replace it')
-    target.write_text(text)
+    write_fixture(target,text)
     lines = []
     for r in rows:
         value = r['source'].encode().hex().upper() or '-'
         lines.append(f"{r['id']} {r['split']} {value} {int(r['clean'])} {r['exact_insert_delete_cost']} {r['untouched_later_start']}")
-    (ROOT/'evidence/recovery-corpus.txt').write_text('\n'.join(lines)+'\n')
+    write_fixture((ROOT/'cases/fixtures/recovery-corpus.txt'),'\n'.join(lines)+'\n')
     print('Frozen recovery cases:', len(rows), 'heldout:',sum(x['split']=='heldout' for x in rows))
 
 if __name__ == '__main__':

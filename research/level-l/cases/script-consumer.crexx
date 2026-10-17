@@ -24,7 +24,7 @@ main: procedure = .int expose failures cases
     say table.error(); return 1
   end
   dfa = .llmunch..automaton.legacy(gcscript..tabledata())
-  path = 'research/level-l/evidence/script-expected.txt'
+  path = 'research/level-l/cases/fixtures/script-expected.txt'
   do while lines(path)
     row = linein(path); id = field(row,1)
     if id = 'S003' | id = 'S004' then do

@@ -1,0 +1,161 @@
+/* cREXX License (MIT). C/G semantic admission and shared-pass regressions. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import lltestfamilies
+import lltestcompiler
+
+main: procedure = .int expose checks failures contract artifacts
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  artifacts = argv[1]; checks = 0; failures = 0; i = .int
+  schema = .llir..schema(); call lltestfamilies..registerfamilies(reference schema); contract = schema.finish()
+  call fold('int64.add','2','3','5')
+  call fold('int64.sub','2','3','-1')
+  call fold('int64.mul','-7','6','-42')
+  call fold('int64.add','9223372036854775806','1','9223372036854775807')
+  call fold('int64.sub','-9223372036854775807','1','-9223372036854775808')
+  call fold('int64.mul','-9223372036854775808','1','-9223372036854775808')
+  call fold('int64.mul','-9223372036854775808','0','0')
+  call fold('int64.mul','-3037000499','-3037000499','9223372030926249001')
+  call fold('int64.add','9223372036854775807','1','','keep')
+  call fold('int64.add','-9223372036854775808','-1','','keep')
+  call fold('int64.sub','9223372036854775807','-1','','keep')
+  call fold('int64.sub','-9223372036854775808','1','','keep')
+  call fold('int64.mul','-9223372036854775808','-1','','keep')
+  call fold('int64.mul','3037000500','3037000500','','keep')
+  call fold('int64.mul','-3037000500','3037000500','','keep')
+  call fold('int64.div','10','0','','keep')
+  do i = 1 to 7
+    name = word('eq ne lt le gt ge strict',i); expected = word('0 1 1 1 0 0 0',i)
+    call fold('int64.' || name,'-9223372036854775808','9223372036854775807',expected)
+  end
+  call fold('convert.int64.text','-9223372036854775808','','-9223372036854775808')
+  call fold('convert.int64.boolean','1','','1')
+  call fold('convert.int64.boolean','2','','','keep')
+  call fold('convert.boolean.int64','0','','0')
+  call fold('truth','1','','true')
+  call fold('truth','2','','','keep')
+  call fold('truth','31','','true','constant','c')
+  call fold('truth','30','','false','constant','c')
+  call fold('truth','2031','','','keep','c')
+  call fold('truth','312E30','','','keep','c')
+  call fold('truth','32','','','keep','c')
+  do i = 1 to 2
+    level = word('c g',i)
+    text = "if 1 then say 'yes'; else say 'no'"
+    raw = .lltestcompiler..request(level,text as .binary,artifacts,'branch.crexx',1000000,512,67108864,65536,0)
+    opt = .lltestcompiler..request(level,text as .binary,artifacts,'branch.crexx')
+    call check(raw.status() = 0 & opt.status() = 0, level || ' branch compiles: ' || opt.error())
+    before = raw.emissiongraph(); source = opt.graph(); after = opt.emissiongraph()
+    call check(source.text() = before.text(),level || ' inspectable original graph')
+    call check(after.blocks() < before.blocks(),level || ' dead branch removed')
+    call check(oracle(before) = 'yes;' & oracle(after) = 'yes;',level || ' independent source/optimised IR oracle')
+    unoptimised = raw.output(); optimised = opt.output()
+    call check(optimised.bytes() < unoptimised.bytes(),level || ' smaller RXAS')
+    call check(pos('core.branch',after.dump()) = 0,level || ' no constant branch')
+    original = before.binary(); change = llirservices..optimise(reference before,1); preserved = change.result()
+    call check(change.status() = 'limit' & bin2x(original) = bin2x(preserved.binary()),level || ' atomic opt failure')
+    call check(pos('branch.crexx',optimised.text()) > 0,level || ' source metadata retained')
+    storage = dereference after.storage(); validorigins = 1; tagged = 0
+    writer = .llir..writer(); call writer.append(reference optimised); copied = writer.finish()
+    do chunk = 1 to optimised.chunks()
+      id = optimised.origin(chunk)
+      if id < 0 | id > storage.count(9) then validorigins = 0
+      if id > 0 then tagged = 1
+      if copied.origin(chunk) <> id then validorigins = 0
+    end
+    call check(validorigins & tagged & copied.text() = optimised.text(),level || ' remapped chunk origins survive writer append')
+    call check(pos('test sink failure',optimised.stream(.rejectsink())) > 0,level || ' sink failure after optimisation')
+    bounded = .llir..writer(1); call bounded.append(reference optimised); rejected = bounded.finish()
+    call check(rejected.error() <> '' & rejected.bytes() = 0,level || ' bounded append publishes no partial output')
+  end
+  say 'OPT_BACKEND|checks=' || checks || '|failures=' || failures
+  return failures
+
+rejectsink: class implements .llir..sink
+  *: factory
+    return
+  write: method = .string
+    arg bytes = .binary
+    return 'test sink failure'
+
+fold: procedure = .void expose contract
+  arg name = .string, a = .string, b = .string, expected = .string, status = 'constant', level = 'g'
+  draft = .llir..builder(contract); at = draft.synthetic('boundary case')
+  store = dereference contract.data(); operation = contract.operation('crexx.' || level || '.' || name)
+  descriptor = operation.id()
+  /* Descriptors are queried for their declared types, never guessed from name. */
+  resulttype = .llir..typeid(contract.identity(),store.fieldtype(descriptor,2,1))
+  fn = draft.function('check',resulttype); entry = fn.block('entry')
+  lefttype = .llir..typeid(contract.identity(),store.fieldtype(descriptor,1,1))
+  left = entry.constant(lefttype,a,at); op = entry.operation(operation,at)
+  call op.input(store.fieldname(descriptor,1,1),left)
+  if store.arity(descriptor,1) = 2 then do
+    righttype = .llir..typeid(contract.identity(),store.fieldtype(descriptor,1,2))
+    right = entry.constant(righttype,b,at); call op.input(store.fieldname(descriptor,1,2),right)
+  end
+  built = op.finish(); call entry.returnvalue(built.result(),at)
+  graph = draft.finish(); facts = .llirservices..facts(reference graph)
+  result = llirservices..evaluate(reference graph,built.id(),facts)
+  call check(graph.error() = '' & result.status() = status,name || ' ' || a || ' ' || b || ': ' || result.message())
+  if result.status() = 'constant' then do
+    codec = store.codec(resulttype.id()) as .llir..typecodec
+    call check(codec.format(result.at(1)) = expected,name || ' exact result')
+  end
+  return
+
+/** Tiny separate oracle for the documented C/G branch demonstration. It has no
+ * evaluator calls and rejects unadmitted operations instead of guessing. C
+ * entry activation/context construction is inert for this literal-only case. */
+oracle: procedure = .string
+  arg graph = .llir..module
+  store = dereference graph.storage(); values = .binary[]; slots = .binary[]
+  op = store.get(2,store.get(1,1,3),2); output = ''; work = 0
+  do while op > 0 & work < 1000
+    work = work + 1; code = store.get(3,op,1); next = store.get(3,op,3)
+    select code
+      when 1 then values[store.result(op)] = store.bits(store.get(8,store.get(3,op,12),2))
+      when 2 then values[store.result(op)] = ''x as .binary
+      when 3 then values[store.result(op)] = slots[store.get(3,op,12)]
+      when 4 then slots[store.get(3,op,12)] = values[store.operand(op,1)]
+      when 5 then next = store.get(2,store.successor(op,1),2)
+      when 6 then do
+        truth = values[store.operand(op,1)]; next = store.get(2,store.successor(op,2 - <at..u8>(0) truth),2)
+      end
+      when 7 then return output
+      otherwise do
+        name = store.opname(code)
+        select name
+          when 'crexx.g.convert.int64.boolean' then values[store.result(op)] = values[store.operand(op,1)]
+          when 'crexx.g.truth' then do
+            value = values[store.operand(op,1)]; bits = '00'x as .binary
+            if <at..i64>(0) value = 1 then bits = '01'x as .binary
+            values[store.result(op)] = bits
+          end
+          when 'crexx.c.truth' then do
+            value = values[store.operand(op,1)]; bits = '00'x as .binary
+            if bin2x(value) = '31' then bits = '01'x as .binary
+            else if bin2x(value) <> '30' then return 'ERROR'
+            values[store.result(op)] = bits
+          end
+          when 'crexx.c.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
+          when 'crexx.g.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
+          when 'crexx.c.pool.new' then nop
+          when 'crexx.c.arguments.empty' then nop
+          when 'crexx.c.return.absent' then nop
+          otherwise return 'UNSUPPORTED:' || name
+        end
+      end
+    end
+    op = next
+  end
+  return 'LIMIT'
+
+check: procedure = .void expose checks failures
+  arg condition = .int, message = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL: ' || message
+  return

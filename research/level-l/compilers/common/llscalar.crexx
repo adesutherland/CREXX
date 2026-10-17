@@ -1,0 +1,185 @@
+/* cREXX License (MIT). Shared scalar codecs and checked declaration helpers. */
+options levelb
+namespace llscalar expose intadd inttext textcodec floatcodec decimalcodec scalarfold declare
+import rxfnsb
+import llir
+
+/** UTF-8 text literals, stored as exact bytes. Binary/Classic literal values use
+ * bytescodec and are not forced through Unicode decoding. */
+textcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bits = .binary
+    do
+      text = bits as .string
+      if bin2x(text as .binary) <> bin2x(bits) then return 'text does not round-trip as UTF-8'
+      return ''
+    on signal
+      return 'invalid UTF-8 text'
+    end
+    return 'invalid UTF-8 text'
+  format: method = .string
+    arg bits = .binary
+    return bits as .string
+
+/** Checked int64 addition. Overflow keeps the operation for runtime handling. */
+intadd: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','integer evaluation budget exhausted')
+    left = input.at(1); right = input.at(2)
+    a = <at..i64>(0) left; b = <at..i64>(0) right
+    if b > 0 then do
+      if a > 9223372036854775807 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    if b < 0 then do
+      if a < -9223372036854775808 - b then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+    end
+    bytes = .binary; call binresize bytes,8; <at..i64>(0) bytes = a + b
+    result = .llir..evaluation('constant'); call result.add(bytes)
+    return result
+
+inttext: class implements .llir..evaluator
+  *: factory
+    return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    codec = .llir..intcodec(); text = codec.format(input.at(1))
+    result = .llir..evaluation('constant'); call result.add(text as .binary)
+    return result
+
+/** Declarative signature helper; all type handles still belong to the live
+ * caller's registry. This is compiler vocabulary, not a generic IR opcode. */
+declare: procedure = .llir..operation
+  arg family = .llir..family, name = .string, types = .object[], inputs = .string, result = .int, attributes = '', state = 'none', failure = 'none', termination = 'returns'
+  op = family.operation(name)
+  item = .string; split = .int; type = .llir..typeid; i = .int
+  do i = 1 to words(inputs)
+    item = word(inputs,i); split = pos(':',item)
+    type = types[substr(item,split + 1) as .int] as .llir..typeid
+    call op.input(left(item,split - 1),type)
+  end
+  if result > 0 then call op.output('value',types[result] as .llir..typeid)
+  do i = 1 to words(attributes)
+    item = word(attributes,i); split = pos(':',item)
+    type = types[substr(item,split + 1) as .int] as .llir..typeid
+    call op.attribute(left(item,split - 1),type)
+  end
+  call op.state(state); call op.failure(failure); call op.termination(termination)
+  return op
+
+/** The admitted STEP05 rules. Checked scalar arithmetic never changes Classic
+ * numeric context or evaluates a user call. Noncanonical truth and overflow
+ * stay at runtime; core Boolean bytes differ from G's int64 Boolean values. */
+scalarfold: class implements .llir..evaluator
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode; return
+  evaluate: method = .llir..evaluation
+    arg input = .llir..request
+    if input.budget() < 1 then return .llir..evaluation('limit','scalar evaluation budget exhausted')
+    left = input.at(1); right = .binary; bits = .binary; a = .int; b = .int; value = .int
+    if _mode = 'ctruth' then do
+      spelling = bin2x(left)
+      if spelling <> '30' & spelling <> '31' then return .llir..evaluation('keep','Classic truth requires exact 0 or 1 bytes')
+      bits = '00'x as .binary
+      if spelling = '31' then bits = '01'x as .binary
+    end
+    else do
+      a = <at..i64>(0) left
+      if _mode = 'canonical' | _mode = 'gtruth' then do
+        if a <> 0 & a <> 1 then return .llir..evaluation('keep','noncanonical Boolean remains runtime work')
+        if _mode = 'canonical' then bits = left
+        else do
+          bits = '00'x as .binary
+          if a = 1 then bits = '01'x as .binary
+        end
+      end
+      else do
+        right = input.at(2); b = <at..i64>(0) right
+        maximum = 9223372036854775807; minimum = -9223372036854775808; overflow = 0
+        select _mode
+          when 'add' then do
+            if b > 0 then overflow = a > maximum - b
+            if b < 0 then overflow = a < minimum - b
+            if overflow = 0 then value = a + b
+          end
+          when 'sub' then do
+            if b > 0 then overflow = a < minimum + b
+            if b < 0 then overflow = a > maximum + b
+            if overflow = 0 then value = a - b
+          end
+          when 'mul' then do
+            if a > 0 & b > 0 then overflow = a > maximum <idiv> b
+            if a > 0 & b < 0 then overflow = b < minimum <idiv> a
+            if a < 0 & b > 0 then overflow = a < minimum <idiv> b
+            if a < 0 & b < 0 then overflow = a < maximum <idiv> b
+            if overflow = 0 then value = a * b
+          end
+          when 'eq' then value = a = b
+          when 'strict' then value = a = b
+          when 'ne' then value = a <> b
+          when 'lt' then value = a < b
+          when 'le' then value = a <= b
+          when 'gt' then value = a > b
+          when 'ge' then value = a >= b
+          otherwise return .llir..evaluation('keep','operation has no admitted scalar rule')
+        end
+        if overflow then return .llir..evaluation('keep','int64 overflow remains a runtime operation')
+        call binresize bits,8; <at..i64>(0) bits = value
+      end
+    end
+    result = .llir..evaluation('constant'); call result.add(bits); return result
+
+floatcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    value = text as .float
+    bytes = .binary; call binresize bytes,8; <at..f64>(0) bytes = value
+    return bytes
+  check: method = .string
+    arg bytes = .binary
+    if <blen>(bytes) <> 8 then return 'float64 needs eight bytes'
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return (<at..f64>(0) bytes) as .string
+
+/** Decimal constants retain validated source digits, avoiding a binary float
+ * round trip. Runtime conversion applies the declared G numeric contract. */
+decimalcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bytes = .binary
+    if <blen>(bytes) = 0 then return 'empty decimal'
+    text = bytes as .string; i = 1; digits = 0; dot = 0; exponent = 0
+    if left(text,1) = '+' | left(text,1) = '-' then i = 2
+    do while i <= length(text)
+      ch = substr(text,i,1)
+      if pos(ch,'0123456789') > 0 then digits = digits + 1
+      else if ch = '.' & dot = 0 & exponent = 0 then dot = 1
+      else if (ch = 'e' | ch = 'E') & exponent = 0 & digits > 0 then do
+        exponent = 1; digits = 0
+        if substr(text,i + 1,1) = '+' | substr(text,i + 1,1) = '-' then i = i + 1
+      end
+      else return 'invalid decimal spelling'
+      i = i + 1
+    end
+    if digits = 0 then return 'decimal needs digits'
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return bytes as .string

@@ -1,6 +1,0 @@
-Parse status: 1; errors: 1
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/recovery-fixed/earley/quoted-sync.settings: SETTINGS_PARSE at line 2, column 10 (byte 23): value.error: Expected a number or quoted string; found 'many'.
-  second = many
-           ^
-first -> "a;b"
-third -> 3

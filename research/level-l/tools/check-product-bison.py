@@ -6,12 +6,13 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 p = argparse.ArgumentParser()
-p.add_argument('levell', type=Path)
+p.add_argument('rxlang', type=Path)
 p.add_argument('bison', type=Path)
 p.add_argument('spec', type=Path)
 p.add_argument('work', type=Path)
-a = p.parse_args(); a.work.mkdir(parents=True, exist_ok=True)
+a = p.parse_args(); owned = tempfile.TemporaryDirectory(prefix='crexx-bison-'); a.work=Path(owned.name)
 result = subprocess.run([str(a.levell.resolve()), str(a.spec.resolve()), '--graph'], capture_output=True, check=True, timeout=600)
 (a.work / 'graph.txt').write_bytes(result.stdout)
 root = None; nodes = {}

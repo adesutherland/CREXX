@@ -5,6 +5,7 @@ This is a correctness oracle, not a benchmark or a claim of dialect conformance.
 The subset/gaps are listed in CONSUMERS.md. No native grammar is read here.
 """
 from pathlib import Path
+from fixture_support import write_fixture
 import json,re
 R=Path(__file__).resolve().parents[1]
 class Invalid(Exception): pass
@@ -196,9 +197,9 @@ for lang,seeds in SEEDS.items():
         canon=lambda ts:''.join(f'{k}@{a}:{b};' for k,a,b in ts)
         row=[lang,ident,split,s.encode().hex().upper(),str(lexstatus),str(parse),canon(raw) if not lexstatus else '',canon(tokens) if not lexstatus else '',selected]
         rows.append('|'.join(row)+'\n');records.append(dict(zip(['language','id','split','hex','lexical','parse','raw','tokens','selected'],row)))
-path=R/'evidence/consumers-reference.txt'
+path=R/'cases/fixtures/consumers-reference.txt'
 if path.exists() and path.read_text()!=''.join(rows):raise SystemExit('Frozen corpus differs; retain old version and explain revision first')
-path.write_text(''.join(rows));(R/'evidence/consumers-reference.json').write_text(json.dumps(records,indent=2)+'\n')
+write_fixture(path,''.join(rows))
 for lang in SEEDS:
-    (R/f'evidence/consumers-{lang}.txt').write_text(''.join(row for row in rows if row.startswith(lang+'|')))
+    write_fixture((R/f'cases/fixtures/consumers-{lang}.txt'),''.join(row for row in rows if row.startswith(lang+'|')))
 print('Independent consumer fragment fixtures:',len(rows))

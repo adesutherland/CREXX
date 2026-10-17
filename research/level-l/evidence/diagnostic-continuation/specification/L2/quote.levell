@@ -1,7 +1,0 @@
-options levell
-namespace broken
-item: token = 1
-parse: parser start last.good
-first: diagnostic = 'unclosed
-second: rule = )
-last.good: rule = item

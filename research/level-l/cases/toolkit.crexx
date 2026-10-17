@@ -88,7 +88,7 @@ parsers: procedure = .void
   call check retained.run() = 0, 'parse request owns grammar snapshot across later caller mutation'
   call check analysis.run() & analysis.first(rule,97) & analysis.first(rule,98) = 0, 'deferred shared analysis owns original grammar contents'
   limited = .llpeg..parser(simple,root,input,'packrat',2)
-  call check limited.run() = 2 & pos('resource exhausted',limited.error()) > 0, 'fuel exhaustion is distinct from syntax rejection'
+  call check limited.run() = 2 & pos('LL_RESOURCE_LIMIT: parse.work',limited.error()) > 0, 'fuel exhaustion is distinct from syntax rejection'
   diagnostic = .llcore..grammar('ordered')
   b = diagnostic.add(1,98,0,'required.b',1)
   neg = diagnostic.add(8,b,0,'not.b',2)
@@ -96,7 +96,7 @@ parsers: procedure = .void
   choice = diagnostic.add(3,neg,empty,'look.or.empty',4)
   root = diagnostic.add(2,choice,b,'document',5)
   p = .llpeg..parser(diagnostic,root,small,'packrat')
-  call check p.run() = 1 & pos('byte 0',p.error()) > 0 & pos('symbol 98',p.error()) > 0, 'memoized failure under negative predicate still explains a later required token'
+  call check p.run() = 1 & pos('byte 0',p.error()) > 0 & pos('expected required.b',p.error()) > 0, 'memoized failure under negative predicate still explains a later required token'
   say 'predicate diagnostic:' p.error()
   recursive = .llcore..grammar('squirrel')
   rule = recursive.add(5,0,0,'A',1)

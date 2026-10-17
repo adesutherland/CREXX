@@ -38,7 +38,7 @@ consumer: procedure = .void expose failures cases
     failures = failures + 1; say 'FAIL LR build:' language table.error(); return
   end
   dfa = .llmunch..automaton.legacy(data)
-  path = 'research/level-l/evidence/consumers-' || language || '.txt'; count = 0
+  path = 'research/level-l/cases/fixtures/consumers-' || language || '.txt'; count = 0
   do while lines(path)
     row = linein(path)
     if field(row,1) <> language then iterate

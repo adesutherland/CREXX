@@ -323,7 +323,7 @@ foundation.
 
 For an explanation of how source becomes tokens and trees, how the IF rules
 attach ELSE, and how the interpreter walks the result, read the
-[Level L process overview](../../lib/rxfnsl/doc/user-guide.md#overview-from-a-language-description-to-a-useful-program).
+[Level L process overview](../../langtools/doc/user-guide.md#overview-from-a-language-description-to-a-useful-program).
 It also distinguishes generated token stages from RexxScript's handwritten
 layout and concatenation passes.
 
@@ -421,5 +421,5 @@ The constructor `execution(program, fuel, maximum, fold)` enables folding by
 default. Set the fourth argument to `0` to inspect ordinary execution. Both
 paths have the same language and function behavior. Folding can reduce the
 number of execution ticks needed. The [worked analysis
-example](../examples/ast-analysis.crexx) and [Level L analysis guide](../../lib/rxfnsl/doc/user-guide.md#calculate-facts-about-a-tree)
+example](../examples/ast-analysis.crexx) and [Level L analysis guide](../../langtools/doc/user-guide.md#calculate-facts-about-a-tree)
 show the complete pipeline and the common result-table API.

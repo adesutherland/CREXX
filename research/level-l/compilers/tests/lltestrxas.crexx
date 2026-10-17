@@ -1,0 +1,36 @@
+/* cREXX License (MIT). Test-only cross-language corpus adapter.
+ * Never included in compiler products or installed libraries. */
+options levelb
+namespace lltestrxas expose compilation quote
+import rxfnsb
+import llir
+import llrxastext
+import llcrxas
+import lltrxas
+
+compilation: class
+  _level = .string
+  _c = .llcrxas..compilation
+  _g = .lltrxas..compilation
+  *: factory
+    arg graph = .llir..module, level = .string, artifacts = .string, bytes = 67108864, registers = 65536
+    _level = lower(level)
+    if _level = 'c' then _c = .llcrxas..compilation(graph,artifacts,bytes,registers)
+    else _g = .lltrxas..compilation(graph,artifacts,bytes,registers)
+    return
+  status: method = .int
+    if _level = 'c' then return _c.status()
+    return _g.status()
+  error: method = .string
+    if _level = 'c' then return _c.error()
+    return _g.error()
+  offset: method = .int
+    if _level = 'c' then return _c.offset()
+    return _g.offset()
+  output: method = .llir..output
+    if _level = 'c' then return _c.output()
+    return _g.output()
+
+quote: procedure = .string
+  arg bytes = .binary
+  return llrxastext..quote(bytes)

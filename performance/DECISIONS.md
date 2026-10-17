@@ -14,7 +14,7 @@ baselines and evidence required by unresolved qualification in HEAD.
 ## LEVEL-L-IR-01 — initial foundation storage
 
 Retain fixed-width row records behind Level L's checked IR handles. The
-[STEP02 mechanism screen](../lib/rxfnsl/compilers/evidence/step02-20261015/README.md)
+[STEP02 mechanism screen](../research/level-l/compilers/PLAN.md)
 verified identical values and buffer accounting for rows and packed columns.
 Rows constructed faster in those samples; columns slightly favoured field scans
 and updates. Both showed warmup trends. This supports the simple initial builder

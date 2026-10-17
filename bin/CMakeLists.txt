@@ -154,15 +154,15 @@ add_custom_command(
         BYPRODUCTS ${_crexx_rxbuild_grammar_rxas}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${_crexx_rxbuild_root}"
         COMMAND ${CMAKE_COMMAND}
-                -DLEVEL_L=$<TARGET_FILE:levell_cli>
+                -DLEVEL_L=$<TARGET_FILE:rxlang>
                 -DSPEC=${_crexx_rxbuild_spec}
                 -DOUTPUT=${_crexx_rxbuild_grammar_rxas}
                 -DFORMAT=rxas
-                -P "${CMAKE_CURRENT_SOURCE_DIR}/../lib/rxfnsl/tools/generate.cmake"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/../langtools/cmake/generate.cmake"
         COMMAND $<TARGET_FILE:rxas> -o "${_crexx_rxbuild_root}/rxbuildgrammar"
                 "${_crexx_rxbuild_grammar_rxas}"
-        DEPENDS levell_cli rxas "${_crexx_rxbuild_spec}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/../lib/rxfnsl/tools/generate.cmake"
+        DEPENDS rxlang rxas "${_crexx_rxbuild_spec}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/../langtools/cmake/generate.cmake"
         VERBATIM)
 add_custom_command(
         OUTPUT ${_crexx_rxbuild_reader_rxbin}

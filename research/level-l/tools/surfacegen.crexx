@@ -1,20 +1,20 @@
 /* Backend-only lowering of the existing authored Level L AST.
- * Frontend syntax/validation is owned by the pinned levell_bootstrap module.
+ * Frontend syntax/validation is owned by the pinned rxlang_bootstrap module.
  */
 options levell
 import rxfnsb
-import levell_bootstrap
+import rxlang_bootstrap
 main: procedure = .int expose bad
   arg argv = .string[]
   if argv[0] <> 2 then do
     say '/* usage: surfacegen authored.levell rules|wrapper */'; return 1
   end
-  token = .levell_bootstrap..levellastnode; index = .int
+  token = .rxlang_bootstrap..levellastnode; index = .int
   source = ''
   do while lines(argv[1])
     source = source || linein(argv[1]) || '0a'x
   end
-  result = levell_bootstrap..levell_parse(source)
+  result = rxlang_bootstrap..levell_parse(source)
   if result.status() <> 0 then do
     say '/* Level L error at byte' result.error_start() ':' result.error() '*/'; return 1
   end
@@ -86,18 +86,18 @@ main: procedure = .int expose bad
   else return 1
   return 0
 
-findkind: procedure = .levell_bootstrap..levellastnode
-  arg parent = .levell_bootstrap..levellastnode, kind = .string, name = .string
+findkind: procedure = .rxlang_bootstrap..levellastnode
+  arg parent = .rxlang_bootstrap..levellastnode, kind = .string, name = .string
   do index = 0 to parent.child_count() - 1
     node = parent.child_at(index)
     if node.kind() == kind then do
       if name == '' | upper(node.name()) == upper(name) then return node
     end
   end
-  return .levell_bootstrap..levellastnode('error')
+  return .rxlang_bootstrap..levellastnode('error')
 
 render: procedure = .string expose bad
-  arg node = .levell_bootstrap..levellastnode, root = .levell_bootstrap..levellastnode, lexer = .levell_bootstrap..levellastnode, depth = .int
+  arg node = .rxlang_bootstrap..levellastnode, root = .rxlang_bootstrap..levellastnode, lexer = .rxlang_bootstrap..levellastnode, depth = .int
   index = .int; out = .string
   if depth > 64 then do; bad = 1; return ''; end
   select node.kind()

@@ -1,3 +1,4 @@
+include("${CMAKE_CURRENT_SOURCE_DIR}/unicode/LevelL.cmake")
 cmake_minimum_required(VERSION 3.24)
 
 set(RXUNICODE_CASEFOLD_DATA

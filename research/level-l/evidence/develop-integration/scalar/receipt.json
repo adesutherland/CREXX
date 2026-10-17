@@ -1,7 +1,0 @@
-{
-  "runtime_overlap": 28,
-  "compiler_modes": 2,
-  "compiler_vms": 2,
-  "optimizer_disagreements": [],
-  "unexpected_failures": 0
-}

@@ -1,4 +1,0 @@
-STATUS|1
-LESSON_PARSE at line 1, column 11 (byte 10): command.error: Expected read NAME or write NAME NUMBER; found end of input.
-  write port
-            ^

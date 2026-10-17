@@ -1,0 +1,64 @@
+/* cREXX License (MIT). Owned semantic family registration. */
+options levelb
+namespace lltir expose registerfamilies
+import rxfnsb
+import llir
+import llscalar
+
+/** Register this frontend's operations. Shared scalar types carry typed ABI
+ * attributes; no other language's operations or frontend are loaded. */
+registerfamilies: procedure = .void
+  arg registry = reference .llir..schema
+  schema = dereference registry
+  g = schema.family('crexx.g',1)
+  integer = g.type('int64',.llir..intcodec() as .object)
+  text = g.type('text',.llscalar..textcodec() as .object)
+  op = g.operation('iadd')
+  call op.input('left',integer); call op.input('right',integer); call op.output('value',integer)
+  call op.state('none'); call op.failure('overflow'); call op.termination('returns')
+  call op.evaluator(.llscalar..intadd() as .object)
+  op = g.operation('itext')
+  call op.input('value',integer); call op.output('text',text)
+  call op.state('none'); call op.failure('none'); call op.termination('returns')
+  call op.evaluator(.llscalar..inttext() as .object)
+  op = g.operation('say')
+  call op.input('text',text)
+  call op.state('output'); call op.failure('io'); call op.termination('returns')
+  types = .object[]
+  types[1] = integer as .object; types[2] = text as .object; types[3] = g.type('boolean',.llir..intcodec() as .object) as .object
+  types[4] = g.type('float64',.llscalar..floatcodec() as .object) as .object
+  types[5] = g.type('decimal',.llscalar..decimalcodec() as .object) as .object
+  types[11] = schema.boolean() as .object
+  call llscalar..declare(g,'decimal.default',types,'',5,'','none','none')
+  names = 'int64 text boolean float64 decimal'
+  i = .int; j = .int; k = .int; name = .string; inputs = .string; op = .llir..operation
+  do i = 1 to 5
+    name = word(names,i)
+    do j = 1 to 5
+      if i <> j then do
+        op = llscalar..declare(g,'convert.' || name || '.' || word(names,j),types,'value:' || i,j,'','none','conversion')
+        if i = 1 & j = 2 then call op.evaluator(.llscalar..inttext() as .object)
+        if (i = 1 & j = 3) | (i = 3 & j = 1) then call op.evaluator(.llscalar..scalarfold('canonical') as .object)
+      end
+    end
+    do k = 1 to 7
+      op = llscalar..declare(g,name || '.' || word('eq ne lt le gt ge strict',k),types,'left:' || i || ' right:' || i,3)
+      if i = 1 then call op.evaluator(.llscalar..scalarfold(word('eq ne lt le gt ge strict',k)) as .object)
+    end
+    if i = 1 | i = 3 | i = 4 | i = 5 then do
+      do k = 1 to 4
+        op = llscalar..declare(g,name || '.' || word('add sub mul div',k),types,'left:' || i || ' right:' || i,i,'','none','arithmetic')
+        if i = 1 & k < 4 then call op.evaluator(.llscalar..scalarfold(word('add sub mul',k)) as .object)
+      end
+      call llscalar..declare(g,name || '.negative',types,'value:' || i,i,'','none','overflow')
+      call llscalar..declare(g,name || '.positive',types,'value:' || i,i)
+    end
+  end
+  call llscalar..declare(g,'fromtruth',types,'value:11',3)
+  op = llscalar..declare(g,'truth',types,'value:3',11)
+  call op.evaluator(.llscalar..scalarfold('gtruth') as .object)
+  call llscalar..declare(g,'boolean.not',types,'value:3',3)
+  call llscalar..declare(g,'boolean.xor',types,'left:3 right:3',3)
+  call llscalar..declare(g,'text.concat',types,'left:2 right:2',2,'','none','resource')
+  call llscalar..declare(g,'exit',types,'value:1',0,'','process','exit','diverges')
+  return

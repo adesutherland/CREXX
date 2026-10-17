@@ -1,0 +1,52 @@
+/* cREXX License (MIT). Independent Level L tool-service consumer. */
+options levelb
+import rxfnsb
+import llgenerate
+import lllimits
+import llir
+import llrxastext
+import llbinmeta
+import llfileoutput
+import rxfs
+
+main: procedure = .int expose failed
+  arg argv = .string[]
+  source = readbinary(argv[1]); failed = 0
+  request = .llgenerate..request(source,'rxas','lesson.levell')
+  call check(request.status() = 0,'generation')
+  artifact = request.output()
+  call check(artifact.bytes() > 0 & pos('.globals',artifact.text()) > 0,'assembly')
+  call check(request.output().text() = artifact.text(),'repeat ownership')
+  call check(artifact.text() as .binary = readbinary(argv[4]),'CLI/service parity')
+  graph = .llgenerate..request(source,'graph')
+  call check(graph.status() = 0 & pos('ROOT|',graph.output().text()) = 1,'graph')
+  limited = .llgenerate..request(source,'rxas','lesson.levell',.lllimits..policy(),0,1)
+  call check(limited.status() <> 0 & limited.output().bytes() = 0,'bounded atomic artifact')
+  bad = .llgenerate..request('invalid specification' as .binary,'rxas','broken.levell')
+  call check(bad.status() <> 0 & bad.output().bytes() = 0 & pos('broken.levell',bad.error()) > 0,'diagnostic')
+  format = .llgenerate..request(source,'invalid')
+  call check(format.status() = 2 & format.output().bytes() = 0,'format admission')
+  escaped = llrxastext..quote(x2bin('4100225CFF'))
+  call check(escaped = '"A\x00\x22\x5C\xFF"','byte escaping')
+  item = .llrxastext..instruction('load','r1,2',17)
+  call check(item.text() = 'load r1,2' & item.origin() = 17,'target record')
+  catalog = .llbinmeta..catalog(readbinary(argv[2]))
+  call check(catalog.error() = '','metadata envelope')
+  corrupt = .llbinmeta..catalog('broken' as .binary)
+  call check(pos('LL_RXBIN_IMPORT',corrupt.error()) = 1,'metadata rejection')
+  call check(artifact.text() = request.output().text(),'independent requests')
+  chunks = .binary[]; chunks[1] = x2bin('410042FF'); origins = .int[]; origins[1] = 0
+  data = .llir..output(chunks,origins,4,'')
+  call check(llfileoutput..publish(data,argv[3]) = '', 'atomic publish')
+  call check(readbinary(argv[3]) = x2bin('410042FF'),'exact file bytes')
+  call check(llfileoutput..publish(limited.output(),argv[3]) <> '', 'rejected publication')
+  call check(readbinary(argv[3]) = x2bin('410042FF'),'preserved destination')
+  ignored = rxfs..delete(argv[3])
+  say 'TOOL_SERVICES|failures=' || failed
+  return failed
+check: procedure = .void expose failed
+  arg condition = .int, name = .string
+  if condition then return
+  failed = failed + 1
+  say 'FAIL|' || name
+  return

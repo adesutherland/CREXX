@@ -37,7 +37,7 @@ main: procedure = .int expose failures
   ritem = findrule(lg,'recover.item'); rclose = findrule(lg,'recover.close'); rarray = findrule(lg,'recover.record')
   pg = pikaDoc.grammar(); recordrank = lower.rank(findrule(pg,'record'))
   dfa = .llmunch..automaton.legacy(gclexquote..tabledata())
-  path = 'research/level-l/evidence/lexrecovery-corpus.txt'
+  path = 'research/level-l/cases/fixtures/lexrecovery-corpus.txt'
   do while lines(path)
     row = linein(path); id = word(row,1); split = word(row,2); hex = word(row,3)
     clean = word(row,4) as .int; exact = word(row,5) as .int; later = word(row,6) as .int

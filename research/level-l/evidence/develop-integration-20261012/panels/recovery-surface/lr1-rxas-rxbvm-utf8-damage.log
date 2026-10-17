@@ -1,4 +1,0 @@
-Parse status: 1; errors: 1
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/recovery-surface/lr1/utf8-damage.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): LL_UTF8: malformed UTF-8; original bytes FF
-  source bytes: 6669727374203D20FF0A7468697264203D2033
-third -> 3

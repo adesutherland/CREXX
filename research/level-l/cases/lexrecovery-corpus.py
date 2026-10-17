@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Freeze lexical-damage comparison with a separate regular-language edit oracle."""
 from pathlib import Path
+from fixture_support import write_fixture
 import re,json,hashlib
 R=Path(__file__).resolve().parents[1]
 ALPHABET='x="ab;/*'
@@ -42,8 +43,8 @@ meta={'scope':'Quoted values and optional nonnested block comments; exact stated
       'rubric':['valid-input invariance','status and full/partial/resource distinction','stable located expectations and opening quote/comment',
                 'explicit cost model','untouched later record with exact source interval','bad recovery retained; no intended-repair oracle'],
       'cases':records}
-p=R/'evidence/lexrecovery-corpus.json';text=json.dumps(meta,indent=2)+'\n'
+p=R/'cases/fixtures/lexrecovery-corpus.json';text=json.dumps(meta,indent=2)+'\n'
 if p.exists() and p.read_text()!=text:raise SystemExit('Frozen lexical corpus differs')
-p.write_text(text)
-(R/'evidence/lexrecovery-corpus.txt').write_text(''.join(f"{x['id']} {x['split']} {x['source'].encode().hex().upper() or '-'} {int(x['clean'])} {x['exact_insert_delete_cost']} {x['untouched_later_start']}\n" for x in records))
+write_fixture(p,text)
+write_fixture((R/'cases/fixtures/lexrecovery-corpus.txt'),''.join(f"{x['id']} {x['split']} {x['source'].encode().hex().upper() or '-'} {int(x['clean'])} {x['exact_insert_delete_cost']} {x['untouched_later_start']}\n" for x in records))
 print('Frozen lexical recovery cases:',len(records),'heldout:',sum(x['split']=='heldout' for x in records))

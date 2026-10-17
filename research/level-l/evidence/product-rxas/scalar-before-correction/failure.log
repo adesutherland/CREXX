@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/tests_functional/check-scalar-conformance.py", line 37, in <module>
-    raise AssertionError(f'scalar mismatch against {mode}/{vm}; see {work}')
-AssertionError: scalar mismatch against noopt/rxtvm; see /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/scalar-proof

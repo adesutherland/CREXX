@@ -1,5 +1,0 @@
-[0/2] Re-checking globbed directories...
-[1/5] Building C object platform/CMakeFiles/test_mainframe_handlers_utf8.dir/tests/test_mainframe_handlers.c.o
-[2/5] Building C object platform/CMakeFiles/test_mainframe_handlers_byte.dir/tests/test_mainframe_handlers.c.o
-[3/5] Linking C executable bin/test_mainframe_handlers_utf8
-[4/5] Linking C executable bin/test_mainframe_handlers_byte

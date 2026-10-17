@@ -69,11 +69,11 @@ def smoke_level_l(prefix, source, work, run, extension):
     """Exercise the installed generator, library and modern script command."""
     binary = prefix / 'bin'
     grammar = work / 'settings.crexx'
-    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.crexx', grammar)
+    shutil.copy2(source / 'langtools/examples/settings/01-basic.crexx', grammar)
     reader_source = work / 'settings-reader.crexx'
-    shutil.copy2(source / 'lib/rxfnsl/examples/settings-reader.crexx', reader_source)
+    shutil.copy2(source / 'langtools/examples/settings-reader.crexx', reader_source)
     settings = work / 'settings.txt'
-    shutil.copy2(source / 'lib/rxfnsl/examples/settings.txt', settings)
+    shutil.copy2(source / 'langtools/examples/settings.txt', settings)
     linked = work / 'settings-linked'
     driver = binary / ('crexx' + extension)
     run('levell-program-build', [driver, '--program', linked, reader_source, grammar])

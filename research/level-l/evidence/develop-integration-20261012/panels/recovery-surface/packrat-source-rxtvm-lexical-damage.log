@@ -1,8 +1,0 @@
-Parse status: 1; errors: 2
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/recovery-surface/packrat/lexical-damage.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): LL_LEXICAL: unexpected '$'
-  first = $
-          ^
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/recovery-surface/packrat/lexical-damage.settings: SETTINGS_PARSE at line 2, column 10 (byte 19): value.error: Expected a number or quoted string; found 'many'.
-  second = many
-           ^
-third -> 3

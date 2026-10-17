@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-LL_NULLABLE_TOKEN: whitespace (line 22) accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.

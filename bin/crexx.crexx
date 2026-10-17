@@ -1754,7 +1754,7 @@ rxc = rxpath || 'bin' || dirsep || 'rxc'
 rxas = rxpath || 'bin' || dirsep || 'rxas'
 rxlink = rxpath || 'bin' || dirsep || 'rxlink'
 /* Generate providers before any consumer compiler can resolve their imports. */
-generator = rxpath || 'bin' || dirsep || 'levell'
+generator = rxpath || 'bin' || dirsep || 'rxlang'
 if isfile(generator || '.exe') then generator = generator || '.exe'
 if grammarCount > 0 then do
   if \isfile(generator) then do

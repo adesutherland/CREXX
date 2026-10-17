@@ -2,6 +2,7 @@
 """Independent insert/delete-distance oracle for a complete finite language."""
 import itertools
 from pathlib import Path
+from fixture_support import write_fixture
 
 
 def distance(source, target):
@@ -23,8 +24,8 @@ def main():
             source = "".join(letters)
             cost = min(distance(source, target) for target in accepted)
             rows.append((source.encode().hex() or "-") + " " + str(cost))
-    path = Path(__file__).resolve().parents[1] / "evidence/lrrepair-finite-oracle.txt"
-    path.write_text("\n".join(rows) + "\n")
+    path = Path(__file__).resolve().parents[1] / "cases/fixtures/lrrepair-finite-oracle.txt"
+    write_fixture(path,"\n".join(rows) + "\n")
     print(f"lrrepair_reference_cases={len(rows)}")
 
 

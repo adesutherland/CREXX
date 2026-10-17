@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comments/refuse-shield-recursive/input.levell: line 10, byte 258: bad: outside pattern: LL_LEX_RECURSION: unsupported recursive lexical rule quoted.text at line 12. DFA generation requires acyclic regular definitions; use a declared counter stage for nesting.

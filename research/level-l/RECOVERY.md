@@ -21,7 +21,7 @@ The recovery counts above exclude clean controls. The all-case summaries also
 include five clean later arrays and two clean later records, giving denominators
 29 and22 respectively. Earlier prose mixed all-case array counts with
 damaged-only lexical counts; this 11 October clarification changes no engine
-results. See [the exact reconciliation](evidence/user-guide/recovery-counts.json).
+results. See [current plan](PLAN.md).
 
 The array panel has40 cases/13 held out; the lexical panel34/13. Clean inputs
 remain clean. The quoted/comment lexer stops on24/28 damaged inputs; its four
@@ -57,15 +57,14 @@ for this fixture; equal cost does not make the frontier result better. Its
 previous algebraic ranking-reversal repair remains valid on its stated domain.
 Global recovery optimality remains unproved.
 
-## Evidence and units
+## Oracle contracts and units
 
-`evidence/recovery-summary.json` and `evidence/lexrecovery-summary.json` derive
-from complete outputs in tranches11/16. The independent recognizers use exhaustive
+The maintained recovery and lexical-recovery oracles in `cases/fixtures` use exhaustive
 short-input insertion/deletion BFS. Substitution costs2; native exact-oracle
 cross-checks cover selected small cases. Cost beyond the BFS bound is unknown.
 The original lexical oracle accidentally treated UTF-8 `é` as one character
 edit. The corrected oracle treats its two bytes separately; Q034 is cost2.
-`evidence/lexrecovery-oracle-unit-correction/` preserves the error. No apparent
+No apparent
 local/global gap from that unit mismatch is used as evidence.
 
 Work counters are engine-specific. c14/frontier array work is42916/46722 and

@@ -496,7 +496,7 @@ A deletes `abcd` and reads `e`; B records four missing `z` characters, reads
 machinery at budget 4. The outer sequence retains A at position 5 and prunes
 B. After the common `f`, B ranks better by the engine's own seven-key rule.
 The probe also checks that the normal recovery result is the completed A and
-prints the reachable completed B. `evidence/c14-pruning-reference.out` retains
+prints the reachable completed B. The maintained c14 pruning fixture demonstrates
 the trees and comparator values. This refutes global minimization of that
 ranking over these generated candidates; it says nothing about which repair
 a human would prefer. It is separate from Pika's recognition semantics.
@@ -1113,7 +1113,7 @@ flagged terminals are outside this policy. Unsupported cases return explicit
 failure rather than pretend an expectation set is complete. This pass does not
 repair text and does not prove which edit the author intended.
 
-The shared 40-case array panel is frozen in `evidence/recovery-corpus.json` with
+The shared 40-case array panel is frozen in `cases/fixtures/recovery-corpus.json` with
 27 development and 13 held-out cases. An independent recursive-descent recognizer
 and exhaustive insert/delete BFS through cost two provide clean outcomes and
 bounded minimum costs; three native Earley/edit-oracle cases independently agree.

@@ -400,6 +400,12 @@ add_subdirectory(interpreter)
 add_subdirectory(rxpa)
 add_subdirectory(preprocessor)
 add_subdirectory(lib)
+add_subdirectory(langtools)
+option(CREXX_BUILD_RESEARCH_COMPILERS "Build experimental Level L source compilers" OFF)
+set(CREXX_RESEARCH_LANGUAGES "C;G" CACHE STRING "Experimental compiler languages to build")
+if(CREXX_BUILD_RESEARCH_COMPILERS)
+  add_subdirectory(research/level-l/compilers)
+endif()
 add_subdirectory(rexxscript)
 add_subdirectory(demos)
 add_subdirectory(examples)
@@ -872,4 +878,15 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
         # of installs after their targets moved to tests/performance/.
         PATTERN "rx_rcc5f_stats_boxed.rxplugin" EXCLUDE
         PATTERN "rx_rcc5f_stats_direct.rxplugin" EXCLUDE
-        PATTERN "rx_rxvector01_direct.rxplugin" EXCLUDE)
+        PATTERN "rx_rxvector01_direct.rxplugin" EXCLUDE
+        # Historical research outputs in bin must not leak from incremental trees.
+        PATTERN "rxfnsl-base.rxbin" EXCLUDE
+        PATTERN "levell" EXCLUDE
+        PATTERN "levell.exe" EXCLUDE
+        PATTERN "levelllib.rxbin" EXCLUDE
+        PATTERN "llcompilers.rxbin" EXCLUDE
+        PATTERN "llccompiler.rxbin" EXCLUDE
+        PATTERN "llgcompiler.rxbin" EXCLUDE
+        PATTERN "llctarget.rxbin" EXCLUDE
+        PATTERN "llrxc-c*" EXCLUDE
+        PATTERN "llrxc-g*" EXCLUDE)
