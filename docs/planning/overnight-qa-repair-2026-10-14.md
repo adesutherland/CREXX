@@ -1,5 +1,139 @@
 # Overnight QA repair — 14 October 2026
 
+## 18 October continuation — binary-import registration and Windows service oracle
+
+### Vision and intended outcomes
+
+Adrian requested work in the existing hotfix checkout, synchronization with
+HEAD, repair of failing overnight QA and publication to develop. Hotfix was
+fast-forwarded to develop `ff97dbfbb443a2dd44f9ed08c007186ec326776a`, preserving
+unrelated files in both checkouts. Restore the existing import regressions and
+the independent Level L CLI/service comparison on native Windows. Preserve
+compiler/runtime/language semantics, exact service artifact bytes, and strict
+binary-file publication assertions. Publish the qualified repairs together.
+
+### Acceptance criteria
+
+1. **O18-AC01 — verified:** account for every failed job in
+   [Deep Build QA 39090761473](https://github.com/adesutherland/CREXX/actions/runs/39090761473)
+   and [Sanitizer QA 39095054676](https://github.com/adesutherland/CREXX/actions/runs/39095054676).
+   Both qualified develop `db2fabdd6cbd036874a27fcb6d14832a696e647e`, despite
+   scheduled-workflow metadata naming master. All five Deep platforms fail
+   three misspelled `driverary_*.cmake` paths; Unix platforms also fail the
+   standalone bootstrap install-helper call. Windows service cases report
+   only `CLI/service parity`. macOS ASan fails the same three paths and
+   bootstrap fixture; Linux stops at the first missing path. Inspected build
+   and CTest sanitizer artifacts contain no ASan/LSan or UBSan diagnostic.
+2. **O18-AC02 — verified:** register the three existing `binary_*.cmake` scripts
+   correctly; their original assertions pass in current normal Debug and
+   maintained Apple ASan. Preserve the existing serial scheduling/900-second
+   backstop for the global-import matrix; no matrix expansion.
+3. **O18-AC03 — verified locally:** reproduce Windows-style CRLF CLI output against the
+   existing service fixture, then compare the CLI text after CRLF-to-LF
+   conversion with the exact service artifact. Preserve every other byte and
+   binary-publication assertion. Opt/noopt cases on both VMs pass with native
+   and CRLF CLI oracles. Include these small service cases in normal smoke QA
+   so Windows publication checks exercise the repaired comparison.
+4. **O18-AC04 — verified locally:** current core `stage-product` and focused prerequisites
+   build without warnings; affected import correctness and service regressions
+   pass. Reuse the unchanged bootstrap/oracle-preparation proof at
+   `d166e13c2`/`ff97dbfbb` recorded in `research/level-l/PLAN.md` rather than
+   reimplementing or repeating it. Record commands, qualified inputs, results
+   and platform limits here before the substantive push. No full manual
+   overnight dispatch is needed for these QA-only repairs.
+5. **O18-AC05 — publication prepared:** publish separate reviewable causes together to hotfix
+   and develop, verify remote refs and synchronize the existing develop
+   checkout while preserving its unrelated dirty files. Normal automatic
+   Build/CodeQL are expected to pass; report only observed hosted outcomes,
+   without status-only commits. Delete task-created temporary diagnostics.
+
+### Implementation steps
+
+1. **O18-STEP01 — done (AC01):** inspect jobs and single temporary copies of
+   failed logs/artifacts, synchronize hotfix, inspect the owning plans,
+   authoring guide and sanitizer protocol, and identify already integrated
+   repairs. Record this continuation before implementation.
+2. **O18-STEP02 — done (AC02/04):** correct the three script references,
+   regenerate current build declarations, and run their unchanged Debug and
+   maintained-ASan tests with refreshed product prerequisites.
+3. **O18-STEP03 — done (AC03/04):** reproduce the CRLF oracle discrepancy,
+   correct only the test's platform text comparison, retain the independent
+   service assertions, label service smoke coverage, and run both oracle
+   forms and the relevant ordinary correctness panel. No language or
+   architecture decision is introduced.
+4. **O18-STEP04 — locally qualified; publication prepared (AC04/05):** summarize final qualification and limits,
+   review diffs, commit each cause, check develop for concurrent changes,
+   publish and reconcile both checkouts without discarding unrelated work.
+
+### Qualification and publication
+
+Qualified inputs: base `ff97dbfbb443a2dd44f9ed08c007186ec326776a` plus the
+three CMake script-name corrections, service fixture/registration changes and
+the current documentation diff. Compiler, runtime and generator implementation
+inputs are unchanged by this repair.
+
+- Normal Debug `stage-product`, `rxvme` and `compiler_exit_bin` completed;
+  `cmake --build cmake-build-debug --target qa-prep-smoke --parallel 8`
+  then passed without warnings. The first multi-target Make invocation refreshed
+  the old build graph but could not resolve the newly introduced service target
+  from its initially loaded Makefile; the fresh preparation invocation resolved
+  and built both service targets. This was build-tree refresh, not a product
+  failure or a source repair.
+- `ctest --test-dir cmake-build-debug --tests-from-file <selection>
+  --parallel 30 --output-on-failure` passed **213/213**, 621.12 seconds.
+  The disposable selection contained every `essential`/`smoke` test plus the
+  seven import cases named in O18-AC02/STEP03: the three binary tests,
+  `global_import_types`, both `source_import_private_dependency_*` cases and
+  `inline_return_conversions`. This exercises the compiler, assembler, linker
+  and both VM dispatches; the original import assertions remain intact.
+- Before repair, injecting CRLF into the existing generated CLI oracle at the
+  base revision made all four opt/noopt and VM service cases fail only
+  `CLI/service parity`, matching the native Windows logs. With the repair,
+  all four CRLF cases pass; changing one other ASCII byte makes all four fail
+  the same parity assertion. Native-LF cases pass in the 213-test panel.
+  Private oracle and binary-output files are automatically removed.
+- Maintained Apple ASan prerequisite build passed via `tools/asan-run.sh
+  --build-dir cmake-build-debugasan --phase build --build-target stage-product
+  --build-target rxvme --build-target compiler_exit_bin --build-target
+  levell_services_opt --build-target levell_services_noopt --build-jobs 6
+  --build-leaks off --leaks off --no-live-tail`. It emits existing Apple SDK
+  `sprintf` deprecation warnings in unchanged C sources; no suppression or
+  product change is introduced here. Apple LeakSanitizer is unsupported.
+  The focused command below passed **11/11**, 482.54 seconds, without an
+  AddressSanitizer diagnostic. The global-import matrix passed in 336.78
+  seconds under its unchanged serial scheduling and 900-second limit.
+  This is focused local Apple ASan proof, not a full sanitizer, Linux leak,
+  native Windows or release qualification.
+- The separate latest completed Build failure at
+  [39108991776](https://github.com/adesutherland/CREXX/actions/runs/39108991776)
+  accepted notarization and recovered stapling on its fourth attempt, then
+  exhausted all four validation attempts on CloudKit connection loss
+  (`NSURLErrorDomain -1005`, exit 68). The bounded retry helper behaved as
+  specified. Keep its strict validation gate; this external service failure
+  does not justify changing retry policy or bypassing validation.
+
+Focused sanitizer command (the same seven import cases and four service cases
+also passed in the normal Debug selection):
+
+```sh
+tools/asan-run.sh --build-dir cmake-build-debugasan --phase ctest \
+  --regex '^(binary_(forward_dependencies|global_import_types|storage_selector_dependencies)|global_import_types|source_import_private_dependency_.*|inline_return_conversions|levell_services_.*)$' \
+  --test-jobs 4 --build-leaks off --leaks off --no-live-tail
+```
+
+Final diff review and generated CTest inspection confirm the three script
+paths exist, all four service cases carry smoke coverage, and the existing
+global-import scheduling/timeout is unchanged. Both integrated preparation
+repairs retain their earlier qualification. All required local publication
+gates pass. Prepare the two distinct causes as separate commits and publish
+them together to hotfix/develop; normal automatic Build/CodeQL are expected
+to pass, with real Apple ticket-service availability remaining external.
+Remote-ref and occupied-checkout integrity verification completes O18-AC05
+and is reported live, without a status-only repository push. Temporary command
+logs, downloaded artifacts, oracle files and test workspaces are deleted after
+extracting this summary. The unrelated develop work and hotfix Python cache
+are preserved.
+
 ## 17 October continuation — validation ticket-service recovery
 
 The authorised CI monitor observed a remaining gap in AC-03 at develop

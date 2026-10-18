@@ -222,7 +222,7 @@ add_test(NAME binary_forward_dependencies
         -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_forward_dependencies_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_forward_dependencies.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_forward_dependencies.cmake)
 set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
@@ -278,7 +278,7 @@ add_test(NAME binary_global_import_types
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_global_import_types.crexx
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_global_import_types_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_global_import_types.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_global_import_types.cmake)
 set_tests_properties(binary_global_import_types PROPERTIES
     LABELS "compiler;imports;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
@@ -294,7 +294,7 @@ add_test(NAME binary_storage_selector_dependencies
         -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
         -DBIN=${CMAKE_BINARY_DIR}/bin
         -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_storage_selector_dependencies_ws
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/driverary_storage_selector_dependencies.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_storage_selector_dependencies.cmake)
 set_tests_properties(binary_storage_selector_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;binary;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib;compiler_exit_bin")
