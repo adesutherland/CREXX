@@ -13,6 +13,9 @@ add_custom_command(OUTPUT "${_generated_grammar}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/generate.cmake"
   DEPENDS rxlang "${_generated_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/generate.cmake"
   VERBATIM)
+# Share one producer between generated-module and callable-service preparation.
+# Target ordering prevents independent parallel Make consumers racing this file.
+add_custom_target(levell_generated_grammar DEPENDS "${_generated_grammar}")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/levell_example.rxbin"
   COMMAND $<TARGET_FILE:rxas> levell_example
   DEPENDS rxas "${_generated_grammar}"
@@ -21,7 +24,7 @@ crexx_add_import_root(levell_generated_test_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports" OUTPUT_VARIABLE _generated_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin"
     "${CMAKE_CURRENT_BINARY_DIR}/levell_example.rxbin"
-  DEPENDS library rxfnsl rxlanglib)
+  DEPENDS library rxfnsl rxlanglib levell_generated_grammar)
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin"
   COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
     -i "${CMAKE_CURRENT_BINARY_DIR}/imports"
@@ -377,6 +380,7 @@ foreach(_mode opt noopt)
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/${_mode}-linked" "${_services}/${_mode}" ${_service_files}
     DEPENDS rxc rxas rxlink levell_service_test_imports ${_service_imports} services.crexx VERBATIM)
   add_custom_target(levell_services_${_mode} ALL DEPENDS "${_services}/${_mode}-linked.rxbin")
+  add_dependencies(levell_services_${_mode} levell_generated_grammar)
   add_dependencies(testlangtools levell_services_${_mode})
   foreach(_vm rxtvm rxbvm)
     if(TARGET ${_vm})

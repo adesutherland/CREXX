@@ -370,6 +370,96 @@ local compatibility gap in RA-AC07/RA-STEP08; hosted verification remains the
 normal push-triggered workflows. Temporary tools and diagnostics are deleted
 after verification.
 
+### Standalone and service-test preparation repair
+
+**Approved continuation, 18 October 2026:** Adrian authorised updating local
+develop, preserving active work, implementing both repairs, focused tests and
+publication, then resuming lightweight CI monitoring on the new head. The
+checkout fast-forwarded to `3eb8a76d160e56ec93a19ac2bf40839267454dea`
+(rxbuild-only RXPP handling and report-writer sample), preserving all 115
+pre-existing uncommitted files including this plan. Acceptance below remains
+bounded to these repairs; the local checks below qualify their publication.
+
+The [Linux Debug Optimizer Parity job](https://github.com/adesutherland/CREXX/actions/runs/39070474392/job/117515399533)
+at `db2fabdd6cbd036874a27fcb6d14832a696e647e` passed 1004/1009 tests.
+The bootstrap-order fixture failed at configuration because the shared tool
+declarations called product installation helpers in standalone mode. Four
+opt/noopt service cases failed because their preparation targets did not build
+the generated `levell_example.rxas` CLI oracle. These are separate preparation
+gaps following the layout change, with no optimizer mismatch or sanitizer
+diagnostic in the failing output.
+
+Both mechanisms reproduced locally before any implementation edit:
+`ctest --test-dir cmake-build-debug -R '^rxlang_bootstrap_build_order$'
+--output-on-failure` fails with the same unknown install helper. With only the
+generated CLI oracle temporarily removed, building `levell_services_opt` and
+`levell_services_noopt` leaves it absent; `levell_services_opt_rxtvm` then fails
+with the same READBINARY error. The original generated file and its timestamp
+were restored. Temporary diagnostic files were deleted.
+
+**Outcome:** keep standalone bootstrap independent of native CLI installation,
+and make each service preparation target supply its actual runtime inputs in
+a fresh or partially prepared tree. Preserve normal product installation,
+single-producer bootstrap ordering, freshness and the independent service/CLI
+comparison. No compiler, language or runtime semantics change.
+
+1. **RA-PREP-AC01 — verified locally (RA-AC06/07):** the real standalone project configures
+   without product install helpers; the existing parallel-Make regression passes
+   clean, missing-L2, changed-input and no-op checks. Normal product installation
+   still registers `rxlang` and `rxlanglib`.
+2. **RA-PREP-AC02 — verified locally (RA-AC05/07):** preparing either service target
+   recreates a missing generated CLI oracle, keeps no-op builds unchanged and
+   supplies all four existing opt/noopt and VM service regressions.
+3. **RA-PREP-AC03 — local checks verified; publication prepared (RA-AC09/10):** focused local checks and the required
+   product build pass; current guides explain these boundaries. Preserve active
+   work, delete temporary diagnostics, publish only the repairs, and follow the
+   new normal workflows without claiming hosted success from local proof.
+
+| Step | Work and gate |
+|---|---|
+| RA-STEP09 — complete locally | Reproduce the standalone configuration failure; guard product installation with the existing standalone boundary; verify the actual standalone configuration, Make fixture and normal product inventory. Serves PREP-AC01/03. |
+| RA-STEP10 — complete locally | Reproduce the missing-oracle failure; give the oracle one shared producer with its file freshness dependencies and order both service targets after it; check missing-output recovery and no-op behavior, then run the four service cases and product build. Serves PREP-AC02/03. |
+
+The 18 October continuation covers these narrow repairs in the existing main
+develop checkout. Keep the distinct causes reviewable and publish
+them together after focused qualification; reuse unchanged semantic evidence.
+
+**Local qualification, 18 October 2026:** base
+`3eb8a76d160e56ec93a19ac2bf40839267454dea` plus the two CMake repairs above.
+The actual standalone project configures with Ninja and Unix Makefiles.
+`python3 -B langtools/tests/check-bootstrap-build.py --source <checkout>
+--work unused --cmake <cmake> --make /usr/bin/make` passes the existing
+real-declaration fixture's clean, missing-L2, changed-input and no-op checks.
+This is the same command registered by `rxlang_bootstrap_build_order`, reused
+without a redundant rerun. A component install into a disposable prefix with
+spaces installs `rxlang` and `rxlanglib.rxbin` byte-identical to the products.
+
+`cmake --build cmake-build-debug --target stage-product levell_services_opt
+levell_services_noopt testlevell_generated --parallel 8` passes without warnings.
+After refreshing the incoming product prerequisites, removing only the generated
+CLI oracle and preparing each service target separately restores its exact
+bytes while leaving both service images' bytes and timestamps unchanged. A
+subsequent preparation is a no-op. The original specification/tool file
+dependencies remain intact; the generated-module consumer also waits for the
+shared producer.
+
+`ctest --test-dir cmake-build-debug --output-on-failure --parallel 4 -R
+'^(levell_services_.*|levell_generated_.*|levell_product_inventory|rxbuild_demo_build_order|rxbuild_directory_missing|rxbuild_directory_blocked)$'`
+passes all ten tests: four service mode/VM cases, two generated-module cases,
+product inventory and three rxbuild regressions after the incoming update.
+The existing bootstrap fixture and service cases reproduce the original
+failures; normal fresh hosted preparation will exercise the repaired
+dependencies. No duplicate test or expanded aggregate was added.
+
+These results qualify the combined local preparation repair, not a fresh
+sanitizer, full optimizer-parity, cross-platform or release pass. Compiler,
+runtime and test-oracle semantics are unchanged. The two repairs are prepared
+as separate commits for one develop publication; normal push-triggered Build
+CREXX and CodeQL runs will be monitored at that exact head. All 114 unrelated
+active files remain uncommitted and byte-identical; temporary diagnostics are
+deleted after extracting this summary. Hosted results belong in the workflow
+links and conversation, without a status-only follow-up commit.
+
 ### Reorganisation verification and remaining scope
 
 Qualified in the main `develop` checkout against base
