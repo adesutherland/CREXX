@@ -146,6 +146,8 @@ if(NOT CREXX_LEVEL_L_STANDALONE)
   add_subdirectory(tests)
 endif()
 
-# Published products owned by this component.
-crexx_install_targets(rxlang)
-crexx_install_bytecode(rxlanglib "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin")
+# The standalone graph produces bytecode without native product installation.
+if(NOT CREXX_LEVEL_L_STANDALONE)
+  crexx_install_targets(rxlang)
+  crexx_install_bytecode(rxlanglib "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin")
+endif()

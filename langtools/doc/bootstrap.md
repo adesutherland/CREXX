@@ -86,6 +86,8 @@ cmake --build build-level-l --target rxfnsl levell_unicode_lexer --parallel 8
 
 This standalone project neither defines nor builds re2c or Level G targets. It
 produces portable bytecode artifacts rather than packaging a native CLI.
+Product install declarations are omitted in this mode; the normal repository
+build still installs `rxlang` and `rxlanglib.rxbin`.
 `-DCREXX_LEVEL_L_NOOPT=ON` disables compiler and assembler optimization for the
 Level L modules and bootstrap stages. The full product build uses normal tool
 optimization. `langtools/bootstrap/build-local.sh opt|noopt` wraps the same standalone graph
