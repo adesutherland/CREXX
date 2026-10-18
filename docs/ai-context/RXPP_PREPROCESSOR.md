@@ -216,12 +216,8 @@ rxlink generated.rxbin external1.rxbin external2.rxbin ...
   -> member.rxbin
 ```
 
-The linked result is not automatically executed.
-
-`##LINKGO` takes no arguments and is valid only when `##LINK` is also present.
-It marks the recipe for the `crexx.exe` driver, which runs the linked member
-after a successful link. The ordinary `##LINK` recipe remains link-only; it
-never requests execution.
+The linked result is not automatically executed. To run it, invoke the linked
+RXBIN separately with `rxtvm`, or use an `rxbuild` plan with a `RUN` phase.
 
 Compilation or assembly errors stop the recipe before linking. The driver
 continues processing later command-line source members after a successful
@@ -254,7 +250,6 @@ external runtime/link modules:
 import|data_CallCatalog
 external|../lib/CallCatalog.rxbin
 link|CallCatalog_linked
-linkgo|1
 norun|1
 ```
 
@@ -377,3 +372,10 @@ macro constant token emission on the authored buffer.
 `rxpp_diagnostics` checks raw/localized RXPP diagnostic rendering.
 `rxpp_diagnostic_catalogs` checks RXPP-emitted `RXPP_*` keys against the shared
 catalogs and complete German/Dutch translations.
+
+`##RXBUILD REQUIRED` marks an RXPP source that must be processed as part of a
+controlled `.build` plan. Direct `rxpp`/`crexx` preprocessing rejects the
+source. The `rxbuild` `COMPILE RXPP` phase passes the internal `--rxbuild`
+option, which permits preprocessing to continue. The option is an invocation
+mode for the build tool and is not intended as a general source-language
+feature.

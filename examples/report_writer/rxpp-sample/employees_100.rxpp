@@ -1,0 +1,28 @@
+options levelb
+##RXBUILD REQUIRED /* Must be processed through the associated .build plan. */
+##cflag nosrcmap
+import reportreader
+/*
+ * The report definition is embedded as RXPP data. RXPP turns the block into
+ * the employees[] string array below.
+ *
+ * Run this example through report_writer_100.build. The build plan performs
+ * RXPP preprocessing, compilation, assembly, and execution with the required
+ * import and runtime paths.
+ */
+##dalias report    /* allow a REPORT block command */
+
+REPORT EMPLOYEES
+  INPUT "examples/report_writer/rxpp-sample/employees_100.data"
+  INPUT_FORMAT DELIMITED
+  DELIMITER ";"
+  OUTPUT "cmake-build-release/report_writer/rxpp-sample/employees_100.txt" FORMAT TEXT
+  COLUMN department POSITION 1 WIDTH 16
+  COLUMN name       POSITION 2 WIDTH 20
+  COLUMN salary     POSITION 3 WIDTH 10 FORMAT "9,999.99"
+  BREAK department
+  TOTAL salary
+END REPORT
+
+/* invoke the report */
+return reportreader..run_lines('EMPLOYEES',employees)

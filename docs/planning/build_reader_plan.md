@@ -180,3 +180,38 @@ Validation of this repair, based on `2796992b24f2e555c21ae2c8103c19135bdba4c1`:
 - Normal push-triggered Build CREXX and CodeQL are expected to verify the
   repair; local success does not establish their result. No extra hosted matrix
   or status-only follow-up commit is required. Temporary diagnostics are deleted.
+
+## Explicit RXBUILD-only RXPP sources
+
+### Vision and intended outcomes
+
+Allow an RXPP source to declare that it is an application input for a
+controlled `.build` pipeline rather than a directly compilable standalone
+source. A `##RXBUILD REQUIRED` declaration stops direct RXPP invocation with
+an actionable diagnostic, while `rxbuild` passes an explicit internal mode
+option so its own RXPP phase can process the same source. The central `crexx`
+driver remains unchanged.
+
+### Acceptance criteria
+
+- AC-38: RXPP recognizes `##RXBUILD REQUIRED` and rejects direct preprocessing
+  without build mode, with a diagnostic naming the source that requires the
+  associated `.build` plan.
+- AC-39: RXPP accepts the declaration with the internal `--rxbuild` option,
+  and `rxbuild` supports `COMPILE RXPP` for the controlled phase.
+- AC-40: A following `COMPILE PROGRAM` compiles the generated source with the
+  output directory on its import path, and `RUN` supplies that directory to
+  the VM for external modules.
+- AC-41: Direct failure, controlled report-writer success, and existing simple
+  plan regression checks pass without changing the central `crexx` driver.
+
+### Implementation steps
+
+- STEP-34: **In progress.** Add RXPP mode parsing, the `##RXBUILD REQUIRED`
+  validation, and the stable diagnostic catalog entries. Serves AC-38.
+- STEP-35: **In progress.** Restore `COMPILE RXPP` in the current
+  `tools/rxbuild` grammar and reader, pass `--rxbuild`, and mark the
+  report-writer source. Serves AC-39 and AC-40.
+- STEP-36: Update user and component documentation, rebuild the packaged tools,
+  and run direct-failure, controlled-success, and regression checks. Serves
+  AC-41.

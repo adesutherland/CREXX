@@ -54,5 +54,9 @@ The `.rxbin` remains the portable application image. Windows produces the
 `.exe`; Linux and macOS produce an extensionless native executable using the
 compiler configured for the current CREXX build.
 
+`COMPILE RXPP` preprocesses an RXPP source into `OUTPUT.crexx` beneath
+`OUTPUT_DIR`. If the source contains `##RXBUILD REQUIRED`, this is the
+supported phase because it invokes RXPP with the internal `--rxbuild` mode.
+
 For the complete user guide, see
 [docs/rxbuild.md](../../docs/rxbuild.md).

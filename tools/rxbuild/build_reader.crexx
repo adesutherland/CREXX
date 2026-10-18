@@ -85,6 +85,7 @@ execute_plan: procedure = .int
     kind = fields[1]
     if kind = 'GRAMMAR' then rc = compile_grammar(action_value(fields,2),action_value(fields,3),action_value(fields,4))
     if kind = 'READER' then rc = compile_reader(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5))
+    if kind = 'RXPP' then rc = compile_rxpp(action_value(fields,2),action_value(fields,3),action_value(fields,4))
     if kind = 'PROGRAM' then rc = compile_program(action_value(fields,2),action_value(fields,3),action_value(fields,4))
     if kind = 'APPLICATION' then rc = compile_application(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5),action_value(fields,6))
     if kind = 'EXE' then rc = create_exe(action_value(fields,2),action_value(fields,3),action_value(fields,4),action_value(fields,5))
@@ -183,6 +184,14 @@ collect_node: procedure = .int
       call append_action actions,'READER',dir,source,dir || '/' || grammar_output,output,''
       call report_reader dir,source,grammar_output,output
     end
+    else if kind = 'COMPILE RXPP' then do
+      attrs = attribute_list(tree,statement)
+      dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
+      source = attribute_value(tree,attrs,'source.attribute',1,variables)
+      output = attribute_value(tree,attrs,'output.attribute',1,variables)
+      call append_action actions,'RXPP',dir,source,output,'',''
+      call report_rxpp dir,source,output
+    end
     else if kind = 'COMPILE PROGRAM' then do
       attrs = attribute_list(tree,statement)
       dir = attribute_value(tree,attrs,'output.dir.attribute',1,variables)
@@ -238,6 +247,10 @@ report_grammar: procedure
 report_reader: procedure
   arg dir = .string, source = .string, grammar = .string, output = .string
   say 'RXBUILD RESOLVED: COMPILE READER OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" DEPENDS_ON = "' || project_path(dir || '/' || grammar || '.rxbin') || '" OUTPUT = "' || project_path(dir || '/' || output || '.rxbin') || '";'
+
+report_rxpp: procedure
+  arg dir = .string, source = .string, output = .string
+  say 'RXBUILD RESOLVED: COMPILE RXPP OUTPUT_DIR = "' || project_path(dir) || '" SOURCE = "' || project_path(source) || '" OUTPUT = "' || project_path(dir || '/' || output || '.crexx') || '";'
 
 report_program: procedure
   arg dir = .string, source = .string, output = .string
@@ -432,7 +445,7 @@ attribute_value: procedure = .string
   if attrs < 0 then return ''
   do i = 1 to tree.count(attrs)
     wrapper = tree.child(attrs,i)
-    if tree.name(wrapper) <> 'grammar.attribute' & tree.name(wrapper) <> 'reader.attribute' & tree.name(wrapper) <> 'program.compile.attribute' & tree.name(wrapper) <> 'program.attribute' & tree.name(wrapper) <> 'application.attribute' & tree.name(wrapper) <> 'exe.attribute' & tree.name(wrapper) <> 'run.attribute' then iterate
+    if tree.name(wrapper) <> 'grammar.attribute' & tree.name(wrapper) <> 'reader.attribute' & tree.name(wrapper) <> 'rxpp.attribute' & tree.name(wrapper) <> 'program.compile.attribute' & tree.name(wrapper) <> 'program.attribute' & tree.name(wrapper) <> 'application.attribute' & tree.name(wrapper) <> 'exe.attribute' & tree.name(wrapper) <> 'run.attribute' then iterate
     node = tree.child(wrapper,1)
     if tree.name(node) <> wanted then iterate
     if wanted = 'argument.attribute' then return substitute_value(unquote(tree.text(tree.child(node,2 + occurrence))),variables)
@@ -606,6 +619,32 @@ compile_reader: procedure = .int
   say 'BUILD READER:' project_path(source)
   return run_command('reader',argv,input_lines)
 
+compile_rxpp: procedure = .int
+  arg dir = .string, source = .string, output = .string
+  rc = ensure_project_directories(dir,output)
+  if rc <> 0 then return rc
+  output_source = project_path(dir) || '/' || output || '.crexx'
+  macro_library = .rxfs..abspath(.rxfs..loadpath() || '/maclib.rexx')
+  argv = .string[]
+  argv[1] = tool('rxpp')
+  argv[2] = '--rxbuild'
+  argv[3] = '-I'
+  argv[4] = project_path(source)
+  argv[5] = '-O'
+  argv[6] = output_source
+  argv[7] = '-M'
+  argv[8] = macro_library
+  input_lines = .string[]
+  say 'BUILD RXPP:' project_path(source)
+  rc = run_command('rxpp preprocess',argv,input_lines)
+  if rc <> 0 then return rc
+  if .rxfs..isfile(output_source) = 0 then do
+    say 'RXBUILD: RXPP did not create ' || output_source
+    return 1
+  end
+  say 'BUILD RXPP SOURCE:' output_source
+  return 0
+
 compile_program: procedure = .int
   arg dir = .string, source = .string, output = .string
   rc = ensure_project_directories(dir,output)
@@ -618,6 +657,8 @@ compile_program: procedure = .int
   argv[2] = '--program'
   argv[3] = project_path(dir) || '/' || output
   argv[4] = project_path(source)
+  argv[5] = '-i'
+  argv[6] = project_path(dir)
   input_lines = .string[]
   say 'BUILD PROGRAM:' project_path(source)
   return run_command('program',argv,input_lines)
@@ -719,10 +760,12 @@ execute_program: procedure = .int
   arg dir = .string, program = .string, argument = .string, value = .string, input = .string
   argv = .string[]
   argv[1] = tool('rxtvm')
-  argv[2] = project_path(dir) || '/' || program || '.rxbin'
+  argv[2] = '-l'
+  argv[3] = project_path(dir)
+  argv[4] = project_path(dir) || '/' || program || '.rxbin'
   if argument <> '' then do
-    argv[3] = argument
-    argv[4] = value
+    argv[5] = argument
+    argv[6] = value
   end
   input_lines = .string[]
   if input <> '' then input_lines[1] = input
@@ -792,6 +835,7 @@ statement_kind: procedure = .string
   if name = 'loop.statement' then return 'LOOP'
   if name = 'compile.grammar.statement' then return 'COMPILE GRAMMAR'
   if name = 'compile.reader.statement' then return 'COMPILE READER'
+  if name = 'compile.rxpp.statement' then return 'COMPILE RXPP'
   if name = 'compile.program.statement' then return 'COMPILE PROGRAM'
   if name = 'compile.application.statement' then return 'COMPILE APPLICATION'
   if name = 'create.exe.statement' then return 'CREATE EXE'

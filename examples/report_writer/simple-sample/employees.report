@@ -1,0 +1,13 @@
+# External report definition for the simple report-writer sample.
+# It reads employee records and writes a grouped, fixed-width report.
+REPORT EMPLOYEES
+  INPUT "examples/report_writer/simple-sample/employees.data"
+  INPUT_FORMAT DELIMITED
+  DELIMITER ";"
+  OUTPUT "cmake-build-release/report_writer/simple-sample/employees.txt" FORMAT TEXT
+  COLUMN department POSITION 1 WIDTH 16
+  COLUMN name       POSITION 2 WIDTH 20
+  COLUMN salary     POSITION 3 WIDTH 10 FORMAT "9,999.99"
+  BREAK department
+  TOTAL salary
+END REPORT

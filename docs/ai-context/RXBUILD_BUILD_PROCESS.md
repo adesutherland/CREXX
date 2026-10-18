@@ -11,7 +11,7 @@ The process has two separate parts:
 1. CMake packages the `rxbuild` command with its Level L grammar and Level B
    reader.
 2. The command reads a `.build` plan and performs its declared phases:
-   grammar compilation, reader/program compilation, application compilation,
+   grammar compilation, reader/RXPP/program compilation, application compilation,
    native executable packaging, and program execution.
 
 The grammar recognizes structure. The reader interprets the parse tree and
@@ -52,6 +52,11 @@ provide clean-build ordering; file edges rebuild consumers when imports change.
 The `rxbuild_example` target must therefore build from a clean tree on its own,
 without depending on another product target to happen to prepare its imports.
 
+The main `crexx` driver also recognizes a single `.build` input and delegates
+it to the sibling `rxbuild` executable. This is an editor/terminal convenience
+only; `rxbuild` remains the implementation of the build-plan language and the
+normal `.crexx`, `.rxpp`, and `.levell` dispatch paths are unchanged.
+
 Build the command with:
 
 ```powershell
@@ -71,15 +76,19 @@ For `rxbuild tools/rxbuild/example.build`, the reader:
 4. reports `RXBUILD_PARSE` with source location information on failure;
 5. walks the named parse tree and collects the plan actions;
 6. invokes `crexx --library` for `COMPILE GRAMMAR`;
-7. invokes `crexx --program` for `COMPILE READER`;
-8. invokes `crexx --program` for `COMPILE PROGRAM`;
-9. invokes the declared compiler with `rxtvm`, then direct `rxc` and `rxas`,
+7. invokes `rxc` and `rxas` for `COMPILE READER`, with the output directory
+   on the compiler import path so the declared grammar module is available;
+8. invokes `rxpp` for `COMPILE RXPP`, writing the generated `.crexx` source
+   under its declared output directory;
+9. invokes `rxc` and `rxas` for `COMPILE PROGRAM`, with that output directory
+   on the import path;
+10. invokes the declared compiler with `rxtvm`, then direct `rxc` and `rxas`,
    for `COMPILE APPLICATION`;
-10. invokes `crexx --native` on the generated application source for
+11. invokes `crexx --native` on the generated application source for
     `CREATE EXE`, then publishes the requested platform-native executable
     (`.exe` on Windows, extensionless on Linux/macOS);
-11. invokes `rxtvm` for `RUN`; and
-12. returns the first failing phase status.
+12. invokes `rxtvm` for `RUN` with `WORK_DIR` as its working location; and
+13. returns the first failing phase status.
 
 Relative paths in a plan are resolved from the repository root discovered by
 the reader. The command tools are resolved beside `rxbuild`, so the process
@@ -92,6 +101,7 @@ The initial grammar supports one or more semicolon-terminated statements:
 ```text
 COMPILE GRAMMAR OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE READER OUTPUT_DIR = "..." SOURCE = "..." DEPENDS_ON = "..." OUTPUT = "...";
+COMPILE RXPP OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE PROGRAM OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE APPLICATION OUTPUT_DIR = "..." SOURCE = "..." DEPENDS_ON = "..." COMPILER = "..." OUTPUT = "...";
 CREATE EXE OUTPUT_DIR = "..." APPLICATION = "..." OUTPUT = "...";

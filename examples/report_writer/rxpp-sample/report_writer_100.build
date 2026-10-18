@@ -1,0 +1,32 @@
+/* Preprocess, compile, and run the RXPP report application. */
+
+COMPILE GRAMMAR
+  OUTPUT_DIR = "cmake-build-release/report_writer/rxpp-sample"
+  SOURCE     = "examples/report_writer/grammar/report.levell"
+  OUTPUT     = "reportgrammar"
+;
+
+COMPILE READER
+  OUTPUT_DIR = "cmake-build-release/report_writer/rxpp-sample"
+  SOURCE     = "examples/report_writer/report_reader.crexx"
+  DEPENDS_ON = "reportgrammar"
+  OUTPUT     = "report_reader"
+;
+
+COMPILE RXPP
+  OUTPUT_DIR = "cmake-build-release/report_writer/rxpp-sample"
+  SOURCE     = "examples/report_writer/rxpp-sample/employees_100.rxpp"
+  OUTPUT     = "employees_100"
+;
+
+COMPILE PROGRAM
+  OUTPUT_DIR = "cmake-build-release/report_writer/rxpp-sample"
+  SOURCE     = "cmake-build-release/report_writer/rxpp-sample/employees_100.crexx"
+  OUTPUT     = "employees_100"
+;
+
+RUN
+  WORK_DIR  = "cmake-build-release/report_writer/rxpp-sample"
+  PROGRAM   = "employees_100"
+  STDIN     = ""
+;

@@ -144,6 +144,7 @@ RXC-LC-0 = Level C-diagnose.
 RXC-LC-IMPLICIT_ADDRESS = Impliciete ADDRESS-opdracht; zet de opdrachttekst tussen aanhalingstekens of gebruik ADDRESS expliciet.
 RXPP_ALREADY_SOURCE_MAPPED = Invoer bevat al options srcmap: {file}.
 RXPP_ALREADY_SOURCE_MAPPED_HINT = Voer rxc uit op de gegenereerde source-map-uitvoer; voer rxpp niet twee keer uit.
+RXPP_BUILD_REQUIRED = Deze RXPP-bron vereist rxbuild; voer het bijbehorende .build-plan uit: {file}.
 RXPP_EXPANSION_LIMIT = Maximale macro-expansielimiet overschreden na {count}.
 RXPP_MCALL_DEPTH = .mcall-nestingsdiepte {depth} overschrijdt de limiet {limit} in macro {macro}.
 RXPP_FILE_TERMINATED = RXPP-verwerking van {file} beëindigd.

@@ -1,0 +1,21 @@
+/* Build and run the report writer example. */
+
+COMPILE GRAMMAR
+  OUTPUT_DIR = "cmake-build-release/report_writer/simple-sample"
+  SOURCE     = "examples/report_writer/grammar/report.levell"
+  OUTPUT     = "reportgrammar"
+;
+
+COMPILE READER
+  OUTPUT_DIR = "cmake-build-release/report_writer/simple-sample"
+  SOURCE     = "examples/report_writer/report_reader.crexx"
+  DEPENDS_ON = "reportgrammar"
+  OUTPUT     = "report_reader"
+;
+
+RUN
+  WORK_DIR = "cmake-build-release/report_writer/simple-sample"
+  PROGRAM  = "report_reader"
+  ARGUMENT = "-a" "examples/report_writer/simple-sample/employees.report"
+  STDIN    = ""
+;

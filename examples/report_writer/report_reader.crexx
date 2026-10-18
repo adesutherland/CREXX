@@ -1,0 +1,446 @@
+/*
+ * First cREXX Report Writer reader.
+ *
+ * The reader consumes a report definition accepted by reportgrammar and
+ * applies it to a delimiter-separated input file.  Records are streamed
+ * through the report specification and written to the configured text file,
+ * or to the console when no OUTPUT statement is present.
+ * Input data may contain blank lines or lines beginning with '#'; those lines
+ * are ignored.
+ *
+ * Example report definition:
+ *
+ *   REPORT EMPLOYEES
+ *     INPUT "employees.data"
+ *     INPUT_FORMAT DELIMITED
+ *     DELIMITER ";"
+ *     COLUMN department POSITION 1 WIDTH 16
+ *     COLUMN name       POSITION 2 WIDTH 20
+ *     COLUMN salary     POSITION 3 WIDTH 10 FORMAT "9,999.99"
+ *     BREAK department
+ *     TOTAL salary
+ *   END REPORT
+ */
+options levelb
+namespace reportreader expose main run_lines
+import rxfnsb
+import llcore
+import lllanguage
+import llsource
+import lltree
+import reportgrammar
+
+state: initialiser expose rw_input rw_delimiter rw_input_format rw_output rw_output_format rw_break rw_total rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  rw_input = ''
+  rw_delimiter = ';'
+  rw_input_format = 'DELIMITED'
+  rw_output = ''
+  rw_output_format = 'TEXT'
+  rw_break = ''
+  rw_total = ''
+  rw_column_count = 0
+  rw_column_name = .string[]
+  rw_column_position = .int[]
+  rw_column_width = .int[]
+  rw_column_format = .string[]
+
+main: procedure = .int
+  arg argv = .string[]
+
+  if argv[0] <> 1 then do
+    say 'usage: report_reader report-definition.report'
+    return 2
+  end
+
+  definition = .binary
+  do
+    definition = readbinary(argv[1])
+  on signal
+    say 'REPORT_IO: cannot read ' || argv[1]
+    return 2
+  end
+
+  return execute_definition(definition,argv[1])
+
+
+/* Execute a report definition held in an RXPP-generated string array. */
+run_lines: procedure = .int
+  arg report_name = .string, body = .string[]
+  definition = .string
+  i = .int
+
+  definition = 'REPORT ' || report_name || '0a'x
+  do i = 1 to body[0]
+    definition = definition || body[i] || '0a'x
+  end
+  definition = definition || 'END REPORT' || '0a'x
+  return execute_definition(definition as .binary,'<RXPP report ' || report_name || '>')
+
+
+/* Parse the definition, build its report specification, and execute it. */
+execute_definition: procedure = .int
+  arg definition = .binary, source = .string
+
+  request = .lllanguage..request(reportgrammar..language(),definition)
+  status = request.parse()
+  if status <> 0 then do
+    say source || ': ' || llsource..diagnostic(definition,request.offset(),'REPORT_PARSE',request.error())
+    return status
+  end
+
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'REPORT_TREE: ' || tree.error()
+    return 3
+  end
+
+  call initialise_report
+  status = read_report_definition(tree)
+  if status <> 0 then return status
+
+  return run_report()
+
+
+initialise_report: procedure expose rw_input rw_delimiter rw_input_format rw_output rw_output_format rw_break rw_total rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  rw_input = ''
+  rw_delimiter = ';'
+  rw_input_format = 'DELIMITED'
+  rw_output = ''
+  rw_output_format = 'TEXT'
+  rw_break = ''
+  rw_total = ''
+  rw_column_count = 0
+  rw_column_name = .string[]
+  rw_column_position = .int[]
+  rw_column_width = .int[]
+  rw_column_format = .string[]
+  return
+
+
+/* Extract the semantic statements from the report parse tree. */
+read_report_definition: procedure = .int expose rw_input rw_delimiter rw_input_format rw_output rw_output_format rw_break rw_total rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  arg tree = .lltree..view
+  root = tree.root()
+  report = .int
+  statement_list = .int
+  i = .int
+  node = .int
+  statement = .int
+
+  do i = 1 to tree.count(root)
+    node = tree.child(root,i)
+    if tree.name(node) = 'report' then report = node
+  end
+
+  if report = 0 then return report_failure('report node not found')
+
+  do i = 1 to tree.count(report)
+    node = tree.child(report,i)
+    if tree.name(node) = 'statement.list' then statement_list = node
+  end
+
+  if statement_list = 0 then return report_failure('statement list not found')
+
+  do i = 1 to tree.count(statement_list)
+    statement = tree.child(statement_list,i)
+    if tree.name(statement) = 'separator' then iterate
+    if tree.name(statement) <> 'statement' then iterate
+    if tree.count(statement) = 0 then iterate
+    statement = tree.child(statement,1)
+    call read_statement(tree,statement)
+  end
+
+  if rw_input = '' then return report_failure('INPUT is missing')
+  if rw_column_count = 0 then return report_failure('no COLUMN definitions found')
+  if rw_break <> '' & break_position() = 0 then return report_failure('BREAK column is not defined')
+  if rw_total <> '' & total_position() = 0 then return report_failure('TOTAL column is not defined')
+  return 0
+
+
+/* Interpret one report statement. */
+read_statement: procedure expose rw_input rw_delimiter rw_input_format rw_output rw_output_format rw_break rw_total rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  arg tree = .lltree..view, statement = .int
+  name = tree.name(statement)
+
+  select
+    when name = 'input.statement' then do
+      source = tree.child(statement,2)
+      rw_input = node_text(tree,source)
+    end
+
+    when name = 'input.format.statement' then do
+      rw_input_format = translate(node_text(tree,tree.child(statement,2)))
+    end
+
+    when name = 'delimiter.statement' then do
+      rw_delimiter = node_text(tree,tree.child(statement,2))
+    end
+
+    when name = 'output.statement' then do
+      rw_output = node_text(tree,tree.child(statement,2))
+      do i = 3 to tree.count(statement)
+        node = tree.child(statement,i)
+        if tree.name(node) = 'output.format' then do
+          rw_output_format = translate(node_text(tree,tree.child(node,2)))
+        end
+      end
+    end
+
+    when name = 'column.statement' then call read_column tree,statement
+
+    when name = 'break.statement' then do
+      rw_break = node_text(tree,tree.child(statement,2))
+    end
+
+    when name = 'total.statement' then do
+      rw_total = node_text(tree,tree.child(statement,2))
+    end
+  end
+  return
+
+
+/* Read one fixed-column definition. */
+read_column: procedure expose rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  arg tree = .lltree..view, statement = .int
+
+  rw_column_count = rw_column_count + 1
+  n = rw_column_count
+  rw_column_name[n] = node_text(tree,tree.child(statement,2))
+  rw_column_position[n] = n
+  rw_column_width[n] = 12
+  rw_column_format[n] = ''
+
+  do i = 3 to tree.count(statement)
+    node = tree.child(statement,i)
+    name = tree.name(node)
+
+    if name = 'column.position' then do
+      rw_column_position[n] = tree.text(tree.child(node,2)) as .int
+    end
+    else if name = 'number' then do
+      /* The direct number following WIDTH is the width value. */
+      if i > 1 then do
+        previous = tree.name(tree.child(statement,i - 1))
+        if previous = 'widthword' then rw_column_width[n] = tree.text(node) as .int
+      end
+    end
+    else if name = 'column.format' then do
+      rw_column_format[n] = node_text(tree,tree.child(node,2))
+    end
+  end
+  return
+
+
+/* Execute the report against the configured delimited input. */
+run_report: procedure = .int expose rw_input rw_delimiter rw_input_format rw_output rw_output_format rw_break rw_total rw_column_count rw_column_name rw_column_position rw_column_width rw_column_format
+  line = .string
+  fields = .string[]
+  current_break = .string
+  previous_break = .string
+  subtotal = .float
+  available = .int
+  rc = .int
+  close_rc = .int
+
+  if translate(rw_input_format) <> 'DELIMITED' then do
+    say 'REPORT_WARNING: input format ' || rw_input_format || ' treated as delimited text'
+  end
+
+  if lines(rw_input) < 0 then return report_failure('cannot read INPUT ' || rw_input)
+  if rw_output <> '' then do
+    if erasefile(rw_output) <> 0 then return report_failure('cannot create OUTPUT ' || rw_output)
+  end
+
+  rc = print_heading()
+  if rc <> 0 then return report_failure('cannot write report heading')
+  previous_break = ''
+  subtotal = 0
+
+  do while lines(rw_input) > 0
+    line = linein(rw_input)
+    if strip(line) = '' then iterate
+    if left(strip(line),1) = '#' then iterate
+    fields = qsplit(line,rw_delimiter)
+    current_break = field_value(fields,break_position())
+
+    if previous_break <> '' & current_break <> previous_break then do
+      rc = print_total(previous_break,subtotal)
+      if rc <> 0 then return report_failure('cannot write break total')
+      subtotal = 0
+    end
+
+    if rw_break <> '' & current_break <> previous_break then do
+      rc = emit_report_line('')
+      if rc <> 0 then return report_failure('cannot write break separator')
+      rc = emit_report_line('[' || rw_break || ': ' || current_break || ']')
+      if rc <> 0 then return report_failure('cannot write break heading')
+    end
+
+    rc = print_record(fields)
+    if rc <> 0 then return report_failure('cannot write report record')
+    if rw_total <> '' then subtotal = subtotal + numeric_value(field_value(fields,total_position()))
+    previous_break = current_break
+  end
+
+  if rw_total <> '' & previous_break <> '' then do
+    rc = print_total(previous_break,subtotal)
+    if rc <> 0 then return report_failure('cannot write final total')
+  end
+
+  if rw_output <> '' then do
+    close_rc = lineout(rw_output)
+    if close_rc <> 0 then return report_failure('cannot close OUTPUT ' || rw_output)
+  end
+  return 0
+
+
+print_heading: procedure = .int expose rw_column_count rw_column_name rw_column_width
+  i = .int
+  line = .string
+  rc = .int
+  line = ''
+  do i = 1 to rw_column_count
+    line = line || fixed_text(rw_column_name[i],rw_column_width[i])
+  end
+  rc = emit_report_line(line)
+  if rc <> 0 then return rc
+  return emit_report_line(copies('-',length(line)))
+
+
+print_record: procedure = .int expose rw_column_count rw_column_position rw_column_width rw_column_format
+  arg fields = .string[]
+  i = .int
+  value = .string
+  line = .string
+  line = ''
+  do i = 1 to rw_column_count
+    value = field_value(fields,rw_column_position[i])
+    value = format_column(value,rw_column_format[i])
+    line = line || fixed_text(value,rw_column_width[i])
+  end
+  return emit_report_line(line)
+
+
+print_total: procedure = .int expose rw_total rw_column_count rw_column_width rw_column_name rw_column_position rw_column_format
+  arg group = .string, amount = .float
+  position = .int
+  formatted = .string
+  line = .string
+  line = 'TOTAL ' || group || ': '
+  if rw_total <> '' then do
+    position = total_position()
+    formatted = format_column(amount,rw_column_format[position])
+    line = line || rw_total || '=' || formatted
+  end
+  return emit_report_line(line)
+
+
+break_position: procedure = .int expose rw_break rw_column_count rw_column_name rw_column_position
+  i = .int
+  if rw_break = '' then return 0
+  do i = 1 to rw_column_count
+    if translate(rw_column_name[i]) = translate(rw_break) then return rw_column_position[i]
+  end
+  return 0
+
+
+total_position: procedure = .int expose rw_total rw_column_count rw_column_name rw_column_position
+  i = .int
+  if rw_total = '' then return 0
+  do i = 1 to rw_column_count
+    if translate(rw_column_name[i]) = translate(rw_total) then return rw_column_position[i]
+  end
+  return 0
+
+
+field_value: procedure = .string
+  arg fields = .string[], position = .int
+  if position = 0 | position > fields[0] then return ''
+  return strip(fields[position])
+
+
+numeric_value: procedure = .float
+  arg value = .string
+  return value as .float
+
+
+fixed_text: procedure = .string
+  arg value = .string, width = .int
+  if width <= 0 then return ''
+  if length(value) > width then return left(value,width)
+  return left(value,width)
+
+
+node_text: procedure = .string
+  arg tree = .lltree..view, node = .int
+  raw = tree.text(node)
+  if tree.name(node) = 'string' then do
+    if length(raw) >= 2 then do
+      raw = changestr('""',substr(raw,2,length(raw) - 2),'"')
+    end
+  end
+  return raw
+
+
+report_failure: procedure = .int
+  arg message = .string
+  say 'REPORT_ERROR: ' || message
+  return 4
+
+
+/* Write one rendered report line without retaining the report in memory. */
+emit_report_line: procedure = .int expose rw_output
+  arg line = .string
+  if rw_output = '' then do
+    say line
+    return 0
+  end
+  return lineout(rw_output,line)
+
+
+/* Format the first supported numeric mask: 9,999.99. */
+format_column: procedure = .string
+  arg value = .string, mask = .string
+  dot = .int
+  decimals = .int
+  rendered = .string
+  negative = .string
+  integer = .string
+  fraction = .string
+  grouped = .string
+  chunk = .string
+  if mask = '' then return value
+  if pos('9',mask) = 0 then return value
+
+  dot = pos('.',mask)
+  if dot = 0 then return value
+  decimals = length(mask) - dot
+  rendered = format(value,,decimals)
+  negative = ''
+  if left(rendered,1) = '-' then do
+    negative = '-'
+    rendered = substr(rendered,2)
+  end
+
+  dot = pos('.',rendered)
+  if dot = 0 then do
+    integer = rendered
+    fraction = ''
+  end
+  else do
+    integer = left(rendered,dot - 1)
+    fraction = substr(rendered,dot + 1)
+  end
+
+  grouped = ''
+  do while length(integer) > 3
+    chunk = right(integer,3)
+    if grouped = '' then grouped = chunk
+    else grouped = chunk || ',' || grouped
+    integer = left(integer,length(integer) - 3)
+  end
+  if grouped = '' then grouped = integer
+  else grouped = integer || ',' || grouped
+
+  if fraction = '' then return negative || grouped
+  return negative || grouped || '.' || fraction

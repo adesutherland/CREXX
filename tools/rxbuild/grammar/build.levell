@@ -9,6 +9,7 @@
  *   DO OVER NAME AS item ... END;
  *   COMPILE GRAMMAR
  *   COMPILE READER
+ *   COMPILE RXPP
  *   COMPILE PROGRAM
  *   COMPILE APPLICATION
  *   CREATE EXE
@@ -42,6 +43,7 @@ namespace rxbuildgrammar
 compileword: token
 grammarword: token
 readerword: token
+rxppword: token
 applicationword: token
 createword: token
 exeword: token
@@ -135,6 +137,7 @@ parse: parser semantics contextfree input tokens start program
          | loop.statement
          | compile.grammar.statement
          | compile.reader.statement
+         | compile.rxpp.statement
          | compile.program.statement
          | compile.application.statement
          | create.exe.statement
@@ -185,6 +188,24 @@ parse: parser semantics contextfree input tokens start program
     rule = compileword readerword
            reader.attributes
            terminator
+
+  /* ---------------------------
+   * Preprocess RXPP source
+   * ---------------------------
+   */
+
+  compile.rxpp.statement:
+    rule = compileword rxppword
+           rxpp.attributes
+           terminator
+
+  rxpp.attributes:
+    rule = rxpp.attribute*
+
+  rxpp.attribute:
+    rule = output.dir.attribute
+         | source.attribute
+         | output.attribute
 
   reader.attributes:
     rule = reader.attribute*
@@ -339,6 +360,12 @@ classify: tokenstage start 1
     transform stage classify state 1
       take identifier text "READER"
       emit readerword
+      next 1
+
+  word.rxpp:
+    transform stage classify state 1
+      take identifier text "RXPP"
+      emit rxppword
       next 1
 
   word.application:
