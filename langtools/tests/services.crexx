@@ -17,7 +17,9 @@ main: procedure = .int expose failed
   artifact = request.output()
   call check(artifact.bytes() > 0 & pos('.globals',artifact.text()) > 0,'assembly')
   call check(request.output().text() = artifact.text(),'repeat ownership')
-  call check(artifact.text() as .binary = readbinary(argv[4]),'CLI/service parity')
+  /* SAY uses native text newlines; the callable artifact retains exact LF bytes. */
+  cliText = readbinary(argv[4]) as .string
+  call check(artifact.text() as .binary = changestr('0d0a'x,cliText,'0a'x) as .binary,'CLI/service parity')
   graph = .llgenerate..request(source,'graph')
   call check(graph.status() = 0 & pos('ROOT|',graph.output().text()) = 1,'graph')
   limited = .llgenerate..request(source,'rxas','lesson.levell',.lllimits..policy(),0,1)

@@ -460,6 +460,18 @@ active files remain uncommitted and byte-identical; temporary diagnostics are
 deleted after extracting this summary. Hosted results belong in the workflow
 links and conversation, without a status-only follow-up commit.
 
+The separate Windows failure in overnight Deep QA
+[39090761473](https://github.com/adesutherland/CREXX/actions/runs/39090761473)
+is a text-oracle mismatch: all four MinGW and both MSVC service cases report
+`CLI/service parity`, rather than the missing-file failure above. The CLI emits
+text through SAY, so native Windows output uses CRLF; the callable artifact
+contains LF. The [overnight repair continuation](../../docs/planning/overnight-qa-repair-2026-10-14.md)
+owns its reproducer, qualification and hotfix/develop publication. Compare the
+CLI after CRLF-to-LF conversion using the original binary equality, preserving
+all other artifact bytes and the existing binary-file publication assertions.
+The small opt/noopt service cases also belong to normal smoke preparation on
+Windows; no service, compiler or runtime implementation changes.
+
 ### Reorganisation verification and remaining scope
 
 Qualified in the main `develop` checkout against base

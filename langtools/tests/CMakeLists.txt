@@ -389,6 +389,7 @@ foreach(_mode opt noopt)
       set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES
         PASS_REGULAR_EXPRESSION "TOOL_SERVICES[|]failures=0" TIMEOUT 300 LABELS "level-l;optimizer-parity")
       crexx_register_test_prep_targets(TESTS levell_services_${_mode}_${_vm} TARGETS levell_services_${_mode} ${_vm})
+      crexx_label_smoke_tests(levell_services_${_mode}_${_vm})
     endif()
   endforeach()
 endforeach()

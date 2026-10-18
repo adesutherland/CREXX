@@ -61,8 +61,10 @@ failure locations. Existing generated-runtime CTests include an exact-budget
 3,000-item named-tree regression. The installed package smoke uses the driver
 for both source forms and checks that a failed grammar preserves the program.
 
-The independent callable-service tests compare their generated RXAS with the
-CLI's output. Prepare them with `levell_services_opt` and
+The independent callable-service smoke tests compare their generated RXAS with
+the CLI's output, converting only native CRLF text newlines to LF for this
+comparison. The service artifacts and binary publication checks retain exact
+bytes. Prepare them with `levell_services_opt` and
 `levell_services_noopt`; each target builds the shared
 `levell_generated_grammar` oracle as well as its service bytecode. Its original
 specification/tool dependencies retain freshness and missing-output recovery,
