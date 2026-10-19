@@ -60,7 +60,10 @@ foreach(_language IN LISTS _languages)
   else()
     # The Unicode variable lexer exceeds the generic 4096-state build default.
     # Keep this compiler's allowance separate from global Level L policy.
-    list(APPEND _grammar_limits -DGENERATOR_LIMITS=dfa.states=16384)
+    list(APPEND _grammar_limits -DGENERATOR_LIMITS=dfa.states=16384 -DREUSE_LEXER=ON)
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
+      "${_front}/llcgrammar.rxas.lexer" "${_front}/llcgrammar.rxas.lexer.manifest"
+      "${_front}/llcgrammar.rxas.lexer.lock")
   endif()
   add_custom_command(OUTPUT "${_front}/ll${_language}grammar.rxbin"
     COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:rxlang> -DSPEC=${_spec}

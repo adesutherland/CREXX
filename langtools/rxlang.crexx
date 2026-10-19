@@ -7,7 +7,7 @@ main: procedure = .int
   arg argv = .string[]
   rule = .int; d = .int; i = .int; entry = .int; name = .string
   if argv[0] < 1 then do
-    say 'usage: rxlang specification.crexx|specification.rxl [--rxas|--graph] [--limit name=count] (generated artifact on stdout)'; return 2
+    say 'usage: rxlang specification.crexx|specification.rxl [--rxas|--graph] [--limit name=count] [--lexer-in path] [--lexer-out new-path] (generated artifact on stdout)'; return 2
   end
   limits = .lllimits..policy()
   if argv[1] = '--limits' then do
@@ -18,13 +18,26 @@ main: procedure = .int
     end
     return 0
   end
-  format = 'crexx'; i = 2
+  format = 'crexx'; i = 2; lexin = ''; lexout = ''; cap = 67108864
   do while i <= argv[0]
     if argv[i] = '--rxas' | argv[i] = '--graph' then do
       if format <> 'crexx' then do
         say 'LL_USAGE: choose one output format'; return 2
       end
       format = argv[i]
+    end
+    else if argv[i] = '--lexer-in' | argv[i] = '--lexer-out' then do
+      option = argv[i]; i = i + 1
+      if i > argv[0] then do; say 'LL_USAGE: ' || option || ' requires a path'; return 2; end
+      if argv[i] = '' then do; say 'LL_USAGE: empty lexical path'; return 2; end
+      if option = '--lexer-in' then do
+        if lexin <> '' then do; say 'LL_USAGE: repeated --lexer-in'; return 2; end
+        lexin = argv[i]
+      end
+      else do
+        if lexout <> '' then do; say 'LL_USAGE: repeated --lexer-out'; return 2; end
+        lexout = argv[i]
+      end
     end
     else if argv[i] = '--limit' then do
       i = i + 1
@@ -54,6 +67,19 @@ main: procedure = .int
     end
     i = i + 1
   end
+  if lexin <> '' | lexout <> '' then do
+    if format = '--graph' then do; say 'LL_USAGE: lexical transport requires rxas or crexx'; return 2; end
+    if lexin == 'stdin' | lexin == 'stdout' | lexin == 'stderr' | lexout == 'stdin' | lexout == 'stdout' | lexout == 'stderr' then do
+      say 'LL_USAGE: lexical transport cannot use standard streams'; return 2
+    end
+    original = pathkey(argv[1])
+    if (lexin <> '' & pathkey(lexin) == original) | (lexout <> '' & pathkey(lexout) == original) then do
+      say 'LL_USAGE: lexical path must differ from source'; return 2
+    end
+    if lexin <> '' & lexout <> '' then if pathkey(lexin) == pathkey(lexout) then do
+      say 'LL_USAGE: lexical input and output paths must differ'; return 2
+    end
+  end
   source = .binary
   do
     source = readbinary(argv[1])
@@ -61,11 +87,94 @@ main: procedure = .int
     say 'LL_SOURCE_IO: cannot read specification ' || argv[1]; return 2
   end
 
-  request = .llgenerate..request(source,changestr('--',format,''),argv[1],limits,lower(right(argv[1],4)) = '.rxl')
+  candidate = .binary
+  if lexin <> '' then do
+    do
+      candidate = readlexical(lexin,cap)
+    on signal
+      say 'LL_LEXER_IO: cannot read lexical input ' || lexin; return 2
+    end
+    if bincompare(candidate,source) = 0 then do
+      say 'LL_USAGE: lexical input duplicates source bytes'; return 2
+    end
+  end
+  request = .llgenerate..request
+  if lexin <> '' | lexout <> '' then request = .llgenerate..request(source,changestr('--',format,''),argv[1],limits,lower(right(argv[1],4)) = '.rxl',cap,candidate)
+  else request = .llgenerate..request(source,changestr('--',format,''),argv[1],limits,lower(right(argv[1],4)) = '.rxl')
   if request.status() <> 0 then do; say request.error(); return request.status(); end
+  if lexout <> '' then do
+    candidate = request.lexical()
+    if writelexical(lexout,candidate,cap) = 0 then do
+      say 'LL_LEXER_IO: cannot create or finish new lexical output ' || lexout; return 2
+    end
+  end
   output = request.output()
   do i = 1 to output.chunks()
     chunk = output.chunk(i)
     say binsubstr(chunk,1,<blen>(chunk) - 1) as .string
   end
   return 0
+
+/* Lexical normalization is a spelling guard, not filesystem canonicalization.
+ * Exclusive output creation also protects aliases of any existing input. */
+pathkey: procedure = .string
+  arg path = .string
+  parts = .string[]; count = 0; start = 1; i = .int; part = .string
+  do i = 1 to length(path) + 1
+    if i <= length(path) then if substr(path,i,1) <> '/' & substr(path,i,1) <> '\' then iterate
+    part = substr(path,start,i - start); start = i + 1
+    if part = '' | part = '.' then iterate
+    if part = '..' & count > 0 then do
+      if parts[count] <> '..' then do; count = count - 1; iterate; end
+    end
+    count = count + 1; parts[count] = part
+  end
+  result = ''; if left(path,1) = '/' | left(path,1) = '\' then result = '/'
+  do i = 1 to count
+    if result <> '' & right(result,1) <> '/' then result = result || '/'
+    result = result || parts[i]
+  end
+  return result
+
+/* Advisory oversize is a cold miss; actual transport errors still fail. */
+readlexical: procedure = .binary
+  arg path = .string, cap = .int
+  result = .binary; chunk = .binary; fileid = 0; eof = 0; status = 0
+  close_status = 0; mode = 'rb'; chunk_size = 32768
+  assembler fopen fileid,path,mode
+  if fileid = 0 then do; call raise 'NOTREADY','cannot open lexical input',path; return result; end
+  do while eof = 0
+    used = <blen>(result); wanted = cap - used + 1
+    if wanted > chunk_size then wanted = chunk_size
+    assembler freadb chunk,fileid,wanted
+    size = <blen>(chunk)
+    assembler ferror status,fileid
+    assembler feof eof,fileid
+    if status <> 0 | (size = 0 & eof = 0) then do
+      assembler fclose close_status,fileid
+      call raise 'NOTREADY','cannot read lexical input',path; return result
+    end
+    if size > cap - used then do
+      assembler fclose close_status,fileid
+      if close_status <> 0 then call raise 'NOTREADY','cannot close lexical input',path
+      empty = .binary; return empty
+    end
+    if size > 0 then assembler bappend result,chunk
+  end
+  assembler fclose close_status,fileid
+  if close_status <> 0 then call raise 'NOTREADY','cannot close lexical input',path
+  return result
+
+/* Caller-owned new scratch only; never truncate a source/input alias. */
+writelexical: procedure = .int
+  arg path = .string, data = .binary, cap = .int
+  size = <blen>(data)
+  if size > cap then return 0
+  fileid = 0; write_error = 0; flushed = 0; closed = 0; mode = 'wbx'
+  assembler fopen fileid,path,mode
+  if fileid = 0 then return 0
+  assembler fwriteb fileid,data
+  assembler ferror write_error,fileid
+  assembler fflush flushed,fileid
+  assembler fclose closed,fileid
+  return write_error = 0 & flushed = 0 & closed = 0

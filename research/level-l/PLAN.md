@@ -1,5 +1,71 @@
 # Level L language tooling research — 10 October 2026
 
+<a id="current-action-lexer-reuse"></a>
+
+## Completed action: lexical construction reuse
+
+**APPROVED by Adrian. LRUSE-STEP01–04 are locally complete.**
+The [generation contract](../../langtools/doc/generation-design.md)
+owns exact service, capsule, CLI, stamp and persistence details. This generic
+Level L action precedes the next grammar-changing C increment; it does not
+close or replace any existing research, CFC or language acceptance criterion.
+
+### Vision and intended outcome
+
+Let grammar authors change parser/AST productions without rebuilding an
+unchanged main/outside-comment-shield lexer. Preserve pure fresh specification,
+parser, policy, stage, diagnostic and output admission, self-contained generated
+languages, all SDK/runtime algorithms and C/B semantics. Opted-in hosts may
+reuse a bounded private owned capsule; ordinary requests retain cold behavior
+without capsule-construction overhead. Initially only research C build generation
+opts into persistence, with one output owner and last-good-output preservation.
+
+### Numbered acceptance criteria
+
+| ID / status | Observable closure and decisive proof |
+|---|---|
+| **LRUSE-AC01 — Locally qualified: identity/equivalence** | Optional trailing lexical input and once-only queries follow the approved contract. Canonical reachable main/all-shield identity includes stamp/images/Unicode/ordered rules and exact NFA/DFA limits, excluding incidental parser/source IDs. Independent hit/miss and disabled/cold/warm byte-equality controls cover both rxas/crexx, priority, Unicode, comments and spans. All-or-miss images and counts preserve generated headers. |
+| **LRUSE-AC02 — Locally qualified: budgets/errors** | Bounded structural decoding/current immutable loaders reject malformed/oversize data as cold misses. Lower NFA/DFA limits force cold admission. Fresh source/parser/policy/stage/output errors still fail with current diagnostics and no artifacts, lexical empty/reused0. Source/output/capsule bounds and provenance controls pass; service makes no authenticity or arbitrary-bit-flip guarantee. |
+| **LRUSE-AC03 — Locally qualified: separation/build closure** | No SDK API/algorithm, C/B semantics, generic signature or new provider dependency changes. Pure service and CLI I/O remain separate. Automated checked source-closure stamp/injection is shared across L0/L1/L2, includes required pre-L0 foundation/seed identities but excludes downstream stage outputs/self/host paths, covers new modules and adds no reverse/research edge. Unprepared manual builds disable reuse. Narrow closure/fixed-point/import checks pass. |
+| **LRUSE-AC04 — Locally qualified: persistence/atomicity** | CLI path/format/I/O controls and output-derived REUSE_LEXER wrapper pass checksum/manifest, interruption/partial pair, no-op/missing-cache, concurrency and paths-with-spaces tests. Canonical output lock/unique staging preserve prior output/cache on generation failure; manifest-last publication handles interruption as a miss. Equal capsules are not rewritten; missing cache cannot force an otherwise up-to-date rebuild. |
+| **LRUSE-AC05 — Locally qualified: independent/real consumer proof** | Independent non-C/G cases pass before one real C cold fill/parser-only warm control and an unchanged G regression. Verify current-parser output/lexer equivalence and actual RXAS where affected, then the required product build. Reuse unchanged proof; measure only necessary aggregate additions in normal Debug, with generous serial scheduling. No broad matrix/per-slice ASan/formal benchmark. |
+| **LRUSE-AC06 — Locally qualified: reviewable delivery** | Owning architecture/API/build guidance and concise qualified input/command/result/limit summary are current. Independent source/RXAS review clears the assigned change; unrelated files remain byte-identical, temporary diagnostics are deleted and only approved qualified paths enter a local commit. Persistence is a named build artifact, not evidence retention. |
+
+### Numbered implementation steps and approval gate
+
+| Step / status | Work, criteria and dependencies |
+|---|---|
+| **LRUSE-STEP01 — Complete: approved design** | Exact contract and independent expectations recorded; AC01–06. Root/peer review and Adrian's approval cover the service/API/CLI/persistence/stamp contract. |
+| **LRUSE-STEP02 — Complete** | Pure service, private capsule/key and automated stamp/closure with independent non-C/G fixtures; AC01–03/05/06. SDK/runtime APIs and algorithms stay unchanged. |
+| **LRUSE-STEP03 — Complete** | CLI transport and output-derived REUSE_LEXER persistence, stamp preparation/dependencies/clean ownership and initial C-only opt-in; AC03/04/06. One writer per shared file and one scheduled builder. |
+| **LRUSE-STEP04 — Locally complete** | Independent panel, fixed point, actual C cold/warm control, G regression, product build and source/RXAS review pass; AC01–06. Owning docs, scheduling and cleanup retain the proof below. Scoped local commits use Adrian's existing authorization and root scope clearance; push/publication is separate. |
+
+The compiler dependency is [L-CONSTRUCT-01](compilers/PLAN.md#l-construct-01).
+The C compiler remains separately owned; INTERPRET stays its final stage.
+
+### Current focused proof
+
+Normal Debug uses `6450835b486a5a3110e7f5120549833ecbdd2ea7` plus the reviewed
+LRUSE source/fixture patch. Final shared stamp is
+`37a6d2087b3f77f4c45806dc1cde329418669d3c6c7c9dd9274316902462fcda`.
+The first service panel precedes packaging/stamp refresh; its implementation,
+fixture, foundation/SDK and raw frontend/syntax image bytes are unchanged.
+
+| Focused command / inspection | Observed result and boundary |
+|---|---|
+| `lexical-reuse-linked -a service`; unprepared private service `-a unstamped` | 89/0 service checks (64.429s), then 2/0 unstamped checks; the latter six-command preparation/run takes 10.474s. Both formats, identity/priority/Unicode/shields, fresh parser/errors, limits and malformed capsules; manual source exposes no capsule/reuse. |
+| `check-lexical-reuse.py --bin … --service-rxas …` | 42/0 native CLI/cache commands in 29.572s; exclusive scratch/aliases/streams, real tool fingerprints/checksums, atomic generation failure, unchanged cache, spaces/concurrency and no-op/missing-cache controls. Actual RXAS has only two new request queries; bounded geometric buffer writes/private helpers are independently reviewed. |
+| `cmake --build cmake-build-debug --target rxlang --parallel 8` | Final narrow refresh passes in 56.997s, no diagnostics. All stages use the same stamp; L1/L2 generated grammar RXAS SHA256 agrees (`820d1378…1804`). Native/version packaging changed; foundation/SDK content did not. |
+| `check-bootstrap-build.py`; lifecycle fixture setup/source review | Expanded Make order/stamp control passes in 31.859s: one producer, CLI-input rebuild, module/foundation stamp plus three service recompiles, omitted-module refusal and no-ops. Constant-output stand-ins establish scheduling, not changed downstream bytes. Lifecycle copy/invalidation expectations are corrected and cheaply checked; no fresh lifecycle campaign. |
+| Temporary exact-parser/tiny-lexer preflight; one C cold fill and two wrapper warm requests | Preflight passes in 10.769s. Cold parser-only variant: 659.690s, 29,709 NFA / 5,609 DFA / 2,453 LR, 7,699,374 RXAS bytes and 3,619,322 capsule bytes. Warm variant (10.025s) equals its cold bytes; warm original (9.935s) equals the saved qualified 7,698,798-byte original RXAS (`46a61283…9059`). Cache bytes/mtime stay unchanged; checkout source/product remain unchanged. Checked capsule/manifest transfer under the product lock is qualification setup only. Timings are scoped construction observations, not a formal benchmark. |
+| `levell_lexical_reuse` target; static guard; CTest show-only | Target passes in 8.822s with no diagnostics. Its prepared service assembly equals L2 byte-for-byte and is linked into the fixture; actual static guard passes. Three tests have one producer/private imports, serial 900/900/1800s scheduling; no repeated runtime panel solely for registration. |
+| `cmake --build cmake-build-debug --target stage-product --parallel 8`; `check-backend.py --case pipeline-g` | Product build passes in 93.051s without warnings/errors, including changed-generator installed consumers. Optional research C is excluded from this target. Existing G control passes 4 commands in 4.749s. Final generator/stamp identities remain unchanged; no second C cold or broad suite. |
+
+No fresh native semantic change, SDK algorithm/API change, ASan, hosted,
+installed or cross-platform qualification is claimed. Cache reuse requires
+unchanged generator artifacts; normal version relinks can intentionally miss.
+
+
 ## Repository architecture and cleanup
 
 **Status: reorganisation and final naming/library-only refinement published.**

@@ -8,6 +8,7 @@ import argparse
 from collections import Counter
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import shutil
@@ -67,11 +68,18 @@ def check():
     tools = fixture/'langtools'
     for directory in ['cmake', 'grammar', 'rexx', 'bootstrap']:
         (tools/directory).mkdir(parents=True, exist_ok=True)
+    # Exercise the real checked pre-L0 stamp closure with unchanged maintained
+    # data; only the instrumented tool/frontend stand-ins below are substituted.
+    manifest = (source/'langtools/cmake/generator-inputs.cmake').read_text()
+    for relative in re.findall(r'^  ([^\s]+)$', manifest, re.M):
+        target = fixture/relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source/relative, target)
     shutil.copyfile(source/'langtools/CMakeLists.txt', tools/'CMakeLists.txt')
     shutil.copyfile(source/'langtools/cmake/generate.cmake', tools/'cmake/generate.cmake')
     (tools/'rxlang.crexx').write_text('fixture driver\n')
     (tools/'rexx/llfront.crexx').write_text('/* BEGIN FRONTEND READER */\n/* END FRONTEND READER */\n')
-    (tools/'rexx/llgenerate.crexx').write_text('fixture service\n')
+    (tools/'rexx/llgenerate.crexx').write_text('fixture service @LLGENERATE_SOURCE_STAMP@\n')
     (tools/'bootstrap/seed-reader.inc').write_text('fixture seed\n')
     shutil.copyfile(source/'langtools/bootstrap/prepare-front.cmake', tools/'bootstrap/prepare-front.cmake')
     (tools/'grammar/levell.levell').write_text('fixture grammar\n')
@@ -91,8 +99,12 @@ project(level_l_build_order NONE)
 set(CREXX_LEVEL_L_STANDALONE ON)
 include("'''+source.as_posix()+'''/cmake/CrexxImportRoots.cmake")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "base library")
-file(WRITE "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "base Level L")
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/bin/library.rxbin")
+  file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "base library")
+endif()
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+  file(WRITE "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "base Level L")
+endif()
 add_custom_target(library)
 add_custom_target(rxfnsl)
 '''+ '\n'.join(declarations)+'''
@@ -105,12 +117,12 @@ add_dependencies(consume rxlanglib levell_unicode_lexer)
     environment = dict(os.environ, LL_BUILD_EVENTS=str(events))
     records = []
 
-    def run(label, command):
+    def run(label, command, success=True):
         started = time.monotonic()
         with (work/(label+'.log')).open('w') as log:
             result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment, timeout=120)
         records.append(dict(label=label, status=result.returncode, seconds=round(time.monotonic()-started, 3)))
-        if result.returncode:
+        if (result.returncode == 0) != success:
             raise AssertionError(f'{label} failed: {work/(label+".log")}\n'+(work/(label+'.log')).read_text()[-4000:])
 
     def build_once(label, expected_stages):
@@ -119,24 +131,57 @@ add_dependencies(consume rxlanglib levell_unicode_lexer)
         calls = Counter(tuple(json.loads(line)) for line in events.read_text().splitlines())
         assert all(n == 1 for n in calls.values()), (label, calls)
         drivers = {Path(path).parent.name for (name, path) in calls if name == 'rxc' and Path(path).name == 'rxlang.rxas'}
-        assert drivers == set(expected_stages), (label, drivers)
-        if not expected_stages:
+        if expected_stages is not None:
+            assert drivers == set(expected_stages), (label, drivers)
+        if expected_stages == []:
             assert not calls, (label, calls)
         records[-1]['tool_calls'] = sum(calls.values())
         records[-1]['driver_stages'] = sorted(drivers)
+        return calls
 
     run('configure', [args.cmake, '-S', str(fixture), '-B', str(build), '-G', 'Unix Makefiles', '-DCMAKE_MAKE_PROGRAM='+args.make])
     build_once('clean', ['L0', 'L1', 'L2'])
+    identity = build/'langtools/bootstrap/source/generator.identity'
+    stamp = identity.read_bytes(); mtime = identity.stat().st_mtime_ns
     build_once('noop', [])
+    assert identity.read_bytes() == stamp and identity.stat().st_mtime_ns == mtime
+
     (build/'langtools/bootstrap/L2/rxlang-linked.rxbin').unlink()
     build_once('missing-l2', ['L2'])
     time.sleep(1.05)  # Accommodate Make/filesystems with one-second mtime resolution.
     with (tools/'rxlang.crexx').open('a') as stream:
         stream.write('changed fixture driver\n')
     build_once('changed-input', ['L0', 'L1', 'L2'])
+    assert identity.read_bytes() != stamp
+    stamp = identity.read_bytes()
+    time.sleep(1.05)  # Preserve the existing Make timestamp-resolution contract.
+    with (fixture/'lib/rxfnsl/rexx/llregular.crexx').open('a') as stream:
+        stream.write('\n/* maintained module identity control */\n')
+    # Stand-in compilers emit constant metadata, so unchanged staged metadata
+    # need not rebuild drivers. The new stamp must recompile every service.
+    calls = build_once('changed-module', None)
+    services = {Path(path).parent.name for (name, path) in calls
+                if name == 'rxc' and Path(path).name == 'llgenerate.rxas'}
+    assert services == {'L0', 'L1', 'L2'}, calls
+    assert identity.read_bytes() != stamp
+    stamp = identity.read_bytes()
+    time.sleep(1.05)
+    with (build/'bin/rxfnsl.rxbin').open('a') as stream:
+        stream.write('changed pre-L0 artifact identity\n')
+    calls = build_once('changed-foundation', None)
+    services = {Path(path).parent.name for (name, path) in calls
+                if name == 'rxc' and Path(path).name == 'llgenerate.rxas'}
+    assert services == {'L0', 'L1', 'L2'}, calls
+    assert identity.read_bytes() != stamp
+    missing = fixture/'lib/rxfnsl/rexx/omitted_stamp_module.crexx'
+    missing.write_text('new module must be included explicitly\n')
+    run('omitted-module', [args.cmake, '-S', str(fixture), '-B', str(build)], success=False)
+    assert 'stamp closure omits maintained module' in (work/'omitted-module.log').read_text()
+    missing.unlink()
     build_once('final-noop', [])
+
     owned.cleanup()
-    print('LEVEL_L_BUILD_ORDER|PASS|clean,missing-l2,changed-input,noops')
+    print('LEVEL_L_BUILD_ORDER|PASS|clean,missing-l2,changed-input,module,foundation,closure,noops')
 
 
 if __name__ == '__main__':

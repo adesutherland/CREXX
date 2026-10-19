@@ -2853,6 +2853,7 @@ Messages identify the original grammar file and source location.
 
 ```text
 rxlang specification.crexx [--rxas|--graph] [--limit name=count]
+       [--lexer-in PATH] [--lexer-out NEWPATH]
 rxlang --limits
 ```
 
@@ -2877,6 +2878,17 @@ output. Check its exit code before treating output as a generated module:
 `--limit name=count` can be repeated to set several build allowances. These are
 settings for that invocation; they do not become rules of the generated language.
 
+For `rxas` or source output, `--lexer-in` can supply an owned lexical capsule
+from an earlier successful generation, and `--lexer-out` writes the current
+capsule to a new scratch file. Each option appears at most once; neither is
+valid with `--graph`. Output must not already exist. Source, input and output
+paths must differ; exact `stdin`, `stdout` and `stderr` names are refused.
+Conservative spelling/content guards and exclusive output creation protect
+inputs; they do not promise general filesystem alias resolution. Capsule I/O
+finishes before generated stdout is written. The capsule is private build data,
+not a portable public format or an authenticated input; see the
+[generation contract](generation-design.md).
+
 ### Write an output file safely
 
 Use [generate.cmake](../cmake/generate.cmake):
@@ -2893,6 +2905,15 @@ cmake -DLEVEL_L="$task_bin/rxlang" \
 The wrapper generates a temporary file and replaces the output only on success.
 A failed build preserves the previous module. Direct redirection with
 `> my_language.rxas` truncates that file before `rxlang` runs.
+
+Optional `-DREUSE_LEXER=ON` lets this wrapper own an output-derived lexical
+cache, checksum manifest and lock in the build directory. Missing/stale/damaged
+cache data falls back to cold generation. Parser, source and output validation
+still run freshly; a failed generation preserves prior output/cache. The wrapper
+serializes that output's transaction and publishes the manifest last. An equal
+capsule is not rewritten, and removing the optional cache does not force an
+otherwise up-to-date build. Clean the three sidecars with the owning output.
+Only the research C grammar opts in by default; bootstrap generation stays cold.
 
 `FORMAT=crexx` selects source output. Compile it with `rxc`, assemble with `rxas`,
 and link as for an RXAS-generated module. Level L delegates bytecode production
@@ -3899,8 +3920,19 @@ end
 ```
 
 Here source is `.binary`. Formats are `rxas`, `crexx` and `graph`; optional
-arguments are `limits=.lllimits..policy()`, `rxl=0`, and `bytes=67108864`.
+arguments are `limits=.lllimits..policy()`, `rxl=0`, `bytes=67108864`, and a
+trailing optional `lexical=.binary`.
 Queries evaluate once. Output owns its chunks. Failed admission, generation or
 budget checks produce a diagnostic and no partial artifact. The service performs
 no file I/O or printing; the `rxlang` CLI is a consumer. See
 [tool documentation](../README.md) for bootstrap and helpers.
+
+Omit `lexical` for ordinary cold behavior without capsule work. Present empty
+binary opts into cold construction plus `lexical()` output; present owned bytes
+tries reuse of the complete main/outside-comment-shield DFA set. `reused()` is
+1 only on successful checked reuse; graph/error/disabled/cold requests return 0.
+`lexical()` owns its returned bytes and is empty on errors, graph requests or
+unprepared manual builds. Source/parser/policy/output checks always run on the
+current specification. The existing `bytes` cap bounds capsule/key work too;
+oversize/stale/malformed candidates miss without overriding ordinary limits.
+Persisted-byte integrity is the host's responsibility; the wrapper checks SHA256.

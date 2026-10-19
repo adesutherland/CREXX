@@ -433,3 +433,68 @@ add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/check-products.cmake")
 set_tests_properties(levell_product_inventory PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_PRODUCTS[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
 crexx_register_test_prep_targets(TESTS levell_product_inventory TARGETS rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+
+# Independent lexical reuse: one ordinary prepared service and one intentionally
+# unprepared manual service. Each image has one producer and a private import root.
+set(_reuse "${CMAKE_CURRENT_BINARY_DIR}/lexical-reuse")
+file(MAKE_DIRECTORY "${_reuse}/unstamped")
+set(_reuse_base "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+set(_reuse_bootstrap "${CMAKE_BINARY_DIR}/langtools/bootstrap/L2")
+crexx_add_import_root(levell_lexical_base_imports DIRECTORY "${_reuse}/base"
+  OUTPUT_VARIABLE _reuse_base_imports FILES ${_reuse_base}
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap)
+add_custom_command(OUTPUT "${_reuse}/llgenerate.rxbin" BYPRODUCTS "${_reuse}/llgenerate.rxas"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/base"
+    -o "${_reuse}/llgenerate" "${CMAKE_BINARY_DIR}/langtools/bootstrap/source/llgenerate.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/llgenerate"
+  DEPENDS rxc rxas levell_generator_source levell_lexical_base_imports ${_reuse_base_imports}
+    "${CMAKE_BINARY_DIR}/langtools/bootstrap/source/llgenerate.crexx" VERBATIM)
+add_custom_target(levell_lexical_service DEPENDS "${_reuse}/llgenerate.rxbin")
+crexx_add_import_root(levell_lexical_imports DIRECTORY "${_reuse}/imports"
+  OUTPUT_VARIABLE _reuse_imports FILES ${_reuse_base} "${_reuse}/llgenerate.rxbin"
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap levell_lexical_service)
+add_custom_command(OUTPUT "${_reuse}/service-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/imports"
+    -o "${_reuse}/service" "${CMAKE_CURRENT_SOURCE_DIR}/lexical-reuse.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/service"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_reuse}/service-linked" "${_reuse}/service"
+    "${_reuse}/llgenerate" "${_reuse_bootstrap}/llfront" "${_reuse_bootstrap}/llsyntax" ${_reuse_base}
+  DEPENDS rxc rxas rxlink levell_lexical_imports ${_reuse_imports} lexical-reuse.crexx VERBATIM)
+add_custom_command(OUTPUT "${_reuse}/unstamped/llgenerate.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/base"
+    -o "${_reuse}/unstamped/llgenerate" "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/llgenerate.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/unstamped/llgenerate"
+  DEPENDS rxc rxas levell_lexical_base_imports ${_reuse_base_imports}
+    "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/llgenerate.crexx" VERBATIM)
+crexx_add_import_root(levell_unstamped_imports DIRECTORY "${_reuse}/unstamped/imports"
+  OUTPUT_VARIABLE _unstamped_imports FILES ${_reuse_base}
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+    "${_reuse}/unstamped/llgenerate.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap "${_reuse}/unstamped/llgenerate.rxbin")
+add_custom_command(OUTPUT "${_reuse}/unstamped/linked.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/unstamped/imports"
+    -o "${_reuse}/unstamped/probe" "${CMAKE_CURRENT_SOURCE_DIR}/lexical-reuse.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/unstamped/probe"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_reuse}/unstamped/linked" "${_reuse}/unstamped/probe"
+    "${_reuse}/unstamped/llgenerate" "${_reuse_bootstrap}/llfront" "${_reuse_bootstrap}/llsyntax" ${_reuse_base}
+  DEPENDS rxc rxas rxlink levell_unstamped_imports ${_unstamped_imports} lexical-reuse.crexx VERBATIM)
+add_custom_target(levell_lexical_reuse ALL DEPENDS "${_reuse}/service-linked.rxbin" "${_reuse}/unstamped/linked.rxbin")
+add_dependencies(testlangtools levell_lexical_reuse)
+add_test(NAME levell_lexical_reuse_service COMMAND $<TARGET_FILE:rxbvm>
+  --no-autoload "${_reuse}/service-linked.rxbin" -a service)
+add_test(NAME levell_lexical_reuse_unstamped COMMAND $<TARGET_FILE:rxbvm>
+  --no-autoload "${_reuse}/unstamped/linked.rxbin" -a unstamped)
+# Isolated Debug service 64s; CLI/cache panel 42 commands/30s. Source-only
+# qualification follows AGENTS.md; serialize these against other nested work.
+set_tests_properties(levell_lexical_reuse_service levell_lexical_reuse_unstamped PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE[|].*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 900 LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS levell_lexical_reuse_service levell_lexical_reuse_unstamped
+  TARGETS levell_lexical_reuse rxbvm)
+add_test(NAME rxlang_lexical_reuse_cli COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-lexical-reuse.py" --bin "${CMAKE_BINARY_DIR}/bin"
+  --cmake "${CMAKE_COMMAND}" --service-rxas "${_reuse}/llgenerate.rxas")
+set_tests_properties(rxlang_lexical_reuse_cli PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE_CLI[|]commands=.*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 1800 LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS rxlang_lexical_reuse_cli TARGETS rxlang levell_lexical_service)

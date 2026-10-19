@@ -23,6 +23,7 @@ crexx_add_import_root(levell_base_imports
   OUTPUT_VARIABLE _ll_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library rxfnsl)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/GeneratorStamp.cmake")
 foreach(stage RANGE 0 2)
   set(dir "${_ll_root}/L${stage}")
   file(MAKE_DIRECTORY "${dir}/source")
@@ -75,10 +76,10 @@ foreach(stage RANGE 0 2)
     DEPENDS "${dir}/llfront.rxbin" ${syntax})
   add_custom_command(OUTPUT "${dir}/llgenerate.rxbin"
     COMMAND $<TARGET_FILE:rxc> ${_ll_flags} -x --no-exe-import
-      -i "${_ll_root}/imports;${dir}/driver-imports" -o "${dir}/llgenerate" "${CMAKE_CURRENT_SOURCE_DIR}/rexx/llgenerate.crexx"
+      -i "${_ll_root}/imports;${dir}/driver-imports" -o "${dir}/llgenerate" "${_ll_prepared_generator}"
     COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${dir}/llgenerate"
-    DEPENDS rxc rxas levell_driver_imports_${stage} ${_ll_driver_import_files}
-      ${_ll_imports} "${CMAKE_CURRENT_SOURCE_DIR}/rexx/llgenerate.crexx" VERBATIM)
+    DEPENDS rxc rxas levell_generator_source levell_driver_imports_${stage} ${_ll_driver_import_files}
+      ${_ll_imports} "${_ll_prepared_generator}" VERBATIM)
   crexx_add_import_root(levell_service_imports_${stage}
     DIRECTORY "${dir}/service-imports" OUTPUT_VARIABLE _ll_service_import_files
     FILES "${dir}/llgenerate.rxbin" DEPENDS "${dir}/llgenerate.rxbin")
@@ -127,8 +128,9 @@ if(UNIX AND NOT CREXX_LEVEL_L_STANDALONE)
         --source "${CMAKE_SOURCE_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/order-measure"
         --cmake "${CMAKE_COMMAND}" --make "${_ll_make}"
       VERBATIM)
-    # Isolated nested fixture: Debug 15s, maintained Apple ASan tree 15s.
-    # Tool stand-ins test build ordering; real-tool execution is separate proof.
+    # Expanded stamp/order fixture: isolated Debug 32s. Source-only sanitizer
+    # scheduling follows AGENTS.md. Tool stand-ins check ordering separately
+    # from real-tool byte identity and execution.
     add_test(NAME rxlang_bootstrap_build_order
       COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-bootstrap-build.py"
         --source "${CMAKE_SOURCE_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/order-check"

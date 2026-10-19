@@ -1,7 +1,7 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. CLC-STEP05.SELECT1–3 are locally complete. Next: review
-the generic L checked-DFA reuse contract before further grammar changes.**
+**Complete C is open. CLC-STEP05.SELECT1–3 and the generic L lexer reuse
+prerequisite are locally complete. Next: the individual C instruction review.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -17,12 +17,12 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Next action: generic L generation reuse contract review
+## Completed prerequisite: generic L lexical construction reuse
 
-Before another grammar-changing C increment, the generic L owner must propose
-the checked reuse contract under L-CONSTRUCT-01. Exact cache identity, admission,
-limits and build ownership need review and approval before implementation;
-SELECT has not implemented that proposal.
+The [generic Level L owner](../PLAN.md#current-action-lexer-reuse)
+records locally qualified LRUSE-AC01–06 / STEP01–04 and the approved generation
+contract. L-CONSTRUCT-01 is this dependency, not a C-specific cache/API; SELECT
+has not implemented it. All CFC rows and INTERPRET-last sequencing remain.
 
 <a id="current-action-select"></a>
 
@@ -74,7 +74,7 @@ tools, generic L and B runtime products are unchanged and reused.
 
 | Command / inspection | Observed result and scope |
 |---|---|
-| `rxlang --rxas` exact parser/AST with temporary tiny lexer; existing full C grammar recipe and `rxas` | Cheap LR admission passed in 8.239s (3 NFA / 2 DFA / 2,452 LR). The one required full-source generation/assembly passed in 653.136s: 29,709 NFA / 5,609 DFA / 2,452 LR, 7,698,798 RXAS bytes, no diagnostics. Cold construction cost only; L-CONSTRUCT-01 retains the proposed generic reuse work. |
+| `rxlang --rxas` exact parser/AST with temporary tiny lexer; existing full C grammar recipe and `rxas` | Cheap LR admission passed in 8.239s (3 NFA / 2 DFA / 2,452 LR). The one required full-source generation/assembly passed in 653.136s: 29,709 NFA / 5,609 DFA / 2,452 LR, 7,698,798 RXAS bytes, no diagnostics. Cold construction cost only; generic reuse is qualified separately under L-CONSTRUCT-01. |
 | `frontend-tests-linked -a select <runtime> <examples>` | 190/0 checks, opt/rxbvm, 49.628s: AST/order/spans, Unicode/CRLF, optional arms/nearest ELSE, syntax/dead/profile refusals. |
 | `backend-tests-linked -a <runtime> <capture> select` | 90/0 twice, opt/rxbvm and noopt/rxtvm, internally both IR modes; 37.845/38.644s. Open/closed/nested/loop/missing endpoints, once-only truth, literal pruning, anonymous source and actual shape. |
 | `target-context-linked -a select`; `check-target-context.py` | 6/0 in each paired B/VM cell; shape 181/0 opt and 184/0 noopt. Shared 34.2/7.3 messages/source, valid raw event IDs and bound-event→signalorigin forwarding. Distinct inline sites need not share physical PCs. |
@@ -233,7 +233,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current SELECT** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; approved SELECT implementation is current. |
+| **CLC-STEP05 — Partial; bounded reviews through SELECT complete** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; next individual instruction review follows generic LRUSE qualification. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -450,16 +450,21 @@ previous-output preservation/tmp cleanup and two-limit forwarding with a
 byte-identical successful artifact. No language/default-policy change or formal
 performance claim follows.
 
-**L-CONSTRUCT-01 — later generic L construction cost (STEP02/09):** `llregular`
-linearly searches prior subset keys and retains equivalent DFA states. The
-generic L owner may add indexed subset lookup/equivalent-state reduction with
-independent longest-match, priority, Unicode-membership/span and bounded-failure
-proof. Parser-only `.rxl` changes currently repeat unchanged lexical construction
-because generation emits DFA/LR together. Before the next grammar-changing
-slice, that owner should propose checked DFA reuse keyed on lexical rules/order/
-token IDs, Unicode/encoding and image/generator inputs, preserving current limits.
-The reuse contract needs approval; it is not implemented in SELECT. The observed
-cost covers generation plus assembly, not target execution or conformance retests.
+<a id="l-construct-01"></a>
+
+**L-CONSTRUCT-01 — locally qualified generic L reuse (STEP02/09):** opted-in
+parser-only `.rxl` builds can reuse unchanged lexical construction. The
+[generic LRUSE plan](../PLAN.md#current-action-lexer-reuse)
+and [approved contract](../../../langtools/doc/generation-design.md) own checked
+main/all-shield reuse, bounded service/stamp and output-derived persistence.
+LRUSE-STEP01–04 are locally complete, including one real C cold fill and warm
+output equivalence. Reuse requires unchanged generator/stamp artifacts; version
+relinks can intentionally miss. C/B semantics and SDK/runtime APIs/algorithms
+retain their owners. Separately, `llregular`'s linear
+subset lookup/equivalent-state construction remains a later generic algorithm
+opportunity requiring independent longest-match/priority/Unicode/span/budget
+proof. Reuse does not claim to solve that algorithmic cost or establish a formal
+performance result.
 
 ## Completed CABI proof and limits
 

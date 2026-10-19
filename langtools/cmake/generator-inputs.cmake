@@ -1,0 +1,52 @@
+# Explicit maintained source closure for the private generator stamp.
+# Add new generator/SDK/property modules here; configure checks omissions.
+set(LL_GENERATOR_STAMP_SOURCES
+  cmake/CrexxImportRoots.cmake
+  langtools/CMakeLists.txt
+  langtools/bootstrap/CMakeLists.txt
+  langtools/bootstrap/prepare-front.cmake
+  langtools/bootstrap/seed-reader.inc
+  langtools/cmake/GeneratorStamp.cmake
+  langtools/cmake/generate.cmake
+  langtools/cmake/generator-inputs.cmake
+  langtools/cmake/prepare-generator.cmake
+  langtools/grammar/levell.levell
+  langtools/rexx/llfront.crexx
+  langtools/rexx/llgenerate.crexx
+  langtools/rxlang.crexx
+  lib/rxfnsb/unicode/data/unicode-17.0.0/DerivedCoreProperties.txt
+  lib/rxfnsb/unicode/data/unicode-17.0.0/PropList.txt
+  lib/rxfnsb/unicode/data/unicode-17.0.0/SHA256SUMS
+  lib/rxfnsb/unicode/data/unicode-17.0.0/UnicodeData.txt
+  lib/rxfnsl/rexx/CMakeLists.txt
+  lib/rxfnsl/rexx/llannotation.crexx
+  lib/rxfnsl/rexx/llast.crexx
+  lib/rxfnsl/rexx/llcap.crexx
+  lib/rxfnsl/rexx/llcfg.crexx
+  lib/rxfnsl/rexx/llcharset.crexx
+  lib/rxfnsl/rexx/llcheck.crexx
+  lib/rxfnsl/rexx/llcomments.crexx
+  lib/rxfnsl/rexx/llcore.crexx
+  lib/rxfnsl/rexx/llearley.crexx
+  lib/rxfnsl/rexx/llflow.crexx
+  lib/rxfnsl/rexx/llforest.crexx
+  lib/rxfnsl/rexx/llir.crexx
+  lib/rxfnsl/rexx/llirservices.crexx
+  lib/rxfnsl/rexx/lllanguage.crexx
+  lib/rxfnsl/rexx/lllimits.crexx
+  lib/rxfnsl/rexx/lllr.crexx
+  lib/rxfnsl/rexx/llmunch.crexx
+  lib/rxfnsl/rexx/llpeg.crexx
+  lib/rxfnsl/rexx/llpratt.crexx
+  lib/rxfnsl/rexx/llproject.crexx
+  lib/rxfnsl/rexx/llproperties.crexx
+  lib/rxfnsl/rexx/llrecover.crexx
+  lib/rxfnsl/rexx/llregional.crexx
+  lib/rxfnsl/rexx/llregular.crexx
+  lib/rxfnsl/rexx/llsource.crexx
+  lib/rxfnsl/rexx/llstage.crexx
+  lib/rxfnsl/rexx/lltree.crexx
+  lib/rxfnsl/unicode/Properties.cmake
+  lib/rxfnsl/unicode/generate-properties.cmake
+  lib/rxfnsl/unicode/generate-properties.crexx
+)

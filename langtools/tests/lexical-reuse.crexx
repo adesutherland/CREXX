@@ -1,0 +1,220 @@
+/* cREXX License (MIT). Independent lexical-reuse service contracts. */
+options levelb
+import rxfnsb
+import llgenerate
+import lllimits
+
+main: procedure = .int expose checks failures base capsule
+  arg argv = .string[]
+  if argv[0] > 1 then return 2
+  selector = 'service'; if argv[0] = 1 then selector = argv[1]
+  if selector <> 'service' & selector <> 'unstamped' then return 2
+  checks = 0; failures = 0; base = specification()
+  capsule = ''x as .binary
+  if selector = 'unstamped' then call unstamped()
+  else do
+    call presence()
+    call identities()
+    call shields()
+    call refusals()
+  end
+  say 'LEXICAL_REUSE|' || selector || '|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+/* Overlapping keyword/name rules make priority and emitted IDs significant.
+ * A narrow explicit Unicode scalar keeps the fixture small. */
+specification: procedure = .string
+  nl = '0A'x as .string
+  text = 'options levell' || nl || 'namespace reuse_fixture' || nl
+  text = text || 'name: token = 1' || nl || 'keyword: token = 2' || nl
+  text = text || 'scan: lexer input utf8' || nl
+  text = text || "  letter: charset = 'a' to 'z' | U+03BB" || nl
+  text = text || "  key.lex: rule = 'if' then emit keyword" || nl
+  text = text || '  name.lex: rule = letter+ then emit name' || nl
+  text = text || "  spaces: rule = (' ' | U+000A | U+000D)+ then skip" || nl
+  text = text || 'parse: parser start root backend lr1' || nl
+  return text || '  root: rule = keyword | name' || nl
+
+/* The returned capsule/output outlive the request which created them. */
+produced: procedure = .binary expose base
+  request = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1,67108864,''x as .binary)
+  call check(request.status() = 0 & request.reused() = 0,'present empty opts into cold construction: ' || request.error())
+  result = request.lexical()
+  call check(<blen>(result) > 0,'successful opted-in build returns owned capsule')
+  return result
+
+presence: procedure = .void expose base capsule
+  disabled = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1)
+  baseline = disabled.output()
+  call check(disabled.status() = 0 & disabled.reused() = 0 & <blen>(disabled.lexical()) = 0,'omitted input keeps ordinary cold service')
+  capsule = produced(); saved = capsule
+  warm = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1,67108864,capsule)
+  output = warm.output()
+  call check(warm.status() = 0 & warm.reused() = 1,'owned capsule reused after producer returns: ' || warm.error())
+  call check(output.text() == baseline.text(),'disabled/cold/warm RXAS is byte-identical')
+  call check(bincompare(warm.lexical(),saved) = 0 & bincompare(warm.lexical(),saved) = 0 & warm.reused() = 1 & warm.output().text() == output.text(),'queries are stable and preserve owned results')
+  plain = .llgenerate..request(base as .binary,'crexx','reuse.rxl',.lllimits..policy(),1)
+  warm = .llgenerate..request(base as .binary,'crexx','reuse.rxl',.lllimits..policy(),1,67108864,capsule)
+  call check(plain.status() = 0 & warm.status() = 0 & warm.reused() = 1,'lexical identity is independent of output format')
+  call check(plain.output().text() == warm.output().text(),'cold/warm cREXX source is byte-identical')
+  graph = .llgenerate..request(base as .binary,'graph','reuse.rxl',.lllimits..policy(),1,67108864,capsule)
+  call check(graph.status() = 0 & graph.output().bytes() > 0 & graph.reused() = 0 & <blen>(graph.lexical()) = 0,'graph output neither uses nor exposes a capsule')
+  call check(bincompare(saved,capsule) = 0 & baseline.text() == disabled.output().text(),'later requests preserve original capsule/output')
+  return
+
+/* Compare the new document against its own cold oracle, never the old parser. */
+equivalent: procedure = .void expose capsule
+  arg source = .string, expected = .int, label = .string, filename = 'reuse.rxl', limits = .lllimits..policy()
+  cold = .llgenerate..request(source as .binary,'rxas',filename,limits,1)
+  warm = .llgenerate..request(source as .binary,'rxas',filename,limits,1,67108864,capsule)
+  call check(cold.status() = 0 & warm.status() = 0,label || ' is accepted: ' || cold.error() || ' / ' || warm.error())
+  call check(warm.reused() = expected,label || ' has expected hit/miss ' || expected)
+  call check(cold.output().text() == warm.output().text(),label || ' retains current parser/source output')
+  return
+
+identities: procedure = .void expose base capsule
+  nl = '0A'x as .string
+  source = changestr('root: rule = keyword | name',base,'root: rule = (keyword | name)+')
+  call equivalent(source,1,'changed parser production')
+  source = changestr('name: token = 1',base,'name: token = 1 then tree Name(spelling = text)')
+  call equivalent(source,1,'changed AST mapping')
+  source = changestr('scan: lexer',base,'spare: token = 7' || nl || 'scan: lexer')
+  call equivalent(source,1,'unused explicit token declaration')
+  source = changestr('  letter: charset',base,"  unused: pattern = 'q'" || nl || '  letter: charset')
+  call equivalent(source,1,'incidental unreachable lexical graph IDs')
+  call equivalent(nl || base,1,'source lines and logical filename','elsewhere.rxl')
+  key = "  key.lex: rule = 'if' then emit keyword"
+  name = '  name.lex: rule = letter+ then emit name'
+  source = changestr(key || nl || name,base,name || nl || key)
+  call equivalent(source,0,'equal-length rule priority')
+  call equivalent(changestr('name: token = 1',base,'name: token = 3'),0,'actual emitted token ID')
+  call equivalent(changestr('then emit keyword',base,'then skip'),0,'skip versus emit action')
+  call equivalent(changestr("'if' then emit",base,"'in' then emit"),0,'literal bytes')
+  call equivalent(changestr('U+03BB',base,'U+03BC'),0,'Unicode scalar membership')
+  source = changestr('U+03BB',base,'U+0062')
+  cold = .llgenerate..request(source as .binary,'rxas','encoding.rxl',.lllimits..policy(),1,67108864,''x as .binary)
+  ascii = cold.lexical(); source = changestr('input utf8',source,'input utf8bytes')
+  plain = .llgenerate..request(source as .binary,'rxas','encoding.rxl',.lllimits..policy(),1)
+  warm = .llgenerate..request(source as .binary,'rxas','encoding.rxl',.lllimits..policy(),1,67108864,ascii)
+  call check(cold.status() = 0 & plain.status() = 0 & warm.status() = 0 & warm.reused() = 0 & warm.output().text() == plain.output().text(),'encoding alone invalidates an otherwise identical ASCII byte machine')
+  limits = .lllimits..policy(); ignored = limits.set('nfa.states',65535)
+  call equivalent(base,0,'changed admitted NFA allowance','reuse.rxl',limits)
+  limits = .lllimits..policy(); ignored = limits.set('dfa.states',4095)
+  call equivalent(base,0,'changed admitted DFA allowance','reuse.rxl',limits)
+  return
+
+/* Outside-comment machines are not the main DFA. Both must be reused together. */
+shields: procedure = .void
+  nl = '0A'x as .string
+  source = 'options levell' || nl || 'namespace reuse_shields' || nl
+  source = source || 'word: token = 1' || nl
+  source = source || "notes: comments line '#' outside quoted.text" || nl
+  source = source || "blocks: comments block '/*' '*/' outside quoted.text" || nl
+  source = source || 'scan: lexer input utf8' || nl
+  source = source || "  body: charset = 'a' to 'z' | '#' | '/' | '*'" || nl
+  source = source || '  quoted.text: pattern = ''"'' body* ''"''' || nl
+  source = source || '  word.lex: rule = quoted.text then emit word' || nl
+  source = source || "  spaces: rule = (' ' | U+000A)+ then skip" || nl
+  source = source || 'parse: parser start root backend lr1' || nl || '  root: rule = word*' || nl
+  cold = .llgenerate..request(source as .binary,'rxas','shields.rxl',.lllimits..policy(),1,67108864,''x as .binary)
+  held = cold.lexical()
+  call check(cold.status() = 0 & <blen>(held) > 0,'all-shield cold capsule: ' || cold.error())
+  if cold.status() <> 0 | <blen>(held) = 0 then return
+  changed = changestr('root: rule = word*',source,'root: rule = word+')
+  plain = .llgenerate..request(changed as .binary,'rxas','shields.rxl',.lllimits..policy(),1)
+  warm = .llgenerate..request(changed as .binary,'rxas','shields.rxl',.lllimits..policy(),1,67108864,held)
+  call check(plain.status() = 0 & warm.status() = 0 & warm.reused() = 1 & plain.output().text() == warm.output().text(),'parser-only hit retains every required shield')
+  changed = changestr('quoted.text: pattern =',source,"unused: pattern = 'z'" || nl || '  quoted.text: pattern =')
+  warm = .llgenerate..request(changed as .binary,'rxas','shields.rxl',.lllimits..policy(),1,67108864,held)
+  call check(warm.status() = 0 & warm.reused() = 1,'shield graph renumbering is incidental')
+  changed = changestr("'a' to 'z'",source,"'a' to 'y'")
+  plain = .llgenerate..request(changed as .binary,'rxas','shields.rxl',.lllimits..policy(),1)
+  warm = .llgenerate..request(changed as .binary,'rxas','shields.rxl',.lllimits..policy(),1,67108864,held)
+  call check(plain.status() = 0 & warm.status() = 0 & warm.reused() = 0 & plain.output().text() == warm.output().text(),'changed shield machine forces whole-set cold construction')
+  call candidatecases(source,held)
+  return
+
+/* Private decoder controls use lengths from a valid generated capsule, not
+ * a frozen dump. No case asserts a semantic-authentication guarantee. */
+candidatecases: procedure = .void
+  arg source = .string, good = .binary
+  plain = .llgenerate..request(source as .binary,'rxas','shields.rxl',.lllimits..policy(),1)
+  expected = plain.output().text()
+  keysize = <at..i32>(8) good; countat = 12 + keysize
+  count = <at..i32>(countat) good; first = countat + 4
+  imagesize = <at..i32>(first + 8) good; imageat = first + 12
+  second = imageat + imagesize
+  secondsize = <at..i32>(second + 8) good; third = second + 12 + secondsize
+  call check(count = 3,'private capsule contains main plus both required shields')
+  if count <> 3 then return
+  do mode = 1 to 7
+    candidate = good
+    select mode
+      when 1 then <at..i32>(8) candidate = 2147483647
+      when 2 then <at..i32>(countat) candidate = 2147483647
+      when 3 then <at..i32>(third) candidate = <at..i32>(second) good
+      when 4 then <at..i32>(first + 4) candidate = 0
+      when 5 then <at..i32>(imageat + 4) candidate = 2147483647
+      when 6 then <at..i32>(imageat + 16) candidate = 999
+      otherwise <at..u8>(12) candidate = 0
+    end
+    request = .llgenerate..request(source as .binary,'rxas','shields.rxl',.lllimits..policy(),1,67108864,candidate)
+    call check(request.status() = 0 & request.error() = '' & request.reused() = 0 & request.output().text() == expected,'bounded malformed count/duplicate/image/key candidate quietly misses ' || mode)
+    call check(bincompare(request.lexical(),good) = 0,'miss rebuilds complete current machine set ' || mode)
+  end
+  return
+
+failed: procedure = .void expose capsule
+  arg source = .binary, label = .string, limits = .lllimits..policy(), bytes = 67108864, expected = ''
+  request = .llgenerate..request(source,'rxas','failure.rxl',limits,1,bytes,capsule)
+  call check(request.status() <> 0 & request.error() <> '',label || ' retains current failure')
+  call check(request.output().bytes() = 0 & <blen>(request.lexical()) = 0 & request.reused() = 0,label || ' exposes no output/capsule or successful hit')
+  if expected <> '' then call check(pos(expected,request.error()) > 0,label || ' reaches its intended error: ' || request.error())
+  return
+
+refusals: procedure = .void expose base capsule
+  limits = .lllimits..policy(); ignored = limits.set('nfa.states',1)
+  call failed(base as .binary,'lower NFA limit',limits)
+  limits = .lllimits..policy(); ignored = limits.set('dfa.states',1)
+  call failed(base as .binary,'lower DFA limit',limits)
+  limits = .lllimits..policy(); ignored = limits.set('source.bytes',1)
+  call failed(base as .binary,'fresh source limit',limits)
+  call failed(base as .binary,'fresh output limit',.lllimits..policy(),1)
+  cold = .llgenerate..request(base as .binary,'rxas','failure.rxl',.lllimits..policy(),1)
+  cap = <blen>(capsule)
+  call check(cap > 0 & cap < cold.output().bytes(),'valid capsule/key fit below known generated output extent')
+  if cap > 0 & cap < cold.output().bytes() then call failed(base as .binary,'writer failure after admissible hit',.lllimits..policy(),cap,'output.bytes')
+  call failed((base as .binary) || ('FF'x as .binary),'fresh malformed UTF8')
+  source = changestr('root: rule = keyword | name',base,'root: rule = left.branch | right.branch')
+  source = source || ('0A'x as .string) || 'left.branch: rule = name' || ('0A'x as .string) || 'right.branch: rule = name'
+  call failed(source as .binary,'fresh parser conflict',.lllimits..policy(),67108864,'LL_LR_ADMISSION:')
+  source = changestr('root: rule = keyword | name',base,'root: rule = missing')
+  call failed(source as .binary,'fresh source reference error')
+  cold = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1)
+  do mode = 1 to 4
+    candidate = 'invalid capsule' as .binary
+    if mode = 2 then candidate = binsubstr(capsule,1,<blen>(capsule) - 1)
+    if mode = 3 then candidate = capsule || '00'x as .binary
+    cap = 67108864
+    if mode = 4 then do
+      cap = cold.output().bytes() + 1024
+      candidate = x2bin(copies('00',cap + 1))
+    end
+    request = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1,cap,candidate)
+    call check(request.status() = 0 & request.reused() = 0 & request.error() = '' & request.output().text() == cold.output().text(),'malformed/truncated/trailing candidate is a quiet cold miss ' || mode)
+  end
+  return
+
+unstamped: procedure = .void expose base
+  plain = .llgenerate..request(base as .binary,'rxas','manual.rxl',.lllimits..policy(),1)
+  request = .llgenerate..request(base as .binary,'rxas','manual.rxl',.lllimits..policy(),1,67108864,''x as .binary)
+  call check(plain.status() = 0 & request.status() = 0 & request.output().text() == plain.output().text(),'manual unstamped generation remains ordinary cold')
+  call check(request.reused() = 0 & <blen>(request.lexical()) = 0,'manual unstamped service cannot circulate a placeholder capsule')
+  return
