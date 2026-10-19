@@ -1,8 +1,8 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.DROP3, qualified local integration and
-closeout; DROP1/2 are implemented and reviewed. Next: LC-I-03 assignment
-review, with no implementation started.**
+**Complete C is open. Current: CLC-STEP05.ASSIGN3, qualified local closeout of
+the existing C v3 assignment path. Next: LC-I-04 NOP review; no implementation
+has started.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -18,31 +18,51 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Current action: DROP
+## Current action: assignment
 
-Adrian approved the [exact C v3/CDrop/one-operation/name-admission contract](doc/architecture.md#proposed-next-instruction-drop)
-on 19 October 2026. Reuse existing Unicode/pool semantics and context/method ABI;
-no new B/L/VM API or runtime algorithm. STEP03d is locally committed as
-`62d6dd44df528d56f4ca191bdc28d73b960c9432`; DROP product work has started.
-DROP1/2 implement canonical C v3, generated-rule name admission and ordered
-existing-pool method calls. Independent source and actual caller/helper RXAS
-review pass. DROP3's focused normal Debug checks pass. This is local
-qualification; no remote publication has occurred.
+Qualify [LC-I-03's existing one-write path](doc/LEVELC-INSTRUCTION-REVIEW.md#assignment-one-write-after-rhs-evaluation)
+against LC-AC-54/63: evaluate the RHS once, then let the current shared pool
+substitute/classify the raw target and store its exact value. Empty RHS assigns
+empty text. Current C v3/schema, target exports and shared B algorithms stay
+unchanged; no lowering defect has been reproduced. Add independent proof and
+repair product code only for a demonstrated failure. Native C is read-only.
 
 | ID / status | Checkable closure |
 |---|---|
-| **DROP-AC01 — Qualified** | Shared Unicode/raw variable symbols, CDrop spans/items and exact v3/name admission pass source/IR positives and atomic refusal, including dead source, reserved-dot prefixes and unsupported routine-name shapes. |
-| **DROP-AC02 — Qualified** | Independent direct/indirect order, one captured list per indirect item, scalar/stem/compound, dropped-versus-empty/default state and self-carrier cases pass. |
-| **DROP-AC03 — Qualified** | Unicode/configured blanks, distinct micro-sign/Greek names, ARG destinations, aliases/private pools and existing invalid-word continuation/error policy pass. |
-| **DROP-AC04 — Qualified** | Caller/helper RXAS proves ordered existing pool calls and preserved source/owners; focused compiler/IR/assembler/VM normal Debug checks pass. |
+| **ASSIGN-AC01 — Qualified** | Source/AST/IR and independent execution cover scalar overwrite, keyword targets, empty RHS, stems/arbitrary compound targets, numeric/unset/empty tail components, substituted case, main/IF/group/private contexts and Unicode/NUL/high-ordinal values/tails. Stem assignment resets explicit/dropped tails; tail assignment clears its tombstone. |
+| **ASSIGN-AC02 — Qualified** | A source marker call and old-value reads prove once-only RHS-before-write behavior; IR/RXAS places RHS call/read before the sole raw-name store, with no compiler tail pre-read. Complementary exported-IR/B-host mutation-before-store proves resolution uses current tail bindings; this is composed proof, not a source EXPOSE call. |
+| **ASSIGN-AC03 — Qualified** | Prebound-context execution proves live scalar/stem/exact/nested aliases, private reset isolation and preservation of unrelated case-distinct tails, exact Unicode/NUL text and RexxValue caches through load/store without conversion. |
+| **ASSIGN-AC04 — Qualified** | Invalid targets with explicit/empty RHS and malformed dead source refuse with logical located diagnostics and prior output intact. Fatal RHS failure cannot reach the store/later output. Actual caller/helper RXAS has one pool write, no unused explicit-RHS default/splitter/conversion, preserved owners/source; focused normal Debug passes both compiler/IR modes and VMs. |
 
-**CLC-STEP05.DROP1 — Implemented/reviewed:** shared source-symbol/AST prerequisite
-(AC01/03). **CLC-STEP05.DROP2 — Implemented/reviewed:** ordered DROP lowering
-through existing pool methods (AC01–04). **CLC-STEP05.DROP3 — Qualified:** independent
-LC-I-02 review/qualification (all four AC). One source writer proceeds serially through parser/frontend and
-IR/selector; a separate worker owns fixtures/CMake/integration, with independent
-review. Source EXPOSE, resumable conditions and wider C acceptance retain their
-later owners.
+**CLC-STEP05.ASSIGN1 — Reviewed (AC01–04):** freeze independent expectations and
+inspect existing source/IR/shared-pool contracts; depends on committed DROP.
+**CLC-STEP05.ASSIGN2 — Implemented (AC01–04):** fixtures, composed context proof and
+structural guards; any reproduced repair needs coordinated source ownership.
+**CLC-STEP05.ASSIGN3 — Qualified (AC01–04):** sole builder qualifies focused normal
+Debug with measured serial scheduling; independent source/RXAS review precedes
+local commit. Reuse unchanged grammar/tools/runtime evidence; a commit alone
+does not require expensive grammar regeneration or a source-slice ASan run.
+
+Whole LC-I-03 remains open for source EXPOSE/shared-label contexts (STEP06),
+exact Classic diagnostics (STEP04), resumed conditions/NOVALUE and full
+clause/TRACE observations (STEP07). Ordinary private calls have fresh pools;
+the composed proof must not claim caller-pool mutation through those calls.
+
+## Completed DROP increment
+
+Local commit `fccb95b46dc4cfd75a453c0573fba27a78d5ff3b` qualified the
+[approved C v3 DROP/name contract](doc/architecture.md#proposed-next-instruction-drop)
+with independent source/RXAS review and [normal Debug proof](#current-drop-proof).
+No remote publication or whole LC-I-02 closure is claimed; source EXPOSE,
+conditions/full diagnostics and TRACE keep their later owners.
+
+| Stable ID / status | Qualified closure |
+|---|---|
+| **DROP-AC01 — Qualified** | Raw Unicode symbols, ordered CDrop spans/items and exact v3/name admission; dead-source, reserved-dot-prefix and routine-profile refusals. |
+| **DROP-AC02 — Qualified** | Direct/indirect order, one captured list, scalar/stem/compound states, defaults/tombstones and self-carrier cases. |
+| **DROP-AC03 — Qualified** | Unicode/configured blanks, micro-sign/Greek identity, ARG names, aliases/private pools and invalid-word continuation. |
+| **DROP-AC04 — Qualified** | Existing pool calls and caller/helper owners/source in actual RXAS; focused compiler/IR/assembler/VM Debug proof. |
+| **CLC-STEP05.DROP1–3 — Complete** | Shared symbols/AST, ordered lowering and independent local qualification completed before ASSIGN1. |
 
 <a id="active-first-implementation-increment"></a>
 <a id="shared-b-unicode-interface-and-c-adapter-migration"></a>
@@ -94,7 +114,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current DROP** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Whole SAY remains open; the approved DROP review is current. |
+| **CLC-STEP05 — Partial; current assignment** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Bounded SAY/DROP reviews retain shared dependencies; assignment is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -142,9 +162,35 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current DROP proof
+## Current assignment proof
 
-The reviewed DROP patch on `62d6dd44df528d56f4ca191bdc28d73b960c9432` has a
+The assignment fixtures on `fccb95b46dc4cfd75a453c0573fba27a78d5ff3b` qualify
+the unchanged C v3 store path; independent source and actual RXAS review pass.
+Six direct `rxc`/`rxas`/`rxlink` commands prepared
+the two B-mode contract images warning-free in 1.9524s, using the qualified
+DROP import roots and generated grammar. No native, library, compiler-host or
+grammar rebuild was needed. Unchanged product/runtime/name/schema proof is
+reused; no fresh sanitizer, installed, hosted or whole-C claim follows.
+
+| Normal Debug command / inspection | Observed result and scope |
+|---|---|
+| `check-assignment.py --build cmake-build-debug --work <temporary> --vm rxbvm --vm rxtvm` completed components | All 36 positive commands passed: 24 source/AST/IR/provider checks and 20 B-host alias/cache/live-binding assertions per B-mode/VM cell; the independent 23-line source oracle passed both B modes, C IR modes and VMs. All five source refusals passed, including dead malformed RHS in both IR modes and prior-output preservation. |
+| Same checker with `--phase fatal` | Ten commands passed in 5.6418s: both IR modes and VMs produce only the prefix and `RXC-LC-42.3`; actual own-frame fatal diversion cannot enter the target store. Compiler host is B opt; linked target is B noopt; assembler optimisation is disabled. |
+| Caller/helper inspection | Provider has three value reads and eight ordered raw-name writes without conversion/splitting/owner copies. Source marker/read precedes its sole target write; supplied-context mutation precedes compound resolution. Provider and same-IR source RXAS are byte-identical across B host modes. Shared pool/runtime bodies are unchanged. |
+| CTest registration inspection | `llcompiler_c_assignment` defaults to all 51 commands, available VMs, 1800s hang protection, serial execution and the backend resource lock. Generated command/properties were inspected without rerunning the completed workload solely for registration. |
+
+The completed positive/refusal components plus one fatal compile took at most
+77s; the remaining fatal component took 5.6418s. A checker-only correction
+distinguished executable handler calls from imported declarations. Valid
+positive/refusal results were reused; no single successful full-workload timing
+is claimed. Source-call ordering and exported-context mutation/storage remain
+complementary proofs with the limits above; source EXPOSE is not implemented.
+
+<a id="current-drop-proof"></a>
+
+## Completed DROP proof
+
+DROP commit `fccb95b46dc4cfd75a453c0573fba27a78d5ff3b` has a
 warning-free focused Debug host/fixture build and independent source/actual RXAS
 review. Positive execution passed 47 source/IR/name/schema assertions and nine
 prebound alias/configuration assertions in each B-mode/VM cell. The independent
@@ -184,7 +230,8 @@ execution. No such algorithm change is part of DROP.
 ## Completed CABI proof and limits
 
 The following results qualify CABI commit
-`62d6dd44df528d56f4ca191bdc28d73b960c9432`, not the current DROP changes.
+`62d6dd44df528d56f4ca191bdc28d73b960c9432`; later changed inputs need their own
+focused qualification.
 `cmake --build cmake-build-debug --target stage-product`
 and focused hosts/fixtures passed warning-free; the optional `llctarget` product
 copy byte-matches the qualified opt target. No other optional packaged/installed C product,

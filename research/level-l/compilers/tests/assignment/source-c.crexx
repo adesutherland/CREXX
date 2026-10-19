@@ -1,0 +1,57 @@
+options levelc
+scalar = 'first'; scalar = 'second'
+say 'scalar=' || scalar
+empty =
+say 'empty=<' || empty || '>'
+say = 'say'; then = 'then'; else = 'else'; drop = 'drop'
+say 'keywords=' || say || '|' || then || '|' || else || '|' || drop
+items. = 'base'; items.one = 'override'; drop items.two
+items. = 'reset'
+say 'reset=' || items.one || '|' || items.two || '|' || items.other
+items.one = 'again'; drop items.one; items.one = 'restored'
+say 'restore=' || items.one
+items.one =
+say 'empty-tail=<' || items.one || '>'
+items. =
+say 'empty-stem=<' || items.one || '>|<' || items.other || '>'
+numeric = '01'; items.numeric = 'leading'; items.1 = 'one'
+say 'numeric=' || items.numeric || '|' || items.1
+drop unset
+items.unset = 'symbolic'
+say 'unset=' || items.UNSET
+key = ''; items.key = 'empty component'
+say 'empty-component=' || items.key
+key = 'b'; items.key = 'lower'; key = 'B'; items.key = 'upper'
+key = 'b'; say 'case=' || items.key || '|' || items.B
+first = 'part'; last = 'Tail'; key = 'part.Tail'
+deep.first.last = 'joined'
+say 'compound=' || deep.key
+key = 'part..Tail'; deep.key = 'empty middle'
+first = 'part'; last = 'Tail'
+say 'empty-middle=' || deep.first..last
+key = 'α.漢🙂'; deep.key = 'Unicode tail'
+say 'unicode-tail=' || deep.key
+key = '0061'x; nul.key = 'nul-a'; key = '0062'x; nul.key = 'nul-b'
+key = '0061'x; say 'nul-tail=' || nul.key
+key = '0062'x; say 'nul-tail-other=' || nul.key
+value = 'FF0080'x; copied = value
+say 'ordinals=' || length(copied) || '|' || (copied == 'FF0080'x)
+value = 'α漢🙂'; copied = value
+say 'text=' || length(copied) || '|' || (copied == 'α漢🙂')
+µ = 'micro'; μ = 'Greek'; Μ = 'same Greek'
+say 'names=' || µ || '|' || μ || '|' || Μ
+old = 'old'; old = old || '+'
+say 'old-value=' || old
+if 1 then scalar = 'if' else scalar = 'wrong'
+do
+  scalar = scalar || '-group'
+end
+say 'context=' || scalar
+key = 'b'; items.key = 'before'; keep = 'parent'
+items.key = marker()
+say 'rhs=' || items.key || '|' || key || '|' || keep
+exit 0
+marker: procedure
+  say 'RHS_MARKER'
+  key = 'different'; keep = 'child'
+  return 'new'

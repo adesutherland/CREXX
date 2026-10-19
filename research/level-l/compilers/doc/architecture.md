@@ -805,6 +805,24 @@ RXAS must show one library drop path per
 item, one capture per indirect reference, live pool/config bindings, truthful
 source/clause origins and no compiler word/tail algorithm or extra configuration.
 
+### Assignment: existing one-write contract
+
+The [assignment review](LEVELC-INSTRUCTION-REVIEW.md#assignment-one-write-after-rhs-evaluation)
+qualifies the existing C v3 operation without a new schema or API. The frontend
+evaluates `Assignment(value?)` once, using empty text only when the RHS is
+absent, then emits `crexx.c.store(context,value)[name]` with the raw target.
+The selector borrows the current pool at that operation; `llctarget.poolwrite`
+passes the exact `RexxValue` to `RexxVariablePool.setSymbolValue` once. The pool
+owns post-RHS tail substitution, final classification, stem reset and alias
+propagation. Compiler-side tail capture or text conversion is not required.
+
+Source call/read-before-store inspection and a test-only exported C IR body
+that mutates the supplied context before storing provide complementary proof.
+Ordinary private calls create fresh pools, so that composition does not prove a
+source RHS call can mutate its caller through EXPOSE. Source EXPOSE/shared
+labels, exact Classic diagnostics, resumable conditions and full TRACE remain
+the existing STEP04/06/07 dependencies; ASSIGN-AC01–04 track the bounded review.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

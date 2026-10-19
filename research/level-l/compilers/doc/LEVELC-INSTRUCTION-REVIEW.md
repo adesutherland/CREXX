@@ -78,8 +78,8 @@ both compiler IR modes and VMs with assembler optimisation disabled, all 256
 ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
 whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
-closure are separate states. DROP's bounded review below follows that SAY
-disposition; assignment is the next individual instruction review.
+closure are separate states. The bounded DROP and assignment reviews below
+follow that SAY disposition; LC-I-04 NOP is the next individual review.
 
 ## DROP: ordered names and borrowed pool effects
 
@@ -107,3 +107,30 @@ affected frontend checks also pass. Source EXPOSE, resumable conditions, complet
 diagnostic identities and TRACE remain open, so whole LC-I-02 remains partial.
 Existing native C DROP fixtures and shared B pool/Unicode proofs
 remain read-only semantic controls, not inherited passes for the new compiler.
+
+## Assignment: one write after RHS evaluation
+
+[LC-AC-54/63](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+require scalar/stem/arbitrary compound writes, an omitted RHS as assigned empty
+text, stem reset of explicit/dropped tails and substitution after RHS evaluation.
+The existing frontend already evaluates the RHS before one raw-name
+`crexx.c.store`; the selector/target then call the current pool's
+`setSymbolValue`. The pool owns classification, case-preserved substituted tails,
+aliases and value/cache storage. No product defect or new API/schema is assumed.
+
+[ASSIGN-AC01–04](../PLAN.md#current-action-assignment) require independent source,
+AST/IR, prebound-context and caller/helper RXAS proof. Source marker calls and
+old-value reads establish once-only RHS-before-write order. An exported test IR
+body mutates the supplied live context before its store; a B owner observes the
+selected tail, aliases and cache flags before formatting. These are composed
+proofs: private source calls have fresh pools and cannot mutate the parent by
+inheriting a prebound alias. Do not copy native fixture EXPOSE, counted DO or
+C2X forms into the admitted source profile merely to obtain a test.
+
+The bounded review is locally qualified by the [composed normal Debug
+checks](../PLAN.md#current-assignment-proof) and independent actual caller/fatal
+RXAS inspection. No product change was needed. Whole LC-I-03 remains partial
+for source EXPOSE/shared-label, exact Classic diagnostic, resumed
+condition/NOVALUE and full clause/TRACE dependencies under STEP04/06/07.
+Existing native and shared B passes are controls, not inherited assignment
+acceptance. The next individual review is LC-I-04 NOP.

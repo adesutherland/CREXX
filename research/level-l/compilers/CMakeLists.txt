@@ -164,6 +164,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_c_drop_contracts_${_mode}
       DEPENDS "${_dir}/drop-contracts-linked.rxbin")
+    ll_compile(assignment-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/assignment-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/assignment-contracts-linked"
+        "${_dir}/assignment-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/assignment-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_c_assignment_contracts_${_mode}
+      DEPENDS "${_dir}/assignment-contracts-linked.rxbin")
     foreach(_vm rxbvm rxtvm)
       if(TARGET ${_vm})
         set(_contracts_test "llcompiler_c_context_contracts_${_mode}_${_vm}")
@@ -320,6 +328,22 @@ if("c" IN_LIST _languages)
   crexx_register_test_prep_targets(TESTS llcompiler_c_drop TARGETS
     llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
     llcompiler_c_drop_contracts_opt llcompiler_c_drop_contracts_noopt
+    llcompiler_target_opt llcompiler_target_noopt library classlib rxfnsc rxunicode_core
+    fs cstream rxc rxas rxlink ${_drop_vms})
+  # Isolated Debug components: 36 positives + 5 refusals + one fatal compile
+  # completed within 77s; the remaining fatal component took 5.65s. No single
+  # successful full-run timing is claimed. Source-only policy is in AGENTS.md.
+  add_test(NAME llcompiler_c_assignment COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-assignment.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/llcompiler_c_assignment"
+    ${_drop_vm_args})
+  set_tests_properties(llcompiler_c_assignment PROPERTIES
+    PASS_REGULAR_EXPRESSION "ASSIGN[|]phase=all[|]commands=[0-9]+[|]failures=0"
+    TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_assignment TARGETS
+    llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
+    llcompiler_c_assignment_contracts_opt llcompiler_c_assignment_contracts_noopt
     llcompiler_target_opt llcompiler_target_noopt library classlib rxfnsc rxunicode_core
     fs cstream rxc rxas rxlink ${_drop_vms})
   # Retained isolated timing entrypoint for this nested aggregate.

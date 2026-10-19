@@ -3386,6 +3386,34 @@ Source EXPOSE, resumable conditions and full TRACE remain later compiler work.
 The [independent DROP fixtures](../../research/level-l/compilers/tests/drop/)
 own source, state, diagnostic, borrowed-alias and emitted-code expectations.
 
+### Classic assignment
+
+An assignment evaluates its expression once before the current variable pool
+resolves the target. A missing expression assigns empty text. The pool owns
+scalar replacement, compound-tail substitution and stem defaults; the compiler
+passes the raw target name and exact value to that shared implementation.
+
+```rexx
+options levelc
+key = 'b'
+items.key = 'old'
+items.key = items.key || '+'
+empty =
+say items.key || '|<' || empty || '>'
+```
+
+The output is `old+|<>`. Substituted tail contents keep their case and may
+contain Unicode, dots or NUL; these contents are values, not newly parsed source
+identifiers. A whole-stem assignment replaces its default and clears explicit
+or dropped tails. Assigning an individual tail restores a previously dropped
+binding. Assignment preserves the value's text and numeric representation.
+
+Private source routines have fresh pools. The [independent assignment
+fixtures](../../research/level-l/compilers/tests/assignment/) combine source-call
+ordering with a separate B-owned, prebound-context control;
+they do not establish source EXPOSE or shared-label behavior. Those forms,
+resumable conditions and full TRACE remain later compiler work.
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:

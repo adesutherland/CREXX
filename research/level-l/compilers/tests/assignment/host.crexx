@@ -1,0 +1,72 @@
+/* cREXX License (MIT). Caller-owned assignment aliases, values and live binding. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import assignfixture
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  parent = .rexxpool..RexxVariablePool(1); bridge = .rexxpool..RexxVariablePool(1); child = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  activation = .rexxactivation..RexxActivationArguments()
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference child,reference config)
+  typed = .rexxvalue..RexxValue.fromInt(42); integerflags = typed.cacheFlags()
+  decimal = .rexxvalue..RexxValue.fromDecimal('12.50' as .decimal); decimalflags = decimal.cacheFlags()
+  payload = .rexxvalue..RexxValue('α' || ('00'x as .string) || 'ÿ'); textflags = payload.cacheFlags()
+  call child.setValue('cached',typed); call child.setValue('decimal',decimal); call child.setValue('payload',payload)
+  call child.setString('key','a'); call child.setStemString('items.','a','old-a')
+  call parent.setString('exact','old'); call parent.setString('nested','old')
+  call bridge.exposeValue('nested',reference parent,'nested')
+  call child.exposeValue('nested',reference bridge,'nested'); call child.exposeValue('exact',reference parent,'exact')
+  call parent.setSymbolValue('shared.',.rexxvalue..RexxValue('base'))
+  call parent.setStemString('shared.','explicit','old'); call parent.dropSymbol('shared.missing')
+  call child.exposeStem('shared.',reference parent,'shared.')
+  call parent.setStemString('private.','a','alias'); call parent.setStemString('private.','B','upper')
+  call child.exposeSymbol('private.key',reference parent)
+  returned = assignfixture..run(reference context)
+  call check(\returned.hasReturnValue(),'fresh absent result')
+  value = child.stemSymbolValue('items.','b')
+  call check(value.cacheFlags() = integerflags & value.hasInt() & \value.hasString(),'post-effect compound store preserves integer-only cache')
+  call check(value.asInt() = 42 & child.stemSymbolValue('items.','a').asString() = 'old-a','target resolves mutated key, old tail unchanged')
+  value = parent.value('exact')
+  call check(value.cacheFlags() = integerflags & value.hasInt() & \value.hasString(),'scalar alias receives exact cached value')
+  call check(value.asInt() = 42,'scalar alias mutates parent')
+  value = parent.value('nested')
+  call check(value.cacheFlags() = integerflags & value.asInt() = 42,'nested alias reaches authoritative parent')
+  shared = parent.stem('shared.')
+  call check(shared.size() = 0 & \shared.isDroppedTail('missing'),'whole exposed stem clears explicit tails and tombstones')
+  value = parent.stemSymbolValue('shared.','missing')
+  call check(value.cacheFlags() = integerflags & value.asInt() = 42,'whole-stem default retains typed cache')
+  value = parent.stemSymbolValue('private.','a')
+  call check(value.cacheFlags() = integerflags & value.asInt() = 42,'private reset reaches prebound exact tail')
+  call check(parent.stemSymbolValue('private.','B').asString() = 'upper','private reset preserves unrelated case-distinct parent tail')
+  call check(child.symbolValue('private.B').asInt() = 42,'private reset supplies local unexposed tail')
+  value = child.value('decimalcopy')
+  call check(value.cacheFlags() = decimalflags & value.hasDecimal() & \value.hasString() & \value.hasInt(),'decimal-only cache retained before observation')
+  call check(value.asDecimal() = '12.50' as .decimal,'decimal value retained')
+  value = child.value('textcopy')
+  call check(value.cacheFlags() = textflags & value.hasString(),'text cache retained before conversion')
+  call check(value.asString() = 'α' || ('00'x as .string) || 'ÿ','Unicode/NUL text copied exactly')
+  call check(child.value('cached').cacheFlags() = integerflags,'load/store does not format cached source')
+  call check(child.value('decimal').cacheFlags() = decimalflags,'load/store does not format decimal source')
+  other = .rexxpool..RexxVariablePool(1)
+  call other.setValue('cached',.rexxvalue..RexxValue.fromInt(99))
+  call other.setValue('decimal',decimal); call other.setValue('payload',payload)
+  call other.setString('key','a')
+  call context.bindPool(reference other)
+  returned = assignfixture..run(reference context)
+  call check(other.stemSymbolValue('items.','b').asInt() = 99,'second invocation uses current rebound pool')
+  call check(parent.value('exact').asInt() = 42 & child.value('cached').asInt() = 42,'rebound invocation leaves original owners intact')
+  call check(\returned.hasReturnValue(),'rebound invocation returns fresh absent result')
+  say 'ASSIGN_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
