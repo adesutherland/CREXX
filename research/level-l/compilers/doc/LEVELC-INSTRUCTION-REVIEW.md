@@ -176,7 +176,7 @@ successful default-policy lexing of later text that enabled line comments hide.
 Raw operands and original Unicode/CRLF byte spans remain observable in the AST.
 
 The existing B `RexxClassicConfig.applyOptions` accepts zero runtime words and
-returns without scanning or conversion. The approved current-v3 specialization
+returns without scanning or conversion. The specialization introduced in C v3
 omits that call and validates bare/simple String/Number operands without unused
 value construction. Name reads, unary/binary operations, calls, required results,
 errors, normal visits and budgets remain; dead malformed literals still refuse.
@@ -222,4 +222,32 @@ validation and contextual effects. Whole LC-I-06 remains partial
 for SELECT/full DO/shared labels/EXPOSE, complete expressions and exact static
 diagnostics, resumed conditions/NOVALUE and clause/TRACE observations under
 STEP04/05/06/07. Shared B truth and generic L algorithms retain their owners.
-The approved SELECT increment starts after the IF commits.
+The approved SELECT increment is reviewed separately below.
+
+## SELECT: ordered WHEN checks and source-backed no-match delivery
+
+[SELECT-AC01–04](../PLAN.md#current-action-select) own the approved bounded
+SELECT review. CSelect retains ordered CWhen/COtherwise and original spans;
+OTHERWISE is one optional final instruction list and may be empty. Each reached
+WHEN evaluates once and performs contextual truth before its selected body.
+Later tests/arms remain dormant after the first exact text `1`; exact text `0`
+continues. Invalid values use the existing distinct 34.2 helper behavior.
+
+The current C-owned family is v4/43 operations. Its two additions are
+`when.truth(value,context)` and attribute-free `select.missing`; the target adds
+`whentruth` and `selectmissing` to its existing 23 exports. The no-match bridge
+reuses shared 7.3 message/source and forwards its captured ERROR event with
+signalorigin. Separate inline calls need not have equal physical PCs. Generated
+C separately indexes the exact SELECT origin for the visible source line and
+retains its nonresumable fatal policy. Fresh/loaded/dead missing operations
+must have an owned exact nonempty valid source span before publication.
+
+SELECT creates no loop frame. Only structurally open arm endpoints join;
+LEAVE/ITERATE target the surrounding loop. Cold absent-result/core-return
+closure after the divergent missing operation is required by the current IR,
+not an unused join. Both source arms and later dead source remain validated.
+Focused selectors, paired B/IR/VM runtime, admission/metadata/atomicity controls
+and independent actual caller/helper inspection pass the
+[bounded Debug proof](../PLAN.md#current-select-proof). Whole
+LC-I-07 retains shared labels/fall-through/EXPOSE, complete expressions/DO/named
+transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.

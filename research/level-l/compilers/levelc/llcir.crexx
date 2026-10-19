@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',3)
+  c = schema.family('crexx.c',4)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -59,4 +59,6 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'call',types,'arguments:9 context:7',10,'target:2 function:11','context.output','condition')
   call llscalar..declare(c,'length',types,'value:6 context:7',6,'','context','condition')
   call llscalar..declare(c,'exit',types,'value:6',0,'','process','exit','diverges')
+  call llscalar..declare(c,'when.truth',types,'value:6 context:7',11,'','context','condition')
+  call llscalar..declare(c,'select.missing',types,'',0,'','none','condition','diverges')
   return

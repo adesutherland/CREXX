@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -122,6 +122,38 @@ truth: procedure = .int
   result = rexxclassic_expression_unary(reference callcontext,value)
   result = rexxclassicbif_checked(reference callcontext,result)
   return result.logicalValue() as .int
+
+/** Apply the shared WHEN-value check at the caller's numeric settings.
+ * @param value Evaluated WHEN operand.
+ * @param context Borrowed execution bundle; its owners must remain live.
+ * @return Zero or one; invalid logical text raises Classic 34.2.
+ * @signal CLASSIC_SYNTAX The shared logical check failed. */
+whentruth: procedure = .int
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('LOGICALWHENVALUE',context)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  result = rexxclassicbif_checked(reference callcontext,result)
+  return result.logicalValue() as .int
+
+/** Relay the shared no-match error without copying its message policy.
+ * The original helper event keeps its raw source; the generated C caller owns
+ * the visible SELECT location and prevents resumption through its fatal path.
+ * @param line Indexed one-based SELECT source line, represented as text.
+ * @signal CLASSIC_SYNTAX The shared SELECT no-match error (7.3).
+ * @return No value; a direct B caller that skips the signal may resume. */
+selectmissing: procedure = .void
+  arg line = .string
+  message = .string
+  do
+    call rexxvalue_select_missing(line)
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return
 
 /** Validate and commit one stored activation setting using its existing owner.
  * The executing C caller installs the validated settings in its own VM frame.

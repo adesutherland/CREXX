@@ -11,13 +11,59 @@ import rexxclassicbifnumeric
 import llctarget
 
 main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] > 1 then return 2
+  if argv[0] = 1 then if argv[1] <> 'select' then return 2
   checks = 0; failures = 0
-  call expressions()
-  call argumentcases()
-  call borrowedowners()
-  call numericframes()
+  if argv[0] = 0 then do
+    call expressions()
+    call argumentcases()
+    call borrowedowners()
+    call numericframes()
+  end
+  call selectcases()
   say 'TARGET_CONTEXT|checks=' || checks || '|failures=' || failures
   return failures
+
+/* The direct B bridge preserves the existing helper's raw event origin.
+ * Generated C separately supplies the visible SELECT line and fatal policy. */
+selectcases: procedure = .void
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call check(llctarget..whentruth(.RexxValue('0'),reference context) = 0,'false WHEN value')
+  call check(llctarget..whentruth(.RexxValue('1'),reference context) = 1,'true WHEN value')
+  caught = 0
+  do
+    ignored = llctarget..whentruth(.RexxValue('1.0'),reference context)
+  on signal classic_syntax as problem
+    caught = pos('RXC-LC-34.2',problem.message()) = 1
+  end
+  call check(caught,'WHEN retains its distinct shared 34.2 identity')
+  originalmodule = -1; originaladdress = -1; originalmessage = ''
+  originalfile = ''; originalline = 0; originalsource = ''
+  do
+    call rexxvalue_select_missing('17')
+  on signal error as original
+    originalmodule = original.module(); originaladdress = original.address()
+    originalmessage = original.message()
+    originalfile = original.file(); originalline = original.line(); originalsource = original.source()
+  end
+  call check(pos('RXC-LC-7.3:',originalmessage) = 1 & pos('line 17',originalmessage) > 0,'existing no-match helper owns exact message')
+  caught = 0; bridgemodule = -2; bridgeaddress = -2; bridgemessage = ''
+  bridgefile = ''; bridgeline = 0; bridgesource = ''
+  do
+    call llctarget..selectmissing('17')
+  on signal classic_syntax as bridged
+    caught = 1; bridgemodule = bridged.module(); bridgeaddress = bridged.address()
+    bridgemessage = bridged.message()
+    bridgefile = bridged.file(); bridgeline = bridged.line(); bridgesource = bridged.source()
+  end
+  call check(caught & bridgemessage == originalmessage,'bridge changes condition name without rewriting helper message')
+  /* Separate inline sites have distinct physical PCs; both retain the helper source. */
+  call check(originalmodule >= 0 & originaladdress > 0 & bridgemodule >= 0 & bridgeaddress > 0 & originalfile == bridgefile & pos('RexxValue.crexx',originalfile) > 0 & originalline > 0 & originalline = bridgeline & originalsource == bridgesource & pos('signal "ERROR"',originalsource) > 0,'bridge retains valid raw origin and shared helper file/line/source')
+  return
 
 check: procedure = .void expose checks failures
   arg condition = .int, description = .string

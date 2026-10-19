@@ -19,6 +19,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'options' then call optionstests()
     when 'if' then call iftests()
     when 'if-errors' then call iferrors()
+    when 'select' then call selecttests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -78,7 +79,8 @@ syntax: procedure = .void
     call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
     call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','number',10,'line 1, column 10')
     call bad(language,'interpret "say 1"' as .binary,'LL_COMPILER_PROFILE:','INTERPRET',0)
-    call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
+    if language = 'g' then call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
+    else call bad(language,'select' as .binary,'LL_COMPILER_SYNTAX:','expected',6)
   end
   call bad('c','numeric form wrong' as .binary,'LL_COMPILER_SYNTAX:','SCIENTIFIC',13)
   call bad('g','x = ' as .binary,'LL_COMPILER_SYNTAX:','number')
@@ -152,6 +154,7 @@ grammar: procedure = .void expose examples
   call noptests()
   call optionstests()
   call iftests()
+  call selecttests()
   text = .string; source = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -172,6 +175,164 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** SELECT retains authored clauses while its ordinary arms keep their AST. */
+selecttests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  first = .llast..node; second = .llast..node; fallback = .llast..node; body = .llast..node
+  outer = .llast..node; inner = .llast..node; request = .lltestfrontend..request
+  graph = .llir..module; op = .llir..opview; origin = .llir..origin
+  source = .string; prefix = .string; ignored = .string; arm = .string; expected = .string
+  sample = .int; i = .int; whenchecks = .int; missingchecks = .int
+  crlf = '0D0A'x as .string
+  prefix = 'SeLeCt' || crlf || "  WhEn '0' ThEn nop" || crlf
+  source = prefix || "  when '1' then say 'α漢🙂'" || crlf || '  OtHeRwIsE' || crlf || '    options' || crlf || '    nop' || crlf || 'EnD'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF SELECT AST accepted: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'CSelect' & node.count('clauses') = 3,'three ordered SELECT clauses')
+    call check(node.start() = 0 & node.finish() = <blen>(source as .binary) & node.sourcetext() = source,'whole authored SELECT extent retained')
+    if node.kind() = 'CSelect' & node.count('clauses') = 3 then do
+      first = node.child('clauses',1); second = node.child('clauses',2); fallback = node.child('clauses',3)
+      call check(first.kind() = 'CWhen' & second.kind() = 'CWhen' & fallback.kind() = 'COtherwise','WHEN order and final OTHERWISE retained')
+      call check(first.start() = 10 & second.start() = <blen>(prefix as .binary) + 2,'WHEN starts use original UTF-8 byte offsets')
+      prefix = prefix || "  when '1' then "
+      body = second.child('body')
+      call check(body.kind() = 'Say' & body.start() = <blen>(prefix as .binary),'Unicode arm retains its own byte start')
+      call check(pos("say 'α漢🙂'",body.sourcetext()) = 1,'Unicode arm text survives projection')
+      body = fallback.child('body')
+      call check(body.kind() = 'Sequence' & body.count('items') = 2,'OTHERWISE owns one full instruction Sequence')
+      first = body.child('items',1); second = body.child('items',2)
+      call check(first.kind() = 'COptions' & second.kind() = 'Nop','OTHERWISE body order and childless instructions retained')
+    end
+  end
+  do sample = 1 to 4
+    select sample
+      when 1 then source = 'select; when 0 then nop; otherwise; end'
+      when 2 then source = 'select' || crlf || 'when 0 then nop' || crlf || 'otherwise' || crlf || 'end'
+      when 3 then source = "select; when 0 then nop; otherwise say 'inline'; nop; end"
+      otherwise source = 'select; when 0 then nop; otherwise select; when 1 then nop; end; end'
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'empty/list/inline OTHERWISE parses ' || sample || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    fallback = node.child('clauses',2); body = fallback.child('body')
+    call check(fallback.kind() = 'COtherwise' & body.kind() = 'Sequence','OTHERWISE has exactly one Sequence ' || sample)
+    if sample <= 2 then call check(body.count('items') = 0,'empty OTHERWISE has no invented instruction ' || sample)
+    if sample = 3 then do
+      first = body.child('items',1); second = body.child('items',2)
+      call check(body.count('items') = 2 & first.kind() = 'Say' & second.kind() = 'Nop','same-clause first instruction stays in OTHERWISE list')
+    end
+    if sample = 4 then do
+      first = body.child('items',1)
+      call check(body.count('items') = 1 & first.kind() = 'CSelect','inline nested SELECT is ordinary first list instruction')
+    end
+    if sample <= 3 then ignored = good('c',source,'crexx.c.when.truth','crexx.c.select.missing')
+    else ignored = good('c',source,'crexx.c.select.missing')
+  end
+  source = 'if 1 then select; when 1 then if 0 then nop else options; end else nop'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'SELECT barrier restores outer IF and keeps inner nearest ELSE')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    node = outer.child('yes'); first = node.child('clauses',1); inner = first.child('body'); body = outer.child('no')
+    call check(outer.kind() = 'IfElse' & node.kind() = 'CSelect' & inner.kind() = 'IfElse' & body.kind() = 'Nop','distinct inner and outer IF own their ELSE')
+    first = inner.child('yes'); second = inner.child('no')
+    call check(first.kind() = 'Nop' & second.kind() = 'COptions','inner WHEN arm retains optional instructions')
+  end
+  do sample = 1 to 5
+    select sample
+      when 1 then source = 'select=1; when=1; otherwise=2; end=3; else=1; say select when otherwise end; select; when when then options else; when else then nop; otherwise; end'
+      when 2 then source = 'do; select; when 1 then options; otherwise; end; end'
+      when 3 then source = 'do while 1; select; when 1 then leave; otherwise iterate; end; end'
+      when 4 then source = 'exit 0; p: procedure; select; when 1 then return 1; otherwise return 2; end'
+      otherwise source = 'select; when 1 then call p,; otherwise arg a,; end; exit 0; p: procedure; return'
+    end
+    ignored = good('c',source,'crexx.c.when.truth')
+  end
+  do sample = 1 to 14
+    select sample
+      when 1 then do; arm = 'return'; expected = 'Return'; end
+      when 2 then do; arm = 'exit'; expected = 'Exit'; end
+      when 3 then do; arm = 'say'; expected = 'Say'; end
+      when 4 then do; arm = 'options'; expected = 'COptions'; end
+      when 5 then do; arm = 'arg'; expected = 'CArg'; end
+      when 6 then do; arm = 'arg a,'; expected = 'CArg'; end
+      when 7 then do; arm = 'numeric digits'; expected = 'CNumeric'; end
+      when 8 then do; arm = 'numeric fuzz'; expected = 'CNumeric'; end
+      when 9 then do; arm = 'numeric form'; expected = 'CForm'; end
+      when 10 then do; arm = 'numeric form scientific'; expected = 'CForm'; end
+      when 11 then do; arm = 'numeric form engineering'; expected = 'CForm'; end
+      when 12 then do; arm = 'a='; expected = 'Assignment'; end
+      when 13 then do; arm = 'call else,'; expected = 'Invoke'; end
+      otherwise do; arm = 'drop else'; expected = 'CDrop'; end
+    end
+    source = 'select; when 1 then ' || arm || '; otherwise; end'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'SELECT admits ordinary minimum arm ' || arm || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    first = node.child('clauses',1); body = first.child('body')
+    call check(body.kind() = expected,'ordinary arm AST retained ' || arm)
+  end
+  prefix = "say 'α漢🙂'" || crlf
+  source = prefix || 'sElEcT' || crlf || "when '0' then nop" || crlf || "when '1' then nop" || crlf || 'end'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'select-span.crexx')
+  call check(request.status() = 0,'source-backed SELECT IR accepted: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); whenchecks = 0; missingchecks = 0
+    call check(graph.error() = '','SELECT source IR verifies')
+    do i = 1 to graph.operations()
+      op = graph.operation(i); origin = op.origin()
+      if op.name() = 'crexx.c.when.truth' then do
+        whenchecks = whenchecks + 1
+        call check(origin.kind() = 'exact' & origin.last() - origin.first() = 4,'WHEN truth has exact keyword extent')
+        call check(binsubstr(origin.sourcebytes(),origin.first() + 1,4) = 'when' as .binary,'WHEN origin selects authored keyword')
+      end
+      if op.name() = 'crexx.c.select.missing' then do
+        missingchecks = missingchecks + 1
+        call check(origin.kind() = 'exact' & origin.first() = <blen>(prefix as .binary) & origin.last() - origin.first() = 6,'missing error has six-byte SELECT origin after Unicode/CRLF')
+        call check(origin.sourcebytes() = source as .binary,'missing error retains original full source')
+      end
+    end
+    call check(whenchecks = 2 & missingchecks = 1,'every authored WHEN and one absent-OTHERWISE fallback retained')
+  end
+  source = 'select; before:; when 0 then nop; between:; when 1 then nop; end'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'SELECT boundary labels retain source AST')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    first = node.child('clauses',1); second = node.child('clauses',3)
+    call check(node.count('clauses') = 4 & first.kind() = 'CLabel' & second.kind() = 'CLabel','labels remain ordered clauses, not discarded')
+    call check(first.text('name') = 'before' & second.text('name') = 'between','raw label spellings retained')
+  end
+  call bad('c',source as .binary,'LL_COMPILER_PROFILE:','CLabel',8)
+  call bad('c','exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_PROFILE:','CLabel')
+  do sample = 1 to 14
+    select sample
+      when 1 then source = 'select 1; when 1 then nop; end'
+      when 2 then source = 'select; end'
+      when 3 then source = 'select; otherwise; end'
+      when 4 then source = 'select; when then nop; end'
+      when 5 then source = 'select; when 1 nop; end'
+      when 6 then source = 'select; when 1 then; end'
+      when 7 then source = 'select; when 1 then nop; say 2; end'
+      when 8 then source = 'select; when 0 then nop; otherwise; when 1 then nop; end'
+      when 9 then source = 'select; when 0 then nop; otherwise; otherwise; end'
+      when 10 then source = 'select; when 1 then nop;'
+      when 11 then source = 'select; when 1 then nop; end x'
+      when 12 then source = 'when 1 then nop'
+      when 13 then source = 'otherwise nop'
+      otherwise source = 'exit 0; select; when 1 then nop; otherwise; otherwise; end'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+  end
+  call bad('c','select; when 1 then nop; when 1d then nop; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c',"select; when 1 then nop; otherwise say 'GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call bad('c','select; when 0 then interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
   return
 
 /** IF owns only its nearest ELSE; arm instructions retain their own AST. */

@@ -55,6 +55,9 @@ scientificword: token = 50
 engineeringword: token = 51
 asword: token = 52
 dropword: token = 53
+selectword: token = 54
+whenword: token = 55
+otherwiseword: token = 56
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -100,7 +103,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   statements: rule = separator* (statement as item (separator (statement as item)?)*)?
     then tree Sequence(items = item*)
   statement: rule = closed.statement | open.statement
-  closed.statement: rule = simple | block | if.closed
+  closed.statement: rule = simple | block | select.statement | if.closed
   open.statement: rule = if.open | if.continued
   if.closed: rule = ifword expression as condition thenword closed.statement as yes elseword closed.statement as no
     then tree IfElse(condition = condition, yes = yes, no = no)
@@ -108,6 +111,18 @@ parse: parser semantics contextfree input tokens start program backend lr1
     then tree IfThen(condition = condition, yes = yes)
   if.continued: rule = ifword expression as condition thenword closed.statement as yes elseword open.statement as no
     then tree IfElse(condition = condition, yes = yes, no = no)
+  select.statement: rule = selectword separator
+    (separator | (label.statement as clause separator))*
+    select.when as clause separator
+    (separator | ((select.when | label.statement) as clause separator))*
+    (select.otherwise as clause)? endword
+    then tree CSelect(clauses = clause+)
+  select.when: rule = whenword expression as condition thenword statement as body
+    then tree CWhen(condition = condition, body = body)
+  select.otherwise: rule = otherwiseword otherwise.body as body
+    then tree COtherwise(body = body)
+  otherwise.body: rule = (statement as item)? separator (separator | (statement as item separator))*
+    then tree Sequence(items = item*)
   say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
   call.statement: rule = callword identifier as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)

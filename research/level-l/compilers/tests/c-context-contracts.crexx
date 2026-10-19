@@ -9,13 +9,15 @@ main: procedure = .int expose checks failures
   arg argv = .string[]
   if argv[0] <> 1 then return 2
   checks = 0; failures = 0; mode = .int
-  call versionrefusal(argv[1],2)
-  call versionrefusal(argv[1],4)
+  call versionrefusal(argv[1],3)
+  call versionrefusal(argv[1],5)
+  call selectschema()
   do mode = 1 to 6
     call functioncontract(argv[1],mode)
+    call forgedschema(argv[1],mode)
+    call selectorigin(argv[1],mode)
   end
   do mode = 1 to 4
-    call forgedschema(argv[1],mode)
     call contextslots(argv[1],mode)
   end
   say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
@@ -27,6 +29,26 @@ check: procedure = .void expose checks failures
   if passed then return
   failures = failures + 1
   say 'FAIL|' || label
+  return
+
+/* Literal expectations for the two appended descriptors complement whole-
+ * schema admission. Existing operation IDs and the context ABI stay intact. */
+selectschema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  call check(version = 4 & data.ops() = 43,'current C v4 has exactly 43 operations')
+  call check(data.opname(41) = 'crexx.c.exit' & data.opname(42) = 'crexx.c.when.truth' & data.opname(43) = 'crexx.c.select.missing','SELECT appends descriptors after the unchanged 41 operations')
+  descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
+  call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
+  call check(data.arity(id,2) = 1 & data.fieldname(id,2,1) = 'value' & data.typename(data.fieldtype(id,2,1)) = 'core.boolean' & data.arity(id,3) = 0,'WHEN truth returns only a Boolean with no attributes')
+  call check(data.effectvalue(id,1) = 'context' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'returns','WHEN truth retains contextual condition effects')
+  descriptor = contract.operation('crexx.c.select.missing'); id = descriptor.id()
+  call check(data.arity(id,1) = 0 & data.arity(id,2) = 0 & data.arity(id,3) = 0,'SELECT missing has no serialized operands, results or line attribute')
+  call check(data.effectvalue(id,1) = 'none' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'diverges','SELECT missing declares the current fatal-profile effect')
   return
 
 /* Old and unknown semantic versions are refused before their function ABI is
@@ -115,6 +137,7 @@ forgedschema: procedure = .void
       do field = 1 to source.arity(i,kind)
         spelling = source.fieldname(i,kind,field)
         if mode = 2 & name = 'crexx.c.numeric.form' & kind = 1 then spelling = 'wrongcontext'
+        if mode = 5 & name = 'crexx.c.when.truth' & kind = 1 & field = 2 then spelling = 'wrongcontext'
         type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
         if kind = 1 then call declared.input(spelling,type)
         else if kind = 2 then call declared.output(spelling,type)
@@ -124,7 +147,9 @@ forgedschema: procedure = .void
     state = source.effectvalue(i,1)
     if mode = 1 & name = 'crexx.c.numeric.form' then state = 'none'
     call declared.state(state); call declared.failure(source.effectvalue(i,2))
-    call declared.termination(source.effectvalue(i,3))
+    termination = source.effectvalue(i,3)
+    if mode = 6 & name = 'crexx.c.select.missing' then termination = 'returns'
+    call declared.termination(termination)
   end
   ignored = data.freeze(); contract = .llir..contract(data)
   operation = .llir..opview
@@ -143,7 +168,7 @@ forgedschema: procedure = .void
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'forged unused descriptor is a valid generic graph ' || mode)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
-  expected = word('effects field operation constant',mode)
+  expected = word('effects field operation constant field effects',mode)
   call check(backend.status() <> 0 & pos(expected,backend.error()) > 0, 'unused descriptor refused precisely ' || mode)
   call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'unused descriptor refusal is atomic ' || mode)
   return
@@ -196,4 +221,52 @@ contextslots: procedure = .void
   if mode = 4 then call check(backend.status() = 0 & output.bytes() > 0, 'entry-bound context aliases admitted: ' || backend.error())
   else call check(backend.status() <> 0 & pos('context',lower(backend.error())) > 0, 'unbound/nonentry context slot refused ' || mode || ': ' || backend.error())
   call check((mode = 4 | output.bytes() = 0) & bin2x(saved) = bin2x(graph.binary()), 'context alias admission is atomic ' || mode)
+  return
+
+/* These origins are structurally valid generic IR. SELECT alone needs one
+ * exact, nonempty authored span, including for an unreachable operation.
+ * Generic ts_llir already covers absent/out-of-range/recovered origin refusal;
+ * those malformed graphs never reach target admission. */
+selectorigin: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  text = 'α' || ('0D0A'x as .string) || 'select'
+  file = builder.source('<source>',text as .binary); exact = file.origin(4,10)
+  at = exact
+  if mode = 2 then at = file.origin(4,4)
+  if mode = 3 then at = builder.synthetic('SELECT missing synthetic refusal')
+  if mode = 4 | mode = 6 then at = exact.derive()
+  if mode = 5 then at = exact.derive('composite')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); block = fn.block('entry')
+  closure = exact.derive()
+  draft = .llir..opdraft; operation = .llir..opview
+  if mode = 6 then do
+    draft = block.operation(contract.operation('crexx.c.return.absent'),closure)
+    operation = draft.finish(); call block.returnvalue(operation.result(),closure)
+    block = fn.block('dead')
+  end
+  draft = block.operation(contract.operation('crexx.c.select.missing'),at)
+  operation = draft.finish()
+  draft = block.operation(contract.operation('crexx.c.return.absent'),closure)
+  operation = draft.finish(); call block.returnvalue(operation.result(),closure)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'generic-valid SELECT origin fixture ' || mode || ': ' || graph.error())
+  restored = llir..loadbinary(contract,saved)
+  call check(restored.error() = '' & bin2x(restored.binary()) = bin2x(saved),'SELECT origin survives binary round trip ' || mode)
+  call selectadmission(artifacts,graph,mode,'fresh')
+  call selectadmission(artifacts,restored,mode,'loaded')
+  return
+
+selectadmission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, mode = .int, lane = .string
+  saved = graph.binary(); label = lane || ' SELECT origin ' || mode
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 1 then do
+    call check(backend.status() = 0 & output.bytes() > 0, label || ' admits anonymous exact source: ' || backend.error())
+    call check(pos('<source>',output.text()) > 0 & pos('llctarget.selectmissing',output.text()) > 0,label || ' retains logical source and missing helper')
+  end
+  else call check(backend.status() <> 0 & pos('SELECT missing',backend.error()) > 0 & output.bytes() = 0,label || ' refuses before publication: ' || backend.error())
+  call check(bin2x(saved) = bin2x(graph.binary()),label || ' preserves input')
   return

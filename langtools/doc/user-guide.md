@@ -3487,9 +3487,36 @@ if '0' then say 'not reached'
 The output is `selected`; the unchosen division is never evaluated. Current
 main/group/WHILE/private-routine placements retain each arm instruction's own
 contract. Both terminating arms add no spare join/default-return path, and
-literal branch pruning retains the contextual truth check. SELECT, full DO,
+literal branch pruning retains the contextual truth check. Full DO,
 shared labels/EXPOSE, complete diagnostic identities, resumed conditions and
 TRACE remain later work in the [IF plan](../../research/level-l/compilers/PLAN.md#current-action-if).
+
+### Classic SELECT
+
+SELECT evaluates WHEN conditions in source order until the first exact text
+`1`, then executes only that instruction. Exact text `0` continues to the next
+WHEN. Later expressions and arms remain dormant after a match. OTHERWISE
+accepts an instruction list, including an empty list, and is optional and final.
+
+```rexx
+options levelc
+select
+  when '0' then say 1/0
+  when '1' then say 'selected'
+  otherwise
+    say 'fallback'
+    nop
+end
+```
+
+The output is `selected`. An invalid logical WHEN value, such as `'1.0'`, raises
+Classic 34.2 at WHEN before either its body or later code. With no true WHEN
+and no OTHERWISE, Classic 7.3 identifies the SELECT line. Nested SELECT and
+admitted main/group/WHILE/private-routine arms preserve ordinary loop transfers;
+SELECT itself creates no loop frame. Current generated C uses the fatal,
+nonresumable condition profile. Shared labels/fall-through/EXPOSE, complete
+expressions/DO, full diagnostic recovery and conditions/TRACE remain open in
+the [SELECT plan](../../research/level-l/compilers/PLAN.md#current-action-select).
 
 ## Optional arguments and separate G modules
 
@@ -3565,7 +3592,7 @@ Helpers that must observe rebinding take `reference context`. Invalid or expired
 references raise `REFERENCE_INVALID`; a rejected rebind preserves the old pool.
 
 Direct hosts import `llctarget` from `llctarget.rxbin` and use the
-[nine borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
+[borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
 They reuse existing BIFs and the host's character configuration. Numeric calls
 inherit the executing caller frame; `setting` updates stored activation state
 only, so a host installs validated settings in its own frame. Generated C does
@@ -3574,11 +3601,11 @@ child inheritance and parent restoration. The direct fixture
 `research/level-l/compilers/tests/target-context.crexx` demonstrates the same
 boundary independently. Generated C uses one required context reference and one
 fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. C-family v3 and this target are the current research contract:
-rebuild earlier C images/IR; no legacy bridge is provided. This migration adds
-no INTERPRET, and its fatal-condition profile remains nonresumable. Version 3
-adds the ordered DROP operation and shared raw-symbol admission described above;
-the borrowed-context procedure ABI and target exports are unchanged.
+configuration. C-family v4/43 operations and the 25-export target are the current
+research contract: rebuild earlier C images/IR; no legacy bridge is provided.
+SELECT adds contextual WHEN truth and a shared no-match error bridge; the
+borrowed-context procedure ABI is unchanged. INTERPRET remains unimplemented,
+and the current fatal-condition profile remains nonresumable.
 
 Ordinary C text follows the agreed Unicode codepoint model, preserving codes
 0–255 through the fixed Latin-1 ordinal bridge. Modern SAY and BIF behavior is

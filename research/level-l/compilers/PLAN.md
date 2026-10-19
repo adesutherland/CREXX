@@ -1,7 +1,7 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.IF3, locally qualified and closing
-out two reviewed repairs. Approved SELECT work starts after the IF commits.**
+**Complete C is open. CLC-STEP05.SELECT1–3 are locally complete. Next: review
+the generic L checked-DFA reuse contract before further grammar changes.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -17,36 +17,98 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Current action: IF
+## Next action: generic L generation reuse contract review
 
-Qualify LC-I-06 within the existing C v3/41-op contract: evaluate the condition
-once, validate Classic truth once, execute only the selected admitted instruction
-and preserve source/error/ownership behavior. Reuse Level L parsing/IR and the
-shared B truth/runtime bodies; no language/API/schema/native change is approved.
-Native [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
-is a read-only reference, not new-C acceptance. INTERPRET remains last.
+Before another grammar-changing C increment, the generic L owner must propose
+the checked reuse contract under L-CONSTRUCT-01. Exact cache identity, admission,
+limits and build ownership need review and approval before implementation;
+SELECT has not implemented that proposal.
+
+<a id="current-action-select"></a>
+
+## Completed SELECT increment
+
+Implement LC-I-07's approved ordered SELECT/WHEN/OTHERWISE subset in the B/L C
+compiler, using the [approved exact contract](doc/architecture.md#approved-select-contract).
+Users receive lazy first-match selection, ordinary admitted arms, contextual
+34.2 errors and visible source-indexed 7.3 when no arm matches. Preserve source,
+borrowed ownership, loop targets and failed-output atomicity. The approved
+C-owned change adds CSelect/CWhen/COtherwise, advances C to v4/43 operations and
+llctarget to 25 exports; existing 41 operations/four types/context ABI, generic L
+format/core and B/L/VM APIs stay unchanged. Version 3 refuses; no compatibility
+adapter or duplicate shared-runtime logical/selection body is commissioned.
+Reuse shared B truth/select-missing bodies. Native LC-AC-68 is a read-only reference, never an
+oracle or fallback; INTERPRET remains last.
 
 | ID / status | Checkable closure |
 |---|---|
-| **IF-AC01 — Qualified** | Independent AST/spans/nearest ELSE, supported placements and admitted optional/default arm minima pass. Missing syntax, stray ELSE and malformed dead source refuse; prior output survives. |
-| **IF-AC02 — Qualified** | Once-only condition/truth, selected arms, lazy no-ELSE/unchosen errors, exact `0`/`1` and fatal 34.1 prefix pass. Private source calls retain fresh pools; no shared-pool inference is made. |
-| **IF-AC03 — Qualified** | Both IR modes retain contextual truth/evaluation. Literal facts prune only with truth retained. Reproduced IF-F01/F02 are repaired; closed endpoints add no spare join/epilogue, dead validation and source/owner/fatal paths remain. |
-| **IF-AC04 — Qualified** | Existing narrow selectors, paired B/IR/VM Debug, actual caller/fatal RXAS, sentinel refusal and measured component scheduling pass. Unchanged grammar/native/runtime/L proof is reused; no new aggregate or ASan/broad matrix. |
+| **SELECT-AC01 — Locally qualified** | Independent CSelect ordered CWhen/COtherwise/CLabel AST and original spans cover at least one WHEN, one optional final OTHERWISE (empty/list/inline), nested/nearest ELSE, keyword variables, main/group/WHILE/private and admitted arms. Missing/stray/duplicate/out-of-order clauses, missing expressions/arms/END, named END and malformed dead source refuse with locations/prior-output preservation. Retained labels give the existing shared-label profile refusal. |
+| **SELECT-AC02 — Locally qualified** | Marker/state/error expectations prove one evaluation/truth per reached WHEN, first exact `1` wins, later tests/arms dormant, exact `0` continues, full OTHERWISE list/empty branch, loop LEAVE/ITERATE targets and private-pool boundaries. Invalid WHEN gives 34.2 before body/later output. No match gives visible 7.3 at SELECT. Direct shims preserve existing shared-helper raw origin/message via ERROR→CLASSIC_SYNTAX signalorigin; only the generated fatal profile claims nonresumption. |
+| **SELECT-AC03 — Locally qualified** | Exact current v4/43-op family and 25-export metadata admit the two approved descriptors/signatures; v3/forged/dead schema/import records refuse atomically. Every fresh/loaded/dead select.missing has an owned exact source-backed nonempty valid indexed span/location; absent/synthetic/recovered/derived/composite/invalid origins refuse without output/graph mutation. No serialized line attribute or generic L/VM API is added. |
+| **SELECT-AC04 — Locally qualified** | Both IR modes and actual caller/helper RXAS show ordered contextual WHEN checks, required source/owners/cleanup and joins only for open endpoints, with no SELECT loop frame or spare default/join. The missing path retains only approved cold return.absent/core.return closure. Existing focused Debug selectors/runtime/atomicity controls and resource limits qualify paired representative B/IR/VM cells; scheduling is measured as needed. Reuse unchanged native/B/L proof, one necessary frozen-grammar refresh, no new aggregate/ASan/broad campaign. |
 
-**CLC-STEP05.IF1 — Complete (AC01–04):** approved plan and minimal source
-IR/IR-off RXAS probe reproduced IF-F01; root classified and authorised repair.
-**CLC-STEP05.IF2 — Complete (AC01–04):** focused existing fixtures and the
-independently reviewed lazy-first-open join and optional-arm/ELSE parser
-corrections are frozen. Grammar/native/runtime inputs are unchanged.
-No grammar regeneration or native/API expansion is planned.
-**CLC-STEP05.IF3 — Locally qualified (AC01–04):** focused proof and independent
-source/RXAS review pass; concise docs, scheduling and task cleanup accompany
-two causal local commits after root review. No push is authorised.
+**CLC-STEP05.SELECT1 — Complete (AC01–04):** approved vision, exact contract,
+criteria and independent expectations recorded before product edits.
+**CLC-STEP05.SELECT2 — Complete (AC01–04):** ordered AST/parser/lowering, v4
+admission and two shared-runtime shims implemented; source and independent
+fixtures reviewed on disjoint ownership.
+**CLC-STEP05.SELECT3 — Complete (AC01–04):** the [focused Debug proof](#current-select-proof)
+and independent actual caller/helper RXAS review pass. Owning docs/scheduling
+are current, unrelated work is preserved and the bounded local increment is
+reviewed complete; whole SELECT and CFC closure remain open.
 
-Whole IF remains partial for SELECT/full DO/shared labels/EXPOSE, full expression
-and exact static diagnostics, resumed conditions/NOVALUE and clause/TRACE under
-STEP04/05/06/07. Arm instructions retain their own semantics and open criteria;
-this increment does not close those dependencies or any CFC criterion.
+Whole SELECT closure also requires shared labels/fall-through/EXPOSE, complete
+expressions/full DO/named transfers, exact diagnostics/recovery and condition,
+SIGL, clause/TRACE observations under STEP03–07. Current fatal-profile behavior
+does not implement resumable conditions. No CFC criterion closes in this slice.
+
+
+## Current SELECT proof
+
+Normal Debug qualifies `23aebe427adbb9bf4c277cdd5d327645d5712fd6` plus the
+reviewed SELECT source/fixture changes. Grammar SHA256 is
+`b7aba43f36e86f5d071a96a7911582c919be43d70d699d69af06bf741f2e9691`.
+Affected B modules/hosts/fixtures were compiled, assembled and linked through
+existing direct recipes; final fixture refresh is warning-free. Existing native
+tools, generic L and B runtime products are unchanged and reused.
+
+| Command / inspection | Observed result and scope |
+|---|---|
+| `rxlang --rxas` exact parser/AST with temporary tiny lexer; existing full C grammar recipe and `rxas` | Cheap LR admission passed in 8.239s (3 NFA / 2 DFA / 2,452 LR). The one required full-source generation/assembly passed in 653.136s: 29,709 NFA / 5,609 DFA / 2,452 LR, 7,698,798 RXAS bytes, no diagnostics. Cold construction cost only; L-CONSTRUCT-01 retains the proposed generic reuse work. |
+| `frontend-tests-linked -a select <runtime> <examples>` | 190/0 checks, opt/rxbvm, 49.628s: AST/order/spans, Unicode/CRLF, optional arms/nearest ELSE, syntax/dead/profile refusals. |
+| `backend-tests-linked -a <runtime> <capture> select` | 90/0 twice, opt/rxbvm and noopt/rxtvm, internally both IR modes; 37.845/38.644s. Open/closed/nested/loop/missing endpoints, once-only truth, literal pruning, anonymous source and actual shape. |
+| `target-context-linked -a select`; `check-target-context.py` | 6/0 in each paired B/VM cell; shape 181/0 opt and 184/0 noopt. Shared 34.2/7.3 messages/source, valid raw event IDs and bound-event→signalorigin forwarding. Distinct inline sites need not share physical PCs. |
+| `c-context-contracts-linked -a <runtime>`; opt `drop-contracts-linked` | 105/0 admission checks in 4.512s; DROP maintenance 47/0. Exact v4/43 descriptors, versions 3/5/unused forgeries, fresh/loaded/dead origin refusal and `<source>` positive; prior generic invalid-origin controls reused. No full DROP rerun. |
+| `check-backend.py --case select-c --case select-when-error-c --case select-missing-c --ir on/off` | 48 tool commands pass across opt/rxbvm and noopt/rxtvm, both IR modes. Four isolated components 13.801/14.166/19.977/15.131s. Independent lazy/order/OTHERWISE/loop/private output; visible 34.2 at WHEN line 4 and 7.3 at SELECT line 3. Assembler `-n` isolates compiler IR. |
+| `check-step07.py --c-only --select-metadata` | 12/0 commands, 13.011s: valid authored catalogue plus five one-field new-export mutations, each preserving prior output. Default coverage retains these controls. |
+| CLI SELECT refusals; `check-backend.py --native-controls --case select-c` | Three prior-output sentinels pass (6.517s): missing WHEN once and malformed dead arm in both IR modes, no staging residue. One independent native control passes 4 commands; native output is not the oracle. |
+| Complete readable caller/helper RXAS, both IR modes | Root and independent review clear. Ordered call/requirevalue/WHEN truth, no spare closed join/default, enclosing WHILE targets, source-indexed missing line, fatal diversion, numeric setup, owner/ref cleanup and source mappings remain. Required cold missing absent/return closure and ordinary context/window costs remain explicit. |
+| Existing PoC C view consumer; CTest show-only | One relink + one view invocation passes 13 checks; all five maintained walk-c AST/IR/RXAS views are byte-identical, so no asset rewrite or repeated runtime walkthrough. Registration inspected without executing aggregates: backend 40 cases/295 commands, representative C-calls 121/others 68; existing serial locks and generous 900/1800s hang guards retained. Component timings are not a newly measured full aggregate. |
+
+No fresh sanitizer/native rebuild, installed/hosted/cross-platform or whole-C
+qualification is claimed. Existing unchanged B/L/runtime proof is reused; no
+new generic L, VM or runtime algorithm is introduced. Current fatal delivery
+is nonresumable. All twelve CFC criteria and the whole-instruction dependencies
+above remain open; the next instruction review is separate.
+
+<a id="current-action-if"></a>
+
+## Completed IF increment
+
+Local commits `e6601b13842c0d3ce124398f038be2f271401ac1` (optional-arm parser)
+and `23aebe427adbb9bf4c277cdd5d327645d5712fd6` (closed-arm joins) qualify the
+[bounded IF contract](doc/LEVELC-INSTRUCTION-REVIEW.md#if-one-condition-and-only-the-selected-arm)
+with [normal Debug proof](#current-if-proof). IF-F01/F02 are closed; whole IF
+retains SELECT/full DO/shared labels/EXPOSE, full expressions/exact static
+errors, resumed conditions/NOVALUE and clause/TRACE dependencies.
+
+| Stable ID / status | Qualified closure |
+|---|---|
+| **IF-AC01 — Qualified** | Independent AST/spans/nearest ELSE, supported placements/optional-default arm minima and located/dead-source/prior-output refusal. |
+| **IF-AC02 — Qualified** | Once condition/truth, lazy selected/no-ELSE paths, exact `0`/`1` and fatal 34.1 prefix; private calls retain fresh pools. |
+| **IF-AC03 — Qualified** | Truth survives literal pruning; closed endpoints add no spare join/epilogue, and dead validation/source/owner/fatal work remains. |
+| **IF-AC04 — Qualified** | Existing paired B/IR/VM Debug selectors, actual RXAS, sentinels and measured scheduling; unchanged grammar/native/runtime/L reused. |
+| **CLC-STEP05.IF1–3 — Complete** | Approved plan, two reproduced reviewed repairs, independent fixtures/local qualification and scoped local commits completed before SELECT1. |
 
 <a id="current-action-options"></a>
 
@@ -171,7 +233,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current IF** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; existing-contract IF qualification is current. |
+| **CLC-STEP05 — Partial; current SELECT** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; approved SELECT implementation is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -219,7 +281,12 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current IF proof
+<a id="current-if-proof"></a>
+
+## Completed IF proof
+
+Local commits `e6601b13842c0d3ce124398f038be2f271401ac1` and
+`23aebe427adbb9bf4c277cdd5d327645d5712fd6` record the qualified source below.
 
 Inputs are `690e930d772c9814b5c10db9284a9572afe3ea3f` plus frozen IF-parser-1,
 IF-frontend-1 and the focused fixtures. The corrected frontend fixture SHA-256
@@ -251,8 +318,7 @@ refusal. Grammar and arm instruction contracts are unchanged.
 Maintained C view inputs have only unaffected open, nonnested arms and no
 corrected bare-arm boundary; no view regeneration was needed. This is local
 source-only qualification, not a native/core refresh, sanitizer, hosted,
-installed/platform or whole-IF claim. The approved SELECT increment starts only
-after the IF commits; its architecture is separate from IF qualification.
+installed/platform or whole-IF claim. The approved SELECT increment is separate from this IF qualification.
 
 <a id="current-options-proof"></a>
 
@@ -388,8 +454,12 @@ performance claim follows.
 linearly searches prior subset keys and retains equivalent DFA states. The
 generic L owner may add indexed subset lookup/equivalent-state reduction with
 independent longest-match, priority, Unicode-membership/span and bounded-failure
-proof. The observed cost above covers generation plus assembly, not target
-execution. No such algorithm change is part of DROP.
+proof. Parser-only `.rxl` changes currently repeat unchanged lexical construction
+because generation emits DFA/LR together. Before the next grammar-changing
+slice, that owner should propose checked DFA reuse keyed on lexical rules/order/
+token IDs, Unicode/encoding and image/generator inputs, preserving current limits.
+The reuse contract needs approval; it is not implemented in SELECT. The observed
+cost covers generation plus assembly, not target execution or conformance retests.
 
 ## Completed CABI proof and limits
 

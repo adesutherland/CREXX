@@ -2,7 +2,7 @@
 
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
-the context ABI records completed STEP03d and the current approved C v3/DROP
+the context ABI records completed STEP03d and the current approved C v4/SELECT
 implementation. Qualification remains in the plan.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
@@ -39,11 +39,11 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; ordered DROP projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify the current DROP increment; wider source/instruction coverage remains substantially smaller than native C. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; ordered DROP and SELECT projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
-| `levelc/runtime/llctarget.crexx` | One current B target: nine borrowed-context adapters reuse shared B bodies; no per-operation default config/pool or copied activation. Literal/pool/packet/result helpers remain. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One current B target: ten borrowed-context adapters and one no-match bridge reuse shared B bodies; no per-operation default config/pool or copied activation. Fourteen literal/pool/packet/result helpers remain. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
@@ -441,7 +441,9 @@ argument construction finishes before the new bundle borrows the activation.
 Keep only the helpers used by the clean selector: `literal`, `poolnew`,
 `poolread`, `poolwrite`, `sayvalue`, `arguments`, `mainargs`, `append`, `present`,
 `absent`, `requirevalue`, `setresult`, `status` and `failuremessage`. Together
-with the nine entries above these are the complete 23 exports. Remove
+with the nine entries above these form the 23-export foundation. SELECT adds
+two entries under its [approved contract](#approved-select-contract), giving
+the current 25 exports. Remove
 `contextnew`, the old nine bodies, compatibility bridge/build entries and
 old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
 the current implementations. The private `bifcontext` remains internal.
@@ -463,8 +465,8 @@ introduced into static applications.
 
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d is locally complete; the approved DROP increment advances its
-unchanged context ABI to C family version 3.** Use the following semantic contract and generated procedure
+**CLC-STEP03d is locally complete; DROP introduced C family version 3 and
+SELECT advances it to version 4 without changing the context ABI.** Use the following semantic contract and generated procedure
 ABI, with one clean current C target and no compatibility bridge for earlier
 research C programs. The five shared B callables and nine borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
@@ -473,9 +475,9 @@ record or RXAS/VM operation is introduced. Complete labels, conditions and
 INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 3. The neutral scalar names do not load the G
+types and `crexx.c` version 4. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1/2 are never reinterpreted as version 3. Within version 3, the complete C
+versions 1/2/3 are never reinterpreted as version 4. Within version 4, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -500,7 +502,8 @@ operation remain absent. Resolve the current pool from the bundle
 at each pool operation, so an observed `bindPool` replacement remains live.
 
 The following table preserves the 40 context-foundation operations; approved
-DROP adds the 41st operation [below](#proposed-next-instruction-drop). Names have
+DROP adds the 41st operation [below](#proposed-next-instruction-drop), and
+[SELECT](#approved-select-contract) adds operations 42/43. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
 `crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
@@ -588,7 +591,7 @@ The selected configuration factory's `?requested_profile=.string` stays
 optional in metadata and is supplied explicitly. Existing `poolnew()` owns
 the explicit `.RexxVariablePool(1)` construction; no duplicate pool-factory
 selection is added to the C emitter.
-The nine new adapters remain required-only. Legacy short type spellings may
+The nine foundational adapters and the two SELECT entries remain required-only. Legacy short type spellings may
 match only their explicit known owner-qualified identities, never arbitrary
 basenames or class/interface assignability. Preserve the existing hidden
 receiver ABI: pass a live receiver alias with its established call-window
@@ -615,8 +618,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v3 IR + current bundle/adapters | Supported through the one-context ABI. |
-| Current selector + C v1/v2/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v4 IR + current bundle/adapters | Supported through the one-context ABI. |
+| Current selector + C v1/v2/v3/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -827,7 +830,7 @@ the existing STEP04/06/07 dependencies; ASSIGN-AC01–04 track the bounded revie
 
 ### Approved OPTIONS contract
 
-**Adrian approved the COptions AST and current-v3 no-op specialization.**
+**Adrian approved the COptions AST and no-op specialization, introduced in C v3.**
 Reuse the [approved source/runtime policy](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
 under LC-AC-66/LC-STEP-67B. The current shared
 [`RexxClassicConfig.applyOptions(words=.RexxValue)->.void`](../../../../lib/rxfnsc/RexxClassicConfig.crexx)
@@ -872,7 +875,7 @@ has no work.
    under C-SRC / LC-REF-002; these are later obligations, not exclusions.
    Known but unsupported static controls such as STRICTC/srcmap receive a
    located PROFILE refusal; quoted or later values do not select static settings.
-3. **Runtime expression, current C v3.** Evaluate an operand exactly once using
+3. **Runtime expression.** Evaluate an operand exactly once using
    existing expression operations, including Name reads, calls, function-result
    requirements, context/failure effects and source origins; only its unused
    final value is discarded. Unknown words, embedded NUL and DBCS-specific
@@ -884,7 +887,8 @@ has no work.
    Preserve normal node visits/budgets and validation of malformed unreachable
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
-   B/L API or family-version change is required; C v3 remains 41 operations.
+   B/L API or family-version change was required for OPTIONS; its C v3 baseline
+   had 41 operations. SELECT separately advances the current family to v4/43.
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
    comment switches/conflicts, quoted markers and independent requests. Source
@@ -897,6 +901,79 @@ has no work.
    full conditions/TRACE retain their later owners. Adding any recognized word
    or other effect to `applyOptions` invalidates this specialization and requires
    C contract review, consumer regressions and recompilation before integration.
+
+<a id="proposed-select-contract"></a>
+<a id="approved-select-contract"></a>
+
+## Approved SELECT contract
+
+**Approved by Adrian; implemented and locally qualified within the
+[recorded SELECT proof](../PLAN.md#current-select-proof).** [LC-AC-68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+is the reference contract. The approved C-owned change keeps the current four
+types and required-context procedure ABI, advances `crexx.c` to **version 4 /
+43 operations**, and extends `llctarget` from 23 to **25 exports**. Its existing
+41 operations stay unchanged; version 3 is rejected rather than reinterpreted.
+Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
+
+| Contract | Exact approved shape |
+|---|---|
+| Source AST | `CSelect(clauses:(CWhen\|COtherwise\|CLabel)+)`; `CWhen(condition:expression, body:statement)`; `COtherwise(body:Sequence)`. At least one WHEN, at most one final OTHERWISE; its Sequence may be empty. Preserve ordered clauses and authored byte spans. |
+| `crexx.c.when.truth` | Inputs `value:V context:C`; output `value:core.boolean`; no attributes. State `context`, failure `condition`, termination `returns`. |
+| `crexx.c.select.missing` | No inputs/results/attributes. State `none`, failure `condition`, termination `diverges` under the current nonresumable C profile. |
+| `llctarget..whentruth` | `(value=.rexxvalue..RexxValue, context=reference .rexxclassiccontext..RexxClassicContext) -> .int` |
+| `llctarget..selectmissing` | `(line=.string) -> .void` |
+
+SELECT has a plain header followed by a clause delimiter, ordered
+`WHEN expression THEN instruction` clauses, optional OTHERWISE instruction
+list and plain END. OTHERWISE may start its first instruction on the same
+clause, including nested SELECT. Preserve null clauses, nearest ELSE, keyword
+variables and ordinary statement dispatch for every admitted arm. Missing,
+stray, duplicate or out-of-order clauses, missing operands/arms/END and named
+END receive located refusal, including dead source. Retained CLabel nodes at
+legal clause boundaries remain a shared-label profile refusal until STEP06;
+they must not be silently discarded.
+
+Lower to ordered test edges: evaluate each WHEN once until the first exact
+logical 1, execute only its body, then skip remaining tests and arms. Last false
+selects the complete OTHERWISE list or `select.missing`. SELECT adds no loop
+frame; LEAVE/ITERATE retain their enclosing repetitive-DO targets. Visit and
+validate all authored expressions/arms at compilation. Join only structurally
+open endpoints, preserving dead-block closure; exact 0/1 branch facts retain
+effectful WHEN truth. Reuse `rexxclassic_expression_unary` with
+`LOGICALWHENVALUE` and `rexxclassicbif_checked` for **34.2**, without copying
+logical validation or changing the existing IF truth entry.
+
+For **7.3**, `selectmissing` calls existing `rexxvalue_select_missing(line)` in a
+simple B group with `on signal error as problem`. Re-raise its unchanged message
+through `signalorigin "CLASSIC_SYNTAX",message,problem`. This preserves the
+shared helper's raw bound module/address; it does not create a SELECT VM fault
+address. The frontend supplies an exact SELECT-keyword origin; it drives the
+indexed line and visible C source/diagnostic context. The selector admits only
+an owned exact, source-backed, nonempty valid indexed span/location for
+`select.missing`, on fresh and loaded graphs alike, before output publication.
+Absent/synthetic/recovered/derived/composite or invalid origins refuse. There
+is no freely serialized line attribute or extra lexical authentication pass.
+
+The existing generated-C fatal handlers make this path nonresumable; no such
+claim is made for a direct B caller that skips a signal. A divergent extension
+still needs a core terminator: retain the existing EXIT convention of cold
+`return.absent` plus `core.return` closure and mark the path terminated. This
+structural fallback is separate from an unused join; no generic terminator or
+condition-dispatch API is added.
+
+Qualification must cover lazy marker/error order, empty/list/inline OTHERWISE,
+34.2 at WHEN and visible 7.3 at SELECT, nested/private/loop-transfer placements,
+all admitted arms, source refusals and keyword variables. Exact schema/import/
+version and fresh/loaded origin refusals preserve prior output. Direct shims
+and IR-off/on caller/helper RXAS must prove retained checks, dormant later arms
+and no unused join/default construction. Reuse existing focused Debug
+selectors and runtime proofs; no new aggregate or per-slice ASan campaign.
+Whole SELECT retains shared labels/fall-through/EXPOSE, complete expressions/
+DO/named transfers, exact diagnostic/recovery and condition/SIGL/clause/TRACE
+dependencies. Approval covers only these AST records, C v4 operation contracts
+and two target exports/signal bridge. Focused source/IR/runtime/admission and
+actual caller/helper RXAS qualification passes the linked plan; whole SELECT
+and complete C remain open.
 
 ## Optimisation ownership
 

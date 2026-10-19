@@ -57,11 +57,12 @@ source, operators, shared labels, pools, conditions and host contracts are open.
 SAY's adjacent radix-literal repair has retained proof, not whole-SAY closure.
 
 The current implementation selects one `llctarget` borrowed-context surface and
-C-family v3 with one required context-reference procedure argument and one
-contextual DROP operation. Root/private owners
+C-family v4/43 operations with one required context-reference procedure argument,
+contextual DROP/WHEN truth and source-indexed SELECT no-match handling. Root/private owners
 and numeric entry setup remain conservative; argument/result transport remains
 by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
-owns the qualified v2 baseline; DROP-AC01–04 own v3 qualification. Complete shared-label activation
+owns the qualified v2 baseline; DROP-AC01–04 own the v3 increment and
+SELECT-AC01–04 own current v4 qualification. Complete shared-label activation
 remains open. Earlier research C images/IR must be rebuilt, with no compatibility
 bridge. Neutral scalar ABI records still use `crexx.g` names.
 
@@ -104,7 +105,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-04 NOP / STEP05 | Partial: childless forms locally qualified | Main/IF/group/while/private placements, contextual variable, first-extra-token/dead refusals and unchanged NOP/blank IR/instruction/frame shape pass. Repaired dead-NOP construction preserves later static validation. SELECT/shared labels, exact 21.1 and clause/TRACE/condition observations remain open. | [LC-AC-05/64](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-05 OPTIONS / STEP05 | Partial: bounded COptions forms locally qualified | Retain every optional operand, including header Names; select settings only from a complete first bare-word clause using request-local comments. Current zero-word B processor is specialized away; preserve operand effects/errors and validate discarded literals/dead source. Full header/STRICTC/source-map, shared-label and conditions/TRACE work remains open under [OPTIONS-AC01–04](../PLAN.md#current-action-options). | [LC-AC-66](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-06 IF / STEP05 | Partial: admitted forms locally qualified | Once-only condition/truth, lazy selected arms/no ELSE, exact text 0/1 and fatal 34.1, nearest/contextual ELSE and optional/default arm minima pass. Both closed arms add no join/default epilogue; dead validation and source remain. SELECT/full DO/shared labels/EXPOSE, full expressions/exact static diagnostics, resumed conditions/NOVALUE and clause/TRACE stay open. | [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-07 SELECT / STEP05 | Not implemented | Ordered WHEN edges, first true arm, OTHERWISE/no-match 7.3 and nesting. Each tested condition gets its own 34.* origin; no eager evaluation of later WHEN expressions. | [LC-AC-09/68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-07 SELECT / STEP05 | Partial: admitted forms locally qualified | Ordered lazy WHEN edges, full/empty OTHERWISE, nested/loop/private arms and source-indexed 34.2/7.3 use shared B bodies. [SELECT-AC01–04](../PLAN.md#current-select-proof) pass current focused proof. Shared labels/fall-through/EXPOSE, complete expressions/DO/named transfers, full diagnostic recovery and condition/SIGL/clause/TRACE remain open. | [LC-AC-09/68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-08 DO / STEP05 | Partial: group/while subset | Explicit loop-entry/test/body/step/exit blocks and runtime state only where needed. Counted/controlled/FOREVER/WHILE/UNTIL combinations, scalar/compound control, arbitrary numeric count, END-name checks and negative syntax. Header terms evaluated at specified times, not each iteration. | [LC-AC-03/10–15/17–35/65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-09 LEAVE / STEP05 | Partial: unnamed subset | Resolve named/unnamed active-loop destination, clear crossed loop state, preserve default/STRICTC reached-time error distinction. No unnecessary runtime search for statically proved target; dynamic cases stay explicit. | [LC-AC-69](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-10 ITERATE / STEP05 | Partial: unnamed subset | Transfer to correct target's step/test point, preserving step timing, active outer loops and cleanup. Cover every DO form and named/invalid target; do not implement as LEAVE or direct body jump. | [LC-AC-70](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
@@ -472,7 +473,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-035 | Function-name ending-period `51.1` | Not implemented | C-SRC / STEP04; source/host completion STEP07/08 | Emit authored 51.1 for illegal ending-period function names. |
 | LC-REF-036 | Clause/label/null-clause program structure | Partial: private labels | C-SRC / STEP04; source/host completion STEP07/08 | Implement one-body labels/null clauses/fall-through and source/TRACE anchors. |
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | Partial: admitted IF locally qualified | LC-I-06–10 / STEP05 | Complete remaining SELECT/full-DO/shared-label placements, expression/condition/diagnostic and TRACE dependencies in LC-I-06. |
-| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Not implemented | LC-I-06–10 / STEP05 | Implement lazy ordered SELECT, OTHERWISE and no-match 7.3. |
+| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Partial: admitted forms locally qualified | LC-I-06–10 / STEP05 | Retain qualified SELECT-AC01–04 and LC-I-07 shared-label, expression/control, diagnostic/recovery and observation dependencies. |
 | LC-REF-039 | Simple DO grouping and empty body | Partial: simple DO | LC-I-06–10 / STEP05 | Complete simple-group placements, empty bodies, labels and observations. |
 | LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: WHILE subset | LC-I-06–10 / STEP05 | Complete every DO header, entry/step timing, arbitrary counts and errors. |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | Partial: unnamed transfers | LC-I-06–10 / STEP05 | Complete named/unnamed targets, crossed-state cleanup and default/STRICTC timing. |
@@ -550,7 +551,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-QUEUE` | Not implemented | LC-I-18 / STEP06 | Full LC-I-18 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-RETURN` | Partial | LC-I-14 / STEP06 | Full LC-I-14 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-SAY` | Partial | LC-I-01 / STEP05 | Full LC-I-01 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-SELECT` | Not implemented | LC-I-07 / STEP05 | Full LC-I-07 check in the instruction ledger; shared dependencies remain open. |
+| `SYN-CLASSIC-SELECT` | Partial: admitted forms locally qualified | LC-I-07 / STEP05 | SELECT-AC01–04 pass; full LC-I-07 and shared dependencies remain open. |
 | `SYN-CLASSIC-SIGNAL` | Not implemented | LC-I-23 / STEP07 | Full LC-I-23 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-TRACE` | Not implemented | LC-I-24 / STEP07 | Full LC-I-24 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-EXPRESSIONS` | Partial: operator subset | C-EXPR/C-NUM; STEP04/07 | Close LC-REF-043–046/053/054, including power, integer division/remainder and full comparisons. |

@@ -351,6 +351,7 @@ request: class
         end
         built = op.finish()
       end
+      when kind = 'CSelect' then call selection(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
         value = expression(node.child('condition')); if _error <> '' then return
         value = truth(value,origin)
@@ -450,6 +451,76 @@ request: class
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
     return
+  /** Ordered SELECT tests share ordinary statement lowering. Semantic liveness
+   * and structural completion stay separate, including checked dead source. */
+  selection: method = .void
+    arg node = .llast..node
+    clause = .llast..node; origin = .llir..origin; missingorigin = .llir..origin
+    join = .llir..block; chosen = .llir..block; following = .llir..block
+    value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    i = .int; kind = .string; hasjoin = 0; hasotherwise = 0; whens = 0
+    incoming = _alive; normal = 0
+    do i = 1 to node.count('clauses') while _error = ''
+      clause = node.child('clauses',i); kind = clause.kind()
+      if hasotherwise then do
+        call fail(clause,'PROFILE: SELECT clause follows OTHERWISE'); return
+      end
+      select
+        when kind = 'CWhen' then do
+          if tick(clause) = 0 then return
+          whens = whens + 1
+          value = expression(clause.child('condition')); if _error <> '' then return
+          origin = _file.origin(clause.start(),clause.start() + 4,clause.origin())
+          value = truth(value,origin,'crexx.c.when.truth')
+          chosen = newblock('select.when'); following = newblock('select.next')
+          call _block.branch(value,chosen,following,origin)
+          _block = chosen; _terminated = 0; _alive = incoming
+          call statement(clause.child('body')); if _error <> '' then return
+          normal = normal | (_alive & _terminated = 0)
+          if _terminated = 0 then do
+            if hasjoin = 0 then do; join = newblock('select.join'); hasjoin = 1; end
+            call _block.jump(join,origin)
+          end
+          _block = following; _terminated = 0; _alive = incoming
+        end
+        when kind = 'COtherwise' then do
+          if tick(clause) = 0 then return
+          if whens = 0 then do
+            call fail(clause,'PROFILE: SELECT requires a WHEN clause'); return
+          end
+          hasotherwise = 1; origin = at(clause)
+          call statement(clause.child('body')); if _error <> '' then return
+          normal = normal | (_alive & _terminated = 0)
+          if _terminated = 0 then do
+            if hasjoin = 0 then do; join = newblock('select.join'); hasjoin = 1; end
+            call _block.jump(join,origin)
+          end
+        end
+        when kind = 'CLabel' then call statement(clause)
+        otherwise do
+          call fail(clause,'PROFILE: invalid SELECT clause ' || kind); return
+        end
+      end
+    end
+    if _error <> '' then return
+    if whens = 0 then do
+      call fail(node,'PROFILE: SELECT requires a WHEN clause'); return
+    end
+    if hasotherwise = 0 then do
+      missingorigin = _file.origin(node.start(),node.start() + 6,node.origin())
+      op = _block.operation(_contract.operation('crexx.c.select.missing'),missingorigin)
+      built = op.finish()
+      /* The fatal C profile cannot return here. Close the structural block
+       * using the existing return packet contract, as for EXIT. */
+      origin = missingorigin.derive()
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+      built = op.finish(); call _block.returnvalue(built.result(),origin)
+      _terminated = 1; _alive = 0
+    end
+    if hasjoin then do; _block = join; _terminated = 0; end
+    else _terminated = 1
+    _alive = normal
+    return
   valuetype: method = .string
     arg value = .llir..valuehandle
     descriptor = dereference _contract.data()
@@ -457,9 +528,9 @@ request: class
     if left(name,5) = 'core.' then return substr(name,6)
     return substr(name,9)
   truth: method = .llir..valuehandle
-    arg value = .llir..valuehandle, origin = .llir..origin
+    arg value = .llir..valuehandle, origin = .llir..origin, operation = 'crexx.c.truth'
     built = .llir..opview
-    op = _block.operation(_contract.operation('crexx.c.truth'),origin)
+    op = _block.operation(_contract.operation(operation),origin)
     call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
     /* Preserve owner checks and pool-policy effects even for known truth.
      * A separate exact literal fact lets ordinary branch pruning remain safe. */

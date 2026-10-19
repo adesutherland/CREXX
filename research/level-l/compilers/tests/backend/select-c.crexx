@@ -1,0 +1,59 @@
+options levelc
+say 'before'
+select
+  when marker('first',0) then say 'wrong first'
+  when marker('second',1) then do
+    say 'pick'
+    nop
+    options
+  end
+  when marker('later',1/0) then say 'wrong later'
+  otherwise say 'wrong otherwise'
+end
+select
+  when 1 then select
+    when 0 then say 'wrong nested'
+    otherwise if 1 then options else say 'wrong inner'
+      say 'nested'
+      nop
+  end
+  otherwise say 'wrong outer'
+end
+select
+  when 0 then say 'wrong empty'
+  otherwise
+end
+say 'empty'
+i = 0
+do while i < 3
+  i = i + 1
+  select
+    when i = 1 then iterate
+    when i = 3 then leave
+    otherwise say 'loop' i
+  end
+  say 'tail' i
+end
+say choice(0) choice(1)
+select = 's'
+when = 'w'
+otherwise = 'o'
+end = 'e'
+say select when otherwise end
+say 'after'
+select
+  when 1 then exit 0
+  otherwise exit 9
+end
+nop
+options 42
+marker: procedure
+  arg label,value
+  say label
+  return value
+choice: procedure
+  arg value
+  select
+    when value then return 'yes'
+    otherwise return 'no'
+  end

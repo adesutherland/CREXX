@@ -297,5 +297,31 @@
     "output": "before\ncondition\n",
     "error": "RXC-LC-34.1",
     "args": []
+  },
+  {
+    "name": "select",
+    "level": "c",
+    "source": "select-c.crexx",
+    "output": "before\nFIRST\nSECOND\npick\nnested\nempty\nloop 2\ntail 2\nno yes\ns w o e\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "select-when-error",
+    "level": "c",
+    "source": "select-when-error-c.crexx",
+    "output": "before\ncondition\n",
+    "error": "RXC-LC-34.2",
+    "error_line": 4,
+    "args": []
+  },
+  {
+    "name": "select-missing",
+    "level": "c",
+    "source": "select-missing-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-7.3",
+    "error_line": 3,
+    "args": []
   }
 ]

@@ -18,6 +18,7 @@ main: procedure = .int expose checks failures artifacts outputfile
       when 'nop' then call nopchecks(outputfile)
       when 'options' then call optionschecks(outputfile)
       when 'if' then call ifchecks(outputfile)
+      when 'select' then call selectchecks(outputfile)
       otherwise return 2
     end
   end
@@ -29,6 +30,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call nopchecks()
     call optionschecks()
     call ifchecks()
+    call selectchecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -169,6 +171,66 @@ ifchecks: procedure = .void expose artifacts
     graph = request.emissiongraph(); text = graph.dump()
     call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
     call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
+  return
+
+/** Ordered WHEN edges retain truth; only open endpoints need convergence. */
+selectchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; expected = .int; missing = .int; written = .int
+  sample = .int; optimise = .int; selected = .int; request = .lltestcompiler..request
+  graph = .llir..module; output = .llir..output; text = .string
+  do sample = 1 to 7
+    select sample
+      when 1 then do; source = 'select; when flag then exit 0; otherwise exit 1; end'; expected = 2; missing = 0; end
+      when 2 then do; source = 'exit 0; p: procedure; arg flag; select; when flag then return 1; otherwise return 2; end'; expected = 1; missing = 0; end
+      when 3 then do; source = 'select; when flag then select; when inner then exit 0; otherwise exit 1; end; otherwise exit 2; end'; expected = 3; missing = 0; end
+      when 4 then do; source = 'do while flag; select; when flag then leave; otherwise iterate; end; end'; expected = 1; missing = 0; end
+      when 5 then do; source = 'select; when flag then nop; otherwise; end'; expected = 1; missing = 0; end
+      when 6 then do; source = 'select; when flag then exit 0; end; nop; options 42'; expected = 2; missing = 1; end
+      otherwise do; source = 'select; when flag then nop; when other then nop; end'; expected = 2; missing = 1; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'select-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'SELECT endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      if sample = 5 | sample = 7 then call check(pos('select.join.',text) > 0,'open SELECT endpoints retain convergence ' || sample || '/' || optimise)
+      else call check(pos('select.join.',text) = 0,'closed SELECT endpoints add no join ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.return.absent') = expected,'only EXIT/missing/normal structural packets ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.select.missing') = missing,'only absent OTHERWISE emits missing path ' || sample || '/' || optimise)
+      output = request.output()
+      call check(pos('.srcstep',output.text()) > 0 & pos('select-shape.crexx',output.text()) > 0,'SELECT source/fatal records retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 1 | sample = 2 | sample = 4 | sample = 6) then written = writebinary(inspect || '-select-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
+    end
+  end
+  do optimise = 0 to 1
+    source = 'select; when marker() then nop; when marker() then nop; otherwise nop; end; exit 0; marker: procedure; return 1'
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'select-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful WHEN conditions accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 2 & occurrences(text,'crexx.c.when.truth ') = 2,'one call/contextual truth per WHEN ' || optimise || '/' || selected)
+      call check(pos('crexx.c.call ',text) < pos('crexx.c.when.truth ',text),'first condition precedes its truth ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-select-once-' || optimise || '.rxas',output.text() as .binary)
+    source = "select; when '1' then nop; when marker() then say 'wrong'; otherwise nop; end; exit 0; marker: procedure; return 1"
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'select-literal.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'literal WHEN accepted ' || optimise)
+    if request.status() <> 0 then iterate
+    graph = request.graph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.when.truth ') = 2 & occurrences(text,'crexx.c.call ') = 1,'source retains both checked WHEN paths')
+    graph = request.emissiongraph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.when.truth ') = 2 - optimise,'selected first literal keeps its contextual truth ' || optimise)
+    call check(occurrences(text,'crexx.c.call ') = 1 - optimise,'only IR-on prunes dormant later WHEN evaluation ' || optimise)
+  end
+  request = .lltestcompiler..request('c','select; when 0 then nop; end' as .binary,artifacts)
+  call check(request.status() = 0,'default anonymous source admits indexed missing path: ' || request.error())
+  if request.status() = 0 then do
+    output = request.output(); call check(pos('<source>',output.text()) > 0,'anonymous service keeps its logical source identity')
   end
   return
 

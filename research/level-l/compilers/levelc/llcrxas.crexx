@@ -40,6 +40,7 @@ compilation: class
   _maxargs = .int
   _fallthrough = .int
   _sourceindexes = .object[]
+  _selectlines = .int[]
   _lastsource = .string
   _lastlocation = .string
   _routine = .string
@@ -316,6 +317,7 @@ compilation: class
       if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then call fail('LOWERING: unsupported constant type ' || type)
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
+    if name = 'crexx.c.select.missing' then call checkselectorigin(op)
     if name = 'crexx.c.load' | name = 'crexx.c.store' | name = 'crexx.c.drop' then call checksymbol(op.attribute('name') as .string)
     if name = 'crexx.c.numeric.form' then do
       form = op.attribute('form') as .string
@@ -331,6 +333,34 @@ compilation: class
       symbol = localname(op.attribute('target') as .string)
       if symbol = 'llf1' then call fail('LOWERING: call target must be a private routine')
     end
+    return
+  /** No-match diagnostics require one unambiguous authored source location.
+   * Check every operation before creating the writer, including dead/loaded IR.
+   * Only the indexed line is retained privately; it is not a schema attribute. */
+  checkselectorigin: method = .void
+    arg op = .llir..opview
+    origin = op.origin()
+    if origin.belongs(_store) = 0 then do
+      call fail('LOWERING: SELECT missing requires an owned exact source origin'); return
+    end
+    if origin.kind() <> 'exact' then do
+      call fail('LOWERING: SELECT missing requires an owned exact source origin'); return
+    end
+    bytes = origin.sourcebytes(); first = origin.first(); last = origin.last()
+    extent = <blen>(bytes)
+    if first < 0 | last <= first | last > extent then do
+      call fail('LOWERING: SELECT missing requires a nonempty source-backed span'); return
+    end
+    positions = .llsource..index
+    positions = sourceindex(origin)
+    at = positions.position(first); ending = positions.position(last)
+    if at.error() <> '' | ending.error() <> '' then do
+      call fail('SOURCE: SELECT missing origin: ' || at.error() || ending.error()); return
+    end
+    if at.line() < 1 | at.column() < 1 then do
+      call fail('SOURCE: SELECT missing requires a valid indexed location'); return
+    end
+    _selectlines[op.id()] = at.line()
     return
   /** Source and direct IR use one generated variable-symbol authority. Keep
    * its immutable definition per selector; each name is checked in linear work
@@ -725,6 +755,19 @@ compilation: class
     call emit('.srcstep','0 0 6 "" 0 0 0 ""')
     _lastsource = ''; _lastlocation = ''
     return
+  /** Reuse the existing request-local index for admission and source emission. */
+  sourceindex: method = .llsource..index
+    arg origin = .llir..origin
+    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    positions = .llsource..index
+    if sourceid <= _sourceindexes[0] then do
+      if _sourceindexes[sourceid] is .llsource..index then positions = _sourceindexes[sourceid] as .llsource..index
+    end
+    if initialized(positions) = 0 then do
+      positions = .llsource..index(origin.sourcebytes())
+      _sourceindexes[sourceid] = positions as .object
+    end
+    return positions
   source: method = .void
     arg origin = .llir..origin
     key = .string; location = .string
@@ -735,16 +778,9 @@ compilation: class
       call sourcerecord(key,location)
       return
     end
-    store = dereference _store; sourceid = store.get(9,origin.id(),1)
     positions = .llsource..index
-    if sourceid <= _sourceindexes[0] then do
-      if _sourceindexes[sourceid] is .llsource..index then positions = _sourceindexes[sourceid] as .llsource..index
-    end
+    positions = sourceindex(origin)
     bytes = origin.sourcebytes()
-    if initialized(positions) = 0 then do
-      positions = .llsource..index(bytes)
-      _sourceindexes[sourceid] = positions as .object
-    end
     at = positions.position(origin.first())
     if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return; end
     line = at.line(); column = at.column(); first = at.first(); last = at.last()
@@ -842,6 +878,13 @@ compilation: class
     end
     select
       when name = 'truth' then call adapter(op,'truth','.int',v || ' ' || contexttype)
+      when name = 'when.truth' then call adapter(op,'whentruth','.int',v || ' ' || contexttype)
+      when name = 'select.missing' then do
+        line = _selectlines[op.id()]
+        if line < 1 then do; call fail('LOWERING: SELECT missing origin was not admitted'); return; end
+        symbol = imported('llctarget','llctarget.selectmissing','.void','.string')
+        call argtext(1,line as .string); call invoke('',symbol,1)
+      end
       when name = 'drop' then call dropoperation(op)
       when name = 'say' then call adapter(op,'sayvalue','.void',v)
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')

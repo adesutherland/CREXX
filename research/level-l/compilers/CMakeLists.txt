@@ -285,7 +285,7 @@ foreach(_mode opt noopt)
         set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
           TIMEOUT 300 LABELS "library;level-l;compiler-frontends;optimizer-parity")
         if(_group STREQUAL "grammar")
-          # IF adds a measured 44s Debug component of in-process requests.
+          # IF adds a measured 44s Debug component; SELECT adds 50s.
           # Serialize the expanded grammar workload with a generous hang guard.
           set_tests_properties(${_test} PROPERTIES TIMEOUT 900
             RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
@@ -367,9 +367,11 @@ if("c" IN_LIST _languages)
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
-  # C calls: 110 commands in the representative cell, 68 in the other cells;
-  # isolated Debug 96s. Source-only qualification uses Debug; sanitizer
-  # scheduling follows AGENTS.md.
+  # C calls: 121 commands in the representative cell, 68 in the other cells;
+  # existing 110-command Debug baseline 96s; focused SELECT metadata adds
+  # 11 default commands (its independent 12-command control measured 13s).
+  # This is component evidence, not a fresh full-aggregate measurement.
+  # Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
   # Serialize nested tools; 1800s is a hang guard for slower hosts.
   foreach(_mode opt noopt)
     foreach(_vm rxbvm rxtvm)
@@ -377,7 +379,7 @@ if("c" IN_LIST _languages)
         set(_calls "llcompiler_c_calls_${_mode}_${_vm}")
         set(_commands 68)
         if(_mode STREQUAL "opt" AND _vm STREQUAL "rxbvm")
-          set(_commands 110)
+          set(_commands 121)
         endif()
         add_test(NAME ${_calls}
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"

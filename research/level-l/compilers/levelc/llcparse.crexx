@@ -90,16 +90,16 @@ parsed: class
               if owners[ownercount] = 'if' then word = 'ELSE'
             end
           end
-          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE SELECT WHEN OTHERWISE EXPOSE') > 0 then do
+          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP SELECT WHEN OTHERWISE') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
       end
-      /* Actual statement owners determine ELSE eligibility. A group hides
-       * enclosing IF owners until its END restores them. */
+      /* Actual statement owners determine ELSE eligibility. DO and SELECT
+       * hide enclosing IF owners until their END restores them. */
       if clause & kind <> sep & arm = 0 & word <> 'ELSE' & word <> 'THEN' then do
         do while ownercount > 0
           if owners[ownercount] <> 'if' then leave
@@ -108,10 +108,11 @@ parsed: class
       end
       if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
       if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; end
+      if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
       if word = 'END' then do
         do while ownercount > 0
           closed = owners[ownercount]; ownercount = ownercount - 1
-          if closed = 'group' then leave
+          if closed = 'group' | closed = 'select' then leave
         end
       end
       if word = 'ELSE' & ownercount > 0 then do
@@ -120,7 +121,7 @@ parsed: class
       ok = classified.append(kind,first,last)
       if kind = opening then depth = depth + 1
       if kind = closing then depth = depth - 1
-      if word = 'IF' then condition = condition + 1
+      if word = 'IF' | word = 'WHEN' then condition = condition + 1
       /* Empty operands complete only their admitted prefix positions. The
        * first assignment '=' consumes its head; later equals are operators. */
       if clause & depth = 0 & kind = id & next = equals then operandmode = 'assignment-head'
@@ -132,8 +133,8 @@ parsed: class
         emptyrhs = 1; operandmode = 'assignment'
       end
       if kind <> sep then arm = word = 'THEN' | word = 'ELSE'
-      if word = 'THEN' | word = 'ELSE' then operandmode = ''
-      clause = kind = sep | word = 'THEN' | word = 'ELSE' | kind = colon
+      if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then operandmode = ''
+      clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
         term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
         if emptyrhs | wordpos(word,'SAY RETURN EXIT OPTIONS ARG DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
@@ -301,7 +302,7 @@ headerpolicy: procedure = .llcomments..rules
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))

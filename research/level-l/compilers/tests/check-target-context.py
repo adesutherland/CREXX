@@ -16,6 +16,7 @@ import argparse
 from dataclasses import dataclass, field
 from pathlib import Path
 import re
+import shlex
 import sys
 from typing import Optional
 
@@ -46,6 +47,7 @@ class Procedure:
     arguments: str = ''
     variables: dict = field(default_factory=dict)
     instructions: list = field(default_factory=list)
+    sources: list = field(default_factory=list)
 
     def calls(self):
         return [(index, target) for index, (opcode, operands) in enumerate(self.instructions)
@@ -61,12 +63,14 @@ class Procedure:
 def read_rxas(path):
     procedures, attributes = {}, {}
     current = None
+    source = None
     for raw in path.read_text(encoding='utf-8').splitlines():
         row = raw.strip()
         header = HEADER.match(raw)
         if header:
             name, options = header.groups()
             current = None
+            source = None
             if '.locals=' in options:
                 exported = re.search(r'\.expose=(\S+)', options)
                 require(name not in procedures, f'{path.name}: duplicate procedure {name}')
@@ -78,6 +82,9 @@ def read_rxas(path):
             attributes[attribute[1].removeprefix(CONTEXT + '.')] = (attribute[2], int(attribute[3]))
         if current is None:
             continue
+        if row.startswith('.srcstep '):
+            fields = shlex.split(row)
+            source = (fields[4], int(fields[5]), fields[8])
         signature = SIGNATURE.match(row)
         if signature:
             current.result, current.arguments = signature[2], signature[3]
@@ -89,6 +96,7 @@ def read_rxas(path):
             continue
         opcode, _, operands = row.partition(' ')
         current.instructions.append((opcode, operands.strip()))
+        current.sources.append(source)
     return procedures, attributes
 
 
@@ -188,6 +196,8 @@ def check_adapter(procedures):
         'binaryop': ('.rexxvalue..rexxvalue', f'operation=.string,left={value},right={value},context={context}'),
         'unaryop': ('.rexxvalue..rexxvalue', f'operation=.string,value={value},context={context}'),
         'truth': ('.int', f'value={value},context={context}'),
+        'whentruth': ('.int', f'value={value},context={context}'),
+        'selectmissing': ('.void', 'line=.string'),
         'setting': ('.void', f'operation=.string,context={context},value={value}'),
         'digits': ('.rexxvalue..rexxvalue', f'context={context}'),
         'readarg': ('.rexxvalue..rexxvalue', f'context={context},ordinal=.int'),
@@ -223,7 +233,7 @@ def check_adapter(procedures):
     for name, signature in signatures.items():
         p = procedures[name]
         require((p.result, p.arguments) == signature, f'{name}: approved signature/defaults changed')
-    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext']}
+    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext'] if name != 'selectmissing'}
     all_calls = [target for p in borrowed.values() for _, target in p.calls()]
     forbidden = {
         '§rexxactivation.rexxactivationarguments.§factory',
@@ -241,7 +251,7 @@ def check_adapter(procedures):
                                        '.rexxpool..rexxvariablepool', '.rexxclassicconfig..rexxclassicconfig'}}
         require(not any(op == 'copy' and operands.split(',')[-1] in owner_registers
                         for op, operands in p.instructions), f'{p.name}: copied live owner value')
-    for name in ['binaryop', 'unaryop', 'truth', 'digits']:
+    for name in ['binaryop', 'unaryop', 'truth', 'whentruth', 'digits']:
         require(not any(op in {'numsci', 'numeng', 'setnumdgts', 'setnumfuz', 'setnumfrm'}
                         for op, _ in procedures[name].instructions), f'{name}: inherited numeric frame reset')
     helper = procedures['bifcontext']
@@ -259,6 +269,7 @@ def check_adapter(procedures):
         'binaryop': 'rexxclassicbifs.rexxclassic_expression_binary',
         'unaryop': 'rexxclassicbifs.rexxclassic_expression_unary',
         'truth': 'rexxclassicbifs.rexxclassic_expression_unary',
+        'whentruth': 'rexxclassicbifs.rexxclassic_expression_unary',
         'digits': 'rexxclassicbifnumeric.rexxclassicbif_digits',
         'countargs': 'rexxclassicbifarg.rexxclassicbif_arg',
         'existsarg': 'rexxclassicbifarg.rexxclassicbif_arg',
@@ -268,6 +279,26 @@ def check_adapter(procedures):
         p = procedures[name]
         require(p.call_index('bifcontext') < p.call_index(entry) < p.call_index(CHECKED),
                 f'{name}: expected direct existing implementation followed by checked delivery')
+    missing = procedures['selectmissing']
+    helper_sites = [index for index, target in missing.calls()
+                    if target == 'rexxvalue.rexxvalue_select_missing']
+    inline_sites = [index for index, (op, operands) in enumerate(missing.instructions)
+                    if op == 'signal' and operands.startswith('"ERROR",')
+                    and missing.sources[index] is not None
+                    and Path(missing.sources[index][0]).name == 'RexxValue.crexx'
+                    and 'signal "ERROR"' in missing.sources[index][2]]
+    require(len(helper_sites) + len(inline_sites) == 1,
+            'selectmissing: expected the existing helper call or its source-backed inline ERROR')
+    captures = [(index, operands.split(',')[1])
+                for index, (op, operands) in enumerate(missing.instructions)
+                if op == 'sigbrv' and operands.endswith(',"ERROR"')]
+    bridges = [(index, operands.split(',')[-1])
+               for index, (op, operands) in enumerate(missing.instructions)
+               if op == 'signalorigin' and operands.startswith('"CLASSIC_SYNTAX",')]
+    require(len(captures) == len(bridges) == 1
+            and captures[0][1] == bridges[0][1]
+            and captures[0][0] < (helper_sites + inline_sites)[0] < bridges[0][0],
+            'selectmissing: bind one ERROR event and forward that same event through signalorigin')
     binary = procedures['binaryop']
     transport = binary.call_index('bifcontext')
     for name in ['strictcompareequal', 'concat', 'spaceconcat']:

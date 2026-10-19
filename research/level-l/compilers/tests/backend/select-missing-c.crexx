@@ -1,0 +1,7 @@
+options levelc
+say 'before'
+select
+  when 0 then say 'wrong first'
+  when 0 then say 'wrong second'
+end
+say 'wrong after'

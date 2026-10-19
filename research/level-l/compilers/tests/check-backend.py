@@ -128,6 +128,8 @@ try:
             if case['error']:
                 assert result.returncode != 0 and case['error'].lower() in stderr.lower(), (label, stderr)
                 assert source.name in stderr, (label, 'missing authored source', stderr)
+                if 'error_line' in case:
+                    assert f"{source.name}:{case['error_line']}:" in stderr, (label, 'wrong authored fault line', stderr)
                 if case['name']=='origin-error':
                     assert ':3:' in stderr, (label, 'wrong CRLF source line', stderr)
             else:

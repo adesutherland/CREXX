@@ -21,7 +21,11 @@ p.add_argument('--native-controls', action='store_true')
 p.add_argument('--inspect', type=Path, help='temporary directory for representative caller RXAS review')
 p.add_argument('--c-only', action='store_true',
                help='check existing C calls in restricted compiler-host and static-target roots')
+p.add_argument('--select-metadata', action='store_true',
+               help='run only the focused SELECT target metadata controls (requires --c-only)')
 a = p.parse_args()
+if a.select_metadata and not a.c_only:
+    p.error('--select-metadata requires --c-only')
 if a.c_only and (a.installed or a.native_controls):
     p.error('--c-only uses build-linked compiler images; installed/native controls remain mixed-mode checks')
 if a.c_only and a.vm not in ('rxbvm', 'rxtvm'):
@@ -153,7 +157,7 @@ def metadata_image(directory, signature, *, exported=True, duplicate=False):
     run(directory.name+'-assemble', [tool('rxas'), '-n', asm])
 
 
-def classic_metadata():
+def classic_metadata(select_only=False):
     """Selected ABI mutations are assembled for import only, never executed.
 
     A valid authored class catalog is admitted first. Each negative changes
@@ -195,6 +199,7 @@ def classic_metadata():
     valid = '\n'.join(lines)+'\n'
     target = (backend/'llctarget.rxas').read_text(encoding='utf-8')
     source = root/'backend/numeric-c.crexx'
+    select_source = root/'backend/select-missing-c.crexx'
 
     def fixture(label, package, text):
         directory = work/label
@@ -208,9 +213,12 @@ def classic_metadata():
         return directory
 
     directory = fixture('c-valid-catalog', 'rxfnsc', valid)
-    for ir in ['off', 'on']:
-        compile_source('c', source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
+    for ir in (['on'] if select_only else ['off', 'on']):
+        compile_source('c', select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
                        label='c-valid-catalog-'+ir, imports=directory)
+    if not select_only:
+        compile_source('c', select_source, work/'c-select-valid-catalog.rxas',
+                       label='c-select-valid-catalog', imports=directory)
 
     cases = [
         ('c-target-optional', 'llctarget', 'context=reference '+ct,
@@ -234,8 +242,21 @@ def classic_metadata():
          'context=reference .wrong', 'rexxclassicbifnumeric.rexxclassicbif_digits'),
         ('c-bif-layout', 'rxfnsc', '".int"', '".string"',
          'rexxclassicbifs.rexxbifcallcontext.bif_arg_count'),
+        ('c-select-truth-result', 'llctarget', '".int"', '".string"',
+         'llctarget.whentruth'),
+        ('c-select-truth-context', 'llctarget', 'context=reference '+ct,
+         '?context=reference '+ct, 'llctarget.whentruth'),
+        ('c-select-missing-result', 'llctarget', '".void"', '".int"',
+         'llctarget.selectmissing'),
+        ('c-select-missing-line', 'llctarget', 'line=.string', 'line=.binary',
+         'llctarget.selectmissing'),
+        ('c-select-missing-optional', 'llctarget', 'line=.string', '?line=.string',
+         'llctarget.selectmissing'),
     ]
     for label, package, before, after, name in cases:
+        is_select = label.startswith('c-select-')
+        if select_only and not is_select:
+            continue
         text = target if package == 'llctarget' else valid
         pattern = re.compile(r'(^\s*\.meta "'+re.escape(name)+r'"="b"[^\n]*$)', re.M)
         matches = list(pattern.finditer(text))
@@ -243,11 +264,11 @@ def classic_metadata():
         replacement = matches[0].group().replace(before, after, 1)
         text = text[:matches[0].start()]+replacement+text[matches[0].end():]
         directory = fixture(label, package, text)
-        for ir in ['off', 'on']:
+        for ir in (['on'] if is_select else ['off', 'on']):
             # Identity mutations deliberately exercise selected-call lookup;
             # all other cases reach a concrete signature or class refusal.
             message = b'not found' if label == 'c-member-identity' else b'incompatible'
-            reject(source, message, label+'-'+ir, 'c', directory, ir=ir)
+            reject(select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
 
 
 def classic_construction(text, name):
@@ -362,6 +383,10 @@ def classic_shape(text, name):
 
 
 try:
+    if a.select_metadata:
+        classic_metadata(select_only=True)
+        print(f'SELECT_METADATA|commands={len(records)}|failures=0')
+        raise SystemExit(0)
     for level in (['c'] if a.c_only else ['g', 'c']):
         fixtures = []
         for name in ['scale', 'presence', 'calls']:
