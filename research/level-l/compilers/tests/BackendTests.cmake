@@ -11,7 +11,7 @@ add_custom_target(llcompiler_step07_measure
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/step07-measure"
     --mode opt --vm rxbvm --native-controls
   DEPENDS llcompiler_backend-step07_opt llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt
-    llcompiler_target_opt library rxfnsc rxbvm rxas rxlink
+    llcompiler_target_opt library classlib rxfnsc rxunicode_core fs cstream rxbvm rxas rxlink
   VERBATIM)
 add_custom_target(llcompiler_poc_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-poc.py"
@@ -132,7 +132,7 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_step07}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-step07_${_mode} llcompiler_target_${_mode}
-          library rxfnsc rxas rxlink ${_vm})
+          library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
     endif()
   endforeach()
 endforeach()

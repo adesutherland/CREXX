@@ -1,4 +1,4 @@
-Program|0:202|options levelc
+Program|0:208|options levelc
 total = 2 + 3
 if total > 4 then say twice(total)
 else say 0
@@ -6,14 +6,14 @@ do while total > 0
   total = total - 1
 end
 say total
-say length('cat')
+say length('α漢🙂')
 exit 0
 
 twice: procedure
   arg value
   return value * 2
 
-Sequence|0:202|options levelc
+Sequence|0:208|options levelc
 total = 2 + 3
 if total > 4 then say twice(total)
 else say 0
@@ -21,7 +21,7 @@ do while total > 0
   total = total - 1
 end
 say total
-say length('cat')
+say length('α漢🙂')
 exit 0
 
 twice: procedure
@@ -122,42 +122,42 @@ Chain|122:127|total
 Chain|122:127|total
 Chain|122:127|total
 Name|122:127|total
-Say|128:145|say length('cat')
-Chain|132:145|length('cat')
-Chain|132:145|length('cat')
-Chain|132:145|length('cat')
-Chain|132:145|length('cat')
-Chain|132:145|length('cat')
-Chain|132:145|length('cat')
-Call|132:145|length('cat')
-Arguments|139:144|'cat'
-Argument|139:144|'cat'
-Chain|139:144|'cat'
-Chain|139:144|'cat'
-Chain|139:144|'cat'
-Chain|139:144|'cat'
-Chain|139:144|'cat'
-Chain|139:144|'cat'
-String|139:144|'cat'
-Exit|146:152|exit 0
-Chain|151:152|0
-Chain|151:152|0
-Chain|151:152|0
-Chain|151:152|0
-Chain|151:152|0
-Chain|151:152|0
-Number|151:152|0
-CLabel|154:160|twice:
-CProcedure|161:170|procedure
-CArg|173:182|arg value
-ArgTarget|177:182|value
-Return|185:201|return value * 2
-Chain|192:201|value * 2
-Chain|192:201|value * 2
-Chain|192:201|value * 2
-Chain|192:201|value * 2
-Chain|192:201|value * 2
-Chain|192:201|value * 2
-Name|192:197|value
-Number|200:201|2
-times|198:199|*
+Say|128:151|say length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Chain|132:151|length('α漢🙂')
+Call|132:151|length('α漢🙂')
+Arguments|139:150|'α漢🙂'
+Argument|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+Chain|139:150|'α漢🙂'
+String|139:150|'α漢🙂'
+Exit|152:158|exit 0
+Chain|157:158|0
+Chain|157:158|0
+Chain|157:158|0
+Chain|157:158|0
+Chain|157:158|0
+Chain|157:158|0
+Number|157:158|0
+CLabel|160:166|twice:
+CProcedure|167:176|procedure
+CArg|179:188|arg value
+ArgTarget|183:188|value
+Return|191:207|return value * 2
+Chain|198:207|value * 2
+Chain|198:207|value * 2
+Chain|198:207|value * 2
+Chain|198:207|value * 2
+Chain|198:207|value * 2
+Chain|198:207|value * 2
+Name|198:203|value
+Number|206:207|2
+times|204:205|*

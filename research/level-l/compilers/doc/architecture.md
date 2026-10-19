@@ -246,6 +246,239 @@ integers/floats are implementation choices, not changed Classic semantics.
 Ordinary text is exact Unicode codepoints with the fixed Latin-1 ordinal bridge;
 external stream encodings do not change source or ordinal semantics.
 
+### Borrowed Classic context proposal — awaiting approval
+
+**Draft contract for the next bounded STEP03 slice; no implementation or API
+approval is claimed.** The plan owns its scheduling and acceptance status.
+The intended outcome is one execution-owned configuration and one authoritative
+activation/pool binding for the C subset already admitted at `975afbc15`.
+Remove per-operator configuration construction and copies of live activation
+state while retaining existing expression/BIF bodies and observable results.
+This does not admit more source forms or close an instruction review.
+
+The slice covers the existing scalar expressions, assignments, structured
+control, NUMERIC forms, private PROCEDURE routines, argument/result presence
+and LENGTH/ARG/DIGITS forms. It does not add shared-label/fall-through calling,
+EXPOSE syntax, condition handlers, new BIF names, signed external calls, host
+invocation APIs or dynamic compilation. Those remain with their owning steps.
+The existing Unicode procedures and algorithms are unchanged.
+
+#### Exact proposed shared B surface
+
+Add `RexxClassicContext` in namespace `rexxclassiccontext`, owned by
+`lib/rxfnsc/RexxClassicContext.crexx` and delivered in the existing
+`rxfnsc.rxbin`. It is a reference bundle, not a second implementation of an
+activation. Its only fields are references to existing caller-owned objects.
+It allocates no activation, pool or configuration and stores no reference to
+itself or one of its own members. Existing `rexxactivation`, `rexxpool`,
+configuration and BIF exports retain their signatures and behavior.
+
+Passing the three existing references separately would add no B class, but
+would spread pool-binding replacement across every helper ABI. A copied pool
+reference does not observe replacement of the caller's binding, and nested
+reference containers are outside the current B surface. The proposed bundle
+provides one explicit mutable binding using existing class/reference rules.
+
+These are the complete five proposed callables. All arguments are required;
+there are no defaults, optional-presence bits or exposed by-value arguments.
+Types below use the existing fully qualified source identities.
+
+| Callable | Exact parameters | Result |
+|---|---|---|
+| `.rexxclassiccontext..RexxClassicContext(...)` (default factory) | `activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig` | `.rexxclassiccontext..RexxClassicContext` |
+| `activation()` | none | `reference .rexxactivation..RexxActivationArguments` |
+| `pool()` | none | `reference .rexxpool..RexxVariablePool` |
+| `config()` | none | `reference .rexxclassicconfig..RexxClassicConfig` |
+| `bindPool(pool)` | `pool = reference .rexxpool..RexxVariablePool` | `.void` |
+
+The factory checks all three references with the existing `<refvalid>` facility
+before publishing a bundle. Each getter checks its selected reference before
+returning it. `bindPool` checks the replacement before changing the binding;
+failure leaves the previous binding intact. Invalid or expired targets raise
+the existing `REFERENCE_INVALID` condition. There is no new handle, error
+category, lifetime extension, global registry or VM/object ABI.
+Callers supply initialized instances; a live reference cell does not by itself
+prove object initialization. Existing `OBJECT_NOT_INITIALIZED` behavior remains
+when an uninitialized object is used. The bundle adds no profile/state inference
+or eager copy of the referenced objects.
+
+`bindPool` changes only this bundle's pool reference. It does not create or copy
+a pool, apply EXPOSE, change Unicode-name policy, alter activation state or
+modify configuration. Those operations retain their existing owners. C selects
+UTF8 configuration and Unicode pool names at entry; the shared bundle itself
+does not introduce a new character-profile policy.
+
+#### Stable owners and copying
+
+The C entry wrapper owns the existing root `RexxActivationArguments`, UTF8
+`RexxClassicConfig`, root `RexxVariablePool` and the bundle in stable local
+storage. Capture arguments and complete any by-value construction before
+binding references. Helpers receive a reference to that authoritative bundle;
+they do not receive copies of live activation/configuration objects.
+
+The factory's value result can safely move into its final local because its
+three references point to external caller-owned storage. Ordinary B copying
+of a bundle copies these references: the referents are shared, but a later
+`bindPool` changes only the copied bundle receiving that call. Generated C
+therefore passes the authoritative bundle by reference and never substitutes
+a value copy when a live binding is required. It must not overwrite, move,
+resize away or recycle any referenced owner while a borrow is live.
+
+For the admitted private-PROCEDURE call profile, each caller call window owns
+the child's argument/activation object, private pool and bundle until the child
+returns. Populate arguments in source order, inherit state with the existing
+`inheritSignalPolicy`, and mark the invocation using `beginInternalCall` or
+`beginInternalFunction`. Use existing `enterProcedure` validation and pool
+initialisation/status inheritance; no new inheritance algorithm is added.
+Construct the bundle only after those owners occupy stable storage. Nested
+calls borrow the same root configuration and create fresh child activation
+state; a child NUMERIC change cannot modify the parent's activation.
+
+The callee uses the supplied binding rather than constructing another pool.
+Rebinding in direct runtime tests can use another caller-owned pool, proving
+that subsequent reads and BIF contexts observe the same authoritative bundle.
+This is not permission to implement the later shared-label/PROCEDURE protocol
+inside this slice. Any later callee-local replacement must restore or end every
+borrow before that local dies; it cannot leave a caller-owned bundle referring
+to returned-frame storage.
+
+Keep existing fresh return-presence packets for now. They contain returned
+value/presence, not a copied live child activation or references to child local
+storage. Their current representation cost remains explicit. Reference targets
+cannot escape into program results, cross a VM-context boundary or outlive
+their invocation. Stale-reference controls must fail through checked references,
+not extend owner lifetimes. Repeated executions own separate roots/configs.
+
+#### Numeric frame and error contract
+
+`RexxActivationArguments` remains the authoritative stored DIGITS/FUZZ/FORM
+state. The executing C frame must also carry those settings: existing numeric
+BIFs read the immediate caller's VM frame through inherited numeric clauses,
+not `RexxBifCallContext.setCallerActivation`.
+
+At root entry install the root defaults, and at child entry install the inherited
+child settings in the C frame. After a successful NUMERIC statement, install
+the new settings in that same frame. An existing-instruction sequence can set
+FUZZ to zero, set DIGITS, set the validated FUZZ and set FORM, avoiding an invalid
+intermediate DIGITS/FUZZ pair. This sequence is emitted in the C frame; calling
+a B setter that changes only its own VM frame would lose the setting on return.
+
+Validation reuses `setNumericDigits`, `setNumericFuzz` and `setNumericForm`.
+They commit only after successful validation and return their existing error
+text. On validation failure, raise the existing authored `CLASSIC_SYNTAX`
+diagnostic and execute no VM setting instructions: activation fields and the
+owning C frame retain their prior settings. Validated installs must use admitted
+integer values and existing instructions, with no fallible conversion between
+field commit and frame synchronisation. This is the ordinary validation-failure
+atomicity contract. Resumable asynchronous conditions and observer boundaries
+remain STEP02/07 obligations; this slice does not claim their closure.
+
+When a direct numeric BIF is emitted from the C frame, its inherited clauses
+read that frame. If a temporary B shim is the immediate BIF caller, the shim
+must declare DIGITS, FUZZ and FORM inherited so that it receives the C frame's
+settings; relying on the shim's default settings is incorrect. Returning from
+the shim or child restores its caller's VM frame using existing VM behavior.
+Do not change process-global RexxValue defaults or add a native numeric service.
+
+#### Checked BIF reuse and target compatibility decision
+
+Call sites retain source-ordered values/presence and existing direct BIF entry
+selection. Build a call-local `RexxBifCallContext.expression(name)`, bind the
+bundle's config/pool/activation through existing setters, set arguments and call
+the selected existing B entry followed by `rexxclassicbif_checked`. The name is
+diagnostic context, not selection through the legacy name dispatcher. No BIF
+body or error policy is copied into the compiler. Existing config getters and
+argument arrays can still copy values internally; those are retained costs,
+not a claim that the complete BIF path performs no copies.
+
+**Compatibility decision for approval:** prefer an additive `llctarget2`
+namespace in the same installed `llctarget.rxbin`, preserving every existing
+`llctarget` export/signature for already-emitted C images. New C output uses
+the following exact borrowed-context shim entries. Here `V` is
+`.rexxvalue..RexxValue` and `C` is
+`reference .rexxclassiccontext..RexxClassicContext`; these are table abbreviations,
+not additional public type names.
+All parameters are required and have no defaults/expose flags.
+
+| New entry | Parameters | Result |
+|---|---|---|
+| `llctarget2..binaryop` | `operation = .string, left = V, right = V, context = C` | `V` |
+| `llctarget2..unaryop` | `operation = .string, value = V, context = C` | `V` |
+| `llctarget2..truth` | `value = V, context = C` | `.int` |
+| `llctarget2..setting` | `operation = .string, context = C, value = V` | `.void` |
+| `llctarget2..digits` | `context = C` | `V` |
+| `llctarget2..readarg` | `context = C, ordinal = .int` | `V` |
+| `llctarget2..countargs` | `context = C` | `V` |
+| `llctarget2..existsarg` | `context = C, ordinal = V, option = V` | `V` |
+| `llctarget2..lengthvalue` | `value = V, context = C` | `V` |
+
+Keep the currently admitted operation names and argument forms. `readarg`
+retains ARG-instruction uppercase behavior; it is not the raw ARG BIF accessor.
+`setting` mutates the borrowed activation only after existing validation; the
+selector then performs the C-frame install above. `digits`, ARG and LENGTH
+select their existing checked BIF entries. Legacy argument construction,
+literal/pool helpers and fresh result packets can retain their current ABI;
+argument construction finishes before the new bundle borrows the activation.
+Legacy helper bodies remain compatibility code until separately retired.
+The existing operator-name branch and conservative root setup remain named
+C-OPT-01/03 work; this proposal does not add direct-operation B exports or claim
+that literal-only programs have no unused setup.
+
+The alternative is an intentional coordinated break of the exposed research
+`llctarget` signatures. That avoids retaining a second shim surface, but old
+emitted images could no longer use the replacement installed target library.
+That consequence requires explicit approval; a coordinated rebuild alone does
+not preserve those images. Do not silently choose this alternative.
+
+New generated C source-unit procedures receive one `C` reference; invocation
+kind and argument presence reside in its existing activation. Their existing
+fresh result-packet result type remains. This internal ABI is distinct from
+the unchanged VM main entry and from later signed external-call contracts.
+Changed C semantic type/effect/call records must use a separately reviewed C
+family revision; do not reinterpret old frozen records or change generic L
+record semantics. Old installed target metadata missing `llctarget2` or the
+bundle must cause a precise import diagnostic before publishing RXAS, preserving
+the previous output. Mixed old/new target packages must not accidentally select
+an old same-name signature. No new runtime product or compiler dependency is
+introduced into static applications.
+
+#### Review, migration and verification gates
+
+All gates below are open, serving CFC-AC02/03/06/07/09/11/12. They describe
+this contract slice, not complete activation, BIF, host or C acceptance.
+
+1. Approve the five-callable B surface, borrowing/error contract and additive
+   target compatibility choice. Freeze the affected C family revision and
+   internal call metadata before selector implementation. Preserve all existing
+   rxfnsc public class/BIF signatures and native/typed/RexxScript consumers.
+2. Prove the bundle independently with existing B reference operations: external
+   stable owners, safe factory-result copying, live pool rebinding, independent
+   copy binding, failed replacement atomicity and `REFERENCE_INVALID` after
+   owner death. Use direct B runtime tests in both modes and both VMs.
+3. Reuse `testRexxActivationArguments`, `testRexxRuntimePools`,
+   `testRexxClassicBifArg`, `testRexxClassicBifLength` and
+   `testRexxClassicBifNumeric`. Add only missing checks for the new borrow path,
+   invalid NUMERIC preserving both stored and VM state, independent roots and
+   nested caller restoration. Reuse existing body expectations unchanged.
+4. Migrate the admitted C selector/IR atomically. Reuse
+   `tests/backend/{numeric,arguments,argv,calls}-c.crexx` and their `cases.json`
+   expectations, selected independent `classic_expression_contract.py`
+   expectations and `levelc_bif_numeric_context` fixtures. Extend STEP07's
+   malformed-import/previous-output controls to both proposed surfaces. Execute
+   old emitted-image/new-library and new-compiler/old-metadata controls.
+5. Inspect caller and helper RXAS: one UTF8 configuration per execution, stable
+   borrowed owners, no live activation/configuration copy per operator, no unused
+   callee pool reconstruction, correct inherited numeric shim frame and no new
+   BIF dispatch/body. Classify retained result/argument/config-getter copies.
+   Reuse the C-only exact-root/static/installed controls and existing consumer
+   regressions. Measure any materially expanded nested aggregate before CTest
+   registration, and qualify centrally under the repository's normal Debug and
+   maintained sanitizer rules.
+
+These gates do not design or implement INTERPRET, continuation ownership or
+ephemeral code loading. The later mechanism must use the same live pool binding;
+its exact runtime/VM contracts remain at the final STEP11 decision gate.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

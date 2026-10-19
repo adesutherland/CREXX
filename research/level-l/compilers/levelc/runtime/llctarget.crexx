@@ -136,10 +136,11 @@ status: procedure = .int
   return result.programReturnCode()
 lengthvalue: procedure = .RexxValue
   arg value = .RexxValue
-  context = .RexxBifCallContext('')
+  context = .RexxBifCallContext.expression('LENGTH')
+  config = .RexxClassicConfig('UTF8'); call context.setConfig(reference config)
   values = .RexxValue[]; presence = .int[]
   values[1] = value; presence[1] = 1
-  call context.setName('LENGTH'); call context.setArguments(values,presence)
+  call context.setArguments(values,presence)
   result = rexxclassicbiflength..rexxclassicbif_length(reference context)
   return rexxclassicbif_checked(reference context,result)
 

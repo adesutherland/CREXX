@@ -6,6 +6,15 @@ and `frontend-probe` Level B consumers, as described in the
 [frontend manual](../../doc/frontends.md). The [walkthrough](../../doc/pipeline-walkthrough.md)
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
+The Classic pipeline tree and IR were refreshed on 19 October 2026 from the
+current Debug noopt components. The two existing probe sources were compiled
+and linked in a temporary directory against those components. The remaining
+examples retain their earlier qualification. The C source now calls
+`length('α漢🙂')`: the payload has three codepoints and nine UTF-8 bytes. Its
+quoted `String` occupies byte range `139:150` in the 208-byte source. The IR
+retains `CEB1E6BCA2F09F9982` as the value's bytes; LENGTH's result is a runtime
+contract, not a byte-span calculation.
+
 | Input pair | Classic output | G output |
 |---|---|---|
 | Pipeline | [Tree](pipeline-c.tree), [IR](pipeline-c.ir) | [Tree](pipeline-g.tree), [IR](pipeline-g.ir) |
@@ -28,5 +37,5 @@ that refusal is expected, and no successful IR is emitted. The local Git
 attributes preserve its literal CRLF bytes and retain the generated dumps
 without trimming source trivia or printed framing.
 
-Regeneration commands and tool/source hashes are in the
+Regeneration and qualification details are in the
 [current plan](../../PLAN.md).

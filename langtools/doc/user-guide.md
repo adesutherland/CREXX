@@ -3382,6 +3382,21 @@ scale: procedure
   return value * factor
 ```
 
+The C call baseline can be checked independently of G using the existing
+examples and expected results:
+
+```sh
+cmake --build cmake-build-debug --target llcompiler_c_calls_measure
+```
+
+This runs the B/L C compiler image in a restricted host and its linked output
+in a separate compiler-free runtime, with bytecode autoload disabled. It checks
+argument holes versus empty strings, recursion, evaluation order, the current
+LENGTH/ARG/DIGITS bindings and rejection of incompatible Classic metadata.
+It does not establish complete ARG/CALL, the remaining BIF bindings or a live
+activation API. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
+records the precise qualification boundary; INTERPRET is the final stage.
+
 For separate G compilation, put `namespace scalelib expose scale` after the
 provider's OPTIONS line and keep only routine declarations. In the consumer,
 write `import scalelib` and call `scalelib..scale(7)`. Compile and assemble the

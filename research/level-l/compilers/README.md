@@ -45,9 +45,10 @@ new B/G features and self-hosting are outside it. Existing G behavior remains
 supported. The [target architecture](doc/architecture.md),
 [requirements crosswalk](doc/levelc-requirements.md) and
 [worker packages](doc/agent-work-packages.md) are approved for implementation;
-open stages are not implemented capability. Shared Unicode algorithms now have
-an independent B component consumed by the unchanged G facade. Moving C's
-adapters to an approved public B interface remains a later STEP03 slice.
+open stages are not implemented capability. Shared Unicode algorithms and the
+23 procedural entrypoints now belong to the optional B `rxunicode-core` component;
+C adapters use that core directly, while G retains its API and two wrapper
+classes. New-compiler BIF binding and live activation/context work remain open.
 
 [The walkthrough](doc/pipeline-walkthrough.md) and maintained examples describe
 the implemented PoC. C completion proceeds instruction by instruction, ending

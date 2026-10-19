@@ -103,6 +103,28 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-24 TRACE / STEP07 | Missing full contract | Compile clause/result events with current VM metadata/exit protocol, share activation option/query state and command inhibition. Verify actual displayed values/origins and approved practical divergences. Disabled tracing must not require avoidable formatting/allocation. |
 | LC-I-25 INTERPRET / STEP11 | Missing | Same compiler in group mode, live caller state, source-once semantics, complete/no-label groups, nested compile/execute, CALL-handler resumption versus SIGNAL discard, caller routines, RETURN/EXIT and bounded resident ownership. Include all LC-87 proof cases and installed/platform lifecycle; no second evaluator. |
 
+## SAY dependency packet — CLC-STEP01b
+
+This is the first concrete instruction dependency packet, inspected at local
+`975afbc15` on 19 October 2026. It does not close LC-I-01. The retained
+[CFC-SAY criteria and validation](../PLAN.md#say-validation),
+[CLC-STEP01a controls](../PLAN.md#active-first-implementation-increment) and
+[Unicode migration qualification](../PLAN.md#shared-b-unicode-interface-and-c-adapter-migration)
+state the actual qualified inputs and modes; this ledger adds no new execution
+verdict. Native whole-SAY acceptance remains a reusable control, not a new-C pass.
+
+Paths under `tests/` below are relative to `research/level-l/compilers/`.
+
+| Dependency | Current implementation / reusable independent expectations | Remaining closure obligation and owner |
+|---|---|---|
+| **SAY-D01 — C-SRC** | `levelc/llcparse.crexx` fuses adjacent X/B suffixes and preserves authored spelling/ranges; `llcfrontend.ordinalliteral` decodes them into ordinal constants in the existing String/Say path. `tests/say/forms-c.crexx`, `literal-c.crexx` and the invalid-literal rows in `tests/check-say.py` cover empty/partial groups, Unicode/NUL, adjacency and located refusal. `CFC-SAY-AC02` retains the focused radix proof, including all 256 ordinals. | Complete C token/clause admission and static validation of all unreachable source under STEP04. A passing literal subset does not establish the whole expression/source contract. |
+| **SAY-D02 — C-EXPR / BF01–05** | `llcfrontend.statement` evaluates the optional operand once, then appends one `crexx.c.say`; an omitted operand supplies the empty value. `tests/say/forms-c.crexx` expects nested `inner` output before `outer=done`; `error-c.crexx` expects `before`, then arithmetic failure with no later output. `CFC-SAY-AC03` records both IR modes/VMs with assembler optimisation disabled. Native `compiler/tests/rexx_src/levelc_say_instruction.rexx` supplies an additional counter/recursive-output oracle. | Complete operators, compound reads, BIF and call forms, missing/empty presence and errors using shared runtime bodies. Port reusable cases through the new compiler as their prerequisites become available; do not inherit native closure. |
+| **SAY-D03 — C-POOL / C-ACT / C-NUM** | `llcfrontend.lowerall` currently creates pool, argument and numeric slots for every routine; `levelc/runtime/llctarget.crexx` supplies pool/value/snapshot adapters. `tests/backend/calls-c.crexx`, `arguments-c.crexx` and `numeric-c.crexx` have independent expected rows in `tests/backend/cases.json`; native `levelc_say_pool_reads.rexx` and `levelc_say_bif_family.rexx` are reusable controls. | STEP03 owns live replaceable pool/context binding and shared-label activation, including recursion/restoration and configured text/numeric behavior. Current private PROCEDURE routines and copied packets do not close those contracts. |
+| **SAY-D04 — C-HOST output** | `llcrxas` selects `llctarget.sayvalue`; that adapter performs `say value.asString(1)`. Existing native `compiler/tests/src/test_levelc_say_host_output.c` supplies exact NUL/high-scalar bytes and six callback invocations from `levelc_say_bytes.rexx`; `levelc_say_host_output` registers that control. | Run equivalent new-C output through the execution-owned length-aware output/configuration route, including once-only conversion, declared callback/error behavior and exact NUL/Unicode lengths. STEP03/08 own the shared adapter/host interface; a plain B SAY path is not complete configured Classic output proof. |
+| **SAY-D05 — C-OBS / conditions / TRACE** | `levelc/llcir.crexx` declares SAY state `output`, failure `conversion.io`, ordinary continuation `returns`; generic optimisation retains it. `tests/backend-tests.crexx` and `tests/check-provenance.py` check existing logical identities/origins, and `tests/say/error-c.crexx` checks the reached fatal-error ordering. | Explicit authored clause identity, trace/result observations, actual condition origin and trapped/resumed failure must be preserved under STEP03/07. Source ranges and a conservative effect summary alone do not establish those semantics. New exceptional/resumable L edges require their own approved contract. |
+| **SAY-D06 — C-OPT-01 / target quality** | `tests/check-say.py` rejects literal X/B pool reads/runtime decoding; retained `CFC-SAY-AC04` distinguishes complete RXAS from helper work. `llcfrontend.lowerall` still unconditionally constructs a pool; `llcrxas` supplies argument/context entry machinery. | C-owned requirement analysis must justify omitting unused setup for constant-only SAY, with read/write/call/RESULT/observation negatives. Preserve allocation, ABI, failure and lifetime obligations; do not make generic L discard named allocation/state effects. Register reuse remains the separate L/target contract. |
+| **SAY-D07 — delivery / independent foundations** | `llcompiler_c_only_{opt,noopt}_{rxbvm,rxtvm}` reuses the SAY expectations in separate B/L compiler-host and static-runtime roots with native compilers/G absent. `tests/check-say.py` enumerates the explicit target libraries, including the B Unicode core; the compiler host does not acquire that runtime. Independent `ts_llirflow`, `ts_llirservices` and `ts_lloptimise` cover normal flow, effects, owner/revision invalidation and atomic limits. | Preserve exact producer/import/install inventories and both-mode/engine proof as this packet grows. Required host/platform and full CFC obligations remain open; current desktop fixture success establishes neither complete SAY nor complete C. INTERPRET remains STEP11. |
+
 ## BIF integration and verification packages
 
 **Reuse the existing BIF implementation.** All 95 native table names already
@@ -185,6 +207,198 @@ Eight stream functions use execution-owned raw/encoded stream adapters; position
 `DATE`, `TIME`, `RANDOM`.
 
 Clause-stable clock samples with program elapsed/reset state, calendars/conversions/timezones and injectable error clocks; RANDOM range/seed/state contracts and isolation. Deterministic tests plus named live-host checks, not timing assumptions.
+
+### Exact runtime binding inventory — CLC-STEP01b
+
+This source inventory is pinned to local `975afbc15`, after the shared B Unicode
+migration. It lists all **95 names exactly once**: 70 catalogue names, LOWER/UPPER
+and 23 Unicode extensions. The authority for selected entries is
+[`levelc_direct_bifs`](../../../../compiler/rxcp_levelc_lower.c); implementations
+are in [`lib/rxfnsc`](../../../../lib/rxfnsc/). This inventory records existing
+ABI and dependencies; it does not authorise a new API or reimplement a BIF.
+
+Every selected entry returns `.RexxValue` and takes a mandatory first
+`context_ref = reference .rexxclassicbifs..RexxBifCallContext`. It carries the
+BIF name, ordered `.RexxValue[]` operands, a separate presence vector and count,
+current configuration and error transport. Explicit empty and omitted operands
+must remain distinct. ADDRESS, ARG, CONDITION and TRACE additionally take
+`activation_ref = reference .rexxactivation..RexxActivationArguments`, in that
+order. The table names the actual frame entries for ADDRESS/TRACE, the CENTRE
+alias in the CENTER module, and the common BIT*/LOWER/UPPER entries; selecting a
+similarly named legacy helper is not sufficient.
+
+The common context can hold borrowed pool/configuration/activation references.
+The requirements below identify state that binding must preserve, not a request
+to construct or copy a whole activation for every call. Numeric wrappers retain
+their authored `numeric ... inherited` settings; merely matching a signature
+cannot establish inherited NUMERIC, observer or host semantics.
+
+| Context code | Required state beyond ordinary operands/presence/error transport |
+|---|---|
+| `T` | Current text configuration: exact codepoints, admitted character/case/comparison rules and padding/ranges used by the entry. No implicit normalization. |
+| `W` | `T` plus configured word/blank scanning. |
+| `O` | Fixed Latin-1 ordinal bridge and rejection above U+00FF for byte-valued operations; radix grouping/width remains entry-owned. |
+| `N` | Caller NUMERIC state required by the entry and its argument checks; preserve inherited DIGITS/FORM/FUZZ, rounding and condition behavior where applicable. |
+| `A` | Explicit second activation reference: argument state, current condition or frame ADDRESS/TRACE, according to the entry. |
+| `P` | Live visible pool and text-name configuration; VALUE may mutate it or access a configured external pool. |
+| `K` | Context-bound activation clause clock and shared elapsed/reset state; direct harnesses may use the existing injected pool clock. |
+| `Q` | Execution-selected queue through current configuration; query must not consume it. |
+| `R` | Execution/configuration-owned RNG state and explicit seed mutation. |
+| `S` | Retained source inventory supplied through configuration, including exact line/count/error behavior. |
+| `H` | Execution-owned stream/configuration/provider state; qualification/path policy, codec, lifecycle and NOTREADY/error transport. |
+| `U` | Shared B Unicode provider with existing C text/ordinal, optional-presence and error adapters. |
+| `—` | No additional state identified here; the common context and entry-specific checks still apply. ERRORTEXT uses the shared message catalog. |
+
+Fixture abbreviations name maintained inputs with authored expected results:
+
+- `B/Foo` means [`lib/rxfnsc/tests_functional/testRexxClassicBifFoo.crexx`](../../../../lib/rxfnsc/tests_functional/).
+  `B/Numeric` and `B/Bitwise` are the existing shared harnesses;
+  `B/Bifs` denotes `testRexxClassicBifs.crexx` in that directory.
+- `CU` means [`compiler/tests/rexx_src/levelc_unicode_services.rexx`](../../../../compiler/tests/rexx_src/levelc_unicode_services.rexx)
+  and its `.expected`, plus [`classic_unicode_contract.py`](../../../../compiler/tests/classic_unicode_contract.py)
+  for ordinals/replacement omission and the independent public B
+  [`ts_unicode_public.crexx`](../../../../lib/rxfnsb/unicode/tests/ts_unicode_public.crexx).
+- `CS` means the stream cases of [`classic_unicode_contract.py`](../../../../compiler/tests/classic_unicode_contract.py)
+  named in the [Unicode/stream crosswalk](../../../../compiler/docs/levelc_unicode_and_streams.md#regression-crosswalk),
+  [`test_classic_stream_lifecycle.c`](../../../../compiler/tests/src/test_classic_stream_lifecycle.c)
+  and [`classic_stream_package.rexx`](../../../../tests/rxpa/classic_stream_package.rexx).
+  These provide reusable semantics/lifecycle/byte expectations, not coverage of every stream case.
+
+`P` in the **New C** column means only an admitted partial route exists:
+LENGTH takes one actual, DIGITS none, ARG none or two present actuals. Their
+existing new-C controls are `tests/backend/arguments-c.crexx`, `argv-c.crexx`,
+`numeric-c.crexx` and `tests/frontend-tests.crexx`; emission uses current
+`llctarget` adapters, not a completed generic direct-BIF binding. `O` means the
+name is not bound by the new frontend. Local-routine shadowing remains distinct.
+All 95 whole BIF integration obligations remain open. The cited B/native/G
+fixtures may be reused as oracles; their existing passes are never new-C passes.
+
+Some direct harnesses exercise a different retained entry: `B/Address` and
+`B/Trace` test pool-oriented clients, while the catalogue selects activation
+frame entries. Reuse native [`levelc_address_whole.rexx`](../../../../compiler/tests/rexx_src/levelc_address_whole.rexx)
+with its `.expected` and [`levelc_trace_values.rexx`](../../../../compiler/tests/rexx_src/levelc_trace_values.rexx)
+with its opt/no-opt goldens for that distinction. `B/Subword` calls the common
+helper rather than the selected standalone entry; the compiled
+`levelc_bif_reference_audit.rexx`/`.expected` is an additional control. These
+differences must remain visible when attributing later new-C results.
+
+| Name | Fully qualified runtime symbol | Context | Reusable fixture | New C |
+|---|---|---|---|---|
+| `ABBREV` | `rexxclassicbifabbrev.rexxclassicbif_abbrev` | T | `B/Abbrev` | O |
+| `ABS` | `rexxclassicbifabs.rexxclassicbif_abs` | N | `B/Abs` | O |
+| `ADDRESS` | `rexxclassicbifaddress.rexxclassicbif_address_frame` | A | `B/Address` | O |
+| `ARG` | `rexxclassicbifarg.rexxclassicbif_arg` | A | `B/Arg` | P |
+| `B2X` | `rexxclassicbifb2x.rexxclassicbif_b2x` | — | `B/B2x` | O |
+| `BITAND` | `rexxclassicbifs.rexxclassicbif_bitand` | O | `B/Bitwise` | O |
+| `BITOR` | `rexxclassicbifs.rexxclassicbif_bitor` | O | `B/Bitwise` | O |
+| `BITXOR` | `rexxclassicbifs.rexxclassicbif_bitxor` | O | `B/Bitwise` | O |
+| `C2D` | `rexxclassicbifc2d.rexxclassicbif_c2d` | O, N | `B/C2d` | O |
+| `C2X` | `rexxclassicbifc2x.rexxclassicbif_c2x` | O | `B/C2x` | O |
+| `CENTER` | `rexxclassicbifcenter.rexxclassicbif_center` | T | `B/Center` | O |
+| `CENTRE` | `rexxclassicbifcenter.rexxclassicbif_centre` | T | `B/Centre` | O |
+| `CHANGESTR` | `rexxclassicbifchangestr.rexxclassicbif_changestr` | T | `B/Changestr` | O |
+| `COMPARE` | `rexxclassicbifcompare.rexxclassicbif_compare` | T | `B/Compare` | O |
+| `CONDITION` | `rexxclassicbifcondition.rexxclassicbif_condition` | A | `B/Condition` | O |
+| `COPIES` | `rexxclassicbifcopies.rexxclassicbif_copies` | T | `B/Copies` | O |
+| `COUNTSTR` | `rexxclassicbifcountstr.rexxclassicbif_countstr` | T | `B/Countstr` | O |
+| `D2C` | `rexxclassicbifd2c.rexxclassicbif_d2c` | O, N | `B/D2c` | O |
+| `D2X` | `rexxclassicbifd2x.rexxclassicbif_d2x` | O, N | `B/D2x` | O |
+| `DATATYPE` | `rexxclassicbifdatatype.rexxclassicbif_datatype` | T | `B/Datatype` | O |
+| `DATE` | `rexxclassicbifdate.rexxclassicbif_date` | K | `B/Date` | O |
+| `DELSTR` | `rexxclassicbifdelstr.rexxclassicbif_delstr` | T | `B/Delstr` | O |
+| `DELWORD` | `rexxclassicbifdelword.rexxclassicbif_delword` | W | `B/Delword` | O |
+| `DIGITS` | `rexxclassicbifnumeric.rexxclassicbif_digits` | N | `B/Numeric` | P |
+| `ERRORTEXT` | `rexxclassicbiferrortext.rexxclassicbif_errortext` | — | `B/Errortext` | O |
+| `FORM` | `rexxclassicbifnumeric.rexxclassicbif_form` | N | `B/Numeric` | O |
+| `FORMAT` | `rexxclassicbifformat.rexxclassicbif_format` | N | `B/Format` | O |
+| `FUZZ` | `rexxclassicbifnumeric.rexxclassicbif_fuzz` | N | `B/Numeric` | O |
+| `INSERT` | `rexxclassicbifinsert.rexxclassicbif_insert` | T | `B/Insert` | O |
+| `LASTPOS` | `rexxclassicbiflastpos.rexxclassicbif_lastpos` | T | `B/Lastpos` | O |
+| `LEFT` | `rexxclassicbifleft.rexxclassicbif_left` | T | `B/Left` | O |
+| `LENGTH` | `rexxclassicbiflength.rexxclassicbif_length` | T | `B/Length` | P |
+| `LOWER` | `rexxclassicbifs.rexxclassicbif_lower` | T | `B/Bifs` | O |
+| `MAX` | `rexxclassicbifmax.rexxclassicbif_max` | N | `B/Max` | O |
+| `MIN` | `rexxclassicbifmin.rexxclassicbif_min` | N | `B/Min` | O |
+| `OVERLAY` | `rexxclassicbifoverlay.rexxclassicbif_overlay` | T | `B/Overlay` | O |
+| `POS` | `rexxclassicbifpos.rexxclassicbif_pos` | T | `B/Pos` | O |
+| `QUEUED` | `rexxclassicbifqueued.rexxclassicbif_queued` | Q | `B/Queued` | O |
+| `RANDOM` | `rexxclassicbifrandom.rexxclassicbif_random` | R | `B/Random` | O |
+| `REVERSE` | `rexxclassicbifreverse.rexxclassicbif_reverse` | T | `B/Reverse` | O |
+| `RIGHT` | `rexxclassicbifright.rexxclassicbif_right` | T | `B/Right` | O |
+| `SIGN` | `rexxclassicbifsign.rexxclassicbif_sign` | N | `B/Sign` | O |
+| `SOURCELINE` | `rexxclassicbifsourceline.rexxclassicbif_sourceline` | S | `B/Sourceline` | O |
+| `SPACE` | `rexxclassicbifspace.rexxclassicbif_space` | W | `B/Space` | O |
+| `STRIP` | `rexxclassicbifstrip.rexxclassicbif_strip` | T | `B/Strip` | O |
+| `SUBSTR` | `rexxclassicbifsubstr.rexxclassicbif_substr` | T | `B/Substr` | O |
+| `SUBWORD` | `rexxclassicbifsubword.rexxclassicbif_subword` | W | `B/Subword` | O |
+| `SYMBOL` | `rexxclassicbifsymbol.rexxclassicbif_symbol` | P | `B/Symbol` | O |
+| `TIME` | `rexxclassicbiftime.rexxclassicbif_time` | K | `B/Time` | O |
+| `TRACE` | `rexxclassicbiftrace.rexxclassicbif_trace_frame` | A | `B/Trace` | O |
+| `TRANSLATE` | `rexxclassicbiftranslate.rexxclassicbif_translate` | T | `B/Translate` | O |
+| `TRUNC` | `rexxclassicbiftrunc.rexxclassicbif_trunc` | N | `B/Trunc` | O |
+| `UPPER` | `rexxclassicbifs.rexxclassicbif_upper` | T | `B/Bifs` | O |
+| `VALUE` | `rexxclassicbifvalue.rexxclassicbif_value` | P | `B/Value` | O |
+| `VERIFY` | `rexxclassicbifverify.rexxclassicbif_verify` | T | `B/Verify` | O |
+| `WORD` | `rexxclassicbifword.rexxclassicbif_word` | W | `B/Word` | O |
+| `WORDINDEX` | `rexxclassicbifwordindex.rexxclassicbif_wordindex` | W | `B/Wordindex` | O |
+| `WORDLENGTH` | `rexxclassicbifwordlength.rexxclassicbif_wordlength` | W | `B/Wordlength` | O |
+| `WORDPOS` | `rexxclassicbifwordpos.rexxclassicbif_wordpos` | W | `B/Wordpos` | O |
+| `WORDS` | `rexxclassicbifwords.rexxclassicbif_words` | W | `B/Words` | O |
+| `X2B` | `rexxclassicbifx2b.rexxclassicbif_x2b` | — | `B/X2b` | O |
+| `X2C` | `rexxclassicbifx2c.rexxclassicbif_x2c` | O | `B/X2c` | O |
+| `X2D` | `rexxclassicbifx2d.rexxclassicbif_x2d` | O, N | `B/X2d` | O |
+| `XRANGE` | `rexxclassicbifxrange.rexxclassicbif_xrange` | O | `B/Xrange` | O |
+| `CHARIN` | `rexxclassicbifstream.rexxclassicbif_charin` | H | `CS` | O |
+| `CHAROUT` | `rexxclassicbifstream.rexxclassicbif_charout` | H | `CS` | O |
+| `CHARS` | `rexxclassicbifstream.rexxclassicbif_chars` | H | `CS` | O |
+| `LINEIN` | `rexxclassicbifstream.rexxclassicbif_linein` | H | `CS` | O |
+| `LINEOUT` | `rexxclassicbifstream.rexxclassicbif_lineout` | H | `CS` | O |
+| `LINES` | `rexxclassicbifstream.rexxclassicbif_lines` | H | `CS` | O |
+| `QUALIFY` | `rexxclassicbifstream.rexxclassicbif_qualify` | H | `CS` | O |
+| `STREAM` | `rexxclassicbifstream.rexxclassicbif_stream` | H | `CS` | O |
+| `UNICODEVERSION` | `rexxclassicbifunicode.rexxclassicbif_unicodeversion` | U | `CU` | O |
+| `TONFD` | `rexxclassicbifunicode.rexxclassicbif_tonfd` | U | `CU` | O |
+| `TONFC` | `rexxclassicbifunicode.rexxclassicbif_tonfc` | U | `CU` | O |
+| `TONFKD` | `rexxclassicbifunicode.rexxclassicbif_tonfkd` | U | `CU` | O |
+| `TONFKC` | `rexxclassicbifunicode.rexxclassicbif_tonfkc` | U | `CU` | O |
+| `ISNFD` | `rexxclassicbifunicode.rexxclassicbif_isnfd` | U | `CU` | O |
+| `ISNFC` | `rexxclassicbifunicode.rexxclassicbif_isnfc` | U | `CU` | O |
+| `ISNFKD` | `rexxclassicbifunicode.rexxclassicbif_isnfkd` | U | `CU` | O |
+| `ISNFKC` | `rexxclassicbifunicode.rexxclassicbif_isnfkc` | U | `CU` | O |
+| `TOUPPERCASE` | `rexxclassicbifunicode.rexxclassicbif_touppercase` | U | `CU` | O |
+| `TOLOWERCASE` | `rexxclassicbifunicode.rexxclassicbif_tolowercase` | U | `CU` | O |
+| `TOCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tocasefold` | U | `CU` | O |
+| `TOSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tosimplecasefold` | U | `CU` | O |
+| `TOTURKICCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkiccasefold` | U | `CU` | O |
+| `TOTURKICSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkicsimplecasefold` | U | `CU` | O |
+| `GRAPHEMECOUNT` | `rexxclassicbifunicode.rexxclassicbif_graphemecount` | U | `CU` | O |
+| `GRAPHEMEREVERSE` | `rexxclassicbifunicode.rexxclassicbif_graphemereverse` | U | `CU` | O |
+| `GRAPHEMESUBSTR` | `rexxclassicbifunicode.rexxclassicbif_graphemesubstr` | U | `CU` | O |
+| `GRAPHEMEPOS` | `rexxclassicbifunicode.rexxclassicbif_graphemepos` | U | `CU` | O |
+| `ENCODE` | `rexxclassicbifunicode.rexxclassicbif_encode` | U | `CU` | O |
+| `DECODE` | `rexxclassicbifunicode.rexxclassicbif_decode` | U | `CU` | O |
+| `ISDECODABLE` | `rexxclassicbifunicode.rexxclassicbif_isdecodable` | U | `CU` | O |
+| `ISENCODINGSUPPORTED` | `rexxclassicbifunicode.rexxclassicbif_isencodingsupported` | U | `CU` | O |
+
+The native `levelc_bif_inventory.rexx` contains unreachable calls and therefore
+checks admission only; it is not a semantic oracle. The broader
+`levelc_bif_reference_audit.rexx` and `.expected` provide additional fixed
+results for many ordinary entries. Stateful entries retain their direct B
+harnesses and instruction/host proof; a pure-text classification here does not
+permit generic L to infer purity from the entry name.
+
+This slice checks source identities/signatures and available fixture paths,
+not executable metadata or runtime behavior. C-ABI still requires separately
+compiled producer/consumer, incompatible/malformed metadata, optional-presence,
+ownership and installed controls through the new compiler. The existing 25
+instruction and 75 reference routes below remain open under their own criteria.
+
+Static validation used in-memory Python extraction of `levelc_direct_bifs`,
+namespace/procedure lookup and fixture/link checks: all 95 rows match the live
+source, return/context forms match, exactly four entries take the activation
+reference, and every named direct fixture/local link exists. The pre-existing
+25 instruction and 75 reference rows are byte-identical; `git diff --check`
+passes. No product build or runtime test was run for this documentation slice.
 
 ## Complete reference-obligation routing
 

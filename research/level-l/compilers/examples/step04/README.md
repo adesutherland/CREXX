@@ -9,6 +9,14 @@ for the original qualification boundary. The subsequent essential provenance
 correction refreshes these outputs; its bounded proof is recorded in
 [current plan](../../PLAN.md).
 
+The Classic pipeline IR and RXAS were refreshed on 19 October 2026 using the
+current Debug noopt frontend probe and C compiler, with compiler IR optimisation
+and assembler optimisation both disabled. Its source now uses
+`length('α漢🙂')`, which returns three codepoints from nine UTF-8 payload bytes.
+The regenerated image printed the unchanged expected `10`, `0`, `3` with
+autoload disabled and the explicit Classic link closure below. Other examples
+retain their earlier qualification.
+
 | Source | IR | RXAS | Executed output |
 |---|---|---|---|
 | [Classic literal](literal-c.crexx) | [IR](literal-c.ir) | [RXAS](literal-c.rxas) | [01](literal-c.out) |
@@ -30,14 +38,18 @@ From this directory, with the installed bin directory in `CREXX_BIN`, regenerate
 and execute the G literal with:
 
 ```sh
-"$CREXX_BIN/llrxc-g" -i "$CREXX_BIN" -o literal-g.rxas literal-g.crexx
+"$CREXX_BIN/llrxc-g" -n -i "$CREXX_BIN" -o literal-g.rxas literal-g.crexx
 "$CREXX_BIN/rxas" -n literal-g.rxas
 "$CREXX_BIN/rxlink" -o literal-g-linked literal-g.rxbin "$CREXX_BIN/library.rxbin"
-"$CREXX_BIN/rxbvm" literal-g-linked.rxbin
+"$CREXX_BIN/rxbvm" --no-autoload literal-g-linked.rxbin
 ```
 
-For Classic use `llrxc-c` and add `llctarget.rxbin` and `rxfnsc.rxbin` to the
-link inputs. For the larger examples the source path is
+For Classic use `llrxc-c` and link the program with `library.rxbin`,
+`llctarget.rxbin`, `rxfnsc.rxbin`, `classlib.rxbin` and `rxunicode-core.rxbin`.
+The class library supplies the dynamic pool's map; the standalone B Unicode
+core supplies Classic's Unicode procedures. This closure has no G aggregate.
+Do not add `rxfnsg.rxbin` alongside the standalone core: a linked image has one
+Unicode provider. For the larger examples the source path is
 `../step01/pipeline-c.crexx` or `../step01/pipeline-g.crexx`. The CLI records the source basename, independently of its physical directory;
 service callers can pass a deliberate relative logical name to disambiguate
 files with the same basename. The IR dumps use the existing
@@ -59,14 +71,14 @@ crexx_examples="$PWD/research/level-l/compilers/examples/step01"
   crexx_work=$(mktemp -d)
   trap 'rm -rf "$crexx_work"' EXIT
   cd "$crexx_work"
-  "$crexx_bin/llrxc-g" -i "$crexx_bin" -o demo-g.rxas "$crexx_examples/pipeline-g.crexx"
+  "$crexx_bin/llrxc-g" -n -i "$crexx_bin" -o demo-g.rxas "$crexx_examples/pipeline-g.crexx"
   "$crexx_bin/rxas" -n demo-g.rxas
   "$crexx_bin/rxlink" -o demo-g-linked demo-g.rxbin "$crexx_bin/library.rxbin"
-  "$crexx_bin/rxbvm" demo-g-linked.rxbin
-  "$crexx_bin/llrxc-c" -i "$crexx_bin" -o demo-c.rxas "$crexx_examples/pipeline-c.crexx"
+  "$crexx_bin/rxbvm" --no-autoload demo-g-linked.rxbin
+  "$crexx_bin/llrxc-c" -n -i "$crexx_bin" -o demo-c.rxas "$crexx_examples/pipeline-c.crexx"
   "$crexx_bin/rxas" -n demo-c.rxas
-  "$crexx_bin/rxlink" -o demo-c-linked demo-c.rxbin "$crexx_bin/library.rxbin" "$crexx_bin/llctarget.rxbin" "$crexx_bin/rxfnsc.rxbin"
-  "$crexx_bin/rxbvm" demo-c-linked.rxbin
+  "$crexx_bin/rxlink" -o demo-c-linked demo-c.rxbin "$crexx_bin/library.rxbin" "$crexx_bin/llctarget.rxbin" "$crexx_bin/rxfnsc.rxbin" "$crexx_bin/classlib.rxbin" "$crexx_bin/rxunicode-core.rxbin"
+  "$crexx_bin/rxbvm" --no-autoload demo-c-linked.rxbin
   cat demo-g.rxas demo-c.rxas
 )
 ```
@@ -76,8 +88,10 @@ compile source through IR to RXAS, assemble bytecode, link runtime dependencies,
 then execute. Open `demo-g.rxas` or `demo-c.rxas` to inspect emitted assembly;
 the original sources remain in the examples directory. The commands use the
 new B/Level L compilers. Classic's additional link inputs supply its target
-adapter and dynamic runtime. Both tools currently implement the admitted PoC
-profile, with shared IR optimisation enabled by default. Full language coverage
+adapter, dynamic runtime, map and Unicode services. The commands disable shared
+IR optimisation with `-n` and assembler optimisation separately with `rxas -n`.
+Both compilers enable shared IR optimisation by default when `-n` is omitted.
+They currently implement the admitted PoC profile; full language coverage
 remains later work.
 
 ## Error provenance

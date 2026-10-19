@@ -198,6 +198,33 @@ if("c" IN_LIST _languages)
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
+  add_custom_target(llcompiler_c_calls_measure
+    COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
+      --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/c-calls-measure"
+      --mode opt --vm rxbvm --c-only
+    DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
+      fs cstream rxas rxlink rxbvm
+    USES_TERMINAL VERBATIM)
+  # 55 commands: isolated Debug 32s / maintained Apple ASan 97s. This reuses
+  # existing call/numeric fixtures; serialize nested tools with a hang guard.
+  foreach(_mode opt noopt)
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        set(_test "llcompiler_c_calls_${_mode}_${_vm}")
+        add_test(NAME ${_test}
+          COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
+            --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+            --mode ${_mode} --vm ${_vm} --c-only)
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "STEP07_C_ONLY[|]commands=55[|]failures=0"
+          TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+          LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_test}
+          TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+            library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
+      endif()
+    endforeach()
+  endforeach()
   # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
   # nested tools; 900s is a generous hang guard, not a performance criterion.
   foreach(_mode opt noopt)

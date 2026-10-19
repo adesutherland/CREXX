@@ -395,6 +395,122 @@ product result is reused after byte-identical output-recovery checks and
 test-registration/documentation-only edits; no redundant full rebuild or broad
 QA was added.
 
+## Active C contract baseline increment
+
+**CLC-STEP01b — bounded baseline implemented and locally qualified on Unicode
+migration `975afbc15a608f2f87ed5d535dec9619f0f46a2e`.** Adrian
+authorised continuing the next C step with GPT-6.1 Sol Extra High workers on
+19 October 2026. The preceding baseline and Unicode migration are committed
+locally; this increment has no publication instruction.
+
+### Vision and intended outcome
+
+Make the existing C call/argument contract independently executable without G
+or native compiler fallback, and identify the exact existing runtime entry and
+context obligations for every BIF before extending bindings. Reuse authored
+fixtures and BIF bodies. This closes a bounded dependency-baseline slice, not
+the whole STEP01 ledger or complete instruction/BIF semantics. Prepare the
+next activation/configuration API as a concrete proposal; do not implement new
+public APIs before Adrian approves them. INTERPRET remains last.
+
+The baseline review reproduced **CBASE-F01**: at `975afbc15`, compiling and
+running `say length('α漢🙂')` returns `9`, not the required three codepoints.
+`llctarget.lengthvalue` creates the default BYTE BIF context; the unchanged B
+LENGTH entry correctly follows that supplied profile. Correct this C adapter
+using the existing expression context and UTF8 configuration APIs. Strengthen
+the existing pipeline literal (three non-ASCII scalars, still expected `3`)
+instead of duplicating BIF bodies or adding an aggregate. This is a repair of
+the agreed C contract, not a new API or language decision.
+
+| Criterion | Checkable outcome |
+|---|---|
+| **CBASE-AC01** | The requirements document inventories all 95 catalogue names exactly once with existing runtime entry/context, reusable fixture and current new-C status. The first SAY dependency packet names implementation, expectations and remaining closure obligations. No native verdict becomes a new-C pass. |
+| **CBASE-AC02** | C-only STEP07 orchestration reuses scale/presence/calls expected files and three malformed Classic metadata controls. Separate restricted host/target roots, empty PATH and disabled VM autoload prove no G/native compiler dependency. Both compiler modes and VM engines pass; malformed imports preserve prior output and located diagnostics. |
+| **CBASE-AC03** | Representative emitted RXAS checks retain authored logical names, ordered/presence-bearing calls and current ABI obligations. Existing conservative helper/configuration costs stay named and open rather than being mistaken for optimised completion. |
+| **CBASE-AC04** | Isolated Debug and maintained Apple-ASan measurements precede new nested CTest registration; explicit serial scheduling and generous timeout follow observed cost. Preserve mixed STEP07 behavior and reuse unchanged product/L/BIF qualification. Temporary diagnostics are deleted. |
+| **CBASE-AC05** | The architecture describes an exact proposed execution/configuration/activation API, including numeric VM-frame synchronisation and ownership. It is visibly awaiting approval, with no new public runtime or L API implemented. |
+| **CBASE-AC06** | CBASE-F01 returns three Unicode codepoints in the existing pipeline fixture under both compiler modes/VMs and focused ASan. Existing ASCII/presence/numeric/error expectations remain valid. Inspect the adapter RXAS for one UTF8 configuration and no unused default pool/configuration; preserve the public signature and shared BIF implementation. |
+
+| Step | Work and dependencies | Status |
+|---|---|---|
+| **CBASE-STEP01** | Audit the current 95-entry runtime catalogue and existing fixtures; update requirements and SAY dependency packet (AC01). | Complete for the bounded inventory: 95 exact entries and reusable fixtures; whole BIF/instruction integration remains open. |
+| **CBASE-STEP02** | Extend only existing STEP07 orchestration with a C-only selection and isolation/structural assertions (AC02/03); no compiler/runtime changes in this step. | Complete: existing calls/presence/recursion plus pipeline/numeric fixtures, restricted host/target roots and positive source/ABI checks. |
+| **CBASE-STEP03** | Review the activation/configuration proposal against existing B APIs, numeric frame behavior and component boundaries (AC05). | Proposal complete and independently reviewed; new public API implementation awaits Adrian's approval. |
+| **CBASE-STEP04** | Coordinator reviews changes, measures isolated Debug/ASan workload, registers and runs focused cases, checks mixed mode, and records exact scope (AC01–05). | Complete for this local slice; results and limitations below. |
+| **CBASE-STEP05** | Repair the reproduced C LENGTH configuration at its adapter using existing B APIs, update the existing literal, rebuild the product/target prerequisites and run the focused revised cases (AC06). | Complete: explicit UTF8 expression context, unchanged signature/BIF body, all four Debug cells and focused ASan pass. |
+
+### Local qualification and next API gate
+
+CBASE-AC01–06 pass for this bounded increment. Inputs are the local Unicode
+commit above plus the C-only harness, existing-fixture change and five-line
+adapter diff. Three GPT-6.1 Sol Extra High workers supplied implementation and
+independent review; the coordinator reproduced CBASE-F01 before repairing it,
+reviewed the diffs and actual RXAS, and ran the checks below.
+
+- The inventory matches all 95 native catalogue names/entry signatures and
+  existing fixture paths. Three names have partial new-C bindings and 92 are
+  unbound; no whole BIF is declared complete. SAY's packet keeps its remaining
+  output, condition, source/TRACE and code-quality obligations explicit.
+- `cmake --build cmake-build-debug --parallel 10 --target stage-product
+  llcompiler_target_opt llcompiler_target_noopt` passes without warnings after
+  the LENGTH repair. Existing BIF bodies, Unicode implementation, generic L
+  implementation and native/VM sources are unchanged; their prior qualification
+  is reused.
+- Before registering the nested tests, `llcompiler_c_calls_measure` passed
+  all 55 commands in about 32 seconds in Debug. The same workload using
+  maintained Apple-ASan tools passed in about 97 seconds. These local scheduling
+  observations support `RUN_SERIAL`, the existing backend resource lock and a
+  900-second hang guard; they are not performance claims.
+- On final adapter/fixture inputs, `ctest --test-dir cmake-build-debug
+  --output-on-failure -R '^llcompiler_c_calls_'` passes all four compiler-mode /
+  VM cells, each with 55 commands (31–37 seconds). Each includes IR on/off,
+  independently expected calls/presence/recursion, Unicode LENGTH and NUMERIC,
+  malformed metadata/output preservation, positive logical source records and
+  structural ABI/call checks. Assembler optimisation is separately replayed on
+  the scale fixture. The existing mixed `llcompiler_step07_opt_rxbvm` passed
+  its unchanged 99-command workload after the orchestration refactor; it does
+  not exercise the later changed LENGTH adapter and its result is reused.
+- `tools/asan-run.sh --phase build --build-target measure --build-jobs 1
+  --build-leaks off` in a temporary focused CMake fixture recompiles the changed
+  adapter with the maintained instrumented `rxc`/`rxas`, then runs those same
+  55 commands with the maintained instrumented tools and C compiler image
+  (`opt`, `rxbvm`). It passes in about 107 seconds for the workload. Its four
+  shared bytecode inputs match Debug byte-for-byte. No sanitizer diagnostic
+  was observed; Apple LSan is unavailable. This is a focused changed-adapter
+  proof, not a fresh full sanitizer build or platform sanitizer closure.
+- Opt/noopt helper RXAS preserve the public signature and contain one expression
+  context factory, one UTF8 config, a live config reference, the existing direct
+  LENGTH BIF and checked result. The expression factory creates no default
+  pool/config. The adapter still constructs its per-call context/config and
+  argument arrays; execution-owned context and remaining C-OPT costs stay open.
+- Current noopt B probes regenerate the maintained C pipeline tree/IR examples;
+  the current C compiler regenerates the complete RXAS example with IR
+  optimisation off. Assembly without optimisation, explicit five-module linking
+  and a restricted VM with autoload disabled produce the unchanged independent
+  `10/0/3` expectation. The nine UTF8 payload bytes encode three scalars; actual
+  byte spans and logical source records remain intact. These existing worked
+  examples are maintained documentation assets, not retained diagnostic dumps.
+- An independently compiled native C control of the changed pipeline also
+  prints `10/0/3` (`rxc-c -n`, `rxas -n`, explicit library/rxfnsc/classlib/core
+  link, `rxbvm --no-autoload`). Its existing entry UTF8 configuration and direct
+  LENGTH BIF agree with the authored expectation. No native behavior was used
+  to change that expectation. Unchanged G controls retain their prior proof.
+
+All 112 unrelated active files remain byte-identical and uncommitted. Temporary
+probes, diagnostics and measurement fixtures are deleted after inspection.
+The preceding foundation and Unicode migration are local commits. Adrian
+approved committing this qualified C baseline locally on 19 October 2026 and
+implementing the shared context and compatible adapters next. Nothing is pushed.
+
+The [borrowed Classic context proposal](doc/architecture.md#borrowed-classic-context-proposal--awaiting-approval)
+now specifies five shared B callables and additive `llctarget2` compatibility
+entries, ownership/invalid-reference behavior and numeric VM-frame synchronisation.
+Adrian approved that B surface and additive adapter compatibility on 19 October
+2026. The exact affected C family metadata remains a separate gate before
+selector migration. Complete STEP01, STEP03, CFC-AC01–12
+and INTERPRET remain open; INTERPRET is still the final stage. There is no new
+hosted, installed, Windows/Linux, cross-platform or release qualification.
+
 ## Authority and scope
 
 This is the authoritative implementation plan for the new compiler subtree.
