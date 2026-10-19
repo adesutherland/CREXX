@@ -1,2 +1,0 @@
-argv=['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/adrian/CLionProjects/CREXX-hotfix/tests/native-inference/package_acceptance.py', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/package-core/bin/crexx-provider-package', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-i8qzpsvt/package-core/bin/providers/rxcore_package.native.json']
-PASS: native manifest identity/hash/traversal/collision/Unicode controls

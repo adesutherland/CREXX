@@ -1,8 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-numeric digits 5
-  arg argv = .string[]
-d = .decimal
-d = .float(1.234567890123456) as .decimal
-say d = 1.2346d
-return 0

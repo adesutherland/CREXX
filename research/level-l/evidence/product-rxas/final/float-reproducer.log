@@ -1,9 +1,0 @@
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc -x --no-exe-import -n -i /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin -o /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/float-reproducer/noopt /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/tests_functional/float-comparison-reproducer.rexx
-
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas -n /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/float-reproducer/noopt
-
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc -x --no-exe-import -i /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin -o /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/float-reproducer/opt /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/rexxscript/tests_functional/float-comparison-reproducer.rexx
-
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/float-reproducer/opt
-
-{"noopt-rxtvm": "0", "noopt-rxbvm": "0", "opt-rxtvm": "1", "opt-rxbvm": "1"}

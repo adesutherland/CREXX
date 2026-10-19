@@ -1,8 +1,0 @@
-display=crexx-1.0.0-beta.3+local.g6ab5a7815df7.dirty
-version=1.0.0-beta.3+local.g6ab5a7815df7.dirty
-base_version=1.0.0-beta.3
-version_file=1.0.0-beta.3
-channel=local
-timestamp=20260825T092521Z
-commit=6ab5a7815df751e806696c8d196c6ddf7affcb69
-dirty=1

@@ -1,0 +1,29 @@
+options levelc
+say
+say ''
+say '01'
+say ' a  b '
+say 'α漢🙂ÿ'
+say '41004280FF'x
+say '10000000 11111111'B
+say 'C3A9'x
+say 'F FF'x
+say '1 1111'b
+say ''x
+say ''b
+x = 'tail'
+say '41' x
+say '41'xyz
+if 1 then say 'yes'
+do
+  say 'group'
+end
+say 'outer=' || inner()
+numeric digits 3
+say 1 / 3
+numeric form engineering
+say 1e7 + 1
+exit
+inner: procedure
+say 'inner'
+return 'done'

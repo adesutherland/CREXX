@@ -1,6 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-numeric digits 5
-  arg argv = .string[]
-say 123456 + 1 = 123457
-return 0

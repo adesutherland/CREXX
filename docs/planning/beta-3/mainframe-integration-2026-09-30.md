@@ -125,7 +125,7 @@ INT-AC-01/02/05 and INT-STEP-01/02/02.1/03 pass. Final normal correctness is
 2,293/2,293 (766.24 s); focused maintained Apple ASan is 8/8 (23.26 s).
 No sanitizer diagnostic appeared. Apple LSan is unavailable; this is focused
 host proof, not broad/native release qualification. Product inputs and permanent
-logs are retained in [the review](../../qa/beta3-mainframe-2026-09-30/README.md).
+logs are retained in [historical review](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-mainframe-2026-09-30/README.md).
 
 INT-AC-03 and STEP-04 await the fast-forward push to origin/develop and terminal
 Build CREXX/optimizer-parity/CodeQL inspection on the pushed revision. The final
@@ -145,7 +145,7 @@ preparation. The reviewed delivery `e15392da705c5e9e0e1e57b70586b53fc8cb64ed`
 is on origin/develop. Build CREXX 36749864309, optimizer parity and CodeQL
 36749863689 pass on that exact SHA; CodeQL has no new alert (nine existing
 alerts retained). The dev snapshot publishes 30 assets and points at it.
-[Publication/package receipts](../../qa/beta3-mainframe-2026-09-30/publication.json)
+[historical Publication/package receipts](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-mainframe-2026-09-30/publication.json)
 include real core-package smoke and archive identities for all four platforms.
 
 During final CI the Lab completed its independent PDOS kernel repair and

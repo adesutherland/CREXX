@@ -7,9 +7,11 @@ Raw anchors are independently recovered from source lines for this closed corpus
 raw compiler dumps carry (-1,-1). This is deliberately not a general AST format.
 """
 from pathlib import Path
-import hashlib,json,os,re,subprocess,tempfile
-r=Path(__file__).resolve().parents[1]; bins=Path(os.environ.get('CREXX_BIN_DIR',r/'build/frozen-tools-20261010'))
-e=r/'evidence/migration';e.mkdir(exist_ok=True)
+import hashlib,json,os,re,subprocess,tempfile,atexit
+from fixture_support import write_fixture
+r=Path(__file__).resolve().parents[1]; bins=Path(os.environ.get('CREXX_BIN_DIR',r.parents[1]/'cmake-build-debug/bin'))
+e=r/'cases/fixtures/migration'
+owned=tempfile.TemporaryDirectory(prefix='crexx-migration-');atexit.register(owned.cleanup);work=Path(owned.name)
 kinds={'PROCEDURE':10,'CLASS':11,'ASSIGN':20,'RETURN':21,'VAR_TARGET':22,'VAR_SYMBOL':23,'INTEGER':24,'OP_ADD':25,'OP_MULT':26,'INSTRUCTIONS':30}
 line_re=re.compile(r'^( *)([A-Z_]+) : "(.*)" \((-?\d+):(-?\d+)\) \[Type: .*\]$')
 def stage(log,name):
@@ -44,14 +46,14 @@ sources={
 }
 records=[]
 for name,source in sources.items():
- path=r/f'cases/migration/{name}.crexx';path.write_text(source)
- fd,tmp=tempfile.mkstemp(prefix='crexx-levell-migration-',suffix='.log');os.close(fd)
- command=[str(bins/'rxc'),'-x','-d1','-dp','-n','--no-exe-import','-i',str(bins),'-o',str(r/f'build/{name}'),str(path)]
+ path=work/f'{name}.crexx';path.write_text(source)
+ fd,tmp=tempfile.mkstemp(dir=work,suffix='.log');os.close(fd)
+ command=[str(bins/'rxc'),'-x','-d1','-dp','-n','--no-exe-import','-i',str(bins),'-o',str(work/name),str(path)]
  with open(tmp,'wb') as log:run=subprocess.run(command,stdout=log,stderr=log)
- log=Path(tmp).read_text();(e/f'{name}.log').write_text(log)
+ log=Path(tmp).read_text()
  if run.returncode:raise SystemExit(f'{name}: compiler {run.returncode}; inspect {tmp}')
  raw=stage(log,'STAGE_RAW');fixed=stage(log,'STAGE_FIXUP')
- (e/f'{name}.expected').write_text(canonical(fixed)+'\n')
+ write_fixture(e/f'{name}.expected',canonical(fixed)+'\n')
  flat=descend(raw,'INSTRUCTIONS')['children'];rows=[];linepos=1
  starts=[];offset=0
  for line in source.splitlines(True):starts.append(offset);offset+=len(line)
@@ -82,7 +84,6 @@ for name,source in sources.items():
    rows.append((99,'list',first,finish,root,node));root=len(rows)
   else:root=node;first=begin
  out=f'{source.encode().hex()}\n{root}\n'+''.join('|'.join(map(str,row))+'\n' for row in rows)
- (e/f'{name}.tree').write_text(out)
+ write_fixture(e/f'{name}.tree',out)
  records.append({'name':name,'command':command,'returncode':run.returncode,'source_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'log_sha256':hashlib.sha256(log.encode()).hexdigest()})
-(e/'reference.json').write_text(json.dumps({'tool_sha256':hashlib.sha256((bins/'rxc').read_bytes()).hexdigest(),'cases':records,'scope':'B/G structural grouping with compiler exits disabled; no full AST/service equivalence'},indent=2)+'\n')
-print('Retained',len(records),'raw/fixup compiler references.')
+print('Checked',len(records),'raw/fixup compiler references.')

@@ -1,0 +1,8 @@
+/* Missing selection directories must fail before compilation. */
+
+GRAMMAR_DIR = "tools/rxbuild/no-such-directory";
+GRAMMARS = FILES IN "${GRAMMAR_DIR}" EXTENSION ".levell" BASENAMES;
+
+DO OVER GRAMMARS AS item
+  COMPILE GRAMMAR OUTPUT_DIR = "cmake-build-release/build/selected" SOURCE = "${GRAMMAR_DIR}/${item}.levell" OUTPUT = "${item}";
+END;

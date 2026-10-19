@@ -2,7 +2,7 @@
 
 Reviewed 10 October 2026. This is source inspection, not qualification of these
 language implementations. The complete pinned revisions and inspected file
-inventory are in [mike-sources.json](evidence/mike-sources.json).
+inventory are in [mike-sources.json](cases/fixtures/mike-sources.json).
 
 Mike's 10 October email, “add ons - based on CREXX”,
 links Smalltalk, xBase, Pascal, PL/M, Lisp, BASIC, LOGO and SNOBOL. It also refers

@@ -150,3 +150,7 @@ if(BUILD_TESTING)
 endif()
 
 crexx_finalize_directory_qa_tiers()
+
+if(ENABLE_ODBC)
+    crexx_install_targets(_odbc _odbc_static)
+endif()

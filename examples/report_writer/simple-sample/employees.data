@@ -1,0 +1,6 @@
+# This is employee file read by the report_writer example.
+# Fields: department; employee name; salary
+Engineering;Alice;1250.5
+Engineering;Bob;2750
+Sales;Carol;999.9
+Sales;Dan;3100.25

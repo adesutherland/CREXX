@@ -1,3 +1,0 @@
-options levelb numeric_common
-numeric digits 18
-say (0.30000000000000004 as .decimal) = 0.30000000000000004d

@@ -1,0 +1,30 @@
+function $MAIN -> crexx.g.int64
+  entry.1:
+    %1 = core.constant 7 : crexx.g.int64 @origin:21
+    core.store %1 slot:$tmp.1 @origin:13
+    %2 = crexx.calls.site.1 %1 target="SCALE" package="" presence="0100" @origin:13
+    %3 = crexx.g.convert.int64.text %2 @origin:4
+    crexx.g.say %3 @origin:4
+    %4 = core.constant 7 : crexx.g.int64 @origin:40
+    core.store %4 slot:$tmp.2 @origin:32
+    %5 = core.constant 3 : crexx.g.int64 @origin:49
+    core.store %5 slot:$tmp.3 @origin:32
+    %6 = crexx.calls.site.2 %4 %5 target="SCALE" package="" presence="0101" @origin:32
+    %7 = crexx.g.convert.int64.text %6 @origin:23
+    crexx.g.say %7 @origin:23
+    %8 = core.constant 0 : crexx.g.int64 @origin:59
+    crexx.g.exit %8 @origin:51
+    %9 = core.constant 0 : crexx.g.int64 @origin:51
+    core.return %9 @origin:51
+function SCALE -> crexx.g.int64
+  argument 1 crexx.g.int64 required
+  argument 2 crexx.g.int64 optional
+  entry.1:
+    %10 = core.argument argument:1 @origin:61
+    core.store %10 slot:VALUE @origin:61
+    %11 = core.constant 2 : crexx.g.int64 @origin:64
+    %12 = core.optionalargument %11 argument:2 @origin:63
+    core.store %12 slot:FACTOR @origin:61
+    core.store %10 slot:$tmp.1 @origin:72
+    %13 = crexx.g.int64.mul %10 %12 @origin:72
+    core.return %13 @origin:66

@@ -1,9 +1,0 @@
-options levell
-namespace probe_language
-identifier: token = 1
-other: token = 2
-scan: lexer
-first: charset = unicode.XID_Start | '_'
-rest: charset = unicode.XID_Continue | '_'
-name.lex: rule = first rest* then emit identifier
-other.lex: rule = scalar then emit other

@@ -90,7 +90,7 @@ target_include_directories(decimal_gate1_adapter PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/third_party/utf8)
 target_link_libraries(decimal_gate1_adapter PRIVATE
         rxvmplugin ${CREXX_MATH_LIBRARY})
 add_dependencies(decimal_gate1_adapter mc_decimal_dynamic db_decimal_dynamic)
@@ -332,7 +332,7 @@ endforeach()
 add_custom_target(performance_binary_fastpath)
 crexx_add_rexx_opt_matrix(
         NAME binary_fastpath_compare
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_fastpath_compare.crexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_fastpath_compare.crexx
         TARGET_GROUP performance_binary_fastpath
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
@@ -350,7 +350,7 @@ add_custom_target(performance_binary_byvalue)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME binary_byvalue_compare_${_crexx_runner}
-            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_byvalue_compare.crexx
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_byvalue_compare.crexx
             TARGET_GROUP performance_binary_byvalue
             RUNNER ${_crexx_runner}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
@@ -478,7 +478,7 @@ set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
 add_custom_target(performance_binary_packed_float)
 crexx_add_rexx_opt_matrix(
         NAME binary_packed_float_compare
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_packed_float_compare.crexx
         TARGET_GROUP performance_binary_packed_float
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
@@ -686,10 +686,11 @@ crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tinyexpr_dispatch_compare.crexx
         TARGET_GROUP performance_tinyexpr_dispatch
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/langtools/examples
         RXC_FLAGS -x
-        DEPENDS library rxfnsl compiler_exit_bin
-        RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsl
+        DEPENDS library rxlang_example_tinyexpr compiler_exit_bin
+            "${CMAKE_BINARY_DIR}/langtools/examples/tinyexpr.rxbin"
+        RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/langtools/examples/tinyexpr
         TEST_LABELS "performance;dispatch;level-l"
 )
 foreach(_crexx_mode IN ITEMS noopt opt)

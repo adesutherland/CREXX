@@ -1,6 +1,6 @@
 # Level L language-engineering strategy
 
-**Research and implementation report for the `levell` review branch.**
+**Research and implementation report for the `rxlang` review branch.**
 The 11 October remote safety checkpoint preserves this work for review;
 integration, full programme completion and release remain open in PLAN.md.
 On 11 October Adrian selected **DFA, LL(1), canonical LR(1), ordinary packrat
@@ -49,7 +49,7 @@ required native algorithm and mathematical obligation to evidence;
 [CONSUMERS.md](CONSUMERS.md) states the useful-language subsets;
 [RECOVERY.md](RECOVERY.md) reports the frozen/held-out comparisons;
 [MATH.md](MATH.md) contains proofs, conditions and counterexamples. Cost/lifecycle
-results are in [COST.md](COST.md). Local branch `levell` preserves the production
+results are in [COST.md](COST.md). Local branch `rxlang` preserves the production
 checkout and existing syntax. Research completion is distinct from shipping.
 
 ## Answers to the strategic questions

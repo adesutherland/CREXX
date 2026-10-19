@@ -17,7 +17,7 @@ target_include_directories(_hash_static PRIVATE
         ${CMAKE_SOURCE_DIR}/binutils/include)
 target_link_libraries(_hash_static PRIVATE rxbin)
 
-add_rxpa_provider_package(_hash)
+add_rxpa_provider_package(_hash INSTALL)
 
 # The provider remains part of the default product build.  Keep it independent
 # of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
@@ -45,3 +45,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_install_targets(_hash _hash_static)

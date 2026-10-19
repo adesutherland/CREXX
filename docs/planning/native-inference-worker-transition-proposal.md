@@ -141,7 +141,7 @@ remaining native-model and broader Debug qualification. The session-affine llama
 does not use the newly tracked direct legacy route. This is a non-representative
 call-mechanism result, not an inference throughput or overall product verdict.
 The first Release decision gate is satisfied; no timing rerun or tuning is
-needed. The [evidence bundle](../qa/native-inference-s3d01/README.md) retains
+needed. The [historical evidence bundle](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-s3d01/README.md) retains
 raw samples, commands, source/build identities and the pre-repair failures.
 
 | Criterion | Disposition |

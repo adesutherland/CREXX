@@ -181,7 +181,7 @@ a selective stage-product build.
 
 ## Final retained proof and publication contract
 
-`docs/qa/console-native-packaging-2026-10-13/README.md` records the independently
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/console-native-packaging-2026-10-13/README.md) records the independently
 inspected signed Windows Beta 3 ZIP, fresh graph omission/correction, warning-free
 core/toolchain/optional builds, the actual extracted core's 26 passing commands,
 SDK relocated proof, missing/restored archive controls, dynamic console opt/noopt,
@@ -225,7 +225,7 @@ The partial-flat GTK-style conflict is reproduced and repaired with strict
 per-name hashes; identical paths pass and differing/missing bytes fail. Controls
 were measured before CTest registration in Debug and maintained Apple ASan flags,
 then all three fixture CTests passed.
-`docs/qa/console-native-packaging-2026-10-13/generic-helper/README.md` retains
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/console-native-packaging-2026-10-13/generic-helper/README.md) retains
 exact inputs, commands, source/header identities and expected publication state.
 The compatible core-target and collector causes are published together as two
 reviewable commits. Remote refs provide CP-AC-06 proof; occupied dirty develop
@@ -244,5 +244,5 @@ The command-line and GNU loader causes are retained separately. Native Windows
 wide-command-line and runtime staging revalidation remains with the Windows
 owner after this qualified source publication. The validator and acceptance
 harness are unchanged; no architecture or signing operation was introduced.
-`docs/qa/console-native-packaging-2026-10-13/windows-unicode/README.md` records
+[historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/console-native-packaging-2026-10-13/windows-unicode/README.md) records
 exact inputs, failed job artifacts, qualification bounds and publication state.

@@ -19,18 +19,17 @@ For Level B benchmark or runner edits, the root instruction requiring
 
 ## Workspace boundaries
 
-- Keep programme status, idea triage, manifests and retained evidence here.
+- Keep current programme status, workload definitions and durable decisions here.
 - Keep portable, correctness-gated language workloads in `tests/benchmarks/`.
 - Keep focused cREXX/VM/compiler/library comparisons and microbenchmarks in
   `tests/performance/`.
 - Keep user-facing profiler documentation in
   `docs/books/crexx_programming_guide/profiling.md`.
-- Keep current status in `performance/ROADMAP.md` and durable conclusions in
-  `performance/DECISIONS.md`. Recover completed reports and superseded runs
-  from Git rather than retaining snapshot copies in HEAD.
+- Keep current status and concise result summaries in `performance/ROADMAP.md`
+  and durable conclusions in `performance/DECISIONS.md`. Delete superseded
+  reports and run output under the repository-root documentation/output rules.
 
-Do not create a second copy of a benchmark merely to retain results. Evidence
-bundles point to the exact versioned workload and record the commit used.
+Use the exact versioned workload; do not copy benchmarks into result bundles.
 
 ## Roadmap discipline
 
@@ -39,8 +38,8 @@ bundles point to the exact versioned workload and record the commit used.
   speculative.
 - Give an idea a stable ID. Record the hypothesis, affected surfaces, semantic
   risks, evidence needed and disposition. Consolidate rejected or negative
-  outcomes and their reasons in `DECISIONS.md`; completed worklists and
-  superseded raw runs belong in Git history.
+  outcomes and their reasons in `DECISIONS.md`; delete completed worklists and
+  raw runs after incorporating lasting conclusions. Do not commit them for history.
 - Update an activity's status and dated notes in the same change that starts,
   completes, pauses or invalidates it.
 - `complete` means the activity's exit criterion in the programme report is
@@ -50,22 +49,21 @@ bundles point to the exact versioned workload and record the commit used.
 
 ## Evidence discipline
 
-Correctness is a prerequisite for timing. A retained evidence bundle must say:
+Correctness is a prerequisite for timing. The current result summary must say:
 
 - source commit, branch and dirty-worktree scope;
 - host, operating system, CPU, toolchain, generator and build options;
 - exact workload/image set, VM, optimized/unoptimized mode and lifecycle;
 - whether source/TRACE metadata was retained or stripped;
 - exact commands, warmups, recorded-run count and serial/parallel policy;
-- raw benchmark-native metrics and output, kept distinct from harness/process
-  elapsed time;
-- correctness result and raw samples, including negative or noisy results; and
+- benchmark-native metrics, kept distinct from harness/process elapsed time;
+- correctness, sample counts/statistics, including negative or noisy results; and
 - the interpretation boundary: observation, inference, upper bound or claim.
 
-Keep raw samples for the selected current baseline or unresolved verdict.
-Once a campaign is superseded, retain its durable decision in HEAD and recover
-its raw samples from Git history; do not retain every completed run directory.
-Summary statistics never replace the raw samples of a selected current result. Run benchmark samples
+Inspect raw samples while deciding the result, then delete them and temporary
+outputs. Record the method, uncertainty and conclusion in the owning document;
+do not retain baseline/verdict bundles or external archives. Reuse a documented
+baseline when it supports the intended comparison. Run benchmark samples
 serially unless an activity explicitly measures concurrency. Do not compare a
 process-startup-inclusive measurement with a steady-state kernel measurement,
 or retained metadata with stripped metadata, as if they were the same mode.
@@ -124,9 +122,8 @@ claims. Apply these standing rules to future performance work:
 - Any new or changed performance tool must be cREXX Level B. Read
   `docs/ai-context/CREXX_LEVELB_AUTHORING.md` before editing it; do not replace
   the Level B path with Python.
-- Keep formal evidence compact: one final consolidated bundle, prior forensics
-  referenced rather than copied, and no committed calibration, superseded
-  scratch run or reproducible duplicate build output.
+- Keep the final comparison and its limitations in the current owning document;
+  delete calibration, raw runs, generated diagnostics and duplicate build output.
 
 ## RXAS preprocessing ownership
 
@@ -164,7 +161,7 @@ is reviewed:
 2. Immediately freeze implementation work and build the ordinary,
    profiling-off Release product.
 3. Run the smallest decisive end-to-end Release performance cells against
-   already-retained valid baseline evidence. Audit and reuse the baseline; do
+   a documented valid baseline. Audit and reuse the baseline; do
    not rerun it unless it is invalid or a bounded drift control is genuinely
    required.
 4. Report the Release verdict to Adrian and stop for direction. Until Adrian
@@ -180,7 +177,7 @@ is reviewed:
 An explicit unattended or overnight continuation direction from Adrian may
 replace the interactive pause for the named sequence of slices. In that case,
 rerun an adverse or noisy targeted verdict once without changing the candidate
-or measurement shape. If the result is confirmed, retain both runs, record the
+or measurement shape. If the result is confirmed, summarize both runs, record the
 slowdown and the changed binary/code shape most likely responsible, apply any
 standing disposition Adrian supplied, and continue with the required QA and
 next slice. This exception does not weaken the default interactive stop and
@@ -191,7 +188,7 @@ does not authorize redesign, publication or a changed benchmark.
 After Adrian accepts the Release verdict, keep closeout to the shortest path
 needed for the agreed scope: remove disposable PoCs and obsolete production
 code, rebuild the affected product, run focused checks plus the required broad
-CTest, retain the decisive benchmark evidence, update the live roadmap, review
+CTest, summarize the decisive comparison, delete run output, update the roadmap, review
 the diff, and commit when requested. Do not automatically add another 006
 audit, rerun valid baselines, expand the benchmark portfolio, repeat isolated
 harness measurements, rewrite historical reports, or add sanitizer,

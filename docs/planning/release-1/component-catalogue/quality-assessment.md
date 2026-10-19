@@ -239,7 +239,7 @@ bytecode bundle; `pprint` builds independently as an optimized example.
 |---|---|---|---|
 | old `lib/rxmath` | mixed repository source: Rexx, native, RXAS | T0; D0-D1 | No active build boundary, so correctness/performance cannot be inferred. Some routines may be useful reference material; the tree as a package is low-confidence. |
 | residual `rxfnsb/rxas` | pure RXAS | T0 for residual files; active bridge/elapsed tested indirectly | Deprecated spellings and inactive alternatives should not be benchmarked or “improved” until disposition is decided. |
-| demos/examples | mainly pure Rexx/RXPP; one RXAS demo | T0-T1 as product contracts | Appropriate learning/integration evidence, but successful compilation is not a compatibility or quality promise. Dependencies and expected output should be documented if retained. |
+| examples/examples | mainly pure Rexx/RXPP; one RXAS demo | T0-T1 as product contracts | Appropriate learning/integration evidence, but successful compilation is not a compatibility or quality promise. Dependencies and expected output should be documented if retained. |
 | Level C PoCs | native/compiler experimental source | T0-T1 | Architecture evidence only; not part of the supported parser/runtime contract. |
 
 ## Use of cREXX language features

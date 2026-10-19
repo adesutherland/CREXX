@@ -39,3 +39,5 @@ set_tests_properties(keyaccess_test_noopt keyaccess_test_opt keyaccess_compact_f
         PROPERTIES RESOURCE_LOCK keyaccess_compaction TIMEOUT 300)
 crexx_label_smoke_tests(keyaccess_test_noopt)
 crexx_label_smoke_tests(keyaccess_compact_failure PREP_TARGETS keyaccess_compact_failure_test)
+
+crexx_install_targets(_keyaccess _keyaccess_static)

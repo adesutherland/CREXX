@@ -53,7 +53,7 @@ language change or compiler/runtime redesign is in this plan.
   inputs and 1,422 listings. Four real PDFs and their independent reviews now
   qualify the initial profile; all listing snapshots match authored source.
 - [BUILDING-DOCS.md](../BUILDING-DOCS.md) and
-  [the port guide](../texttools/README.md) record the current route and limits.
+  [the port guide](../../tools/texttools/README.md) record the current route and limits.
   Detailed receipts are outside the source tree under
   `/Users/adrian/.codex/cleanups/CREXX-20260930-108257c3d/documentation-review-20261001/`.
 - `binary_memory_instructions.md` refers to `bcopy.rxas`, `fixedwidth.rxas`,

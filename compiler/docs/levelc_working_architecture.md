@@ -51,7 +51,7 @@ and a reusable C-first compilation service for INTERPRET. The
 [10 October C-first phase](../../docs/ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
 was approved by Adrian; its bounded implementation and local qualification are
 complete and published to `origin/develop` in the authorized 10 October batch.
-The [receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
+The [historical receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md)
 retains final-input evidence and the SAN-011/012 later release-QA assignment.
 `rxc-c` and the exact-length `rxcc_parse` frontend service use the C component
 over the common backend. The independent binutils `rxcontract` reader and
@@ -1272,8 +1272,8 @@ lowering, see `compiler/docs/levelc_syntax_highlighting.md`.
   - `compiler/docs/validation_logic_map.md`
 - Lemon keyword fallback:
   - `docs/lemon.md`
-  - `lemon/lempar.c`
-  - `lemon/lemon.c`
+  - `third_party/lemon/lempar.c`
+  - `third_party/lemon/lemon.c`
 - Current Level B front end:
   - `compiler/rxcposcn.re`
   - `compiler/rxcpopgr.y`
@@ -2415,7 +2415,7 @@ Success criteria:
 PoC 1 execution result:
 
 - Implemented at `compiler/pocs/levelc_lemon_fallback/`.
-- Built and run against `cmake-build-debug/lemon/lemon`.
+- Built and run against `cmake-build-debug/third_party/lemon/lemon`.
 - Confirmed that `%fallback` handles simple expression-context
   keyword-as-identifier cases such as `SAY IF ;`.
 - Confirmed that `%fallback` cannot backtrack a clause-leading keyword already

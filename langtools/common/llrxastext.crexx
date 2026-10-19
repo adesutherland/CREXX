@@ -1,0 +1,35 @@
+/* cREXX License (MIT). Exact RXAS text utilities. */
+options levelb
+namespace llrxastext expose quote instruction
+import rxfnsb
+import llir
+
+/** RXAS escaping is byte-exact, including embedded NUL and Unicode. */
+quote: procedure = .string
+  arg bytes = .binary
+  out = .llir..writer(max(2,<blen>(bytes) * 4 + 2),'')
+  call out.write('"')
+  do i = 0 to <blen>(bytes) - 1
+    c = <at..u8>(i) bytes
+    if c >= 32 & c < 127 & c <> 34 & c <> 92 then call out.write(d2c(c))
+    else call out.write('\x' || right('0' || d2x(c),2))
+  end
+  call out.write('"'); result = out.finish()
+  return result.text()
+
+/** One selected target record, with ordered operands and original origin ID.
+ * All operand strings come from checked registers, internal labels, verified
+ * callable names, exact numeric codecs or quote(). No raw source is RXAS. */
+instruction: class
+  _mnemonic = .string
+  _operands = .string
+  _origin = .int
+  *: factory
+    arg mnemonic = .string, operands = .string, origin = .int
+    _mnemonic = mnemonic; _operands = operands; _origin = origin
+    return
+  text: method = .string
+    if _operands = '' then return _mnemonic
+    return _mnemonic || ' ' || _operands
+  origin: method = .int
+    return _origin

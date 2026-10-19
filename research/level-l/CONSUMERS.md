@@ -18,14 +18,14 @@ byte-for-byte deterministic across the two compiler modes.
 | Prolog | 86 | Facts/rules, recursive terms/lists, list tails, quoted atoms versus variables, anonymous-variable spelling, clause termination, two comment forms | Operator tables, queries, escapes/value decoding, variable identity allocation, term semantic restrictions, unification or resolution. |
 
 The pinned owning files and hashes are already inventoried in
-`evidence/mike-sources.json`. The selected bodies were re-read at those revisions:
+`cases/fixtures/mike-sources.json`. The selected bodies were re-read at those revisions:
 Pascal `tokenize`, PL/M `lexinto`/`numval`, BASIC `tokenize_line`, Lisp
 `readobj`/`readlist`, and the checked-in Prolog `PTokenize`/`ParseClauseTerm`.
 References supply the design constraints; the whole external interpreters were
 not built or executed in tranche 13. The independently executed oracle is the
 explicit subset reader in `cases/consumers-reference.py`.
 
-Two failed controls are retained in `evidence/consumers-first-failure`:
+Two failed controls are retained in `cases/fixtures/consumers-first-failure`:
 
 1. Optional line numbers before both an ordinary BASIC line and NEXT caused a
    genuine LR(1) construction conflict. The declared finite-state stage now
@@ -100,9 +100,7 @@ RexxScript intrinsically requires PEG. A product grammar manipulator should
 present the named-tree reconstruction and its preconditions with this rewrite.
 
 An unterminated quote raises a signal from the frozen library's `qstripcomment`
-before the evaluator returns its usual structured error. The original uncaught
-outcome is retained in `evidence/script-reference-first-failure`; the reference
-harness then catches and records it so subsequent fixtures execute. The native
+before the evaluator returns its usual structured error. The reference harness catches this signal so subsequent fixtures execute. The native
 scanner returns a located lexical failure. Neither the production evaluator
 nor its library was changed. Other reference columns are expression-relative
 and one-based, whereas native spans are absolute zero-based source bytes; the
@@ -145,7 +143,7 @@ proposed authored spelling still needs design. Original bytes remain the owner
 of every token and tree, although the scanner sees an equal-length masked copy.
 The parser's explicit EOF closure represents the final clause boundary. An
 attempt to invent an empty source token was correctly rejected by the common
-stream contract and is retained in `evidence/rexxfront-first-failure`.
+stream contract; EOF closure must not invent a source token.
 
 Classic raw trees distinguish `'a''b'` (one quoted string) from blank
 concatenation and preserve abuttal across nested comments. The B/G raw grammar

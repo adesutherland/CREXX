@@ -59,3 +59,5 @@ install(FILES "${CREXX_ARRAY_FORMATTING_MODULE}"
         DESTINATION examples/functions/array-formatting)
 
 crexx_finalize_directory_qa_tiers()
+
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS example_array_formatting_artifacts)

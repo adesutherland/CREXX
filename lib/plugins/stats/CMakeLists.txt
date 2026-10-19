@@ -12,7 +12,7 @@ target_link_libraries(stats PRIVATE ${CREXX_MATH_LIBRARY})
 add_static_plugin_target(stats rxstats.c)
 target_link_libraries(stats_static PRIVATE ${CREXX_MATH_LIBRARY})
 
-add_rxpa_provider_package(stats)
+add_rxpa_provider_package(stats INSTALL)
 
 # The provider remains part of the default product build.  Keep it independent
 # of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
@@ -52,3 +52,5 @@ if(BUILD_TESTING)
 endif()
 
 crexx_finalize_directory_qa_tiers()
+
+crexx_install_targets(stats stats_static)

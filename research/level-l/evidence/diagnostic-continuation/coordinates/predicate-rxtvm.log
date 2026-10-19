@@ -1,5 +1,0 @@
-STATUS|1|BYTE|1
-MESSAGE|unexpected 'a'; expected end of input
-LL_TARGET at line 1, column 2 (byte 1): unexpected 'a'; expected end of input
-  aa
-   ^

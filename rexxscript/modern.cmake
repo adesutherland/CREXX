@@ -2,7 +2,7 @@
 set(_rs1_root "${CMAKE_CURRENT_BINARY_DIR}/modern")
 file(MAKE_DIRECTORY "${_rs1_root}")
 set(_rs1_grammar "${_rs1_root}/rexxscriptgrammar.rxas")
-set(_rs1_level_l "${CMAKE_BINARY_DIR}/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin")
+set(_rs1_level_l "${CMAKE_BINARY_DIR}/langtools/bootstrap/L2/rxlang-linked.rxbin")
 # Construction is pure cREXX bytecode. Use the supported threaded VM for this
 # build tool when available; the installed runner selection is unchanged.
 set(_rs1_generation_vm "${CREXX_RXVM_EXECUTABLE}")
@@ -12,13 +12,13 @@ if(TARGET rxtvm)
   set(_rs1_generation_target rxtvm)
 endif()
 add_custom_command(OUTPUT "${_rs1_grammar}"
-  COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:levell_cli>
+  COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:rxlang>
     -DLEVEL_L_VM=${_rs1_generation_vm}
     -DLEVEL_L_BYTECODE=${_rs1_level_l}
     -DSPEC=${CMAKE_CURRENT_SOURCE_DIR}/grammar/rexxscript.levell
-    -DOUTPUT=${_rs1_grammar} -DFORMAT=rxas -P ${CMAKE_SOURCE_DIR}/lib/rxfnsl/tools/generate.cmake
-  DEPENDS levell_cli ${_rs1_generation_target} "${_rs1_level_l}"
-    grammar/rexxscript.levell ${CMAKE_SOURCE_DIR}/lib/rxfnsl/tools/generate.cmake
+    -DOUTPUT=${_rs1_grammar} -DFORMAT=rxas -P ${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake
+  DEPENDS rxlang ${_rs1_generation_target} "${_rs1_level_l}"
+    grammar/rexxscript.levell ${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake
   COMMENT "Level L: admit RexxScript grammar and generate native DFA/LR tables"
   VERBATIM)
 crexx_add_import_root(rexxscript1_imports DIRECTORY "${_rs1_root}/imports"

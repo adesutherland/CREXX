@@ -1,0 +1,37 @@
+options levelg
+say holes(,3,)
+say holes(4,3,5)
+say recurse(3)
+call pair(mark(1),mark(2))
+call defaults()
+call defaults(-4,-0.25,0.125d,1 as .boolean,'')
+call primitive()
+exit 0
+holes: procedure = .int
+  arg a=2,b=.int,c=7
+  say ?a; say ?b; say ?c
+  a=99
+  say ?a
+  return b+c
+recurse: procedure = .int
+  arg n=.int,step=2
+  if n=0 then return step
+  return recurse(n-1)+step
+mark: procedure = .int
+  arg n=.int
+  say n
+  return n
+pair: procedure = .void
+  arg a=.int,b=.int
+  say a*10+b
+  return
+defaults: procedure = .void
+  arg n=-4,f=-0.25,d=0.125d,?b=.boolean,?s=.string
+  say n; say f; say d; say b; say '[' || s || ']'
+  say ?n; say ?f; say ?d; say ?b; say ?s
+  return
+primitive: procedure = .void
+  arg ?n=.int,?f=.float,?d=.decimal,?b=.boolean,?s=.string
+  say n; say f; say d; say b; say '[' || s || ']'
+  say ?n; say ?f; say ?d; say ?b; say ?s
+  return

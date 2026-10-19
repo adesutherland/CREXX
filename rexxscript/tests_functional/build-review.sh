@@ -11,11 +11,11 @@ rs_build="$rs_root/research/level-l/build/rexxscript1-$rs_mode"
 if [[ "$rs_mode" == noopt ]]; then
   rs_core=${CREXX_LEVEL_L_BUILD:-"$rs_root/research/level-l/build/product-noopt/bootstrap-build"}
   rs_runtime="$rs_core/bin/rxfnsl.rxbin"
-  rs_generator="$rs_core/tools/bootstrap/L2/levell-linked.rxbin"
+  rs_generator="$rs_core/tools/bootstrap/L2/rxlang-linked.rxbin"
 else
   rs_core=${CREXX_LEVEL_L_BUILD:-"$rs_root/cmake-build-levell-product"}
   rs_runtime="$rs_core/bin/rxfnsl.rxbin"
-  rs_generator="$rs_core/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin"
+  rs_generator="$rs_core/langtools/bootstrap/L2/rxlang-linked.rxbin"
 fi
 rs_imports="$rs_build/current-imports"
 mkdir -p "$rs_imports"

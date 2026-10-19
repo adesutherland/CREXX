@@ -10,7 +10,7 @@ inputs until their replacements have been reproduced and reviewed.
 | Files | Role | Maintenance rule |
 | --- | --- | --- |
 | Book-root `.md` chapters; `structure.tex`; the four `crexx_*.tex` main files | Authored prose and book structure | Preserve; edit these to change the publication. |
-| `texttools/*.crexx`, `generate-books.crexx`, `texttools/tests` | Maintained generator sources and focused regressions | Preserve. Compile bytecode and build publications in separate output storage. |
+| `tools/texttools/*.crexx`, `tools/texttools/tests` | Maintained generator sources and focused regressions | Preserve. Compile bytecode and build publications in separate output storage. |
 | `books/boilerplate/*.tex`, `.sty`, `.bib`; book-specific hand-written TeX; `operation/*.operation`; `.def`, `.rxas`, `.crexx` examples | Authored typesetting, semantics and executable examples | Preserve, including author, publisher and licence notices. A `.tex` suffix does not imply generated output. |
 | Uppercase guide symlinks in book folders, such as `CREXX_LEVELB_AUTHORING.md` | Book inputs linked to canonical `ai-context` sources | Six are explicitly included by the current book structures. Preserve the links; edit the canonical guide. They are not redundant copies or generated output. |
 | Library `levelb-*.md` and corresponding `lib/rxfnsb/rexx/*.md` | Similar but separately edited documentation | No maintained copier was found. Do not overwrite one with the other: many differ in heading, links or prose. |
@@ -43,8 +43,8 @@ CMake target for these four publications.
 ## Printed books through cREXX
 
 The maintained route is now the repository-owned [TextTools cREXX
-port](texttools/README.md), based on René Jansen's 17 upstream scripts.
-[generate-books.crexx](generate-books.crexx) stages the four books in a fresh
+port](../tools/texttools/README.md), based on René Jansen's 17 upstream scripts.
+[generate-books.crexx](../tools/texttools/generate-books.crexx) stages the four books in a fresh
 output tree, dereferences source-guide symlinks, excludes old `tex/book` outputs,
 and calls the port directly. No ooRexx interpreter or external TextTools
 checkout is required. The original wrappers and René's publication notices
@@ -57,7 +57,7 @@ XeLaTeX outline/cross-reference convergence, and xdvipdfmx.
 executables without creating output; `build` attempts the complete PDF route.
 Shared boilerplate keeps the relative directory relationships used by the books.
 
-Follow the [build/run commands](texttools/README.md#build-and-run) to compile,
+Follow the [build/run commands](../tools/texttools/README.md#build-and-run) to compile,
 assemble and link the port outside the source tree. Arguments to the resulting
 program are:
 
@@ -141,9 +141,9 @@ the existing `ls`/`stat` combination already supports directory discovery.
 
 The port is based on TextTools commit
 [`0767adac303f80ade9af46b509f7ca33353c6065`](https://github.com/RexxLA/TextTools/tree/0767adac303f80ade9af46b509f7ca33353c6065).
-All 17 scripts have named cREXX counterparts in [texttools.crexx](texttools/texttools.crexx).
+All 17 scripts have named cREXX counterparts in [texttools.crexx](../tools/texttools/texttools.crexx).
 The original external scripts remain useful comparison sources; they are no
-longer a runtime dependency of the new route. [The port guide](texttools/README.md)
+longer a runtime dependency of the new route. [The port guide](../tools/texttools/README.md)
 records the source mapping and repairs, including filename case, multi-index
 arguments, fenced-source handling, Pandoc escapes and child return codes.
 
@@ -218,7 +218,7 @@ U+FE0F are default-ignorable joiner/presentation controls and have no visible
 glyph in this profile. To restore René's
 font choices, select `original` and install the original families on the
 typesetting host. To change the substitutions, edit `applyfontprofile` in
-`texttools/texttools.crexx` and the scoped `texttools/glyph-fallback.tex`; the authored TeX remains the reference. Original
+`tools/texttools/texttools.crexx` and the scoped `tools/texttools/glyph-fallback.tex`; the authored TeX remains the reference. Original
 font availability and layout equivalence have not been qualified here.
 
 For this macOS qualification, TeX Live 2026 is installed in
@@ -345,7 +345,7 @@ Fenced examples are extracted and printed. Explicit `<!--splice--...-->` tags
 and authored TeX `splice` commands run during typesetting; not every listing is
 executed. Many listings are incomplete fragments or use other languages.
 
-The book-specific [bookhighlight.crexx](texttools/bookhighlight.crexx) uses
+The book-specific [bookhighlight.crexx](../tools/texttools/bookhighlight.crexx) uses
 Peter Jacob's [Scanlex.crexx](../lib/classlib/Scanlex.crexx) as its token and
 character-scanning starting point, with rules checked against the compiler
 scanners. It classifies fragments without requiring complete syntax, imports,

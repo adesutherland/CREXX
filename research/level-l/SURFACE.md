@@ -13,7 +13,7 @@ below remain open; approval of the proposal is not delivery evidence.
 PLAN.md, LANG-D01–10 and LANG-AC01–14,
 owns decisions and acceptance. The later sections retain historical research
 evidence; their old capability limits are not the current product reference.
-Use [the user guide](../../lib/rxfnsl/doc/user-guide.md) for what runs today.
+Use [the user guide](../../langtools/doc/user-guide.md) for what runs today.
 
 ## Common surface, Unicode and composition review — 11 October
 
@@ -406,7 +406,7 @@ checkout, pinned here to `9a86fb37c0d0d7b9cd395d676e8a0a3ef45e39b8`:
 
 - `docs/ai-context/CREXX_LEVEL_L_SYNTAX.md` defines the authored contract;
 - `docs/books/crexx_language_reference/level_l_syntax.md` is the human guide;
-- `experiments/unicode/level-l-bootstrap/levell_bootstrap.crexx` parses and
+- `experiments/unicode/level-l-bootstrap/rxlang_bootstrap.crexx` parses and
   validates that contract into Level B token and AST objects; and
 - `experiments/unicode/level-l-emitter/crexx.syntax` is the direct re2c/cREXX
   output adapter.
@@ -436,11 +436,12 @@ malformed/otherwise diagnostics. Tokens are named in authored rules; assigned
 numeric IDs belong to the validated lowering. Authors do not write C actions,
 numbered regex rows or slash-delimited regex literals.
 
-## Executed shared-frontend proof
+## Shared-frontend design
 
-`run-surface.sh` reads the pinned Git objects into ignored build storage. It
-compiles the existing bootstrap **unchanged**, preserving its doc tags, token
-objects, structural AST, ID assignment, source spans and validation.
+The original shared-frontend experiment preserved the bootstrap token objects,
+structural AST, ID assignment, source spans and validation. The maintained
+product now lives in `langtools/`; its generation-service tests own current
+source/RXAS parity. The completed one-off surface comparison runner is retired.
 
 Two backends consume the same parsed source:
 

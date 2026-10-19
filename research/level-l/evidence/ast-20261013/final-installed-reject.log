@@ -1,2 +1,0 @@
-START: grammar nonempty_grammar
-/tmp/levell-ast-admission-opt/nonempty.rxl: LL_GRAMMAR: line 18, byte 574: LL_AST_CARDINALITY: field program.items requires at least one match, but capture item may be absent

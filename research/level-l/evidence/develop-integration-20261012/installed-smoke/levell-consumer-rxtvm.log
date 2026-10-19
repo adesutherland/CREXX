@@ -1,4 +1,0 @@
-argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-levell-installed-avtkahvy/bin/rxtvm', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-dceqkhgb/settings-linked', '-a', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-dceqkhgb/settings.txt']
-retries -> 3
-greeting -> "café"
-note -> "say ""hello"""

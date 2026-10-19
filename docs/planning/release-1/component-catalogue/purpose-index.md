@@ -104,7 +104,7 @@ This table contains all 129 active selectors exactly once. The former
 | `P07` operating-system adapter | native-backed classlib `Os`; `mylib1` procedures embedded in the system-plugin examples |
 | `P13` Level G hosted services | all `lib/rxfnsg/rexx/llm.crexx` types and members |
 | `P12` Classic/RexxScript runtime | every `lib/rxfnsc` export/member and every `rexxscript` export/member |
-| `P14` embedded-language support | every `lib/rxfnsl/rexx/tinyexpr.crexx` export |
+| `P14` embedded-language support | every `langtools/examples/tinyexpr/tinyexpr.crexx` export |
 
 The classlib row rules account for all 33 pure-Rexx selectors and all three
 native-backed selectors.

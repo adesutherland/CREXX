@@ -1,0 +1,78 @@
+/* cREXX License (MIT). Owned STEP07A service/IR views and independent failures. */
+options levelb
+import rxfnsb
+import lltestcompiler
+import lltestrxas
+import llir
+import lltestfamilies
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 4 then return 2
+  source = readbinary(argv[2]); failures = 0
+  request = .lltestcompiler..request(argv[1],source,argv[3],argv[2])
+  if request.status() <> 0 then do; say request.diagnostic(); return 1; end
+  graph = request.graph(); selected = request.emissiongraph(); output = request.output()
+  if writebinary(argv[4] || '.ir',graph.dump() as .binary) <= 0 then failures = failures + 1
+  if writebinary(argv[4] || '.selected.ir',selected.dump() as .binary) <= 0 then failures = failures + 1
+  if writebinary(argv[4] || '.rxas',output.text() as .binary) <= 0 then failures = failures + 1
+  store = dereference graph.storage(); contract = dereference store.contract()
+  restored = llir..loadbinary(contract,graph.binary())
+  if restored.error() <> '' | restored.text() <> graph.text() then failures = failures + 1
+  do i = 1 to graph.functions()
+    fn = graph.function(i); other = restored.function(i)
+    if fn.name() <> other.name() | fn.exportname() <> other.exportname() | fn.arguments() <> other.arguments() then failures = failures + 1
+    do j = 1 to fn.arguments()
+      if fn.optional(j) <> other.optional(j) then failures = failures + 1
+    end
+  end
+  backend = .lltestrxas..compilation(restored,argv[1],argv[3]); again = backend.output()
+  if backend.status() <> 0 then do; say backend.error(); failures = failures + 1; end
+  failures = failures + adversarial(argv[3])
+  say 'STEP07_SERVICE|failures=' || failures
+  return failures
+
+/* Valid generic graphs must still satisfy the consumer's call ABI. */
+adversarial: procedure = .int
+  arg artifacts = .string
+  failures = 0
+  do mode = 1 to 9
+    registry = .llir..schema(); call lltestfamilies..registerfamilies(reference registry)
+    integer = registry.type('crexx.g.int64'); text = registry.type('crexx.g.text')
+    family = registry.family('crexx.calls',1)
+    presence = family.type('presence',.llir..bytescodec() as .object)
+    declared = family.operation('test'); call declared.output('value',integer)
+    call declared.attribute('target',text); call declared.attribute('package',text)
+    if mode = 4 then call declared.attribute('presence',text)
+    else call declared.attribute('presence',presence)
+    if mode <> 5 then call declared.state('call')
+    call declared.failure('condition'); call declared.termination('returns')
+    contract = registry.finish(); builder = .llir..builder(contract); at = builder.synthetic('call contract')
+    main = builder.function('$MAIN',integer); entry = main.block('entry')
+    callop = entry.operation(contract.operation('crexx.calls.test'),at)
+    if mode = 9 then do
+      call callop.attribute('target',('module.f' || ('0A'x as .string) || 'injected') as .binary)
+      call callop.attribute('package','module')
+    end
+    else do
+      call callop.attribute('target','F'); call callop.attribute('package','')
+    end
+    mask = '00'x as .binary
+    if mode = 2 then mask = '02'x as .binary
+    if mode = 3 then mask = '01'x as .binary
+    call callop.attribute('presence',mask)
+    op = callop.finish(); call entry.returnvalue(op.result(),at)
+    fn = builder.function('F',integer)
+    optional = 1; if mode = 1 then optional = 0
+    ignored = fn.argument(integer,optional)
+    if mode = 6 then call fn.exportas('bad identity')
+    if mode = 7 then call fn.exportas('module.' || ('0A'x as .string) || 'injected')
+    if mode = 8 then call fn.exportas('1module.f')
+    block = fn.block('entry'); value = block.constant(integer,'1',at); call block.returnvalue(value,at)
+    graph = builder.finish(); saved = graph.binary()
+    backend = .lltestrxas..compilation(graph,'g',artifacts); output = backend.output()
+    if mode = 9 & pos('invalid callable identity',backend.error()) = 0 then failures = failures + 1
+    if graph.error() <> '' | backend.status() = 0 | output.bytes() <> 0 | bin2x(saved) <> bin2x(graph.binary()) then do
+      failures = failures + 1; say 'FAIL|call ABI refusal ' || mode || '|' || graph.error() || '|' || backend.error()
+    end
+  end
+  return failures

@@ -77,8 +77,9 @@ jobs:
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
-    # Hang backstop; serial nested aggregates carry their own measured guards.
-    timeout-minutes: 240
+    # Full macOS ASan took 239.5 minutes before structured-flow isolation.
+    # Leave headroom beyond each test's own measured hang backstop.
+    timeout-minutes: 360
 
     strategy:
       fail-fast: false

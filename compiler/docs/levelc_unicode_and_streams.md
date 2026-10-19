@@ -5,7 +5,7 @@ The authoritative plan and qualification status are
 [LC-UNICODE](../../docs/planning/release-1/levelc-compatibility-worklist.md#lc-unicode--compatible-byte-ordinals-unicode-and-encoded-streams-2026-10-09).
 This document records the implemented contract. All eight criteria for this
 approved local programme are verified in the
-[development receipt](../../docs/qa/levelc-unicode-2026-10-09/README.md); wider
+[historical development receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md); wider
 Level C/Release 1 obligations retain their separate status.
 
 ## Ordinary values and byte compatibility

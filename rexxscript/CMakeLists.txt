@@ -230,3 +230,7 @@ endforeach()
 add_subdirectory(tests_functional)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/modern.cmake)
+
+# Published products owned by this component.
+crexx_install_targets(rexxscript_cli rexxscript1_cli)
+crexx_install_bytecode(rexxscript "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin")

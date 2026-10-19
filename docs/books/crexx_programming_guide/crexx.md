@@ -315,7 +315,7 @@ and its consumer can both be named `calculator` with different suffixes.
 Duplicate output member names within the same kind are diagnosed.
 Grammar errors stop the build and preserve the previous published output.
 Generator, grammar and runtime identities participate in incremental rebuilds.
-See the [Level L user guide](../../../lib/rxfnsl/doc/user-guide.md) for a complete
+See the [Level L user guide](../../../langtools/doc/user-guide.md) for a complete
 settings reader and calculator.
 
 ## Examples

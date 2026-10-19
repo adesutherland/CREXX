@@ -1,4 +1,0 @@
-STATUS|1
-LESSON_PARSE at line 1, column 5 (byte 4): unexpected end of input; expected a, b
-  abab
-      ^

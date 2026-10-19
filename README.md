@@ -25,8 +25,8 @@ for package selection, installers, and a first program, and the
 The [Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
 tracks ongoing `develop` work and is replaced after each successful publication.
 
-Current `develop` also includes the [Level L language toolkit](lib/rxfnsl/doc/user-guide.md):
-the `levell` grammar generator, its runtime library, and the separately selected
+Current `develop` also includes the [Level L language toolkit](langtools/doc/user-guide.md):
+the `rxlang` grammar generator, its runtime library, and the separately selected
 modern `rexxscript1` interpreter. These are development additions after Beta 3;
 the existing `rexxscript` command and `REXXSCRIPT` compiler exit keep their dialect.
 
@@ -165,6 +165,8 @@ is searched for same-extension imports.
   direction, and history. It is not the current technical reference.
 
 ## Contributing
+
+For the source-directory ownership map, see [DOCS_MAP.md](docs/DOCS_MAP.md#source-ownership).
 
 For repository-specific working rules, start with [AGENTS.md](AGENTS.md). It
 lists the current implementation references to trust before changing compiler

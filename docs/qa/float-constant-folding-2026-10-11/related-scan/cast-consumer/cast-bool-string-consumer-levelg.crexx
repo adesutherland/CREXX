@@ -1,5 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-  arg argv = .string[]
-say (2 as .boolean)
-return 0

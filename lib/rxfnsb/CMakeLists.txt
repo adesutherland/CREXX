@@ -37,3 +37,4 @@ add_custom_command(
 )
 
 add_custom_target(library ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/library.rxbin)
+crexx_install_bytecode(library "${CMAKE_BINARY_DIR}/bin/library.rxbin")

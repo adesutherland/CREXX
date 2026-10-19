@@ -8,7 +8,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_dynamic_plugin_target(fs rxfs.c)
 add_static_plugin_target(fs rxfs.c)
-add_rxpa_provider_package(fs)
+add_rxpa_provider_package(fs INSTALL)
 
 # The provider remains part of the default product build.  Keep it independent
 # of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
@@ -35,3 +35,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_install_targets(fs fs_static)

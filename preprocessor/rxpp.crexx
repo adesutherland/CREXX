@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias rxpp_build_mode fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -55,6 +55,7 @@ arg command=.string[]
   infile  = .string
   outfile = .string
   maclib  = .string
+  rxpp_build_mode = 0
   verbose = .int
   verbose = 0
   cnext   = .string
@@ -81,6 +82,7 @@ arg command=.string[]
      else if command.i='-OUT' then outfile=command.j
      else if command.i='-M' then maclib=command.j
      else if command.i='-VERBOSE' then verbose=command.j
+     else if command.i='--RXBUILD' then rxpp_build_mode=1
   end
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started RXPP build 'rxpp_build_timestamp
   
@@ -223,7 +225,7 @@ RXPPPassOne: procedure = .int expose fortran_bind_count fortran_bind_target fort
      call rxpp_diag 'warning','RXPP_MACLIB_MISSING','file',maclib
   end
   else do
-     call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
+     call GetPreComp macnum,infile                 ## analyse maclib, source lines not needed just register macros
      if verbose then say 'CRX0120I ['time('l')'] Maclib loaded:      'source.0' records'
      if verbose then say 'CRX0130I ['time('l')'] Macros extracted:   'macros_mname.0
      maxmac=macros_mname.0
@@ -243,7 +245,7 @@ RXPPPassOne: procedure = .int expose fortran_bind_count fortran_bind_target fort
      call rxpp_diag 'warning','RXPP_SYSTEM_MACLIB_MISSING','file',macsys
   end
   else do
-     call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
+     call GetPreComp macnum,infile                 ## analyse maclib, source lines not needed just register macros
      if verbose then say 'CRX0120I ['time('l')'] System Maclib loaded: 'source.0' records'
      if verbose then say 'CRX0130I ['time('l')'] Macros extracted:     'macros_mname.0-maxmac
   end
@@ -341,7 +343,7 @@ RXPPPassOne: procedure = .int expose fortran_bind_count fortran_bind_target fort
   fortran_export_host=.string[]
   fortran_exports_declared=0
   fortran_call_insert_at=source.0+1
-  call GetPreComp rexxlines              ## analyse source, source lines needed keep them
+  call GetPreComp rexxlines,infile       ## analyse source, source lines needed keep them
   fortran_block_seen=0
   do scan_line=1 to source.0
      if source.scan_line='fortran_source = .string[]' then fortran_block_seen=1
@@ -617,9 +619,14 @@ return source[0]
  * dispatches command handlers.
  * ------------------------------------------------------------------
  */
-GetPrecomp: procedure
-   arg line_no=.int
+GetPrecomp: procedure expose rxpp_build_mode
+   arg line_no=.int,source_file=.string
    lineNo = 0
+   source_file=translate(source_file,'/','\')
+   source_file=changestr('//',source_file,'/')
+   if rxpp_build_mode='debug' then say 'CRX0000I ['time('l')'] Reading 'source_file
+
+   if rxpp_build_mode='debug' then say 'CRX0000I ['time('l')'] Pre-Compiling 'source_file
    builddir=0    /* ##BUILDDIR may appear only once */
    do while lineNo < source.0      ## array might grow, so while is more reliable
       LineNo=LineNo+1
@@ -665,6 +672,15 @@ GetPrecomp: procedure
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##LOADMACRO' then call cmd_loadMacro lineNo,line
       else if ucmd = '##BUILDDIR' then stype.LineNo='X'
+      else if ucmd = '##RXBUILD' then do
+         if upper(word(line,2)) = 'REQUIRED' then do
+            if rxpp_build_mode = 0 then do
+               call rxpp_diag 'error','RXPP_BUILD_REQUIRED','file',source_file
+               exit 8
+            end
+            stype.LineNo='X'
+         end
+      end
       else if ucmd = '##EXTERNAL' then call cmd_external lineNo,line
       else if ucmd = '##LINK' then call cmd_link lineNo,line
       else if ucmd = '##NORUN' then call cmd_norun lineNo,line
@@ -1769,7 +1785,7 @@ CMD_dalias: procedure
       end
 
       reserved = ' ADDRESS ARG BY CALL DO ELSE END EXIT IF IMPORT INTERPRET ITERATE LEAVE NOP NUMERIC OPTIONS OTHERWISE PARSE PROCEDURE PULL PUSH RETURN SAY SELECT SIGNAL THEN TRACE WHEN WHILE '
-      rxpp_reserved = ' ARRAY BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE SET SYS USE UNSET '
+      rxpp_reserved = ' ARRAY BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE RXBUILD SET SYS USE UNSET '
       if pos(' 'alias' ',reserved)>0 | pos(' 'alias' ',rxpp_reserved)>0 then do
          say 'RXPP error: invalid DALIAS name' alias '- reserved keyword'
          exit 8

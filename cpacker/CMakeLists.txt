@@ -8,3 +8,6 @@ add_executable(rxcpack rxcpack.c)
 target_include_directories(rxcpack PRIVATE ${CMAKE_SOURCE_DIR}/platform)
 target_link_libraries(rxcpack platform)
 add_dependencies(rxcpack platform)
+
+# Published products owned by this component.
+crexx_install_targets(rxcpack)

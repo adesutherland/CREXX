@@ -93,7 +93,8 @@ Canonical NetRexx common-portfolio cells use `options nobinary decimal` and
 keep timed arithmetic, loop/state values and numeric arrays in NetRexx `Rexx`
 decimal semantics. Generated Java and the default HotSpot JIT are the normal
 NetRexx implementation/runtime substrate and are fair parts of that result;
-record the JDK/JVM and retain the generated Java/classes. A source compiled
+record the JDK/JVM and inspect the generated Java/classes during validation,
+then delete those generated files. A source compiled
 with `options binary`, or one whose timed numeric state is expressed through
 primitive Java numeric types, is a labelled binary/JVM control and is excluded
 from the common Rexx aggregate. Host-Java storage required by a workload, such
@@ -280,7 +281,8 @@ A performance result may enter release material only when it identifies:
 - canonical profiling-off Release product and exact VM mode;
 - complete named portfolio and aggregate membership/version;
 - correctness/equivalence status and every exclusion;
-- formal sample minimums, raw samples and uncertainty;
+- formal sample counts, summary statistics and uncertainty, checked against
+  the raw samples before those temporary outputs are deleted;
 - source/build/runtime/machine/power provenance and exact commands;
 - source/generated/internal-form/executable hashes;
 - lifecycle, RSS and artifact-size results;
@@ -291,24 +293,19 @@ A performance result may enter release material only when it identifies:
 Cross-platform or release-wide wording requires evidence for every platform it
 names. A same-host NR-10 result is a claim only for that named host/platform.
 
-## Compact evidence retention
+## Durable results and disposable output
 
-Retain one final bundle per formal campaign with:
+Follow the repository-root documentation/output rules. Update the current
+scorecard, roadmap or decision record with exact input identities, commands,
+measurement conditions, sample counts/statistics, uncertainty, correctness and
+interpretation. Include negative/noisy conclusions and reasons for any invalid
+sample; do not conceal them by deleting the raw data.
 
-- README/interpretation, machine-readable provenance, exact schedule/commands
-  and recursive checksums;
-- consolidated warmup/recorded samples and correctness/output tables;
-- scorecard source tables and rendered Markdown;
-- source/runtime/tool/build/artifact hashes and sizes; and
-- only the generated/internal forms necessary to audit a forensic claim.
-
-Keep calibration, failed setup attempts, superseded trial schedules, ordinary
-build products and reproducible duplicate binaries outside the repository.
-Reference stable earlier forensics rather than copying them. Preserve
-decision-relevant negative/noisy samples and invalid-sample records.
-
-Review every retained file for an audit or reproduction purpose. Do not prune
-existing historical bundles merely to apply this policy retrospectively.
+Raw samples are temporary inputs to analysis. After inspection and calculation,
+delete logs, samples, generated code/dumps, receipts and run bundles. Do not
+commit them or move them to an archive. Consolidate lasting information from
+existing historical bundles into current documents, then remove the bundles;
+maintained workloads and regression fixtures keep their normal source owners.
 
 ## Document ownership
 

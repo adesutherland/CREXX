@@ -28,7 +28,7 @@ target_link_libraries(float PRIVATE ${CREXX_MATH_LIBRARY})
 add_static_plugin_target(float rxfloat.c)
 target_link_libraries(float_static PRIVATE ${CREXX_MATH_LIBRARY})
 
-add_rxpa_provider_package(float)
+add_rxpa_provider_package(float INSTALL)
 
 # The canonical provider and archive names are rxfloat.  Preserve the
 # historical artifacts as declaration-time compatibility inputs for existing
@@ -103,3 +103,8 @@ if(BUILD_TESTING)
 endif()
 
 crexx_finalize_directory_qa_tiers()
+
+crexx_install_targets(float float_static)
+install(FILES "$<TARGET_FILE:float>" DESTINATION bin RENAME "rx_rxmath.rxplugin")
+install(FILES "$<TARGET_FILE:float_static>" DESTINATION bin
+        RENAME "rx_rxmath_static${CMAKE_STATIC_LIBRARY_SUFFIX}")

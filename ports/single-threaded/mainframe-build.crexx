@@ -56,7 +56,7 @@ main: procedure = .int
   flags=.string[]
   native=.string; item=.string; writer=.string; product=.string
   manifest=.string[]
-  dirs="platform interpreter interpreter/rxvmplugin assembler binutils/include avl_tree utf8 inc rxpa compiler interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber"
+  dirs="platform interpreter interpreter/rxvmplugin assembler binutils/include third_party/avl_tree third_party/utf8 interpreter/rxvml rxpa compiler interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber"
   i=.int; j=.int
   do i=1 to words(dirs)
     call arrayappend flags,"-I"||source||"/"||word(dirs,i)
@@ -117,7 +117,7 @@ main: procedure = .int
     end
   end
   else do
-    native="platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c avl_tree/avl_tree.c binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c binutils/rxcontract.c binutils/rxsha256.c binutils/rxgraph.c"
+    native="platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c third_party/avl_tree/avl_tree.c binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c binutils/rxcontract.c binutils/rxsha256.c binutils/rxgraph.c"
     do i=1 to words(native)
       call arrayappend units,source||"/"||word(native,i)
     end

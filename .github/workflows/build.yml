@@ -170,7 +170,7 @@ jobs:
         if: matrix.platform != 'windows'
         shell: bash
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
@@ -209,7 +209,7 @@ jobs:
         if: matrix.toolchain == 'msvc'
         shell: cmd
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional sqlite sqlite_static vector vector_static --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
@@ -891,7 +891,7 @@ jobs:
       - name: Configure plugin and engine only
         shell: bash
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" \
             -DCMAKE_BUILD_TYPE=Release -DENABLE_LLAMA=ON \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
@@ -1370,7 +1370,7 @@ jobs:
       - name: Configure Debug parity build
         shell: bash
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/debug-parity" \
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/debug-parity" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCREXX_QA_CTEST_JOBS=5 \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
@@ -1463,7 +1463,7 @@ jobs:
         if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/qualification" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
@@ -1477,7 +1477,7 @@ jobs:
         if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/qualification" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \

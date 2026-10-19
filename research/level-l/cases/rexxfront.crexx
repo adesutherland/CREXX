@@ -21,7 +21,7 @@ main: procedure = .int
   ok = guard.add('assignment priority',0,1,4,1,-1,'',31,1)
   ok = guard.add('label priority',0,1,12,1,-1,'',31,1)
   dfa = .llmunch..automaton.legacy(gcrexx..tabledata())
-  path = 'research/level-l/evidence/rexxfront/expected.txt'
+  path = 'research/level-l/cases/fixtures/rexxfront/expected.txt'
   do while lines(path)
     row = linein(path); id = field(row,1); level = field(row,2); bytes = x2bin(field(row,3))
     expected = field(row,4) as .int; wanted = field(row,5); cases = cases + 1

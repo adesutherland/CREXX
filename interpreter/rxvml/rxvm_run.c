@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../inc/rxvm.h"
+#include "../../interpreter/rxvml/rxvm.h"
 #include "../rxvmintp.h"
 #include "../rxvmvars.h"
 #include "rxastree.h"

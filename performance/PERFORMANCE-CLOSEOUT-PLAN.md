@@ -21,7 +21,7 @@ scorecard does not qualify those later candidates.
 - [x] **PC-AC-01 — frozen product:** the named combined source candidate is
   `81f15918676d92a7d3e88954d94779ed759e9db8`; portfolio-v3 was reviewed and
   correctness-qualified before measurement. Evidence: the final
-  [Stage 5 bundle](evidence/2026-08-18-performance-closeout-stage5/).
+  [qualification summary](RESULTS.md).
 - [x] **PC-AC-02 — provider and concurrency decisions:** retain `mc_decimal`;
   rejected tuned-decNumber, decQuad and libmpdec outcomes and reopening triggers
   are in [DECISIONS.md](DECISIONS.md). The unchanged Mac concurrency timing

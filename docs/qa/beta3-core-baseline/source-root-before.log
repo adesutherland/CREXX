@@ -1,4 +1,0 @@
-CMake Error at compiler/tests/source_root_namespace_order.cmake:35 (message):
-  rxbvm first-second: 0
-
-  ORDER PASS 38

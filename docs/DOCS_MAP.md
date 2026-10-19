@@ -36,7 +36,7 @@ code before editing user-facing docs.
 | `concurrency` | Concurrency control plane | Maintainers and contributors | Live task/channel/provider worklist, accepted decisions and current qualification summaries | Status-oriented and explicit |
 | `rexxscript/doc` | RexxScript product docs | Users, integrators, RexxScript developers | User guide, developer guide, runtime/product source of truth | Product-owned and current |
 | `docs/ai-context` | Current implementation context | Agents and maintainers | Architecture facts, debugging, Level B authoring, library/runtime notes | Operational and explicit |
-| `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining, retired working notes | Deep technical notes with status labels |
+| `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining and current worklists | Maintained contracts and unresolved scope |
 | `docs/bifs`, `docs/functions`, `docs/instructions` | Data and generation assets | Maintainers | Reference inputs and old generation data | Source material, not prose docs |
 | GitHub wiki | Vision, direction, and history | Project followers | Why CREXX exists, where it is going, historical milestones | Contextual, not current technical reference |
 | `AGENTS.md` | Repository working rules | Agents and contributors | Required trust sources, workflow rules, debug discipline | Canonical and concise |
@@ -62,22 +62,42 @@ code before editing user-facing docs.
   `concurrency/WORKLIST.md`; performance timing remains under `performance/`.
 - Deep compiler mechanisms belong in `compiler/docs`; promote summaries into
   public docs only when they help users or integrators.
-- Working notes may stay in `compiler/docs` or `docs/ai-context`, but they must
-  carry a status line if they are not final.
+- Keep only enduring contracts and current plans with unresolved scope.
+  Consolidate lasting findings into their owner and delete completed notes.
 - The wiki must not contain current command syntax, grammar, VM internals,
   build recipes, or API facts. Link to release docs instead.
 
-## Current Cleanup Status
+## Source ownership
 
-HEAD retains consolidated plans, supported documentation, maintained inputs and
-essential current qualification summaries. Completed investigation logs,
-superseded runs are recovered from Git history. Book-local guide symlinks remain
-where the printed book structures consume them; canonical implementation
-guidance lives in `ai-context`. See [BUILDING-DOCS.md](BUILDING-DOCS.md) before
-removing apparently generated documentation.
+| Source owner | Responsibility |
+| --- | --- |
+| `compiler`, `assembler`, `linker`, `disassembler`, `interpreter`, `preprocessor`, `debugger`, `contract`, `cpacker` | Toolchain components and their tests |
+| `binutils`, `platform`, `rxpa`, `messages` | Shared binary/platform/provider contracts and diagnostic data |
+| `driver` | `crexx`, build worker, supported `crxc` wrapper and driver tests |
+| `langtools` | Level L tool implementation, common tool libraries, guides and examples |
+| `lib/rxfnsl` | Generic Level L SDK libraries and their tests |
+| `research/level-l/compilers` | Experimental C and typed G/B compilers and their current plan |
+| `tools/rxbuild`, `tools/build-system/{levelg,audit}`, `tools/texttools` | Named build tools, build-graph observation and document generation |
+| `third_party` | Root-level vendored re2c, Lemon, AVL and UTF-8 inputs; no vendor pruning |
+| `examples`, component `tests`, `tests` | User examples, component regressions, cross-component regressions |
+| `research/pipes` | The unshipped pipe proposal and its two prototypes |
+| `ports` | Maintained constrained-host build/package adapters |
+| `scripts`, `packaging`, `.github` | Automation, packaging assets and workflow definitions |
 
-The first Release 1 beta documentation pass updated the public front doors and
-pruned the wiki to project vision/history. The second pass promotes selected
-as-built technical content from `docs/ai-context` into the language reference,
-programming guide, and VM specification. Further work should focus on detailed
-examples and optional plugin pages.
+`bin/` is a build/install destination, not a source owner. Component CMake
+files explicitly register published targets and bytecode; provider manifests
+select their dependency closure. Files left in a shared build output directory
+do not thereby become installable products. Native support archives deliberately
+remain in installed `bin/` for `crexx -native`.
+
+`ports/single-threaded` owns the maintained CMS/TSO build and package recipes;
+`platform` owns their shared services and explicit target selection. The obsolete
+S370 Docker/GCCLIB route and its legacy compiler hooks are retired. No archive
+or duplicate `ports/cms` subtree replaces them. Guest qualification remains
+separate from desktop and source-layout checks.
+
+Current plans, supported documentation, maintained inputs and concise results
+belong in HEAD. Raw logs and completed run bundles do not. Book-local symlinks,
+figures and required generation inputs remain governed by
+[BUILDING-DOCS.md](BUILDING-DOCS.md). Historical published material is recoverable
+from Git; no archive tree replaces deleted output.

@@ -306,12 +306,12 @@ completion. SAN-013 is closed for the host mock finding; native-provider and
 PDOS guest qualification retain their separately recorded scope. This is
 local qualification, not a published or sanitizer-clean release claim.
 
-The [candidate review](../qa/mainframe-address-2026-10-11-review.md) records
+The [historical candidate review](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-11-review.md) records
 the implementation/resource review and exact four-cell campaign. All eight
 native tools were checked against their producer input hashes; matching sources,
 libraries and packages are frozen by the retained `mainframe-qa-pack.crexx`.
 The operator strictly verified the replacement pack before starting native CMS.
-The [memory assessment](../qa/mainframe-address-2026-10-11-memory.md) separates
+The [historical memory assessment](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-11-memory.md) separates
 the mock defect, pointer portability, PDOS file caps and loader/heap boundaries.
 Actual native heap high-water remains unmeasured. Selected capture, fault
 recovery, caller continuation and repeated lifetimes are qualified by the
@@ -319,14 +319,14 @@ four-cell campaign and independent validation; measured PDOS real-frame peaks
 are separate from application heap usage.
 
 Native CMS RXC exhausted the original 64 MiB application heap while expanding
-the full current G library. The [heap amendment](../qa/mainframe-address-2026-10-11-heap-review.md)
+the full current G library. The [historical heap amendment](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-11-heap-review.md)
 records the explicit 256 MiB CMS candidate, unchanged image sizes, verified
 replacement packages and affected CMS replay. This is an SDK application-profile
 capacity finding; CMS virtual storage and PDOS physical/file limits remain
 separate. Temporary native CMS512M must be restored before handback. Both CMS
 campaign cells retain unified A1 imports and full Classic dependencies.
 
-The [allocation amendment](../qa/mainframe-address-2026-10-11-allocation-review.md)
+The [historical allocation amendment](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-11-allocation-review.md)
 supersedes that failed 256 MiB profile with 192 MiB candidates for both native
 personalities. Real CMS20 macro expansion confirms the SDK's 32-byte lists;
 the serial native capacity oracle obtains/checks/releases 64/128/192 MiB and
@@ -342,11 +342,11 @@ and caller-file checks at RC 0. Native TSO Level B also passes twice, including
 contained native fault recovery and successful caller continuation. Both
 Classic native compile/assemble/link now pass on both systems. Their first
 runtime loads reject the same missing rxcstream provider. The separately
-[reviewed native runtime amendment](../qa/mainframe-address-2026-10-12-classic-provider-review.md)
+[historical reviewed native runtime amendment](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-12-classic-provider-review.md)
 adds the required bounded providers and matching classlib. The original native
 C objects were retained and relinked; both real OS cells now pass two B and two
 Classic executions, with exact replacement-package delivery/readback. The
-[runtime checkpoint](../qa/mainframe-address-2026-10-12-runtime-qualification.md)
+[historical runtime checkpoint](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/mainframe-address-2026-10-12-runtime-qualification.md)
 owns current per-cell results and exact amendment identities.
 Both PDOS cells now pass two B and two Classic executions. Corrected fixture
 vocabulary and physical record geometry exposed a K output-member displacement defect, proven

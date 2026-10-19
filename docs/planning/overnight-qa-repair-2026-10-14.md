@@ -1,5 +1,181 @@
 # Overnight QA repair — 14 October 2026
 
+## 18 October continuation — binary-import registration and Windows service oracle
+
+### Vision and intended outcomes
+
+Adrian requested work in the existing hotfix checkout, synchronization with
+HEAD, repair of failing overnight QA and publication to develop. Hotfix was
+fast-forwarded to develop `ff97dbfbb443a2dd44f9ed08c007186ec326776a`, preserving
+unrelated files in both checkouts. Restore the existing import regressions and
+the independent Level L CLI/service comparison on native Windows. Preserve
+compiler/runtime/language semantics, exact service artifact bytes, and strict
+binary-file publication assertions. Publish the qualified repairs together.
+
+### Acceptance criteria
+
+1. **O18-AC01 — verified:** account for every failed job in
+   [Deep Build QA 39090761473](https://github.com/adesutherland/CREXX/actions/runs/39090761473)
+   and [Sanitizer QA 39095054676](https://github.com/adesutherland/CREXX/actions/runs/39095054676).
+   Both qualified develop `db2fabdd6cbd036874a27fcb6d14832a696e647e`, despite
+   scheduled-workflow metadata naming master. All five Deep platforms fail
+   three misspelled `driverary_*.cmake` paths; Unix platforms also fail the
+   standalone bootstrap install-helper call. Windows service cases report
+   only `CLI/service parity`. macOS ASan fails the same three paths and
+   bootstrap fixture; Linux stops at the first missing path. Inspected build
+   and CTest sanitizer artifacts contain no ASan/LSan or UBSan diagnostic.
+2. **O18-AC02 — verified:** register the three existing `binary_*.cmake` scripts
+   correctly; their original assertions pass in current normal Debug and
+   maintained Apple ASan. Preserve the existing serial scheduling/900-second
+   backstop for the global-import matrix; no matrix expansion.
+3. **O18-AC03 — verified locally:** reproduce Windows-style CRLF CLI output against the
+   existing service fixture, then compare the CLI text after CRLF-to-LF
+   conversion with the exact service artifact. Preserve every other byte and
+   binary-publication assertion. Opt/noopt cases on both VMs pass with native
+   and CRLF CLI oracles. Include these small service cases in normal smoke QA
+   so Windows publication checks exercise the repaired comparison.
+4. **O18-AC04 — verified locally:** current core `stage-product` and focused prerequisites
+   build without warnings; affected import correctness and service regressions
+   pass. Reuse the unchanged bootstrap/oracle-preparation proof at
+   `d166e13c2`/`ff97dbfbb` recorded in `research/level-l/PLAN.md` rather than
+   reimplementing or repeating it. Record commands, qualified inputs, results
+   and platform limits here before the substantive push. No full manual
+   overnight dispatch is needed for these QA-only repairs.
+5. **O18-AC05 — publication prepared:** publish separate reviewable causes together to hotfix
+   and develop, verify remote refs and synchronize the existing develop
+   checkout while preserving its unrelated dirty files. Normal automatic
+   Build/CodeQL are expected to pass; report only observed hosted outcomes,
+   without status-only commits. Delete task-created temporary diagnostics.
+
+### Implementation steps
+
+1. **O18-STEP01 — done (AC01):** inspect jobs and single temporary copies of
+   failed logs/artifacts, synchronize hotfix, inspect the owning plans,
+   authoring guide and sanitizer protocol, and identify already integrated
+   repairs. Record this continuation before implementation.
+2. **O18-STEP02 — done (AC02/04):** correct the three script references,
+   regenerate current build declarations, and run their unchanged Debug and
+   maintained-ASan tests with refreshed product prerequisites.
+3. **O18-STEP03 — done (AC03/04):** reproduce the CRLF oracle discrepancy,
+   correct only the test's platform text comparison, retain the independent
+   service assertions, label service smoke coverage, and run both oracle
+   forms and the relevant ordinary correctness panel. No language or
+   architecture decision is introduced.
+4. **O18-STEP04 — locally qualified; publication prepared (AC04/05):** summarize final qualification and limits,
+   review diffs, commit each cause, check develop for concurrent changes,
+   publish and reconcile both checkouts without discarding unrelated work.
+
+### Qualification and publication
+
+Qualified inputs: base `ff97dbfbb443a2dd44f9ed08c007186ec326776a` plus the
+three CMake script-name corrections, service fixture/registration changes and
+the current documentation diff. Compiler, runtime and generator implementation
+inputs are unchanged by this repair.
+
+- Normal Debug `stage-product`, `rxvme` and `compiler_exit_bin` completed;
+  `cmake --build cmake-build-debug --target qa-prep-smoke --parallel 8`
+  then passed without warnings. The first multi-target Make invocation refreshed
+  the old build graph but could not resolve the newly introduced service target
+  from its initially loaded Makefile; the fresh preparation invocation resolved
+  and built both service targets. This was build-tree refresh, not a product
+  failure or a source repair.
+- `ctest --test-dir cmake-build-debug --tests-from-file <selection>
+  --parallel 30 --output-on-failure` passed **213/213**, 621.12 seconds.
+  The disposable selection contained every `essential`/`smoke` test plus the
+  seven import cases named in O18-AC02/STEP03: the three binary tests,
+  `global_import_types`, both `source_import_private_dependency_*` cases and
+  `inline_return_conversions`. This exercises the compiler, assembler, linker
+  and both VM dispatches; the original import assertions remain intact.
+- Before repair, injecting CRLF into the existing generated CLI oracle at the
+  base revision made all four opt/noopt and VM service cases fail only
+  `CLI/service parity`, matching the native Windows logs. With the repair,
+  all four CRLF cases pass; changing one other ASCII byte makes all four fail
+  the same parity assertion. Native-LF cases pass in the 213-test panel.
+  Private oracle and binary-output files are automatically removed.
+- Maintained Apple ASan prerequisite build passed via `tools/asan-run.sh
+  --build-dir cmake-build-debugasan --phase build --build-target stage-product
+  --build-target rxvme --build-target compiler_exit_bin --build-target
+  levell_services_opt --build-target levell_services_noopt --build-jobs 6
+  --build-leaks off --leaks off --no-live-tail`. It emits existing Apple SDK
+  `sprintf` deprecation warnings in unchanged C sources; no suppression or
+  product change is introduced here. Apple LeakSanitizer is unsupported.
+  The focused command below passed **11/11**, 482.54 seconds, without an
+  AddressSanitizer diagnostic. The global-import matrix passed in 336.78
+  seconds under its unchanged serial scheduling and 900-second limit.
+  This is focused local Apple ASan proof, not a full sanitizer, Linux leak,
+  native Windows or release qualification.
+- The separate latest completed Build failure at
+  [39108991776](https://github.com/adesutherland/CREXX/actions/runs/39108991776)
+  accepted notarization and recovered stapling on its fourth attempt, then
+  exhausted all four validation attempts on CloudKit connection loss
+  (`NSURLErrorDomain -1005`, exit 68). The bounded retry helper behaved as
+  specified. Keep its strict validation gate; this external service failure
+  does not justify changing retry policy or bypassing validation.
+
+Focused sanitizer command (the same seven import cases and four service cases
+also passed in the normal Debug selection):
+
+```sh
+tools/asan-run.sh --build-dir cmake-build-debugasan --phase ctest \
+  --regex '^(binary_(forward_dependencies|global_import_types|storage_selector_dependencies)|global_import_types|source_import_private_dependency_.*|inline_return_conversions|levell_services_.*)$' \
+  --test-jobs 4 --build-leaks off --leaks off --no-live-tail
+```
+
+Final diff review and generated CTest inspection confirm the three script
+paths exist, all four service cases carry smoke coverage, and the existing
+global-import scheduling/timeout is unchanged. Both integrated preparation
+repairs retain their earlier qualification. All required local publication
+gates pass. Prepare the two distinct causes as separate commits and publish
+them together to hotfix/develop; normal automatic Build/CodeQL are expected
+to pass, with real Apple ticket-service availability remaining external.
+Remote-ref and occupied-checkout integrity verification completes O18-AC05
+and is reported live, without a status-only repository push. Temporary command
+logs, downloaded artifacts, oracle files and test workspaces are deleted after
+extracting this summary. The unrelated develop work and hotfix Python cache
+are preserved.
+
+## 17 October continuation — validation ticket-service recovery
+
+The authorised CI monitor observed a remaining gap in AC-03 at develop
+`e9d614b17092618674de6349c974d966d623292d`. The
+[Intel Mac job](https://github.com/adesutherland/CREXX/actions/runs/39065095277/job/117500123658)
+passed all 205 tests and extracted-core/SDK packaging; Apple accepted notarization
+and stapling succeeded. The separate validation request then lost its CloudKit
+connection (`NSURLErrorDomain -1005`, exit 68), outside the helper's retry loop.
+
+**Outcome:** recover temporary ticket-service failures in either stapling or
+validation while retaining strict publication gates. Extend AC-03's existing
+four-attempt, exit-68-only policy to each action independently; never repeat
+successful stapling merely because validation failed. Every other error and
+exhausted retry must propagate, and all callers retain their `spctl` assessment.
+Work in the existing main develop checkout under the 17 October repair authority;
+the historical hotfix instructions below describe the earlier delivery only.
+
+6. **STEP-06 — done (AC-03):** extend the controlled command fixture to cover
+   validation recovery, both retry caps, permanent errors after a transient error,
+   exact command ordering, diagnostics, delays, usage and paths with spaces;
+   then share the bounded retry implementation between the two actions.
+7. **STEP-07 — locally qualified, publication prepared (AC-04/05):** run the
+   focused fixture and shell syntax checks, reuse unchanged product/build
+   qualification, update the signing guide,
+   publish only this repair to develop and retarget CI. Delete temporary output;
+   local command fixtures do not establish real Apple-service success.
+
+**Qualification:** against the unchanged helper at `e9d614b17092618674de6349c974d966d623292d`,
+the new validation-recovery case failed with exit 68 as expected. With the helper
+change, `python3 -B scripts/test-macos-stapling.py` passed all 14 policy cases.
+`bash -n scripts/staple-macos-installer.sh scripts/repackage-macos-plugin.sh`
+also passed. The fixture checks exact command order, per-action attempt limits,
+delays, exit status, visible diagnostics and argument handling without live Apple
+requests. No workflow, product, compiler, runtime or build input changed. Reuse
+the preceding warning-free Debug `stage-product` build and this revision's hosted
+core product, functional smoke and package-smoke passes; only the signing helper,
+its controlled fixture and documentation change. This is local retry-policy proof,
+not real Apple-service, sanitizer, cross-platform or release qualification.
+Normal push-triggered Build/CodeQL will verify publication; report their outcome
+in conversation without a status-only follow-up commit. Temporary diagnostics
+are deleted after extracting this finding.
+
 ## Vision and intended outcomes
 
 Restore the overnight correctness checks and development publication after the
@@ -12,8 +188,9 @@ to hotfix and develop. No language, compiler architecture or release change.
 
 ## Acceptance criteria
 
-1. **AC-01 — verified:** Account for every failed overnight job using retained
-   logs. Five Deep platforms fail the four source_data_contract_l modes; MinGW
+1. **AC-01 — verified:** Account for every failed overnight job using inspected
+   logs and the concise findings below. Five Deep platforms fail the four
+   source_data_contract_l modes; MinGW
    also fails cri17_attached_provider_opt because GCC ignores the fixture's
    __declspec(thread), making its current-session pointer shared. Both
    sanitizer jobs fail the same contract (Linux stops at its first failure).
@@ -24,15 +201,16 @@ to hotfix and develop. No language, compiler architecture or release change.
    between authored Level L grammars and B/G routine providers. All 16 existing
    B/C/G/L optimized/unoptimized, linked/unlinked contracts pass in normal Debug
    and maintained Apple ASan; all byte, import and rejection assertions remain.
-3. **AC-03 — verified:** Mac installer stapling retries only temporary service exit
-   68, stops after four attempts, and requires validation before continuation.
+3. **AC-03 — verified locally, real service confirmation pending:** Mac installer
+   stapling and validation each retry only temporary service exit 68, stop after four attempts
+   per action, and require successful validation before continuation.
    Fixture proof covers recovery, permanent failure, exhausted retries and
    validation failure, including paths containing spaces. All three production
    packaging entry points use the helper, retaining spctl assessment.
 4. **AC-04 — verified:** Core stage-product and required QA prerequisites build;
-   focused normal and sanitizer checks pass. Retain exact qualified source-input
-   hashes, commands and receipts before the substantive first push. Reuse the
-   passing unaffected overnight gates rather than repeating full matrices.
+   focused normal and sanitizer checks pass. Record qualified inputs, commands,
+   results and limitations in this plan before the substantive first push. Reuse
+   the passing unaffected overnight gates rather than repeating full matrices.
 5. **AC-05 — publication ready:** Commit separate reviewable fixture and packaging repairs,
    publish them together to hotfix/develop after AC-02–04 pass, verify remote
    refs, and fast-forward the existing develop checkout preserving dirty work.
@@ -61,7 +239,7 @@ to hotfix and develop. No language, compiler architecture or release change.
    core, plugin and retained-plugin packaging entry points; test its strict
    failure/retry behavior with a controlled xcrun fixture. No signing secrets or
    upstream engine rebuild is needed for this policy check.
-4. **STEP-04 — publication ready (AC-04/05):** Inspect final diffs, retain receipt and hashes,
+4. **STEP-04 — publication ready (AC-04/05):** Inspect final diffs, summarize qualification,
    commit compatible causes separately, synchronize and push hotfix/develop,
    preserve occupied checkout changes and report publication verification.
 5. **STEP-05 — done (AC-01/04/06):** Retain the separate MinGW TLS warning and
@@ -81,9 +259,8 @@ to hotfix and develop. No language, compiler architecture or release change.
 
 Scheduled workflow metadata names master 77ba820c, but their assurance gate
 checks out develop 50926edb8. The actual failures belong to that develop source.
-The compact permanent receipt and failed excerpts are retained in
-[docs/qa/overnight-2026-10-14/](../qa/overnight-2026-10-14/README.md).
-Sanitizer failures are functional fixture
+The linked hosted runs own their logs; the findings and local qualification are
+summarized here. Sanitizer failures are functional fixture
 failures, not SAN findings. Linux's stop-on-failure means its full CTest coverage
 is incomplete; no sanitizer-clean or release-ready claim is made.
 
@@ -92,13 +269,13 @@ Normal Debug qualification passed: 16/16 source-data contracts (108.59 s),
 Maintained Apple ASan passed all the same cases in two nonoverlapping groups:
 12 typed source contracts (121.50 s), then four Classic C contracts and four
 CRI-17 controls (65.62 s), following successful prerequisite/fixture builds.
-All six stapling policy cases and shell syntax checks passed. No code/test
-inputs have changed since their recorded hashes in the receipt's inputs.json.
+The original six stapling policy cases and shell syntax checks passed; the
+17 October continuation above extends that policy's validation coverage.
 
 All required local publication gates are green. The three compatible causes
 are committed separately and pushed together to existing hotfix/develop; remote
 ref and occupied-checkout integrity verification completes AC-05 and is reported
-live in the conversation. The substantive first push includes the final receipt
-and expected successful normal automatic CI/snapshot publication. Native MinGW
+live in the conversation. The substantive first push includes this qualification
+summary and expected successful normal automatic CI/snapshot publication. Native MinGW
 and real Apple service confirmation belong to those automatic jobs; no status-
 only repository push or full manual overnight rerun is planned.

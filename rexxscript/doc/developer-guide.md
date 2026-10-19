@@ -4,7 +4,7 @@ This guide covers two explicitly selected implementations. **Modern
 `rexxscript1` uses a Level L grammar and executes its selected tree.** The
 legacy `rexxscript` namespace/command and `REXXSCRIPT` compiler exit retain the
 earlier handwritten evaluator and compatibility API. They are not the same
-parser, dialect or host contract. The modern path is an unreleased `levell`
+parser, dialect or host contract. The modern path is an unreleased `rxlang`
 review implementation; the legacy path is the current beta 3 WIP consumer.
 The [Level C architecture design](../../compiler/docs/levelc_working_architecture.md)
 records the shared `rxfnsc` runtime boundary. Both products use its
@@ -14,9 +14,9 @@ typed values. Their sandbox and host policies are documented separately below.
 
 ## Modern Level L implementation (local review)
 
-The [Level L user guide](../../lib/rxfnsl/doc/user-guide.md) explains grammar
+The [Level L user guide](../../langtools/doc/user-guide.md) explains grammar
 authoring, generated modules, token stages and source trees independently of
-RexxScript. Its [diagnostic assessment](../../lib/rxfnsl/doc/diagnostics.md)
+RexxScript. Its [diagnostic assessment](../../langtools/doc/diagnostics.md)
 records current strict/record-recovery behavior and the remaining recovery work.
 
 The modern command is `rexxscript1`; it does not replace the legacy modules.
@@ -38,7 +38,7 @@ records the selected subset and remaining boundaries. Its ownership is:
    directly to the existing rxfnsc functions using a live call context.
 
 This is an end-to-end Level L interpreter example, like the
-[calculator](../../lib/rxfnsl/examples/calculator/calculator.rxl), with a
+[calculator](../../langtools/examples/calculator/calculator.rxl), with a
 larger language and application semantics. Parsing decides syntax and nesting;
 the named-view adapter exposes the selected tree; the validator checks structural
 constraints; execution follows control flow. Evaluating an IF visits only its
@@ -97,7 +97,7 @@ returned values; ordinary VM object/binary assignment copies storage. It is not
 a copy-on-write design or a claim that all request initialization is zero-copy.
 The parser's packed table lookups use a private synchronous `EXPOSE` borrow,
 with no escaping alias. Creating a weak reference per lookup was rejected after
-sampling showed repeated lifetime-owner discovery. The [Level L guide](../../lib/rxfnsl/tools/README.md)
+sampling showed repeated lifetime-owner discovery. The [Level L guide](../../langtools/README.md)
 records image representation, bounds and loader validation.
 
 Build `testrexxscript1` and `testlevell_generated`, then run the corresponding
@@ -108,7 +108,7 @@ same 28 scalar expressions with the current Level G compiler in both compiler
 modes and VMs. After adopting develop `54f736804`, all observations agree.
 The permanent `float-comparison-reproducer.rexx` now requires false in both
 compiler modes; the scalar harness rejects every optimization disagreement.
-The [integration receipt](../../research/level-l/evidence/develop-integration/README.md)
+The [current plan](../../research/level-l/PLAN.md)
 records RS-F01 closure and preserves the earlier discrepancy as historical evidence. The interpreter
 uses typed integer/float/decimal comparisons and string-targeted Rexx comparisons,
 not the Classic RexxValue decimal-comparison helper. This is overlap evidence,
@@ -119,7 +119,7 @@ interpreter checks the executed operand only.
 `check-cli.py BIN WORK` exercises the native executable, shared provider linkage,
 source I/O, UTF-8, syntax, undefined-variable and capability failures. Generator
 determinism/atomic failure and dual-format packed-byte checks are in
-`lib/rxfnsl/tests_functional/check-generator.py` and `check-image-parity.py`.
+`langtools/tests/check-generator.py` and `check-image-parity.py`.
 
 Current local qualification is macOS ARM64 Debug. Linux, Windows, sanitizer,
 install/package and hosted CI qualification of the new product are not claimed.

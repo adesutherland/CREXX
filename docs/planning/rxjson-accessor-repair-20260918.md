@@ -68,7 +68,7 @@ before transferring the repair: 451/451 unique normal correctness cases
 (287 Level-B functional and 169 smoke/essential, with overlap). The 14 JSON
 cases ran first and were excluded from the remaining selection. One missing
 terminal-test fixture was built and only its initially unrun case was run.
-The [qualification record](../qa/rxjson-accessor-20260918/README.md) retains
+The [historical qualification record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/rxjson-accessor-20260918/README.md) retains
 all results, the initial not-run result, hashes and publication boundary.
 AC-05 is complete: repair `65275452d90dd1d9ed8146650f7059b27ff9c56c` was pushed
 to origin/hotfix and then origin/develop. Build CREXX run 35387480916 and CodeQL

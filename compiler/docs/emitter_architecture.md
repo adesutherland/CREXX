@@ -91,7 +91,12 @@ table copy is introduced.
   inlining. Direct final packed-load returns retain their result donation.
   `iterate_condition_cleanup` covers all four RXC/RXAS opt/noopt combinations;
   `frame_control_ast` checks nested branch paths, cleanup ownership and target
-  preservation.
+  preservation. The imported-guard return case is covered by
+  `inline_receiver_detached_guard_opt`. Repair `a415090dc` closed AC-01–05:
+  15 focused Debug checks, all four baseline/repair optimizer combinations,
+  the engineering modal-loop controls and the 1,837-case compiler sweep
+  (seven reviewed goldens replayed separately) provided the local boundary.
+  That published repair does not imply new Windows or sanitizer qualification.
 
 ### Procedures & Program Structure (`rxcp_emit_proc.c`)
 - **Functionality**: Logic for `PROCEDURE`, `PROGRAM_FILE`, and `REXX_UNIVERSE`.
@@ -141,9 +146,9 @@ Current rules:
 
 - `.ref` / `ARG expose ...` formals alias the incoming argument register and must be able to update the caller-visible value.
 - Plain by-value formals must preserve caller-visible state if the callee writes to the formal.
-- `mark_const_args()` in [`compiler/rxcp_opt.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c) marks by-value formals as `is_const_arg` when the formal symbol is provably read-only inside the callee. Those formals may safely share the incoming register in both `-n` and optimised builds.
-- Writable by-value formals still require an isolated local register. The emitter materialises that copy in the `ARG` case in [`compiler/rxcpemit.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcpemit.c).
-- Status partitions are centralized in [`binutils/include/rxflags.h`](/Users/adrian/CLionProjects/CREXX/binutils/include/rxflags.h). `REGTP_VAL` is `0x00000100`, and `REGTP_NOTSYM` is `0x00000200`; the low byte is VM-private, while the remainder of that former compiler byte is a separate protected language band. Compiler call setup must preserve it.
+- `mark_const_args()` in [`compiler/rxcp_opt.c`](../rxcp_opt.c) marks by-value formals as `is_const_arg` when the formal symbol is provably read-only inside the callee. Those formals may safely share the incoming register in both `-n` and optimised builds.
+- Writable by-value formals still require an isolated local register. The emitter materialises that copy in the `ARG` case in [`compiler/rxcpemit.c`](../rxcpemit.c).
+- Status partitions are centralized in [`binutils/include/rxflags.h`](../../binutils/include/rxflags.h). `REGTP_VAL` is `0x00000100`, and `REGTP_NOTSYM` is `0x00000200`; the low byte is VM-private, while the remainder of that former compiler byte is a separate protected language band. Compiler call setup must preserve it.
 - For large values (strings, arrays, objects, binaries), `REGTP_NOTSYM` means the actual argument is not backed by a caller-visible symbol. In that case the callee may reuse or swap the incoming register instead of copying, because there is no caller binding to preserve.
 - For small values (`.int`, `.float`, booleans), the emitter always copies writable by-value formals. That is an intentional cost tradeoff: copying is cheaper than propagating and checking a "non-symbol temporary" flag for those types.
 

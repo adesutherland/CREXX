@@ -401,3 +401,19 @@ foreach(_binfile ${REXXTESTBINS})
 endforeach()
 
 crexx_finalize_directory_qa_tiers()
+
+# Repository ownership and package composition: no compiler or nested build in
+# these checks. The install test serializes writes to the CMake install manifest.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME repository_source_hygiene
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-source-hygiene.py)
+add_test(NAME repository_cleanup_contracts
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/tests/test_cleanup_contracts.py)
+add_test(NAME product_install_inventory
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/tests/check_install_inventory.py
+        --build ${CMAKE_BINARY_DIR} --cmake ${CMAKE_COMMAND})
+set_tests_properties(repository_source_hygiene repository_cleanup_contracts
+    PROPERTIES LABELS "repository;cmake" TIMEOUT 60)
+set_tests_properties(product_install_inventory PROPERTIES
+    LABELS "packaging;cmake" RUN_SERIAL TRUE TIMEOUT 180
+    CREXX_PREP_TARGETS "stage-product")

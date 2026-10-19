@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-LL_RESOURCE_LIMIT: nfa.states budget 1, required at least 2. Increase the host budget or reduce the workload.

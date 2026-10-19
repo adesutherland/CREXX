@@ -1,0 +1,7 @@
+options levelb
+say scale(7)
+say scale(7,3)
+exit 0
+scale: procedure = .int
+  arg value = .int, factor = 2
+  return value * factor

@@ -1,0 +1,194 @@
+/* cREXX License (MIT). Owned C/G source admission through generated Level L. */
+options levelb
+namespace llcparse expose parsed
+import rxfnsb
+import llcore
+import llast
+import lllanguage
+import lllimits
+import llcgrammar
+
+/** One parse request owns source, diagnostics and projected AST. Token layout
+ * inserts only zero-width concatenation/separation tokens; original spans are
+ * never rewritten. The generated LR grammar owns syntactic decisions. */
+parsed: class
+  _tree = .llast..tree
+  _error = .string
+  _offset = .int
+  _status = .int
+  *: factory
+    arg source = .binary, limit = 1000000
+    _error = ''; _offset = 0; _status = 0
+    _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+
+    if limit < 1 | <blen>(source) > limit then do
+      _error = 'LL_COMPILER_LIMIT: source byte budget exceeded'; _status = 2; return
+    end
+    language = llcgrammar..language()
+    policy = .lllimits..policy()
+    ok = policy.set('source.bytes',limit)
+    request = .lllanguage..request(language,source,policy)
+    _status = request.lex(0)
+    if _status <> 0 then do
+      _error = request.error(); _offset = request.offset()
+      if left(_error,11) = 'LL_LEXICAL:' then do
+        byte = binsubstr(source,_offset + 1,1)
+        if byte = "'" as .binary | byte = '"' as .binary then _error = 'LL_COMPILER_SYNTAX: unterminated quoted string'
+        else _error = 'LL_COMPILER_SYNTAX: invalid input byte 0x' || bin2x(byte)
+      end
+      return
+    end
+    layout = request.tokens()
+    id = language.tokenid('identifier'); sep = language.tokenid('separator')
+    opening = language.tokenid('open'); closing = language.tokenid('close')
+    colon = language.tokenid('colon'); equals = language.tokenid('assign')
+    kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int
+    classified = .llcore..stream.tokens(source)
+    clause = 1; depth = 0; condition = 0; pendingif = 0; after = ''
+    previous = -1; term = 0; namespaceclause = 0; exports = 0
+    do i = 0 to layout.size() - 1
+      kind = layout.symbol(i); first = layout.start(i); last = layout.finish(i + 1)
+      spelling = upper(binsubstr(source,first + 1,last - first) as .string)
+      word = ''; next = layout.symbol(i + 1)
+      /* Classic radix suffixes are whole adjacent symbols, not concatenated
+       * variables. Keep the original bytes in one String token and let the
+       * semantic mapper validate/decode them; G retains its own contract. */
+      if kind = language.tokenid('string') & next = id & layout.start(i + 1) = last then do
+        suffixend = layout.finish(i + 2)
+        suffix = upper(binsubstr(source,last + 1,suffixend - last) as .string)
+        if suffix = 'X' | suffix = 'B' then do
+          last = suffixend; i = i + 1; next = layout.symbol(i + 1)
+        end
+      end
+      if kind = sep then do; namespaceclause = 0; exports = 0; end
+      if kind = id then do
+        if next = colon then kind = language.tokenid('labelname')
+        else if depth = 0 then do
+          if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
+          else if after = 'DO' & spelling = 'WHILE' then word = 'WHILE'
+          else if after = 'NUMERIC' & wordpos(spelling,'DIGITS FUZZ FORM') > 0 then word = spelling
+          else if after = 'FORM' & wordpos(spelling,'SCIENTIFIC ENGINEERING') > 0 then word = spelling
+          else if condition > 0 & spelling = 'THEN' & term then do
+            word = 'THEN'; condition = condition - 1
+          end
+          else if spelling = 'ELSE' & next <> equals & (clause | (pendingif > 0 & (term | previous = sep))) then word = 'ELSE'
+          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE SELECT WHEN OTHERWISE DROP EXPOSE') > 0 then do
+            _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
+          end
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC') > 0 then word = spelling
+        end
+
+        if word <> '' then kind = language.tokenid(lower(word) || 'word')
+      end
+      ok = classified.append(kind,first,last)
+      if kind = opening then depth = depth + 1
+      if kind = closing then depth = depth - 1
+      if word = 'IF' then do; condition = condition + 1; pendingif = pendingif + 1; end
+      if word = 'ELSE' & pendingif > 0 then pendingif = pendingif - 1
+      clause = kind = sep | word = 'THEN' | word = 'ELSE' | kind = colon
+      if kind <> sep | condition = 0 then term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
+      if kind = colon & next <> sep then do
+        ok = classified.synthetic(sep,last); clause = 1
+      end
+      after = word; previous = kind
+    end
+    /* Normalize separators only after words have their contextual meanings.
+     * A variable named THEN/ELSE must never consume the following clause. */
+    normalized = .llcore..stream.tokens(source)
+    thenword = language.tokenid('thenword'); elseword = language.tokenid('elseword')
+    depth = 0; previous = -1; work = 0
+    do i = 0 to classified.size() - 1
+      work = work + 1
+      if work > limit * 16 then do
+        _status = 2; _offset = classified.start(i); _error = 'LL_COMPILER_LIMIT: token-layout work budget exceeded'; return
+      end
+      kind = classified.symbol(i); first = classified.start(i); last = classified.finish(i + 1)
+      if kind = sep then do
+        ahead = i + 1
+        do while classified.symbol(ahead) = sep
+          work = work + 1
+          if work > limit * 16 then do
+            _status = 2; _offset = first; _error = 'LL_COMPILER_LIMIT: token-layout work budget exceeded'; return
+          end
+          ahead = ahead + 1
+        end
+        next = classified.symbol(ahead)
+        physical = first <> last & binsubstr(source,first + 1,last - first) <> ';' as .binary
+        if (depth > 0 & physical) | previous = thenword | previous = elseword | next = thenword | next = elseword then iterate
+      end
+      if first = last then ok = normalized.synthetic(kind,first)
+      else ok = normalized.append(kind,first,last)
+      if kind = opening then depth = depth + 1
+      if kind = closing then depth = depth - 1
+      previous = kind
+    end
+    joined = .llcore..stream.tokens(source)
+    previous = -1; previousend = 0; beforeprevious = -1
+    number = language.tokenid('number'); string = language.tokenid('string')
+    callword = language.tokenid('callword')
+    do i = 0 to normalized.size() - 1
+      kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
+
+      leftterm = previous = id | previous = number | previous = string | previous = closing | ('c' = 'g' & previous = language.tokenid('presence'))
+      rightterm = kind = id | kind = number | kind = string | kind = opening | ('c' = 'g' & kind = language.tokenid('presence'))
+      function = previous = id & kind = opening & previousend = first
+      if leftterm & rightterm & function = 0 & beforeprevious <> callword then do
+        token = language.tokenid('abut')
+        if first > previousend then token = language.tokenid('blank')
+        ok = joined.synthetic(token,previousend)
+      end
+      if first = last then ok = joined.synthetic(kind,first)
+      else ok = joined.append(kind,first,last)
+      beforeprevious = previous; previous = kind; previousend = last
+    end
+    _status = request.parse_tokens(joined)
+    if _status <> 0 then do
+      _error = syntaxmessage(request.error()); _offset = request.offset(); return
+    end
+    _tree = request.ast(); _status = _tree.status(); _error = _tree.error()
+    return
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  offset: method = .int
+    return _offset
+  ast: method = .llast..tree
+    return _tree
+
+/** Translate internal token labels without losing the LR expected-token set. */
+syntaxmessage: procedure = .string
+  arg text = .string
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose'
+  do i = 1 to words(keywords)
+    keyword = word(keywords,i)
+    text = changestr(keyword || 'word',text,upper(keyword))
+  end
+  text = changestr('separator',text,'end of clause')
+  text = changestr('typename',text,'type name')
+  text = changestr('labelname',text,'routine label')
+  marker = pos('; expected ',text)
+  if marker > 0 then do
+    prefix = left(text,marker + 10); rest = substr(text,marker + 11); text = prefix; first = 1; item = .string
+    do while rest <> ''
+      split = pos(',',rest)
+      if split = 0 then do; item = strip(rest); rest = ''; end
+      else do; item = strip(left(rest,split - 1)); rest = substr(rest,split + 1); end
+      if first = 0 then text = text || ', '
+      text = text || tokenname(item); first = 0
+    end
+  end
+  return 'LL_COMPILER_SYNTAX: ' || text
+
+tokenname: procedure = .string
+  arg name = .string
+  keys = 'assign plus minus times divide concat blank abut lt gt le ge ne strict and or xor not open close comma identifier number string'
+  values = .string[]
+  values[1] = "'='"; values[2] = "'+'"; values[3] = "'-'"; values[4] = "'*'"; values[5] = "'/'"
+  values[6] = "'||'"; values[7] = 'blank concatenation'; values[8] = 'abuttal concatenation'
+  values[9] = "'<'"; values[10] = "'>'"; values[11] = "'<='"; values[12] = "'>='"; values[13] = "'<>'"
+  values[14] = "'=='"; values[15] = "'&'"; values[16] = "'|'"; values[17] = "'&&'"; values[18] = "'\'"
+  values[19] = "'('"; values[20] = "')'"; values[21] = "','"; values[22] = 'name'; values[23] = 'number'; values[24] = 'quoted string'
+  index = wordpos(name,keys)
+  if index > 0 then return values[index]
+  return name

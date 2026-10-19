@@ -399,8 +399,8 @@ buffer, while the generated short-call path was another 9.7x to 10.5x slower
 because every recycled activation relinked the very large declared-local
 frame. This showed that an enormous generated method was not a viable product
 shape; it did not show that Unicode classification itself was unsound. See the
-[generated NFD rough
-screen](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-26-generated-nfd-rough.txt).
+[historical generated NFD rough
+screen](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence).
 
 The recovered prepared-symbol executor instead used the existing VM `.string`
 decoder, one dense descriptor lookup per scalar, bounded dispatch code, and
@@ -408,8 +408,8 @@ direct output. It returned to approximate parity for call-heavy rows and used
 0.46x to 0.77x the canonical time on the retained 101 KB buffer samples. On
 812 KB and 6.50 MB buffers its median ratios were 0.45x to 0.55x. Host load made
 the exact percentages directional, but it could not explain the disappearance
-of the earlier order-of-magnitude loss. See the [prepared-symbol NFD recovery
-evidence](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-27-prepared-symbol-nfd-recovery.txt).
+of the earlier order-of-magnitude loss. See the [historical prepared-symbol NFD recovery
+evidence](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence).
 
 The design conclusion is narrower than “re2c is slow.” re2c remains useful for
 generators that can produce bounded runtime state. Here, `.string` was already
@@ -441,16 +441,16 @@ old exact-only predicate. The selected rule is therefore:
   follow-on work.
 
 The full figures, host envelope, semantic limits of the Apple control, and raw
-artifact locations are in the [common normalization directional
-evidence](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-common-normalization-directional.txt).
+artifact locations are in the [historical common normalization directional
+evidence](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence).
 
 The later informal certificate screen found no significant cold-path
 regression. A positive matching certificate made repeated normalization on the
 unchanged large buffer 26.1x to 133.8x faster and repeated predicates 15.0x to
 166.1x faster. Those numbers validate the certificate mechanism's cost shape,
-not a formal clean-host performance guarantee. See the [normalization
+not a formal clean-host performance guarantee. See the [historical normalization
 certificate
-screen](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt).
+screen](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence).
 
 ### Grapheme streaming versus per-call indexing
 
@@ -458,8 +458,8 @@ For direct count and bounded substring on a 49,152-byte, 7,168-grapheme input,
 building a complete boundary index inside every call was 1.802% to 2.953%
 slower across the two VMs and two operations. The accepted split therefore
 keeps direct count and bounded substring streaming while the explicit
-`.graphemes` view retains an index for repeated work. The [grapheme first
-Release verdict](../../../performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/README.md)
+`.graphemes` view retains an index for repeated work. The [historical grapheme first
+Release verdict](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence)
 contains the balanced samples and scope limits.
 
 ## Qualification boundary

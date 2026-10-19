@@ -1,0 +1,135 @@
+/*
+ * First report-definition grammar.
+ *
+ * The grammar describes a fixed-column report with configurable input.
+ * Version 1 supports:
+ *
+ *   REPORT name
+ *     INPUT source
+ *     INPUT_FORMAT DELIMITED
+ *     DELIMITER ";"
+ *     OUTPUT "report.txt" FORMAT TEXT
+ *     COLUMN field POSITION number WIDTH number FORMAT "format"
+ *     BREAK field
+ *     TOTAL field
+ *   END REPORT
+ *
+ * INPUT may be an identifier, for example employees, or a quoted file name.
+ * Output is deliberately kept separate from input.  The input may be a
+ * delimited record stream, while the report itself is fixed-column text.
+ */
+
+options levell
+namespace reportgrammar
+
+identifier: token
+number: token
+string: token
+separator: token
+
+reportword: token
+endword: token
+inputword: token
+inputformatword: token
+delimiterword: token
+outputword: token
+formatword: token
+columnword: token
+positionword: token
+widthword: token
+breakword: token
+totalword: token
+
+scan: lexer input utf8bytes
+  digit: charset = U+0030 to U+0039
+
+  letter: charset =
+      U+0041 to U+005A |
+      U+0061 to U+007A |
+      U+005F
+
+  hspace: charset = U+0009 | U+0020
+  newline: charset = U+000A | U+000D
+  line.character: charset =
+      U+0000 to U+0009 |
+      U+000B to U+000C |
+      U+000E to U+00FF
+
+  string.body: charset =
+      U+0020 to U+0021 |
+      U+0023 to U+00FF |
+      U+0009
+
+  name: pattern = letter (letter | digit | "-" | ".")*
+  numeric: pattern = digit+ ("." digit*)?
+
+  whitespace: rule = hspace+ then skip
+  hash.comment: rule = '#' line.character* then skip
+  number.literal: rule = numeric then emit number
+  string.literal: rule = '"' (string.body | '""')* '"' then emit string
+  terminator: rule = newline then emit separator
+
+  report.keyword: rule = "REPORT" then emit reportword
+  end.keyword: rule = "END" then emit endword
+  input.keyword: rule = "INPUT" then emit inputword
+  input.format.keyword: rule = "INPUT_FORMAT" then emit inputformatword
+  delimiter.keyword: rule = "DELIMITER" then emit delimiterword
+  output.keyword: rule = "OUTPUT" then emit outputword
+  format.keyword: rule = "FORMAT" then emit formatword
+  column.keyword: rule = "COLUMN" then emit columnword
+  position.keyword: rule = "POSITION" then emit positionword
+  width.keyword: rule = "WIDTH" then emit widthword
+  break.keyword: rule = "BREAK" then emit breakword
+  total.keyword: rule = "TOTAL" then emit totalword
+
+  name.literal: rule = name then emit identifier
+
+
+parse: parser semantics contextfree input tokens start document
+
+  document: rule = separator* report separator*
+
+  report: rule =
+      reportword identifier separator statement.list endword reportword
+
+  statement.list: rule =
+      separator* (statement separator+)*
+
+  statement: rule =
+      input.statement |
+      input.format.statement |
+      delimiter.statement |
+      output.statement |
+      column.statement |
+      break.statement |
+      total.statement
+
+  input.statement: rule =
+      inputword (identifier | string)
+
+  input.format.statement: rule =
+      inputformatword identifier
+
+  delimiter.statement: rule =
+      delimiterword string
+
+  output.statement: rule =
+      outputword string output.format?
+
+  output.format: rule =
+      formatword identifier
+
+  column.statement: rule =
+      columnword identifier column.position? widthword number column.format?
+
+  column.position: rule =
+      positionword number
+
+  column.format: rule =
+      formatword string
+
+  break.statement: rule =
+      breakword identifier
+
+  total.statement: rule =
+      totalword identifier

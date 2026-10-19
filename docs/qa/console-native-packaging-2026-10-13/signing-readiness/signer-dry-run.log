@@ -1,4 +1,0 @@
-Source: CREXX-dev-snapshot-windows-x64.zip @ 5c57df76f7c80c6ebee1a2288d939199a41103e2
-Source: llama.rexx-dev-snapshot-windows-x64-vulkan.zip @ 5c57df76f7c80c6ebee1a2288d939199a41103e2
-Manager: artifact 11773080151 / Build 38302906672
-Would sign and publish core and selected plugin ZIPs, payloads, uninstallers and setups.

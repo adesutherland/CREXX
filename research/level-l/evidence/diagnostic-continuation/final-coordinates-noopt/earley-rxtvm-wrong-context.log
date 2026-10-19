@@ -1,5 +1,0 @@
-STATUS|1|BYTE|9
-MESSAGE|unexpected 'many'; expected separator, end of input
-LL_TARGET at line 1, column 10 (byte 9): unexpected 'many'; expected separator, end of input
-  port = 4 many
-           ^

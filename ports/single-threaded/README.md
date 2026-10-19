@@ -5,6 +5,15 @@ uses the actual switch interpreter and RXBIN 007 loader, with unchanged 64-bit
 Rexx integers, values, procedure calls and synchronous language signals.
 The normal top-level desktop build is unchanged.
 
+This directory owns the maintained CMS/TSO build and package recipes. Shared
+services and target selection live in `platform`; select `CREXX_CMS_ELF` or
+`CREXX_TSO_ELF` (the documented Mainframe Lab profile aliases remain accepted).
+The obsolete root S370 Docker/GCCLIB recipe and its `__CMS__` compatibility
+hooks are retired. That route is not an alternative build of the current port.
+The maintained recipe reads headers from their canonical source owners,
+including `third_party/avl_tree`, `third_party/utf8` and `interpreter/rxvml`;
+these roots also participate in its input-freshness checks.
+
 The intended application C baseline is C99. The primary CMS route is the
 maintained GCC 16.2 cross-toolchain hosted on macOS; its retained target recipes
 use GNU99. A host build requesting C99 does not establish complete strict-C99
@@ -154,8 +163,8 @@ retain ASan/UBSan and do not claim leak qualification.
 
 ## CMS file discovery
 
-For the selected CMS31/TSO31 ADDRESS build and its exact qualification status,
-see [the mainframe runtime checkpoint](../../docs/qa/mainframe-address-2026-10-12-runtime-qualification.md).
+The selected CMS31/TSO31 ADDRESS build retains the native guest qualification
+boundaries described above.
 Native TSO file operands passed to Rexx file operations use an explicit
 native spelling such as `DSN:MFA12.INPUT`, a parenthesized PDS member or a
 leading quoted dataset name. Bare `NAME.TYPE` is cREXX logical naming and
@@ -168,7 +177,7 @@ For the experimental CMS ELF platform only, defining `CREXX_CMS_DIRENT`
 selects the existing prefix/type directory filter over a host-supplied
 `dirent.h`, `opendir`, `readdir` and `closedir`. Put that host header ahead of
 generic libc headers. The default CMS configuration still reports `ENOSYS`;
-ordinary desktop and legacy CMS selections are unchanged.
+ordinary desktop behavior is unchanged.
 
 The Mainframe Lab runtime supplies independent, bounded snapshots of the A1
 minidisk, presenting alphanumeric CMS names/types as lowercase `name.type`.
@@ -191,3 +200,51 @@ its separately packaged executable. Historical RXC `-X`/RXAS/RXVM demonstrations
 do not establish 31-bit application execution, compiler-exit memory fit or
 release packaging; small 31-bit runtime/text fixtures establish only their
 tested service boundaries.
+
+## Classic provider closure and guest qualification
+
+The native Classic image requires `rxcstream`, the private `rxfs` subset
+(`abspath`, `isfile`, `loadpath`), and the matching `classlib.rxbin` alongside
+`library`, `rxfnsc`, and `rxfnsg`. Use `rxlink -p` to inspect that closure.
+CLI and embedding initialization share per-VM provider sessions; the constrained
+implementation is single-threaded and requires neither TLS nor constructors.
+Native record FILEs are sequential and non-positionable: do not probe them with
+`fileno`/`fstat` or claim positional replacement. Native `isfile` uses the
+logical-name/binary boundary. Unsupported absolute/executable path discovery
+signals FAILURE; it must not invent POSIX names. This is dependency support,
+not qualification of every Classic STREAM operation.
+
+PDOS fixtures use `VERSION` through `ADDRESS PDOS`. `VER` belongs to PCOMM;
+using it through PDOS caused RC14 and was misclassified as a console watchdog.
+Keep capture, nonzero child result, contained fault, subsequent recovery, the
+64 KiB caller-file tail, wide guard, and Classic RC/.RC/.RS/handler assertions.
+The Classic and PDOS packers include this maintained contract. A host build or
+syntax check does not establish guest acceptance: native compile, assemble,
+link and execute with the canonical libraries on each named personality remain
+the gate. Existing CMS31/TSO31 and PDOS results belong to their qualified
+revisions; this directory cleanup does not repeat or extend those results.
+
+## Source-layout validation
+
+The 17 October 2026 legacy retirement was checked on macOS Debug against
+`062061f13786c44d56975ac80dd907faa9e2a9be` plus the S370 removal, obsolete-hook
+cleanup and maintained include-path correction. `cmake --build cmake-build-debug
+--target stage-product --parallel 8` passed without warnings. Fifteen focused
+CTests passed: `platform_cms_selection`, `platform_cms31_selection`,
+`platform_cms_directory`, `platform_cms_text`, `native_raw_cms`, `native_raw_tso`,
+`mainframe_handlers_utf8`, `mainframe_handlers_byte`, `mainframe_stdio`,
+`mainframe_batch_stdio`, `mainframe_console_signals`, both
+`mainframe_address_{cms,tso}_policy` tests, `repository_source_hygiene` and
+`repository_cleanup_contracts`.
+
+All eleven recipe include roots exist. Host C99 syntax probes using those roots
+resolve `platform.h`, `avl_tree.h`, `utf.h` and `rxvm.h` under both explicit
+CMS/TSO profiles even with an inherited Linux define. The Level B recipe also
+passes the native `rxc` → `rxas` → `rxlink` pipeline; five invalid-invocation
+controls return RC 2 without creating build outputs. RC-AC09 (legacy retirement)
+passes the source-reference check; RC-AC10 (maintained port continuity) passes
+the checks above; RC-AC11 (preservation and documentation) retains all 114
+pre-existing active files byte-for-byte and updates the owning guides.
+These are source-layout, host and command-validation checks, not fresh SDK,
+native guest, hosted CI or release qualification. Temporary captures were
+discarded; the completed repository cleanup plan is retired.

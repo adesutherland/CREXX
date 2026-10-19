@@ -1,0 +1,57 @@
+/* cREXX License (MIT). Reproducible PoC views through the Level B service. */
+options levelb
+import rxfnsb
+import lltestcompiler
+import lltestparse
+import llast
+import llir
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 4 then return 2
+  checks = 0; failures = 0
+  level = argv[1]; source = readbinary(argv[2]); artifacts = argv[3]; prefix = argv[4]
+  parsed = .lltestparse..parsed(level,source)
+  call check(parsed.status() = 0,'walkthrough parses')
+  if parsed.status() <> 0 then return 1
+  tree = parsed.ast(); walk = tree.walk('parents first'); view = ''; newline = '0A'x as .string
+  branches = 0; spelling = 0
+  do while walk.next()
+    node = walk.node()
+    view = view || node.kind() || '|' || node.start() || ':' || node.finish() || '|' || node.sourcetext() || newline
+    if node.kind() = 'IfElse' then branches = branches + 1
+    if node.kind() = 'Number' & strip(node.sourcetext()) = '01' then spelling = 1
+  end
+  call check(branches = 1 & spelling,'tree retains both arms and exact literal spelling')
+  call save(prefix || '.ast',view)
+  before = .lltestcompiler..request(level,source,artifacts,'walk-' || level || '.crexx',1000000,512,67108864,65536,0)
+  after = .lltestcompiler..request(level,source,artifacts,'walk-' || level || '.crexx')
+  call check(before.status() = 0 & after.status() = 0,'both emission modes succeed')
+  if before.status() <> 0 | after.status() <> 0 then do
+    say before.diagnostic(); say after.diagnostic(); return 1
+  end
+  original = before.graph(); same = after.graph(); selected = after.emissiongraph()
+  call check(original.dump() = same.dump(),'optimisation leaves frontend graph unchanged')
+  division = 'crexx.g.int64.div'; if level = 'c' then division = 'crexx.c.div'
+  call check(pos(division,original.dump()) > 0,'source graph retains division')
+  call check(pos(division,selected.dump()) = 0,'selected graph removes unreachable division')
+  call check(pos('core.branch',selected.dump()) = 0,'literal branch simplified')
+  call save(prefix || '.before.ir',original.dump() || newline)
+  call save(prefix || '.after.ir',selected.dump() || newline)
+  output = before.output(); call save(prefix || '.before.rxas',output.text())
+  output = after.output(); call save(prefix || '.after.rxas',output.text())
+  call check(pos('walk-' || level || '.crexx',output.text()) > 0,'logical source retained')
+  say 'POC_VIEWS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg condition = .int, description = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL|' || description
+  return
+save: procedure = .void
+  arg filename = .string, text = .string
+  bytes = text as .binary
+  call check(writebinary(filename,bytes) = <blen>(bytes),'write ' || filename)
+  return

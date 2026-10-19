@@ -1,4 +1,0 @@
-# Preserve raw CMake/CTest evidence, including emitted trailing blanks.
-ctest-registration.json whitespace=-blank-at-eol
-product-build.log whitespace=-blank-at-eol
-product-generation.log whitespace=-blank-at-eol

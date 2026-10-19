@@ -7,7 +7,7 @@
  * unregister and deterministic module release.
  */
 
-#include "../../inc/rxvm.h"
+#include "../../interpreter/rxvml/rxvm.h"
 #include "rxvmchannel.h"
 #include "rxvmintp.h"
 #include "rxvmworker.h"

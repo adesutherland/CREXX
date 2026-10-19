@@ -1,6 +1,0 @@
-WAVE: project compile/assemble jobs=1
-START: project member reader
-BUILT: project member reader
-BARRIER: link program
-PUBLISHED: program /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-library.rxbin
-PUBLISHED: native program /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-library

@@ -1,3 +1,0 @@
-workers -> [2 + 3 * 4]
-greeting -> "Hello"
-limit -> [-(2 + 3) * 4]

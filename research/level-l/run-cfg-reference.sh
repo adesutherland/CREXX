@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 task_dir=$(cd "$(dirname "$0")" && pwd)
-task_bison=${BISON_BIN:-"$task_dir/build/bison-runtime/installed/bin/bison"}
-task_build="$task_dir/build/cfg-reference"
-task_evidence="$task_dir/evidence/cfg-reference"
+if [[ -z "${LEVEL_L_RUN_ROOT:-}" ]]; then
+  exec "$task_dir/run-clean.sh" "$0" "$@"
+fi
+task_bison=${BISON_BIN:-$(command -v bison)}
+task_build="$LEVEL_L_RUN_ROOT/build/cfg-reference"
+task_evidence="$LL_RESEARCH_OUTPUT/cfg-reference"
 mkdir -p "$task_build" "$task_evidence"
-task_log=$(mktemp /tmp/crexx-cfg-reference.XXXXXX)
+task_log=$(mktemp "$LEVEL_L_RUN_ROOT"/crexx-cfg-reference.XXXXXX)
 printf 'CFG reference log: %s\n' "$task_log"
 "$task_bison" --version > "$task_evidence/runtime.txt"
 shasum -a 256 "$task_bison" "$task_dir/cases/lr-reference.y" "$task_dir/cases/glr-reference.y" >> "$task_evidence/runtime.txt"

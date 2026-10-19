@@ -516,7 +516,7 @@ batch: class
         op = store.get(2,b,3)
         do while op > 0
           call spend(1 + store.get(3,op,5) + store.get(3,op,7))
-          opcode = store.get(3,op,1); discardable = opcode = 1 | opcode = 2 | _folds[op]
+          opcode = store.get(3,op,1); discardable = opcode = 1 | opcode = 2 | opcode = 8 | opcode = 9 | _folds[op]
           if opcode > 16 & _folds[op] = 0 then discardable = pure(schema,opcode - 16)
           needed = 0
           do i = 1 to store.get(3,op,7)

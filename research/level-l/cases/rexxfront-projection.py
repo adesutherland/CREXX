@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Closed-corpus raw compiler AST projection, separate from source recognition."""
 from pathlib import Path
-import json,re
-r=Path(__file__).resolve().parents[1];e=r/'evidence/rexxfront'
+import json,re,sys
+from fixture_support import write_fixture
+r=Path(__file__).resolve().parents[1];e=Path(sys.argv[1])
 def canonical(n):
     kind=n['kind'];value=n['value']
     if kind=='REXX_OPTIONS':return ''
@@ -19,4 +20,4 @@ for c in json.loads((e/'manifest.json').read_text())['cases']:
     invalid=any(bad(n) for n in roots)
     selected='' if invalid else ''.join(canonical(n) for n in roots)
     out.append('|'.join([c['id'],c['level'],c['source'].encode().hex().upper(),str(int(invalid)),selected])+'\n')
-(e/'expected.txt').write_text(''.join(out));print('Projected initial compiler trees:',len(out))
+write_fixture(r/'cases/fixtures/rexxfront/expected.txt',''.join(out));print('Projected initial compiler trees:',len(out))

@@ -1,6 +1,0 @@
-[0/2] Re-checking globbed directories...
-[0/2] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests && /opt/homebrew/bin/cmake -DRXC=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc -DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas -DRXLINK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink -DRXBVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm -DSOURCE_DIR=/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src -DRXTVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm -DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas -DMUTATE_FLOAT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/mutate_rxbin_float -DWORK_DIR=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/numeric_constant_measure -P /Users/adrian/CLionProjects/CREXX/compiler/tests/numeric_constant_contract.cmake
--- PASS: numeric values/casts/nonfinite B/G compiler/assembler/VM/import and exact RXDAS transport matrix (1 seconds)
-real 1.34
-user 0.76
-sys 0.42

@@ -10,7 +10,7 @@ Linux:
 
 ```sh
 concurrency/qa/run-linux-qualification.sh \
-  EXPECTED_FULL_COMMIT BUILD_DIRECTORY EVIDENCE_DIRECTORY
+  EXPECTED_FULL_COMMIT BUILD_DIRECTORY WORKSPACE_PARENT
 ```
 
 Windows PowerShell:
@@ -19,10 +19,12 @@ Windows PowerShell:
 concurrency/qa/run-windows-qualification.ps1 \
   -ExpectedCommit EXPECTED_FULL_COMMIT \
   -BuildDirectory BUILD_DIRECTORY \
-  -EvidenceDirectory EVIDENCE_DIRECTORY
+  -WorkspaceParent WORKSPACE_PARENT
 ```
 
-The build and evidence directories must be empty and outside the repository.
+The build directory must be empty and outside the repository. WORKSPACE_PARENT
+is an existing temporary directory outside the repository. The runner creates
+a uniquely owned child for logs, package checks and install probes.
 The checkout must be detached at, or have `HEAD` equal to, the expected
 40-character commit with no tracked, staged or untracked changes.
 
@@ -72,9 +74,17 @@ conditional. A smaller count is acceptable only when the configure log names
 that unsupported variant and all tests registered for the resulting build
 pass. Do not edit source on the qualification host to change a result.
 
-On failure, retain the complete evidence directory, record the first failing
-command and exact test, and return the defect to Mac with a minimal reproducer.
-After a Mac repair and local QA, replay the whole platform runner at the new
-exact commit.
+On success the runner prints the result and deletes its temporary capture and
+package workspace. On failure or interruption it prints the active workspace
+path; inspect the first failing command and its diagnostic before deleting it:
 
-The output layout is described in [`EVIDENCE.md`](EVIDENCE.md).
+```sh
+python3 tools/qa_workspace.py cleanup /temporary/parent/crexx-qa-IDENTITY
+```
+
+Cleanup accepts only its own marked workspace, not the build directory, another
+task's directory or a symlink. Keep the build tree for incremental diagnosis.
+Record the result, affected commit, failed mechanism and any remaining platform
+limits in the current worklist. Delete captures after that summary; do not commit
+logs, inventories, checksums, transcripts or copies of source. Hosted workflow
+records stay on GitHub. These runners do not authorize overnight QA dispatch.

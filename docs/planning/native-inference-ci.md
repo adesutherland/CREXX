@@ -1,5 +1,46 @@
 # Native inference release pipeline and branch qualification
 
+## CI-F22 — Core inventory and the Ollama HTTP example
+
+**Outcome:** retain the core-owned `examples/llm/ollama_generate.crexx`
+demonstration while rejecting native llama payloads and GGUF models. The
+reorganisation moved this HTTP-service example into the packaged examples tree;
+the old `*llama*` check mistook its name for a native provider leak. On
+`4f37a4f7347a29336d134afabc17ea36b8e1aee2`, all four core smoke suites and
+MinGW passed before this packaging check failed; CodeQL passed. The
+[Linux job](https://github.com/adesutherland/CREXX/actions/runs/39058722352/job/117484364338)
+shows the common mechanism. No compiler/runtime change or provider enablement
+is required. This repair serves CI-AC-02/05/08 under the approved CI-repair scope.
+
+1. [x] **F22-AC-01:** the actual Ollama source survives archive/extraction and
+   passes inventory validation at its exact owned path. An identically named
+   file elsewhere or a similarly named binary is not exempt.
+2. [x] **F22-AC-02:** native llama files/directories and GGUF models still fail,
+   including mixed-case names; diagnostics identify the rejected relative path.
+3. [x] **F22-AC-03:** focused split-package regressions pass; unchanged product
+   build and functional evidence is reused. Normal hosted packaging remains
+   separately unverified until the new workflows pass.
+
+1. [x] **F22-01:** extract the inventory check, admit only the owned HTTP-example
+   source, and add archive and rejection controls (AC-01/02).
+2. [x] **F22-02:** run focused checks, update the owning guidance and prepare
+   the authorised repair publication and normal CI retarget; delete temporary
+   diagnostics (AC-03).
+
+Local qualification against the above base plus this script/test/documentation
+repair: `python3 -B -m unittest discover -s scripts/tests -p test_split_release.py
+-v` passes all 21 tests, including five new archive/inventory controls. An actual
+ZIP round trip of the current example sources plus `example-artifacts` also
+passes inventory validation (177 files); only the permitted HTTP source matches
+the llama-name check. The old smoke reproduces its false positive with that
+source alone. Source/build diff inspection confirms unchanged product inputs,
+so the prior warning-free Debug `stage-product` build and the five hosted core
+smoke results are reused. No fresh full package, signing, native execution or
+cross-platform qualification is claimed for this Python-only repair. Normal
+push-triggered workflows own that verification; their links belong in the CI
+monitor and conversation. Temporary fixtures and diagnostics are deleted after
+extracting these conclusions.
+
 ## CI-F21 — Windows snapshot llama installers
 
 Approved by Adrian on 17 September after inspecting the missing setup assets.
@@ -48,7 +89,7 @@ snapshot collector rejects the missing llama setup. Actionlint, Bash syntax and
 Python compilation checks pass. A live dry run identifies core/plugin revision
 `d8f59732d`; manager artifact `10483239865` downloads by ID and verifies against
 GitHub SHA-256 and its complete manifest/bootstrap hashes. Evidence is retained
-under `docs/qa/windows-snapshot-2026-09-17/`. Hosted integration and final signing
+under [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/windows-snapshot-2026-09-17). Hosted integration and final signing
 remain open. No product source or CTest input changed from the green F20 gates.
 
 ## CI-F20 — 17 September overnight filesystem manifest regression
@@ -75,7 +116,7 @@ canonical QA disposition is SAN-QA-016 in `docs/SANITIZER-WORKLIST.md`.
 
 1. [x] **F20-AC-01:** retain exact failed source/run identities, the local
    reproducer and complete sanitizer logs; distinguish QA assertions from
-   memory findings. Evidence: `docs/qa/overnight-2026-09-17/`.
+   memory findings. Evidence: [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-09-17).
 2. [x] **F20-AC-02:** the permanent test verifies zero plugin-wide capability,
    complete session hooks, reentrant filesystem procedures and session-affine
    fileguard factory/methods; dynamic load/unload and two-VM ownership remain
@@ -224,7 +265,7 @@ retries use the named candidate branches in the live handoff.
    Serves CI-AC-02/03/05; depends on CI-02. Preserve signing/installer safeguards.
 4. [x] **CI-04 — Run remote qualification:** push only the candidate branch;
    exercise selected fast lanes first, repair failures with focused controls,
-   then run required wider workflows on the resulting exact SHA. Retain logs
+   then run required wider workflows on the resulting exact SHA. Reference hosted logs
    and cancel superseded candidate runs. Serves CI-AC-01/06/07.
 5. [x] **CI-05 — Reconcile and report:** record terminal run/artifact identities,
    update this checklist and parent criteria, and make the green candidate
@@ -301,7 +342,7 @@ References: [pinned fixture generator](https://github.com/ggml-org/llama.cpp/blo
 The aggregate passed isolated Debug/Apple-ASan measurement (44.5/48.3 seconds),
 then its registered serial CTest passed (28.20/45.57 seconds). Workflow validation
 and 14 publication/signing/matrix controls pass.
-[Retained evidence](../qa/native-inference-ci/README.md) records scope and inputs.
+[historical Retained evidence](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md) records scope and inputs.
 CI-03/04 remain open until the candidate packages and wider hosted jobs finish.
 
 ## Windows portability follow-up within CI-03/04
@@ -337,7 +378,7 @@ Its only changes from shared diagnostic-support commit `dd6e3155d` are the
 explicit 120-second stack-capture request and its branch-only note. Do not merge
 that workflow override into the candidate. A diagnostic stop fails; the normal
 qualification backstop and workload remain unchanged. Cause and platform closure
-remain open in [the pipeline ledger](../qa/native-inference-ci/README.md).
+remain open in [historical pipeline ledger](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md).
 
 CI-F09 reopens CI-AC-06: a delayed push event superseded a manual Windows-only
 selection and launched the full matrix. Automatic package pushes now name only
@@ -568,7 +609,7 @@ CI-AC-02/03/07 and CI-D01-01 without changing the four-core/six-plugin asset cou
 
 1. [x] **MINGW-AC-01:** Windows/MinGW `ENABLE_LLAMA=OFF` product and core smoke
    pass; extracted-core consumer checks explicitly execute both VM variants.
-2. [x] **MINGW-AC-02:** retain exact source/toolchain and terminal logs; no
+2. [x] **MINGW-AC-02:** record exact source/toolchain and hosted run identities; no
    distributable binary artifact is uploaded. The gate remains a prerequisite
    for plugin qualification and final publication.
 3. [x] **MINGW-01:** add and run the focused Windows/MinGW diagnostic core job.
@@ -750,7 +791,7 @@ used by neighboring VM-header consumers. Put both requirements in the shared
 private harness configuration. Before another broad build, compile both actual
 CMake-generated object commands: removing just the atomics switch must reproduce
 the SDK error, and the unchanged command must pass. This preflight builds no
-core executable or engine. Retain its commands and negative/positive logs.
+core executable or engine. Record its commands and negative/positive results; delete temporary logs.
 F14-AC-01 and F14-01 are reopened until that Windows proof; unchanged normal and
 Apple sanitizer evidence remains valid for their unaffected commands.
 
@@ -1133,7 +1174,7 @@ refresh after signing. The latest develop #699 fix (`f786b15d8`, plus evidence
 at `94f2f228c`) has green Build/CodeQL but is not in this candidate. Integrate it
 and finish these existing delivery steps before one combined final Build/package
 check; reuse unchanged broad Deep/sanitizer evidence and focus integration tests
-on affected import/provider behavior. The [live status table](../qa/native-inference-ci/README.md#consolidated-delivery-result)
+on affected import/provider behavior. The [historical live status table](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-ci/README.md#consolidated-delivery-result)
 records exact run/revision boundaries. Parent hardware/model criteria and actual
 signed/offline proof remain open; no scope change or promotion is implied.
 

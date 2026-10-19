@@ -55,7 +55,7 @@ if(MSVC)
     # The native compiler SDK supplies Windows system import libraries.
     list(FILTER _ui_gtk_link_files INCLUDE REGEX "\\.(dll\\.a|lib)$")
 endif()
-add_rxpa_provider_package(_ui_gtk_native
+add_rxpa_provider_package(_ui_gtk_native INSTALL
         LINK_FILES ${_ui_gtk_link_files}
         RUNTIME_TARGETS _ui_gtk_native
         RUNTIME_FILES ${_ui_gtk_runtime_files}

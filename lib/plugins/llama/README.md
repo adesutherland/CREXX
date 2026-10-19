@@ -47,7 +47,7 @@ readiness. Use that status page for the evidence and its limits.
 
 These pages are installed together under `share/crexx/llama`. The repository's
 `docs/planning/native-inference-backlog.md` retains the full plan and acceptance
-criteria; `docs/qa/native-inference-step07/README.md` maps them to documentation,
+criteria; [historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/native-inference-step07/README.md) maps them to documentation,
 tests, evidence and remaining QA. Historical STEP-01 Rexx-facade proposals are
 superseded by the implemented C factories documented here.
 

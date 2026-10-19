@@ -1,1 +1,0 @@
-say "must not execute"; x=(1+

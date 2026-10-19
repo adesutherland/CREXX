@@ -1,6 +1,0 @@
-Parse status: 1; errors: 2
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/lr1/mixed-order.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): value.error: Expected a number or quoted string; found 'many'.
-  source bytes: 6669727374203D206D616E790A7365636F6E64203D20FF0A
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/lr1/mixed-order.settings: SETTINGS_PARSE at line 2, column 10 (byte 22): LL_UTF8: malformed UTF-8; original bytes FF
-  source bytes: 65636F6E64203D20FF0A7468697264203D20330A
-third -> 3

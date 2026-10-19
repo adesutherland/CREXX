@@ -1,9 +1,0 @@
-Warning in llcheck.crexx @ 146:15 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 97, column 13. Declare this binding explicitly if intentional., "text"
-1 warning(s) in source file
-Warning in lllr.crexx @ 43:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 39, column 8. Declare this binding explicitly if intentional., "i"
-Warning in lllr.crexx @ 52:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 39, column 8. Declare this binding explicitly if intentional., "i"
-Warning in lllr.crexx @ 160:49 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 151, column 14. Declare this binding explicitly if intentional., "terminal"
-3 warning(s) in source file
-Warning in squirrel.crexx @ 34:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 19, column 6. Declare this binding explicitly if intentional., "n"
-Warning in squirrel.crexx @ 82:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 19, column 6. Declare this binding explicitly if intentional., "n"
-2 warning(s) in source file

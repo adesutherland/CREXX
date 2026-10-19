@@ -67,7 +67,7 @@ if(BUILD_TESTING AND EXISTS "${CREXX_MAINFRAME_COMMAND_ADAPTERS}/command.h")
         target_include_directories(${vm} PRIVATE ${CMAKE_SOURCE_DIR}/platform
             ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
             ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/assembler
-            ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/inc)
+            ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
         # Explicit stable identity: the CMake target carries the selected mock.
         configure_linker_for_static_lib(${vm} mainframe_address_${profile} PROVIDER_ID rxmainframe_address)
         target_link_libraries(${vm} rxvmplugin rxvmref rxbin mc_decimal_manual avl_tree rxpa rxpashim)
@@ -153,3 +153,5 @@ if(BUILD_TESTING AND EXISTS "${CREXX_MAINFRAME_COMMAND_ADAPTERS}/command.h")
         TARGETS mainframe_address_checks)
     crexx_schedule_directory_qa_tier_finalization()
 endif()
+
+crexx_install_targets(mainframe_address_decl)

@@ -1,2 +1,0 @@
-Scanned: current.log, qa-prep.log, ctest.log, build.log
-ASan/LSan diagnostic logs: []

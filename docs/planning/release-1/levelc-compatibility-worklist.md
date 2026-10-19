@@ -23,7 +23,7 @@ proof or a new delivery plan. Existing LC/R1 criteria retain their IDs and scope
 The eight formerly missing stream BIFs and the agreed Unicode/ordinal contract
 are implemented and qualified under LC-UNICODE. LC-CLOSE has qualified the
 ordinary expression, physical source NUL, diagnostics and DATE/TIME repairs.
-The [10 October repair receipt](../../qa/ci-core-stream-packaging-2026-10-10/README.md)
+The [historical 10 October repair receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/ci-core-stream-packaging-2026-10-10/README.md)
 also retains core stream packaging and exact integer-operand proof. Older dated
 absence/deferral/clock-defect text must not be read as the current queue.
 
@@ -31,7 +31,7 @@ Adrian approved C-first extraction on 2026-10-10. Its bounded local phase is
 complete and published to `origin/develop` in the authorized 10 October
 development batch. The
 [COMP-PIPE-01 plan](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
-owns acceptance and the [receipt](../../qa/classic-frontend-split-2026-10-10/README.md)
+owns acceptance and the [historical receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/classic-frontend-split-2026-10-10/README.md)
 retains qualification. `rxc-c` links the C frontend and common backend without
 the B/G parser/task/exit host. Imports use an independent binutils metadata
 reader and separate AST adapter; typed source/editor services use the owning
@@ -50,7 +50,7 @@ final delivery status is published development code with unchanged local
 qualification. Normal automatic publication workflows are expected to pass;
 GitHub run records own observed hosted status. This section is the authoritative
 action plan for Adrian's request. All eight criteria have retained evidence in
-[the development receipt](../../qa/levelc-unicode-2026-10-09/README.md).
+[historical development receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md).
 It supersedes the earlier Unicode/source-conversion and stream design deferrals
 for the work specified here. Older dated receipts retain their original scope.
 Compiler splitting, INTERPRET, broader host invocation/HALT APIs and full
@@ -243,7 +243,7 @@ rxbvm. Five independent G algorithm oracles pass optimized portable Release.
 The 2286-check normal Debug sweep plus closure of its 24 identified QA fixture/
 deadline failures and the retained optimized contract establishes 2287 unique
 passing normal checks. Core Debug/Release builds and normal QA preparation pass.
-[The receipt](../../qa/levelc-unicode-2026-10-09/README.md) records final input
+[historical receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md) records final input
 hashes, all results, exact reuse proof, preserved RexxDoc coverage and log paths
 under `output/levelc-unicode-20261009.BLUGKe/`.
 All eight LC-U criteria are verified for this local development programme;
@@ -471,7 +471,7 @@ CTest stage is running with eight jobs, stop-on-failure and Apple's documented
 leak-detection limit. AC-04 and AC-03A remain open until it completes.
 Completed logs, both source manifests, selected build configurations and the
 one-fixture registry reuse proof are now retained in
-`docs/qa/levelc-publication-2026-10-08/`; this evidence directory is a receipt,
+[historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-publication-2026-10-08); this evidence directory is a receipt,
 not a second scope/implementation plan. Publication remains pending.
 
 **LC-QA-PUB-STEP-04 SDK QA failure and repair plan.** The full macOS
@@ -553,7 +553,7 @@ the 1.29s structured debug replay, both altered Release fixtures are verified.
 All local criteria AC-01–04 plus AC-03A/03B are verified. Full normal Debug
 3,296-case final-input coverage, complete 3,112-case macOS ASan correctness
 coverage, clean Debug/Release builds, both Release replays and source reuse
-proof are retained in `docs/qa/levelc-publication-2026-10-08/README.md`.
+proof are retained in [historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-publication-2026-10-08/README.md).
 No first-party sanitizer finding occurred. Existing compatibility obligations,
 including LC-DOC-ISSUE-01 TIME clause refresh, remain open; no full Level C,
 Release 1 or cross-platform sanitizer-clean claim is made. Only publication
@@ -1995,7 +1995,7 @@ and STEP-01–05 are verified for the agreed repair scope. SAN-010 closure and
 DBDEC-01 remain verified on their recorded inputs. The final qualification
 record, qualified revision, native Windows regression replays and hosted
 evidence are retained in
-[the QA record](../../qa/overnight-2026-10-09/qualification.json) and its
+[historical QA record](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09/qualification.json) and its
 adjacent `hosted/` receipts. This closes this repair task, not full Level C or
 Release 1 compatibility, the agreed later Unicode/source-conversion/host/
 INTERPRET work, or a fresh release/platform sanitizer matrix.
@@ -2008,7 +2008,7 @@ normal/macOS/maintained supported Linux evidence; host-format native Windows
 replay remains the separate AC-03 delivery gate. The qualified 1ac5995c6 code
 and 9,765-file manifest are unchanged. Normal full 3,320 cases plus affected
 DB requalification, four final PDFs/render checks, Windows cause controls and
-matrix checks are retained in `docs/qa/overnight-2026-10-09/qualification.json`.
+matrix checks are retained in [historical capture](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09/qualification.json).
 STEP-05 is now publication/automatic-check work. AC-03/06 remain open until
 native Windows and normal publication workflows actually complete.
 
@@ -2047,7 +2047,7 @@ to the library cover (targeted real-PDF rebuild) and manual CI book scheduling
 `77ba820c35e40450311823a3e7f171e37a7982f8`, but their checkout logs explicitly
 resolve `0aafdb155b07d2a345193a870cc47922e1e837c0` on develop. Inventory, original
 LSan log and bounded Deep diagnostic excerpts are retained in
-`docs/qa/overnight-2026-10-09/`. The ownership repair uses `cntx_f`, an owned
+[historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09). The ownership repair uses `cntx_f`, an owned
 source buffer and `fre_cntx`; matching macOS Debug/ASan frame checks pass.
 The grouped 32-case local fixture panel passes in
 `/tmp/crexx-overnight-focused-local.B3Rtp7`. Windows ACP control reproduces
@@ -2063,7 +2063,7 @@ The ARM Linux document bootstrap retains pinned versions and x64 hashes.
 All four books pass the maintained pipeline and non-empty asset check. The
 repaired Han glyph and all covers were visually inspected; the library cover
 wrap passes its targeted rebuild. Hashes, page counts and rendered evidence
-are retained in `docs/qa/overnight-2026-10-09/books/`. Full normal Debug has passed as recorded above; supported Linux ASan/LSan
+are retained in [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/overnight-2026-10-09/books). Full normal Debug has passed as recorded above; supported Linux ASan/LSan
 remains in progress and is not a full pass claim. The disposable Ubuntu ARM guest's GCC 13
 ASan build suffered excessive fake-stack allocation cost. It was stopped
 through the maintained runner and restarted with Clang 18 (all ASan and LSan

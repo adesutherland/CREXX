@@ -130,7 +130,7 @@ Owners below are the current GitHub assignees, not new assignments.
 | [#617 — plugin policy](https://github.com/adesutherland/CREXX/issues/617), Peter | Existing catalogue has role/delivery/composition axes; much remains expressly provisional. | Approve category definitions and their build, package, documentation and test obligations, including standard/default versus bootstrap core. |
 | [#622 — plugin/exit inventory](https://github.com/adesutherland/CREXX/issues/622), Peter | A detailed component catalogue already exists. Some rows are outdated; RXPA and library work has substantially changed the tree. | Refresh that catalogue, map every shipped integration/exit to the approved policy, and record dependencies/options/package/tests and migration notes. Reuse the catalogue instead of starting a second inventory. |
 | [#624 — package validation](https://github.com/adesutherland/CREXX/issues/624), Rene | Four core platform outputs, matching optional llama packages and three exact-revision SDKs are in the current snapshot. Final beta 3 assets do not yet exist. | Verify the selected beta 3 assets, identities/checksums, signatures, clean install/use/reinstall/removal and fallback status. Close only against the actual release assets and matching docs. |
-| [#625 — demos/tutorials](https://github.com/adesutherland/CREXX/issues/625), Rene | Numerous implementation fixtures and examples exist; the issue still lacks the final curated user-facing result. | Select a small named set, retain commands/expected output/known limits, and verify it against the candidate packages. Include B, RXPP, standalone/embedded RexxScript, initial G, bounded C and L generated-output examples; a provider demo remains optional. |
+| [#625 — examples/tutorials](https://github.com/adesutherland/CREXX/issues/625), Rene | Numerous implementation fixtures and examples exist; the issue still lacks the final curated user-facing result. | Select a small named set, retain commands/expected output/known limits, and verify it against the candidate packages. Include B, RXPP, standalone/embedded RexxScript, initial G, bounded C and L generated-output examples; a provider demo remains optional. |
 | [#663 — RXPP macros](https://github.com/adesutherland/CREXX/issues/663), unassigned | The issue itself reports implementation; named-section examples, macro/runtime docs and focused regressions exist. | Verify the documented `.gen`, `.tail`, `.section` and `##emit` scenarios and installed invocation; reconcile the promised guide and close as delivered if its acceptance passes. Do not treat it as a new feature project. |
 | [#665 — data queues](https://github.com/adesutherland/CREXX/issues/665), Peter | Comments and current provider documentation describe execution-local named queues, including RXQUEUE management. The language-reference chapter still incorrectly says named queues are unsupported. | Reconcile implementation/tests and docs, then close the delivered execution-local queue scope. External cross-process queue services are a separate, explicitly excluded product capability. This does not prove complete compiled Level C lowering. |
 | [#602 — SOURCELINE](https://github.com/adesutherland/CREXX/issues/602), unassigned | This remains a real stateful BIF gap. The Classic BIF reference requires retained visible source lines and execution-context plumbing; `.srcstep` alone is insufficient. | Recommend including it explicitly in Beta 4's complete Level C acceptance matrix. For the requested zero-issue checkpoint, close as an approved transfer only after that durable row, owner and tests are recorded. It remains unimplemented work. If every closure must instead mean implemented, this feature must be built and qualified before the checkpoint. |
@@ -147,11 +147,11 @@ and example evidence to #624/#625 as well as the existing lab criteria.
 ## Mainframe PoC/alpha: selected beta 3 deliverable
 
 The authoritative lab scope is
-[BETA3-MAINFRAME-PLAN.md](/Users/adrian/CLionProjects/mainframe-lab/docs/BETA3-MAINFRAME-PLAN.md),
+[BETA3-MAINFRAME-PLAN.md](../../../../../mainframe-lab/docs/BETA3-MAINFRAME-PLAN.md),
 supported by its
-[delivery plan](/Users/adrian/CLionProjects/mainframe-lab/docs/MAINFRAME-DELIVERY-PLAN.md)
+[delivery plan](../../../../../mainframe-lab/docs/MAINFRAME-DELIVERY-PLAN.md)
 and
-[manual qualification procedure](/Users/adrian/CLionProjects/mainframe-lab/docs/operator/BETA3-MANUAL-QUALIFICATION.md).
+[manual qualification procedure](../../../../../mainframe-lab/docs/operator/BETA3-MANUAL-QUALIFICATION.md).
 Retain its B3-01–06 IDs instead of creating a second mainframe acceptance plan.
 
 | Package | Beta 3 commitment | Evidence still needed |
@@ -194,7 +194,7 @@ the later handler repair by rebuilding an old base.
 ### cREXX changes still requiring integration or disposition
 
 The active Linux pipeline applies five visible patches in
-[linux-topics.series](/Users/adrian/CLionProjects/mainframe-lab/patches/crexx-cms-release-poc/linux-topics.series).
+[linux-topics.series](../../../../../mainframe-lab/patches/crexx-cms-release-poc/linux-topics.series).
 Their changes remain absent from the inspected published cREXX revision.
 The older TSO register exposes additional candidate areas; these overlap with
 newer platform work and require reconciliation, not automatic replay.
@@ -211,8 +211,8 @@ newer platform work and require reconciliation, not automatic replay.
 | Older TSO topic `0013`: VM value factory allocation checks | Guards worker-owned and standalone factories before value initialization. Current cREXX still calls initialization after unchecked allocation. The lab records a failing base and passing fault-injected candidate. | Reconcile and integrate both paths with focused regressions. This is separate from the compressor patch bearing the same topic number in the other directory. |
 
 The two patch registers are
-[Linux/CMS continuation](/Users/adrian/CLionProjects/mainframe-lab/patches/crexx-cms-release-poc/README.md)
-and [earlier TSO candidates](/Users/adrian/CLionProjects/mainframe-lab/patches/crexx/README.md).
+[Linux/CMS continuation](../../../../../mainframe-lab/patches/crexx-cms-release-poc/README.md)
+and [earlier TSO candidates](../../../../../mainframe-lab/patches/crexx/README.md).
 This review establishes the integration gap; it does not approve the exported
 patches unchanged or claim that their old bases qualify current cREXX.
 The source must be rebased/reconciled, reviewed under cREXX's rules and covered
@@ -383,8 +383,8 @@ They are not automatically beta 3 requirements because their files live under
 the already repaired #702 shell-name issue. Current `develop` preserves const
 through lookup instead. Recommend reconciling the PR as superseded rather than
 merging the old implementation. [PR #662](https://github.com/adesutherland/CREXX/pull/662)
-is the still-applicable `tiem` to `time` comment correction in `S370/cms.h`;
-it can be handled as a separate trivial contribution. Neither was changed here.
+corrects a comment in the obsolete S370 compatibility header; retirement of that
+route supersedes the proposed correction. Neither PR is changed by this cleanup.
 
 ## Recommended agreement
 

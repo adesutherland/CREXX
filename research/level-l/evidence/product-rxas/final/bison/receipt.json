@@ -1,7 +1,0 @@
-{
-  "graph_sha256": "7a2c3dbbabeecf07e42434cf1f3a23b8394a157305c6396669693f1d1b28a69d",
-  "bison_sha256": "9aa090217c3184256be3588c262f32a3a1ea9ff2ff62931ed7e4ef76a89ede80",
-  "states": 1613,
-  "conflicts": 0,
-  "scope": "Exact common CFG; Bison adds its EOF final state. Independent admission, not runtime tree equivalence."
-}

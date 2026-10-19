@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   printf '%s\n' \
-    "usage: $0 EXPECTED_FULL_COMMIT BUILD_DIRECTORY EVIDENCE_DIRECTORY"
+    "usage: $0 EXPECTED_FULL_COMMIT BUILD_DIRECTORY WORKSPACE_PARENT"
 }
 
 die() {
@@ -19,14 +19,14 @@ die() {
 
 expected_commit=$1
 build_argument=$2
-evidence_argument=$3
+workspace_parent=$3
 
 [[ "$expected_commit" =~ ^[0-9a-f]{40}$ ]] ||
   die "expected commit must be a full lowercase 40-character SHA"
 [[ "$(uname -s)" == Linux ]] || die "this runner requires Linux"
 
 for required_tool in git cmake ctest ninja zip dpkg dpkg-deb realpath \
-  sha256sum cc awk find sort xargs grep cut tee cp tr; do
+  python3 sha256sum cc awk find sort xargs grep cut tee cp tr; do
   command -v "$required_tool" >/dev/null ||
     die "required tool is unavailable: $required_tool"
 done
@@ -38,35 +38,33 @@ repository_root=$(git rev-parse --show-toplevel)
   die "qualification checkout is not clean"
 
 build_directory=$(realpath -m "$build_argument")
-evidence_directory=$(realpath -m "$evidence_argument")
 repository_root=$(cd "$repository_root" && pwd -P)
-artifact_directory="${evidence_directory}-artifacts"
-
-[[ "$build_directory" != "$evidence_directory" ]] ||
-  die "build and evidence directories must differ"
-[[ "$build_directory" != "$artifact_directory" ]] ||
-  die "build and artifact directories must differ"
 case "$build_directory/" in
   "$repository_root/"*) die "build directory must be outside the repository" ;;
 esac
-case "$evidence_directory/" in
-  "$repository_root/"*) die "evidence directory must be outside the repository" ;;
-esac
-case "$artifact_directory/" in
-  "$repository_root/"*) die "artifact directory must be outside the repository" ;;
-esac
-mkdir -p "$build_directory" "$evidence_directory"
+mkdir -p "$build_directory"
 [[ -z "$(find "$build_directory" -mindepth 1 -print -quit)" ]] ||
   die "build directory is not empty"
-[[ -z "$(find "$evidence_directory" -mindepth 1 -print -quit)" ]] ||
-  die "evidence directory is not empty"
-if [[ -e "$artifact_directory" ]]; then
-  [[ -d "$artifact_directory" ]] || die "artifact path is not a directory"
-  [[ -z "$(find "$artifact_directory" -mindepth 1 -print -quit)" ]] ||
-    die "artifact directory is not empty"
-else
-  mkdir -p "$artifact_directory"
-fi
+workspace_parent=$(realpath "$workspace_parent")
+case "$workspace_parent/" in
+  "$repository_root/"*) die "workspace parent must be outside the repository" ;;
+esac
+workspace_tool="$repository_root/tools/qa_workspace.py"
+evidence_directory=$(python3 "$workspace_tool" create --parent "$workspace_parent")
+artifact_directory="$evidence_directory/artifacts"
+mkdir -p "$artifact_directory"
+finish_workspace() {
+  result=$?
+  if [[ $result -eq 0 ]]; then
+    python3 "$workspace_tool" cleanup "$evidence_directory"
+  else
+    printf 'Active failure workspace: %s\nAfter diagnosis: python3 %q cleanup %q\n' \
+      "$evidence_directory" "$workspace_tool" "$evidence_directory" >&2
+  fi
+}
+trap finish_workspace EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 build_jobs=${CREXX_QUALIFICATION_BUILD_JOBS:-4}
 test_jobs=${CREXX_QUALIFICATION_TEST_JOBS:-10}
@@ -241,12 +239,6 @@ grep -E '^(CMAKE_BUILD_TYPE|CREXX_ENABLE_TLS|CREXX_VM_HANDLER_PANEL|CREXX_VM_PRO
   printf 'artifact_directory=%s\n' "$artifact_directory"
 } > "$evidence_directory/RESULT.txt"
 
-(
-  cd "$evidence_directory"
-  find . -type f ! -name SHA256SUMS ! -name qualification.log -print0 |
-    sort -z | xargs -0 sha256sum > SHA256SUMS
-)
-
+cat "$evidence_directory/RESULT.txt"
 trap - ERR
-printf 'PASS: Linux qualification evidence retained at %s\n' \
-  "$evidence_directory"
+printf 'PASS: Linux qualification; temporary captures removed on exit.\n'

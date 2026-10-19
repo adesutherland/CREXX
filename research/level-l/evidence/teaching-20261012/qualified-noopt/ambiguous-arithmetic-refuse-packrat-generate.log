@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-LL_BACKEND_ADMISSION: packrat: expression (line 14): left-corner cycle; ordinary PEG progress not proved

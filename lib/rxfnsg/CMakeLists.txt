@@ -1,3 +1,4 @@
+include("${CMAKE_CURRENT_SOURCE_DIR}/unicode/LevelL.cmake")
 cmake_minimum_required(VERSION 3.24)
 
 set(RXUNICODE_CASEFOLD_DATA
@@ -46,3 +47,4 @@ if(BUILD_TESTING)
     ts_unicode_codec
     ts_unicode_normalization)
 endif()
+crexx_install_bytecode(rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin")

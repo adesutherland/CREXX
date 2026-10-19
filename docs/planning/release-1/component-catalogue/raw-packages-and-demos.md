@@ -72,7 +72,7 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `TOOL-rxlink` | RXBIN linker | `linker` | `linker/CMakeLists.txt` builds `rxlink` |
 | `TOOL-rxdas` | RXBIN disassembler | `disassembler` | `disassembler/CMakeLists.txt` builds `rxdas` |
 | `TOOL-rxcpack` | RXBIN-to-C packager | `cpacker` | `cpacker/CMakeLists.txt` builds `rxcpack` |
-| `TOOL-crexx` | high-level compile/assemble/run/native driver | `bin/crexx.crexx` | `bin/CMakeLists.txt` builds `crexx` |
+| `TOOL-crexx` | high-level compile/assemble/run/native driver | `driver/crexx.crexx` | `driver/CMakeLists.txt` builds `crexx` |
 | `TOOL-rxvm` | compiler-selected bare VM product entry point | `interpreter` | `interpreter/CMakeLists.txt` links/copies `rxvm` to the selected concrete VM |
 | `TOOL-rxbvm` | portable switch-dispatch bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` always builds `rxbvm` |
 | `TOOL-rxtvm` | direct-threaded bare VM executable | `interpreter` | `interpreter/CMakeLists.txt` builds `rxtvm` for GNU/Clang-family compilers, but not MSVC |
@@ -143,18 +143,18 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 
 | ID | Kind | Source |
 |---|---|---|
-| `DEMO-demos-cms-cms-address-demo-crexx` | demo | `demos/cms/cms_address_demo.crexx` |
-| `DEMO-demos-cms-cms-address-environment-crexx` | demo | `demos/cms/cms_address_environment.crexx` |
-| `DEMO-demos-llm-anthropic-generate-crexx` | demo | `demos/llm/anthropic_generate.crexx` |
-| `DEMO-demos-llm-gemini-generate-crexx` | demo | `demos/llm/gemini_generate.crexx` |
-| `DEMO-demos-llm-llm-address-demo-crexx` | demo | `demos/llm/llm_address_demo.crexx` |
-| `DEMO-demos-llm-llm-address-environment-crexx` | demo | `demos/llm/llm_address_environment.crexx` |
-| `DEMO-demos-llm-ollama-generate-crexx` | demo | `demos/llm/ollama_generate.crexx` |
-| `DEMO-demos-llm-ollama-generate-rxas` | demo | `demos/llm/ollama_generate.rxas` |
-| `DEMO-demos-llm-openai-generate-crexx` | demo | `demos/llm/openai_generate.crexx` |
-| `DEMO-demos-native-kv-kv-address-demo-crexx` | demo | `demos/native/kv/kv_address_demo.crexx` |
-| `DEMO-demos-native-sqlite-sqlite-address-demo-crexx` | demo | `demos/native/sqlite/sqlite_address_demo.crexx` |
-| `DEMO-demos-rexxscript-rexxscript-demo-crexx` | demo | `demos/rexxscript/rexxscript_demo.crexx` |
+| `DEMO-demos-cms-cms-address-demo-crexx` | demo | `examples/cms/cms_address_demo.crexx` |
+| `DEMO-demos-cms-cms-address-environment-crexx` | demo | `examples/cms/cms_address_environment.crexx` |
+| `DEMO-demos-llm-anthropic-generate-crexx` | demo | `examples/llm/anthropic_generate.crexx` |
+| `DEMO-demos-llm-gemini-generate-crexx` | demo | `examples/llm/gemini_generate.crexx` |
+| `DEMO-demos-llm-llm-address-demo-crexx` | demo | `examples/llm/llm_address_demo.crexx` |
+| `DEMO-demos-llm-llm-address-environment-crexx` | demo | `examples/llm/llm_address_environment.crexx` |
+| `DEMO-demos-llm-ollama-generate-crexx` | demo | `examples/llm/ollama_generate.crexx` |
+| `DEMO-demos-llm-ollama-generate-rxas` | demo | `examples/llm/ollama_generate.rxas` |
+| `DEMO-demos-llm-openai-generate-crexx` | demo | `examples/llm/openai_generate.crexx` |
+| `DEMO-demos-native-kv-kv-address-demo-crexx` | demo | `examples/native/kv/kv_address_demo.crexx` |
+| `DEMO-demos-native-sqlite-sqlite-address-demo-crexx` | demo | `examples/native/sqlite/sqlite_address_demo.crexx` |
+| `DEMO-demos-rexxscript-rexxscript-demo-crexx` | demo | `examples/rexxscript/rexxscript_demo.crexx` |
 | `EXAMPLE-examples-montecarlo-crexx` | example | `examples/MonteCarlo.crexx` |
 | `EXAMPLE-examples-anagram-crexx` | example | `examples/anagram.crexx` |
 | `EXAMPLE-examples-caesar-crexx` | example | `examples/caesar.crexx` |

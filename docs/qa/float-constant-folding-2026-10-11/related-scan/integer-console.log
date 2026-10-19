@@ -1,5 +1,0 @@
-integer-precision-propagation noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n"}
-integer-precision-fold noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n"}
-integer-max-propagation noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: "compiler exit 2: Error in integer-max-propagation-levelb.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""; "compiler exit 2: Error in integer-max-propagation-levelg.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""
-integer-default-large-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
-integer-default-max-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}

@@ -70,7 +70,7 @@ if(APPLE AND BUILD_TESTING)
             ${platform_sources} rxinteger.c tests/mainframe_console_mock.c)
     target_include_directories(rxvm_mainframe_console_harness PRIVATE . tests
             ../interpreter ../interpreter/rxvmplugin ../assembler
-            ../binutils/include ../avl_tree ../rxpa ../utf8 ../inc)
+            ../binutils/include ../third_party/avl_tree ../rxpa ../third_party/utf8 ../interpreter/rxvml)
     target_compile_definitions(rxvm_mainframe_console_harness PRIVATE
             CREXX_CMS_ELF=1 NTHREADED=1)
     set_property(TARGET rxvm_mainframe_console_harness PROPERTY C_STANDARD 99)
@@ -262,3 +262,6 @@ if(UNIX AND BUILD_TESTING)
     set_tests_properties(text_codec PROPERTIES LABELS "platform;text" TIMEOUT 30
         CREXX_PREP_TARGETS test_text_codec)
 endif()
+
+# Published products owned by this component.
+crexx_install_targets(platform)

@@ -250,8 +250,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxImportRoots.cmake)
 foreach(re2c_alias IN ITEMS D GO HS JAVA JS OCAML PY RUST SWIFT V ZIG)
     set(RE2C_BUILD_RE2${re2c_alias} OFF CACHE BOOL "Build re2c language alias" FORCE)
 endforeach()
-add_subdirectory(re2c)
-add_subdirectory(lemon)
+add_subdirectory(third_party/re2c)
+add_subdirectory(third_party/lemon)
 
 # Suppress warnings for external dependencies (re2c, lemon) across compilers
 # We do this here (top-level) so it applies regardless of how their subdirs are configured
@@ -302,6 +302,7 @@ foreach(_crexx_message_catalog IN LISTS CREXX_MESSAGE_CATALOGS)
             "${CMAKE_BINARY_DIR}/bin/messages/${_crexx_message_catalog_name}"
             COPYONLY)
 endforeach()
+install(FILES ${CREXX_MESSAGE_CATALOGS} DESTINATION bin/messages)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/messages/"
         DESTINATION share/crexx/messages
         FILES_MATCHING PATTERN "*.msg")
@@ -386,8 +387,11 @@ if(BUILD_TESTING)
     add_dependencies(qa-prep-all qa-prep qa-prep-measurement)
 endif()
 
+include(cmake/CrexxInstall.cmake)
+
 add_subdirectory(platform)
-add_subdirectory(avl_tree)
+add_subdirectory(third_party/avl_tree)
+crexx_install_targets(avl_tree)
 add_subdirectory(cpacker)
 add_subdirectory(binutils)
 add_subdirectory(contract)
@@ -400,17 +404,25 @@ add_subdirectory(interpreter)
 add_subdirectory(rxpa)
 add_subdirectory(preprocessor)
 add_subdirectory(lib)
+add_subdirectory(langtools)
+option(CREXX_BUILD_RESEARCH_COMPILERS "Build experimental Level L source compilers" OFF)
+set(CREXX_RESEARCH_LANGUAGES "C;G" CACHE STRING "Experimental compiler languages to build")
+if(CREXX_BUILD_RESEARCH_COMPILERS)
+  add_subdirectory(research/level-l/compilers)
+endif()
 add_subdirectory(rexxscript)
-add_subdirectory(demos)
 add_subdirectory(examples)
 add_subdirectory(tests)
-add_subdirectory(bin crexx_driver)
+add_subdirectory(driver crexx_driver)
+add_subdirectory(tools/rxbuild)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxWindowsUtf8.cmake)
 
 # These non-owning aggregate targets expose the product stages without
 # replacing or duplicating the direct dependencies declared by their members.
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)
+get_property(_crexx_installed_targets GLOBAL PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS)
+add_dependencies(stage-product ${_crexx_installed_targets})
 
 # Test directories register their exact generated-artifact requirements while
 # assigning tiers. Attach those dependencies only after all producers and the
@@ -712,6 +724,8 @@ install(FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxOperationContract.cmake"
         "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/RXPluginFunction.cmake"
         "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/WriteProviderPackage.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/InstallProviderPackage.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/RuntimePackagePaths.cmake"
         DESTINATION "${CREXX_CMAKE_PACKAGE_INSTALL_DIR}")
 
 if(TARGET linked_opt_runtime_artifacts)
@@ -854,22 +868,3 @@ if(BUILD_TESTING)
             VERBATIM
             COMMENT "Running focused optimized/non-optimized correctness parity")
 endif()
-
-set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
-
-# set the destination directory for your scripts in the build directory
-set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-# Install target to copy binaries to /usr/local/bin
-install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
-        DESTINATION bin
-        FILES_MATCHING
-        PATTERN "*"
-        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
-        # These exact names were historical test-only performance controls in
-        # the shared build bin directory. Keep incremental stale artifacts out
-        # of installs after their targets moved to tests/performance/.
-        PATTERN "rx_rcc5f_stats_boxed.rxplugin" EXCLUDE
-        PATTERN "rx_rcc5f_stats_direct.rxplugin" EXCLUDE
-        PATTERN "rx_rxvector01_direct.rxplugin" EXCLUDE)

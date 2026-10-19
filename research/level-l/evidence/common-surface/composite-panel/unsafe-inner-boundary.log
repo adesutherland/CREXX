@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-LL_REGION_ADMISSION: unsafe region: boundary/virtual token belongs to inner grammar

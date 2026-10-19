@@ -11,6 +11,25 @@
 before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
 does not run RXPP internally.
 
+The [repository ownership map](../DOCS_MAP.md#source-ownership) separates the
+`driver/` implementation of `crexx` from `tools/rxbuild/`, which owns the build-plan
+reader, grammar and command. TextTools belongs to `tools/texttools/`; user demos
+belong to categorized `examples/`, and pipe prototypes to `research/pipes/`.
+Root-level vendor sources live under `third_party/`; the first-party scanner
+fragment is `platform/encoding.re` and the VM lifecycle header is
+`interpreter/rxvml/rxvm.h`.
+
+Maintained CMS/TSO build recipes belong to `ports/single-threaded`; shared
+services use the explicit profiles in `platform/platform_config.h`. The old
+S370 Docker/GCCLIB route and its `__CMS__` hooks are retired; they are not part
+of the maintained native-platform contract.
+
+Components register their installed native targets and bytecode explicitly.
+`stage-product` depends on those selected producers, while provider manifests
+name and hash-check their dependency closure. Installation does not harvest the
+shared build `bin/` directory. The installed `bin/` layout, native support
+archives, RXPP helper and mathematical compatibility aliases are preserved.
+
 The opt-in [single-threaded port](../../ports/single-threaded/README.md) builds
 the same compiler with a constrained embedded VM, retaining compiler exits.
 It leaves the normal desktop configuration and language contracts intact.
@@ -58,6 +77,33 @@ validation/emission. It is not an in-process source-to-RXBIN service or Classic
 INTERPRET. Malformed source, concurrent live units and teardown after backend
 import failure have focused tests. Concurrent embedded compilation remains
 outside this phase.
+
+## Level L and experimental compilers
+
+`langtools/` owns Level L itself: the `rxlang` command, callable `llgenerate` service,
+specification frontend, bootstrap and generic RXAS/metadata/file-output helpers.
+`lib/rxfnsl/` owns only generic SDK source and its required Unicode build inputs.
+All Level L guides/examples and independent library tests live in `langtools/`.
+The SDK has no dependency on a source-language compiler or the Level L command.
+`rxfnsl.rxbin` is the SDK; `rxlanglib.rxbin` is the tool service package.
+
+The new compilers live in `research/level-l/compilers/`. Classic owns an
+independent frontend, semantic family, RXAS selector, service and main. G uses
+`typed/`, the intended common B/G core; proper B is not yet implemented. Shared
+Level L IR, transformations, writer and tool utilities remain language-neutral.
+There is no common language-dispatch main. Compiler algorithms are Level B;
+native `rxc` builds them as a seed and is absent from compilation requests.
+
+`stage-product` includes `stage-l-libraries` and `stage-l-tools`. Experimental
+compilers require `CREXX_BUILD_RESEARCH_COMPILERS=ON`, optional selection through
+`CREXX_RESEARCH_LANGUAGES=C` or `G`, and `stage-research-compilers`. Their install
+component is `ResearchCompilers`, excluded from normal installation, including
+stale experimental products left in an incremental build. Normal CI explicitly
+selects both research compilers so their regressions continue to run.
+See [tool documentation](../../langtools/README.md), the
+[compiler architecture](../../research/level-l/compilers/doc/architecture.md)
+and [programme plan](../../research/level-l/PLAN.md). This changes ownership,
+not the native compiler's production routing or the agreed language scope.
 
 ## Remaining compiler separation proposal
 
@@ -608,8 +654,8 @@ values, legacy caller declarations and incompatible or incomplete contracts.
 
 ### Project member invalidation and declaration lookup
 
-`bin/crexx.crexx` owns project/member action keys, worker selection and atomic
-link publication. `bin/crexx_build_worker.crexx` constructs the same compiler
+`driver/crexx.crexx` owns project/member action keys, worker selection and atomic
+link publication. `driver/crexx_build_worker.crexx` constructs the same compiler
 argv for compilation and dependency checking. A successful member compile uses
 `rxc --project-dependencies path`; `--check-project-dependencies path` checks
 that snapshot without compiling bodies or loading executable providers.

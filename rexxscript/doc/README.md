@@ -26,7 +26,7 @@ than duplicating the full command, runtime, and implementation descriptions.
 - Keep `docs/ai-context/REXXSCRIPT*.md` as maintainer/agent context that points
   back to this directory for the product view.
 
-The local `levell` branch also contains an unreleased **RexxScript 1** review
+The local `rxlang` branch also contains an unreleased **RexxScript 1** review
 implementation, explicitly selected by `rexxscript1`. Its modern Level G scalar
 contract and Level L architecture are documented in the modern sections of the
 same user/developer guides. It does not redefine the legacy command implicitly.

@@ -48,7 +48,7 @@ instruction review.
 
 ## 1. VM Lifecycle
 
-The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
+The execution of a program within `rxvm` is handled in discrete phases (as defined in `interpreter/rxvml/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
 3. **Dependency resolution and linking**: `rxvm_link()` first resolves declared
@@ -1569,14 +1569,14 @@ usage errors. Use repeated `ADDRESS` statements or `ADDRESS CREXX "batch"` with
 input lines. `batch` skips blank lines and `--` comments and stops at the first
 non-zero return code.
 
-`demos/native/sqlite/` is now an ordinary consumer of the installed
+`examples/native/sqlite/` is now an ordinary consumer of the installed
 `rxsqlite_address` Level G environment. The façade claims `SQLITE` and
 `SQLITE3`, treats SQL named parameters such as `:name` as handler-specific uses
 of ADDRESS host-variable bindings, and delegates every database operation to
 the generic typed `rxsqlite` RXPA provider. There is no ADDRESS-specific native
 SQLite implementation.
 
-`demos/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
+`examples/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
 providers. One Rexx environment class claims a family of model-shaped
 environment names (`LLM_GPT_4_1`, `CLAUDE_SONNET_4_5`, `GEMINI_2_5_FLASH`,
 `GEMMA4_LATEST`) and routes internally to the `rxfnsg` LLM drivers. This keeps

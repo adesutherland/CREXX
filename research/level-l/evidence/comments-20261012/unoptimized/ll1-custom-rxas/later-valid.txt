@@ -1,3 +1,0 @@
-first=many // fake;name=4
-second=(*x*)
-third=3

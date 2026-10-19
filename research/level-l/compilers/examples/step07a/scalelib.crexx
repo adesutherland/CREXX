@@ -1,0 +1,5 @@
+options levelg
+namespace scalelib expose scale
+scale: procedure = .int
+  arg value = .int, factor = 2
+  return value * factor

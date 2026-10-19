@@ -1,7 +1,0 @@
-CMake Error at compiler/tests/run_iterate_condition_cleanup.cmake:42 (message):
-  ITERATE condition cleanup failed (exit 1):
-
-  modal on second turn=0
-
-
-

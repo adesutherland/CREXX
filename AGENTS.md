@@ -76,64 +76,39 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 ## Development publication and overnight assurance
 
-For ordinary changes, a successful core product build and appropriate functional
-regressions are sufficient to promote to `develop`. Run focused tests for the
-affected behavior and the relevant normal correctness suite; retain evidence for
-the code/test/build inputs actually qualified. The normal automatic publication
-workflows provide Release product/smoke, optimizer-parity and CodeQL checks.
-Do not turn every development publication into release qualification.
+For ordinary develop publication, require a successful core product build,
+appropriate focused functional regressions and the relevant normal correctness
+suite. Summarize the exact qualified inputs and outcomes in the current plan.
+Normal automatic workflows provide Release product/smoke, optimizer-parity and
+CodeQL checks; local results do not establish hosted success.
 
 Full hosted deep/comprehensive matrices, build-graph comparisons, stress and
-full Linux ASan/LSan/macOS ASan assurance normally run overnight. Do not manually
-dispatch them, or wait for them before ordinary `develop` publication, merely
-because a change touches the compiler/runtime or is called a hotfix. Their
-purpose is to find issues for prompt remedial work after integration; that work
-may justify a targeted repeat of the relevant deep gate. This is an intentional
-tradeoff to keep development feedback and publication fast.
+full Linux ASan/LSan/macOS ASan assurance normally run overnight. Do not dispatch
+or wait for them for routine development, compiler/runtime changes or hotfixes.
+Use failures to drive prompt repairs and, where justified, a targeted repeat.
+Additional pre-publication gates require an explicit scope or concrete risk,
+such as an agreed native-inference change, release candidate or actual sanitizer
+finding. Preserve user-required gates and the SAN closure rules below.
 
-Avoidable testing delay is an engineering cost, not evidence of diligence.
-It delays integration and user feedback, occupies runners, and blocks useful
-work. Before adding a long run, identify the unresolved risk, why retained or
-focused evidence is insufficient, and why the expected benefit justifies its
-elapsed-time cost. Choose the smallest decisive check. Repeating unchanged
-valid tests or routinely holding development publication for overnight assurance
-is a process defect to correct, not the safe default. Do not accumulate extra
-checks simply to obtain more green results.
+Avoidable testing delay is an engineering cost. Before a long or repeated run,
+name the unresolved risk, why existing results or focused checks are insufficient,
+and why the benefit warrants its time. Reuse valid results when code/test/build
+inputs are unchanged. History-only merges and documentation changes do not
+invalidate them; do not accumulate extra checks merely for more green results.
 
-Additional pre-publication qualification is an exception: for example an
-explicitly agreed novel native-inference change, a release candidate, or repair
-and closure of an actual sanitizer finding. Record the concrete risk, additional
-checks and why they gate that work in its plan. Do not infer the exception from
-general requests to test, qualify, publish or obtain green CI. Preserve explicit
-user-required gates. Actual first-party sanitizer findings still follow the
-SAN worklist and closure rules below; overnight scheduling does not waive known
-defects or permit unsupported sanitizer-clean/release-ready claims.
+Prepare current documentation, a concise validation summary and the expected
+publication status before the first substantive push. Once required local gates
+pass, assume normal workflows will succeed for that preparation, while reporting
+only observed passes as verified. Do not hold the task open for CI or leave a
+planned post-CI documentation update.
 
-Reuse unchanged valid evidence. Promotion, history-only merges and documentation
-edits do not require repeating broad testing. Automatic publication workflows
-provide their own run records without requiring extra overnight lanes.
-
-Include documentation, qualification receipts and the expected final publication
-status in the first push of the substantive change. Prepare these updates
-before committing; do not leave pending placeholders for a planned post-CI
-documentation update. After the required pre-publication gates pass, assume
-the normal automatic workflows will succeed when preparing that first push.
-Do not keep the task open merely to wait for green CI and write another
-repository status update.
-
-Do not create a follow-up commit or push solely to mark CI as passed, replace
-pending status with expected success, or archive successful workflow metadata.
-That starts another rebuild without changing the product or its qualification
-inputs. The GitHub run and its logs are the evidence; observed status can be
-reported in the conversation without another commit. Report actual results
-accurately, distinguishing expected success from a verified pass.
-
-If a workflow fails, use that failed run and its logs as the evidence, diagnose
-and repair the cause, and include any needed documentation/status corrections
-in the next substantive fix commit. Do not add a status-only push for the
-failure. Preserve explicitly required hosted, release and sanitizer closure
-gates; this guidance removes redundant status commits, not required proof.
-Keep this standing publication policy in `AGENTS.md`, not component worklists.
+Never commit or push solely to mark CI passed, replace pending status or archive
+workflow metadata. Hosted run links provide the result; report observed status
+in conversation. If a workflow fails, inspect its logs, diagnose and repair the
+cause, and include necessary documentation corrections with the substantive fix.
+Do not download and retain a second copy of the logs. Required release and
+sanitizer proof still applies. Keep this publication policy here, not in
+component worklists.
 
 ## Emitted-code quality
 
@@ -148,6 +123,11 @@ for a new broad benchmark or release-qualification run.
 - Compare equivalent inputs with the existing compiler's appropriate B, G and
   C modes, recording compiler and assembler optimisation separately. An old
   compiler's excess code or defect is a finding, not an acceptance target.
+  State expected behaviour from the agreed language contract and independent
+  test expectations before using native output as a control. When results
+  disagree, retain a minimal case and classify the cause in the new compiler,
+  native compiler, shared runtime or test oracle; do not reproduce a native
+  bug to obtain parity or weaken an expectation merely to match it.
 - Distinguish source/debug records from executable instructions, and caller
   code from work hidden in helpers or linked libraries. Inspect calls, copies,
   frame/register requirements, branches, allocations and numeric/context
@@ -169,6 +149,29 @@ for a new broad benchmark or release-qualification run.
   structural assertions rather than brittle register-number snapshots where
   possible; agree representative resource/performance budgets before claiming
   replacement readiness, under the existing performance governance.
+
+## Level L compiler delivery priority
+
+Adrian approved completing the new Level C compiler before proper Level B
+self-hosting on 16 October 2026. `research/level-l/compilers/PLAN.md` owns the C-first
+milestone, its coverage crosswalk and acceptance. Keep `LLCOMP-STEP07B` and its
+criteria open and deferred; preserve the eventual B/G/full-replacement scope.
+The existing native B seed builds the Level B compiler implementation and
+Level L libraries. Use Level L parsing, IR, transformation and emitter services;
+new compilation requests must not delegate to the native compiler.
+
+Maintain current G behaviour and regressions when shared services change; G
+feature expansion is not a prerequisite for each C increment. Continue adding
+independent Level L tests for reusable services. Complete C includes the agreed
+Classic instruction/BIF and host contracts, diagnostics, conditions/TRACE and
+INTERPRET. Review and complete instructions one at a time, retaining their
+individual semantics, errors, RXAS-quality evidence and shared dependencies.
+Adrian deferred INTERPRET, including its mechanism review, until later on
+16 October 2026; it remains required for eventual complete C.
+Retain existing language/API/platform decision gates and explicit exclusions.
+Inspect actual RXAS for quality and efficiency throughout, including work hidden
+in helpers; native C output may be faulty or inefficient. The emitted-code
+rules above and the Level L research performance exception below both apply.
 
 ## Working Rules
 
@@ -213,7 +216,27 @@ for a new broad benchmark or release-qualification run.
   exact-head hosted qualification when that avoids redundant long-running
   gates. Sanitizer worklist requirements below still apply to actual
   first-party sanitizer findings.
-- Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
+- Keep documentation current and enduring: architecture, contracts, user guides,
+  active plans/worklists, decisions and concise validation summaries. Update the
+  owning document in place; delete obsolete notes, completed handoffs, duplicate
+  reports and superseded plans after incorporating any lasting information.
+  This applies to every project and future initiative, including research,
+  performance and sanitizer work.
+- Logs, traces, raw samples, generated dumps, run receipts, per-run hash bundles
+  and scratch results are disposable. Use temporary or ignored build locations
+  while actively diagnosing or measuring, then delete them after extracting the
+  useful conclusions. Do not track, commit, archive elsewhere or retain them
+  "for evidence". An ignored directory is not a retention policy. Do not create
+  dated evidence/run directories or commit junk first to preserve it in Git.
+  Existing tracked junk should be removed as part of the relevant cleanup.
+- Record verification in the current owning document: revision or relevant
+  input identity, command, result, scope and limitations. Link to hosted runs
+  when relevant instead of downloading their logs into the tree. Reuse valid
+  results without keeping raw output. Maintained source, regression fixtures,
+  test oracles, example outputs used by tests/docs, licensed data and build
+  inputs remain legitimate assets; give each a named purpose and owner, rather
+  than relabelling an evidence dump as a fixture. Before deletion, check actual
+  references and move any real test input into its owning test/fixture directory.
 - Keep normal successful builds free of compiler warnings and unnecessary generated notices. Remove notices at their emitting source and fix warning/error causes. Do not hide command stdout/stderr, filter diagnostics, or use blanket warning suppression to make a build look clean. Avoid unnecessary generator work on unchanged inputs.
 - For native object providers, use the C RXPA factories/method bindings and
   checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
@@ -222,7 +245,8 @@ for a new broad benchmark or release-qualification run.
   `lib/plugins/llama/typed.h` as executable examples; `rxpa_classdecl` is only a
   metadata compilation fixture. Preserve Rexx classes that still own behavior.
   When replacing a shim, remove its obsolete source/build entries and update
-  human and agent guides together; mark retained historical evidence as such.
+  human and agent guides together; fold lasting conclusions into current docs
+  and delete obsolete notes.
 - Treat library development as an opportunity to validate the complete product
   toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and
   `rxvm`, and a library-discovered defect in any of those layers should gain a
@@ -279,7 +303,7 @@ the criteria that remain.
 ### Level L research exception
 
 For the Level L research project, including the experimental B-only C/G
-compilers under `lib/rxfnsl/compilers`, formal performance testing is not a
+compilers under `research/level-l/compilers`, formal performance testing is not a
 completion or publication requirement. Adrian set this scope on 15 October
 2026. Do not gate research increments on a formal Release benchmark, prescribed
 sample counts, AC power, or a separate performance-verdict approval. Focused
@@ -295,8 +319,8 @@ For performance-programme work, read `performance/AGENTS.md` and
 compiler/assembler optimisations, VM execution paths, or recorded performance
 evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
 `performance/DECISIONS.md` for durable accepted/rejected choices. Keep the
-consolidated plans and essential current evidence in HEAD; recover completed
-programme history and superseded runs from Git when needed.
+consolidated plans, durable decisions and current result summaries in HEAD.
+The documentation/output rules above apply; do not preserve raw run bundles.
 
 Outside the Level L research exception above, after an approved production performance edit, follow the mandatory first
 Release verdict in `performance/AGENTS.md` before doing broad closeout work.
@@ -367,8 +391,9 @@ cleanup, and documentation polish come after this decision gate, not before it.
   repository-level blocker, even when it is independent of the change that
   exposed it.  Before continuing unrelated closeout work, give the finding a
   stable `SAN-nnn` entry in `docs/SANITIZER-WORKLIST.md` with its reproducer,
-  retained log, affected revision, owner/next action, and closure test.  A
-  dated evidence note alone is not a valid disposition.
+  concise diagnostic, affected revision, owner/next action, and closure test.
+  Inspect temporary logs, summarize the finding in that entry, then delete the
+  logs. A separate dated note is not a valid disposition.
 - Do not describe a release candidate, release, or cross-platform sanitizer
   pass as complete or sanitizer-clean while a first-party `SAN-nnn` item is
   open. A bounded implementation phase may close only when Adrian explicitly
@@ -401,7 +426,9 @@ cleanup, and documentation polish come after this decision gate, not before it.
 - For unattended sanitizer sessions, request or reuse a saved approval for the
   `tools/asan-run.sh` command prefix, then keep build/test/status/kill actions
   inside that runner so the session does not stall on permission prompts.
-- When debugging anything that can emit large or unbounded output, redirect both stdout and stderr to a temp log file created with `mktemp`, then inspect that file with focused reads such as `tail`, `sed`, or `grep`.
-- Apply the temp-log workflow to verbose builds, parser-mode sessions, tracing, fixed-point loops, and any command that might otherwise flood the terminal or crash the agent session.
-- Treat `rxc -d*`, parser traces, fixed-point validation traces, and syntax-highlighting debug runs as mandatory temp-log cases: do not stream their raw output directly to the terminal.
-- Keep the terminal-facing output short: print the temp log path, then read back only the relevant slices needed for diagnosis.
+- Redirect verbose or unbounded stdout/stderr to a temporary file with `mktemp`;
+  inspect focused slices with `rg`, `sed` or `tail`. This is mandatory for
+  verbose builds, `rxc -d*`, parser/fixed-point traces and syntax-highlighting
+  debug runs. Show only the path and relevant excerpts while diagnosing.
+  Delete task-created logs after recording the useful result in the current
+  plan/worklist; never copy them into source, evidence or archive directories.

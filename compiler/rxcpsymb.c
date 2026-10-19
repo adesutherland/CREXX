@@ -31,7 +31,7 @@
 #include <ctype.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "../avl_tree/avl_tree.h"
+#include "../third_party/avl_tree/avl_tree.h"
 #include "rxcpdary.h"
 
 #ifndef NUTF8

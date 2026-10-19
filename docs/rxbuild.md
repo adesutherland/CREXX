@@ -14,6 +14,17 @@ cmake --build cmake-build-release --target rxbuild --parallel 1
 .\cmake-build-release\bin\rxbuild.exe tools\build\example.build
 ~~~
 
+The same plan can also be started through the cREXX front door, which is
+convenient for a single CLion external-tool action:
+
+~~~powershell
+.\cmake-build-release\bin\crexx.exe tools\build\example.build
+~~~
+
+When the input has a `.build` suffix, `crexx.exe` delegates it to the sibling
+`rxbuild.exe`. The plan remains an external runtime input; only one `.build`
+file may be supplied in that invocation.
+
 The recursive selection sample is:
 
 ~~~powershell
@@ -36,6 +47,13 @@ The MiniBASIC example uses the same reader process:
 .\cmake-build-release\bin\rxbuild.exe examples\minibasic\BUILD\build-minibasic.build
 ~~~
 
+The report-writer RXPP sample uses the same front door for preprocessing,
+compilation, and execution:
+
+~~~powershell
+.\cmake-build-release\bin\crexx.exe examples\report_writer\rxpp-sample\report_writer_100.build
+~~~
+
 ## Build phases
 
 A plan normally contains these operations:
@@ -43,6 +61,7 @@ A plan normally contains these operations:
 ~~~text
 COMPILE GRAMMAR
 COMPILE READER
+COMPILE RXPP
 COMPILE PROGRAM or COMPILE APPLICATION
 CREATE EXE
 RUN
@@ -51,10 +70,27 @@ RUN
 COMPILE GRAMMAR invokes the cREXX compiler for a .levell grammar and publishes
 the generated grammar module under OUTPUT_DIR.
 
-COMPILE READER compiles a .crexx reader and loads the grammar named by
-DEPENDS_ON.
+COMPILE READER compiles a .crexx reader with `rxc`, assembles it with `rxas`,
+and makes the grammar named by DEPENDS_ON available from OUTPUT_DIR.
 
-COMPILE PROGRAM compiles an ordinary cREXX program into a standalone .rxbin.
+COMPILE RXPP runs the existing RXPP preprocessor and writes the generated
+`.crexx` source as `OUTPUT.crexx` under OUTPUT_DIR. A following COMPILE PROGRAM
+can compile that generated source with OUTPUT_DIR on its import path, so
+imports produced for the RXPP application do not require a separate manual
+`-i` option.
+
+An RXPP source may declare:
+
+```rexx
+##RXBUILD REQUIRED
+```
+
+Such a source is rejected by direct RXPP/`crexx` preprocessing. The `COMPILE
+RXPP` phase supplies the internal `--rxbuild` mode and is therefore the
+supported entry point.
+
+COMPILE PROGRAM compiles an ordinary cREXX program with `rxc` and `rxas` into
+a standalone .rxbin.
 
 COMPILE APPLICATION invokes a declared source-language compiler, compiles its
 generated cREXX source, and emits one standalone application .rxbin.
@@ -64,8 +100,9 @@ using the existing cREXX native driver. APPLICATION names the application
 output from the preceding phase; OUTPUT is the executable stem. The .rxbin
 remains available as an independent bytecode deliverable.
 
-RUN invokes the generated .rxbin program. ARGUMENT supplies command-line
-arguments and STDIN supplies one input line when needed.
+RUN invokes the generated .rxbin program with WORK_DIR as the VM working
+location. ARGUMENT supplies command-line arguments and STDIN supplies one
+input line when needed.
 
 ### Source-language applications
 
@@ -106,8 +143,8 @@ is platform-specific even though the `.rxbin` is portable.
 
 ~~~text
 BUILD_DIR = "cmake-build-release/build";
-GRAMMAR_SOURCE = "tools/build/grammar/build.levell";
-READER_SOURCE = "tools/build/build_reader.crexx";
+GRAMMAR_SOURCE = "tools/rxbuild/grammar/build.levell";
+READER_SOURCE = "tools/rxbuild/build_reader.crexx";
 
 COMPILE GRAMMAR
   OUTPUT_DIR = "${BUILD_DIR}"
@@ -123,7 +160,7 @@ COMPILE READER
 RUN
   WORK_DIR = "${BUILD_DIR}"
   PROGRAM = "build_demo"
-  ARGUMENT = "-a" "tools/build/example.build"
+  ARGUMENT = "-a" "tools/rxbuild/example.build"
   STDIN = "";
 ~~~
 
@@ -136,7 +173,7 @@ A plan can assign string variables:
 
 ~~~text
 OUT_DIR = "cmake-build-release/build";
-GRAMMAR = "tools/build/grammar/build.levell";
+GRAMMAR = "tools/rxbuild/grammar/build.levell";
 ~~~
 
 Use ${NAME} inside quoted attribute values:
@@ -155,7 +192,7 @@ FILES selects regular files from a directory. BASENAMES removes the selected
 extension from each result:
 
 ~~~text
-GRAMMAR_DIR = "tools/build/grammar";
+GRAMMAR_DIR = "tools/rxbuild/grammar";
 OUT_DIR = "cmake-build-release/build/selected";
 GRAMMARS = FILES IN "${GRAMMAR_DIR}" EXTENSION ".levell" BASENAMES;
 
@@ -238,5 +275,5 @@ Common diagnostics include:
   compiler from a grammar or source extension.
 - Relative source paths should be written for the selected project root.
 
-See [tools/build/README.md](../tools/build/README.md) and the runnable
-plans in [tools/build](../tools/build/).
+See [tools/rxbuild/README.md](../tools/rxbuild/README.md) and the runnable
+plans in [tools/build](../tools/rxbuild).

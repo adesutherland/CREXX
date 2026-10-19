@@ -19,14 +19,14 @@ remaining adapter/platform acceptance and the worklist for SAN-009's retained
 sanitizer findings.  Every first-party finding receives a stable `SAN-nnn`
 entry as soon as it is observed, including defects exposed while testing an
 unrelated activity.  "Independent" and "pre-existing" are attribution labels,
-not dispositions.  Dated evidence may support an entry but may not replace it.
+not dispositions. Record the finding in the current worklist, not a dated note.
 
 An open `SAN-nnn` item blocks cross-platform sanitizer-clean and release
 completion claims. A bounded implementation phase may close only after Adrian
 explicitly assigns its outstanding platform proof to a named later release-QA
 gate. That handoff must name the live item, current repair evidence and the
 release-QA owner; it does not close or downgrade the item. The entry must retain
-the exact failing command and log, affected revision, smallest permanent
+the exact failing command and concise diagnostic, affected revision, smallest permanent
 reproducer, owner or next action, and closure checks.
 
 Closure requires all of the following:
@@ -47,7 +47,10 @@ until the underlying defect is repaired and requalified.
 
 ## Runner
 
-The runner keeps every command in a timestamped log directory:
+The runner writes temporary command logs in a timestamped build directory.
+Inspect them during the run, summarize outcomes and diagnostics in the current
+worklist, then delete the run directory after its processes finish. Do not
+track, copy or archive these logs; the root documentation/output rules apply.
 
 ```sh
 tools/asan-run.sh --phase focused-lsan
@@ -168,6 +171,14 @@ matrices have 900-second outer limits to cover instrumented hosted execution.
 An explicit CTest timeout with no sanitizer diagnostic is a harness result until
 the unchanged test is checked under its declared isolated scheduling; it is not
 a sanitizer-clean result and must not be waived.
+
+The 16 `ts_llstructuredflow_*` backend/optimizer/VM cells also use `RUN_SERIAL`
+and a 900-second hang backstop. Their cyclic-analysis and resource-bound matrix
+is CPU intensive despite executing prelinked bytecode without nested builds.
+Eight competing Linux ASan cells exhausted the former 300-second limit;
+isolated unchanged LL1 controls pass in Debug and Apple ASan. Keep all cells
+and their semantic/resource assertions enabled. Measurements and the repair
+disposition are recorded as SAN-QA-019 in the sanitizer worklist.
 
 For a stepwise full leak-clean loop after the tree is already built:
 

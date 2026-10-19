@@ -25,6 +25,8 @@ options levelb comments_dash
 import rxfnsb
 
 /*
+ * Samples default to <build-dir>/performance/lifecycle. Inspect and summarize
+ * the result in the owning programme document, then delete this workspace.
  * Capture compile/translation and cold load-to-first-result phases for the
  * deliberately tiny lifecycle probes. The combined load_first_result phase is
  * used because none of the three public command-line surfaces exposes a
@@ -40,7 +42,7 @@ main: procedure = .int
   runs = 3
   repo_root = "."
   build_dir = "cmake-build-release"
-  output_dir = "performance/evidence/lifecycle"
+  output_dir = ""
   output_path = ""
   oorexx_home = "/Users/adrian/.local/opt/oorexx/5.1.0-12973"
   netrexx_home = "/Users/adrian/.local/opt/netrexx/5.10-GA"
@@ -115,6 +117,7 @@ main: procedure = .int
     return argument_error("--crexx-vm must be rxtvm, rxbvm or both")
   if runs < 1 then return argument_error("--runs must be positive")
   if \is_absolute_path(build_dir) then build_dir = current_directory() || "/" || build_dir
+  if output_dir = "" then output_dir = build_dir || "/performance/lifecycle"
   if output_path = "" then output_path = output_dir || "/samples.csv"
 
   command_out = .string[]
@@ -159,7 +162,7 @@ main: procedure = .int
 
   if write_lines(output_path, rows) <> 0 then return 1
   if write_summary(output_dir || "/summary.csv", rows) <> 0 then return 1
-  say "PASS: retained" rows[0] - 1 "lifecycle phase samples in" output_path
+  say "PASS: captured" rows[0] - 1 "lifecycle phase samples in" output_path
   return 0
 
 capture_crexx: procedure = .int

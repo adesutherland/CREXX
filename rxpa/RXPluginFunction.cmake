@@ -111,7 +111,7 @@ endfunction()
 # packaging.  The historical <id>_static.a/.lib archive remains available for
 # compatibility with existing consumers.
 function(add_rxpa_provider_package plugin_name)
-    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY;PROVIDER_ID;ENGINE_ID"
+    cmake_parse_arguments(RXPA_PROVIDER "INSTALL" "OUTPUT_DIRECTORY;PROVIDER_ID;ENGINE_ID"
         "LINK_TARGETS;LINK_FILES;RUNTIME_TARGETS;BACKEND_TARGETS;RUNTIME_FILES;RUNTIME_SEARCH_DIRECTORIES" ${ARGN})
     set(_crexx_dynamic_target ${plugin_name})
     set(_crexx_static_target ${plugin_name}_static)
@@ -208,6 +208,20 @@ function(add_rxpa_provider_package plugin_name)
             VERBATIM
             COMMENT "Generating ${_crexx_provider_id} provider package metadata")
         add_custom_target(${plugin_name}_runtime_package ALL DEPENDS ${_package_outputs})
+    endif()
+    if(RXPA_PROVIDER_INSTALL)
+        # Install the declared pair directly from targets, so missing stale
+        # POST_BUILD copies cannot change a package's identity.
+        install(FILES "$<TARGET_FILE:${_crexx_dynamic_target}>"
+            "$<TARGET_FILE:${_crexx_static_target}>" DESTINATION bin/providers)
+        install(FILES "$<TARGET_FILE:${_crexx_static_target}>"
+            DESTINATION bin/providers RENAME "${_crexx_provider_id}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        if(_package_outputs)
+            set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
+                "${plugin_name}_runtime_package")
+            install(CODE "set(provider_manifest \"${_crexx_provider_dir}/${_crexx_provider_id}.native.json\")
+include(\"${CMAKE_CURRENT_FUNCTION_LIST_DIR}/InstallProviderPackage.cmake\")")
+        endif()
     endif()
 endfunction()
 

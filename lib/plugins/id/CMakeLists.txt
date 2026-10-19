@@ -12,7 +12,7 @@ target_link_libraries(id PRIVATE Threads::Threads)
 add_static_plugin_target(id id.c)
 target_link_libraries(id_static PRIVATE Threads::Threads)
 
-add_rxpa_provider_package(id)
+add_rxpa_provider_package(id INSTALL)
 
 if(BUILD_TESTING)
     add_custom_target(rxid_test ALL)
@@ -35,3 +35,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_install_targets(id id_static)

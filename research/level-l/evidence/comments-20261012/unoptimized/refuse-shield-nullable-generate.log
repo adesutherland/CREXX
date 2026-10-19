@@ -1,2 +1,0 @@
-/* Level L: checking regular lexer rules */
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/unoptimized/refuse-shield-nullable/input.levell: line 10, byte 258: bad: outside pattern: LL_NULLABLE_TOKEN: quoted.text (line 12) accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.

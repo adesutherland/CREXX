@@ -40,7 +40,7 @@ foreach(_rxsqlite_target IN ITEMS sqlite sqlite_static)
     target_link_libraries(${_rxsqlite_target} PRIVATE
             Threads::Threads ${CREXX_MATH_LIBRARY})
 endforeach()
-add_rxpa_provider_package(sqlite)
+add_rxpa_provider_package(sqlite INSTALL)
 
 # Build the Level-G ADDRESS facade as an ordinary installed cREXX module.  Its
 # native declaration input is the same rxsqlite plugin installed for runtimes.
@@ -171,3 +171,6 @@ if(BUILD_TESTING)
 endif()
 
 crexx_finalize_directory_qa_tiers()
+
+crexx_install_targets(sqlite sqlite_static)
+crexx_install_bytecode(rxsqlite_address "${_rxsqlite_address_base}.rxbin")

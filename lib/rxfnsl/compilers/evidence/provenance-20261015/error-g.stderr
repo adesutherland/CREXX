@@ -1,6 +1,0 @@
-PANIC: (SIGNAL DIVISION_BY_ZERO)
-  at module 1 (/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g.rxas) address 43 (0x2b)
-  source: error-g.crexx:3:5: say 1 / 0
-  called from:
-  at module 1 (/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/levell-cp-examples-jqmw4w9h/error-g.rxas) address 6 (0x6)
-  source: :0:0: 

@@ -1,0 +1,71 @@
+/* cREXX License (MIT). Level L command options, input and reporting. */
+options levelb
+import rxfnsb
+import lllimits
+import llgenerate
+main: procedure = .int
+  arg argv = .string[]
+  rule = .int; d = .int; i = .int; entry = .int; name = .string
+  if argv[0] < 1 then do
+    say 'usage: rxlang specification.crexx|specification.rxl [--rxas|--graph] [--limit name=count] (generated artifact on stdout)'; return 2
+  end
+  limits = .lllimits..policy()
+  if argv[1] = '--limits' then do
+    settings = lllimits..names()
+    do i = 1 to words(settings)
+      name = word(settings,i)
+      say name || '=' || limits.limit(name) || ' (ceiling ' || limits.ceiling(name) || ')'
+    end
+    return 0
+  end
+  format = 'crexx'; i = 2
+  do while i <= argv[0]
+    if argv[i] = '--rxas' | argv[i] = '--graph' then do
+      if format <> 'crexx' then do
+        say 'LL_USAGE: choose one output format'; return 2
+      end
+      format = argv[i]
+    end
+    else if argv[i] = '--limit' then do
+      i = i + 1
+      if i > argv[0] then do
+        say 'LL_USAGE: --limit requires name=count'; return 2
+      end
+      setting = argv[i]; split = pos('=',setting)
+      if split < 2 then do
+        say 'LL_USAGE: --limit requires name=count'; return 2
+      end
+      name = left(setting,split - 1); value = substr(setting,split + 1)
+      if value = '' | verify(value,'0123456789') <> 0 then do
+        say 'LL_USAGE: resource count must be a positive decimal integer'; return 2
+      end
+      count = .int
+      do
+        count = value as .int
+      on signal
+        say 'LL_USAGE: resource count exceeds the host integer representation'; return 2
+      end
+      if limits.set(name,count) = 0 then do
+        say 'LL_USAGE: ' || limits.error(); return 2
+      end
+    end
+    else do
+      say 'LL_USAGE: unknown option ' || argv[i]; return 2
+    end
+    i = i + 1
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'LL_SOURCE_IO: cannot read specification ' || argv[1]; return 2
+  end
+
+  request = .llgenerate..request(source,changestr('--',format,''),argv[1],limits,lower(right(argv[1],4)) = '.rxl')
+  if request.status() <> 0 then do; say request.error(); return request.status(); end
+  output = request.output()
+  do i = 1 to output.chunks()
+    chunk = output.chunk(i)
+    say binsubstr(chunk,1,<blen>(chunk) - 1) as .string
+  end
+  return 0

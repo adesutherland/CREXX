@@ -356,7 +356,7 @@ ASan/LSan and macOS ASan each pass **2,376/2,376** after successful build and
 preparation. Both complete artifacts and job logs are retained in durable
 local storage; the coordinator verified checkout identities, Linux build/test
 leak detection and absence of sanitizer diagnostics. See the
-[hosted receipt](../../qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
+[historical hosted receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
 This satisfies the matrix portion of AC-08 for that integrated revision;
 do not attribute it to the later #220 code edit or to native packages. No
 extra broad run is launched. The original native AC-04/11 and final AC-10
@@ -468,7 +468,7 @@ requesting any additional run. Native AC-04/11, final sanitizer AC-08 and
 final AC-10 remain open.
 
 **17:17 UTC CodeQL triage checkpoint:** the worker's
-[trace and probe receipt](../../qa/beta3-core-baseline/codeql-227-triage-2026-09-28.md)
+[historical trace and probe receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/codeql-227-triage-2026-09-28.md)
 at `8cd689359` confirms a real environment-path-to-stderr flow on allocation
 failure. The same configured search path is already printed by the ordinary
 missing-provider diagnostic. Coordinator source inspection confirms the
@@ -487,7 +487,7 @@ not a silent issue closure or a change to the product-definition sequence.
 Both sanitizer lanes are still active on unchanged published `9f2f44cfd`.
 
 **17:27 UTC older-alert review and bounded repair:** the
-[nine-alert receipt](../../qa/beta3-core-baseline/codeql-older-alerts-triage-2026-09-28.md)
+[historical nine-alert receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/codeql-older-alerts-triage-2026-09-28.md)
 at `6c437c535` identifies four redundant compiler checks (#216–218/#225),
 one confirmed RXBIN error-format defect (#220), and four filesystem check/use
 findings (#222–224/#226). Coordinator inspection confirms that #220 passes
@@ -499,7 +499,7 @@ separate review before changing behavior; do not infer atomic object identity
 from a pathname API or silently weaken the documented symlink rejection.
 
 **17:34 UTC filesystem review evidence:** the coordinator's
-[controlled source-substitution probe](../../qa/beta3-core-baseline/codeql-226-path-swap-probe-2026-09-28.md)
+[historical controlled source-substitution probe](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/codeql-226-path-swap-probe-2026-09-28.md)
 uses the unchanged published `rxfs_transfer` function. On macOS, replacing
 the inspected final source with a symlink makes hardlink succeed against the
 referenced victim inode and move succeed with a symlink target; copy rejects
@@ -529,7 +529,7 @@ dismissal or new broad run is part of this bounded step.
 
 **17:40 UTC #220 repair acceptance:** local commit `b63ee4b6a` changes only
 the incorrect graph-operand format specifier plus its
-[QA receipt](../../qa/beta3-core-baseline/codeql-220-format-repair-2026-09-28.md).
+[historical QA receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/codeql-220-format-repair-2026-09-28.md).
 The coordinator independently inspected the variadic types and unchanged
 failure/cause handling, verified retained Debug 4/4 and Apple ASan 4/4
 results and hashes, and completed a successful normal core product build.
@@ -583,7 +583,7 @@ matrix passed on exact `9f2f44cfd`, with successful build/preparation and
 **2,376/2,376 CTests**. The coordinator retained the uploaded artifact and
 job log in durable local storage, verified checkout identity and settings,
 and inspected for sanitizer diagnostics. Full paths, hashes and platform
-limits are in the [hosted sanitizer receipt](../../qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
+limits are in the [historical hosted sanitizer receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
 Linux ASan/LSan is still running. This macOS result does not qualify the
 subsequent #220 edit, Linux leaks, or native mainframe integration; AC-08
 and all other outstanding criteria remain open. No repeat was dispatched.
@@ -630,7 +630,7 @@ and CodeQL remain active at this snapshot. The macOS sanitizer result is
 retained as above; Linux ASan/LSan is still running on `9f2f44cfd`.
 
 The macOS current-provider characterization is retained at `65a49141e`:
-[53 isolated invocations](../../qa/beta3-core-baseline/rxfs-stable-path-macos-2026-09-28.md)
+[historical 53 isolated invocations](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/rxfs-stable-path-macos-2026-09-28.md)
 confirm the current stable-path statuses and source/target outcomes. It is
 not concurrent-swap, Linux, Windows or mainframe qualification. Reuse those
 valid observations; new copy regressions must distinguish the actual repair.
@@ -639,7 +639,7 @@ format-only product input remains separate until any combined publication
 decision is made. No extra broad matrix is dispatched for this approval.
 
 **28 September replacement worker checkpoint:** the complete
-[takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
+[maintained contract](core-baseline-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
 checkout; latest implementation commit is `2df36e28e`, followed by local
 documentation-only audit/handoff commits. The later current-status receipts
@@ -669,7 +669,7 @@ hosted ILP32 evidence; see the shared-core acceptance receipt below. All
 remaining criteria stay open/partial
 as detailed below. The earlier hosted Build on `30d723054` found two fixture
 causes and did not pass; its focused repair evidence is in the
-[hosted fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
+[historical hosted fixture receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
 Shared cREXX conversion and raw native services are authoritative; the
 tentative runtime map-setter draft was removed before the platform commit.
 
@@ -727,8 +727,8 @@ one text arbitrarily is forbidden. Fixing source identity transport is a future
 compiler/inliner provenance design, not a comment-retention tweak. Existing
 source-step stripping does not repair this collision.
 
-The compact [probe log](../../qa/beta3-core-baseline/sourceline-probe.log)
-and the [actual caller RXAS](../../qa/beta3-core-baseline/sourceline-main.rxas)
+The compact [historical probe log](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/sourceline-probe.log)
+and the [historical actual caller RXAS](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/sourceline-main.rxas)
 retain commands and conflicting source anchors from product revision
 `143921e11e4d573909fcc4def28da5dceadba9d9`. Providers are retained beside them.
 Coordinator independently inspected this evidence. No further SOURCELINE QA or
@@ -776,7 +776,7 @@ is authorized here.
   and missing certified exits fail, working PARSE executes `before/hello/after`,
   optional exit load keeps its existing warning/fallback, malformed RXBIN
   import fails with retained cause. Baseline PARSE/ADDRESS silently disappeared
-  with status zero; compact receipt retained under `docs/qa/beta3-core-baseline`.
+  with status zero; compact receipt retained under [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline).
 - At this earlier checkpoint, compiler root/load/allocation and native platform
   edits remained uncommitted. Shadowed source providers
   now have a separate flag so dependency manifests do not hash unused bodies.
@@ -846,7 +846,7 @@ is authorized here.
   `test_single_embed` build `/tmp/beta3-single-build.log`, and focused
   `single_vm_state` `/tmp/beta3-single-test.log`. This is not a CMS/TSO native
   compiler/package proof. The detailed crossing inventory is
-  [text-capability-matrix.md](../../qa/beta3-core-baseline/text-capability-matrix.md).
+  [historical text-capability-matrix.md](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/text-capability-matrix.md).
 - The complete Debug build passed on the platform candidate before the later
   narrow existence-probe and selector edits at
   `/tmp/beta3-platform-all-build2.log` (1,564 actions after the focused
@@ -928,7 +928,7 @@ causes: `source_import_srcmap_factory` lacks the required library search path
 in its isolated fixture, and both RXC/RXPP diagnostic-catalog tests find the
 same two new keys absent from German and Dutch catalogues. Exact commands,
 tree/cache/log hashes, excerpts, passing serialized aggregate receipts and
-repair limits are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
+repair limits are in the [historical combined normal QA receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
 At this point, the coordinator was reviewing both causes. No production source,
 test fixture or catalogue had yet changed; AC-07 and STEP-05 remained OPEN
 pending focused repair qualification. Preserve the other 2283 passing results
@@ -950,7 +950,7 @@ AC-09 product publication and AC-10 final handoff also remain OPEN.
    passed 3/3; a focused Apple ASan build of `rxc` and `library` and the
    matching source-map CTest passed 1/1 without sanitizer diagnostics. Exact
    commands, input tree `088c61f77fda5eef407cf0fd1a54f0d13b55ef8d`,
-   local paths and hashes are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
+   local paths and hashes are in the [historical combined normal QA receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
 
 The 2,283 unchanged passing combined results are retained and the three
 failed entries are resolved by focused rerun. The coordinator accepted this
@@ -978,7 +978,7 @@ directory to build `bin` and declaring `test_source_semantics`, `library` and
 `compiler_exit_bin` prep targets in `1366df3c1`. The matching focused Apple
 ASan parser-mode test passes 1/1. Exact commands, local and hosted log hashes,
 the read-only DSL-Syntax-Highlighter input identity and the open hosted retry
-are in the [fixture repair receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
+are in the [historical fixture repair receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
 An adjacent parser-mode sandbox audit found the same missing-module setup in
 the comprehensive `highlight_cache` test; commit `00d42cb3a` makes its first
 sandbox stage the required library and compiler exits, with explicit fixture
@@ -992,7 +992,7 @@ The Linux hosted `gcc -m32` RXBIN cross-width check and optimizer parity job
 passed on published head; retain those valid results. No broad QA rerun was
 made for these test-only/fixture-only changes.
 
-The separate [console flush probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+The separate [historical console flush probe](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
 demonstrates that `fflush` can report success while a partial prompt remains
 invisible and a deferred raw error reaches only close. This is an additional
 AC-04/11 native standard-stream contract requirement, not a sanitizer finding.
@@ -1013,7 +1013,7 @@ fixture-only repairs. The local follow-up after that head changes documentation
 only. Coordinator-reviewed composite local correctness at `30d723054`
 retains 2,283 passing combined Debug tests plus three focused repairs; the
 parser-mode hosted fixtures then passed focused Debug/Apple ASan at the exact
-inputs in the [fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
+inputs in the [historical fixture receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
 No broad local QA was repeated for fixture or documentation changes.
 
 The patch register above now disposes every supplied CMS release-PoC topic:

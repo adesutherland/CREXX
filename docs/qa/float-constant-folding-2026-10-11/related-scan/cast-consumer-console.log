@@ -1,4 +1,0 @@
-cast-int-string-consumer noopt: {"exit": 0, "stderr": "", "stdout": "1.5\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1.5\n"}
-cast-bool-string-consumer noopt: {"exit": 0, "stderr": "", "stdout": "2\n"} | opt: {"exit": 0, "stderr": "", "stdout": "2\n"}
-cast-bool-typed-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
-cast-int-string-assignment noopt: {"exit": 0, "stderr": "", "stdout": "1.5\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1.5\n"}

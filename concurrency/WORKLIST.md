@@ -129,11 +129,11 @@ repairs; each repaired candidate was committed and the affected matrix was
 replayed from fresh directories at a clean exact commit.
 
 The exact clean-commit runners and expected-result rules are versioned in
-[`qa/`](qa/). They configure fresh out-of-tree builds, enable live HTTP/TLS
+[`qa/`](qa). They configure fresh out-of-tree builds, enable live HTTP/TLS
 verification, execute the maintained labels plus stress and broad CTest, and
 prove installed and extracted-package toolchains without editing the target
 checkout. The next-agent execution and independent review brief is
-[`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md).
+[the qualification guide](qa/README.md).
 
 ### Native Windows QA-D evidence
 
@@ -144,7 +144,7 @@ concurrency tests and 2,220/2,220 complete cases. All three SCHANNEL lanes also
 passed live trusted/mismatch TLS, 20 stress repetitions, install smoke and
 extracted-ZIP smoke; Clang and GCC proved both VM executables, while MSVC proved
 its supported portable `rxbvm` product. The retained record is
-[`2026-08-17-windows-qualification`](evidence/2026-08-17-windows-qualification/README.md).
+[historical `2026-08-17-windows-qualification`](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/concurrency/evidence/2026-08-17-windows-qualification/README.md).
 
 - [ ] Build the ordinary product and concurrency libraries on supported Linux,
   Windows and Mac toolchains.
@@ -267,7 +267,7 @@ The final syntax-highlighting matrix passed 72/72 and the complete sweep passed
 
 The complete local Linux repair-validation commands, logs, install/package
 inventories and digests are retained in
-[`2026-08-17-linux-harness-repair`](evidence/2026-08-17-linux-harness-repair/README.md).
+[historical `2026-08-17-linux-harness-repair`](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/concurrency/evidence/2026-08-17-linux-harness-repair/README.md).
 
 ## Evidence retention
 

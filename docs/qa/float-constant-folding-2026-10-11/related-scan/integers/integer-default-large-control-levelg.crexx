@@ -1,7 +1,0 @@
-options levelg numeric_common
-main: procedure = .int
-numeric digits 18
-  arg argv = .string[]
-i = 9007199254740993
-say i = 9007199254740993
-return 0

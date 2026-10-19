@@ -1,0 +1,6 @@
+options levelg
+say scale()
+exit 0
+scale: procedure = .int
+  arg value = .int, factor = 2
+  return value * factor

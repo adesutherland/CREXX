@@ -1,4 +1,0 @@
-STATUS|1|BYTE|0
-ORIGINAL|3C212D2D6F70656E
-MASK|2020202020202020
-ERROR|LL_COMMENT: unclosed block comment angle; opening bytes [0,4)

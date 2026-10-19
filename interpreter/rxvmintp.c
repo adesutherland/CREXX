@@ -5875,8 +5875,6 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define RXVM_PLATFORM_NAME "windows"
 #elif defined(__APPLE__)
 #define RXVM_PLATFORM_NAME "macOS"
-#elif defined(__CMS__)
-#define RXVM_PLATFORM_NAME "cms"
 #else
 #define RXVM_PLATFORM_NAME "unknown"
 #endif

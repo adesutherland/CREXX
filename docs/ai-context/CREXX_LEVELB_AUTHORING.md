@@ -17,7 +17,7 @@ For Level B authoring, these sources are more reliable than model memory:
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 - `docs/books/crexx_language_reference/data_types.md`
 - `docs/books/crexx_language_reference/statements.md`
-- nearby working `.crexx` files in `lib/`, `bin/`, `compiler/exits/`,
+- nearby working `.crexx` files in `lib/`, `driver/`, `compiler/exits/`,
   `debugger/`, and `tests/`
 
 ## Repo-Native Level B Patterns
@@ -56,7 +56,7 @@ address crexx "echo .crexx" output ordered_searches
 ```
 
 References:
-- `tests/demo/countlines.crexx`
+- `examples/basic/countlines.crexx`
 - `compiler/exits/address/test_address.crexx`
 
 ### 3. Tool-style entry point with procedure-exposed module state
@@ -410,7 +410,7 @@ Store concrete class instances with an explicit `as .object` upcast.
 
 References:
 
-- `tests/demo/countlines.crexx`
+- `examples/basic/countlines.crexx`
 - `compiler/exits/ExitTestSupport.crexx`
 - `docs/books/crexx_language_reference/data_types.md`
 
@@ -578,8 +578,8 @@ address path "rxas -h" output out error err
 References:
 
 - `compiler/exits/address/test_address.crexx`
-- `bin/crexx.crexx`
-- `tests/demo/countlines.crexx`
+- `driver/crexx.crexx`
+- `examples/basic/countlines.crexx`
 
 ### Signal handlers live on simple `do` groups
 
@@ -645,7 +645,7 @@ References:
 - `docs/books/crexx_language_reference/arguments.md`
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `debugger/rxdb.crexx`
-- `tests/demo/countlines.crexx`
+- `examples/basic/countlines.crexx`
 
 ## Wayfinding: Best Example Files By Task
 
@@ -657,8 +657,8 @@ References:
 
 ### Writing a top-level command/script
 
-- `tests/demo/countlines.crexx`
-- `bin/crexx.crexx`
+- `examples/basic/countlines.crexx`
+- `driver/crexx.crexx`
 - `compiler/exits/address/test_address.crexx`
 
 ### Writing a stateful tool
@@ -685,7 +685,7 @@ References:
 
 - `docs/books/crexx_language_reference/arguments.md`
 - `debugger/rxdb.crexx`
-- `tests/demo/countlines.crexx`
+- `examples/basic/countlines.crexx`
 
 ## Agent Guidance
 

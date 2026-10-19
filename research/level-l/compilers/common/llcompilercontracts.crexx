@@ -1,0 +1,181 @@
+/* cREXX License (MIT). Level B import contracts, no native compiler reader. */
+options levelb
+namespace llcompilercontracts expose catalog signature validtype sourcename
+import rxfnsb
+import llir
+import llbinmeta
+
+/** Logical source identity at compiler boundaries. A physical CLI path always
+ * becomes a basename; service callers may retain deliberate relative names.
+ * Recognise both host path spellings independently of the executing platform. */
+sourcename: procedure = .string
+  arg name = .string, physical = 0
+  absolute = left(name,1) = '/' | left(name,1) = '\'
+  if length(name) >= 3 then absolute = absolute | (substr(name,2,1) = ':' & (substr(name,3,1) = '/' | substr(name,3,1) = '\'))
+  if physical | absolute then do
+    split = max(lastpos('/',name),lastpos('\',name))
+    if split > 0 then return substr(name,split + 1)
+  end
+  return name
+
+/** Compiler admission over the independent Level L metadata reader. */
+catalog: class
+  _records = .llbinmeta..catalog
+  *: factory
+    arg image = .binary, budget = 16777216
+    _records = .llbinmeta..catalog(image,budget)
+    return
+  error: method = .string
+    return changestr('LL_RXBIN_IMPORT',_records.error(),'LL_COMPILER_IMPORT')
+  field: method = .string
+    arg kind = .int, owner = .string, member = '', ordinal = 1
+    return _records.field(kind,owner,member,ordinal)
+  lookup: method = .signature
+    arg name = .string
+    raw = _records.lookup(name)
+    if raw.error() <> '' then return .signature.failed(changestr('LL_RXBIN_IMPORT',raw.error(),'LL_COMPILER_IMPORT'))
+    return .signature(raw.name(),raw.result(),raw.arguments(),raw.flags())
+
+/** Exact selected signature fields. The frontend profile admits scalar by-value
+ * calls; other complete metadata is retained by catalog and rejected if used. */
+signature: class
+  _name = .string
+  _result = .string
+  _types = .string[]
+  _names = .string[]
+  _optional = .int[]
+  _error = .string
+  _options = .string
+  *: factory
+    arg name = .string, result = .string, arguments = .string, flags_text = ''
+    _name = name; _result = lower(strip(result)); _options = flags_text; _error = ''
+    if validtype(_result) = 0 then do
+      _error = 'invalid result type'; return
+    end
+    if strip(arguments) = '' then return
+    start = 1; depth = 0
+    do i = 1 to length(arguments) + 1
+      ch = substr(arguments,i,1)
+      if ch = '[' then depth = depth + 1
+      if ch = ']' then depth = depth - 1
+      if depth < 0 then do
+        _error = 'unbalanced argument type'; return
+      end
+      if (ch = ',' & depth = 0) | i > length(arguments) then do
+        item = strip(substr(arguments,start,i - start)); start = i + 1
+        split = pos('=',item)
+        if split < 2 then do
+          _error = 'argument needs name=type'; return
+        end
+        name = strip(left(item,split - 1)); type = lower(strip(substr(item,split + 1)))
+        optional = left(name,1) = '?'
+        if optional then name = substr(name,2)
+        if validtype(type) = 0 then do
+          type = literaltype(type)
+          if type <> '' then optional = 1
+        end
+        if validtype(type) = 0 | type = '.void' | name = '' | verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then do
+          _error = 'unsupported or invalid argument contract'; return
+        end
+        if verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') <> 0 then do
+          _error = 'invalid formal name'; return
+        end
+        do j = 1 to _names[0]
+          if upper(_names[j]) == upper(name) then do; _error = 'duplicate formal name'; return; end
+        end
+        n = _types[0] + 1; _types[n] = type; _names[n] = name; _optional[n] = optional
+      end
+    end
+    if depth <> 0 then _error = 'unbalanced argument type'
+    return
+  failed: factory
+    arg reason = .string
+    _error = reason; _name = ''; _result = ''; _options = ''
+    return
+  error: method = .string
+    return _error
+  name: method = .string
+    return _name
+  result: method = .string
+    return _result
+  arguments: method = .int
+    return _types[0]
+  type: method = .string
+    arg ordinal = .int
+    return _types[ordinal]
+  paramname: method = .string
+    arg ordinal = .int
+    return _names[ordinal]
+  optional: method = .int
+    arg ordinal = .int
+    return _optional[ordinal]
+  flags_text: method = .string
+    return _options
+
+validtype: procedure = .int
+  arg text = .string
+  /* Selected frontend calls are scalar; full class names are retained for the
+   * Classic backend contract, without admitting authored object syntax. */
+  if left(lower(text),10) = 'reference ' then do
+    text = strip(substr(text,11))
+    if text = '.void' | left(lower(text),10) = 'reference ' then return 0
+  end
+  if left(text,1) <> '.' | length(text) < 2 then return 0
+  rest = substr(text,2)
+  do while pos('..',rest) > 0
+    split = pos('..',rest); part = left(rest,split - 1)
+    if part = '' | verify(part,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then return 0
+    rest = substr(rest,split + 2)
+  end
+  return rest <> '' & verify(left(rest,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 & verify(rest,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
+
+/** Legacy metadata contains literal defaults, never general expressions. */
+literaltype: procedure = .string
+  arg text = .string
+  if text = '' then return ''
+  i = .int
+  quote = left(text,1)
+  if quote = "'" | quote = '"' then do
+    i = 2
+    do while i <= length(text)
+      if substr(text,i,1) = quote then do
+        if i = length(text) then return '.string'
+        if substr(text,i + 1,1) <> quote then return ''
+        i = i + 1
+      end
+      i = i + 1
+    end
+    return ''
+  end
+  folded = lower(text)
+  if left(folded,1) = '+' | left(folded,1) = '-' then folded = substr(folded,2)
+  if folded == 'inf' | folded == 'nan' then return '.float'
+  if left(folded,4) = 'nan(' & right(folded,1) = ')' then do
+    bits = substr(folded,5,length(folded) - 5)
+    if length(bits) <> 16 | verify(bits,'0123456789abcdef') <> 0 then return ''
+    /* IEEE payload must be a NaN, not infinity or a finite value. */
+    if wordpos(left(bits,3),'7ff fff') = 0 | verify(substr(bits,4),'0') = 0 then return ''
+    return '.float'
+  end
+  i = 1; digits = 0; dot = 0; exponent = 0
+  if left(text,1) = '+' | left(text,1) = '-' then i = 2
+  do while i <= length(text)
+    ch = substr(text,i,1)
+    if pos(ch,'0123456789') > 0 then digits = digits + 1
+    else if ch = '.' & dot = 0 & exponent = 0 then dot = 1
+    else if ch = 'e' & exponent = 0 & digits > 0 then do
+      exponent = 1; digits = 0
+      if substr(text,i + 1,1) = '+' | substr(text,i + 1,1) = '-' then i = i + 1
+    end
+    else return ''
+    i = i + 1
+  end
+  if digits = 0 then return ''
+  if dot | exponent then return '.float'
+  do
+    if left(text,1) = '+' then text = substr(text,2)
+    codec = .llir..intcodec(); ignored = codec.parse(text)
+  on signal
+    return ''
+  end
+  return '.int'

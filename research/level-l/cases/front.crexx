@@ -25,7 +25,7 @@ main: procedure = .int expose failures cases
   call pegcase graph,root,'x=truefalse;',1
   call pegcase graph,root,'x=1; garbage',1
   /* Independently handwritten format oracle; deterministic mutation corpus. */
-  path = 'research/level-l/evidence/config-reference.txt'
+  path = 'research/level-l/cases/fixtures/config-reference.txt'
   do while lines(path)
     row = linein(path); first = pos('|',row); second = pos('|',row,first + 1)
     hex = substr(row,1,first - 1); expected = substr(row,first + 1,second - first - 1) as .int

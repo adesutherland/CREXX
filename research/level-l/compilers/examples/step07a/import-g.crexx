@@ -1,0 +1,5 @@
+options levelg
+import scalelib
+say scalelib..scale(7)
+say scalelib..scale(7,3)
+exit 0

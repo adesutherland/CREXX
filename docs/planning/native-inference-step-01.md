@@ -232,7 +232,7 @@ Multi-device placement remains subject to supported split modes and real tests.
 
 Current [`add_rxpa_provider_package`](../../rxpa/RXPluginFunction.cmake) copies
 the dynamic plugin and static archive. The native
-[`crexx` wrapper](../../bin/crexx.crexx) selects those archives from provider
+[`crexx` wrapper](../../driver/crexx.crexx) selects those archives from provider
 requirements; it does not carry provider-specific dependent libraries or runtime
 bundles. Do not assume a CMake target's transitive links survive archive copying.
 The global `crexx_native_libs` list is not the right place for optional llama

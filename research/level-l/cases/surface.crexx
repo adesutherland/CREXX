@@ -1,6 +1,6 @@
 /* The same authored Rexx-like Level L source feeds native and re2c backends. */
 options levell
-import rxfnsl
+import tinyexpr
 import gsurface
 import level_l_tinyexpr
 main: procedure = .int
@@ -10,10 +10,10 @@ main: procedure = .int
   sources[7] = '2 + @'; sources[8] = 'é'
   do index = 1 to sources[0]
     source = sources[index]
-    expected = rxfnsl..tinyexpr_lex(source)
+    expected = tinyexpr..tinyexpr_lex(source)
     native = gsurface..lex(source)
     re2c = level_l_tinyexpr..level_l_tinyexpr_lex(source)
-    count = rxfnsl..tinyexpr_token_count(expected)
+    count = tinyexpr..tinyexpr_token_count(expected)
     nativecount = <blen>(native) / 12
     re2ccount = level_l_tinyexpr..level_l_tinyexpr_token_count(re2c)
     if count <> nativecount | count <> re2ccount then do
@@ -23,13 +23,13 @@ main: procedure = .int
       kind = <at..i32>(token * 12) native
       start = <at..i32>(token * 12 + 4) native
       size = <at..i32>(token * 12 + 8) native
-      if kind <> rxfnsl..tinyexpr_token_kind(expected,token) | kind <> level_l_tinyexpr..level_l_tinyexpr_token_kind(re2c,token) then return 1
-      if start <> rxfnsl..tinyexpr_token_start(expected,token) | start <> level_l_tinyexpr..level_l_tinyexpr_token_start(re2c,token) then return 1
-      if size <> rxfnsl..tinyexpr_token_length(expected,token) | size <> level_l_tinyexpr..level_l_tinyexpr_token_length(re2c,token) then return 1
+      if kind <> tinyexpr..tinyexpr_token_kind(expected,token) | kind <> level_l_tinyexpr..level_l_tinyexpr_token_kind(re2c,token) then return 1
+      if start <> tinyexpr..tinyexpr_token_start(expected,token) | start <> level_l_tinyexpr..level_l_tinyexpr_token_start(re2c,token) then return 1
+      if size <> tinyexpr..tinyexpr_token_length(expected,token) | size <> level_l_tinyexpr..level_l_tinyexpr_token_length(re2c,token) then return 1
     end
     if gsurface..status() <> level_l_tinyexpr..level_l_tinyexpr_status() then return 1
     if gsurface..erroroffset() <> level_l_tinyexpr..level_l_tinyexpr_error_offset() then return 1
     if gsurface..errormessage() <> level_l_tinyexpr..level_l_tinyexpr_error_message() then return 1
   end
-  say 'PASS: established Rexx-like Level L surface -> native DFA and direct re2c/cREXX; kinds/spans/EOF/diagnostics agree'
+  say 'PASS: established Rexx-like Level L surface -> native DFA and direct third_party/re2c/cREXX; kinds/spans/EOF/diagnostics agree'
   return 0

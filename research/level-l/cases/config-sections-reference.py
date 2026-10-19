@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Independent full-format recognizer and flat-path source transformation."""
 from pathlib import Path
+from fixture_support import write_fixture
 import json,re
 ROOT=Path(__file__).resolve().parents[1]
 class Invalid(Exception): pass
@@ -79,5 +80,5 @@ for text in sorted(cases):
     try: flat=Reader(text).document(); status=0
     except Invalid: flat=''; status=1
     rows.append(f'{text.encode().hex().upper()}|{status}|{flat.encode().hex().upper()}\n')
-f=ROOT/'evidence/config-sections-reference.txt'; f.write_text(''.join(rows))
+f=ROOT/'cases/fixtures/config-sections-reference.txt'; write_fixture(f,''.join(rows))
 print('Independent section/comment format cases:',len(rows))

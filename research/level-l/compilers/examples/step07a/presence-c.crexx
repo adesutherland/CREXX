@@ -1,0 +1,13 @@
+options levelc
+call probe
+call probe ''
+call probe 'given'
+exit 0
+probe: procedure
+  arg text
+  say arg(1,'E')
+  if \arg(1,'E') then text = 'default'
+  say '[' || text || ']'
+  text = 'changed'
+  say arg(1,'E')
+  return

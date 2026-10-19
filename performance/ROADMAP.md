@@ -17,7 +17,7 @@ ledgers and superseded runs are available in Git history.
 ## Current Position
 
 **LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
-[compiler plan F5-STEP01](../lib/rxfnsl/compilers/PLAN.md#step05-proposal-level-l-services-and-shared-optimisation)
+[compiler plan F5-STEP01](../research/level-l/compilers/PLAN.md)
 owns this bounded Level B change. Hypothesis: shared indexed source-position
 lookup avoids repeated prefix scans; lazy defaults and selection-derived call
 windows remove unnecessary compiler work and emitted state without changing
@@ -31,21 +31,20 @@ and memory were recorded separately; static counts are not speed claims. This
 cell has no corresponding RexxCPS workload. That first verdict preceded broader
 QA and shared-pass implementation under the policy then in force. It establishes
 neither production replacement nor a portfolio-wide performance claim.
-The [first verdict](../lib/rxfnsl/compilers/evidence/step05-cleanup-20261015/README.md)
-now retains 36 paired samples per language: C paired median -2.78%, G timing
+The accepted first verdict used 36 paired samples per language: C paired median -2.78%, G timing
 inconclusive, smaller RXAS/frames in both and no peak-RSS regression. Adrian accepted this cleanup verdict on 15 October and authorised continuation.
 The shared-pass increment is now locally qualified under F5-STEP02–04, with
 fewer runtime computations/branches and helper calls on the paired examples;
-[receipt](../lib/rxfnsl/compilers/evidence/step05-20261015/README.md). This does not
+[current compiler plan](../research/level-l/compilers/PLAN.md). This does not
 establish a compiler-latency or memory improvement. Adrian subsequently clarified on 15 October that
 formal performance testing is not required for this research project. The root
 `AGENTS.md` now scopes the exception; no second formal Release verdict, AC-power
 or prescribed-sampling gate applies. The Release product and focused checks
-passed. Battery-powered pilots are retained as non-formal observations only;
+passed. Battery-powered pilots supported no formal performance claim;
 functional/resource/code-quality and later production-replacement criteria remain.
 
 **LEVEL-L-IR-01 — numeric IR storage screen (15 October).** The approved
-[compiler foundation plan](../lib/rxfnsl/compilers/PLAN.md#step02-implementation-record)
+[compiler foundation plan](../research/level-l/compilers/PLAN.md)
 compares fixed-width record and column storage before retaining its first
 layout. Hypothesis: row records favour append and whole-operation handling;
 columns may favour field scans. Risks are incorrect growth copies, changed IDs,
@@ -54,8 +53,8 @@ The Level B [harness](../tests/performance/levell_ir_storage.crexx) checks ident
 values before measuring construction, scans and field rewrites. This is a
 non-representative storage mechanism screen, not a compiler speed or memory
 qualification. RexxCPS has no corresponding IR arena workload and is inapplicable.
-The [STEP02 receipt](../lib/rxfnsl/compilers/evidence/step02-20261015/README.md) retains
-serial Release observations: all fields/checksums agree, rows favour construction
+The [storage decision](DECISIONS.md#level-l-ir-01--initial-foundation-storage) records
+the serial Release observations: all fields/checksums agree, rows favour construction
 and columns slightly favour the single-field scan/update. The initial foundation
 retains row records. Warmup trends and excluded VM overhead are explicit. This
 bounded screen is complete; representative compiler measurements remain open.
@@ -76,7 +75,7 @@ and binary provenance. This is a non-representative, single-mechanism research
 screen; RexxCPS cannot measure this parser mechanism and is intentionally absent.
 No production compiler/VM change or performance verdict is selected.
 The research proof is now executed: the established Rexx-like `.levell` AST
-feeds native DFA and retained direct re2c/cREXX backends, with four opt/no-opt/VM
+feeds native DFA and retained direct third_party/re2c/cREXX backends, with four opt/no-opt/VM
 surface comparisons passing. Native token-first counts and raw paired screens
 are retained, alongside actual Pika mixed-recursion and quadratic live-object
 counterexamples and a quadratic maximal-munch rollback witness. Production
@@ -126,7 +125,7 @@ records **OPT-BOUNDARY-01, repaired and published to develop**: shared SSA queri
 now account for possible incoming argument/global aliases. The original probe
 returns `42` in both modes and 102 affected tests pass. Repair `f7a8b08c1` was
 published in the selected defect batch; its
-[execution record](../docs/qa/beta3-defect-batch-2026-09-18/README.md)
+[qualification summary](../docs/ROADMAP.md)
 tracks normal combined-head hosted checks. No no-alias calling restriction was introduced.
 Adrian accepted OPT-BOUNDARY-02's RXC-only imported-inline boundary and
 OPT-BOUNDARY-03's public status-bit contract. The audit owns those decisions
@@ -201,8 +200,8 @@ Focused Release and Debug pass 78 checks each; all 3,129 normal Release checks
 are verified, including focused replay of two repaired upstream RXPP fixtures.
 Current matched startup observations retain about 79% extended and 63–65% bare
 elapsed reduction. Fine-grained contributor cost remains noisy as disclosed in
-the accepted first verdict. The [final review/receipts](evidence/2026-10-12-vm-startup-repair/README.md)
-and [scope record](VM-STARTUP-REVIEW-WORKLIST.md) cover the findings, ownership
+the accepted first verdict. The [qualification summary](RESULTS.md)
+and [scope record](DECISIONS.md#vm-startup-01-accepted-registry-lookup-indexes) cover the findings, ownership
 repair, architecture review and limits. No public layout, RXBIN, graph or dispatch
 change. Normal automatic publication workflows are expected to succeed; their
 live run records provide hosted results. No release is cut. These are local, non-representative startup
@@ -300,7 +299,7 @@ are recorded here or appeared in the completed programme ledger:
 PERF3 and POSTPERF-01 through POSTPERF-05 are complete. Accepted mechanisms,
 negative decisions and reopening triggers are consolidated in
 [DECISIONS.md](DECISIONS.md). The
-[Stage 5 baseline](evidence/2026-08-18-performance-closeout-stage5/) retains
+[qualification summary](RESULTS.md) retains
 its final samples and identities while the formal Linux QA-C criterion is open.
 It does not qualify a later release candidate.
 

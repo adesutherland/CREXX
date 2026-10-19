@@ -1,6 +1,6 @@
 /* Gate F F1e process crash/disconnect and replacement conformance. */
 
-#include "../../inc/rxvm.h"
+#include "../../interpreter/rxvml/rxvm.h"
 #include "platform.h"
 #include "rxvmchannel.h"
 #include "rxvmchannel_process.h"

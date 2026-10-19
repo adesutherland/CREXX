@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 task_dir=$(cd "$(dirname "$0")" && pwd)
+if [[ -z "${LEVEL_L_RUN_ROOT:-}" ]]; then
+  exec "$task_dir/run-clean.sh" "$0" "$@"
+fi
 task_root=$(git -C "$task_dir" rev-parse --show-toplevel)
-task_bin=${CREXX_BIN_DIR:-"$task_root/../CREXX/cmake-build-release/bin"}
-task_build="$task_dir/build/opt"
+task_bin=${CREXX_BIN_DIR:-"$task_root/cmake-build-release/bin"}
+task_build="$LEVEL_L_RUN_ROOT/build/opt"
 mkdir -p "$task_build/invalid"
 printf '1 a*\n' > "$task_build/invalid/nullable.lex"
 printf '1 [z-a]\n' > "$task_build/invalid/range.lex"
@@ -11,7 +14,7 @@ printf "Start <- Missing\n" > "$task_build/invalid/undefined.peg"
 printf "Start <- ('')*\n" > "$task_build/invalid/nullable.peg"
 printf "Start <- ! 'a'\n" > "$task_build/invalid/predicate.peg"
 for task_vm in rxtvm rxbvm; do
-  task_output="$task_dir/evidence/invalid-$task_vm.out"
+  task_output="$LL_RESEARCH_OUTPUT/invalid-$task_vm.out"
   : > "$task_output"
   for task_file in nullable.lex range.lex undefined.peg nullable.peg predicate.peg; do
     task_generator=parsegen

@@ -18,12 +18,12 @@ Use these sources in order:
    and deterministic entry point;
 6. [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) for the frozen Release 1 review and
    platform-validation ledger;
-7. [`qa/`](qa/) for the exact Linux/Windows qualification runners and evidence
+7. [`qa/`](qa) for the exact Linux/Windows qualification runners and evidence
    contract;
 8. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
    source-to-test truth matrix;
 9. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
-10. [`history/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/history) and `performance/evidence/` for dated provenance.
+10. [`history/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/history) and [historical capture](https://github.com/adesutherland/CREXX/tree/70e8c300f94c2c8e9698d5789491a8e8f80f3746/performance/evidence) for dated provenance.
 
 The historical records contain the former Gate E/F names. Those names identify
 the development sequence only; they are not user-facing feature names or
@@ -60,7 +60,7 @@ area roadmap.
 | Current implementation and publication status | [`WORKLIST.md`](WORKLIST.md) |
 | Executable test manifest and entry point | [`TEST-MANIFEST.md`](TEST-MANIFEST.md) |
 | Release 1 solution-point and platform QA | [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) |
-| Frozen Linux/Windows qualification | [`qa/`](qa/) |
+| Frozen Linux/Windows qualification | [`qa/`](qa) |
 | Source-to-test capability truth | [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) |
 
 Release-specific availability belongs in `docs/releases/`. Benchmark results
@@ -77,5 +77,5 @@ affect concurrency work.
   separately approved architecture decisions.
 - Exercise `rxc`, `rxas`, `rxlink` and both VMs when concurrency libraries or
   compiler lowering change.
-- Keep dated timings and raw logs in their evidence bundles. Summarize only the
-  resulting status here.
+- Summarize lasting conclusions in the owning worklist or decision record, then
+  delete temporary logs and samples. Do not retain run bundles.

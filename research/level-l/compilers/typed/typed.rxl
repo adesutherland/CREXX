@@ -1,0 +1,169 @@
+/* cREXX License (MIT). STEP03 Level G scalar/control/call profile. */
+options levell
+namespace llggrammar
+
+identifier: token = 1
+number: token = 2
+string: token = 3
+separator: token = 4
+open: token = 5
+close: token = 6
+comma: token = 7
+colon: token = 8
+typename: token = 9
+labelname: token = 10
+assign: token = 11 then tree assign()
+plus: token = 12 then tree plus()
+minus: token = 13 then tree minus()
+times: token = 14 then tree times()
+divide: token = 15 then tree divide()
+concat: token = 16 then tree concat()
+blank: token = 17 then tree blank()
+abut: token = 18 then tree abut()
+lt: token = 19 then tree lt()
+gt: token = 20 then tree gt()
+le: token = 21 then tree le()
+ge: token = 22 then tree ge()
+ne: token = 23 then tree ne()
+strict: token = 24 then tree strict()
+and: token = 25 then tree and()
+or: token = 26 then tree or()
+xor: token = 27 then tree xor()
+not: token = 28 then tree not()
+ifword: token = 29
+thenword: token = 30
+elseword: token = 31
+doword: token = 32
+endword: token = 33
+whileword: token = 34
+leaveword: token = 35
+iterateword: token = 36
+returnword: token = 37
+exitword: token = 38
+sayword: token = 39
+callword: token = 40
+nopword: token = 41
+optionsword: token = 42
+importword: token = 43
+procedureword: token = 44
+argword: token = 45
+numericword: token = 46
+digitsword: token = 47
+fuzzword: token = 48
+formword: token = 49
+scientificword: token = 50
+engineeringword: token = 51
+asword: token = 52
+presence: token = 53
+namespaceword: token = 54
+exposeword: token = 55
+exportname: token = 56
+callopen: token = 57
+
+comment: comments nested "/*" "*/"
+scan: lexer input utf8bytes
+  digit: charset = U+0030 to U+0039
+  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  hspace: charset = U+0009 | U+0020
+  newline: charset = U+000A | U+000D
+  squote.body: charset = U+0020 to U+0026 | U+0028 to U+00FF | U+0009
+  dquote.body: charset = U+0020 to U+0021 | U+0023 to U+00FF | U+0009
+  numeric: pattern = (digit+ ("." digit*)? | "." digit+) (("e" | "E") ("+" | "-")? digit+)?
+  name: pattern = letter (letter | digit)*
+  whitespace: rule = hspace+ then skip
+  numeric.literal: rule = numeric ("d" | "D")? then emit number
+  name.literal: rule = name (".." name)? then emit identifier
+  presence.literal: rule = "?" name then emit presence
+  type.literal: rule = "." name then emit typename
+  single.literal: rule = "'" (squote.body | "''")* "'" then emit string
+  double.literal: rule = '"' (dquote.body | '""')* '"' then emit string
+  terminator: rule = (newline | ";") then emit separator
+  op.0: rule = "=" then emit assign
+  op.1: rule = "+" then emit plus
+  op.2: rule = "-" then emit minus
+  op.3: rule = "*" then emit times
+  op.4: rule = "/" then emit divide
+  op.5: rule = "||" then emit concat
+  op.6: rule = "(" then emit open
+  op.7: rule = ")" then emit close
+  op.8: rule = "," then emit comma
+  op.9: rule = ":" then emit colon
+  op.10: rule = "<" then emit lt
+  op.11: rule = ">" then emit gt
+  op.12: rule = "<=" then emit le
+  op.13: rule = ">=" then emit ge
+  op.14: rule = "<>" then emit ne
+  op.15: rule = "==" then emit strict
+  op.16: rule = "&" then emit and
+  op.17: rule = "|" then emit or
+  op.18: rule = "&&" then emit xor
+  op.19: rule = "\" then emit not
+
+parse: parser semantics contextfree input tokens start program backend lr1
+  program: rule = statements as body (procedure as routine)* then tree Program(body = body, routines = routine*)
+  statements: rule = separator* (statement as item (separator (statement as item)?)*)?
+    then tree Sequence(items = item*)
+  statement: rule = closed.statement | open.statement
+  closed.statement: rule = simple | block | if.closed
+  open.statement: rule = if.open | if.continued
+  if.closed: rule = ifword expression as condition thenword closed.statement as yes elseword closed.statement as no
+    then tree IfElse(condition = condition, yes = yes, no = no)
+  if.open: rule = ifword expression as condition thenword statement as yes
+    then tree IfThen(condition = condition, yes = yes)
+  if.continued: rule = ifword expression as condition thenword closed.statement as yes elseword open.statement as no
+    then tree IfElse(condition = condition, yes = yes, no = no)
+  say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
+  call.statement: rule = call.bare | call.parenthesised
+  call.bare: rule = callword identifier as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
+  call.parenthesised: rule = callword identifier as name callopen arguments as arguments close then tree Invoke(name = text(name), arguments = arguments)
+  return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
+  exit.statement: rule = exitword (expression as value)? then tree Exit(value = value?)
+  leave.statement: rule = leaveword then tree Leave()
+  iterate.statement: rule = iterateword then tree Iterate()
+  nop.statement: rule = nopword then tree Nop()
+  options.statement: rule = optionsword identifier as level then tree Options(level = text(level))
+  block: rule = do.group | do.while
+  do.group: rule = doword separator statements as body endword then tree Block(body = body)
+  do.while: rule = doword whileword expression as condition separator statements as body endword
+    then tree While(condition = condition, body = body)
+  expression: rule = logical.or
+  logical.or: rule = logical.and as item ((or | xor) as op logical.and as item)*
+    then tree Chain(operands = item+, operators = op*)
+  logical.and: rule = comparison as item (and as op comparison as item)*
+    then tree Chain(operands = item+, operators = op*)
+  comparison: rule = concatenation as item ((assign | ne | lt | gt | le | ge | strict) as op concatenation as item)*
+    then tree Chain(operands = item+, operators = op*)
+  concatenation: rule = additive as item ((concat | blank | abut) as op additive as item)*
+    then tree Chain(operands = item+, operators = op*)
+  additive: rule = multiplicative as item ((plus | minus) as op multiplicative as item)*
+    then tree Chain(operands = item+, operators = op*)
+  multiplicative: rule = unary as item ((times | divide) as op unary as item)*
+    then tree Chain(operands = item+, operators = op*)
+  unary: rule = prefix | cast.value
+  prefix: rule = (plus | minus | not) as op unary as value then tree Prefix(operator = op, value = value)
+  primary: rule = number.value | string.value | name.value | call.value | group.value | presence.value
+  presence.value: rule = presence then tree Presence(spelling = text)
+  number.value: rule = number then tree Number(spelling = text)
+  string.value: rule = string then tree String(spelling = text)
+  name.value: rule = identifier then tree Name(spelling = text)
+  group.value: rule = open expression as value close then tree Group(value = value)
+  call.value: rule = identifier as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
+  arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
+  argument: rule = (expression as value)? then tree Argument(value = value?)
+  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | declaration | import.statement | namespace.statement
+  assignment: rule = identifier as name assign expression as value then tree Assignment(name = text(name), value = value)
+  declaration: rule = identifier as name assign type as type then tree GDeclare(name = text(name), type = type)
+  type: rule = typename then tree Type(spelling = text)
+  cast.value: rule = primary as value (asword type as target)* then tree Cast(value = value, targets = target*)
+  import.statement: rule = importword identifier as name then tree GImport(name = text(name))
+  namespace.statement: rule = namespaceword identifier as name exposeword (export.entry as item)+ then tree GNamespace(name = text(name), exports = item+)
+  export.entry: rule = exportname then tree Export(name = text)
+  procedure: rule = labelname as name colon procedureword assign type as result separator statements as body
+    then tree GProcedure(name = text(name), result = result, body = body)
+  arg.statement: rule = argword parameter as item (comma parameter as item)* then tree GArg(items = item+)
+  parameter: rule = required.parameter | optional.parameter | default.parameter
+  required.parameter: rule = identifier as name assign type as type then tree Parameter(name = text(name), type = type)
+  optional.parameter: rule = presence as name assign type as type then tree OptionalParameter(name = text(name), type = type)
+  default.parameter: rule = identifier as name assign literal as value then tree DefaultParameter(name = text(name), value = value)
+  literal: rule = number.value | string.value | signed.literal
+  signed.literal: rule = (plus | minus) as op number.value as value then tree Prefix(operator = op, value = value)

@@ -6,7 +6,7 @@
  * rejection through the same private channel core used by RXAS.
  */
 
-#include "../../inc/rxvm.h"
+#include "../../interpreter/rxvml/rxvm.h"
 #include "rxvmchannel.h"
 #include "rxvmchannel_byte.h"
 #include "rxvmchannel_child.h"

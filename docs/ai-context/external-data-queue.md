@@ -254,4 +254,4 @@ implementation.
 
 - [Classic and typed syntax inventory](../planning/release-1/component-catalogue/raw-language-syntax.md)
 - [Typed intrinsic and documentation-only BIF inventory](../planning/release-1/component-catalogue/raw-intrinsic-and-reserved-bifs.md)
-- [Level C compliance reference](../../../compiler/docs/levelc_compliance_reference.md)
+- [Level C compliance reference](../../compiler/docs/levelc_compliance_reference.md)

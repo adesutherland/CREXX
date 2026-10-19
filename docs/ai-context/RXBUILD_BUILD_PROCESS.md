@@ -11,7 +11,7 @@ The process has two separate parts:
 1. CMake packages the `rxbuild` command with its Level L grammar and Level B
    reader.
 2. The command reads a `.build` plan and performs its declared phases:
-   grammar compilation, reader/program compilation, application compilation,
+   grammar compilation, reader/RXPP/program compilation, application compilation,
    native executable packaging, and program execution.
 
 The grammar recognizes structure. The reader interprets the parse tree and
@@ -25,7 +25,7 @@ configured build tree's `bin` directory:
 
 ```text
 build.levell
-    -> levell
+    -> rxlang
     -> rxbuildgrammar.rxas
     -> rxbuildgrammar.rxbin
 
@@ -44,6 +44,19 @@ The packaged command contains the grammar, reader, Level L runtime modules,
 and the native filesystem/platform providers needed by the reader. A `.build`
 file remains an external runtime input.
 
+Both ordinary Level B compilation rules (reader and demo) depend on the
+`library` and `compiler_exit_bin` producers and on their `library.rxbin` and
+`rxcexits.rxbin` files. These are required even for the small demo: its normal
+compiler invocation loads the base library and certified exits. Target edges
+provide clean-build ordering; file edges rebuild consumers when imports change.
+The `rxbuild_example` target must therefore build from a clean tree on its own,
+without depending on another product target to happen to prepare its imports.
+
+The main `crexx` driver also recognizes a single `.build` input and delegates
+it to the sibling `rxbuild` executable. This is an editor/terminal convenience
+only; `rxbuild` remains the implementation of the build-plan language and the
+normal `.crexx`, `.rxpp`, and `.levell` dispatch paths are unchanged.
+
 Build the command with:
 
 ```powershell
@@ -55,7 +68,7 @@ platforms.
 
 ## Runtime flow
 
-For `rxbuild tools/build/example.build`, the reader:
+For `rxbuild tools/rxbuild/example.build`, the reader:
 
 1. reads the file as binary input;
 2. creates an `lllanguage` request from `rxbuildgrammar`;
@@ -63,15 +76,19 @@ For `rxbuild tools/build/example.build`, the reader:
 4. reports `RXBUILD_PARSE` with source location information on failure;
 5. walks the named parse tree and collects the plan actions;
 6. invokes `crexx --library` for `COMPILE GRAMMAR`;
-7. invokes `crexx --program` for `COMPILE READER`;
-8. invokes `crexx --program` for `COMPILE PROGRAM`;
-9. invokes the declared compiler with `rxtvm`, then direct `rxc` and `rxas`,
+7. invokes `rxc` and `rxas` for `COMPILE READER`, with the output directory
+   on the compiler import path so the declared grammar module is available;
+8. invokes `rxpp` for `COMPILE RXPP`, writing the generated `.crexx` source
+   under its declared output directory;
+9. invokes `rxc` and `rxas` for `COMPILE PROGRAM`, with that output directory
+   on the import path;
+10. invokes the declared compiler with `rxtvm`, then direct `rxc` and `rxas`,
    for `COMPILE APPLICATION`;
-10. invokes `crexx --native` on the generated application source for
+11. invokes `crexx --native` on the generated application source for
     `CREATE EXE`, then publishes the requested platform-native executable
     (`.exe` on Windows, extensionless on Linux/macOS);
-11. invokes `rxtvm` for `RUN`; and
-12. returns the first failing phase status.
+12. invokes `rxtvm` for `RUN` with `WORK_DIR` as its working location; and
+13. returns the first failing phase status.
 
 Relative paths in a plan are resolved from the repository root discovered by
 the reader. The command tools are resolved beside `rxbuild`, so the process
@@ -84,6 +101,7 @@ The initial grammar supports one or more semicolon-terminated statements:
 ```text
 COMPILE GRAMMAR OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE READER OUTPUT_DIR = "..." SOURCE = "..." DEPENDS_ON = "..." OUTPUT = "...";
+COMPILE RXPP OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE PROGRAM OUTPUT_DIR = "..." SOURCE = "..." OUTPUT = "...";
 COMPILE APPLICATION OUTPUT_DIR = "..." SOURCE = "..." DEPENDS_ON = "..." COMPILER = "..." OUTPUT = "...";
 CREATE EXE OUTPUT_DIR = "..." APPLICATION = "..." OUTPUT = "...";
@@ -106,7 +124,7 @@ case-insensitive `${NAME}` substitution in quoted attribute values:
 
 ```text
 BUILD_DIR = "cmake-build-release/build";
-GRAMMAR = "tools/build/grammar/build.levell";
+GRAMMAR = "tools/rxbuild/grammar/build.levell";
 
 COMPILE GRAMMAR OUTPUT_DIR = "${BUILD_DIR}"
   SOURCE = "${GRAMMAR}" OUTPUT = "rxbuildgrammar";
@@ -118,7 +136,7 @@ them. Undefined variables and malformed `${...}` references are reported by
 iteration are supported as a separate expansion layer:
 
 ```text
-GRAMMAR_DIR = "tools/build/grammar";
+GRAMMAR_DIR = "tools/rxbuild/grammar";
 OUT_DIR = "cmake-build-release/build/selected";
 GRAMMARS = FILES IN "${GRAMMAR_DIR}" RECURSIVE EXTENSION ".levell" BASENAMES;
 
@@ -137,7 +155,7 @@ subdirectory names are preserved relative to the selected directory.
 per selected item, after variable substitution, and nested output directories
 are created as needed. Missing directories and empty selections stop the plan
 before tools are invoked. The complete example is
-[`tools/build/selection.build`](../../tools/build/selection.build).
+[`tools/rxbuild/selection.build`](../../tools/rxbuild/selection.build).
 
 For each expanded action, `rxbuild` also prints an `RXBUILD RESOLVED` line
 showing the absolute output, source, dependency, or program paths that will be
@@ -158,11 +176,11 @@ belong in the CMake build tree. They should not be committed beside the
 ## Example
 
 The complete working example is in
-[`tools/build`](../../tools/build):
+[`tools/rxbuild`](../../tools/rxbuild):
 
 ```powershell
 & .\cmake-build-release\bin\rxbuild.exe `
-  tools\build\example.build
+  tools\rxbuild\example.build
 ```
 
 The same pattern is used by the MiniBASIC plan at

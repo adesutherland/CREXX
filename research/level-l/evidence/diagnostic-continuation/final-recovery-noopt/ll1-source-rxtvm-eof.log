@@ -1,5 +1,0 @@
-Parse status: 1; errors: 1
-/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery-noopt/ll1/eof.settings: SETTINGS_PARSE at line 2, column 7 (byte 16): value.error: Expected a number or quoted string; found end of input.
-  last =
-        ^
-third -> 3

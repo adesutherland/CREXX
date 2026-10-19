@@ -61,7 +61,7 @@ if a.phase in ('all', 'examples'):
         program = compile(name, root/'lib/plugins/llama/examples'/ (name+'.crexx'))
         run(name+'-example', [bin/'rxbvm', program, '-a', *args], marker)
     if a.gemma:
-        program = compile('gemma4', root/'docs/qa/llm-interface-review-20260917/gemma4-common.crexx')
+        program = compile('gemma4', root/'tests/native-inference/fixtures/gemma4-common.crexx')
         run('gemma4-E4B-common', [bin/'rxbvm', program, '-a', a.gemma.resolve(),
             'a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2'], 'PASS: local Gemma 4 model')
 print('PASS: local compatibility phase '+a.phase)

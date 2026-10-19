@@ -1,7 +1,0 @@
-POLICY|notes|KEEP|0
-COMMENTS|1|SHIELDED|1
-STATUS|2|BYTE|99
-MESSAGE|LL_RESOURCE_LIMIT: scan.work budget 100, required at least 101. Increase the host budget or reduce the workload.
-COMMENT_TARGET at line 1, column 100 (byte 99): LL_RESOURCE_LIMIT: scan.work budget 100, required at least 101. Increase the host budget or reduce the workload.
-  ...aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
-                         ^

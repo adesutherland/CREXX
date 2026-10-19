@@ -1,2 +1,0 @@
-options levelb numeric_common
-say 1e-310 + 1e-310 = 2e-310

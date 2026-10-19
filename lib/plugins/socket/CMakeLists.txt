@@ -67,3 +67,5 @@ enable_testing()
 set_tests_properties(socket_test_noopt socket_test_opt PROPERTIES
         PASS_REGULAR_EXPRESSION "socket smoke ok"
 )
+
+crexx_install_targets(_socket)
