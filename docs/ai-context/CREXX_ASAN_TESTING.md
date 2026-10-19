@@ -172,6 +172,14 @@ An explicit CTest timeout with no sanitizer diagnostic is a harness result until
 the unchanged test is checked under its declared isolated scheduling; it is not
 a sanitizer-clean result and must not be waived.
 
+The 16 `ts_llstructuredflow_*` backend/optimizer/VM cells also use `RUN_SERIAL`
+and a 900-second hang backstop. Their cyclic-analysis and resource-bound matrix
+is CPU intensive despite executing prelinked bytecode without nested builds.
+Eight competing Linux ASan cells exhausted the former 300-second limit;
+isolated unchanged LL1 controls pass in Debug and Apple ASan. Keep all cells
+and their semantic/resource assertions enabled. Measurements and the repair
+disposition are recorded as SAN-QA-019 in the sanitizer worklist.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh

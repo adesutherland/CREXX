@@ -77,6 +77,121 @@ CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
 AddressSanitizer or LeakSanitizer diagnostic appears in either retained
 artifact.
 
+## Overnight structured-flow timeout repair — 19 October 2026
+
+### SAN-QA-019 — structured-flow matrix exceeds its shared-pool deadline
+
+Status: **repair locally qualified for hotfix/develop publication; overnight
+Linux confirmation pending**. Owner: Codex, under Adrian's request to diagnose,
+repair and publish from the existing hotfix checkout. Affected revision:
+`016e6a65466c65a5c722b96452d95025acb463b2`.
+
+**Vision and intended outcome:** restore dependable overnight sanitizer
+qualification while retaining every structured-flow backend, optimizer and VM
+cell and its semantic/resource-bound assertions. Correctness deadlines are hang
+backstops; the test pool must not turn host contention into a product failure.
+No language or runtime change is proposed.
+
+- Trigger: [Sanitizer QA 39196944021](https://github.com/adesutherland/CREXX/actions/runs/39196944021),
+  Linux x64 ASan/LSan. The full instrumented build and preparation succeed;
+  `ts_llstructuredflow_ll1_noopt_rxtvm` and `ts_llstructuredflow_ll1_opt_rxtvm`
+  each time out at 300.12 seconds in the eight-slot CTest pool. The other
+  structured-flow cells pass, including LR1 threaded cells at 274.36 and
+  227.67 seconds. CTest stops after 2,667 of 3,289 selected tests; unexecuted
+  tests are not passes. The full build, preparation and CTest logs contain no
+  ASan/LSan memory diagnostic or non-timeout test failure. The macOS arm64
+  ASan lane passes. This is a QA finding, not a memory-safety finding.
+- Original command: `tools/asan-run.sh --phase full --build-jobs 4
+  --test-jobs 8 --exclude-label '^performance-measurement$' --no-live-tail`,
+  Linux build/test leak detection enabled.
+- Isolated unchanged controls: the exact two LL1 threaded cells pass Debug
+  in 4.63/4.48 seconds and maintained Apple ASan in 18.89/18.66 seconds,
+  using `--phase ctest --regex
+  '^ts_llstructuredflow_ll1_(noopt|opt)_rxtvm$' --test-jobs 1 --leaks off
+  --no-live-tail` after building their two prep targets and `rxtvm` through the
+  runner. Initial local CTest found missing generated fixtures; preparation
+  resolved that setup issue before measurement. Apple leak detection is
+  unsupported; this is not Linux LSan proof.
+- Cause and repair: all 16 structured-flow cells inherited the generic
+  300-second parallel policy despite their CPU-intensive cyclic-analysis,
+  path-control and exact resource-boundary matrix. They now use `RUN_SERIAL`
+  and a 900-second hang backstop across all four backends, both optimizer
+  modes and both VMs. Hosted passing macOS Earley cells already took
+  257.76–267.47 seconds under contention. Condition tests retain their existing
+  scheduling; no source, oracle, sanitizer option or coverage is weakened.
+- The same hosted macOS job took 239.5 minutes against a 240-minute outer
+  limit (CTest alone: 11,026.81 seconds). The workflow hang backstop becomes
+  360 minutes to retain practical headroom when the matrix runs in isolation;
+  build/test scope and platform leak policy remain unchanged.
+  Scheduled jobs load their workflow definition from default `master` and
+  check out the selected `develop` source: the CTest repair applies on the next
+  overnight run, while the outer-limit change takes effect when the workflow
+  definition reaches `master` through the normal release promotion. This
+  hotfix does not update the release branch or claim that limit is already live
+  for scheduled jobs.
+
+**Numbered acceptance criteria**
+
+1. **SQA19-AC01:** replay the two unchanged failing cells once in isolation
+   after preparing their artifacts, in normal Debug and maintained Apple ASan;
+   record elapsed times, semantic results and sanitizer capability limits.
+2. **SQA19-AC02:** set explicit scheduling and a generous hang backstop for the
+   affected matrix and outer workflow from isolated measurements and hosted
+   failure evidence.
+   Inspect generated CTest properties and retain every existing test/oracle.
+3. **SQA19-AC03:** pass the affected matrix in Debug and maintained ASan after
+   the scheduling repair, with unchanged product/test-source inputs. A working
+   core product build must also pass. No broad suite rerun is required for a
+   scheduling-only repair without a sanitizer finding.
+4. **SQA19-AC04:** summarize exact inputs, results and limitations here, publish
+   the repair to hotfix and promote it to develop while preserving unrelated
+   local changes. Hosted success remains an observed workflow result.
+
+**Numbered implementation steps**
+
+1. **SQA19-STEP01 (AC01):** inspect original logs, prepare the two LL1 fixtures
+   and run the unchanged isolated Debug control followed by Apple ASan.
+2. **SQA19-STEP02 (AC02):** use the measured costs to repair CTest scheduling
+   and timeout declarations in `langtools/tests/CMakeLists.txt`.
+3. **SQA19-STEP03 (AC03):** prepare/run the complete structured-flow matrix in
+   Debug then Apple ASan; inspect registration and core-build results.
+4. **SQA19-STEP04 (AC04):** update this disposition, remove temporary logs,
+   commit, push hotfix and fast-forward develop. Let normal overnight Linux
+   ASan/LSan assurance establish hosted confirmation without claiming it early.
+
+**Qualification and publication disposition, 19 October 2026**
+
+- **AC01 / STEP01 verified:** unchanged isolated controls pass as recorded
+  above. Local timings are diagnostic observations on macOS arm64 with ten
+  logical CPUs, not formal performance results.
+- **AC02 / STEP02 verified:** generated CTest JSON in both trees retains all
+  16 structured-flow cells with `RUN_SERIAL=true`, `TIMEOUT=900` and the
+  original `failures=0` oracle; all 16 condition cells retain their original
+  300-second parallel registration. `actionlint .github/workflows/sanitizers.yml`
+  passes. CMake input SHA-256:
+  `4026821d20de6703e300caa613b2da5eac75f4438071c4185914da59021ca5de`.
+- **AC03 / STEP03 verified:** runner build of all eight
+  `ts_llstructuredflow_<backend>_<mode>` prep targets passes in Debug and
+  maintained Apple ASan. Debug core targets `rxc`, `rxc-c`, `rxas`, `rxlink`
+  and `rxvm` pass without warnings. The exact final CTest shape is
+  `tools/asan-run.sh --build-dir <tree> --phase ctest --regex
+  '^ts_llstructuredflow_' --test-jobs 8 --leaks off --no-live-tail`:
+  Debug passes 16/16 in 90.40 seconds; Apple ASan passes 16/16 in 364.75
+  seconds, with no address-sanitizer diagnostic. ASan build leak detection is
+  also off because Apple LSan is unsupported; its rebuild emits existing
+  Apple `sprintf` deprecation warnings. No supported Linux leak policy changes.
+- Qualified product/test-source identity is the affected revision above;
+  only CTest scheduling, the outer workflow guard and these owning documents
+  change. Documentation and history-only promotion do not invalidate the
+  retained results. Temporary diagnostic logs are deleted after this summary.
+- **AC04 / STEP04 publication disposition:** publish the commit containing
+  this repair on `hotfix` and promote the same commit to `develop`, preserving
+  unrelated local work. Normal automatic build/smoke, optimizer-parity and
+  CodeQL workflows are expected to pass; only their hosted results establish
+  that outcome. No full hosted sanitizer repeat is dispatched for this
+  scheduling-only repair. The next scheduled Linux ASan/LSan run owns hosted
+  confirmation; Codex/Adrian retain SAN-QA-019 for diagnosis if it recurs.
+
 ## Mainframe ADDRESS qualification — 11 October 2026
 
 SAN-013 is closed on 12 October after focused repair and the full supported

@@ -215,6 +215,15 @@ foreach(_backend ll1 lr1 packrat earley)
           COMMAND $<TARGET_FILE:${_vm}> "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin")
         set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES
           PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        if(_flowcase STREQUAL "structuredflow")
+          # The cyclic-analysis/resource-bound matrix is CPU intensive even
+          # though it executes prelinked bytecode. Eight competing ASan cells
+          # exceeded 300 seconds on hosted Linux; isolated LL1 controls take
+          # about 19 seconds on Apple ASan. Keep host contention out of the
+          # correctness verdict and leave a generous hang backstop (SAN-QA-019).
+          set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES
+            RUN_SERIAL TRUE TIMEOUT 900)
+        endif()
         crexx_register_test_prep_targets(TESTS ${_structured_flow_name}_${_vm} TARGETS ${_structured_flow_name} ${_vm})
       endif()
     endforeach()
