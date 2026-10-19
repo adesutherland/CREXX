@@ -140,6 +140,7 @@ analyse: procedure = .llirservices..analysis
   if budget < 1 then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work must be positive',facts)
   store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
   work = 0; op = .int; b = .int; i = .int; s = .int; f = .int; target = .int; at = .int; opcode = .int; temp = .binary; bytes = .binary
+  rowoffset = .int
   do op = 1 to graph.operations()
     if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
     work = work + 1

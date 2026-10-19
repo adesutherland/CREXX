@@ -440,8 +440,10 @@ The architecture direction is:
   ordinal bridge handles byte-valued Classic operations without weakening the
   Level B/G `.string` contract. Shared `RexxValue` retains binary storage for
   RexxScript and future explicit binary facilities.
-- Level G's `rxunicode` module owns richer Unicode services. Its production
-  executors are Level B codepoint algorithms over pinned, generated Unicode
+- Shared B `rxunicode` procedures own explicit Unicode services; G owns
+  collection/iterator objects and C owns Classic adapters. The optional
+  `rxunicode-core.rxbin` and G aggregate contain the same B members; select
+  one provider per linked image. Their executors use pinned, generated Unicode
   17.0.0 constants; they do not require an external Unicode provider or make
   provider choice part of application semantics.
 
@@ -565,7 +567,7 @@ The completed UTF baseline is:
 
 The remaining work has moved to its owning levels:
 
-- Level G's implemented `rxunicode` baseline owns explicit normalization,
+- The shared B `rxunicode` baseline owns explicit normalization,
   default casing/folding, grapheme segmentation, and codecs. Four positive
   normalization certificates are stored in the VM value/register status word
   because the VM owns copy and mutation, but they occupy the protected

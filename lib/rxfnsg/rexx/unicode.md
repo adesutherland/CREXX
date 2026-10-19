@@ -1,6 +1,10 @@
 # `rxunicode` text services
 
-`rxunicode` is the explicit Unicode 17.0.0 Level G module. The canonical user
+`rxunicode` provides explicit Unicode 17.0.0 services. Its 23 procedures live
+in the shared Level B core; this G module owns `.graphemes` and
+`.graphemeiterator`, and the G aggregate includes the same B procedures once.
+Select standalone core for B/C-only applications or the G aggregate for
+combined applications, never both in one linked image. The canonical user
 guide is [Unicode text
 services](../../../docs/books/crexx_library_reference/unicode.md); the
 [algorithm appendix](../../../docs/books/crexx_vm_spec/unicode_algorithms.md)

@@ -37,7 +37,7 @@ operation; it must not hide a second Classic parser, lowerer or BIF implementati
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/runtime/llctarget.crexx` | B adapter, name-dispatched operators, per-arithmetic-call UTF8 configuration, copied numeric snapshots and private pools. | Use one activation-owned context, direct checked entrypoints and a thin adapter. |
-| `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, rxfnsg, cstream/fs. | Extend existing owners; separate required Unicode/provider delivery from G aggregation after closure audit. |
+| `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Literal/constant-IF example still creates a pool and carries arguments/context/result; main/body frames have 6/16 registers; clause IDs zero. | Historical readable cost example, not optimal or newly measured. Specialise only after observation/lifetime proof. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
 
@@ -87,29 +87,34 @@ and existing consumers; directory movement alone does not prove independence.
 
 The active slice preserves existing public APIs. C-only dependency controls
 stage separate compiler-host and static-target roots; static C links the
-existing `library`, `rxfnsc`, `llctarget` and `classlib` images explicitly.
+existing `library`, `rxfnsc`, `llctarget`, `classlib` and B Unicode core images explicitly.
 The collection library supplies variable-pool storage. Generic IR definite
 assignment indexes predecessor edges once and schedules changed exits through
 a bounded worklist; it does not introduce a C analysis engine or liveness API.
-Unicode runtime extraction below preserves private ABI and G facade source.
+Unicode ownership below preserves private ABI, public procedure bodies and G classes.
 Exact qualification and remaining criteria belong to the active plan.
 
 ## Shared Unicode foundation in Level B
 
-Adrian suggested a common B Unicode foundation for both G and C during this
-review. Source inspection confirms that the case/codec/grapheme templates and
-normalization executor are already B; the public `rxunicode` facade is G, and
-all are bundled in `rxfnsg`. C adapters import that facade. Extract and expose
-existing capability rather than rewrite the algorithms or make C depend on G.
-The ownership extraction is approved. The initial implementation preserves the
-private `_rxunicode` ABI; the new public B facade remains an exact-contract gate.
+The shared component packages the existing algorithms and 23 public
+`rxunicode` procedures in `rxunicode-core.rxbin`. C adapters compile against
+that exact B metadata. G includes the same B members in its aggregate and
+retains its collection/iterator classes. No duplicate procedure body, extra
+forwarding layer or second Unicode algorithm is introduced.
 
-| Proposed owner | Content and contract |
+CLC-STEP03b preserves namespace, signatures, argument presence, bodies and
+documentation. Adrian approved the
+[exact public contract](../../../../lib/rxfnsb/unicode/README.md#public-b-interface)
+after independent verification that minimal B and L bootstrap remain upstream
+of this optional component. Property/simple-mapping and other new interfaces
+remain later exact-contract gates. The plan records qualification separately.
+
+| Owner | Content and contract |
 |---|---|
-| `lib/rxfnsb/unicode/` | Shared B runtime source/templates and canonical pinned Unicode/legacy-codec data; separately selectable `rxunicode-core.rxbin` (internal component image). No dependency on the G facade or C libraries. |
-| `tools/unicode/` | Move component-specific table compilers/generators, their Level L grammar and build adapters here; use `rxlang` as a tool. Generated code/tables remain build outputs. No source compiler algorithm is moved here. |
-| Shared B procedural facade | Version, property/simple mapping, explicit normalization/full mapping/folding, direct grapheme operations and byte/text codecs. Exact public namespace/signatures are a CLC-STEP03 contract gate; private numeric selectors stay private. |
-| `lib/rxfnsg/rexx/unicode.crexx` | Preserve public `rxunicode` functions and G collection/iterator API, delegating to the B foundation. Source compatibility and doc tags remain required. |
+| `lib/rxfnsb/unicode/` | Shared B runtime source/templates and canonical pinned Unicode/legacy-codec data; separately selectable `rxunicode-core.rxbin` (selectable component image). No dependency on the G facade or C libraries. |
+| `tools/unicode/` | Component-specific table compilers/generators, their Level L grammar and build adapters; use `rxlang` as a tool. Generated code/tables remain build outputs. No source compiler algorithm is moved here. |
+| Shared B procedural facade | STEP03b preserves the existing 23 `rxunicode` version, normalization/full mapping/folding, direct grapheme and codec procedures. Property/simple mapping remains a separate STEP03 contract. Private numeric selectors stay private. |
+| `lib/rxfnsg/rexx/unicode.crexx` | Preserve G collection/iterator classes and their private helper calls; the aggregate explicitly includes the B-owned procedures to preserve its old public surface without duplicate bodies. Source compatibility and doc tags remain required. |
 | `lib/rxfnsc/` | Preserve Classic BIF names, argument presence/checking, text/ordinal conversion and Classic error translation. Call the B facade directly. No second normalization, segmentation or codec implementation. |
 | `lib/rxfnsl/` | Consume pinned property data or a minimal independent property table for recognition; no import of G/C and no requirement to load the full Unicode runtime. |
 
@@ -120,10 +125,12 @@ and pinned source data without depending on this optional runtime image. One
 canonical source-data owner can feed different generated indexes needed by L
 and runtime algorithms; do not create a graph cycle or conflate those indexes.
 
-The B interface uses `.string`, `.binary`, scalar positions/results and explicit
-owned values, with documented errors and work limits. G-only iterator objects
-stay in G. Shared byte/codepoint iteration and simple mappings may be consumed
-by the C scanner/pool; locale/configuration overlays remain C-owned. Existing
+The current B interface uses `.string`, `.binary` and ordinary scalar results;
+its grapheme positions count extended graphemes. It preserves existing value
+ownership and family-specific errors. It adds no public traversal, simple-map
+or budget API. Those possible shared scanner/pool services remain later
+STEP03 contract work; G-only iterator objects stay in G and locale/configuration
+overlays remain C-owned. Existing
 ordinary text remains exact codepoints, without implicit normalization, folding
 or grapheme indexing. Explicit full casing may expand; ordinary Classic symbol
 casing must use its simple-mapping contract. Stream codec choice never changes
@@ -137,6 +144,14 @@ copying. Test C-only and G-only clean/incremental/installed builds, missing and
 changed generated inputs and no-op freshness. Preserve data provenance/licenses,
 API doc tags and code-shape assertions. These tests close ownership; no new
 Unicode version or semantic expansion is implied.
+
+Select one provider aggregate per linked image: standalone B core for C-only
+applications or the existing G aggregate containing those B members for
+combined products. The linker rejects overlapping providers; no deduplication
+change is proposed. Exact import roots and autoload-origin checks must prove
+the C path's independence, rather than relying on broad installed-directory
+search order. Existing embedded/G consumers retain a focused compatibility
+check with the standalone core physically absent.
 
 ## Compilation pipeline
 

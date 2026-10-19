@@ -195,7 +195,7 @@ if("c" IN_LIST _languages)
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"
       --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/c-only-measure"
       --mode opt --vm rxbvm --c-only
-    DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc
+    DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
   # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
@@ -214,7 +214,7 @@ if("c" IN_LIST _languages)
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_test}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-            library classlib rxfnsc fs cstream rxas rxlink ${_vm})
+            library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
       endif()
     endforeach()
   endforeach()

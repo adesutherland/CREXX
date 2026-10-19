@@ -26,10 +26,12 @@ sources = Path(__file__).resolve().parent / 'say'
 backend = build / 'research/level-l/compilers/backend' / args.mode
 runtime = work / 'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc', 'classlib']:
+for name in ['library', 'rxfnsc', 'classlib', 'rxunicode-core']:
     shutil.copyfile(build / 'bin' / (name + '.rxbin'), runtime / (name + '.rxbin'))
 shutil.copyfile(backend / 'llctarget.rxbin', runtime / 'llctarget.rxbin')
 ext = '.exe' if os.name == 'nt' else ''
+runtime_dlls = tuple(sorted((build / 'bin').glob('*.dll'))) if os.name == 'nt' else ()
+dll_names = {path.name for path in runtime_dlls}
 tool = lambda name: str(build / 'bin' / (name + ext))
 env = dict(os.environ, PATH=str(work / 'no-native-compiler'))
 records = []
@@ -44,6 +46,10 @@ vm_options = []
 def stage_vm(directory, providers):
     directory.mkdir()
     shutil.copy2(build / 'bin' / (args.vm + ext), directory / (args.vm + ext))
+    # Installed MSVC executables use the same app-local CRT closure as the
+    # native-package relocation tests, independently of the caller's PATH.
+    for path in runtime_dlls:
+        shutil.copy2(path, directory / path.name)
     provider_directory = directory / 'providers'
     provider_directory.mkdir()
     for provider in providers:
@@ -65,13 +71,14 @@ if args.c_only:
     compiler_image = compiler_directory / 'llrxc-c-linked.rxbin'
     shutil.copyfile(backend / compiler_image.name, compiler_image)
     assert {entry.name for entry in compiler_directory.iterdir()} == {
-        args.vm + ext, compiler_image.name, 'providers'}
+        args.vm + ext, compiler_image.name, 'providers', *dll_names}
     target_directory = work / 'static target'
     target_vm = stage_vm(target_directory, ['rxfs', 'rxcstream'])
     assert {entry.name for entry in target_directory.iterdir()} == {
-        args.vm + ext, 'providers'}
+        args.vm + ext, 'providers', *dll_names}
     assert {entry.name for entry in runtime.iterdir()} == {
-        'library.rxbin', 'rxfnsc.rxbin', 'classlib.rxbin', 'llctarget.rxbin'}
+        'library.rxbin', 'rxfnsc.rxbin', 'classlib.rxbin', 'rxunicode-core.rxbin',
+        'llctarget.rxbin'}
     for compiler in ['rxc', 'rxc-c']:
         assert shutil.which(compiler, path=env['PATH']) is None
     # Exact linked inputs must suffice: no bytecode package may be found by
@@ -133,7 +140,7 @@ try:
             modules = [assembly.with_suffix('.rxbin'), runtime / 'library.rxbin']
             if level == 'c':
                 modules += [runtime / 'llctarget.rxbin', runtime / 'rxfnsc.rxbin',
-                            runtime / 'classlib.rxbin']
+                            runtime / 'classlib.rxbin', runtime / 'rxunicode-core.rxbin']
             run(label + '-link', [tool('rxlink'), '-o', linked, *modules])
             image = Path(str(linked) + '.rxbin')
             if args.c_only:

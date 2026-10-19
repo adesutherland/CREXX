@@ -1,0 +1,144 @@
+/* cREXX License (MIT). Public B interface and ownership regression.
+ * Focused expected values come from the maintained G Unicode conformance rows;
+ * those suites retain the complete UCD, codec and grapheme oracles.
+ */
+options levelb
+import rxfnsb
+import rxunicode
+
+main: procedure = .int
+  errors = 0
+  decomposed = "A" || "cc8a"x
+  composed = "c385"x
+  ligature = "efac81"x
+  errors = errors + check(rxunicode..version() = "17.0.0", "shared data version")
+  errors = errors + check(rxunicode..toNFD(composed) == decomposed, "public NFD")
+  errors = errors + check(rxunicode..toNFC(decomposed) == composed, "public NFC")
+  errors = errors + check(rxunicode..toNFKD(ligature) == "fi", "public NFKD")
+  errors = errors + check(rxunicode..toNFKC(ligature) == "fi", "public NFKC")
+  errors = errors + check(rxunicode..isNFD(decomposed) & \rxunicode..isNFD(composed), "public NFD predicate")
+  errors = errors + check(rxunicode..isNFC(composed) & \rxunicode..isNFC(decomposed), "public NFC predicate")
+  errors = errors + check(rxunicode..isNFKD("fi") & \rxunicode..isNFKD(ligature), "public NFKD predicate")
+  errors = errors + check(rxunicode..isNFKC("fi") & \rxunicode..isNFKC(ligature), "public NFKC predicate")
+  errors = errors + check(decomposed == "A" || "cc8a"x, "exposed normalization input unchanged")
+  errors = errors + check(composed == "c385"x & ligature == "efac81"x, "predicate inputs unchanged")
+  retained = rxunicode..toNFC(decomposed)
+  decomposed = "replaced caller"
+  errors = errors + check(retained == composed, "returned value survives caller replacement")
+
+  sharp_s = "Stra" || "c39f"x || "e"
+  dotted_i = "I" || "c4b0"x
+  turkic = "c4b1"x || "i"
+  errors = errors + check(rxunicode..toUppercase(sharp_s) == "STRASSE", "public full uppercase expansion")
+  errors = errors + check(rxunicode..toLowercase("ce9fcea3"x) == "cebfcf82"x, "public final sigma")
+  errors = errors + check(rxunicode..toCasefold(sharp_s) == "strasse", "public full default fold")
+  errors = errors + check(rxunicode..toSimpleCasefold("e1ba9e"x) == "c39f"x, "public simple fold")
+  errors = errors + check(rxunicode..toTurkicCasefold(dotted_i) == turkic, "public full Turkic fold")
+  errors = errors + check(rxunicode..toTurkicSimpleCasefold(dotted_i) == turkic, "public simple Turkic fold")
+  errors = errors + check(sharp_s == "Stra" || "c39f"x || "e" & dotted_i == "I" || "c4b0"x, "case inputs unchanged")
+
+  text = "4100f48fbfbf"x
+  utf16 = "41000000FFDBFFDF"x as .binary
+  encoded = rxunicode..encode(text)
+  errors = errors + check(bin2x(encoded) = "4100F48FBFBF", "default encoding preserves NUL and high scalar")
+  errors = errors + check(bin2x(rxunicode..encode(text,"UTF-16LE")) = bin2x(utf16), "explicit endian bytes")
+  errors = errors + check(rxunicode..decode(encoded) == text, "default decode")
+  errors = errors + check(rxunicode..decode(utf16,"UTF-16LE") == text, "explicit endian decode")
+  errors = errors + check(rxunicode..decode("EFBBBF41"x as .binary) == "efbbbf"x || "A", "BOM remains a scalar")
+  errors = errors + check(rxunicode..isDecodable(encoded) & \rxunicode..isDecodable("C080"x as .binary), "default strict predicate")
+  errors = errors + check(rxunicode..isEncodingSupported(" utf_8 ") & \rxunicode..isEncodingSupported("UTF-16"), "supported codec spelling query")
+  errors = errors + check(\rxunicode..isEncodingSupported(""), "empty codec query is false")
+  errors = errors + check(text == "4100f48fbfbf"x & bin2x(utf16) = "41000000FFDBFFDF", "codec caller values unchanged")
+  errors = errors + check(rxunicode..decode("C08041"x as .binary,"UTF-8","[?]") == "[?][?]A", "replacement uses maximal malformed subparts")
+  errors = errors + check(bin2x(rxunicode..encode("e29895"x,"ASCII","3F21"x as .binary)) = "3F21", "exact multi-byte encode replacement")
+  errors = errors + check(rxunicode..decode("FF"x as .binary,,"?") == "?", "encoding hole preserves default and replacement presence")
+  errors = errors + check(bin2x(rxunicode..encode("A",,"3F"x as .binary)) = "41", "binary optional argument with encoding hole")
+  text = "replaced caller"
+  errors = errors + check(bin2x(encoded) = "4100F48FBFBF", "encoded result survives caller replacement")
+
+  accent = "65cc81"x
+  emoji = "f09f9880"x
+  clusters = accent || emoji
+  errors = errors + check(rxunicode..graphemeCount(clusters) = 2, "public grapheme count")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,2) == emoji, "omitted grapheme length is suffix")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,1,0) == "", "explicit zero grapheme length")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,2,2) == emoji || " ", "default one-grapheme blank pad")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,2,2,accent) == emoji || accent, "single-grapheme multi-scalar pad")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,2,,"") == emoji, "omitted length ignores explicit empty pad")
+  errors = errors + check(rxunicode..graphemeSubstr(clusters,2,,"xy") == emoji, "omitted length ignores multi-grapheme pad")
+  errors = errors + check(rxunicode..graphemePos(emoji,clusters) = 2, "public one-based grapheme position")
+  errors = errors + check(rxunicode..graphemePos("cc81"x,clusters) = 0, "match must start at a grapheme boundary")
+  errors = errors + check(rxunicode..graphemePos("",clusters) = 0, "empty grapheme needle")
+  errors = errors + check(rxunicode..graphemeReverse(clusters) == emoji || accent, "public grapheme reversal")
+  errors = errors + check(clusters == accent || emoji, "grapheme input unchanged")
+
+  probe = .CertificateProbe(composed)
+  before = probe.certificates()
+  errors = errors + check(probe.normalized(), "normalization through an exposed mapped string")
+  certified = probe.certificates()
+  errors = errors + check((certified <and> before) = before, "existing language certificates retained")
+  errors = errors + check(probe.normalized() & probe.text() == composed, "repeated predicate preserves caller content")
+  errors = errors + check((probe.certificates() <and> certified) = certified, "repeated predicate preserves positive certificates")
+
+  expected_signal = .string
+  do mode = 1 to 15
+    expected_signal = "INVALID_ARGUMENTS"
+    if mode = 1 | mode = 2 | mode = 14 then expected_signal = "UNICODE_ERROR"
+    errors = errors + check(failed_call(mode) = expected_signal, "public signal/default control " || mode)
+  end
+  if errors = 0 then say "PASS: public B Unicode API without G aggregation"
+  return errors <> 0
+
+/** Read-only language-flag view; no test asserts or forges a certificate. */
+CertificateProbe: class
+  _text = .string with register.0.string
+  _certificates = .int with register.0.flags.language
+  *: factory
+    arg text = .string
+    _text = text
+    return
+  normalized: method = .boolean
+    return rxunicode..isNFC(_text)
+  certificates: method = .int
+    return _certificates
+  text: method = .string
+    return _text
+
+failed_call: procedure = .string
+  arg mode = .int
+  ignored_text = .string; ignored_bytes = .binary; ignored_predicate = .boolean
+  do
+    select mode
+      when 1 then ignored_text = rxunicode..decode("C080"x as .binary)
+      when 2 then ignored_bytes = rxunicode..encode("e29895"x,"ASCII")
+      when 3 then ignored_bytes = rxunicode..encode("A",,""x as .binary)
+      when 4 then ignored_text = rxunicode..decode("41"x as .binary,,"")
+      when 5 then ignored_bytes = rxunicode..encode("A","ASCII","FF"x as .binary)
+      when 6 then ignored_text = rxunicode..decode("41"x as .binary,"UTF-16")
+      when 7 then ignored_predicate = rxunicode..isDecodable("41"x as .binary,"")
+      when 8 then ignored_bytes = rxunicode..encode("A","")
+      when 9 then ignored_text = rxunicode..decode("41"x as .binary,"")
+      when 10 then ignored_text = rxunicode..graphemeSubstr("A",0)
+      when 11 then ignored_text = rxunicode..graphemeSubstr("A",1,-1)
+      when 12 then ignored_text = rxunicode..graphemeSubstr("A",1,1,"xy")
+      when 13 then ignored_predicate = rxunicode..graphemePos("A","A",0) > 0
+      when 14 then ignored_text = rxunicode..decode("00"x as .binary,"UTF-16LE")
+      when 15 then ignored_predicate = rxunicode..isDecodable("41"x as .binary,"UTF-16")
+      otherwise return "UNKNOWN_TEST_CASE"
+    end
+  on signal unicode_error as problem
+    return problem.name()
+  on signal invalid_arguments as problem
+    return problem.name()
+  on signal out_of_range as problem
+    return problem.name()
+  end
+  return "NO_SIGNAL"
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "FAIL: public B Unicode" label
+    return 1
+  end
+  return 0

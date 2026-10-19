@@ -121,9 +121,11 @@ set(_unicode_tools
   case_mapping_table grapheme_table unicode_gennorm2 generate_encoding
   generate_casefold generate_case_mapping generate_grapheme unicode_data
   unicode_d generate_normalization)
-set(_unicode_modules
+set(_unicode_private_modules
   unicode_casefold unicode_case_mapping unicode_codec unicode_grapheme
   unicode_normalization)
+set(_unicode_modules ${_unicode_private_modules} unicode_api)
+set(_unicode_api_source "${CMAKE_CURRENT_SOURCE_DIR}/rexx/unicode_api.crexx")
 set(_unicode_tool_sources)
 foreach(_unicode_tool IN LISTS _unicode_tools)
   list(APPEND _unicode_tool_sources
@@ -138,7 +140,10 @@ set(_unicode_byproducts)
 foreach(_unicode_module IN LISTS _unicode_modules)
   list(APPEND _unicode_byproducts
     "${_unicode_members_root}/${_unicode_module}/${_unicode_module}.rxas"
-    "${_unicode_members_root}/${_unicode_module}/${_unicode_module}.rxbin"
+    "${_unicode_members_root}/${_unicode_module}/${_unicode_module}.rxbin")
+endforeach()
+foreach(_unicode_module IN LISTS _unicode_private_modules)
+  list(APPEND _unicode_byproducts
     "${_unicode_generated_source_root}/${_unicode_module}.crexx")
 endforeach()
 foreach(_unicode_tool IN LISTS _unicode_tools)
@@ -193,6 +198,7 @@ add_custom_command(
     "${_unicode_linked_builder}"
     ${_unicode_tool_sources}
     ${_unicode_templates}
+    "${_unicode_api_source}"
     ${_rxunicode_runtime_inputs}
     levell_unicode_lexer
     "${CMAKE_BINARY_DIR}/bin/gennorm2_language.rxbin"

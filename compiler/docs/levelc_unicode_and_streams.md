@@ -39,6 +39,18 @@ remain in force. Padding counts characters. Ordinary nonnumeric ordering follows
 codepoint order, preserving ordinal order throughout U+0000–U+00FF. These
 Unicode extensions must be named when claiming parity with another processor.
 
+## Unicode runtime ownership
+
+The 23 existing `rxunicode` procedures live in the separately selectable B
+`rxunicode-core.rxbin`. `rxfnsc` stages that exact metadata and keeps its
+Classic BIF and stream bodies unchanged. The standalone C runtime can select
+core without G. Existing combined products select G's aggregate, which embeds
+the same B members; linking both provider aggregates is invalid. G retains
+its collection/iterator classes. This packaging split does not change byte
+ordinals, source casing, codec selection, argument presence or error mapping.
+The [shared contract](../../lib/rxfnsb/unicode/README.md#public-b-interface)
+documents ownership and the acyclic minimal-B → L → optional-core build order.
+
 ## Explicit Unicode BIFs
 
 The Classic adapters use the existing Unicode 17.0.0 rxunicode algorithms and

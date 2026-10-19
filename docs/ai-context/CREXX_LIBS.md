@@ -7,8 +7,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
 
 - `lib/rxfnsb/unicode/` (separately built B Unicode executors and canonical
-  pinned data; `rxunicode-core.rxbin` retains the private `_rxunicode` ABI.
-  G owns its public facade; Classic adapters still own BIF policy. Large
+  pinned data; `rxunicode-core.rxbin` supplies the 23 existing public
+  `rxunicode` procedures and retains the private `_rxunicode` ABI. G owns
+  its collection/iterator classes; Classic adapters own BIF policy. Large
   Unicode tables do not enter the minimal bootstrap `library.rxbin`.)
 
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
@@ -1028,7 +1029,7 @@ delivery route:
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append`, `pathkind`, `abspath`, `copy`, `hardlink`, `move`; `.fileguard` | Narrow filesystem operations plus non-overwriting publication primitives and owning locks/leases. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
-| `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Level G Unicode 17.0.0 services over `.string` plus explicit `.binary` codec boundaries. The pure Level G facade delegates to private Level B codepoint executors and generated immutable tables. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
+| `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Shared Level B Unicode 17.0.0 procedures over `.string` plus explicit `.binary` codec boundaries; G retains collections/iterators. The core and G aggregate expose the same procedural bodies over private B executors and immutable tables; select one provider per image. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
 
 The source CMake target for `rxplatform` is named `_platform` to avoid a target
 collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
@@ -1488,14 +1489,17 @@ payloads.
 ## Classic Unicode and streams (2026-10-09)
 
 Compiled Level C rxfnsc now provides all 70 catalogued Classic names and 23
-explicit Unicode BIFs using rxfnsg algorithms. RexxClassicConfig owns stream
+explicit Unicode BIFs using the shared B `rxunicode-core` algorithms. RexxClassicConfig owns stream
 values, positions and codec selection; local calls share configuration, while
 independent root configurations own separate handles. The private rxcstream
 RXPA provider uses checked C factories/method bindings and session-affine
 native payload ownership. Copies share a handle; explicit close closes aliases
 and finalization closes remaining resources. No forwarding construction class
 or VM opcode is added. Dynamic metadata and static archives are packaged through
-the ordinary provider catalogue; rxfnsc stages rxfnsg, rxcstream and rxfs imports.
+the ordinary provider catalogue; rxfnsc stages exact `rxunicode-core`, rxcstream
+and rxfs imports. It retains external Unicode imports rather than embedding
+another copy. Standalone C uses the B core; combined products use the same
+members already embedded in G, selecting only one aggregate per linked image.
 `stage-c-rexx-tools` explicitly builds `cstream_static` as well as the dynamic
 provider selected by those imports. Fresh product payloads need both
 `bin/providers/rxcstream.rxplugin` and `rxcstream.a` (`.lib` on MSVC); a dynamic
@@ -1522,6 +1526,7 @@ checks this failure boundary and uses RexxClassicStream's compiled behavior.
 Classic embeddings that load `rxfnsc` must configure the runtime/provider
 directory with the existing `rxvml_create(runtime_bin_directory, ...)` option.
 An empty library path supplies no dynamic-provider search directories. The
-packaged runtime includes `rxcstream`, `rxfs` and `rxfnsg`; explicit bytecode
+packaged runtime includes `rxcstream`, `rxfs` and Unicode support (standalone
+`rxunicode-core`, or the existing combined G aggregate); explicit bytecode
 module paths do not themselves configure the provider search path. The SAY,
 ADDRESS, ARG and CALL embedding fixtures now exercise this installed layout.

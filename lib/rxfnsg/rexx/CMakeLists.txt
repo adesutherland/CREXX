@@ -17,6 +17,7 @@ add_test(
   NAME rxunicode_contract_surface
   COMMAND ${CMAKE_COMMAND}
     -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/unicode.crexx
+    -DAPI_SOURCE=${CMAKE_SOURCE_DIR}/lib/rxfnsb/unicode/rexx/unicode_api.crexx
     -DDOC=${CMAKE_CURRENT_SOURCE_DIR}/unicode.md
     -DUSER_DOC=${CMAKE_SOURCE_DIR}/docs/books/crexx_library_reference/unicode.md
     -DNORMALIZATION_TEST=${CMAKE_CURRENT_SOURCE_DIR}/../tests_functional/ts_unicode_normalization.crexx

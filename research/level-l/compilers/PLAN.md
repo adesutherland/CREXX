@@ -254,13 +254,146 @@ correctness and structural checks do not establish a formal performance result.
 This increment leaves full CFC-AC01–12 open. Next work is the remaining STEP01
 contract/dependency ledger and precise STEP02/03 public effect/runtime/Unicode
 interfaces, followed by expression and existing-BIF integration in STEP04.
-Private Unicode packaging does not yet remove C's existing G facade dependency.
+That baseline still used G metadata for C; the qualified CLC-STEP03b migration
+below removes this dependency.
 INTERPRET implementation remains STEP11, last. No full hosted, cross-platform,
 release or replacement readiness is claimed; CI monitoring remains paused.
 Final `git diff --check` and reviewed document links pass. All 112 unrelated
 active files remain byte-identical and uncommitted. Task-created diagnostic
 logs and temporary fixtures were deleted; maintained regression inputs and
 build products remain in their owning locations.
+
+## Shared B Unicode interface and C adapter migration
+
+**CLC-STEP03b: implemented and locally qualified, 19 October 2026.**
+Adrian approved the public contract conditional on the green B/L cycle audit. The foundation baseline is committed locally as
+`ec602e941254a59c0779a314c4f26d803adab3a5` and has not been pushed. The source review below fixed the contract before implementation.
+
+**Vision and outcome.** B and C should use the already implemented Unicode
+procedures without acquiring a G language-library dependency. Preserve the
+complete existing G surface and Classic semantics with one implementation and
+one pinned data owner. Move the existing 23 procedural `rxunicode` entries to
+B `unicode_api` in `rxunicode-core.rxbin`, preserving namespace, signatures,
+presence, errors and RexxDoc. G retains its two classes; C retains its existing
+BIF/stream adapter bodies and changes the selected metadata/runtime provider.
+The exact preserved API and edge policies are in the
+[owning Unicode component](../../../lib/rxfnsb/unicode/README.md#public-b-interface).
+
+This is an ownership/availability change, not another BIF implementation or a
+new Unicode algorithm. No new public properties, simple mapping, traversal,
+locale or budget API is approved by this proposal. Those remaining STEP03
+requirements stay open, as do new-compiler BIF bindings and all complete-C
+criteria. INTERPRET implementation remains last.
+
+### Numbered acceptance for this slice
+
+UAPI-AC01–08 and CLC-STEP03b.1–6 are **locally satisfied for this bounded
+migration**, with the evidence and platform limits below. Full CFC-AC01–12,
+remaining STEP03 service contracts and complete-C delivery remain open.
+
+| ID | Observable pass condition / verification | Parent criteria |
+|---|---|---|
+| **UAPI-AC01** | The independent B image's rxunicode namespace exposes exactly the 23 approved procedural signatures with existing defaults/presence/reference bits and no G classes. Compare imported metadata and source/RexxDoc coverage; owning language/module/source records may change. | CFC-AC07/09/12 |
+| **UAPI-AC02** | Direct public B callers pass existing independent Unicode expected results plus omitted/explicit-empty replacement, omitted/zero grapheme length and pad-presence controls, in opt/no-opt and both VMs with G absent and autoload disabled. Preserve all actual signal categories and caller values/certificates. | CFC-AC02/09/11 |
+| **UAPI-AC03** | G's aggregate still exports the 23 rxunicode procedures and two classes exactly once; its existing conformance, snapshot/iterator and source/docs contract tests pass. No G-to-B forwarding layer or duplicate public body is introduced. | CFC-AC06/09 |
+| **UAPI-AC04** | Classic Unicode BIFs and stream adapters compile with an exact B-only Unicode metadata root, preserve ordinal conversion/checks/authored error contracts and pass existing direct/native C/typed Classic/RexxScript consumer tests where affected. No new compiler BIF completion is inferred. | CFC-AC02/03/04/09 |
+| **UAPI-AC05** | C-only static/runtime and restricted installed-artifact tests select the standalone B provider with G files absent. Existing combined products select G's embedded B provider once. Inspect autoload origins and execute a combined product with standalone core absent to prove already-loaded G exports satisfy the hints. Retain duplicate-provider rejection; no new C-only installer is implied. | CFC-AC07/09/12 |
+| **UAPI-AC06** | Cold/changed-input/missing-output/repeated builds retain one producer and file freshness, including rebuilt Classic metadata consumers; migration removes stale G metadata. Component install/relocation and exact C-only/G compatibility inventories pass. B/L bootstrap stays acyclic and independent of the optional core. | CFC-AC07/12 |
+| **UAPI-AC07** | Representative RXAS and existing shape tests preserve single constants, direct scalar/table access and current normalization certificates. No new forwarding frames, input/table copies, whole-input recoding or hidden G-class allocation. Classify retained by-value costs without silently changing ABI. | CFC-AC06/09/11 |
+| **UAPI-AC08** | Architecture, Unicode library/source/API guidance and worker scope match actual ownership; existing BIF bodies/doc tags/fixtures and unrelated work are preserved. Coordinator independently reviews final changes and records exact local/hosted/platform limitations here. | CFC-AC08/09/12 |
+
+### Numbered implementation order
+
+| Step | Work and dependency | Acceptance |
+|---|---|---|
+| **CLC-STEP03b.1** | Freeze the reviewed API/presence/error/provider contract and inspect exact source/metadata expectations. Prerequisite: Adrian's public-interface approval. | UAPI-AC01/08 |
+| **CLC-STEP03b.2** | Move the existing procedural bodies/doc tags into B `unicode_api`; compile it from exact private-member metadata and add it to the core. Keep algorithm templates, data and argument modes unchanged. | UAPI-AC01/02/06/07 |
+| **CLC-STEP03b.3** | Retain G classes only in its `unicode` source, include `unicode_api` explicitly in G link selectors, and adapt the existing source/docs contract check to both owners. Depends on b.2. | UAPI-AC03/07/08 |
+| **CLC-STEP03b.4** | Replace rxfnsc's staged G metadata with the core; remove the stale image and preserve producer/freshness edges, adding the staged Unicode file to member dependencies. Extend the new C harness's target image inventory/preparation only; preserve its independent compiler-host closure. Audit C-only, combined, embedded and installed provider selection without broad driver or linker changes. Depends on b.2; integration with b.3 is coordinator-owned. | UAPI-AC04/05/06 |
+| **CLC-STEP03b.5** | Reuse direct B/G/C/stream/optional-import fixtures, add the missing public surface and independence controls, inspect RXAS, then run the focused checks and product build. Measure any new nested aggregate before registration. | UAPI-AC01–07 |
+| **CLC-STEP03b.6** | Independently review contracts/diff/metadata, update enduring guides and this summary, delete diagnostic output and present the qualified migration. Publication requires the authority current at that time. | UAPI-AC08; all slice criteria |
+
+Three Sol 6.1 Extra High workers and the coordinator independently checked the
+build/import graph before starting the approved migration. The direction is:
+native seed/tools → minimal B `library` → `rxfnsl` and L0/L1/L2 → Unicode
+lexer/generators → five private B members → public `unicode_api` → core → C/G
+consumers. The classlib/certified-exit build prerequisites also originate from
+the minimal B library; their downstream consumer tests are not producer edges.
+Level L reads canonical raw UCD inputs without importing the optional core.
+The new public member uses only private-member metadata plus minimal build
+prerequisites, never its own final core or G. No back-edge exists. Preserve this
+boundary in executable bootstrap, exact-import and recovery checks (UAPI-AC06).
+
+The approved review requirements include G's explicit `unicode_api` selector,
+removal of stale staged G imports, Classic member file freshness, exactly one
+provider per linked image, and preserved native autoload origins and optional
+argument semantics. No Unicode/BIF algorithm changes or INTERPRET implementation
+are part of this increment. The previous foundation's unchanged proof remains
+reusable.
+
+### Current implementation and qualification
+
+Qualified inputs are local baseline `ec602e941254a59c0779a314c4f26d803adab3a5`
+plus this migration. The existing native seed built the B/L tools;
+no new C compilation request was delegated to it. Three Sol 6.1 Extra High
+workers implemented/reviewed disjoint areas; coordinator checks below establish
+the integrated result. Adrian authorised committing this migration locally on
+19 October 2026. The baseline and migration remain unpublished; CI monitoring
+remains paused. Source/test/build inputs are unchanged from the qualification
+below; this local commit reuses those results.
+
+The 23 procedure signatures, bodies and RexxDoc blocks moved unchanged from G
+to B; the two G class bodies/docs are byte-identical. Existing BIF/stream bodies,
+algorithm templates, pinned input bytes and VM/RXAS semantics are unchanged.
+Binary checks require exactly B23 and G23+2, with the existing types, optional
+and exposed argument bits; source checks pin literal defaults. The public B
+fixture tests all 23 functions, 15 error controls, presence/empty/zero/pad cases,
+caller preservation and existing normalization certificate behavior.
+
+U9 compiles from minimal B plus exactly five private member images. G includes
+`unicode_api` explicitly and hashes its ordered selectors into the link key.
+Classic stages the core, deletes stale G metadata and retains the core file
+edge in all 79 generated member commands. The actual staging-rule regression
+reproduced repeated Make work after a byte-identical producer refresh; touching
+all six successfully copied outputs consumes that refresh once. Canonical data
+LF attributes now follow their B-owned location. Restricted Windows test roots
+copy the app-local native DLL closure, without adding compiler/library fallback.
+
+| Check / command | Observed result and scope |
+|---|---|
+| `cmake --build cmake-build-debug --parallel 10 --target stage-product ts_unicode_public llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt llcompiler_target_opt llcompiler_target_noopt` | Passed without warnings. Earlier refresh exposed an implicit sibling-scope `rowoffset` declaration in the baseline L analysis; one explicit procedure-scope declaration fixes it without changing transfers. Independent flow/service and RXAS regressions pass in Debug and ASan. |
+| Focused Debug CTests: `-R '^(ts_unicode_|rxunicode_|unicode_public_metadata_contract$|optional_binary_import_|classic_stream_lifecycle$|rxlang_bootstrap_build_order$|ts_llir(flow|services)_|levell_ir_flow_rxas$)'` | All 50 passed. Includes five existing G conformance families in both modes/engines, independent private/public B fixtures, metadata/source checks, optional imports, stream lifecycle, bootstrap ordering and L services. |
+| Existing `classic_unicode_contract_opt`; four `llcompiler_c_only_*`; `rexxscript_cli_smoke`, `crexx_rexxscript_smoke`, `crexx_levelc_classic_runtime_smoke`, `crexx_rxunicode_default_runtime`; `llcompiler_product_inventory` | All ten additional CTests passed. The new C harness reuses its 32 commands per mode/engine with native compilers/G absent; target core selection does not enter the B/L compiler-host closure. These checks do not complete the new compiler's BIF catalogue. |
+| `unicode_classic_provider_*` and `check-classic-provider.py --bin-root cmake-build-debug/bin --vm rxbvm --mode opt` | All four mode/engine workloads passed (opt/rxbvm measured directly; remaining three as CTests). Reuses existing Unicode BIF expected output and encoded-stream fixture across core autoload, compiler-free static linking, G preloaded with core absent, and duplicate-provider rejection. Inlining legitimately leaves private helper hints as well as eight ordinary public normalization calls; every Unicode hint selects core. |
+| `check-classic-import-build.py` / `unicode_classic_import_build_{make,ninja}`; direct missing-output recovery of public RXAS, public RXBIN and core image | Actual extracted staging rule passes cold, six individual missing outputs, same-byte/changed-byte core refresh, stale G removal and subsequent no-ops under both generators. Each real missing public/core output rebuilt byte-identically, then Ninja performed no work. Generated producer graphs for minimal library, rxfnsl and L bootstrap contain neither core nor G; actual Debug/ASan L0/L1/L2 builds complete. |
+| `tools/asan-run.sh --phase build` for public/provider/L fixture prerequisites, followed by `--phase ctest` selecting public, metadata, five Unicode shapes, L flow/services/shape, provider and import-build cases | Preparation and all 24 selected CTests passed; opt/rxbvm provider was separately measured through the build runner. Apple LSan is unavailable (`--build-leaks off`, `--leaks off`). Native prerequisite refresh emitted existing Apple SDK `sprintf` deprecation warnings; no sanitizer diagnostic was observed. This is focused Apple ASan, not a broad or Linux LSan verdict. |
+| `scripts/tests/check_install_inventory.py --build cmake-build-debug --expect-bytecode rxunicode-core`; provider fixture against a relocated install | Fresh/repeated 391-file inventories, prefix with spaces and exact installed core bytes passed. The restricted installed opt/rxbvm workload passed all 14 commands. Both embedded VMs executed the existing C Unicode fixture with autoload disabled, required native plugins present and all external library bytecode absent. An initial probe omitted the combined VM's required native plugins; correcting that setup required no product change. |
+
+For nested scheduling, the 14-command provider fixture measured about 8 seconds
+in Debug and 17 in maintained Apple ASan. Its four CTests use `RUN_SERIAL` and a
+900-second hang guard. The 19-command stand-in import fixture measured Make
+4.3/3.9 seconds and Ninja 1.7/1.8 seconds in Debug/maintained-ASan build contexts;
+it tests CMake rules, not instrumented cREXX execution. Available-generator cells
+are serial with a 600-second guard. These timings set scheduling only.
+
+Coordinator inspection compared all 23 emitted executable procedure bodies,
+normalizing only generated label identities and excluding source metadata.
+Instructions, operands, calls and local register counts are identical to the
+old G facade; no forwarding frames, copies, allocations or G objects were
+introduced. Existing private-family shape tests pass. Retained value-argument
+costs and normalization exposure are existing ABI, not new speed claims.
+
+Architecture, component/source docs, library guide and Classic runtime guidance
+now describe the same provider boundary. All 112 unrelated active files remain
+byte-identical and uncommitted. Diagnostic output and temporary test installs
+are disposable and removed after review; only maintained fixtures remain.
+There is no new hosted, Windows/Linux, cross-platform sanitizer, release or
+complete-C qualification. Remaining shared property/simple-map/traversal/budget
+contracts and new-compiler BIF bindings stay open. INTERPRET remains STEP11,
+last; its mechanism and implementation were not changed. The warning-free
+product result is reused after byte-identical output-recovery checks and
+test-registration/documentation-only edits; no redundant full rebuild or broad
+QA was added.
 
 ## Authority and scope
 
@@ -381,8 +514,9 @@ Active order: retained native B seed and native tools → B runtime and Level L
 SDK/tools → new C compiler → C applications. C source requests use no native
 source compiler/backend. Keep compiler-host, target-runtime and optional runtime-
 compilation manifests separate. C-only host products must not link/generate the
-G frontend. The current rxfnsc package's G Unicode dependency needs the reviewed
-package split in CLC-STEP03; no duplicate Unicode implementation is proposed.
+G frontend. The approved CLC-STEP03b migration selects B-owned Unicode metadata/runtime
+for rxfnsc while combined products retain G's embedded copy; no duplicate
+Unicode implementation or B/L bootstrap back-edge is introduced.
 
 Existing L0/L1/L2 bootstrap remains required. Earlier B1/B2/B3 self-hosting and
 full G closure remain LLCOMP-AC02/STEP07B outside this delivery, without any

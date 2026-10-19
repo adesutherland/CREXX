@@ -684,6 +684,26 @@ main: procedure = .int
     return 1
   end
 
+  -- Compile the public B facade from the five private member images, never
+  -- from an earlier core/G aggregate. This keeps the producer acyclic.
+  unicode_casefold_bin = members_root || "/unicode_casefold/unicode_casefold.rxbin"
+  unicode_case_mapping_bin = members_root || "/unicode_case_mapping/unicode_case_mapping.rxbin"
+  unicode_codec_bin = members_root || "/unicode_codec/unicode_codec.rxbin"
+  unicode_grapheme_bin = members_root || "/unicode_grapheme/unicode_grapheme.rxbin"
+  unicode_normalization_bin = members_root || "/unicode_normalization/unicode_normalization.rxbin"
+  unicode_api_imports = imports_root || "/unicode-api"
+  if prepare_import_root(cmake, unicode_api_imports, library, "library.rxbin", unicode_casefold_bin, "unicode_casefold.rxbin", unicode_case_mapping_bin, "unicode_case_mapping.rxbin", unicode_codec_bin, "unicode_codec.rxbin", unicode_grapheme_bin, "unicode_grapheme.rxbin", unicode_normalization_bin, "unicode_normalization.rxbin") <> 0 then do
+    call pool.close()
+    return 1
+  end
+  unicode_api_source = runtime_root || "/rexx/unicode_api.crexx"
+  unicode_api_key = action_key(tool_identity || ":unicode_api:-x", unicode_api_source, library, unicode_casefold_bin, unicode_case_mapping_bin, unicode_codec_bin, unicode_grapheme_bin, unicode_normalization_bin)
+  unicode_api_wave = .channelvalue[]
+  call queue_compile unicode_api_wave, "unicode_api", unicode_api_source, members_root || "/unicode_api", unicode_api_imports, rxc, rxas, cmake, unicode_api_key, 0
+  if run_task_wave(pool, worker_target, unicode_api_wave, "U9 public B Unicode procedures") <> 0 then do
+    call pool.close()
+    return 1
+  end
 
   call pool.close()
   names = .string[]
@@ -692,6 +712,7 @@ main: procedure = .int
   names[3] = "unicode_codec"
   names[4] = "unicode_grapheme"
   names[5] = "unicode_normalization"
+  names[6] = "unicode_api"
   modules = .string[]
   do i = 1 to names[0]
     modules[i] = members_root || "/" || names[i] || "/" || names[i] || ".rxbin"

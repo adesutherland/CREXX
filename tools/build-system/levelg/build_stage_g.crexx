@@ -481,10 +481,14 @@ main: procedure = .int
     call arrayappend names, "unicode_codec"
     call arrayappend names, "unicode_grapheme"
     call arrayappend names, "unicode_normalization"
+    call arrayappend names, "unicode_api"
   end
 
   link_key = action_key("link-tool:" || configuration, rxlink)
   do i = 1 to modules[0]
     link_key = action_key(link_key || ":" || i, modules[i])
+  end
+  do i = 1 to names[0]
+    link_key = action_key(link_key || ":include:" || names[i])
   end
   return link_library(work_root, bin_dir, rxlink, cmake, configuration, modules, names, link_key)

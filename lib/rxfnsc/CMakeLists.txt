@@ -158,7 +158,7 @@ set(RXFNSC_IMPORT_LIBRARY "${RXFNSC_IMPORT_ROOT}/library.rxbin")
 set(RXFNSC_IMPORT_CLASSLIB "${RXFNSC_IMPORT_ROOT}/classlib.rxbin")
 set(RXFNSC_IMPORT_STREAM "${RXFNSC_IMPORT_ROOT}/rxcstream.rxplugin")
 set(RXFNSC_IMPORT_FS "${RXFNSC_IMPORT_ROOT}/rxfs.rxplugin")
-set(RXFNSC_IMPORT_UNICODE "${RXFNSC_IMPORT_ROOT}/rxfnsg.rxbin")
+set(RXFNSC_IMPORT_UNICODE "${RXFNSC_IMPORT_ROOT}/rxunicode-core.rxbin")
 set(RXFNSC_IMPORT_EXITS "${RXFNSC_IMPORT_ROOT}/rxcexits.rxbin")
 add_custom_command(
   OUTPUT
@@ -169,6 +169,7 @@ add_custom_command(
     "${RXFNSC_IMPORT_STREAM}"
     "${RXFNSC_IMPORT_FS}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${RXFNSC_IMPORT_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${RXFNSC_IMPORT_ROOT}/rxfnsg.rxbin"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${RXFNSC_IMPORT_LIBRARY}"
@@ -179,15 +180,24 @@ add_custom_command(
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
     "${RXFNSC_IMPORT_EXITS}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
     "${RXFNSC_IMPORT_UNICODE}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:cstream> "${RXFNSC_IMPORT_STREAM}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:fs> "${RXFNSC_IMPORT_FS}"
+  # Consume a completed producer refresh even when all copied bytes match.
+  # Keep every declared output current for Make's secondary-output rules.
+  COMMAND ${CMAKE_COMMAND} -E touch_nocreate
+    "${RXFNSC_IMPORT_LIBRARY}"
+    "${RXFNSC_IMPORT_CLASSLIB}"
+    "${RXFNSC_IMPORT_EXITS}"
+    "${RXFNSC_IMPORT_UNICODE}"
+    "${RXFNSC_IMPORT_STREAM}"
+    "${RXFNSC_IMPORT_FS}"
   DEPENDS
     cstream
     fs
-    rxfnsg
-    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    rxunicode_core
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
     library
     classlib
     compiler_exit_bin
@@ -337,6 +347,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
       "${RXFNSC_IMPORT_LIBRARY}"
       "${RXFNSC_IMPORT_CLASSLIB}"
       "${RXFNSC_IMPORT_EXITS}"
+      "${RXFNSC_IMPORT_UNICODE}"
       ${_rxfnsc_source_deps}
       ${RXFNSC_MEMBER_BUILD_DEPS}
     WORKING_DIRECTORY "${_member_dir}"
