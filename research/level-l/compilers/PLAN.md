@@ -1,8 +1,7 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.ASSIGN3, qualified local closeout of
-the existing C v3 assignment path. Next: LC-I-04 NOP review; no implementation
-has started.**
+**Complete C is open. Current: CLC-STEP05.NOP3, qualified local closeout.
+Next: the approved OPTIONS design; no OPTIONS implementation is included here.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -18,35 +17,53 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Current action: assignment
+## Current action: NOP
 
-Qualify [LC-I-03's existing one-write path](doc/LEVELC-INSTRUCTION-REVIEW.md#assignment-one-write-after-rhs-evaluation)
-against LC-AC-54/63: evaluate the RHS once, then let the current shared pool
-substitute/classify the raw target and store its exact value. Empty RHS assigns
-empty text. Current C v3/schema, target exports and shared B algorithms stay
-unchanged; no lowering defect has been reproduced. Add independent proof and
-repair product code only for a demonstrated failure. Native C is read-only.
+Qualify [LC-I-04's existing childless path](doc/LEVELC-INSTRUCTION-REVIEW.md#nop-childless-statement-without-runtime-work)
+against LC-AC-05/64: NOP preserves surrounding execution order and rejects every
+same-clause operand. The AST retains the authored statement; an unobserved NOP
+needs no IR value/effect or runtime helper. Current C v3 and product APIs stay
+unchanged; NOP-F01 below repairs reproduced dead-NOP construction only.
+Native C remains read-only.
 
 | ID / status | Checkable closure |
 |---|---|
-| **ASSIGN-AC01 — Qualified** | Source/AST/IR and independent execution cover scalar overwrite, keyword targets, empty RHS, stems/arbitrary compound targets, numeric/unset/empty tail components, substituted case, main/IF/group/private contexts and Unicode/NUL/high-ordinal values/tails. Stem assignment resets explicit/dropped tails; tail assignment clears its tombstone. |
-| **ASSIGN-AC02 — Qualified** | A source marker call and old-value reads prove once-only RHS-before-write behavior; IR/RXAS places RHS call/read before the sole raw-name store, with no compiler tail pre-read. Complementary exported-IR/B-host mutation-before-store proves resolution uses current tail bindings; this is composed proof, not a source EXPOSE call. |
-| **ASSIGN-AC03 — Qualified** | Prebound-context execution proves live scalar/stem/exact/nested aliases, private reset isolation and preservation of unrelated case-distinct tails, exact Unicode/NUL text and RexxValue caches through load/store without conversion. |
-| **ASSIGN-AC04 — Qualified** | Invalid targets with explicit/empty RHS and malformed dead source refuse with logical located diagnostics and prior output intact. Fatal RHS failure cannot reach the store/later output. Actual caller/helper RXAS has one pool write, no unused explicit-RHS default/splitter/conversion, preserved owners/source; focused normal Debug passes both compiler/IR modes and VMs. |
+| **NOP-AC01 — Qualified** | Childless Nop AST and authored spans pass in main, selected/nested IF/ELSE, group/while and private-routine contexts; case variants work and contextual NOP assignment/read remains a variable. Independent output preserves surrounding side effects/order. |
+| **NOP-AC02 — Qualified** | Variable, quoted, numeric, bracket and keyword tails, including inline and dead source, refuse at the first extra token with current logical located syntax diagnostics, no successful output and prior-output preservation. Exact Classic 21.1 remains a named later dependency. |
+| **NOP-AC03 — Qualified** | Reached and post-terminator NOP IR/RXAS against a valid blank-clause control adds no NOP operation/value/helper/call/default, unreachable return path or frame demand; surrounding instructions, owners and truthful source metadata remain. Empty DO-group wrappers provide valid IF-arm controls. No source records are removed to reduce counts. |
+| **NOP-AC04 — Qualified** | Existing narrow frontend/backend controls pass focused normal Debug in the relevant compiler/IR modes and VMs, with independent source/RXAS review and scoped proof. Qualified grammar/tools/helpers are reused; no new aggregate/orchestrator is required. |
 
-**CLC-STEP05.ASSIGN1 — Reviewed (AC01–04):** freeze independent expectations and
-inspect existing source/IR/shared-pool contracts; depends on committed DROP.
-**CLC-STEP05.ASSIGN2 — Implemented (AC01–04):** fixtures, composed context proof and
-structural guards; any reproduced repair needs coordinated source ownership.
-**CLC-STEP05.ASSIGN3 — Qualified (AC01–04):** sole builder qualifies focused normal
-Debug with measured serial scheduling; independent source/RXAS review precedes
-local commit. Reuse unchanged grammar/tools/runtime evidence; a commit alone
-does not require expensive grammar regeneration or a source-slice ASan run.
+**CLC-STEP05.NOP1 — Reviewed (AC01–04):** record independent expectations and
+inspect existing grammar/contextual policy/non-emission; depends on committed
+assignment. **CLC-STEP05.NOP2 — Implemented (AC01–04):** extend existing narrow
+fixtures/AST/error/shape controls; coordinate a product repair only for a
+minimal reproduced failure. **CLC-STEP05.NOP3 — Qualified (AC01–04):** sole builder
+qualifies focused normal Debug, then independent review and local commit.
+Reuse unchanged product/grammar evidence and existing scheduling; no source-slice
+ASan or expensive grammar regeneration follows from a local commit.
 
-Whole LC-I-03 remains open for source EXPOSE/shared-label contexts (STEP06),
-exact Classic diagnostics (STEP04), resumed conditions/NOVALUE and full
-clause/TRACE observations (STEP07). Ordinary private calls have fresh pools;
-the composed proof must not claim caller-pool mutation through those calls.
+Whole LC-I-04 remains partial for SELECT placements (STEP05), shared-label
+contexts (STEP06), exact Classic 21.1 (STEP04) and clause/TRACE/condition
+observations (STEP07). This bounded review does not introduce those capabilities.
+
+<a id="current-action-assignment"></a>
+
+## Completed assignment increment
+
+Local commit `b42cf6fc7da7e487a45a646aa4e0ea7bfda74857` qualified the
+[existing one-write contract](doc/LEVELC-INSTRUCTION-REVIEW.md#assignment-one-write-after-rhs-evaluation)
+without product changes, with independent source/RXAS and [Debug proof](#current-assignment-proof).
+Source-call ordering and supplied-context mutation/storage remain complementary;
+private source calls have fresh pools. Whole LC-I-03 retains EXPOSE/shared-label,
+exact diagnostic, resumed condition/NOVALUE and clause/TRACE dependencies.
+
+| Stable ID / status | Qualified closure |
+|---|---|
+| **ASSIGN-AC01 — Qualified** | Scalar/keyword/empty-RHS/stem/arbitrary compound forms, numeric/unset/empty tails, substituted case, main/IF/group/private execution, Unicode/NUL/high ordinals and explicit/dropped-tail reset/reassignment. |
+| **ASSIGN-AC02 — Qualified** | Once-only source RHS call/read before the sole raw-name write, no tail pre-read; complementary supplied-context mutation then resolution, without claiming source EXPOSE. |
+| **ASSIGN-AC03 — Qualified** | Live scalar/stem/exact/nested aliases, private reset isolation, unrelated case-distinct tails and exact text/cache preservation without conversion. |
+| **ASSIGN-AC04 — Qualified** | Explicit/empty/dead-source refusals preserve prior output; fatal RHS cannot reach write/later output; one-write/no-default/splitter/conversion RXAS with owners/source and focused mode/VM proof. |
+| **CLC-STEP05.ASSIGN1–3 — Complete** | Contract review, independent fixtures/structural guards and local Debug/RXAS qualification completed before NOP1. |
 
 ## Completed DROP increment
 
@@ -114,7 +131,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current assignment** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Bounded SAY/DROP reviews retain shared dependencies; assignment is current. |
+| **CLC-STEP05 — Partial; current NOP** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Bounded SAY/DROP/assignment reviews retain shared dependencies; NOP is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -162,29 +179,58 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current assignment proof
+## Current NOP proof
 
-The assignment fixtures on `fccb95b46dc4cfd75a453c0573fba27a78d5ff3b` qualify
-the unchanged C v3 store path; independent source and actual RXAS review pass.
-Six direct `rxc`/`rxas`/`rxlink` commands prepared
-the two B-mode contract images warning-free in 1.9524s, using the qualified
-DROP import roots and generated grammar. No native, library, compiler-host or
-grammar rebuild was needed. Unchanged product/runtime/name/schema proof is
-reused; no fresh sanitizer, installed, hosted or whole-C claim follows.
+The reviewed patch on `b42cf6fc7da7e487a45a646aa4e0ea7bfda74857` passes focused
+normal Debug with independent source/actual RXAS review. Only affected B
+frontend/dependent modules, linked hosts and fixtures were refreshed directly
+through the existing `rxc`/`rxas`/`rxlink` recipes. Qualified native tools,
+grammar, shared libraries and runtime inputs were reused; no expensive grammar,
+native/core-product, sanitizer or full aggregate run was performed. Final
+fixture preparation is warning-free. Installed/hosted/whole-C proof is not claimed.
 
 | Normal Debug command / inspection | Observed result and scope |
 |---|---|
-| `check-assignment.py --build cmake-build-debug --work <temporary> --vm rxbvm --vm rxtvm` completed components | All 36 positive commands passed: 24 source/AST/IR/provider checks and 20 B-host alias/cache/live-binding assertions per B-mode/VM cell; the independent 23-line source oracle passed both B modes, C IR modes and VMs. All five source refusals passed, including dead malformed RHS in both IR modes and prior-output preservation. |
-| Same checker with `--phase fatal` | Ten commands passed in 5.6418s: both IR modes and VMs produce only the prefix and `RXC-LC-42.3`; actual own-frame fatal diversion cannot enter the target store. Compiler host is B opt; linked target is B noopt; assembler optimisation is disabled. |
-| Caller/helper inspection | Provider has three value reads and eight ordered raw-name writes without conversion/splitting/owner copies. Source marker/read precedes its sole target write; supplied-context mutation precedes compound resolution. Provider and same-IR source RXAS are byte-identical across B host modes. Shared pool/runtime bodies are unchanged. |
-| CTest registration inspection | `llcompiler_c_assignment` defaults to all 51 commands, available VMs, 1800s hang protection, serial execution and the backend resource lock. Generated command/properties were inspected without rerunning the completed workload solely for registration. |
+| Existing `frontend-tests-linked.rxbin -a nop <imports> <examples>` | 124 checks/0 in 20.2367s, B opt/rxbvm: childless spans, supported contexts, contextual variable, first-extra-token refusals and continued dead semantic validation. |
+| Existing `backend-tests-linked.rxbin -a <contracts> <inspection-prefix> nop` | 50 checks/0 each: opt/rxbvm 29.955s; noopt/rxtvm 29.3s. Five valid equal-width NOP/blank pairs in both IR modes compare source/selected IR operations, values, blocks, slots, executable instructions and frames while retaining truthful metadata. |
+| `check-backend.py --case nop-c --ir on/off` in those paired B-mode/VM cells | Four research runs/16 commands pass the independent four-line main/IF/group/while/private oracle. Selected native control: four commands, same expected output; native C remains a read-only comparator. Assembler optimisation is disabled; unchanged assembler proof is reused. |
+| Focused failure controls | Empty/unknown case filters refuse before creating work; two dead-NOP CLI refusals in both IR modes locate the first extra token and preserve previous output. |
+| Existing registration inspection | Default backend corpus becomes 32 cases/239 commands. Generated pass expression and retained 1800s/serial/backend-lock properties verified without rerunning the aggregate. The added shape component is measured at about 30s Debug; source-only sanitizer policy follows AGENTS.md. |
+
+The three selectors took 79.4923s in total; the bounded execution/failure and
+two actual-RXAS capture controls took 24.7319s. These are component timings,
+not a new full-aggregate or formal performance claim. Both new selectors also
+run through the existing maintained defaults; no orchestrator was added.
+
+**NOP-F01 — repaired (AC03; NOP2):** post-EXIT/private-RETURN NOP previously
+reopened a dead block, adding an absent-result helper and frame slot (21→22).
+Preparation now occurs in `statement` after the normal visit/budget check;
+structural traversal and non-emitting statements leave termination intact.
+The extra path is gone, affected frames match blank controls at 21 and following
+dead semantic errors still refuse. The EXIT pair differs only in truthful
+source text; the private RETURN pair is byte-identical to its blank control.
+Existing EXIT fallback work remains; no optimizer/schema/runtime workaround or
+zero-cost claim for unrelated machinery follows.
+
+<a id="current-assignment-proof"></a>
+
+## Completed assignment proof
+
+Assignment commit `b42cf6fc7da7e487a45a646aa4e0ea7bfda74857` qualifies the
+unchanged C v3 store path with independent source/actual RXAS review. Six direct
+`rxc`/`rxas`/`rxlink` commands prepared both B-mode contract images warning-free
+in 1.9524s using qualified DROP imports/grammar; no product or grammar rebuild.
+
+| Normal Debug command / inspection | Observed result and scope |
+|---|---|
+| `check-assignment.py --build cmake-build-debug --work <temporary> --vm rxbvm --vm rxtvm` completed components | 36 positive commands: 24 source/AST/IR/provider and 20 B-host alias/cache/live-binding assertions per B-mode/VM cell; 23-line oracle in both B/IR modes and VMs. Five source refusals include dead RHS/both IR modes and preserved prior output. |
+| Same checker with `--phase fatal` | Ten commands/5.6418s; both IR modes/VMs produce only prefix + RXC-LC-42.3; own-frame diversion cannot enter store. B-opt host/B-noopt target, assembler optimisation off. |
+| Caller/helper and CTest inspection | Provider: three reads/eight ordered raw writes, no conversion/splitter/owner copies; same-IR RXAS byte-identical across B modes. Existing helpers unchanged. `llcompiler_c_assignment`: 51 commands, available VMs, 1800s/serial/backend lock; registration inspected without repeated execution. |
 
 The completed positive/refusal components plus one fatal compile took at most
-77s; the remaining fatal component took 5.6418s. A checker-only correction
-distinguished executable handler calls from imported declarations. Valid
-positive/refusal results were reused; no single successful full-workload timing
-is claimed. Source-call ordering and exported-context mutation/storage remain
-complementary proofs with the limits above; source EXPOSE is not implemented.
+77s; remaining fatal work took 5.6418s. No single successful full-workload timing
+is claimed; unchanged positive/refusal results were reused. No fresh sanitizer,
+installed, hosted or whole-instruction/C claim follows.
 
 <a id="current-drop-proof"></a>
 

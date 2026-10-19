@@ -79,7 +79,7 @@ ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
 whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
 closure are separate states. The bounded DROP and assignment reviews below
-follow that SAY disposition; LC-I-04 NOP is the next individual review.
+follow that SAY disposition; LC-I-04 NOP is the current individual review.
 
 ## DROP: ordered names and borrowed pool effects
 
@@ -133,4 +133,32 @@ RXAS inspection. No product change was needed. Whole LC-I-03 remains partial
 for source EXPOSE/shared-label, exact Classic diagnostic, resumed
 condition/NOVALUE and full clause/TRACE dependencies under STEP04/06/07.
 Existing native and shared B passes are controls, not inherited assignment
-acceptance. The next individual review is LC-I-04 NOP.
+acceptance.
+
+## NOP: childless statement without runtime work
+
+[LC-AC-05/64](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+require childless NOP to preserve adjacent execution order and reject every
+same-clause operand. The generated grammar already projects `Nop()` and the
+frontend emits no operation for it. Structural traversal and NOP keep an
+already-terminated block closed; only later emitting statements prepare a dead
+block after their normal visit/budget check, preserving dead-source validation.
+[NOP-AC01–04](../PLAN.md#current-action-nop)
+qualify authored AST spans, supported main/IF/group/while/private placements,
+contextual NOP variable names and first-extra-token refusals, including dead
+source. Reached and post-terminator NOP should add no IR value/effect, helper,
+call, default, unreachable return path or frame demand against a valid control;
+use empty DO-group wrappers for IF arms rather than an invalid missing statement.
+Preserve truthful source records.
+
+Reuse existing narrow frontend/backend tests and qualified tools/grammar;
+no new runtime/schema/API or orchestration is needed. Native NOP fixtures are
+read-only semantic controls; their historical ignored-tail bug is not an
+acceptance target. SELECT placements, shared labels, exact Classic 21.1 and
+clause/condition/TRACE observations retain STEP04/05/06/07 owners. Whole LC-I-04
+stays partial until those dependencies close. The bounded review is locally
+qualified by the [focused Debug proof](../PLAN.md#current-nop-proof) and
+independent actual RXAS comparison. The repaired dead-NOP construction adds no
+unreachable return helper or frame slot, while following dead semantic errors
+still refuse. Existing frontend/backend defaults retain the regression; no new
+orchestrator, grammar, schema or runtime change was needed.

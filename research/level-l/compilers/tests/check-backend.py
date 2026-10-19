@@ -22,7 +22,19 @@ parser.add_argument('--mode', choices=['opt', 'noopt'], default='noopt')
 parser.add_argument('--vm', default='rxbvm')
 parser.add_argument('--native-controls', action='store_true')
 parser.add_argument('--installed', type=Path)
+parser.add_argument('--case', action='append', help='focused name-level case; skips unrelated controls and uses assembler -n')
+parser.add_argument('--ir', choices=('on', 'off'), default='on', help='research compiler IR optimisation')
 args = parser.parse_args()
+source_dir = Path(__file__).resolve().parent / 'backend'
+cases = json.loads((source_dir / 'cases.json').read_text(encoding='utf-8'))
+if args.case:
+    requested = set(args.case)
+    unknown = requested - {case['name'] + '-' + case['level'] for case in cases}
+    if unknown:
+        parser.error('unknown or empty case selection: ' + repr(sorted(unknown)))
+    cases = [case for case in cases if case['name'] + '-' + case['level'] in requested]
+if args.native_controls and args.ir != 'on':
+    parser.error('--ir applies only to the research compiler')
 build = args.build.resolve()
 args.work.mkdir(parents=True, exist_ok=True)
 run_directory = tempfile.TemporaryDirectory(prefix='check-',dir=args.work)
@@ -31,7 +43,6 @@ bin_dir = (args.installed or build / 'bin').resolve()
 ext = '.exe' if os.name == 'nt' else ''
 tool = lambda name: str(bin_dir / (name + ext))
 backend = build / 'research/level-l/compilers/backend' / args.mode
-source_dir = Path(__file__).resolve().parent / 'backend'
 records = []
 start = time.monotonic()
 # Isolated target-contract directory. Host executables cannot discover native
@@ -59,12 +70,12 @@ def run(label, command, success=True, isolated=False):
 
 def compiler(level, destination, source):
     if args.installed:
-        return [tool('llrxc-'+level), '-i', str(runtime), '-o', str(destination), str(source)]
+        return [tool('llrxc-'+level), *(['-n'] if args.ir == 'off' else []), '-i', str(runtime), '-o', str(destination), str(source)]
     return [tool(args.vm), str(backend / ('llrxc-'+level+'-linked.rxbin')), '-a',
-            '-i', str(runtime), '-o', str(destination), str(source)]
+            *(['-n'] if args.ir == 'off' else []), '-i', str(runtime), '-o', str(destination), str(source)]
 
 try:
-    if not args.native_controls and not args.installed:
+    if not args.native_controls and not args.installed and not args.case:
         exact = work/'exact.rxas'
         result = run('contracts', [tool(args.vm), str(backend/'backend-tests-linked.rxbin'), '-a', str(runtime), str(exact)], isolated=True)
         assert b'failures=0' in result.stdout, result.stdout
@@ -73,7 +84,6 @@ try:
             run('exact-'+mode+'-link', [tool('rxlink'), '-o', str(work/'exact-linked'), str(work/'exact.rxbin'), str(runtime/'library.rxbin')])
             result = run('exact-'+mode+'-run', [tool(args.vm), str(work/'exact-linked.rxbin')])
             assert result.stdout.replace(b'\r\n', b'\n') == b'A\x00B"\\\xce\xb1\n-inf\n', result.stdout
-    cases = json.loads((source_dir / 'cases.json').read_text())
     for case in cases:
         stem = case['name'] + '-' + case['level']
         source = (source_dir / case['source']).resolve()
@@ -91,7 +101,7 @@ try:
         assert assembly.exists(), stem
         # Both assembler modes exercise generated control/call windows. Shared
         # IR optimisation is on; check-optimise.py covers the compiler -n control.
-        for assembler_mode in (['noopt'] if args.native_controls else ['noopt', 'opt']):
+        for assembler_mode in (['noopt'] if args.native_controls or args.case else ['noopt', 'opt']):
             label = stem + '-' + assembler_mode
             command = [tool('rxas')] + (['-n'] if assembler_mode=='noopt' else []) + [str(assembly)]
             run(label+'-assemble', command)
@@ -117,7 +127,7 @@ try:
             else:
                 assert not stderr, (label, stderr)
         print(stem+' PASS', flush=True)
-    if not args.native_controls:
+    if not args.native_controls and not args.case:
         # Every failing command preserves a pre-existing destination, including
         # incomplete source, unsupported features, missing/forged contracts,
         # staging collisions and rename failures. No user-owned file is deleted.

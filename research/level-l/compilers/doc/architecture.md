@@ -823,6 +823,80 @@ source RHS call can mutate its caller through EXPOSE. Source EXPOSE/shared
 labels, exact Classic diagnostics, resumable conditions and full TRACE remain
 the existing STEP04/06/07 dependencies; ASSIGN-AC01–04 track the bounded review.
 
+### Proposed next instruction: OPTIONS
+
+**Proposed; Adrian's approval is pending for the AST change and C-owned no-op
+specialization. No OPTIONS implementation is authorized by this section.**
+Reuse the [approved source/runtime policy](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+under LC-AC-66/LC-STEP-67B. The current shared
+[`RexxClassicConfig.applyOptions(words=.RexxValue)->.void`](../../../../lib/rxfnsc/RexxClassicConfig.crexx)
+recognizes zero runtime words and returns without scanning, conversion or state
+change. Recommend specializing that present contract in C rather than emitting
+a call whose body has no work.
+
+1. **Source AST and ownership.** Replace the bounded `Options(level:text)`
+   node with `COptions(value:expression?)` for every OPTIONS clause, including
+   the leading header. Its original expression tree, raw Name spellings and
+   authored byte spans retain all bare header words; no new public header
+   record is needed. A private per-request C header descriptor selects source
+   policy before full lexing. Bound the prepass using the existing `source.bytes`
+   and `scan.work` policy; preserve malformed
+   UTF-8 and dead-source refusal before emission. Only a complete first nonempty
+   clause consisting of OPTIONS and bare words is a static header; quoted values, operators or
+   call punctuation make it runtime-only. Never apply settings from a prefix
+   such as `options levelc()` or from a later/nested clause. The leading clause
+   still evaluates its expression once at its source position.
+2. **Existing file settings.** This C-only compiler accepts `LEVELC` and
+   `NUMERIC_CLASSIC`; other level selectors and `NUMERIC_COMMON` refuse with
+   located profile diagnostics. Nested block comments remain the default.
+   `COMMENTS_HASH`/`COMMENTS_NOHASH` and `COMMENTS_DASH`/`COMMENTS_NODASH`
+   explicitly enable/disable their line forms; `COMMENTS_NOSLASH` is accepted,
+   `COMMENTS_SLASH` refused, and opposite switches for one form conflict.
+   Repeated identical switches are harmless. Use existing request-local
+   `llcomments.rules` and `lllanguage.definition.usecomments`, preserving quote
+   shielding, original bytes/spans and request isolation. No native pre-scan,
+   second comment algorithm, Unicode-profile switch or B/G dispatch is added.
+   Unknown bare words do not change file settings; their ordinary expression
+   evaluation remains. Full header controls remain open under LC-I-05 /
+   LC-REF-064, STRICTC under LC-I-09 / LC-REF-041, and source-map integration
+   under C-SRC / LC-REF-002; these are later obligations, not exclusions.
+   Known but unsupported static controls such as STRICTC/srcmap receive a
+   located PROFILE refusal; quoted or later values do not select static settings.
+3. **Runtime expression, current C v3.** Evaluate an operand exactly once using
+   existing expression operations, including Name reads, calls, function-result
+   requirements, context/failure effects and source origins; only its unused
+   final value is discarded. Unknown words, embedded NUL and DBCS-specific
+   values have no processor effect. Bare OPTIONS emits no empty default.
+   Exactly one String or Number leaf through Group/zero-operator single-operand
+   Chain wrappers is fully validated without constructing an unused IR constant
+   or RexxValue helper. Unary/binary operations, Name reads, calls and required
+   result checks retain their effects/errors even when the result is unused.
+   Preserve normal node visits/budgets and validation of malformed unreachable
+   literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
+   block merely to construct an unused result. No new operation, target export,
+   B/L API or family-version change is required; C v3 remains 41 operations.
+4. **Checkable closure and future gate.** Independent AST/header positives and
+   located refusals cover complete-clause classification, raw words/spans,
+   comment switches/conflicts, quoted markers and independent requests. Source
+   cases prove once-only effects/errors in supported main/IF/group/while/private
+   contexts, first dynamic OPTIONS, bare/unknown/NUL values and malformed dead
+   source; prior output survives rejection. IR-off/on RXAS must retain operand
+   work/errors while showing no OPTIONS processor call or unused bare/literal
+   helper/default/frame growth. Focused normal Debug reuses existing tools and
+   comment/runtime proofs; SELECT/shared labels, exact Classic diagnostics and
+   full conditions/TRACE retain their later owners. Adding any recognized word
+   or other effect to `applyOptions` invalidates this specialization and requires
+   C contract review, consumer regressions and recompilation before integration.
+
+The conservative alternative is C family v4 with one void
+`crexx.c.options(context:crexx.c.context,value:crexx.c.value)` operation, no
+attributes, effects `context / condition / returns`; select the existing
+configuration method directly through its checked receiver ABI, with no target
+export or B API. It preserves an explicit processor boundary but adds unused
+value/call work for the present zero-word contract. The recommended v3 path
+requires explicit approval of the specialization; it does not silently erase
+runtime behavior promised by a future processor contract.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

@@ -262,9 +262,6 @@ request: class
         call _block.store(_contextslot,_block.readarg(1,origin),origin)
       end
       do i = _current.first() to _current.last() while _error = ''
-        if _terminated then do
-          _block = newblock('unreachable'); _terminated = 0; _alive = 0
-        end
         call statement(_current.body().child('items',i))
       end
       if _error <> '' then return
@@ -290,11 +287,13 @@ request: class
     if tick(node) = 0 then return
     i = .int
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    /* Visit structural/non-emitting statements without reopening a terminated
+     * block. Later emitting statements still lower in checked dead code. */
+    if _terminated & kind <> 'Sequence' & kind <> 'Block' & kind <> 'Nop' & kind <> 'Options' then do
+      _block = newblock('unreachable'); _terminated = 0; _alive = 0
+    end
     select
       when kind = 'Sequence' then do i = 1 to node.count('items') while _error = ''
-        if _terminated then do
-          _block = newblock('unreachable'); _terminated = 0; _alive = 0
-        end
         call statement(node.child('items',i))
       end
       when kind = 'Block' then call statement(node.child('body'))

@@ -1,0 +1,22 @@
+options levelc
+nop = 'variable'
+say nop
+NoP
+say 'before'
+if 1 then nop else say 'wrong'
+if 0 then say 'wrong' else nop
+do
+  nop
+end
+once = 1
+do while once
+  nop
+  once = 0
+end
+say probe()
+say 'after'
+exit 0
+probe: procedure
+  nOp
+  if 1 then do; nop; end else nop
+  return 'private'

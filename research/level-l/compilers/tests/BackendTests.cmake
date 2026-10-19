@@ -39,6 +39,8 @@ add_custom_target(llcompiler_provenance_measure
 # Isolated measurements: 89s Debug (29 corpus cases), 263s maintained Apple
 # ASan (31 cases), including nested tools. Serialize whole aggregates; 1800s
 # is a hang guard with room for slower hosted machines, not a speed criterion.
+# NOP adds seven tool commands and a measured ~30s Debug shape component.
+# Retain serial 1800s scheduling; source-only qualification follows AGENTS.md.
 foreach(_mode opt noopt)
   foreach(_vm rxbvm rxtvm)
     if(TARGET ${_vm})
@@ -62,7 +64,7 @@ foreach(_mode opt noopt)
           --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_test} PROPERTIES
-        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=31[|]commands=232[|]failures=0"
+        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=32[|]commands=239[|]failures=0"
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test}

@@ -10,16 +10,87 @@ import llcompilercontracts
 
 main: procedure = .int expose checks failures artifacts outputfile
   arg argv = .string[]
-  if argv[0] < 1 | argv[0] > 2 then return 2
-  outputfile = ''; if argv[0] = 2 then outputfile = argv[2]
+  if argv[0] < 1 | argv[0] > 3 then return 2
+  outputfile = ''; if argv[0] >= 2 then outputfile = argv[2]
   artifacts = argv[1]; checks = 0; failures = 0
-  call requests()
-  call graphs()
-  call provenance()
-  call cleanup()
-  if outputfile <> '' then call literals()
+  if argv[0] = 3 then do
+    if argv[3] <> 'nop' then return 2
+    call nopchecks(outputfile)
+  end
+  else do
+    call requests()
+    call graphs()
+    call provenance()
+    call cleanup()
+    call nopchecks()
+    if outputfile <> '' then call literals()
+  end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
   return failures
+
+/* Equal-width blanks preserve following source coordinates. Source records
+ * remain in actual output; only this comparison omits metadata and abstracts
+ * diagnostic-location payloads, retaining their executable loads and frames. */
+nopchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; written = .int
+  do sample = 1 to 5
+    select sample
+      when 1 then source = "say 'before'; nop; say 'after'"
+      when 2 then source = 'exit 0; nop'
+      when 3 then source = 'do; exit 0; do; nop; end; end'
+      when 4 then source = 'exit 0; p: procedure; return 1; do; nop; end'
+      otherwise source = 'if 1 then do; nop; end; else do; nop; end'
+    end
+    control = changestr('nop',source,'   ')
+    do optimise = 0 to 1
+      withnop = .lltestcompiler..request('c',source as .binary,artifacts,'nop-shape.crexx',1000000,512,67108864,65536,optimise)
+      without = .lltestcompiler..request('c',control as .binary,artifacts,'nop-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(withnop.status() = 0 & without.status() = 0,'valid NOP/control pair ' || sample || '/' || optimise || ': ' || withnop.error() || ' / ' || without.error())
+      if withnop.status() <> 0 | without.status() <> 0 then iterate
+      graph = withnop.graph(); other = without.graph()
+      call check(irshape(graph) = irshape(other),'NOP adds no source IR operation/value/block/slot ' || sample || '/' || optimise)
+      graph = withnop.emissiongraph(); other = without.emissiongraph()
+      call check(irshape(graph) = irshape(other),'NOP adds no selected IR operation/value/block/slot ' || sample || '/' || optimise)
+      output = withnop.output(); blank = without.output()
+      if inspect <> '' & optimise = 0 & (sample = 2 | sample = 4) then do
+        written = writebinary(inspect || '-' || sample || '-nop.rxas',output.text() as .binary)
+        written = writebinary(inspect || '-' || sample || '-blank.rxas',blank.text() as .binary)
+      end
+      call check(execshape(output.text()) = execshape(blank.text()),'NOP adds no instruction/frame/helper/default ' || sample || '/' || optimise)
+      call check(pos('.srcstep',output.text()) > 0 & pos('nop-shape.crexx',output.text()) > 0,'truthful source records retained ' || sample || '/' || optimise)
+    end
+  end
+  return
+
+irshape: procedure = .string
+  arg graph = .llir..module
+  value = .llir..valuehandle
+  data = dereference graph.storage()
+  text = data.count(1) || '/' || data.count(2) || '/' || data.count(3) || '/' || data.count(4) || '/' || data.count(5)
+  do i = 1 to graph.operations()
+    op = graph.operation(i); text = text || '|' || op.name() || ':' || op.inputs() || ':' || op.results() || ':' || op.successors()
+    do input = 1 to op.inputs(); value = op.input(input); text = text || ',' || value.id(); end
+    if op.name() = 'core.constant' then do; value = op.result(); text = text || ':' || bin2x(value.bytes()); end
+  end
+  return text
+
+execshape: procedure = .string
+  arg source = .string
+  text = ''; start = 1
+  do while start <= length(source)
+    finish = pos('0A'x as .string,source,start)
+    if finish = 0 then finish = length(source) + 1
+    line = strip(substr(source,start,finish - start)); start = finish + 1
+    if line = '' | left(line,1) = '.' then iterate
+    if pos('nop-shape.crexx:',line) > 0 then do
+      quote = pos('"',line)
+      if quote > 0 then line = left(line,quote - 1) || '"<diagnostic location>"'
+    end
+    text = text || line || ('0A'x as .string)
+  end
+  return text
+
 check: procedure = .void expose checks failures
   arg condition = .int, name = .string
   checks = checks + 1

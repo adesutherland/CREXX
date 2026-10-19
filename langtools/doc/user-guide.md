@@ -3414,6 +3414,26 @@ ordering with a separate B-owned, prebound-context control;
 they do not establish source EXPOSE or shared-label behavior. Those forms,
 resumable conditions and full TRACE remain later compiler work.
 
+### Classic NOP
+
+NOP has no operand and leaves surrounding execution order unchanged. It can
+occupy the admitted main, IF/ELSE, group, WHILE and private-routine statement
+positions. The same word can still name a variable in assignment or expression
+context:
+
+```rexx
+options levelc
+nop = 'variable'
+NoP
+say nop
+```
+
+The output is `variable`. An extra token after the statement, as in `nop x`,
+is rejected even in unreachable source. An unobserved NOP adds no value,
+runtime helper or frame demand; its authored AST span remains available.
+SELECT/shared-label placements, exact Classic diagnostic identities and full
+clause/TRACE observations remain later compiler work.
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:

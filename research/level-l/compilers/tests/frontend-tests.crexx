@@ -15,6 +15,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'syntax' then call syntax()
     when 'grammar' then call grammar()
     when 'mapping' then call mapping()
+    when 'nop' then call noptests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -145,6 +146,7 @@ literals: procedure = .void
 
 grammar: procedure = .void expose examples
   call treechecks()
+  call noptests()
   text = .string; source = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -165,6 +167,47 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+noptests: procedure = .void
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  source = .string; walk = .llast..walk; ignored = .string; sample = .int
+  do sample = 1 to 7
+    select sample
+      when 1 then source = 'NoP'
+      when 2 then source = 'nop=3; say nop; nOp'
+      when 3 then source = 'if 1 then nop else NOP'
+      when 4 then source = 'if 1 then if 0 then nop else nop'
+      when 5 then source = 'do; nop; end'
+      when 6 then source = 'do while 0; nop; end'
+      otherwise source = 'exit 0; p: procedure; nop; return'
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'NOP placement parses ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); walk = tree.walk('parents first'); found = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'Nop' then iterate
+      found = found + 1
+      call check(node.children() = 0,'NOP has no invented child/value')
+      if sample = 1 then call check(node.start() = 0 & node.finish() = 3 & node.sourcetext() = 'NoP','NOP exact authored byte span/case')
+    end
+    call check(found > 0,'authored Nop node found ' || sample)
+    ignored = good('c',source,'core.return','crexx.c.nop')
+  end
+  ignored = good('c','nop=3; say nop','name="nop"')
+  do sample = 1 to 6
+    tail = word('x quoted 1 (1) [x] then',sample); message = 'unexpected'
+    if sample = 2 then tail = "'x'"
+    if sample = 5 then message = '0x5B'
+    call bad('c',('nop ' || tail) as .binary,'LL_COMPILER_SYNTAX:',message,4,'line 1, column 5')
+  end
+  call bad('c','if 1 then nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',14)
+  call bad('c','exit 0; nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',12)
+  call bad('c','exit 0; nop; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; p: procedure; return; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
   return
 
 treechecks: procedure = .void

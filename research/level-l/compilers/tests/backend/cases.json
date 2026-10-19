@@ -1,5 +1,13 @@
 [
   {
+    "name": "nop",
+    "level": "c",
+    "source": "nop-c.crexx",
+    "output": "variable\nbefore\nprivate\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
     "name": "pipeline",
     "level": "c",
     "source": "../../examples/step01/pipeline-c.crexx",
