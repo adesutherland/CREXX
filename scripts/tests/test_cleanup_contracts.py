@@ -90,7 +90,7 @@ class CleanupTests(unittest.TestCase):
         fixtures = ['compiler/tests/golden/run/empty.out', 'tests/invalid.rxas',
                     'third_party/re2c/test/parser.log', 'tests/fixtures/invalid.log',
                     'compiler/tests/golden/diagnostic.log', 'tests/native-inference/fixtures/model.gguf',
-                    'lib/rxfnsl/unicode/data/UnicodeData.txt', 'docs/books/figure.pdf']
+                    'lib/rxfnsb/unicode/data/UnicodeData.txt', 'docs/books/figure.pdf']
         self.assertEqual(hygiene.violations(fixtures), [])
         bad = ['docs/qa/new-run/input.crexx', 'performance/evidence/new/results.csv',
                'concurrency/evidence/session.md', 'compiler/build.log']

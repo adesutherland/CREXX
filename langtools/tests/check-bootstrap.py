@@ -97,7 +97,7 @@ qualify('bounded-unicode',header+"""  pair: pattern = U+03B1{2,3}
   value.rule: rule = pair U+1F600? then emit value
 """+footer,[s.encode() for s in ['', 'α','αα','ααα','αααα','αα😀','ααα😀','αα😀αα','😀','ααβ']],bounded_oracle)
 # The owning ICU rule-file oracle operates on decoded scalars and re-encodes spans.
-gennorm=(root/'lib/rxfnsg/unicode/gennorm2.levell').read_text().replace('namespace gennorm2_language','namespace probe_language').replace('invalid_utf8','bad_utf8').replace('invalid_character','bad_character')
+gennorm=(root/'tools/unicode/gennorm2.levell').read_text().replace('namespace gennorm2_language','namespace probe_language').replace('invalid_utf8','bad_utf8').replace('invalid_character','bad_character')
 def gennorm_oracle(source):
  try:text=source.decode('utf8')
  except UnicodeDecodeError:return None

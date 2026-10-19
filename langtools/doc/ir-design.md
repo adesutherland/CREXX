@@ -251,6 +251,54 @@ the stores preceding it. An unreachable block is still structurally checked.
 Unknown state effects or incomplete continuation contracts return `unsupported`.
 Other outcomes are `invalid` and `limit`; neither publishes analysis facts.
 
+The analyser indexes each terminator edge once in a private predecessor list.
+It computes reachability from every function entry, then schedules all reachable
+blocks once. A block intersects its reachable predecessors' slot sets and applies
+its ordered stores; a changed exit set schedules its successors. A ring queue
+holds at most one pending entry per block. Unreachable predecessors do not affect
+a meet, and function entries retain empty incoming sets even with back edges.
+Reachable exit sets start at the finite lattice top and only lose assignment
+facts; stores generate fixed facts. Each entry transfer starts from empty,
+regardless of its position in the block table. This monotone iteration also
+handles irreducible cycles and terminates when no changed exit remains queued.
+
+For `B` blocks, `E` edges and `S` slots, private index/queue storage is `O(B+E)`
+and the two byte lattices use `2*B*S` bytes, with one `S`-byte transfer buffer.
+The work budget checks the lattice product before allocation and charges its
+initialization, edge indexing/traversal, slot meets/transfers, operation walks and
+sparse fact-key searches. Each rescheduled block examines only its predecessor
+and successor lists; it does not rescan unrelated blocks to discover incoming
+edges. Final fact publication is also budgeted. Charges check the remaining
+allowance before addition, including a maximum signed-integer budget. Work exhaustion at
+any stage returns `limit` without usable partial facts; a later request starts a
+fresh analysis.
+
+These are analysis scheduling and storage bounds, not executable-value liveness
+or a register allocator. Exceptional/resumable edge contracts remain unsupported.
+The independent `ts_llirflow` regression checks a two-entry cycle, unreachable
+predecessors, independent function roots, slot-free cycles, effect refusals,
+resource recovery and owner/revision invalidation using hand-checked facts.
+
+The emitted implementation resizes `before` and `after` once to `B*S`, uses
+strict byte reads/writes for lattice cells, and resizes `temp` to one `S`-byte
+row. Its transfer and publication paths use the existing checked, target-sized
+three-operand `bcopy`: the destination's current logical length bounds each copy
+to `S` bytes. Row offsets are within the previously checked lattice product;
+slot-free paths skip the copy. The initial `bincopy` calls were not sufficient:
+that helper's ordinary by-value source argument copied the entire `B*S` payload
+before moving the requested row. The two callers now avoid that hidden clone
+without changing the BIF or VM instruction contract.
+
+`levell_ir_flow_rxas` reads the already-built SDK RXAS and resolves storage
+registers from metadata. It checks lattice versus scratch sizes, direct byte
+access and bounded row-copy sites, and rejects whole-lattice copies or the old
+helper calls. It ignores unrelated object copies and source/debug record counts;
+it is omitted for deliberately unoptimised SDK builds. The native B seed still
+emits tracing/source observations, ordinary object/fact/service calls, and some
+unused inline-resize result bookkeeping. These are residual seed/ownership costs,
+not additional lattice copies or a speed claim. The shape check complements
+functional/resource tests; it does not prove all control-flow or alias semantics.
+
 Facts use `has(domain,id,key)` and `get(domain,id,key)`. `get` returns exact bytes;
 it raises `LL_IR_FACT` for absence. `reachable` facts belong to blocks and
 `definitely.assigned` facts to load operations. Both use byte `00` or `01`.

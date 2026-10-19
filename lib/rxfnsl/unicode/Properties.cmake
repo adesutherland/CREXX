@@ -1,5 +1,5 @@
 set(_ll_property_dir "${CMAKE_CURRENT_SOURCE_DIR}/../unicode")
-set(_ll_property_data "${_ll_property_dir}/data/unicode-17.0.0")
+get_filename_component(_ll_property_data "${_ll_property_dir}/../../rxfnsb/unicode/data/unicode-17.0.0" ABSOLUTE)
 set(_ll_property_work "${CMAKE_CURRENT_BINARY_DIR}/properties")
 file(MAKE_DIRECTORY "${_ll_property_work}")
 if(TARGET rxtvm)

@@ -1,4 +1,4 @@
-set(CREXX_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../..")
+set(CREXX_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 if(TARGET rxtvm)
   set(_ll_vm rxtvm)
 else()

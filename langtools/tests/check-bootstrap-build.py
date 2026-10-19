@@ -75,9 +75,9 @@ def check():
     (tools/'bootstrap/seed-reader.inc').write_text('fixture seed\n')
     shutil.copyfile(source/'langtools/bootstrap/prepare-front.cmake', tools/'bootstrap/prepare-front.cmake')
     (tools/'grammar/levell.levell').write_text('fixture grammar\n')
-    unicode = fixture/'lib/rxfnsg/unicode'
+    unicode = fixture/'tools/unicode'
     unicode.mkdir(parents=True)
-    shutil.copyfile(source/'lib/rxfnsg/unicode/LevelL.cmake', unicode/'LevelL.cmake')
+    shutil.copyfile(source/'tools/unicode/LevelL.cmake', unicode/'LevelL.cmake')
     (unicode/'gennorm2.levell').write_text('fixture grammar\n')
     declarations = []
     for name in ['rxc', 'rxas', 'rxlink', 'rxtvm']:
@@ -97,7 +97,7 @@ add_custom_target(library)
 add_custom_target(rxfnsl)
 '''+ '\n'.join(declarations)+'''
 add_subdirectory(langtools)
-include(lib/rxfnsg/unicode/LevelL.cmake)
+include(tools/unicode/LevelL.cmake)
 add_custom_target(consume ALL)
 add_dependencies(consume rxlanglib levell_unicode_lexer)
 ''')

@@ -130,7 +130,9 @@ analysis: class
 
 /** Reachability follows both Boolean edges. Definite assignment intersects
  * incoming sets, starting from the finite lattice top except at function entry.
- * No inference about language truth or mutable external state is made. */
+ * Predecessor links are indexed once. Only changed block exits wake successors;
+ * the ring queue retains at most one pending entry per block. No inference about
+ * language truth or mutable external state is made. */
 analyse: procedure = .llirservices..analysis
   arg owner = reference .llir..module, budget = 1000000
   graph = dereference owner; facts = .llirservices..facts(owner)
@@ -139,12 +141,25 @@ analyse: procedure = .llirservices..analysis
   store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
   work = 0; op = .int; b = .int; i = .int; s = .int; f = .int; target = .int; at = .int; opcode = .int; temp = .binary; bytes = .binary
   do op = 1 to graph.operations()
+    if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
     work = work + 1
-    if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
     opcode = store.get(3,op,1)
     if opcode > 16 then do
       if schema.effectvalue(opcode - 16,3) <> 'returns' then return .llirservices..analysis('unsupported','LL_IR_CONTROL: incomplete continuation contract for ' || store.opname(opcode),facts)
       if schema.effectvalue(opcode - 16,1) = 'unknown' then return .llirservices..analysis('unsupported','LL_IR_EFFECT: unknown state effects for ' || store.opname(opcode),facts)
+    end
+  end
+  /* These private links describe the existing verified edges. They neither
+   * change the IR nor introduce another control/effect contract. */
+  blocks = graph.blocks(); slots = store.count(5)
+  predecessors = .int[]; previous = .int[]; incoming = .int[]; links = 0
+  do b = 1 to blocks
+    op = store.get(2,b,3)
+    do i = 1 to store.get(3,op,9)
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      work = work + 1
+      target = store.successor(op,i); links = links + 1
+      predecessors[links] = b; previous[links] = incoming[target]; incoming[target] = links
     end
   end
   reachable = .int[]; pending = .int[]; head = 1; tail = 0
@@ -154,77 +169,114 @@ analyse: procedure = .llirservices..analysis
   do while head <= tail
     b = pending[head]; head = head + 1; op = store.get(2,b,3)
     do i = 1 to store.get(3,op,9)
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
       work = work + 1
-      if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
       target = store.successor(op,i)
       if reachable[target] = 0 then do
         reachable[target] = 1; tail = tail + 1; pending[tail] = target
       end
     end
   end
-  slots = store.count(5); blocks = graph.blocks()
-  if slots > 0 & blocks > (budget - work) <idiv> slots then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work cannot cover the slot lattice',facts)
-  before = .binary; after = .binary; call binresize before,blocks * slots; call binresize after,blocks * slots
+  /* Check the product before allocating either lattice. Charge initialization
+   * even when the first transfer would immediately exhaust the work budget. */
+  cells = 0
+  if slots > 0 then do
+    if blocks > (budget - work) <idiv> slots then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work cannot cover the slot lattice',facts)
+    cells = blocks * slots; work = work + cells
+  end
+  before = .binary; after = .binary; call binresize before,cells; call binresize after,cells
+  /* Exit sets start at top, including entry blocks. Entry transfer always
+   * starts from empty, so even reordered entries only remove initial facts. */
+  queued = .int[]; pending = .int[]; head = 1; tail = 0; waiting = 0
   do b = 1 to blocks
+    if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+    work = work + 1
     f = store.get(2,b,1)
     do s = 1 to slots
       at = (b - 1) * slots + s - 1
-      if reachable[b] & store.get(5,s,1) = f & store.get(1,f,3) <> b then <at..u8>(at) after = 1
+      if reachable[b] & store.get(5,s,1) = f then <at..u8>(at) after = 1
+    end
+    if reachable[b] then do
+      tail = tail + 1; pending[tail] = b; queued[b] = 1; waiting = waiting + 1
     end
   end
-  changed = 1; pass = 0
-  do while changed
-    changed = 0; pass = pass + 1
-    do b = 1 to blocks
-      if reachable[b] = 0 then iterate
-      f = store.get(2,b,1)
-      do s = 1 to slots
-        work = work + 1
-        if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
-        known = 1
-        if store.get(1,f,3) = b | store.get(5,s,1) <> f then known = 0
-        else do p = 1 to blocks
-          if reachable[p] = 0 then iterate
-          last = store.get(2,p,3)
-          do i = 1 to store.get(3,last,9)
-            work = work + 1
-            if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
-            if store.successor(last,i) = b then do
-              from = (p - 1) * slots + s - 1
-              known = known & <at..u8>(from) after
-            end
+  do while waiting > 0
+    b = pending[head]; head = head + 1
+    if head > blocks then head = 1
+    waiting = waiting - 1; queued[b] = 0; f = store.get(2,b,1)
+    do s = 1 to slots
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      work = work + 1
+      known = 0
+      if store.get(1,f,3) <> b & store.get(5,s,1) = f then do
+        known = 1; link = incoming[b]
+        do while link > 0
+          if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+          work = work + 1
+          predecessor = predecessors[link]; link = previous[link]
+          if reachable[predecessor] then do
+            from = (predecessor - 1) * slots + s - 1
+            known = known & <at..u8>(from) after
           end
         end
-        at = (b - 1) * slots + s - 1; <at..u8>(at) before = known
       end
-      op = store.get(2,b,2)
-      call binresize temp,slots
-      if slots > 0 then call bincopy temp,0,before,(b - 1) * slots,slots
-      do while op > 0
+      at = (b - 1) * slots + s - 1; <at..u8>(at) before = known
+    end
+    op = store.get(2,b,2)
+    call binresize temp,slots
+    if slots > 0 then do
+      rowoffset = (b - 1) * slots
+      assembler bcopy temp,before,rowoffset
+    end
+    do while op > 0
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      work = work + 1
+      if store.get(3,op,1) = 4 then do
+        at = store.get(3,op,12) - 1; <at..u8>(at) temp = 1
+      end
+      op = store.get(3,op,3)
+    end
+    changed = 0
+    do s = 1 to slots
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      work = work + 1
+      at = (b - 1) * slots + s - 1; local = s - 1
+      if <at..u8>(at) after <> <at..u8>(local) temp then changed = 1
+      <at..u8>(at) after = <at..u8>(local) temp
+    end
+    if changed then do
+      op = store.get(2,b,3)
+      do i = 1 to store.get(3,op,9)
+        if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
         work = work + 1
-        if work > budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
-        if store.get(3,op,1) = 4 then do
-          at = store.get(3,op,12) - 1; <at..u8>(at) temp = 1
+        target = store.successor(op,i)
+        if queued[target] = 0 then do
+          tail = tail + 1
+          if tail > blocks then tail = 1
+          pending[tail] = target; queued[target] = 1; waiting = waiting + 1
         end
-        op = store.get(3,op,3)
-      end
-      do s = 1 to slots
-        at = (b - 1) * slots + s - 1; local = s - 1
-        if <at..u8>(at) after <> <at..u8>(local) temp then changed = 1
-        <at..u8>(at) after = <at..u8>(local) temp
       end
     end
   end
-  result = .llirservices..analysis('ok','',facts)
+  /* Publish only after convergence. Fact insertion scans existing sparse keys;
+   * charge that scan as well as the final operation walk. */
+  issues = .int[]; messages = .string[]
   do b = 1 to blocks
+    if facts.count() >= budget - work then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+    work = work + facts.count() + 1
     if reachable[b] then bytes = '01'x as .binary
     else bytes = '00'x as .binary
     call facts.put('block',b,'reachable',bytes)
     if reachable[b] = 0 then iterate
     call binresize temp,slots
-    if slots > 0 then call bincopy temp,0,before,(b - 1) * slots,slots
+    if slots > 0 then do
+      rowoffset = (b - 1) * slots
+      assembler bcopy temp,before,rowoffset
+    end
     op = store.get(2,b,2)
     do while op > 0
+      if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+      work = work + 1
       opcode = store.get(3,op,1)
       if opcode = 3 | opcode = 4 then do
         s = store.get(3,op,12); at = s - 1
@@ -233,8 +285,11 @@ analyse: procedure = .llirservices..analysis
           if <at..u8>(at) temp then bytes = '01'x as .binary
           else do
             bytes = '00'x as .binary
-            call result.issue(op,'LL_IR_UNASSIGNED: slot ' || store.text(store.get(5,s,3)) || ' may be read before assignment (operation ' || op || ')')
+            i = issues[0] + 1; issues[i] = op
+            messages[i] = 'LL_IR_UNASSIGNED: slot ' || store.text(store.get(5,s,3)) || ' may be read before assignment (operation ' || op || ')'
           end
+          if facts.count() >= budget - work then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+          work = work + facts.count() + 1
           call facts.put('operation',op,'definitely.assigned',bytes)
         end
       end
@@ -242,10 +297,9 @@ analyse: procedure = .llirservices..analysis
     end
   end
   if facts.error() <> '' then return .llirservices..analysis('limit',facts.error(),facts)
-  /* Publish the completed fact snapshot while retaining the diagnostics. */
   final = .llirservices..analysis('ok','',facts)
-  do i = 1 to result.issues()
-    call final.issue(result.operation(i),result.diagnostic(i))
+  do i = 1 to issues[0]
+    call final.issue(issues[i],messages[i])
   end
   return final
 

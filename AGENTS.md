@@ -152,26 +152,28 @@ for a new broad benchmark or release-qualification run.
 
 ## Level L compiler delivery priority
 
-Adrian approved completing the new Level C compiler before proper Level B
-self-hosting on 16 October 2026. `research/level-l/compilers/PLAN.md` owns the C-first
-milestone, its coverage crosswalk and acceptance. Keep `LLCOMP-STEP07B` and its
-criteria open and deferred; preserve the eventual B/G/full-replacement scope.
-The existing native B seed builds the Level B compiler implementation and
-Level L libraries. Use Level L parsing, IR, transformation and emitter services;
-new compilation requests must not delegate to the native compiler.
+Adrian narrowed this delivery to Level C only on 19 October 2026.
+`research/level-l/compilers/PLAN.md` owns its coverage and acceptance. New B/G
+features, proper B self-hosting and combined replacement are outside this
+increment; retain their unverified criteria and existing consumer regressions.
+The native B seed builds the B implementation and Level L libraries. New
+compilation requests use Level L parsing, IR, transformation and emission and
+must not delegate to native source compiler services.
 
-Maintain current G behaviour and regressions when shared services change; G
-feature expansion is not a prerequisite for each C increment. Continue adding
-independent Level L tests for reusable services. Complete C includes the agreed
-Classic instruction/BIF and host contracts, diagnostics, conditions/TRACE and
-INTERPRET. Review and complete instructions one at a time, retaining their
-individual semantics, errors, RXAS-quality evidence and shared dependencies.
-Adrian deferred INTERPRET, including its mechanism review, until later on
-16 October 2026; it remains required for eventual complete C.
-Retain existing language/API/platform decision gates and explicit exclusions.
-Inspect actual RXAS for quality and efficiency throughout, including work hidden
-in helpers; native C output may be faulty or inefficient. The emitted-code
-rules above and the Level L research performance exception below both apply.
+Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
+conditions/TRACE and INTERPRET. Design the complete architecture before
+implementation approval; implement INTERPRET last. Review instructions one at
+a time with individual semantics, errors, RXAS quality and shared dependencies.
+Maintain independent Level L tests. Keep compiler policy, generic L services,
+shared B runtime/Unicode libraries and RXAS/VM infrastructure separately owned.
+Adrian approved the C-only plan and shared B Unicode extraction on 19 October
+2026. Preserve G/C interfaces and one algorithm/data owner; exact new public
+API and ISA contracts retain their decision gates.
+
+Retain language/API/platform decision gates and explicit exclusions. Inspect
+actual RXAS and helper work throughout; native C may be faulty or inefficient.
+The emitted-code rules and Level L research performance exception apply;
+production RXAS/VM performance edits retain their own verdict gate.
 
 ## Working Rules
 

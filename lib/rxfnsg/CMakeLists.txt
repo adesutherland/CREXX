@@ -1,32 +1,5 @@
-include("${CMAKE_CURRENT_SOURCE_DIR}/unicode/LevelL.cmake")
 cmake_minimum_required(VERSION 3.24)
 
-set(RXUNICODE_CASEFOLD_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/CaseFolding.txt")
-set(RXUNICODE_GRAPHEME_PROPERTY_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/auxiliary/GraphemeBreakProperty.txt")
-set(RXUNICODE_GRAPHEME_TEST_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/auxiliary/GraphemeBreakTest.txt")
-set(RXUNICODE_EMOJI_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/emoji/emoji-data.txt")
-set(RXUNICODE_DERIVED_CORE_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/DerivedCoreProperties.txt")
-set(RXUNICODE_UNICODE_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/UnicodeData.txt")
-set(RXUNICODE_NORMALIZATION_PROPERTIES_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/DerivedNormalizationProps.txt")
-set(RXUNICODE_NORMALIZATION_TEST_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/NormalizationTest.txt")
-set(RXUNICODE_SPECIAL_CASING_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/unicode-17.0.0/SpecialCasing.txt")
-set(RXUNICODE_WINDOWS1252_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/legacy/CP1252-2.0.0.txt")
-set(RXUNICODE_IBM437_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/legacy/CP437-2.0.0.txt")
-set(RXUNICODE_IBM850_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/legacy/CP850-2.0.0.txt")
-set(RXUNICODE_IBM1047_DATA
-  "${CMAKE_CURRENT_SOURCE_DIR}/unicode/data/legacy/IBM1047.txt")
 add_subdirectory(rexx)
 add_subdirectory(tests_functional)
 

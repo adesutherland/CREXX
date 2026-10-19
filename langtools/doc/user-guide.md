@@ -3185,8 +3185,13 @@ rxlink -o demo-linked demo.rxbin /path/to/bin/library.rxbin
 rxbvm demo-linked.rxbin
 ```
 
-For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin` and
-`/path/to/bin/rxfnsc.rxbin` to the link command. Use VM `-a` followed by program
+For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin`,
+`/path/to/bin/rxfnsc.rxbin` and `/path/to/bin/classlib.rxbin` to the link command.
+The collection library supplies the Classic variable pool; include it explicitly
+rather than depending on VM autoload from the compiler installation. The
+`llcompiler_c_only_*` regressions compile with native/typed compiler products
+absent and execute linked static images in a separate directory with autoload
+disabled. This verifies the bounded current profile, not complete C. Use VM `-a` followed by program
 arguments when needed. Keep linker debug metadata for runtime source locations;
 `rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
 by omitting its `-n`. The C/G compilers enable shared IR optimisation by default;

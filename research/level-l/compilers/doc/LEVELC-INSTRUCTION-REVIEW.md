@@ -1,18 +1,20 @@
 # New Level C instruction review
 
 The [C-first plan](../PLAN.md#c-first-delivery-milestone) owns scope, acceptance
-and implementation decisions. Adrian directed instruction-by-instruction review
-on 16 October 2026, leaving INTERPRET until later. This ledger follows the
-existing Classic LC-I order. Native instruction closures do not establish new
-compiler coverage. Shared services are reviewed when an instruction needs them;
-their unresolved portions stay visible rather than being silently inherited.
+and implementation decisions. The 19 October C-only design proposal reviews
+the full architecture now and retains INTERPRET as the final implementation
+stage. This ledger preserves bounded implementation results in LC-I order;
+the [requirements crosswalk](levelc-requirements.md) supplies each new work unit.
+Native closures do not establish new compiler coverage. Whole-instruction
+closure requires its shared/host/condition/TRACE dependencies as well as local
+forms. No further implementation is started by the design proposal.
 
 ## Delivery order
 
 | Existing contract | New compiler review |
 |---|---|
 | LC-I-01 SAY | First review and CFC-SAY-DEF01 repair qualified locally; full host/TRACE/shared dependencies remain open. |
-| LC-I-02 DROP | Next review. |
+| LC-I-02 DROP | Next instruction review after the approved foundation work and SAY disposition. |
 | LC-I-03 assignment | Not yet reviewed for full scope. |
 | LC-I-04 NOP | Not yet reviewed for full scope. |
 | LC-I-05 OPTIONS | Not yet reviewed for full scope. |

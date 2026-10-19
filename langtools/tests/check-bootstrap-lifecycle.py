@@ -10,9 +10,9 @@ work.mkdir(parents=True);out.mkdir(parents=True,exist_ok=True)
 source=work/'source';build=work/'build';blocked=work/'no-re2c';blocked.mkdir()
 shutil.copytree(root/'lib/rxfnsl',source/'lib/rxfnsl')
 shutil.copytree(root/'langtools',source/'langtools')
-(source/'lib/rxfnsg/unicode').mkdir(parents=True)
+(source/'tools/unicode').mkdir(parents=True)
 for name in ['LevelL.cmake','gennorm2.levell']:
- shutil.copyfile(root/'lib/rxfnsg/unicode'/name,source/'lib/rxfnsg/unicode'/name)
+ shutil.copyfile(root/'tools/unicode'/name,source/'tools/unicode'/name)
 (source/'cmake').mkdir();shutil.copy2(root/'cmake/CrexxImportRoots.cmake',source/'cmake/CrexxImportRoots.cmake')
 (blocked/'re2c').write_text('#!/bin/sh\necho forbidden-re2c-invocation >> "'+str(out/'forbidden-re2c.log')+'"\nexit 97\n');(blocked/'re2c').chmod(0o755)
 env=dict(os.environ,PATH=str(blocked)+os.pathsep+os.environ['PATH']);records=[]

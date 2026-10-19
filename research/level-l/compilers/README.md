@@ -40,8 +40,16 @@ arguments after source retain their defaults. See [backend](doc/backend.md).
 Both commands preserve `-i`, `-o` and `-n`. Use installed packages with the
 existing `rxas`, `rxlink` and VM for execution.
 
-[The plan](PLAN.md) owns scope and unfinished criteria.
-[The walkthrough](doc/pipeline-walkthrough.md) and maintained examples show
-source, AST, IR and RXAS. C completion proceeds instruction by instruction;
-INTERPRET and proper B are later work. Correct execution and emitted-code quality
-are both acceptance requirements; native compiler output is only a control.
+[The plan](PLAN.md#c-first-delivery-milestone) owns the active C-only delivery;
+new B/G features and self-hosting are outside it. Existing G behavior remains
+supported. The [target architecture](doc/architecture.md),
+[requirements crosswalk](doc/levelc-requirements.md) and
+[worker packages](doc/agent-work-packages.md) are approved for implementation;
+open stages are not implemented capability. Shared Unicode algorithms now have
+an independent B component consumed by the unchanged G facade. Moving C's
+adapters to an approved public B interface remains a later STEP03 slice.
+
+[The walkthrough](doc/pipeline-walkthrough.md) and maintained examples describe
+the implemented PoC. C completion proceeds instruction by instruction, ending
+with INTERPRET. Correct execution and emitted-code quality are both acceptance
+requirements; native output is a comparison control, not the specification.

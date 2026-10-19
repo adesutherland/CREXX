@@ -1,0 +1,44 @@
+/* Packaging regression over the retained private ABI, not a public B API.
+ * Expected values reuse the independent G conformance fixtures' focused rows.
+ */
+options levelb
+import rxfnsb
+import _rxunicode
+
+errors = 0
+nfd = "A" || "cc8a"x
+nfc = "c385"x
+errors = errors + check(_rxunicode..unicode_normalize(nfd,3) = nfc, "NFC composition")
+errors = errors + check(_rxunicode..unicode_normalize(nfc,1) = nfd, "NFD decomposition")
+errors = errors + check(_rxunicode..unicode_is_normalized(nfc,3), "exact NFC predicate")
+
+sharp_s = "Stra" || "c39f"x || "e"
+errors = errors + check(_rxunicode..unicode_case_convert(sharp_s,1) = "STRASSE", "full uppercase expansion")
+errors = errors + check(_rxunicode..casefold(sharp_s,2) = "strasse", "full default case folding")
+errors = errors + check(_rxunicode..casefold("f0909080"x,2) = "f09090a8"x, "non-BMP case folding")
+errors = errors + check(_rxunicode..unicode_case_convert("ce9fcea3"x,2) = "cebfcf82"x, "final sigma context")
+
+combining_and_emoji = "65cc81f09f9880"x
+errors = errors + check(_rxunicode..grapheme_count(combining_and_emoji) = 2, "combining and supplementary graphemes")
+errors = errors + check(_rxunicode..grapheme_count("f09f87a8f09f87a6"x) = 1, "regional indicator pair")
+nul_and_high = "4100f48fbfbf"x
+errors = errors + check(_rxunicode..grapheme_count(nul_and_high) = 3, "embedded NUL and highest scalar")
+
+text = "41c3a9f09f9880e282ac"x
+encoded = _rxunicode..unicode_encode(text,"UTF-16LE")
+errors = errors + check(bin2x(encoded) = "4100E9003DD800DEAC20", "exact UTF-16LE bytes")
+errors = errors + check(_rxunicode..unicode_decode(encoded,"UTF-16LE") = text, "UTF-16LE decode")
+errors = errors + check(_rxunicode..unicode_decode("c1c2c3"x as .binary,"IBM1047") = "ABC", "retained EBCDIC mapping")
+errors = errors + check(\_rxunicode..unicode_is_decodable("c080"x as .binary,"UTF-8"), "malformed UTF-8 rejected")
+errors = errors + check(bin2x(_rxunicode..unicode_encode(nul_and_high,"UTF-16LE")) = "41000000FFDBFFDF", "NUL and high scalar bytes")
+
+if errors = 0 then say "PASS: independent B Unicode core without G aggregation"
+return errors <> 0
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "FAIL: B Unicode core" label
+    return 1
+  end
+  return 0

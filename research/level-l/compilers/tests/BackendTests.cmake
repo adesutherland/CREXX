@@ -4,7 +4,7 @@ add_custom_target(llcompiler_say_measure
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/say-measure"
     --mode opt --vm rxbvm
   DEPENDS llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt llcompiler_target_opt
-    rxas rxlink rxbvm library rxfnsc
+    rxas rxlink rxbvm library classlib rxfnsc fs cstream
   USES_TERMINAL VERBATIM)
 add_custom_target(llcompiler_step07_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
@@ -54,7 +54,7 @@ foreach(_mode opt noopt)
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_say}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
-          llcompiler_target_${_mode} library rxfnsc rxas rxlink ${_vm})
+          llcompiler_target_${_mode} library classlib rxfnsc fs cstream rxas rxlink ${_vm})
       set(_test "llcompiler_backend_${_mode}_${_vm}")
       add_test(NAME ${_test}
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"

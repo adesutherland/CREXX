@@ -28,4 +28,4 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/library.rxbin"
 add_custom_target(library DEPENDS "${CMAKE_BINARY_DIR}/bin/library.rxbin")
 add_subdirectory("${CREXX_ROOT}/lib/rxfnsl/rexx" rexx)
 add_subdirectory("${CREXX_ROOT}/langtools" langtools)
-include("${CREXX_ROOT}/lib/rxfnsg/unicode/LevelL.cmake")
+include("${CREXX_ROOT}/tools/unicode/LevelL.cmake")

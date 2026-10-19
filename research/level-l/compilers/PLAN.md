@@ -1,88 +1,266 @@
-# cREXX compilers built with Level L
+# Level C delivery through Level L
 
-The compiler programme is experimental and implemented in Level B. STEP01–06
-and STEP07A are published; the bounded SAY radix-literal repair is published.
-The repository reorganisation is implemented and locally verified in main
-`develop`, with publication pending; [the owning plan](../PLAN.md#repository-architecture-and-cleanup)
-contains its RA acceptance criteria. This does not close full C, B or G coverage.
+**Active scope: Level C only. Architecture and delivery sequence approved by
+Adrian, 19 October 2026; implementation started.** The existing native B compiler remains
+the build seed. New B/G features, B self-hosting and combined replacement are
+outside this delivery; retained consumers remain regression obligations.
+INTERPRET is the final implementation stage. Its architecture is reviewed now,
+not deferred until a design incompatible with it has already been built.
 
-Classic instruction completion takes priority. Review each instruction against
-its own semantics, diagnostics and RXAS quality. Preserve current G behaviour;
-B/G share the `typed/` implementation. Proper B/self-hosting (STEP07B) and
-INTERPRET (STEP08) remain deferred. See the
-[instruction ledger](doc/LEVELC-INSTRUCTION-REVIEW.md),
-[STEP07A contracts](doc/STEP07A-CONTRACTS.md), [architecture](doc/architecture.md)
-and [user guide](../../../langtools/doc/user-guide.md).
-
-## Current delivery and validation boundary
-
-| Stage | Delivered scope | Remaining boundary |
-|---|---|---|
-| STEP01 | Agreed C/G PoC and IR/semantic contracts | Full-language contracts remain separately gated. |
-| STEP02 | Checked extensible IR, semantic services and writer | General replacement and resource criteria remain open. |
-| STEP03 | C/G source-to-IR frontends and diagnostics | Coverage is the declared PoC. |
-| STEP04 | Source-to-RXAS services and commands; essential provenance fixes | Full clause/TRACE semantics and wider allocation optimisation remain open. |
-| STEP05 | Generic propagation, admitted folding, pruning and emitter cleanup | No formal performance verdict is required for Level L research. |
-| STEP06 | End-to-end PoC coverage, installed use and build-order repairs | Local qualification is not full platform/replacement qualification. |
-| STEP07A | Exact constants, explicit arguments/presence, checked callable contracts | Does not implement proper B or complete Classic. |
-| C-first | Instruction-by-instruction work; SAY radix literals repaired | Whole SAY, host output/conditions/TRACE, remaining instructions and BIFs stay open. |
-| STEP07B/08/09/10 | Deferred/planned | Proper B, INTERPRET, complete qualification, then explicit replacement approval. |
-
-Before reorganisation, the published baseline was
-`06a548321662e6dc4e91899363eb12831b4d952c`. Its retained conclusions include
-STEP07A's 99-command matrix, the 40-command SAY regression and earlier PoC,
-provenance, independent Level L and bootstrap coverage. These are historical
-local results; the changed source/build boundaries are covered by the focused checks in
-the RA plan. Raw run logs, hashes and receipts have been deleted. Permanent
-regression inputs and readable examples remain under `tests/` and `examples/`.
-CI monitoring remains stopped. Publication is a separate instruction.
+Source review began on synchronized `develop`
+`016e6a65466c65a5c722b96452d95025acb463b2`. During review, local and remote
+advanced together to `e5c066b87945dc697df6c771fc5a56a20962c772`, a sanitizer
+scheduling/documentation change. Its diff leaves reviewed compiler/runtime
+implementation unchanged; preserve the new structured-flow serial scheduling.
+All 112 pre-existing active files remained byte-identical. Neither revision
+identity is a fresh product, hosted or release qualification. The reorganisation and
+subsequent preparation repairs are published. CI monitoring remains paused.
 
 ## Vision and intended outcome
 
-Build new Level C and Level G compilers in cREXX using Level L. Each frontend
-recognises its own language and preserves its semantics, then produces a common
-intermediate representation (IR). Shared analyses and optimisations transform
-that IR before the owning C or typed selector emits RXAS through shared Level L
-writer and target utilities. The existing assembler, linker and
-VM execute the result.
+Deliver a complete, explicitly selected Level C compiler and reusable compile
+service implemented in B using Level L. Complete the agreed Classic instruction,
+BIF, Unicode, host, diagnostics and lifecycle contracts, ending with INTERPRET.
+Alongside it, deliver independently proven generic Level L services, shared B
+Classic libraries, and justified RXAS/VM support for economical C execution.
+Keep these four owners separate and document their interfaces and failure paths.
+Native C is an inspected comparison control; its bugs, overhead and unfinished
+contracts cannot define acceptance of the new implementation.
 
-The result must also be economical and intelligible at the IR/RXAS boundary:
-simple source should not acquire unnecessary setup, misleading source maps or
-accidental host paths. Necessary Classic semantics remain explicit, but the
-existing Classic compiler's expansion is not a quality target. Source fidelity,
-structural code quality and measured replacement budgets accompany functional
-correctness throughout development, rather than being postponed until final
-replacement (AC16).
+The [active C-only milestone](#c-first-delivery-milestone) below owns sequence
+and acceptance. Read it with the [approved architecture](doc/architecture.md),
+[requirements crosswalk](doc/levelc-requirements.md) and
+[subagent work packages](doc/agent-work-packages.md). Those documents detail one
+plan; they do not introduce competing acceptance authorities. Product routing
+and retirement of native C require a separate explicit decision after delivery.
 
-These compilers are intended to replace the production C-language compiler
-routes when their complete replacement criteria pass. The first PoC covers C
-and G; the complete destination also includes the proper Level B compiler,
-written in Level B and built through Level L. Until qualified, all three remain
-separate, explicitly selected tools beside the existing compilers. The retained
-C-language Level B compiler supplies the initial seed. It does not remain the
-normal B compiler after replacement. Retiring the native seed itself is outside
-this programme; its re2c and other native build prerequisites remain explicit.
+## Existing foundation and evidence boundary
 
-Adrian clarified this bootstrap destination during STEP01 review on 15 October
-2026: native B seed, Level L, proper B, rebuild/verify B and L, then downstream
-G and C. That remains the final self-hosted build order. On 16 October Adrian
-reordered development delivery: complete C using the existing native B seed
-before implementing STEP07B. C's compiler host depends on Level B and Level L,
-independently of G. C functionality does not require the new B compiler to exist.
+STEP01–06 and STEP07A provide the published C/G PoC, generic IR, owned services,
+provenance/optimisation foundations, callable metadata and delivery fixtures.
+The bounded SAY radix-literal repair is published; complete SAY remains open.
+Retained implementation records below describe their exact local scope. The
+historical `06a548321662e6dc4e91899363eb12831b4d952c` checkpoint included the
+99-command STEP07A and 40-command SAY checks; later layout/preparation proofs
+belong to the parent plan. None establishes complete new C or current hosted
+success. Reuse unchanged qualified inputs; do not retain raw run output.
 
-Level L remains a general language-engineering toolkit. Developing both C and G
-drives its requirements: Classic dynamic state, numeric context and conditions
-must coexist with G types, references, classes and extensions. The extensible
-IR, its schemas, compact storage and views belong in Level L,
-along with reusable tree, graph, analysis, transformation and emission services.
-Compiler libraries define C/G operation families, language semantics and cREXX
-calling conventions. Existing settings, calculator and RexxScript consumers continue to exercise the generic services.
+### BIF implementation reuse
 
-The first delivery is a genuine two-frontend compiling PoC. It must execute
-programs from both languages through the same IR, optimisations and cREXX RXAS
-backend. A recogniser, an IR dump, or delegation to the old compiler does not
-complete that delivery. Full language migration and production replacement are
-later phases with separate gates; they remain part of the intended end state.
+The existing Classic libraries already provide the BIF bodies. BF01–09 are
+new-compiler binding and verification packages, not a library reimplementation
+programme. Preserve unchanged bodies and valid direct-library qualification;
+reuse existing independent fixtures through the new compiler. Its current
+LENGTH/ARG/DIGITS subset must grow to the existing catalogue, with correct
+presence, context, ABI, errors and source behavior. Change a library only for
+a reproduced defect, a named unfinished contract or approved Unicode ownership
+extraction. The design review found no new BIF-body defect.
+
+## C-first delivery milestone
+
+**C-only architecture and implementation approved, 19 October 2026.** This
+supersedes the 16 October ordering only where explicit: B/G expansion is out
+of this delivery, INTERPRET architecture is designed now, and its implementation
+is last. Existing language exceptions remain binding. The
+[Classic worklist](../../../docs/planning/release-1/levelc-compatibility-worklist.md)
+continues to own language decisions; a native closure never closes new C.
+
+### Checkable acceptance criteria
+
+All CFC criteria remain **open** for the complete new compiler. Existing
+foundation evidence may close individual sub-obligations only.
+
+| ID | Observable pass condition and proof |
+|---|---|
+| **CFC-AC01** | Complete crosswalk of LC-I-01–25, all 95 named BIF entries, LC-REF-001–075, extensions and approved exceptions. Each row links implementation, independent positive/error expectations and qualification; no omitted or inherited native passes. |
+| **CFC-AC02** | Expressions, numeric/string/Unicode values, symbols/stems/pools/EXPOSE, PARSE/ARG, control and calls implement the agreed contract. Test state, order, errors and limits, including defects exposed by native comparisons; each instruction has its own disposition. |
+| **CFC-AC03** | Activation/labels, SIGNAL/CALL conditions, RETURN/EXIT, clause clocks, source/TRACE and diagnostic origins survive normal/abrupt/nested paths, Unicode/CRLF/NUL and optimisation. Prior output survives failed compilation. Source identities are logical and stable. |
+| **CFC-AC04** | Host invocation/completion, callback-window pool access, ADDRESS/commands, streams/queues, clocks/HALT and signed external calls have positive/error/ownership proof on their declared platforms. Configuration and missing host facilities stay open unless explicitly excluded. |
+| **CFC-AC05** | INTERPRET satisfies LC-87-01–05 using the same B/L compiler, live caller state, real resumption/transfers, nested groups and bounded resident-code reclamation. Tests include trapped failures, all-pinned exhaustion, stale handles and teardown; no native/RexxScript fallback. |
+| **CFC-AC06** | Representative full RXAS and helper paths have checked structural expectations for simple expressions, loops, calls, errors and dynamic execution. Compiler/RXAS modes are distinct. Direct defects are fixed; necessary cost and later opportunities have owners. Preserve ABI, source, TRACE and numeric observations; static counts are not speed claims. |
+| **CFC-AC07** | Generic L services have independent non-C/G consumers, checked structure/effects/facts, bounded failure and documented algorithms. C/BIF/ISA policy stays in owning extensions; source/import/install audits prove no native or typed frontend in the C host closure. |
+| **CFC-AC08** | Every required C row closes on qualified inputs, with CLI/service/installed/platform proof, documentation and runnable walkthroughs. Distinguish local, hosted, guest/SDK, sanitizer and release results. Complete C is separate from default replacement and B/G delivery. |
+| **CFC-AC09** | B Classic runtime has one implementation of values, pool aliases, activation/context, BIFs and host adapters. C target closure uses the shared B Unicode foundation independently of G aggregation; native C, typed Classic mode and RexxScript retain their contracts. Public metadata/doc tags and consumer regressions prove compatibility. |
+| **CFC-AC10** | Any RXAS/VM change has an approved operation/storage contract, exact error/alias/lifetime/source semantics, encoding/disassembly/loader tests and both-engine/platform proof. Alternatives are compared; production performance edits pass the first Release verdict gate. No native source-language implementation is introduced. |
+| **CFC-AC11** | Compile/request/result and runtime activation/code lifetimes are isolated, reusable and bounded. Verify exact lengths, atomic failure, stale/foreign references, interruption, repeated/concurrent contexts, declared budgets and recovery without partially published output. |
+| **CFC-AC12** | Delivery/build manifests separate native seed, L tools/SDK, C host, C runtime and optional dynamic-compile support. Cold/incremental/installed/relocated builds have one producer and correct freshness; static applications have no compiler dependency. Platform capability rows and source/user/API documentation match actual products. |
+
+AC01–08 preserve their earlier meanings; AC09–12 make runtime/ISA/resource and
+product boundaries separately checkable. Explicitly approved compatibility
+exceptions are positive documented contracts, not permission to omit unfinished
+host/source/reference obligations. Formal performance tests are not a research
+publication gate; production primitive edits and later replacement budgets
+retain repository performance governance.
+
+### Numbered delivery sequence
+
+The CLC sequence is **approved for implementation**. STEP01 and bounded
+foundations of STEP02/03 are active; later steps remain open. Each step updates architecture, schemas/algorithms and user guidance
+with its implementation. Generic L changes include independent tests; shared
+changes include existing G/native-C/RexxScript tests where affected.
+
+| Step | Deliverable and decisive checks | Criteria / dependencies |
+|---|---|---|
+| **CLC-STEP01 — contracts and executable baseline** | Freeze the requirements/exception ledger, source/ABI/platform manifests and independent expectations. Audit current tests against code; establish C-only dependency controls and representative RXAS shapes. No assumption that native is correct. | AC01/06/07/08/12; design approval. |
+| **CLC-STEP02 — generic L foundations** | Reuse existing llflow/llir services; extend registered effect/control contracts for exceptional and resumable edges, clause observations, revision-bound analyses, generic liveness and checked rewrites. Retain block-local values/slots; no gratuitous SSA conversion. Positive/adversarial independent L fixtures and G regressions. | AC07/10/11; STEP01; precise public API/schema approval. Deliver foundations incrementally against real consumers. |
+| **CLC-STEP03 — Classic runtime and ABI** | Reconcile shared B activation/context/pool services, direct operation entries, BIF presence/error ABI and one-body label-entry model. Extract the existing B Unicode algorithms into a separately selectable B foundation for C/G, retaining G facade/API and independent L bootstrap; no algorithm/table duplication. Prove recursion, restoration, exposure, exceptions and build closures. | AC02/03/09/11/12; STEP01 and required STEP02 contracts; exact ABI gate. |
+| **CLC-STEP04 — source and expression completion** | Complete contextual lexing, Unicode symbols, literals/continuation/comments, AST/source maps, all operators and numeric/context/error rules; bind existing value/Unicode BIF entries in BF01–04 and reuse their expected-result fixtures. Validate unreachable syntax before optimisation. Test independent expectations, both modes and RXAS cost. | AC01–03/06/07/09/11; STEP02/03. |
+| **CLC-STEP05 — instruction reviews 01–10** | SAY, DROP, assignment, NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE, individually. Support all source forms/errors, pool/loop effects and clause anchors; normal/strict timing distinctions remain explicit. | AC01–03/06/07; STEP04. Each row gets its own implementation/review packet; dependent host/TRACE proof stays open. |
+| **CLC-STEP06 — instruction reviews 11–19** | ARG, PROCEDURE, CALL, RETURN, EXIT, PULL, PUSH, QUEUE, PARSE individually. Integrate one PARSE executor, shared label/fall-through activation, exact argument presence, static signed providers and BF05/06/08. | AC01–04/06/09/11; STEP03–05. ARG may introduce PARSE infrastructure before PARSE's full instruction review. |
+| **CLC-STEP07 — instruction reviews 20–24** | ADDRESS, implicit commands, NUMERIC, SIGNAL, TRACE individually. Finish BF07/09 compiler integration, command/callback state, delayed/immediate traps and existing clock/source/error context integration. Inspect authored locations and executable overhead. | AC01–04/06/09; STEP06. NUMERIC/conditions needed earlier use STEP03/04 contracts; full instruction closure occurs here. |
+| **CLC-STEP08 — host and remaining contract completeness** | Close named remaining reference/host configuration and BIF integration rows, preserving completed library work; length-aware invocation/completion and pool callback-window APIs, real HALT/clock/error producers and named stream/queue/platform adapters. No silent desktop-only completion. | AC01–04/09/11/12; STEP04–07; new public host APIs require exact contract approval. |
+| **CLC-STEP09 — target quality and justified infrastructure** | Finish C-OPT-01–06 and allocation/call-window proofs; compare existing instructions, library/selector fixes and any native primitive. Measure concrete production candidates before selection. Add only approved primitives and qualify both engines/consumers. | AC06/07/10/11; applies incrementally after STEP03, full closure after STEP08. Performance verdict gate for production edits. No INTERPRET mechanism implementation here. |
+| **CLC-STEP10 — static C acceptance** | Close LC-I-01–24, all BIFs and static reference rows; installed/cold/freshness manifests, platform applicability, source/IR/RXAS walkthrough and independent coordinator review. Run required grouped checks once on final inputs. | AC01–04/06–12 static portions; STEP01–09. This is a bounded static-C milestone, not complete C. |
+| **CLC-STEP11 — INTERPRET and final C acceptance** | Implement and qualify the dynamic group mechanism last, then close all complete-C criteria, docs and installed/platform proof. Substeps below include the remaining code-owner/continuation infrastructure. | All AC01–12; static milestone and exact mechanism approval. No B/G expansion or default switch follows automatically. |
+
+STEP02/03 may be developed in parallel on disjoint ownership after interfaces
+are frozen. Instruction compiler edits are serial in LC-I order; workers can
+prepare independent expected tests, runtime services and independent reviews in
+parallel. Do not declare a whole instruction closed while its listed host,
+TRACE, condition or shared-service proofs remain open.
+
+#### Final stage substeps
+
+- **CLC-STEP11a:** prove normal/nested/SYNTAX/CALL-handler-resume/SIGNAL cases
+  with live activation and owned continuations; compare the proposed image-group
+  approach with existing loader limits. Review exact ABI, cleanup and quotas.
+- **CLC-STEP11b:** implement approved generic ephemeral image ownership and safe
+  entry/reclamation in VM/linker/assembler interfaces as needed. Prove pins,
+  stale handles, all-pinned exhaustion, failure rollback and both engines.
+- **CLC-STEP11c:** connect interpreted-group mode of the same C service, compile/
+  assemble/load, live pool/arguments/configuration, caller routine dispatch and
+  continuation spills. No second parser/evaluator or native compiler fallback.
+- **CLC-STEP11d:** close all LC-87 semantics including PROCEDURE eligibility,
+  outer loop restrictions, RETURN/EXIT/SIGNAL, delayed handlers, nested groups,
+  source/TRACE, caches/quotas, host/platform and installed use. Complete the final
+  independent C review and required qualification on exact inputs.
+
+These substeps are one final implementation stage. Host/platform limitations
+that prevent required dynamic execution remain explicit blockers for decision;
+a file-stage compiler alone does not close INTERPRET.
+
+### Existing step-ID reconciliation
+
+| Retained ID | Current disposition |
+|---|---|
+| CFC-STEP01 | Instruction review and crosswalk continue through CLC-STEP01/04–08; bounded SAY evidence retained below. |
+| CFC-STEP02 | Mechanism architecture proposed here; executable proof moves to final CLC-STEP11a. |
+| CFC-STEP03 | Semantic work is CLC-STEP03–06. |
+| CFC-STEP04 | Conditions/source/host work is CLC-STEP07/08. |
+| CFC-STEP05 | INTERPRET integration is CLC-STEP11. |
+| CFC-STEP06 | Static checkpoint CLC-STEP10; complete C checkpoint CLC-STEP11d. |
+| CFC-STEP07 | B/G expansion is outside this delivery; no automatic resumption. |
+| LLCOMP-STEP07B/09/10 | Wider B/G/self-hosting/replacement criteria remain unverified, outside this C-only completion claim. |
+
+### Approval and decision gates
+
+Adrian approved the four-owner architecture, C-only sequence and GPT-6.1 Sol
+Extra High worker model on 19 October 2026. Review exact changed public L/Classic APIs,
+serialized schemas, host services and VM/ISA contracts in their owning step.
+Reusing existing approved semantics needs no repeated approval. Any proposed
+language deviation must identify its user-visible effect and receive a separate
+decision. Default-routing changes, native-C retirement and release qualification
+are not authorised by approving research implementation.
+
+### Design-review validation
+
+Inspected compiler/runtime sources at `016e6a65466c65a5c722b96452d95025acb463b2`
+are unchanged by the reconciled `e5c066b87945dc697df6c771fc5a56a20962c772` head.
+The completed design review changed documentation only. In-memory Python checks confirm 25
+instruction rows, all 95 native catalogue names exactly once in BIF work groups,
+all 75 reference IDs and retention of prior acceptance/step IDs. Local document
+links/anchors and `git diff --check` pass; all 112 pre-existing active files are
+byte-identical. No product/test qualification was rerun for this proposal.
+The active implementation below establishes executable proof incrementally.
+
+## Active first implementation increment
+
+**First bounded foundation increment implemented and locally qualified.
+Complete C remains open.** Base:
+`e5c066b87945dc697df6c771fc5a56a20962c772`. Adrian approved implementation
+with GPT-6.1 Sol Extra High subagents, existing BIF/test reuse, clean ownership
+and INTERPRET last. The coordinator owns integration and independent checks.
+Adrian authorised committing this baseline locally on 19 October; publication
+and resumed CI monitoring are outside that instruction. The existing qualified
+source/test/build inputs are unchanged, so their results below are reused.
+
+| Increment | Acceptance and work | Current status |
+|---|---|---|
+| **CLC-STEP01a** | Reuse current SAY fixtures/expected bytes in a C-only staged host with native/typed compilers absent; execute generated static images in a separate compiler-free runtime. Inspect existing RXAS structural checks. CFC-AC06/07/12 slices. | Implemented and locally qualified: 32 existing C checks, both modes and VM engines; C-only registration is outside the mixed C/G gate. Complete C dependency/platform acceptance remains open. |
+| **CLC-STEP02a** | Replace repeated whole-graph predecessor scans in existing IR definite-assignment analysis with private bounded predecessor/worklist infrastructure. Preserve API/schema, unsupported controls and atomic revision-bound facts. Independent irreducible/multiple-root/limit fixture plus existing IR/service regressions. CFC-AC07/11 slices. | Implemented and locally qualified: indexed predecessors, bounded work queue, checked lattice storage/work, atomic facts, independent runtime and RXAS shape checks. Exceptional/resumable effects and liveness allocation remain open. |
+| **CLC-STEP03a** | Extract unchanged B Unicode executors and pinned data from G into optional `rxunicode-core.rxbin`; generators in `tools/unicode`. Retain private ABI, G facade and existing conformance/shape fixtures. Share canonical property data with L without runtime bootstrap dependency. CFC-AC09/12 slices. | Implemented and locally qualified: single B producer, unchanged algorithms/G facade, independent B runtime, canonical data, recovery/no-op and install checks. Exact public B facade and C adapter migration remain open. |
+
+### Local qualification and findings
+
+Inputs are the base above plus this increment's source, test and build changes.
+Three GPT-6.1 Sol Extra High workers supplied disjoint implementations; the
+coordinator reviewed and integrated their code, inspected generated RXAS and
+ran the following focused checks. Existing BIF bodies and expected results were
+reused. No native compiler/runtime instruction or public API was changed.
+
+- `cmake --build cmake-build-debug --parallel 10 --target stage-product`
+  passes without compiler warnings. This includes the integrated B Unicode
+  producer and its G consumer.
+- `llcompiler_c_only_measure` passes the existing 32 C SAY commands in an
+  isolated compiler host and a separate runtime, with empty `PATH` and VM
+  autoload disabled. Exact imports include the existing `classlib`; the old
+  test's ambient autoload assumption is removed. Debug took about 19 seconds;
+  maintained Apple ASan/Make took about 55 seconds. These scheduling observations
+  support serial CTest registration with a 900-second hang limit, not a speed
+  claim. `ctest --test-dir cmake-build-debug -R '^llcompiler_c_only_'`
+  passes all four mode/VM variants (about 17 seconds each).
+- Focused Debug CTests pass for independent L IR/services/flow/optimisation,
+  the retained mixed C/G SAY cases, direct B Unicode runtime, all five existing
+  Unicode RXAS checks, existing G Unicode conformance/contract and native C
+  Unicode/label consumers. After the final flow copy correction, all 23 selected
+  L, mixed SAY, RXAS and repository hygiene/cleanup checks pass; unchanged
+  Unicode semantic inputs reuse their preceding passes.
+- `tools/asan-run.sh --phase build` with targets `llcompiler_c_only_measure`,
+  `ts_llirflow_opt`, `ts_llirflow_noopt`, `ts_llirservices_opt`,
+  `ts_llirservices_noopt` and `ts_unicode_core`, eight build jobs and
+  `--build-leaks off`, passes. The cold C-only Make path exposed a missing
+  cross-directory `llbinmeta` producer prerequisite. Research `ll_compile`
+  now maps exact shared image paths to their producers while retaining file
+  freshness dependencies. The same preparation then passes.
+- `tools/asan-run.sh --phase ctest --regex
+  '^(ts_llir(flow|services)_|ts_unicode_core_|levell_ir_flow_rxas$)'
+  --test-jobs 8 --leaks off` passes all 13 tests on the maintained Apple ASan
+  build. No sanitizer finding was observed. Apple LSan is unavailable; this is
+  focused ASan evidence, not a full platform sanitizer closure. Refreshing native
+  prerequisites emitted existing SDK `sprintf` deprecation warnings; the ASan
+  refresh is not claimed warning-free.
+- Existing `rxlang_bootstrap_build_order` passes its real-declaration Make
+  clean/missing-L2/changed-input/no-op fixture. Actual Debug/Ninja Unicode
+  builds restore a removed member RXAS, generated source and final core image
+  byte-identically; the following builds preserve timestamps. Actual maintained
+  ASan/Make restores the member and then remains a no-op. Recovering the core
+  exposed a repeated G builder invocation when its link retained identical
+  bytes; the G CMake rule now records successful output completion. Two
+  following Make requests run no G controller and preserve bytes/timestamps.
+- `python3 -B scripts/tests/check_install_inventory.py --build
+  cmake-build-debug --expect-bytecode rxunicode-core` passes fresh/repeated
+  installation into a prefix containing spaces, checks 391 files and retained
+  exclusions, and verifies exact core bytes. A separate core component install
+  also preserves those bytes. This does not establish installed new-C closure.
+
+RXAS review found that two prior `bincopy` calls cloned the full B×S lattice
+through a by-value argument before copying one S-byte row. Both callers now
+size the scratch row to S and use the existing target-sized `bcopy` operation;
+no BIF body or VM edit was needed. `levell_ir_flow_rxas` checks this shape from
+metadata-resolved registers and rejects whole-lattice copies. Remaining seed
+compiler object/trace/service overhead is described in the algorithm guide;
+correctness and structural checks do not establish a formal performance result.
+
+This increment leaves full CFC-AC01–12 open. Next work is the remaining STEP01
+contract/dependency ledger and precise STEP02/03 public effect/runtime/Unicode
+interfaces, followed by expression and existing-BIF integration in STEP04.
+Private Unicode packaging does not yet remove C's existing G facade dependency.
+INTERPRET implementation remains STEP11, last. No full hosted, cross-platform,
+release or replacement readiness is claimed; CI monitoring remains paused.
+Final `git diff --check` and reviewed document links pass. All 112 unrelated
+active files remain byte-identical and uncommitted. Task-created diagnostic
+logs and temporary fixtures were deleted; maintained regression inputs and
+build products remain in their owning locations.
 
 ## Authority and scope
 
@@ -122,102 +300,22 @@ with the repository roadmap, release plan and AGENTS.md.
   must be visible in the dependency audit, rather than described as a C-free
   operating environment.
 - Build configuration and test orchestration may use existing repository tools;
-  compiler algorithms and new performance tooling stay in cREXX. No new C
-  runtime, VM or linker implementation is authorised by this plan. If a required
-  semantic operation cannot be expressed through the existing platform, retain
-  a reproducer and bring the missing contract back for a decision.
+  compiler algorithms and new performance tooling stay in cREXX. The proposed
+  C-only architecture includes separately owned native RXAS/VM enhancements.
+  It does not authorise their implementation before design approval; exact
+  public API/ISA, lifetime and performance gates remain binding. Native changes
+  must implement execution/storage primitives, never hidden source compilation.
 
 
-## Delivery phases and initial language coverage
+## Earlier programme scope and retained IDs
 
-### Phase A: two-frontend compiling PoC
-
-The initial paired corpus covers literals, scalar assignment and reads,
-arithmetic/comparisons, IF/ELSE, a pre-test loop, procedures/calls/returns and
-SAY. G inputs use explicit types in the admitted profile; Classic inputs use
-RexxValue/pool semantics and their configured numeric rules. Each frontend has
-a Level L grammar and semantic mapper; neither translates into source for the
-old compiler. Pin precise forms and exclusions in STEP01 before implementation.
-
-Include cases where the languages agree and cases where they must differ:
-numeric representation/conversion, literal spelling, eager versus skipped
-operands, variable state, argument/result handling and diagnostics. Use one
-supported runtime-library call path so calling/import contracts are exercised,
-not only standalone arithmetic. Choose parser backends from the current
-supported portfolio and justify any composite stages from actual grammar needs.
-
-Complete source -> IR -> optimised IR -> RXAS -> linked execution for both
-languages. Provide unoptimised and optimised stage dumps and a small independent
-cREXX IR evaluator for the admitted operations, alongside existing compiler
-and reference-language controls. The evaluator is a test oracle, not a runtime
-fallback or a second INTERPRET implementation.
-
-### Phase B: language and product coverage
-
-Grow the same pipeline towards full C/G replacement. The coverage matrix must
-include every currently supported source feature, import/metadata contract,
-diagnostic and tooling entry of the routes being replaced. Track new upstream
-features while the implementations coexist. Do not redefine replacement as
-parity only on the original PoC subset.
-
-The active delivery sequence now completes C first, through the C-first
-milestone below, while retaining current G regressions and independent Level L
-consumers. G expansion and proper B/self-hosting under STEP07B are deferred
-until after that milestone. Their full coverage remains required for eventual
-combined replacement. B and G may share typed syntax and semantic code where
-their contracts agree; the B build must not require generated G services or
-the G compiler. The final self-hosted product build order begins with B and L.
-
-For G this includes classes/interfaces, references and ownership, arrays,
-numeric modes, imports/providers, initialisers, task/parallel and extension
-contracts where supported. For C it includes the whole-instruction/BIF matrix,
-PARSE, stems/exposure, numeric state, calls/arguments, labels/SIGNAL/conditions,
-TRACE, ADDRESS, Unicode, streams and host contracts. Reuse the shared runtime
-algorithms through explicit ABI calls rather than implementing a second set of
-Classic BIF semantics in the compiler. Existing compiler bugs are recorded and
-resolved against the language contract, not copied merely to match output.
-
-### Phase C: reusable compilation and INTERPRET
-
-STEP08 is part of C completion, with its mechanism review brought forward
-before late C closeout. The phase number does not require waiting for STEP07B
-or full G coverage. Its semantic and lifetime gates remain unchanged.
-
-Build the drivers over a cREXX request/result compile service from the start:
-exact source length, owned diagnostics/artifacts, explicit imports/options,
-work/storage limits, failure cleanup and no CLI process exit in the service.
-Normal module compilation and later interpreted-group mode share the frontend,
-semantic lowering, IR, optimiser and RXAS backend.
-
-Before execution of generated Classic code, prove the activation contract:
-current pool and replacement of that pool by PROCEDURE; arguments/presence and
-RESULT; NUMERIC/ADDRESS/TRACE and condition state; local routine/label access;
-RETURN/EXIT/SIGNAL; handler suspension and resumption; nested INTERPRET; and
-authored/generated diagnostic origins. A fresh ordinary procedure call or a
-completion enum alone does not establish these semantics.
-
-The existing VM exposes loading but no public individual-module unloading.
-Select and prove bounded generated-code ownership, retention and reclamation;
-a bounded lookup cache with unbounded resident modules is insufficient.
-Code may be cached only under an explicit semantic/dependency key and must not
-retain an expired caller activation. Keep standalone compiler/assembler stages
-available for constrained hosts. A generated-code mechanism that requires new
-C/VM support is a decision gate with an unmet criterion, not permission to
-violate the cREXX-only implementation requirement.
-
-### Phase D: production replacement
-
-The C-first milestone qualifies a complete, explicitly selected C tool and
-service independently of new B self-hosting. It does not close the combined
-B/C/G replacement criteria or authorise a default-routing change. STEP09/10
-retain those obligations and the explicit replacement decision.
-
-Switch default compiler routing only after the full coverage, bootstrap,
-platform, lifecycle and delivery criteria pass and Adrian approves the switch.
-Retain the documented C-language bootstrap tool and required existing runtime,
-assembler/linker/VM tools. Remove obsolete production compiler routes, build
-entries and documentation together after proving there is no hidden dependency
-on them. Preserve a tested rollback path for the routing transition.
+The earlier Phase A delivered a C/G PoC; Phase B sought full B/C/G coverage,
+Phase C reusable compilation/INTERPRET and Phase D combined replacement.
+Adrian narrowed active delivery to C on 19 October. The LLCOMP criteria and
+steps below preserve earlier contracts and stable references; their B/G-only
+portions are **outside the current delivery**, not completed or automatically
+scheduled next. C portions are implemented through CFC/CLC below. No new B
+compiler, full G migration or combined default switch gates C completion.
 
 ## Architecture documentation alongside implementation
 
@@ -270,54 +368,34 @@ as those stages arrive. Distinguish a proved bound, an assumed semantic premise
 and a measured observation. Explain terms before using them; a diagram or node
 dump supplements the explanation rather than replacing it.
 
-Current architecture/reference pages describe what is implemented. Proposed
-shapes remain visibly proposed in this plan or review material until accepted.
+As-built reference pages describe implemented services. The architecture page
+now explicitly describes the proposed target, with a separately labelled source
+baseline. Proposed records are not public APIs until their contract gate passes.
 Use tested fixture dumps/excerpts where practical so examples cannot silently
 drift from code. Keep chronology and qualification receipts out of the enduring
 use/reference explanation. No empty documentation skeleton counts as evidence.
 
 ## Bootstrap and dependency direction
 
-```text
-native tools, including retained C-language B seed B0
-    -> B libraries and complete Level L built by B0
-    -> proper cREXX B compiler B1, built by B0 using Level L-generated frontend
-    -> rebuild B libraries, Level L and proper B using B1 -> B2
-    -> repeat the same closure using B2 -> B3; compare B2/B3 stage products
-    -> qualified B + Level L foundation
-         -> new G compiler and G runtime/library products
-         -> new C compiler and its B-only host services
-```
+Active order: retained native B seed and native tools → B runtime and Level L
+SDK/tools → new C compiler → C applications. C source requests use no native
+source compiler/backend. Keep compiler-host, target-runtime and optional runtime-
+compilation manifests separate. C-only host products must not link/generate the
+G frontend. The current rxfnsc package's G Unicode dependency needs the reviewed
+package split in CLC-STEP03; no duplicate Unicode implementation is proposed.
 
-The [architecture](doc/architecture.md#bootstrap-native-seed-to-self-hosted-b-and-l)
-defines stage inputs, output comparisons and host versus target dependencies.
-The existing Level L L0/L1/L2 reader bootstrap runs within the appropriate build
-stage; its numbers are distinct from B1/B2/B3 compiler generations. Rebuilding L
-with proper B establishes that the foundation no longer needs the native B
-compiler. Repeating the same closure checks convergence; it is a fixed
-qualification procedure, not a build loop that runs indefinitely.
-
-All compiler infrastructure is Level B. Neither Level L, proper B nor the C
-compiler host may require G. Existing full Classic runtime packaging currently
-depends on G; this target-program dependency is recorded separately. Removing
-that dependency requires a reviewed runtime/package split and is not established
-merely by writing the C compiler in B. The C/G PoC may use the existing runtime
-packages while the full closure is developed.
-
-Test cold from pinned sources without installed new compiler products. Later
-self-hosting stages must run with native B/C/G compiler services unavailable,
-while retaining the required assembler/linker/VM tools. Keep exact stage import
-roots and manifests, including libraries and generated grammar modules; renaming
-a PATH entry alone does not prove absence of a linked native backend. Use
-deterministic products, opt/no-opt controls and independent semantic regressions.
-Convergent output demonstrates reproducibility, not compiler correctness by
-itself. Routine incremental builds reuse the qualified foundation; they need not
-repeat cold multi-generation qualification for unrelated edits.
+Existing L0/L1/L2 bootstrap remains required. Earlier B1/B2/B3 self-hosting and
+full G closure remain LLCOMP-AC02/STEP07B outside this delivery, without any
+claim of convergence. Cold and installed C checks use explicit import roots and
+native source-compiler services unavailable after bootstrap. Separate RXAS and
+RXLINK stages remain supported, including constrained-host applicability.
 
 ## Numbered acceptance criteria
 
-All implementation criteria below are **open**. Phase A evidence closes its
-declared PoC portions only; Phase B–D obligations remain visible.
+These are **retained whole-programme criteria**, not the active C-only
+completion checklist. Their unverified portions stay open; B/G expansion and
+self-hosting portions are out of the current delivery. CFC-AC01–12 below define
+this delivery without claiming the wider programme complete.
 
 1. **LLCOMP-AC01 — cREXX-only compiler and separation.** All compiler stages are
    cREXX/Level L under the layout above, with generic services in Level L. Both
@@ -435,8 +513,8 @@ declared PoC portions only; Phase B–D obligations remain visible.
 | **LLCOMP-STEP05** | Add shared temporary propagation, admitted constant evaluation, branch simplification and safe unused-operation elimination. Verify against the independent IR evaluator and emitted execution, including actual code-shape improvements for both languages. | AC04–07/09/13/16 | STEP04; pass contracts reviewed before enabling each transformation. Do not use optimisation to conceal direct construction/emission defects. |
 | **LLCOMP-STEP06** | Qualify and document the two-frontend PoC: bootstrap, installed tools, both VMs/modes, failure cases, explicit resource bounds and semantic comparisons. | Phase A portions of AC01–09/12–16 | STEP05. **PoC review gate:** assess usefulness and complexity; approve the next coverage increments. This does not authorise production replacement. |
 | **LLCOMP-STEP07** | Complete Classic coverage first through the C-first milestone: instructions/BIFs, pools, calls, runtime/host contracts, diagnostics and tooling. Maintain current G coverage; its remaining classes/references, ownership, extensions and other full-language obligations stay open for later. | AC03–10/12–16 | STEP06/07A foundations; keep the complete coverage matrix current and generic services independent of either language. No new B prerequisite for C delivery. |
-| **LLCOMP-STEP07B — deferred until after C completion** | Implement the proper B frontend/profile over the shared IR/backend; inventory full B coverage and the self-hosting source closure. Build B1 from the native seed, rebuild B/L/B to B2 and B3, and qualify convergence, semantic behaviour and independence from G/native compiler services. | AC01/02/04–10/12–15 | Shared backend and required typed/metadata coverage from STEP04/07; review the exact B coverage and stage manifest before implementation. Required before combined STEP09, not before the C-first milestone. |
-| **LLCOMP-STEP08 — deferred INTERPRET** | Prove and implement the shared compile-service/Classic interpreted-group activation and continuation route, with bounded generated-code ownership. | AC05/09/11–13 | Adrian deferred this mechanism review and implementation; runtime integration follows the needed STEP07 activation/control contracts. **INTERPRET mechanism gate**, existing LC criteria and no-C constraint remain binding. |
+| **LLCOMP-STEP07B — outside current C-only delivery** | Implement the proper B frontend/profile over the shared IR/backend; inventory full B coverage and the self-hosting source closure. Build B1 from the native seed, rebuild B/L/B to B2 and B3, and qualify convergence, semantic behaviour and independence from G/native compiler services. | AC01/02/04–10/12–15 | Shared backend and required typed/metadata coverage from STEP04/07; review the exact B coverage and stage manifest before implementation. Required before combined STEP09, not before the C-first milestone. |
+| **LLCOMP-STEP08 — CLC-STEP11, final implementation stage** | Prove and implement the shared compile-service/Classic interpreted-group activation and continuation route, with bounded generated-code ownership. | AC05/09/11–13 | The 19 October design request brings architecture review into this proposal; mechanism implementation follows static-C acceptance in CLC-STEP11. **INTERPRET mechanism gate**, existing LC criteria and B/L-only source-compiler constraint remain binding; separately reviewed native execution/storage support is permitted by the proposed design. |
 | **LLCOMP-STEP09** | Close full B/C/G replacement coverage, installed/platform qualification, constrained-host/bootstrap requirements and representative performance budgets. | AC01–16 | STEP07/07B/08; reuse unchanged evidence and keep release/sanitizer gates distinct from ordinary develop publication. |
 | **LLCOMP-STEP10** | Switch default B/C/G routes, retain the explicit native B seed, and retire superseded production compiler paths/documentation. | AC01/02/10/12/14 | STEP09 plus **Adrian's explicit replacement approval** and a verified rollback procedure. |
 
@@ -817,141 +895,10 @@ B-host modes and VMs, independent Level L, native/new module interoperability,
 installed CLI/service requests and focused Apple ASan checks. This increment
 is included in the develop publication authorised on 17 October; no hosted
 STEP07A result is claimed.
-The subsequent C-first decision below supersedes the earlier balanced C/G
+The active C-only decision above supersedes the earlier balanced C/G
 expansion sequence. Classic coverage and STEP08 now lead; STEP07B is deferred.
 Its full self-hosting obligations and the INTERPRET mechanism gate are retained.
 
-
-## C-first delivery milestone
-
-**Priority and plan approved, 16 October 2026.** Adrian chose to complete the
-new Level C compiler before STEP07B, and explicitly retained RXAS quality and
-efficiency as acceptance. Native C output may be faulty or inefficient. This
-Adrian subsequently directed instruction-by-instruction review, starting with
-SAY in the existing LC-I order, and leaving INTERPRET until later. This
-supersedes the earlier parallel/early INTERPRET mechanism review; no INTERPRET
-implementation or mechanism investigation is part of the current pass. This
-section is the authoritative sequence within STEP07/08, not a second Classic
-language specification. The [Classic worklist](../../../docs/planning/release-1/levelc-compatibility-worklist.md)
-and its [reference obligations](../../../docs/planning/release-1/levelc-reference-obligations.md)
-continue to own language conformance and approved exceptions.
-
-### Vision and intended outcome
-
-Deliver a complete, explicitly selected Level C compiler and reusable compile
-service through Level L, with correct Classic behaviour, useful diagnostics and
-economical, explainable RXAS. All new compiler algorithms remain Level B;
-grammars and reusable services use Level L. The existing native B seed continues
-to build this implementation. New source compilation never delegates to native
-compiler services. Existing runtime algorithms are reused through checked ABI
-contracts, rather than copied into a second Classic runtime.
-
-Complete C includes the agreed instruction/BIF surface, variables and pools,
-numeric/string/Unicode rules, calls, host services, conditions, TRACE and
-INTERPRET. Existing native support alone is neither the complete scope nor its
-proof: its missing behaviour remains visible and its defects must not become
-the new specification. A parked item is still open unless Adrian has explicitly
-approved an exclusion. Constrained-host and platform applicability must be
-recorded and qualified; desktop-only proof does not close them.
-
-G retains its currently qualified behaviour. Shared changes run appropriate G
-regressions and independent non-C/G Level L tests; they do not require a new G
-feature in every C increment. Proper B and further G expansion resume after C
-completion. This changes scheduling, not LLCOMP-AC02/10 or the final B/L build
-order. The whole-programme AC01–16 and STEP09/10 stay open until their full
-scope passes. A later default switch still needs its own approval and rollback.
-
-### Checkable acceptance criteria
-
-All **CFC-AC01–08 are open**. STEP07A supplies retained foundation evidence.
-Instruction reviews advance this crosswalk incrementally; a reviewed subset or
-a deferred shared dependency does not establish whole-instruction completion.
-INTERPRET remains an eventual requirement, with its work explicitly deferred.
-
-1. **CFC-AC01 — complete scope crosswalk.** Map every applicable Classic
-   instruction, BIF, LC reference obligation and approved extension to new
-   grammar/AST/IR/runtime paths, positive/error tests and qualification evidence.
-   Record current support, missing implementation, missing proof, approved
-   exclusions and unresolved decisions separately. Reconcile upstream changes;
-   no required row may disappear or inherit a native compiler's pass by name.
-   Serves LLCOMP-AC03/08/10/15.
-2. **CFC-AC02 — Classic semantics and independent expectations.** Complete
-   variables/stems/compound names, DROP/EXPOSE, PARSE/ARG, expressions, numeric
-   context, structured control, routine/label/call resolution and applicable
-   BIF contracts. Tests state expected values, side effects, errors and order
-   independently of native output, including boundaries and invalid inputs.
-   Native discrepancies retain a minimal reproducer, modes, expected contract,
-   classification and disposition; unresolved semantic ambiguity remains open.
-   Serves LLCOMP-AC05/08/10.
-3. **CFC-AC03 — activation, conditions and source behaviour.** Verify local
-   labels, SIGNAL/CALL conditions, trap state, RETURN/EXIT, source identities,
-   clause/TRACE observations and diagnostic origins through calls and failures.
-   Include Unicode/CRLF, syntax and semantic messages/carets, generated source,
-   optimised/unoptimised paths and preserved prior output on refusal.
-   Serves LLCOMP-AC05/07/09/10.
-4. **CFC-AC04 — host and delivery contracts.** Qualify the agreed ADDRESS and
-   implicit-command, input/output/stream/queue, invocation, external-call and
-   exposed host-state routes, including ownership, conditions, failure and
-   resource limits. Preserve the approved static signed B/G call boundary and
-   other exact scope decisions; new general loading/interoperation is a review
-   gate. Missing platform facilities or host APIs remain named open rows.
-   Serves LLCOMP-AC08/10/12.
-5. **CFC-AC05 — INTERPRET.** Complete STEP08 against LC-I-25 / LC-87-01–05:
-   live caller state, nested groups, local labels/routines, transfers and
-   resumption, exact source/provenance, and bounded generated-code retention
-   and reclamation. Work is deferred until after the current instruction review
-   pass. When resumed, first retain a small mechanism proof and review its exact
-   contract before integration. Unsupported native platform needs are blockers
-   for decision, not permission to add C compiler/VM code or omit the feature.
-   Serves LLCOMP-AC05/09/11–13.
-6. **CFC-AC06 — inspected RXAS quality and efficiency.** Each substantive
-   lowering/emission/optimisation increment retains readable full RXAS for
-   representative simple, control, call and failure cases, alongside relevant
-   before/after IR and structural assertions. Record IR/assembler/host modes;
-   use assembler-no-opt controls to expose compiler work. Inspect executable
-   instructions, repeated setup, calls and helper work, copies, branches,
-   allocations, register/frame needs and cleanup separately from metadata.
-   Preserve truthful logical filenames, source/TRACE and error observations.
-   Classify excess as a direct defect, proven semantic/ABI need or a named
-   later optimisation with evidence and a closure test. Repair direct defects
-   in the owning layer; an eventual pass or a worse native result is no excuse.
-   Neither raw line counts nor smaller code alone prove speed or correctness.
-   Formal performance testing remains outside ordinary Level L research;
-   later production budgets remain under LLCOMP-AC13. Serves AC06/07/09/16.
-7. **CFC-AC07 — reusable Level L and B-only implementation.** New generic
-   tree/IR/analysis/writer services have independent non-C/G tests, documented
-   ownership/invariants and resource/failure checks. Language facts remain in
-   compiler extensions. Source/dependency audits, both retained B-host modes,
-   appropriate G regression checks and installed requests with native compiler
-   services unavailable prove the boundary. Serves LLCOMP-AC01/04/06/07/15;
-   does not close new-B self-hosting AC02.
-8. **CFC-AC08 — complete C qualification and handover.** Close every required
-   crosswalk row with exact-input evidence; verify installed CLI/service,
-   supported VMs/platforms and constrained-host applicability, packaging,
-   lifecycle and documented errors. Reuse valid evidence and keep local,
-   hosted, sanitizer and release gates distinct. Architecture, algorithms,
-   user guide and executable source/IR/RXAS examples agree. Direct quality
-   defects and required host/INTERPRET gaps prevent completion. Record retained
-   optimisation limitations without claiming optimal code or full B/G
-   replacement. Serves the C portions of LLCOMP-AC01–16; approval of routing
-   changes remains separate.
-
-### Numbered delivery sequence
-
-These steps preserve the existing top-level IDs. Each implementation slice
-must record its exact API/tree/IR decisions and worked example before edits;
-already approved semantics need no repeat permission. New language decisions,
-architecture shifts and public API contracts retain their existing gates.
-
-| Step and current state | Work and acceptance | Dependencies / decision gate |
-|---|---|---|
-| **CFC-STEP01 — in progress** | Review each instruction in LC-I order, starting with SAY; incrementally reconcile the complete C crosswalk, pin independent expectations and inspect representative RXAS. CFC-AC01/02/06/08. | STEP07A foundation. Reuse applicable evidence; identify shared expression/BIF/host gaps explicitly. Finish the current instruction's review and disposition before starting the next. |
-| **CFC-STEP02 — deferred by Adrian** | Later prove the STEP08 activation/control/source/lifetime route on a small INTERPRET example and nested/error case. CFC-AC03/05/07. | Resume after the current instruction review pass. Exact integration/API approval remains required. No early INTERPRET mechanism work. |
-| **CFC-STEP03 — open** | Complete variable/pool/stem/exposure, PARSE/ARG, expressions/numeric state, structured control and routine/call families, reusing runtime services and improving Level L where reusable. CFC-AC02/06/07. | STEP01 instruction review; implement each agreed instruction and its necessary shared services, retaining errors, actual RXAS and structural checks in every slice. |
-| **CFC-STEP04 — open** | Complete labels, conditions/SIGNAL/TRACE, diagnostic provenance and agreed host/I/O/stream/queue/call contracts. CFC-AC03/04/06/07. | Needed activation/pool contracts from STEP03; exact host gaps remain visible instead of emulated silently. |
-| **CFC-STEP05 — open** | Implement and integrate STEP08 INTERPRET with nested activation, transfer/resumption and bounded code lifetime. CFC-AC05/06/07. | Accepted STEP02 mechanism plus required STEP03/04 semantics. No fallback to native source compilation. |
-| **CFC-STEP06 — open** | Close remaining crosswalk rows and the complete C delivery evidence, documentation and emitted-code review. CFC-AC01–08. | Required STEP03–05 coverage; focused evidence first, remaining full/platform gates once on final inputs. Separate C milestone; no STEP07B prerequisite or automatic default switch. |
-| **CFC-STEP07 — deferred** | Resume STEP07B and remaining G coverage, then combined STEP09/10 qualification and routing review. | Complete C milestone; retain all existing B/G/self-hosting criteria and decision gates. |
 
 ### Instruction review 01: SAY
 
@@ -970,8 +917,8 @@ ordinal bridge. This is a shared literal defect exposed by SAY. Existing
 Classic syntax and ordinal semantics are already agreed; no new public Level L
 API, grammar syntax, IR operation or runtime facility is proposed.
 
-1. **CFC-SAY-AC01 (reviewed):** classify both SAY forms, expression/order/error,
-   Unicode/host and source/TRACE obligations, with implementation, evidence and
+The [retained SAY validation](#say-validation) owns the bounded repair
+criteria/results. Its successful subset does not close whole SAY.
 
 ## Qualification and documentation practice
 
@@ -1014,8 +961,8 @@ API, grammar syntax, IR operation or runtime facility is proposed.
 | STEP05 / shared Level L optimisation | F5-AC01–08 and F5-STEP01–04 verified locally; [current plan](PLAN.md). Level B-only shared services, C/G integration, independent tests, code-quality examples, B-only bootstrap and installed delivery complete. Formal research performance tests are not required. Develop publication and lightweight CI-monitor handover authorised; hosted outcomes separate. |
 | STEP06 / remaining Phase A | F6-AC01–06 and F6-STEP01–04 verified locally for the agreed C/G PoC; [current plan](PLAN.md), [coverage](doc/poc-coverage.md), [walkthrough](examples/step06/README.md). F6-PREP-01 repaired and locally qualified; published as `4eca26ac8335a22dd74f84250696ba68303c9958` with repair `7326287c5`. Wider replacement/platform gates remain open. |
 | STEP07A / scalar calls and modules | Bounded increment and [exact API](doc/STEP07A-CONTRACTS.md) implemented and locally qualified: F7A-AC01–06 complete. Develop publication authorised 17 October 2026 with the bounded SAY repair; hosted results separate. No STEP07B or later coverage approval implied. |
-| C-first delivery / STEP07 and STEP08 | Priority approved 16 October; CFC-AC01–08 and CFC-STEP01–07 recorded above. Complete C leads; current G coverage maintained. Instruction-by-instruction review is active, starting with SAY. INTERPRET and its mechanism review are deferred; no new C completion claimed. |
-| STEP07B / proper B and further G expansion | Deferred until after the C-first milestone. AC02/self-hosting and remaining G criteria stay open and retain their IDs. |
+| C-only delivery / STEP07 and STEP08 | Architecture and CLC-STEP01–11 approved 19 October. CLC-STEP01a/02a/03a implement the first bounded foundation increment, including shared B Unicode extraction. CFC-AC01–12 remain open for complete C; INTERPRET implementation is last. Exact new API/ISA gates remain binding. |
+| STEP07B / proper B and further G expansion | Outside current delivery, not automatically resumed. AC02/self-hosting and remaining G criteria stay open with stable IDs. |
 | STEP09/10 / combined full replacement | Planned destination; all full B/C/G coverage, delivery and explicit default-switch gates remain open. |
 | LLCOMP-AC01–16 | Open for their full compiler scope. STEP02 establishes the bounded IR foundation portions; AC16 now explicitly requires emitted-code quality. |
 | Existing Level L AST services | Published separately; see the parent plan's AST7 evidence. |
@@ -1096,6 +1043,12 @@ RA-AC07 now owns the approved research opt-in delivery boundary.
 | **F6-PREP-STEP01 — complete** | Reproduce with actual CMake declarations and record target/file ownership; AC01. |
 | **F6-PREP-STEP02 — complete** | Add producer ordering, retain a permanent regression and qualify real parallel preparation; AC01/02, after reproducer. |
 | **F6-PREP-STEP03 — publication authorised** | Reuse verified STEP06 evidence, document and publish repair plus STEP06, hand over monitoring and propose STEP07; AC03, after focused checks. |
+
+### SAY validation
+
+These are retained results for the published radix repair, not a new execution
+run or whole-instruction verdict. The earlier foundation checkpoint and
+instruction ledger delimit their scope.
 
 1. **CFC-SAY-AC01 (reviewed):** classify both SAY forms, expression/order/error,
    Unicode/host and source/TRACE obligations, with implementation, evidence and

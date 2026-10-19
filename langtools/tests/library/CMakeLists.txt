@@ -47,7 +47,7 @@ crexx_add_import_root(levell_ast_test_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ast-imports" OUTPUT_VARIABLE _ast_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library rxfnsl)
-foreach(_test llast llanalysis llir llirservices llsource lloptimise)
+foreach(_test llast llanalysis llir llirservices llirflow llsource lloptimise)
   foreach(_mode noopt opt)
     set(_ast_flags)
     if(_mode STREQUAL "noopt")
@@ -78,5 +78,18 @@ foreach(_test llast llanalysis llir llirservices llsource lloptimise)
 
 endforeach()
 
+
+# Read the already-built SDK RXAS; diagnostic noopt SDK builds intentionally
+# disable the inline resize shape checked here.
+if(NOT CREXX_LEVEL_L_NOOPT)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME levell_ir_flow_rxas COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/../check-ir-flow-rxas.py"
+    "${CMAKE_BINARY_DIR}/lib/rxfnsl/rexx/llirservices.rxas")
+  set_tests_properties(levell_ir_flow_rxas PROPERTIES
+    PASS_REGULAR_EXPRESSION "IR_FLOW_RXAS[|]PASS" TIMEOUT 30
+    LABELS "library;level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_ir_flow_rxas TARGETS rxfnsl)
+endif()
 
 crexx_finalize_directory_qa_tiers()

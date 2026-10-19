@@ -6,6 +6,11 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
 
+- `lib/rxfnsb/unicode/` (separately built B Unicode executors and canonical
+  pinned data; `rxunicode-core.rxbin` retains the private `_rxunicode` ABI.
+  G owns its public facade; Classic adapters still own BIF policy. Large
+  Unicode tables do not enter the minimal bootstrap `library.rxbin`.)
+
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 
 - `lib/rxfnsl/` (Level L language-engineering examples and generated-output

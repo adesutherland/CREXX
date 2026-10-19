@@ -16,10 +16,31 @@ if(NOT _languages)
 endif()
 function(ll_compile NAME SOURCE DIRECTORY)
   set(_files ${ARGN})
+  # Cross-directory generated imports need their producer target as well as
+  # the file dependency, so Unix Make builds them before staging metadata.
+  set(_producers)
+  foreach(_file IN LISTS _files)
+    if(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/library.rxbin")
+      list(APPEND _producers library)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+      list(APPEND _producers rxfnsl)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+      list(APPEND _producers rxfnsc)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
+      list(APPEND _producers llrxastext)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
+      list(APPEND _producers llbinmeta)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
+      list(APPEND _producers llfileoutput)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+      list(APPEND _producers fs)
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES _producers)
   file(MAKE_DIRECTORY "${DIRECTORY}")
   string(MAKE_C_IDENTIFIER "${DIRECTORY}_${NAME}" _key)
   crexx_add_import_root(${_key}_imports DIRECTORY "${DIRECTORY}/imports-${NAME}"
-    OUTPUT_VARIABLE _imports FILES ${_files} DEPENDS ${_files})
+    OUTPUT_VARIABLE _imports FILES ${_files} DEPENDS ${_files} ${_producers})
   add_custom_command(OUTPUT "${DIRECTORY}/${NAME}.rxbin"
     COMMAND $<TARGET_FILE:rxc> ${_flags} -x --no-exe-import -i "${DIRECTORY}/imports-${NAME}"
       -o "${DIRECTORY}/${NAME}" "${SOURCE}"
@@ -166,6 +187,37 @@ if("c" IN_LIST _languages)
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/llctarget.rxbin" VERBATIM)
   add_custom_target(llctarget ALL DEPENDS "${_products}/llctarget.rxbin")
   install(FILES "${_products}/llctarget.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+endif()
+if("c" IN_LIST _languages)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  # Retained isolated timing entrypoint for this nested aggregate.
+  add_custom_target(llcompiler_c_only_measure
+    COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"
+      --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/c-only-measure"
+      --mode opt --vm rxbvm --c-only
+    DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc
+      fs cstream rxas rxlink rxbvm
+    USES_TERMINAL VERBATIM)
+  # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
+  # nested tools; 900s is a generous hang guard, not a performance criterion.
+  foreach(_mode opt noopt)
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        set(_test "llcompiler_c_only_${_mode}_${_vm}")
+        add_test(NAME ${_test}
+          COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"
+            --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+            --mode ${_mode} --vm ${_vm} --c-only)
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "SAY C-ONLY PASS: 32 commands"
+          TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+          LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_test}
+          TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+            library classlib rxfnsc fs cstream rxas rxlink ${_vm})
+      endif()
+    endforeach()
+  endforeach()
 endif()
 if("c" IN_LIST _languages AND "g" IN_LIST _languages)
   include("${CMAKE_CURRENT_SOURCE_DIR}/tests/BackendTests.cmake")

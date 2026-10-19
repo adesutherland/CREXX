@@ -16,6 +16,27 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**LEVELC-TARGET-01 — approved C-only infrastructure direction (19 October).** The
+[compiler architecture](../research/level-l/compilers/doc/architecture.md#optimisation-ownership)
+and [delivery plan](../research/level-l/compilers/PLAN.md#c-first-delivery-milestone)
+own C-OPT-01–06: remove proven-unused activation setup, allocate by liveness,
+use direct context-aware library calls and improve pool/call selection before
+considering machine primitives. Hypothesis: removing repeated configuration,
+copies and dispatch lowers Classic workload cost without weakening observations.
+Risks include EXPOSE/VALUE aliasing, numeric context, LOSTDIGITS, handler/TRACE
+behavior, call-window ownership and hidden helper costs. Compare the best
+existing instruction sequence and library/selector repair before proposing any
+RXAS/VM operation. Shared Unicode extraction must preserve table ownership and
+algorithm/code-shape properties; it is not a new Unicode speed claim.
+
+Required evidence is independent correctness and actual RXAS/helper inspection;
+production candidates additionally need representative ordinary Release time,
+storage and cross-engine results under the first-verdict gate. No measured
+performance win or native primitive is selected by this proposal. Generic L/C
+research retains its formal-performance exception. Exact public ISA/storage
+contracts and production performance edits require their existing approval;
+INTERPRET image-ownership work occurs only in the final implementation stage.
+
 **LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
 [compiler plan F5-STEP01](../research/level-l/compilers/PLAN.md)
 owns this bounded Level B change. Hypothesis: shared indexed source-position

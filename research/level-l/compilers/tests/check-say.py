@@ -14,6 +14,8 @@ parser.add_argument('--build', type=Path, required=True)
 parser.add_argument('--work', type=Path, required=True)
 parser.add_argument('--mode', choices=['opt', 'noopt'], default='opt')
 parser.add_argument('--vm', choices=['rxbvm', 'rxtvm'], default='rxbvm')
+parser.add_argument('--c-only', action='store_true',
+                    help='check C in a staged compiler host and compiler-free target')
 args = parser.parse_args()
 build = args.build.resolve()
 work_parent = args.work.resolve()
@@ -24,19 +26,64 @@ sources = Path(__file__).resolve().parent / 'say'
 backend = build / 'research/level-l/compilers/backend' / args.mode
 runtime = work / 'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc']:
+for name in ['library', 'rxfnsc', 'classlib']:
     shutil.copyfile(build / 'bin' / (name + '.rxbin'), runtime / (name + '.rxbin'))
 shutil.copyfile(backend / 'llctarget.rxbin', runtime / 'llctarget.rxbin')
 ext = '.exe' if os.name == 'nt' else ''
 tool = lambda name: str(build / 'bin' / (name + ext))
 env = dict(os.environ, PATH=str(work / 'no-native-compiler'))
 records = []
+compiler_vm = build / 'bin' / (args.vm + ext)
+compiler_image = backend / 'llrxc-c-linked.rxbin'
+compiler_directory = work
+target_vm = compiler_vm
+target_directory = work
+vm_options = []
 
 
-def run(label, command, expected=0, isolated=False):
+def stage_vm(directory, providers):
+    directory.mkdir()
+    shutil.copy2(build / 'bin' / (args.vm + ext), directory / (args.vm + ext))
+    provider_directory = directory / 'providers'
+    provider_directory.mkdir()
+    for provider in providers:
+        name = provider + '.rxplugin'
+        shutil.copy2(build / 'bin' / name, provider_directory / name)
+    assert {entry.name for entry in provider_directory.iterdir()} == {
+        provider + '.rxplugin' for provider in providers}
+    return directory / (args.vm + ext)
+
+
+if args.c_only:
+    # The VM also searches beside itself and the application, so an empty PATH
+    # alone does not isolate a compiler running from the shared build bin/.
+    # Native RXAS/RXLINK remain explicit tools outside these execution roots.
+    (work / 'no-native-compiler').mkdir()
+    env.pop('CREXX_PROVIDER_PATH', None)
+    compiler_directory = work / 'compiler host'
+    compiler_vm = stage_vm(compiler_directory, ['rxfs'])
+    compiler_image = compiler_directory / 'llrxc-c-linked.rxbin'
+    shutil.copyfile(backend / compiler_image.name, compiler_image)
+    assert {entry.name for entry in compiler_directory.iterdir()} == {
+        args.vm + ext, compiler_image.name, 'providers'}
+    target_directory = work / 'static target'
+    target_vm = stage_vm(target_directory, ['rxfs', 'rxcstream'])
+    assert {entry.name for entry in target_directory.iterdir()} == {
+        args.vm + ext, 'providers'}
+    assert {entry.name for entry in runtime.iterdir()} == {
+        'library.rxbin', 'rxfnsc.rxbin', 'classlib.rxbin', 'llctarget.rxbin'}
+    for compiler in ['rxc', 'rxc-c']:
+        assert shutil.which(compiler, path=env['PATH']) is None
+    # Exact linked inputs must suffice: no bytecode package may be found by
+    # autoload in either stage. Runtime imports above are compiler metadata and
+    # explicit link inputs; they are never loaded by the compiler host VM.
+    vm_options = ['--no-autoload']
+
+
+def run(label, command, expected=0, isolated=False, cwd=None):
     before = time.monotonic()
     command = [str(x) for x in command]
-    result = subprocess.run(command, cwd=work, capture_output=True, timeout=300,
+    result = subprocess.run(command, cwd=cwd or work, capture_output=True, timeout=300,
                             env=env if isolated else None)
     (work / (label + '.stdout')).write_bytes(result.stdout)
     (work / (label + '.stderr')).write_bytes(result.stderr)
@@ -49,9 +96,10 @@ def run(label, command, expected=0, isolated=False):
 
 def compile_source(level, source, assembly, ir, expected=0):
     return run(assembly.stem + '-compile',
-               [tool(args.vm), backend / ('llrxc-' + level + '-linked.rxbin'), '-a',
+               [compiler_vm, *vm_options,
+                compiler_image if args.c_only else backend / ('llrxc-' + level + '-linked.rxbin'), '-a',
                 *(['-n'] if ir == 'noopt' else []), '-i', runtime, '-o', assembly, source],
-               expected, isolated=True)
+               expected, isolated=True, cwd=compiler_directory)
 
 
 try:
@@ -65,6 +113,8 @@ try:
             ('literal', 'c', b'A\0B\xc2\x80\xc3\xbf\n', 0),
             ('forms', 'g', '\n01\nα漢🙂\n5\n'.encode(), 0),
         ]:
+            if args.c_only and level != 'c':
+                continue
             label = name + '-' + level + '-' + ir
             source = sources / (name + '-' + level + '.crexx')
             assembly = work / (label + '.rxas')
@@ -82,9 +132,18 @@ try:
             linked = work / (label + '-linked')
             modules = [assembly.with_suffix('.rxbin'), runtime / 'library.rxbin']
             if level == 'c':
-                modules += [runtime / 'llctarget.rxbin', runtime / 'rxfnsc.rxbin']
+                modules += [runtime / 'llctarget.rxbin', runtime / 'rxfnsc.rxbin',
+                            runtime / 'classlib.rxbin']
             run(label + '-link', [tool('rxlink'), '-o', linked, *modules])
-            result = run(label + '-run', [tool(args.vm), str(linked) + '.rxbin'], status)
+            image = Path(str(linked) + '.rxbin')
+            if args.c_only:
+                # The deployment root contains only the VM, native transports
+                # and linked static images, with no compiler or L SDK package.
+                staged = target_directory / image.name
+                shutil.copyfile(image, staged)
+                image = staged
+            result = run(label + '-run', [target_vm, *vm_options, image], status,
+                         isolated=args.c_only, cwd=target_directory)
             assert result.stdout.replace(b'\r\n', b'\n') == expected, (label, result.stdout)
             if status:
                 assert b'RXC-LC-42.3' in result.stderr and b'error-c.crexx:3:5' in result.stderr
@@ -100,6 +159,7 @@ try:
             message = result.stdout + result.stderr
             assert b'LL_COMPILER_SYNTAX' in message and source.name.encode() in message, message
             assert assembly.read_bytes() == b'previous user output'
-    print('SAY PASS: ' + str(len(records)) + ' commands', flush=True)
+    verdict = 'SAY C-ONLY PASS: ' if args.c_only else 'SAY PASS: '
+    print(verdict + str(len(records)) + ' commands', flush=True)
 finally:
     run_directory.cleanup()

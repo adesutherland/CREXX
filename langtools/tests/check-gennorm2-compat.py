@@ -14,9 +14,9 @@ def run(name,args):
 for implementation in ['reference','native']:
  for mode in ['opt','noopt']:
   work=out/(implementation+'-'+mode);work.mkdir(exist_ok=True);flags=['-n'] if mode=='noopt' else []
-  lexer=(root/'langtools/tests/fixtures/reference-gennorm2.crexx') if implementation=='reference' else root/'lib/rxfnsg/unicode/tools/level_l_gennorm2.crexx'
+  lexer=(root/'langtools/tests/fixtures/reference-gennorm2.crexx') if implementation=='reference' else root/'tools/unicode/level_l_gennorm2.crexx'
   modules=[]
-  for name,src in [('level_l_gennorm2',lexer),('unicode_gennorm2',root/'lib/rxfnsg/unicode/tools/unicode_gennorm2.crexx'),('probe',root/'langtools/tests/gennorm2-record-probe.crexx')]:
+  for name,src in [('level_l_gennorm2',lexer),('unicode_gennorm2',root/'tools/unicode/unicode_gennorm2.crexx'),('probe',root/'langtools/tests/gennorm2-record-probe.crexx')]:
    run(implementation+'-'+mode+'-'+name+'-compile',[bin/'rxc',*flags,'-x','--no-exe-import','-i',f'{work};{bin}','-o',work/name,src])
    run(implementation+'-'+mode+'-'+name+'-assemble',[bin/'rxas',*flags,work/name]);modules.append(work/(name+'.rxbin'))
   run(implementation+'-'+mode+'-link',[bin/'rxlink','-s','-o',work/'linked',modules[-1],*modules[:-1],bin/'gennorm2_language.rxbin',bin/'rxfnsl.rxbin',bin/'library.rxbin'])

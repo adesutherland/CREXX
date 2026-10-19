@@ -2,12 +2,15 @@
 
 ## Repository architecture and cleanup
 
-**Status: reorganisation and final naming/library-only refinement verified locally; authorised for publication to develop.**
+**Status: reorganisation and final naming/library-only refinement published.**
 This section owns the repository/layout refactor. The compiler subplan moves to
 `research/level-l/compilers/PLAN.md` with its implementation. Work uses the main
 CLion `develop` checkout. B and G share the typed compiler core; Classic is
-independent. C-first delivery, Level B implementation, deferred INTERPRET and
-paused CI monitoring remain unchanged. Approval covers the directory, service,
+independent. The active [C-only compiler plan](compilers/PLAN.md#c-first-delivery-milestone)
+now owns the approved 19 October architecture and delivery through final-stage
+INTERPRET, including a shared B Unicode foundation. B/G expansion is outside
+that delivery; this parent plan retains independent Level L obligations. CI
+monitoring remains paused. Approval covers the directory, service,
 build/install and cleanup changes below. Adrian authorised committing and pushing
 the completed work on 17 October 2026, followed by a whole-repository review.
 That wider review must present its proposal for approval before implementation.
@@ -105,7 +108,7 @@ this review does not promote unfinished Pika/Squirrel/recovery experiments.
   service. Consumers of `llfront` must explicitly use the tool library. This is
   an intentional package boundary change, not an unexplained missing import.
 - `grammar/gennorm2.levell` belongs to its Unicode consumer under
-  `lib/rxfnsg/unicode`; `tinyexpr.levell` belongs with its library example.
+  `tools/unicode`; `tinyexpr.levell` belongs with its library example.
   Keep generated syntax/table products in the build tree, not in source.
 - Move the compiler subtree, plan, instruction ledger and maintained examples
   to `research/level-l/compilers`, then split the mixed implementation as above.
@@ -1915,7 +1918,7 @@ claim a new platform pass. Current ownership is described above.
    the path regression, and run focused local checks. **Locally verified:**
    product build, four CTests, native runner checks, 586 comment-panel
    observations, Windows/path and package guards pass. All renamed input bytes
-   and 3,169 retained panel hashes match. See [current validation](#current-validation).
+   and 3,169 retained panel hashes match. This is a historical checkpoint, not fresh qualification.
 3. **CI-STEP03 (CI-AC03):** publish the qualified repair and follow normal
    hosted CI to completion. **The enclosing commit is the approved repair
    payload.** Hosted Windows/GNU link and final green-workflow evidence follows
@@ -1947,8 +1950,7 @@ claim a new platform pass. Current ownership is described above.
    into the authorized `rxlang` checkout. **Verified:** manual `fb4972050`, clean
    merge `2121969ce` includes `a415090dc`. Depends on STEP01.
 3. **PUB-STEP03 (PUB-AC01–04):** fresh product/QA build, relevant correctness
-   runs and installed checks; fix reproduced integration defects. **Verified**
-   by [current validation](#current-validation).
+   runs and installed checks; fix reproduced integration defects. **Verified at the historical publication checkpoint**; no fresh result is claimed.
 4. **PUB-STEP04 (PUB-AC05):** record exact inputs/results, commit and publish
    only after STEP03 passes; verify remote state. **Local publication payload
    complete; approved delivery is the fast-forward push of the enclosing commit
@@ -1979,7 +1981,7 @@ claim a new platform pass. Current ownership is described above.
    panel. This changes examples/tests, not the Level L language or runtime.
 3. **DOC-STEP03 (DOC-AC02–04):** check internal links, current source contracts
    and executable instructions; record the results and present the revised guide.
-   **Verified** by [current validation](#current-validation).
+   **Verified at the historical documentation checkpoint**; no fresh result is claimed.
 
 1. **CONT-AC01 (LANG-AC05/10/11/13):** every remaining construction or recovery
    safeguard is a connected optional host budget or a named, checked format/
