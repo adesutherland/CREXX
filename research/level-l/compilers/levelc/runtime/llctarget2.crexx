@@ -1,0 +1,157 @@
+/* cREXX License (MIT). Borrowed-context adapters for the Classic target. */
+options levelb numeric_classic
+namespace llctarget2 expose binaryop unaryop truth setting digits readarg countargs existsarg lengthvalue
+import rxfnsb
+import rexxvalue
+import rexxactivation
+import rexxclassiccontext
+import rexxclassicbifs
+import rexxclassicbifarg
+import rexxclassicbiflength
+import rexxclassicbifnumeric
+
+/** Evaluate an admitted binary operation in the caller's numeric frame.
+ * @param context borrowed execution bundle; its owners must remain live
+ * @return the existing expression implementation's checked result */
+binaryop: procedure = .RexxValue
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg operation = .string, left = .RexxValue, right = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  if operation = 'strict' then return left.strictCompareEqual(right)
+  if operation = 'concat' | operation = 'abut' then return left.concat(right)
+  if operation = 'blank' then return left.spaceConcat(right)
+  index = wordpos(operation,'add sub mul div eq ne lt le gt ge and or xor')
+  name = word('ADD SUBTRACT MULTIPLY DIVIDE COMPAREEQUAL COMPARENOTEQUAL COMPARELESSTHAN COMPARELESSOREQUAL COMPAREGREATERTHAN COMPAREGREATEROREQUAL LOGICALAND LOGICALOR LOGICALXOR',index)
+  callcontext = bifcontext(name,context)
+  result = rexxclassic_expression_binary(reference callcontext,left,right)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Evaluate an admitted prefix operation using the borrowed execution owners.
+ * @param context borrowed execution bundle
+ * @return the existing expression implementation's checked result */
+unaryop: procedure = .RexxValue
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg operation = .string, value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  name = word('POSITIVE NEGATE LOGICALNOT',wordpos(operation,'positive negative not'))
+  callcontext = bifcontext(name,context)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Apply the existing IF-value check without introducing another truth rule.
+ * @param context borrowed execution bundle
+ * @return zero or one; invalid logical text raises CLASSIC_SYNTAX */
+truth: procedure = .int
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('LOGICALIFVALUE',context)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  result = rexxclassicbif_checked(reference callcontext,result)
+  return result.logicalValue() as .int
+
+/** Validate and commit one stored activation setting using its existing owner.
+ * The executing C caller installs the validated settings in its own VM frame.
+ * This helper never changes that frame or copies the live activation.
+ * @param context borrowed execution bundle
+ * @signal CLASSIC_SYNTAX validation failed; the activation is unchanged */
+setting: procedure = .void
+  arg operation = .string, context = reference .rexxclassiccontext..RexxClassicContext, value = .RexxValue
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  message = .string
+  select
+    when operation = 'digits' then do
+      config_ref = bundle.config()
+      message = activation.setNumericDigits(value,config_ref)
+    end
+    when operation = 'fuzz' then do
+      fuzz_config_ref = bundle.config()
+      message = activation.setNumericFuzz(value,fuzz_config_ref)
+    end
+    when operation = 'form' then message = activation.setNumericForm(value)
+    otherwise message = 'unknown numeric setting'
+  end
+  if message <> '' then do
+    assembler signal "CLASSIC_SYNTAX",message
+  end
+  return
+
+/** Read DIGITS from the immediate caller frame through the existing BIF.
+ * All numeric settings are inherited across this temporary shim frame.
+ * @param context borrowed execution bundle
+ * @return current caller DIGITS as a RexxValue */
+digits: procedure = .RexxValue
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('DIGITS',context)
+  result = rexxclassicbifnumeric..rexxclassicbif_digits(reference callcontext)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Read an ARG-instruction position, retaining legacy uppercase behavior.
+ * @param context borrowed execution bundle
+ * @param ordinal one-based position; missing positions remain empty
+ * @return uppercase argument text, distinct from raw ARG BIF access */
+readarg: procedure = .RexxValue
+  arg context = reference .rexxclassiccontext..RexxClassicContext, ordinal = .int
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  value = activation.argument(ordinal)
+  return .RexxValue(upper(value.asString()))
+
+/** Select the existing zero-operand ARG BIF against the live activation.
+ * @param context borrowed execution bundle
+ * @return the argument count, including internal omitted positions */
+countargs: procedure = .RexxValue
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  callcontext = bifcontext('ARG',context)
+  activation_ref = bundle.activation()
+  result = rexxclassicbifarg..rexxclassicbif_arg(reference callcontext,activation_ref)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Select the existing ARG E/O validation and presence implementation.
+ * @param context borrowed execution bundle
+ * @return checked existence or omission result for the supplied operands */
+existsarg: procedure = .RexxValue
+  arg context = reference .rexxclassiccontext..RexxClassicContext, ordinal = .RexxValue, option = .RexxValue
+  bundle = dereference context
+  callcontext = bifcontext('ARG',context)
+  values = .RexxValue[]; presence = .int[]
+  values[1] = ordinal; values[2] = option; presence[1] = 1; presence[2] = 1
+  call callcontext.setArguments(values,presence)
+  activation_ref = bundle.activation()
+  result = rexxclassicbifarg..rexxclassicbif_arg(reference callcontext,activation_ref)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Select the existing character LENGTH using the execution configuration.
+ * @param context borrowed execution bundle
+ * @return checked character count, including Unicode text and embedded NUL */
+lengthvalue: procedure = .RexxValue
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('LENGTH',context)
+  values = .RexxValue[]; presence = .int[]
+  values[1] = value; presence[1] = 1
+  call callcontext.setArguments(values,presence)
+  result = rexxclassicbiflength..rexxclassicbif_length(reference callcontext)
+  return rexxclassicbif_checked(reference callcontext,result)
+
+/** Call-local error/operand transport borrowing the authoritative owners.
+ * Config must be bound before pool: the existing pool setter reads it.
+ * The returned value contains only references to external live storage. */
+bifcontext: procedure = .RexxBifCallContext
+  arg name = .string, context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  result = .RexxBifCallContext.expression(name)
+  config_ref = bundle.config()
+  call result.setConfig(config_ref)
+  pool_ref = bundle.pool()
+  call result.setCallerPool(pool_ref)
+  activation_ref = bundle.activation()
+  call result.setCallerActivation(activation_ref)
+  return result

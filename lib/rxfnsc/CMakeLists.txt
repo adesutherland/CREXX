@@ -132,6 +132,7 @@ set(RXFNSC_MODULES
   RexxClassicAddress
   RexxVariablePool
   RexxActivationArguments
+  RexxClassicContext
   RexxClassicConditionEvent
   RexxClassicDiagnosticCatalog
   RexxDoState
@@ -223,6 +224,7 @@ set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxClassicAddress RexxClassicState RexxActivationArguments RexxVariablePool RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue RexxClassicState RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicContext RexxActivationArguments RexxVariablePool RexxClassicConfig)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue RexxClassicStream)

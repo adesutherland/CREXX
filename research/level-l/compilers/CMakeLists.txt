@@ -123,9 +123,56 @@ foreach(_mode opt noopt)
     endif()
   endforeach()
   if("c" IN_LIST _languages)
-    ll_compile(llctarget "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/llctarget.crexx" "${_dir}"
-      "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+    # Keep the installed image and legacy exports stable while adding the
+    # borrowed-context namespace. Members are private, not separate products.
+    set(_target_members "${_dir}/target-members")
+    foreach(_adapter llctarget llctarget2)
+      ll_compile(${_adapter} "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/${_adapter}.crexx" "${_target_members}"
+        "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+    endforeach()
+    set(_target_control "${_target_members}/target.ctl")
+    file(GENERATE OUTPUT "${_target_control}" CONTENT
+      "INPUT ${_target_members}/llctarget.rxbin\nINPUT ${_target_members}/llctarget2.rxbin\nINCLUDE llctarget\nINCLUDE llctarget2\nPRESERVE INLINE\nOUTPUT ${_dir}/llctarget\n")
+    add_custom_command(OUTPUT "${_dir}/llctarget.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -c "${_target_control}"
+      DEPENDS rxlink "${_target_control}" "${_target_members}/llctarget.rxbin"
+        "${_target_members}/llctarget2.rxbin" VERBATIM)
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
+
+    ll_compile(target-context "${CMAKE_CURRENT_SOURCE_DIR}/tests/target-context.crexx" "${_dir}"
+      "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      "${_dir}/llctarget.rxbin")
+    set(_target_runtime "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+    add_custom_command(OUTPUT "${_dir}/target-context-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -o "${_dir}/target-context-linked"
+        "${_dir}/target-context.rxbin" "${_dir}/llctarget.rxbin" ${_target_runtime}
+      DEPENDS rxlink classlib rxunicode_core "${_dir}/target-context.rxbin"
+        "${_dir}/llctarget.rxbin" ${_target_runtime} VERBATIM)
+    add_custom_target(llcompiler_target_context_${_mode}
+      DEPENDS "${_dir}/target-context-linked.rxbin")
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(_context_shape "llcompiler_target_context_shape_${_mode}")
+    add_test(NAME ${_context_shape} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-target-context.py"
+      --context "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicContext/RexxClassicContext.rxas"
+      --adapter "${_target_members}/llctarget2.rxas")
+    set_tests_properties(${_context_shape} PROPERTIES TIMEOUT 60
+      LABELS "library;levelc;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_context_shape}
+      TARGETS rxfnsc llcompiler_target_${_mode})
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        set(_context_test "llcompiler_target_context_${_mode}_${_vm}")
+        add_test(NAME ${_context_test} COMMAND $<TARGET_FILE:${_vm}>
+          --no-autoload "${_dir}/target-context-linked.rxbin")
+        set_tests_properties(${_context_test} PROPERTIES PASS_REGULAR_EXPRESSION "TARGET_CONTEXT[|]checks=[0-9]+[|]failures=0"
+          TIMEOUT 300 LABELS "library;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_context_test}
+          TARGETS llcompiler_target_context_${_mode} fs cstream ${_vm})
+      endif()
+    endforeach()
   endif()
   # Mixed-language regression adapters are never part of the products.
   if("c" IN_LIST _languages AND "g" IN_LIST _languages)

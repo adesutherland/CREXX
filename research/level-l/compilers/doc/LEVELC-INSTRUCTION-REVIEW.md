@@ -1,47 +1,16 @@
-# New Level C instruction review
+# Level C instruction review
 
-The [C-first plan](../PLAN.md#c-first-delivery-milestone) owns scope, acceptance
-and implementation decisions. The 19 October C-only design proposal reviews
-the full architecture now and retains INTERPRET as the final implementation
-stage. This ledger preserves bounded implementation results in LC-I order;
-the [requirements crosswalk](levelc-requirements.md) supplies each new work unit.
-Native closures do not establish new compiler coverage. Whole-instruction
-closure requires its shared/host/condition/TRACE dependencies as well as local
-forms. No further implementation is started by the design proposal.
+The [requirements ledger](levelc-requirements.md#whole-instruction-work-units)
+owns all 25 instruction statuses, detailed native-criterion links, dependencies
+and closure checks. The [plan](../PLAN.md#remaining-actions) owns the approved
+sequence; [architecture](architecture.md) owns the design. This document retains
+review reasoning and findings, not a duplicate progress table.
 
-## Delivery order
-
-| Existing contract | New compiler review |
-|---|---|
-| LC-I-01 SAY | First review and CFC-SAY-DEF01 repair qualified locally; full host/TRACE/shared dependencies remain open. |
-| LC-I-02 DROP | Next instruction review after the approved foundation work and SAY disposition. |
-| LC-I-03 assignment | Not yet reviewed for full scope. |
-| LC-I-04 NOP | Not yet reviewed for full scope. |
-| LC-I-05 OPTIONS | Not yet reviewed for full scope. |
-| LC-I-06 IF | Not yet reviewed for full scope. |
-| LC-I-07 SELECT | Not yet reviewed for full scope. |
-| LC-I-08 DO | Not yet reviewed for full scope; inspect context-specific logical error identity. |
-| LC-I-09 LEAVE | Not yet reviewed for full scope. |
-| LC-I-10 ITERATE | Not yet reviewed for full scope. |
-| LC-I-11 ARG | Not yet reviewed for full scope. |
-| LC-I-12 PROCEDURE | Not yet reviewed for full scope. |
-| LC-I-13 CALL | Not yet reviewed for full scope. |
-| LC-I-14 RETURN | Not yet reviewed for full scope. |
-| LC-I-15 EXIT | Not yet reviewed for full scope. |
-| LC-I-16 PULL | Not yet reviewed for full scope. |
-| LC-I-17 PUSH | Not yet reviewed for full scope. |
-| LC-I-18 QUEUE | Not yet reviewed for full scope. |
-| LC-I-19 PARSE | Not yet reviewed for full scope. |
-| LC-I-20 ADDRESS | Not yet reviewed for full scope. |
-| LC-I-21 implicit command | Not yet reviewed for full scope. |
-| LC-I-22 NUMERIC | Not yet reviewed for full scope. |
-| LC-I-23 SIGNAL | Not yet reviewed for full scope. |
-| LC-I-24 TRACE | Not yet reviewed for full scope. |
-| LC-I-25 INTERPRET | Deferred by Adrian, including mechanism review; required for eventual complete C. |
-
-The full BIF/LC-reference crosswalk remains CFC-AC01 work. Each instruction adds
-its relevant rows; this table is not a declaration that other features work or
-that unreviewed instructions have no implementation.
+Review each instruction in LC-I order with independent values/errors, source
+observations and full caller/helper RXAS. Record shared host/condition/TRACE
+dependencies while advancing to the next review; a whole row stays open until
+those dependencies pass. INTERPRET is designed in the complete architecture and
+implemented last after static acceptance.
 
 ## SAY: contract and paths
 
@@ -103,6 +72,10 @@ runtime helper work; it does not hide decoding in a target helper. Source
 records for literal evaluation and output describe different authored ranges;
 they must not be deleted just to reduce metadata counts.
 
-The [SAY validation summary](../PLAN.md#say-validation) records local results and limits.
-SAY stays open for the explicit shared/host/TRACE obligations above. Review and
+Retained local qualification at `06a548321662e6dc4e91899363eb12831b4d952c`
+passed the 40-command SAY workload: independent literal/order/error expectations,
+both compiler IR modes and VMs with assembler optimisation disabled, all 256
+ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
+checks passed for this bounded repair. These are reused results, not a new run;
+whole SAY stays open for the shared/host/TRACE obligations above. Review and
 closure are separate states; the next instruction is DROP after SAY disposition.

@@ -1,8 +1,8 @@
 # C/G PoC coverage and boundaries
 
 This is the Phase A coverage map for the [approved POC-01–10 profile](poc-scope.md).
-[PLAN.md](../PLAN.md) owns acceptance; the [current plan](../PLAN.md)
-records actual runs and input identities. A row establishes the admitted slice,
+[PLAN.md](../PLAN.md) owns active acceptance; this map describes the bounded
+PoC fixtures and their evidence limits. A row establishes the admitted slice,
 not full C/G language compatibility. The compiler and reusable services are
 Level B; grammars use Level L and RXAS output uses `llir.writer`.
 
@@ -105,14 +105,13 @@ The PoC demonstrates that Level L can host both deliberately different
 frontends, generic checked transformations and real target emission. Its useful
 shared outputs are the numeric IR/contracts, reconstruction and proof-aware
 passes, source index, owned failures and writer. STEP07A now extends those services with optional-input/export views and scalar
-call/module coverage. Its [contract](STEP07A-CONTRACTS.md) and
-[validation summary](../PLAN.md#step07a-validation) own the new coverage; the STEP06
-results above remain historical qualification for their exact inputs.
+call/module coverage. Its [contract and bounded qualification](STEP07A-CONTRACTS.md#acceptance-and-next-implementation-checks)
+own the new coverage; the STEP06 results above apply only to their exact inputs.
 The approved [C-first milestone](../PLAN.md#c-first-delivery-milestone) now
 prioritises complete Classic coverage, including pool exposure and wider forms,
-conditions/TRACE, hosts and STEP08 INTERPRET. Its full crosswalk remains open;
+conditions/TRACE, hosts and final CLC-STEP11 INTERPRET. Its full crosswalk remains open;
 this historical PoC map does not replace it. Proper B and G expansion are
 deferred, while existing G and independent Level L regression coverage remains
 required for shared changes. Adrian directed instruction-by-instruction review,
-starting with SAY; INTERPRET and its mechanism review are deferred until later
-and remain open for eventual C completion.
+starting with SAY; the complete architecture includes INTERPRET, whose mechanism approval and
+implementation remain the final C stage.

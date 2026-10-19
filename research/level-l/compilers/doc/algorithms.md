@@ -4,7 +4,8 @@ The foundation algorithms below are implemented in `llir` and `llirservices`.
 The source frontends and RXAS selection are implemented. Production IR
 optimisation remains planned. The [backend algorithm](backend.md#structures-and-algorithm)
 describes stable registers, checked call windows, literals, source mapping and atomic output.
-Each implemented stage carries its contract and decisive tests under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
+Each implemented stage follows the [representation contracts](architecture.md#representation-contracts)
+and records decisive checks against the [current acceptance criteria](../PLAN.md#c-first-delivery-milestone).
 
 ## Stages and evidence
 

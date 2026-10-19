@@ -3397,6 +3397,37 @@ It does not establish complete ARG/CALL, the remaining BIF bindings or a live
 activation API. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
 records the precise qualification boundary; INTERPRET is the final stage.
 
+The shared B runtime now exposes a borrowed execution bundle for direct hosts:
+
+```rexx
+import rexxactivation
+import rexxpool
+import rexxclassicconfig
+import rexxclassiccontext
+
+activation = .rexxactivation..RexxActivationArguments()
+pool = .rexxpool..RexxVariablePool(1)
+config = .rexxclassicconfig..RexxClassicConfig("UTF8")
+context = .rexxclassiccontext..RexxClassicContext(reference activation, reference pool, reference config)
+```
+
+Keep those three initialized owners in stable storage for the bundle's lifetime.
+Its `activation()`, `pool()` and `config()` methods return checked references;
+`bindPool(reference replacement)` changes only the receiving bundle's pool
+binding. Copying the bundle shares the owners but not later binding changes.
+Helpers that must observe rebinding take `reference context`. Invalid or expired
+references raise `REFERENCE_INVALID`; a rejected rebind preserves the old pool.
+
+New direct hosts can import `llctarget2` from the same `llctarget.rxbin` and use
+the [nine borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
+They reuse existing BIFs and the host's character configuration. Numeric calls
+inherit the executing caller frame; `setting` updates stored activation state
+only, so a host must install validated settings in its own frame. The direct
+fixture `research/level-l/compilers/tests/target-context.crexx` demonstrates this
+distinction and nested restoration. Existing generated C code still uses the
+legacy exports; switching the selector and C-family metadata is a separate
+reviewed increment. This runtime surface does not add C source forms or INTERPRET.
+
 For separate G compilation, put `namespace scalelib expose scale` after the
 provider's OPTIONS line and keep only routine declarations. In the consumer,
 write `import scalelib` and call `scalelib..scale(7)`. Compile and assemble the

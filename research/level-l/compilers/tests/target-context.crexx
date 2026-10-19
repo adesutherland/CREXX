@@ -1,0 +1,307 @@
+/* cREXX License (MIT). Independent direct borrowed-target contracts. */
+options levelb numeric_classic
+import rxfnsb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxclassicbifs
+import rexxclassicbifnumeric
+import llctarget
+import llctarget2
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  call expressions()
+  call argumentcases()
+  call borrowedowners()
+  call numericframes()
+  call legacy()
+  say 'TARGET_CONTEXT|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg condition = .int, description = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1
+  say 'FAIL|' || description
+  return
+
+valuecheck: procedure = .void
+  arg actual = .RexxValue, expected = .string, description = .string
+  call check(actual.asString() == expected,description || ': expected ' || expected || ', got ' || actual.asString())
+  return
+
+binarycheck: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, operation = .string, left = .string, right = .string, expected = .string
+  actual = llctarget2..binaryop(operation,.RexxValue(left),.RexxValue(right),context)
+  call valuecheck(actual,expected,'binary ' || operation)
+  return
+
+expressions: procedure = .void
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call binarycheck(reference context,'add','7','2','9')
+  call binarycheck(reference context,'sub','7','2','5')
+  call binarycheck(reference context,'mul','7','2','14')
+  call binarycheck(reference context,'div','1','4','0.25')
+  call binarycheck(reference context,'eq','01','1','1')
+  call binarycheck(reference context,'ne','01','1','0')
+  call binarycheck(reference context,'lt','1','2','1')
+  call binarycheck(reference context,'le','2','2','1')
+  call binarycheck(reference context,'gt','3','2','1')
+  call binarycheck(reference context,'ge','2','2','1')
+  call binarycheck(reference context,'and','1','0','0')
+  call binarycheck(reference context,'or','0','1','1')
+  call binarycheck(reference context,'xor','1','1','0')
+  call binarycheck(reference context,'strict','01','1','0')
+  call binarycheck(reference context,'strict','same','same','1')
+  call binarycheck(reference context,'concat','a','b','ab')
+  call binarycheck(reference context,'abut','a','b','ab')
+  call binarycheck(reference context,'blank','a','b','a b')
+  call valuecheck(llctarget2..unaryop('positive',.RexxValue('02'),reference context),'2','prefix positive')
+  call valuecheck(llctarget2..unaryop('negative',.RexxValue('2'),reference context),'-2','prefix negative')
+  call valuecheck(llctarget2..unaryop('not',.RexxValue('0'),reference context),'1','prefix not')
+  call check(llctarget2..truth(.RexxValue('0'),reference context) = 0,'false IF value')
+  call check(llctarget2..truth(.RexxValue('1'),reference context) = 1,'true IF value')
+  call binaryerror(reference context,'add','bad','2','RXC-LC-41.1')
+  call binaryerror(reference context,'add','2','bad','RXC-LC-41.2')
+  call binaryerror(reference context,'div','1','0','RXC-LC-42.3')
+  call binaryerror(reference context,'and','2','1','RXC-LC-34.5')
+  call binaryerror(reference context,'or','1','2','RXC-LC-34.6')
+  call unaryerror(reference context,'positive','bad','RXC-LC-41.3')
+  call unaryerror(reference context,'not','2','RXC-LC-34.6')
+  caught = 0
+  do
+    ignored = llctarget2..truth(.RexxValue('2'),reference context)
+  on signal classic_syntax as problem
+    caught = pos('RXC-LC-34.1',problem.message()) = 1
+  end
+  call check(caught,'IF uses the existing logical-value diagnostic')
+  return
+
+binaryerror: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, operation = .string, left = .string, right = .string, code = .string
+  caught = 0
+  do
+    ignored = llctarget2..binaryop(operation,.RexxValue(left),.RexxValue(right),context)
+  on signal classic_syntax as problem
+    caught = pos(code,problem.message()) = 1
+  end
+  call check(caught,'binary error ' || operation || ' ' || code)
+  return
+
+unaryerror: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, operation = .string, value = .string, code = .string
+  caught = 0
+  do
+    ignored = llctarget2..unaryop(operation,.RexxValue(value),context)
+  on signal classic_syntax as problem
+    caught = pos(code,problem.message()) = 1
+  end
+  call check(caught,'prefix error ' || operation || ' ' || code)
+  return
+
+argumentcases: procedure = .void
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call valuecheck(llctarget2..countargs(reference context),'0','empty argument frame')
+  call activation.appendText('Mixed')
+  call activation.append(.RexxValue('ignored omission payload'),0)
+  call activation.appendText('')
+  call activation.append(.RexxValue('ignored trailing payload'),0)
+  call valuecheck(llctarget2..countargs(reference context),'3','highest supplied position excludes trailing omission')
+  call valuecheck(llctarget2..readarg(reference context,1),'MIXED','ARG instruction retains uppercase')
+  call valuecheck(llctarget2..readarg(reference context,2),'','omitted ARG instruction position')
+  call valuecheck(llctarget2..readarg(reference context,3),'','explicit empty ARG instruction position')
+  call valuecheck(llctarget2..readarg(reference context,9),'','missing ARG instruction position')
+  call presencecheck(reference context,'1','E','1')
+  call presencecheck(reference context,'2','E','0')
+  call presencecheck(reference context,'2','O','1')
+  call presencecheck(reference context,'3','E','1')
+  call presencecheck(reference context,'3','O','0')
+  call presencecheck(reference context,'4','O','1')
+  call presencecheck(reference context,'9','E','0')
+  call presencecheck(reference context,'9','O','1')
+  call argumenterror(reference context,'0','E','RXC-LC-40.14')
+  call argumenterror(reference context,'1.5','E','RXC-LC-40.12')
+  call argumenterror(reference context,'1','X','RXC-LC-40.28')
+  call activation.appendText('later')
+  call valuecheck(llctarget2..countargs(reference context),'5','later activation mutation is visible')
+  call valuecheck(llctarget2..readarg(reference context,5),'LATER','later argument value is visible')
+  return
+
+presencecheck: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, ordinal = .string, option = .string, expected = .string
+  result = llctarget2..existsarg(context,.RexxValue(ordinal),.RexxValue(option))
+  call valuecheck(result,expected,'ARG(' || ordinal || ',' || option || ')')
+  return
+
+argumenterror: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, ordinal = .string, option = .string, code = .string
+  caught = 0
+  do
+    ignored = llctarget2..existsarg(context,.RexxValue(ordinal),.RexxValue(option))
+  on signal classic_syntax as problem
+    caught = pos(code,problem.message()) = 1
+  end
+  call check(caught,'ARG error ' || code)
+  return
+
+borrowedowners: procedure = .void
+  activation = .rexxactivation..RexxActivationArguments()
+  first = .rexxpool..RexxVariablePool(0)
+  second = .rexxpool..RexxVariablePool(0)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference first,reference config)
+  call valuecheck(llctarget2..lengthvalue(.RexxValue(''),reference context),'0','empty LENGTH')
+  call valuecheck(llctarget2..lengthvalue(.RexxValue('é日🙂'),reference context),'3','Unicode LENGTH uses code points')
+  call valuecheck(llctarget2..lengthvalue(.RexxValue('é'),reference context),'2','LENGTH retains combining code points')
+  nultext = '41C3A9F09F998200'x as .string
+  call valuecheck(llctarget2..lengthvalue(.RexxValue(nultext),reference context),'4','Unicode LENGTH includes embedded NUL')
+  call check(first.unicodeNames() & \second.unicodeNames(),'existing BIF setter applies config to the live first pool')
+  call binaryerror(reference context,'add','١٢','1','RXC-LC-41.1')
+  call config.setTextDatatypeDigits('٠١٢٣٤٥٦٧٨٩')
+  call binarycheck(reference context,'add','١٢','1','13')
+  call config.setExponentDigitLimit(2)
+  call binaryerror(reference context,'add','1E003','1','RXC-LC-41.7')
+  call config.setExponentDigitLimit(3)
+  call binarycheck(reference context,'add','1E003','1','1001')
+  call context.bindPool(reference second)
+  call check(\second.unicodeNames(),'bundle rebind itself does not alter pool policy')
+  call config.useByteProfile()
+  call valuecheck(llctarget2..lengthvalue(.RexxValue('é'),reference context),'2','later BYTE config is borrowed')
+  call check(first.unicodeNames() & \second.unicodeNames(),'BIF setup uses rebound second pool')
+  call config.useUtf8Profile()
+  call valuecheck(llctarget2..lengthvalue(.RexxValue('é'),reference context),'1','later UTF8 config is borrowed')
+  call check(second.unicodeNames(),'rebound pool observes later config mutation')
+  return
+
+numericframes: procedure = .void
+  numeric digits 12
+  numeric fuzz 4
+  numeric form engineering
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call valuecheck(llctarget2..digits(reference context),'12','DIGITS reads caller frame rather than stored default 9')
+  call llctarget2..setting('digits',reference context,.RexxValue('3'))
+  call llctarget2..setting('fuzz',reference context,.RexxValue('1'))
+  call llctarget2..setting('form',reference context,.RexxValue('scientific'))
+  call check(activation.numericDigits() = 3 & activation.numericFuzz() = 1 & activation.numericForm() = 1,'setting changes the borrowed activation')
+  call framecheck(12,4,'engineering','setter leaves owning caller VM frame unchanged')
+  call valuecheck(llctarget2..digits(reference context),'12','numeric BIF keeps caller frame after stored mutation')
+  call settingerror(reference context,'digits','0','RXC-LC-26.5')
+  call settingerror(reference context,'digits','1','RXC-LC-33.1')
+  call settingerror(reference context,'digits','1000','RXC-LC-33.2')
+  call settingerror(reference context,'digits','1.5','RXC-LC-26.5')
+  call settingerror(reference context,'fuzz','-1','RXC-LC-26.6')
+  call settingerror(reference context,'fuzz','3','RXC-LC-33.1')
+  call settingerror(reference context,'form','invalid','RXC-LC-33.6')
+  call settingerror(reference context,'unknown','7','unknown numeric setting')
+  call check(activation.numericDigits() = 3 & activation.numericFuzz() = 1 & activation.numericForm() = 1,'all failed settings preserve stored activation')
+  call framecheck(12,4,'engineering','failed setters preserve caller VM frame')
+  call installedframe(reference context)
+  call framecheck(12,4,'engineering','return restores outer numeric frame')
+  call valuecheck(llctarget2..digits(reference context),'12','DIGITS restored after child frame returns')
+  call check(activation.numericDigits() = 3 & activation.numericFuzz() = 1 & activation.numericForm() = 1,'child caller-frame install does not replace stored activation')
+  return
+
+/** Model the future C selector's same-frame validated install using existing
+ * instructions. Caller FUZZ=4 exceeds stored DIGITS=3, so zero FUZZ first. */
+installedframe: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  dgts = activation.numericDigits(); fuz = activation.numericFuzz(); frm = activation.numericForm()
+  zero = 0
+  assembler setnumfuz zero
+  assembler setnumdgts dgts
+  assembler setnumfuz fuz
+  assembler setnumfrm frm
+  call framecheck(3,1,'scientific','executing frame installs validated activation settings')
+  call valuecheck(llctarget2..digits(context),'3','DIGITS sees installed immediate caller frame')
+  call binarycheck(context,'div','1','7','0.143')
+  call binarycheck(context,'eq','1.01','1.02','1')
+  call valuecheck(llctarget2..unaryop('positive',.RexxValue('1.234'),context),'1.23','unary inherits installed DIGITS')
+  call framecheck(3,1,'scientific','successful adapters restore immediate caller frame')
+  call binaryerror(context,'div','1','0','RXC-LC-42.3')
+  call framecheck(3,1,'scientific','expression failure restores immediate caller frame')
+  call numericchild(context)
+  call framecheck(3,1,'scientific','nested frame changes restore installed parent frame')
+  return
+
+numericchild: procedure = .void
+  numeric digits 5
+  numeric fuzz 0
+  numeric form engineering
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  call valuecheck(llctarget2..digits(context),'5','nested DIGITS sees immediate frame rather than stored 3')
+  call binarycheck(context,'div','1','7','0.14286')
+  call binarycheck(context,'mul','10000','10000','100.00E+6')
+  call framecheck(5,0,'engineering','adapter preserves nested engineering frame')
+  return
+
+framecheck: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg expected_digits = .int, expected_fuzz = .int, expected_form = .string, description = .string
+  call check(rxfnsb..digits() = expected_digits & rxfnsb..fuzz() = expected_fuzz & rxfnsb..form() = expected_form,description)
+  callcontext = .rexxclassicbifs..RexxBifCallContext.expression('FORM')
+  value = rexxclassicbifnumeric..rexxclassicbif_form(reference callcontext)
+  call valuecheck(value,upper(expected_form),'direct FORM BIF observes inherited frame')
+  call callcontext.setName('FUZZ')
+  value = rexxclassicbifnumeric..rexxclassicbif_fuzz(reference callcontext)
+  call valuecheck(value,expected_fuzz || '','direct FUZZ BIF observes inherited frame')
+  return
+
+settingerror: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, operation = .string, value = .string, code = .string
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  dgts = activation.numericDigits(); fuz = activation.numericFuzz(); frm = activation.numericForm()
+  caller_digits = rxfnsb..digits(); caller_fuzz = rxfnsb..fuzz(); caller_form = rxfnsb..form()
+  caught = 0
+  do
+    call llctarget2..setting(operation,context,.RexxValue(value))
+  on signal classic_syntax as problem
+    caught = pos(code,problem.message()) = 1
+  end
+  call check(caught,'setting diagnostic ' || operation || ' ' || value)
+  call check(activation.numericDigits() = dgts & activation.numericFuzz() = fuz & activation.numericForm() = frm,'failed setting is atomic for stored activation')
+  call framecheck(caller_digits,caller_fuzz,caller_form,'failed setting restores immediate caller frame')
+  return
+
+legacy: procedure = .void
+  activation = llctarget..contextnew()
+  changed = llctarget..setting('digits',activation,.RexxValue('4'))
+  call valuecheck(llctarget..digits(activation),'9','old by-value setter leaves source unchanged')
+  call valuecheck(llctarget..digits(changed),'4','old by-value setter returns changed snapshot')
+  call valuecheck(llctarget..binaryop('add',.RexxValue('7'),.RexxValue('2'),changed),'9','old expression signature remains usable')
+  call valuecheck(llctarget..lengthvalue(.RexxValue('é日🙂')),'3','old LENGTH signature remains usable')
+  oldargs = llctarget..arguments()
+  oldargs = llctarget..append(oldargs,.RexxValue('Mixed'),1)
+  call valuecheck(llctarget..readarg(oldargs,1),'MIXED','old ARG instruction signature retains uppercase')
+  call valuecheck(llctarget..countargs(oldargs),'1','old ARG count signature remains usable')
+  call valuecheck(llctarget..existsarg(oldargs,.RexxValue('1'),.RexxValue('E')),'1','old ARG presence signature remains usable')
+  return

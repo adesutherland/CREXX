@@ -8,20 +8,24 @@ automations or new branches. The [architecture](architecture.md) and
 
 ## Coordination model
 
-Adrian requested an Astra Extra High coordinator for design and later
-coordination, with GPT-6.1 Sol Extra High subagents. Configure future worker
+Adrian requested an Astra Extra High coordinator for review and coordination,
+with GPT-6.1 Sol Extra High subagents. Configure future worker
 assignments with `model=gpt-6.1-sol`, `reasoning_effort=xhigh`; a requested model
-must not be silently substituted. The coordinator independently checks results,
-resolves interfaces, updates acceptance, integrates and publishes only within
-then-current authority. These are roles requested by Adrian, not a claim about
-the model identity of a previous or current session.
+must not be silently substituted. The coordinator owns reviews, independent
+validation of code and evidence, scheduling, interface and acceptance decisions,
+and coordination. The coordinator also authorizes and oversees commits and
+publication within then-current authority. Assigned Sol workers perform
+implementation, shared-file integration, documentation, builds, tests and
+cleanup. These are roles requested
+by Adrian, not a claim about the model identity of a previous or current session.
 
 Use the existing synchronized `develop` checkout. Do not create branches or
 worktrees. All agents share files: the coordinator grants exclusive ownership
 of named paths before writes. Record baseline HEAD and unrelated dirty paths;
-keep their contents unchanged. Assign a single integrator for shared CMake,
+keep their contents unchanged. Assign a single worker integrator for shared CMake,
 public schemas and canonical plans. Workers report diffs; they do not commit,
-push, stash, reset, clean, switch branches, change automation or build broadly.
+push, stash, reset, clean, switch branches, change automation or start unassigned
+broad builds.
 
 With four available slots, use coordinator plus at most three workers. Useful
 parallel work is a generic L implementation, a runtime/Unicode implementation
@@ -46,16 +50,16 @@ start; CLC stage closure also requires the complete plan criteria.
 
 | Package / owner | Allowed implementation area | Inputs and deliverables | Decisive acceptance / dependencies |
 |---|---|---|---|
-| **WP-01 Contract audit** | Read-only sources; coordinator writes requirements/plan | Reconcile LC-I, BIF, LC-REF and approved exceptions; inventory current test paths, APIs/platforms and C-only host/target closures. Propose minimal independent fixtures and exact changed interfaces. | CFC-AC01/07/12; CLC-STEP01. No native status copied into new completion. |
+| **WP-01 Contract audit** | Read-only sources; assigned worker writes requirements/plan after coordinator review | Reconcile LC-I, BIF, LC-REF and approved exceptions; inventory current test paths, APIs/platforms and C-only host/target closures. Propose minimal independent fixtures and exact changed interfaces. | CFC-AC01/07/12; CLC-STEP01. No native status copied into new completion. |
 | **WP-02 L analyses** | `lib/rxfnsl/rexx/`, assigned `langtools/tests`, generic docs/examples | Registered edge/effect/observation schemas, finite facts/worklists, def/use/liveness, invalidation and checked rewrite APIs. Provide record diagrams, complexity/budgets and non-C examples. | CFC-AC07/11; STEP02. Public API/schema gate before implementation; no C names or RXAS opcode knowledge. |
 | **WP-03 Classic runtime** | Assigned `lib/rxfnsc` classes/tests | Reconcile activation/pool/config/value/condition ownership, direct operations and BIF ABI; live pool binding, shared body/entry contracts, cleanup, presence and context inheritance. Keep old consumers compatible. | CFC-AC02/03/09/11; STEP03. Direct B tests plus affected native C/RexxScript/typed Classic regressions; public ABI approved. |
-| **WP-04 Shared B Unicode** | Assigned `lib/rxfnsb/unicode` target, migration from `lib/rxfnsg`, `tools/unicode`, shared data consumers | Extract existing B executors and minimal procedural API, retain G facade/iterators and C adapters, single pinned data owner and acyclic L/bootstrap graph. Exact paths/API/product names reviewed before move. | CFC-AC07/09/12; STEP03. Direct B, unchanged G and C tests, UCD/codec negatives, linked table ownership, cold/freshness/installed closure. Coordinate CMake edits; no same-file overlap with WP-03. |
+| **WP-04 Shared B Unicode** | Assigned `lib/rxfnsb/unicode`, `tools/unicode` and affected data/consumer paths | Extraction/public B API, preserved G facade, one pinned data owner and acyclic bootstrap are completed foundations. Remaining assignments integrate new C names/BIF consumers; add property/simple-map/traversal/budget interfaces only for an identified need and exact API approval. | CFC-AC07/09/12; STEP03/04. Reuse unchanged B/G/core qualification; prove changed C recognition/bindings, errors and provider/freshness closure. Coordinate CMake edits; no same-file overlap with WP-03. |
 | **WP-05 C source/expressions** | Assigned `levelc` grammar/parser/frontend/IR modules and compiler tests | Complete C-SRC/C-EXPR, source/AST schemas, static validation, Unicode names, operators, numeric contracts and BF01–04 binding. Use L and runtime APIs, no duplicate algorithms. | CFC-AC01–03/06/07; STEP04 after needed WP-02/03/04 contracts. Native comparisons are controls. |
 | **WP-06 One C instruction** | Named grammar/frontend/IR/selector paths and a named instruction fixture directory | One LC-I row, all forms/errors/edges, worked AST/IR/RXAS, runtime interface use and independent expectations. Required shared improvements are explicit linked dependencies. | CFC-AC01–04/06; STEP05–07. Serial instruction writer; separate review packet. Full closure waits for all listed shared proofs. |
 | **WP-07 BIF/host family** | Assigned runtime family/adapter and tests; frontend binding edits coordinated | One BF integration group or C-HOST contract at a time. Reuse existing BIF bodies, fixtures and valid qualification; bind names/presence/context/errors through the new compiler. Complete only named missing host contracts. Library edits require a reproduced defect, identified open contract or approved Unicode extraction. | CFC-AC01/04/09/11; STEP06–08. New public host APIs require review; no alternate ADDRESS protocol or dynamic external-call policy. |
 | **WP-08 C target quality** | Assigned C selector and `compilers/common` target utility paths | Target records, liveness-driven register reuse, call windows, ABI cleanup and C-OPT01–05. Explain legality and compare actual caller plus helper RXAS. | CFC-AC06/07/11; STEP09 incrementally. WP-02 generic facts; no target policy in SDK. No broad performance work for research. |
 | **WP-09 RXAS/VM primitive** | Precisely assigned assembler/binutils/interpreter/disassembler/linker paths and direct tests | One reproduced cost or missing execution capability; compare existing sequence, library/selector fix and primitive. Propose exact operands/effects/alias/errors/source/encoding/platform contract before code. | CFC-AC10/11; STEP09 or final STEP11b. Explicit native/ABI gate; mandatory first Release verdict for production optimisation. No language parser/BIF dispatch in VM. |
-| **WP-10 Delivery and independent QA** | Assigned build/test/packaging files; coordinator owns shared root integration | Cold/incremental/no-op/missing-input/installed manifests, platform capability matrix, static compiler-free runtime, independent reference/oracle and RXAS checks. Aggregate tests measured before registration. | CFC-AC08/11/12; STEP10 and STEP11d. Reuse existing qualification; no automatic overnight matrix. |
+| **WP-10 Delivery and independent QA** | Assigned build/test/packaging files; assigned worker owns shared root integration | Cold/incremental/no-op/missing-input/installed manifests, platform capability matrix, static compiler-free runtime, independent reference/oracle and RXAS checks. Aggregate tests measured before registration. | CFC-AC08/11/12; STEP10 and STEP11d. Reuse existing qualification; no automatic overnight matrix. |
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
 
@@ -95,16 +99,18 @@ VALUE merely to make a test pass; those dependencies belong to their owners.
 
 The coordinator first checks changed paths against ownership and active-work
 hashes, then reviews the implementation and the independent review findings.
-Re-run only decisive checks whose evidence is missing or invalidated. Verify the
-normal product build and appropriate functional/correctness suites before any
-substantive publication, following AGENTS. An author and reviewer both reporting
-success does not replace coordinator inspection.
+Assign workers only decisive checks whose evidence is missing or invalidated;
+the coordinator validates their evidence rather than executing builds or tests.
+Verify evidence for the normal product build and appropriate functional/correctness
+suites before any substantive publication, following AGENTS. An author and reviewer
+both reporting success does not replace coordinator inspection.
 
 For a production RXAS/VM performance edit, freeze after minimum focused
-correctness, run the governed first ordinary Release comparison, report the
-verdict and stop for Adrian's direction before broad closeout. This gate does
-not apply to ordinary Level L research increments; actual sanitizer findings
-retain SAN worklist/regression/platform closure requirements in either case.
+correctness, assign a worker the governed first ordinary Release comparison,
+review and report the verdict, then stop for Adrian's direction before broad
+closeout. This gate does not apply to ordinary Level L research increments;
+actual sanitizer findings retain SAN worklist/regression/platform closure
+requirements in either case.
 
 Commit only assigned, qualified paths when publication is authorised. Verify
 remote develop and discover actual exact-SHA normal workflows; do not rerun or

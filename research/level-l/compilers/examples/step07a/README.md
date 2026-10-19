@@ -10,10 +10,8 @@ The B files remain independent native-seed controls, not a new B frontend.
 | `scalelib` and `import-g` | Separately compile the exported G routine and its caller; print `14`, then `21`. |
 | `missing-g` | Refuse the missing required first argument at line 2, column 10. |
 
-The `.expected` files contain the complete expected output. The native
-[design controls](../../PLAN.md#step07a-validation) remain
-historical; [STEP07A qualification](../../PLAN.md#step07a-validation)
-records the new compiler runs. `scale-c.ir`, `scale-g.ir` and matching selected
+The `.expected` files contain the complete expected output. The [implemented contract and qualification boundary](../../doc/STEP07A-CONTRACTS.md#acceptance-and-next-implementation-checks)
+distinguish the native controls from new compiler runs. `scale-c.ir`, `scale-g.ir` and matching selected
 IR/RXAS files show the actual service output. The G fallback load is guarded by
 presence; Classic retains its explicit ARG/IF semantics and runtime helpers.
 

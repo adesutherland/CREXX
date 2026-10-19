@@ -25,6 +25,12 @@ compilers/backends. RXAS, RXLINK, VM, platform services and native transport
 providers remain legitimate dependencies. A native primitive executes a defined
 operation; it must not hide a second Classic parser, lowerer or BIF implementation.
 
+Native compiler source changes in this delivery are limited to evidenced defects
+in the Level B build seed, with focused regressions preserving the existing
+language contract. New Classic compiler features remain in this B/L implementation;
+shared runtime behavior remains in `lib/rxfnsc/`. Native Classic parsing, lowering
+and feature work are outside this delivery.
+
 ## Current implementation review
 
 | Inspected surface | Current facts | Target consequence |
@@ -246,26 +252,31 @@ integers/floats are implementation choices, not changed Classic semantics.
 Ordinary text is exact Unicode codepoints with the fixed Latin-1 ordinal bridge;
 external stream encodings do not change source or ordinal semantics.
 
-### Borrowed Classic context proposal — awaiting approval
+### Borrowed Classic context contract
 
-**Draft contract for the next bounded STEP03 slice; no implementation or API
-approval is claimed.** The plan owns its scheduling and acceptance status.
+**Shared B surface and additive target adapters approved by Adrian on
+19 October 2026; implemented locally.** The plan owns acceptance and
+qualification. This runtime increment does not migrate generated C procedures
+or change serialized C-family records; their exact revision remains a review
+gate before selector migration.
 The intended outcome is one execution-owned configuration and one authoritative
 activation/pool binding for the C subset already admitted at `975afbc15`.
 Remove per-operator configuration construction and copies of live activation
 state while retaining existing expression/BIF bodies and observable results.
 This does not admit more source forms or close an instruction review.
 
-The slice covers the existing scalar expressions, assignments, structured
+The following selector migration will cover the existing scalar expressions, assignments, structured
 control, NUMERIC forms, private PROCEDURE routines, argument/result presence
 and LENGTH/ARG/DIGITS forms. It does not add shared-label/fall-through calling,
 EXPOSE syntax, condition handlers, new BIF names, signed external calls, host
 invocation APIs or dynamic compilation. Those remain with their owning steps.
+The current runtime increment supplies the five-callable B bundle and nine
+direct-host adapters below; generated C still uses the legacy target entries.
 The existing Unicode procedures and algorithms are unchanged.
 
-#### Exact proposed shared B surface
+#### Approved shared B surface
 
-Add `RexxClassicContext` in namespace `rexxclassiccontext`, owned by
+`RexxClassicContext` lives in namespace `rexxclassiccontext`, owned by
 `lib/rxfnsc/RexxClassicContext.crexx` and delivered in the existing
 `rxfnsc.rxbin`. It is a reference bundle, not a second implementation of an
 activation. Its only fields are references to existing caller-owned objects.
@@ -276,10 +287,10 @@ configuration and BIF exports retain their signatures and behavior.
 Passing the three existing references separately would add no B class, but
 would spread pool-binding replacement across every helper ABI. A copied pool
 reference does not observe replacement of the caller's binding, and nested
-reference containers are outside the current B surface. The proposed bundle
+reference containers are outside the current B surface. The bundle
 provides one explicit mutable binding using existing class/reference rules.
 
-These are the complete five proposed callables. All arguments are required;
+These are the complete five approved callables. All arguments are required;
 there are no defaults, optional-presence bits or exposed by-value arguments.
 Types below use the existing fully qualified source identities.
 
@@ -297,6 +308,11 @@ returning it. `bindPool` checks the replacement before changing the binding;
 failure leaves the previous binding intact. Invalid or expired targets raise
 the existing `REFERENCE_INVALID` condition. There is no new handle, error
 category, lifetime extension, global registry or VM/object ABI.
+If an existing B procedure signal handler resumes with `.signalaction.skip()`,
+the rejected operation returns immediately: a failed factory returns a bundle
+with empty references, a failed getter returns an empty reference, and a failed
+`bindPool` preserves its old binding. This is failure recovery, not a successful
+borrow; no rejected reference is installed after the signal handler returns.
 Callers supply initialized instances; a live reference cell does not by itself
 prove object initialization. Existing `OBJECT_NOT_INITIALIZED` behavior remains
 when an uninitialized object is used. The bundle adds no profile/state inference
@@ -391,9 +407,9 @@ body or error policy is copied into the compiler. Existing config getters and
 argument arrays can still copy values internally; those are retained costs,
 not a claim that the complete BIF path performs no copies.
 
-**Compatibility decision for approval:** prefer an additive `llctarget2`
+**Approved compatibility choice:** an additive `llctarget2`
 namespace in the same installed `llctarget.rxbin`, preserving every existing
-`llctarget` export/signature for already-emitted C images. New C output uses
+`llctarget` export/signature for already-emitted C images. After the separately reviewed selector migration, new C output will use
 the following exact borrowed-context shim entries. Here `V` is
 `.rexxvalue..RexxValue` and `C` is
 `reference .rexxclassiccontext..RexxClassicContext`; these are table abbreviations,
@@ -421,14 +437,13 @@ literal/pool helpers and fresh result packets can retain their current ABI;
 argument construction finishes before the new bundle borrows the activation.
 Legacy helper bodies remain compatibility code until separately retired.
 The existing operator-name branch and conservative root setup remain named
-C-OPT-01/03 work; this proposal does not add direct-operation B exports or claim
+C-OPT-01/03 work; this contract does not add direct-operation B exports or claim
 that literal-only programs have no unused setup.
 
-The alternative is an intentional coordinated break of the exposed research
-`llctarget` signatures. That avoids retaining a second shim surface, but old
-emitted images could no longer use the replacement installed target library.
-That consequence requires explicit approval; a coordinated rebuild alone does
-not preserve those images. Do not silently choose this alternative.
+An intentional break of the exposed `llctarget` signatures was rejected for
+this increment: a coordinated source rebuild would not preserve existing
+emitted images. The two namespaces share one target product and existing
+Classic library implementations; they do not duplicate the BIF bodies.
 
 New generated C source-unit procedures receive one `C` reference; invocation
 kind and argument presence reside in its existing activation. Their existing
@@ -444,11 +459,13 @@ introduced into static applications.
 
 #### Review, migration and verification gates
 
-All gates below are open, serving CFC-AC02/03/06/07/09/11/12. They describe
+The first public-surface approval is complete; implementation/qualification
+status is recorded under CTX in the plan. These gates serve
+CFC-AC02/03/06/07/09/11/12 and describe
 this contract slice, not complete activation, BIF, host or C acceptance.
 
-1. Approve the five-callable B surface, borrowing/error contract and additive
-   target compatibility choice. Freeze the affected C family revision and
+1. The five-callable B surface, borrowing/error contract and additive
+   target compatibility choice are approved. Separately freeze the affected C family revision and
    internal call metadata before selector implementation. Preserve all existing
    rxfnsc public class/BIF signatures and native/typed/RexxScript consumers.
 2. Prove the bundle independently with existing B reference operations: external

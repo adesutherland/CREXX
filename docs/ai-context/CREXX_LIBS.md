@@ -64,6 +64,28 @@ The [detailed compatibility layer](../../compiler/docs/levelc_compatibility_laye
 maps each current entry, actual test path and outstanding contract. A same-named
 standalone string wrapper or legacy unit is not automatically the compiled path.
 
+`rexxclassiccontext.RexxClassicContext` in `rxfnsc` bundles three existing,
+caller-owned references: `RexxActivationArguments`, `RexxVariablePool` and
+`RexxClassicConfig`. Its required factory arguments are `activation`, `pool`
+and `config`; `activation()`, `pool()` and `config()` return checked references,
+and `bindPool(pool)` replaces only the receiving bundle's binding. It allocates
+no owner, selects no character policy and has no Level L dependency. Copies
+share referents but have independent pool bindings; pass the authoritative
+bundle by reference when rebinding must remain visible. Empty/expired references
+raise `REFERENCE_INVALID` before mutation. Explicit signal-skip recovery returns
+an unbound factory result or empty getter result and leaves a rejected rebind
+unchanged. Keep all owners initialized and in stable storage while borrowed.
+
+The research C adapters in namespace `llctarget2` consume that bundle and reuse
+existing checked BIF/expression entries. They ship alongside unchanged legacy
+`llctarget` exports in the same target image. Compiler policy remains in
+`research/level-l/compilers`; the shared B class owns no compiler or VM policy.
+The numeric adapters inherit the caller's VM settings. `setting` updates only
+the stored activation; the eventual C selector must install validated settings
+in its own executing frame. The existing selector still uses legacy adapters;
+its serialized contract migration is separately reviewed. See the
+[borrowed-context contract](../../research/level-l/compilers/doc/architecture.md#borrowed-classic-context-contract).
+
 The CMake build treats each `rxfnsc` member as an isolated source compilation.
 Its own source and only its declared transitive `rxfnsc` source dependencies
 are copied into a member-private, dependency-keyed source root under
