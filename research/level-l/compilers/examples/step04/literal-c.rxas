@@ -41,111 +41,131 @@ null r9
 null r10
 null r8
 ret r0
-llf1() .locals=21
+llf1() .locals=23
 .srcstep 0 0 6 "" 0 0 0 ""
 .meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
-load r17,"literal-c.crexx: entering $MAIN"
+load r19,"literal-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
 numsci 18,1,2
-linkref r5,a1
-swap r5,r19
-load r18,1
-settp r19,256
-call r9,rexxclassiccontext.rexxclassiccontext.activation(),r18
-swap r5,r19
-null r19
-unlink r5
-linkref r6,r9
-swap r6,r19
-load r18,1
-settp r19,256
-call r10,rexxactivation.rexxactivationarguments.numericdigits(),r18
-swap r6,r19
-null r19
-swap r6,r19
-load r18,1
-settp r19,256
-call r11,rexxactivation.rexxactivationarguments.numericfuzz(),r18
-swap r6,r19
-null r19
-swap r6,r19
-load r18,1
-settp r19,256
-call r12,rexxactivation.rexxactivationarguments.numericform(),r18
-swap r6,r19
-null r19
-unlink r6
-null r9
+linkref r7,a1
+swap r7,r21
+load r20,1
+settp r21,256
+call r11,rexxclassiccontext.rexxclassiccontext.activation(),r20
+swap r7,r21
+null r21
+unlink r7
+linkref r8,r11
+swap r8,r21
+load r20,1
+settp r21,256
+call r12,rexxactivation.rexxactivationarguments.numericdigits(),r20
+swap r8,r21
+null r21
+swap r8,r21
+load r20,1
+settp r21,256
+call r13,rexxactivation.rexxactivationarguments.numericfuzz(),r20
+swap r8,r21
+null r21
+swap r8,r21
+load r20,1
+settp r21,256
+call r14,rexxactivation.rexxactivationarguments.numericform(),r20
+swap r8,r21
+null r21
+unlink r8
+null r11
 setnumfuz 0
-setnumdgts r10
-setnumfuz r11
-setnumfrm r12
+setnumdgts r12
+setnumfuz r13
+setnumfrm r14
 llb1:
 .srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
-load r17,"literal-c.crexx: generated code in $MAIN"
+load r19,"literal-c.crexx: generated code in $MAIN"
 copy r2,a1
 copy r1,r2
-.srcstep 11 0 17 "literal-c.crexx" 2 5 7 "say 01"
-load r17,"literal-c.crexx:2:5"
-load r19,"01"
-load r18,1
-settp r19,768
-call r3,llctarget.literal(),r18
-null r19
-.srcstep 4 0 17 "literal-c.crexx" 2 1 7 "say 01"
-load r17,"literal-c.crexx:2:1"
-copy r19,r3
-load r18,1
-settp r19,768
-call r16,llctarget.sayvalue(),r18
-null r19
+.srcstep 10 0 17 "literal-c.crexx" 1 9 15 "options levelc"
+load r19,"literal-c.crexx:1:9"
+copy r3,r1
+linkref r7,r3
+swap r7,r21
+load r20,1
+settp r21,256
+call r9,rexxclassiccontext.rexxclassiccontext.pool(),r20
+swap r7,r21
+null r21
+unlink r7
+copy r21,r9
+load r22,"levelc"
+load r20,2
+settp r21,768
+settp r22,768
+call r4,llctarget.poolread(),r20
+null r21
+null r22
+null r9
+.srcstep 18 0 17 "literal-c.crexx" 2 5 7 "say 01"
+load r19,"literal-c.crexx:2:5"
+load r21,"01"
+load r20,1
+settp r21,768
+call r5,llctarget.literal(),r20
+null r21
+.srcstep 11 0 17 "literal-c.crexx" 2 1 7 "say 01"
+load r19,"literal-c.crexx:2:1"
+copy r21,r5
+load r20,1
+settp r21,768
+call r18,llctarget.sayvalue(),r20
+null r21
 .srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
-load r17,"literal-c.crexx: generated code in $MAIN"
-load r18,0
-call r4,llctarget.absent(),r18
-ret r4
+load r19,"literal-c.crexx: generated code in $MAIN"
+load r20,0
+call r6,llctarget.absent(),r20
+ret r6
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r16,1
+load r18,1
 br llerror1
 llerror1_2:
-load r16,2
+load r18,2
 br llerror1
 llerror1_3:
-load r16,3
+load r18,3
 br llerror1
 llerror1_4:
-load r16,4
+load r18,4
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r19,r0
-copy r20,r17
-load r18,2
-settp r19,768
-settp r20,768
-call r17,llctarget.failuremessage(),r18
-null r19
-null r20
-beq llraise1_1,r16,1
-beq llraise1_2,r16,2
-beq llraise1_3,r16,3
+copy r21,r0
+copy r22,r19
+load r20,2
+settp r21,768
+settp r22,768
+call r19,llctarget.failuremessage(),r20
+null r21
+null r22
+beq llraise1_1,r18,1
+beq llraise1_2,r18,2
+beq llraise1_3,r18,3
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r17,r0
+signalorigin "INVALID_ARGUMENTS",r19,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r17,r0
+signalorigin "CONVERSION_ERROR",r19,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r17,r0
+signalorigin "DIVISION_BY_ZERO",r19,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r17,r0
+signalorigin "CLASSIC_SYNTAX",r19,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
@@ -165,6 +185,10 @@ rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexx
   .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
 rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
   .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
+llctarget.poolread() .expose=llctarget.poolread
+  .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "poolref=reference .rexxvariablepool,name=.string"
+rexxclassiccontext.rexxclassiccontext.pool() .expose=rexxclassiccontext.rexxclassiccontext.pool
+  .meta "rexxclassiccontext.rexxclassiccontext.pool"="b" "reference .rexxpool..rexxvariablepool" rexxclassiccontext.rexxclassiccontext.pool() ""
 llctarget.literal() .expose=llctarget.literal
   .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "text=.string"
 llctarget.sayvalue() .expose=llctarget.sayvalue

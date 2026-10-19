@@ -282,6 +282,19 @@ request: class
     arg name = .string, origin = .llir..origin
     if name = 'text' | name = 'value' then return _block.constantbytes(type(name),''x as .binary,origin)
     return _block.constant(type(name),'0',origin)
+  /** Classify only; the selected expression path still owns every visit and
+   * literal check. Fallback expression lowering is never visited twice. */
+  simpleliteral: method = .int
+    arg node = .llast..node
+    do forever
+      kind = node.kind()
+      if kind = 'Group' then node = node.child('value')
+      else if kind = 'Chain' then do
+        if node.count('operators') <> 0 | node.count('operands') <> 1 then return 0
+        node = node.child('operands',1)
+      end
+      else return kind = 'String' | kind = 'Number'
+    end
   statement: method = .void
     arg node = .llast..node
     if tick(node) = 0 then return
@@ -289,7 +302,12 @@ request: class
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
     /* Visit structural/non-emitting statements without reopening a terminated
      * block. Later emitting statements still lower in checked dead code. */
-    if _terminated & kind <> 'Sequence' & kind <> 'Block' & kind <> 'Nop' & kind <> 'Options' then do
+    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop'
+    if kind = 'COptions' then do
+      nonemitting = 1
+      if node.count('value') then nonemitting = simpleliteral(node.child('value'))
+    end
+    if _terminated & nonemitting = 0 then do
       _block = newblock('unreachable'); _terminated = 0; _alive = 0
     end
     select
@@ -297,9 +315,8 @@ request: class
         call statement(node.child('items',i))
       end
       when kind = 'Block' then call statement(node.child('body'))
-      when kind = 'Options' then do
-        root = _tree.root(); body = root.child('body'); first = body.child('items',1)
-        if first.id() <> node.id() | lower(node.text('level')) <> 'levelc' then call fail(node,'PROFILE: options must select this frontend at the start of the source')
+      when kind = 'COptions' then do
+        if node.count('value') then value = expression(node.child('value'),'',nonemitting)
       end
       when kind = 'Nop' then nop
       when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
@@ -465,7 +482,7 @@ request: class
     if suffix = 'B' then text = b2x(text)
     return x2c(text)
   expression: method = .llir..valuehandle
-    arg node = .llast..node, expected = ''
+    arg node = .llast..node, expected = '', discardliteral = 0
     invalid = .llir..valuehandle
     if tick(node) = 0 then return invalid
     _offset = node.offset()
@@ -477,6 +494,7 @@ request: class
           if right(lower(spelling),1) = 'd' then do
             call fail(node,'PROFILE: decimal suffix is not Classic syntax'); return invalid
           end
+          if discardliteral then return invalid
           return _block.constantbytes(type('value'),spelling as .binary,origin)
         end
       end
@@ -485,6 +503,7 @@ request: class
         if right(spelling,1) <> quote then do
           ordinaltext = ordinalliteral(node,spelling)
           if _error <> '' then return invalid
+          if discardliteral then return invalid
           return _block.constantbytes(type('value'),ordinaltext as .binary,origin)
         end
         text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
@@ -493,6 +512,7 @@ request: class
           if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
           i = i + 1
         end
+        if discardliteral then return invalid
         target = 'value'
         return _block.constantbytes(type(target),decoded as .binary,origin)
       end
@@ -504,7 +524,7 @@ request: class
           built = op.finish(); return built.result()
         end
       end
-      when kind = 'Group' then return expression(node.child('value'),expected)
+      when kind = 'Group' then return expression(node.child('value'),expected,discardliteral)
       when kind = 'Prefix' then do
         name = node.child('operator').kind(); child = node.child('value')
 
@@ -521,7 +541,7 @@ request: class
         built = op.finish(); return built.result()
       end
       when kind = 'Chain' then do
-        value = expression(node.child('operands',1),expected)
+        value = expression(node.child('operands',1),expected,discardliteral)
         do i = 1 to node.count('operators') while _error = ''
           operator = node.child('operators',i).kind(); right = node.child('operands',i + 1)
           value = binary(value,operator,right,origin,expected)

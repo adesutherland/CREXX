@@ -3,8 +3,10 @@ function $MAIN -> crexx.c.result
   entry.1:
     %1 = core.argument argument:1 @origin:2
     core.store %1 slot:$context @origin:2
-    %2 = core.constant 3031 : crexx.c.value @origin:11
-    crexx.c.say %2 @origin:4
-    %3 = crexx.c.return.absent @origin:2
-    core.return %3 @origin:2
+    %2 = core.load slot:$context @origin:10
+    %3 = crexx.c.load %2 name="levelc" @origin:10
+    %4 = core.constant 3031 : crexx.c.value @origin:18
+    crexx.c.say %4 @origin:11
+    %5 = crexx.c.return.absent @origin:2
+    core.return %5 @origin:2
 

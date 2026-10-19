@@ -10,8 +10,10 @@ correction refreshes these outputs; its bounded proof is recorded in
 [current plan](../../PLAN.md).
 
 The Classic IR and RXAS views use the current borrowed-context ABI, with
-compiler IR optimisation and assembler optimisation both disabled. The literal,
-pipeline and error images were assembled, linked and executed; G views retain
+compiler IR optimisation and assembler optimisation both disabled. Earlier literal,
+pipeline and error execution is retained for the unchanged body behavior. The
+current C views add the approved header Name read, qualified by focused OPTIONS
+execution; this refresh does not replay the full walkthrough. G views retain
 their earlier qualification. The pipeline source uses
 `length('α漢🙂')`, which returns three codepoints from nine UTF-8 payload bytes.
 The image prints the unchanged expected `10`, `0`, `3` with autoload disabled

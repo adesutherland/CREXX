@@ -1,7 +1,7 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.NOP3, qualified local closeout.
-Next: the approved OPTIONS design; no OPTIONS implementation is included here.**
+**Complete C is open. Current: CLC-STEP05.OPTIONS3 closeout; the bounded
+COptions/current-v3 increment is locally qualified, publication not performed.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -17,34 +17,58 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Current action: NOP
+## Current action: OPTIONS
 
-Qualify [LC-I-04's existing childless path](doc/LEVELC-INSTRUCTION-REVIEW.md#nop-childless-statement-without-runtime-work)
-against LC-AC-05/64: NOP preserves surrounding execution order and rejects every
-same-clause operand. The AST retains the authored statement; an unobserved NOP
-needs no IR value/effect or runtime helper. Current C v3 and product APIs stay
-unchanged; NOP-F01 below repairs reproduced dead-NOP construction only.
-Native C remains read-only.
+Adrian approved the [COptions/source-header and zero-runtime-word contract](doc/architecture.md#approved-options-contract)
+for LC-I-05. Retain each clause as `COptions(value:expression?)`, including the
+leading static clause's ordinary once-only expression. C-owned header policy
+uses existing request-local L comment machinery; current B `applyOptions` has
+no runtime words/effects. Omit that processor call and unused bare/simple
+literal value construction while preserving every other operand effect/error,
+source origin, visit and budget. Current C v3/41 operations and B/L/target APIs
+stay unchanged. Native C is a read-only contract/control, INTERPRET remains last.
 
 | ID / status | Checkable closure |
 |---|---|
-| **NOP-AC01 — Qualified** | Childless Nop AST and authored spans pass in main, selected/nested IF/ELSE, group/while and private-routine contexts; case variants work and contextual NOP assignment/read remains a variable. Independent output preserves surrounding side effects/order. |
-| **NOP-AC02 — Qualified** | Variable, quoted, numeric, bracket and keyword tails, including inline and dead source, refuse at the first extra token with current logical located syntax diagnostics, no successful output and prior-output preservation. Exact Classic 21.1 remains a named later dependency. |
-| **NOP-AC03 — Qualified** | Reached and post-terminator NOP IR/RXAS against a valid blank-clause control adds no NOP operation/value/helper/call/default, unreachable return path or frame demand; surrounding instructions, owners and truthful source metadata remain. Empty DO-group wrappers provide valid IF-arm controls. No source records are removed to reduce counts. |
-| **NOP-AC04 — Qualified** | Existing narrow frontend/backend controls pass focused normal Debug in the relevant compiler/IR modes and VMs, with independent source/RXAS review and scoped proof. Qualified grammar/tools/helpers are reused; no new aggregate/orchestrator is required. |
+| **OPTIONS-AC01 — Qualified** | COptions retains raw operands/header words and byte spans. Only the complete first nonempty bare-word clause selects approved LEVELC/Classic/comment settings; quoted/operator/call/later forms are runtime-only. Conflicts, incompatible levels/numeric/slash and known unsupported static controls refuse at their authored words. Fresh definitions/rules, quoted markers and independent requests prove isolation. Header discovery cannot depend on successful default-policy lexing of later enabled-line-comment text. |
+| **OPTIONS-AC02 — Qualified** | Independent supported main/IF/group/while/private cases prove once-only operands, including the leading header, Name reads, unary/binary operations, calls and required-result/failure behavior. Bare/unknown/NUL/DBCS values have no processor effect. Exactly one String/Number leaf through Group/zero-operator single-operand Chain wrappers validates with normal visits/budgets but produces no unused value; malformed/dead literals still refuse. |
+| **OPTIONS-AC03 — Qualified** | IR-off/on caller/helper RXAS retains operand effects/errors/source/owners with no OPTIONS processor or OPTIONS-specific getter/conversion call, new op/export/API or family revision. Bare/simple-literal reached/dead cases add no unused constant/helper/default/frame/dead-return work. The B zero-word premise and future runtime-word/effect review/recompile gate remain explicit. |
+| **OPTIONS-AC04 — Qualified** | Independent AST/header/runtime/errors and prior-output controls pass focused normal Debug in relevant B/IR modes and VMs. Existing source.bytes/scan.work limits bound prepass and full parsing without a new public meter; all UTF-8/dead source is validated. Sole builder batches required grammar refresh, reuses unchanged native/B/L proofs and measures any materially changed scheduling; no source-slice ASan or inherited native pass. |
 
-**CLC-STEP05.NOP1 — Reviewed (AC01–04):** record independent expectations and
-inspect existing grammar/contextual policy/non-emission; depends on committed
-assignment. **CLC-STEP05.NOP2 — Implemented (AC01–04):** extend existing narrow
-fixtures/AST/error/shape controls; coordinate a product repair only for a
-minimal reproduced failure. **CLC-STEP05.NOP3 — Qualified (AC01–04):** sole builder
-qualifies focused normal Debug, then independent review and local commit.
-Reuse unchanged product/grammar evidence and existing scheduling; no source-slice
-ASan or expensive grammar regeneration follows from a local commit.
+**CLC-STEP05.OPTIONS1 — Reviewed (AC01–04):** record approved contract, exact
+source/AST/prepass ownership and independent expectations; root reviews plan
+and independent reviewer checks bounded prefix/comment handling before code.
+Depends on NOP commit below; root approved the recorded implementation scope.
+**CLC-STEP05.OPTIONS2 — Implemented/source-reviewed (AC01–04):** implement C-owned header/COptions and
+discard-only literal validation in the three owned frontend files; source/AST
+then lowering checkpoints precede builder's single grammar refresh. Separate
+worker owns tests/CMake/user docs; no B runtime/native/L API changes.
+**CLC-STEP05.OPTIONS3 — Qualified; local integration (AC01–04):** freeze product, focused Debug and actual
+RXAS review, reconcile shared dependencies and scoped proof before local commit.
 
-Whole LC-I-04 remains partial for SELECT placements (STEP05), shared-label
-contexts (STEP06), exact Classic 21.1 (STEP04) and clause/TRACE/condition
-observations (STEP07). This bounded review does not introduce those capabilities.
+Whole LC-I-05 retains full header controls/STRICTC/source maps, SELECT/shared
+labels, exact diagnostics and conditions/TRACE under their ledger owners.
+Adding a runtime word/effect to `applyOptions` requires C contract review and
+consumer qualification/recompilation before integration, not silent reuse of
+the no-op specialization.
+
+<a id="current-action-nop"></a>
+
+## Completed NOP increment
+
+Local commit `ca679a39d55660981e3805ccc94c2d973ad788f6` qualified the
+[childless/non-emitting path](doc/LEVELC-INSTRUCTION-REVIEW.md#nop-childless-statement-without-runtime-work)
+and repaired NOP-F01 with independent source/RXAS and [normal Debug proof](#current-nop-proof).
+Whole LC-I-04 retains SELECT/shared-label placements, exact 21.1 and
+clause/TRACE/condition dependencies; no full-instruction closure is claimed.
+
+| Stable ID / status | Qualified closure |
+|---|---|
+| **NOP-AC01 — Qualified** | Childless AST/spans, case/contextual variable behavior and ordered main/IF/group/while/private execution. |
+| **NOP-AC02 — Qualified** | Variable/quoted/numeric/bracket/keyword tails, inline/dead source and first-extra-token refusal with located errors/prior-output preservation. |
+| **NOP-AC03 — Qualified** | Valid reached/dead blank-clause pairs add no NOP operation/helper/default/dead-return/frame work; surrounding owners/source remain truthful. |
+| **NOP-AC04 — Qualified** | Existing narrow frontend/backend selectors, paired B/IR/VM Debug and independent source/RXAS review, with unchanged grammar/tools/runtime reused. |
+| **CLC-STEP05.NOP1–3 — Complete** | Contract review, focused repair/fixtures and local qualification completed before OPTIONS1. |
 
 <a id="current-action-assignment"></a>
 
@@ -131,7 +155,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current NOP** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Bounded SAY/DROP/assignment reviews retain shared dependencies; NOP is current. |
+| **CLC-STEP05 — Partial; current OPTIONS** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; approved OPTIONS is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -179,9 +203,50 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current NOP proof
+## Current OPTIONS proof
 
-The reviewed patch on `b42cf6fc7da7e487a45a646aa4e0ea7bfda74857` passes focused
+Baseline `ca679a39d55660981e3805ccc94c2d973ad788f6` plus the frozen three-file
+OPTIONS patch passes the focused normal Debug packet below. Only C grammar
+and affected B modules/linked hosts/fixtures were refreshed through existing
+recipes; final preparation is warning-free. Qualified native tools, shared
+B runtime, generic L comment/budget and core-product proof are reused on
+unchanged inputs. No native/core refresh, ASan, full aggregate, installed or
+hosted qualification is claimed.
+
+| Command / inspection | Observed result and scope |
+|---|---|
+| Existing C grammar `generate.cmake` recipe, `dfa.states=16384`, then `rxas` | One required generation/assembly: 643.937s, 29,709 NFA / 5,609 DFA / 1,780 LR states, 7,555,017 RXAS bytes, no diagnostics. This is cold construction cost, not a speed claim; L-CONSTRUCT-01 retains generic ownership. |
+| Existing affected B `rxc`/`rxas`/`rxlink` recipes | Both modes pass 54 commands in 24.7256s with zero warnings; the final pair-construction-only fixture refresh uses six commands. `llcomments`/`llsource` remain in the existing `rxfnsl` closure. |
+| `frontend-tests-linked.rxbin -a options <imports> <examples>` | 153 checks/0 in 19.7506s, opt/rxbvm: raw COptions AST/spans; static versus dynamic complete-clause admission; real retained Name/operator IR; request-local comments, shielding and Unicode/CRLF; bare IF ownership; malformed/dead/UTF8 and early source-limit refusal. |
+| `backend-tests-linked.rxbin -a <runtime> <inspection-prefix> options` | 55 checks/0 each: opt/rxbvm 38.9912s, noopt/rxtvm 43.0447s. Five identical-header/byte-width blank pairs in both IR modes preserve IR operations/values/blocks/slots and executable/frame shape; reached/postEXIT/privateRETURN bare/simple literals add no work. Name/unary/binary/call/required-result operations remain. |
+| `check-backend.py --case options-c --case options-error-c --case options-result-error-c --ir on/off` in those paired B/VM cells | Four cells, three cases/12 commands each, 48 commands in 46.7497s total. Once/reached/private/inline-arm marker order passes; 42.3 and 45.1 preserve only the expected before-prefix. Assembler `-n` isolates compiler output. |
+| Focused CLI prior-output controls | Three commands pass in 1.7505s: conflicting static options once and a dead malformed literal in both IR modes preserve the sentinel destination and leave no stage artifact. |
+| Independent actual RXAS review | Both B-mode pair captures agree. Owning fatal handlers/source/child cleanup and required-result checks remain; no continuation reaches later SAY after failure. No OPTIONS processor or processor conversion is added. Existing private-call config inheritance and EXIT fallback remain admitted costs, not OPTIONS work. |
+
+Component timings are isolated normal Debug observations, not a new full
+aggregate or formal performance claim. Both selectors run in existing maintained
+defaults. Generated registration confirms 35 cases/260 commands and the retained
+1800s/serial/backend-lock properties in all four lanes without replaying the
+aggregate. Fourteen existing-consumer commands refresh 23 maintained C views
+(4 AST, 11 IR, 8 RXAS) in 25.875s; C count tables/owning text are reconciled.
+These are view-generation/consumer checks, not new walkthrough assembly/link/VM
+runs. The new header read is covered by the 48 runtime commands; unchanged body
+and G proof is reused. Source-only sanitizer scheduling follows AGENTS.md.
+Product inputs and grammar match their frozen qualification identities. Whole
+instruction/shared dependencies remain open.
+
+**OPTIONS-F01 — repaired (AC01/02; OPTIONS2):** actual IF owners now gate a
+following ELSE after bare OPTIONS. Inline/separated true/false and nested arms
+pass while standalone/stale-IF/completed-ELSE operands remain Names. The private
+header procedure uses synchronous diagnostic references without an unsupported
+factory receiver or escaping links; two tiny compile-only controls isolated that
+source-authoring boundary. No native seed defect or new public API is claimed.
+
+<a id="current-nop-proof"></a>
+
+## Completed NOP proof
+
+NOP commit `ca679a39d55660981e3805ccc94c2d973ad788f6` passes focused
 normal Debug with independent source/actual RXAS review. Only affected B
 frontend/dependent modules, linked hosts and fixtures were refreshed directly
 through the existing `rxc`/`rxas`/`rxlink` recipes. Qualified native tools,

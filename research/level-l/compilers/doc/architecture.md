@@ -45,7 +45,7 @@ and feature work are outside this delivery.
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/runtime/llctarget.crexx` | One current B target: nine borrowed-context adapters reuse shared B bodies; no per-operation default config/pool or copied activation. Literal/pool/packet/result helpers remain. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
-| Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/26; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
+| Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
 
 Some old BIF/reference paragraphs still describe DATE/TIME refresh and streams
@@ -823,37 +823,47 @@ source RHS call can mutate its caller through EXPOSE. Source EXPOSE/shared
 labels, exact Classic diagnostics, resumable conditions and full TRACE remain
 the existing STEP04/06/07 dependencies; ASSIGN-AC01–04 track the bounded review.
 
-### Proposed next instruction: OPTIONS
+<a id="proposed-next-instruction-options"></a>
 
-**Proposed; Adrian's approval is pending for the AST change and C-owned no-op
-specialization. No OPTIONS implementation is authorized by this section.**
+### Approved OPTIONS contract
+
+**Adrian approved the COptions AST and current-v3 no-op specialization.**
 Reuse the [approved source/runtime policy](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
 under LC-AC-66/LC-STEP-67B. The current shared
 [`RexxClassicConfig.applyOptions(words=.RexxValue)->.void`](../../../../lib/rxfnsc/RexxClassicConfig.crexx)
 recognizes zero runtime words and returns without scanning, conversion or state
-change. Recommend specializing that present contract in C rather than emitting
-a call whose body has no work.
+change. C specializes that present contract without emitting a call whose body
+has no work.
 
 1. **Source AST and ownership.** Replace the bounded `Options(level:text)`
    node with `COptions(value:expression?)` for every OPTIONS clause, including
    the leading header. Its original expression tree, raw Name spellings and
    authored byte spans retain all bare header words; no new public header
-   record is needed. A private per-request C header descriptor selects source
-   policy before full lexing. Bound the prepass using the existing `source.bytes`
-   and `scan.work` policy; preserve malformed
-   UTF-8 and dead-source refusal before emission. Only a complete first nonempty
-   clause consisting of OPTIONS and bare words is a static header; quoted values, operators or
-   call punctuation make it runtime-only. Never apply settings from a prefix
+   record is needed. A private C prepass selects source policy before full
+   lexing, bounded by the existing `source.bytes` and `scan.work` policy. It
+   uses default block-comment preparation and generated lexing of a first-clause
+   candidate framed by masked CR/LF/semicolon bytes. Failed candidate lexing,
+   quoted values, operators or call punctuation make it runtime-only; only a
+   successfully lexed complete OPTIONS/bare-word clause selects settings.
+   Header-own-line hash/dash markers are not stripped during discovery and
+   cannot turn a punctuation expression into a static header. Never apply
+   settings from a prefix
    such as `options levelc()` or from a later/nested clause. The leading clause
    still evaluates its expression once at its source position.
+   UTF-8, resource and contract failures propagate; only an unclosed default
+   comment strictly after a proven complete clause may defer discovery's error.
+   The selected-policy full parse owns all source validity, including dead
+   source; partial/recovered preparation is never publishable output.
 2. **Existing file settings.** This C-only compiler accepts `LEVELC` and
    `NUMERIC_CLASSIC`; other level selectors and `NUMERIC_COMMON` refuse with
    located profile diagnostics. Nested block comments remain the default.
    `COMMENTS_HASH`/`COMMENTS_NOHASH` and `COMMENTS_DASH`/`COMMENTS_NODASH`
    explicitly enable/disable their line forms; `COMMENTS_NOSLASH` is accepted,
    `COMMENTS_SLASH` refused, and opposite switches for one form conflict.
-   Repeated identical switches are harmless. Use existing request-local
-   `llcomments.rules` and `lllanguage.definition.usecomments`, preserving quote
+   Repeated identical switches are harmless. Generated `language()` constructs
+   fresh definition/comment-rule owners per call with no globals. Replace only
+   that request's rules through existing `llcomments.rules` and
+   `lllanguage.definition.usecomments`, preserving quote
    shielding, original bytes/spans and request isolation. No native pre-scan,
    second comment algorithm, Unicode-profile switch or B/G dispatch is added.
    Unknown bare words do not change file settings; their ordinary expression
@@ -887,15 +897,6 @@ a call whose body has no work.
    full conditions/TRACE retain their later owners. Adding any recognized word
    or other effect to `applyOptions` invalidates this specialization and requires
    C contract review, consumer regressions and recompilation before integration.
-
-The conservative alternative is C family v4 with one void
-`crexx.c.options(context:crexx.c.context,value:crexx.c.value)` operation, no
-attributes, effects `context / condition / returns`; select the existing
-configuration method directly through its checked receiver ABI, with no target
-export or B API. It preserves an explicit processor boundary but adds unused
-value/call work for the present zero-word contract. The recommended v3 path
-requires explicit approval of the specialization; it does not silently erase
-runtime behavior promised by a future processor contract.
 
 ## Optimisation ownership
 

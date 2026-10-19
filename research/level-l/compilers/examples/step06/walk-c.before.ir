@@ -3,27 +3,29 @@ function $MAIN -> crexx.c.result
   entry.1:
     %1 = core.argument argument:1 @origin:2
     core.store %1 slot:$context @origin:2
-    %2 = core.constant 3031 : crexx.c.value @origin:11
-    crexx.c.say %2 @origin:4
-    %3 = core.constant 31 : crexx.c.value @origin:19
-    %4 = core.load slot:$context @origin:12
-    %5 = crexx.c.truth %3 %4 @origin:12
-    %6 = core.constant true : core.boolean @origin:20
-    core.branch %6 -> if.yes.2 -> if.no.3 @origin:12
+    %2 = core.load slot:$context @origin:10
+    %3 = crexx.c.load %2 name="levelc" @origin:10
+    %4 = core.constant 3031 : crexx.c.value @origin:18
+    crexx.c.say %4 @origin:11
+    %5 = core.constant 31 : crexx.c.value @origin:26
+    %6 = core.load slot:$context @origin:19
+    %7 = crexx.c.truth %5 %6 @origin:19
+    %8 = core.constant true : core.boolean @origin:27
+    core.branch %8 -> if.yes.2 -> if.no.3 @origin:19
   if.yes.2:
-    %7 = core.constant 6F6B : crexx.c.value @origin:28
-    crexx.c.say %7 @origin:21
-    core.jump -> if.join.4 @origin:12
+    %9 = core.constant 6F6B : crexx.c.value @origin:35
+    crexx.c.say %9 @origin:28
+    core.jump -> if.join.4 @origin:19
   if.no.3:
-    %8 = core.constant 31 : crexx.c.value @origin:36
-    core.store %8 slot:$tmp.1 @origin:35
-    %9 = core.constant 30 : crexx.c.value @origin:37
-    %10 = core.load slot:$tmp.1 @origin:35
-    %11 = core.load slot:$context @origin:35
-    %12 = crexx.c.div %10 %9 %11 @origin:35
-    crexx.c.say %12 @origin:29
-    core.jump -> if.join.4 @origin:12
+    %10 = core.constant 31 : crexx.c.value @origin:43
+    core.store %10 slot:$tmp.1 @origin:42
+    %11 = core.constant 30 : crexx.c.value @origin:44
+    %12 = core.load slot:$tmp.1 @origin:42
+    %13 = core.load slot:$context @origin:42
+    %14 = crexx.c.div %12 %11 %13 @origin:42
+    crexx.c.say %14 @origin:36
+    core.jump -> if.join.4 @origin:19
   if.join.4:
-    %13 = crexx.c.return.absent @origin:2
-    core.return %13 @origin:2
+    %15 = crexx.c.return.absent @origin:2
+    core.return %15 @origin:2
 

@@ -56,7 +56,8 @@ alone would miss that earlier native validation; no native defect is claimed.
 
 The full literal-only baseline still constructs root activation/pool/configuration
 owners and a borrowed bundle, a return packet, same-frame numeric setup and a
-fatal-error handler. The pool and argument owners are unused by that example. These costs belong to the
+fatal-error handler. Constant SAY itself does not use the pool or argument
+owners; an authored `options levelc` now retains its separate Name read. These costs belong to the
 existing context/pool specialisation and slot/register cleanup owners in
 [poc-coverage](poc-coverage.md#code-quality-and-remaining-work), not to the SAY
 output contract. Record their removal criteria: prove no pool, argument or
@@ -78,8 +79,8 @@ both compiler IR modes and VMs with assembler optimisation disabled, all 256
 ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
 whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
-closure are separate states. The bounded DROP and assignment reviews below
-follow that SAY disposition; LC-I-04 NOP is the current individual review.
+closure are separate states. The bounded DROP, assignment and NOP reviews below
+follow that SAY disposition; LC-I-05 OPTIONS is the current individual review.
 
 ## DROP: ordered names and borrowed pool effects
 
@@ -162,3 +163,32 @@ independent actual RXAS comparison. The repaired dead-NOP construction adds no
 unreachable return helper or frame slot, while following dead semantic errors
 still refuse. Existing frontend/backend defaults retain the regression; no new
 orchestrator, grammar, schema or runtime change was needed.
+
+## OPTIONS: retained expressions and current empty processor
+
+[OPTIONS-AC01–04](../PLAN.md#current-action-options) track the
+[approved contract](architecture.md#approved-options-contract). Each clause is
+`COptions(value:expression?)`, including the first static header. Only a complete
+first nonempty bare-word clause selects approved C/Classic/comment settings;
+quoted/operator/call/later forms retain ordinary runtime expression semantics.
+Request-local L comment preparation must recognize that header without requiring
+successful default-policy lexing of later text that enabled line comments hide.
+Raw operands and original Unicode/CRLF byte spans remain observable in the AST.
+
+The existing B `RexxClassicConfig.applyOptions` accepts zero runtime words and
+returns without scanning or conversion. The approved current-v3 specialization
+omits that call and validates bare/simple String/Number operands without unused
+value construction. Name reads, unary/binary operations, calls, required results,
+errors, normal visits and budgets remain; dead malformed literals still refuse.
+Reached/post-terminator blank controls must show no extra value, helper, frame
+or dead return while retaining the same header and truthful source metadata.
+
+Focused existing frontend/backend selectors and independent runtime cases pass
+the [bounded normal Debug qualification](../PLAN.md#current-options-proof),
+with independent actual reached/dead/operand/fatal RXAS review. Existing B
+no-word and generic L comment/budget proof are reused on unchanged inputs. No runtime word, API,
+family revision or native implementation is added. A future processor word or
+effect requires C review, regression qualification and consumer recompilation.
+Whole LC-I-05 retains full header controls/STRICTC/source maps, shared-label,
+exact diagnostic and conditions/TRACE dependencies; this increment does not
+close those outcomes.

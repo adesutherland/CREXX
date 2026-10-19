@@ -115,7 +115,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   leave.statement: rule = leaveword then tree Leave()
   iterate.statement: rule = iterateword then tree Iterate()
   nop.statement: rule = nopword then tree Nop()
-  options.statement: rule = optionsword identifier as level then tree Options(level = text(level))
+  options.statement: rule = optionsword (expression as value)? then tree COptions(value = value?)
   block: rule = do.group | do.while
   do.group: rule = doword separator statements as body endword then tree Block(body = body)
   do.while: rule = doword whileword expression as condition separator statements as body endword

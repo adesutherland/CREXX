@@ -17,8 +17,10 @@ else say 'no'
 | C | [source](branch-c.crexx) | [IR](branch-c.before.ir) | [IR](branch-c.after.ir) | [RXAS](branch-c.before.rxas) | [RXAS](branch-c.after.rxas) |
 | G | [source](branch-g.crexx) | [IR](branch-g.before.ir) | [IR](branch-g.after.ir) | [RXAS](branch-g.before.rxas) | [RXAS](branch-g.after.rxas) |
 
-All four outputs assembled with `rxas -n`, linked with source metadata and
-executed successfully, printing `yes`. G links `library.rxbin`; C also links
+Earlier execution of the source pairs with `rxas -n` and linked metadata
+established `yes`. The current C view refresh adds the required header Name
+read; focused OPTIONS runtime checks qualify that new work without replaying
+the whole walkthrough. G links `library.rxbin`; C also links
 `llctarget.rxbin` and `rxfnsc.rxbin`. The C runtime's normal class library remains
 available. The commands differ only by the compiler's `-n` switch:
 
@@ -59,11 +61,11 @@ discard-safe work disappear. No contextual numeric evaluator is assumed.
 
 | Complete module | G before | G after | C before | C after |
 |---|---:|---:|---:|---:|
-| Executable instructions | 17 | 8 | 164 | 145 |
-| Calls | 1 | 1 | 18 | 16 |
-| RXAS bytes | 892 | 559 | 7,079 | 6,492 |
-| Body registers | 7 | 3 | 26 | 23 |
-| Source records | 11 | 7 | 15 | 11 |
+| Executable instructions | 17 | 8 | 183 | 164 |
+| Calls | 1 | 1 | 20 | 18 |
+| RXAS bytes | 892 | 559 | 7,878 | 7,289 |
+| Body registers | 7 | 3 | 28 | 25 |
+| Source records | 11 | 7 | 16 | 12 |
 
 [Counts](shapes.json) exclude labels, metadata and external declarations;
 wrappers and cold handlers are included. These are code-shape observations,

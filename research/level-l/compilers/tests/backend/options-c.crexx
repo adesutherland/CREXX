@@ -1,0 +1,34 @@
+options levelc comments_hash comments_dash
+# quote/operator junk is ignored: ' + // /*
+-- quote/operator junk is ignored: " ( + /*
+say 'before'
+levelc = 'changed'
+options levelc
+options
+options 'etmode' || '00'x || 'unknown exmode'
+options marker('main')
+if 1 then options marker('if') else options marker('wrong')
+if 0 then options marker('wrong')
+if 1 then options else options
+if 1 then options else options marker('wrong')
+if 0 then options else options marker('bare else')
+if 1 then if 0 then options else options else options marker('wrong outer')
+do
+  options marker('group')
+end
+once = 1
+do while once
+  options marker('while')
+  once = 0
+end
+options worker()
+say '# -- quoted'
+say 'after'
+exit 0
+marker: procedure
+  arg label
+  say label
+  return 'unknown'
+worker: procedure
+  options marker('private')
+  return 'ignored'

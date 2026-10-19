@@ -47,7 +47,8 @@ has count zero, rather than a fake value.
 | Say / Return / Exit | `value: node?` | Optional authored value; each instruction has its own semantics. |
 | Call / Invoke | `name: text, arguments: Arguments` | Expression call / CALL instruction. |
 | Arguments / Argument | `items: Argument+` / `value: node?` | Positional presence. A single empty Argument represents a zero-argument call; two empty entries are two omitted positions. |
-| Options | `level: text` | If present, must select the requested language and start the source. |
+| COptions | `value: node?` | Classic retains every optional expression, including the first bare-word header. Only that complete initial clause selects static settings; all operands keep ordinary evaluation. |
+| Options (G) | `level: text` | If present, must select G and start the source. |
 
 Each expression precedence level produces a Chain, including transparent
 single-operand levels. These preserve the selected grammar structure; the

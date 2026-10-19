@@ -14,8 +14,11 @@ main: procedure = .int expose checks failures artifacts outputfile
   outputfile = ''; if argv[0] >= 2 then outputfile = argv[2]
   artifacts = argv[1]; checks = 0; failures = 0
   if argv[0] = 3 then do
-    if argv[3] <> 'nop' then return 2
-    call nopchecks(outputfile)
+    select argv[3]
+      when 'nop' then call nopchecks(outputfile)
+      when 'options' then call optionschecks(outputfile)
+      otherwise return 2
+    end
   end
   else do
     call requests()
@@ -23,6 +26,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call provenance()
     call cleanup()
     call nopchecks()
+    call optionschecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -63,6 +67,55 @@ nopchecks: procedure = .void expose artifacts
   end
   return
 
+/** Only the discarded OPTIONS clause changes; the header and layout match. */
+optionschecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; target = .string; written = .int; graph = .llir..module
+  output = .llir..output; blank = .llir..output
+  header = 'options levelc; '
+  do sample = 1 to 5
+    select sample
+      when 1 then do
+        target = "options; options 'λ'; options 42; options ((42))"
+        source = "options levelc; " || target || "; say 'after'"
+      end
+      when 2 then do; target = "options; options ('λ'); options 42"; source = 'options levelc; exit 0; ' || target; end
+      when 3 then do; target = 'options'; source = 'options levelc; do; exit 0; do; ' || target || '; end; end'; end
+      when 4 then do; target = "options ((42))"; source = 'options levelc; exit 0; p: procedure; return 1; do; ' || target || '; end'; end
+      otherwise do; target = "options 'literal'"; source = 'options levelc; if 1 then do; ' || target || '; end; else do; ' || target || '; end'; end
+    end
+    control = header || changestr(target,substr(source,length(header) + 1),copies(' ',<blen>(target as .binary)))
+    do optimise = 0 to 1
+      withoptions = .lltestcompiler..request('c',source as .binary,artifacts,'options-shape.crexx',1000000,512,67108864,65536,optimise)
+      without = .lltestcompiler..request('c',control as .binary,artifacts,'options-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(withoptions.status() = 0 & without.status() = 0,'valid OPTIONS/control pair ' || sample || '/' || optimise || ': ' || withoptions.error() || ' / ' || without.error())
+      if withoptions.status() <> 0 | without.status() <> 0 then iterate
+      graph = withoptions.graph(); other = without.graph()
+      call check(irshape(graph) = irshape(other),'OPTIONS adds no source IR value/helper/block/slot ' || sample || '/' || optimise)
+      graph = withoptions.emissiongraph(); other = without.emissiongraph()
+      call check(irshape(graph) = irshape(other),'OPTIONS adds no selected IR value/helper/block/slot ' || sample || '/' || optimise)
+      output = withoptions.output(); blank = without.output()
+      call check(execshape(output.text(),'options-shape.crexx') = execshape(blank.text(),'options-shape.crexx'),'OPTIONS adds no instruction/frame/default/dead return ' || sample || '/' || optimise)
+      call check(pos('applyoptions',output.text()) = 0,'no empty processor/config-conversion call ' || sample || '/' || optimise)
+      if inspect <> '' & optimise = 0 & (sample = 1 | sample = 2 | sample = 4) then do
+        written = writebinary(inspect || '-' || sample || '-options.rxas',output.text() as .binary)
+        written = writebinary(inspect || '-' || sample || '-blank.rxas',blank.text() as .binary)
+      end
+    end
+  end
+  source = 'options levelc; options raw; options +1; options -2; options 1+2; options marker(); exit 0; marker: procedure; return 1'
+  request = .lltestcompiler..request('c',source as .binary,artifacts,'options-effects.crexx',1000000,512,67108864,65536,0)
+  call check(request.status() = 0,'effectful discarded operands accepted: ' || request.error())
+  if request.status() <> 0 then return
+  graph = request.graph(); text = graph.dump()
+  call check(occurrences(text,'crexx.c.load ') = 2,'header and ordinary Name reads retained')
+  call check(pos('crexx.c.positive',text) > 0 & pos('crexx.c.negative',text) > 0 & pos('crexx.c.add',text) > 0,'unary and binary work retained')
+  call check(pos('crexx.c.call',text) > 0 & pos('crexx.c.requirevalue',text) > 0,'call and required-result work retained')
+  output = request.output()
+  call check(pos('applyoptions',output.text()) = 0,'effectful operand still has no OPTIONS processor call')
+  if inspect <> '' then written = writebinary(inspect || '-effects.rxas',output.text() as .binary)
+  return
+
 irshape: procedure = .string
   arg graph = .llir..module
   value = .llir..valuehandle
@@ -76,14 +129,14 @@ irshape: procedure = .string
   return text
 
 execshape: procedure = .string
-  arg source = .string
+  arg source = .string, logical = 'nop-shape.crexx'
   text = ''; start = 1
   do while start <= length(source)
     finish = pos('0A'x as .string,source,start)
     if finish = 0 then finish = length(source) + 1
     line = strip(substr(source,start,finish - start)); start = finish + 1
     if line = '' | left(line,1) = '.' then iterate
-    if pos('nop-shape.crexx:',line) > 0 then do
+    if pos(logical || ':',line) > 0 then do
       quote = pos('"',line)
       if quote > 0 then line = left(line,quote - 1) || '"<diagnostic location>"'
     end

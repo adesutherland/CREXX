@@ -7,6 +7,8 @@ import llast
 import lllanguage
 import lllimits
 import llcgrammar
+import llcomments
+import llsource
 
 /** One parse request owns source, diagnostics and projected AST. Token layout
  * inserts only zero-width concatenation/separation tokens; original spans are
@@ -27,6 +29,10 @@ parsed: class
     language = llcgrammar..language()
     policy = .lllimits..policy()
     ok = policy.set('source.bytes',limit)
+    comments = .llcomments..rules
+    comments = headerpolicy(language,source,policy,reference _status,reference _error,reference _offset)
+    if _status <> 0 then return
+    call language.usecomments(comments)
     request = .lllanguage..request(language,source,policy)
     _status = request.lex(0)
     if _status <> 0 then do
@@ -46,6 +52,7 @@ parsed: class
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; pendingif = 0; after = ''
     droplist = 0; dropelse = 0; arm = 0
+    optionsclause = 0; optionselse = 0
     owners = .string[]; ownercount = 0
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
@@ -67,7 +74,9 @@ parsed: class
         end
       end
       if kind = sep then do; namespaceclause = 0; exports = 0; end
-      if kind = sep & depth = 0 then do; droplist = 0; dropelse = 0; end
+      if kind = sep & depth = 0 then do
+        droplist = 0; dropelse = 0; optionsclause = 0; optionselse = 0
+      end
       if kind = id then do
         if next = colon then kind = language.tokenid('labelname')
         else if depth = 0 then do
@@ -78,7 +87,7 @@ parsed: class
           else if condition > 0 & spelling = 'THEN' & term then do
             word = 'THEN'; condition = condition - 1
           end
-          else if spelling = 'ELSE' & next <> equals & (droplist = 0 | dropelse) & (clause | (pendingif > 0 & (term | previous = sep))) then word = 'ELSE'
+          else if spelling = 'ELSE' & next <> equals & (droplist = 0 | dropelse) & (optionsclause = 0 | optionselse) & (clause | (pendingif > 0 & (term | previous = sep))) then word = 'ELSE'
           else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE SELECT WHEN OTHERWISE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
@@ -117,10 +126,18 @@ parsed: class
         droplist = 1; dropelse = 0
         if arm & ownercount > 0 then dropelse = owners[ownercount] = 'if'
       end
+      if word = 'OPTIONS' then do
+        /* Bare OPTIONS completes an arm, but an ordinary ELSE operand must
+         * not borrow an IF that already finished in an earlier clause. */
+        optionsclause = 1; optionselse = 0
+        if arm & ownercount > 0 then optionselse = owners[ownercount] = 'if'
+      end
       if kind <> sep then arm = word = 'THEN' | word = 'ELSE'
-      if word = 'THEN' | word = 'ELSE' then do; droplist = 0; dropelse = 0; end
+      if word = 'THEN' | word = 'ELSE' then do
+        droplist = 0; dropelse = 0; optionsclause = 0; optionselse = 0
+      end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | kind = colon
-      if kind <> sep | condition = 0 then term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
+      if kind <> sep | condition = 0 then term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'OPTIONS' | word = 'LEAVE' | word = 'ITERATE'
       if kind = colon & next <> sep then do
         ok = classified.synthetic(sep,last); clause = 1
       end
@@ -191,6 +208,94 @@ parsed: class
     return _offset
   ast: method = .llast..tree
     return _tree
+
+/** Discover only the complete first clause. The shared coordinator owns
+ * quotes/comments; raw separators merely frame a candidate for exact lexing.
+ * A failed candidate never contributes partial static settings. */
+headerpolicy: procedure = .llcomments..rules
+  arg language = .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int
+  status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref
+  byte = .int; i = .int; setting = .int
+  result = language.comments()
+  prepared = .llsource..prepared(source,language.encoding(),'','',policy.limit('source.bytes'),0,result,policy.limit('scan.work'))
+  preparedstatus = prepared.status()
+  if preparedstatus <> 0 then do
+    if preparedstatus <> 1 | left(prepared.error(),11) <> 'LL_COMMENT:' then do
+      status = preparedstatus; error = prepared.error(); offset = prepared.offset(); return result
+    end
+  end
+  masked = prepared.bytes(); extent = <blen>(masked); first = 0
+  do while first < extent
+    byte = <at..u8>(first) masked
+    if byte <> 9 & byte <> 32 & byte <> 10 & byte <> 13 & byte <> 59 then leave
+    first = first + 1
+  end
+  finish = first
+  do while finish < extent
+    byte = <at..u8>(finish) masked
+    if byte = 10 | byte = 13 | byte = 59 then leave
+    finish = finish + 1
+  end
+  if preparedstatus <> 0 & prepared.offset() <= finish then do
+    status = preparedstatus; error = prepared.error(); offset = prepared.offset(); return result
+  end
+  if first = extent then return result
+  candidate = .lllanguage..request(language,binsubstr(source,1,finish),policy)
+  candidatestatus = candidate.lex(0)
+  if candidatestatus <> 0 then do
+    /* A raw delimiter inside a quoted runtime expression can truncate this
+     * candidate. The final full-source request owns lexical validity. */
+    if candidatestatus <> 1 then do
+      status = candidatestatus; error = candidate.error(); offset = candidate.offset()
+    end
+    return result
+  end
+  tokens = candidate.tokens(); index = 0
+  do while index < tokens.size()
+    if tokens.symbol(index) <> language.tokenid('separator') then leave
+    index = index + 1
+  end
+  identifier = language.tokenid('identifier')
+  if index >= tokens.size() then return result
+  if tokens.symbol(index) <> identifier then return result
+  spelling = binsubstr(source,tokens.start(index) + 1,tokens.finish(index + 1) - tokens.start(index)) as .string
+  if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') <> 0 then return result
+  if upper(spelling) <> 'OPTIONS' then return result
+  do i = index + 1 to tokens.size() - 1
+    if tokens.symbol(i) <> identifier then return result
+  end
+  /* Every operand is now a bare word. Validate all settings before replacing
+   * this request's comment rules; the leading expression still executes. */
+  hash = 0; dash = 0
+  do i = index + 1 to tokens.size() - 1
+    raw = binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)) as .string
+    spelling = ''
+    if verify(raw,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 then spelling = upper(raw)
+    message = ''
+    if wordpos(spelling,'LEVELA LEVELB LEVELD LEVELG LEVELL NUMERIC_COMMON COMMENTS_SLASH') > 0 then message = 'incompatible source option '
+    if wordpos(spelling,'STRICTC SRCMAP') > 0 then message = 'unsupported static source option '
+    if spelling = 'COMMENTS_HASH' | spelling = 'COMMENTS_NOHASH' then do
+      setting = 1; if spelling = 'COMMENTS_NOHASH' then setting = -1
+      if hash <> 0 & hash <> setting then message = 'incompatible source option '
+      hash = setting
+    end
+    if spelling = 'COMMENTS_DASH' | spelling = 'COMMENTS_NODASH' then do
+      setting = 1; if spelling = 'COMMENTS_NODASH' then setting = -1
+      if dash <> 0 & dash <> setting then message = 'incompatible source option '
+      dash = setting
+    end
+    if message <> '' then do
+      status = 1; offset = tokens.start(i); error = 'LL_COMPILER_PROFILE: ' || message || raw; return result
+    end
+  end
+  result = .llcomments..rules()
+  ok = result.add('nested','nested','/*','*/')
+  if hash = 1 then ok = result.add('hash','line','#')
+  if dash = 1 then ok = result.add('dash','line','--')
+  if result.error() <> '' then do
+    status = 3; offset = 0; error = result.error()
+  end
+  return result
 
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string

@@ -23,6 +23,12 @@ value and formats it for SAY.
 | C | [source](walk-c.crexx) | [tree](walk-c.ast) | [before](walk-c.before.ir) | [after](walk-c.after.ir) | [before](walk-c.before.rxas) | [after](walk-c.after.rxas) |
 | G | [source](walk-g.crexx) | [tree](walk-g.ast) | [before](walk-g.before.ir) | [after](walk-g.after.ir) | [before](walk-g.before.rxas) | [after](walk-g.after.rxas) |
 
+The C AST retains `COptions` and its ordinary `levelc` Name expression; the
+current C views include that header read. Focused OPTIONS execution qualifies
+its added behavior, while earlier walkthrough body/error results are reused.
+This refresh generates views and checks the consumer; it does not rerun the
+whole walkthrough.
+
 The AST listing is a parents-first view: `kind|start:finish|source text`, with
 zero-based byte spans and multiline source text left intact. Both contain
 `Number|19:21|01`, an `IfElse` and its two SAY arms. The condition and arms are
@@ -59,11 +65,11 @@ work; inspecting the caller alone does not measure work inside those helpers.
 
 | Complete emitted module | C before | C after | G before | G after |
 |---|---:|---:|---:|---:|
-| Executable instructions | 200 | 158 | 27 | 10 |
-| Calls | 22 | 18 | 1 | 1 |
-| Wrapper/body frame registers | 16 / 34 | 16 / 26 | 2 / 14 | 2 / 5 |
-| Source records | 20 | 13 | 16 | 9 |
-| RXAS bytes | 8,111 | 6,785 | 1,244 | 657 |
+| Executable instructions | 219 | 176 | 27 | 10 |
+| Calls | 24 | 20 | 1 | 1 |
+| Wrapper/body frame registers | 16 / 36 | 16 / 27 | 2 / 14 | 2 / 5 |
+| Source records | 21 | 14 | 16 | 9 |
+| RXAS bytes | 8,903 | 7,564 | 1,244 | 657 |
 
 [Counts](shapes.json) include entry wrappers and cold handlers, exclude labels,
 metadata and external declarations, and do not include external helper bodies.

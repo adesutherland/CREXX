@@ -39,11 +39,14 @@ compiler invocation or library initialiser is implied.
 Counts cover the complete emitted modules, including wrappers and cold handlers;
 helper/library bodies are outside these text counts. New output uses compiler IR
 optimisation on; the native design controls used `rxc -n` / `rxc-c -n`. All were
-assembled with `rxas -n` for semantic attribution. Counts do not establish speed.
+previously assembled with `rxas -n` for semantic attribution. The current C
+views include the ordinary header Name read; focused OPTIONS runtime checks
+qualify that new work, while unchanged body proof is reused. This view refresh
+does not repeat assembly/execution. Counts do not establish speed.
 
 | Module | Instructions | Calls (all call variants) | Frame registers | Source records | TRACE events |
 |---|---:|---:|---|---:|---:|
-| new-c | 675 | 72 | 16, 40, 47 | 41 | 0 |
+| new-c | 694 | 74 | 16, 42, 47 | 42 | 0 |
 | new-g | 47 | 3 | 2, 16, 8 | 18 | 0 |
 | native-b | 21 | 3 | 4, 3 | 7 | 11 |
 | native-g | 21 | 3 | 4, 3 | 7 | 11 |

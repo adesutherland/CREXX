@@ -1,8 +1,8 @@
 {
   "c-before": {
-    "instructions": 164,
-    "calls": 18,
-    "source_records": 15,
+    "instructions": 183,
+    "calls": 20,
+    "source_records": 16,
     "frames": [
       [
         "main",
@@ -10,15 +10,15 @@
       ],
       [
         "llf1",
-        "26"
+        "28"
       ]
     ],
-    "bytes": 7079
+    "bytes": 7878
   },
   "c-after": {
-    "instructions": 145,
-    "calls": 16,
-    "source_records": 11,
+    "instructions": 164,
+    "calls": 18,
+    "source_records": 12,
     "frames": [
       [
         "main",
@@ -26,10 +26,10 @@
       ],
       [
         "llf1",
-        "23"
+        "25"
       ]
     ],
-    "bytes": 6492
+    "bytes": 7289
   },
   "g-before": {
     "bytes": 892,

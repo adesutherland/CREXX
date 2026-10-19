@@ -28,7 +28,14 @@ twice: procedure
   arg value
   return value * 2
 
-Options|0:14|options levelc
+COptions|0:14|options levelc
+Chain|8:14|levelc
+Chain|8:14|levelc
+Chain|8:14|levelc
+Chain|8:14|levelc
+Chain|8:14|levelc
+Chain|8:14|levelc
+Name|8:14|levelc
 Assignment|15:28|total = 2 + 3
 Chain|23:28|2 + 3
 Chain|23:28|2 + 3

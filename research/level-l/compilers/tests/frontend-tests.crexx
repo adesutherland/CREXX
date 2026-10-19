@@ -16,6 +16,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'grammar' then call grammar()
     when 'mapping' then call mapping()
     when 'nop' then call noptests()
+    when 'options' then call optionstests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -147,6 +148,7 @@ literals: procedure = .void
 grammar: procedure = .void expose examples
   call treechecks()
   call noptests()
+  call optionstests()
   text = .string; source = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -167,6 +169,123 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** Header policy is request-local; every clause still has an operand AST. */
+optionstests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  yes = .llast..node; no = .llast..node
+  walk = .llast..walk; source = .string; ignored = .string; required = .string; sample = .int
+  graph = .llir..module; operation = .llir..opview; names = .string; literals = .string
+  source = 'options LeVeLc NUMERIC_CLASSIC unknown; options; options (42); options ''α'''
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'OPTIONS expression/header AST accepted: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk('parents first'); count = 0; names = ''; literals = ''
+    do while walk.next()
+      node = walk.node()
+      if node.kind() = 'COptions' then do
+        count = count + 1
+        if count = 1 then call check(node.start() = 0 & pos('options LeVeLc',node.sourcetext()) = 1,'header keeps original byte extent')
+        if count = 2 then call check(node.count('value') = 0,'bare OPTIONS has no invented operand')
+      end
+      if node.kind() = 'Name' then names = names || node.text('spelling') || '|'
+      if node.kind() = 'Number' | node.kind() = 'String' then literals = literals || node.text('spelling') || '|'
+    end
+    call check(count = 4,'every OPTIONS clause retained')
+    call check(names = 'LeVeLc|NUMERIC_CLASSIC|unknown|','raw header words remain ordinary Names')
+    call check(literals = '42|''α''|','group and Unicode literal spelling retained')
+  end
+  do sample = 1 to 4
+    source = 'if 1 then options else options'
+    if sample > 2 then source = 'if 0 then options else options'
+    if sample % 2 = 0 then source = changestr('options else',source,'options; else')
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'inline/separated bare OPTIONS arms parse ' || sample)
+    if parsed.status() = 0 then do
+      tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+      call check(node.kind() = 'IfElse','bare OPTIONS does not swallow contextual ELSE ' || sample)
+      if node.kind() = 'IfElse' then do
+        yes = node.child('yes'); no = node.child('no')
+        call check(yes.kind() = 'COptions' & no.kind() = 'COptions' & yes.count('value') = 0 & no.count('value') = 0,'two childless OPTIONS arms ' || sample)
+      end
+    end
+  end
+  ignored = good('c','options else','name="else"')
+  ignored = good('c','if 1 then nop; options else','name="else"')
+  ignored = good('c','if 1 then nop; if 0 then options else options else','name="else"')
+  parsed = .lltestparse..parsed('c','if 1 then if 0 then options else options else say ''outer''' as .binary)
+  call check(parsed.status() = 0,'nested bare OPTIONS retains outer ELSE')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    yes = node.child('yes'); no = node.child('no')
+    call check(node.kind() = 'IfElse' & yes.kind() = 'IfElse' & no.kind() = 'Say','nested OPTIONS arms preserve the actual IF owners')
+  end
+  /* Each enabled request is followed by a default request in this process. */
+  do sample = 1 to 15
+    select sample
+      when 1 then source = 'options levelc CoMmEnTs_HaSh; # '' unterminated + // /*' || ('0A'x as .string) || 'say ''# literal'''
+      when 2 then source = '#v=3; say #v'
+      when 3 then source = 'options levelc comments_dash; say 2 -- '' broken + /*' || ('0A'x as .string) || 'say ''-- literal'''
+      when 4 then source = 'say 2 -- 1'
+      when 5 then source = 'options ''comments_hash''; #v=3; say #v'
+      when 6 then source = 'say 1; options comments_hash; #v=3; say #v'
+      when 7 then source = 'options levelc comments_hash comments_hash comments_nohead unknown comments_noslash'
+      when 8 then source = 'options levelc comments_nohash comments_nodash; #v=3; say #v; say 2 -- 1'
+      when 9 then source = 'options numeric_common(); exit 0; numeric_common: procedure; return 1'
+      when 10 then source = 'options levelg(); exit 0; levelg: procedure; return 1'
+      when 11 then source = 'options ''strictc''; options strictc; options ''srcmap''; options srcmap'
+      when 12 then source = 'options levelc commentſ_hash; #v=3; say #v'
+      when 13 then source = '/* leading /* nested */ */; options levelc numeric_classic'
+      when 14 then source = 'options ''x;y''; #v=3; say #v'
+      otherwise source = 'options levelg || ''x''; #v=3; say #v'
+    end
+    required = 'core.return'
+    if wordpos(sample as .string,'2 5 6 8 12 14 15') > 0 then required = 'name="#v"'
+    if sample = 4 then required = 'crexx.c.negative'
+    if sample = 9 | sample = 10 then required = 'crexx.c.call'
+    if sample = 11 then required = 'name="srcmap"'
+    ignored = good('c',source,required)
+    if sample = 8 then call check(pos('crexx.c.negative',ignored) > 0,'explicit NODASH keeps arithmetic minus tokens')
+  end
+  /* A bare header word is evaluated before, and again after, its assignment. */
+  request = .lltestfrontend..request('c','options levelc; levelc=''changed''; options levelc' as .binary,artifacts)
+  call check(request.status() = 0,'headerword can be assigned/read in the same request')
+  if request.status() = 0 then do
+    graph = request.graph(); names = ''
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.load' | operation.name() = 'crexx.c.store' then names = names || operation.name() || ':' || (operation.attribute('name') as .string) || '|'
+    end
+    call check(names = 'crexx.c.load:levelc|crexx.c.store:levelc|crexx.c.load:levelc|','both OPTIONS Name reads surround the actual headerword assignment')
+  end
+  do sample = 1 to 9
+    word = word('levelb levelg levell numeric_common comments_slash strictc srcmap comments_nohash comments_nodash',sample)
+    source = 'options levelc ' || word
+    if sample = 8 then source = 'options comments_hash comments_nohash'
+    if sample = 9 then source = 'options comments_dash comments_nodash'
+    call bad('c',source as .binary,'LL_COMPILER_PROFILE:',word)
+  end
+  source = 'options levelc comments_hash' || ('0D0A'x as .string) || '# ''α + junk' || ('0D0A'x as .string) || 'options ''β'''
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode CRLF comment source parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk('parents first'); found = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'String' then iterate
+      call check(node.sourcetext() = "'β'" & node.start() = <blen>(source as .binary) - 4,'original UTF-8 byte span after CRLF/comment')
+      found = found + 1
+    end
+    call check(found = 1,'comment junk has no invented quoted AST')
+  end
+  call bad('c',"options 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',8)
+  call bad('c',"exit 0; options ('2'b)" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call bad('c','exit 0; options ((1d))' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','6F7074696F6E7320FF'x as .binary,'LL_UTF8:','malformed UTF-8',8)
+  call bad('c',('options levelc comments_hash' as .binary) || ('0A23FF'x as .binary),'LL_UTF8:','malformed UTF-8')
+  parsed = .lltestparse..parsed('c','6F7074696F6E7320FF'x as .binary,4)
+  call check(pos('LL_COMPILER_LIMIT: source byte budget',parsed.error()) = 1,'source limit rejects before header/UTF-8 scanning')
   return
 
 noptests: procedure = .void

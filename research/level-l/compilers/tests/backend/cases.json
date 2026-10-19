@@ -257,5 +257,29 @@
     "output": "1\n1\n0\n0\n0\n1\n1\n0\n",
     "error": "",
     "args": []
+  },
+  {
+    "name": "options",
+    "level": "c",
+    "source": "options-c.crexx",
+    "output": "before\nMAIN\nIF\nBARE ELSE\nGROUP\nWHILE\nPRIVATE\n# -- quoted\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "options-error",
+    "level": "c",
+    "source": "options-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-42.3",
+    "args": []
+  },
+  {
+    "name": "options-result-error",
+    "level": "c",
+    "source": "options-result-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-45.1",
+    "args": []
   }
 ]

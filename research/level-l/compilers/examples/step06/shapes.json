@@ -1,23 +1,23 @@
 {
   "walk-c-before": {
-    "instructions": 200,
-    "calls": 22,
-    "source_records": 20,
+    "instructions": 219,
+    "calls": 24,
+    "source_records": 21,
     "frames": [
       16,
-      34
+      36
     ],
-    "bytes": 8111
+    "bytes": 8903
   },
   "walk-c-after": {
-    "instructions": 158,
-    "calls": 18,
-    "source_records": 13,
+    "instructions": 176,
+    "calls": 20,
+    "source_records": 14,
     "frames": [
       16,
-      26
+      27
     ],
-    "bytes": 6785
+    "bytes": 7564
   },
   "walk-g-before": {
     "instructions": 27,

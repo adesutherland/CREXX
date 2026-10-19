@@ -3434,6 +3434,43 @@ runtime helper or frame demand; its authored AST span remains available.
 SELECT/shared-label placements, exact Classic diagnostic identities and full
 clause/TRACE observations remain later compiler work.
 
+### Classic OPTIONS
+
+Every OPTIONS clause retains its ordinary optional expression. The operand is
+evaluated once where the clause is reached, including Name reads, arithmetic,
+calls and errors; bare OPTIONS has no operand. The current shared Classic
+processor recognizes no runtime words, so unknown/DBCS words and embedded NUL
+have no processor effect. The compiler omits the empty processor call and unused
+simple String/Number construction, while retaining operand effects and validation.
+
+Only a complete first nonempty clause made of OPTIONS and bare words selects
+file settings. `LEVELC` and `NUMERIC_CLASSIC` are accepted. Nested block comments
+remain enabled; `COMMENTS_HASH`/`COMMENTS_NOHASH` and
+`COMMENTS_DASH`/`COMMENTS_NODASH` select request-local line comments.
+`COMMENTS_NOSLASH` is accepted; slash comments, incompatible levels/numeric
+policy, conflicting switches and known unsupported static controls such as
+`STRICTC`/`srcmap` are rejected. Identical switches may repeat. The header's bare
+words still have their ordinary expression evaluation.
+
+```rexx
+options levelc comments_hash
+# This line is a comment in this request.
+options 'unknown' || '00'x
+options probe()
+exit 0
+probe: procedure
+  say 'once'
+  return 'ignored'
+```
+
+The output is `once`. Quoted, operator-shaped and call-shaped first clauses,
+and all later OPTIONS clauses, do not select file settings. For example,
+`options levelg()` is an ordinary private function call when that routine is
+defined. Settings never leak into a later compilation request. Adding runtime
+words or effects to the shared processor requires compiler contract review and
+recompilation; complete header controls, source maps, conditions and TRACE
+remain later work under the [OPTIONS plan](../../research/level-l/compilers/PLAN.md#current-action-options).
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:

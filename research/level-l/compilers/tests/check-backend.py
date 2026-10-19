@@ -2,8 +2,8 @@
 """Isolated STEP04 toolchain regression orchestration; no compiler implementation.
 
 Use prebuilt B-only compiler images. Native compilers are only optional,
-independent controls; no source request can fall back to them. Keep all logs and
-command identities in a per-invocation work directory.
+independent controls; no source request can fall back to them. Diagnostics and
+command identities are temporary and removed at the end of each invocation.
 """
 import argparse
 import hashlib
@@ -24,6 +24,7 @@ parser.add_argument('--native-controls', action='store_true')
 parser.add_argument('--installed', type=Path)
 parser.add_argument('--case', action='append', help='focused name-level case; skips unrelated controls and uses assembler -n')
 parser.add_argument('--ir', choices=('on', 'off'), default='on', help='research compiler IR optimisation')
+parser.add_argument('--inspect', type=Path, help='copy selected readable RXAS to a temporary review directory')
 args = parser.parse_args()
 source_dir = Path(__file__).resolve().parent / 'backend'
 cases = json.loads((source_dir / 'cases.json').read_text(encoding='utf-8'))
@@ -35,6 +36,8 @@ if args.case:
     cases = [case for case in cases if case['name'] + '-' + case['level'] in requested]
 if args.native_controls and args.ir != 'on':
     parser.error('--ir applies only to the research compiler')
+if args.inspect and not args.case:
+    parser.error('--inspect requires a focused --case selection')
 build = args.build.resolve()
 args.work.mkdir(parents=True, exist_ok=True)
 run_directory = tempfile.TemporaryDirectory(prefix='check-',dir=args.work)
@@ -99,6 +102,9 @@ try:
             command = compiler(case['level'], assembly, source)
         run(stem+'-compile', command, isolated=not args.native_controls)
         assert assembly.exists(), stem
+        if args.inspect:
+            args.inspect.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(assembly, args.inspect / f'{stem}-{args.mode}-{args.ir}-{Path(args.vm).name}.rxas')
         # Both assembler modes exercise generated control/call windows. Shared
         # IR optimisation is on; check-optimise.py covers the compiler -n control.
         for assembler_mode in (['noopt'] if args.native_controls or args.case else ['noopt', 'opt']):

@@ -101,25 +101,33 @@ function $MAIN -> crexx.c.result
   entry.1:
     %1 = core.argument argument:1 @origin:2
     core.store %1 slot:$context @origin:2
-    %2 = core.constant 32 : crexx.c.value @origin:11
-    core.store %2 slot:$tmp.1 @origin:9
-    %3 = core.constant 33 : crexx.c.value @origin:13
-    %4 = core.load slot:$tmp.1 @origin:9
-    %5 = core.load slot:$context @origin:9
-    %6 = crexx.c.add %4 %3 %5 @origin:9
-    %7 = core.load slot:$context @origin:4
-    crexx.c.store %7 %6 name="total" @origin:4
-    %8 = core.load slot:$context @origin:21
-    %9 = crexx.c.load %8 name="total" @origin:21
-    core.store %9 slot:$tmp.2 @origin:17
-    %10 = core.constant 34 : crexx.c.value @origin:25
-    %11 = core.load slot:$tmp.2 @origin:17
-    %12 = core.load slot:$context @origin:17
-    %13 = crexx.c.gt %11 %10 %12 @origin:17
-    %14 = core.load slot:$context @origin:14
-    %15 = crexx.c.truth %13 %14 @origin:14
-    core.branch %15 -> if.yes.2 -> if.no.3 @origin:14
+    %2 = core.load slot:$context @origin:10
+    %3 = crexx.c.load %2 name="levelc" @origin:10
+    %4 = core.constant 32 : crexx.c.value @origin:18
+    core.store %4 slot:$tmp.1 @origin:16
+    %5 = core.constant 33 : crexx.c.value @origin:20
+    %6 = core.load slot:$tmp.1 @origin:16
+    %7 = core.load slot:$context @origin:16
+    %8 = crexx.c.add %6 %5 %7 @origin:16
+    %9 = core.load slot:$context @origin:11
+    crexx.c.store %9 %8 name="total" @origin:11
+    %10 = core.load slot:$context @origin:28
+    %11 = crexx.c.load %10 name="total" @origin:28
+    core.store %11 slot:$tmp.2 @origin:24
+    %12 = core.constant 34 : crexx.c.value @origin:32
+    %13 = core.load slot:$tmp.2 @origin:24
+    %14 = core.load slot:$context @origin:24
+    %15 = crexx.c.gt %13 %12 %14 @origin:24
+    %16 = core.load slot:$context @origin:21
+    %17 = crexx.c.truth %15 %16 @origin:21
+    core.branch %17 -> if.yes.2 -> if.no.3 @origin:21
 ```
+
+The header remains `COptions` in the source tree and performs the ordinary
+`levelc` Name read before the assignment. Its current empty processor emits no
+call. The new C views are generated/consumer-checked, with header behavior
+covered by focused OPTIONS execution; unchanged walkthrough body and G
+qualification is reused.
 
 `32`, `33` and `34` are hex byte spellings for `2`, `3` and `4`; Classic values
 are not silently canonicalised to G integers. Pool operations retain raw source

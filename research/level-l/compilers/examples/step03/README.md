@@ -7,8 +7,9 @@ and `frontend-probe` Level B consumers, as described in the
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
 The Classic IR views use the current borrowed-context ABI, generated through
-the existing Debug frontend probe without IR optimisation. The source trees
-and G views retain their earlier qualification. The C pipeline calls
+the existing Debug frontend probe without IR optimisation. The C source trees now retain `COptions` and the header
+Name expression; the C IR retains its pool read. G views retain their earlier
+qualification. The C pipeline calls
 `length('α漢🙂')`: the payload has three codepoints and nine UTF-8 bytes. Its
 quoted `String` occupies byte range `139:150` in the 208-byte source. The IR
 retains `CEB1E6BCA2F09F9982` as the value's bytes; LENGTH's result is a runtime
