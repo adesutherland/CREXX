@@ -50,6 +50,19 @@ main: procedure = .int expose checks failures contract artifacts
     call check(raw.status() = 0 & opt.status() = 0, level || ' branch compiles: ' || opt.error())
     before = raw.emissiongraph(); source = opt.graph(); after = opt.emissiongraph()
     call check(source.text() = before.text(),level || ' inspectable original graph')
+    if level = 'c' then do
+      /* This graph has the production required context argument and binding.
+       * Exact branch proof must retain the runtime truth effects and errors. */
+      store = dereference before.storage(); facts = .llirservices..facts(reference before)
+      found = 0
+      do operation = 1 to store.count(3)
+        if store.opname(store.get(3,operation,1)) <> 'crexx.c.truth' then iterate
+        found = found + 1
+        evaluated = llirservices..evaluate(reference before,operation,facts)
+        call check(evaluated.status() = 'keep','contextual C truth has no pure evaluator')
+      end
+      call check(found = 1 & pos('crexx.c.truth',after.dump()) > 0,'literal branch proof retains effectful C truth')
+    end
     call check(after.blocks() < before.blocks(),level || ' dead branch removed')
     call check(oracle(before) = 'yes;' & oracle(after) = 'yes;',level || ' independent source/optimised IR oracle')
     unoptimised = raw.output(); optimised = opt.output()
@@ -84,7 +97,8 @@ rejectsink: class implements .llir..sink
 fold: procedure = .void expose contract
   arg name = .string, a = .string, b = .string, expected = .string, status = 'constant', level = 'g'
   draft = .llir..builder(contract); at = draft.synthetic('boundary case')
-  store = dereference contract.data(); operation = contract.operation('crexx.' || level || '.' || name)
+  family = 'crexx.g'; if level = 'c' then family = 'test.classic'
+  store = dereference contract.data(); operation = contract.operation(family || '.' || name)
   descriptor = operation.id()
   /* Descriptors are queried for their declared types, never guessed from name. */
   resulttype = .llir..typeid(contract.identity(),store.fieldtype(descriptor,2,1))
@@ -142,7 +156,6 @@ oracle: procedure = .string
           end
           when 'crexx.c.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
           when 'crexx.g.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
-          when 'crexx.c.pool.new' then nop
           when 'crexx.c.arguments.empty' then nop
           when 'crexx.c.return.absent' then nop
           otherwise return 'UNSUPPORTED:' || name

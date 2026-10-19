@@ -25,7 +25,10 @@ passes without exercising the new compiler.
 - [Unicode/stream contract](../../../../compiler/docs/levelc_unicode_and_streams.md):
   exact Unicode scalar text/codepoint positions, UTF-8 source, fixed Latin-1
   ordinal bridge, simple symbol casing, no implicit normalization/graphemes;
-  explicit Unicode algorithms and raw/encoded streams remain admitted.
+  explicit Unicode algorithms and raw/encoded streams remain admitted. Ordinary
+  C text uses Unicode codepoints. Codes 0–255 preserve the fixed Latin-1 bridge;
+  agreed Unicode behavior above U+00FF is intentional, not a historical byte
+  compatibility defect.
 - External C calls retain the static signed B/G provider contract, including
   documented missing-provider timing/error differences. No general late dynamic
   provider search or new foreign-language interface is inferred.
@@ -51,11 +54,13 @@ comma ARG and LENGTH/ARG/DIGITS. Identifiers remain ASCII-patterned; full Classi
 source, operators, shared labels, pools, conditions and host contracts are open.
 SAY's adjacent radix-literal repair has retained proof, not whole-SAY closure.
 
-Generated C still selects legacy `llctarget` entries, copied numeric/argument
-packets and conservative entry setup. The shared B `RexxClassicContext` and nine
-`llctarget2` adapters are implemented and directly qualified, but the selector
-has not migrated. Exact C-family metadata and generated-procedure ABI approval
-precedes that migration. Neutral scalar ABI records still use `crexx.g` names.
+The current migration selects one `llctarget` borrowed-context surface and C-family
+v2 with one required context-reference procedure argument. Root/private owners
+and numeric entry setup remain conservative; argument/result transport remains
+by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
+owns current selector/admission qualification; complete shared-label activation
+remains open. Earlier research C images/IR must be rebuilt, with no compatibility
+bridge. Neutral scalar ABI records still use `crexx.g` names.
 
 Shared B Unicode extraction/public API and the existing eight stream/23 Unicode
 BIF bodies are completed reusable assets. Remaining work is C recognition,
@@ -90,7 +95,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 
 | Contract / stage | New C status | Next closure check (full row remains open) | Detailed native contract to reuse |
 |---|---|---|---|
-| LC-I-01 SAY / STEP05 | Partial: radix fix retained | `Say(value?)` lowers once, then one ordered output effect. Empty, NUL, high scalars, output ordering and configured callback/error behavior. Literal-only RXAS has no runtime radix decode; unused context/pool setup needs C-OPT-01 proof. | [LC-AC-57/60](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-01 SAY / STEP05 | Partial: radix fix retained | `Say(value?)` evaluates its optional expression once and produces one ordered output effect: bare line, visible Unicode/numeric text, output/evaluation order and ordinary errors through the current route. Further historical processor/callback/byte-exact host edge parity is deferred and unclaimed; preserve existing useful controls. Literal-only RXAS has no runtime radix decode; unused context/pool setup needs C-OPT-01 proof. | [LC-AC-57/60](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-02 DROP / STEP05 | Not implemented | Direct/indirect source-ordered variable lists become pool-drop operations; arbitrary compounds and exposed aliases use runtime pool rules. Invalid list words follow accepted policy. No argument/alias reevaluation or numeric conversion. | [LC-AC-07/53/55/56/62](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-03 assignment / STEP05 | Partial: simple scalar only | Evaluate RHS before compound substitution; one pool write with exact scalar text/cache semantics. Stems, implicit tails, exposed aliases and NUL/Unicode names; inspect duplicate reads/copies and alias invalidation. | [LC-AC-54/63](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-04 NOP / STEP05 | Partial | No value/effect operation, but preserve clause/label/TRACE observations. Reject trailing operands in every legal statement position; no runtime helper for an unobserved NOP. | [LC-AC-05/64](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
@@ -129,10 +134,10 @@ Paths under `tests/` below are relative to `research/level-l/compilers/`.
 |---|---|---|
 | **SAY-D01 — C-SRC** | `levelc/llcparse.crexx` fuses adjacent X/B suffixes and preserves authored spelling/ranges; `llcfrontend.ordinalliteral` decodes them into ordinal constants in the existing String/Say path. `tests/say/forms-c.crexx`, `literal-c.crexx` and the invalid-literal rows in `tests/check-say.py` cover empty/partial groups, Unicode/NUL, adjacency and located refusal. The retained focused radix proof includes all 256 ordinals. | Complete C token/clause admission and static validation of all unreachable source under STEP04. A passing literal subset does not establish the whole expression/source contract. |
 | **SAY-D02 — C-EXPR / BF01–05** | `llcfrontend.statement` evaluates the optional operand once, then appends one `crexx.c.say`; an omitted operand supplies the empty value. `tests/say/forms-c.crexx` expects nested `inner` output before `outer=done`; `error-c.crexx` expects `before`, then arithmetic failure with no later output. Retained new-C proof covers both IR modes/VMs with assembler optimisation disabled. Native `compiler/tests/rexx_src/levelc_say_instruction.rexx` supplies an additional counter/recursive-output oracle. | Complete operators, compound reads, BIF and call forms, missing/empty presence and errors using shared runtime bodies. Port reusable cases through the new compiler as their prerequisites become available; do not inherit native closure. |
-| **SAY-D03 — C-POOL / C-ACT / C-NUM** | `llcfrontend.lowerall` currently creates pool, argument and numeric slots for every routine; `levelc/runtime/llctarget.crexx` supplies pool/value/snapshot adapters. `tests/backend/calls-c.crexx`, `arguments-c.crexx` and `numeric-c.crexx` have independent expected rows in `tests/backend/cases.json`; native `levelc_say_pool_reads.rexx` and `levelc_say_bif_family.rexx` are reusable controls. | The borrowed B bundle/adapters are qualified; STEP03 still owns selector migration and complete shared-label activation, recursion/restoration and configured text/numeric behavior. Current private PROCEDURE routines/copied packets do not close them. |
-| **SAY-D04 — C-HOST output** | `llcrxas` selects `llctarget.sayvalue`; that adapter performs `say value.asString(1)`. Existing native `compiler/tests/src/test_levelc_say_host_output.c` supplies exact NUL/high-scalar bytes and six callback invocations from `levelc_say_bytes.rexx`; `levelc_say_host_output` registers that control. | Run equivalent new-C output through the execution-owned length-aware output/configuration route, including once-only conversion, declared callback/error behavior and exact NUL/Unicode lengths. STEP03/08 own the shared adapter/host interface; a plain B SAY path is not complete configured Classic output proof. |
+| **SAY-D03 — C-POOL / C-ACT / C-NUM** | `llcfrontend.lowerall` threads one context reference through each routine; `levelc/runtime/llctarget.crexx` borrows activation/pool/configuration and reuses existing BIF bodies. The selector creates caller-owned private activation/pool bundles and installs validated numeric settings in the executing frame. `tests/backend/calls-c.crexx`, `arguments-c.crexx` and `numeric-c.crexx` have independent expected rows in `tests/backend/cases.json`; native `levelc_say_pool_reads.rexx` and `levelc_say_bif_family.rexx` are reusable controls. | STEP03d qualifies the borrowed selector migration separately from complete shared-label activation and configured text/numeric behavior. Current private PROCEDURE routines and copied argument/result packets do not close those wider contracts. |
+| **SAY-D04 — C-HOST output** | `llcrxas` selects `llctarget.sayvalue`; that adapter performs `say value.asString(1)`. Existing native `compiler/tests/src/test_levelc_say_host_output.c` supplies exact NUL/high-scalar bytes and six callback invocations from `levelc_say_bytes.rexx`; `levelc_say_host_output` registers that control. | Modern SAY requires a bare line, once-only optional expression, visible Unicode/numeric text, order and ordinary errors through the current output route. Further historical processor/callback/byte-exact host edge parity is deferred and unclaimed, not a new matrix or completion blocker. Retain existing controls; record a specific non-conformance only when observed. Source NUL, argument lengths, streams and ADDRESS host contracts remain separately required. |
 | **SAY-D05 — C-OBS / conditions / TRACE** | `levelc/llcir.crexx` declares SAY state `output`, failure `conversion.io`, ordinary continuation `returns`; generic optimisation retains it. `tests/backend-tests.crexx` and `tests/check-provenance.py` check existing logical identities/origins, and `tests/say/error-c.crexx` checks the reached fatal-error ordering. | Explicit authored clause identity, trace/result observations, actual condition origin and trapped/resumed failure must be preserved under STEP03/07. Source ranges and a conservative effect summary alone do not establish those semantics. New exceptional/resumable L edges require their own approved contract. |
-| **SAY-D06 — C-OPT-01 / target quality** | `tests/check-say.py` rejects literal X/B pool reads/runtime decoding; the retained review distinguishes complete RXAS from helper work. `llcfrontend.lowerall` still unconditionally constructs a pool; `llcrxas` supplies argument/context entry machinery. | C-owned requirement analysis must justify omitting unused setup for constant-only SAY, with read/write/call/RESULT/observation negatives. Preserve allocation, ABI, failure and lifetime obligations; do not make generic L discard named allocation/state effects. Register reuse remains the separate L/target contract. |
+| **SAY-D06 — C-OPT-01 / target quality** | `tests/check-say.py` rejects literal X/B pool reads/runtime decoding; the retained review distinguishes complete RXAS from helper work. `llcrxas` still unconditionally constructs root and private-call owners and installs the entry context; it does not specialise unused ownership setup. | C-owned requirement analysis must justify omitting unused setup for constant-only SAY, with read/write/call/RESULT/observation negatives. Preserve allocation, ABI, failure and lifetime obligations; do not make generic L discard named allocation/state effects. Register reuse remains the separate L/target contract. |
 | **SAY-D07 — delivery / independent foundations** | `llcompiler_c_only_{opt,noopt}_{rxbvm,rxtvm}` reuses the SAY expectations in separate B/L compiler-host and static-runtime roots with native compilers/G absent. `tests/check-say.py` enumerates the explicit target libraries, including the B Unicode core; the compiler host does not acquire that runtime. Independent `ts_llirflow`, `ts_llirservices` and `ts_lloptimise` cover normal flow, effects, owner/revision invalidation and atomic limits. | Preserve exact producer/import/install inventories and both-mode/engine proof as this packet grows. Required host/platform and full CFC obligations remain open; current desktop fixture success establishes neither complete SAY nor complete C. INTERPRET remains STEP11. |
 
 ## BIF integration and verification packages
@@ -308,7 +313,7 @@ own new-C value/error/context cases, without repeating the whole matrix 95 times
 | `ABBREV` | `rexxclassicbifabbrev.rexxclassicbif_abbrev` | T | `B/Abbrev` | Unbound | BF01 / STEP04; BIF-CHECK |
 | `ABS` | `rexxclassicbifabs.rexxclassicbif_abs` | N | `B/Abs` | Unbound | BF03 / STEP04; BIF-CHECK |
 | `ADDRESS` | `rexxclassicbifaddress.rexxclassicbif_address_frame` | A | `B/Address` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `ARG` | `rexxclassicbifarg.rexxclassicbif_arg` | A | `B/Arg` | Partial: legacy route | BF05 / STEP04/06/07; BIF-CHECK |
+| `ARG` | `rexxclassicbifarg.rexxclassicbif_arg` | A | `B/Arg` | Partial: borrowed-context route | BF05 / STEP04/06/07; BIF-CHECK |
 | `B2X` | `rexxclassicbifb2x.rexxclassicbif_b2x` | — | `B/B2x` | Unbound | BF03 / STEP04; BIF-CHECK |
 | `BITAND` | `rexxclassicbifs.rexxclassicbif_bitand` | O | `B/Bitwise` | Unbound | BF03 / STEP04; BIF-CHECK |
 | `BITOR` | `rexxclassicbifs.rexxclassicbif_bitor` | O | `B/Bitwise` | Unbound | BF03 / STEP04; BIF-CHECK |
@@ -328,7 +333,7 @@ own new-C value/error/context cases, without repeating the whole matrix 95 times
 | `DATE` | `rexxclassicbifdate.rexxclassicbif_date` | K | `B/Date` | Unbound | BF09 / STEP07/08; BIF-CHECK |
 | `DELSTR` | `rexxclassicbifdelstr.rexxclassicbif_delstr` | T | `B/Delstr` | Unbound | BF01 / STEP04; BIF-CHECK |
 | `DELWORD` | `rexxclassicbifdelword.rexxclassicbif_delword` | W | `B/Delword` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `DIGITS` | `rexxclassicbifnumeric.rexxclassicbif_digits` | N | `B/Numeric` | Partial: legacy route | BF05 / STEP04/06/07; BIF-CHECK |
+| `DIGITS` | `rexxclassicbifnumeric.rexxclassicbif_digits` | N | `B/Numeric` | Partial: borrowed-context route | BF05 / STEP04/06/07; BIF-CHECK |
 | `ERRORTEXT` | `rexxclassicbiferrortext.rexxclassicbif_errortext` | — | `B/Errortext` | Unbound | BF07 / STEP07; BIF-CHECK |
 | `FORM` | `rexxclassicbifnumeric.rexxclassicbif_form` | N | `B/Numeric` | Unbound | BF05 / STEP04/06/07; BIF-CHECK |
 | `FORMAT` | `rexxclassicbifformat.rexxclassicbif_format` | N | `B/Format` | Unbound | BF03 / STEP04; BIF-CHECK |
@@ -336,7 +341,7 @@ own new-C value/error/context cases, without repeating the whole matrix 95 times
 | `INSERT` | `rexxclassicbifinsert.rexxclassicbif_insert` | T | `B/Insert` | Unbound | BF01 / STEP04; BIF-CHECK |
 | `LASTPOS` | `rexxclassicbiflastpos.rexxclassicbif_lastpos` | T | `B/Lastpos` | Unbound | BF01 / STEP04; BIF-CHECK |
 | `LEFT` | `rexxclassicbifleft.rexxclassicbif_left` | T | `B/Left` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `LENGTH` | `rexxclassicbiflength.rexxclassicbif_length` | T | `B/Length` | Partial: legacy route | BF01 / STEP04; BIF-CHECK |
+| `LENGTH` | `rexxclassicbiflength.rexxclassicbif_length` | T | `B/Length` | Partial: borrowed-context route | BF01 / STEP04; BIF-CHECK |
 | `LOWER` | `rexxclassicbifs.rexxclassicbif_lower` | T | `B/Bifs` | Unbound | BF01 / STEP04; BIF-CHECK |
 | `MAX` | `rexxclassicbifmax.rexxclassicbif_max` | N | `B/Max` | Unbound | BF03 / STEP04; BIF-CHECK |
 | `MIN` | `rexxclassicbifmin.rexxclassicbif_min` | N | `B/Min` | Unbound | BF03 / STEP04; BIF-CHECK |
@@ -494,7 +499,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | Partial: private pool only | C-POOL / STEP03/05/06; STEP08 external API | Complete first-instruction eligibility and ordered direct/indirect EXPOSE. |
 | LC-REF-066 | PUSH/QUEUE ordering and null-expression value | Not implemented | LC-I-17/18 / STEP06 | Bind one queue owner; test null expressions, once-only evaluation and ordering. |
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | Partial: private RETURN | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Complete main/subroutine/function RETURN, result presence and recursive cleanup. |
-| LC-REF-068 | SAY default output and optional empty expression | Partial: SAY/radix subset | LC-I-01 / STEP05; STEP07/08 observations/host | Complete shared expression/output dependency packet, exact lengths and errors. |
+| LC-REF-068 | SAY default output and optional empty expression | Partial: SAY/radix subset | LC-I-01 / STEP05; STEP07/08 observations/host | Complete modern expression/output order and ordinary errors; further historical host edge parity is deferred and unclaimed. |
 | LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Implement every SIGNAL target/trap, causing clause and crossed-state cleanup. |
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Implement approved practical TRACE state/display/inhibition and divergences. |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | Partial: fatal error path | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Exercise all seven condition producers/traps and nested ownership; real HALT separate. |
@@ -627,8 +632,8 @@ the new compiler. This triangulation avoids a shared compiler/oracle defect.
 Every completion record in the current plan names input revision, decisive
 command/result, observed platform/mode, code-shape outcome and remaining gaps.
 Retain source fixtures and intended documentation outputs, not logs/dumps/run
-receipts. Measure any new nested aggregate in normal Debug and the maintained
-sanitizer tree before registration; set serial/resource/timeout properties.
+receipts. Follow [AGENTS.md](../../../../AGENTS.md) for isolated aggregate
+measurement, scheduling and sanitizer scope.
 Reuse unchanged qualified evidence; do not rerun broad QA per instruction.
 
 ## Platform and capability gates

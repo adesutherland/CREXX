@@ -220,15 +220,12 @@ The maintained checks for this implemented bounded contract are:
 3. **F7A-STEP04 / AC01–06:** inspect complete RXAS, run focused end-to-end modes
    and installed CLI/service requests with old compilers unavailable, refresh
    only invalidated evidence, and update architecture/trees/algorithms/guide.
-   Measure new aggregates in isolation in Debug and maintained ASan before
-   registration; no formal performance campaign or automatic CI rerun.
+   Follow [AGENTS.md](../../../../AGENTS.md) for isolated aggregate measurement,
+   scheduling and sanitizer scope; no formal performance campaign or automatic CI rerun.
 
 Full replacement, arbitrary defaults, references, conditions/TRACE, proper B
 self-hosting and INTERPRET retain their named later gates.
 
-Retained local qualification at `06a548321662e6dc4e91899363eb12831b4d952c`
-passed the 99-command STEP07A workload in both B-host modes/VMs, independent
-Level L checks, native/new module interoperability, installed CLI/service and
-focused Apple ASan. Native B/G/C controls separately passed 38 commands/14 VM
-executions. These unchanged-input results are bounded; no new hosted or full
-language/platform qualification is claimed.
+The [current plan](../PLAN.md) records qualified inputs, reused controls and
+remaining delivery/platform limits. Bounded scalar-call proof does not establish
+complete C, B/G replacement or hosted qualification.

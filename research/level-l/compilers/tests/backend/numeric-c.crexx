@@ -6,15 +6,20 @@ numeric fuzz
 say 1.234 = 1.233
 say change()
 say digits()
+say 1.234 = 1.233
 say 1 / 3
+say 10000 * 10000
 numeric form engineering
-say 1000000 + 0
+say 10000 * 10000
 numeric form scientific
-say 1000000 + 0
+say 10000 * 10000
 numeric digits
 say digits()
 exit 0
 change: procedure
  say digits()
  numeric digits 2
+ numeric fuzz 1
+ numeric form engineering
+ say 10000 * 10000
  return 1 / 3

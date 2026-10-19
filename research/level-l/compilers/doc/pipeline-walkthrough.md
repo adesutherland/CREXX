@@ -97,41 +97,40 @@ observable output operation.
 
 ```text
 function $MAIN -> crexx.c.result
-  argument 1 crexx.c.arguments required
-  argument 2 crexx.c.numeric required
+  argument 1 crexx.c.context required
   entry.1:
-    %1 = crexx.c.pool.new @origin:2
-    core.store %1 slot:$pool @origin:2
-    %2 = core.argument argument:1 @origin:2
-    core.store %2 slot:$arguments @origin:2
-    %3 = core.argument argument:2 @origin:2
-    core.store %3 slot:$numeric @origin:2
-    %4 = core.constant 32 : crexx.c.value @origin:11
-    core.store %4 slot:$tmp.1 @origin:9
-    %5 = core.constant 33 : crexx.c.value @origin:13
-    %6 = core.load slot:$tmp.1 @origin:9
-    %7 = core.load slot:$numeric @origin:9
-    %8 = crexx.c.add %6 %5 %7 @origin:9
-    %9 = core.load slot:$pool @origin:4
-    crexx.c.store %9 %8 name="TOTAL" @origin:4
-    %10 = core.load slot:$pool @origin:21
-    %11 = crexx.c.load %10 name="TOTAL" @origin:21
-    core.store %11 slot:$tmp.2 @origin:17
-    %12 = core.constant 34 : crexx.c.value @origin:25
-    %13 = core.load slot:$tmp.2 @origin:17
-    %14 = core.load slot:$numeric @origin:17
-    %15 = crexx.c.gt %13 %12 %14 @origin:17
-    %16 = crexx.c.truth %15 @origin:14
-    core.branch %16 -> if.yes.2 -> if.no.3 @origin:14
+    %1 = core.argument argument:1 @origin:2
+    core.store %1 slot:$context @origin:2
+    %2 = core.constant 32 : crexx.c.value @origin:11
+    core.store %2 slot:$tmp.1 @origin:9
+    %3 = core.constant 33 : crexx.c.value @origin:13
+    %4 = core.load slot:$tmp.1 @origin:9
+    %5 = core.load slot:$context @origin:9
+    %6 = crexx.c.add %4 %3 %5 @origin:9
+    %7 = core.load slot:$context @origin:4
+    crexx.c.store %7 %6 name="TOTAL" @origin:4
+    %8 = core.load slot:$context @origin:21
+    %9 = crexx.c.load %8 name="TOTAL" @origin:21
+    core.store %9 slot:$tmp.2 @origin:17
+    %10 = core.constant 34 : crexx.c.value @origin:25
+    %11 = core.load slot:$tmp.2 @origin:17
+    %12 = core.load slot:$context @origin:17
+    %13 = crexx.c.gt %11 %10 %12 @origin:17
+    %14 = core.load slot:$context @origin:14
+    %15 = crexx.c.truth %13 %14 @origin:14
+    core.branch %15 -> if.yes.2 -> if.no.3 @origin:14
 ```
 
 `32`, `33` and `34` are hex byte spellings for `2`, `3` and `4`; Classic values
 are not silently canonicalised to G integers. Pool operations show their `name`
-attribute. The numeric snapshot is an explicit argument and local slot, read
-for each contextual operation. Callees receive the current snapshot and own
-subsequent updates, preserving the caller's context. Their argument packet
-separately retains omission bits; their returned packet retains value presence.
-The STEP04 entry wrapper supplies main's initial argument/context state.
+attribute. The one required context argument is stored as a reference-valued
+local alias and read for each contextual operation. The bundle borrows live
+activation, pool and configuration owners; pool reads observe its current binding.
+The caller constructs stable child owners after completing the argument packet,
+inherits numeric state and passes one bundle reference. Child updates leave the
+parent activation and restored VM frame unchanged. Argument/result packets
+separately retain omission and returned-value presence. The entry wrapper owns
+main's initial state and the shared UTF8 configuration.
 
 ## Loops, calls and short-circuiting
 
@@ -141,8 +140,9 @@ slots for values crossing blocks. G's source variable is a typed local slot;
 Classic reads and writes its pool, including the defined unset-name behaviour.
 
 A G call has a registered typed signature and `target="TWICE"` attribute. A
-Classic call takes its original argument packet and numeric snapshot, and yields
-a result-presence packet. CALL updates RESULT; expression use requires a value.
+Classic call carries its original argument packet, the borrowed context and a
+function/subroutine attribute, and yields a result-presence packet. CALL updates
+RESULT; expression use requires a value.
 The imports are checked against actual runtime metadata by the Level B reader,
 not guessed from source names or supplied by the native compiler.
 
@@ -156,7 +156,10 @@ canonical integer/decimal/default contracts.
 ## RXAS execution and implemented optimisation
 
 STEP05 requests exact evaluation from the operation's registered service.
-An unknown Classic numeric context prevents contextual folding; a possibly
+No evaluator is registered for context-dependent Classic operations. Exact
+literal `0`/`1` supplies a separate derived Boolean branch fact while the
+effectful runtime truth check remains. An unknown numeric context prevents
+contextual folding; a possibly
 failing or effectful operation is retained unless the pass proves its required
 premises. Propagation of G local slots does not establish a right to propagate
 arbitrary Classic pool reads. Proved branch pruning must retain preceding

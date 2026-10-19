@@ -1,493 +1,784 @@
 .globals=0
-main() .locals=6
+main() .locals=16
 .srcstep 0 0 6 "" 0 0 0 ""
-copy r4,a1
-load r3,1
-settp r4,768
-call r1,llctarget.mainargs(),r3
+copy r13,a1
+load r12,1
+settp r13,768
+call r9,llctarget.mainargs(),r12
+null r13
+load r12,0
+call r10,llctarget.poolnew(),r12
+load r13,"UTF8"
+load r12,1
+settp r13,768
+call r8,rexxclassicconfig.rexxclassicconfig.§factory(),r12
+null r13
+mkref r4,r8
+mkref r13,r9
+mkref r14,r10
+copy r15,r4
+load r12,3
+settp r13,768
+settp r14,768
+settp r15,768
+call r11,rexxclassiccontext.rexxclassiccontext.§factory(),r12
+null r13
+null r14
+null r15
+mkref r13,r11
+load r12,1
+settp r13,768
+call r0,llf1(),r12
+null r13
+copy r13,r0
+load r12,1
+settp r13,768
+call r0,llctarget.status(),r12
+null r13
+null r11
 null r4
-load r3,0
-call r2,llctarget.contextnew(),r3
-copy r4,r1
-copy r5,r2
-load r3,2
-settp r4,768
-settp r5,768
-call r0,llf1(),r3
-null r4
-null r5
-copy r4,r0
-load r3,1
-settp r4,768
-call r1,llctarget.status(),r3
-null r4
-ret r1
-llf1() .locals=33
+null r9
+null r10
+null r8
+ret r0
+llf1() .locals=40
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
-numsci 18,1,1
-load r28,"scale-c.crexx: entering $MAIN"
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
+load r35,"scale-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+numsci 18,1,2
+linkref r23,a1
+swap r23,r37
+load r36,1
+settp r37,256
+call r27,rexxclassiccontext.rexxclassiccontext.activation(),r36
+swap r23,r37
+null r37
+unlink r23
+linkref r24,r27
+swap r24,r37
+load r36,1
+settp r37,256
+call r28,rexxactivation.rexxactivationarguments.numericdigits(),r36
+swap r24,r37
+null r37
+swap r24,r37
+load r36,1
+settp r37,256
+call r29,rexxactivation.rexxactivationarguments.numericfuzz(),r36
+swap r24,r37
+null r37
+swap r24,r37
+load r36,1
+settp r37,256
+call r30,rexxactivation.rexxactivationarguments.numericform(),r36
+swap r24,r37
+null r37
+unlink r24
+null r27
+setnumfuz 0
+setnumdgts r28
+setnumfuz r29
+setnumfrm r30
 llb1:
 .srcstep 2 0 98 "scale-c.crexx" 1 1 15 "options levelc"
-load r28,"scale-c.crexx: generated code in $MAIN"
-load r29,0
-call r6,llctarget.poolnew(),r29
-unlink r1
-link r1,r6
-copy r7,a1
-copy r3,r7
-copy r8,a2
-copy r2,r8
+load r35,"scale-c.crexx: generated code in $MAIN"
+copy r4,a1
+copy r1,r4
 .srcstep 12 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
-load r28,"scale-c.crexx:2:5"
-load r29,0
-call r9,llctarget.arguments(),r29
-copy r4,r9
+load r35,"scale-c.crexx:2:5"
+load r36,0
+call r5,llctarget.arguments(),r36
+copy r2,r5
+.srcstep 19 0 17 "scale-c.crexx" 2 11 12 "say scale(7)"
+load r35,"scale-c.crexx:2:11"
+load r37,"7"
+load r36,1
+settp r37,768
+call r6,llctarget.literal(),r36
+null r37
+.srcstep 12 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
+load r35,"scale-c.crexx:2:5"
+load r7,1
 .srcstep 20 0 17 "scale-c.crexx" 2 11 12 "say scale(7)"
-load r28,"scale-c.crexx:2:11"
-load r30,"7"
-load r29,1
-settp r30,768
-call r10,llctarget.literal(),r29
-null r30
+load r35,"scale-c.crexx:2:11"
+copy r37,r5
+copy r38,r6
+copy r39,r7
+load r36,3
+settp r37,768
+settp r38,768
+settp r39,768
+call r8,llctarget.append(),r36
+null r37
+null r38
+null r39
 .srcstep 12 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
-load r28,"scale-c.crexx:2:5"
-load r11,1
-.srcstep 21 0 17 "scale-c.crexx" 2 11 12 "say scale(7)"
-load r28,"scale-c.crexx:2:11"
-copy r30,r9
-copy r31,r10
-copy r32,r11
-load r29,3
-settp r30,768
-settp r31,768
-settp r32,768
-call r12,llctarget.append(),r29
-null r30
-null r31
-null r32
-.srcstep 12 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
-load r28,"scale-c.crexx:2:5"
-copy r4,r12
-copy r30,r12
+load r35,"scale-c.crexx:2:5"
+copy r2,r8
 copy r31,r8
-load r29,2
-settp r30,768
-settp r31,768
-call r13,llf2(),r29
-null r30
+linkref r23,r4
+swap r23,r37
+load r36,1
+settp r37,256
+call r27,rexxclassiccontext.rexxclassiccontext.activation(),r36
+swap r23,r37
+null r37
+unlink r23
+link r24,r31
+copy r38,r27
+swap r24,r37
+load r36,2
+settp r37,256
+settp r38,768
+call r34,rexxactivation.rexxactivationarguments.inheritsignalpolicy(),r36
+swap r24,r37
+null r37
+null r38
+swap r24,r37
+load r36,1
+settp r37,256
+call r34,rexxactivation.rexxactivationarguments.begininternalfunction(),r36
+swap r24,r37
+null r37
+swap r24,r37
+load r36,1
+settp r37,256
+call r34,rexxactivation.rexxactivationarguments.enterprocedure(),r36
+swap r24,r37
+null r37
+unlink r24
+linkref r23,r4
+swap r23,r37
+load r36,1
+settp r37,256
+call r25,rexxclassiccontext.rexxclassiccontext.pool(),r36
+swap r23,r37
+null r37
+unlink r23
+linkref r23,r4
+swap r23,r37
+load r36,1
+settp r37,256
+call r26,rexxclassiccontext.rexxclassiccontext.config(),r36
+swap r23,r37
+null r37
+unlink r23
+load r36,0
+call r32,llctarget.poolnew(),r36
+link r24,r32
+copy r38,r25
+swap r24,r37
+load r36,2
+settp r37,256
+settp r38,768
+call r34,rexxpool.rexxvariablepool.inheritcommandstatus(),r36
+swap r24,r37
+null r37
+null r38
+unlink r24
+mkref r37,r31
+mkref r38,r32
+copy r39,r26
+load r36,3
+settp r37,768
+settp r38,768
+settp r39,768
+call r33,rexxclassiccontext.rexxclassiccontext.§factory(),r36
+null r37
+null r38
+null r39
+mkref r37,r33
+load r36,1
+settp r37,768
+call r9,llf2(),r36
+null r37
+null r33
+null r27
+null r25
+null r26
 null r31
-copy r30,r13
-load r29,1
-settp r30,768
-call r14,llctarget.requirevalue(),r29
-null r30
+null r32
+copy r37,r9
+load r36,1
+settp r37,768
+call r10,llctarget.requirevalue(),r36
+null r37
 .srcstep 4 0 17 "scale-c.crexx" 2 1 13 "say scale(7)"
-load r28,"scale-c.crexx:2:1"
-copy r30,r14
-load r29,1
-settp r30,768
-call r27,llctarget.sayvalue(),r29
-null r30
-.srcstep 30 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:5"
-load r29,0
-call r15,llctarget.arguments(),r29
-copy r5,r15
-.srcstep 38 0 17 "scale-c.crexx" 3 11 12 "say scale(7,3)"
-load r28,"scale-c.crexx:3:11"
-load r30,"7"
-load r29,1
-settp r30,768
-call r16,llctarget.literal(),r29
-null r30
-.srcstep 30 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:5"
-load r17,1
-.srcstep 39 0 17 "scale-c.crexx" 3 11 12 "say scale(7,3)"
-load r28,"scale-c.crexx:3:11"
-copy r30,r15
-copy r31,r16
-copy r32,r17
-load r29,3
-settp r30,768
-settp r31,768
-settp r32,768
-call r18,llctarget.append(),r29
-null r30
+load r35,"scale-c.crexx:2:1"
+copy r37,r10
+load r36,1
+settp r37,768
+call r34,llctarget.sayvalue(),r36
+null r37
+.srcstep 29 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:5"
+load r36,0
+call r11,llctarget.arguments(),r36
+copy r3,r11
+.srcstep 36 0 17 "scale-c.crexx" 3 11 12 "say scale(7,3)"
+load r35,"scale-c.crexx:3:11"
+load r37,"7"
+load r36,1
+settp r37,768
+call r12,llctarget.literal(),r36
+null r37
+.srcstep 29 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:5"
+load r13,1
+.srcstep 37 0 17 "scale-c.crexx" 3 11 12 "say scale(7,3)"
+load r35,"scale-c.crexx:3:11"
+copy r37,r11
+copy r38,r12
+copy r39,r13
+load r36,3
+settp r37,768
+settp r38,768
+settp r39,768
+call r14,llctarget.append(),r36
+null r37
+null r38
+null r39
+.srcstep 29 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:5"
+copy r3,r14
+.srcstep 44 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
+load r35,"scale-c.crexx:3:13"
+load r37,"3"
+load r36,1
+settp r37,768
+call r15,llctarget.literal(),r36
+null r37
+.srcstep 29 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:5"
+load r16,1
+.srcstep 45 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
+load r35,"scale-c.crexx:3:13"
+copy r37,r14
+copy r38,r15
+copy r39,r16
+load r36,3
+settp r37,768
+settp r38,768
+settp r39,768
+call r17,llctarget.append(),r36
+null r37
+null r38
+null r39
+.srcstep 29 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:5"
+copy r3,r17
+copy r18,r1
+copy r31,r17
+linkref r23,r18
+swap r23,r37
+load r36,1
+settp r37,256
+call r27,rexxclassiccontext.rexxclassiccontext.activation(),r36
+swap r23,r37
+null r37
+unlink r23
+link r24,r31
+copy r38,r27
+swap r24,r37
+load r36,2
+settp r37,256
+settp r38,768
+call r34,rexxactivation.rexxactivationarguments.inheritsignalpolicy(),r36
+swap r24,r37
+null r37
+null r38
+swap r24,r37
+load r36,1
+settp r37,256
+call r34,rexxactivation.rexxactivationarguments.begininternalfunction(),r36
+swap r24,r37
+null r37
+swap r24,r37
+load r36,1
+settp r37,256
+call r34,rexxactivation.rexxactivationarguments.enterprocedure(),r36
+swap r24,r37
+null r37
+unlink r24
+linkref r23,r18
+swap r23,r37
+load r36,1
+settp r37,256
+call r25,rexxclassiccontext.rexxclassiccontext.pool(),r36
+swap r23,r37
+null r37
+unlink r23
+linkref r23,r18
+swap r23,r37
+load r36,1
+settp r37,256
+call r26,rexxclassiccontext.rexxclassiccontext.config(),r36
+swap r23,r37
+null r37
+unlink r23
+load r36,0
+call r32,llctarget.poolnew(),r36
+link r24,r32
+copy r38,r25
+swap r24,r37
+load r36,2
+settp r37,256
+settp r38,768
+call r34,rexxpool.rexxvariablepool.inheritcommandstatus(),r36
+swap r24,r37
+null r37
+null r38
+unlink r24
+mkref r37,r31
+mkref r38,r32
+copy r39,r26
+load r36,3
+settp r37,768
+settp r38,768
+settp r39,768
+call r33,rexxclassiccontext.rexxclassiccontext.§factory(),r36
+null r37
+null r38
+null r39
+mkref r37,r33
+load r36,1
+settp r37,768
+call r19,llf2(),r36
+null r37
+null r33
+null r27
+null r25
+null r26
 null r31
 null r32
-.srcstep 30 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:5"
-copy r5,r18
-.srcstep 47 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
-load r28,"scale-c.crexx:3:13"
-load r30,"3"
-load r29,1
-settp r30,768
-call r19,llctarget.literal(),r29
-null r30
-.srcstep 30 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:5"
-load r20,1
-.srcstep 48 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
-load r28,"scale-c.crexx:3:13"
-copy r30,r18
-copy r31,r19
-copy r32,r20
-load r29,3
-settp r30,768
-settp r31,768
-settp r32,768
-call r21,llctarget.append(),r29
-null r30
-null r31
-null r32
-.srcstep 30 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:5"
-copy r5,r21
-copy r22,r2
-copy r30,r21
-copy r31,r22
-load r29,2
-settp r30,768
-settp r31,768
-call r23,llf2(),r29
-null r30
-null r31
-copy r30,r23
-load r29,1
-settp r30,768
-call r24,llctarget.requirevalue(),r29
-null r30
-.srcstep 22 0 17 "scale-c.crexx" 3 1 15 "say scale(7,3)"
-load r28,"scale-c.crexx:3:1"
-copy r30,r24
-load r29,1
-settp r30,768
-call r27,llctarget.sayvalue(),r29
-null r30
-.srcstep 56 0 17 "scale-c.crexx" 4 6 7 "exit 0"
-load r28,"scale-c.crexx:4:6"
-load r30,"0"
-load r29,1
-settp r30,768
-call r25,llctarget.literal(),r29
-null r30
-.srcstep 49 0 17 "scale-c.crexx" 4 1 7 "exit 0"
-load r28,"scale-c.crexx:4:1"
-copy r30,r25
-load r29,1
-settp r30,768
-call r27,llctarget.present(),r29
-null r30
-copy r30,r27
-load r29,1
-settp r30,768
-call r27,llctarget.status(),r29
-null r30
-exit r27
-load r29,0
-call r26,llctarget.absent(),r29
-ret r26
+copy r37,r19
+load r36,1
+settp r37,768
+call r20,llctarget.requirevalue(),r36
+null r37
+.srcstep 21 0 17 "scale-c.crexx" 3 1 15 "say scale(7,3)"
+load r35,"scale-c.crexx:3:1"
+copy r37,r20
+load r36,1
+settp r37,768
+call r34,llctarget.sayvalue(),r36
+null r37
+.srcstep 53 0 17 "scale-c.crexx" 4 6 7 "exit 0"
+load r35,"scale-c.crexx:4:6"
+load r37,"0"
+load r36,1
+settp r37,768
+call r21,llctarget.literal(),r36
+null r37
+.srcstep 46 0 17 "scale-c.crexx" 4 1 7 "exit 0"
+load r35,"scale-c.crexx:4:1"
+copy r37,r21
+load r36,1
+settp r37,768
+call r34,llctarget.present(),r36
+null r37
+copy r37,r34
+load r36,1
+settp r37,768
+call r34,llctarget.status(),r36
+null r37
+exit r34
+load r36,0
+call r22,llctarget.absent(),r36
+ret r22
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r27,1
+load r34,1
 br llerror1
 llerror1_2:
-load r27,2
+load r34,2
 br llerror1
 llerror1_3:
-load r27,3
+load r34,3
 br llerror1
 llerror1_4:
-load r27,4
+load r34,4
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r30,r0
-copy r31,r28
-load r29,2
-settp r30,768
-settp r31,768
-call r28,llctarget.failuremessage(),r29
-null r30
-null r31
-beq llraise1_1,r27,1
-beq llraise1_2,r27,2
-beq llraise1_3,r27,3
+copy r37,r0
+copy r38,r35
+load r36,2
+settp r37,768
+settp r38,768
+call r35,llctarget.failuremessage(),r36
+null r37
+null r38
+beq llraise1_1,r34,1
+beq llraise1_2,r34,2
+beq llraise1_3,r34,3
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r28,r0
+signalorigin "INVALID_ARGUMENTS",r35,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r28,r0
+signalorigin "CONVERSION_ERROR",r35,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r28,r0
+signalorigin "DIVISION_BY_ZERO",r35,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r28,r0
+signalorigin "CLASSIC_SYNTAX",r35,r0
 ret
-llf2() .locals=38
+llf2() .locals=47
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.SCALE"="b" ".rexxactivation..rexxactivationarguments" llf2() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
-numsci 18,1,1
-load r32,"scale-c.crexx: entering SCALE"
+.meta "llprogram.SCALE"="b" ".rexxactivation..rexxactivationarguments" llf2() "context=reference .rexxclassiccontext..rexxclassiccontext"
+load r41,"scale-c.crexx: entering SCALE"
 sigbrv llerror2_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror2_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror2_3,r0,"CONVERSION_ERROR"
 sigbrv llerror2_4,r0,"INVALID_ARGUMENTS"
+numsci 18,1,2
+linkref r29,a1
+swap r29,r43
+load r42,1
+settp r43,256
+call r33,rexxclassiccontext.rexxclassiccontext.activation(),r42
+swap r29,r43
+null r43
+unlink r29
+linkref r30,r33
+swap r30,r43
+load r42,1
+settp r43,256
+call r34,rexxactivation.rexxactivationarguments.numericdigits(),r42
+swap r30,r43
+null r43
+swap r30,r43
+load r42,1
+settp r43,256
+call r35,rexxactivation.rexxactivationarguments.numericfuzz(),r42
+swap r30,r43
+null r43
+swap r30,r43
+load r42,1
+settp r43,256
+call r36,rexxactivation.rexxactivationarguments.numericform(),r42
+swap r30,r43
+null r43
+unlink r30
+null r33
+setnumfuz 0
+setnumdgts r34
+setnumfuz r35
+setnumfrm r36
 llb2:
-.srcstep 58 0 98 "scale-c.crexx" 1 1 15 "options levelc"
-load r32,"scale-c.crexx: generated code in SCALE"
-load r33,0
-call r7,llctarget.poolnew(),r33
-unlink r1
-link r1,r7
-copy r8,a1
-copy r3,r8
-copy r9,a2
-copy r2,r9
-.srcstep 59 0 17 "scale-c.crexx" 6 3 20 "  arg value, factor"
-load r32,"scale-c.crexx:6:3"
-copy r34,r8
-load r35,1
-load r33,2
-settp r34,768
-settp r35,768
-call r10,llctarget.readarg(),r33
-null r34
-null r35
-mkref r34,r7
-copy r35,r10
-load r36,"VALUE"
-load r33,3
-settp r34,768
-settp r35,768
-settp r36,768
-call r31,llctarget.poolwrite(),r33
-null r34
-null r35
-null r36
-copy r11,r3
-copy r34,r11
-load r35,2
-load r33,2
-settp r34,768
-settp r35,768
-call r12,llctarget.readarg(),r33
-null r34
-null r35
-unlink r13
-link r13,r1
-mkref r34,r13
-copy r35,r12
-load r36,"FACTOR"
-load r33,3
-settp r34,768
-settp r35,768
-settp r36,768
-call r31,llctarget.poolwrite(),r33
-null r34
-null r35
-null r36
-.srcstep 76 0 17 "scale-c.crexx" 7 11 12 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:11"
-load r34,"2"
-load r33,1
-settp r34,768
-call r14,llctarget.literal(),r33
-null r34
-.srcstep 69 0 17 "scale-c.crexx" 7 7 17 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:7"
-copy r4,r14
-.srcstep 83 0 17 "scale-c.crexx" 7 13 16 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:13"
-load r34,"E"
-load r33,1
-settp r34,768
-call r15,llctarget.literal(),r33
-null r34
-.srcstep 69 0 17 "scale-c.crexx" 7 7 17 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:7"
-copy r5,r15
-copy r16,r3
-copy r34,r16
-copy r35,r14
-copy r36,r15
-load r33,3
-settp r34,768
-settp r35,768
-settp r36,768
-call r17,llctarget.existsarg(),r33
-null r34
-null r35
-null r36
-.srcstep 67 0 17 "scale-c.crexx" 7 6 17 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:6"
-copy r18,r2
-load r34,"not"
-copy r35,r17
-copy r36,r18
-load r33,3
-settp r34,768
-settp r35,768
-settp r36,768
-call r19,llctarget.unaryop(),r33
-null r34
-null r35
-null r36
-.srcstep 60 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:3"
-copy r34,r19
-load r33,1
-settp r34,768
-call r20,llctarget.truth(),r33
-null r34
-brt llb3,r20
+.srcstep 55 0 98 "scale-c.crexx" 1 1 15 "options levelc"
+load r41,"scale-c.crexx: generated code in SCALE"
+copy r5,a1
+copy r1,r5
+.srcstep 56 0 17 "scale-c.crexx" 6 3 20 "  arg value, factor"
+load r41,"scale-c.crexx:6:3"
+copy r43,r5
+load r44,1
+load r42,2
+settp r43,768
+settp r44,768
+call r6,llctarget.readarg(),r42
+null r43
+null r44
+copy r7,r1
+linkref r29,r7
+swap r29,r43
+load r42,1
+settp r43,256
+call r31,rexxclassiccontext.rexxclassiccontext.pool(),r42
+swap r29,r43
+null r43
+unlink r29
+copy r43,r31
+copy r44,r6
+load r45,"VALUE"
+load r42,3
+settp r43,768
+settp r44,768
+settp r45,768
+call r40,llctarget.poolwrite(),r42
+null r43
+null r44
+null r45
+null r31
+copy r8,r1
+copy r43,r8
+load r44,2
+load r42,2
+settp r43,768
+settp r44,768
+call r9,llctarget.readarg(),r42
+null r43
+null r44
+copy r10,r1
+linkref r29,r10
+swap r29,r43
+load r42,1
+settp r43,256
+call r31,rexxclassiccontext.rexxclassiccontext.pool(),r42
+swap r29,r43
+null r43
+unlink r29
+copy r43,r31
+copy r44,r9
+load r45,"FACTOR"
+load r42,3
+settp r43,768
+settp r44,768
+settp r45,768
+call r40,llctarget.poolwrite(),r42
+null r43
+null r44
+null r45
+null r31
+.srcstep 73 0 17 "scale-c.crexx" 7 11 12 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:11"
+load r43,"2"
+load r42,1
+settp r43,768
+call r11,llctarget.literal(),r42
+null r43
+.srcstep 66 0 17 "scale-c.crexx" 7 7 17 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:7"
+copy r2,r11
+.srcstep 80 0 17 "scale-c.crexx" 7 13 16 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:13"
+load r43,"E"
+load r42,1
+settp r43,768
+call r12,llctarget.literal(),r42
+null r43
+.srcstep 66 0 17 "scale-c.crexx" 7 7 17 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:7"
+copy r3,r12
+copy r13,r1
+copy r43,r13
+copy r44,r11
+copy r45,r12
+load r42,3
+settp r43,768
+settp r44,768
+settp r45,768
+call r14,llctarget.existsarg(),r42
+null r43
+null r44
+null r45
+.srcstep 64 0 17 "scale-c.crexx" 7 6 17 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:6"
+copy r15,r1
+load r43,"not"
+copy r44,r14
+copy r45,r15
+load r42,3
+settp r43,768
+settp r44,768
+settp r45,768
+call r16,llctarget.unaryop(),r42
+null r43
+null r44
+null r45
+.srcstep 57 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:3"
+copy r17,r1
+copy r43,r16
+copy r44,r17
+load r42,2
+settp r43,768
+settp r44,768
+call r18,llctarget.truth(),r42
+null r43
+null r44
+brt llb3,r18
 br llb4
 llb3:
-.srcstep 91 0 17 "scale-c.crexx" 7 32 33 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:32"
-load r34,"2"
-load r33,1
-settp r34,768
-call r21,llctarget.literal(),r33
-null r34
-.srcstep 84 0 17 "scale-c.crexx" 7 23 33 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:23"
-unlink r22
-link r22,r1
-mkref r34,r22
-copy r35,r21
-load r36,"FACTOR"
-load r33,3
-settp r34,768
-settp r35,768
-settp r36,768
-call r31,llctarget.poolwrite(),r33
-null r34
-null r35
-null r36
-.srcstep 60 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:3"
+.srcstep 88 0 17 "scale-c.crexx" 7 32 33 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:32"
+load r43,"2"
+load r42,1
+settp r43,768
+call r19,llctarget.literal(),r42
+null r43
+.srcstep 81 0 17 "scale-c.crexx" 7 23 33 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:23"
+copy r20,r1
+linkref r29,r20
+swap r29,r43
+load r42,1
+settp r43,256
+call r31,rexxclassiccontext.rexxclassiccontext.pool(),r42
+swap r29,r43
+null r43
+unlink r29
+copy r43,r31
+copy r44,r19
+load r45,"FACTOR"
+load r42,3
+settp r43,768
+settp r44,768
+settp r45,768
+call r40,llctarget.poolwrite(),r42
+null r43
+null r44
+null r45
+null r31
+.srcstep 57 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:3"
 br llb5
 llb4:
-.srcstep 60 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
-load r32,"scale-c.crexx:7:3"
+.srcstep 57 0 17 "scale-c.crexx" 7 3 33 "  if \x5Carg(2,'E') then factor = 2"
+load r41,"scale-c.crexx:7:3"
 llb5:
-.srcstep 99 0 17 "scale-c.crexx" 8 10 15 "  return value * factor"
-load r32,"scale-c.crexx:8:10"
-unlink r23
-link r23,r1
-mkref r34,r23
-load r35,"VALUE"
-load r33,2
-settp r34,768
-settp r35,768
-call r24,llctarget.poolread(),r33
-null r34
-null r35
-.srcstep 98 0 17 "scale-c.crexx" 8 10 24 "  return value * factor"
-copy r6,r24
-.srcstep 100 0 17 "scale-c.crexx" 8 18 24 "  return value * factor"
-load r32,"scale-c.crexx:8:18"
-unlink r25
-link r25,r1
-mkref r34,r25
-load r35,"FACTOR"
-load r33,2
-settp r34,768
-settp r35,768
-call r26,llctarget.poolread(),r33
-null r34
-null r35
-.srcstep 98 0 17 "scale-c.crexx" 8 10 24 "  return value * factor"
-load r32,"scale-c.crexx:8:10"
-copy r27,r6
-copy r28,r2
-load r34,"mul"
-copy r35,r27
-copy r36,r26
-copy r37,r28
-load r33,4
-settp r34,768
-settp r35,768
-settp r36,768
-settp r37,768
-call r29,llctarget.binaryop(),r33
-null r34
-null r35
-null r36
-null r37
-.srcstep 92 0 17 "scale-c.crexx" 8 3 24 "  return value * factor"
-load r32,"scale-c.crexx:8:3"
-copy r34,r29
-load r33,1
-settp r34,768
-call r30,llctarget.present(),r33
-null r34
-ret r30
+.srcstep 96 0 17 "scale-c.crexx" 8 10 15 "  return value * factor"
+load r41,"scale-c.crexx:8:10"
+copy r21,r1
+linkref r29,r21
+swap r29,r43
+load r42,1
+settp r43,256
+call r31,rexxclassiccontext.rexxclassiccontext.pool(),r42
+swap r29,r43
+null r43
+unlink r29
+copy r43,r31
+load r44,"VALUE"
+load r42,2
+settp r43,768
+settp r44,768
+call r22,llctarget.poolread(),r42
+null r43
+null r44
+null r31
+.srcstep 95 0 17 "scale-c.crexx" 8 10 24 "  return value * factor"
+copy r4,r22
+.srcstep 97 0 17 "scale-c.crexx" 8 18 24 "  return value * factor"
+load r41,"scale-c.crexx:8:18"
+copy r23,r1
+linkref r29,r23
+swap r29,r43
+load r42,1
+settp r43,256
+call r31,rexxclassiccontext.rexxclassiccontext.pool(),r42
+swap r29,r43
+null r43
+unlink r29
+copy r43,r31
+load r44,"FACTOR"
+load r42,2
+settp r43,768
+settp r44,768
+call r24,llctarget.poolread(),r42
+null r43
+null r44
+null r31
+.srcstep 95 0 17 "scale-c.crexx" 8 10 24 "  return value * factor"
+load r41,"scale-c.crexx:8:10"
+copy r25,r4
+copy r26,r1
+load r43,"mul"
+copy r44,r25
+copy r45,r24
+copy r46,r26
+load r42,4
+settp r43,768
+settp r44,768
+settp r45,768
+settp r46,768
+call r27,llctarget.binaryop(),r42
+null r43
+null r44
+null r45
+null r46
+.srcstep 89 0 17 "scale-c.crexx" 8 3 24 "  return value * factor"
+load r41,"scale-c.crexx:8:3"
+copy r43,r27
+load r42,1
+settp r43,768
+call r28,llctarget.present(),r42
+null r43
+ret r28
 llerror2_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r31,1
+load r40,1
 br llerror2
 llerror2_2:
-load r31,2
+load r40,2
 br llerror2
 llerror2_3:
-load r31,3
+load r40,3
 br llerror2
 llerror2_4:
-load r31,4
+load r40,4
 llerror2:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r34,r0
-copy r35,r32
-load r33,2
-settp r34,768
-settp r35,768
-call r32,llctarget.failuremessage(),r33
-null r34
-null r35
-beq llraise2_1,r31,1
-beq llraise2_2,r31,2
-beq llraise2_3,r31,3
+copy r43,r0
+copy r44,r41
+load r42,2
+settp r43,768
+settp r44,768
+call r41,llctarget.failuremessage(),r42
+null r43
+null r44
+beq llraise2_1,r40,1
+beq llraise2_2,r40,2
+beq llraise2_3,r40,3
 llraise2_4:
-signalorigin "INVALID_ARGUMENTS",r32,r0
+signalorigin "INVALID_ARGUMENTS",r41,r0
 ret
 llraise2_3:
-signalorigin "CONVERSION_ERROR",r32,r0
+signalorigin "CONVERSION_ERROR",r41,r0
 ret
 llraise2_2:
-signalorigin "DIVISION_BY_ZERO",r32,r0
+signalorigin "DIVISION_BY_ZERO",r41,r0
 ret
 llraise2_1:
-signalorigin "CLASSIC_SYNTAX",r32,r0
+signalorigin "CLASSIC_SYNTAX",r41,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
-llctarget.contextnew() .expose=llctarget.contextnew
-  .meta "llctarget.contextnew"="b" ".rexxactivation..rexxactivationarguments" llctarget.contextnew() ""
-llctarget.status() .expose=llctarget.status
-  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
 llctarget.poolnew() .expose=llctarget.poolnew
   .meta "llctarget.poolnew"="b" ".rexxpool..rexxvariablepool" llctarget.poolnew() ""
+rexxclassicconfig.rexxclassicconfig.§factory() .expose=rexxclassicconfig.rexxclassicconfig.§factory
+  .meta "rexxclassicconfig.rexxclassicconfig.\xC2\xA7factory"="b" ".rexxclassicconfig..rexxclassicconfig" rexxclassicconfig.rexxclassicconfig.§factory() "?requested_profile=.string"
+rexxclassiccontext.rexxclassiccontext.§factory() .expose=rexxclassiccontext.rexxclassiccontext.§factory
+  .meta "rexxclassiccontext.rexxclassiccontext.\xC2\xA7factory"="b" ".rexxclassiccontext..rexxclassiccontext" rexxclassiccontext.rexxclassiccontext.§factory() "activation=reference .rexxactivation..rexxactivationarguments,pool=reference .rexxpool..rexxvariablepool,config=reference .rexxclassicconfig..rexxclassicconfig"
+llctarget.status() .expose=llctarget.status
+  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
+rexxclassiccontext.rexxclassiccontext.activation() .expose=rexxclassiccontext.rexxclassiccontext.activation
+  .meta "rexxclassiccontext.rexxclassiccontext.activation"="b" "reference .rexxactivation..rexxactivationarguments" rexxclassiccontext.rexxclassiccontext.activation() ""
+rexxactivation.rexxactivationarguments.numericdigits() .expose=rexxactivation.rexxactivationarguments.numericdigits
+  .meta "rexxactivation.rexxactivationarguments.numericdigits"="b" ".int" rexxactivation.rexxactivationarguments.numericdigits() ""
+rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexxactivationarguments.numericfuzz
+  .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
+rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
+  .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
 llctarget.arguments() .expose=llctarget.arguments
   .meta "llctarget.arguments"="b" ".rexxactivation..rexxactivationarguments" llctarget.arguments() ""
 llctarget.literal() .expose=llctarget.literal
   .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "text=.string"
 llctarget.append() .expose=llctarget.append
   .meta "llctarget.append"="b" ".rexxactivation..rexxactivationarguments" llctarget.append() "frame=.rexxactivationarguments,value=.rexxvalue,present=.int"
+rexxactivation.rexxactivationarguments.inheritsignalpolicy() .expose=rexxactivation.rexxactivationarguments.inheritsignalpolicy
+  .meta "rexxactivation.rexxactivationarguments.inheritsignalpolicy"="b" ".void" rexxactivation.rexxactivationarguments.inheritsignalpolicy() "parent_ref=reference .rexxactivationarguments"
+rexxactivation.rexxactivationarguments.begininternalfunction() .expose=rexxactivation.rexxactivationarguments.begininternalfunction
+  .meta "rexxactivation.rexxactivationarguments.begininternalfunction"="b" ".void" rexxactivation.rexxactivationarguments.begininternalfunction() ""
+rexxactivation.rexxactivationarguments.enterprocedure() .expose=rexxactivation.rexxactivationarguments.enterprocedure
+  .meta "rexxactivation.rexxactivationarguments.enterprocedure"="b" ".void" rexxactivation.rexxactivationarguments.enterprocedure() ""
+rexxclassiccontext.rexxclassiccontext.pool() .expose=rexxclassiccontext.rexxclassiccontext.pool
+  .meta "rexxclassiccontext.rexxclassiccontext.pool"="b" "reference .rexxpool..rexxvariablepool" rexxclassiccontext.rexxclassiccontext.pool() ""
+rexxclassiccontext.rexxclassiccontext.config() .expose=rexxclassiccontext.rexxclassiccontext.config
+  .meta "rexxclassiccontext.rexxclassiccontext.config"="b" "reference .rexxclassicconfig..rexxclassicconfig" rexxclassiccontext.rexxclassiccontext.config() ""
+rexxpool.rexxvariablepool.inheritcommandstatus() .expose=rexxpool.rexxvariablepool.inheritcommandstatus
+  .meta "rexxpool.rexxvariablepool.inheritcommandstatus"="b" ".void" rexxpool.rexxvariablepool.inheritcommandstatus() "parent=reference .rexxvariablepool"
 llctarget.requirevalue() .expose=llctarget.requirevalue
   .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments"
 llctarget.sayvalue() .expose=llctarget.sayvalue
@@ -499,16 +790,16 @@ llctarget.absent() .expose=llctarget.absent
 llctarget.failuremessage() .expose=llctarget.failuremessage
   .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
 llctarget.readarg() .expose=llctarget.readarg
-  .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "frame=.rexxactivationarguments,ordinal=.int"
+  .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "context=reference .rexxclassiccontext..rexxclassiccontext,ordinal=.int"
 llctarget.poolwrite() .expose=llctarget.poolwrite
   .meta "llctarget.poolwrite"="b" ".void" llctarget.poolwrite() "poolref=reference .rexxvariablepool,value=.rexxvalue,name=.string"
 llctarget.existsarg() .expose=llctarget.existsarg
-  .meta "llctarget.existsarg"="b" ".rexxvalue..rexxvalue" llctarget.existsarg() "frame=.rexxactivationarguments,ordinal=.rexxvalue,option=.rexxvalue"
+  .meta "llctarget.existsarg"="b" ".rexxvalue..rexxvalue" llctarget.existsarg() "context=reference .rexxclassiccontext..rexxclassiccontext,ordinal=.rexxvalue,option=.rexxvalue"
 llctarget.unaryop() .expose=llctarget.unaryop
-  .meta "llctarget.unaryop"="b" ".rexxvalue..rexxvalue" llctarget.unaryop() "operation=.string,value=.rexxvalue,context=.rexxactivationarguments"
+  .meta "llctarget.unaryop"="b" ".rexxvalue..rexxvalue" llctarget.unaryop() "operation=.string,value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.truth() .expose=llctarget.truth
-  .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue"
+  .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.poolread() .expose=llctarget.poolread
   .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "poolref=reference .rexxvariablepool,name=.string"
 llctarget.binaryop() .expose=llctarget.binaryop
-  .meta "llctarget.binaryop"="b" ".rexxvalue..rexxvalue" llctarget.binaryop() "operation=.string,left=.rexxvalue,right=.rexxvalue,context=.rexxactivationarguments"
+  .meta "llctarget.binaryop"="b" ".rexxvalue..rexxvalue" llctarget.binaryop() "operation=.string,left=.rexxvalue,right=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"

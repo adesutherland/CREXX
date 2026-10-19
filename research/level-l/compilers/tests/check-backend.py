@@ -38,7 +38,7 @@ start = time.monotonic()
 # compilers through PATH, and do not receive their path as an argument.
 runtime = work / 'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc']:
+for name in ['library', 'rxfnsc', 'classlib', 'rxunicode-core']:
     shutil.copyfile(bin_dir / (name + '.rxbin'), runtime / (name + '.rxbin'))
 shutil.copyfile((bin_dir / 'llctarget.rxbin') if args.installed else backend / 'llctarget.rxbin', runtime / 'llctarget.rxbin')
 env = dict(os.environ)
@@ -98,7 +98,8 @@ try:
             linked = work / (label+'-linked')
             modules = [str(assembly.with_suffix('.rxbin')), str(runtime/'library.rxbin')]
             if case['level']=='c':
-                modules += [str(runtime/'llctarget.rxbin'), str(runtime/'rxfnsc.rxbin')]
+                modules += [str(runtime/'llctarget.rxbin'), str(runtime/'rxfnsc.rxbin'),
+                            str(runtime/'classlib.rxbin'), str(runtime/'rxunicode-core.rxbin')]
             # Preserve source metadata; -s intentionally strips runtime sources.
             run(label+'-link', [tool('rxlink'), '-o', str(linked)] + modules)
             command = [tool(args.vm), str(linked)+'.rxbin']

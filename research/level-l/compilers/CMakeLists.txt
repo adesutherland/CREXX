@@ -123,21 +123,42 @@ foreach(_mode opt noopt)
     endif()
   endforeach()
   if("c" IN_LIST _languages)
-    # Keep the installed image and legacy exports stable while adding the
-    # borrowed-context namespace. Members are private, not separate products.
-    set(_target_members "${_dir}/target-members")
-    foreach(_adapter llctarget llctarget2)
-      ll_compile(${_adapter} "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/${_adapter}.crexx" "${_target_members}"
-        "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
-    endforeach()
-    set(_target_control "${_target_members}/target.ctl")
-    file(GENERATE OUTPUT "${_target_control}" CONTENT
-      "INPUT ${_target_members}/llctarget.rxbin\nINPUT ${_target_members}/llctarget2.rxbin\nINCLUDE llctarget\nINCLUDE llctarget2\nPRESERVE INLINE\nOUTPUT ${_dir}/llctarget\n")
-    add_custom_command(OUTPUT "${_dir}/llctarget.rxbin"
-      COMMAND $<TARGET_FILE:rxlink> -c "${_target_control}"
-      DEPENDS rxlink "${_target_control}" "${_target_members}/llctarget.rxbin"
-        "${_target_members}/llctarget2.rxbin" VERBATIM)
+    # The approved C ABI is one clean namespace and one target product.
+    ll_compile(llctarget "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/llctarget.crexx" "${_dir}"
+      "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
+
+    set(_c_contract_inputs ${_base} ${_shared}
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
+    list(REMOVE_DUPLICATES _c_contract_inputs)
+    ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
+      "${_dir}" ${_c_contract_inputs})
+    add_custom_command(OUTPUT "${_dir}/c-context-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/c-context-contracts-linked"
+        "${_dir}/c-context-contracts.rxbin" ${_c_contract_inputs}
+      DEPENDS rxlink "${_dir}/c-context-contracts.rxbin" ${_c_contract_inputs} VERBATIM)
+    crexx_add_import_root(llcompiler_c_context_contract_runtime_${_mode}
+      DIRECTORY "${_dir}/context-contract-runtime"
+      OUTPUT_VARIABLE _c_contract_runtime
+      FILES "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin"
+      DEPENDS rxfnsc llcompiler_target_${_mode}
+        "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin")
+    add_custom_target(llcompiler_c_context_contracts_${_mode}
+      DEPENDS "${_dir}/c-context-contracts-linked.rxbin" "${_c_contract_runtime}")
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        set(_contracts_test "llcompiler_c_context_contracts_${_mode}_${_vm}")
+        add_test(NAME ${_contracts_test} COMMAND $<TARGET_FILE:${_vm}>
+          --no-autoload "${_dir}/c-context-contracts-linked.rxbin"
+          -a "${_dir}/context-contract-runtime")
+        set_tests_properties(${_contracts_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "C_CONTEXT_CONTRACTS[|]checks=[0-9]+[|]failures=0"
+          TIMEOUT 300 LABELS "level-l;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_contracts_test}
+          TARGETS llcompiler_c_context_contracts_${_mode} llcompiler_target_${_mode} rxfnsc ${_vm})
+      endif()
+    endforeach()
 
     ll_compile(target-context "${CMAKE_CURRENT_SOURCE_DIR}/tests/target-context.crexx" "${_dir}"
       "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
@@ -157,7 +178,7 @@ foreach(_mode opt noopt)
     add_test(NAME ${_context_shape} COMMAND ${Python3_EXECUTABLE}
       "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-target-context.py"
       --context "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicContext/RexxClassicContext.rxas"
-      --adapter "${_target_members}/llctarget2.rxas")
+      --adapter "${_dir}/llctarget.rxas")
     set_tests_properties(${_context_shape} PROPERTIES TIMEOUT 60
       LABELS "library;levelc;compiler-backend;optimizer-parity")
     crexx_register_test_prep_targets(TESTS ${_context_shape}
@@ -174,39 +195,54 @@ foreach(_mode opt noopt)
       endif()
     endforeach()
   endif()
+  # Independent IR contracts use generic Level L only, including in C-only
+  # configurations. Their test vocabulary does not load either compiler.
+  set(_tests "${CMAKE_CURRENT_BINARY_DIR}/test-support/${_mode}")
+  set(_contracts_dir "${CMAKE_CURRENT_BINARY_DIR}/frontends/${_mode}")
+  ll_compile(lltestfamilies "${CMAKE_CURRENT_SOURCE_DIR}/tests/lltestfamilies.crexx" "${_tests}" ${_base})
+  ll_compile(contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/ir-contracts.crexx"
+    "${_contracts_dir}" ${_base} "${_tests}/lltestfamilies.rxbin")
+  add_custom_command(OUTPUT "${_contracts_dir}/contracts-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_contracts_dir}/contracts-linked"
+      "${_contracts_dir}/contracts.rxbin" "${_tests}/lltestfamilies.rxbin" ${_base}
+    DEPENDS rxlink "${_contracts_dir}/contracts.rxbin" "${_tests}/lltestfamilies.rxbin" ${_base} VERBATIM)
+  add_custom_target(llcompiler_contracts_${_mode} ALL DEPENDS "${_contracts_dir}/contracts-linked.rxbin")
+  foreach(_vm rxtvm rxbvm)
+    if(TARGET ${_vm})
+      set(_test "llcompiler_ir_contracts_${_mode}_${_vm}")
+      add_test(NAME ${_test} COMMAND $<TARGET_FILE:${_vm}> "${_contracts_dir}/contracts-linked.rxbin")
+      set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
+        TIMEOUT 300 LABELS "level-l;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_test} TARGETS llcompiler_contracts_${_mode} ${_vm})
+    endif()
+  endforeach()
   # Mixed-language regression adapters are never part of the products.
   if("c" IN_LIST _languages AND "g" IN_LIST _languages)
+    list(APPEND _allhosts "${_tests}/lltestfamilies.rxbin")
     list(REMOVE_DUPLICATES _allhosts)
-    set(_tests "${CMAKE_CURRENT_BINARY_DIR}/test-support/${_mode}")
-    foreach(_adapter lltestfamilies lltestparse lltestfrontend lltestrxas lltestcompiler)
+    foreach(_adapter lltestparse lltestfrontend lltestrxas lltestcompiler)
       ll_compile(${_adapter} "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_adapter}.crexx" "${_tests}" ${_base} ${_allhosts})
       list(APPEND _allhosts "${_tests}/${_adapter}.rxbin")
     endforeach()
-    foreach(_consumer frontend-tests frontend-probe parse-probe contracts-probe backend-probe backend-tests backend-optimise backend-poc backend-step07 demo contracts)
+    foreach(_consumer frontend-tests frontend-probe parse-probe contracts-probe backend-probe backend-tests backend-optimise backend-poc backend-step07 demo)
       set(_dest "${CMAKE_CURRENT_BINARY_DIR}/frontends/${_mode}")
       set(_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_consumer}.crexx")
       if(_consumer MATCHES "^backend")
         set(_dest "${_dir}")
       elseif(_consumer STREQUAL "demo")
         set(_source "${CMAKE_CURRENT_SOURCE_DIR}/examples/ir-demo.crexx")
-      elseif(_consumer STREQUAL "contracts")
-        set(_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/ir-contracts.crexx")
       endif()
       ll_compile(${_consumer} "${_source}" "${_dest}" ${_base} ${_allhosts})
       add_custom_command(OUTPUT "${_dest}/${_consumer}-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dest}/${_consumer}-linked" "${_dest}/${_consumer}" ${_allhosts} ${_base}
         DEPENDS rxlink "${_dest}/${_consumer}.rxbin" ${_allhosts} ${_base} VERBATIM)
       add_custom_target(llcompiler_${_consumer}_${_mode} ALL DEPENDS "${_dest}/${_consumer}-linked.rxbin")
-      if(_consumer STREQUAL "demo" OR _consumer STREQUAL "contracts")
-        set(_success "failures=0")
-        if(_consumer STREQUAL "demo")
-          set(_success "IR_DEMO[|]OK")
-        endif()
+      if(_consumer STREQUAL "demo")
         foreach(_vm rxtvm rxbvm)
           if(TARGET ${_vm})
             set(_test "llcompiler_ir_${_consumer}_${_mode}_${_vm}")
             add_test(NAME ${_test} COMMAND $<TARGET_FILE:${_vm}> "${_dest}/${_consumer}-linked.rxbin")
-            set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "${_success}" TIMEOUT 300 LABELS "level-l;optimizer-parity")
+            set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "IR_DEMO[|]OK" TIMEOUT 300 LABELS "level-l;optimizer-parity")
             crexx_register_test_prep_targets(TESTS ${_test} TARGETS llcompiler_${_consumer}_${_mode} ${_vm})
           endif()
         endforeach()
@@ -252,31 +288,31 @@ if("c" IN_LIST _languages)
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
-  # 55 commands: isolated Debug 32s / maintained Apple ASan 97s. This reuses
-  # existing call/numeric fixtures; serialize nested tools with a hang guard.
+  # C calls: 110 commands in the representative cell, 68 in the other cells;
+  # isolated Debug 96s. Source-only qualification uses Debug; sanitizer
+  # scheduling follows AGENTS.md.
+  # Serialize nested tools; 1800s is a hang guard for slower hosts.
   foreach(_mode opt noopt)
     foreach(_vm rxbvm rxtvm)
       if(TARGET ${_vm})
-        set(_test "llcompiler_c_calls_${_mode}_${_vm}")
-        add_test(NAME ${_test}
+        set(_calls "llcompiler_c_calls_${_mode}_${_vm}")
+        set(_commands 68)
+        if(_mode STREQUAL "opt" AND _vm STREQUAL "rxbvm")
+          set(_commands 110)
+        endif()
+        add_test(NAME ${_calls}
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
-            --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+            --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_calls}"
             --mode ${_mode} --vm ${_vm} --c-only)
-        set_tests_properties(${_test} PROPERTIES
-          PASS_REGULAR_EXPRESSION "STEP07_C_ONLY[|]commands=55[|]failures=0"
-          TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        set_tests_properties(${_calls} PROPERTIES
+          PASS_REGULAR_EXPRESSION "STEP07_C_ONLY[|]commands=${_commands}[|]failures=0"
+          TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
-        crexx_register_test_prep_targets(TESTS ${_test}
+        crexx_register_test_prep_targets(TESTS ${_calls}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
             library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
-      endif()
-    endforeach()
-  endforeach()
-  # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
-  # nested tools; 900s is a generous hang guard, not a performance criterion.
-  foreach(_mode opt noopt)
-    foreach(_vm rxbvm rxtvm)
-      if(TARGET ${_vm})
+        # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
+        # nested tools; 900s is a generous hang guard, not a performance criterion.
         set(_test "llcompiler_c_only_${_mode}_${_vm}")
         add_test(NAME ${_test}
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"

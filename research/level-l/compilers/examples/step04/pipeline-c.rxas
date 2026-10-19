@@ -1,611 +1,853 @@
 .globals=0
-main() .locals=6
+main() .locals=16
 .srcstep 0 0 6 "" 0 0 0 ""
-copy r4,a1
-load r3,1
-settp r4,768
-call r1,llctarget.mainargs(),r3
+copy r13,a1
+load r12,1
+settp r13,768
+call r9,llctarget.mainargs(),r12
+null r13
+load r12,0
+call r10,llctarget.poolnew(),r12
+load r13,"UTF8"
+load r12,1
+settp r13,768
+call r8,rexxclassicconfig.rexxclassicconfig.§factory(),r12
+null r13
+mkref r4,r8
+mkref r13,r9
+mkref r14,r10
+copy r15,r4
+load r12,3
+settp r13,768
+settp r14,768
+settp r15,768
+call r11,rexxclassiccontext.rexxclassiccontext.§factory(),r12
+null r13
+null r14
+null r15
+mkref r13,r11
+load r12,1
+settp r13,768
+call r0,llf1(),r12
+null r13
+copy r13,r0
+load r12,1
+settp r13,768
+call r0,llctarget.status(),r12
+null r13
+null r11
 null r4
-load r3,0
-call r2,llctarget.contextnew(),r3
-copy r4,r1
-copy r5,r2
-load r3,2
-settp r4,768
-settp r5,768
-call r0,llf1(),r3
-null r4
-null r5
-copy r4,r0
-load r3,1
-settp r4,768
-call r1,llctarget.status(),r3
-null r4
-ret r1
-llf1() .locals=67
+null r9
+null r10
+null r8
+ret r0
+llf1() .locals=75
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
-numsci 18,1,1
-load r61,"pipeline-c.crexx: entering $MAIN"
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
+load r69,"pipeline-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+numsci 18,1,2
+linkref r57,a1
+swap r57,r71
+load r70,1
+settp r71,256
+call r61,rexxclassiccontext.rexxclassiccontext.activation(),r70
+swap r57,r71
+null r71
+unlink r57
+linkref r58,r61
+swap r58,r71
+load r70,1
+settp r71,256
+call r62,rexxactivation.rexxactivationarguments.numericdigits(),r70
+swap r58,r71
+null r71
+swap r58,r71
+load r70,1
+settp r71,256
+call r63,rexxactivation.rexxactivationarguments.numericfuzz(),r70
+swap r58,r71
+null r71
+swap r58,r71
+load r70,1
+settp r71,256
+call r64,rexxactivation.rexxactivationarguments.numericform(),r70
+swap r58,r71
+null r71
+unlink r58
+null r61
+setnumfuz 0
+setnumdgts r62
+setnumfuz r63
+setnumfrm r64
 llb1:
 .srcstep 2 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
-load r61,"pipeline-c.crexx: generated code in $MAIN"
-load r62,0
-call r10,llctarget.poolnew(),r62
-unlink r1
-link r1,r10
-copy r11,a1
-copy r3,r11
-copy r12,a2
-copy r2,r12
+load r69,"pipeline-c.crexx: generated code in $MAIN"
+copy r8,a1
+copy r1,r8
 .srcstep 11 0 17 "pipeline-c.crexx" 2 9 10 "total = 2 + 3"
-load r61,"pipeline-c.crexx:2:9"
-load r63,"2"
-load r62,1
-settp r63,768
-call r13,llctarget.literal(),r62
-null r63
+load r69,"pipeline-c.crexx:2:9"
+load r71,"2"
+load r70,1
+settp r71,768
+call r9,llctarget.literal(),r70
+null r71
 .srcstep 9 0 17 "pipeline-c.crexx" 2 9 14 "total = 2 + 3"
-copy r4,r13
+copy r2,r9
 .srcstep 13 0 17 "pipeline-c.crexx" 2 13 14 "total = 2 + 3"
-load r61,"pipeline-c.crexx:2:13"
-load r63,"3"
-load r62,1
-settp r63,768
-call r14,llctarget.literal(),r62
-null r63
+load r69,"pipeline-c.crexx:2:13"
+load r71,"3"
+load r70,1
+settp r71,768
+call r10,llctarget.literal(),r70
+null r71
 .srcstep 9 0 17 "pipeline-c.crexx" 2 9 14 "total = 2 + 3"
-load r61,"pipeline-c.crexx:2:9"
-copy r15,r4
-copy r16,r2
-load r63,"add"
-copy r64,r15
-copy r65,r14
-copy r66,r16
-load r62,4
-settp r63,768
-settp r64,768
-settp r65,768
-settp r66,768
-call r17,llctarget.binaryop(),r62
-null r63
-null r64
-null r65
-null r66
+load r69,"pipeline-c.crexx:2:9"
+copy r11,r2
+copy r12,r1
+load r71,"add"
+copy r72,r11
+copy r73,r10
+copy r74,r12
+load r70,4
+settp r71,768
+settp r72,768
+settp r73,768
+settp r74,768
+call r13,llctarget.binaryop(),r70
+null r71
+null r72
+null r73
+null r74
 .srcstep 4 0 17 "pipeline-c.crexx" 2 1 14 "total = 2 + 3"
-load r61,"pipeline-c.crexx:2:1"
-unlink r18
-link r18,r1
-mkref r63,r18
-copy r64,r17
-load r65,"TOTAL"
-load r62,3
-settp r63,768
-settp r64,768
-settp r65,768
-call r60,llctarget.poolwrite(),r62
-null r63
-null r64
-null r65
+load r69,"pipeline-c.crexx:2:1"
+copy r14,r1
+linkref r57,r14
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+copy r72,r13
+load r73,"TOTAL"
+load r70,3
+settp r71,768
+settp r72,768
+settp r73,768
+call r68,llctarget.poolwrite(),r70
+null r71
+null r72
+null r73
+null r59
 .srcstep 21 0 17 "pipeline-c.crexx" 3 4 9 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:4"
-unlink r19
-link r19,r1
-mkref r63,r19
-load r64,"TOTAL"
-load r62,2
-settp r63,768
-settp r64,768
-call r20,llctarget.poolread(),r62
-null r63
-null r64
+load r69,"pipeline-c.crexx:3:4"
+copy r15,r1
+linkref r57,r15
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+load r72,"TOTAL"
+load r70,2
+settp r71,768
+settp r72,768
+call r16,llctarget.poolread(),r70
+null r71
+null r72
+null r59
 .srcstep 17 0 17 "pipeline-c.crexx" 3 4 14 "if total > 4 then say twice(total)"
-copy r5,r20
+copy r3,r16
 .srcstep 25 0 17 "pipeline-c.crexx" 3 12 13 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:12"
-load r63,"4"
-load r62,1
-settp r63,768
-call r21,llctarget.literal(),r62
-null r63
+load r69,"pipeline-c.crexx:3:12"
+load r71,"4"
+load r70,1
+settp r71,768
+call r17,llctarget.literal(),r70
+null r71
 .srcstep 17 0 17 "pipeline-c.crexx" 3 4 14 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:4"
-copy r22,r5
-copy r23,r2
-load r63,"gt"
-copy r64,r22
-copy r65,r21
-copy r66,r23
-load r62,4
-settp r63,768
-settp r64,768
-settp r65,768
-settp r66,768
-call r24,llctarget.binaryop(),r62
-null r63
-null r64
-null r65
-null r66
+load r69,"pipeline-c.crexx:3:4"
+copy r18,r3
+copy r19,r1
+load r71,"gt"
+copy r72,r18
+copy r73,r17
+copy r74,r19
+load r70,4
+settp r71,768
+settp r72,768
+settp r73,768
+settp r74,768
+call r20,llctarget.binaryop(),r70
+null r71
+null r72
+null r73
+null r74
 .srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:1"
-copy r63,r24
-load r62,1
-settp r63,768
-call r25,llctarget.truth(),r62
-null r63
-brt llb2,r25
+load r69,"pipeline-c.crexx:3:1"
+copy r21,r1
+copy r71,r20
+copy r72,r21
+load r70,2
+settp r71,768
+settp r72,768
+call r22,llctarget.truth(),r70
+null r71
+null r72
+brt llb2,r22
 br llb3
 llb2:
 .srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:23"
-load r62,0
-call r26,llctarget.arguments(),r62
-copy r6,r26
-.srcstep 35 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:29"
-load r63,""
-load r62,1
-settp r63,768
-call r27,llctarget.literal(),r62
-null r63
-unlink r28
-link r28,r1
-mkref r63,r28
-load r64,"TOTAL"
-load r62,2
-settp r63,768
-settp r64,768
-call r29,llctarget.poolread(),r62
-null r63
-null r64
+load r69,"pipeline-c.crexx:3:23"
+load r70,0
+call r23,llctarget.arguments(),r70
+copy r4,r23
+.srcstep 41 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
+load r69,"pipeline-c.crexx:3:29"
+copy r24,r1
+linkref r57,r24
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+load r72,"TOTAL"
+load r70,2
+settp r71,768
+settp r72,768
+call r25,llctarget.poolread(),r70
+null r71
+null r72
+null r59
 .srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:23"
-copy r30,r6
-load r31,1
-.srcstep 43 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:29"
-copy r63,r30
-copy r64,r29
-copy r65,r31
-load r62,3
-settp r63,768
-settp r64,768
-settp r65,768
-call r32,llctarget.append(),r62
-null r63
-null r64
+load r69,"pipeline-c.crexx:3:23"
+copy r26,r4
+load r27,1
+.srcstep 42 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
+load r69,"pipeline-c.crexx:3:29"
+copy r71,r26
+copy r72,r25
+copy r73,r27
+load r70,3
+settp r71,768
+settp r72,768
+settp r73,768
+call r28,llctarget.append(),r70
+null r71
+null r72
+null r73
+.srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+load r69,"pipeline-c.crexx:3:23"
+copy r4,r28
+copy r29,r4
+copy r30,r1
+copy r65,r29
+linkref r57,r30
+swap r57,r71
+load r70,1
+settp r71,256
+call r61,rexxclassiccontext.rexxclassiccontext.activation(),r70
+swap r57,r71
+null r71
+unlink r57
+link r58,r65
+copy r72,r61
+swap r58,r71
+load r70,2
+settp r71,256
+settp r72,768
+call r68,rexxactivation.rexxactivationarguments.inheritsignalpolicy(),r70
+swap r58,r71
+null r71
+null r72
+swap r58,r71
+load r70,1
+settp r71,256
+call r68,rexxactivation.rexxactivationarguments.begininternalfunction(),r70
+swap r58,r71
+null r71
+swap r58,r71
+load r70,1
+settp r71,256
+call r68,rexxactivation.rexxactivationarguments.enterprocedure(),r70
+swap r58,r71
+null r71
+unlink r58
+linkref r57,r30
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+linkref r57,r30
+swap r57,r71
+load r70,1
+settp r71,256
+call r60,rexxclassiccontext.rexxclassiccontext.config(),r70
+swap r57,r71
+null r71
+unlink r57
+load r70,0
+call r66,llctarget.poolnew(),r70
+link r58,r66
+copy r72,r59
+swap r58,r71
+load r70,2
+settp r71,256
+settp r72,768
+call r68,rexxpool.rexxvariablepool.inheritcommandstatus(),r70
+swap r58,r71
+null r71
+null r72
+unlink r58
+mkref r71,r65
+mkref r72,r66
+copy r73,r60
+load r70,3
+settp r71,768
+settp r72,768
+settp r73,768
+call r67,rexxclassiccontext.rexxclassiccontext.§factory(),r70
+null r71
+null r72
+null r73
+mkref r71,r67
+load r70,1
+settp r71,768
+call r31,llf2(),r70
+null r71
+null r67
+null r61
+null r59
+null r60
 null r65
-.srcstep 34 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:23"
-copy r6,r32
-copy r33,r6
-copy r34,r2
-copy r63,r33
-copy r64,r34
-load r62,2
-settp r63,768
-settp r64,768
-call r35,llf2(),r62
-null r63
-null r64
-copy r63,r35
-load r62,1
-settp r63,768
-call r36,llctarget.requirevalue(),r62
-null r63
+null r66
+copy r71,r31
+load r70,1
+settp r71,768
+call r32,llctarget.requirevalue(),r70
+null r71
 .srcstep 26 0 65 "pipeline-c.crexx" 3 19 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:19"
-copy r63,r36
-load r62,1
-settp r63,768
-call r60,llctarget.sayvalue(),r62
-null r63
+load r69,"pipeline-c.crexx:3:19"
+copy r71,r32
+load r70,1
+settp r71,768
+call r68,llctarget.sayvalue(),r70
+null r71
 .srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:1"
+load r69,"pipeline-c.crexx:3:1"
 br llb4
 llb3:
-.srcstep 51 0 17 "pipeline-c.crexx" 4 10 11 "else say 0"
-load r61,"pipeline-c.crexx:4:10"
-load r63,"0"
-load r62,1
-settp r63,768
-call r37,llctarget.literal(),r62
-null r63
-.srcstep 44 0 17 "pipeline-c.crexx" 4 6 11 "else say 0"
-load r61,"pipeline-c.crexx:4:6"
-copy r63,r37
-load r62,1
-settp r63,768
-call r60,llctarget.sayvalue(),r62
-null r63
+.srcstep 50 0 17 "pipeline-c.crexx" 4 10 11 "else say 0"
+load r69,"pipeline-c.crexx:4:10"
+load r71,"0"
+load r70,1
+settp r71,768
+call r33,llctarget.literal(),r70
+null r71
+.srcstep 43 0 17 "pipeline-c.crexx" 4 6 11 "else say 0"
+load r69,"pipeline-c.crexx:4:6"
+copy r71,r33
+load r70,1
+settp r71,768
+call r68,llctarget.sayvalue(),r70
+null r71
 .srcstep 14 0 65 "pipeline-c.crexx" 3 1 35 "if total > 4 then say twice(total)"
-load r61,"pipeline-c.crexx:3:1"
+load r69,"pipeline-c.crexx:3:1"
 llb4:
-.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
-load r61,"pipeline-c.crexx:5:1"
+.srcstep 51 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r69,"pipeline-c.crexx:5:1"
 llb5:
-.srcstep 59 0 17 "pipeline-c.crexx" 5 10 15 "do while total > 0"
-load r61,"pipeline-c.crexx:5:10"
-unlink r38
-link r38,r1
-mkref r63,r38
-load r64,"TOTAL"
-load r62,2
-settp r63,768
-settp r64,768
-call r39,llctarget.poolread(),r62
-null r63
-null r64
-.srcstep 55 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
-copy r7,r39
-.srcstep 63 0 17 "pipeline-c.crexx" 5 18 19 "do while total > 0"
-load r61,"pipeline-c.crexx:5:18"
-load r63,"0"
-load r62,1
-settp r63,768
-call r40,llctarget.literal(),r62
-null r63
-.srcstep 55 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
-load r61,"pipeline-c.crexx:5:10"
-copy r41,r7
-copy r42,r2
-load r63,"gt"
-copy r64,r41
-copy r65,r40
-copy r66,r42
-load r62,4
-settp r63,768
-settp r64,768
-settp r65,768
-settp r66,768
-call r43,llctarget.binaryop(),r62
-null r63
-null r64
-null r65
-null r66
-.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
-load r61,"pipeline-c.crexx:5:1"
-copy r63,r43
-load r62,1
-settp r63,768
-call r44,llctarget.truth(),r62
-null r63
-brt llb6,r44
+.srcstep 58 0 17 "pipeline-c.crexx" 5 10 15 "do while total > 0"
+load r69,"pipeline-c.crexx:5:10"
+copy r34,r1
+linkref r57,r34
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+load r72,"TOTAL"
+load r70,2
+settp r71,768
+settp r72,768
+call r35,llctarget.poolread(),r70
+null r71
+null r72
+null r59
+.srcstep 54 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
+copy r5,r35
+.srcstep 62 0 17 "pipeline-c.crexx" 5 18 19 "do while total > 0"
+load r69,"pipeline-c.crexx:5:18"
+load r71,"0"
+load r70,1
+settp r71,768
+call r36,llctarget.literal(),r70
+null r71
+.srcstep 54 0 17 "pipeline-c.crexx" 5 10 19 "do while total > 0"
+load r69,"pipeline-c.crexx:5:10"
+copy r37,r5
+copy r38,r1
+load r71,"gt"
+copy r72,r37
+copy r73,r36
+copy r74,r38
+load r70,4
+settp r71,768
+settp r72,768
+settp r73,768
+settp r74,768
+call r39,llctarget.binaryop(),r70
+null r71
+null r72
+null r73
+null r74
+.srcstep 51 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r69,"pipeline-c.crexx:5:1"
+copy r40,r1
+copy r71,r39
+copy r72,r40
+load r70,2
+settp r71,768
+settp r72,768
+call r41,llctarget.truth(),r70
+null r71
+null r72
+brt llb6,r41
 br llb7
 llb6:
-.srcstep 72 0 17 "pipeline-c.crexx" 6 11 16 "  total = total - 1"
-load r61,"pipeline-c.crexx:6:11"
-unlink r45
-link r45,r1
-mkref r63,r45
-load r64,"TOTAL"
-load r62,2
-settp r63,768
-settp r64,768
-call r46,llctarget.poolread(),r62
-null r63
-null r64
-.srcstep 70 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
-copy r8,r46
-.srcstep 74 0 17 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
-load r61,"pipeline-c.crexx:6:19"
-load r63,"1"
-load r62,1
-settp r63,768
-call r47,llctarget.literal(),r62
-null r63
-.srcstep 70 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
-load r61,"pipeline-c.crexx:6:11"
-copy r48,r8
-copy r49,r2
-load r63,"sub"
-copy r64,r48
-copy r65,r47
-copy r66,r49
-load r62,4
-settp r63,768
-settp r64,768
-settp r65,768
-settp r66,768
-call r50,llctarget.binaryop(),r62
-null r63
-null r64
-null r65
-null r66
-.srcstep 65 0 17 "pipeline-c.crexx" 6 3 20 "  total = total - 1"
-load r61,"pipeline-c.crexx:6:3"
-unlink r51
-link r51,r1
-mkref r63,r51
-copy r64,r50
-load r65,"TOTAL"
-load r62,3
-settp r63,768
-settp r64,768
-settp r65,768
-call r60,llctarget.poolwrite(),r62
-null r63
-null r64
-null r65
-.srcstep 52 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
-load r61,"pipeline-c.crexx:5:1"
+.srcstep 71 0 17 "pipeline-c.crexx" 6 11 16 "  total = total - 1"
+load r69,"pipeline-c.crexx:6:11"
+copy r42,r1
+linkref r57,r42
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+load r72,"TOTAL"
+load r70,2
+settp r71,768
+settp r72,768
+call r43,llctarget.poolread(),r70
+null r71
+null r72
+null r59
+.srcstep 69 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
+copy r6,r43
+.srcstep 73 0 17 "pipeline-c.crexx" 6 19 20 "  total = total - 1"
+load r69,"pipeline-c.crexx:6:19"
+load r71,"1"
+load r70,1
+settp r71,768
+call r44,llctarget.literal(),r70
+null r71
+.srcstep 69 0 17 "pipeline-c.crexx" 6 11 20 "  total = total - 1"
+load r69,"pipeline-c.crexx:6:11"
+copy r45,r6
+copy r46,r1
+load r71,"sub"
+copy r72,r45
+copy r73,r44
+copy r74,r46
+load r70,4
+settp r71,768
+settp r72,768
+settp r73,768
+settp r74,768
+call r47,llctarget.binaryop(),r70
+null r71
+null r72
+null r73
+null r74
+.srcstep 64 0 17 "pipeline-c.crexx" 6 3 20 "  total = total - 1"
+load r69,"pipeline-c.crexx:6:3"
+copy r48,r1
+linkref r57,r48
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+copy r72,r47
+load r73,"TOTAL"
+load r70,3
+settp r71,768
+settp r72,768
+settp r73,768
+call r68,llctarget.poolwrite(),r70
+null r71
+null r72
+null r73
+null r59
+.srcstep 51 0 65 "pipeline-c.crexx" 5 1 19 "do while total > 0"
+load r69,"pipeline-c.crexx:5:1"
 br llb5
 llb7:
-.srcstep 82 0 17 "pipeline-c.crexx" 8 5 10 "say total"
-load r61,"pipeline-c.crexx:8:5"
-unlink r52
-link r52,r1
-mkref r63,r52
-load r64,"TOTAL"
-load r62,2
-settp r63,768
-settp r64,768
-call r53,llctarget.poolread(),r62
-null r63
-null r64
-.srcstep 75 0 17 "pipeline-c.crexx" 8 1 10 "say total"
-load r61,"pipeline-c.crexx:8:1"
-copy r63,r53
-load r62,1
-settp r63,768
-call r60,llctarget.sayvalue(),r62
-null r63
-.srcstep 98 0 17 "pipeline-c.crexx" 9 12 17 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
-load r61,"pipeline-c.crexx:9:12"
-load r63,"\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82"
-load r62,1
-settp r63,768
-call r54,llctarget.literal(),r62
-null r63
-.srcstep 91 0 17 "pipeline-c.crexx" 9 5 18 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
-load r61,"pipeline-c.crexx:9:5"
-copy r9,r54
-copy r55,r9
-copy r63,r55
-load r62,1
-settp r63,768
-call r56,llctarget.lengthvalue(),r62
-null r63
-.srcstep 83 0 17 "pipeline-c.crexx" 9 1 18 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
-load r61,"pipeline-c.crexx:9:1"
-copy r63,r56
-load r62,1
-settp r63,768
-call r60,llctarget.sayvalue(),r62
-null r63
-.srcstep 99 0 17 "pipeline-c.crexx" 10 1 7 "exit 0"
-load r61,"pipeline-c.crexx:10:1"
-load r63,"0"
-load r62,1
-settp r63,768
-call r57,llctarget.literal(),r62
-null r63
-.srcstep 106 0 17 "pipeline-c.crexx" 10 6 7 "exit 0"
-load r61,"pipeline-c.crexx:10:6"
-load r63,"0"
-load r62,1
-settp r63,768
-call r58,llctarget.literal(),r62
-null r63
-.srcstep 99 0 17 "pipeline-c.crexx" 10 1 7 "exit 0"
-load r61,"pipeline-c.crexx:10:1"
-copy r63,r58
-load r62,1
-settp r63,768
-call r60,llctarget.present(),r62
-null r63
-copy r63,r60
-load r62,1
-settp r63,768
-call r60,llctarget.status(),r62
-null r63
-exit r60
-load r62,0
-call r59,llctarget.absent(),r62
-ret r59
+.srcstep 81 0 17 "pipeline-c.crexx" 8 5 10 "say total"
+load r69,"pipeline-c.crexx:8:5"
+copy r49,r1
+linkref r57,r49
+swap r57,r71
+load r70,1
+settp r71,256
+call r59,rexxclassiccontext.rexxclassiccontext.pool(),r70
+swap r57,r71
+null r71
+unlink r57
+copy r71,r59
+load r72,"TOTAL"
+load r70,2
+settp r71,768
+settp r72,768
+call r50,llctarget.poolread(),r70
+null r71
+null r72
+null r59
+.srcstep 74 0 17 "pipeline-c.crexx" 8 1 10 "say total"
+load r69,"pipeline-c.crexx:8:1"
+copy r71,r50
+load r70,1
+settp r71,768
+call r68,llctarget.sayvalue(),r70
+null r71
+.srcstep 97 0 17 "pipeline-c.crexx" 9 12 17 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
+load r69,"pipeline-c.crexx:9:12"
+load r71,"\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82"
+load r70,1
+settp r71,768
+call r51,llctarget.literal(),r70
+null r71
+.srcstep 90 0 17 "pipeline-c.crexx" 9 5 18 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
+load r69,"pipeline-c.crexx:9:5"
+copy r7,r51
+copy r52,r7
+copy r53,r1
+copy r71,r52
+copy r72,r53
+load r70,2
+settp r71,768
+settp r72,768
+call r54,llctarget.lengthvalue(),r70
+null r71
+null r72
+.srcstep 82 0 17 "pipeline-c.crexx" 9 1 18 "say length('\xCE\xB1\xE6\xBC\xA2\xF0\x9F\x99\x82')"
+load r69,"pipeline-c.crexx:9:1"
+copy r71,r54
+load r70,1
+settp r71,768
+call r68,llctarget.sayvalue(),r70
+null r71
+.srcstep 105 0 17 "pipeline-c.crexx" 10 6 7 "exit 0"
+load r69,"pipeline-c.crexx:10:6"
+load r71,"0"
+load r70,1
+settp r71,768
+call r55,llctarget.literal(),r70
+null r71
+.srcstep 98 0 17 "pipeline-c.crexx" 10 1 7 "exit 0"
+load r69,"pipeline-c.crexx:10:1"
+copy r71,r55
+load r70,1
+settp r71,768
+call r68,llctarget.present(),r70
+null r71
+copy r71,r68
+load r70,1
+settp r71,768
+call r68,llctarget.status(),r70
+null r71
+exit r68
+load r70,0
+call r56,llctarget.absent(),r70
+ret r56
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r60,1
+load r68,1
 br llerror1
 llerror1_2:
-load r60,2
+load r68,2
 br llerror1
 llerror1_3:
-load r60,3
+load r68,3
 br llerror1
 llerror1_4:
-load r60,4
+load r68,4
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r63,r0
-copy r64,r61
-load r62,2
-settp r63,768
-settp r64,768
-call r61,llctarget.failuremessage(),r62
-null r63
-null r64
-beq llraise1_1,r60,1
-beq llraise1_2,r60,2
-beq llraise1_3,r60,3
+copy r71,r0
+copy r72,r69
+load r70,2
+settp r71,768
+settp r72,768
+call r69,llctarget.failuremessage(),r70
+null r71
+null r72
+beq llraise1_1,r68,1
+beq llraise1_2,r68,2
+beq llraise1_3,r68,3
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r61,r0
+signalorigin "INVALID_ARGUMENTS",r69,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r61,r0
+signalorigin "CONVERSION_ERROR",r69,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r61,r0
+signalorigin "DIVISION_BY_ZERO",r69,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r61,r0
+signalorigin "CLASSIC_SYNTAX",r69,r0
 ret
-llf2() .locals=25
+llf2() .locals=32
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.TWICE"="b" ".rexxactivation..rexxactivationarguments" llf2() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
-numsci 18,1,1
-load r19,"pipeline-c.crexx: entering TWICE"
+.meta "llprogram.TWICE"="b" ".rexxactivation..rexxactivationarguments" llf2() "context=reference .rexxclassiccontext..rexxclassiccontext"
+load r26,"pipeline-c.crexx: entering TWICE"
 sigbrv llerror2_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror2_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror2_3,r0,"CONVERSION_ERROR"
 sigbrv llerror2_4,r0,"INVALID_ARGUMENTS"
+numsci 18,1,2
+linkref r14,a1
+swap r14,r28
+load r27,1
+settp r28,256
+call r18,rexxclassiccontext.rexxclassiccontext.activation(),r27
+swap r14,r28
+null r28
+unlink r14
+linkref r15,r18
+swap r15,r28
+load r27,1
+settp r28,256
+call r19,rexxactivation.rexxactivationarguments.numericdigits(),r27
+swap r15,r28
+null r28
+swap r15,r28
+load r27,1
+settp r28,256
+call r20,rexxactivation.rexxactivationarguments.numericfuzz(),r27
+swap r15,r28
+null r28
+swap r15,r28
+load r27,1
+settp r28,256
+call r21,rexxactivation.rexxactivationarguments.numericform(),r27
+swap r15,r28
+null r28
+unlink r15
+null r18
+setnumfuz 0
+setnumdgts r19
+setnumfuz r20
+setnumfrm r21
 llb8:
-.srcstep 108 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
-load r19,"pipeline-c.crexx: generated code in TWICE"
-load r20,0
-call r5,llctarget.poolnew(),r20
-unlink r1
-link r1,r5
-copy r6,a1
-copy r3,r6
-copy r7,a2
-copy r2,r7
-.srcstep 109 0 17 "pipeline-c.crexx" 13 3 12 "  arg value"
-load r19,"pipeline-c.crexx:13:3"
-copy r8,r3
-copy r21,r8
-load r22,1
-load r20,2
-settp r21,768
-settp r22,768
-call r9,llctarget.readarg(),r20
-null r21
-null r22
-unlink r10
-link r10,r1
-mkref r21,r10
-copy r22,r9
-load r23,"VALUE"
-load r20,3
-settp r21,768
-settp r22,768
-settp r23,768
-call r18,llctarget.poolwrite(),r20
-null r21
-null r22
-null r23
-.srcstep 117 0 17 "pipeline-c.crexx" 14 10 15 "  return value * 2"
-load r19,"pipeline-c.crexx:14:10"
-unlink r11
-link r11,r1
-mkref r21,r11
-load r22,"VALUE"
-load r20,2
-settp r21,768
-settp r22,768
-call r12,llctarget.poolread(),r20
-null r21
-null r22
-.srcstep 116 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
-copy r4,r12
-.srcstep 118 0 17 "pipeline-c.crexx" 14 18 19 "  return value * 2"
-load r19,"pipeline-c.crexx:14:18"
-load r21,"2"
-load r20,1
-settp r21,768
-call r13,llctarget.literal(),r20
-null r21
-.srcstep 116 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
-load r19,"pipeline-c.crexx:14:10"
-copy r14,r4
-copy r15,r2
-load r21,"mul"
-copy r22,r14
-copy r23,r13
-copy r24,r15
-load r20,4
-settp r21,768
-settp r22,768
-settp r23,768
-settp r24,768
-call r16,llctarget.binaryop(),r20
-null r21
-null r22
-null r23
-null r24
-.srcstep 110 0 17 "pipeline-c.crexx" 14 3 19 "  return value * 2"
-load r19,"pipeline-c.crexx:14:3"
-copy r21,r16
-load r20,1
-settp r21,768
-call r17,llctarget.present(),r20
-null r21
-ret r17
+.srcstep 107 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
+load r26,"pipeline-c.crexx: generated code in TWICE"
+copy r3,a1
+copy r1,r3
+.srcstep 108 0 17 "pipeline-c.crexx" 13 3 12 "  arg value"
+load r26,"pipeline-c.crexx:13:3"
+copy r4,r1
+copy r28,r4
+load r29,1
+load r27,2
+settp r28,768
+settp r29,768
+call r5,llctarget.readarg(),r27
+null r28
+null r29
+copy r6,r1
+linkref r14,r6
+swap r14,r28
+load r27,1
+settp r28,256
+call r16,rexxclassiccontext.rexxclassiccontext.pool(),r27
+swap r14,r28
+null r28
+unlink r14
+copy r28,r16
+copy r29,r5
+load r30,"VALUE"
+load r27,3
+settp r28,768
+settp r29,768
+settp r30,768
+call r25,llctarget.poolwrite(),r27
+null r28
+null r29
+null r30
+null r16
+.srcstep 116 0 17 "pipeline-c.crexx" 14 10 15 "  return value * 2"
+load r26,"pipeline-c.crexx:14:10"
+copy r7,r1
+linkref r14,r7
+swap r14,r28
+load r27,1
+settp r28,256
+call r16,rexxclassiccontext.rexxclassiccontext.pool(),r27
+swap r14,r28
+null r28
+unlink r14
+copy r28,r16
+load r29,"VALUE"
+load r27,2
+settp r28,768
+settp r29,768
+call r8,llctarget.poolread(),r27
+null r28
+null r29
+null r16
+.srcstep 115 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
+copy r2,r8
+.srcstep 117 0 17 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+load r26,"pipeline-c.crexx:14:18"
+load r28,"2"
+load r27,1
+settp r28,768
+call r9,llctarget.literal(),r27
+null r28
+.srcstep 115 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
+load r26,"pipeline-c.crexx:14:10"
+copy r10,r2
+copy r11,r1
+load r28,"mul"
+copy r29,r10
+copy r30,r9
+copy r31,r11
+load r27,4
+settp r28,768
+settp r29,768
+settp r30,768
+settp r31,768
+call r12,llctarget.binaryop(),r27
+null r28
+null r29
+null r30
+null r31
+.srcstep 109 0 17 "pipeline-c.crexx" 14 3 19 "  return value * 2"
+load r26,"pipeline-c.crexx:14:3"
+copy r28,r12
+load r27,1
+settp r28,768
+call r13,llctarget.present(),r27
+null r28
+ret r13
 llerror2_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r18,1
+load r25,1
 br llerror2
 llerror2_2:
-load r18,2
+load r25,2
 br llerror2
 llerror2_3:
-load r18,3
+load r25,3
 br llerror2
 llerror2_4:
-load r18,4
+load r25,4
 llerror2:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r21,r0
-copy r22,r19
-load r20,2
-settp r21,768
-settp r22,768
-call r19,llctarget.failuremessage(),r20
-null r21
-null r22
-beq llraise2_1,r18,1
-beq llraise2_2,r18,2
-beq llraise2_3,r18,3
+copy r28,r0
+copy r29,r26
+load r27,2
+settp r28,768
+settp r29,768
+call r26,llctarget.failuremessage(),r27
+null r28
+null r29
+beq llraise2_1,r25,1
+beq llraise2_2,r25,2
+beq llraise2_3,r25,3
 llraise2_4:
-signalorigin "INVALID_ARGUMENTS",r19,r0
+signalorigin "INVALID_ARGUMENTS",r26,r0
 ret
 llraise2_3:
-signalorigin "CONVERSION_ERROR",r19,r0
+signalorigin "CONVERSION_ERROR",r26,r0
 ret
 llraise2_2:
-signalorigin "DIVISION_BY_ZERO",r19,r0
+signalorigin "DIVISION_BY_ZERO",r26,r0
 ret
 llraise2_1:
-signalorigin "CLASSIC_SYNTAX",r19,r0
+signalorigin "CLASSIC_SYNTAX",r26,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
-llctarget.contextnew() .expose=llctarget.contextnew
-  .meta "llctarget.contextnew"="b" ".rexxactivation..rexxactivationarguments" llctarget.contextnew() ""
-llctarget.status() .expose=llctarget.status
-  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
 llctarget.poolnew() .expose=llctarget.poolnew
   .meta "llctarget.poolnew"="b" ".rexxpool..rexxvariablepool" llctarget.poolnew() ""
+rexxclassicconfig.rexxclassicconfig.§factory() .expose=rexxclassicconfig.rexxclassicconfig.§factory
+  .meta "rexxclassicconfig.rexxclassicconfig.\xC2\xA7factory"="b" ".rexxclassicconfig..rexxclassicconfig" rexxclassicconfig.rexxclassicconfig.§factory() "?requested_profile=.string"
+rexxclassiccontext.rexxclassiccontext.§factory() .expose=rexxclassiccontext.rexxclassiccontext.§factory
+  .meta "rexxclassiccontext.rexxclassiccontext.\xC2\xA7factory"="b" ".rexxclassiccontext..rexxclassiccontext" rexxclassiccontext.rexxclassiccontext.§factory() "activation=reference .rexxactivation..rexxactivationarguments,pool=reference .rexxpool..rexxvariablepool,config=reference .rexxclassicconfig..rexxclassicconfig"
+llctarget.status() .expose=llctarget.status
+  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
+rexxclassiccontext.rexxclassiccontext.activation() .expose=rexxclassiccontext.rexxclassiccontext.activation
+  .meta "rexxclassiccontext.rexxclassiccontext.activation"="b" "reference .rexxactivation..rexxactivationarguments" rexxclassiccontext.rexxclassiccontext.activation() ""
+rexxactivation.rexxactivationarguments.numericdigits() .expose=rexxactivation.rexxactivationarguments.numericdigits
+  .meta "rexxactivation.rexxactivationarguments.numericdigits"="b" ".int" rexxactivation.rexxactivationarguments.numericdigits() ""
+rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexxactivationarguments.numericfuzz
+  .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
+rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
+  .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
 llctarget.literal() .expose=llctarget.literal
   .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "text=.string"
 llctarget.binaryop() .expose=llctarget.binaryop
-  .meta "llctarget.binaryop"="b" ".rexxvalue..rexxvalue" llctarget.binaryop() "operation=.string,left=.rexxvalue,right=.rexxvalue,context=.rexxactivationarguments"
+  .meta "llctarget.binaryop"="b" ".rexxvalue..rexxvalue" llctarget.binaryop() "operation=.string,left=.rexxvalue,right=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.poolwrite() .expose=llctarget.poolwrite
   .meta "llctarget.poolwrite"="b" ".void" llctarget.poolwrite() "poolref=reference .rexxvariablepool,value=.rexxvalue,name=.string"
+rexxclassiccontext.rexxclassiccontext.pool() .expose=rexxclassiccontext.rexxclassiccontext.pool
+  .meta "rexxclassiccontext.rexxclassiccontext.pool"="b" "reference .rexxpool..rexxvariablepool" rexxclassiccontext.rexxclassiccontext.pool() ""
 llctarget.poolread() .expose=llctarget.poolread
   .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "poolref=reference .rexxvariablepool,name=.string"
 llctarget.truth() .expose=llctarget.truth
-  .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue"
+  .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.arguments() .expose=llctarget.arguments
   .meta "llctarget.arguments"="b" ".rexxactivation..rexxactivationarguments" llctarget.arguments() ""
 llctarget.append() .expose=llctarget.append
   .meta "llctarget.append"="b" ".rexxactivation..rexxactivationarguments" llctarget.append() "frame=.rexxactivationarguments,value=.rexxvalue,present=.int"
+rexxactivation.rexxactivationarguments.inheritsignalpolicy() .expose=rexxactivation.rexxactivationarguments.inheritsignalpolicy
+  .meta "rexxactivation.rexxactivationarguments.inheritsignalpolicy"="b" ".void" rexxactivation.rexxactivationarguments.inheritsignalpolicy() "parent_ref=reference .rexxactivationarguments"
+rexxactivation.rexxactivationarguments.begininternalfunction() .expose=rexxactivation.rexxactivationarguments.begininternalfunction
+  .meta "rexxactivation.rexxactivationarguments.begininternalfunction"="b" ".void" rexxactivation.rexxactivationarguments.begininternalfunction() ""
+rexxactivation.rexxactivationarguments.enterprocedure() .expose=rexxactivation.rexxactivationarguments.enterprocedure
+  .meta "rexxactivation.rexxactivationarguments.enterprocedure"="b" ".void" rexxactivation.rexxactivationarguments.enterprocedure() ""
+rexxclassiccontext.rexxclassiccontext.config() .expose=rexxclassiccontext.rexxclassiccontext.config
+  .meta "rexxclassiccontext.rexxclassiccontext.config"="b" "reference .rexxclassicconfig..rexxclassicconfig" rexxclassiccontext.rexxclassiccontext.config() ""
+rexxpool.rexxvariablepool.inheritcommandstatus() .expose=rexxpool.rexxvariablepool.inheritcommandstatus
+  .meta "rexxpool.rexxvariablepool.inheritcommandstatus"="b" ".void" rexxpool.rexxvariablepool.inheritcommandstatus() "parent=reference .rexxvariablepool"
 llctarget.requirevalue() .expose=llctarget.requirevalue
   .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments"
 llctarget.sayvalue() .expose=llctarget.sayvalue
   .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
 llctarget.lengthvalue() .expose=llctarget.lengthvalue
-  .meta "llctarget.lengthvalue"="b" ".rexxvalue..rexxvalue" llctarget.lengthvalue() "value=.rexxvalue"
+  .meta "llctarget.lengthvalue"="b" ".rexxvalue..rexxvalue" llctarget.lengthvalue() "value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.present() .expose=llctarget.present
   .meta "llctarget.present"="b" ".rexxactivation..rexxactivationarguments" llctarget.present() "value=.rexxvalue"
 llctarget.absent() .expose=llctarget.absent
@@ -613,4 +855,4 @@ llctarget.absent() .expose=llctarget.absent
 llctarget.failuremessage() .expose=llctarget.failuremessage
   .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
 llctarget.readarg() .expose=llctarget.readarg
-  .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "frame=.rexxactivationarguments,ordinal=.int"
+  .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "context=reference .rexxclassiccontext..rexxclassiccontext,ordinal=.int"

@@ -9,13 +9,13 @@ for the original qualification boundary. The subsequent essential provenance
 correction refreshes these outputs; its bounded proof is recorded in
 [current plan](../../PLAN.md).
 
-The Classic pipeline IR and RXAS were refreshed on 19 October 2026 using the
-current Debug noopt frontend probe and C compiler, with compiler IR optimisation
-and assembler optimisation both disabled. Its source now uses
+The Classic IR and RXAS views use the current borrowed-context ABI, with
+compiler IR optimisation and assembler optimisation both disabled. The literal,
+pipeline and error images were assembled, linked and executed; G views retain
+their earlier qualification. The pipeline source uses
 `length('α漢🙂')`, which returns three codepoints from nine UTF-8 payload bytes.
-The regenerated image printed the unchanged expected `10`, `0`, `3` with
-autoload disabled and the explicit Classic link closure below. Other examples
-retain their earlier qualification.
+The image prints the unchanged expected `10`, `0`, `3` with autoload disabled
+and the explicit Classic link closure below.
 
 | Source | IR | RXAS | Executed output |
 |---|---|---|---|

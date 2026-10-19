@@ -92,9 +92,7 @@ request: class
   _bindtypes = .string[]
   _explicit = .int[]
   _slots = .object[]
-  _poolslot = .llir..slot
   _contextslot = .llir..slot
-  _argsslot = .llir..slot
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -221,7 +219,7 @@ request: class
   type: method = .llir..typeid
     arg name = .string
     if name = 'void' then return _contract.voidtype()
-    if wordpos(name,'value numeric pool arguments result') > 0 then return _contract.type('crexx.c.' || name)
+    if wordpos(name,'value context arguments result') > 0 then return _contract.type('crexx.c.' || name)
     return _contract.type('crexx.g.' || name)
   /** Only observed call masks create descriptors; no optional-subset expansion. */
   newblock: method = .llir..block
@@ -240,7 +238,7 @@ request: class
       item = _routines[i] as .routine
       fn = _builder.function(item.name(),type(item.result()))
       do
-        index = fn.argument(type('arguments')); index = fn.argument(type('numeric'))
+        index = fn.argument(type('context'))
       end
       _functions[i] = fn as .object
     end
@@ -250,11 +248,8 @@ request: class
       _blocknumber = 0; _tempnumber = 0; _loops = 0; _terminated = 0; _alive = 1
       _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
       do
-        _poolslot = _fn.slot('$pool',type('pool')); _contextslot = _fn.slot('$numeric',type('numeric')); _argsslot = _fn.slot('$arguments',type('arguments'))
-        op = _block.operation(_contract.operation('crexx.c.pool.new'),origin); built = op.finish()
-        call _block.store(_poolslot,built.result(),origin)
-        call _block.store(_argsslot,_block.readarg(1,origin),origin)
-        call _block.store(_contextslot,_block.readarg(2,origin),origin)
+        _contextslot = _fn.slot('$context',type('context'))
+        call _block.store(_contextslot,_block.readarg(1,origin),origin)
       end
       do i = _current.first() to _current.last() while _error = ''
         if _terminated then do
@@ -304,7 +299,7 @@ request: class
           else value = defaultvalue('value',origin)
           if _error = '' then do
             op = _block.operation(_contract.operation('crexx.c.store'),origin)
-            call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
+            call op.input('context',_block.load(_contextslot,origin)); call op.input('value',value)
             call op.attribute('name',upper(node.text('name')) as .binary); built = op.finish()
           end
         end
@@ -363,9 +358,8 @@ request: class
         _terminated = 1; _alive = 0
       end
       when kind = 'Exit' then do
-        name = 'int64'; name = 'value'
-        value = _block.constantbytes(type(name),'0' as .binary,origin)
         if node.count('value') then value = expression(node.child('value'),'int64')
+        else value = _block.constantbytes(type('value'),'0' as .binary,origin)
         if _error <> '' then return
 
         op = _block.operation(_contract.operation('crexx.' || 'c' || '.exit'),origin); call op.input('value',value); built = op.finish()
@@ -382,26 +376,27 @@ request: class
         targetnode = node.child('items',i); name = upper(strip(targetnode.text('name')))
         if name = '' then iterate
         op = _block.operation(_contract.operation('crexx.c.arguments.read'),origin)
-        call op.input('arguments',_block.load(_argsslot,origin))
+        call op.input('context',_block.load(_contextslot,origin))
         codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(i as .string)); built = op.finish(); value = built.result()
         op = _block.operation(_contract.operation('crexx.c.store'),origin)
-        call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
+        call op.input('context',_block.load(_contextslot,origin)); call op.input('value',value)
         call op.attribute('name',name as .binary); built = op.finish()
       end
       when kind = 'CNumeric' then do
-        setting = lower(node.text('setting')); initial = '9'; if setting = 'fuzz' then initial = '0'
-        value = _block.constantbytes(type('value'),initial as .binary,origin)
+        setting = lower(node.text('setting'))
         if node.count('value') then value = expression(node.child('value'))
+        else do
+          initial = '9'; if setting = 'fuzz' then initial = '0'
+          value = _block.constantbytes(type('value'),initial as .binary,origin)
+        end
         if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.numeric.' || setting),origin)
         call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
-        call _block.store(_contextslot,built.result(),origin)
       end
       when kind = 'CForm' then do
-        form = upper(node.text('form')); if form = '' then form = 'SCIENTIFIC'
+        form = lower(node.text('form')); if form = '' then form = 'scientific'
         op = _block.operation(_contract.operation('crexx.c.numeric.form'),origin)
         call op.input('context',_block.load(_contextslot,origin)); call op.attribute('form',form as .binary); built = op.finish()
-        call _block.store(_contextslot,built.result(),origin)
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
@@ -415,9 +410,16 @@ request: class
   truth: method = .llir..valuehandle
     arg value = .llir..valuehandle, origin = .llir..origin
     built = .llir..opview
-
     op = _block.operation(_contract.operation('crexx.c.truth'),origin)
-    call op.input('value',value); built = op.finish(); return built.result()
+    call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    /* Preserve owner checks and pool-policy effects even for known truth.
+     * A separate exact literal fact lets ordinary branch pruning remain safe. */
+    if value.isconstant() then do
+      spelling = bin2x(value.bytes())
+      if spelling = '30' then return _block.constant(_contract.boolean(),'0',origin.derive())
+      if spelling = '31' then return _block.constant(_contract.boolean(),'1',origin.derive())
+    end
+    return built.result()
   /** Decode Classic source digits once, using the existing B ordinal bridge.
    * Only the leading group may be short; a blank separates complete groups.
    * The original String node retains its spelling and authored source span. */
@@ -477,7 +479,7 @@ request: class
         name = upper(node.text('spelling'))
         do
           op = _block.operation(_contract.operation('crexx.c.load'),origin)
-          call op.input('pool',_block.load(_poolslot,origin)); call op.attribute('name',name as .binary)
+          call op.input('context',_block.load(_contextslot,origin)); call op.attribute('name',name as .binary)
           built = op.finish(); return built.result()
         end
       end
@@ -550,7 +552,7 @@ request: class
       end
       else if name = 'ARG' & count = 0 then do
         op = _block.operation(_contract.operation('crexx.c.arguments.count'),origin)
-        call op.input('arguments',_block.load(_argsslot,origin)); built = op.finish(); value = built.result()
+        call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); value = built.result()
       end
       else do
         saved = .object[]
@@ -568,10 +570,11 @@ request: class
           if _error <> '' then return invalid
           op = _block.operation(_contract.operation('crexx.c.length'),origin)
           slot = saved[1] as .llir..slot; call op.input('value',_block.load(slot,origin))
+          call op.input('context',_block.load(_contextslot,origin))
         end
         else do
           op = _block.operation(_contract.operation('crexx.c.arguments.exists'),origin)
-          call op.input('arguments',_block.load(_argsslot,origin))
+          call op.input('context',_block.load(_contextslot,origin))
           slot = saved[1] as .llir..slot; call op.input('ordinal',_block.load(slot,origin))
           slot = saved[2] as .llir..slot; call op.input('option',_block.load(slot,origin))
         end
@@ -586,8 +589,8 @@ request: class
       packet = temporary(type('arguments')); call _block.store(packet,built.result(),origin)
       do i = 1 to count
         argument = arguments.child('items',i); present = argument.count('value') <> 0
-        value = defaultvalue('value',at(argument))
         if present then value = expression(argument.child('value'))
+        else value = defaultvalue('value',at(argument))
         if _error <> '' then return invalid
         op = _block.operation(_contract.operation('crexx.c.arguments.append'),at(argument))
         call op.input('arguments',_block.load(packet,origin)); call op.input('value',value)
@@ -596,14 +599,16 @@ request: class
       end
       op = _block.operation(_contract.operation('crexx.c.call'),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
-      call op.attribute('target',name as .binary); built = op.finish(); result = built.result()
+      call op.attribute('target',name as .binary)
+      boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
+      built = op.finish(); result = built.result()
     end
     if expressioncall then do
       op = _block.operation(_contract.operation('crexx.c.requirevalue'),origin)
       call op.input('result',result); built = op.finish(); return built.result()
     end
     op = _block.operation(_contract.operation('crexx.c.setresult'),origin)
-    call op.input('pool',_block.load(_poolslot,origin)); call op.input('result',result); built = op.finish()
+    call op.input('context',_block.load(_contextslot,origin)); call op.input('result',result); built = op.finish()
     return invalid
   classiccontract: method = .void
     arg node = .llast..node, name = .string

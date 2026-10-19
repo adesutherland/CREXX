@@ -3114,7 +3114,7 @@ else say 0
 
 The G version selects `options levelg` and adds `total = .int` before the
 assignment. G lowers the sum to `crexx.g.int64.add` and stores a typed slot.
-Classic lowers it to `crexx.c.add` with an explicit numeric context and stores
+Classic lowers it to `crexx.c.add` with an explicit borrowed context and stores
 the pool key `TOTAL`. Each lowers the IF expression, converts its result to a
 core Boolean and creates yes/no/join blocks. SAY remains an observable operation.
 
@@ -3241,8 +3241,10 @@ values and short-circuiting. A declared G decimal starts absent and displays
 The current output uses stable registers and runtime adapters. Shared Level L
 passes propagate proved private values, evaluate admitted constants, simplify
 Boolean branches and remove safe unused operations. G admits checked int64
-arithmetic/comparisons and canonical conversions; C initially admits only exact
-literal `0`/`1` truth. Classic arithmetic, mutable numeric context and variable
+arithmetic/comparisons and canonical conversions. C retains the effectful runtime
+truth check; exact literal `0`/`1` separately supplies a derived Boolean branch
+fact so dead-arm pruning preserves context checks and errors. Classic arithmetic,
+mutable numeric context and variable
 pools keep runtime semantics. Both languages preserve effects and errors. See
 the [actual before/after example](../../research/level-l/compilers/examples/step05/README.md) and
 [generic Level L optimisation API](ir-design.md#optimise-a-frozen-module).
@@ -3393,8 +3395,8 @@ This runs the B/L C compiler image in a restricted host and its linked output
 in a separate compiler-free runtime, with bytecode autoload disabled. It checks
 argument holes versus empty strings, recursion, evaluation order, the current
 LENGTH/ARG/DIGITS bindings and rejection of incompatible Classic metadata.
-It does not establish complete ARG/CALL, the remaining BIF bindings or a live
-activation API. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
+It does not establish complete ARG/CALL, shared-label activation, the remaining
+BIF bindings or full conditions/TRACE. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
 records the precise qualification boundary; INTERPRET is the final stage.
 
 The shared B runtime now exposes a borrowed execution bundle for direct hosts:
@@ -3418,15 +3420,25 @@ binding. Copying the bundle shares the owners but not later binding changes.
 Helpers that must observe rebinding take `reference context`. Invalid or expired
 references raise `REFERENCE_INVALID`; a rejected rebind preserves the old pool.
 
-New direct hosts can import `llctarget2` from the same `llctarget.rxbin` and use
-the [nine borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
+Direct hosts import `llctarget` from `llctarget.rxbin` and use the
+[nine borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
 They reuse existing BIFs and the host's character configuration. Numeric calls
 inherit the executing caller frame; `setting` updates stored activation state
-only, so a host must install validated settings in its own frame. The direct
-fixture `research/level-l/compilers/tests/target-context.crexx` demonstrates this
-distinction and nested restoration. Existing generated C code still uses the
-legacy exports; switching the selector and C-family metadata is a separate
-reviewed increment. This runtime surface does not add C source forms or INTERPRET.
+only, so a host installs validated settings in its own frame. Generated C does
+this at procedure entry and after each successful NUMERIC statement, preserving
+child inheritance and parent restoration. The direct fixture
+`research/level-l/compilers/tests/target-context.crexx` demonstrates the same
+boundary independently. Generated C uses one required context reference and one
+fresh result packet; caller-owned child activations/pools share the root UTF8
+configuration. C-family v2 and this target are the current research contract:
+rebuild earlier C images/IR; no legacy bridge is provided. This migration adds
+no C source forms or INTERPRET, and its fatal-condition profile remains
+nonresumable.
+
+Ordinary C text follows the agreed Unicode codepoint model, preserving codes
+0–255 through the fixed Latin-1 ordinal bridge. Modern SAY and BIF behavior is
+the delivery target. Further historical SAY processor/callback/byte-exact edge
+parity is deferred and unclaimed; existing useful controls remain.
 
 For separate G compilation, put `namespace scalelib expose scale` after the
 provider's OPTIONS line and keep only routine declarations. In the consumer,

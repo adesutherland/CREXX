@@ -1,138 +1,214 @@
 .globals=0
-main() .locals=6
+main() .locals=16
 .srcstep 0 0 6 "" 0 0 0 ""
-copy r4,a1
-load r3,1
-settp r4,768
-call r1,llctarget.mainargs(),r3
+copy r13,a1
+load r12,1
+settp r13,768
+call r9,llctarget.mainargs(),r12
+null r13
+load r12,0
+call r10,llctarget.poolnew(),r12
+load r13,"UTF8"
+load r12,1
+settp r13,768
+call r8,rexxclassicconfig.rexxclassicconfig.§factory(),r12
+null r13
+mkref r4,r8
+mkref r13,r9
+mkref r14,r10
+copy r15,r4
+load r12,3
+settp r13,768
+settp r14,768
+settp r15,768
+call r11,rexxclassiccontext.rexxclassiccontext.§factory(),r12
+null r13
+null r14
+null r15
+mkref r13,r11
+load r12,1
+settp r13,768
+call r0,llf1(),r12
+null r13
+copy r13,r0
+load r12,1
+settp r13,768
+call r0,llctarget.status(),r12
+null r13
+null r11
 null r4
-load r3,0
-call r2,llctarget.contextnew(),r3
-copy r4,r1
-copy r5,r2
-load r3,2
-settp r4,768
-settp r5,768
-call r0,llf1(),r3
-null r4
-null r5
-copy r4,r0
-load r3,1
-settp r4,768
-call r1,llctarget.status(),r3
-null r4
-ret r1
-llf1() .locals=16
+null r9
+null r10
+null r8
+ret r0
+llf1() .locals=26
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "p1=.rexxactivation..rexxactivationarguments,p2=.rexxactivation..rexxactivationarguments"
-numsci 18,1,1
-load r12,"walk-c.crexx: entering $MAIN"
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
+load r22,"walk-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+numsci 18,1,2
+linkref r10,a1
+swap r10,r24
+load r23,1
+settp r24,256
+call r14,rexxclassiccontext.rexxclassiccontext.activation(),r23
+swap r10,r24
+null r24
+unlink r10
+linkref r11,r14
+swap r11,r24
+load r23,1
+settp r24,256
+call r15,rexxactivation.rexxactivationarguments.numericdigits(),r23
+swap r11,r24
+null r24
+swap r11,r24
+load r23,1
+settp r24,256
+call r16,rexxactivation.rexxactivationarguments.numericfuzz(),r23
+swap r11,r24
+null r24
+swap r11,r24
+load r23,1
+settp r24,256
+call r17,rexxactivation.rexxactivationarguments.numericform(),r23
+swap r11,r24
+null r24
+unlink r11
+null r14
+setnumfuz 0
+setnumdgts r15
+setnumfuz r16
+setnumfrm r17
 llb1:
 .srcstep 2 0 98 "walk-c.crexx" 1 1 15 "options levelc"
-load r12,"walk-c.crexx: generated code in $MAIN"
-load r13,0
-call r5,llctarget.poolnew(),r13
-unlink r1
-link r1,r5
-copy r6,a1
-copy r3,r6
-copy r7,a2
-copy r2,r7
+load r22,"walk-c.crexx: generated code in $MAIN"
+copy r3,a1
+copy r1,r3
 .srcstep 11 0 17 "walk-c.crexx" 2 5 7 "say 01"
-load r12,"walk-c.crexx:2:5"
-load r14,"01"
-load r13,1
-settp r14,768
-call r8,llctarget.literal(),r13
-null r14
+load r22,"walk-c.crexx:2:5"
+load r24,"01"
+load r23,1
+settp r24,768
+call r4,llctarget.literal(),r23
+null r24
 .srcstep 4 0 17 "walk-c.crexx" 2 1 7 "say 01"
-load r12,"walk-c.crexx:2:1"
-copy r14,r8
-load r13,1
-settp r14,768
-call r11,llctarget.sayvalue(),r13
-null r14
-.srcstep 37 0 98 "walk-c.crexx" 3 1 19 "if 1 then say 'ok'"
-load r12,"walk-c.crexx: generated code in $MAIN"
-llb2:
-.srcstep 27 0 17 "walk-c.crexx" 3 15 19 "if 1 then say 'ok'"
-load r12,"walk-c.crexx:3:15"
-load r14,"ok"
-load r13,1
-settp r14,768
-call r9,llctarget.literal(),r13
-null r14
-.srcstep 20 0 65 "walk-c.crexx" 3 11 19 "if 1 then say 'ok'"
-load r12,"walk-c.crexx:3:11"
-copy r14,r9
-load r13,1
-settp r14,768
-call r11,llctarget.sayvalue(),r13
-null r14
+load r22,"walk-c.crexx:2:1"
+copy r24,r4
+load r23,1
+settp r24,768
+call r21,llctarget.sayvalue(),r23
+null r24
+.srcstep 19 0 17 "walk-c.crexx" 3 4 5 "if 1 then say 'ok'"
+load r22,"walk-c.crexx:3:4"
+load r24,"1"
+load r23,1
+settp r24,768
+call r5,llctarget.literal(),r23
+null r24
 .srcstep 12 0 65 "walk-c.crexx" 3 1 19 "if 1 then say 'ok'"
-load r12,"walk-c.crexx:3:1"
+load r22,"walk-c.crexx:3:1"
+copy r6,r1
+copy r24,r5
+copy r25,r6
+load r23,2
+settp r24,768
+settp r25,768
+call r7,llctarget.truth(),r23
+null r24
+null r25
+.srcstep 38 0 98 "walk-c.crexx" 3 1 19 "if 1 then say 'ok'"
+load r22,"walk-c.crexx: generated code in $MAIN"
+llb2:
+.srcstep 28 0 17 "walk-c.crexx" 3 15 19 "if 1 then say 'ok'"
+load r22,"walk-c.crexx:3:15"
+load r24,"ok"
+load r23,1
+settp r24,768
+call r8,llctarget.literal(),r23
+null r24
+.srcstep 21 0 65 "walk-c.crexx" 3 11 19 "if 1 then say 'ok'"
+load r22,"walk-c.crexx:3:11"
+copy r24,r8
+load r23,1
+settp r24,768
+call r21,llctarget.sayvalue(),r23
+null r24
+.srcstep 12 0 65 "walk-c.crexx" 3 1 19 "if 1 then say 'ok'"
+load r22,"walk-c.crexx:3:1"
 llb3:
 .srcstep 2 0 98 "walk-c.crexx" 1 1 15 "options levelc"
-load r12,"walk-c.crexx: generated code in $MAIN"
-load r13,0
-call r10,llctarget.absent(),r13
-ret r10
+load r22,"walk-c.crexx: generated code in $MAIN"
+load r23,0
+call r9,llctarget.absent(),r23
+ret r9
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r11,1
+load r21,1
 br llerror1
 llerror1_2:
-load r11,2
+load r21,2
 br llerror1
 llerror1_3:
-load r11,3
+load r21,3
 br llerror1
 llerror1_4:
-load r11,4
+load r21,4
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r14,r0
-copy r15,r12
-load r13,2
-settp r14,768
-settp r15,768
-call r12,llctarget.failuremessage(),r13
-null r14
-null r15
-beq llraise1_1,r11,1
-beq llraise1_2,r11,2
-beq llraise1_3,r11,3
+copy r24,r0
+copy r25,r22
+load r23,2
+settp r24,768
+settp r25,768
+call r22,llctarget.failuremessage(),r23
+null r24
+null r25
+beq llraise1_1,r21,1
+beq llraise1_2,r21,2
+beq llraise1_3,r21,3
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r12,r0
+signalorigin "INVALID_ARGUMENTS",r22,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r12,r0
+signalorigin "CONVERSION_ERROR",r22,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r12,r0
+signalorigin "DIVISION_BY_ZERO",r22,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r12,r0
+signalorigin "CLASSIC_SYNTAX",r22,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
-llctarget.contextnew() .expose=llctarget.contextnew
-  .meta "llctarget.contextnew"="b" ".rexxactivation..rexxactivationarguments" llctarget.contextnew() ""
-llctarget.status() .expose=llctarget.status
-  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
 llctarget.poolnew() .expose=llctarget.poolnew
   .meta "llctarget.poolnew"="b" ".rexxpool..rexxvariablepool" llctarget.poolnew() ""
+rexxclassicconfig.rexxclassicconfig.§factory() .expose=rexxclassicconfig.rexxclassicconfig.§factory
+  .meta "rexxclassicconfig.rexxclassicconfig.\xC2\xA7factory"="b" ".rexxclassicconfig..rexxclassicconfig" rexxclassicconfig.rexxclassicconfig.§factory() "?requested_profile=.string"
+rexxclassiccontext.rexxclassiccontext.§factory() .expose=rexxclassiccontext.rexxclassiccontext.§factory
+  .meta "rexxclassiccontext.rexxclassiccontext.\xC2\xA7factory"="b" ".rexxclassiccontext..rexxclassiccontext" rexxclassiccontext.rexxclassiccontext.§factory() "activation=reference .rexxactivation..rexxactivationarguments,pool=reference .rexxpool..rexxvariablepool,config=reference .rexxclassicconfig..rexxclassicconfig"
+llctarget.status() .expose=llctarget.status
+  .meta "llctarget.status"="b" ".int" llctarget.status() "result=.rexxactivationarguments"
+rexxclassiccontext.rexxclassiccontext.activation() .expose=rexxclassiccontext.rexxclassiccontext.activation
+  .meta "rexxclassiccontext.rexxclassiccontext.activation"="b" "reference .rexxactivation..rexxactivationarguments" rexxclassiccontext.rexxclassiccontext.activation() ""
+rexxactivation.rexxactivationarguments.numericdigits() .expose=rexxactivation.rexxactivationarguments.numericdigits
+  .meta "rexxactivation.rexxactivationarguments.numericdigits"="b" ".int" rexxactivation.rexxactivationarguments.numericdigits() ""
+rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexxactivationarguments.numericfuzz
+  .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
+rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
+  .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
 llctarget.literal() .expose=llctarget.literal
   .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "text=.string"
 llctarget.sayvalue() .expose=llctarget.sayvalue
   .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
+llctarget.truth() .expose=llctarget.truth
+  .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
 llctarget.absent() .expose=llctarget.absent
   .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
 llctarget.failuremessage() .expose=llctarget.failuremessage

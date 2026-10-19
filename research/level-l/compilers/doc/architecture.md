@@ -1,9 +1,9 @@
 # Level C compiler architecture
 
-**Target architecture approved by Adrian, 19 October 2026.** Source review:
-`develop` `016e6a65466c65a5c722b96452d95025acb463b2`, 19 October 2026.
-Reconciled with `e5c066b87945dc697df6c771fc5a56a20962c772` (sanitizer scheduling/docs;
-reviewed compiler/runtime source unchanged). The [plan](../PLAN.md#c-first-delivery-milestone) owns acceptance and sequence;
+**Target architecture approved by Adrian, 19 October 2026.** The original
+native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
+the C-family v2/context sections describe the current reviewed B/L implementation.
+The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
 “Current” below means inspected source, not fresh execution qualification.
@@ -42,9 +42,9 @@ and feature work are outside this delivery.
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
-| `levelc/runtime/llctarget.crexx` | B adapter, name-dispatched operators, per-arithmetic-call UTF8 configuration, copied numeric snapshots and private pools. | Use one activation-owned context, direct checked entrypoints and a thin adapter. |
+| `levelc/runtime/llctarget.crexx` | One current B target: nine borrowed-context adapters reuse shared B bodies; no per-operation default config/pool or copied activation. Literal/pool/packet/result helpers remain. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
-| Maintained `examples/step06/walk-c.after.rxas` | Literal/constant-IF example still creates a pool and carries arguments/context/result; main/body frames have 6/16 registers; clause IDs zero. | Historical readable cost example, not optimal or newly measured. Specialise only after observation/lifetime proof. |
+| Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/26; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
 
 Some old BIF/reference paragraphs still describe DATE/TIME refresh and streams
@@ -254,11 +254,12 @@ external stream encodings do not change source or ordinal semantics.
 
 ### Borrowed Classic context contract
 
-**Shared B surface and additive target adapters approved by Adrian on
-19 October 2026; implemented locally.** The plan owns acceptance and
-qualification. This runtime increment does not migrate generated C procedures
-or change serialized C-family records; their exact revision remains a review
-gate before selector migration.
+**Shared B surface and nine borrowed target adapters approved by Adrian on
+19 October 2026; implemented and locally qualified.** Adrian subsequently
+approved the clean selector/schema migration below and removed compatibility
+requirements for earlier research C output: use one current `llctarget`
+namespace/product and remove obsolete copied-context adapter bodies. The plan
+owns implementation and qualification; shared B/L consumer contracts remain.
 The intended outcome is one execution-owned configuration and one authoritative
 activation/pool binding for the C subset already admitted at `975afbc15`.
 Remove per-operator configuration construction and copies of live activation
@@ -270,8 +271,8 @@ control, NUMERIC forms, private PROCEDURE routines, argument/result presence
 and LENGTH/ARG/DIGITS forms. It does not add shared-label/fall-through calling,
 EXPOSE syntax, condition handlers, new BIF names, signed external calls, host
 invocation APIs or dynamic compilation. Those remain with their owning steps.
-The current runtime increment supplies the five-callable B bundle and nine
-direct-host adapters below; generated C still uses the legacy target entries.
+The completed runtime baseline supplies the five-callable B bundle and nine
+direct-host adapters below; generated C still needs the approved migration.
 The existing Unicode procedures and algorithms are unchanged.
 
 #### Approved shared B surface
@@ -396,7 +397,7 @@ settings; relying on the shim's default settings is incorrect. Returning from
 the shim or child restores its caller's VM frame using existing VM behavior.
 Do not change process-global RexxValue defaults or add a native numeric service.
 
-#### Checked BIF reuse and target compatibility decision
+#### Checked BIF reuse and current target
 
 Call sites retain source-ordered values/presence and existing direct BIF entry
 selection. Build a call-local `RexxBifCallContext.expression(name)`, bind the
@@ -407,10 +408,11 @@ body or error policy is copied into the compiler. Existing config getters and
 argument arrays can still copy values internally; those are retained costs,
 not a claim that the complete BIF path performs no copies.
 
-**Approved compatibility choice:** an additive `llctarget2`
-namespace in the same installed `llctarget.rxbin`, preserving every existing
-`llctarget` export/signature for already-emitted C images. After the separately reviewed selector migration, new C output will use
-the following exact borrowed-context shim entries. Here `V` is
+**Approved clean target:** one namespace `llctarget` in the existing installed
+`llctarget.rxbin`. Consolidate the completed borrowed adapters into that owner
+and delete `llctarget2` and the replaced copied-context implementations. Earlier
+research C images/IR are not a compatibility contract. New C output uses the
+following exact borrowed-context entries. Here `V` is
 `.rexxvalue..RexxValue` and `C` is
 `reference .rexxclassiccontext..RexxClassicContext`; these are table abbreviations,
 not additional public type names.
@@ -418,44 +420,242 @@ All parameters are required and have no defaults/expose flags.
 
 | New entry | Parameters | Result |
 |---|---|---|
-| `llctarget2..binaryop` | `operation = .string, left = V, right = V, context = C` | `V` |
-| `llctarget2..unaryop` | `operation = .string, value = V, context = C` | `V` |
-| `llctarget2..truth` | `value = V, context = C` | `.int` |
-| `llctarget2..setting` | `operation = .string, context = C, value = V` | `.void` |
-| `llctarget2..digits` | `context = C` | `V` |
-| `llctarget2..readarg` | `context = C, ordinal = .int` | `V` |
-| `llctarget2..countargs` | `context = C` | `V` |
-| `llctarget2..existsarg` | `context = C, ordinal = V, option = V` | `V` |
-| `llctarget2..lengthvalue` | `value = V, context = C` | `V` |
+| `llctarget..binaryop` | `operation = .string, left = V, right = V, context = C` | `V` |
+| `llctarget..unaryop` | `operation = .string, value = V, context = C` | `V` |
+| `llctarget..truth` | `value = V, context = C` | `.int` |
+| `llctarget..setting` | `operation = .string, context = C, value = V` | `.void` |
+| `llctarget..digits` | `context = C` | `V` |
+| `llctarget..readarg` | `context = C, ordinal = .int` | `V` |
+| `llctarget..countargs` | `context = C` | `V` |
+| `llctarget..existsarg` | `context = C, ordinal = V, option = V` | `V` |
+| `llctarget..lengthvalue` | `value = V, context = C` | `V` |
 
 Keep the currently admitted operation names and argument forms. `readarg`
 retains ARG-instruction uppercase behavior; it is not the raw ARG BIF accessor.
 `setting` mutates the borrowed activation only after existing validation; the
 selector then performs the C-frame install above. `digits`, ARG and LENGTH
-select their existing checked BIF entries. Legacy argument construction,
-literal/pool helpers and fresh result packets can retain their current ABI;
+select their existing checked BIF entries. Existing argument construction,
+literal/pool helpers and fresh result packets retain their current ABI;
 argument construction finishes before the new bundle borrows the activation.
-Legacy helper bodies remain compatibility code until separately retired.
+Keep only the helpers used by the clean selector: `literal`, `poolnew`,
+`poolread`, `poolwrite`, `sayvalue`, `arguments`, `mainargs`, `append`, `present`,
+`absent`, `requirevalue`, `setresult`, `status` and `failuremessage`. Together
+with the nine entries above these are the complete 23 exports. Remove
+`contextnew`, the old nine bodies, compatibility bridge/build entries and
+old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
+the current implementations. The private `bifcontext` remains internal.
 The existing operator-name branch and conservative root setup remain named
 C-OPT-01/03 work; this contract does not add direct-operation B exports or claim
 that literal-only programs have no unused setup.
-
-An intentional break of the exposed `llctarget` signatures was rejected for
-this increment: a coordinated source rebuild would not preserve existing
-emitted images. The two namespaces share one target product and existing
-Classic library implementations; they do not duplicate the BIF bodies.
 
 New generated C source-unit procedures receive one `C` reference; invocation
 kind and argument presence reside in its existing activation. Their existing
 fresh result-packet result type remains. This internal ABI is distinct from
 the unchanged VM main entry and from later signed external-call contracts.
-Changed C semantic type/effect/call records must use a separately reviewed C
-family revision; do not reinterpret old frozen records or change generic L
-record semantics. Old installed target metadata missing `llctarget2` or the
-bundle must cause a precise import diagnostic before publishing RXAS, preserving
-the previous output. Mixed old/new target packages must not accidentally select
+Changed C semantic type/effect/call records use the approved C family revision
+below; do not reinterpret old frozen records or change generic L record
+semantics. Installed target metadata missing current `llctarget` signatures or
+the bundle must cause a precise import diagnostic before publishing RXAS, preserving
+the previous output. Incompatible packages must not accidentally select
 an old same-name signature. No new runtime product or compiler dependency is
 introduced into static applications.
+
+#### Approved C-family revision and generated procedure ABI
+
+**CLC-STEP03d approved by Adrian on 19 October 2026; implementation underway.**
+Use the following `crexx.c` version 2 semantic contract and generated procedure
+ABI, with one clean current C target and no compatibility bridge for earlier
+research C programs. The five shared B callables and nine borrowed signatures
+above are retained. No extra B callable, generic L API/transport format, source
+form, RXBIN metadata record or RXAS/VM operation is introduced. This migrates
+only the admitted profile listed above; complete labels, conditions and
+INTERPRET retain their later gates.
+
+The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
+types and `crexx.c` version 2. The neutral scalar names do not load the G
+frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
+version 1 is never reinterpreted as version 2. Within version 2, the complete C
+type/operation declarations, including unused declarations and all ordered
+fields and effect summaries, must match the canonical C registration before
+emission. Foreign operations remain outside the C profile.
+
+The C types are `value`, `arguments`, `result` and new `context`. The first
+three retain their current runtime representations: `RexxValue`, a not-yet-
+borrowed argument/activation packet and a fresh return-presence packet. They
+retain the existing byte codec in the semantic registry. `context` uses that
+same nominal codec registration but denotes only a live reference to an
+authoritative `RexxClassicContext`; its runtime payload is never serialized in
+IR. It may originate only at the one required function parameter and flow
+through reference-value copies and local slots. A context slot is bound once
+in its function's entry block, from parameter 1 or an earlier proven entry
+alias, before entry reads; every later/dead-block read requires that binding.
+Reject nonentry/repeated stores and unproved producers. This is the narrow
+C opaque-context invariant, not a general definite-assignment service; the
+generic structural verifier alone does not prove slot initialization.
+Reject `core.constant` and
+optional/default parameters of this type, references in results, and any
+unsupported producer/use. The former `numeric` and `pool` types and `pool.new`
+operation are absent from version 2. Resolve the current pool from the bundle
+at each pool operation, so an observed `bindPool` replacement remains live.
+
+The following table is the complete 40-operation C-family contract. Names have
+the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
+`I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
+`crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
+`context` is a conservative state footprint covering reads or writes through
+the bundle, including existing BIF pool-policy setters; it does not assert
+read-only access. `condition` includes the existing reference, initialization,
+conversion, numeric, argument and resource conditions without changing their
+names or diagnostic policy. All rows terminate as `returns` except `exit`.
+No evaluator is registered for context-dependent operations, including truth.
+For exact literal bytes `0`/`1`, C construction may supply a separate derived
+core Boolean to the branch while retaining the effectful runtime truth call.
+Dead-arm pruning therefore preserves owner checks, pool-policy effects and
+condition timing. Removing that context work remains C-OPT-03, subject to its
+state/failure/observation proof.
+
+| Operation(s) | Ordered inputs | Ordered attributes | Output | State | Failure |
+|---|---|---|---|---|---|
+| `add sub mul div eq ne lt le gt ge strict concat blank abut and or xor` | `left:V right:V context:C` | — | V | `context` | `condition` |
+| `positive negative not` | `value:V context:C` | — | V | `context` | `condition` |
+| `say` | `value:V` | — | — | `output` | `conversion.io` |
+| `load` | `context:C` | `name:T` | V | `context` | `condition` |
+| `store` | `context:C value:V` | `name:T` | — | `context` | `condition` |
+| `truth` | `value:V context:C` | — | B | `context` | `condition` |
+| `numeric.digits numeric.fuzz` | `value:V context:C` | — | — | `context` | `condition` |
+| `numeric.form` | `context:C` | `form:T` | — | `context` | `condition` |
+| `digits` | `context:C` | — | V | `context` | `condition` |
+| `arguments.empty` | — | — | A | `none` | `resource` |
+| `arguments.append` | `arguments:A value:V present:B` | — | A | `none` | `resource` |
+| `arguments.read` | `context:C` | `ordinal:I` | V | `context` | `condition` |
+| `arguments.count` | `context:C` | — | V | `context` | `condition` |
+| `arguments.exists` | `context:C ordinal:V option:V` | — | V | `context` | `condition` |
+| `return.present` | `value:V` | — | R | `none` | `resource` |
+| `return.absent` | — | — | R | `none` | `resource` |
+| `requirevalue` | `result:R` | — | V | `none` | `missing.result` |
+| `setresult` | `context:C result:R` | — | — | `context` | `condition` |
+| `call` | `arguments:A context:C` | `target:T function:B` | R | `context.output` | `condition` |
+| `length` | `value:V context:C` | — | V | `context` | `condition` |
+| `exit` | `value:V` | — | — | `process` | `exit` |
+
+`exit` has termination `diverges`. `form` admits only the current
+`scientific`/`engineering` spellings; `ordinal` must be positive; `target`
+must identify an existing private routine. `function` is a required canonical
+Boolean attribute: true selects `beginInternalFunction`, false selects
+`beginInternalCall`. It is static invocation metadata, not another argument
+or source-language feature. Ordered actual evaluation and explicit omitted
+positions remain in the existing argument packet. Context-free constants are
+limited to the currently selected literal/scalar types, never argument,
+result or context packets manufactured from bytes.
+
+Every generated source-unit procedure, including `$MAIN`, has precisely:
+
+```text
+(context = reference .rexxclassiccontext..RexxClassicContext)
+    -> .rexxactivation..RexxActivationArguments
+```
+
+The sole argument is required, with no default or expose modifier. The result
+is the existing fresh presence packet; it cannot contain references to child
+owners. Expression calls still use `requirevalue`; statement calls still
+apply/drop `RESULT` in the caller's current pool using existing behavior.
+The VM `main(argv)` entry and integer completion status are unchanged.
+
+Root entry finishes `mainargs(argv)`, constructs one UTF8 configuration and one
+Unicode-name pool in dedicated stable locals, then constructs one bundle using
+their references. It passes `reference bundle` to `$MAIN`. A private call first
+finishes all argument-packet construction, puts that activation in its final
+caller-owned local, calls existing `inheritSignalPolicy(parent.activation())`,
+the selected `beginInternal*` and `enterProcedure`, and initializes a fresh
+private pool with existing command-status inheritance from `parent.pool()`.
+Only then does it construct the child bundle with the parent's configuration
+reference and call the callee with `reference childBundle`. The caller owns
+these locals until return/unwind; callees construct no replacement pool.
+Nested calls have distinct owner windows. Normal return clears borrowed call
+arguments and temporary aliases before releasing bundle/activation/pool owners;
+abrupt paths use existing VM unwind cleanup. This introduces no shared-label
+entry or later PROCEDURE/EXPOSE protocol.
+
+Select the existing exported class factories/methods through the independent
+metadata reader. In particular, use the existing
+`rexxclassiccontext.rexxclassiccontext.§factory` and getter symbols, activation
+numeric/inheritance/procedure methods and pool `inheritCommandStatus` method;
+do not read private attribute layouts. Validate the selected class owner,
+callable identity, B flags, exact result, declared arguments and optional flags.
+The selected configuration factory's `?requested_profile=.string` stays
+optional in metadata and is supplied explicitly. Existing `poolnew()` owns
+the explicit `.RexxVariablePool(1)` construction; no duplicate pool-factory
+selection is added to the C emitter.
+The nine new adapters remain required-only. Legacy short type spellings may
+match only their explicit known owner-qualified identities, never arbitrary
+basenames or class/interface assignability. Preserve the existing hidden
+receiver ABI: pass a live receiver alias with its established call-window
+swap/restoration protocol, rather than a by-value receiver snapshot. Copy an
+already-reference operand's payload; use `mkref` only on an actual stable owner,
+never a reference-valued slot. End every temporary `linkref` alias before its
+window is cleared. Existing general calls suffice; no new ISA is needed.
+
+Each executing C frame selects Classic numeric standard with existing
+`numsci 18,1,2`, then reads validated integer `numericDigits/Fuzz/Form` through
+the borrowed activation and installs `FUZZ=0`, DIGITS, FUZZ, FORM in that frame.
+After a successful void `llctarget.setting` call it performs the same integer
+getter/install sequence, with no text conversion between commit and install.
+Install the existing four fatal `sigbrv` handlers before entry setup/body.
+A failed setting diverts to that C frame's fatal branch and cannot reach any
+numeric install or ordinary next statement. The existing relay installs
+`sighalt` before `signalorigin`: this profile is nonresumable even with an
+outer B skip handler. Do not claim outer-handler recovery or alter that policy
+in this migration. The unchanged direct B adapter tests prove stored-state
+atomicity; generated error executions and branch-shape checks prove diversion.
+Child return restores the caller VM frame; its stored activation was never
+changed by the child. Same-frame FUZZ/FORM proof must use observations whose
+results actually differ, including a non-multiple-of-three exponent.
+
+| Compiler/input/target combination | Disposition |
+|---|---|
+| New compiler + canonical C v2 IR + current bundle/adapters | Supported through the one-context ABI. |
+| Current selector + C v1/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
+| Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
+| Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
+
+Use existing generic manifest save/load checks and reader bounds; add C-owned
+whole-family/type/use and signature checks in `llcrxas`, not C policy in the
+generic reader. Recheck every constant/attribute byte record with the canonical
+selected codec, including unused/dead records, before any raw interpretation:
+host codecs are not identified by the serialized manifest. All required entry
+metadata and every selected runtime contract
+must be admitted before publishing RXAS. Any refusal returns empty output and
+leaves the graph and prior CLI output file byte-identical.
+
+Implementation covers `levelc/llcir.crexx`, `llcfrontend.crexx` and
+`llcrxas.crexx`, consolidation into `levelc/runtime/llctarget.crexx`, deletion
+of `llctarget2.crexx`, their existing service/IR and STEP07/backend/direct-target
+fixtures/checkers, and necessary build/test registration cleanup. Reuse `backend-step07.crexx`,
+`check-step07.py`, `backend/{numeric,arguments,argv,calls}-c.crexx` and
+`cases.json`; extend existing numeric observations for FUZZ/FORM inheritance,
+restoration and failures instead of adding another scenario aggregate. Add
+canonical v2 save/load and adversarial old/forged schema, constant-context,
+wrong-width attributes, entry/unbound context-slot provenance, function-ABI
+and selected runtime metadata refusals. Remove the old-image and
+legacy-signature compatibility controls; retain independent B runtime/Classic
+expectations and shared B/L consumer regressions.
+
+Structural checks must show one root configuration per execution, one required
+reference formal, no live owner snapshots/per-operation configuration, no
+callee pool construction, stable child owners before borrowing, current-pool
+lookup, correct call-kind/presence/result handling, safe receiver restoration
+and reference-window cleanup, Classic same-frame numeric installs only on
+success, existing fatal diversion, and unchanged source/error origins. Inspect
+both caller and helper work; retained packet/config-getter copies stay named
+costs. Qualify focused CLI/service/generated execution in compiler/IR modes and
+both VMs, with separate assembler-mode controls and existing C-only restricted
+roots. Reuse native controls by expected behavior, not faulty/excess native
+output. Materially expanded nested tests need isolated normal Debug scheduling
+measurement before registration, with generous serial timeouts. Reuse valid
+sanitizer evidence for unchanged native inputs; any warranted new sanitizer
+work is consolidated at final delivery under AGENTS.md. No build/test result is claimed
+before implementation/qualification.
 
 #### Review, migration and verification gates
 
@@ -464,9 +664,8 @@ status is recorded under CTX in the plan. These gates serve
 CFC-AC02/03/06/07/09/11/12 and describe
 this contract slice, not complete activation, BIF, host or C acceptance.
 
-1. The five-callable B surface, borrowing/error contract and additive
-   target compatibility choice are approved. Separately freeze the affected C family revision and
-   internal call metadata before selector implementation. Preserve all existing
+1. The five-callable B surface, borrowing/error contract, clean single-target
+   C family revision and internal procedure ABI above are approved. Preserve all existing
    rxfnsc public class/BIF signatures and native/typed/RexxScript consumers.
 2. Prove the bundle independently with existing B reference operations: external
    stable owners, safe factory-result copying, live pool rebinding, independent
@@ -481,20 +680,110 @@ this contract slice, not complete activation, BIF, host or C acceptance.
    `tests/backend/{numeric,arguments,argv,calls}-c.crexx` and their `cases.json`
    expectations, selected independent `classic_expression_contract.py`
    expectations and `levelc_bif_numeric_context` fixtures. Extend STEP07's
-   malformed-import/previous-output controls to both proposed surfaces. Execute
-   old emitted-image/new-library and new-compiler/old-metadata controls.
+   malformed-import/previous-output controls to the current surfaces. Refuse
+   incompatible metadata without retaining an old-program compatibility path.
 5. Inspect caller and helper RXAS: one UTF8 configuration per execution, stable
    borrowed owners, no live activation/configuration copy per operator, no unused
    callee pool reconstruction, correct inherited numeric shim frame and no new
    BIF dispatch/body. Classify retained result/argument/config-getter copies.
    Reuse the C-only exact-root/static/installed controls and existing consumer
    regressions. Measure any materially expanded nested aggregate before CTest
-   registration, and qualify centrally under the repository's normal Debug and
-   maintained sanitizer rules.
+   registration, and qualify centrally under the repository's normal Debug
+   rules. Source-only slices reuse valid unchanged-native sanitizer evidence;
+   consolidate any warranted new proof at final delivery, preserving actual SAN
+   obligations.
 
 These gates do not design or implement INTERPRET, continuation ownership or
 ephemeral code loading. The later mechanism must use the same live pool binding;
 its exact runtime/VM contracts remain at the final STEP11 decision gate.
+
+<a id="proposed-next-instruction-drop"></a>
+
+### Next instruction: DROP
+
+**Approved by Adrian, 19 October 2026; implementation waits for qualified,
+locally committed STEP03d closure.** The exact C v3/AST/operation/name-admission
+contract below is approved; no DROP product code has been added.
+Reuse the existing [Unicode symbol contract](../../../../compiler/docs/levelc_unicode_and_streams.md#ordinary-values-and-byte-compatibility)
+and [pool methods](../../../../lib/rxfnsc/RexxVariablePool.crexx), including
+`dropSymbol(name=.string)->.void` and
+`dropIndirectList(list=.string,config_ref=reference .rexxclassicconfig..RexxClassicConfig)->.void`.
+No new B/L/VM API, target export, runtime algorithm or legacy compatibility path
+is needed. One current `crexx.c` family advances to version 3, retaining its
+four types and one-context procedure ABI, with this 41st operation:
+
+| Operation | Ordered inputs | Ordered attributes | Output | State / failure / termination |
+|---|---|---|---|---|
+| `crexx.c.drop` | `context:crexx.c.context` | `name:crexx.g.text indirect:core.boolean` | none | `context` / `condition` / `returns` |
+
+The projected AST adds `CDrop(items:(DropDirect|DropIndirect)+)`, whose items each
+carry a raw `name` text field and their original authored span. The grammar is
+a nonempty, ordered list of direct variable symbols or parenthesized single
+variable references; `(expression)` is not an indirect target. Emit one drop
+operation per item in source order. Direct items call the current pool's
+`dropSymbol` once. An indirect item reads that variable at its position,
+captures `symbolValue(name).asString(0)` once, then calls the current pool's
+`dropIndirectList` with that captured text and the borrowed configuration.
+Never pre-evaluate all parenthesized references or substitute all tails before
+earlier drops. The shared pool owns tail case, arbitrary component counts,
+stem defaults/tombstones, recursive aliases, word splitting and the already
+approved skip-invalid-word policy.
+
+First complete shared C variable-symbol recognition for DROP and ordinary
+variable read/assignment, using existing L `input utf8` and `unicode.gc.L`
+instead of the current ASCII-undotted rule. The existing authority admits
+letters and `! ? _ @ # $` initially; bodies/tails also admit ASCII digits and
+dots. Leading-digit and ordinary leading-dot constant symbols are not DROP
+targets. Only the existing `.MN`, `.RESULT`, `.RC`, `.RS` and `.SIGL` exception
+remains variable. Preserve number/string/other expression token meanings and
+keyword variables such as `drop=1`; suppress inserted expression-concatenation
+tokens only in DROP item lists. No XID/combining-mark/emoji expansion or NFC is
+introduced. Pass raw variable spellings to pool operations: its existing simple
+casing retains micro-sign U+00B5 identity. The scanner L set equals pinned
+Unicode 17 `gc.L`; [the shared generator](../../../../cmake/CrexxClassicUnicode.cmake)
+owns that letter authority and micro-sign case exception.
+Preserve raw ARG destination names too, while its existing `readarg` helper
+keeps uppercase argument-content behavior. The wider variable lexer does not
+expand the current ASCII-undotted routine/call-name profile: validate those
+names separately and refuse unsupported shapes rather than collapsing Unicode
+identities. Full routine-name integration remains open in STEP04/06; include
+this boundary in the shared-symbol regressions.
+[L token/tree byte offsets](../../../../langtools/doc/user-guide.md#input-profiles)
+and original source bytes remain unchanged. Switching to scalar `utf8` also
+expands the quoted-body sets beyond U+00FF, preserving existing Greek/CJK/emoji
+literals and comment contents, delimiter/newline rules and byte spans. Retain
+the existing `LENGTH('α漢🙂')` regression alongside Unicode variable names.
+
+In v3, each `load`, `store` and `drop` name attribute must be exactly one valid
+C variable symbol. `dropSymbol` assumes this precondition; it is not a runtime
+source-name validator. Add one private C-owned admission check that uses the
+same generated C symbol lexer rule and requires one variable token spanning
+all input bytes: reuse `llcgrammar.language()` and existing
+`lllanguage.request(...).lex(0)`, then check token kind/count and original
+start/end offsets. The same generated definition serves source lexing and
+name admission; no source parsing or new public service is needed. This adds
+no compiler-host `rxfnsc` dependency or duplicate Unicode classifier.
+Indirect subsidiary words retain their separate existing
+runtime/configuration validation. Canonical codecs, entry-bound context and
+unsupported-version/previous-output protections remain unchanged.
+
+The next plan's DROP-AC01–04 cover source/AST/name/schema admission; independent
+ordered scalar/stem/compound/indirect observations; Unicode/configuration/
+alias/private-pool behavior and errors; and caller/helper RXAS plus focused
+qualification. Use the existing direct/indirect/whole-DROP native fixtures as
+read-only comparison inputs, with new-C independent expectations and pool
+tests. Include `drop names (names)`, subsidiary `key items.key`, invalid words
+followed by valid names, arbitrary tails, dropped-versus-empty/default state,
+Unicode letters/blanks/micro sign and malformed unreachable source. Prebound
+context/IR tests can prove alias integration while source EXPOSE and resumable
+conditions keep their later owners. Distinguish `µ` from Greek `μ`/`Μ` across
+assignment/read/drop; `names='names victim'; drop(names)` must retain its captured
+list after dropping its carrier. A prebound lowercase compound-tail alias must
+survive whole-stem DROP without affecting an unrelated parent tail. Bound DROP
+list mode at inline THEN/ELSE and separators so following concatenation resumes.
+RXAS must show one library drop path per
+item, one capture per indirect reference, live pool/config bindings, truthful
+source/clause origins and no compiler word/tail algorithm or extra configuration.
 
 ## Optimisation ownership
 

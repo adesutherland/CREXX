@@ -25,7 +25,7 @@ accepted LC-UNICODE model govern radix literals and fixed U+0000–U+00FF ordina
 | Bare and expression forms | `levelc.rxl` creates `Say(value?)`; `llcfrontend.statement` lowers the expression once, then one `crexx.c.say`. Existing frontend grammar/syntax tests plus `tests/say/forms-c.crexx`. | Full expression/BIF coverage belongs to shared semantics and CFC-AC02. |
 | Evaluation/output order | Ordinary numeric/string expressions, IF/group and private-procedure call with inner output before outer output. `tests/say/forms-c.crexx` has independent expected bytes. | EXPOSE, shared-frame labels and general calls remain PROCEDURE/CALL dependencies. |
 | Text and ordinals | `llcparse` joins only an adjacent single X/B symbol to a C String token; `llcfrontend.ordinalliteral` validates and uses B `b2x`/`x2c` at compilation. Existing `core.constant` preserves exact UTF-8 text. | No G radix-literal expansion. No general BIF admission is implied by compiler-side decoding. |
-| Output route | `llcrxas.classic` calls checked `llctarget.sayvalue`; its B implementation calls `RexxValue.asString(1)` and the existing VM SAY instruction. | New-image configured callback/context isolation and output-failure proof remain open. Existing native callback tests qualify the unchanged platform only. |
+| Output route | `llcrxas.classic` calls checked `llctarget.sayvalue`; its B implementation calls `RexxValue.asString(1)` and the existing VM SAY instruction. | Modern SAY checks the current route, bare line, once-only expression, visible Unicode/numeric text, order and ordinary errors. Further historical callback/byte-exact host edge parity is deferred and unclaimed; retain existing native controls without adding a peripheral matrix. |
 | Syntax and expression failure | Focused malformed literal/expression tests preserve existing output files. Runtime division aborts before the failing SAY or any later output, with authored location. | Classic numeric diagnostic identities for all source errors, caught conditions and full TRACE/clause observations remain open. |
 | Source and RXAS | Complete literal/error RXAS and shape assertions in the maintained SAY fixtures and tests; stable logical basename, full literal span, one output call and no runtime radix conversion. | Full source clause IDs and TRACE remain CFC-AC03 / LC-I-24; generated clause ID zero does not claim full trace support. |
 
@@ -54,9 +54,9 @@ alone would miss that earlier native validation; no native defect is claimed.
 
 ### RXAS review and outstanding cost
 
-The full literal-only baseline still constructs an argument/context wrapper,
-a private pool, return packet and fatal-error handler. The pool and copied
-argument/context slots are unused in that example. These costs belong to the
+The full literal-only baseline still constructs root activation/pool/configuration
+owners and a borrowed bundle, a return packet, same-frame numeric setup and a
+fatal-error handler. The pool and argument owners are unused by that example. These costs belong to the
 existing context/pool specialisation and slot/register cleanup owners in
 [poc-coverage](poc-coverage.md#code-quality-and-remaining-work), not to the SAY
 output contract. Record their removal criteria: prove no pool, argument or
@@ -77,5 +77,5 @@ passed the 40-command SAY workload: independent literal/order/error expectations
 both compiler IR modes and VMs with assembler optimisation disabled, all 256
 ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
-whole SAY stays open for the shared/host/TRACE obligations above. Review and
+whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
 closure are separate states; the next instruction is DROP after SAY disposition.

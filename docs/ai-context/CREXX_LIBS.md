@@ -76,14 +76,17 @@ raise `REFERENCE_INVALID` before mutation. Explicit signal-skip recovery returns
 an unbound factory result or empty getter result and leaves a rejected rebind
 unchanged. Keep all owners initialized and in stable storage while borrowed.
 
-The research C adapters in namespace `llctarget2` consume that bundle and reuse
-existing checked BIF/expression entries. They ship alongside unchanged legacy
-`llctarget` exports in the same target image. Compiler policy remains in
-`research/level-l/compilers`; the shared B class owns no compiler or VM policy.
-The numeric adapters inherit the caller's VM settings. `setting` updates only
-the stored activation; the eventual C selector must install validated settings
-in its own executing frame. The existing selector still uses legacy adapters;
-its serialized contract migration is separately reviewed. See the
+The research C target has one namespace, `llctarget`, in `llctarget.rxbin`.
+Nine adapters consume the borrowed bundle and reuse existing checked BIF and
+expression entries; fourteen helpers retain value/argument/result transport.
+Compiler policy remains in `research/level-l/compilers`; the shared B class
+owns no compiler or VM policy. Generated C procedures take one required bundle
+reference, create child owners in the caller and share the root UTF8 config.
+Numeric adapters inherit VM settings. `setting` changes validated activation
+state; generated C installs those settings in its own executing frame. Earlier
+research C images and C-family v1 IR must be rebuilt through the current
+compiler; there is no compatibility bridge. Shared B/L consumer contracts
+remain unchanged. See the
 [borrowed-context contract](../../research/level-l/compilers/doc/architecture.md#borrowed-classic-context-contract).
 
 The CMake build treats each `rxfnsc` member as an isolated source compilation.

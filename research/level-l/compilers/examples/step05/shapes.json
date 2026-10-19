@@ -1,35 +1,35 @@
 {
   "c-before": {
-    "bytes": 4337,
-    "instructions": 111,
-    "calls": 13,
-    "source_records": 13,
+    "instructions": 164,
+    "calls": 18,
+    "source_records": 15,
     "frames": [
       [
         "main",
-        "6"
+        "16"
       ],
       [
         "llf1",
-        "17"
+        "26"
       ]
-    ]
+    ],
+    "bytes": 7079
   },
   "c-after": {
-    "bytes": 3474,
-    "instructions": 83,
-    "calls": 9,
-    "source_records": 9,
+    "instructions": 145,
+    "calls": 16,
+    "source_records": 11,
     "frames": [
       [
         "main",
-        "6"
+        "16"
       ],
       [
         "llf1",
-        "14"
+        "23"
       ]
-    ]
+    ],
+    "bytes": 6492
   },
   "g-before": {
     "bytes": 892,

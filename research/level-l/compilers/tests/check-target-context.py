@@ -6,9 +6,9 @@ It checks executable instructions separately from source/TRACE metadata, and
 derives reference registers and attribute slots from metadata rather than
 freezing register allocation. Runtime tests own values, errors and lifetimes.
 
-The legacy llctarget ABI and generated C selector/family schema are unchanged
-boundaries, not inputs qualified by this check. Old-image compatibility is a
-separate execution check. Argument/result transport and BIF configuration
+The clean llctarget surface is checked here independently of generated C.
+Generated caller ownership and same-frame numeric installation are checked by
+the C-only end-to-end harness. Argument/result transport and BIF configuration
 getters retain their existing value-copy costs; this is not a zero-copy claim.
 """
 
@@ -196,13 +196,35 @@ def check_adapter(procedures):
         'lengthvalue': ('.rexxvalue..rexxvalue', f'value={value},context={context}'),
     }
     require({p.export for p in procedures.values() if p.export}
-            == {'llctarget2.' + name for name in signatures}, 'adapter: expected nine additive exports')
-    require(set(procedures) == set(signatures) | {'bifcontext'},
+            == {'llctarget.' + name for name in signatures} | {
+                'llctarget.' + name for name in ('literal', 'poolnew', 'poolread', 'poolwrite',
+                    'sayvalue', 'arguments', 'mainargs', 'append', 'present', 'absent',
+                    'requirevalue', 'setresult', 'status', 'failuremessage')},
+            'adapter: expected exactly the clean context and packet/helper surface')
+    helpers = {'literal', 'poolnew', 'poolread', 'poolwrite', 'sayvalue',
+               'arguments', 'mainargs', 'append', 'present', 'absent',
+               'requirevalue', 'setresult', 'status', 'failuremessage'}
+    implementation = set(signatures) | helpers | {'bifcontext'}
+    require(set(procedures) - implementation in (set(), {'bad'})
+            and implementation <= set(procedures),
             'adapter: unexpected implementation or executable main')
+    # Native B opt inlines this unchanged helper; noopt retains its body.
+    if 'bad' in procedures:
+        p = procedures['bad']
+        require(p.export is None and p.result == '.void' and p.arguments == 'message=.string',
+                'bad: expected only the private required-message error helper')
+        require(any(op == 'signal' and args.startswith('"CLASSIC_SYNTAX",')
+                    for op, args in p.instructions), 'bad: missing existing error transport')
+        procedures['requirevalue'].call_index('bad')
+    else:
+        require(any(op == 'signal' and args.startswith('"CLASSIC_SYNTAX",')
+                    for op, args in procedures['requirevalue'].instructions),
+                'requirevalue: missing inlined existing error transport')
     for name, signature in signatures.items():
         p = procedures[name]
         require((p.result, p.arguments) == signature, f'{name}: approved signature/defaults changed')
-    all_calls = [target for p in procedures.values() for _, target in p.calls()]
+    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext']}
+    all_calls = [target for p in borrowed.values() for _, target in p.calls()]
     forbidden = {
         '§rexxactivation.rexxactivationarguments.§factory',
         '§rexxpool.rexxvariablepool.§factory',
@@ -212,7 +234,7 @@ def check_adapter(procedures):
     require(not set(all_calls) & forbidden, 'adapter: owner/default-context construction or legacy BIF dispatch')
     require(all_calls.count(BIF + '.§factory.expression') == 1,
             'adapter: expected one shared expression-context construction site')
-    for p in procedures.values():
+    for p in borrowed.values():
         require(not any(op == 'deref' for op, _ in p.instructions), f'{p.name}: live-owner snapshot introduced')
         owner_registers = {register for kind, register in p.variables.values()
                            if kind in {CONTEXT_TYPE, '.rexxactivation..rexxactivationarguments',
@@ -269,7 +291,7 @@ def check_adapter(procedures):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--context', type=Path, required=True, help='generated RexxClassicContext.rxas')
-    parser.add_argument('--adapter', type=Path, required=True, help='generated llctarget2.rxas')
+    parser.add_argument('--adapter', type=Path, required=True, help='generated clean llctarget.rxas')
     args = parser.parse_args()
     try:
         context, attributes = read_rxas(args.context)

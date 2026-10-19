@@ -6,10 +6,9 @@ and `frontend-probe` Level B consumers, as described in the
 [frontend manual](../../doc/frontends.md). The [walkthrough](../../doc/pipeline-walkthrough.md)
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
-The Classic pipeline tree and IR were refreshed on 19 October 2026 from the
-current Debug noopt components. The two existing probe sources were compiled
-and linked in a temporary directory against those components. The remaining
-examples retain their earlier qualification. The C source now calls
+The Classic IR views use the current borrowed-context ABI, generated through
+the existing Debug frontend probe without IR optimisation. The source trees
+and G views retain their earlier qualification. The C pipeline calls
 `length('α漢🙂')`: the payload has three codepoints and nine UTF-8 bytes. Its
 quoted `String` occupies byte range `139:150` in the 208-byte source. The IR
 retains `CEB1E6BCA2F09F9982` as the value's bytes; LENGTH's result is a runtime

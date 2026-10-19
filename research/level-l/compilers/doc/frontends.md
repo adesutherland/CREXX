@@ -149,23 +149,24 @@ comment or longer identifier after the quote retains ordinary concatenation.
 G's admitted literal syntax is unchanged. Decoding adds no target operation or
 runtime helper call. See the [SAY instruction review](LEVELC-INSTRUCTION-REVIEW.md).
 
-Each function receives an argument packet and an immutable numeric-context
-snapshot, and creates a private pool for the admitted PROCEDURE profile. NUMERIC
-operations create replacement snapshots stored in that activation; calls receive
-the current snapshot. A callee's changes do not mutate its caller's snapshot.
-Main's initial activation/context is a STEP04 entry-wrapper obligation.
+Each function receives one required borrowed-context reference. The caller owns
+its activation, pool and bundle in stable storage; the root also owns the shared
+UTF8 configuration. Arguments remain ordered presence packets. Private calls
+construct child owners after evaluating their actuals and inherit the parent's
+numeric state. NUMERIC validates the live activation, then the executing C frame
+installs its validated settings; child return restores the parent frame.
 
 | Operation | Contract |
 |---|---|
-| `pool.new`, `load`, `store` | Fresh activation-owned pool; named load/store with resource/condition behaviour. |
+| `load`, `store` | Resolve named reads/writes through the borrowed bundle's current pool. |
 | `add/sub/mul/div`, comparisons, `positive/negative/not` | Exact Classic values and explicit numeric context. Arithmetic/conversion/logical errors occur at the operation's runtime point. |
 | `concat/blank/abut`, `and/or/xor` | Source-specific concatenation; both logical operands evaluate in source order. |
-| `truth` | Validate the Classic logical value and produce core Boolean; invalid logical values can fail at runtime. |
-| `numeric.digits/fuzz/form`, `digits` | Validate/update or inspect an immutable numeric snapshot, including defaults/reset and caller inheritance. |
+| `truth` | Validate the Classic logical value through the live context; invalid values can fail. Exact literal `0`/`1` also proves a derived core Boolean for control selection, while retaining runtime truth effects. |
+| `numeric.digits/fuzz/form`, `digits` | Validate/update the borrowed activation or inspect the executing frame, including defaults/reset and caller inheritance. |
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
 | `arguments.read` | The admitted simple ARG target: uppercase a copy, apply Classic single-target parsing, missing gives empty; preserve the original packet for ARG queries. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
-| `call` | Resolved local target, argument packet and current numeric context; fresh PROCEDURE pool and explicit returned-value presence. |
+| `call` | Resolved local target, argument packet, borrowed context and function/subroutine attribute; fresh private child owners and explicit returned-value presence. |
 | `return.present/absent`, `requirevalue`, `setresult` | Distinguish RETURN with/without value; expression calls require a value; CALL sets or drops RESULT. |
 | `length`, `say`, `exit` | Actual Classic BIF contract, observable output and process exit. |
 

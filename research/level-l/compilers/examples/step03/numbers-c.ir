@@ -1,60 +1,47 @@
 function $MAIN -> crexx.c.result
+  argument 1 crexx.c.context required
   entry.1:
-    %1 = crexx.c.pool.new @origin:1
-    core.store %1 slot:$pool @origin:1
-    %2 = core.argument argument:1 @origin:1
-    core.store %2 slot:$arguments @origin:1
-    %3 = core.argument argument:2 @origin:1
-    core.store %3 slot:$numeric @origin:1
-    %4 = core.constant  : crexx.c.value @origin:3
-    %5 = core.constant 3031 : crexx.c.value @origin:10
-    core.store %5 slot:$tmp.1 @origin:6
-    %6 = core.constant 31 : crexx.c.value @origin:14
-    %7 = core.load slot:$tmp.1 @origin:6
-    %8 = core.load slot:$numeric @origin:6
-    %9 = crexx.c.strict %7 %6 %8 @origin:6
-    crexx.c.say %9 @origin:3
-    %10 = core.constant  : crexx.c.value @origin:15
-    %11 = core.constant 302E31 : crexx.c.value @origin:22
-    core.store %11 slot:$tmp.2 @origin:20
-    %12 = core.constant 302E32 : crexx.c.value @origin:24
-    %13 = core.load slot:$tmp.2 @origin:20
-    %14 = core.load slot:$numeric @origin:20
-    %15 = crexx.c.add %13 %12 %14 @origin:20
-    crexx.c.say %15 @origin:15
-    %16 = core.constant 39 : crexx.c.value @origin:25
-    %17 = core.constant 33 : crexx.c.value @origin:32
-    %18 = core.load slot:$numeric @origin:25
-    %19 = crexx.c.numeric.digits %17 %18 @origin:25
-    core.store %19 slot:$numeric @origin:25
-    %20 = core.constant  : crexx.c.value @origin:33
-    %21 = core.constant 31 : crexx.c.value @origin:40
-    core.store %21 slot:$tmp.3 @origin:39
-    %22 = core.constant 33 : crexx.c.value @origin:41
-    %23 = core.load slot:$tmp.3 @origin:39
-    %24 = core.load slot:$numeric @origin:39
-    %25 = crexx.c.div %23 %22 %24 @origin:39
-    crexx.c.say %25 @origin:33
-    %26 = core.constant 39 : crexx.c.value @origin:42
-    %27 = core.constant 39 : crexx.c.value @origin:49
-    %28 = core.load slot:$numeric @origin:42
-    %29 = crexx.c.numeric.digits %27 %28 @origin:42
-    core.store %29 slot:$numeric @origin:42
-    %30 = core.constant  : crexx.c.value @origin:50
-    %31 = core.constant 31 : crexx.c.value @origin:57
-    core.store %31 slot:$tmp.4 @origin:56
-    %32 = core.constant 33 : crexx.c.value @origin:58
-    %33 = core.load slot:$tmp.4 @origin:56
-    %34 = core.load slot:$numeric @origin:56
-    %35 = crexx.c.div %33 %32 %34 @origin:56
-    crexx.c.say %35 @origin:50
-    %36 = core.constant  : crexx.c.value @origin:59
-    %37 = core.load slot:$pool @origin:66
-    %38 = crexx.c.load %37 name="UNASSIGNED" @origin:66
-    crexx.c.say %38 @origin:59
-    %39 = core.constant 30 : crexx.c.value @origin:67
-    %40 = core.constant 30 : crexx.c.value @origin:74
-    crexx.c.exit %40 @origin:67
-    %41 = crexx.c.return.absent @origin:67
-    core.return %41 @origin:67
+    %1 = core.argument argument:1 @origin:2
+    core.store %1 slot:$context @origin:2
+    %2 = core.constant 3031 : crexx.c.value @origin:11
+    core.store %2 slot:$tmp.1 @origin:7
+    %3 = core.constant 31 : crexx.c.value @origin:15
+    %4 = core.load slot:$tmp.1 @origin:7
+    %5 = core.load slot:$context @origin:7
+    %6 = crexx.c.strict %4 %3 %5 @origin:7
+    crexx.c.say %6 @origin:4
+    %7 = core.constant 302E31 : crexx.c.value @origin:23
+    core.store %7 slot:$tmp.2 @origin:21
+    %8 = core.constant 302E32 : crexx.c.value @origin:25
+    %9 = core.load slot:$tmp.2 @origin:21
+    %10 = core.load slot:$context @origin:21
+    %11 = crexx.c.add %9 %8 %10 @origin:21
+    crexx.c.say %11 @origin:16
+    %12 = core.constant 33 : crexx.c.value @origin:33
+    %13 = core.load slot:$context @origin:26
+    crexx.c.numeric.digits %12 %13 @origin:26
+    %14 = core.constant 31 : crexx.c.value @origin:41
+    core.store %14 slot:$tmp.3 @origin:40
+    %15 = core.constant 33 : crexx.c.value @origin:42
+    %16 = core.load slot:$tmp.3 @origin:40
+    %17 = core.load slot:$context @origin:40
+    %18 = crexx.c.div %16 %15 %17 @origin:40
+    crexx.c.say %18 @origin:34
+    %19 = core.constant 39 : crexx.c.value @origin:50
+    %20 = core.load slot:$context @origin:43
+    crexx.c.numeric.digits %19 %20 @origin:43
+    %21 = core.constant 31 : crexx.c.value @origin:58
+    core.store %21 slot:$tmp.4 @origin:57
+    %22 = core.constant 33 : crexx.c.value @origin:59
+    %23 = core.load slot:$tmp.4 @origin:57
+    %24 = core.load slot:$context @origin:57
+    %25 = crexx.c.div %23 %22 %24 @origin:57
+    crexx.c.say %25 @origin:51
+    %26 = core.load slot:$context @origin:67
+    %27 = crexx.c.load %26 name="UNASSIGNED" @origin:67
+    crexx.c.say %27 @origin:60
+    %28 = core.constant 30 : crexx.c.value @origin:75
+    crexx.c.exit %28 @origin:68
+    %29 = crexx.c.return.absent @origin:68
+    core.return %29 @origin:68
 

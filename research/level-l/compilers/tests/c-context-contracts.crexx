@@ -1,0 +1,199 @@
+/* cREXX License (MIT). Independent clean C-family admission boundaries. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0; mode = .int
+  call versionrefusal(argv[1],1)
+  call versionrefusal(argv[1],3)
+  do mode = 1 to 6
+    call functioncontract(argv[1],mode)
+  end
+  do mode = 1 to 4
+    call forgedschema(argv[1],mode)
+    call contextslots(argv[1],mode)
+  end
+  say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return
+
+/* Old and unknown semantic versions are refused before their function ABI is
+ * interpreted. These are valid generic graphs, not corrupt byte streams. */
+versionrefusal: procedure = .void
+  arg artifacts = .string, version = .int
+  registry = .llir..schema(); family = registry.family('crexx.c',version)
+  context = family.type('context',.llir..bytescodec() as .object)
+  result = family.type('result',.llir..bytescodec() as .object)
+  absent = family.operation('return.absent'); call absent.output('value',result)
+  call absent.state('none'); call absent.failure('none'); call absent.termination('returns')
+  contract = registry.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('C semantic version refusal')
+  fn = builder.function('$MAIN',result); ignored = fn.argument(context)
+  block = fn.block('entry'); draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'valid generic version fixture ' || version)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call check(backend.status() <> 0 & pos('unsupported family version crexx.c',backend.error()) > 0, 'precise semantic version refusal ' || version)
+  call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'version refusal publishes no output and preserves input ' || version)
+  return
+
+/* The accepted function carries one required context reference in the target
+ * ABI. Optional, value, extra and wrong-result variants must not be repaired by
+ * the selector or accepted because the body does not read their parameters. */
+functioncontract: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  context = contract.type('crexx.c.context'); result = contract.type('crexx.c.result')
+  value = contract.type('crexx.c.value')
+  at = builder.synthetic('C function ABI')
+  resulttype = result; if mode = 5 then resulttype = value
+  fn = builder.function('$MAIN',resulttype)
+  argumenttype = context; if mode = 3 then argumenttype = value
+  optional = mode = 2
+  ignored = fn.argument(argumenttype,optional)
+  if mode = 4 then ignored = fn.argument(context)
+  block = fn.block('entry')
+  if mode = 6 then ignoredvalue = block.constantbytes(context,'bad context' as .binary,at)
+  returned = .llir..valuehandle
+  if mode = 5 then returned = block.constantbytes(value,'unaccepted result' as .binary,at)
+  else do
+    draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+    operation = draft.finish(); returned = operation.result()
+  end
+  call block.returnvalue(returned,at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'valid generic function fixture ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 1 then do
+    call check(backend.status() = 0 & output.bytes() > 0, 'required context ABI admitted: ' || backend.error())
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '' & bin2x(restored.binary()) = bin2x(saved), 'new C family survives generic binary round trip')
+  end
+  else do
+    call check(backend.status() <> 0 & (pos('Classic',backend.error()) > 0 | pos('unsupported constant type crexx.c.context',backend.error()) > 0), 'incompatible C function ABI refused ' || mode)
+    call check(output.bytes() = 0, 'function refusal publishes no output ' || mode)
+  end
+  call check(bin2x(saved) = bin2x(graph.binary()), 'function admission preserves input ' || mode)
+  return
+
+/* Clone the canonical declarations through the generic schema API, changing
+ * exactly one unused descriptor. This checks whole-schema admission without
+ * keeping a second forty-operation inventory in the test oracle. */
+forgedschema: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  canonical = registry.finish(); source = dereference canonical.data()
+  data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; name = .string; spelling = .string; ignored = .int
+  do i = 2 to source.familycount()
+    ignored = data.addfamily(source.familyname(i),source.version(i))
+  end
+  do i = 3 to source.types()
+    codec = source.codec(i)
+    if mode = 4 & source.typename(i) = 'crexx.g.int64' then codec = .laxcodec() as .object
+    ignored = data.addtype(source.typename(i),codec)
+  end
+  do i = 1 to source.ops()
+    name = source.opname(i); spelling = name
+    if mode = 3 & name = 'crexx.c.numeric.form' then spelling = 'core.spoofed'
+    declared = .llir..operation(reference data,data.addop(spelling))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field)
+        if mode = 2 & name = 'crexx.c.numeric.form' & kind = 1 then spelling = 'wrongcontext'
+        type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    state = source.effectvalue(i,1)
+    if mode = 1 & name = 'crexx.c.numeric.form' then state = 'none'
+    call declared.state(state); call declared.failure(source.effectvalue(i,2))
+    call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); contract = .llir..contract(data)
+  operation = .llir..opview
+  builder = .llir..builder(contract); at = builder.synthetic('unused descriptor refusal')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); block = fn.block('entry')
+  if mode = 4 then do
+    context = block.readarg(1,at)
+    forged = block.operation(contract.operation('crexx.c.arguments.read'),at)
+    call forged.input('context',context)
+    call forged.attribute('ordinal','000000000000000001'x as .binary)
+    operation = forged.finish()
+  end
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'forged unused descriptor is a valid generic graph ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  expected = word('effects field operation constant',mode)
+  call check(backend.status() <> 0 & pos(expected,backend.error()) > 0, 'unused descriptor refused precisely ' || mode)
+  call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'unused descriptor refusal is atomic ' || mode)
+  return
+
+/* A permissive foreign codec must not license the target's raw payload read. */
+laxcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bytes = .binary
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return bin2x(bytes)
+
+/* Context slots are aliases initialized once in the entry block. They are
+ * never independent reference storage that an arbitrary path may replace. */
+contextslots: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  context = contract.type('crexx.c.context'); result = contract.type('crexx.c.result')
+  fn = builder.function('$MAIN',result); ignored = fn.argument(context)
+  slot = fn.slot('context',context); alias = fn.slot('alias',context)
+  at = builder.synthetic('entry context alias'); entry = fn.block('entry')
+  unused = .llir..valuehandle; argument = .llir..valuehandle
+  if mode = 1 then unused = entry.load(slot,at)
+  if mode = 4 then do
+    argument = entry.readarg(1,at); call entry.store(slot,argument,at)
+    argument = entry.load(slot,at); call entry.store(alias,argument,at)
+    unused = entry.load(alias,at)
+  end
+  draft = entry.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call entry.returnvalue(operation.result(),at)
+  if mode = 2 | mode = 3 then do
+    dead = fn.block('dead')
+    if mode = 2 then unused = dead.load(slot,at)
+    else do
+      argument = dead.readarg(1,at); call dead.store(slot,argument,at)
+    end
+    draft = dead.operation(contract.operation('crexx.c.return.absent'),at)
+    operation = draft.finish(); call dead.returnvalue(operation.result(),at)
+  end
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'generic context slot graph ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 4 then call check(backend.status() = 0 & output.bytes() > 0, 'entry-bound context aliases admitted: ' || backend.error())
+  else call check(backend.status() <> 0 & pos('context',lower(backend.error())) > 0, 'unbound/nonentry context slot refused ' || mode || ': ' || backend.error())
+  call check((mode = 4 | output.bytes() = 0) & bin2x(saved) = bin2x(graph.binary()), 'context alias admission is atomic ' || mode)
+  return

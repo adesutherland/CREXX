@@ -32,8 +32,8 @@ main: procedure = .int
   end
   draft = .llir..builder(contract); at = draft.synthetic('Classic SAY')
   fn = draft.function('classic',contract.voidtype()); entry = fn.block('entry')
-  literal = entry.constantbytes(contract.type('crexx.c.value'),'686900FF'x as .binary,at)
-  statement = entry.operation(contract.operation('crexx.c.say'),at)
+  literal = entry.constantbytes(contract.type('test.classic.value'),'686900FF'x as .binary,at)
+  statement = entry.operation(contract.operation('test.classic.say'),at)
   call statement.input('value',literal); op = statement.finish(); call entry.returnvoid(at)
   graph = draft.finish(); facts = .llirservices..facts(reference graph)
   result = llirservices..evaluate(reference graph,2,facts)

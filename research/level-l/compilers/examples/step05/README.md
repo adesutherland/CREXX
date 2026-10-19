@@ -1,11 +1,9 @@
 # STEP05: cleaned IR and RXAS before and after optimisation
 
-These actual outputs were generated on 15 October 2026 from the Level B-only
-STEP05 implementation over develop `afcde7f6c2b2dcce6a8a6e89705457aafcac8344`.
-The before side includes the construction/emitter cleanup and disables the
-shared passes. The after side enables them. This supersedes the original
-proposal-only examples; the [current plan](../../PLAN.md) retains the
-historical design sketches.
+These are actual Level B/Level L compiler outputs. The C views use the current
+borrowed-context ABI; G views retain the existing STEP05 output. The before
+side disables shared passes and the after side enables them. The
+[current plan](../../PLAN.md) owns their qualification boundary.
 
 Use `options levelc` or `options levelg`, followed by:
 
@@ -54,17 +52,18 @@ join:
 
 The backend emits no jumps to the immediately following block. G's body therefore
 contains `numsci`, `load "yes"`, `say`, `load 0`, and `ret`. The complete files also
-retain the entry wrapper and source records. C retains its activation, pool,
-argument/numeric packets and condition handler. Only the exact literal truth
-and the unreachable arm disappear; no Classic numeric semantics are guessed.
+retain the entry wrapper and source records. C retains its borrowed context,
+stable owners, numeric installation and condition handlers. Its effectful truth
+check remains before the proved literal branch; only the unreachable arm and
+discard-safe work disappear. No contextual numeric evaluator is assumed.
 
 | Complete module | G before | G after | C before | C after |
 |---|---:|---:|---:|---:|
-| Executable instructions | 17 | 8 | 111 | 83 |
-| Calls | 1 | 1 | 13 | 9 |
-| RXAS bytes | 892 | 559 | 4,337 | 3,474 |
-| Body registers | 7 | 3 | 17 | 14 |
-| Source records | 11 | 7 | 13 | 9 |
+| Executable instructions | 17 | 8 | 164 | 145 |
+| Calls | 1 | 1 | 18 | 16 |
+| RXAS bytes | 892 | 559 | 7,079 | 6,492 |
+| Body registers | 7 | 3 | 26 | 23 |
+| Source records | 11 | 7 | 15 | 11 |
 
 [Counts](shapes.json) exclude labels, metadata and external declarations;
 wrappers and cold handlers are included. These are code-shape observations,

@@ -218,7 +218,7 @@ mapping: procedure = .void
   text = good('c','say 0 & (1 / 0); say 1 | (1 / 0)','crexx.c.and','logical.rhs')
   text = good('c','numeric digits 3; numeric fuzz 1; numeric form engineering; numeric digits; numeric fuzz; numeric form; say digits()','crexx.c.numeric.form')
   call check(pos('crexx.c.numeric.digits',text) > 0 & pos('crexx.c.numeric.fuzz',text) > 0,'context setters explicit')
-  text = good('c','arg a /*comment*/, b; numeric /*one*/ form /*two*/ engineering; say a','form="ENGINEERING"')
+  text = good('c','arg a /*comment*/, b; numeric /*one*/ form /*two*/ engineering; say a','form="engineering"')
   call check(pos('name="A"',text) > 0 & pos('name="B"',text) > 0,'ARG names exclude comments')
   text = good('c','say 01 == 1; say 1 = 1; say \0','crexx.c.strict')
   call bad('g','say unknown' as .binary,'LL_COMPILER_BIND:','unknown variable')

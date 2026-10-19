@@ -71,25 +71,27 @@ is added only when selection uses it; Classic also retains its diagnostic
 location. A separate call window includes the argument-count register and the
 largest selected call's operands. The same selector is used for planning and
 emission, including hidden conversions; Classic's cold failure-message call
-requires two arguments. Main's wrapper uses two registers for G and six for C.
+requires two arguments. Main's wrapper uses two registers for G and sixteen for C.
 The public minimum register-budget argument remains 16. No liveness reuse is
 introduced. Jumps to the next emitted block fall through, retaining its label
 and resetting source/context state at that entry.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
-all Classic routines use argument/numeric packets and a result-presence packet.
+all Classic routines use one required context reference and return a fresh
+result-presence packet.
 
 Supplied arguments are copied into the private window with flag 768; omitted
 optional positions get flag 512 without constructing a placeholder value. The call
 writes a distinct result register. The window is cleared after return. G callee reads test original presence
 before selecting their fallback; sole-use literal defaults emit only on the
 missing branch. Qualified G exports retain optional flags in `.meta`, and
-provider-only files have no synthetic main. Classic
-pool arguments are explicit references: pool loads/stores use links, and adapter
-calls borrow the same activation pool. Numeric and argument packets are value
-snapshots. Callee NUMERIC updates do not modify its caller's state. Each Classic
-PROCEDURE creates its own pool; CALL applies the returned presence packet to
+provider-only files have no synthetic main. Classic's caller constructs stable
+activation/pool/bundle owners and copies their reference payloads into temporary
+call windows. Getters resolve live pool bindings through the bundle; receiver
+aliases use the existing swap/restoration and unlink protocol. Argument/result
+packets retain value semantics. Callee NUMERIC updates do not modify its caller's
+activation or VM frame. Each admitted private PROCEDURE has its own pool; CALL applies the returned presence packet to
 RESULT and clears RESULT when no value is returned. Expression calls require a
 value. Main forwards VM `-a` arguments as an ordered presence packet.
 
@@ -119,12 +121,14 @@ backend a fresh destination begins at zero. No claim of checked arithmetic
 exceptions is inferred from an ignored VM signal.
 
 Classic operations call the B-written `llctarget` adapter and existing Classic
-runtime. The adapter installs the explicit DIGITS/FUZZ/FORM snapshot in its call
-frame and uses the checked Classic expression/BIF helpers. Exact source literal
+runtime. The executing C frame selects Classic numeric standard and installs
+validated DIGITS/FUZZ/FORM at entry and after successful NUMERIC. Temporary
+expression/BIF helper frames inherit those settings and borrow the context. Exact source literal
 spelling, pool keys, unset reads, UTF-8 comparison policy, eager logical operands,
 ARG uppercase/presence, numeric changes and Classic error codes remain distinct
-from G. ARG preserves surrounding blanks. The target `rxfnsc` package still has
-G prerequisites; that dependency does not enter the compiler host.
+from G. ARG preserves surrounding blanks. The static target links the standalone
+B Unicode core, class library and Classic runtime; no G aggregate or compiler
+dependency enters that target closure.
 
 The backend independently recreates the supported semantic contract. It checks
 extension field names/types/arity and rejects another language's operations or

@@ -1,10 +1,10 @@
-/* cREXX License (MIT). Compiler-owned IR families; the host is Level B only. */
+/* cREXX License (MIT). Independent test-only semantic families; no product C schema is declared here. */
 options levelb
 namespace lltestfamilies expose registerfamilies intadd inttext textcodec
 import rxfnsb
 import llir
 
-/** Register the initial scalar C/G contracts. The host never imports the G
+/** Register independent scalar/contextual test contracts. The host never imports the G
  * compiler or changes a Classic runtime's ambient numeric context. */
 registerfamilies: procedure = .void
   arg registry = reference .llir..schema
@@ -23,7 +23,7 @@ registerfamilies: procedure = .void
   op = g.operation('say')
   call op.input('text',text)
   call op.state('output'); call op.failure('io'); call op.termination('returns')
-  c = schema.family('crexx.c',1)
+  c = schema.family('test.classic',1)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('numeric',.llir..bytescodec() as .object)
   op = c.operation('add')

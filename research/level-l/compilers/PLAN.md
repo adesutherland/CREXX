@@ -1,48 +1,78 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Next: approve the C-family metadata and generated-procedure
-ABI, then migrate the existing C selector to the completed borrowed context.**
+**Complete C is open. Current: CLC-STEP05.DROP1, approved shared-symbol/DROP
+work, starting after the locally qualified STEP03d change is committed.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
 the agreed instructions, all 95 BIF names, Unicode, diagnostics, conditions/TRACE,
-host/lifecycle/platform contracts and, last, INTERPRET. The native B compiler is
-the build seed; new C requests never delegate to a native source compiler/backend.
+host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
+seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain execution dependencies.
 
-The [requirements ledger](doc/levelc-requirements.md) is the single item-by-item
-status record: 25 instructions, 95 BIFs, 75 reference capabilities and 36 syntax
-contracts. It records reuse, missing integration, the owning step and closure
-check. Native passes and existing B runtime bodies are controls, not new-C passes.
-[Architecture](doc/architecture.md) owns design; [work packages](doc/agent-work-packages.md)
-own assignments. Astra reviews/coordinates; Sol 6.1 Extra High workers implement,
-build, test and integrate.
+The [requirements ledger](doc/levelc-requirements.md) owns item-by-item status:
+25 instructions, 95 BIFs, 75 reference capabilities and 36 syntax contracts,
+with reuse, missing integration, owners and closure checks. Native passes and
+existing B bodies are controls, not new-C passes. [Architecture](doc/architecture.md)
+owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
+Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Completed
+## Current action: DROP
 
-- Independent C compiler/service and bounded expressions, structured control,
-  private calls and LENGTH/ARG/DIGITS routes; full instruction/BIF closure remains open.
-- Isolated C-only build/runtime baseline, bounded generic L analysis and shared B
-  Unicode core/public API. Local baseline: `a5fb618d8bf93f56461f88f77c492b6f88516421`.
-- Borrowed B context and nine additive adapters, independent lifetime/numeric/RXAS
-  proof, compatible old images and two reproduced B seed prerequisite fixes:
-  **CTX-AC01–06 / CTX-STEP01–04 locally complete**. Generated C still uses legacy adapters.
+Adrian approved the [exact C v3/CDrop/one-operation/name-admission contract](doc/architecture.md#proposed-next-instruction-drop)
+on 19 October 2026. Reuse existing Unicode/pool semantics and context/method ABI;
+no new B/L/VM API or runtime algorithm. Start product work only after the
+qualified STEP03d local commit. All DROP criteria remain open.
+
+| ID / status | Checkable closure |
+|---|---|
+| **DROP-AC01 — Open** | Shared Unicode/raw variable symbols, CDrop spans/items and exact v3/name admission pass source/IR positives and atomic refusal, including dead source and unsupported routine-name shapes. |
+| **DROP-AC02 — Open** | Independent direct/indirect order, one captured list per indirect item, scalar/stem/compound, dropped-versus-empty/default state and self-carrier cases pass. |
+| **DROP-AC03 — Open** | Unicode/configured blanks, distinct micro-sign/Greek names, ARG destinations, aliases/private pools and existing invalid-word continuation/error policy pass. |
+| **DROP-AC04 — Open** | Caller/helper RXAS proves ordered existing pool calls and preserved source/owners; focused compiler/IR/assembler/VM normal Debug checks pass. |
+
+**CLC-STEP05.DROP1:** shared source-symbol/AST prerequisite (AC01/03).
+**CLC-STEP05.DROP2:** ordered DROP lowering through existing pool methods
+(AC01–04). **CLC-STEP05.DROP3:** independent LC-I-02 review/qualification
+(all four AC). One source writer proceeds serially through parser/frontend and
+IR/selector; a separate worker owns fixtures/CMake/integration, with independent
+review. Source EXPOSE, resumable conditions and wider C acceptance retain their
+later owners.
 
 <a id="active-first-implementation-increment"></a>
 <a id="shared-b-unicode-interface-and-c-adapter-migration"></a>
 <a id="active-c-contract-baseline-increment"></a>
 <a id="active-borrowed-classic-context-increment"></a>
-<a id="step07a-validation"></a>
-<a id="say-validation"></a>
 
-## Remaining actions
+## Completed foundations and qualified C ABI
 
-**Next action — CLC-STEP03:** review the exact C-family type/effect/call revision
-and source-unit procedure ABI for the already admitted profile. Check stable
-borrowed owners, one execution configuration, same-frame NUMERIC installation,
-private-call restoration, precise incompatible-metadata refusal and preservation
-of prior output. The B context/adapters are approved; this selector/schema change
-still needs Adrian's approval before implementation.
+Bounded independent C expressions/control/private calls and LENGTH/ARG/DIGITS,
+generic L services and shared B Unicode are foundations, not whole-instruction
+closure. **CTX-AC01–06 / CTX-STEP01–04 are locally complete**, including borrowed
+B owners and two reproduced B seed repairs; baseline commits are
+`ff63527ae94b1d91acb7ba01025f2e197cf522bc` and
+`eeca738af1c2f3b6dc826f087d398f6400b941ba`.
+
+STEP03d now has the [reviewed clean C v2/context ABI](doc/architecture.md#approved-c-family-revision-and-generated-procedure-abi)
+and normal Debug proof below. Adrian removed research-C backward compatibility:
+one current C family/target, no old-image bridge or copied-context adapters.
+Shared B/L contracts remain intact. A local commit closes this slice before DROP.
+
+| Stable ID / status | Checkable closure and owning contract |
+|---|---|
+| **CABI-AC01 — Qualified** | Exact v2/40-op schema, required context reference, save/load, canonical payloads and entry-bound context slots; malformed/dead records refuse with immutable graph/empty output ([C admission](tests/c-context-contracts.crexx)). |
+| **CABI-AC02 — Qualified** | One root config, stable borrowed root/child owners, live pool, call inheritance/presence/results; direct `target-context` plus STEP07 argv/ARG/call/recursion controls. |
+| **CABI-AC03 — Qualified** | Same-frame Classic DIGITS/FUZZ/FORM install/restore; invalid NUMERIC has fatal diversion without installs, composed with direct adapter atomicity and numeric/fatal RXAS checks. |
+| **CABI-AC04 — Qualified** | One 23-export `llctarget`; obsolete namespace/bodies/compatibility tests removed, BIF bodies/shared contracts/doc tags preserved ([target shape](tests/check-target-context.py)). |
+| **CABI-AC05 — Qualified** | Exact runtime/class/receiver/optional signature admission, owner-hit/fresh-request metadata refusal and sentinel preservation; no native compiler fallback or new public L/VM API ([C matrix](tests/check-step07.py)). |
+| **CABI-AC06 — Qualified** | Caller/helper source/owner/ref/numeric/RXAS guards, both compiler/IR modes and VMs, restricted C-only roots and measured serial normal Debug scheduling. Sanitizer boundary is stated once below. |
+| **CLC-STEP03d.1–3 — Complete** | Approved contract freeze, implementation and independent fixtures/build/Debug measurement; architecture and maintained regression sources own the exact checks. |
+| **CLC-STEP03d.4 — Qualified** | Independent source/RXAS review and final normal Debug proof complete; coordinator reviews/stages and authorizes the local commit before DROP starts. |
+| **META-AC01 — Complete** | Real linked constructor and independent merged definition/prototype fixture select only definition-linked metadata ([services](../../../langtools/tests/services.crexx)). |
+| **META-AC02 — Complete** | Duplicate definitions remain ambiguous; private/missing/malformed links/envelopes refuse. Selected references stay in their pool/1,000,000-ID bound; ignored prototype signature fields stay opaque. |
+| **META-AC03 / CLC-STEP03d.P — Complete** | Reader API/format/type ownership unchanged; separate reviewed six-path prerequisite commit `9c632093f6ab97e819ad9e48d3a6b379d88afba0`, independent services and real C consumer pass. |
+
+## Remaining delivery steps
 
 The steps below describe remaining work, not a requirement to finish a universal
 framework before its first consumer. Deliver the minimum shared service needed
@@ -54,9 +84,9 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 |---|---|---|
 | **CLC-STEP01 — Partial** | Finish contract-to-test traceability, exact ABI/dependency/platform decisions and independent expectations. Every required ledger row has an explicit disposition and closure check. Serves CFC-AC01/06–08/12. | Accepted C direction; exact language/platform exceptions need Adrian's decision. |
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
-| **CLC-STEP03 — Partial; next** | Migrate the admitted selector after the approval above; then complete live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
+| **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Whole SAY remains open; DROP is the next instruction review after its disposition. |
+| **CLC-STEP05 — Partial; current DROP** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Whole SAY remains open; the approved DROP review is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -101,24 +131,31 @@ release approval and resumed CI monitoring require separate direction. Native
 Classic source is read-only; demonstrated B seed defects may be repaired with
 focused regressions. No native Classic feature implementation is authorised.
 
-## Current qualification
+<a id="step07a-validation"></a>
+<a id="say-validation"></a>
 
-Inputs: local baseline above plus frozen CTX runtime/adapters, B seed repairs
-and maintained fixtures. Documentation changes do not invalidate these inputs.
-This increment is locally qualified and unpushed; no hosted/platform/release claim follows.
+## Current proof and limits
 
-| Command / check | Observed result and boundary |
+Qualified inputs are the reviewed C ABI source/fixtures in this change on the
+metadata prerequisite above. `cmake --build cmake-build-debug --target stage-product`
+and focused hosts/fixtures passed warning-free; the optional `llctarget` product
+copy byte-matches the qualified opt target. No other optional packaged/installed C product,
+hosted, cross-platform, release or complete-C claim follows.
+
+| Normal Debug command / check | Observed result |
 |---|---|
-| `cmake --build cmake-build-debug --target stage-product` and Classic/context/C compiler prerequisites; `cmake --build cmake-build-debug --parallel 4 --target llctarget` | Passed; final Debug product has zero warning/error diagnostics. Optional research target matches the qualified opt aggregate; core staging still excludes research. |
-| Focused `ctest --test-dir cmake-build-debug --output-on-failure` selection | 58 final cases passed in 162.01s: context/adapters/shapes, Classic controls, reference/inline and four 55-command C-only cells. Ten unchanged native cases reuse prior passes: **68 distinct Debug tests**. |
-| Native reference selection `^(reference_source_qualified_|reference_identity_)`; maintained Apple ASan | All 12 new cases passed Debug/ASan; ASan 26.22s. Revised inferred-array fixture passed two ASan reruns in 3.93s and final Debug. Imported noopt retains assembler optimisation; local qualified noopt disables both. |
-| `cmake --build <temporary-fixture>/debug --target qualify --parallel 1`; `tools/asan-run.sh --build-dir <temporary-fixture>/asan --phase build --build-target qualify --build-jobs 1 --build-leaks off` | New class/adapters compiled opt/noopt; both concrete VMs with `--no-autoload`: Debug 13.32s / ASan 28.57s, 149 adapter checks per execution, 153 structural checks per RXAS mode. Unchanged runtime members reused. |
-| Old emitted C image against both new target modes / both concrete VMs, `--no-autoload` | Four cells preserve exact `10/0/3`; frozen image and 24 public legacy signatures unchanged. |
+| `check-step07.py --c-only`, four host-mode/VM cells, both IR modes | Representative opt/rxbvm: 110 commands, 96.4892s; other cells: 68 each, opt/rxtvm 60.29s, noopt/rxbvm 59.20s, noopt/rxtvm 60.34s; zero failures. Expanded aggregate uses 1800s/serial/resource-lock hang protection. |
+| Focused CTest direct target, C admission, shape and independent IR selections | Target: 142 current checks in each of four cells; admission: 54 each/four cells; shapes: 168 opt / 171 noopt. Independent IR: four cells plus frontend mapping/calls controls passed. |
+| Independent IR placement and existing optimiser/PoC consumers | Four standalone IR cells passed in 0.53s; fixture RXAS/RXBIN byte-identical across placement. Reuse optimiser 33 commands/24.69s and PoC 54/39.69s passes on unchanged inputs. |
+| Maintained walkthroughs and direct backend control | Eight referenced C RXAS and eleven IR views regenerated; 37 commands assembled/linked/executed required views/errors. Scale RXAS byte-identical to the qualified sample; direct backend 58 checks passed. [Walkthrough counts](examples/step06/README.md) include wrappers/cold handlers and exclude helper bodies/metadata. |
+| Same-source literal compile and code-shape review | Initialized catalog/owner admission cache: 8.113s to 1.174s, byte-identical RXAS. Explicit EXIT/NUMERIC and present args construct no unused defaults. Literal branch pruning retains effectful truth with derived provenance. |
+| Shared metadata prerequisite services | Four Debug cells passed in 22.81s; prior maintained Apple ASan four cells in 34.35s, LSan unavailable. Real C numeric 12-output and IR54 consumer proof passed. |
 
-No first-party sanitizer finding was observed; Apple LSan is unavailable and
-focused ASan is not broad platform closure. The tool refresh's pre-existing SDK
-`sprintf` deprecations are not part of the warning-free Debug claim. Retained
-RXAS costs include ABI argument/result/config-getter copying, nonnumeric
-`numsci` setup and seed post-`ret` cleanup text; C-OPT-02/03/05/06 remain open,
-with no zero-copy, minimal-frame or speed claim. All 112 unrelated active files
-were byte-identical at closeout and task-created diagnostics were removed.
+Per Adrian's source-only policy, this slice claims no fresh sanitizer pass;
+valid unchanged-native evidence is reused and any warranted new sanitizer work
+is consolidated at final delivery under [AGENTS.md](../../../AGENTS.md).
+Actual SAN findings remain blockers. Retained owner/packet/getter copies,
+contextual truth work, numeric setup, conservative registers and seed cleanup
+remain named C-OPT-01–03/05/06 work; static counts and the local timing comparison
+are not speed or minimal-frame claims. No direct construction defect remains
+open from this slice. All complete-C CFC criteria above remain open.

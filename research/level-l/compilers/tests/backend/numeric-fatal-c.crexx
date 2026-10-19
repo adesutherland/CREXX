@@ -1,0 +1,15 @@
+options levelc
+numeric digits 4
+numeric fuzz 1
+numeric form engineering
+say 'parent before child'
+call invalid
+say 'unreachable parent'
+exit 0
+invalid: procedure
+ numeric digits 3
+ numeric fuzz 2
+ say 'child before invalid'
+ numeric digits 2
+ say 'unreachable child'
+ return

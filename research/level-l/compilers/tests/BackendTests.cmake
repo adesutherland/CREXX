@@ -18,13 +18,14 @@ add_custom_target(llcompiler_poc_measure
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/poc-measure"
     --mode opt --vm rxbvm
   DEPENDS llcompiler_backend-poc_opt llcompiler_llrxc-c_opt llcompiler_llrxc-g_opt
-    llcompiler_target_opt library rxfnsc classlib rxbvm rxas rxlink
+    llcompiler_target_opt library rxfnsc classlib rxunicode_core rxbvm rxas rxlink
   VERBATIM)
 add_custom_target(llcompiler_backend_measure
   COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"
     --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/backend-measure"
     --mode noopt --vm rxbvm
-  DEPENDS llcompiler_llrxc-c_noopt llcompiler_llrxc-g_noopt llcompiler_target_noopt llcompiler_backend-tests_noopt rxbvm rxas rxlink
+  DEPENDS llcompiler_llrxc-c_noopt llcompiler_llrxc-g_noopt llcompiler_target_noopt llcompiler_backend-tests_noopt
+    library rxfnsc classlib rxunicode_core rxbvm rxas rxlink
   VERBATIM)
 
 # Retained isolated provenance measurement target; normal CTest lanes follow.
@@ -67,7 +68,7 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_test}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-tests_${_mode} llcompiler_target_${_mode}
-          library rxfnsc rxas rxlink ${_vm})
+          library rxfnsc classlib rxunicode_core rxas rxlink ${_vm})
 
       # Isolated 90-command provenance proof: 28s Debug, 90s Apple ASan.
       # Keep nested tools serialized, with generous whole/inner hang guards.
@@ -99,7 +100,7 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_optimise}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-optimise_${_mode} llcompiler_target_${_mode}
-          library rxfnsc classlib rxas rxlink ${_vm})
+          library rxfnsc classlib rxunicode_core rxas rxlink ${_vm})
 
       # STEP06: 54 nested commands, isolated Debug 32s / Apple ASan 118s.
       # Serial whole tests and 300s inner / 900s outer limits are hang guards.
@@ -115,7 +116,7 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_poc}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}
           llcompiler_backend-poc_${_mode} llcompiler_target_${_mode}
-          library rxfnsc classlib rxas rxlink ${_vm})
+          library rxfnsc classlib rxunicode_core rxas rxlink ${_vm})
 
       # STEP07A: isolated Debug / maintained Apple ASan measured before
       # registration (see PLAN.md, STEP07A validation). Serial whole tests;
@@ -126,7 +127,7 @@ foreach(_mode opt noopt)
           --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_step07}"
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_step07} PROPERTIES
-        PASS_REGULAR_EXPRESSION "STEP07_E2E[|]commands=99[|]failures=0"
+        PASS_REGULAR_EXPRESSION "STEP07_E2E[|]commands=93[|]failures=0"
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_step07}

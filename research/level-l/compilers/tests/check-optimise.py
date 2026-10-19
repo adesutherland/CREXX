@@ -24,7 +24,7 @@ backend = build/'research/level-l/compilers/backend'/args.mode
 root = Path(__file__).resolve().parent
 runtime = work/'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc', 'classlib']:
+for name in ['library', 'rxfnsc', 'classlib', 'rxunicode-core']:
     shutil.copyfile(build/'bin'/f'{name}.rxbin', runtime/f'{name}.rxbin')
 shutil.copyfile(backend/'llctarget.rxbin', runtime/'llctarget.rxbin')
 suffix = '.exe' if os.name == 'nt' else ''
@@ -67,7 +67,8 @@ try:
                 linked = work/(label+'-linked')
                 modules = [assembly.with_suffix('.rxbin'), runtime/'library.rxbin']
                 if level == 'c':
-                    modules += [runtime/'llctarget.rxbin', runtime/'rxfnsc.rxbin']
+                    modules += [runtime/'llctarget.rxbin', runtime/'rxfnsc.rxbin',
+                                runtime/'classlib.rxbin', runtime/'rxunicode-core.rxbin']
                 run(label+'-link', [tool('rxlink'), '-o', linked, *modules])
                 p = run(label+'-run', [tool(args.vm), str(linked)+'.rxbin'])
                 assert p.stdout.replace(b'\r\n', b'\n') == expected and not p.stderr, (label, p.stdout, p.stderr)

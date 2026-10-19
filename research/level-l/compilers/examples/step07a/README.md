@@ -43,7 +43,7 @@ assembled with `rxas -n` for semantic attribution. Counts do not establish speed
 
 | Module | Instructions | Calls (all call variants) | Frame registers | Source records | TRACE events |
 |---|---:|---:|---|---:|---:|
-| new-c | 406 | 41 | 6, 33, 38 | 41 | 0 |
+| new-c | 675 | 72 | 16, 40, 47 | 41 | 0 |
 | new-g | 47 | 3 | 2, 16, 8 | 18 | 0 |
 | native-b | 21 | 3 | 4, 3 | 7 | 11 |
 | native-g | 21 | 3 | 4, 3 | 7 | 11 |
@@ -55,8 +55,11 @@ this selection. Per-value registers and residual private-slot stores/copies are
 the retained allocator/slot-cleanup limitation from STEP05/06, owned by the later
 liveness and packing work. They are visible in the example, not a claim that
 this is optimal code. Native B/G use specialised call forms and smaller frames.
-Classic's helper calls implement explicit argument packets, pools, numeric
-context, result presence and error relay; their three-register groups must not
+Classic's current output retains stable activation/pool/bundle owners, a shared
+root configuration, receiver/reference windows, executing-frame numeric setup,
+argument/result packets and fatal error relay. Temporary receiver links and
+argument windows require explicit cleanup. These obligations and conservative
+root setup must be distinguished from later specialisation; they must not
 be removed without an ABI/lifetime proof. Further Classic specialisation remains
 open. Source records retain distinct expression origins; they are not executed
 TRACE events. Full TRACE fidelity still has its separate gate.

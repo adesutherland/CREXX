@@ -13,13 +13,13 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',1)
+  c = schema.family('crexx.c',2)
   value = c.type('value',.llir..bytescodec() as .object)
-  context = c.type('numeric',.llir..bytescodec() as .object)
+  context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
   call op.input('left',value); call op.input('right',value); call op.input('context',context)
   call op.output('value',value)
-  call op.state('none'); call op.failure('arithmetic'); call op.termination('returns')
+  call op.state('context'); call op.failure('condition'); call op.termination('returns')
   /* No Classic evaluator is registered until its exact contextual operation
    * contract is implemented. A cached host numeric setting is never a fact. */
   op = c.operation('say')
@@ -28,37 +28,34 @@ registerfamilies: procedure = .void
   types = .object[]
   types[1] = integer as .object; types[2] = text as .object
   types[6] = value as .object; types[7] = context as .object
-  types[8] = c.type('pool',.llir..bytescodec() as .object) as .object
   types[9] = c.type('arguments',.llir..bytescodec() as .object) as .object
   types[10] = c.type('result',.llir..bytescodec() as .object) as .object
   types[11] = schema.boolean() as .object
   k = .int; name = .string
-  call llscalar..declare(c,'pool.new',types,'',8,'','allocation','resource')
-  call llscalar..declare(c,'load',types,'pool:8',6,'name:2','pool','condition')
-  call llscalar..declare(c,'store',types,'pool:8 value:6',0,'name:2','pool','resource')
+  call llscalar..declare(c,'load',types,'context:7',6,'name:2','context','condition')
+  call llscalar..declare(c,'store',types,'context:7 value:6',0,'name:2','context','condition')
   do k = 1 to 16
     name = word('sub mul div eq ne lt le gt ge strict concat blank abut and or xor',k)
-    call llscalar..declare(c,name,types,'left:6 right:6 context:7',6,'','none','conversion.arithmetic')
+    call llscalar..declare(c,name,types,'left:6 right:6 context:7',6,'','context','condition')
   end
   do k = 1 to 3
-    call llscalar..declare(c,word('positive negative not',k),types,'value:6 context:7',6,'','none','conversion.arithmetic')
+    call llscalar..declare(c,word('positive negative not',k),types,'value:6 context:7',6,'','context','condition')
   end
-  op = llscalar..declare(c,'truth',types,'value:6',11,'','none','logical')
-  call op.evaluator(.llscalar..scalarfold('ctruth') as .object)
-  call llscalar..declare(c,'numeric.digits',types,'value:6 context:7',7,'','none','numeric')
-  call llscalar..declare(c,'numeric.fuzz',types,'value:6 context:7',7,'','none','numeric')
-  call llscalar..declare(c,'numeric.form',types,'context:7',7,'form:2','none','numeric')
-  call llscalar..declare(c,'digits',types,'context:7',6)
-  call llscalar..declare(c,'arguments.empty',types,'',9)
+  call llscalar..declare(c,'truth',types,'value:6 context:7',11,'','context','condition')
+  call llscalar..declare(c,'numeric.digits',types,'value:6 context:7',0,'','context','condition')
+  call llscalar..declare(c,'numeric.fuzz',types,'value:6 context:7',0,'','context','condition')
+  call llscalar..declare(c,'numeric.form',types,'context:7',0,'form:2','context','condition')
+  call llscalar..declare(c,'digits',types,'context:7',6,'','context','condition')
+  call llscalar..declare(c,'arguments.empty',types,'',9,'','none','resource')
   call llscalar..declare(c,'arguments.append',types,'arguments:9 value:6 present:11',9,'','none','resource')
-  call llscalar..declare(c,'arguments.read',types,'arguments:9',6,'ordinal:1','none','argument')
-  call llscalar..declare(c,'arguments.count',types,'arguments:9',6)
-  call llscalar..declare(c,'arguments.exists',types,'arguments:9 ordinal:6 option:6',6,'','none','argument')
-  call llscalar..declare(c,'return.present',types,'value:6',10)
-  call llscalar..declare(c,'return.absent',types,'',10)
+  call llscalar..declare(c,'arguments.read',types,'context:7',6,'ordinal:1','context','condition')
+  call llscalar..declare(c,'arguments.count',types,'context:7',6,'','context','condition')
+  call llscalar..declare(c,'arguments.exists',types,'context:7 ordinal:6 option:6',6,'','context','condition')
+  call llscalar..declare(c,'return.present',types,'value:6',10,'','none','resource')
+  call llscalar..declare(c,'return.absent',types,'',10,'','none','resource')
   call llscalar..declare(c,'requirevalue',types,'result:10',6,'','none','missing.result')
-  call llscalar..declare(c,'setresult',types,'pool:8 result:10',0,'','pool','resource')
-  call llscalar..declare(c,'call',types,'arguments:9 context:7',10,'target:2','pool.numeric.output','condition')
-  call llscalar..declare(c,'length',types,'value:6',6,'','none','conversion')
+  call llscalar..declare(c,'setresult',types,'context:7 result:10',0,'','context','condition')
+  call llscalar..declare(c,'call',types,'arguments:9 context:7',10,'target:2 function:11','context.output','condition')
+  call llscalar..declare(c,'length',types,'value:6 context:7',6,'','context','condition')
   call llscalar..declare(c,'exit',types,'value:6',0,'','process','exit','diverges')
   return
