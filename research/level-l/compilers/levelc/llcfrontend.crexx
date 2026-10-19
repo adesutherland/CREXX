@@ -354,16 +354,27 @@ request: class
       when kind = 'IfThen' | kind = 'IfElse' then do
         value = expression(node.child('condition')); if _error <> '' then return
         value = truth(value,origin)
-        yes = newblock('if.yes'); no = newblock('if.no'); join = newblock('if.join')
+        yes = newblock('if.yes'); no = newblock('if.no')
+        join = .llir..block; hasjoin = .int; hasjoin = 0
         call _block.branch(value,yes,no,origin)
         incoming = _alive; _block = yes; _terminated = 0
         call statement(node.child('yes')); yesalive = _alive & _terminated = 0
-        if _terminated = 0 then call _block.jump(join,origin)
+        if _terminated = 0 then do
+          join = newblock('if.join'); hasjoin = 1
+          call _block.jump(join,origin)
+        end
         _block = no; _terminated = 0; _alive = incoming
         if kind = 'IfElse' then call statement(node.child('no'))
         noalive = _alive & _terminated = 0
-        if _terminated = 0 then call _block.jump(join,origin)
-        _block = join; _terminated = 0; _alive = yesalive | noalive
+        if _terminated = 0 then do
+          if hasjoin = 0 then do; join = newblock('if.join'); hasjoin = 1; end
+          call _block.jump(join,origin)
+        end
+        /* Even dead open endpoints need structural closure. Closed arms need
+         * no join; later dead source still follows the normal checked path. */
+        if hasjoin then do; _block = join; _terminated = 0; end
+        else _terminated = 1
+        _alive = yesalive | noalive
       end
       when kind = 'While' then do
         header = newblock('while.test'); bodyblock = newblock('while.body'); after = newblock('while.after')

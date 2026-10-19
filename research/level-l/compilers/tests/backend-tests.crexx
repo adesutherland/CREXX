@@ -17,6 +17,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     select argv[3]
       when 'nop' then call nopchecks(outputfile)
       when 'options' then call optionschecks(outputfile)
+      when 'if' then call ifchecks(outputfile)
       otherwise return 2
     end
   end
@@ -27,6 +28,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call cleanup()
     call nopchecks()
     call optionschecks()
+    call ifchecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -114,6 +116,60 @@ optionschecks: procedure = .void expose artifacts
   output = request.output()
   call check(pos('applyoptions',output.text()) = 0,'effectful operand still has no OPTIONS processor call')
   if inspect <> '' then written = writebinary(inspect || '-effects.rxas',output.text() as .binary)
+  return
+
+/** Closed arms need no join/default result; open endpoints still converge. */
+ifchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; expected = .int; written = .int
+  sample = .int; optimise = .int; selected = .int; request = .lltestcompiler..request
+  graph = .llir..module; output = .llir..output; text = .string
+  do sample = 1 to 7
+    select sample
+      when 1 then do; source = 'if flag then exit 0 else exit 1'; expected = 2; end
+      when 2 then do; source = 'exit 0; p: procedure; arg flag; if flag then return 1 else return 2'; expected = 1; end
+      when 3 then do; source = 'if flag then if inner then exit 0 else exit 1; else exit 2'; expected = 3; end
+      when 4 then do; source = 'do while flag; if flag then leave else iterate; end'; expected = 1; end
+      when 5 then do; source = 'if flag then exit 0 else nop'; expected = 2; end
+      when 6 then do; source = 'if flag then exit 0'; expected = 2; end
+      otherwise do; source = 'if flag then exit 0 else exit 1; do; nop; options ((42)); end'; expected = 2; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'if-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'IF endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      if sample = 5 | sample = 6 then call check(pos('if.join.',text) > 0,'open or missing ELSE retains convergence ' || sample || '/' || optimise)
+      else call check(pos('if.join.',text) = 0,'closed arms add no predecessorless join ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.return.absent') = expected,'only necessary absent result packets ' || sample || '/' || optimise)
+      output = request.output()
+      call check(pos('.srcstep',output.text()) > 0 & pos('if-shape.crexx',output.text()) > 0,'IF source/fatal records retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 1 | sample = 2 | sample = 4) then written = writebinary(inspect || '-closed-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
+    end
+  end
+  do optimise = 0 to 1
+    source = 'if marker() then nop else nop; exit 0; marker: procedure; return 1'
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'if-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful condition accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 1 & occurrences(text,'crexx.c.truth ') = 1,'one condition call and contextual truth ' || optimise || '/' || selected)
+      call check(pos('crexx.c.call ',text) < pos('crexx.c.truth ',text),'condition precedes truth ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-once-' || optimise || '.rxas',output.text() as .binary)
+    source = "if '1' then say 'yes' else say 'no'; exit 0"
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'if-literal.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'literal condition accepted ' || optimise)
+    if request.status() <> 0 then iterate
+    graph = request.graph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.truth ') = 1 & occurrences(text,'core.branch ') = 1,'source retains effectful truth and literal branch')
+    graph = request.emissiongraph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
+    call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
   return
 
 irshape: procedure = .string

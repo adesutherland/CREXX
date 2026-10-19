@@ -1,7 +1,7 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.OPTIONS3 closeout; the bounded
-COptions/current-v3 increment is locally qualified, publication not performed.**
+**Complete C is open. Current: CLC-STEP05.IF3, locally qualified and closing
+out two reviewed repairs. Approved SELECT work starts after the IF commits.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -17,40 +17,56 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-## Current action: OPTIONS
+## Current action: IF
 
-Adrian approved the [COptions/source-header and zero-runtime-word contract](doc/architecture.md#approved-options-contract)
-for LC-I-05. Retain each clause as `COptions(value:expression?)`, including the
-leading static clause's ordinary once-only expression. C-owned header policy
-uses existing request-local L comment machinery; current B `applyOptions` has
-no runtime words/effects. Omit that processor call and unused bare/simple
-literal value construction while preserving every other operand effect/error,
-source origin, visit and budget. Current C v3/41 operations and B/L/target APIs
-stay unchanged. Native C is a read-only contract/control, INTERPRET remains last.
+Qualify LC-I-06 within the existing C v3/41-op contract: evaluate the condition
+once, validate Classic truth once, execute only the selected admitted instruction
+and preserve source/error/ownership behavior. Reuse Level L parsing/IR and the
+shared B truth/runtime bodies; no language/API/schema/native change is approved.
+Native [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+is a read-only reference, not new-C acceptance. INTERPRET remains last.
 
 | ID / status | Checkable closure |
 |---|---|
-| **OPTIONS-AC01 — Qualified** | COptions retains raw operands/header words and byte spans. Only the complete first nonempty bare-word clause selects approved LEVELC/Classic/comment settings; quoted/operator/call/later forms are runtime-only. Conflicts, incompatible levels/numeric/slash and known unsupported static controls refuse at their authored words. Fresh definitions/rules, quoted markers and independent requests prove isolation. Header discovery cannot depend on successful default-policy lexing of later enabled-line-comment text. |
-| **OPTIONS-AC02 — Qualified** | Independent supported main/IF/group/while/private cases prove once-only operands, including the leading header, Name reads, unary/binary operations, calls and required-result/failure behavior. Bare/unknown/NUL/DBCS values have no processor effect. Exactly one String/Number leaf through Group/zero-operator single-operand Chain wrappers validates with normal visits/budgets but produces no unused value; malformed/dead literals still refuse. |
-| **OPTIONS-AC03 — Qualified** | IR-off/on caller/helper RXAS retains operand effects/errors/source/owners with no OPTIONS processor or OPTIONS-specific getter/conversion call, new op/export/API or family revision. Bare/simple-literal reached/dead cases add no unused constant/helper/default/frame/dead-return work. The B zero-word premise and future runtime-word/effect review/recompile gate remain explicit. |
-| **OPTIONS-AC04 — Qualified** | Independent AST/header/runtime/errors and prior-output controls pass focused normal Debug in relevant B/IR modes and VMs. Existing source.bytes/scan.work limits bound prepass and full parsing without a new public meter; all UTF-8/dead source is validated. Sole builder batches required grammar refresh, reuses unchanged native/B/L proofs and measures any materially changed scheduling; no source-slice ASan or inherited native pass. |
+| **IF-AC01 — Qualified** | Independent AST/spans/nearest ELSE, supported placements and admitted optional/default arm minima pass. Missing syntax, stray ELSE and malformed dead source refuse; prior output survives. |
+| **IF-AC02 — Qualified** | Once-only condition/truth, selected arms, lazy no-ELSE/unchosen errors, exact `0`/`1` and fatal 34.1 prefix pass. Private source calls retain fresh pools; no shared-pool inference is made. |
+| **IF-AC03 — Qualified** | Both IR modes retain contextual truth/evaluation. Literal facts prune only with truth retained. Reproduced IF-F01/F02 are repaired; closed endpoints add no spare join/epilogue, dead validation and source/owner/fatal paths remain. |
+| **IF-AC04 — Qualified** | Existing narrow selectors, paired B/IR/VM Debug, actual caller/fatal RXAS, sentinel refusal and measured component scheduling pass. Unchanged grammar/native/runtime/L proof is reused; no new aggregate or ASan/broad matrix. |
 
-**CLC-STEP05.OPTIONS1 — Reviewed (AC01–04):** record approved contract, exact
-source/AST/prepass ownership and independent expectations; root reviews plan
-and independent reviewer checks bounded prefix/comment handling before code.
-Depends on NOP commit below; root approved the recorded implementation scope.
-**CLC-STEP05.OPTIONS2 — Implemented/source-reviewed (AC01–04):** implement C-owned header/COptions and
-discard-only literal validation in the three owned frontend files; source/AST
-then lowering checkpoints precede builder's single grammar refresh. Separate
-worker owns tests/CMake/user docs; no B runtime/native/L API changes.
-**CLC-STEP05.OPTIONS3 — Qualified; local integration (AC01–04):** freeze product, focused Debug and actual
-RXAS review, reconcile shared dependencies and scoped proof before local commit.
+**CLC-STEP05.IF1 — Complete (AC01–04):** approved plan and minimal source
+IR/IR-off RXAS probe reproduced IF-F01; root classified and authorised repair.
+**CLC-STEP05.IF2 — Complete (AC01–04):** focused existing fixtures and the
+independently reviewed lazy-first-open join and optional-arm/ELSE parser
+corrections are frozen. Grammar/native/runtime inputs are unchanged.
+No grammar regeneration or native/API expansion is planned.
+**CLC-STEP05.IF3 — Locally qualified (AC01–04):** focused proof and independent
+source/RXAS review pass; concise docs, scheduling and task cleanup accompany
+two causal local commits after root review. No push is authorised.
 
-Whole LC-I-05 retains full header controls/STRICTC/source maps, SELECT/shared
-labels, exact diagnostics and conditions/TRACE under their ledger owners.
-Adding a runtime word/effect to `applyOptions` requires C contract review and
-consumer qualification/recompilation before integration, not silent reuse of
-the no-op specialization.
+Whole IF remains partial for SELECT/full DO/shared labels/EXPOSE, full expression
+and exact static diagnostics, resumed conditions/NOVALUE and clause/TRACE under
+STEP04/05/06/07. Arm instructions retain their own semantics and open criteria;
+this increment does not close those dependencies or any CFC criterion.
+
+<a id="current-action-options"></a>
+
+## Completed OPTIONS increment
+
+Local commit `690e930d772c9814b5c10db9284a9572afe3ea3f` qualified the
+[approved COptions/current-v3 specialization](doc/architecture.md#approved-options-contract)
+with independent source/RXAS and [normal Debug proof](#current-options-proof).
+
+| Stable ID / status | Qualified closure |
+|---|---|
+| **OPTIONS-AC01 — Qualified** | Raw optional expressions/header words/spans, complete first-clause static admission and fresh request-local comment rules; quoted/operator/call/later forms stay dynamic. |
+| **OPTIONS-AC02 — Qualified** | Once/reached operands, unknown/NUL/DBCS no-word behavior, effectful Name/arithmetic/call/required-result paths and discarded-literal/dead validation. |
+| **OPTIONS-AC03 — Qualified** | Reached/post-terminator blank pairs add no OPTIONS processor/value/helper/default/frame work; operand/source/owner/fatal paths remain. |
+| **OPTIONS-AC04 — Qualified** | Focused paired B/IR/VM Debug, prior-output and independent RXAS review; one grammar refresh and existing source-only scheduling, with unchanged native/B/L proof reused. |
+| **CLC-STEP05.OPTIONS1–3 — Complete** | Approved contract, implementation and independent local qualification completed before IF1. |
+
+Whole LC-I-05 retains full header controls/STRICTC/source maps, shared labels,
+exact diagnostics and conditions/TRACE. Adding a runtime word/effect to B
+`applyOptions` requires C review, qualification and recompilation.
 
 <a id="current-action-nop"></a>
 
@@ -155,7 +171,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; current OPTIONS** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; approved OPTIONS is current. |
+| **CLC-STEP05 — Partial; current IF** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; existing-contract IF qualification is current. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
@@ -203,7 +219,44 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current OPTIONS proof
+## Current IF proof
+
+Inputs are `690e930d772c9814b5c10db9284a9572afe3ea3f` plus frozen IF-parser-1,
+IF-frontend-1 and the focused fixtures. The corrected frontend fixture SHA-256
+is `60eecef856bf96ef2ac03f7449f7948eae4536a9ffa6339284e652d04bb61d67`.
+Qualified grammar/native/runtime/L inputs are unchanged; direct existing B
+recipes refreshed only affected modules/hosts/fixtures (44 commands, 20.9072s;
+six fixture-only commands, 5.1679s), with no compiler warnings.
+
+**IF-F01 closed:** the pre-edit two-command source/IR/RXAS probe found two
+predecessorless joins with extra absent helpers/returns. Lazy first-open joins
+remove them directly: source absent operations 4→2; IR-off caller bodies each
+lose four instructions, one helper call and one local (root 30→29, private
+32→31). Both arm visits, dead validation, contextual truth, origins and
+owner/numeric/fatal setup remain. Per-arm EXIT fallback packets are separate
+admitted costs; these counts are not a speed claim.
+**IF-F02 closed:** bare RETURN swallowed its ELSE into an operand. Actual-owner,
+condition/completion admission now covers existing optional/default minima,
+while preserving ELSE condition/operand/CALL-target names and incomplete-head
+refusal. Grammar and arm instruction contracts are unchanged.
+
+| Focused normal Debug command/component | Observed result |
+|---|---|
+| Existing `frontend-tests ... -a if` and `if-errors` selectors | Reuse 127 unchanged positive checks from the first 173-check command (43.517s); five empty-substring matcher errors were fixture-only. Corrected negative-only replay passes 46/0 in 12.4414s. No wholly green 173-check run is claimed. |
+| Existing `backend-tests ... -a runtime prefix if` | 74/0 each in opt/rxbvm (31.6382s) and noopt/rxtvm (31.8275s), both IR modes internally; closed/open/nested/WHILE endpoints, once/truth and literal pruning. |
+| `check-backend.py --case if-c --case if-error-c --ir on/off` | 32/0 tool commands across paired opt/rxbvm and noopt/rxtvm cells, 38.8549s isolated total; independent ordered/lazy/bare-arm and 34.1 before/condition-only output. |
+| Existing `--case if-c --native-controls`; CLI prior-output controls | Four read-only native commands agree with the independent expectation; three CLI refusals pass in 3.0485s, including dead malformed source in both IR modes. |
+| Independent full caller/fatal RXAS and registration inspection | Before/after, endpoint, once, lazy/bare-arm and invalid-truth paths clear. Four grammar lanes use serial/backend lock and 900s; four backend lanes retain serial/lock/1800s with 37 cases/274 commands. No full aggregate rerun. |
+
+Maintained C view inputs have only unaffected open, nonnested arms and no
+corrected bare-arm boundary; no view regeneration was needed. This is local
+source-only qualification, not a native/core refresh, sanitizer, hosted,
+installed/platform or whole-IF claim. The approved SELECT increment starts only
+after the IF commits; its architecture is separate from IF qualification.
+
+<a id="current-options-proof"></a>
+
+## Completed OPTIONS proof
 
 Baseline `ca679a39d55660981e3805ccc94c2d973ad788f6` plus the frozen three-file
 OPTIONS patch passes the focused normal Debug packet below. Only C grammar

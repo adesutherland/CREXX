@@ -1,0 +1,38 @@
+options levelc
+say 'before'
+if marker(1) then say 'yes' else say 1/0
+if marker(0) then say 1/0 else say 'no'
+if '0' then say 'wrong absent else'
+if '1' then do
+  nop
+  options
+  say 'literal'
+end
+if 1 then if 0 then say 'wrong nearest' else say 'nearest'
+i = 0
+do while i < 3
+  i = i + 1
+  if i = 1 then iterate else if i = 3 then leave
+  say 'loop' i
+end
+say choice(0) choice(1)
+call bare 1
+do
+  if 0 then exit 9 else nop
+end
+if 0 then say 'wrong bare' else say
+say 'after'
+if 1 then exit else exit 9
+nop
+options ((42))
+marker: procedure
+  arg value
+  say 'condition' value
+  return value
+choice: procedure
+  arg value
+  if value then return 1 else return 2
+bare: procedure
+  arg value
+  if value then return else return 2
+  say 'wrong returned'

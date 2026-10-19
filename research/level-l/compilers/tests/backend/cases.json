@@ -281,5 +281,21 @@
     "output": "before\n",
     "error": "RXC-LC-45.1",
     "args": []
+  },
+  {
+    "name": "if",
+    "level": "c",
+    "source": "if-c.crexx",
+    "output": "before\ncondition 1\nyes\ncondition 0\nno\nliteral\nnearest\nloop 2\n2 1\n\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "if-error",
+    "level": "c",
+    "source": "if-error-c.crexx",
+    "output": "before\ncondition\n",
+    "error": "RXC-LC-34.1",
+    "args": []
   }
 ]

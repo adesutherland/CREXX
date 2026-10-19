@@ -80,7 +80,7 @@ ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
 whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
 closure are separate states. The bounded DROP, assignment and NOP reviews below
-follow that SAY disposition; LC-I-05 OPTIONS is the current individual review.
+follow that SAY disposition; LC-I-06 IF is the current individual review.
 
 ## DROP: ordered names and borrowed pool effects
 
@@ -192,3 +192,34 @@ effect requires C review, regression qualification and consumer recompilation.
 Whole LC-I-05 retains full header controls/STRICTC/source maps, shared-label,
 exact diagnostic and conditions/TRACE dependencies; this increment does not
 close those outcomes.
+
+## IF: one condition and only the selected arm
+
+[IF-AC01–04](../PLAN.md#current-action-if) qualify the existing admitted
+IF/THEN/ELSE contract. Source parsing keeps original spans and binds ELSE to
+the nearest open IF. An admitted instruction can occupy either arm; optional
+operands must not consume their owner's contextual ELSE, while ordinary `else`
+variable operands remain legal outside that boundary. Missing condition, THEN
+or arm and malformed dead source still refuse before publishing output.
+
+Evaluate the condition once, then perform one effectful Classic truth check.
+Only exact text `0` and `1` is logical; other text raises 34.1 before either arm
+or later output. An unchosen arm is not evaluated. A false IF without ELSE
+continues normally. Exact literal branch facts may remove an unreachable arm
+in IR-on, but must retain contextual truth and its effects/errors.
+
+Source IR creates a join only when at least one arm endpoint remains open.
+Both RETURN/EXIT arms and nested closed arms need no predecessorless join or
+default absent-result epilogue; WHILE LEAVE/ITERATE retain their real targets.
+Both source arms and later dead statements remain statically checked. Existing
+per-EXIT fallback packets, owner/numeric setup and fatal handlers are separate
+costs, not removable IF work. Private source routines still have fresh pools.
+
+Focused independent frontend/backend selectors, runtime expectations and actual
+RXAS inspection pass the [bounded Debug proof](../PLAN.md#current-if-proof).
+The repaired optional-arm parser and lazy join construction retain source
+validation and contextual effects. Whole LC-I-06 remains partial
+for SELECT/full DO/shared labels/EXPOSE, complete expressions and exact static
+diagnostics, resumed conditions/NOVALUE and clause/TRACE observations under
+STEP04/05/06/07. Shared B truth and generic L algorithms retain their owners.
+The approved SELECT increment starts after the IF commits.

@@ -3471,6 +3471,26 @@ words or effects to the shared processor requires compiler contract review and
 recompilation; complete header controls, source maps, conditions and TRACE
 remain later work under the [OPTIONS plan](../../research/level-l/compilers/PLAN.md#current-action-options).
 
+### Classic IF
+
+IF evaluates its condition once and executes only the selected instruction.
+ELSE belongs to the nearest open IF; a false condition without ELSE continues
+with the following statement. The condition must produce exact text `0` or `1`.
+For example, `'1.0'` raises Classic 34.1 before either arm executes.
+
+```rexx
+options levelc
+if '1' then say 'selected' else say 1/0
+if '0' then say 'not reached'
+```
+
+The output is `selected`; the unchosen division is never evaluated. Current
+main/group/WHILE/private-routine placements retain each arm instruction's own
+contract. Both terminating arms add no spare join/default-return path, and
+literal branch pruning retains the contextual truth check. SELECT, full DO,
+shared labels/EXPOSE, complete diagnostic identities, resumed conditions and
+TRACE remain later work in the [IF plan](../../research/level-l/compilers/PLAN.md#current-action-if).
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:

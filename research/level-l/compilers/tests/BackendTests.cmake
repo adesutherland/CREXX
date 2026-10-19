@@ -41,6 +41,8 @@ add_custom_target(llcompiler_provenance_measure
 # is a hang guard with room for slower hosted machines, not a speed criterion.
 # Maintained shape components measure ~30s (NOP) and 39–43s (OPTIONS) in Debug.
 # OPTIONS adds 21 corpus tool commands. Retain serial 1800s scheduling.
+# IF's maintained shape selector measures 32s in Debug; two corpus cases add
+# 14 default tool commands. Retain the existing generous serial scheduling.
 # Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
 foreach(_mode opt noopt)
   foreach(_vm rxbvm rxtvm)
@@ -65,7 +67,7 @@ foreach(_mode opt noopt)
           --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_test} PROPERTIES
-        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=35[|]commands=260[|]failures=0"
+        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=37[|]commands=274[|]failures=0"
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test}
