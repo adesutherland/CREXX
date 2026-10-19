@@ -177,6 +177,9 @@ catalog: class
     return 0
   text: method = .string
     arg pool = .int, id = .int
+    if pool < 0 | pool >= _pools | id < 0 | id > 1000000 then do
+      call fail('metadata reference is outside its pool'); return ''
+    end
     found = search(pool * 1000001 + id,1,_constantcount)
     if found = 0 then do
       call fail('missing string reference'); return ''
@@ -198,14 +201,38 @@ catalog: class
     call run()
     result = .llbinmeta..callable.failed('imported callable not found: ' || name)
     if _error <> '' then return .llbinmeta..callable.failed(_error)
-    matches = 0
+    matches = 0; named = 0
     do i = _constantcount + 1 to _keys[0]
       if _kind[i] <> 7 then iterate
       at = _start[i]
       if _length[i] <> 36 then return .llbinmeta..callable.failed('invalid callable record size')
       symbol = text(_pool[i],<at..u32>(at + 16) _metadata)
+      if _error <> '' then return .llbinmeta..callable.failed(_error)
       if upper(symbol) <> upper(name) then iterate
-      if exported(symbol,_pool[i]) = 0 then return .llbinmeta..callable.failed('callable is not exported: ' || symbol)
+      named = 1
+      /* In a shared pool, a prototype can have the same symbol as a real
+       * definition. Eligibility belongs to this META_FUNC's own procedure
+       * and its reciprocal export, not another export with the same name. */
+      procedureid = <at..u32>(at + 28) _metadata
+      if procedureid > 1000000 then return .llbinmeta..callable.failed('callable procedure reference is outside its pool: ' || symbol)
+      procindex = search(_pool[i] * 1000001 + procedureid,1,_constantcount)
+      if procindex = 0 then return .llbinmeta..callable.failed('callable procedure is missing: ' || symbol)
+      if _kind[procindex] <> 4 | _length[procindex] < 24 then return .llbinmeta..callable.failed('invalid callable procedure: ' || symbol)
+      procstart = _start[procindex]
+      if <at..u32>(procstart + 20) _constants <> _length[procindex] - 24 then return .llbinmeta..callable.failed('invalid procedure payload length: ' || symbol)
+      exposeid = <at..u32>(procstart + 16) _constants
+      if exposeid = 4294967295 then iterate
+      if exposeid > 1000000 then return .llbinmeta..callable.failed('callable export reference is outside its pool: ' || symbol)
+      exportindex = search(_pool[i] * 1000001 + exposeid,1,_constantcount)
+      if exportindex = 0 then return .llbinmeta..callable.failed('callable export is missing: ' || symbol)
+      if _kind[exportindex] <> 6 | _length[exportindex] < 16 then return .llbinmeta..callable.failed('invalid callable export: ' || symbol)
+      expstart = _start[exportindex]; extent = <at..u32>(expstart + 12) _constants
+      imported = <at..u32>(expstart + 8) _constants
+      if extent <> _length[exportindex] - 16 | imported > 1 then return .llbinmeta..callable.failed('invalid callable export payload: ' || symbol)
+      if <at..u32>(expstart + 4) _constants <> procedureid then return .llbinmeta..callable.failed('callable export targets another procedure: ' || symbol)
+      exportname = binsubstr(_constants,expstart + 17,extent) as .string
+      if upper(exportname) <> upper(symbol) then return .llbinmeta..callable.failed('callable export identity mismatch: ' || symbol)
+      if imported then iterate
       flags_text = text(_pool[i],<at..u32>(at + 20) _metadata)
       type = text(_pool[i],<at..u32>(at + 24) _metadata)
       arguments = text(_pool[i],<at..u32>(at + 32) _metadata)
@@ -214,9 +241,11 @@ catalog: class
       if matches > 1 then return .llbinmeta..callable.failed('ambiguous callable: ' || name)
       result = .llbinmeta..callable(symbol,type,arguments,flags_text)
     end
+    if matches = 0 & named then return .llbinmeta..callable.failed('callable is not exported: ' || name)
     return result
   exported: method = .int
     arg symbol = .string, pool = .int
+    if pool < 0 | pool >= _pools then do; call fail('export pool is outside the image'); return 0; end
     do i = 1 to _constantcount
       if _kind[i] <> 6 | _pool[i] <> pool then iterate
       at = _start[i]
@@ -230,7 +259,9 @@ catalog: class
       name = binsubstr(_constants,at + 17,length) as .string
       if upper(name) <> upper(symbol) then iterate
       if <at..u32>(at + 8) _constants then return 0
-      target = search(pool * 1000001 + <at..u32>(at + 4) _constants,1,_constantcount)
+      procedureid = <at..u32>(at + 4) _constants
+      if procedureid > 1000000 then do; call fail('exported procedure reference is outside its pool'); return 0; end
+      target = search(pool * 1000001 + procedureid,1,_constantcount)
       if target = 0 then do
         call fail('exported procedure is missing'); return 0
       end

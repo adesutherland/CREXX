@@ -1,0 +1,14 @@
+/* Independent metadata catalog: one factory definition, genuine duplicate
+ * defining records, and a private callable. Never executed. */
+.globals=0
+.meta "metafixture.box"="b" ".unknown" .class
+§metafixture.box.§factory() .locals=1 .expose=metafixture.box.§factory
+ret r0
+.meta "metafixture.box.§factory"="b" ".metafixture..box" §metafixture.box.§factory() "?profile=.string"
+ambiguous() .locals=1 .expose=metafixture.ambiguous
+ret r0
+.meta "metafixture.ambiguous"="b" ".int" ambiguous() "x=.int"
+.meta "metafixture.ambiguous"="b" ".int" ambiguous() "x=.int"
+secret() .locals=1
+ret r0
+.meta "metafixture.secret"="b" ".int" secret() ""

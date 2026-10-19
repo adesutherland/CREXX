@@ -36,6 +36,20 @@ main: procedure = .int expose failed
   call check(catalog.error() = '','metadata envelope')
   corrupt = .llbinmeta..catalog('broken' as .binary)
   call check(pos('LL_RXBIN_IMPORT',corrupt.error()) = 1,'metadata rejection')
+  /* The merged image has a definition and a re-exported import prototype. */
+  image = readbinary(argv[5]); linked = .llbinmeta..catalog(image)
+  signature = linked.lookup('metafixture.box.§factory')
+  call check(signature.error() = '' & signature.result() = '.metafixture..box' & signature.arguments() = '?profile=.string','merged constructor resolves defining metadata')
+  signature = linked.lookup('metafixture.ambiguous')
+  call check(pos('ambiguous callable',signature.error()) > 0,'genuine duplicate defining metadata remains ambiguous')
+  signature = linked.lookup('metafixture.secret')
+  call check(pos('not exported',signature.error()) > 0,'private metadata remains unavailable')
+  truncated = .llbinmeta..catalog(binsubstr(image,1,<blen>(image) - 1))
+  call check(truncated.error() <> '','truncated linked catalog rejected')
+  call metadatalinks(image)
+  prototype = .llbinmeta..catalog(readbinary(argv[6]))
+  signature = prototype.lookup('metafixture.box.§factory')
+  call check(pos('not exported',signature.error()) > 0,'import prototype alone is not a definition')
   call check(artifact.text() = request.output().text(),'independent requests')
   chunks = .binary[]; chunks[1] = x2bin('410042FF'); origins = .int[]; origins[1] = 0
   data = .llir..output(chunks,origins,4,'')
@@ -51,4 +65,67 @@ check: procedure = .void expose failed
   if condition then return
   failed = failed + 1
   say 'FAIL|' || name
+  return
+
+/* Normalize only the fixture's sections with the existing decompressor, so
+ * individual reference mutations do not also corrupt compression/envelopes. */
+uncompressed: procedure = .binary
+  arg image = .binary
+  decoder = .llbinmeta..catalog(image); output = binsubstr(image,1,304)
+  do section = 1 to 6
+    row = 64 + (section - 1) * 40
+    offset = <at..i64>(row + 16) image; extent = <at..i64>(row + 24) image
+    bits = binsubstr(image,offset + 1,extent)
+    if (section = 3 | section = 4) & <at..u32>(row + 4) image = 1 then do
+      bits = decoder.expand(bits,<at..i64>(row + 32) image)
+      <at..u32>(row + 4) output = 0
+    end
+    padding = (8 - <blen>(output) <mod> 8) <mod> 8
+    output = output || x2bin(copies('00',padding))
+    <at..i64>(row + 16) output = <blen>(output)
+    <at..i64>(row + 24) output = <blen>(bits)
+    output = output || bits
+  end
+  <at..i64>(16) output = <blen>(output)
+  return output
+
+metadatalinks: procedure = .void
+  arg compressed = .binary
+  image = uncompressed(compressed); catalog = .llbinmeta..catalog(image)
+  signature = catalog.lookup('metafixture.box.§factory')
+  call check(signature.error() = '', 'uncompressed fixture retains defining factory')
+  metastart = <at..i64>(200) image; at = metastart + 16; metadata = 0
+  extent = <blen>(image)
+  do while at < extent
+    if <at..u32>(at + 8) image = 7 then do; metadata = at + 24; leave; end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  call check(metadata > 0, 'fixture has selected callable record')
+  procedureid = <at..u32>(metadata + 28) image
+  broken = image; <at..u32>(metadata + 28) broken = 1000001 + procedureid
+  catalog = .llbinmeta..catalog(broken); signature = catalog.lookup('metafixture.box.§factory')
+  call check(pos('outside its pool',signature.error()) > 0, 'pool-local callable ID refuses composite-key alias before lookup')
+  broken = image; <at..u32>(metadata + 28) broken = 1000000
+  catalog = .llbinmeta..catalog(broken); signature = catalog.lookup('metafixture.box.§factory')
+  call check(pos('procedure is missing',signature.error()) > 0, 'missing selected procedure refused')
+  broken = image; <at..u32>(metadata + 28) broken = <at..u32>(metadata + 16) image
+  catalog = .llbinmeta..catalog(broken); signature = catalog.lookup('metafixture.box.§factory')
+  call check(pos('invalid callable procedure',signature.error()) > 0, 'wrong-kind selected procedure refused')
+  constantstart = <at..i64>(160) image; at = constantstart + 16; exportid = 0; exportrecord = 0
+  do while at < metastart
+    if <at..u32>(at + 4) image = procedureid then exportid = <at..u32>(at + 40) image
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  at = constantstart + 16
+  do while at < metastart
+    if <at..u32>(at + 4) image = exportid then do; exportrecord = at + 24; leave; end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  call check(exportrecord > 0, 'fixture has reciprocal export record')
+  broken = image; <at..u32>(exportrecord + 4) broken = procedureid + 1
+  catalog = .llbinmeta..catalog(broken); signature = catalog.lookup('metafixture.box.§factory')
+  call check(pos('targets another procedure',signature.error()) > 0, 'nonreciprocal export link refused')
   return

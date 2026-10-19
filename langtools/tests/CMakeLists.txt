@@ -371,6 +371,19 @@ crexx_finalize_directory_qa_tiers()
 
 # Public callable tooling, independent of both research compilers.
 set(_services "${CMAKE_CURRENT_BINARY_DIR}/services")
+# Independent metadata-reader linkage regression, not executable application code.
+foreach(_part definition import)
+  add_custom_command(OUTPUT "${_services}/metadata-${_part}.rxbin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_services}"
+    COMMAND $<TARGET_FILE:rxas> -n -o "${_services}/metadata-${_part}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-${_part}.rxas"
+    DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/metadata-${_part}.rxas" VERBATIM)
+endforeach()
+add_custom_command(OUTPUT "${_services}/metadata-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/metadata-linked"
+    "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin"
+  DEPENDS rxlink "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin" VERBATIM)
+add_custom_target(levell_metadata_fixtures DEPENDS "${_services}/metadata-linked.rxbin")
 set(_service_files "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin"
   "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
@@ -388,13 +401,13 @@ foreach(_mode opt noopt)
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${_services}/${_mode}"
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/${_mode}-linked" "${_services}/${_mode}" ${_service_files}
     DEPENDS rxc rxas rxlink levell_service_test_imports ${_service_imports} services.crexx VERBATIM)
-  add_custom_target(levell_services_${_mode} ALL DEPENDS "${_services}/${_mode}-linked.rxbin")
-  add_dependencies(levell_services_${_mode} levell_generated_grammar)
+  add_custom_target(levell_services_${_mode} ALL DEPENDS "${_services}/${_mode}-linked.rxbin" "${_services}/metadata-linked.rxbin")
+  add_dependencies(levell_services_${_mode} levell_generated_grammar levell_metadata_fixtures)
   add_dependencies(testlangtools levell_services_${_mode})
   foreach(_vm rxtvm rxbvm)
     if(TARGET ${_vm})
       add_test(NAME levell_services_${_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}>
-        "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}")
+        "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}" "${_services}/metadata-linked.rxbin" "${_services}/metadata-import.rxbin")
       set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES
         PASS_REGULAR_EXPRESSION "TOOL_SERVICES[|]failures=0" TIMEOUT 300 LABELS "level-l;optimizer-parity")
       crexx_register_test_prep_targets(TESTS levell_services_${_mode}_${_vm} TARGETS levell_services_${_mode} ${_vm})

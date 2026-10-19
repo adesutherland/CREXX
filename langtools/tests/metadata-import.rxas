@@ -1,0 +1,8 @@
+/* An ordinary RXAS import prototype retains callable metadata but owns no
+ * implementation. Linking to metadata-definition must not invent ambiguity. */
+.globals=0
+use() .locals=1
+call r0,§metafixture.box.§factory()
+ret r0
+§metafixture.box.§factory() .expose=metafixture.box.§factory
+.meta "metafixture.box.§factory"="b" ".metafixture..box" §metafixture.box.§factory() "?profile=.string"

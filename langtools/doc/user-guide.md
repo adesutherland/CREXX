@@ -3697,6 +3697,12 @@ from `rxfnsl.rxbin`. Grammar-generated programs use only the SDK; hosts that
 compile specifications must explicitly import and link the tool library too.
 There is no dependency from either product into the experimental C/G compilers.
 
+`llbinmeta` reads callable contracts independently of the source compilers.
+A callable definition must point to its own procedure and reciprocal public
+export within the same pool. Imported prototypes do not become definitions
+when pools are merged. Genuine duplicate definitions remain ambiguous; private
+callables and malformed procedure/export references are rejected.
+
 ```rexx
 import llgenerate
 import llir
