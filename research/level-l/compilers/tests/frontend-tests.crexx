@@ -17,6 +17,8 @@ main: procedure = .int expose failures checks artifacts examples
     when 'mapping' then call mapping()
     when 'nop' then call noptests()
     when 'options' then call optionstests()
+    when 'if' then call iftests()
+    when 'if-errors' then call iferrors()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -149,6 +151,7 @@ grammar: procedure = .void expose examples
   call treechecks()
   call noptests()
   call optionstests()
+  call iftests()
   text = .string; source = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -169,6 +172,121 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** IF owns only its nearest ELSE; arm instructions retain their own AST. */
+iftests: procedure = .void
+  parsed = .lltestparse..parsed; tree = .llast..tree; outer = .llast..node
+  inner = .llast..node; yes = .llast..node; no = .llast..node
+  source = .string; ignored = .string; arm = .string; expected = .string; sample = .int; separated = .int
+  source = 'if 1 then if 0 then nop else options'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'nearest ELSE parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    inner = outer.child('yes'); yes = inner.child('yes'); no = inner.child('no')
+    call check(outer.kind() = 'IfThen' & inner.kind() = 'IfElse','ELSE belongs to inner IF')
+    call check(yes.kind() = 'Nop' & no.kind() = 'COptions','admitted childless arms retained')
+    call check(outer.start() = 0 & outer.finish() = length(source) & inner.start() = 10,'original nested IF byte extents')
+  end
+  source = "if '1' then say 'α'" || ('0D0A'x as .string) || "else say 'β'"
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode CRLF IF tree accepted')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    yes = outer.child('yes'); no = outer.child('no')
+    call check(outer.kind() = 'IfElse' & yes.start() = 12 & no.start() = 27,'branch offsets are original UTF-8 bytes')
+    call check(pos("say 'α'",yes.sourcetext()) = 1 & no.sourcetext() = "say 'β'",'authored branch texts retained')
+  end
+  do sample = 1 to 5
+    select sample
+      when 1 then source = 'if=1; then=2; else=3; if if then say then else say else'
+      when 2 then source = 'do; if 1; then; nop; else; options; end'
+      when 3 then source = 'do while 1; if 1 then leave else iterate; end'
+      when 4 then source = 'exit 0; p: procedure; arg flag; if flag then return 1 else return 2'
+      otherwise source = 'if 1 then exit 0 else exit 1; nop; options'
+    end
+    ignored = good('c',source,'crexx.c.truth')
+  end
+  /* Bare optional-value arms must not swallow their actual owner's ELSE. */
+  do sample = 1 to 3
+    arm = word('return exit say',sample)
+    do separated = 0 to 1
+      source = 'if 1 then ' || arm || ' else ' || arm || ' 2'
+      if separated then source = changestr(' else ',source,'; else ')
+      parsed = .lltestparse..parsed('c',source as .binary)
+      call check(parsed.status() = 0,'bare arm parses ' || arm || '/' || separated)
+      if parsed.status() = 0 then do
+        tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+        yes = outer.child('yes'); no = outer.child('no')
+        call check(outer.kind() = 'IfElse' & yes.count('value') = 0 & no.count('value') = 1,'bare arm preserves ELSE ownership ' || arm || '/' || separated)
+      end
+    end
+    ignored = good('c',arm || ' else','name="else"')
+    ignored = good('c','if 1 then nop; ' || arm || ' else','name="else"')
+  end
+  /* Existing optional/default forms complete at their own minimum, not at
+   * every '=' or comma in an arbitrary expression. No grammar is extended. */
+  do sample = 1 to 13
+    select sample
+      when 1 then do; arm = 'options'; expected = 'COptions'; end
+      when 2 then do; arm = 'arg'; expected = 'CArg'; end
+      when 3 then do; arm = 'arg a,'; expected = 'CArg'; end
+      when 4 then do; arm = 'numeric digits'; expected = 'CNumeric'; end
+      when 5 then do; arm = 'numeric fuzz'; expected = 'CNumeric'; end
+      when 6 then do; arm = 'numeric form'; expected = 'CForm'; end
+      when 7 then do; arm = 'numeric form scientific'; expected = 'CForm'; end
+      when 8 then do; arm = 'numeric form engineering'; expected = 'CForm'; end
+      when 9 then do; arm = 'a='; expected = 'Assignment'; end
+      when 10 then do; arm = 'call p'; expected = 'Invoke'; end
+      when 11 then do; arm = 'call p,'; expected = 'Invoke'; end
+      when 12 then do; arm = 'a=1=else'; expected = 'Assignment'; end
+      otherwise do; arm = 'call else'; expected = 'Invoke'; end
+    end
+    do separated = 0 to 1
+      source = 'if 1 then ' || arm || ' else nop'
+      if separated then source = 'if 1 then ' || arm || '; else nop'
+      parsed = .lltestparse..parsed('c',source as .binary)
+      call check(parsed.status() = 0,'optional arm minimum parses ' || arm || '/' || separated || ': ' || parsed.error())
+      if parsed.status() = 0 then do
+        tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+        yes = outer.child('yes'); no = outer.child('no')
+        call check(outer.kind() = 'IfElse' & yes.kind() = expected & no.kind() = 'Nop','optional arm owns exactly one ELSE ' || arm || '/' || separated)
+        if sample = 9 then call check(yes.count('value') = 0,'initial assignment equals permits empty RHS')
+        if sample = 12 then call check(yes.count('value') = 1,'relational equals keeps its ELSE Name operand')
+      end
+    end
+  end
+  ignored = good('c','numeric digits else; numeric fuzz else; a=else','name="else"')
+  ignored = good('c','if 1 then nop; options else; arg else','name="else"')
+  parsed = .lltestparse..parsed('c','call else' as .binary)
+  call check(parsed.status() = 0,'CALL target named ELSE remains identifier')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    call check(outer.kind() = 'Invoke' & outer.text('name') = 'else','CALL consumes its required target before completing')
+  end
+  parsed = .lltestparse..parsed('c','if 1 then return else if 0 then return else return 2' as .binary)
+  call check(parsed.status() = 0,'nested optional arm ownership accepted')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1); inner = outer.child('no')
+    call check(outer.kind() = 'IfElse' & inner.kind() = 'IfElse','nested optional arms retain actual IF owners')
+  end
+  ignored = good('c','if 1 then nop; if 0 then return else return else','name="else"')
+  ignored = good('c','if else then nop','name="else"')
+  ignored = good('c','if 1 then if else then nop','name="else"')
+  call iferrors()
+  return
+
+iferrors: procedure = .void
+  call bad('c','if then nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
+  call bad('c','if 1 nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
+  call bad('c','if 1 then' as .binary,'LL_COMPILER_SYNTAX:','unexpected end of input')
+  call bad('c','if 1 then nop else' as .binary,'LL_COMPILER_SYNTAX:','unexpected end of input')
+  call bad('c','else nop' as .binary,'LL_COMPILER_SYNTAX:',"unexpected 'else'",0)
+  call bad('c','if 1 then call' as .binary,'LL_COMPILER_SYNTAX:','expected name')
+  call bad('c','if 1 then numeric else nop' as .binary,'LL_COMPILER_SYNTAX:','expected DIGITS, FUZZ, FORM')
+  call bad('c','if 1 then exit 0 else exit 1; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; p: procedure; if 1 then return else return 2; nop; options; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
   return
 
 /** Header policy is request-local; every clause still has an operand AST. */

@@ -284,6 +284,12 @@ foreach(_mode opt noopt)
           -a ${_group} "${CMAKE_BINARY_DIR}/bin" "${CMAKE_CURRENT_SOURCE_DIR}/examples/step01")
         set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
           TIMEOUT 300 LABELS "library;level-l;compiler-frontends;optimizer-parity")
+        if(_group STREQUAL "grammar")
+          # IF adds a measured 44s Debug component of in-process requests.
+          # Serialize the expanded grammar workload with a generous hang guard.
+          set_tests_properties(${_test} PROPERTIES TIMEOUT 900
+            RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
+        endif()
         crexx_register_test_prep_targets(TESTS ${_test} TARGETS llcompiler_frontend-tests_${_mode} ${_vm})
       endif()
     endforeach()
