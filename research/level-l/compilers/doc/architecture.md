@@ -975,6 +975,179 @@ and two target exports/signal bridge. Focused source/IR/runtime/admission and
 actual caller/helper RXAS qualification passes the linked plan; whole SELECT
 and complete C remain open.
 
+<a id="proposed-do-contract"></a>
+
+## Proposed DO contract
+
+**Pending Adrian's approval; no DO implementation is authorized by this
+proposal.** [DO-AC01–04 and CLC-STEP05.DO1–3](../PLAN.md#current-action-do)
+will qualify the bounded LC-I-08 increment against
+[LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
+The proposed C-owned revision is **version 5 / 51 operations**, retaining the
+four existing C types and context procedure ABI; `llctarget` has **32 exports**.
+Version 4 is refused, with no compatibility path. No generic L, B runtime,
+native compiler or VM API/algorithm changes are proposed.
+
+| Normalized source AST | Fields |
+|---|---|
+| `CDo` | `header:DoHeader, body:Sequence, ending:DoEnd` |
+| `DoHeader` | `repetition?:(DoCount\|DoForever\|DoControl), condition?:(DoWhile\|DoUntil)` |
+| `DoCount`; `DoForever` | `value:expression`; no fields |
+| `DoControl` | `name:Name, initial:expression, modifiers:DoModifier*` |
+| `DoModifier` | `keyword:text, value:expression`; authored TO/BY/FOR spelling and order |
+| `DoWhile`; `DoUntil` | `value:expression` |
+| `DoEnd` | `name?:Name`; existing `Name(spelling:text)` preserves raw spelling |
+
+An empty header is grouping. Repetition is counted, controlled or FOREVER,
+optionally followed by WHILE/UNTIL; either condition may also stand alone.
+Preserve full node/operand/keyword byte spans, null clauses, contextual keyword
+variables and IF/SELECT/group ownership. A named END is permitted only for a
+controlled DO and must match its authored control symbol, without compound-tail
+substitution, using the existing shared Classic Unicode casing (including the
+micro-sign exception). Missing END, wrong/end-on-noncontrol names, duplicate
+TO/BY/FOR and missing/invalid header operands receive located refusals, even in
+dead source. END validation adds no named LEAVE/ITERATE support.
+
+Here `C`, `V`, `T` and `B` mean the existing context, value, text and
+`core.boolean` types. Every state key is nonempty valid UTF-8 text, without normalization, compared
+by exact bytes within its function; the frontend supplies stable local names
+such as `do.1`. Keys are attributes, never raw arena/operation IDs or runtime
+values. All eight operations terminate `returns`.
+
+| New `crexx.c` operation | Inputs → results | Attributes | State / failure |
+|---|---|---|---|
+| `do.new` | `context:C` → none | `key:T name:T` | `loop.context` / `condition.resource` |
+| `do.capture` | `value:V` → none | `key:T part:T` | `loop.context` / `condition` |
+| `do.start` | none → none | `key:T` | `loop.context` / `condition` |
+| `do.entry` | none → `value:B` | `key:T` | `loop.context` / `condition` |
+| `do.advance` | none → none | `key:T` | `loop.context` / `condition` |
+| `do.close` | none → none | `key:T` | `loop` / `none` |
+| `while.truth`; `until.truth` | `value:V context:C` → `value:B` | none | `context` / `condition` |
+
+`do.new.name` is empty for counted repetition or an admitted raw variable
+symbol for controlled repetition. `part` is exactly `start`, `to`, `by`,
+`repeat` or `for`. Grouping, FOREVER and condition-only loops construct no
+`RexxDoState`. No state type, constant, argument, result, slot or escaping
+reference is added to C IR.
+
+| New `llctarget` export | Exact signature |
+|---|---|
+| `donew` | `(context=reference .rexxclassiccontext..RexxClassicContext, name=.string) -> .rexxdostate..RexxDoState` |
+| `docapture` | `(state=reference .rexxdostate..RexxDoState, part=.string, value=.rexxvalue..RexxValue) -> .void` |
+| `dostart`; `doadvance` | `(state=reference .rexxdostate..RexxDoState) -> .void` |
+| `doentry` | `(state=reference .rexxdostate..RexxDoState) -> .int` |
+| `whiletruth`; `untiltruth` | `(value=.rexxvalue..RexxValue, context=reference .rexxclassiccontext..RexxClassicContext) -> .int` |
+
+The five state shims delegate to the existing
+[`RexxDoState`](../../../../lib/rxfnsc/RexxDoState.crexx) factory and
+`setStart/setTo/setBy/setRepeatCount/setForCount/startControl/entryAllowed/advance`
+methods. Count-mode `do.start` is a protocol marker with no helper call; only
+controlled state needs `startControl`. All shims inherit caller DIGITS/FUZZ/FORM. Shared ERROR signals are
+relayed with unchanged message and bound event through the existing SELECT-style
+`signalorigin CLASSIC_SYNTAX` bridge. WHILE/UNTIL use the existing checked
+`LOGICALWHILEVALUE`/`LOGICALUNTILVALUE` entries, giving **34.3/34.4**; IF/WHEN
+truth stays unchanged. Captures/counts/control checks retain **26.2/26.3** and
+**41.4/41.5/41.6**. Authored origins drive visible C locations; raw shared-helper
+origin remains bound. Only the generated C fatal profile claims nonresumption.
+
+### Header order, control edges and ownership
+
+Capture the start before evaluating modifiers. Evaluate and immediately validate
+each TO/BY/FOR operand once in written order, accepting all six permutations.
+Call `do.start` only after all captures: initial-control validation/assignment
+therefore occurs after modifier checks, including FOR 0. Count/TO entry checks
+precede WHILE, suppressing its expression and the body when entry is disallowed.
+UNTIL runs after the body or unnamed ITERATE, before advance; true skips the
+step. LEAVE skips both UNTIL and advance. A final count-limited iteration still
+advances before the next entry fails. Shared pool methods re-resolve compound
+control names and read body-mutated control values at each entry/step; no cached
+binding or duplicated decimal-count algorithm is introduced.
+
+Each static `do.new` owns one hidden strong `RexxDoState` register in its C
+frame, outside IR values and the disjoint call window. Initialize hidden owners
+to null at entry. The factory returns the owning value into that register;
+only a synchronous helper call borrows it with `mkref`. Never return a reference
+to helper-local storage or copy mutable state. The pool owner outlives this
+frame's loop state. `do.close` releases transient call references, then nulls
+the hidden owner; it needs no runtime export. Re-entry reconstructs the same
+inactive key. ITERATE retains its state and targets UNTIL/advance, not the body.
+Normal exits/LEAVE close the selected loop's state on incoming edges, retaining
+outer states; a state-free inner loop does not close its enclosing state.
+RETURN first forms its owned
+result packet, then closes active states inner-to-outer. EXIT closes this frame's
+states before process termination; VM teardown owns other terminating frames.
+Fatal diversion releases call-window aliases and all hidden owners, deepest
+first, while preserving bound signal `r0` and diagnostic state. Explicit cleanup
+is required because frame recycling alone does not immediately tear down values.
+
+### C-owned protocol admission
+
+Run this read-only check before writer publication on fresh, loaded and final
+post-transform graphs. Generic LLIR verification remains the owner of record,
+type, block-local-value and terminator integrity; it supplies no DO lifetime
+proof. Bound private tables and work before allocation using existing request
+limits; exhaustion refuses atomically rather than disabling admission.
+
+1. **All records:** check exact v5 descriptors/codecs/imports, nonempty keys,
+   valid names/parts and one `do.new` per key per function. Every keyed operation,
+   including dead records, must resolve that constructor in its own function.
+   Constructor mode fixes permitted capture parts: count permits `repeat`;
+   control permits `start/to/by/for`. Source validation also
+   checks all dead header forms, associations, names and expressions.
+2. **Executable paths:** start each function entry with an empty owner stack,
+   following both branch successors. Stack frames hold key, phase and capture
+   mask. `do.new` pushes an inactive key in `Collect`; capture requires that
+   top key/phase and a legal new part. Count captures exactly one `repeat`;
+   control captures `start` first, then at most one each of `to/by/for`.
+   `do.start` requires the complete mask and
+   changes it to `Ready`. Nested construction is allowed in a parent's `Body`.
+3. **Entry/iteration:** `do.entry` requires top `Ready`. Its sole Boolean use is
+   the same block's terminating branch: true changes the top to `Body`, false
+   to `FalseExit`. `do.advance` requires top `Body` and changes it to `Ready`.
+   `Ready` admits only structural jumps to entry; `FalseExit` only jumps to
+   close. `do.close` pops top `Body` or `FalseExit`. Edge-local closes make all
+   ordinary loop exits converge with the same outer stack.
+4. **Merges/backedges:** a block receives one exact stack/phase/mask; every
+   later incoming edge must agree, including backedges. Reject disagreements,
+   non-top uses, repeated start/capture, use before construction/after close
+   and re-entry while active. Core return and executing EXIT require empty
+   stacks. The exact known divergent `select.missing` has no normal successor;
+   its fatal path clears owners. Structural cold suffixes remain verified.
+5. **Finite checking/cleanup:** intern immutable stack nodes with indexed
+   predecessor links; a block is transferred once and subsequent edges compare
+   state identities. Derive each executable constructor's fixed parent/depth
+   from its entry fact. Enumerate hidden owner registers by key, transient
+   borrow slots by the existing call window, and fatal cleanup in reverse depth;
+   unreachable owners remain null. There is no value/slot alias search.
+
+Phase/LIFO proof applies only to instruction paths reachable from function
+entry, stopping at the exact admitted divergent operations. Checked dead source
+can have predecessorless components and edges into live headers: do not invent
+active entry facts for it or claim dead phase-execution proof. Every such record
+still receives the declaration/static checks above. Revalidation prevents a
+rewrite from making an unchecked phase path executable. Keys survive existing
+serialization/rebuild/pruning as text attributes; whole-function clones have
+their own key scope. Duplicating a constructor within one function requires a
+fresh key throughout its cloned region. Arbitrary owner/phase merges or general
+loop rotations are not accepted merely because they might be equivalent; this
+profile adds no path-sensitive lifetime optimizer.
+
+Qualification must cover AST/order/spans and header refusals, zero/large/exponent
+counts, signed/zero BY, numeric spelling/scale, source-order failures, compound
+tail/body mutation, nested/main/private placements, WHILE/UNTIL/transfer timing,
+normal/RETURN/EXIT/fatal cleanup, and the shared error identities. Fresh/loaded/
+dead key declarations, reachable bad merges/backedges/order/close/re-entry,
+post-transform admission and exact target metadata refuse without publication.
+IR-off/on caller/helper RXAS must show no state allocation for state-free forms,
+no repeated capture/config construction, stable owners and only required joins,
+checks and cleanup. Reuse focused Debug/reference fixtures and unchanged shared
+B/L proof; native EXPOSE fixtures require adapted independent expectations, not
+unsupported source copying. No new aggregate or per-slice ASan is commissioned.
+Unnamed transfers cover every admitted repetitive form and skip groups/SELECT;
+named LEAVE/ITERATE and invalid-target delivery remain LC-I-09/10 work. Shared
+labels/EXPOSE, full expressions/exact recovery, resumable conditions/SIGL and
+clause/TRACE remain open; this bounded proposal closes no CFC criterion.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

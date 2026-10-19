@@ -251,3 +251,18 @@ and independent actual caller/helper inspection pass the
 [bounded Debug proof](../PLAN.md#current-select-proof). Whole
 LC-I-07 retains shared labels/fall-through/EXPOSE, complete expressions/DO/named
 transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
+
+## DO: proposed full headers and explicit loop-state ownership
+
+[DO-AC01–04](../PLAN.md#current-action-do) will track the
+[proposed exact contract](architecture.md#proposed-do-contract), pending Adrian's
+approval. Current implementation remains the group/WHILE subset. The proposal
+adds normalized headers/END names, all counted/controlled/FOREVER and WHILE/UNTIL
+forms, shared-runtime order/errors and unnamed-transfer integration. C v5 uses
+static function-local text keys and hidden owned state, not first-class borrowed
+IR state values. All-record declaration checks and executable-CFG phase/LIFO
+proof are distinct; checked dead source receives no invented live-owner facts.
+Named END checks are included; named LEAVE/ITERATE and invalid-target delivery
+remain LC-I-09/10. Shared labels/EXPOSE, complete expressions/exact recovery and
+resumable conditions/SIGL/clause/TRACE remain open. No implementation or whole
+instruction qualification is claimed by recording this proposal.

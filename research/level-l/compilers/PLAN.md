@@ -1,7 +1,8 @@
 # Complete Classic C compiler in B and Level L
 
 **Complete C is open. CLC-STEP05.SELECT1–3 and the generic L lexer reuse
-prerequisite are locally complete. Next: the individual C instruction review.**
+prerequisite are locally complete. Current: CLC-STEP05.DO1 design; exact
+DO contracts await Adrian's approval before implementation.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -16,6 +17,46 @@ with reuse, missing integration, owners and closure checks. Native passes and
 existing B bodies are controls, not new-C passes. [Architecture](doc/architecture.md)
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
+
+<a id="current-action-do"></a>
+
+## Current action: static DO design (pending approval)
+
+Complete LC-I-08's static DO forms and unnamed LEAVE/ITERATE integration within
+the admitted source/expression profile. Preserve header evaluation, numeric and
+live control-variable state, nested targets, original source and failures; reuse
+existing B DO/value/pool/numeric/Unicode bodies rather than duplicating them.
+The [proposed exact contract](doc/architecture.md#proposed-do-contract) owns the
+AST, eight operations, seven exports and finite protocol; the
+[instruction review](doc/LEVELC-INSTRUCTION-REVIEW.md#do-proposed-full-headers-and-explicit-loop-state-ownership)
+records its bounded language scope. The proposal uses C v5 with
+four existing types/51 operations and 32 target exports, refusing v4. Static text
+keys scoped to each function select hidden owned state; no first-class DO state type,
+SDK/ISA/native API or algorithm change is proposed. **Adrian's exact-contract
+approval is required before DO2.**
+
+| ID / status | Proposed checkable closure |
+|---|---|
+| **DO-AC01 — Open: source/AST** | Independent AST/span and syntax controls cover grouping, counted/controlled/FOREVER and standalone/combined WHILE/UNTIL, authored TO/BY/FOR order, scalar/compound controls, null clauses and admitted main/nested/private/IF/SELECT placements. END names compare authored symbols without tail substitution using shared Classic Unicode casing; missing/wrong/noncontrol names, malformed/duplicate/incompatible headers and dead source refuse with locations and prior-output preservation. |
+| **DO-AC02 — Open: runtime/order/errors** | Independent markers/state/error expectations prove once-only count capture and controlled start capture before once-only modifiers in all six written orders, immediate modifier validation before control start/assignment (including FOR 0), count/TO entry before WHILE, UNTIL before advance after body/ITERATE, LEAVE skipping both, and the final count-limited advance. Cover zero/large/exponent counts, signed/zero BY, spelling/scale, live compound-tail/body mutation, nested/private ownership and unnamed transfers skipping groups/SELECT; retain shared 26.2/26.3, 41.4–41.6 and distinct 34.3/34.4 with visible C locations and bound raw helper-origin forwarding under the current fatal profile. |
+| **DO-AC03 — Open: exact ABI/protocol admission** | Exact four-type v5/51-op and 32-export metadata controls admit only the architecture's descriptors/signatures. Bounded C-owned all-record validation checks key/name/part declarations and one constructor per function-local key, including dead records; reachable-only Collect/Ready/Body/FalseExit stack/phase/mask and merge/backedge proof rejects invalid order, non-top use, re-entry and unmatched cleanup. Fresh, loaded and post-transform graphs receive the same checks before publication, preserving input graphs/prior output on refusal. Generic LLIR retains record/type/terminator integrity; unreachable components receive no invented execution facts. |
+| **DO-AC04 — Open: ownership/RXAS/qualification** | IR-off/on caller/helper inspection proves stable hidden strong owners and synchronous borrowed helper references, no escaping/copyable IR state, correct normal/LEAVE/RETURN/EXIT/fatal reverse-depth cleanup and retained outer state for state-free inner exits. State-free forms allocate no DO state; count-mode start emits no helper call; captures/configuration and joins contain no avoidable repetition. Focused existing Debug selectors/runtime/admission controls, representative paired B/IR/VM cells and independent RXAS review qualify the change with unchanged shared B/L/native proof reused, checked grammar reuse where eligible, current docs and task-only cleanup; no new aggregate, per-slice ASan or broad campaign. |
+
+**CLC-STEP05.DO1 — Design-ready; awaiting approval (AC01–04):** vision, exact
+architecture, independent expectations and dependencies recorded for review;
+obtain Adrian's approval before implementation.
+**CLC-STEP05.DO2 — Pending approval (AC01–04):** implement approved grammar/
+parser/frontend, v5 admission/selector and seven delegating target shims plus
+focused independent fixtures on assigned paths. Reuse qualified tooling/shared
+runtime and checked lexer reuse; no duplicate language/runtime algorithms.
+**CLC-STEP05.DO3 — Pending DO2 (AC01–04):** qualify source/order/errors, ABI/
+protocol refusal, frame cleanup and actual caller/helper RXAS; update owning
+ledger/docs, preserve unrelated work and close the reviewed local increment.
+
+All twelve CFC criteria remain open. Named LEAVE/ITERATE and invalid-target
+delivery remain LC-I-09/10 work. Full expressions, shared labels/EXPOSE, exact
+recovery, resumable conditions/SIGL and clause/TRACE retain their owners;
+INTERPRET remains last. Recording DO1 authorizes no implementation, build or test.
 
 ## Completed prerequisite: generic L lexical construction reuse
 
@@ -233,7 +274,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; bounded reviews through SELECT complete** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; next individual instruction review follows generic LRUSE qualification. |
+| **CLC-STEP05 — Partial; current DO1 design** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews retain shared dependencies; exact DO proposal awaits approval before implementation. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
