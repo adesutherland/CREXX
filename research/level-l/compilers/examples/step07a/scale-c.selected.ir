@@ -37,11 +37,11 @@ function SCALE -> crexx.c.result
     core.store %20 slot:$context @origin:55
     %21 = crexx.c.arguments.read %20 ordinal="1" @origin:56
     %22 = core.load slot:$context @origin:56
-    crexx.c.store %22 %21 name="VALUE" @origin:56
+    crexx.c.store %22 %21 name="value" @origin:56
     %23 = core.load slot:$context @origin:56
     %24 = crexx.c.arguments.read %23 ordinal="2" @origin:56
     %25 = core.load slot:$context @origin:56
-    crexx.c.store %25 %24 name="FACTOR" @origin:56
+    crexx.c.store %25 %24 name="factor" @origin:56
     %26 = core.constant 32 : crexx.c.value @origin:73
     core.store %26 slot:$tmp.1 @origin:66
     %27 = core.constant 45 : crexx.c.value @origin:80
@@ -56,16 +56,16 @@ function SCALE -> crexx.c.result
   if.yes.2:
     %34 = core.constant 32 : crexx.c.value @origin:88
     %35 = core.load slot:$context @origin:81
-    crexx.c.store %35 %34 name="FACTOR" @origin:81
+    crexx.c.store %35 %34 name="factor" @origin:81
     core.jump -> if.join.4 @origin:57
   if.no.3:
     core.jump -> if.join.4 @origin:57
   if.join.4:
     %36 = core.load slot:$context @origin:96
-    %37 = crexx.c.load %36 name="VALUE" @origin:96
+    %37 = crexx.c.load %36 name="value" @origin:96
     core.store %37 slot:$tmp.3 @origin:95
     %38 = core.load slot:$context @origin:97
-    %39 = crexx.c.load %38 name="FACTOR" @origin:97
+    %39 = crexx.c.load %38 name="factor" @origin:97
     %40 = core.load slot:$tmp.3 @origin:95
     %41 = core.load slot:$context @origin:95
     %42 = crexx.c.mul %40 %39 %41 @origin:95

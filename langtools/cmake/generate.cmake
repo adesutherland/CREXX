@@ -9,7 +9,11 @@ if(FORMAT STREQUAL "rxas")
 elseif(DEFINED FORMAT AND NOT FORMAT STREQUAL "crexx")
   message(FATAL_ERROR "Unknown Level L artifact format: ${FORMAT}")
 endif()
-execute_process(COMMAND ${generator_command} "${SPEC}" ${format_option}
+set(generator_options ${format_option})
+foreach(setting IN LISTS GENERATOR_LIMITS)
+  list(APPEND generator_options --limit "${setting}")
+endforeach()
+execute_process(COMMAND ${generator_command} "${SPEC}" ${generator_options}
   OUTPUT_FILE "${OUTPUT}.tmp" ERROR_VARIABLE generator_stderr RESULT_VARIABLE generator_result)
 if(NOT generator_result EQUAL 0)
   file(READ "${OUTPUT}.tmp" generator_message LIMIT 8192)

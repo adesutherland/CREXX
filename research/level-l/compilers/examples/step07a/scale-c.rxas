@@ -498,7 +498,7 @@ null r43
 unlink r29
 copy r43,r31
 copy r44,r6
-load r45,"VALUE"
+load r45,"value"
 load r42,3
 settp r43,768
 settp r44,768
@@ -528,7 +528,7 @@ null r43
 unlink r29
 copy r43,r31
 copy r44,r9
-load r45,"FACTOR"
+load r45,"factor"
 load r42,3
 settp r43,768
 settp r44,768
@@ -618,7 +618,7 @@ null r43
 unlink r29
 copy r43,r31
 copy r44,r19
-load r45,"FACTOR"
+load r45,"factor"
 load r42,3
 settp r43,768
 settp r44,768
@@ -647,7 +647,7 @@ swap r29,r43
 null r43
 unlink r29
 copy r43,r31
-load r44,"VALUE"
+load r44,"value"
 load r42,2
 settp r43,768
 settp r44,768
@@ -669,7 +669,7 @@ swap r29,r43
 null r43
 unlink r29
 copy r43,r31
-load r44,"FACTOR"
+load r44,"factor"
 load r42,2
 settp r43,768
 settp r44,768

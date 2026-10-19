@@ -186,6 +186,12 @@ request: class
       if item.name() = upper(name) then return i
     end
     return 0
+  /** Variable recognition is wider than this existing private-call profile.
+   * Do not silently merge newly lexable Unicode or dotted routine names. */
+  routinename: method = .int
+    arg name = .string
+    if name = '' then return 0
+    return verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 & verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789') = 0
   inventory: method = .void
     root = _tree.root(); body = root.child('body')
     main = .routine('$MAIN','int64',body,1,body.count('items'))
@@ -198,7 +204,11 @@ request: class
     do i = 1 to body.count('items')
       node = body.child('items',i)
       if node.kind() <> 'CLabel' then iterate
-      name = upper(node.text('name'))
+      name = node.text('name')
+      if routinename(name) = 0 then do
+        call fail(node,'PROFILE: routine name is outside the ASCII-undotted profile'); return
+      end
+      name = upper(name)
       if findroutine(name) > 0 then do
         call fail(node,'BIND: duplicate routine ' || name); return
       end
@@ -293,6 +303,18 @@ request: class
         if first.id() <> node.id() | lower(node.text('level')) <> 'levelc' then call fail(node,'PROFILE: options must select this frontend at the start of the source')
       end
       when kind = 'Nop' then nop
+      when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
+        item = node.child('items',i); itemorigin = at(item)
+        if item.kind() <> 'DropDirect' & item.kind() <> 'DropIndirect' then do
+          call fail(item,'PROFILE: invalid DROP item'); return
+        end
+        op = _block.operation(_contract.operation('crexx.c.drop'),itemorigin)
+        call op.input('context',_block.load(_contextslot,itemorigin))
+        call op.attribute('name',item.text('name') as .binary)
+        boolean = .llir..boolcodec()
+        call op.attribute('indirect',boolean.parse((item.kind() = 'DropIndirect') as .string))
+        built = op.finish()
+      end
       when kind = 'Assignment' then do
         do
           if node.count('value') then value = expression(node.child('value'))
@@ -300,7 +322,7 @@ request: class
           if _error = '' then do
             op = _block.operation(_contract.operation('crexx.c.store'),origin)
             call op.input('context',_block.load(_contextslot,origin)); call op.input('value',value)
-            call op.attribute('name',upper(node.text('name')) as .binary); built = op.finish()
+            call op.attribute('name',node.text('name') as .binary); built = op.finish()
           end
         end
       end
@@ -373,7 +395,7 @@ request: class
       end
       when kind = 'Invoke' then value = invocation(node,0)
       when kind = 'CArg' then do i = 1 to node.count('items')
-        targetnode = node.child('items',i); name = upper(strip(targetnode.text('name')))
+        targetnode = node.child('items',i); name = strip(targetnode.text('name'))
         if name = '' then iterate
         op = _block.operation(_contract.operation('crexx.c.arguments.read'),origin)
         call op.input('context',_block.load(_contextslot,origin))
@@ -476,7 +498,7 @@ request: class
         return _block.constantbytes(type(target),decoded as .binary,origin)
       end
       when kind = 'Name' then do
-        name = upper(node.text('spelling'))
+        name = node.text('spelling')
         do
           op = _block.operation(_contract.operation('crexx.c.load'),origin)
           call op.input('context',_block.load(_contextslot,origin)); call op.attribute('name',name as .binary)
@@ -530,7 +552,11 @@ request: class
     built = op.finish(); return built.result()
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
-    invalid = .llir..valuehandle; origin = at(node); name = upper(node.text('name'))
+    invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
+    if routinename(name) = 0 then do
+      call fail(node,'PROFILE: routine name is outside the ASCII-undotted profile'); return invalid
+    end
+    name = upper(name)
     arguments = node.child('arguments'); count = arguments.count('items')
     if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
     target = findroutine(name); argument = .llast..node; value = .llir..valuehandle

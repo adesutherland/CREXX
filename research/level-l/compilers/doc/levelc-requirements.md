@@ -50,15 +50,18 @@ exception or platform exclusion is approved by writing this design.
 
 The independent `levelc/levelc.rxl` / `llcparse` / `llcfrontend` pipeline admits
 bounded scalar expressions/control, private PROCEDURE-labelled routines, scalar
-comma ARG and LENGTH/ARG/DIGITS. Identifiers remain ASCII-patterned; full Classic
+comma ARG and LENGTH/ARG/DIGITS. The approved DROP increment adds ordered
+direct/indirect lists and shared Unicode/raw variable names, including ARG
+destinations; routine/call names retain the ASCII-undotted profile. Full Classic
 source, operators, shared labels, pools, conditions and host contracts are open.
 SAY's adjacent radix-literal repair has retained proof, not whole-SAY closure.
 
-The current migration selects one `llctarget` borrowed-context surface and C-family
-v2 with one required context-reference procedure argument. Root/private owners
+The current implementation selects one `llctarget` borrowed-context surface and
+C-family v3 with one required context-reference procedure argument and one
+contextual DROP operation. Root/private owners
 and numeric entry setup remain conservative; argument/result transport remains
 by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
-owns current selector/admission qualification; complete shared-label activation
+owns the qualified v2 baseline; DROP-AC01–04 own v3 qualification. Complete shared-label activation
 remains open. Earlier research C images/IR must be rebuilt, with no compatibility
 bridge. Neutral scalar ABI records still use `crexx.g` names.
 
@@ -96,8 +99,8 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | Contract / stage | New C status | Next closure check (full row remains open) | Detailed native contract to reuse |
 |---|---|---|---|
 | LC-I-01 SAY / STEP05 | Partial: radix fix retained | `Say(value?)` evaluates its optional expression once and produces one ordered output effect: bare line, visible Unicode/numeric text, output/evaluation order and ordinary errors through the current route. Further historical processor/callback/byte-exact host edge parity is deferred and unclaimed; preserve existing useful controls. Literal-only RXAS has no runtime radix decode; unused context/pool setup needs C-OPT-01 proof. | [LC-AC-57/60](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-02 DROP / STEP05 | Not implemented | Direct/indirect source-ordered variable lists become pool-drop operations; arbitrary compounds and exposed aliases use runtime pool rules. Invalid list words follow accepted policy. No argument/alias reevaluation or numeric conversion. | [LC-AC-07/53/55/56/62](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-03 assignment / STEP05 | Partial: simple scalar only | Evaluate RHS before compound substitution; one pool write with exact scalar text/cache semantics. Stems, implicit tails, exposed aliases and NUL/Unicode names; inspect duplicate reads/copies and alias invalidation. | [LC-AC-54/63](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-02 DROP / STEP05 | Partial: ordered v3 forms locally qualified | Direct/indirect lists, arbitrary compounds, dropped/default/empty states, Unicode/configured blanks, private pools and prebound aliases pass independent state/origin/RXAS checks. One captured indirect list uses existing invalid-word continuation. Source EXPOSE, resumable conditions, full diagnostic identities and TRACE remain STEP06/07 dependencies. | [LC-AC-07/53/55/56/62](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-03 assignment / STEP05 | Partial: raw Unicode scalar/stem/compound integration | DROP fixtures exercise existing pool reads/writes; the individual assignment review is next. Prove RHS evaluation before compound substitution, call effects, exact text/cache semantics, aliases and diagnostics; inspect duplicate reads/copies and invalidation. | [LC-AC-54/63](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-04 NOP / STEP05 | Partial | No value/effect operation, but preserve clause/label/TRACE observations. Reject trailing operands in every legal statement position; no runtime helper for an unobserved NOP. | [LC-AC-05/64](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-05 OPTIONS / STEP05 | Partial: header subset | Separate admitted static header controls from executable expression/empty form and unknown-word policy. Evaluate once at its clause; no implicit Unicode profile switch. Context mutation is an effect, not a compile-time global. | [LC-AC-66](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-06 IF / STEP05 | Partial | Condition, true/false edges and nearest ELSE with arbitrary admitted arms. Exactly one logical validation, correct 34.1 and source; branch folding must retain required diagnostic/evaluation effects. | [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
@@ -124,7 +127,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 ## SAY dependency packet — CLC-STEP01b
 
 This is the first concrete instruction dependency packet, inspected at local
-`975afbc15` on 19 October 2026. It does not close LC-I-01. The [current qualification](../PLAN.md#current-qualification) records unchanged-input
+`975afbc15` on 19 October 2026. It does not close LC-I-01. The [bounded baseline qualification](../PLAN.md#completed-cabi-proof-and-limits) records unchanged-input
 proof; the [SAY review](LEVELC-INSTRUCTION-REVIEW.md) retains its grammar/RXAS
 findings. This packet adds no new execution verdict. Native whole-SAY acceptance remains a reusable control, not a new-C pass.
 
@@ -480,8 +483,8 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | Partial: logical subset | C-EXPR / STEP04; STEP05/07 contexts | Complete eager AND/OR/XOR/NOT and context-specific exact logical failures. |
 | LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | Partial: scalar comma ARG only | LC-I-11/16/19 / STEP06 | Implement all seven PARSE sources and UPPER through one executor. |
 | LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | Partial: scalar comma ARG only | LC-I-11/16/19 / STEP06 | Complete ordered arbitrary templates/patterns/positions and malformed/dynamic errors. |
-| LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | Partial: scalar/private pool | C-POOL / STEP03/05/06; STEP08 external API | Test dropped/implicit/scalar/stem/exposed states and recursive alias lifetime. |
-| LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | Partial: scalar writes | C-POOL / STEP03/05/06; STEP08 external API | Complete stem propagation, source-ordered substitution and recursive EXPOSE. |
+| LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | Partial: DROP states/private pools/prebound aliases | C-POOL / STEP03/05/06; STEP08 external API | Complete source EXPOSE, recursive alias lifetime and host access. |
+| LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | Partial: shared scalar/stem/compound DROP integration | C-POOL / STEP03/05/06; STEP08 external API | Complete assignment review and source-ordered recursive EXPOSE. |
 | LC-REF-051 | Compound-tail evaluation without NOVALUE, final lookup with NOVALUE | Not implemented | C-POOL / STEP03/05/06; STEP08 external API | Test tail substitution suppresses NOVALUE while final lookup may raise it. |
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | Not implemented | C-POOL / STEP03/05/06; STEP08 external API | Implement constant/reserved symbols and causing-clause SIGL/.SIGL updates. |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | Partial: NUMERIC/arithmetic subset | C-EXPR / STEP04; STEP05/07 contexts | Qualify DIGITS/FORM/FUZZ, rounding, error/LOSTDIGITS and restoration end to end. |
@@ -491,7 +494,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | Not implemented | C-HOST / STEP08 | Provide real HALT and clause-boundary trap/TRACE initialization without unused clocks. |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Complete ADDRESS selection/swap/transient/WITH resources and NUL disposition. |
 | LC-REF-059 | CALL ON/OFF delayed condition handlers | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Implement delayed CALL handlers, policy replacement, suspension and resumption. |
-| LC-REF-060 | DROP direct and parenthesized variable lists | Not implemented | C-POOL / STEP03/05/06; STEP08 external API | Implement ordered direct/indirect DROP over scalar/stem/compound aliases. |
+| LC-REF-060 | DROP direct and parenthesized variable lists | Partial: ordered v3 forms locally qualified | C-POOL / STEP03/05/06; STEP08 external API | Retain ordered/captured-list/Unicode/prebound-alias proof; close source EXPOSE, conditions, full diagnostics and TRACE dependencies. |
 | LC-REF-061 | EXIT value, fallthrough and finalization | Partial: return-like EXIT | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Propagate EXIT to program root; finalize once and expose host completion. |
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | Not implemented | LC-I-25 / STEP11; LC-87-01–05 | Close LC-87-01–05 through same compiler with live caller and bounded code. |
 | LC-REF-063 | NUMERIC DIGITS/FORM/FUZZ validation and defaults | Partial: NUMERIC subset | C-EXPR / STEP04; STEP05/07 contexts | Validate all NUMERIC forms/defaults atomically and install in owning C frame. |
@@ -523,8 +526,8 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-CLAUSES` | Partial: bounded grammar/source | C-SRC/C-OBS; STEP04/07/08 | Close LC-REF-007/030/036/057/070/072: clause endings/identity, observations and initialization. |
 | `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Partial: bounded grammar | C-SRC; STEP04 | Close LC-REF-026/033 for every contextual symbol/promotion case. |
 | `SYN-CLASSIC-LABELS` | Partial: private PROCEDURE labels | C-ACT/C-SRC/C-OBS; STEP03/06/07/11 | Close LC-REF-036/042/055/056/069 and dynamic caller-label reachability. |
-| `SYN-CLASSIC-SYMBOLS` | Partial: simple ASCII names | C-SRC/C-POOL; STEP03/04/05/06/08 | Close LC-REF-026/029/034/035/043/049–052, Unicode/configuration and host access. |
-| `SYN-CLASSIC-STEMS` | Not implemented in new C | C-POOL; STEP03/05/06/08 | Complete LC-I-02/03/12 and LC-REF-049–051 with source-ordered recursive aliases. |
+| `SYN-CLASSIC-SYMBOLS` | Partial: shared Unicode/raw variable names | C-SRC/C-POOL; STEP03/04/05/06/08 | Retain distinct micro-sign/Greek and raw ARG/name admission proof; close remaining constant symbols, routine/call names, configuration and host access. |
+| `SYN-CLASSIC-STEMS` | Partial: shared reads/writes/DROP | C-POOL; STEP03/05/06/08 | Complete LC-I-03/12 and LC-REF-049–051 with source-ordered recursive aliases and conditions. |
 | `SYN-CLASSIC-STRINGS` | Partial: quoted/radix subset | C-SRC/C-UNI; STEP04 | Close LC-REF-011–013/025/027/028, quoted doubling/grouping, limits and exact text. |
 | `SYN-CLASSIC-ASSIGNMENT` | Partial | LC-I-03 / STEP05 | Full LC-I-03 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-COMMAND` | Not implemented | LC-I-21 / STEP07 | Full LC-I-21 check in the instruction ledger; shared dependencies remain open. |
@@ -532,7 +535,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-ARG` | Partial | LC-I-11 / STEP06 | Full LC-I-11 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-CALL` | Partial | LC-I-13 / STEP06 | Full LC-I-13 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-DO` | Partial | LC-I-08 / STEP05 | Full LC-I-08 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-DROP` | Not implemented | LC-I-02 / STEP05 | Full LC-I-02 check in the instruction ledger; shared dependencies remain open. |
+| `SYN-CLASSIC-DROP` | Partial: direct/indirect forms locally qualified | LC-I-02 / STEP05 | Full LC-I-02 closure waits the named EXPOSE/condition/diagnostic/TRACE dependencies. |
 | `SYN-CLASSIC-EXIT` | Partial | LC-I-15 / STEP06 | Full LC-I-15 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-IF` | Partial | LC-I-06 / STEP05 | Full LC-I-06 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-INTERPRET` | Not implemented | LC-I-25 / STEP11 | Full LC-I-25 check in the instruction ledger; shared dependencies remain open. |

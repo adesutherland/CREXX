@@ -78,4 +78,32 @@ both compiler IR modes and VMs with assembler optimisation disabled, all 256
 ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
 checks passed for this bounded repair. These are reused results, not a new run;
 whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
-closure are separate states; the next instruction is DROP after SAY disposition.
+closure are separate states. DROP's bounded review below follows that SAY
+disposition; assignment is the next individual instruction review.
+
+## DROP: ordered names and borrowed pool effects
+
+[LC-I-02](levelc-requirements.md#whole-instruction-work-units) reuses the existing
+shared pool's direct and indirect operations. The approved C v3 contract adds
+`CDrop` with ordered direct/indirect items and one `crexx.c.drop` operation per
+item. Each operation consumes the borrowed context and carries raw name text
+plus its indirect flag. It has no result and retains context/condition effects.
+The compiler neither splits subsidiary words nor implements compound tails.
+
+| Obligation | Implementation and independent expectation | Remaining boundary |
+|---|---|---|
+| Source names and item spans | The generated UTF-8 lexer supplies the same Unicode-letter/punctuation/dot rule to parsing and selector name admission. `tests/drop/contracts.crexx` checks micro-sign/Greek identity, parentheses-inclusive byte spans, ordered raw attributes and item origins. | Routine/call names retain the ASCII-undotted profile. Full symbols, shared labels and host name access retain STEP04/06/08 owners. |
+| Contextual list boundaries | Source fixtures distinguish ordinary THEN/ELSE targets, a completed prior IF, a completed ELSE arm, a real nested outer ELSE and DO-contained lists. Following expressions resume ordinary concatenation. | Full IF/DO instruction review remains separate. |
+| Ordered state | One direct item calls `dropSymbol` once. Each indirect item reads its carrier at that point, captures `symbolValue(...).asString(0)` once and calls `dropIndirectList` once. Independent output covers substitution after an earlier drop, self-carrier capture, arbitrary tails, defaults/tombstones and dropped versus empty. | NOVALUE policy and complete assignment/EXPOSE reviews remain open. |
+| Shared aliases and configuration | A test-only exported C body is invoked by a B root with stable borrowed owners, exact lowercase compound-tail aliases and configured extra blanks. The parent uppercase tail survives whole-stem drop; the alias can subsequently restore the lowercase tail. Captured self-carrier lists continue after invalid words. | This proves prebound alias integration; it does not implement source EXPOSE or replace the shared pool's existing tests. |
+| Refusal and atomicity | Malformed source, including unreachable source, preserves a previous output. Generic valid graphs with invalid reachable/dead load/store/drop names publish no RXAS and remain byte-identical. Existing schema/context tests reject previous/unknown C versions. | Full Classic diagnostic identity, resumable conditions and TRACE remain shared later obligations. |
+| Caller and helper work | Structural checks require ordered existing drop/read/conversion calls, one capture and borrowed pool/configuration getters; inspect their receiver cleanup and existing pool bodies. A synthetic execution marker detects an accidentally entered C root wrapper in the B-root fixture. | Root owners, entry numeric setup, fatal dispatch and conservative temporaries retain C-OPT owners; no optimal-frame or speed claim follows. |
+
+The focused normal Debug workload and its isolated scheduling measurement are
+owned by `tests/check-drop.py` and DROP-AC01–04 in the current plan. The 40-command
+positive component and 15 source refusals pass, with separate component timing;
+no single successful full-workload timing is claimed. Existing C admission and
+affected frontend checks also pass. Source EXPOSE, resumable conditions, complete
+diagnostic identities and TRACE remain open, so whole LC-I-02 remains partial.
+Existing native C DROP fixtures and shared B pool/Unicode proofs
+remain read-only semantic controls, not inherited passes for the new compiler.

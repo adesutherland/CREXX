@@ -3347,6 +3347,45 @@ abuttal with variable XYZ. This adds no G literal syntax or general Classic BIF
 support. Full expression, host and TRACE coverage remains described by the
 [instruction review](../../research/level-l/compilers/doc/LEVELC-INSTRUCTION-REVIEW.md).
 
+### Classic variable symbols and DROP
+
+The C profile preserves raw variable spellings for reads, assignments, ARG
+destinations and DROP. Names start with a Unicode letter or `! ? _ @ # $`;
+later characters may also be ASCII digits or dots. Stems and arbitrary compound
+tails use the existing shared pool rules. Leading-digit and ordinary leading-dot
+constant symbols cannot be DROP targets; `.MN`, `.RESULT`, `.RC`, `.RS` and
+`.SIGL` are the admitted leading-dot variable exceptions. Combining marks and emoji are not variable-name letters,
+and names are not implicitly normalized. Micro-sign `µ` remains distinct from
+Greek `μ`/`Μ`. ARG still uppercases argument contents independently of the raw
+destination spelling. Routine/call names retain the ASCII-undotted profile and
+wider shapes receive an explicit diagnostic.
+
+```rexx
+options levelc
+µ = 'micro'
+victim = 'held'
+names = 'names victim'
+drop (names) µ
+say names victim µ
+```
+
+The output is `NAMES VICTIM µ`. A DROP list contains direct variable symbols
+or parenthesized single variable references. Items execute in source order;
+each indirect item captures its current value once, then the shared pool drops
+that captured subsidiary list in order. Dropping its carrier does not discard
+the remaining captured words. Invalid subsidiary words are skipped and later
+valid words continue. Lists use the borrowed configuration's Unicode and extra
+blanks. Direct source targets must be valid variables, even in unreachable
+source; `(a+1)` is an expression and is not an indirect DROP reference.
+
+DROP reuses scalar, stem, compound-tail and exposed-alias pool behavior. A
+dropped binding differs from an assigned empty value and a dropped stem removes
+its default and tails. The compiler emits one contextual operation and existing
+pool call per item; it does not split indirect words or substitute tails itself.
+Source EXPOSE, resumable conditions and full TRACE remain later compiler work.
+The [independent DROP fixtures](../../research/level-l/compilers/tests/drop/)
+own source, state, diagnostic, borrowed-alias and emitted-code expectations.
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:
@@ -3430,10 +3469,11 @@ child inheritance and parent restoration. The direct fixture
 `research/level-l/compilers/tests/target-context.crexx` demonstrates the same
 boundary independently. Generated C uses one required context reference and one
 fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. C-family v2 and this target are the current research contract:
+configuration. C-family v3 and this target are the current research contract:
 rebuild earlier C images/IR; no legacy bridge is provided. This migration adds
-no C source forms or INTERPRET, and its fatal-condition profile remains
-nonresumable.
+no INTERPRET, and its fatal-condition profile remains nonresumable. Version 3
+adds the ordered DROP operation and shared raw-symbol admission described above;
+the borrowed-context procedure ABI and target exports are unchanged.
 
 Ordinary C text follows the agreed Unicode codepoint model, preserving codes
 0–255 through the fixed Latin-1 ordinal bridge. Modern SAY and BIF behavior is

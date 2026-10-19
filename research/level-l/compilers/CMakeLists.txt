@@ -54,12 +54,18 @@ set(_front "${CMAKE_CURRENT_BINARY_DIR}/frontends")
 file(MAKE_DIRECTORY "${_front}")
 foreach(_language IN LISTS _languages)
   set(_spec "${CMAKE_CURRENT_SOURCE_DIR}/levelc/levelc.rxl")
+  set(_grammar_limits)
   if(_language STREQUAL "g")
     set(_spec "${CMAKE_CURRENT_SOURCE_DIR}/typed/typed.rxl")
+  else()
+    # The Unicode variable lexer exceeds the generic 4096-state build default.
+    # Keep this compiler's allowance separate from global Level L policy.
+    list(APPEND _grammar_limits -DGENERATOR_LIMITS=dfa.states=16384)
   endif()
   add_custom_command(OUTPUT "${_front}/ll${_language}grammar.rxbin"
     COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:rxlang> -DSPEC=${_spec}
       -DOUTPUT=${_front}/ll${_language}grammar.rxas -DFORMAT=rxas
+      ${_grammar_limits}
       -P "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake"
     COMMAND $<TARGET_FILE:rxas> "${_front}/ll${_language}grammar"
     DEPENDS rxlang rxas "${_spec}" "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake" VERBATIM)
@@ -129,6 +135,7 @@ foreach(_mode opt noopt)
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
 
     set(_c_contract_inputs ${_base} ${_shared}
+      "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
@@ -146,6 +153,17 @@ foreach(_mode opt noopt)
         "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin")
     add_custom_target(llcompiler_c_context_contracts_${_mode}
       DEPENDS "${_dir}/c-context-contracts-linked.rxbin" "${_c_contract_runtime}")
+    set(_c_drop_inputs ${_c_contract_inputs}
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparse.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcfrontend.rxbin")
+    ll_compile(drop-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/drop/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/drop-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/drop-contracts-linked"
+        "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_c_drop_contracts_${_mode}
+      DEPENDS "${_dir}/drop-contracts-linked.rxbin")
     foreach(_vm rxbvm rxtvm)
       if(TARGET ${_vm})
         set(_contracts_test "llcompiler_c_context_contracts_${_mode}_${_vm}")
@@ -273,6 +291,37 @@ if("c" IN_LIST _languages)
 endif()
 if("c" IN_LIST _languages)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(_drop_vms rxbvm)
+  set(_drop_vm_args --vm rxbvm)
+  if(TARGET rxtvm)
+    list(APPEND _drop_vms rxtvm)
+    list(APPEND _drop_vm_args --vm rxtvm)
+  endif()
+  add_custom_target(llcompiler_c_drop_measure
+    COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
+      --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/drop-measure"
+      ${_drop_vm_args}
+    DEPENDS llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
+      llcompiler_c_drop_contracts_opt llcompiler_c_drop_contracts_noopt
+      llcompiler_target_opt llcompiler_target_noopt library classlib rxfnsc rxunicode_core
+      fs cstream rxc rxas rxlink ${_drop_vms}
+    USES_TERMINAL VERBATIM)
+  # Isolated Debug components: positive 40 commands <125s (including one
+  # refused source), final 15 refusals 19.5s; no single full-run timing claimed.
+  # Serialize nested tools; 1800s is a generous hang guard. See AGENTS.md.
+  add_test(NAME llcompiler_c_drop COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/llcompiler_c_drop"
+    ${_drop_vm_args})
+  set_tests_properties(llcompiler_c_drop PROPERTIES
+    PASS_REGULAR_EXPRESSION "DROP[|]commands=[0-9]+[|]failures=0"
+    TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_drop TARGETS
+    llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
+    llcompiler_c_drop_contracts_opt llcompiler_c_drop_contracts_noopt
+    llcompiler_target_opt llcompiler_target_noopt library classlib rxfnsc rxunicode_core
+    fs cstream rxc rxas rxlink ${_drop_vms})
   # Retained isolated timing entrypoint for this nested aggregate.
   add_custom_target(llcompiler_c_only_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-say.py"

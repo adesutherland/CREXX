@@ -7,6 +7,10 @@ import llcir
 import llcompilercontracts
 import llsource
 import llrxastext
+import llcgrammar
+import lllanguage
+import lllimits
+import llcore
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -47,6 +51,9 @@ compilation: class
   _classiccatalog = .llcompilercontracts..catalog
   _classicready = .int
   _classes = .string[]
+  _symbolgrammar = .lllanguage..definition
+  _symbolpolicy = .lllimits..policy
+  _symbolready = .int
   _records = .object[]
   _recordbytes = .int
   _writer = .llir..writer
@@ -54,7 +61,7 @@ compilation: class
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
-    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _symbolready = 0
     return
   fail: method = .void
     arg reason = .string
@@ -309,6 +316,7 @@ compilation: class
       if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then call fail('LOWERING: unsupported constant type ' || type)
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
+    if name = 'crexx.c.load' | name = 'crexx.c.store' | name = 'crexx.c.drop' then call checksymbol(op.attribute('name') as .string)
     if name = 'crexx.c.numeric.form' then do
       form = op.attribute('form') as .string
       if form <> 'scientific' & form <> 'engineering' then call fail('LOWERING: invalid NUMERIC FORM')
@@ -323,6 +331,28 @@ compilation: class
       symbol = localname(op.attribute('target') as .string)
       if symbol = 'llf1' then call fail('LOWERING: call target must be a private routine')
     end
+    return
+  /** Source and direct IR use one generated variable-symbol authority. Keep
+   * its immutable definition per selector; each name is checked in linear work
+   * without a growing linear memo or a compiler-host Classic runtime import. */
+  checksymbol: method = .void
+    arg name = .string
+    if _symbolready = 0 then do
+      _symbolgrammar = llcgrammar..language()
+      _symbolpolicy = .lllimits..policy()
+      ok = _symbolpolicy.set('source.bytes',min(_limit,2147483647))
+      ok = _symbolpolicy.set('scan.work',max(10000000,min(_limit,134217727) * 16))
+      if _symbolpolicy.error() <> '' then do; call fail('LIMIT: ' || _symbolpolicy.error()); return; end
+      _symbolready = 1
+    end
+    bytes = name as .binary
+    scan = .lllanguage..request(_symbolgrammar,bytes,_symbolpolicy)
+    lexstatus = scan.lex(0)
+    if lexstatus = 2 | lexstatus = 3 then do; call fail('LIMIT: variable-symbol admission: ' || scan.error()); return; end
+    if lexstatus <> 0 then do; call fail('LOWERING: invalid variable symbol'); return; end
+    tokens = scan.tokens()
+    if tokens.size() <> 1 then do; call fail('LOWERING: invalid variable symbol'); return; end
+    if tokens.symbol(0) <> _symbolgrammar.tokenid('identifier') | tokens.start(0) <> 0 | tokens.finish(1) <> <blen>(bytes) then call fail('LOWERING: invalid variable symbol')
     return
   /** Direct graphs can carry host codecs not identified by their manifest.
    * Recheck every payload with the selected canonical codec, including unused
@@ -410,6 +440,40 @@ compilation: class
     symbol = member('rexxclassiccontext.rexxclassiccontext',name,'reference ' || type)
     call invoke(destination,symbol,1,receiver)
     call emit('unlink',receiver)
+    return
+  /** One authored DROP item uses the live pool. The indirect value/text
+   * temporaries occupy otherwise idle child-owner work slots, never IR values.
+   * Capture and convert its list once before the existing ordered executor. */
+  dropoperation: method = .void
+    arg op = .llir..opview
+    symbol = .string
+    pool = reg(_workbase + 2); receiver = reg(_workbase + 1)
+    call binding(input(op),'pool',pool)
+    call emit('linkref',receiver || ',' || pool)
+    bytes = op.attribute('indirect')
+    if <at..u8>(0) bytes = 0 then do
+      symbol = member('rexxpool.rexxvariablepool','dropsymbol','.void','.string')
+      call argtext(2,op.attribute('name') as .string)
+      call invoke('',symbol,2,receiver)
+    end
+    else do
+      value = reg(_workbase + 8); text = reg(_workbase + 9)
+      symbol = member('rexxpool.rexxvariablepool','symbolvalue','.rexxvalue..rexxvalue','.string')
+      call argtext(2,op.attribute('name') as .string)
+      call invoke(value,symbol,2,receiver)
+      valuereceiver = reg(_workbase)
+      call emit('link',valuereceiver || ',' || value)
+      symbol = member('rexxvalue.rexxvalue','asstring','.string','.int','1')
+      call emit('load',reg(_callbase + 2) || ',0')
+      call invoke(text,symbol,2,valuereceiver)
+      call emit('unlink',valuereceiver); call emit('null',value)
+      config = reg(_workbase + 3); call binding(input(op),'config',config)
+      symbol = member('rexxpool.rexxvariablepool','dropindirectlist','.void','.string reference@.rexxclassicconfig..rexxclassicconfig')
+      call argcopy(2,text); call argcopy(3,config)
+      call invoke('',symbol,3,receiver)
+      call emit('null',text); call emit('null',config)
+    end
+    call emit('unlink',receiver); call emit('null',pool)
     return
   /** Values are validated integers, never reparsed text. Keep every install
    * in the executing C frame, after normal return from a successful setter. */
@@ -778,6 +842,7 @@ compilation: class
     end
     select
       when name = 'truth' then call adapter(op,'truth','.int',v || ' ' || contexttype)
+      when name = 'drop' then call dropoperation(op)
       when name = 'say' then call adapter(op,'sayvalue','.void',v)
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')
       when name = 'arguments.append' then call adapter(op,'append',a,a || ' ' || v || ' .int')

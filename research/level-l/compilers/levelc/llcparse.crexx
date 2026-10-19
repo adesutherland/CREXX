@@ -45,10 +45,16 @@ parsed: class
     kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; pendingif = 0; after = ''
+    droplist = 0; dropelse = 0; arm = 0
+    owners = .string[]; ownercount = 0
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
       kind = layout.symbol(i); first = layout.start(i); last = layout.finish(i + 1)
-      spelling = upper(binsubstr(source,first + 1,last - first) as .string)
+      spelling = binsubstr(source,first + 1,last - first) as .string
+      /* Keywords retain their ASCII spelling contract; Unicode casing must
+       * not turn an ordinary variable such as long-s into keyword letters. */
+      if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then spelling = upper(spelling)
+      else spelling = ''
       word = ''; next = layout.symbol(i + 1)
       /* Classic radix suffixes are whole adjacent symbols, not concatenated
        * variables. Keep the original bytes in one String token and let the
@@ -61,6 +67,7 @@ parsed: class
         end
       end
       if kind = sep then do; namespaceclause = 0; exports = 0; end
+      if kind = sep & depth = 0 then do; droplist = 0; dropelse = 0; end
       if kind = id then do
         if next = colon then kind = language.tokenid('labelname')
         else if depth = 0 then do
@@ -71,20 +78,47 @@ parsed: class
           else if condition > 0 & spelling = 'THEN' & term then do
             word = 'THEN'; condition = condition - 1
           end
-          else if spelling = 'ELSE' & next <> equals & (clause | (pendingif > 0 & (term | previous = sep))) then word = 'ELSE'
-          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE SELECT WHEN OTHERWISE DROP EXPOSE') > 0 then do
+          else if spelling = 'ELSE' & next <> equals & (droplist = 0 | dropelse) & (clause | (pendingif > 0 & (term | previous = sep))) then word = 'ELSE'
+          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE SELECT WHEN OTHERWISE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
+      end
+      /* Keep the structural owners of the current statement separately from
+       * the existing dangling-ELSE count. A group hides enclosing IF owners. */
+      if clause & kind <> sep & arm = 0 & word <> 'ELSE' & word <> 'THEN' then do
+        do while ownercount > 0
+          if owners[ownercount] <> 'if' then leave
+          ownercount = ownercount - 1
+        end
+      end
+      if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
+      if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; end
+      if word = 'END' then do
+        do while ownercount > 0
+          closed = owners[ownercount]; ownercount = ownercount - 1
+          if closed = 'group' then leave
+        end
+      end
+      if word = 'ELSE' & ownercount > 0 then do
+        if owners[ownercount] = 'if' then ownercount = ownercount - 1
       end
       ok = classified.append(kind,first,last)
       if kind = opening then depth = depth + 1
       if kind = closing then depth = depth - 1
       if word = 'IF' then do; condition = condition + 1; pendingif = pendingif + 1; end
       if word = 'ELSE' & pendingif > 0 then pendingif = pendingif - 1
+      /* An old unmatched IF must not turn an ordinary DROP target ELSE into
+       * control syntax. Only a DROP that starts an active IF arm has that edge. */
+      if word = 'DROP' then do
+        droplist = 1; dropelse = 0
+        if arm & ownercount > 0 then dropelse = owners[ownercount] = 'if'
+      end
+      if kind <> sep then arm = word = 'THEN' | word = 'ELSE'
+      if word = 'THEN' | word = 'ELSE' then do; droplist = 0; dropelse = 0; end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | kind = colon
       if kind <> sep | condition = 0 then term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
       if kind = colon & next <> sep then do
@@ -125,20 +159,22 @@ parsed: class
     joined = .llcore..stream.tokens(source)
     previous = -1; previousend = 0; beforeprevious = -1
     number = language.tokenid('number'); string = language.tokenid('string')
-    callword = language.tokenid('callword')
+    callword = language.tokenid('callword'); dropword = language.tokenid('dropword'); dropping = 0
     do i = 0 to normalized.size() - 1
       kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
+      if kind = sep | kind = thenword | kind = elseword then dropping = 0
 
       leftterm = previous = id | previous = number | previous = string | previous = closing | ('c' = 'g' & previous = language.tokenid('presence'))
       rightterm = kind = id | kind = number | kind = string | kind = opening | ('c' = 'g' & kind = language.tokenid('presence'))
       function = previous = id & kind = opening & previousend = first
-      if leftterm & rightterm & function = 0 & beforeprevious <> callword then do
+      if dropping = 0 & leftterm & rightterm & function = 0 & beforeprevious <> callword then do
         token = language.tokenid('abut')
         if first > previousend then token = language.tokenid('blank')
         ok = joined.synthetic(token,previousend)
       end
       if first = last then ok = joined.synthetic(kind,first)
       else ok = joined.append(kind,first,last)
+      if kind = dropword then dropping = 1
       beforeprevious = previous; previous = kind; previousend = last
     end
     _status = request.parse_tokens(joined)
@@ -159,7 +195,7 @@ parsed: class
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))

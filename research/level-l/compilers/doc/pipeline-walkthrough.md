@@ -108,9 +108,9 @@ function $MAIN -> crexx.c.result
     %5 = core.load slot:$context @origin:9
     %6 = crexx.c.add %4 %3 %5 @origin:9
     %7 = core.load slot:$context @origin:4
-    crexx.c.store %7 %6 name="TOTAL" @origin:4
+    crexx.c.store %7 %6 name="total" @origin:4
     %8 = core.load slot:$context @origin:21
-    %9 = crexx.c.load %8 name="TOTAL" @origin:21
+    %9 = crexx.c.load %8 name="total" @origin:21
     core.store %9 slot:$tmp.2 @origin:17
     %10 = core.constant 34 : crexx.c.value @origin:25
     %11 = core.load slot:$tmp.2 @origin:17
@@ -122,8 +122,8 @@ function $MAIN -> crexx.c.result
 ```
 
 `32`, `33` and `34` are hex byte spellings for `2`, `3` and `4`; Classic values
-are not silently canonicalised to G integers. Pool operations show their `name`
-attribute. The one required context argument is stored as a reference-valued
+are not silently canonicalised to G integers. Pool operations retain raw source
+spelling in their `name` attribute; the shared pool owns normalization. The one required context argument is stored as a reference-valued
 local alias and read for each contextual operation. The bundle borrows live
 activation, pool and configuration owners; pool reads observe its current binding.
 The caller constructs stable child owners after completing the argument packet,

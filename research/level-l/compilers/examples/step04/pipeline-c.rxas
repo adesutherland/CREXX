@@ -135,7 +135,7 @@ null r71
 unlink r57
 copy r71,r59
 copy r72,r13
-load r73,"TOTAL"
+load r73,"total"
 load r70,3
 settp r71,768
 settp r72,768
@@ -157,7 +157,7 @@ swap r57,r71
 null r71
 unlink r57
 copy r71,r59
-load r72,"TOTAL"
+load r72,"total"
 load r70,2
 settp r71,768
 settp r72,768
@@ -223,7 +223,7 @@ swap r57,r71
 null r71
 unlink r57
 copy r71,r59
-load r72,"TOTAL"
+load r72,"total"
 load r70,2
 settp r71,768
 settp r72,768
@@ -384,7 +384,7 @@ swap r57,r71
 null r71
 unlink r57
 copy r71,r59
-load r72,"TOTAL"
+load r72,"total"
 load r70,2
 settp r71,768
 settp r72,768
@@ -445,7 +445,7 @@ swap r57,r71
 null r71
 unlink r57
 copy r71,r59
-load r72,"TOTAL"
+load r72,"total"
 load r70,2
 settp r71,768
 settp r72,768
@@ -493,7 +493,7 @@ null r71
 unlink r57
 copy r71,r59
 copy r72,r47
-load r73,"TOTAL"
+load r73,"total"
 load r70,3
 settp r71,768
 settp r72,768
@@ -519,7 +519,7 @@ swap r57,r71
 null r71
 unlink r57
 copy r71,r59
-load r72,"TOTAL"
+load r72,"total"
 load r70,2
 settp r71,768
 settp r72,768
@@ -693,7 +693,7 @@ null r28
 unlink r14
 copy r28,r16
 copy r29,r5
-load r30,"VALUE"
+load r30,"value"
 load r27,3
 settp r28,768
 settp r29,768
@@ -715,7 +715,7 @@ swap r14,r28
 null r28
 unlink r14
 copy r28,r16
-load r29,"VALUE"
+load r29,"value"
 load r27,2
 settp r28,768
 settp r29,768

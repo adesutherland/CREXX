@@ -1,0 +1,147 @@
+/* cREXX License (MIT). Independent DROP source, IR and admission contracts. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llcparse
+import llcfrontend
+import llcrxas
+
+main: procedure = .int expose checks failures artifacts
+  arg argv = .string[]
+  if argv[0] <> 2 then return 2
+  artifacts = argv[1]; checks = 0; failures = 0
+  call sourcecontracts()
+  call namecontracts()
+  call provider(argv[2])
+  say 'DROP_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+/* Raw spellings and byte spans are expectations of the agreed source contract,
+ * not snapshots copied from compiler output. Parentheses belong to the item. */
+sourcecontracts: procedure = .void expose artifacts
+  text = 'drop µ (μ) items.key'
+  parsed = .llcparse..parsed(text as .binary)
+  call check(parsed.status() = 0,'Unicode DROP parses: ' || parsed.error())
+  if parsed.status() <> 0 then return
+  tree = parsed.ast(); body = tree.root().child('body'); node = body.child('items',1)
+  call check(node.kind() = 'CDrop' & node.count('items') = 3,'ordered nonempty CDrop list')
+  call check(node.start() = 0 & node.finish() = 22,'complete original byte span')
+  item = node.child('items',1)
+  call check(item.kind() = 'DropDirect' & item.text('name') = 'µ' & item.start() = 5 & item.finish() = 7,'micro-sign direct item span')
+  item = node.child('items',2)
+  call check(item.kind() = 'DropIndirect' & item.text('name') = 'μ' & item.start() = 8 & item.finish() = 12,'Greek indirect item includes parentheses')
+  item = node.child('items',3)
+  call check(item.kind() = 'DropDirect' & item.text('name') = 'items.key' & item.start() = 13 & item.finish() = 22,'raw compound item span')
+  request = .llcfrontend..request(text as .binary,artifacts,'drop-spans.crexx')
+  call check(request.status() = 0,'DROP frontend: ' || request.error())
+  if request.status() <> 0 then return
+  graph = request.graph(); found = 0; names = ''; flags = ''; starts = ''; finishes = ''
+  do i = 1 to graph.operations()
+    operation = graph.operation(i)
+    if operation.name() <> 'crexx.c.drop' then iterate
+    found = found + 1; names = names || (operation.attribute('name') as .string) || '|'
+    boolean = .llir..boolcodec(); flags = flags || boolean.format(operation.attribute('indirect')) || '|'
+    at = operation.origin(); starts = starts || at.first() || '|'; finishes = finishes || at.last() || '|'
+    call check(operation.inputs() = 1 & operation.results() = 0,'one context input, no invented DROP result')
+  end
+  call check(found = 3 & names = 'µ|μ|items.key|' & flags = 'false|true|false|','one IR operation per item, ordered raw names and kinds')
+  call check(starts = '5|8|13|' & finishes = '7|12|22|','IR retains each authored item origin')
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  descriptor = contract.operation('crexx.c.drop')
+  id = descriptor.id()
+  call check(descriptor.valid() & data.ops() = 41,'v3 adds one operation to the contextual family')
+  call check(data.arity(id,1) = 1 & data.fieldname(id,1,1) = 'context' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.context' & data.arity(id,2) = 0,'DROP consumes context and returns no value')
+  call check(data.arity(id,3) = 2 & data.fieldname(id,3,1) = 'name' & data.fieldname(id,3,2) = 'indirect' & data.typename(data.fieldtype(id,3,1)) = 'crexx.g.text' & data.typename(data.fieldtype(id,3,2)) = 'core.boolean','DROP attributes are ordered name:text then indirect:boolean')
+  call check(data.effectvalue(id,1) = 'context' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'returns','DROP retains state and condition effects')
+  return
+
+/* The generic verifier admits text bytes; the C selector must enforce its
+ * exact shared source-name rule on every load/store/drop, even dead blocks.
+ * A few distinct malformed spellings cover token extent, character and shape
+ * boundaries without duplicating the Unicode classifier in this fixture. */
+namecontracts: procedure = .void expose artifacts
+  do mode = 1 to 9
+    name = ''; opname = 'drop'; dead = 0
+    select mode
+      when 1 then do; name = 'two names'; opname = 'load'; end
+      when 2 then do; name = '.ordinary'; opname = 'store'; end
+      when 3 then do; name = '1bad'; end
+      when 4 then do; name = '🙂'; opname = 'load'; dead = 1; end
+      when 5 then do; name = 'é'; opname = 'store'; dead = 1; end
+      when 6 then do; name = 'a' || ('0A'x as .string); dead = 1; end
+      when 7 then do; name = ''; end
+      when 8 then do; name = 'µ'; end
+      otherwise do; name = '.RESULTx'; end
+    end
+    registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+    contract = registry.finish(); builder = .llir..builder(contract)
+    fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+    ignored = fn.argument(contract.type('crexx.c.context'))
+    at = builder.synthetic('independent C name admission'); entry = fn.block('entry'); block = entry
+    if dead then do
+      draft = entry.operation(contract.operation('crexx.c.return.absent'),at)
+      operation = draft.finish(); call entry.returnvalue(operation.result(),at)
+      block = fn.block('dead')
+    end
+    context = block.readarg(1,at)
+    value = .llir..valuehandle
+    if opname = 'store' then value = block.constantbytes(contract.type('crexx.c.value'),'held' as .binary,at)
+    draft = block.operation(contract.operation('crexx.c.' || opname),at)
+    call draft.input('context',context); call draft.attribute('name',name as .binary)
+    if opname = 'store' then call draft.input('value',value)
+    if opname = 'drop' then do
+      boolean = .llir..boolcodec(); call draft.attribute('indirect',boolean.parse('0'))
+    end
+    operation = draft.finish()
+    draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+    operation = draft.finish(); call block.returnvalue(operation.result(),at)
+    graph = builder.finish(); saved = graph.binary()
+    call check(graph.error() = '', 'valid generic name fixture ' || mode || ': ' || graph.error())
+    backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+    if mode = 8 then call check(backend.status() = 0 & output.bytes() > 0,'raw micro-sign name admitted: ' || backend.error())
+    else call check(backend.status() <> 0 & pos('invalid variable symbol',backend.error()) > 0 & output.bytes() = 0,'malformed ' || opname || ' name refused atomically ' || mode || ': ' || backend.error())
+    call check(bin2x(saved) = bin2x(graph.binary()),'name admission preserves graph ' || mode)
+  end
+  return
+
+/* Test-only export through the existing generic function export facility.
+ * A B root owns all borrowed storage and directly invokes this C body; its
+ * generated fresh-root wrapper must never execute. No product API is added. */
+provider: procedure = .void expose artifacts
+  arg destination = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  file = builder.source('drop-provider.crexx','drop items. (names)' as .binary)
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  call fn.exportas('dropfixture.run'); ignored = fn.argument(contract.type('crexx.c.context'))
+  block = fn.block('entry'); at = file.origin(0,19); context = block.readarg(1,at)
+  markerat = builder.synthetic('test-only root execution marker')
+  marker = block.constantbytes(contract.type('crexx.c.value'),'DROP_PROVIDER' as .binary,markerat)
+  draft = block.operation(contract.operation('crexx.c.say'),markerat)
+  call draft.input('value',marker); operation = draft.finish()
+  boolean = .llir..boolcodec()
+  do i = 1 to 2
+    at = file.origin(5,11); name = 'items.'; indirect = '0'
+    if i = 2 then do; at = file.origin(12,19); name = 'names'; indirect = '1'; end
+    draft = block.operation(contract.operation('crexx.c.drop'),at)
+    call draft.input('context',context); call draft.attribute('name',name as .binary)
+    call draft.attribute('indirect',boolean.parse(indirect)); operation = draft.finish()
+  end
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'exported provider graph: ' || graph.error())
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call check(backend.status() = 0 & output.bytes() > 0,'exported provider selection: ' || backend.error())
+  call check(bin2x(saved) = bin2x(graph.binary()),'provider selection preserves graph')
+  if backend.status() = 0 then call check(writebinary(destination,output.text() as .binary) > 0,'provider RXAS published for B host integration')
+  return

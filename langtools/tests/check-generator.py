@@ -10,6 +10,8 @@ import subprocess
 parser = argparse.ArgumentParser()
 parser.add_argument('bin', type=Path)
 parser.add_argument('work', type=Path)
+parser.add_argument('--forwarding-only', action='store_true',
+                    help='check existing CLI budget forwarding and atomic wrapper output only')
 args = parser.parse_args()
 bin_dir, work = args.bin.resolve(), scratch()
 work.mkdir(parents=True, exist_ok=True)
@@ -20,6 +22,33 @@ results = []
 def invoke(spec, *options):
     result = subprocess.run([str(bin_dir / 'rxlang'), str(spec), *options], capture_output=True, timeout=600)
     return result
+
+def forwarding():
+    spec = root / 'langtools/tests/example.levell'
+    baseline = invoke(spec, '--rxas')
+    assert baseline.returncode == 0, (baseline.stdout, baseline.stderr)
+    artifact = work / 'forwarded.rxas'
+    artifact.write_bytes(b'previous valid artifact\n')
+    command = ['cmake', f'-DLEVEL_L={bin_dir / "rxlang"}', f'-DSPEC={spec}',
+               f'-DOUTPUT={artifact}', '-DFORMAT=rxas']
+    script = ['-P', str(root / 'langtools/cmake/generate.cmake')]
+    limited = subprocess.run(command + ['-DGENERATOR_LIMITS=dfa.states=1'] + script,
+                             capture_output=True, timeout=600)
+    assert limited.returncode and b'dfa.states budget 1' in limited.stdout + limited.stderr
+    assert artifact.read_bytes() == b'previous valid artifact\n'
+    assert not Path(str(artifact) + '.tmp').exists()
+    adequate = subprocess.run(command + ['-DGENERATOR_LIMITS=dfa.states=64;source.bytes=1048576'] + script,
+                              capture_output=True, timeout=600)
+    assert adequate.returncode == 0, (adequate.stdout, adequate.stderr)
+    assert artifact.read_bytes() == baseline.stdout, 'forwarded limits changed grammar output'
+    assert not Path(str(artifact) + '.tmp').exists()
+    results.append({'case': 'forwarded build budgets', 'commands': 3,
+                    'previous_artifact_preserved': True, 'identical_artifact': True})
+
+forwarding()
+if args.forwarding_only:
+    print('generator_forwarding_commands=3; failures=0')
+    raise SystemExit(0)
 
 for spec in [root / 'langtools/tests/example.levell', root / 'rexxscript/grammar/rexxscript.levell']:
     first, second = invoke(spec, '--rxas'), invoke(spec, '--rxas')

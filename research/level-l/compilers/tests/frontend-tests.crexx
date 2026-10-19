@@ -67,7 +67,8 @@ syntax: procedure = .void
     call bad(language,'say (1 + 2' as .binary,'LL_COMPILER_SYNTAX:',"')'",10)
     call bad(language,"say 'broken" as .binary,'LL_COMPILER_SYNTAX:','unterminated quoted string',4)
     call bad(language,('say 1' || ('0A'x as .string) || '/* bad') as .binary,'LL_COMMENT:','unclosed nested comment',6)
-    call bad(language,'say @' as .binary,'LL_COMPILER_SYNTAX:','0x40',4)
+    if language = 'g' then call bad(language,'say @' as .binary,'LL_COMPILER_SYNTAX:','0x40',4)
+    else call bad(language,'say ~' as .binary,'LL_COMPILER_SYNTAX:','0x7E',4)
     call bad(language,'73617920FF'x as .binary,'LL_UTF8:','malformed UTF-8',4)
     call bad(language,'7361792000'x as .binary,'LL_COMPILER_SYNTAX:','0x00',4)
     call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
@@ -162,7 +163,7 @@ grammar: procedure = .void expose examples
   text = good('c','if = 2; then = 3; else = 4; say if then else','crexx.c.blank')
   text = good('c','say ''a'' ''b''; say ''a''''b''; say ''a''(2)','crexx.c.abut')
   text = good('c','x =; say x; say unknown','crexx.c.load')
-  call check(pos('name="UNKNOWN"',text) > 0,'Classic pool key visible in IR')
+  call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
   return
 
@@ -219,7 +220,7 @@ mapping: procedure = .void
   text = good('c','numeric digits 3; numeric fuzz 1; numeric form engineering; numeric digits; numeric fuzz; numeric form; say digits()','crexx.c.numeric.form')
   call check(pos('crexx.c.numeric.digits',text) > 0 & pos('crexx.c.numeric.fuzz',text) > 0,'context setters explicit')
   text = good('c','arg a /*comment*/, b; numeric /*one*/ form /*two*/ engineering; say a','form="engineering"')
-  call check(pos('name="A"',text) > 0 & pos('name="B"',text) > 0,'ARG names exclude comments')
+  call check(pos('name="a"',text) > 0 & pos('name="b"',text) > 0,'raw ARG names exclude comments')
   text = good('c','say 01 == 1; say 1 = 1; say \0','crexx.c.strict')
   call bad('g','say unknown' as .binary,'LL_COMPILER_BIND:','unknown variable')
   call bad('g','leave' as .binary,'LL_COMPILER_FLOW:','surrounding loop')

@@ -54,20 +54,22 @@ formword: token = 49
 scientificword: token = 50
 engineeringword: token = 51
 asword: token = 52
+dropword: token = 53
 
 comment: comments nested "/*" "*/"
-scan: lexer input utf8bytes
+scan: lexer input utf8
   digit: charset = U+0030 to U+0039
-  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  letter: charset = unicode.gc.L | '!' | '?' | '_' | '@' | '#' | '$'
   hspace: charset = U+0009 | U+0020
   newline: charset = U+000A | U+000D
-  squote.body: charset = U+0020 to U+0026 | U+0028 to U+00FF | U+0009
-  dquote.body: charset = U+0020 to U+0021 | U+0023 to U+00FF | U+0009
+  squote.body: charset = (scalar except (U+0000 to U+001F | "'")) | U+0009
+  dquote.body: charset = (scalar except (U+0000 to U+001F | '"')) | U+0009
   numeric: pattern = (digit+ ("." digit*)? | "." digit+) (("e" | "E") ("+" | "-")? digit+)?
-  name: pattern = letter (letter | digit)*
+  name: pattern = letter (letter | digit | ".")*
+  reserved: pattern = "." (("m" | "M") ("n" | "N") | ("r" | "R") (("c" | "C") | ("s" | "S") | ("e" | "E") ("s" | "S") ("u" | "U") ("l" | "L") ("t" | "T")) | ("s" | "S") ("i" | "I") ("g" | "G") ("l" | "L"))
   whitespace: rule = hspace+ then skip
   numeric.literal: rule = numeric ("d" | "D")? then emit number
-  name.literal: rule = name then emit identifier
+  name.literal: rule = name | reserved then emit identifier
   type.literal: rule = "." name then emit typename
   single.literal: rule = "'" (squote.body | "''")* "'" then emit string
   double.literal: rule = '"' (dquote.body | '""')* '"' then emit string
@@ -141,7 +143,11 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value: rule = identifier as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement
+  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement
+  drop.statement: rule = dropword drop.item as item (drop.item as item)* then tree CDrop(items = item+)
+  drop.item: rule = drop.direct | drop.indirect
+  drop.direct: rule = identifier as name then tree DropDirect(name = text(name))
+  drop.indirect: rule = open identifier as name close then tree DropIndirect(name = text(name))
   assignment: rule = identifier as name assign (expression as value)? then tree Assignment(name = text(name), value = value?)
   cast.value: rule = primary
   label.statement: rule = labelname as name colon then tree CLabel(name = text(name))

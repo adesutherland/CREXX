@@ -38,7 +38,7 @@ function $MAIN -> crexx.c.result
     %25 = crexx.c.div %23 %22 %24 @origin:57
     crexx.c.say %25 @origin:51
     %26 = core.load slot:$context @origin:67
-    %27 = crexx.c.load %26 name="UNASSIGNED" @origin:67
+    %27 = crexx.c.load %26 name="unassigned" @origin:67
     crexx.c.say %27 @origin:60
     %28 = core.constant 30 : crexx.c.value @origin:75
     crexx.c.exit %28 @origin:68

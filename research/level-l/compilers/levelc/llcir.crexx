@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',2)
+  c = schema.family('crexx.c',3)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -34,6 +34,7 @@ registerfamilies: procedure = .void
   k = .int; name = .string
   call llscalar..declare(c,'load',types,'context:7',6,'name:2','context','condition')
   call llscalar..declare(c,'store',types,'context:7 value:6',0,'name:2','context','condition')
+  call llscalar..declare(c,'drop',types,'context:7',0,'name:2 indirect:11','context','condition')
   do k = 1 to 16
     name = word('sub mul div eq ne lt le gt ge strict concat blank abut and or xor',k)
     call llscalar..declare(c,name,types,'left:6 right:6 context:7',6,'','context','condition')

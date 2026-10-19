@@ -2,7 +2,8 @@
 
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
-the C-family v2/context sections describe the current reviewed B/L implementation.
+the context ABI records completed STEP03d and the current approved C v3/DROP
+implementation. Qualification remains in the plan.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
@@ -38,7 +39,7 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated lexer/LR grammar and C token policy; limited operators, ASCII name pattern, private PROCEDURE labels, simple ARG, LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Extend the actual pipeline; coverage is substantially smaller than native C. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; ordered DROP projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify the current DROP increment; wider source/instruction coverage remains substantially smaller than native C. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
@@ -462,24 +463,24 @@ introduced into static applications.
 
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d approved by Adrian on 19 October 2026; implementation underway.**
-Use the following `crexx.c` version 2 semantic contract and generated procedure
+**CLC-STEP03d is locally complete; the approved DROP increment advances its
+unchanged context ABI to C family version 3.** Use the following semantic contract and generated procedure
 ABI, with one clean current C target and no compatibility bridge for earlier
 research C programs. The five shared B callables and nine borrowed signatures
-above are retained. No extra B callable, generic L API/transport format, source
-form, RXBIN metadata record or RXAS/VM operation is introduced. This migrates
-only the admitted profile listed above; complete labels, conditions and
+above are retained. DROP adds its approved source form and C-owned IR operation
+below; no extra B callable, generic L API/transport format, RXBIN metadata
+record or RXAS/VM operation is introduced. Complete labels, conditions and
 INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 2. The neutral scalar names do not load the G
+types and `crexx.c` version 3. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-version 1 is never reinterpreted as version 2. Within version 2, the complete C
+versions 1/2 are never reinterpreted as version 3. Within version 3, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
 
-The C types are `value`, `arguments`, `result` and new `context`. The first
+The C types are `value`, `arguments`, `result` and `context`. The first
 three retain their current runtime representations: `RexxValue`, a not-yet-
 borrowed argument/activation packet and a fresh return-presence packet. They
 retain the existing byte codec in the semantic registry. `context` uses that
@@ -495,10 +496,11 @@ generic structural verifier alone does not prove slot initialization.
 Reject `core.constant` and
 optional/default parameters of this type, references in results, and any
 unsupported producer/use. The former `numeric` and `pool` types and `pool.new`
-operation are absent from version 2. Resolve the current pool from the bundle
+operation remain absent. Resolve the current pool from the bundle
 at each pool operation, so an observed `bindPool` replacement remains live.
 
-The following table is the complete 40-operation C-family contract. Names have
+The following table preserves the 40 context-foundation operations; approved
+DROP adds the 41st operation [below](#proposed-next-instruction-drop). Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
 `crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
@@ -613,8 +615,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| New compiler + canonical C v2 IR + current bundle/adapters | Supported through the one-context ABI. |
-| Current selector + C v1/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v3 IR + current bundle/adapters | Supported through the one-context ABI. |
+| Current selector + C v1/v2/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -635,7 +637,7 @@ fixtures/checkers, and necessary build/test registration cleanup. Reuse `backend
 `check-step07.py`, `backend/{numeric,arguments,argv,calls}-c.crexx` and
 `cases.json`; extend existing numeric observations for FUZZ/FORM inheritance,
 restoration and failures instead of adding another scenario aggregate. Add
-canonical v2 save/load and adversarial old/forged schema, constant-context,
+canonical current-C save/load and adversarial old/forged schema, constant-context,
 wrong-width attributes, entry/unbound context-slot provenance, function-ABI
 and selected runtime metadata refusals. Remove the old-image and
 legacy-signature compatibility controls; retain independent B runtime/Classic
@@ -699,11 +701,12 @@ its exact runtime/VM contracts remain at the final STEP11 decision gate.
 
 <a id="proposed-next-instruction-drop"></a>
 
-### Next instruction: DROP
+### Implemented instruction: DROP
 
-**Approved by Adrian, 19 October 2026; implementation waits for qualified,
-locally committed STEP03d closure.** The exact C v3/AST/operation/name-admission
-contract below is approved; no DROP product code has been added.
+**Approved by Adrian, 19 October 2026; C v3 source/AST/admission/lowering is
+locally qualified in normal Debug with independent caller/helper review.**
+The [plan](../PLAN.md#current-drop-proof) records its exact bounded proof;
+source EXPOSE, conditions/full diagnostics and TRACE retain later owners.
 Reuse the existing [Unicode symbol contract](../../../../compiler/docs/levelc_unicode_and_streams.md#ordinary-values-and-byte-compatibility)
 and [pool methods](../../../../lib/rxfnsc/RexxVariablePool.crexx), including
 `dropSymbol(name=.string)->.void` and
@@ -729,9 +732,9 @@ earlier drops. The shared pool owns tail case, arbitrary component counts,
 stem defaults/tombstones, recursive aliases, word splitting and the already
 approved skip-invalid-word policy.
 
-First complete shared C variable-symbol recognition for DROP and ordinary
-variable read/assignment, using existing L `input utf8` and `unicode.gc.L`
-instead of the current ASCII-undotted rule. The existing authority admits
+Shared C variable-symbol recognition for DROP and ordinary variable
+read/assignment uses existing L `input utf8` and `unicode.gc.L`.
+The existing authority admits
 letters and `! ? _ @ # $` initially; bodies/tails also admit ASCII digits and
 dots. Leading-digit and ordinary leading-dot constant symbols are not DROP
 targets. Only the existing `.MN`, `.RESULT`, `.RC`, `.RS` and `.SIGL` exception
@@ -742,6 +745,10 @@ introduced. Pass raw variable spellings to pool operations: its existing simple
 casing retains micro-sign U+00B5 identity. The scanner L set equals pinned
 Unicode 17 `gc.L`; [the shared generator](../../../../cmake/CrexxClassicUnicode.cmake)
 owns that letter authority and micro-sign case exception.
+The C lexer retains `typename` only as a whole-token rejection sink, with no
+C parser production consuming it. In particular, `.RCx`/`.RESULTx` must not
+split into a reserved-dot variable plus another target or concatenated value;
+reducing the sink must preserve that refusal and the original error position.
 Preserve raw ARG destination names too, while its existing `readarg` helper
 keeps uppercase argument-content behavior. The wider variable lexer does not
 expand the current ASCII-undotted routine/call-name profile: validate those
@@ -754,20 +761,33 @@ expands the quoted-body sets beyond U+00FF, preserving existing Greek/CJK/emoji
 literals and comment contents, delimiter/newline rules and byte spans. Retain
 the existing `LENGTH('α漢🙂')` regression alongside Unicode variable names.
 
+The C grammar's generation allowance is `dfa.states=16384`, passed through the
+existing `rxlang --limit` option and atomic generation wrapper; global L defaults
+are unchanged. Its two full name uses and scalar quote bodies expand through
+disjoint UTF-8 boxes and fresh Thompson fragments into the existing unminimized
+subset DFA. The locally qualified Unicode 17 artifact has 5,609 DFA states,
+exceeding the default 4,096. The plan records full counts and normal Debug
+cold-construction observations, separately from target execution and without
+a formal performance claim.
+`L-CONSTRUCT-01` in the plan assigns later subset-key indexing/equivalent-state
+reduction to generic L, with independent match/priority/Unicode/span proof.
+
 In v3, each `load`, `store` and `drop` name attribute must be exactly one valid
 C variable symbol. `dropSymbol` assumes this precondition; it is not a runtime
-source-name validator. Add one private C-owned admission check that uses the
+source-name validator. One private C-owned admission check uses the
 same generated C symbol lexer rule and requires one variable token spanning
 all input bytes: reuse `llcgrammar.language()` and existing
 `lllanguage.request(...).lex(0)`, then check token kind/count and original
-start/end offsets. The same generated definition serves source lexing and
+start/end offsets. Each selector retains one generated definition and budget
+policy; it lexes each name without rebuilding tables or adding a growing linear
+name memo. The same generated definition serves source lexing and
 name admission; no source parsing or new public service is needed. This adds
 no compiler-host `rxfnsc` dependency or duplicate Unicode classifier.
 Indirect subsidiary words retain their separate existing
 runtime/configuration validation. Canonical codecs, entry-bound context and
 unsupported-version/previous-output protections remain unchanged.
 
-The next plan's DROP-AC01–04 cover source/AST/name/schema admission; independent
+The plan's DROP-AC01–04 cover source/AST/name/schema admission; independent
 ordered scalar/stem/compound/indirect observations; Unicode/configuration/
 alias/private-pool behavior and errors; and caller/helper RXAS plus focused
 qualification. Use the existing direct/indirect/whole-DROP native fixtures as

@@ -1,7 +1,8 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. Current: CLC-STEP05.DROP1, approved shared-symbol/DROP
-work, starting after the locally qualified STEP03d change is committed.**
+**Complete C is open. Current: CLC-STEP05.DROP3, qualified local integration and
+closeout; DROP1/2 are implemented and reviewed. Next: LC-I-03 assignment
+review, with no implementation started.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -21,20 +22,24 @@ Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integ
 
 Adrian approved the [exact C v3/CDrop/one-operation/name-admission contract](doc/architecture.md#proposed-next-instruction-drop)
 on 19 October 2026. Reuse existing Unicode/pool semantics and context/method ABI;
-no new B/L/VM API or runtime algorithm. Start product work only after the
-qualified STEP03d local commit. All DROP criteria remain open.
+no new B/L/VM API or runtime algorithm. STEP03d is locally committed as
+`62d6dd44df528d56f4ca191bdc28d73b960c9432`; DROP product work has started.
+DROP1/2 implement canonical C v3, generated-rule name admission and ordered
+existing-pool method calls. Independent source and actual caller/helper RXAS
+review pass. DROP3's focused normal Debug checks pass. This is local
+qualification; no remote publication has occurred.
 
 | ID / status | Checkable closure |
 |---|---|
-| **DROP-AC01 — Open** | Shared Unicode/raw variable symbols, CDrop spans/items and exact v3/name admission pass source/IR positives and atomic refusal, including dead source and unsupported routine-name shapes. |
-| **DROP-AC02 — Open** | Independent direct/indirect order, one captured list per indirect item, scalar/stem/compound, dropped-versus-empty/default state and self-carrier cases pass. |
-| **DROP-AC03 — Open** | Unicode/configured blanks, distinct micro-sign/Greek names, ARG destinations, aliases/private pools and existing invalid-word continuation/error policy pass. |
-| **DROP-AC04 — Open** | Caller/helper RXAS proves ordered existing pool calls and preserved source/owners; focused compiler/IR/assembler/VM normal Debug checks pass. |
+| **DROP-AC01 — Qualified** | Shared Unicode/raw variable symbols, CDrop spans/items and exact v3/name admission pass source/IR positives and atomic refusal, including dead source, reserved-dot prefixes and unsupported routine-name shapes. |
+| **DROP-AC02 — Qualified** | Independent direct/indirect order, one captured list per indirect item, scalar/stem/compound, dropped-versus-empty/default state and self-carrier cases pass. |
+| **DROP-AC03 — Qualified** | Unicode/configured blanks, distinct micro-sign/Greek names, ARG destinations, aliases/private pools and existing invalid-word continuation/error policy pass. |
+| **DROP-AC04 — Qualified** | Caller/helper RXAS proves ordered existing pool calls and preserved source/owners; focused compiler/IR/assembler/VM normal Debug checks pass. |
 
-**CLC-STEP05.DROP1:** shared source-symbol/AST prerequisite (AC01/03).
-**CLC-STEP05.DROP2:** ordered DROP lowering through existing pool methods
-(AC01–04). **CLC-STEP05.DROP3:** independent LC-I-02 review/qualification
-(all four AC). One source writer proceeds serially through parser/frontend and
+**CLC-STEP05.DROP1 — Implemented/reviewed:** shared source-symbol/AST prerequisite
+(AC01/03). **CLC-STEP05.DROP2 — Implemented/reviewed:** ordered DROP lowering
+through existing pool methods (AC01–04). **CLC-STEP05.DROP3 — Qualified:** independent
+LC-I-02 review/qualification (all four AC). One source writer proceeds serially through parser/frontend and
 IR/selector; a separate worker owns fixtures/CMake/integration, with independent
 review. Source EXPOSE, resumable conditions and wider C acceptance retain their
 later owners.
@@ -56,7 +61,8 @@ B owners and two reproduced B seed repairs; baseline commits are
 STEP03d now has the [reviewed clean C v2/context ABI](doc/architecture.md#approved-c-family-revision-and-generated-procedure-abi)
 and normal Debug proof below. Adrian removed research-C backward compatibility:
 one current C family/target, no old-image bridge or copied-context adapters.
-Shared B/L contracts remain intact. A local commit closes this slice before DROP.
+Shared B/L contracts remain intact. Local commit
+`62d6dd44df528d56f4ca191bdc28d73b960c9432` closed this slice before DROP began.
 
 | Stable ID / status | Checkable closure and owning contract |
 |---|---|
@@ -67,10 +73,12 @@ Shared B/L contracts remain intact. A local commit closes this slice before DROP
 | **CABI-AC05 — Qualified** | Exact runtime/class/receiver/optional signature admission, owner-hit/fresh-request metadata refusal and sentinel preservation; no native compiler fallback or new public L/VM API ([C matrix](tests/check-step07.py)). |
 | **CABI-AC06 — Qualified** | Caller/helper source/owner/ref/numeric/RXAS guards, both compiler/IR modes and VMs, restricted C-only roots and measured serial normal Debug scheduling. Sanitizer boundary is stated once below. |
 | **CLC-STEP03d.1–3 — Complete** | Approved contract freeze, implementation and independent fixtures/build/Debug measurement; architecture and maintained regression sources own the exact checks. |
-| **CLC-STEP03d.4 — Qualified** | Independent source/RXAS review and final normal Debug proof complete; coordinator reviews/stages and authorizes the local commit before DROP starts. |
+| **CLC-STEP03d.4 — Complete** | Independent source/RXAS review, final normal Debug proof and coordinator-reviewed local commit completed before DROP started. |
 | **META-AC01 — Complete** | Real linked constructor and independent merged definition/prototype fixture select only definition-linked metadata ([services](../../../langtools/tests/services.crexx)). |
 | **META-AC02 — Complete** | Duplicate definitions remain ambiguous; private/missing/malformed links/envelopes refuse. Selected references stay in their pool/1,000,000-ID bound; ignored prototype signature fields stay opaque. |
 | **META-AC03 / CLC-STEP03d.P — Complete** | Reader API/format/type ownership unchanged; separate reviewed six-path prerequisite commit `9c632093f6ab97e819ad9e48d3a6b379d88afba0`, independent services and real C consumer pass. |
+
+<a id="remaining-actions"></a>
 
 ## Remaining delivery steps
 
@@ -134,10 +142,50 @@ focused regressions. No native Classic feature implementation is authorised.
 <a id="step07a-validation"></a>
 <a id="say-validation"></a>
 
-## Current proof and limits
+## Current DROP proof
 
-Qualified inputs are the reviewed C ABI source/fixtures in this change on the
-metadata prerequisite above. `cmake --build cmake-build-debug --target stage-product`
+The reviewed DROP patch on `62d6dd44df528d56f4ca191bdc28d73b960c9432` has a
+warning-free focused Debug host/fixture build and independent source/actual RXAS
+review. Positive execution passed 47 source/IR/name/schema assertions and nine
+prebound alias/configuration assertions in each B-mode/VM cell. The independent
+36-line source oracle passed both B modes, both C IR modes and both target VMs,
+plus one assembler-on control. Unchanged native/runtime/core-product proof is
+reused from the completed CABI baseline below; optional packaged/installed C
+products, hosted, cross-platform and complete-C acceptance are not claimed.
+
+| Normal Debug check / command | Observed result and scope |
+|---|---|
+| `check-drop.py --build cmake-build-debug --work <temporary> --vm rxbvm --vm rxtvm` positive component | All 40 positive commands passed; 47 contract assertions and nine B-root alias/config assertions per host-mode/VM cell, 36-line source oracle in both IR modes/VMs and assembler-on control. Observed elapsed upper bound: 125s, including one source refusal. |
+| `check-drop.py --build cmake-build-debug --work <temporary> --refusals-only` | All 15 source refusals passed in 19.4944s: located syntax/profile diagnostics, dead malformed source, reserved-dot prefixes and previous-output preservation. Positive inputs/results were reused; no single successful full-workload timing is claimed. |
+| Focused CTest selection below | Seven tests passed in 42.43s: C admission 54 checks in four cells; frontend syntax 205, grammar 82 and mapping 81. |
+| Maintained views through existing frontend/CLI/service probes | Four commands refreshed seven C IR/RXAS assets plus the verified inline pipeline snippet. Only authored raw-name casing changed; instruction counts, frames, source records and byte sizes are unchanged. Prior walkthrough execution remains valid. |
+| CTest registration inspection | Default `llcompiler_c_drop` composes the 55 commands, both available VMs; generated command and 1800s/serial/resource-lock properties verified without rerunning the positive workload solely for registration. |
+
+```sh
+ctest --test-dir cmake-build-debug -R '^(llcompiler_c_context_contracts_(opt|noopt)_(rxbvm|rxtvm)|llcompiler_frontend_(syntax|grammar|mapping)_opt_rxbvm)$' --parallel 4 --verbose --output-on-failure
+```
+
+**DROP-F01 — generation repaired (AC01/04):** C generation forwards the existing
+`rxlang --limit dfa.states=16384`; global defaults remain 4096. The generated
+Unicode 17 artifact has NFA 29,709 / DFA 5,609 / LR 1,785 and 7,550,816 RXAS bytes;
+normal Debug generation plus assembly took 651.355s. The three-command
+`check-generator.py ... --forwarding-only` control proves named budget refusal,
+previous-output preservation/tmp cleanup and two-limit forwarding with a
+byte-identical successful artifact. No language/default-policy change or formal
+performance claim follows.
+
+**L-CONSTRUCT-01 — later generic L construction cost (STEP02/09):** `llregular`
+linearly searches prior subset keys and retains equivalent DFA states. The
+generic L owner may add indexed subset lookup/equivalent-state reduction with
+independent longest-match, priority, Unicode-membership/span and bounded-failure
+proof. The observed cost above covers generation plus assembly, not target
+execution. No such algorithm change is part of DROP.
+
+## Completed CABI proof and limits
+
+The following results qualify CABI commit
+`62d6dd44df528d56f4ca191bdc28d73b960c9432`, not the current DROP changes.
+`cmake --build cmake-build-debug --target stage-product`
 and focused hosts/fixtures passed warning-free; the optional `llctarget` product
 copy byte-matches the qualified opt target. No other optional packaged/installed C product,
 hosted, cross-platform, release or complete-C claim follows.
@@ -151,7 +199,7 @@ hosted, cross-platform, release or complete-C claim follows.
 | Same-source literal compile and code-shape review | Initialized catalog/owner admission cache: 8.113s to 1.174s, byte-identical RXAS. Explicit EXIT/NUMERIC and present args construct no unused defaults. Literal branch pruning retains effectful truth with derived provenance. |
 | Shared metadata prerequisite services | Four Debug cells passed in 22.81s; prior maintained Apple ASan four cells in 34.35s, LSan unavailable. Real C numeric 12-output and IR54 consumer proof passed. |
 
-Per Adrian's source-only policy, this slice claims no fresh sanitizer pass;
+Per Adrian's source-only policy, source slices claim no fresh sanitizer pass;
 valid unchanged-native evidence is reused and any warranted new sanitizer work
 is consolidated at final delivery under [AGENTS.md](../../../AGENTS.md).
 Actual SAN findings remain blockers. Retained owner/packet/getter copies,
