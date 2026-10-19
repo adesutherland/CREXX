@@ -1,0 +1,44 @@
+options levelb
+namespace reference_identity_dep expose Item Holder shortIdentity qualifiedIdentity expiredReference
+
+Item: class
+  number = .int
+
+  *: factory
+    arg value = .int
+    number = value
+    return
+
+  read: method = .int
+    return number
+
+  write: method = .void
+    arg value = .int
+    number = value
+    return
+
+Holder: class
+  owner = reference .Item
+
+  *: factory
+    arg value = reference .reference_identity_dep..Item
+    owner = value
+    return
+
+  borrowed: method = reference .reference_identity_dep..Item
+    return owner
+
+  shortBorrowed: method = reference .Item
+    return owner
+
+shortIdentity: procedure = reference .Item
+  arg value = reference .reference_identity_dep..Item
+  return value
+
+qualifiedIdentity: procedure = reference .reference_identity_dep..Item
+  arg value = reference .Item
+  return value
+
+expiredReference: procedure = reference .reference_identity_dep..Item
+  value = .Item(77)
+  return reference value

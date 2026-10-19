@@ -552,7 +552,7 @@ static void copy_value_type(RXCP_UNUSED Context *context, ASTNode *dest, ASTNode
     ast_copy_target_reference_type_from_value(dest, src);
 }
 
-static int same_value_type(ASTNode *left, ASTNode *right) {
+static int same_value_type(Context *context, ASTNode *left, ASTNode *right) {
     size_t i;
 
     if (left->value_type != right->value_type || left->value_dims != right->value_dims) return 0;
@@ -569,7 +569,7 @@ static int same_value_type(ASTNode *left, ASTNode *right) {
     }
 
     if (left->value_type == TP_REFERENCE) {
-        return rxcp_same_reference_value_type(left, right);
+        return rxcp_same_reference_value_type(context, left, right);
     }
 
     return 1;
@@ -2323,7 +2323,7 @@ walker_result type_safety_walker(walker_direction direction,
                     child1->value_type != TP_REFERENCE ||
                     child2->value_type != TP_REFERENCE) {
                     mknd_err(node, "REFSAME_REQUIRES_REFERENCES");
-                } else if (!rxcp_same_reference_value_type(child1, child2)) {
+                } else if (!rxcp_same_reference_value_type(context, child1, child2)) {
                     mknd_err(node, "REFERENCE_TYPE_MISMATCH");
                 }
                 break;
@@ -2916,7 +2916,7 @@ walker_result type_safety_walker(walker_direction direction,
                         if (n->value_type != TP_UNKNOWN) {
                             if (!first_typed_leave) {
                                 first_typed_leave = n;
-                            } else if (!same_value_type(first_typed_leave, n)) {
+                            } else if (!same_value_type(context, first_typed_leave, n)) {
                                 mknd_err(n, "TYPE_MISMATCH");
                             }
                         }

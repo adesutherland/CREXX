@@ -57,6 +57,14 @@ and `reference .ns..item[]`. Primitive and user-class names share the same
 lexical type grammar. The backend resolves the name and rejects unknown or
 incompatible types where a resolved contract is required.
 
+Reference referents use that resolved class identity too: a visible short name
+and its fully qualified spelling denote the same reference type. Reference
+compatibility remains invariant; implementing an interface does not make a
+reference to the class interchangeable with a reference to the interface.
+Referent kind, array rank, lower bounds and extents must still match exactly.
+First-binding inference from a procedure's reference result preserves that
+declared referent metadata, just as an explicit reference declaration does.
+
 ```text
 type       = type-name [ dimensions ] | "reference" whitespace type
 type-name  = "." identifier { ".." identifier }

@@ -45,8 +45,8 @@ int rxcp_task_result_contract_valid(Context *context, Scope *scope,
                                     const char *class_name);
 void rxcp_set_symbol_reference_type_from_node(Symbol *symbol, ASTNode *type_node);
 void rxcp_set_node_value_reference_type_from_node(ASTNode *node, ASTNode *type_node);
-int rxcp_same_reference_value_and_target_type(ASTNode *node);
-int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right);
+int rxcp_same_reference_value_and_target_type(Context *context, ASTNode *node);
+int rxcp_same_reference_value_type(Context *context, ASTNode *left, ASTNode *right);
 void promote_symbol_from_target(Context *context, ASTNode *node);
 void validate_node_promotion(Context *context, ASTNode* node);
 int rxcp_contextualize_exact_decimal_literals(Context *context, ASTNode *node);

@@ -1,0 +1,16 @@
+options levelb
+import qnsa
+import qnsb
+
+main: procedure = .int
+  first = .qnsa..widget('first')
+  second = .qnsb..widget('second')
+  first_ref = reference first
+  second_ref = reference second
+  call takeFirst(second_ref)
+  if first_ref <refsame> second_ref then return 1
+  return 0
+
+takeFirst: procedure = .void
+  arg value = reference .qnsa..widget
+  return

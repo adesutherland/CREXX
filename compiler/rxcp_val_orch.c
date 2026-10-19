@@ -334,7 +334,8 @@ void rxcp_set_node_value_reference_type_from_node(ASTNode *node, ASTNode *type_n
     }
 }
 
-static int same_reference_type(ValueType left_type,
+static int same_reference_type(Context *context,
+                               ValueType left_type,
                                size_t left_dims,
                                const int *left_base,
                                const int *left_elements,
@@ -353,13 +354,15 @@ static int same_reference_type(ValueType left_type,
         if (left_elements[i] != right_elements[i]) return 0;
     }
 
-    if (left_class && right_class) return strcmp(left_class, right_class) == 0;
+    /* References remain invariant: resolve alternate spellings of the same
+     * nominal contract, without admitting class/interface assignability. */
+    if (left_class && right_class) return symbol_names_equivalent(context, left_class, right_class);
     return left_class == 0 && right_class == 0;
 }
 
-int rxcp_same_reference_value_and_target_type(ASTNode *node) {
+int rxcp_same_reference_value_and_target_type(Context *context, ASTNode *node) {
     if (!node) return 0;
-    return same_reference_type(node->value_reference_type,
+    return same_reference_type(context, node->value_reference_type,
                                node->value_reference_dims,
                                node->value_reference_dim_base,
                                node->value_reference_dim_elements,
@@ -371,9 +374,9 @@ int rxcp_same_reference_value_and_target_type(ASTNode *node) {
                                node->target_reference_class);
 }
 
-int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right) {
+int rxcp_same_reference_value_type(Context *context, ASTNode *left, ASTNode *right) {
     if (!left || !right) return 0;
-    return same_reference_type(left->value_reference_type,
+    return same_reference_type(context, left->value_reference_type,
                                left->value_reference_dims,
                                left->value_reference_dim_base,
                                left->value_reference_dim_elements,
@@ -678,6 +681,20 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
     if (node->node_type == FUNCTION) {
         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN) {
             Symbol *s = node->symbolNode->symbol;
+            if (s->type == TP_REFERENCE) {
+                /* First-binding inference reads the call's referent shape
+                 * before the normal FUNCTION type walk populates the node. */
+                ast_set_value_reference_type(node, s->reference_type,
+                                             s->reference_dims,
+                                             s->reference_dim_base,
+                                             s->reference_dim_elements,
+                                             s->reference_class);
+                ast_set_target_reference_type(node, s->reference_type,
+                                              s->reference_dims,
+                                              s->reference_dim_base,
+                                              s->reference_dim_elements,
+                                              s->reference_class);
+            }
             local_dims = s->value_dims;
             if (local_dims) {
                 local_dim_base = malloc(sizeof(int) * (local_dims));
@@ -1051,7 +1068,7 @@ void validate_node_promotion(Context *context, ASTNode* node) {
             mknd_err(node, call_argument_conversion_code(node, "TYPE_MISMATCH"));
             return;
         }
-        if (!rxcp_same_reference_value_and_target_type(node)) {
+        if (!rxcp_same_reference_value_and_target_type(context, node)) {
             mknd_err(node, call_argument_conversion_code(node, "REFERENCE_TYPE_MISMATCH"));
             return;
         }
