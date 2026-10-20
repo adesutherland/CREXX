@@ -2,6 +2,7 @@
  * defining records, and a private callable. Never executed. */
 .globals=0
 .meta "metafixture.box"="b" ".unknown" .class
+.meta "metafixture.box.values"="b" ".int[*]" .attr 7
 §metafixture.box.§factory() .locals=1 .expose=metafixture.box.§factory
 ret r0
 .meta "metafixture.box.§factory"="b" ".metafixture..box" §metafixture.box.§factory() "?profile=.string"

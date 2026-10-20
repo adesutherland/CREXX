@@ -3994,6 +3994,17 @@ export within the same pool. Imported prototypes do not become definitions
 when pools are merged. Genuine duplicate definitions remain ambiguous; private
 callables and malformed procedure/export references are rejected.
 
+`catalog.field(12, attributeName, '', 4)` returns the META_ATTR register index
+as decimal text: `-1` is the unmapped sentinel and `0..2147483647` are mapped
+indices (**CMETA-AC01**). This reads the existing full 64-bit wire field, not a string-pool ID.
+An unsupported index or selected record size returns empty and sets the existing
+`LL_RXBIN_IMPORT` diagnostic; a missing attribute returns empty under the ordinary
+field lookup contract. Fields 1–3 retain name/options/type semantics (**CMETA-AC02**). Register
+views derive from the complete type; no separate view field is inferred.
+
+The independent [metadata attribute fixture](../tests/metadata-attributes.crexx)
+covers these contracts in complementary owning build/VM modes (**CMETA-AC03**).
+
 ```rexx
 import llgenerate
 import llir

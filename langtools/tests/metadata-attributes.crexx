@@ -1,0 +1,73 @@
+/* cREXX License (MIT). Independent scalar META_ATTR index contract. */
+options levelb
+import rxfnsb
+import llbinmeta
+
+main: procedure = .int expose failed checks
+  arg argv = .string[]
+  failed = 0; checks = 0
+  image = uncompressed(readbinary(argv[1]))
+  catalog = .llbinmeta..catalog(image)
+  call check(catalog.field(12,'metafixture.box.values','',1) = 'metafixture.box.values','name unchanged')
+  call check(catalog.field(12,'metafixture.box.values','',2) = 'b','options unchanged')
+  call check(catalog.field(12,'metafixture.box.values','',3) = '.int[*]','type unchanged')
+  call check(catalog.field(12,'metafixture.box.values','',4) = '7' & catalog.error() = '','current register')
+  call check(catalog.field(12,'metafixture.box.missing','',4) = '' & catalog.error() = '','missing stays empty')
+  at = <at..i64>(200) image; limit = at + <at..i64>(216) image; at = at + 16; selected = 0
+  do while at < limit
+    if <at..u32>(at + 8) image = 12 then do; selected = at; leave; end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  call check(selected > 0,'fixture has attribute')
+  if selected = 0 then return 1
+  i = .int; value = .int; broken = .binary
+  do i = 1 to 4
+    value = 0
+    if i = 2 then value = -1
+    if i = 3 then value = 2147483647
+    if i = 4 then value = 4096
+    broken = image; <at..i64>(selected + 24 + 28) broken = value
+    catalog = .llbinmeta..catalog(broken)
+    call check(catalog.field(12,'metafixture.box.values','',4) = value as .string & catalog.error() = '','valid index ' || value)
+  end
+  do i = 1 to 2
+    value = -2; if i = 2 then value = 2147483648
+    broken = image; <at..i64>(selected + 24 + 28) broken = value
+    catalog = .llbinmeta..catalog(broken)
+    call check(catalog.field(12,'metafixture.box.values','',4) = '' & pos('attribute register index',catalog.error()) > 0,'invalid index ' || value)
+  end
+  broken = image; <at..i64>(selected + 16) broken = 40
+  catalog = .llbinmeta..catalog(broken)
+  call check(catalog.field(12,'metafixture.box.values','',4) = '' & pos('metadata record size',catalog.error()) > 0,'bad selected size')
+  catalog = .llbinmeta..catalog(image)
+  call check(catalog.field(12,'metafixture.box.values','',5) = '' & pos('unsupported metadata field',catalog.error()) > 0,'no inferred fifth field')
+  say 'META_ATTRIBUTES|checks=' || checks || '|failures=' || failed
+  return failed
+
+check: procedure = .void expose failed checks
+  arg condition = .int, name = .string
+  checks = checks + 1
+  if condition then return
+  failed = failed + 1; say 'FAIL|' || name
+  return
+
+uncompressed: procedure = .binary
+  arg image = .binary
+  decoder = .llbinmeta..catalog(image); output = binsubstr(image,1,304)
+  do section = 1 to 6
+    row = 64 + (section - 1) * 40
+    offset = <at..i64>(row + 16) image; extent = <at..i64>(row + 24) image
+    bits = binsubstr(image,offset + 1,extent)
+    if (section = 3 | section = 4) & <at..u32>(row + 4) image = 1 then do
+      bits = decoder.expand(bits,<at..i64>(row + 32) image)
+      <at..u32>(row + 4) output = 0
+    end
+    padding = (8 - <blen>(output) <mod> 8) <mod> 8
+    output = output || x2bin(copies('00',padding))
+    <at..i64>(row + 16) output = <blen>(output)
+    <at..i64>(row + 24) output = <blen>(bits)
+    output = output || bits
+  end
+  <at..i64>(16) output = <blen>(output)
+  return output

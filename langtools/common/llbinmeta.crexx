@@ -278,7 +278,7 @@ catalog: class
     if _error <> '' then return ''
     fields = 0; size = 0
     if kind = 11 | kind = 13 then do; fields = 3; size = 28; end
-    if kind = 12 then do; fields = 3; size = 36; end
+    if kind = 12 then do; fields = 4; size = 36; end
     if kind = 15 then do; fields = 5; size = 36; end
     if kind = 14 | kind = 21 | kind = 22 then do; fields = 2; size = 24; end
     if ordinal < 1 | ordinal > fields then do
@@ -293,6 +293,13 @@ catalog: class
       name = text(_pool[i],<at..u32>(at + 16) _metadata)
       if upper(name) <> upper(owner) then iterate
       if kind = 15 & upper(text(_pool[i],<at..u32>(at + 24) _metadata)) <> upper(member) then iterate
+      if kind = 12 & ordinal = 4 then do
+        index = <at..i64>(at + 28) _metadata
+        if index < -1 | index > 2147483647 then do
+          call fail('attribute register index outside -1..INT_MAX'); return ''
+        end
+        return index as .string
+      end
       return text(_pool[i],<at..u32>(at + 12 + ordinal * 4) _metadata)
     end
     return ''

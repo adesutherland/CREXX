@@ -384,6 +384,42 @@ add_custom_command(OUTPUT "${_services}/metadata-linked.rxbin"
     "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin"
   DEPENDS rxlink "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin" VERBATIM)
 add_custom_target(levell_metadata_fixtures DEPENDS "${_services}/metadata-linked.rxbin")
+set(_attribute_files "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+  "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
+crexx_add_import_root(levell_metadata_attribute_imports
+  DIRECTORY "${_services}/attribute-imports" OUTPUT_VARIABLE _attribute_imports
+  FILES ${_attribute_files} DEPENDS library llbinmeta)
+foreach(_attribute_mode opt noopt)
+  set(_attribute_flags)
+  if(_attribute_mode STREQUAL "noopt")
+    set(_attribute_flags -n)
+  endif()
+  set(_attribute_output "${_services}/attributes-${_attribute_mode}")
+  add_custom_command(OUTPUT "${_attribute_output}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_attribute_flags} -x --no-exe-import
+      -i "${_services}/attribute-imports" -o "${_attribute_output}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-attributes.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_attribute_flags} "${_attribute_output}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_attribute_output}-linked"
+      "${_attribute_output}" ${_attribute_files}
+    DEPENDS rxc rxas rxlink levell_metadata_attribute_imports ${_attribute_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-attributes.crexx" VERBATIM)
+  add_custom_target(levell_metadata_attributes_${_attribute_mode}
+    DEPENDS "${_attribute_output}-linked.rxbin"
+      "${_services}/metadata-definition.rxbin")
+  set(_attribute_vm rxbvm)
+  if(_attribute_mode STREQUAL "noopt" AND TARGET rxtvm)
+    set(_attribute_vm rxtvm)
+  endif()
+  add_test(NAME levell_metadata_attributes_${_attribute_mode}
+    COMMAND $<TARGET_FILE:${_attribute_vm}> "${_attribute_output}-linked.rxbin"
+      -a "${_services}/metadata-definition.rxbin")
+  set_tests_properties(levell_metadata_attributes_${_attribute_mode} PROPERTIES
+    PASS_REGULAR_EXPRESSION "META_ATTRIBUTES[|]checks=[0-9]+[|]failures=0"
+    TIMEOUT 60 LABELS "level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_metadata_attributes_${_attribute_mode}
+    TARGETS levell_metadata_attributes_${_attribute_mode} ${_attribute_vm})
+endforeach()
 set(_service_files "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin"
   "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
