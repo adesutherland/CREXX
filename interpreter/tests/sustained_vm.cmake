@@ -75,14 +75,16 @@ foreach(_engine rxbvm rxtvm)
     "${CMAKE_SOURCE_DIR}/binutils/include" "${CMAKE_SOURCE_DIR}/rxpa"
     "${CMAKE_SOURCE_DIR}/platform" "${CMAKE_SOURCE_DIR}/third_party/avl_tree"
     "${CMAKE_SOURCE_DIR}/third_party/utf8")
-  target_link_libraries(sustained_vm_${_engine} rxvmplugin mc_decimal_manual
-    avl_tree rxpa rxvmref rxbin rxpashim Threads::Threads)
-  crexx_enable_vm_platform(sustained_vm_${_engine})
-  target_link_libraries(sustained_vm_${_engine} ${_sustained_socket_libraries})
+  # Force-loaded providers introduce RXPA references. Keep them before the
+  # support archives so ELF linkers resolve those references in one scan.
   configure_linker_for_static_lib(sustained_vm_${_engine} _sustainedvm)
   # Callable publication uses the existing fs provider. Link its instrumented
   # static owner so no host-dependent provider search can select another DSO.
   configure_linker_for_static_lib(sustained_vm_${_engine} fs)
+  target_link_libraries(sustained_vm_${_engine} rxvmplugin mc_decimal_manual
+    avl_tree rxpa rxvmref rxbin rxpashim Threads::Threads)
+  crexx_enable_vm_platform(sustained_vm_${_engine})
+  target_link_libraries(sustained_vm_${_engine} ${_sustained_socket_libraries})
   if(_engine STREQUAL "rxbvm")
     target_compile_definitions(sustained_vm_${_engine} PRIVATE NTHREADED=1)
   endif()
