@@ -1,0 +1,164 @@
+/*
+ * Simple GLOBALV demonstration with diagnostics.
+ *
+ * The program:
+ *
+ *   1. initialises GLOBALV;
+ *   2. creates a group called DEMO;
+ *   3. stores values in that group;
+ *   4. reads a value back into cREXX;
+ *   5. changes the value through cREXX;
+ *   6. lists the group contents;
+ *   7. lists the available groups.
+ */
+options levelg
+
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+
+namespace globalv_demo
+
+import _rxsysb
+
+main: procedure = .int
+
+  errors = 0
+  i = .int
+
+  say "=== GLOBALV demonstration ==="
+  say
+
+
+  /*
+   * Initialise GLOBALV storage.
+   */
+  address globalv "INIT"
+  say "INIT rc =" rc
+
+  if rc <> 0 then
+    errors = errors + 1
+
+
+  /*
+   * Remove the DEMO group from a previous test run.
+   *
+   * An error here may simply mean that the group did not
+   * exist yet, so this return code is displayed but ignored.
+   */
+  address globalv "SELECT DEMO PURGE"
+  say "PURGE rc =" rc
+  say
+
+
+  /*
+   * Store two values in the DEMO group.
+   *
+   * SETL permits values containing blanks.
+   */
+  address globalv "SELECT DEMO SETL USER Peter"
+  say "SET USER rc =" rc
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  address globalv "SELECT DEMO SETL GREETING Hello from GLOBALV"
+  say "SET GREETING rc =" rc
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  say
+
+
+  /*
+   * Read GREETING from GLOBALV into a cREXX variable.
+   *
+   * The colon connects :greeting with the cREXX variable
+   * named greeting.
+   */
+  greeting = ""
+
+  address globalv "SELECT DEMO GET :greeting"
+
+  say "GET GREETING rc =" rc
+  say "GREETING =" greeting
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  if greeting <> "Hello from GLOBALV" then
+    errors = errors + 1
+
+  say
+
+
+  /*
+   * Change the cREXX variable and write it back to GLOBALV.
+   */
+  greeting = "Hello from cREXX"
+
+  address globalv "SELECT DEMO PUTL :greeting"
+
+  say "PUT GREETING rc =" rc
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  say
+
+
+  /*
+   * Retrieve the complete contents of the DEMO group.
+   */
+  listing = .string[]
+
+  address globalv "SELECT DEMO LIST" output listing
+
+  say "LIST rc =" rc
+  say "Contents of group DEMO:"
+  say "Number of entries =" listing[0]
+
+  do i = 1 to listing[0]
+    say "  " listing[i]
+  end
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  say
+
+
+  /*
+   * Retrieve the names of all existing GLOBALV groups.
+   */
+  groups = .string[]
+
+  address globalv "GRPLIST" output groups
+
+  say "GRPLIST rc =" rc
+  say "Available groups:"
+  say "Number of groups =" groups[0]
+
+  do i = 1 to groups[0]
+    say "  " groups[i]
+  end
+
+  if rc <> 0 then
+    errors = errors + 1
+
+  say
+
+
+  /*
+   * Final result.
+   */
+  if errors <> 0 then do
+    say "GLOBALV demonstration failed:"
+    say "Errors =" errors
+    return 1
+  end
+
+  say "GLOBALV demonstration completed successfully."
+  return 0
+
+
+exit main()
