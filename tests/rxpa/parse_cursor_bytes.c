@@ -39,6 +39,34 @@ int main(void) {
         CHECK(rxvm_parse_text(cursor, &text, &length) == 0 && length == 0);
         rxvm_parse_destroy(cursor);
     }
+    /* Cursor section mode retains the same explicit NUTF8 byte units. */
+    memcpy(huge, plan, sizeof(plan));
+    huge[1] = 3; huge[2] = 12;
+    {
+        unsigned char section[sizeof(plan) + 4];
+        memcpy(section, huge, 8); memset(section + 8, 0, 4);
+        memcpy(section + 12, huge + 8, sizeof(plan) - 8);
+        cursor = rxvm_parse_create(source, sizeof(source), section, sizeof(section), &status);
+        CHECK(cursor && status == 0);
+        if (cursor) {
+            CHECK(rxvm_parse_next(cursor) == RXVM_PARSE_FIELD);
+            CHECK(rxvm_parse_text(cursor, &text, &length) == 0 && length == 2 && !memcmp(text, source, 2));
+            CHECK(rxvm_parse_next(cursor) == RXVM_PARSE_FIELD);
+            CHECK(rxvm_parse_text(cursor, &text, &length) == 0 && length == 1 && text[0] == 'Z');
+            CHECK(rxvm_parse_next(cursor) == RXVM_PARSE_DONE);
+            rxvm_parse_destroy(cursor);
+        }
+        section[24] = 4; memset(section + 26, 255, 8); section[33] = 127;
+        cursor = rxvm_parse_create(source, sizeof(source), section, sizeof(section), &status);
+        CHECK(cursor && status == 0);
+        if (cursor) {
+            CHECK(rxvm_parse_next(cursor) == RXVM_PARSE_FIELD);
+            CHECK(rxvm_parse_text(cursor, &text, &length) == 0 && length == 3 && !memcmp(text, source, 3));
+            CHECK(rxvm_parse_next(cursor) == RXVM_PARSE_FIELD);
+            CHECK(rxvm_parse_text(cursor, &text, &length) == 0 && length == 0);
+            rxvm_parse_destroy(cursor);
+        }
+    }
     printf("PARSE_CURSOR_BYTES|checks=%d|failures=%d\n", checks, failures);
     return failures ? 1 : 0;
 }

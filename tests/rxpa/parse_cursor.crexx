@@ -12,6 +12,7 @@ main: procedure = .int expose checks failures
   call ownership()
   call inputs_and_live_writes()
   call sections()
+  call section_mode()
   call protocols()
   call malformed()
   call conversions()
@@ -23,6 +24,54 @@ check: procedure = .void expose checks failures
   checks = checks + 1
   if passed then return
   failures = failures + 1; say 'FAIL|' || label
+  return
+
+section_mode: procedure = .void
+  single = '50030C0001000100000000000101'x as .binary
+  source = '  raw text  '; plan = single
+  cursor = .rxparse..cursor(source,plan); alias = cursor
+  source = 'changed'; <at..u8>(0) plan = 0
+  call field(cursor,1,1,'  raw text  ')
+  saved = cursor.text(); call alias.close()
+  call check(saved == '  raw text  ' & cursor.item() = 0,'v3 snapshots and alias close')
+  cursor = .rxparse..cursor('',single); call field(cursor,1,1,''); call done(cursor)
+  cursor = .rxparse..cursor('one two three','50030C000400020000000000030001000000000000000101030001000000000000000101'x as .binary)
+  call field(cursor,2,1,'one two three'); call field(cursor,4,2,'one two three'); call done(cursor)
+  cursor = .rxparse..cursor('one two three','50030C0003000200000000000101020000000000000000000101'x as .binary)
+  call field(cursor,1,1,'one two three'); call field(cursor,3,2,''); call done(cursor)
+  cursor = .rxparse..cursor('aa:bb cc','50030C0004000200000000000101020001000000010000003A040001000000000000000101'x as .binary)
+  call field(cursor,1,1,'aa'); call field(cursor,4,2,'bb cc'); call done(cursor)
+  cursor = .rxparse..cursor('a' || ('00'x as .string) || ':b','50030C0003000200000000000101020001000000010000003A0101'x as .binary)
+  call field(cursor,1,1,'a' || ('00'x as .string)); call field(cursor,3,2,'b'); call done(cursor)
+  cursor = .rxparse..cursor('a:b/c','50030C0005000300010000000101070000000101070000000101'x as .binary)
+  call check(cursor.next() = 2 & cursor.item() = 2 & cursor.slot() = 1,'v3 closing Input precedes Field')
+  delimiter = ':'; call cursor.supply(delimiter); delimiter = '/'
+  call field(cursor,1,1,'a')
+  call check(cursor.next() = 2 & cursor.item() = 4 & cursor.slot() = 1,'v3 repeated external slot reads again')
+  call cursor.supply(delimiter)
+  call field(cursor,3,2,'b'); call field(cursor,5,3,'c'); call done(cursor)
+  cursor = .rxparse..cursor('abc','50030C0003000200010000000101070000000101'x as .binary)
+  call check(cursor.next() = 2,'v3 dynamic empty pattern Input')
+  call cursor.supply(''); call field(cursor,1,1,'abc'); call field(cursor,3,2,''); call done(cursor)
+  cursor = .rxparse..cursor('Nleft:right','50030C000600030001000000030001000000000000000101030002000000000000000101070000000101'x as .binary)
+  pool = .rexxpool..RexxVariablePool(1)
+  call pool.setString('KEY','OLD')
+  call pool.setStemString('PATTERNS.','OLD','!')
+  call pool.setStemString('PATTERNS.','N',':')
+  call check(cursor.next() = 1 & cursor.item() = 2,'v3 earlier Field precedes later Input')
+  call pool.setSymbolValue('KEY',.rexxvalue..RexxValue(cursor.text()))
+  call check(cursor.next() = 2 & cursor.item() = 5,'v3 live operand checkpoint')
+  call cursor.supply(pool.symbolValue('PATTERNS.KEY').asString())
+  call field(cursor,4,2,'left'); call field(cursor,6,3,'right'); call done(cursor)
+  cursor = .rxparse..cursor('drop','50030C0001000000000000000100'x as .binary)
+  call check(cursor.next() = 1 & cursor.slot() = 0,'v3 lazy drop Field'); call done(cursor)
+  results = .string[]; results[1] = 'sentinel'; source = 'abc'; caught = 0
+  do
+    assembler parseplan results,source,"50030C0001000100000000000101"x
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1 & results[0] = 1 & results[1] == 'sentinel','whole parseplan refuses v3 before vector mutation')
   return
 
 field: procedure = .void
@@ -259,8 +308,10 @@ malformed: procedure = .void
   return
 
 conversions: procedure = .void
+  do version = 2 to 3
   do mode = 0 to 1
     plan = '50020C000200010001000000080000000101'x as .binary
+    <at..u8>(1) plan = version
     <at..u8>(10) plan = mode
     cursor = .rxparse..cursor('abc',plan)
     call check(cursor.next() = 2 & cursor.item() = 1,'numeric input event')
@@ -286,6 +337,7 @@ conversions: procedure = .void
     call check(caught = 1,'numeric conversion consumes exact operand bytes including NUL')
     call cursor.close()
     plan = '50020C00050002000100000003000100000000000000010103000200000000000000080000000101'x as .binary
+    <at..u8>(1) plan = version
     <at..u8>(10) plan = mode
     cursor = .rxparse..cursor('Nlater',plan)
     call check(cursor.next() = 1 & cursor.item() = 2,'earlier field completes before failing numeric input')
@@ -308,5 +360,6 @@ conversions: procedure = .void
     end
     call check(caught = 1 & cursor.item() = 4,'failure cannot publish a later field')
     call cursor.close()
+  end
   end
   return

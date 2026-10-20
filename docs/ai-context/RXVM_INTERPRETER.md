@@ -2266,7 +2266,9 @@ and TRACE source metadata. There is no runtime textual PARSE executor.
 **Development interface; locally qualified in normal Debug and focused Apple
 ASan. Real platform proof remains open.** The
 built-in VM service `.rxparse..cursor(source=.string, plan=.binary)` exposes the
-same packed v1/v2 kernel incrementally. Both factory arguments are required.
+same packed kernel incrementally: v1/v2 retain their existing contracts, and
+v3 supplies raw section matching for ordered higher-level consumers. Both
+factory arguments are required.
 Native RXPA bindings provide its factory/method dispatch, metadata and resource
 lifetime; parsing belongs to the shared VM kernel. The service is mandatory core
 code, including CLI/embedded and constructorless static registration, rather
@@ -2284,6 +2286,21 @@ again, which acknowledges it. Ignoring a drop requires no text allocation or
 target write. Completion follows the packed descriptor: it is not necessarily
 completion of an authored Classic template section. Higher-level consumers own
 section normalization and ordered visible assignments.
+
+V3 is cursor-only: the `parseplan` opcode refuses it. Its 12-byte header and
+literal/numeric/external payload layouts follow v2, but kind 1 denotes a raw
+section. Kind 6, numeric-overlay flags and captured-reference flags are invalid;
+adjacent section targets are invalid. Source positions are codepoints in UTF8
+builds, and the existing byte units under NUTF8. The kernel tracks the preceding
+match's start/end: relative controls start at the former, ordinary captures at
+the latter. Backward/equal numeric controls capture the suffix before moving;
+an empty or missing pattern consumes the remaining section. Every control,
+including targetless controls, updates this state and requests its dynamic
+operand at the actual transition. Existing v1/v2/direct instruction behavior is
+unchanged. The exact versioned layout/transitions and independent controls are
+documented in the [section contract](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+Word/blank policy and pool/TRACE/source policy remain outside the generic VM
+matcher; Classic consumers reuse their shared B character scanner.
 
 For an Input, `item()` identifies that physical dynamic occurrence and `slot()`
 its 1-based external-operand index. Call `supply(text=.string) -> .void` exactly

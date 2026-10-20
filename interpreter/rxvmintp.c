@@ -526,6 +526,10 @@ static rxvm_parse_diagnostic rxvm_parse_plan_execute(value *result,
     const char *text;
     int status, classic_numeric;
 
+    /* Section-mode v3 belongs only to the incremental cursor. Refuse before
+     * constructing state or changing the whole-opcode result vector. */
+    if (plan->string_len >= 2u && (unsigned char)plan->string[1] == 3u)
+        return rxvm_parse_diagnose(RXVM_PARSE_INVALID, 0);
     cursor = rxvm_parse_create(source->string_value, source->string_length,
                                (const unsigned char *)plan->string,
                                plan->string_len, &status);

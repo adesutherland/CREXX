@@ -1,6 +1,6 @@
-/* cREXX License (MIT). One frozen-PARSE engine for the opcode and cursor.
- * Packed targets, including kind 6 word boundaries, retain their existing
- * semantics. Authored Classic template section policy belongs to consumers. */
+/* cREXX License (MIT). One packed-PARSE engine for the opcode and cursor.
+ * Frozen v1/v2 targets retain their existing word/control semantics. Cursor-
+ * only v3 captures raw sections; consumers still own word/pool policy. */
 #include "rxvmparse.h"
 #include "rxsignal.h"
 #include "rxinteger.h"
@@ -40,7 +40,7 @@ struct rxvm_parse_cursor {
     parse_item *items;
     parse_span *captures;
     size_t count, results, dynamics;
-    int classic_numeric;
+    int classic_numeric, section_mode;
     enum parse_phase phase;
     enum parse_stage stage;
     size_t event_item, event_slot;
@@ -49,6 +49,7 @@ struct rxvm_parse_cursor {
     size_t index, pre, cursor, capture_start, pending_item;
     int pending, pre_started, pre_relative;
     size_t relative_anchor;
+    size_t match_start; /* v3 prior match start; cursor is its end-exclusive. */
     unsigned char shared_kind;
     parse_resolved shared;
     char *shared_owned;
@@ -124,11 +125,12 @@ static int decode_plan(rxvm_parse_cursor *p, size_t length) {
     header = (size_t)read_le(p->plan + 2u, 2u);
     if (version == 1u) {
         if (header != 8u) return RXVM_PARSE_INVALID;
-    } else if (version == 2u) {
+    } else if (version == 2u || version == 3u) {
         if (header != 12u || length < 12u || (p->plan[10] & ~1u) || p->plan[11])
             return RXVM_PARSE_INVALID;
         p->dynamics = (size_t)read_le(p->plan + 8u, 2u);
         p->classic_numeric = (p->plan[10] & 1u) != 0;
+        p->section_mode = version == 3u;
     } else return RXVM_PARSE_INVALID;
     p->count = (size_t)read_le(p->plan + 4u, 2u);
     p->results = (size_t)read_le(p->plan + 6u, 2u);
@@ -137,7 +139,7 @@ static int decode_plan(rxvm_parse_cursor *p, size_t length) {
         p->results > SIZE_MAX / sizeof(*p->captures)) return RXVM_PARSE_RANGE;
     p->items = (parse_item *)calloc(p->count, sizeof(*p->items));
     if (!p->items) return RXVM_PARSE_NOMEM;
-    if (p->results) {
+    if (p->results && !p->section_mode) {
         p->captures = (parse_span *)calloc(p->results, sizeof(*p->captures));
         if (!p->captures) return RXVM_PARSE_NOMEM;
     }
@@ -149,6 +151,7 @@ static int decode_plan(rxvm_parse_cursor *p, size_t length) {
         switch (item->kind) {
         case 1:
             if (item->flags & ~1u) return RXVM_PARSE_INVALID;
+            if (p->section_mode && pending) return RXVM_PARSE_INVALID;
             if (pending && pending_slot) completed = pending_slot;
             pending = 1;
             pending_slot = 0;
@@ -171,16 +174,18 @@ static int decode_plan(rxvm_parse_cursor *p, size_t length) {
         }
         case 3: case 4: case 5:
             if ((item->flags & ~1u) || length - offset < 8u) return RXVM_PARSE_INVALID;
+            if (p->section_mode && item->flags) return RXVM_PARSE_INVALID;
             item->movement = read_le(p->plan + offset, 8u);
             if (item->movement > (uint64_t)RXINTEGER_MAX) return RXVM_PARSE_INVALID;
             offset += 8u;
             break;
         case 6:
-            if (item->flags) return RXVM_PARSE_INVALID;
+            if (item->flags || p->section_mode) return RXVM_PARSE_INVALID;
             break;
         case 7: case 8: case 9: case 10:
-            if (version != 2u || (item->flags & ~1u) || length - offset < 2u)
+            if (version == 1u || (item->flags & ~1u) || length - offset < 2u)
                 return RXVM_PARSE_INVALID;
+            if (p->section_mode && item->flags) return RXVM_PARSE_INVALID;
             item->operand = (unsigned int)read_le(p->plan + offset, 2u);
             offset += 2u;
             if (item->flags) {
@@ -243,7 +248,7 @@ rxvm_parse_cursor *rxvm_parse_create(const char *source, size_t source_length,
         }
         p->offsets[p->source_chars] = source_length;
     }
-    p->phase = P_READY; p->stage = S_SCAN; p->cursor = 1u;
+    p->phase = P_READY; p->stage = S_SCAN; p->cursor = p->match_start = 1u;
     if (status) *status = RXVM_PARSE_DONE;
     return p;
 fail:
@@ -476,7 +481,7 @@ static size_t store_numeric(rxvm_parse_cursor *p, const parse_resolved *item,
 
 static int field_event(rxvm_parse_cursor *p, parse_span field) {
     size_t slot = p->items[p->pending_item].slot;
-    if (slot) p->captures[slot - 1u] = field;
+    if (slot && p->captures) p->captures[slot - 1u] = field;
     p->field = field;
     p->event_item = p->pending_item + 1u;
     p->event_slot = slot;
@@ -538,6 +543,49 @@ static int apply_pre(rxvm_parse_cursor *p) {
     return RXVM_PARSE_DONE;
 }
 
+/* Raw section mode applies every control once, including targetless controls.
+ * It shares validation, live operand resolution, search, movement and spans
+ * with the frozen path; only the versioned transition rules differ. */
+static int next_section(rxvm_parse_cursor *p) {
+    parse_resolved item;
+    parse_span field;
+    size_t first, position, end = p->source_chars + 1u;
+    int status;
+    for (;;) {
+        if (p->index == p->count) {
+            if (p->pending) {
+                field = span(p, p->cursor, end - p->cursor);
+                return field_event(p, field);
+            }
+            p->phase = P_DONE;
+            return RXVM_PARSE_DONE;
+        }
+        if (p->items[p->index].kind == 1u) {
+            p->pending_item = p->index++;
+            p->pending = 1;
+            continue;
+        }
+        status = resolve(p, p->index, &item);
+        if (status) return status;
+        first = item.kind == 4u || item.kind == 5u ? p->match_start : p->cursor;
+        if (item.kind == 2u) {
+            position = item.bytes ? find_literal(p, p->cursor, &item) : 0u;
+            if (p->pending) field = span(p, first, (position ? position : end) - first);
+            if (position) {
+                p->match_start = position;
+                p->cursor = position + item.chars;
+            } else p->match_start = p->cursor = end;
+        } else {
+            position = move_cursor(p, p->match_start, &item);
+            if (p->pending) field = span(p, first, position > first ? position - first : end - first);
+            p->match_start = p->cursor = position;
+        }
+        release_input(p);
+        ++p->index;
+        if (p->pending) return field_event(p, field);
+    }
+}
+
 int rxvm_parse_next(rxvm_parse_cursor *p) {
     parse_resolved item;
     parse_span field;
@@ -547,6 +595,7 @@ int rxvm_parse_next(rxvm_parse_cursor *p) {
     if (p->phase != P_READY && p->phase != P_FIELD) return rxvm_parse_fail(p, RXVM_PARSE_INVALID);
     p->phase = P_READY;
     p->event_item = p->event_slot = 0;
+    if (p->section_mode) return next_section(p);
     for (;;) {
         switch (p->stage) {
         case S_SCAN:
