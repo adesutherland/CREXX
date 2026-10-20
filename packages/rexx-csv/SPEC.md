@@ -287,7 +287,7 @@ It is not a dependency or source input for this shared Classic implementation.
 
 ### NetRexx — approved D-05 interface
 
-**Approved and implemented 20 October 2026; macOS qualification is in PLAN.md.** Use the
+**Approved and implemented 20 October 2026; qualification is in PLAN.md.** Use the
 JVM package `rexxcsv`, with four public final classes: `Csv`, `CsvRow`,
 `CsvDocument` and `CsvOutput`. Source belongs under `netrexx/rexxcsv/`.
 `Csv` is a utility class with static factories. Row/result construction is
@@ -410,10 +410,11 @@ no external CSV parser, Java CSV implementation, native plugin or JSON runtime
 dependency is introduced. The existing hand-authored fixtures remain the oracle.
 
 The qualified development baseline is NetRexx 5.10-GA and Temurin JDK
-26.0.1+8 on macOS ARM64. Fresh compiled consumers use class-file version 52;
+26.0.1+8 on macOS ARM64, Ubuntu 24.04 x64 and Windows 2025 x64.
+Fresh compiled consumers use class-file version 52;
 that alone does not qualify an older JVM. The implementation uses Java 8-era
 library APIs; actual tested compiler/JVM versions are declared in the plan.
-Older JVMs and Linux/Windows remain unverified. Source compilation uses
+Older JVMs remain unverified. Source compilation uses
 `NetRexxF.jar`; the installed application check runs with only the compiled
 application/package and `NetRexxR.jar`. No compiler JAR is a runtime requirement
 for a precompiled consumer.
@@ -432,10 +433,12 @@ lifecycle cases. Runtime adapters are test tooling, not shipped dependencies.
 Expected results come from the approved contract, not majority voting among
 implementations or whichever existing parser accepts an input.
 
-Plan one logical package, `rexx-csv`, with a common version and separate
-source artifacts for cREXX, Classic and NetRexx. Proposed rexxpository labels
-are `SOURCE/crexx`, `SOURCE/any` and `SOURCE/netrexx`, subject to actual selection
-tests. Include Markdown documentation, license and runnable examples in each
+One logical package, `rexx-csv`, has a common version and separate source
+artifacts for cREXX, Classic and NetRexx. Current rexxpository clients select
+`SOURCE/crexx`, `SOURCE/any` (Regina/ooRexx) and `SOURCE/netrexx`, respectively.
+Archives contain top-level regular files only; the NetRexx guide restores the
+`rexxcsv/` source directory before compilation. Public package/class names do
+not change. Include Markdown documentation, license and runnable examples in each
 artifact. Every upload must list its qualified bindings and operating systems
 explicitly; unverified bindings/platforms remain planned. All package uploads
 need separate authorization.

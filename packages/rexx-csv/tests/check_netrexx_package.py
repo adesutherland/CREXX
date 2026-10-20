@@ -4,6 +4,7 @@ import argparse
 import os
 from pathlib import Path
 import runpy
+import shutil
 import sys
 import tarfile
 import tempfile
@@ -24,13 +25,20 @@ def check(tools):
         installed.mkdir()
         with tarfile.open(artifact) as archive:
             names = [m.name for m in archive.getmembers()]
-            assert set(names) == {'rexxcsv/Csv.nrx', 'rexxcsv/CsvRow.nrx',
-                                  'rexxcsv/CsvDocument.nrx', 'rexxcsv/CsvOutput.nrx',
+            assert set(names) == {'Csv.nrx', 'CsvRow.nrx',
+                                  'CsvDocument.nrx', 'CsvOutput.nrx',
                                   'NetRexxDemo.nrx', 'rexx-csv-README.md',
                                   'rexx-csv-SPEC.md', 'rexx-csv-LICENSE.txt'}
-            assert all(m.isfile() and m.mode == 0o644 for m in archive.getmembers())
+            assert all(m.isfile() and '/' not in m.name and m.mode == 0o644
+                       for m in archive.getmembers())
             archive.extractall(installed, filter='data')
-        sources = [Path(name) for name in names if name.endswith('.nrx')]
+        # Execute the guide's layout step: mkdir rexxcsv; cp Csv*.nrx rexxcsv/.
+        # Compile from those copies with the unchanged -sourcedir command.
+        (installed / 'rexxcsv').mkdir()
+        for name in ('Csv.nrx', 'CsvRow.nrx', 'CsvDocument.nrx', 'CsvOutput.nrx'):
+            shutil.copyfile(installed / name, installed / 'rexxcsv' / name)
+        sources = [Path('rexxcsv') / name for name in names if name.startswith('Csv')]
+        sources.append(Path('NetRexxDemo.nrx'))
         readme = (installed / 'rexx-csv-README.md').read_text(encoding='utf-8')
         snippet = readme.split('```netrexx\n', 1)[1].split('```', 1)[0]
         (installed / 'Usage.nrx').write_text(snippet, encoding='utf-8')

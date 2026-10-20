@@ -1,6 +1,13 @@
 # rexx-csv 0.1.0 — cREXX source package
 
-This is an unpublished first cREXX implementation. It requires the complete
+Install the cREXX source binding of
+[rexx-csv](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=PKG&name=rexx-csv):
+
+```sh
+rxpip-crexx install rexx-csv==0.1.0
+```
+
+The client selects `SOURCE/crexx`. It requires the complete
 cREXX Beta 3 core or a compatible later toolchain. No extra plugin, Python or
 JSON library is needed by the installed source.
 
@@ -39,8 +46,15 @@ See [the full contract](rexx-csv-SPEC.md) for the exact format, BOM handling,
 recoverable errors, resource limits and invalid-index signals. The library
 handles text only; callers own files and encoding selection.
 The [MIT license](rexx-csv-LICENSE.txt) covers this package's original source
-and documentation. Separate Regina/ooRexx and NetRexx source bindings are also qualified on
-macOS; this archive contains the cREXX binding.
+and documentation. Separate Regina/ooRexx and NetRexx source bindings share
+the same package/version; each client selects its own binding.
+
+Qualified on macOS ARM64, Ubuntu 24.04 x64 and Windows 2025 x64 with the
+released cREXX Beta 3 toolchain. All 71 common fixtures, boundary/lifecycle
+checks and fresh installed consumers passed. The
+[Linux/Windows run](https://github.com/adesutherland/CREXX/actions/runs/39443274327)
+records the exact versions and source revision. Linux/macOS exercise both VMs
+with compiler/assembler optimization on and off; Windows uses the MSVC `rxbvm`.
 
 On Windows Beta 3, use ASCII command-line filenames (spaces are supported).
 Its native CLI does not preserve Ω filenames; this is separate from Unicode

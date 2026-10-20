@@ -1,26 +1,43 @@
 # rexx-csv 0.1.0 — NetRexx source package
 
-A pure NetRexx CSV parser/writer. MIT licensed. Qualified on macOS ARM64 with
+A pure NetRexx CSV parser/writer. MIT licensed. Qualified on macOS ARM64,
+Ubuntu 24.04 x64 and Windows 2025 x64 with
 NetRexx 5.10-GA (build 18-20260320-1410) and Temurin JDK 26.0.1+8.
-Other JVM versions remain unqualified. Linux/Windows results for each exact
-revision are recorded by [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml). Class-file target 52
+All 71 common fixtures, boundary/lifecycle checks and fresh installed consumers
+passed. Other JVM versions remain unqualified. The
+[Linux/Windows run](https://github.com/adesutherland/CREXX/actions/runs/39443274327)
+records the exact versions and source revision. Class-file target 52
 alone does not prove Java 8 compatibility. No native plugin, third-party CSV
 parser, JSON or Python runtime dependency is needed.
 
-Extract the archive, preserving the `rexxcsv/` directory. From the extracted
-root, compile the four library sources and the example using your NetRexx SDK:
+Install [rexx-csv](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=PKG&name=rexx-csv):
+
+```sh
+rxpip-netrexx install rexx-csv==0.1.0
+```
+
+The client selects `SOURCE/netrexx`. Rexxpository requires flat archives, so
+the four library sources initially sit beside the example and guides. From
+the installed directory, copy them into their Java package directory before
+compiling with your NetRexx SDK:
 
 ```sh
 CSV_NETREXX_HOME="/path/to/netrexx"
+mkdir -p rexxcsv
+cp Csv.nrx CsvRow.nrx CsvDocument.nrx CsvOutput.nrx rexxcsv/
 java -cp "$CSV_NETREXX_HOME/lib/NetRexxF.jar" org.netrexx.process.NetRexxC rexxcsv/Csv.nrx rexxcsv/CsvRow.nrx rexxcsv/CsvDocument.nrx rexxcsv/CsvOutput.nrx NetRexxDemo.nrx -ecj -utf8 -sourcedir -nologo -verbose0
 java -cp ".:$CSV_NETREXX_HOME/runlib/NetRexxR.jar" NetRexxDemo
 java -cp ".:$CSV_NETREXX_HOME/runlib/NetRexxR.jar" NetRexxDemo "input file.csv" "output file.csv"
 ```
 
-These commands are for the qualified macOS environment. The bundled compiler
+These shell commands apply on macOS/Linux. In Windows `cmd.exe`, use
+`mkdir rexxcsv` followed by `copy Csv*.nrx rexxcsv\`, set the SDK path with
+`set CSV_NETREXX_HOME=C:\path\to\netrexx`, and use `%CSV_NETREXX_HOME%`
+instead of `$CSV_NETREXX_HOME`. Use `;` instead of `:` between classpath entries.
+The bundled compiler
 is selected by `-ecj`; `-utf8` preserves source literals and `-sourcedir` puts
-classes beside their sources in the package directory. Keep the compiled
-`rexxcsv/` directory on the application classpath. After compilation only your
+classes beside their sources in the package directory. Keep the parent of the
+compiled `rexxcsv/` directory on the application classpath (`.` above). After compilation only your
 classes and `NetRexxR.jar` are on the example's dependency classpath; the compiler
 JAR, SDK example classes and checkout are absent. A source install needs a JDK
 and the NetRexx compiler; a precompiled consumer needs its declared JVM/runtime.
@@ -79,8 +96,8 @@ not determine these limits. Failures expose no partial rows/text. Every valid
 canonical output can be parsed back under the same limits.
 
 See `rexx-csv-SPEC.md` for the approved complete API, Unicode and error precedence.
-This local source archive is unpublished. Live rexxpository selection/metadata
-and upload require their separate checks/authorization.
+The same package/version also supplies cREXX and shared Regina/ooRexx source
+artifacts; their clients select those bindings instead.
 
 On the tested Windows runner, use ASCII command-line filenames (spaces work).
 The Java launcher loses Ω in argv on its native code page; this is separate

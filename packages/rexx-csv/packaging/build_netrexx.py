@@ -10,7 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def build(destination):
-    members = {p.relative_to(ROOT / 'netrexx').as_posix(): p
+    # rexxpository accepts top-level regular files only. The installed guide
+    # restores the Java package directory before source compilation.
+    members = {p.name: p
                for p in sorted((ROOT / 'netrexx/rexxcsv').glob('*.nrx'))}
     members.update({
         'NetRexxDemo.nrx': ROOT / 'examples/NetRexxDemo.nrx',
@@ -24,9 +26,9 @@ def build(destination):
                 for name, source in sorted(members.items()):
                     data = source.read_bytes()
                     if name.endswith('.nrx'):
-                        if name.startswith('rexxcsv/'):
-                            data = data.replace(b'../../LICENSE', b'../rexx-csv-LICENSE.txt')
-                            data = data.replace(b'../../SPEC.md', b'../rexx-csv-SPEC.md')
+                        if source.parent.name == 'rexxcsv':
+                            data = data.replace(b'../../LICENSE', b'rexx-csv-LICENSE.txt')
+                            data = data.replace(b'../../SPEC.md', b'rexx-csv-SPEC.md')
                         else:
                             data = data.replace(b'../LICENSE', b'rexx-csv-LICENSE.txt')
                     info = tarfile.TarInfo(name)

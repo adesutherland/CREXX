@@ -1,10 +1,13 @@
 # rexx-csv — shared package plan
 
-Status: **cREXX, Classic and NetRexx implementation/macOS qualification
-complete, 20 October 2026.** All four actual runtimes pass their shared-oracle,
-boundary and installed-consumer checks at the versions recorded below.
-Linux/Windows results belong to the focused hosted gate described below.
-Untested JVMs and live rexxpository integration/publication remain open. Adrian approved D-05 before NetRexx implementation.
+Status: **rexx-csv 0.1.0 published for all four runtimes, 20 October 2026.**
+The cREXX, shared Regina/ooRexx and NetRexx source artifacts are public under
+one package/version. All four runtimes pass the shared fixtures, boundary and
+installed-consumer checks on macOS ARM64, Ubuntu 24.04 x64 and Windows 2025 x64
+at the recorded versions. Anonymous live client selection/install and downloaded
+examples pass on all four actual runtimes. The RexxLA announcement is saved as
+an unsent new-thread draft for Adrian to send. Older runtimes/JVMs remain
+unqualified; Windows CLI filename limits are documented.
 This is the authoritative scope and acceptance record. `SPEC.md` defines the
 approved shared behaviour; `tests/fixtures/` owns the common, hand-authored test data.
 
@@ -26,12 +29,12 @@ delimiters, header mapping, schema/type conversion and spreadsheet-specific
 transformations are later possibilities, outside the first version.
 No compiler, VM, ISA, native ABI or core-library changes are planned.
 
-The eventual portability target is macOS, Linux and Windows for every runtime
-family. This is a proposed qualification scope, not a claim of existing support.
-A cREXX-only increment can finish independently, with the other runtime and
-platform criteria remaining open. Publication and any narrower supported matrix
-require an explicit decision; an unavailable test machine does not count as a
-pass or silently reduce the objective.
+The first published increment covers macOS ARM64, Linux x64 and Windows x64
+for every runtime family, at the recorded versions. The complete requested
+matrix has passed; older runtime/JVM versions have no qualification claim.
+Windows examples require ASCII command-line paths while preserving Unicode CSV
+contents. Phase results below retain their original scope and do not substitute
+for the final matrix and live publication checks.
 
 ## Repository home
 
@@ -67,8 +70,8 @@ There is one authoritative copy.
 | D-03 | Start with a pure Level B cREXX binding using result objects and row objects; keep file I/O outside the parser. | Approved 20 October 2026; concrete signatures recorded in SPEC.md before implementation. |
 | D-04 | Use one portable Classic implementation for Regina and ooRexx. Evaluate the value-result interface described in `SPEC.md`; do not depend on arbitrary caller-stem mutation. | Boundary proof passed; Adrian approved the concrete SPEC.md API on 20 October 2026. |
 | D-05 | Use a separate NetRexx binding with the same semantic operations. Concrete proposal: `rexxcsv.Csv` factories and immutable typed row/document/output objects, as specified in SPEC.md. | Concrete SPEC.md API approved by Adrian on 20 October 2026; implementation authorized. |
-| D-06 | Package our own source under MIT, retaining actual authorship; do not copy ooRexx `csvStream.cls` into this package. | Original cREXX/Classic/NetRexx source and MIT notices checked in all three local artifacts; no external CSV source copied. Recheck final distribution. |
-| D-07 | Aim for the full platform matrix below; qualify and describe each shipped increment explicitly. | Agree the supported matrix and publication content before upload. |
+| D-06 | Package our own source under MIT, retaining actual authorship; do not copy ooRexx `csvStream.cls` into this package. | Original cREXX/Classic/NetRexx source and MIT notices checked in all three published artifacts; no external CSV source copied. |
+| D-07 | Ship the full three-OS/four-runtime matrix at the versions recorded below; qualify and describe each shipped increment explicitly. | Adrian authorized packaging/upload for all four runtimes and an unsent RexxLA announcement on 20 October 2026. The complete eight-cell hosted gate passed at b385de977; older runtime/JVM versions remain unqualified. |
 | D-08 | Align the parser input and writer output byte limits so every successful write can be parsed back. Use 16 MiB for both, correcting the original 8/16 MiB mismatch. | Approved 20 October 2026: 16 MiB for both. Qualified in all eight cREXX configurations and on Regina, ooRexx and NetRexx below. |
 
 The installed ooRexx distribution already includes `csvStream.cls`, a
@@ -80,24 +83,23 @@ ooRexx lacks CSV support. Its source and license are separate from this proposal
 
 ## Numbered acceptance criteria
 
-All four runtime bindings are verified on their recorded macOS versions.
-The focused hosted gate below owns Linux/Windows results. Untested JVMs and
-live integration remain open; local
-success is not a portability or rexxpository publication claim. Evidence is summarized below.
+All applicable AC-01–AC-11 criteria are complete for the recorded first-version
+matrix and authorized upload/draft scope. See the final publication section for
+live metadata, archive identities, exact consumer checks and remaining limits.
 
 | ID | Observable pass condition | Verification | Status |
 | --- | --- | --- | --- |
 | AC-01 | Placement, first-version behaviour and cREXX public signatures are approved and recorded. Later binding decisions retain their gates. | Adrian approved the plan and cREXX start on 20 October 2026; concrete binding recorded before implementation. | Complete for cREXX, Classic and NetRexx API approval |
-| AC-02 | Every parser fixture produces exactly the stated rows or diagnostic on every delivered binding. Strings retain empty values, whitespace, leading zeros and Unicode. | Common fixtures through independent runtime adapters; byte-preserving fixture transport. | cREXX, Regina, ooRexx and NetRexx passed on macOS |
-| AC-03 | Every writer fixture produces the stated canonical text. For valid tables, parsing written text returns the same cells, including an initial BOM as data. | Writer fixtures and round trips; compare UTF-8 bytes with explicit CRLF. | All four runtimes passed on macOS, including 16 MiB |
-| AC-04 | Errors are atomic and recoverable; limits, coordinates and result lifetimes match the contract. Independent results survive later calls and caller mutation. | Negative/boundary fixtures; success–failure–success, independent-result and input-mutation tests in each binding. | cREXX, Regina, ooRexx and NetRexx passed on macOS |
-| AC-05 | The source-only cREXX package works with its declared minimum released toolchain and the selected current product, without unreleased features or extra plugins. | Build a real consumer through `rxc`, `rxas`, `rxlink`, `rxvm`; focused optimized/unoptimized tests, both concrete VMs where supported. Inspect representative RXAS and helper copying. Record exact tool/library versions. | Passed on macOS |
-| AC-06 | One Classic source passes on both actual Regina and actual ooRexx with its approved interface. | Separate executable paths, version checks, complete common fixtures and caller integration tests; neither runtime stands in for the other. | Passed on macOS |
-| AC-07 | The NetRexx source compiles and passes the same fixtures with documented JVM/compiler requirements. | Fresh compilation and execution using the declared NetRexx runtime JARs; Unicode and newline transport checks. | Passed on macOS: NetRexx 5.10-GA / Temurin JDK 26.0.1+8 |
-| AC-08 | Each supported runtime/OS cell below has a conformance and documented example run, including paths containing spaces. Unsupported or unavailable cells remain visible. | Per-cell commands, versions, source identity and concise outcomes in this plan; no inferred cross-platform passes. | macOS passed; Linux/Windows require the hosted gate below; other JVMs open |
-| AC-09 | Each source artifact installs into a fresh target, includes its docs/license/examples and runs without the checkout or test tooling. Package selection chooses the correct binding. | Clean local rexxpository artifact/install tests, including the `SOURCE/any` Classic selection on Regina and ooRexx. Verify actual current client/server selection rules before final metadata. | All three source archive/install checks passed locally; client/server selection open |
-| AC-10 | The package has concise usage, encoding, error, limit, compatibility and license documentation, with an exact validation summary. | Review examples against installed artifacts; no stale commands or unsupported portability claims. | All delivered bindings documented with exact macOS qualification |
-| AC-11 | Any public upload or announcement has separate explicit authorization and describes only the qualified increment. | Review the artifact/metadata and proposed announcement before that action. | Open |
+| AC-02 | Every parser fixture produces exactly the stated rows or diagnostic on every delivered binding. Strings retain empty values, whitespace, leading zeros and Unicode. | Common fixtures through independent runtime adapters; byte-preserving fixture transport. | All four runtimes passed on all three qualified platforms |
+| AC-03 | Every writer fixture produces the stated canonical text. For valid tables, parsing written text returns the same cells, including an initial BOM as data. | Writer fixtures and round trips; compare UTF-8 bytes with explicit CRLF. | All four runtimes passed on all three qualified platforms, including 16 MiB |
+| AC-04 | Errors are atomic and recoverable; limits, coordinates and result lifetimes match the contract. Independent results survive later calls and caller mutation. | Negative/boundary fixtures; success–failure–success, independent-result and input-mutation tests in each binding. | All four runtimes passed on all three qualified platforms |
+| AC-05 | The source-only cREXX package works with its declared minimum released toolchain and the selected current product, without unreleased features or extra plugins. | Build a real consumer through `rxc`, `rxas`, `rxlink`, `rxvm`; focused optimized/unoptimized tests, both concrete VMs where supported. Inspect representative RXAS and helper copying. Record exact tool/library versions. | Passed on all three qualified platforms |
+| AC-06 | One Classic source passes on both actual Regina and actual ooRexx with its approved interface. | Separate executable paths, version checks, complete common fixtures and caller integration tests; neither runtime stands in for the other. | Passed on all three qualified platforms |
+| AC-07 | The NetRexx source compiles and passes the same fixtures with documented JVM/compiler requirements. | Fresh compilation and execution using the declared NetRexx runtime JARs; Unicode and newline transport checks. | Passed on all three qualified platforms: NetRexx 5.10-GA / Temurin JDK 26.0.1+8 |
+| AC-08 | Each supported runtime/OS cell below has a conformance and documented example run, including paths containing spaces. Unsupported or unavailable cells remain visible. | Per-cell commands, versions, source identity and concise outcomes in this plan; no inferred cross-platform passes. | Complete for the recorded three-OS/four-runtime matrix; older runtime/JVM versions unqualified |
+| AC-09 | Each source artifact installs into a fresh target, includes its docs/license/examples and runs without the checkout or test tooling. Package selection chooses the correct binding. | Clean local rexxpository artifact/install tests, including the `SOURCE/any` Classic selection on Regina and ooRexx. Verify actual current client/server selection rules before final metadata. | Complete: all three public archives and actual anonymous client installs/consumers on all four runtimes |
+| AC-10 | The package has concise usage, encoding, error, limit, compatibility and license documentation, with an exact validation summary. | Review examples against installed artifacts; no stale commands or unsupported portability claims. | Complete: published guides/specification, installation commands, exact matrix and Windows filename limits |
+| AC-11 | Any public upload or announcement has separate explicit authorization and describes only the qualified increment. | Review artifact/metadata against the qualified scope; verify public uploads and save the announcement as an unsent draft. | Complete: upload and draft explicitly authorized and verified; announcement remains unsent for Adrian. |
 
 ## Numbered implementation steps
 
@@ -110,9 +112,9 @@ success is not a portability or rexxpository publication claim. Evidence is summ
 | STEP-05 | Specify and prove the Classic value-result call boundary on Regina and ooRexx, including external procedure scope and large-result copying. Present the concrete interface for D-04 review. Depends on the approved shared contract; can follow the first cREXX increment. | AC-01, AC-04, AC-06 | Complete; boundary proof and API approved. |
 | STEP-06 | Implement the single Classic binding and run all common fixtures independently under both runtimes. Depends on STEP-05 and its interface approval. | AC-02–AC-04, AC-06, AC-10 | Complete on macOS; full fixtures, contracts and local installation passed |
 | STEP-07 | Document and review the NetRexx interface, implement it and qualify compiler/JVM integration. Depends on the shared contract and D-05 review. | AC-01–AC-04, AC-07, AC-10 | Complete on macOS; approved API, fixtures, contracts and fresh installation passed |
-| STEP-08 | Complete or explicitly revise the proposed OS matrix; keep every unverified cell open until then. Depends on the relevant binding steps. | AC-08 | macOS passed; Linux/Windows use the hosted gate below; untested JVMs open |
-| STEP-09 | Build binding-specific source artifacts under one logical package/version; verify selection, fresh installation and examples. Final metadata follows observed rexxpository capabilities, without introducing a native package dependency. Depends on the binding being shipped. | AC-09, AC-10 | All three source artifacts/install checks complete locally; live selection/integration open |
-| STEP-10 | Present the exact qualified increment, artifacts and publication text; request upload authorization only when concrete and reviewable. Depends on its applicable criteria passing. | AC-11 | Not started |
+| STEP-08 | Complete or explicitly revise the proposed OS matrix; keep every unverified cell open until then. Depends on the relevant binding steps. | AC-08 | Complete for the recorded versions; older runtimes/JVMs unqualified |
+| STEP-09 | Build binding-specific source artifacts under one logical package/version; verify selection, fresh installation and examples. Final metadata follows observed rexxpository capabilities, without introducing a native package dependency. Depends on the binding being shipped. | AC-09, AC-10 | Complete: three published source artifacts, actual live client selection and fresh consumers on all four runtimes |
+| STEP-10 | Publish the explicitly authorized, qualified increment and prepare the RexxLA announcement for Adrian to send. Depends on STEP-09 and its applicable criteria passing. | AC-11 | Complete: public upload and unsent new-thread announcement draft |
 
 The cREXX phase ends after its applicable fixture, toolchain, lifecycle and
 installation checks. Overall delivery also requires Classic and NetRexx
@@ -122,19 +124,19 @@ sufficient for this draft/implementation scope; native repairs or actual
 sanitizer findings follow repository policy if encountered. Do not dispatch
 deep assurance or rerun broad unchanged checks simply to review these documents.
 
-## Proposed platform qualification matrix
+## Qualified platform matrix
 
-All cells describe rexx-csv, not general runtime availability. A **Hosted gate**
-cell is qualified only by a successful matching job in
+All cells describe rexx-csv at the recorded versions. Hosted cells are verified
+by the successful matching jobs in
 [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml)
 for the revision being assessed; the job summary records its exact identity.
 
 | Binding/runtime | macOS | Linux | Windows |
 | --- | --- | --- | --- |
-| cREXX Level B | Passed locally | Hosted gate | Hosted gate |
-| Classic / Regina | Passed locally | Hosted gate | Hosted gate |
-| Classic / ooRexx | Passed locally | Hosted gate | Hosted gate |
-| NetRexx / JVM | Passed locally (5.10-GA / JDK 26.0.1) | Hosted gate | Hosted gate |
+| cREXX Level B | Passed locally | Passed: Ubuntu 24.04 x64 | Passed: Windows 2025 x64 |
+| Classic / Regina | Passed locally | Passed: Ubuntu 24.04 x64 | Passed: Windows 2025 x64 |
+| Classic / ooRexx | Passed locally | Passed: Ubuntu 24.04 x64 | Passed: Windows 2025 x64 |
+| NetRexx / JVM | Passed locally (5.10-GA / JDK 26.0.1) | Passed: Ubuntu 24.04 x64 | Passed: Windows 2025 x64 |
 
 The qualified minimum cREXX baseline for the first increment is the published
 `v1.0.0-beta.3` toolchain. Its remote tag, release notes and complete isolated
@@ -173,9 +175,12 @@ source/API requirements and qualification, rather than merely from availability.
   Expected results were hand-authored first; Python is not the contract oracle.
   The byte arithmetic for L002, L006 and L008 also passed an independent check.
 - Draft preparation preceded implementation. Current functional and packaging
-  qualification is recorded below; no public upload or announcement has occurred.
+  qualification is recorded below. At that checkpoint no public upload or
+  announcement had occurred; publication is now recorded at the end.
 
-Next phases: complete the remaining OS/JVM matrix and live rexxpository integration. Public upload remains a separate authorized action.
+The initial preparation above preceded implementation. The final matrix and
+explicitly authorized live publication are complete as recorded at the end;
+older runtime/JVM versions remain unqualified.
 
 ## Contract finding and approved repair
 
@@ -499,7 +504,7 @@ actual run, not by workflow preparation. Extra JVM versions remain open.
 | STEP-08.1 | Pin official runtime assets and versions; inspect platform launchers and make harness execution portable without changing the CSV oracle. | AC-02–AC-08 | Complete: assets downloaded/checksummed; executable suffix/VM selection repaired |
 | STEP-08.2 | Add a focused eight-cell GitHub Actions matrix with full fixture/contracts and fresh source-install checks. Use generous hang-protection limits and independent runtime jobs. Depends on STEP-08.1. | AC-02–AC-10 | Workflow implemented; actual success requires hosted runs |
 | STEP-08.3 | Validate changed harness paths locally, review/stage CSV-only work, commit and push hotfix2. Preserve unrelated Lotto work. Depends on STEP-08.2. | AC-08, AC-10 | Complete: initial publication 1c41e219e; substantive hosted repairs follow |
-| STEP-08.4 | Run the matrix on the pushed revision, inspect failures and repair their actual causes. Claim each cell only after observed success, with the hosted run providing the result and logs. | AC-02–AC-10 | Hosted gate in progress; findings/repairs below |
+| STEP-08.4 | Run the matrix on the pushed revision, inspect failures and repair their actual causes. Claim each cell only after observed success, with the hosted run providing the result and logs. | AC-02–AC-10 | Complete: all eight jobs passed at b385de977; final run linked below |
 
 Publication preparation: this is a source-library increment with unchanged
 native inputs. Prior product build and macOS proofs above are reused. Only the
@@ -681,3 +686,123 @@ repair, and the final ASCII-only path retains the previously qualified scan.
 Next hosted check is Windows Regina fields, followed by full Classic platform
 gates. The cREXX/NetRexx library, fixtures, harnesses and runtime pins are unchanged,
 so their successful hosted cells remain valid.
+
+
+## Live publication (STEP-09 / STEP-10)
+
+Adrian explicitly requested packaging/upload of rexx-csv for all four runtimes
+and a RexxLA announcement draft for him to send on 20 October 2026. The intended
+outcome is one public **rexx-csv 0.1.0** package with three source artifacts:
+`SOURCE/crexx`, `SOURCE/any` (shared Regina/ooRexx), and `SOURCE/netrexx`.
+Actual client 1.2.0 selection code and current upstream server source confirm
+those tags. Preflight found the name unused and the saved login identified as
+`adriansutherland`. No native, runtime, SDK or third-party parser is bundled.
+Version metadata: author Adrian Sutherland; MIT source; summary describing all
+four runtimes; empty package dependencies (host toolchains remain prerequisites).
+The first artifact fixes version metadata, and existing artifacts are immutable.
+
+The [complete hosted run](https://github.com/adesutherland/CREXX/actions/runs/39443274327)
+at `b385de977af6a41a4a1afebeab3968cbba0e5cad` passed every Linux/Windows
+cell, including all common fixtures, boundaries and installed consumers.
+This closes STEP-08 for the agreed recorded versions. Publication reuses those
+unchanged library/fixture results; it adds focused packaging and actual live
+client/consumer checks, rather than another full correctness campaign.
+
+CSV-09: the server accepts only top-level regular files. The prior unpublished
+NetRexx archive has nested `rexxcsv/` members and cannot be uploaded. Flatten
+its four source members for distribution, document copying them to `rexxcsv/`
+before the existing `-sourcedir` compilation, and update the fresh consumer
+check. Public class/package names and executable source remain unchanged.
+This is a distribution-layout adjustment, not an API change.
+
+| ID | Work / acceptance | Serves | Status |
+| --- | --- | --- | --- |
+| STEP-09.1 | Verify current tags, name availability, account, immutable metadata and accepted archive layout from owning client/server code. | AC-09, AC-11 | Complete; CSV-09 above |
+| STEP-09.2 | Prepare shipped guides and flat deterministic source archives; run focused fresh consumers, including the changed NetRexx layout and documented snippets. | AC-09, AC-10 | Complete |
+| STEP-09.3 | Upload all three artifacts with identical version metadata using the authorized account; verify public page/metadata/download hashes and actual client selection/install on all four runtimes. Run the installed examples with exact Unicode CSV bytes and error/output-preservation checks. | AC-09–AC-11 | Complete |
+| STEP-10.1 | Save a new-thread RexxLA announcement with actual package link, installation commands, qualified scope, authorship/license and material limits; verify it remains unsent. | AC-10, AC-11 | Complete: draft saved and verified unsent; Adrian will send |
+| STEP-10.2 | Fold publication results into this plan and current usage docs; publish CSV-only source/documentation changes in hotfix2 while preserving unrelated Lotto work. | AC-10, AC-11 | Complete in this substantive CSV publication change; remote commit result is reported in conversation |
+
+
+### Final qualification and publication result
+
+CSV-08 is closed: the final complete hosted run above passed all eight cells at
+`b385de977`, including every Classic group after the bounded UTF-8 repair.
+The Windows Regina expanded field group completed in 16.8s (diagnostic elapsed
+time, not a formal performance claim). Local final Regina count checks also
+passed. No assertion, common fixture or resource limit was removed.
+
+CSV-09 is closed: `build_netrexx.py` now emits eight flat regular files, and
+`check_netrexx_package.py` checks that layout and restores the source package
+directory before the original compilation. The fresh compile, README/SPEC API
+snippets, exact UTF-8/CRLF file cases, malformed-input output preservation and
+runtime-only JAR consumer pass with NetRexx 5.10-GA / Temurin 26.0.1+8 on macOS.
+The changed layout reconstructs the same nested compiler inputs qualified on
+Linux/Windows; library algorithms, APIs and shared fixtures are unchanged.
+
+Published page:
+[rexx-csv 0.1.0](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=PKG&name=rexx-csv).
+Owner `adriansutherland`; author **Adrian Sutherland**. Identical summary on all
+three artifacts: “CSV parser/writer for cREXX, Regina, ooRexx and NetRexx; shared
+Unicode text contract, checked errors and canonical CRLF output. MIT-licensed
+source.” `REQUIRES` is empty. The host runtime/compiler is a documented
+prerequisite, not a nonexistent repository package dependency.
+
+| Artifact | Bytes | Published SHA-256 |
+| --- | --- | --- |
+| SOURCE/crexx | 14802 | faeeb586c1f716269d2345b0584c56545f34ca06f4ccabe14aabcdaa15255f23 |
+| SOURCE/any (Regina/ooRexx) | 16966 | f43189604ba921a5a7c048968fa113ba1a55b489f215961c9202bbe47a24d29d |
+| SOURCE/netrexx | 16358 | 9f40235b591908fb59feed5e387225fc977cd6d28af643bfa2e6d153b44eaadf |
+
+The authorized saved account published the three artifacts privately first,
+with identical version metadata, then made the complete package public.
+Anonymous INFO/ARTIFACTS/OWNERS/page checks confirm version, author, empty
+requirements and all three file lists; anonymous downloads match the uploaded
+archive bytes exactly. Source archive builders are deterministic; every member
+is a safe top-level regular file with source, example, guide, specification or
+MIT-license ownership. No runtime/SDK, native binary, JSON/Python harness or
+third-party CSV source is shipped.
+
+Focused final packaging commands all pass:
+`check_package.py --bin <released-Beta-3-bin>`,
+`check_classic_package.py --runtime <Regina-3.9.7>`, the same with actual
+`ooRexx-5.1.0-r12973`, and `check_netrexx_package.py --sdk <5.10-GA>
+--java-home <Temurin-26.0.1+8>`. The Beta 3 macOS installer matches the unchanged
+published SHA-256 recorded above; its compiler reports `crexx-1.0.0-beta.3`.
+
+A separate live-consumer check used official client **1.2.0** (Regina, actual
+ooRexx, cREXX and NetRexx), each with a fresh anonymous `RXPIP_HOME`, no token
+or credentials, and its own target containing spaces and Ω. Each actual client
+ran `install --target=DIR rexx-csv==0.1.0` and `freeze --target=DIR`; cREXX chose
+`SOURCE/crexx`, Regina/ooRexx chose the same `SOURCE/any`, and NetRexx chose
+`SOURCE/netrexx`. Every installed file matches its downloaded archive member.
+The shipped cREXX driver command and NetRexx shell setup/compile block were
+executed from those live installations; Classic needs no compilation.
+
+All four live installed examples pass their built-in case and an independent
+file case containing quoted commas, doubled quotes, embedded LF, empty cells,
+leading zeros, Latin text and supplementary Unicode, with exact canonical
+UTF-8/CRLF byte comparison. Unclosed quote, NUL and malformed UTF-8 return
+failure without changing an existing output file on each runtime. These live
+checks run on macOS ARM64; Linux/Windows full conformance/source-consumer proof
+comes from the linked hosted gate, not an inferred hosted live-install claim.
+The Windows ASCII CLI filename requirement, older-JVM limit and caller-owned
+file I/O boundaries remain documented in all relevant guides.
+
+The new-thread RexxLA Gmail draft is titled **rexx-csv 0.1.0 — CSV source
+library for cREXX, Regina, ooRexx and NetRexx**. It includes the public package,
+source/fixtures and qualification links, each runtime's install command,
+qualified versions, memory/Windows limits and MIT license. It retains the
+DRAFT label and has no reply headers. No announcement or email was sent.
+Task-created runtime downloads, client copies, anonymous stores, builds,
+archives and scratch logs are disposable and removed after this result is
+recorded. Unrelated Lotto changes remain preserved outside this publication.
+
+
+Publication verification reuses the full hosted source results because all
+three library implementations, examples and common fixtures match the qualified
+inputs. Only NetRexx archive layout/its focused consumer check and documentation
+changed. The updated local focused consumer passed, and actual live installation
+reconstructs the same compilation layout. The publication commit uses `[skip ci]`
+to avoid repeating the eight full source-contract jobs for this packaging/docs
+increment. No new hosted result is inferred for this commit.

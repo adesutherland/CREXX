@@ -1,16 +1,28 @@
 # rexx-csv 0.1.0 — Classic source package
 
 One pure Rexx CSV parser/writer for Regina and ooRexx. MIT licensed.
-Qualified on macOS ARM64 with Regina 3.9.7 and ooRexx 5.1.0 r12973.
-Older runtimes remain unqualified. Linux/Windows results for each exact
-revision are recorded by [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml). There is no native,
+Qualified on macOS ARM64, Ubuntu 24.04 x64 and Windows 2025 x64 with
+Regina 3.9.7 and ooRexx 5.1.0 r12973. All 71 common fixtures, boundary/lifecycle
+checks and fresh installed consumers passed. Older runtimes remain unqualified.
+The [Linux/Windows run](https://github.com/adesutherland/CREXX/actions/runs/39443274327)
+records the exact versions and source revision. There is no native,
 ooRexx class, JSON or Python runtime dependency. NetRexx uses a separate binding.
 
-Extract all five files into an application directory. Keep `rexx_csv.rexx`
+Install [rexx-csv](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=PKG&name=rexx-csv)
+with your runtime's client (Regina or ooRexx respectively):
+
+```sh
+regina -a /path/to/rxpip.rexx install rexx-csv==0.1.0
+rxpip-oorexx install rexx-csv==0.1.0
+```
+
+Choose one command. Both select the identical `SOURCE/any` artifact. On Windows,
+use the supplied `rxpip.bat` or `rxpip-oorexx.bat` launcher. Installation puts
+all five files in the current directory; no build step is needed.
+Keep `rexx_csv.rexx`
 with the calling application and quote the lowercase external name as shown
 below, so Regina finds it on case-sensitive filesystems. Run with that directory as the working
-directory. No build step is needed. This archive is unpublished; live
-rexxpository selection/metadata remains to be verified before publication.
+directory.
 
 ```sh
 regina classic_demo.rexx

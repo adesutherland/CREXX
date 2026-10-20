@@ -1,9 +1,10 @@
 # rexx-csv
 
 A CSV source library with a shared format contract and fixtures for cREXX,
-Regina, ooRexx and NetRexx. All four runtimes are qualified on macOS with
-the tested versions recorded in the plan. This package has not been
-uploaded to rexxpository.
+Regina, ooRexx and NetRexx. Version 0.1.0 supplies three source bindings under
+one [rexxpository package](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=PKG&name=rexx-csv).
+All four runtimes passed on macOS ARM64, Ubuntu 24.04 x64 and Windows 2025 x64
+at the versions recorded below. MIT licensed; original source by Adrian Sutherland.
 
 The parser and writer operate on text and string fields. They preserve empty
 fields, spaces, leading zeros, quoted newlines and Unicode. Parsing accepts
@@ -12,9 +13,29 @@ widths may differ. Invalid CSV returns an explicit result with an error code
 and logical record/field coordinates. There is no native plugin dependency.
 
 See [SPEC.md](SPEC.md) for the complete format, limits and binding APIs, and
-[PLAN.md](PLAN.md) for acceptance status and the remaining runtime/platform work.
+[PLAN.md](PLAN.md) for acceptance status, exact qualification and version limits.
 File I/O and byte decoding are caller responsibilities; the example shows an
 explicit UTF-8 boundary without newline translation.
+
+## Install from rexxpository
+
+Choose your runtime's client and install into a fresh application directory:
+
+| Runtime | Command | Selected artifact / installed guide |
+| --- | --- | --- |
+| cREXX | `rxpip-crexx install rexx-csv==0.1.0` | `SOURCE/crexx`; [cREXX guide](packaging/README-crexx.md) |
+| Regina | `regina -a /path/to/rxpip.rexx install rexx-csv==0.1.0` | `SOURCE/any`; [Classic guide](packaging/README-classic.md) |
+| ooRexx | `rxpip-oorexx install rexx-csv==0.1.0` | The same `SOURCE/any`; [Classic guide](packaging/README-classic.md) |
+| NetRexx | `rxpip-netrexx install rexx-csv==0.1.0` | `SOURCE/netrexx`; [NetRexx guide](packaging/README-netrexx.md) |
+
+The [client downloads](https://www.rexxpository.org/cgi-bin/rxpip_server.rexx?action=DOWNLOADS)
+include Windows launchers. Installation includes source, a runnable example,
+`rexx-csv-README.md`, the shared specification and MIT license. Clients select
+the binding automatically; use a separate application directory per binding.
+No package dependencies are needed. Install the appropriate host toolchain
+separately; the archive does not include a Rexx runtime, JDK or NetRexx SDK.
+NetRexx's guide has a short source-directory preparation step because
+rexxpository accepts only top-level archive members.
 
 ## cREXX usage
 
@@ -67,8 +88,8 @@ are supported, but arbitrary Unicode CLI filenames are not.
 ## Regina and ooRexx usage
 
 One file, `classic/rexx_csv.rexx`, runs on both interpreters. Qualified versions
-are Regina 3.9.7 and ooRexx 5.1.0 r12973 on macOS ARM64; older versions and
-Linux/Windows qualification is recorded by the hosted matrix described below. There are no native or ooRexx
+are Regina 3.9.7 and ooRexx 5.1.0 r12973 on all three tested platforms;
+older versions remain unqualified. There are no native or ooRexx
 class dependencies. Put the file with your application and run from that
 directory so the external function can be found. Quote the lowercase external
 name as shown: Regina otherwise searches for uppercase REXX_CSV on Linux.
@@ -127,9 +148,8 @@ existing output untouched; file-write failure has ordinary caller I/O semantics.
 ## NetRexx usage
 
 The `rexxcsv` package provides `Csv`, `CsvRow`, `CsvDocument` and `CsvOutput`.
-Qualified with NetRexx 5.10-GA and Temurin JDK 26.0.1+8 on macOS ARM64.
-Other JVM versions remain unqualified; Linux/Windows results are in the hosted
-matrix below. Target class-file
+Qualified with NetRexx 5.10-GA and Temurin JDK 26.0.1+8 on all three tested platforms.
+Other JVM versions remain unqualified. Target class-file
 version 52 alone does not establish an older-JVM pass.
 
 ```netrexx
@@ -183,7 +203,7 @@ unoptimized code on `rxtvm` and `rxbvm`, plus resource boundaries and ownership.
 Python and JSON are development tooling, not installed runtime requirements.
 Use `--modes opt` or `--vms rxbvm` for a focused replay. The plan records
 observed qualification separately from this description of the test command.
-The package check extracts an unpublished archive into a fresh directory, then
+The package check builds/extracts a local archive into a fresh directory, then
 exercises the documented driver command, exact file I/O and failure recovery.
 
 Run the same 71 fixtures and shared boundary/lifecycle recipes on each actual
@@ -232,6 +252,11 @@ fresh installed consumer with spaced paths and exact Unicode CSV bytes.
 Separate Windows filename probes report the native launcher limitations above. A green job qualifies its
 exact commit and runtime; the workflow definition alone establishes no pass.
 
+The [complete qualification run](https://github.com/adesutherland/CREXX/actions/runs/39443274327)
+passed all eight jobs at `b385de977`. Publication retains those library and
+fixture bytes. The flat NetRexx distribution layout has an additional focused
+fresh-consumer check; publication checks actual client selection and live installs.
+
 `tests/hosted-runtimes.json` pins official downloads and SHA-256 checksums:
 cREXX Beta 3, Regina 3.9.7, ooRexx 5.1.0 r12973 and NetRexx 5.10-GA.
 NetRexx jobs use Temurin JDK 26.0.1+8. Windows cREXX uses the MSVC SDK's
@@ -262,6 +287,8 @@ python3 packaging/build_netrexx.py /tmp/rexx-csv-0.1.0-netrexx.rxpkg
 ```
 
 Each deterministic gzip/tar artifact contains source, an example, installation
-instructions, specification and MIT license. None bundles a runtime or
-implies an uploaded/registered rexxpository package. Public metadata and the
-remaining platform/JVM qualification are tracked in the plan.
+instructions, specification and MIT license. All archive members are top-level
+regular files, as required by rexxpository; NetRexx users copy its four library
+sources into `rexxcsv/` before compilation as documented in the installed guide.
+These builders are offline and never upload. Publication and compatibility
+details are tracked in the plan.
