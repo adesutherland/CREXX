@@ -183,6 +183,14 @@ definition: class
     return _dfa
   tables: method = .lllr..tables
     return _parser
+  /** Borrow fields of this anchored, live, unchanged definition. The caller
+   * must retain this receiver, in the same worker, until its readers end. */
+  borrowedscanner: method = .llmunch..scanner
+    arg source = .binary, mode = .string, fuel = 10000000
+    return .llmunch..scanner.borrowed(reference _dfa,source,mode,fuel)
+  borrowedparser: method = .lllr..parser
+    arg input = .llcore..stream, fuel = 1000000
+    return .lllr..parser.borrowed(reference _parser,input,fuel)
   backend: method = .string
     return _backend
   grammar: method = .llcore..grammar
@@ -208,6 +216,10 @@ definition: class
  * token stream. Original bytes remain owned by every resulting tree. */
 request: class
   _language = .definition
+  _borrowed = .int
+  _admitted = .int
+  _owner = reference .definition
+  _comments = .llcomments..rules
   _source = .binary
   _tokens = .llcore..stream
   _tree = .llcore..tree
@@ -221,6 +233,8 @@ request: class
   _limits = .lllimits..policy
   *: factory
     arg language = .definition, source = .binary, ?limits = .lllimits..policy
+    _borrowed = 0; _admitted = 1
+    empty_owner = reference .definition; _owner = empty_owner
     _language = language; _source = source; _root = 0; _status = 0; _offset = 0; _error = ''; _lexed = 0
     _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
     _forestroot = 0
@@ -231,18 +245,62 @@ request: class
       _status = 3; _error = _limits.error(); _lexed = 1
     end
     return
+  /** Borrow a fully prepared DFA/LR definition, without copying its tables.
+   * The owner stays live, anchored and unchanged for every reader operation.
+   * Source, limits, comments and all results remain request-owned. */
+  borrowed: factory
+    arg language = reference .definition, source = .binary, ?limits = .lllimits..policy, ?comments = .llcomments..rules
+    _borrowed = 1; _admitted = 0; _owner = language
+    _source = source; _root = 0; _status = 0; _offset = 0; _error = ''; _lexed = 0
+    _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
+    _forestroot = 0
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    if languagealive(_owner) = 0 then do
+      _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'; _lexed = 1; return
+    end
+    owner = dereference _owner
+    if ?comments then _comments = comments
+    else _comments = owner.comments()
+    if initialized(_comments) = 0 then do
+      _status = 3; _error = 'LL_COMMENT_CONTRACT: comment override requires initialized rules'; _lexed = 1; return
+    end
+    if _comments.validate() = 0 then do
+      _status = 3; _error = _comments.error(); _lexed = 1; return
+    end
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); _lexed = 1; return
+    end
+    _admitted = 1
+    return
   lex: method = .int
     arg classify = 1
+    ownerref = reference _language
+    if _borrowed then do
+      ownerref = _owner
+      if languagealive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'
+        return _status
+      end
+    end
+    language = dereference ownerref
+    if _borrowed & _admitted = 0 then return _status
     if _lexed then return _status
     _lexed = 1
-    prepared = .llsource..prepared(_source,_language.encoding(),'','',_limits.limit('source.bytes'),0,_language.comments(),_limits.limit('scan.work'))
+    comments = .llcomments..rules
+    if _borrowed then comments = _comments
+    else comments = language.comments()
+    prepared = .llsource..prepared(_source,language.encoding(),'','',_limits.limit('source.bytes'),0,comments,_limits.limit('scan.work'))
     _status = prepared.status()
     if _status <> 0 then do
       _error = prepared.error(); _offset = prepared.offset()
-      if left(_error,8) = 'LL_UTF8:' & _language.malformed() <> '' then _error = _language.malformed()
+      if left(_error,8) = 'LL_UTF8:' & language.malformed() <> '' then _error = language.malformed()
       return _status
     end
-    scan = .llmunch..scanner(_language.automaton(),prepared.bytes(),'munch',_limits.limit('scan.work'))
+    scan = .llmunch..scanner
+    if _borrowed then scan = language.borrowedscanner(prepared.bytes(),'munch',_limits.limit('scan.work'))
+    else scan = .llmunch..scanner(language.automaton(),prepared.bytes(),'munch',_limits.limit('scan.work'))
     _status = scan.run()
     /* Preserve already accepted lexical tokens for inspection/ABI adapters.
      * A nonzero status still prevents parsing or execution of this request. */
@@ -253,7 +311,7 @@ request: class
     if _status <> 0 then do
       _error = scan.error(); _offset = scan.offset()
       if _status = 1 then _error = 'LL_LEXICAL: ' || _error
-      if _status = 1 & _language.unmatched() <> '' then _error = _language.unmatched()
+      if _status = 1 & language.unmatched() <> '' then _error = language.unmatched()
       return _status
     end
     if classify then return classify_tokens(_tokens)
@@ -261,11 +319,21 @@ request: class
   /** Run declared token stages after a consumer has normalized layout. */
   classify_tokens: method = .int
     arg tokens = .llcore..stream
+    ownerref = reference _language
+    if _borrowed then do
+      ownerref = _owner
+      if languagealive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'
+        return _status
+      end
+    end
+    language = dereference ownerref
+    if _borrowed & _admitted = 0 then return _status
     if tokens.source() <> _source | tokens.error() <> '' then do
       _status = 3; _error = 'LL_SOURCE_OWNER: invalid staged token source'; return _status
     end
     _tokens = tokens
-    stages = _language.stages()
+    stages = language.stages()
     do i = 1 to stages[0]
       stage = .llstage..transducer(stages[i],_tokens,_limits.limit('parse.work'))
       _status = stage.run()
@@ -281,22 +349,35 @@ request: class
   parse_tokens: method = .int
     arg tokens = .llcore..stream
     at = .int; bytes = .binary; found = .string; fallback = .string
+    ownerref = reference _language
+    if _borrowed then do
+      ownerref = _owner
+      if languagealive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'
+        return _status
+      end
+    end
+    language = dereference ownerref
+    if _borrowed & _admitted = 0 then return _status
     if _limits.error() <> '' then do
       _status = 3; _error = _limits.error(); return _status
     end
     if tokens.source() <> _source then do
       _status = 3; _error = 'LL_SOURCE_OWNER: token source differs'; return _status
     end
-    if _language.hasparser() = 0 then do
+    if _borrowed & language.backend() <> 'lr1' then do
+      _status = 3; _error = 'LL_BORROW_BACKEND: borrowed parsing requires LR1'; return _status
+    end
+    if language.hasparser() = 0 then do
       _status = 3; _error = 'LL_NO_PARSER: this specification defines a lexer only'; return _status
     end
     _tokens = tokens
-    backend = _language.backend()
+    backend = language.backend()
     if backend = 'pratt' then do
-      expression = .llpratt..parser(_language.operators(),tokens,_limits.limit('parse.work'))
+      expression = .llpratt..parser(language.operators(),tokens,_limits.limit('parse.work'))
       _status = expression.run(); _tree = expression.namedtree(); _root = expression.root()
       _offset = expression.offset(); _error = expression.error()
-      if _status = 0 then _root = _tree.add(5,_language.expressionname(),_tree.start(_root),_tree.finish(_root),_root,0)
+      if _status = 0 then _root = _tree.add(5,language.expressionname(),_tree.start(_root),_tree.finish(_root),_root,0)
       if _status = 1 then do
         at = 0
         do while at < tokens.size() & tokens.start(at) < _offset
@@ -309,7 +390,7 @@ request: class
       return _status
     end
     if backend = 'regional' then do
-      composite = .llregional..parser(_language.region(),tokens,_limits.limit('parse.work'),1)
+      composite = .llregional..parser(language.region(),tokens,_limits.limit('parse.work'),1)
       _status = composite.run(); _tree = composite.tree(); _root = composite.root()
       _offset = composite.offset(); _error = composite.error()
       if _status = 1 then do
@@ -321,12 +402,12 @@ request: class
           bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
           found = llsource..lexeme(bytes,at >= tokens.size())
           _error = 'unexpected ' || found || '; ' || _error
-          if <blen>(contexts) > 0 then _error = _language.explain(contexts,found,composite.expected(),_error)
+          if <blen>(contexts) > 0 then _error = language.explain(contexts,found,composite.expected(),_error)
       end
       return _status
     end
     if backend = 'll1' | backend = 'packrat' then do
-      predictive = .llpeg..parser(_language.grammar(),_language.root(),tokens,backend,_limits.limit('parse.work'),_limits)
+      predictive = .llpeg..parser(language.grammar(),language.root(),tokens,backend,_limits.limit('parse.work'),_limits)
       _status = predictive.run(); _tree = predictive.arena(); _root = predictive.root()
       _offset = predictive.offset(); _error = predictive.error()
       if _status = 1 then do
@@ -334,12 +415,12 @@ request: class
         bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
         found = llsource..lexeme(bytes,at >= tokens.size())
         fallback = 'unexpected ' || found || '; expected ' || predictive.expectations()
-        _error = _language.explain(predictive.contexts(),found,predictive.expectations(),fallback)
+        _error = language.explain(predictive.contexts(),found,predictive.expectations(),fallback)
       end
       return _status
     end
     if backend = 'earley' then do
-      chart = .llearley..parser(_language.grammar(),_language.root(),tokens,_limits.limit('parse.work'),_limits.limit('earley.cells'),_limits)
+      chart = .llearley..parser(language.grammar(),language.root(),tokens,_limits.limit('parse.work'),_limits.limit('earley.cells'),_limits)
       _status = chart.run(); _offset = chart.offset(); _error = chart.error()
       _forest = chart.forest(); _forestroot = chart.root()
       if _status = 1 then do
@@ -347,7 +428,7 @@ request: class
         bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
         found = llsource..lexeme(bytes,at >= tokens.size())
         fallback = 'unexpected ' || found || '; expected ' || chart.expected()
-        _error = _language.explain(chart.contexts(),found,chart.expected(),fallback)
+        _error = language.explain(chart.contexts(),found,chart.expected(),fallback)
       end
       if _status = 0 then do
         _root = chart.treeroot(); _tree = chart.tree()
@@ -360,14 +441,16 @@ request: class
       end
       return _status
     end
-    parser = .lllr..parser(_language.tables(),tokens,_limits.limit('parse.work'))
+    parser = .lllr..parser
+    if _borrowed then parser = language.borrowedparser(tokens,_limits.limit('parse.work'))
+    else parser = .lllr..parser(language.tables(),tokens,_limits.limit('parse.work'))
     _status = parser.run(); _tree = parser.tree(); _root = parser.root()
     _offset = parser.offset(); _error = parser.error()
     if _status = 1 then do
       at = parser.position(); bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
       found = llsource..lexeme(bytes,at >= tokens.size())
       fallback = 'unexpected ' || found || '; expected ' || parser.expected()
-      _error = _language.explain(parser.contexts(),found,parser.expected(),fallback)
+      _error = language.explain(parser.contexts(),found,parser.expected(),fallback)
     end
     return _status
   tokens: method = .llcore..stream
@@ -383,14 +466,41 @@ request: class
   /** Projection is explicit and refuses failed/forest requests. The original
    * derivation remains available even if an application arity check fails. */
   projection: method = .llproject..projection
+    ownerref = reference _language
+    if _borrowed then do
+      ownerref = _owner
+      if languagealive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'
+        return .llproject..projection(_tree,0,.llproject..schema(),_limits.limit('tree.entries'))
+      end
+    end
+    language = dereference ownerref
+    if _borrowed & _admitted = 0 then return .llproject..projection(_tree,0,.llproject..schema(),_limits.limit('tree.entries'))
     root = _root
     if _status <> 0 then root = 0
-    return .llproject..projection(_tree,root,_language.schema(),_limits.limit('tree.entries'))
+    return .llproject..projection(_tree,root,language.schema(),_limits.limit('tree.entries'))
   /** Construct an owned AST only from a successful unique parse. */
   ast: method = .llast..tree
+    ownerref = reference _language
+    if _borrowed then do
+      ownerref = _owner
+      if languagealive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: request requires a live initialized definition'
+        return .llast..tree.failed(_error)
+      end
+    end
+    language = dereference ownerref
+    if _borrowed & _admitted = 0 then return .llast..tree.failed(_error)
     if _status <> 0 | _root = 0 then return .llast..tree.failed('LL_AST_PARSE: AST construction requires a successful unique parse; ' || _error)
-    return .llast..tree(_tree,_root,_language.astschema(),_limits.limit('tree.entries'))
+    return .llast..tree(_tree,_root,language.astschema(),_limits.limit('tree.entries'))
   offset: method = .int
     return _offset
   error: method = .string
     return _error
+
+/** A weak borrow never prolongs storage lifetime; inspect validity first. */
+languagealive: procedure = .int
+  arg owner = reference .definition
+  if <refvalid>(owner) = 0 then return 0
+  language = dereference owner
+  return initialized(language)

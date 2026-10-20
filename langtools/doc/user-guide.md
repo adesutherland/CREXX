@@ -1379,6 +1379,74 @@ status = request.parse()
 `source` is `.binary`. The optional third constructor argument is a
 `.lllimits..policy`, described under [Resource limits](#resource-limits).
 
+<a id="proposed-borrowed-language-requests"></a>
+
+### Borrowed language requests
+
+A caller-owned, fully prepared DFA/LR
+language may serve fresh requests and readers without copying its packed tables
+or production metadata. The owner remains live, anchored and unchanged for the
+whole borrowed lifetime. These additions do not change the owning APIs above.
+
+Keep the definition in anchored storage until the request and its readers end:
+
+```rexx
+language = levell_settings..language()
+request = .lllanguage..request.borrowed(reference language,source)
+status = request.parse()
+```
+
+The generic additions use existing types and explicit weak references:
+
+| API | Exact arguments / result |
+|---|---|
+| `lllanguage.request.borrowed` factory | `language: reference .lllanguage..definition, source: .binary, ?limits: .lllimits..policy, ?comments: .llcomments..rules` |
+| `lllanguage.definition.borrowedscanner` method | `source: .binary, mode: .string, fuel: .int = 10000000` → `.llmunch..scanner` |
+| `lllanguage.definition.borrowedparser` method | `input: .llcore..stream, fuel: .int = 1000000` → `.lllr..parser` |
+| `llmunch.scanner.borrowed` factory | `dfa: reference .llmunch..automaton, source: .binary, mode: .string, fuel: .int = 10000000` |
+| `lllr.parser.borrowed` factory | `compiled: reference .lllr..tables, input: .llcore..stream, fuel: .int = 1000000` |
+| `lllr.tables.productionlength`, `productionlhs` | Each takes `production: .int` and returns `.int`; delegate existing production-index lookups. |
+| `lllr.tables.symbolkind`, `symbollabel` | Each takes `symbol: .int`; returns `.int` / `.string` respectively. |
+| `lllr.tables.terminalname` | `token: .int` → `.string`; retain the existing parser's first matching terminal label, `token N` fallback and EOF `end of input`. |
+| `llcfg.productions.symbolkind`, `terminalname` | `symbol: .int` → `.int` / `token: .int` → `.string`; read the owned grammar directly, without returning or copying it. |
+
+The table queries delegate the existing CFG authority; move the parser's
+terminal-label lookup there rather than adding a second algorithm. Preserve
+terminal order, reduction labels and augmented-root behavior exactly. Existing
+production/symbol bounds and error behavior remain. The parser uses these
+queries during reductions and expected-token trials instead of value-returning
+`grammar()` / `source()` calls. Definition wrappers borrow their private fields;
+they add no public mutable-table reference getters. Scanner/parser owning and
+borrowed factories feed the same recognition loops.
+
+Definition wrappers require an anchored, live definition receiver: child weak
+references point to its retained DFA/LR fields, never method locals, temporary
+definition values or self-references into a subsequently copied wrapper.
+The borrowed request supports prepared DFA lexing and the LR1 parsing route.
+Other parse backends return status 3 with `LL_BORROW_BACKEND: borrowed parsing
+requires LR1`; there is no silent value-copy fallback. An omitted limits argument
+uses the existing default policy. Omitted comments copy the definition's baseline
+rules; supplied comments copy and validate that request's override through the
+existing rules API. The request never calls
+`usecomments` on the owner. Each consumer retains its declared lexical rules
+and exact source bytes.
+
+The caller keeps every borrowed definition/automaton/table owner live, at a
+stable storage location, unchanged and in the same VM worker until its last
+borrower ends. This is an explicit precondition: reference validity detects
+expired storage, not mutation or rebinding of a still-live owner. Borrowed
+factories and owner-dependent operations refuse an empty, expired or live but
+uninitialized owner with status 3 and an
+`LL_BORROW_OWNER:` diagnostic, without reading it or publishing partial output.
+Ordinary direct method-receiver guards remain unchanged. There is no generic
+freeze or mutation-detection mechanism and no cross-worker sharing. Reader methods take
+scoped live aliases; they do not store self-references into an owning wrapper
+that may subsequently be returned or copied. Copying a borrower retains weak
+borrows; it does not snapshot the heavy owner. Sources, token streams, policies,
+comment rules and already materialized trees/ASTs retain their own data after
+readers end. Later parsing/projection/AST construction still needs a live
+definition for its metadata; expiry does not retroactively invalidate results.
+
 ### Definition methods
 
 | Method | Result |

@@ -254,6 +254,8 @@ automaton: class
  */
 scanner: class
   _dfa = .automaton
+  _borrowed = .int
+  _owner = reference .automaton
   _source = .binary
   _mode = .string
   _result = .llcore..stream
@@ -269,15 +271,37 @@ scanner: class
   _badends = .int[]
   *: factory
     arg dfa = .automaton, source = .binary, mode = .string, fuel = 10000000
+    _borrowed = 0
+    empty_owner = reference .automaton; _owner = empty_owner
     _dfa = dfa; _source = source; _mode = mode; _fuel = fuel
     _result = .llcore..stream.tokens(source)
     _ran = 0; _status = 0; _offset = 0; _steps = 0; _error = ''
     return
+  /** Borrow a prepared DFA at a stable, unchanged location in this worker.
+   * The caller retains the live owner; copies retain only this weak borrow. */
+  borrowed: factory
+    arg dfa = reference .automaton, source = .binary, mode = .string, fuel = 10000000
+    _borrowed = 1; _owner = dfa
+    _source = source; _mode = mode; _fuel = fuel
+    _result = .llcore..stream.tokens(source)
+    _ran = 0; _status = 0; _offset = 0; _steps = 0; _error = ''
+    if dfaalive(_owner) = 0 then do
+      _status = 3; _error = 'LL_BORROW_OWNER: scanner requires a live initialized DFA'
+    end
+    return
   run: method = .int
+    ownerref = reference _dfa
+    if _borrowed then do
+      ownerref = _owner
+      if dfaalive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: scanner requires a live initialized DFA'; return _status
+      end
+    end
+    dfa = dereference ownerref
     if _ran then return _status
     _ran = 1
-    if _dfa.verify() = 0 then do
-      _status = 3; _error = _dfa.error(); return _status
+    if dfa.verify() = 0 then do
+      _status = 3; _error = dfa.error(); return _status
     end
     if _mode <> 'reverse' & _mode <> 'munch' & _mode <> 'recover' then do
       _status = 3; _error = 'unsupported scanner mode'; return _status
@@ -294,17 +318,17 @@ scanner: class
         cursor = at; state = 1
         do while cursor < size
           byte = <at..u8>(cursor) _source
-          cls = _dfa.classof(byte)
+          cls = dfa.classof(byte)
           if cls < 0 then leave
           _steps = _steps + 1
           if _steps > _fuel then do
             _status = 2; _error = lllimits..describe('scan.work',_fuel,_steps); return _status
           end
-          state = _dfa.target(state,cls)
+          state = dfa.target(state,cls)
           if state = 0 then leave
           cursor = cursor + 1
-          if _dfa.kind(state) <> 0 then do
-            finish = cursor; kind = _dfa.kind(state)
+          if dfa.kind(state) <> 0 then do
+            finish = cursor; kind = dfa.kind(state)
           end
         end
       end
@@ -333,23 +357,31 @@ scanner: class
     end
     return _status
   prepare: method = .void
-    size = <blen>(_source); states = _dfa.states()
+    ownerref = reference _dfa
+    if _borrowed then do
+      ownerref = _owner
+      if dfaalive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: scanner requires a live initialized DFA'; return
+      end
+    end
+    dfa = dereference ownerref
+    size = <blen>(_source); states = dfa.states()
     ends = .int[]; kinds = .int[]
     do at = size to 0 by -1
       column = (at <mod> 2) * states; following = ((at + 1) <mod> 2) * states
       cls = -1
       if at < size then do
-        byte = <at..u8>(at) _source; cls = _dfa.classof(byte)
+        byte = <at..u8>(at) _source; cls = dfa.classof(byte)
       end
       do state = 1 to states
-        kind = _dfa.kind(state); finish = -1
+        kind = dfa.kind(state); finish = -1
         if kind <> 0 then finish = at
         if cls >= 0 then do
           _steps = _steps + 1
           if _steps > _fuel then do
             _status = 2; _error = lllimits..describe('scan.work',_fuel,_steps); return
           end
-          target = _dfa.target(state,cls)
+          target = dfa.target(state,cls)
           if target > 0 then do
             if ends[following + target] > finish then do
               finish = ends[following + target]; kind = kinds[following + target]
@@ -377,3 +409,10 @@ scanner: class
   badend: method = .int
     arg i = .int
     return _badends[i]
+
+/** Reject empty/expired/uninitialized storage before accessing the DFA. */
+dfaalive: procedure = .int
+  arg owner = reference .automaton
+  if <refvalid>(owner) = 0 then return 0
+  dfa = dereference owner
+  return initialized(dfa)
