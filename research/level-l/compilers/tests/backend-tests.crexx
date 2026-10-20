@@ -23,6 +23,7 @@ main: procedure = .int expose checks failures artifacts outputfile
       when 'do-final' then call dochecks(outputfile,1)
       when 'leave' then call leavechecks(outputfile)
       when 'leave-invalid' then call leavechecks(outputfile,1)
+      when 'iterate' then call iteratechecks(outputfile)
       otherwise return 2
     end
   end
@@ -37,6 +38,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call selectchecks()
     call dochecks()
     call leavechecks()
+    call iteratechecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -177,6 +179,104 @@ ifchecks: procedure = .void expose artifacts
     graph = request.emissiongraph(); text = graph.dump()
     call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
     call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
+  return
+
+/** Follow the selected end path through CFG edges, not printed block order. */
+iteratechecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; selectedkey = .string; assembly = .string; instruction = .string
+  sample = .int; optimise = .int; selected = .int; first = .int; expected = .int
+  ordinal = .int; state = .int; i = .int; closes = .int; selectedcloses = .int
+  jumps = .int; invalid = .int; reads = .int; target = .int; truthid = .int
+  advanceblock = .int; exitblock = .int; entryblock = .int; advances = .int
+  entries = .int; exitcloses = .int; exitadvances = .int; written = .int
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview
+  do sample = 1 to 5
+    expected = 1; ordinal = 1; instruction = 'iterate'
+    select sample
+      when 1 then source = 'do i=1 by 2 for 2 until flag; do j=10 for 2; iterate I; end; end'
+      when 2 then source = 'do i=1 by 2 for 2; do forever; do; select; when 1 then do j=10; iterate I; end; end; end; end; end'
+      when 3 then do; source = 'do i=1 for 1; do I=10 for 2; iterate i; end; end'; expected = 0; ordinal = 2; end
+      when 4 then do; source = 'do i=1; do j=10; leave I; end; end'; expected = 2; instruction = 'leave'; end
+      otherwise do; source = 'options levelc strictc; do i=1; do j=10; iterate Ghost; end; end'; expected = 0; end
+    end
+    first = pos(instruction,source) - 1
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'iterate-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'ITERATE shape accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      do selected = 0 to 1
+        graph = request.graph(); if selected then graph = request.emissiongraph()
+        selectedkey = ''; state = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.name() <> 'crexx.c.do.new' then iterate
+          state = state + 1
+          if state = ordinal then selectedkey = operation.attribute('key') as .string
+        end
+        call check(selectedkey <> '', 'selected static state is declared')
+        closes = 0; selectedcloses = 0; jumps = 0; invalid = 0; reads = 0; target = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.origin().first() <> first then iterate
+          select operation.name()
+            when 'crexx.c.do.close' then do
+              closes = closes + 1
+              if (operation.attribute('key') as .string) = selectedkey then selectedcloses = selectedcloses + 1
+            end
+            when 'core.jump' then do; jumps = jumps + 1; target = operation.successor(1); end
+            when 'crexx.c.load' then reads = reads + 1
+            when 'crexx.c.transfer.invalid' then do
+              invalid = invalid + 1
+              call check((operation.attribute('code') as .string) = '28.4' & (operation.attribute('name') as .string) = 'Ghost','invalid ITERATE keeps exact code/raw name')
+            end
+            otherwise nop
+          end
+        end
+        call check(closes = expected & reads = 0,'transfer closes only crossed owners without target pool reads')
+        if sample < 4 then do
+          call check(selectedcloses = 0 & jumps = 1 & invalid = 0,'ITERATE preserves selected owner and has one normal edge')
+          truthid = 0; advanceblock = target; exitblock = 0; entryblock = 0
+          if sample = 1 then do
+            do i = 1 to graph.operations()
+              operation = graph.operation(i)
+              if operation.blockid() = target & operation.name() = 'crexx.c.until.truth' then truthid = operation.result().id()
+            end
+            do i = 1 to graph.operations()
+              operation = graph.operation(i)
+              if operation.blockid() <> target | operation.name() <> 'core.branch' then iterate
+              if operation.input(1).id() = truthid then do; exitblock = operation.successor(1); advanceblock = operation.successor(2); end
+            end
+            call check(truthid > 0 & exitblock > 0 & advanceblock > 0,'selected continuation evaluates UNTIL before choosing exit or advance')
+          end
+          advances = 0; entries = 0; exitcloses = 0; exitadvances = 0
+          do i = 1 to graph.operations()
+            operation = graph.operation(i)
+            if operation.blockid() = advanceblock then do
+              if operation.name() = 'crexx.c.do.advance' then if (operation.attribute('key') as .string) = selectedkey then advances = advances + 1
+              if operation.name() = 'core.jump' then entryblock = operation.successor(1)
+            end
+            if sample = 1 & operation.blockid() = exitblock then do
+              if operation.name() = 'crexx.c.do.close' then if (operation.attribute('key') as .string) = selectedkey then exitcloses = exitcloses + 1
+              if operation.name() = 'crexx.c.do.advance' then exitadvances = exitadvances + 1
+            end
+          end
+          do i = 1 to graph.operations()
+            operation = graph.operation(i)
+            if operation.blockid() = entryblock & operation.name() = 'crexx.c.do.entry' then if (operation.attribute('key') as .string) = selectedkey then entries = entries + 1
+          end
+          call check(advances = 1 & entries = 1,'selected advance returns to selected count/TO entry')
+          if sample = 1 then call check(exitcloses = 1 & exitadvances = 0,'true UNTIL closes selected state without advancing it')
+        end
+        else if sample = 4 then call check(selectedcloses = 1 & jumps = 1 & invalid = 0,'shared LEAVE still closes selected state and exits')
+        else call check(closes = 0 & jumps = 0 & invalid = 1,'invalid ITERATE has no normal cleanup/jump continuation')
+      end
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.invalidtransfer(),') = (sample = 5),'only invalid ITERATE calls the shared bridge')
+      if inspect <> '' then written = writebinary(inspect || '-iterate-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
   end
   return
 

@@ -3470,8 +3470,8 @@ remain enabled; `COMMENTS_HASH`/`COMMENTS_NOHASH` and
 `COMMENTS_DASH`/`COMMENTS_NODASH` select request-local line comments.
 `COMMENTS_NOSLASH` is accepted; slash comments, incompatible levels/numeric
 policy, conflicting switches and unsupported `SRCMAP` are rejected. `STRICTC`
-selects reached-only invalid LEAVE-target errors for this request; default C
-rejects source-provable invalid LEAVE targets even in dead source. Identical switches
+selects reached-only invalid LEAVE/ITERATE-target errors for this request; default C
+rejects source-provable invalid transfer targets even in dead source. Identical switches
 may repeat; quoted/later/call-shaped STRICTC stays an ordinary operand. Header
 words still have their ordinary expression evaluation.
 
@@ -3635,11 +3635,14 @@ Grouping and state-free repetition allocate no DO state. END names compare
 authored symbols using shared Classic casing. LEAVE accepts an optional raw
 control name, resolves the innermost matching controlled loop within this
 routine and closes crossed states without end checks/steps or pool-name search.
-Named ITERATE remains explicitly unsupported until its following increment;
-shared labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
+ITERATE accepts the same optional raw names, closes only crossed inner states
+and resumes the selected loop's UNTIL/advance/entry path, retaining its owner.
+Shared labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
 forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof);
 [named LEAVE proof](../../research/level-l/compilers/PLAN.md#current-leave-proof)
 covers static targets and request-local invalid-target policy.
+[Named ITERATE proof](../../research/level-l/compilers/PLAN.md#current-iterate-proof)
+covers selected-loop end work and default/STRICTC 28.2/28.4 errors.
 INTERPRET remains unimplemented,
 and the current fatal-condition profile remains nonresumable.
 

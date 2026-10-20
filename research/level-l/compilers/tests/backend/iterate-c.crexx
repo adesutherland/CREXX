@@ -1,0 +1,55 @@
+options levelc
+do i=1 for 3 until untilcheck(i)
+  do forever
+    do
+      select
+        when 1 then do j=10 for 2
+          say 'body' i j
+          iterate I
+        end
+      end
+    end
+  end
+end
+say 'until-final' i j
+do i=1 by 2 for 2
+  do j=10 for 2
+    say 'for' i j
+    iterate i
+  end
+end
+say 'for-final' i j
+do i=1 for 1
+  do I=10 for 2
+    say 'shadow' i
+    iterate i
+  end
+  say 'after-inner' i
+end
+say 'after-outer' i
+x='x'; y='y'; key='x'; a.x=99; a.y=88
+do A.key=1 for 2
+  key='y'
+  do j=10 for 2
+    iterate a.KEY
+  end
+end
+say 'raw-tail' a.x a.y j
+do else=1 for 1
+  if 1 then iterate else nop
+  say 'bad-inline'
+end ELSE
+say 'inline' else
+say owned() owned()
+exit 0
+untilcheck: procedure
+  arg value
+  say 'check' value
+  return value=2
+owned: procedure
+  do local=1 by 2 for 2
+    do nested=10 for 2
+      iterate LOCAL
+    end
+  end
+  return local

@@ -267,7 +267,7 @@ static function-local text keys and hidden owned state, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
 Named END checks are included; the current v6 LEAVE increment below integrates
-shared invalid-target delivery. Named ITERATE remains LC-I-10 work. Shared labels/EXPOSE, complete expressions/exact recovery and
+shared invalid-target delivery. The separately qualified ITERATE increment below uses that foundation. Shared labels/EXPOSE, complete expressions/exact recovery and
 resumable conditions/SIGL/clause/TRACE remain open. Independent source/CFG,
 metadata/protocol, runtime/error and actual caller/helper RXAS checks pass;
 this closes the admitted increment, not whole-instruction or complete-C delivery.
@@ -285,7 +285,30 @@ Valid edges close crossed states inner-to-outer including the selected loop,
 then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
 transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
-C v6/52 operations and 33 exports are the current exact surface; named ITERATE
-remains a profile refusal until the separate following increment. Shared
+C v6/52 operations and 33 exports are the current exact surface; this LEAVE
+checkpoint initially retained named ITERATE's profile refusal, now removed by
+the separately qualified increment below. Shared
 labels/EXPOSE, dynamic loop invalidation, resumable conditions, exact recovery
 and clause/TRACE remain open; bounded local qualification does not close them.
+
+
+<a id="iterate-selected-loop-end-work"></a>
+
+## ITERATE: preserve the selected loop and enter its end work
+
+The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
+and [ITERATE-AC01–04](../PLAN.md#current-iterate-proof) qualify the bounded static
+nearest/named profile. Resolve raw names within this routine using shared
+Classic casing; close only crossed inner states, retain the selected owner and
+jump to its existing UNTIL/advance/count-entry path. True UNTIL skips advance;
+false UNTIL and count exhaustion retain the final step. Groups/SELECT and
+state-free wrappers add no target or owner. Private source routines retain
+fresh pools and cannot target caller loops.
+
+Default C rejects provable invalid targets even in dead source (28.2 without a
+repetitive loop, 28.4 for a missing name); STRICTC signals only when reached.
+Malformed syntax always refuses. The existing v6/52/33/header/admission and
+shared error bridge remain unchanged. Focused source, CFG, paired execution,
+prior-output and independent actual RXAS checks pass with a shared LEAVE
+regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
+resumable conditions, exact recovery and clause/TRACE remain open.

@@ -3,8 +3,8 @@
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
 the context ABI records completed STEP03d and the current approved C v6
-implementation. Named LEAVE is locally qualified; named ITERATE follows
-separately. The plan records bounded local qualification.
+implementation. Static named LEAVE and ITERATE are locally qualified.
+The plan records bounded local qualification.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
@@ -40,7 +40,7 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; locally qualified bounded DROP/SELECT/static DO/named LEAVE projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; locally qualified bounded DROP/SELECT/static DO/named LEAVE/ITERATE projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
@@ -990,7 +990,7 @@ and IR-off/on caller/helper RXAS must prove retained checks, dormant later arms
 and no unused join/default construction. Reuse existing focused Debug
 selectors and runtime proofs; no new aggregate or per-slice ASan campaign.
 Whole SELECT retains shared labels/fall-through/EXPOSE, complete expressions/
-DO/named transfers, exact diagnostic/recovery and condition/SIGL/clause/TRACE
+DO, dynamic transfer invalidation, exact diagnostic/recovery and condition/SIGL/clause/TRACE
 dependencies. Approval covers only these AST records, C v4 operation contracts
 and two target exports/signal bridge. Focused source/IR/runtime/admission and
 actual caller/helper RXAS qualification passes the linked plan; whole SELECT
@@ -1075,7 +1075,7 @@ each TO/BY/FOR operand once in written order, accepting all six permutations.
 Call `do.start` only after all captures: initial-control validation/assignment
 therefore occurs after modifier checks, including FOR 0. Count/TO entry checks
 precede WHILE, suppressing its expression and the body when entry is disallowed.
-UNTIL runs after the body or unnamed ITERATE, before advance; true skips the
+UNTIL runs after the body or a valid ITERATE, before advance; true skips the
 step. LEAVE skips both UNTIL and advance. A final count-limited iteration still
 advances before the next entry fails. Shared pool methods re-resolve compound
 control names and read body-mutated control values at each entry/step; no cached
@@ -1166,7 +1166,8 @@ checks and cleanup. Reuse focused Debug/reference fixtures and unchanged shared
 B/L proof; native EXPOSE fixtures require adapted independent expectations, not
 unsupported source copying. No new aggregate or per-slice ASan is commissioned.
 Unnamed transfers cover every admitted repetitive form and skip groups/SELECT;
-named LEAVE/ITERATE and invalid-target delivery remain LC-I-09/10 work. Shared
+named LEAVE/ITERATE and invalid-target delivery are separately qualified under
+the [transfer contract](#approved-leave-iterate-contract). Shared
 labels/EXPOSE, full expressions/exact recovery, resumable conditions/SIGL and
 clause/TRACE remain open; approval of this bounded increment closes no CFC criterion.
 
@@ -1175,9 +1176,9 @@ clause/TRACE remain open; approval of this bounded increment closes no CFC crite
 
 ## Approved LEAVE and ITERATE contract
 
-**APPROVED by Adrian on 20 October 2026. Named LEAVE and the shared v6
-foundation are locally qualified in the [current plan](../PLAN.md#current-action-leave);
-named ITERATE remains the separate next increment.** Complete the bounded static-transfer behavior of LC-I-09, then
+**APPROVED by Adrian on 20 October 2026. Named LEAVE, named ITERATE and the
+shared v6 foundation are locally qualified in the
+[current plan](../PLAN.md#current-action-iterate).** Complete the bounded static-transfer behavior of LC-I-09, then
 LC-I-10, using the qualified DO ownership protocol. The shared decision is
 **C v6 / 52 operations, four unchanged types and 33 target exports**, refusing
 v5 without a compatibility path. No generic L, shared B runtime, native compiler
@@ -1250,12 +1251,10 @@ resumable transfer claim. Recheck fresh and post-transform graphs before output.
 | `LEAVE-AC03`; `ITERATE-AC03` | LEAVE preserves control values and skips all crossed end work; ITERATE closes inner owners and preserves selected UNTIL/step/count/entry timing. Nested stateful/state-free and repeated private-call cases prove lifetime boundaries. |
 | `LEAVE-AC04`; `ITERATE-AC04` | Exact v6/52-op/33-export and code/name admission, atomic fresh/loaded/post-transform refusal, ERROR-origin bridge, and IR-off/on caller/helper RXAS. Valid transfers add only required closes/jumps; focused existing Debug fixtures, docs and cleanup qualify each instruction separately. |
 
-`CLC-STEP05.LEAVE1` records expectations and the exact-contract approval;
-`LEAVE2` implements shared AST/header/schema/bridge and LEAVE with independent
-fixtures; `LEAVE3` qualifies and locally commits the reviewed slice. Then
-`CLC-STEP05.ITERATE1–3` review expectations, implement and qualify ITERATE using
-the same approved ABI. Named ITERATE must remain explicitly refused until its
-step is implemented. Reuse unchanged DO/B/L proof; no new aggregate or per-slice
+`CLC-STEP05.LEAVE1–3` delivered the shared AST/header/schema/bridge and qualified
+LEAVE with independent fixtures. `CLC-STEP05.ITERATE1–3` separately qualified
+ITERATE using the same approved ABI and existing DO end path. Reuse unchanged
+DO/B/L proof; no new aggregate or per-slice
 sanitizer campaign is commissioned. Shared labels/EXPOSE, SIGNAL/INTERPRET loop
 invalidation, resumable conditions, exact recovery and clause/TRACE retain their
 owners. All complete-C criteria remain open and INTERPRET remains last.

@@ -315,7 +315,6 @@ request: class
     if tick(node) = 0 then return
     i = .int
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
-    target = .llir..block
     /* Visit structural/non-emitting statements without reopening a terminated
      * block. Later emitting statements still lower in checked dead code. */
     nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop'
@@ -398,18 +397,7 @@ request: class
         else _terminated = 1
         _alive = yesalive | noalive
       end
-      when kind = 'Leave' then call leaveloop(node,origin)
-      when kind = 'Iterate' then do
-        if node.count('name') then do
-          named = node.child('name'); if tick(named) = 0 then return
-          call fail(named,'PROFILE: named ITERATE is outside this frontend profile'); return
-        end
-        if _loops = 0 then do
-          call fail(node,'FLOW: ' || kind || ' requires a surrounding loop'); return
-        end
-        target = loopcontinue(_loops); _continuealive[_loops] = _continuealive[_loops] | _alive
-        call _block.jump(target,origin); _terminated = 1; _alive = 0
-      end
+      when kind = 'Leave' | kind = 'Iterate' then call looptransfer(node,origin)
       when kind = 'Return' then do
         do
           if node.count('value') then do
@@ -501,10 +489,12 @@ request: class
     return
   /** Select a static source-loop binding. Names never read the pool or expand
    * compound tails; only the common symbol-casing rule defines identity. */
-  leaveloop: method = .void
+  looptransfer: method = .void
     arg node = .llast..node, origin = .llir..origin
     name = ''; selected = _loops; level = .int
     op = .llir..opdraft; built = .llir..opview
+    target = .llir..block
+    continuing = node.kind() = 'Iterate'
     if node.count('name') then do
       named = node.child('name'); if tick(named) = 0 then return
       name = named.text('spelling'); selected = 0
@@ -517,8 +507,10 @@ request: class
     end
     if selected = 0 then do
       code = '28.1'; if _loops > 0 then code = '28.3'
+      if continuing then do; code = '28.2'; if _loops > 0 then code = '28.4'; end
       if _strictc = 0 then do
-        call fail(node,'FLOW: RXC-LC-' || code || ': invalid LEAVE target "' || name || '"'); return
+        instruction = upper(node.kind())
+        call fail(node,'FLOW: RXC-LC-' || code || ': invalid ' || instruction || ' target "' || name || '"'); return
       end
       op = _block.operation(_contract.operation('crexx.c.transfer.invalid'),origin)
       call op.attribute('code',code as .binary); call op.attribute('name',name as .binary); built = op.finish()
@@ -528,9 +520,15 @@ request: class
       call _block.returnvalue(built.result(),origin.derive())
       _terminated = 1; _alive = 0; return
     end
-    target = loopafter(selected)
-    _breakalive[selected] = _breakalive[selected] | _alive
-    do level = _loops to selected by -1
+    outermost = selected
+    if continuing then do
+      target = loopcontinue(selected); _continuealive[selected] = _continuealive[selected] | _alive
+      outermost = selected + 1
+    end
+    else do
+      target = loopafter(selected); _breakalive[selected] = _breakalive[selected] | _alive
+    end
+    do level = _loops to outermost by -1
       if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
     end
     call _block.jump(target,origin); _terminated = 1; _alive = 0

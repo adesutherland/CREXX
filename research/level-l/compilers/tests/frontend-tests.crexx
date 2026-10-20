@@ -26,6 +26,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'do-literals' then call doliteraltests()
     when 'leave' then call leavetests()
     when 'leave-policy' then call leavepolicytests()
+    when 'iterate' then call iteratetests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -163,6 +164,7 @@ grammar: procedure = .void expose examples
   call selecttests()
   call dotests()
   call leavetests()
+  call iteratetests()
   text = .string; source = .string; loopshape = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -256,7 +258,53 @@ leavetests: procedure = .void expose artifacts
     end
     call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
   end
-  call bad('c','do i=1; iterate i; end' as .binary,'LL_COMPILER_PROFILE:','named ITERATE')
+  ignored = good('c','do i=1 for 1; iterate i; end','crexx.c.do.advance')
+  return
+
+/** ITERATE retains its selected state and uses the ordinary DO end path. */
+iteratetests: procedure = .void expose artifacts
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  name = .llast..node; source = .string; ignored = .string; expected = .string
+  sample = .int
+  parsed = .llcparse..parsed('iterate α.key' as .binary)
+  call check(parsed.status() = 0,'raw Unicode ITERATE syntax parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1); name = node.child('name')
+    call check(node.kind() = 'Iterate' & node.start() = 0 & node.finish() = 14,'ITERATE instruction byte span')
+    call check(name.kind() = 'Name' & name.text('spelling') = 'α.key' & name.start() = 8 & name.finish() = 14,'ITERATE raw name byte span')
+  end
+  do sample = 1 to 4
+    select sample
+      when 1 then source = 'do i=1 for 2 until flag; do j=10 for 2; iterate I; end; end'
+      when 2 then source = 'do i=1 for 1; do I=10 for 2; iterate i; end; end'
+      when 3 then source = 'do A.KEY=1 for 2; key="y"; do forever; do j=10; iterate a.key; end; end; end'
+      otherwise source = 'do else=1 for 1; if flag then do; iterate else; end; end ELSE'
+    end
+    ignored = good('c',source,'crexx.c.do.advance')
+  end
+  do sample = 1 to 2
+    source = 'do else=1 for 1; if flag then iterate else nop; end ELSE'
+    if sample = 2 then source = 'do i=1 for 1; if flag then iterate; else nop; end'
+    parsed = .llcparse..parsed(source as .binary)
+    call check(parsed.status() = 0,'inline/separated bare ITERATE keeps ELSE ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1).child('body').child('items',1)
+    name = node.child('yes')
+    call check(node.kind() = 'IfElse' & name.kind() = 'Iterate' & name.count('name') = 0,'nearest ELSE owns bare ITERATE ' || sample)
+  end
+  do sample = 1 to 4
+    expected = 'RXC-LC-28.2:'
+    select sample
+      when 1 then source = 'iterate'
+      when 2 then source = 'do; iterate Ghost; end'
+      when 3 then do; source = 'do 1; if 0 then iterate Ghost; end'; expected = 'RXC-LC-28.4:'; end
+      otherwise source = 'do caller=1; call p; leave; end; exit 0; p: procedure; iterate caller'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_FLOW:',expected)
+  end
+  call bad('c','iterate i extra' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','options levelc strictc; exit 0; iterate i extra' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  ignored = good('c','options levelc strictc; if 0 then iterate Ghost; exit 0; p: procedure; iterate','crexx.c.transfer.invalid')
   return
 
 /* Select the policy boundary independently after a seed-only repair. */

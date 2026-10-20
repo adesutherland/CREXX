@@ -1,0 +1,10 @@
+options levelc strictc
+say 'before'
+if 0 then iterate Missing
+do i=1 for 1
+  if 0 then iterate Ghost
+end
+say 'after' i
+exit 0
+uncalled: procedure
+  iterate

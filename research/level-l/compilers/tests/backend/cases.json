@@ -444,5 +444,39 @@
     "error": "RXC-LC-28.3:",
     "error_line": 5,
     "args": []
+  },
+  {
+    "name": "iterate",
+    "level": "c",
+    "source": "iterate-c.crexx",
+    "output": "body 1 10\ncheck 1\nbody 2 10\ncheck 2\nuntil-final 2 10\nfor 1 10\nfor 3 10\nfor-final 5 10\nshadow 10\nshadow 11\nafter-inner 12\nafter-outer 13\nraw-tail 1 90 10\ninline 2\n5 5\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "iterate-strict-dead",
+    "level": "c",
+    "source": "iterate-strict-dead-c.crexx",
+    "output": "before\nafter 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "iterate-outside-error",
+    "level": "c",
+    "source": "iterate-outside-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.2:",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "iterate-missing-error",
+    "level": "c",
+    "source": "iterate-missing-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.4:",
+    "error_line": 5,
+    "args": []
   }
 ]

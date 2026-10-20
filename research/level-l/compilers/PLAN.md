@@ -1,8 +1,8 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. CLC-STEP05.LEAVE1–3 are locally qualified.
-Next is the separately approved named ITERATE increment; its implementation
-starts after the scoped LEAVE local commit.**
+**Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified.
+Next is PARSE machinery review, with ARG consuming the same engine; exact design
+approval is required before that implementation.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -18,6 +18,69 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
+<a id="current-action-iterate"></a>
+
+## Completed named ITERATE increment
+
+Complete LC-I-10's admitted static nearest/named transfers without changing
+DO evaluation, selected-loop state or end-work order. Resolve raw names within
+the current routine using the qualified shared Classic casing rule; close only
+crossed inner state, retain the selected owner and enter its existing UNTIL /
+advance / entry path. Adrian approved the
+[exact transfer contract](doc/architecture.md#approved-leave-iterate-contract)
+on 20 October 2026, conditional on the now-completed LEAVE commit. Reuse its
+optional-name AST, request-local STRICTC, C v6/52 operations, 33 exports and
+shared invalid-transfer bridge. No grammar/schema/API/Unicode algorithm change
+is proposed. Native output remains a read-only control; INTERPRET remains last.
+
+| ID / status | Approved checkable closure |
+|---|---|
+| **ITERATE-AC01 — Locally qualified: source/targets** | Independent nearest/named/shadowed/raw compound targets and original spans use the existing optional Name AST and shared casing. Groups/IF/SELECT do not become targets; state-free wrappers and private routine boundaries preserve lookup. Existing nearest-ELSE authority remains, including bare inline ITERATE plus ELSE versus ordinary/grouped ELSE names. Reuse unchanged source/name/Unicode proof and retain malformed/dead syntax refusals. |
+| **ITERATE-AC02 — Locally qualified: policy/errors** | Default C refuses source-provable invalid ITERATE even dead/uncalled: 28.2 without a repetitive loop, even named, and 28.4 for a missing name inside loops. STRICTC signals only reached invalid instructions with authored name, visible C source and unchanged bound raw helper event; dormant invalid paths do not signal. Reuse qualified header/request isolation and four-code admission/bridge proof; distinct CLI refusals preserve prior output. |
+| **ITERATE-AC03 — Locally qualified: execution/lifetime** | Independent markers/control values prove only crossed inner owners close, selected state survives and the jump reaches normal UNTIL before advance/entry. True UNTIL skips advance; false UNTIL retains step/count/entry order and the final FOR-limited advance. Same-name shadowing, raw compound identity despite tail changes, stateful/state-free crossings and private-call/reentry boundaries preserve state without source EXPOSE/shared-pool inference. |
+| **ITERATE-AC04 — Locally qualified: quality/qualification** | Actual IR-off/on caller RXAS shows required inner-to-outer closes and one selected end-point jump, no target pool search/helper or selected-owner close, and unchanged fatal/RETURN/source obligations. Existing focused selectors, small independent corpus and representative paired B/IR/VM Debug cells qualify the slice; reuse v6 metadata/admission, shared B/Unicode, native and current grammar proof. Retain default coverage, generous serial scheduling, concise docs and task-only cleanup; no new aggregate, broad QA or per-slice ASan. |
+
+**CLC-STEP05.ITERATE1 — Approved/complete (AC01–04):** exact contract,
+independent expected state/order and reused dependencies are recorded before
+product edits. Coordinator review/dispatch is complete on disjoint ownership.
+**CLC-STEP05.ITERATE2 — Complete (AC01–04):** named ITERATE and focused
+source/runtime/shape controls reuse the existing LEAVE foundation; only
+`llcfrontend` changes in the product.
+**CLC-STEP05.ITERATE3 — Locally qualified/complete (AC01–04):** focused
+Debug proof and independent actual RXAS review pass; owning docs and scheduling
+are current. Whole-instruction dependencies remain open.
+
+Shared labels/EXPOSE, SIGNAL/INTERPRET loop invalidation, complete expressions,
+exact recovery, resumable conditions/SIGL and clause/TRACE retain their owners.
+All twelve CFC criteria remain open; this bounded increment is not whole C.
+
+<a id="current-iterate-proof"></a>
+
+### Current ITERATE proof
+
+Normal Debug qualifies `d61ac16c3` plus frozen frontend `b56a02b9` and the
+reviewed focused fixtures (corrected positive source `19f949fa`). Affected-only
+preparation passes 15 commands in 15.922s, warning-free. Grammar/parser, v6/52/33
+schema/target, header policy, protocol/admission, Unicode and shared B runtime
+are unchanged; their [LEAVE proof](#current-leave-proof) and the existing native/
+core `stage-product` proof are reused. No grammar or native rebuild was needed.
+
+| Command / inspection | Observed result and boundary |
+|---|---|
+| `frontend-tests … iterate` | 52/0 in 18.274s: optional-name/spans, nearest ELSE, static targets, default dead/private refusals and STRICTC dormant invalid source. Existing header/Unicode/name controls are reused. |
+| `backend-tests … iterate` | 104/0 in each paired opt/rxbvm and noopt/rxtvm cell (52.547/43.678s), internally both IR modes. Five cases follow selected UNTIL/advance/entry successors, retain selected owners, skip state-free wrappers, preserve shadowing and include the shared LEAVE inclusive-close regression. |
+| `check-backend.py` selected `iterate-…` cases | All 40 commands pass: opt both IR modes run four cases (16 commands each, 35.009/35.973s); noopt/rxtvm runs the positive case in both modes (4 each, 20.194/18.778s). Independent UNTIL 2/10, FOR final 5/10, shadow 10/11→12→13, raw-tail 1/90/10, inline ELSE and private 5/5 states pass. Reached 28.2/28.4 locations and dormant STRICTC pass. Explicit x/y selfbindings corrected the initial case-sensitive pool setup; its 41.6 was consistent with the missing lowercase element, not a product defect. |
+| CLI refusal sentinels; one native C read-only control | Three distinct refusals preserve prior output/no staging residue: dead no-loop 28.2, missing-target 28.4 and malformed STRICTC syntax. Native compiler `-n`/assembler `-n` prints `for 1 10`, `for 3 10`, `for-final 5 10` from the independently expected outer-ITERATE control. Seven commands pass in 5.507s; native output is not the oracle. |
+| Complete caller RXAS, root/peer review | Clear selected UNTIL→advance→entry, state-free/SELECT crossings, shadowing, private reentry and fatal paths. Only crossed inner owners close; selected state survives to normal end work, child references release before requirevalue, and logical source/raw names remain truthful. No runtime target search, transfer helper or per-transfer numeric setup is added. Twelve same-IR capture pairs are byte-identical across B hosts; ordinary context/frame/packet costs remain admitted C-OPT baseline costs. |
+| Existing coverage/scheduling | Default grammar/backend selectors retain new assertions and four corpus cases. Backend 58 cases/421 commands retains serial lock/1800s; frontend grammar retains serial lock/900s. Measured new runtime/shape components support these hang guards, with no full-aggregate replay. Maintained examples contain no LEAVE/ITERATE, so unchanged relevant lowering and prior current-v6 view proof are reused without regeneration. |
+
+Shared v6 metadata/admission/header/direct bridge/Unicode proof is reused;
+no second shared matrix, source-slice ASan, installed/hosted/platform or whole-C
+qualification is claimed. Shared labels/EXPOSE, dynamic loop invalidation,
+resumable conditions, exact recovery and clause/TRACE remain open; all twelve
+CFC criteria remain open and INTERPRET remains last. PARSE machinery review is
+next, with ARG using that engine after exact-contract approval.
+
 <a id="current-action-leave"></a>
 
 ## Completed named LEAVE increment
@@ -31,13 +94,13 @@ shared invalid-transfer helper. Adrian approved the
 on 20 October 2026; DO is qualified and locally committed. This increment adds
 the shared optional-name AST/STRICTC/v6 foundation and implements named LEAVE.
 It retains four C types, advances C to v6/52 operations and the target to 33
-exports, and refuses v5. Named ITERATE remains an explicit profile refusal until
-its separate step. No SDK, shared-runtime algorithm, native or VM API changes
+exports, and refuses v5. At that LEAVE checkpoint, named ITERATE retained its
+profile refusal; the separately qualified increment above now integrates it. No SDK, shared-runtime algorithm, native or VM API changes
 are commissioned.
 
 | ID / status | Approved checkable closure |
 |---|---|
-| **LEAVE-AC01 — Locally qualified: source/targets** | Independent optional-Name AST and original instruction/name byte spans cover nearest, named/shadowed/raw compound and Unicode controls through group/IF/SELECT wrappers and private routines. Eligible inline IF keeps bare `leave else` as LEAVE plus ELSE; ordinary/grouped ELSE names and `leave i else` retain nearest-ELSE ownership. Malformed/surplus/dead syntax refuses with locations; named ITERATE still refuses explicitly. |
+| **LEAVE-AC01 — Locally qualified: source/targets** | Independent optional-Name AST and original instruction/name byte spans cover nearest, named/shadowed/raw compound and Unicode controls through group/IF/SELECT wrappers and private routines. Eligible inline IF keeps bare `leave else` as LEAVE plus ELSE; ordinary/grouped ELSE names and `leave i else` retain nearest-ELSE ownership. Malformed/surplus/dead syntax refuses with locations; named ITERATE explicitly refused at that checkpoint. |
 | **LEAVE-AC02 — Locally qualified: policy/errors** | Ordinary requests reject all source-provable invalid LEAVE targets, including dead/uncalled source: 28.1 without a repetitive loop, even named, and 28.3 for a missing name inside loops. STRICTC checks syntax everywhere but invokes the shared unchanged error only when reached, with authored name and visible C location/raw helper event. Same-process enable/default/failure, duplicate/quoted/later/call-shaped header controls prove request-local static policy and failed parsed.strictc()=0; prior output survives refusal. |
 | **LEAVE-AC03 — Locally qualified: execution/lifetime** | Independent markers/control states prove LEAVE skips crossed UNTIL/advance work, preserves current values, selects the innermost matching controlled loop and closes crossed owners inner-to-outer including its target. State-free crossed loops add no owner, group/SELECT wrappers are skipped, unrelated outer state survives and repeated private calls remain isolated; no source EXPOSE/shared-pool claim is inferred. |
 | **LEAVE-AC04 — Locally qualified: ABI/admission/quality** | Exact v6/52-op/33-export metadata and all-record code/name controls admit only the approved schema/signature, including dead/loaded records. Fresh and post-transform invalid graphs refuse atomically without graph/prior-output mutation. Direct ERROR-origin bridge checks and IR-off/on caller/helper RXAS show only required closes/jumps for valid transfers, no runtime name search, and invalid cold closure/common fatal cleanup. Focused existing Debug selectors and representative paired B/IR/VM cases, reviewed docs and task-only cleanup qualify the bounded slice; reuse unchanged DO/B/L/native proof and checked warm grammar. |
@@ -77,7 +140,8 @@ proof below is reused; no merge-only rebuild or research grammar refresh.
 
 No source EXPOSE/shared-pool inference, resumed-condition/TRACE, installed,
 hosted, cross-platform, fresh sanitizer or whole-C qualification is claimed.
-Named ITERATE remains an explicit profile refusal until its separate increment.
+That LEAVE checkpoint retained named ITERATE's profile refusal; its separate
+qualified increment is recorded above.
 All twelve CFC criteria remain open; INTERPRET remains last.
 
 ### Completed B-SEED-01 prerequisite: preserve linked-output stores
@@ -320,7 +384,7 @@ with independent source/RXAS and [normal Debug proof](#current-options-proof).
 | **OPTIONS-AC04 — Qualified** | Focused paired B/IR/VM Debug, prior-output and independent RXAS review; one grammar refresh and existing source-only scheduling, with unchanged native/B/L proof reused. |
 | **CLC-STEP05.OPTIONS1–3 — Complete** | Approved contract, implementation and independent local qualification completed before IF1. |
 
-Whole LC-I-05 retains full header controls/STRICTC/source maps, shared labels,
+Whole LC-I-05 retains full header controls/source maps, shared labels,
 exact diagnostics and conditions/TRACE. Adding a runtime word/effect to B
 `applyOptions` requires C review, qualification and recompilation.
 
@@ -427,7 +491,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; next ITERATE1** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews and static DO are locally qualified with shared dependencies open; named LEAVE is locally qualified; the approved named ITERATE increment follows its local commit. |
+| **CLC-STEP05 — Partial; next PARSE machinery review** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews and static DO are locally qualified with shared dependencies open; named LEAVE is locally qualified; named ITERATE is locally qualified; PARSE machinery review follows, with ARG using the same engine after design approval. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
