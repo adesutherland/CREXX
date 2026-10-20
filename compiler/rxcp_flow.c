@@ -399,6 +399,14 @@ static void flow_mark_node_effect(RxcpFlowProcedure *procedure,
     if (symbol) {
         value = flow_value_index_for_symbol(procedure, symbol);
         if (value >= 0) {
+            /* A dereference assignment creates a live storage link. Record
+             * that semantic fact before transforms; the emitter's separate
+             * dereference list is populated later for scoped cleanup only. */
+            if (node->parent && node->parent->node_type == ASSIGN &&
+                node == node->parent->child && node->sibling &&
+                node->sibling->node_type == OP_DEREFERENCE) {
+                procedure->values[value].aliased = 1;
+            }
             if (flow_node_reads_variable(node)) {
                 bits_set(&block->uses, (size_t)value);
                 procedure->values[value].reads++;
@@ -1168,32 +1176,26 @@ static int flow_must_safe_write_before_read(RxcpFlowProcedure *procedure,
     return 1;
 }
 
-static int flow_symbol_has_dereference_alias(Symbol *symbol) {
-    size_t i;
-    if (!symbol || !symbol->scope) return 0;
-    for (i = 0; i < scp_dereference_symbol_count(symbol->scope); i++) {
-        if (scp_dereference_symbol_at(symbol->scope, i) == symbol) return 1;
-    }
-    return 0;
-}
-
-static int flow_default_candidate(Symbol *symbol) {
-    if (!symbol || !symbol->needs_default_initiation ||
+static int flow_default_candidate(const RxcpFlowValue *value) {
+    Symbol *symbol;
+    if (!value || value->aliased || !(symbol = value->symbol) ||
+        !symbol->needs_default_initiation ||
         symbol->symbol_type != VARIABLE_SYMBOL || !symbol->scope) return 0;
     if (symbol->scope->type != SCOPE_PROCEDURE && symbol->scope->type != SCOPE_LOCAL) return 0;
     if (symbol->is_arg || symbol->is_ref_arg || symbol->is_this || symbol->is_factory ||
         symbol->exposed || symbol->is_global_var || symbol->has_reference_target ||
-        symbol->value_dims || flow_symbol_is_compiler_owned(symbol) ||
-        flow_symbol_has_dereference_alias(symbol)) return 0;
+        symbol->value_dims || flow_symbol_is_compiler_owned(symbol)) return 0;
     return flow_scalar_type(symbol->type);
 }
 
-static int flow_arg_candidate(ASTNode *arg, Symbol *symbol) {
-    if (!arg || !symbol || arg->node_type != ARG || arg->is_ref_arg ||
+static int flow_arg_candidate(ASTNode *arg, const RxcpFlowValue *value) {
+    Symbol *symbol;
+    if (!arg || !value || value->aliased || !(symbol = value->symbol) ||
+        arg->node_type != ARG || arg->is_ref_arg ||
         arg->is_opt_arg || arg->is_const_arg) return 0;
     if (!symbol->is_arg || symbol->is_ref_arg || symbol->exposed ||
         symbol->has_reference_target || symbol->value_dims ||
-        flow_symbol_is_compiler_owned(symbol) || flow_symbol_has_dereference_alias(symbol)) return 0;
+        flow_symbol_is_compiler_owned(symbol)) return 0;
     return symbol->type == TP_BOOLEAN || symbol->type == TP_INTEGER ||
            symbol->type == TP_FLOAT || symbol->type == TP_DECIMAL;
 }
@@ -1207,12 +1209,12 @@ static int flow_copy_type(ValueType type) {
 
 static int flow_copy_value_candidate(const RxcpFlowValue *value) {
     Symbol *symbol;
-    if (!value || !(symbol = value->symbol) || !flow_copy_type(value->type) ||
+    if (!value || value->aliased || !(symbol = value->symbol) || !flow_copy_type(value->type) ||
         symbol->symbol_type != VARIABLE_SYMBOL || !symbol->scope ||
         (symbol->scope->type != SCOPE_PROCEDURE && symbol->scope->type != SCOPE_LOCAL) ||
         symbol->is_ref_arg || symbol->is_this || symbol->is_factory ||
         symbol->exposed || symbol->is_global_var || symbol->has_reference_target ||
-        symbol->value_dims || flow_symbol_has_dereference_alias(symbol)) return 0;
+        symbol->value_dims) return 0;
     return 1;
 }
 
@@ -1781,7 +1783,7 @@ static int flow_apply_transforms(RxcpFlowProcedure *procedure) {
     for (i = 0; i < procedure->value_count; i++) {
         RxcpFlowValue *value = &procedure->values[i];
         Symbol *symbol = value->symbol;
-        if (!flow_default_candidate(symbol)) continue;
+        if (!flow_default_candidate(value)) continue;
         if (flow_must_safe_write_before_read(procedure, i)) {
             symbol->flow_skip_default_initiation = 1;
         }
@@ -1792,7 +1794,7 @@ static int flow_apply_transforms(RxcpFlowProcedure *procedure) {
         ASTNode *target = arg->child;
         Symbol *symbol = flow_variable_symbol(target);
         int value = flow_value_index_for_symbol(procedure, symbol);
-        if (value >= 0 && flow_arg_candidate(arg, symbol)) {
+        if (value >= 0 && flow_arg_candidate(arg, &procedure->values[value])) {
             if (flow_arg_can_share_input(procedure, arg, symbol, value)) {
                 arg->flow_share_arg_input = 1;
             } else if (flow_must_safe_write_before_read(procedure, (size_t)value)) {

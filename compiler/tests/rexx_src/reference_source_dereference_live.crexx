@@ -34,8 +34,65 @@ main: procedure = .int
 
   if expectInvalid(makeDeadRef()) <> 1 then return fail("invalid dereference signal")
 
+  /* A linked scalar is observable through its owner even when the local is
+   * never read again. These writes must survive optimized dead-store analysis. */
+  integer_owner = .int; integer_owner = 3
+  integer_ref = reference integer_owner
+  call storeLinkedInteger(integer_ref,41,0)
+  if integer_owner <> 3 then return fail("untaken linked integer store")
+  call storeLinkedInteger(integer_ref,41,1)
+  if integer_owner <> 41 then return fail("linked integer argument store")
+
+  boolean_owner = .boolean; boolean_owner = 0
+  boolean_ref = reference boolean_owner
+  call storeLinkedBoolean(boolean_ref,1,1)
+  if boolean_owner <> 1 then return fail("linked boolean argument store")
+  call storeLinkedBoolean(boolean_ref,1,0)
+  if boolean_owner <> 0 then return fail("linked boolean alternate store")
+
+  float_owner = .float; float_owner = 1.5
+  float_ref = reference float_owner
+  call storeLinkedFloat(float_ref,2.5)
+  if float_owner <> 2.5 then return fail("scoped linked float argument store")
+
+  /* Copying a linked value captures its current value. Reading the link after
+   * a direct owner write must instead observe that newer value. */
+  do
+    observed = dereference integer_ref
+    before = observed
+    integer_owner = 42
+    if before <> 41 | observed <> 42 then return fail("linked read versus value copy")
+  end
+
   say "PASS: Reference Source Dereference Live"
   return 0
+
+storeLinkedInteger: procedure = .void
+  arg target = reference .int, source = .int, chooseWrite = .boolean
+  linked = dereference target
+  requested = linkedIdentity(source)
+  if chooseWrite then linked = requested
+  return
+
+storeLinkedBoolean: procedure = .void
+  arg target = reference .boolean, source = .boolean, chooseWrite = .boolean
+  linked = dereference target
+  if chooseWrite then linked = source
+  else linked = 0
+  return
+
+storeLinkedFloat: procedure = .void
+  arg target = reference .float, source = .float
+  do
+    linked = dereference target
+    linked = source
+  end
+  return
+
+/* Ordinary scalar inlining must coexist with the caller's live linked store. */
+linkedIdentity: procedure = .int
+  arg value = .int
+  return value
 
 returnLinked: procedure = .int
   arg r = reference .int

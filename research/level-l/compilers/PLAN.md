@@ -99,6 +99,51 @@ this DO local commit. Its named-transfer delivery does not change the frozen
 v5 proof or close source EXPOSE/shared labels, full expressions, exact recovery,
 resumable conditions/SIGL or clause/TRACE. All twelve CFC criteria remain open.
 
+## Completed B-SEED-01 prerequisite: preserve linked-output stores
+
+**Locally qualified; separate seed correctness repair.** The minimal B procedure links an integer
+reference, then assigns a scalar argument through it. Qualified native `rxc`
+with default optimisation drops that observable store: output 0/status 1;
+`rxc -n` retains `icopy` and gives output 1/status 0. Both use `rxas -n`, the
+same library and `rxbvm --no-autoload` (eight commands, 1.093s). Actual RXAS
+confirms the link remains but only the optimised store disappears. STRICTC's
+linked policy output is the reproduced real consumer, not a C syntax defect.
+
+Preserve observable stores through reference-linked aliases while retaining
+valid ordinary-local optimisation. This is a seed correctness repair, with no
+new API or performance initiative; keep it separate from LEAVE implementation.
+
+| ID / status | Checkable closure |
+|---|---|
+| **B-SEED-AC01 — Locally qualified** | Permanent minimal scalar/reference store regressions and an ordinary-local control distinguish the failing optimisation from supported copy propagation; optimised/unoptimised results agree with independent expected values. |
+| **B-SEED-AC02 — Locally qualified** | Actual RXAS retains the appropriate alias store and truthful TRACE/source observations, while the ordinary-local control retains its valid optimisation. Focused existing reference/flow regressions pass; no unrelated matrix or benchmark campaign. |
+| **B-SEED-AC03 — Locally qualified** | Warning-free core product preparation and the original STRICTC consumer prove the qualified seed/affected-input boundary. Preserve passed evidence only where relevant inputs remain unchanged, update concise proof, clean diagnostics and create a separately reviewed local prerequisite commit. |
+
+**B-SEED-STEP01 — Reviewed/complete (AC01–03):** source/RXAS isolates the
+seed optimiser. Approved repair scope is only `compiler/rxcp_flow.c`, retaining
+the existing aliased fact during collection; independent permanent fixtures
+plus nine focused reference/flow controls and `nr26_flow_contract` own closure.
+**B-SEED-STEP02 — Complete (AC01–02):** existing alias facts are
+retained before flow transforms; permanent reference controls extend the
+existing fixture. The minimal fixed opt/noopt probe now gives 1/status 0 in
+both modes (eight commands, 1.539s), retaining linkref then icopy and correct
+assignment TRACE. No broad optimisation fallback or source workaround.
+**B-SEED-STEP03 — Locally qualified/complete (AC01–03):** ten selected native
+reference/flow/NR26 controls pass in 8.948s; root and independent actual RXAS
+review preserve linked int/bool/float stores, alias snapshot semantics, TRACE
+and ordinary-local copy/dead-store optimisation. Required `stage-product`
+passes warning-free (591 steps, 193.892s), following the focused rxc refresh.
+The post-core audit retains 113/129 recorded images byte-identical, including
+B/L/runtime foundations, common services and C grammar; changed native tools
+and stamped generator images are recorded as new identities, with no forced
+capsule admission or research grammar regeneration. Recompiled parser/focused
+consumer passes `frontend-tests … leave-policy` 21/0 (seven commands, 18.545s).
+The original 136-check LEAVE run had 132 passes and four failures; this focused
+policy replay is composed proof, not a wholly green initial run. Qualified
+inputs are `579a8377` plus the reviewed flow/reference patch and the existing
+pending LEAVE consumer; no LEAVE feature is included in this prerequisite.
+No ASan, broad matrix, API or performance claim is added.
+
 ## Completed prerequisite: generic L lexical construction reuse
 
 The [generic Level L owner](../PLAN.md#current-action-lexer-reuse)
