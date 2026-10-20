@@ -37,39 +37,39 @@ function SCALE -> crexx.c.result
   entry.1:
     %22 = core.argument argument:1 @origin:62
     core.store %22 slot:$context @origin:62
-    %23 = crexx.c.arguments.read %22 ordinal="1" @origin:63
-    %24 = core.load slot:$context @origin:63
-    crexx.c.store %24 %23 name="value" @origin:63
-    %25 = core.load slot:$context @origin:63
-    %26 = crexx.c.arguments.read %25 ordinal="2" @origin:63
-    %27 = core.load slot:$context @origin:63
-    crexx.c.store %27 %26 name="factor" @origin:63
-    %28 = core.constant 32 : crexx.c.value @origin:80
-    core.store %28 slot:$tmp.1 @origin:73
-    %29 = core.constant 45 : crexx.c.value @origin:87
-    core.store %29 slot:$tmp.2 @origin:73
-    %30 = core.load slot:$context @origin:73
-    %31 = crexx.c.arguments.exists %30 %28 %29 @origin:73
-    %32 = core.load slot:$context @origin:71
-    %33 = crexx.c.not %31 %32 @origin:71
-    %34 = core.load slot:$context @origin:64
-    %35 = crexx.c.truth %33 %34 @origin:64
-    core.branch %35 -> if.yes.2 -> if.no.3 @origin:64
+    %23 = crexx.c.parse.source %22 kind="ARG" ordinal="1" @origin:64
+    %24 = core.load slot:$context @origin:64
+    crexx.c.parse.execute %24 %23 program="4C435031010001009C000000010000000300000001000000000000000E000000900000000D0000007363616C652D632E6372657878490000004E000000060000000700000046000000490000004E000000060000000700000046000000490000004E00000006000000070000004600000050030C000100010000000100010101000000020000000100000001000000030000000500000076616C7565" @origin:64
+    %25 = core.load slot:$context @origin:64
+    %26 = crexx.c.parse.source %25 kind="ARG" ordinal="2" @origin:64
+    %27 = core.load slot:$context @origin:64
+    crexx.c.parse.execute %27 %26 program="4C435031010001009D000000020000000300000001000000000000000E000000900000000D0000007363616C652D632E63726578785000000056000000060000000E000000460000005000000056000000060000000E000000460000005000000056000000060000000E0000004600000050030C0001000100000001000101010000000200000001000000010000000300000006000000666163746F72" @origin:64
+    %28 = core.constant 32 : crexx.c.value @origin:81
+    core.store %28 slot:$tmp.1 @origin:74
+    %29 = core.constant 45 : crexx.c.value @origin:88
+    core.store %29 slot:$tmp.2 @origin:74
+    %30 = core.load slot:$context @origin:74
+    %31 = crexx.c.arguments.exists %30 %28 %29 @origin:74
+    %32 = core.load slot:$context @origin:72
+    %33 = crexx.c.not %31 %32 @origin:72
+    %34 = core.load slot:$context @origin:65
+    %35 = crexx.c.truth %33 %34 @origin:65
+    core.branch %35 -> if.yes.2 -> if.no.3 @origin:65
   if.yes.2:
-    %36 = core.constant 32 : crexx.c.value @origin:95
-    %37 = core.load slot:$context @origin:88
-    crexx.c.store %37 %36 name="factor" @origin:88
-    core.jump -> if.join.4 @origin:64
+    %36 = core.constant 32 : crexx.c.value @origin:96
+    %37 = core.load slot:$context @origin:89
+    crexx.c.store %37 %36 name="factor" @origin:89
+    core.jump -> if.join.4 @origin:65
   if.no.3:
-    core.jump -> if.join.4 @origin:64
+    core.jump -> if.join.4 @origin:65
   if.join.4:
-    %38 = core.load slot:$context @origin:103
-    %39 = crexx.c.load %38 name="value" @origin:103
-    core.store %39 slot:$tmp.3 @origin:102
-    %40 = core.load slot:$context @origin:104
-    %41 = crexx.c.load %40 name="factor" @origin:104
-    %42 = core.load slot:$tmp.3 @origin:102
-    %43 = core.load slot:$context @origin:102
-    %44 = crexx.c.mul %42 %41 %43 @origin:102
-    %45 = crexx.c.return.present %44 @origin:96
-    core.return %45 @origin:96
+    %38 = core.load slot:$context @origin:104
+    %39 = crexx.c.load %38 name="value" @origin:104
+    core.store %39 slot:$tmp.3 @origin:103
+    %40 = core.load slot:$context @origin:105
+    %41 = crexx.c.load %40 name="factor" @origin:105
+    %42 = core.load slot:$tmp.3 @origin:103
+    %43 = core.load slot:$context @origin:103
+    %44 = crexx.c.mul %42 %41 %43 @origin:103
+    %45 = crexx.c.return.present %44 @origin:97
+    core.return %45 @origin:97

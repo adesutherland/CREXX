@@ -49,6 +49,11 @@ sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+sigbrv llerror1_5,r0,"OBJECT_NOT_INITIALIZED"
+sigbrv llerror1_6,r0,"REFERENCE_INVALID"
+sigbrv llerror1_7,r0,"UNICODE_ERROR"
+sigbrv llerror1_8,r0,"OUT_OF_RANGE"
+sigbrv llerror1_9,r0,"FAILURE"
 numsci 18,1,2
 linkref r59,a1
 swap r59,r73
@@ -615,11 +620,31 @@ load r70,3
 br llerror1
 llerror1_4:
 load r70,4
+br llerror1
+llerror1_5:
+load r70,5
+br llerror1
+llerror1_6:
+load r70,6
+br llerror1
+llerror1_7:
+load r70,7
+br llerror1
+llerror1_8:
+load r70,8
+br llerror1
+llerror1_9:
+load r70,9
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
+sighalt "OBJECT_NOT_INITIALIZED"
+sighalt "REFERENCE_INVALID"
+sighalt "UNICODE_ERROR"
+sighalt "OUT_OF_RANGE"
+sighalt "FAILURE"
 copy r73,r0
 copy r74,r71
 load r72,2
@@ -631,6 +656,26 @@ null r74
 beq llraise1_1,r70,1
 beq llraise1_2,r70,2
 beq llraise1_3,r70,3
+beq llraise1_4,r70,4
+beq llraise1_5,r70,5
+beq llraise1_6,r70,6
+beq llraise1_7,r70,7
+beq llraise1_8,r70,8
+llraise1_9:
+signalorigin "FAILURE",r71,r0
+ret
+llraise1_8:
+signalorigin "OUT_OF_RANGE",r71,r0
+ret
+llraise1_7:
+signalorigin "UNICODE_ERROR",r71,r0
+ret
+llraise1_6:
+signalorigin "REFERENCE_INVALID",r71,r0
+ret
+llraise1_5:
+signalorigin "OBJECT_NOT_INITIALIZED",r71,r0
+ret
 llraise1_4:
 signalorigin "INVALID_ARGUMENTS",r71,r0
 ret
@@ -643,179 +688,315 @@ ret
 llraise1_1:
 signalorigin "CLASSIC_SYNTAX",r71,r0
 ret
-llf2() .locals=32
+llf2() .locals=34
 .srcstep 0 0 6 "" 0 0 0 ""
 .meta "llprogram.TWICE"="b" ".rexxactivation..rexxactivationarguments" llf2() "context=reference .rexxclassiccontext..rexxclassiccontext"
-load r26,"pipeline-c.crexx: entering TWICE"
+null r14
+load r27,"pipeline-c.crexx: entering TWICE"
 sigbrv llerror2_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror2_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror2_3,r0,"CONVERSION_ERROR"
 sigbrv llerror2_4,r0,"INVALID_ARGUMENTS"
+sigbrv llerror2_5,r0,"OBJECT_NOT_INITIALIZED"
+sigbrv llerror2_6,r0,"REFERENCE_INVALID"
+sigbrv llerror2_7,r0,"UNICODE_ERROR"
+sigbrv llerror2_8,r0,"OUT_OF_RANGE"
+sigbrv llerror2_9,r0,"FAILURE"
 numsci 18,1,2
-linkref r14,a1
-swap r14,r28
-load r27,1
-settp r28,256
-call r18,rexxclassiccontext.rexxclassiccontext.activation(),r27
-swap r14,r28
-null r28
-unlink r14
-linkref r15,r18
-swap r15,r28
-load r27,1
-settp r28,256
-call r19,rexxactivation.rexxactivationarguments.numericdigits(),r27
-swap r15,r28
-null r28
-swap r15,r28
-load r27,1
-settp r28,256
-call r20,rexxactivation.rexxactivationarguments.numericfuzz(),r27
-swap r15,r28
-null r28
-swap r15,r28
-load r27,1
-settp r28,256
-call r21,rexxactivation.rexxactivationarguments.numericform(),r27
-swap r15,r28
-null r28
+linkref r15,a1
+swap r15,r29
+load r28,1
+settp r29,256
+call r19,rexxclassiccontext.rexxclassiccontext.activation(),r28
+swap r15,r29
+null r29
 unlink r15
-null r18
+linkref r16,r19
+swap r16,r29
+load r28,1
+settp r29,256
+call r20,rexxactivation.rexxactivationarguments.numericdigits(),r28
+swap r16,r29
+null r29
+swap r16,r29
+load r28,1
+settp r29,256
+call r21,rexxactivation.rexxactivationarguments.numericfuzz(),r28
+swap r16,r29
+null r29
+swap r16,r29
+load r28,1
+settp r29,256
+call r22,rexxactivation.rexxactivationarguments.numericform(),r28
+swap r16,r29
+null r29
+unlink r16
+null r19
 setnumfuz 0
-setnumdgts r19
-setnumfuz r20
-setnumfrm r21
+setnumdgts r20
+setnumfuz r21
+setnumfrm r22
 llb8:
 .srcstep 118 0 98 "pipeline-c.crexx" 1 1 15 "options levelc"
-load r26,"pipeline-c.crexx: generated code in TWICE"
+load r27,"pipeline-c.crexx: generated code in TWICE"
 copy r3,a1
 copy r1,r3
-.srcstep 119 0 17 "pipeline-c.crexx" 13 3 12 "  arg value"
-load r26,"pipeline-c.crexx:13:3"
+.srcstep 120 180 17 "pipeline-c.crexx" 13 3 12 "  arg value"
+load r27,"pipeline-c.crexx:13:3"
 copy r4,r1
-copy r28,r4
-load r29,1
-load r27,2
-settp r28,768
-settp r29,768
-call r5,llctarget.readarg(),r27
-null r28
-null r29
-copy r6,r1
-linkref r14,r6
-swap r14,r28
-load r27,1
-settp r28,256
-call r16,rexxclassiccontext.rexxclassiccontext.pool(),r27
-swap r14,r28
-null r28
-unlink r14
-copy r28,r16
-copy r29,r5
-load r30,"value"
-load r27,3
-settp r28,768
-settp r29,768
-settp r30,768
-call r25,llctarget.poolwrite(),r27
-null r28
-null r29
-null r30
-null r16
-.srcstep 127 0 17 "pipeline-c.crexx" 14 10 15 "  return value * 2"
-load r26,"pipeline-c.crexx:14:10"
-copy r7,r1
-linkref r14,r7
-swap r14,r28
-load r27,1
-settp r28,256
-call r16,rexxclassiccontext.rexxclassiccontext.pool(),r27
-swap r14,r28
-null r28
-unlink r14
-copy r28,r16
-load r29,"value"
-load r27,2
-settp r28,768
-settp r29,768
-call r8,llctarget.poolread(),r27
-null r28
-null r29
-null r16
-.srcstep 126 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
-copy r2,r8
-.srcstep 128 0 17 "pipeline-c.crexx" 14 18 19 "  return value * 2"
-load r26,"pipeline-c.crexx:14:18"
-load r28,"2"
-load r27,1
-settp r28,768
-call r9,llctarget.literal(),r27
-null r28
-.srcstep 126 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
-load r26,"pipeline-c.crexx:14:10"
-copy r10,r2
-copy r11,r1
-load r28,"mul"
-copy r29,r10
-copy r30,r9
-copy r31,r11
-load r27,4
-settp r28,768
+load r25,""
+copy r29,r4
+load r30,"ARG"
+load r31,1
+copy r32,r25
+mkref r33,r14
+load r28,5
 settp r29,768
 settp r30,768
 settp r31,768
-call r12,llctarget.binaryop(),r27
-null r28
+settp r32,768
+settp r33,768
+call r5,llctarget.parsesource(),r28
 null r29
 null r30
 null r31
-.srcstep 120 0 17 "pipeline-c.crexx" 14 3 19 "  return value * 2"
-load r26,"pipeline-c.crexx:14:3"
-copy r28,r12
-load r27,1
-settp r28,768
-call r13,llctarget.present(),r27
-null r28
+null r32
+null r33
+null r25
+link r16,r14
+swap r16,r29
+load r28,1
+settp r29,256
+call r22,rexxclassicbifs.rexxbifcallcontext.haserror(),r28
+swap r16,r29
+null r29
+brf llparse2_77_ready,r22
+swap r16,r29
+load r28,1
+settp r29,256
+call r23,rexxclassicbifs.rexxbifcallcontext.errordetail(),r28
+swap r16,r29
+null r29
+unlink r16
+null r14
+signal "CLASSIC_SYNTAX",r23
+ret
+llparse2_77_ready:
+swap r16,r29
+load r28,1
+settp r29,256
+call r20,rexxclassicbifs.rexxbifcallcontext.conditionid(),r28
+swap r16,r29
+null r29
+swap r16,r29
+load r28,1
+settp r29,256
+call r21,rexxclassicbifs.rexxbifcallcontext.conditiondescription(),r28
+swap r16,r29
+null r29
+unlink r16
+null r14
+beq llparse2_77_done,r20,0
+linkref r15,r4
+swap r15,r29
+load r28,1
+settp r29,256
+call r19,rexxclassiccontext.rexxclassiccontext.activation(),r28
+swap r15,r29
+null r29
+unlink r15
+linkref r16,r19
+copy r30,r20
+copy r31,r21
+load r32,13
+swap r16,r29
+load r28,4
+settp r29,256
+settp r30,768
+settp r31,768
+settp r32,768
+call r26,rexxactivation.rexxactivationarguments.queuecallcondition(),r28
+swap r16,r29
+null r29
+null r30
+null r31
+null r32
+copy r30,r20
+swap r16,r29
+load r28,2
+settp r29,256
+settp r30,768
+call r22,rexxactivation.rexxactivationarguments.signalpolicy(),r28
+swap r16,r29
+null r29
+null r30
+unlink r16
+null r19
+ble llparse2_77_done,r22,0
+copy r29,r20
+copy r30,r21
+load r28,2
+settp r29,768
+settp r30,768
+call r24,rexxclassicconditionevent.rexxclassicconditionevent.§factory(),r28
+null r29
+null r30
+signal "CLASSIC_CONDITION",r24
+null r24
+llparse2_77_done:
+null r21
+copy r6,r1
+copy r29,r6
+copy r30,r5
+load r31,0x4C435031010001009F000000010000000300000001000000000000000E000000D000000010000000706970656C696E652D632E6372657878B7000000BC0000000D00000007000000B4000000B7000000BC0000000D00000007000000B4000000B7000000BC0000000D00000007000000B400000050030C000100010000000100010101000000020000000100000001000000030000000500000076616C7565
+load r28,3
+settp r29,768
+settp r30,768
+settp r31,768
+call r26,rexxclassicparse.execute(),r28
+null r29
+null r30
+null r31
+.srcstep 128 0 17 "pipeline-c.crexx" 14 10 15 "  return value * 2"
+load r27,"pipeline-c.crexx:14:10"
+copy r7,r1
+linkref r15,r7
+swap r15,r29
+load r28,1
+settp r29,256
+call r17,rexxclassiccontext.rexxclassiccontext.pool(),r28
+swap r15,r29
+null r29
+unlink r15
+copy r29,r17
+load r30,"value"
+load r28,2
+settp r29,768
+settp r30,768
+call r8,llctarget.poolread(),r28
+null r29
+null r30
+null r17
+.srcstep 127 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
+copy r2,r8
+.srcstep 129 0 17 "pipeline-c.crexx" 14 18 19 "  return value * 2"
+load r27,"pipeline-c.crexx:14:18"
+load r29,"2"
+load r28,1
+settp r29,768
+call r9,llctarget.literal(),r28
+null r29
+.srcstep 127 0 17 "pipeline-c.crexx" 14 10 19 "  return value * 2"
+load r27,"pipeline-c.crexx:14:10"
+copy r10,r2
+copy r11,r1
+load r29,"mul"
+copy r30,r10
+copy r31,r9
+copy r32,r11
+load r28,4
+settp r29,768
+settp r30,768
+settp r31,768
+settp r32,768
+call r12,llctarget.binaryop(),r28
+null r29
+null r30
+null r31
+null r32
+.srcstep 121 0 17 "pipeline-c.crexx" 14 3 19 "  return value * 2"
+load r27,"pipeline-c.crexx:14:3"
+copy r29,r12
+load r28,1
+settp r29,768
+call r13,llctarget.present(),r28
+null r29
 ret r13
 llerror2_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r25,1
+load r26,1
 br llerror2
 llerror2_2:
-load r25,2
+load r26,2
 br llerror2
 llerror2_3:
-load r25,3
+load r26,3
 br llerror2
 llerror2_4:
-load r25,4
+load r26,4
+br llerror2
+llerror2_5:
+load r26,5
+br llerror2
+llerror2_6:
+load r26,6
+br llerror2
+llerror2_7:
+load r26,7
+br llerror2
+llerror2_8:
+load r26,8
+br llerror2
+llerror2_9:
+load r26,9
 llerror2:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r28,r0
-copy r29,r26
-load r27,2
-settp r28,768
-settp r29,768
-call r26,llctarget.failuremessage(),r27
-null r28
+sighalt "OBJECT_NOT_INITIALIZED"
+sighalt "REFERENCE_INVALID"
+sighalt "UNICODE_ERROR"
+sighalt "OUT_OF_RANGE"
+sighalt "FAILURE"
 null r29
-beq llraise2_1,r25,1
-beq llraise2_2,r25,2
-beq llraise2_3,r25,3
+null r30
+null r31
+null r32
+null r33
+null r14
+copy r29,r0
+copy r30,r27
+load r28,2
+settp r29,768
+settp r30,768
+call r27,llctarget.failuremessage(),r28
+null r29
+null r30
+beq llraise2_1,r26,1
+beq llraise2_2,r26,2
+beq llraise2_3,r26,3
+beq llraise2_4,r26,4
+beq llraise2_5,r26,5
+beq llraise2_6,r26,6
+beq llraise2_7,r26,7
+beq llraise2_8,r26,8
+llraise2_9:
+signalorigin "FAILURE",r27,r0
+ret
+llraise2_8:
+signalorigin "OUT_OF_RANGE",r27,r0
+ret
+llraise2_7:
+signalorigin "UNICODE_ERROR",r27,r0
+ret
+llraise2_6:
+signalorigin "REFERENCE_INVALID",r27,r0
+ret
+llraise2_5:
+signalorigin "OBJECT_NOT_INITIALIZED",r27,r0
+ret
 llraise2_4:
-signalorigin "INVALID_ARGUMENTS",r26,r0
+signalorigin "INVALID_ARGUMENTS",r27,r0
 ret
 llraise2_3:
-signalorigin "CONVERSION_ERROR",r26,r0
+signalorigin "CONVERSION_ERROR",r27,r0
 ret
 llraise2_2:
-signalorigin "DIVISION_BY_ZERO",r26,r0
+signalorigin "DIVISION_BY_ZERO",r27,r0
 ret
 llraise2_1:
-signalorigin "CLASSIC_SYNTAX",r26,r0
+signalorigin "CLASSIC_SYNTAX",r27,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
@@ -875,5 +1056,21 @@ llctarget.absent() .expose=llctarget.absent
   .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
 llctarget.failuremessage() .expose=llctarget.failuremessage
   .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
-llctarget.readarg() .expose=llctarget.readarg
-  .meta "llctarget.readarg"="b" ".rexxvalue..rexxvalue" llctarget.readarg() "context=reference .rexxclassiccontext..rexxclassiccontext,ordinal=.int"
+llctarget.parsesource() .expose=llctarget.parsesource
+  .meta "llctarget.parsesource"="b" ".rexxvalue..rexxvalue" llctarget.parsesource() "context=reference .rexxclassiccontext..rexxclassiccontext,kind=.string,ordinal=.int,caller_source=.string,source_state=reference .rexxclassicbifs..rexxbifcallcontext"
+rexxclassicbifs.rexxbifcallcontext.haserror() .expose=rexxclassicbifs.rexxbifcallcontext.haserror
+  .meta "rexxclassicbifs.rexxbifcallcontext.haserror"="b" ".boolean" rexxclassicbifs.rexxbifcallcontext.haserror() ""
+rexxclassicbifs.rexxbifcallcontext.errordetail() .expose=rexxclassicbifs.rexxbifcallcontext.errordetail
+  .meta "rexxclassicbifs.rexxbifcallcontext.errordetail"="b" ".string" rexxclassicbifs.rexxbifcallcontext.errordetail() ""
+rexxclassicbifs.rexxbifcallcontext.conditionid() .expose=rexxclassicbifs.rexxbifcallcontext.conditionid
+  .meta "rexxclassicbifs.rexxbifcallcontext.conditionid"="b" ".int" rexxclassicbifs.rexxbifcallcontext.conditionid() ""
+rexxclassicbifs.rexxbifcallcontext.conditiondescription() .expose=rexxclassicbifs.rexxbifcallcontext.conditiondescription
+  .meta "rexxclassicbifs.rexxbifcallcontext.conditiondescription"="b" ".string" rexxclassicbifs.rexxbifcallcontext.conditiondescription() ""
+rexxactivation.rexxactivationarguments.queuecallcondition() .expose=rexxactivation.rexxactivationarguments.queuecallcondition
+  .meta "rexxactivation.rexxactivationarguments.queuecallcondition"="b" ".boolean" rexxactivation.rexxactivationarguments.queuecallcondition() "condition=.int,description=.string,line=.int"
+rexxactivation.rexxactivationarguments.signalpolicy() .expose=rexxactivation.rexxactivationarguments.signalpolicy
+  .meta "rexxactivation.rexxactivationarguments.signalpolicy"="b" ".int" rexxactivation.rexxactivationarguments.signalpolicy() "condition=.int"
+rexxclassicconditionevent.rexxclassicconditionevent.§factory() .expose=rexxclassicconditionevent.rexxclassicconditionevent.§factory
+  .meta "rexxclassicconditionevent.rexxclassicconditionevent.\xC2\xA7factory"="b" ".rexxclassicconditionevent..rexxclassicconditionevent" rexxclassicconditionevent.rexxclassicconditionevent.§factory() "condition_id=.int,detail=.string"
+rexxclassicparse.execute() .expose=rexxclassicparse.execute
+  .meta "rexxclassicparse.execute"="b" ".void" rexxclassicparse.execute() "context=reference .rexxclassiccontext..rexxclassiccontext,source=.rexxvalue..rexxvalue,program=.binary"

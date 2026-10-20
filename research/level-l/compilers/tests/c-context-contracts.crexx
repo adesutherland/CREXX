@@ -20,9 +20,10 @@ main: procedure = .int expose checks failures
   end
   call versionrefusal(argv[1],5)
   call versionrefusal(argv[1],6)
-  call versionrefusal(argv[1],8)
+  call versionrefusal(argv[1],7)
+  call versionrefusal(argv[1],9)
   if selector = 'parse' then do
-    call selectschema(); call parseschema()
+    call selectschema(); call parseschema(); call forgedschema(argv[1],4)
     say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
     return failures
   end
@@ -61,13 +62,15 @@ check: procedure = .void expose checks failures
 parseschema: procedure = .void
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); data = dereference contract.data()
-  call check(data.opname(53) = 'crexx.c.parse.source' & data.opname(54) = 'crexx.c.parse.execute','PARSE appends exactly two operations after the unchanged foundation')
+  call check(data.opname(52) = 'crexx.c.parse.source' & data.opname(53) = 'crexx.c.parse.execute','PARSE operations follow the v8 scalar-shortcut retirement')
+  descriptor = contract.operation('crexx.c.arguments.read')
+  call check(descriptor.valid() = 0,'retired scalar ARG operation is absent')
   call doshape(contract,'parse.source','context:crexx.c.context','value:crexx.c.value','kind:crexx.g.text ordinal:crexx.g.int64','context.input','condition.resource')
   call doshape(contract,'parse.execute','context:crexx.c.context source:crexx.c.value','','program:crexx.c.parseprogram','context.input.output.observation','condition.resource')
   return
 
-/* Literal expectations for the two appended descriptors complement whole-
- * schema admission. Existing operation IDs and the context ABI stay intact. */
+/* Literal expectations complement whole-schema admission. V8 removes the
+ * scalar ARG descriptor; all later operation ordinals decrease by one. */
 selectschema: procedure = .void
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); data = dereference contract.data()
@@ -75,8 +78,8 @@ selectschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 7 & data.ops() = 54,'current C v7 has exactly 54 operations')
-  call check(data.opname(41) = 'crexx.c.exit' & data.opname(42) = 'crexx.c.when.truth' & data.opname(43) = 'crexx.c.select.missing','SELECT appends descriptors after the unchanged 41 operations')
+  call check(version = 8 & data.ops() = 53,'current C v8 has exactly 53 operations')
+  call check(data.opname(40) = 'crexx.c.exit' & data.opname(41) = 'crexx.c.when.truth' & data.opname(42) = 'crexx.c.select.missing','SELECT descriptor order after scalar ARG retirement')
   descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
   call check(data.arity(id,2) = 1 & data.fieldname(id,2,1) = 'value' & data.typename(data.fieldtype(id,2,1)) = 'core.boolean' & data.arity(id,3) = 0,'WHEN truth returns only a Boolean with no attributes')
@@ -195,8 +198,9 @@ forgedschema: procedure = .void
   context = .llir..valuehandle; forged = .llir..opdraft
   if mode = 4 then do
     context = block.readarg(1,at)
-    forged = block.operation(contract.operation('crexx.c.arguments.read'),at)
+    forged = block.operation(contract.operation('crexx.c.parse.source'),at)
     call forged.input('context',context)
+    call forged.attribute('kind','ARG' as .binary)
     call forged.attribute('ordinal','000000000000000001'x as .binary)
     operation = forged.finish()
   end
@@ -334,10 +338,10 @@ doschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 7 & count = 5 & data.ops() = 54,'C7 has five types and exactly 54 operations')
+  call check(version = 8 & count = 5 & data.ops() = 53,'C8 has five types and exactly 53 operations')
   names = 'do.new do.capture do.start do.entry do.advance do.close while.truth until.truth'
   do i = 1 to 8
-    call check(data.opname(43 + i) = 'crexx.c.' || word(names,i),'DO descriptor append order ' || i)
+    call check(data.opname(42 + i) = 'crexx.c.' || word(names,i),'DO descriptor order after scalar ARG retirement ' || i)
   end
   call doshape(contract,'do.new','context:crexx.c.context','','key:crexx.g.text name:crexx.g.text','loop.context','condition.resource')
   call doshape(contract,'do.capture','value:crexx.c.value','','key:crexx.g.text part:crexx.g.text','loop.context','condition')
@@ -381,8 +385,8 @@ transfercontracts: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 7 & count = 5 & data.ops() = 54,'transfer foundation retains C7/five types/54 operations')
-  call check(data.opname(52) = 'crexx.c.transfer.invalid','transfer appends only descriptor 52')
+  call check(version = 8 & count = 5 & data.ops() = 53,'transfer foundation retains C8/five types/53 operations')
+  call check(data.opname(51) = 'crexx.c.transfer.invalid','transfer is descriptor 51 after scalar ARG retirement')
   call doshape(contract,'transfer.invalid','','','code:crexx.g.text name:crexx.g.text','none','condition','diverges')
   call forgedschema(artifacts,8)
   cases = '1 2 3 4 5 6 10 11 12 13 14 15 16 18 19 20 21 22 23 24 25'

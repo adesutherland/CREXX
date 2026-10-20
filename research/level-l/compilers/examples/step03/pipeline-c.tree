@@ -160,7 +160,10 @@ Number|157:158|0
 CLabel|160:166|twice:
 CProcedure|167:176|procedure
 CArg|179:188|arg value
-ArgTarget|183:188|value
+ParseTemplates|183:188|value
+ParseTemplate|183:188|value
+ParseTarget|183:188|value
+Name|183:188|value
 Return|191:207|return value * 2
 Chain|198:207|value * 2
 Chain|198:207|value * 2

@@ -3,7 +3,8 @@
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
 the context ABI records completed STEP03d. Current source implements the approved
-C v7 PARSE integration, locally qualified in its finite fatal-error profile. Static named
+C v8 ARG integration over the locally qualified finite PARSE profile; current
+ARG qualification is recorded in the plan. Static named
 LEAVE and ITERATE retain their locally qualified v6 foundation.
 The plan records bounded local qualification.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
@@ -41,12 +42,12 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and approved seven-source PARSE projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; current PARSE qualification and wider source/instruction coverage remain open. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, ASCII private PROCEDURE labels/calls and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; current PARSE qualification and wider source/instruction coverage remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/llcparseprogram.crexx` | C-owned LCP1 construction and independent packet admission reuse the compilation-owned source index and existing strict text codec. | Keep runtime envelope ownership in shared B and generic descriptor execution in the cursor kernel. |
-| `levelc/runtime/llctarget.crexx` | One 34-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One 33-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, PARSE execution, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
@@ -436,13 +437,12 @@ All parameters are required and have no defaults/expose flags.
 | `llctarget..truth` | `value = V, context = C` | `.int` |
 | `llctarget..setting` | `operation = .string, context = C, value = V` | `.void` |
 | `llctarget..digits` | `context = C` | `V` |
-| `llctarget..readarg` | `context = C, ordinal = .int` | `V` |
 | `llctarget..countargs` | `context = C` | `V` |
 | `llctarget..existsarg` | `context = C, ordinal = V, option = V` | `V` |
 | `llctarget..lengthvalue` | `value = V, context = C` | `V` |
 
-Keep the currently admitted operation names and argument forms. `readarg`
-retains ARG-instruction uppercase behavior; it is not the raw ARG BIF accessor.
+Keep the currently admitted operation names and argument forms. Standalone ARG
+uses the shared PARSE acquisition/executor, with no scalar read adapter.
 `setting` mutates the borrowed activation only after existing validation; the
 selector then performs the C-frame install above. `digits`, ARG and LENGTH
 select their existing checked BIF entries. Existing argument construction,
@@ -451,12 +451,12 @@ argument construction finishes before the new bundle borrows the activation.
 Keep only the helpers used by the clean selector: `literal`, `poolnew`,
 `poolread`, `poolwrite`, `sayvalue`, `arguments`, `mainargs`, `append`, `present`,
 `absent`, `requirevalue`, `setresult`, `status` and `failuremessage`. Together
-with the nine entries above these form the 23-export foundation. SELECT adds
+with the eight entries above these form the 22-export foundation. SELECT adds
 two entries under its [approved contract](#approved-select-contract), giving
-25 exports. The [approved DO contract](#approved-do-contract) adds seven;
+24 exports. The [approved DO contract](#approved-do-contract) adds seven;
 the [transfer contract](#approved-leave-iterate-contract) adds `invalidtransfer`,
-giving the 33-export foundation. The [PARSE acquisition adapter](#proposed-c-parse-integration)
-adds `parsesource`, giving the current 34 exports. Remove
+giving the 32-export foundation. The [PARSE acquisition adapter](#proposed-c-parse-integration)
+adds `parsesource`, giving the current 33 exports after ARG retires `readarg`. Remove
 `contextnew`, the old nine bodies, compatibility bridge/build entries and
 old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
 the current implementations. The private `bifcontext` remains internal.
@@ -480,19 +480,19 @@ introduced into static applications.
 
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d is locally complete; current C uses family version 7 without
+**CLC-STEP03d is locally complete; current C uses family version 8 without
 changing the context ABI.** Use the following semantic contract and generated procedure
 ABI, with one clean current C target and no compatibility bridge for earlier
-research C programs. The five shared B callables and nine borrowed signatures
+research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
 record or RXAS/VM operation is introduced. Complete labels, conditions and
 INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 7. The neutral scalar names do not load the G
+types and `crexx.c` version 8. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1/2/3/4/5/6 are never reinterpreted as version 7. Within version 7, the complete C
+versions 1/2/3/4/5/6/7 are never reinterpreted as version 8. Within version 8, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -520,12 +520,10 @@ attribute of `parse.execute`; constants, slots, parameters and results of this
 type are refused. Its [LCP1 contract](#proposed-c-parse-integration) belongs to
 the shared B executor and its independent C producer/admission boundary.
 
-The following table owns all 54 current descriptors: 40 context-foundation
-operations, [DROP](#proposed-next-instruction-drop) at 41,
-[SELECT](#approved-select-contract) at 42/43,
-[DO](#approved-do-contract) at 44–51 and
-[transfer.invalid](#approved-leave-iterate-contract) at 52 and
-[PARSE](#proposed-c-parse-integration) at 53/54. Names have
+The following table owns all 53 current descriptors. V8 removes only the
+scalar `arguments.read` operation; all remaining declarations keep their
+relative order/fields/effects. In canonical registration order DROP is 5,
+SELECT is 41/42, DO is 43–50, transfer.invalid is 51 and PARSE is 52/53. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
 `crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
@@ -556,7 +554,6 @@ state/failure/observation proof.
 | `digits` | `context:C` | — | V | `context` | `condition` |
 | `arguments.empty` | — | — | A | `none` | `resource` |
 | `arguments.append` | `arguments:A value:V present:B` | — | A | `none` | `resource` |
-| `arguments.read` | `context:C` | `ordinal:I` | V | `context` | `condition` |
 | `arguments.count` | `context:C` | — | V | `context` | `condition` |
 | `arguments.exists` | `context:C ordinal:V option:V` | — | V | `context` | `condition` |
 | `return.present` | `value:V` | — | R | `none` | `resource` |
@@ -580,7 +577,7 @@ state/failure/observation proof.
 | `parse.execute` | `context:C source:V` | `program:crexx.c.parseprogram` | — | `context.input.output.observation` | `condition.resource` |
 
 `form` admits only the current
-`scientific`/`engineering` spellings; ARG `ordinal` must be positive; `target`
+`scientific`/`engineering` spellings; `target`
 must identify an existing private routine. `function` is a required canonical
 Boolean attribute: true selects `beginInternalFunction`, false selects
 `beginInternalCall`. It is static invocation metadata, not another argument
@@ -590,7 +587,7 @@ limited to the currently selected literal/scalar types, never argument,
 result or context packets manufactured from bytes.
 PARSE source kinds and their ordinal rules, packet/name/source-origin admission,
 and the typed NOTREADY caller checkpoint are specified by the integration
-contract below; ordinary `arguments.read` retains its uppercase behavior.
+contract below. Standalone ARG uses those same operations with packet UPPER=1.
 
 Every generated source-unit procedure, including `$MAIN`, has precisely:
 
@@ -658,8 +655,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v7 IR + current bundle/adapters | Supported through the one-context ABI; the finite PARSE profile is locally qualified. |
-| Current selector + C v1/v2/v3/v4/v5/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v8 IR + current bundle/adapters | Supported through the one-context ABI; the plan records the finite PARSE/ARG qualification boundary. |
+| Current selector + C v1/v2/v3/v4/v5/v6/v7/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -792,8 +789,8 @@ The C lexer retains `typename` only as a whole-token rejection sink, with no
 C parser production consuming it. In particular, `.RCx`/`.RESULTx` must not
 split into a reserved-dot variable plus another target or concatenated value;
 reducing the sink must preserve that refusal and the original error position.
-Preserve raw ARG destination names too, while its existing `readarg` helper
-keeps uppercase argument-content behavior. The wider variable lexer does not
+Preserve raw ARG destination names too; the shared PARSE executor uppercases
+the captured argument without changing target/operand names. The wider variable lexer does not
 expand the current ASCII-undotted routine/call-name profile: validate those
 names separately and refuse unsupported shapes rather than collapsing Unicode
 identities. Full routine-name integration remains open in STEP04/06; include
@@ -929,7 +926,7 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. The current C v7/54 descriptors are owned by the
+   had 41 operations. The current C v8/53 descriptors are owned by the
    [C-family table](#current-c-family-contract).
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
@@ -954,7 +951,7 @@ has no work.
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
-41 operations. Current [C v7/54/34](#current-c-family-contract) supersedes that
+41 operations. Current [C v8/53/33](#current-c-family-contract) supersedes that
 version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
@@ -1028,7 +1025,7 @@ record the bounded LC-I-08 qualification against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
 The qualified DO increment introduced **version 5 / 51 operations** and
 **32 exports**, retaining the four existing C types and context procedure ABI.
-The [current v7/54/34 contract](#current-c-family-contract) supersedes that
+The [current v8/53/33 contract](#current-c-family-contract) supersedes that
 version boundary without changing the DO descriptors. No generic L, B runtime,
 native compiler or VM API/algorithm changes are commissioned.
 
@@ -1204,7 +1201,7 @@ LC-I-10, using the qualified DO ownership protocol. The shared decision is
 **C v6 / 52 operations, four unchanged types and 33 target exports**, refusing
 v5 without a compatibility path. No generic L, shared B runtime, native compiler
 or VM API/algorithm change is commissioned.
-The current v7 PARSE extension adds its own type/operations/export while
+The original v7 PARSE extension added its own type/operations/export while
 preserving these transfer descriptors and the established context ABI.
 
 Extend existing `Leave` and `Iterate` with `name?:Name`; retain every raw symbol
@@ -1669,7 +1666,7 @@ retain their distinct authored tokens and the agreed runtime `26.4` identity.
 
 | Source | Once-only producer, before any target write |
 |---|---|
-| ARG | New `parse.source(context; kind=ARG, ordinal)` calls the current activation's raw `argument(ordinal)` for each selected comma position; omissions/missing positions parse as empty while presence bits and originals remain unchanged. Empty templates advance ordinal without a read or cursor. Existing `arguments.read` remains unchanged because its existing ARG-instruction adapter uppercases and cannot implement plain PARSE ARG. |
+| ARG | New `parse.source(context; kind=ARG, ordinal)` calls the current activation's raw `argument(ordinal)` for each selected comma position; omissions/missing positions parse as empty while presence bits and originals remain unchanged. Empty templates advance ordinal without a read or cursor. Standalone ARG uses this same raw acquisition with the executor UPPER flag; the former scalar arguments.read/readarg shortcut is removed by the approved v8 increment. |
 | VALUE | Ordinary C expression lowering, exactly once even with an empty template; an omitted expression supplies an empty value. Retain effects and resulting value before parsing. |
 | VAR | Existing C `load(context; name)` once, preserving raw-name/tail lookup and source aliasing before any write, even with an empty template. |
 | PULL | Existing configuration `pullText()` once, selected queue first then its default-input route, including an empty first template. No duplicate queue/input implementation. |
@@ -1691,9 +1688,11 @@ returns without a cursor. Omitted empty ARG positions need no executor.
 
 ### Exact approved C IR and B target surface
 
-The approved integration advances only `crexx.c` to **version 7, 54 operations**; the
-existing 52 declarations and their effects remain byte-identical. Add one
-C-owned type `parseprogram`, registered with the existing `.llir..bytescodec`.
+The original integration advanced `crexx.c` to **version 7, 54 operations**,
+preserving its prior 52 declarations and adding the C-owned `parseprogram`
+type with the existing `.llir..bytescodec`. The current
+[ARG contract](#proposed-arg-contract) removes only the scalar shortcut in
+v8/53; the two PARSE declarations below are unchanged.
 It may occur only as the `program` attribute below, never as a value,
 parameter, result, constant operation or slot. The generic LLIR format stays
 v2; neutral scalars stay `crexx.g` v1. V6 is rejected rather than reinterpreted.
@@ -1732,8 +1731,9 @@ rexxclassicparse.execute(
   source = .rexxvalue..RexxValue, program = .binary) -> .void
 ```
 
-`parsesource` is the one justified acquisition adapter, increasing `llctarget`
-to **34 exports**; its SOURCE case receives the C caller's SOURCEINFO result,
+`parsesource` is the one justified acquisition adapter. The original PARSE
+integration gave `llctarget` 34 exports; ARG's scalar retirement leaves the
+current **33 exports**. Its SOURCE case receives the C caller's SOURCEINFO result,
 the other cases require an empty `caller_source`. Its located failure belongs
 to the source AST. `execute` is a direct shared `rxfnsc` export, with no second
 `llctarget.execute` forwarding body. The selector loads `program` as an RXAS
@@ -2029,7 +2029,7 @@ serve CFC-AC01–04/06–12 without closing those complete-C criteria.
 
 | ID | Checkable pass condition |
 |---|---|
-| **CPARSE-AC01** | Independent AST/admission fixtures cover seven sources, UPPER, empty/leading/trailing/repeated comma positions, arbitrary target/dot/control runs, literal/radix/dynamic operands and located malformed/dead source; previous output survives refusal. Exact v7 declarations/metadata/packet malformed controls refuse atomically. |
+| **CPARSE-AC01** | Independent AST/admission fixtures cover seven sources, UPPER, empty/leading/trailing/repeated comma positions, arbitrary target/dot/control runs, literal/radix/dynamic operands and located malformed/dead source; previous output survives refusal. Exact selected C declarations/metadata/packet malformed controls refuse atomically (originally v7, current v8 after the approved ARG retirement). |
 | **CPARSE-AC02** | Direct generic B consumers prove cursor v3 transitions, control-only anchors, backward/equal/zero/oversize positions, empty/missing/repeated patterns, Unicode/NUL and Input/Field order. Direct assembly proves `parseplan` rejects v3 atomically and unchanged v1/v2/direct consumers pass. No duplicated matcher, callable or opcode is introduced. |
 | **CPARSE-AC03** | Direct shared-B and independent new-C tests prove earlier writes/later live reads, old-value operands that close pending sections, repeated/compound/stem/drop/alias targets and exact final remainders with Unicode White_Space/configured blanks. No eager lookahead, shrinking tails or prefix replay. |
 | **CPARSE-AC04** | Seven-source state/effect tests prove once-only acquisition/conversion/UPPER, queue versus LINEIN distinction, exact raw ARG values/presence, non-ARG extra commas receiving empty, SOURCE root mode/logical path/spaces and VERSION runtime identity. Empty templates still consume required sources without a cursor. Direct prebound source-state tests prove LINEIN error/NOTREADY under OFF/CALL/SIGNAL, first-use uninitialized storage and exactly one reset, clean reuse/rebinding, pending CALL line and typed SIGNAL transport before template execution without a new condition ABI. |
@@ -2058,6 +2058,108 @@ serve CFC-AC01–04/06–12 without closing those complete-C criteria.
    obligations, then review LC-I-19. Schedule ARG and PULL as individual
    instruction assignments reusing the executor; retain all twelve CFC criteria
    and last-stage INTERPRET until their own complete proof.
+
+<a id="proposed-arg-contract"></a>
+
+## Approved standalone ARG contract
+
+**Exact AST/IR/export contract approved by Adrian on 20 October 2026;
+ARG-AC01–04 are locally qualified, including the current product targets;
+scoped local delivery is complete. ARG-AC05 remains open.** This LC-I-11 increment applies the agreed `ARG [template_list]`
+meaning, `PARSE UPPER ARG`, through the locally qualified cursor/LCP1/shared-B
+executor. The [current plan](../PLAN.md#current-action-arg) owns ARG-AC01–05
+and ARG-STEP01–05. Complete CFC, PARSE observations/platforms and last-stage
+INTERPRET retain their existing acceptance and owners.
+
+### Exact public C-owned changes
+
+| Surface | Previous scalar contract | Approved current replacement |
+|---|---|---|
+| Standalone ARG raw AST | `CArg(items:ArgTarget+)`; each `ArgTarget(name:text)` is empty or one scalar name. | `CArg(templates:ParseTemplates)`, exactly one required child. Reuse existing `ParseTemplates(items:ParseTemplate+)` and every existing `ParseTarget`, `ParseDrop`, `ParseLiteral`, `ParseVariablePattern` and `ParsePosition` shape. Remove `ArgTarget` and old `CArg.items`; no shim or alternate projection. |
+| C semantic family | `crexx.c` v7, five C types, 54 operations including `arguments.read`. | V8, the same five C types, 53 operations: remove only `crexx.c.arguments.read`, retaining the exact order/fields/effects of all other declarations. `parse.source`/`parse.execute` become operations 52/53. Reject v7 explicitly rather than reinterpret it; LLIR v2 and neutral `crexx.g` v1 are unchanged. |
+| Target surface | `llctarget` has 34 exports, including `readarg(context,ordinal)->RexxValue`. | Remove that export, metadata and body, leaving 33 exports. Existing `parsesource(context,kind,ordinal,caller_source,source_state)` and `rexxclassicparse.execute(context,source,program)` keep their exact signatures. |
+
+No generic L AST field/copy API, runtime packet version, opcode, native frontend
+or matcher changes. Generic `block.readarg` reads a function's ABI argument and
+is unaffected. The separate test-only `test.classic` family is not a product
+contract and does not provide a compatibility path. Update actual schema,
+admission, target-inventory, argv-helper and maintained IR/RXAS consumers;
+tests/example snapshots are the shortcut's remaining users, not a reason to
+retain obsolete code.
+
+The new CArg span is the complete authored ARG instruction, beginning at the
+ARG token. `ParseTemplates`, including each empty template boundary, and its
+items/names/literals/operands retain the same original half-open byte and scalar
+positions as PARSE templates. The clause key stays `CArg.start()+1`. CArg has
+no fabricated ParseSource or authored UPPER token: the C frontend supplies
+source kind ARG and semantic upper flag 1 privately. Ordinary Parse continues
+to retain its optional authored UPPER spelling and source node unchanged.
+
+### Semantics, token policy and lowering
+
+Use the current `parse.templates` grammar directly after `argword`. At an
+instruction ARG head, token classification enters template mode immediately;
+THEN/END/WITH/UPPER/ARG remain raw template names in their template positions,
+parenthesized names remain raw operands, and only a real nearest IF owner
+admits a depth-zero ELSE boundary. A variable/assignment named ARG remains
+ordinary source. Joining suppresses expression concatenation inside ARG
+templates and applies the existing adjacent constant-symbol guards. Contextual
+38.1/38.2 template errors and semantic numeric/radix checks cover malformed and
+unreachable ARG source; no arbitrary expression is admitted as a pattern or
+position. Diagnostics retain the authored ARG byte/scalar location and the
+previous output survives compilation refusal.
+
+One private lowering routine serves both Parse and CArg. For each nonempty
+ARG template, acquire its ordinal's raw activation argument once, construct
+one immutable LCP1 packet with UPPER bit 1, then call the existing executor
+once. Empty leading/trailing/repeated comma positions only advance ordinal;
+bare or comma-only ARG emits no acquisition, packet or executor. All-drop and
+targetless-control templates are nonempty and retain source/control work.
+Classify all-empty CArg before reopening a terminated block, while still
+visiting/checking its syntax, so post-EXIT/RETURN ARG adds no dead epilogue.
+
+The executor snapshots/converts the selected source once and applies the
+existing checked simple UPPER once before parsing. It never uppercases
+patterns, raw target/operand names or originals in the activation. Missing and
+omitted values parse as empty while explicit empty remains present; repeated
+ARG and subsequent PARSE ARG/presence queries see the original packet. One
+target receives the whole uppercased source, including outer blanks; earlier
+word targets and the final exact remainder use the existing shared word policy.
+Positions remain Unicode codepoints, including NUL and width-changing simple
+case mappings, without full-casing expansion or normalization.
+
+The executor owns live raw-name reads/writes: an operand closing a pending
+section is read before that section's writes, while later operands/compound
+tails observe earlier acknowledged writes. Retain backward/equal/zero movement,
+empty/missing patterns, configured blanks and exact error/source/cleanup
+behavior already specified for PARSE. Native C's eager dynamic-operand capture
+is a classified comparator limitation, never an expected new-C result. The
+current nine-name fatal bridge and shared annotation may say PARSE internally,
+but must preserve the authored ARG clause, template/item/action and raw fault
+provenance. Complete NOVALUE/resumption/TRACE is still ARG-AC05 work.
+
+### Required focused proof and ownership
+
+ARG-AC01–04 require independent raw AST/negative, activation/presence, live-order,
+Unicode/NUL and runtime/error oracles; actual readable caller/shared-helper RXAS;
+v8/53-operation/33-export admission and explicit v7 refusal; affected existing
+PARSE/DROP/argv/call consumers and regenerated maintained views. Bare/comma-only
+ARG versus blank controls cover main, IF, post-EXIT and private post-RETURN
+contexts in both IR modes. Nonempty simple, word/drop, static/variable pattern,
+position/backward and arbitrary-comma cases show exactly one source/executor
+per invoked template, constant packet loads, no `arguments.read`/`readarg`, no
+caller pool writes/UPPER splitter/eager operand vector and stable logical source
+identities. Reuse unchanged executor/cursor/finite-relay proof rather than run a
+new native/sanitizer campaign for this source-only increment.
+
+WP-05/06 own the serial source writer; WP-10 owns required schema/export/view
+integration through that writer, and WP-12 reviews independent expectations,
+final diff and RXAS. Builds are scheduled by the coordinator in normal Debug;
+an expanded nested aggregate is measured in isolation before its retained
+serial/generous timeout is accepted. Approval also commissions a scoped local
+commit after qualification, with no push or hosted wait. Whole LC-I-11 remains
+open until ARG-AC05's shared activation/observation/delivery owners supply their
+proof; native or direct-B passes never substitute for new-C coverage.
 
 ## Optimisation ownership
 

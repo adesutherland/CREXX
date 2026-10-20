@@ -54,8 +54,11 @@ The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
-profile is locally qualified; complete conditions/TRACE, declared platforms and
-the separate ARG/PULL instruction reviews remain open in the plan.
+profile is locally qualified. Standalone ARG now reuses those templates and
+executor with implicit UPPER, replacing its scalar shortcut in C v8/53
+operations and the 33-export target. The plan records its focused qualification;
+complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
+acceptance remain open.
 
 [The walkthrough](doc/pipeline-walkthrough.md) and maintained examples describe
 the implemented PoC. C completion proceeds instruction by instruction, ending

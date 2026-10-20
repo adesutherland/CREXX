@@ -91,9 +91,16 @@ schema is unchanged.
 |---|---|
 | CLabel | `name: text` |
 | CProcedure | no fields |
-| CArg / ArgTarget | `items: ArgTarget+` / `name: text`, empty for omitted target |
+| CArg | `templates: ParseTemplates`, exactly one required child; implicit ARG source/UPPER is private lowering policy |
 | CNumeric | `setting: text, value: node?` |
 | CForm | `form: text`, the optional SCIENTIFIC/ENGINEERING token spelling; empty means reset |
+
+CArg reuses the existing ParseTemplate and Parse* item shapes; `ArgTarget`
+and `CArg.items` are absent. Its complete authored instruction span, every
+template/item span and empty boundary remain exact, without a fabricated UPPER
+or ParseSource token. The [approved ARG contract](architecture.md#proposed-arg-contract)
+also retires the scalar read operation/export in C v8/53 operations and the
+33-export target. The plan records qualification and remaining shared owners.
 
 CLabel and CProcedure remain separate nodes. The routine table recognises an
 admitted label followed immediately by PROCEDURE and records the interval up

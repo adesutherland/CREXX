@@ -282,10 +282,11 @@ argumentcases: procedure = .void
   call activation.appendText('')
   call activation.append(.RexxValue('ignored trailing payload'),0)
   call valuecheck(llctarget..countargs(reference context),'3','highest supplied position excludes trailing omission')
-  call valuecheck(llctarget..readarg(reference context,1),'MIXED','ARG instruction retains uppercase')
-  call valuecheck(llctarget..readarg(reference context,2),'','omitted ARG instruction position')
-  call valuecheck(llctarget..readarg(reference context,3),'','explicit empty ARG instruction position')
-  call valuecheck(llctarget..readarg(reference context,9),'','missing ARG instruction position')
+  source_state = .rexxclassicbifs..RexxBifCallContext
+  call valuecheck(llctarget..parsesource(reference context,'ARG',1,'',reference source_state),'Mixed','ARG source retains raw argument')
+  call valuecheck(llctarget..parsesource(reference context,'ARG',2,'',reference source_state),'','omitted ARG source position')
+  call valuecheck(llctarget..parsesource(reference context,'ARG',3,'',reference source_state),'','explicit empty ARG source position')
+  call valuecheck(llctarget..parsesource(reference context,'ARG',9,'',reference source_state),'','missing ARG source position')
   call presencecheck(reference context,'1','E','1')
   call presencecheck(reference context,'2','E','0')
   call presencecheck(reference context,'2','O','1')
@@ -299,7 +300,7 @@ argumentcases: procedure = .void
   call argumenterror(reference context,'1','X','RXC-LC-40.28')
   call activation.appendText('later')
   call valuecheck(llctarget..countargs(reference context),'5','later activation mutation is visible')
-  call valuecheck(llctarget..readarg(reference context,5),'LATER','later argument value is visible')
+  call valuecheck(llctarget..parsesource(reference context,'ARG',5,'',reference source_state),'later','later raw argument value is visible')
   return
 
 presencecheck: procedure = .void

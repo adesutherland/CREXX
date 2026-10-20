@@ -335,6 +335,12 @@ request: class
       nonemitting = 1
       if node.count('value') then nonemitting = simpleliteral(node.child('value'))
     end
+    if kind = 'CArg' then do
+      nonemitting = 1; templates = node.child('templates')
+      do i = 1 to templates.count('items')
+        if templates.child('items',i).count('items') > 0 then nonemitting = 0
+      end
+    end
     if _terminated & nonemitting = 0 then do
       _block = newblock('unreachable'); _terminated = 0; _alive = 0
     end
@@ -436,17 +442,7 @@ request: class
         _terminated = 1; _alive = 0
       end
       when kind = 'Invoke' then value = invocation(node,0)
-      when kind = 'Parse' then call parsestatement(node)
-      when kind = 'CArg' then do i = 1 to node.count('items')
-        targetnode = node.child('items',i); name = strip(targetnode.text('name'))
-        if name = '' then iterate
-        op = _block.operation(_contract.operation('crexx.c.arguments.read'),origin)
-        call op.input('context',_block.load(_contextslot,origin))
-        codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(i as .string)); built = op.finish(); value = built.result()
-        op = _block.operation(_contract.operation('crexx.c.store'),origin)
-        call op.input('context',_block.load(_contextslot,origin)); call op.input('value',value)
-        call op.attribute('name',name as .binary); built = op.finish()
-      end
+      when kind = 'Parse' | kind = 'CArg' then call parsestatement(node)
       when kind = 'CNumeric' then do
         setting = lower(node.text('setting'))
         if node.count('value') then value = expression(node.child('value'))
@@ -466,28 +462,32 @@ request: class
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
     return
-  /** PARSE retains one source value and emits immutable, source-owned template
-   * packets. The shared executor owns all live name reads and target writes. */
+  /** PARSE and ARG share immutable, source-owned template packets. ARG keeps
+   * its authored instruction identity and privately implies source ARG/UPPER.
+   * The shared executor owns all live name reads and target writes. */
   parsestatement: method = .void
     arg node = .llast..node
     name = .llast..node; operand = .llast..node; item = .llast..node
     template = .llast..node; emptyorigin = .llir..origin
     op = .llir..opdraft; built = .llir..opview
     mode = .string; decoded = .string; movement = .int; code = .string; indexwork = .int
-    source = node.child('source'); templates = node.child('templates'); origin = at(node)
-    spelling = source.text('kind'); kind = ''
-    if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then kind = upper(spelling)
-    if wordpos(kind,'ARG PULL SOURCE LINEIN VERSION VALUE VAR') = 0 then do
-      code = '25.12'; if node.text('upper') <> '' then code = '25.13'
-      call fail(source,'SYNTAX: RXC-LC-' || code || ': invalid PARSE type ' || spelling); return
-    end
-    uppertext = node.text('upper')
-    if uppertext <> '' then do
-      if verify(uppertext,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') <> 0 | upper(uppertext) <> 'UPPER' then do
-        call fail(node,'SYNTAX: invalid PARSE UPPER flag'); return
+    source = .llast..node; templates = node.child('templates'); origin = at(node)
+    kind = 'ARG'; upperflag = 1; value = .llir..valuehandle
+    if node.kind() = 'Parse' then do
+      source = node.child('source'); spelling = source.text('kind'); kind = ''
+      if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then kind = upper(spelling)
+      if wordpos(kind,'ARG PULL SOURCE LINEIN VERSION VALUE VAR') = 0 then do
+        code = '25.12'; if node.text('upper') <> '' then code = '25.13'
+        call fail(source,'SYNTAX: RXC-LC-' || code || ': invalid PARSE type ' || spelling); return
       end
+      uppertext = node.text('upper')
+      if uppertext <> '' then do
+        if verify(uppertext,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') <> 0 | upper(uppertext) <> 'UPPER' then do
+          call fail(node,'SYNTAX: invalid PARSE UPPER flag'); return
+        end
+      end
+      upperflag = uppertext <> ''
     end
-    upperflag = uppertext <> ''; value = .llir..valuehandle
     select
       when kind = 'VALUE' then do
         if source.count('value') then value = expression(source.child('value'))

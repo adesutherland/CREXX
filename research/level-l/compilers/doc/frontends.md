@@ -164,7 +164,7 @@ installs its validated settings; child return restores the parent frame.
 | `truth` | Validate the Classic logical value through the live context; invalid values can fail. Exact literal `0`/`1` also proves a derived core Boolean for control selection, while retaining runtime truth effects. |
 | `numeric.digits/fuzz/form`, `digits` | Validate/update the borrowed activation or inspect the executing frame, including defaults/reset and caller inheritance. |
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
-| `arguments.read` | The admitted simple ARG target: uppercase a copy, apply Classic single-target parsing, missing gives empty; preserve the original packet for ARG queries. |
+| `parse.source/execute` | PARSE and standalone ARG share raw source acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty comma templates skip acquisition/execution and preserve ordinal gaps. Live names/presence/original arguments retain the shared runtime contract. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
 | `call` | Resolved local target, argument packet, borrowed context and function/subroutine attribute; fresh private child owners and explicit returned-value presence. |
 | `return.present/absent`, `requirevalue`, `setresult` | Distinguish RETURN with/without value; expression calls require a value; CALL sets or drops RESULT. |

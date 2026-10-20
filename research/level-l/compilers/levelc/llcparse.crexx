@@ -156,6 +156,7 @@ parsed: class
       end
       if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
       if word = 'PARSE' then parsemode = 'header'
+      if word = 'ARG' then parsemode = 'template'
       if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; ownercontrols[ownercount] = ''; end
       if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
       if word = 'END' then do
@@ -242,6 +243,7 @@ parsed: class
       if kind = sep | kind = thenword | kind = elseword then dropping = 0
       if kind = sep | kind = thenword | kind = elseword then do; parsing = 0; parsetemplate = 0; parsevarname = 0; end
       if kind = language.tokenid('parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
+      if kind = language.tokenid('argword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
       if kind = language.tokenid('parsevalue') then do; parsing = 2; parsetemplate = 0; end
       if kind = language.tokenid('parsevar') then parsevarname = 1
       if kind = language.tokenid('parsekind') | kind = language.tokenid('parsewith') then do; parsing = 1; parsetemplate = 1; end
@@ -418,6 +420,7 @@ parsemessage: procedure = .string
     if mode = 'value' & kind = language.tokenid('parsewith') & tokens.start(i) = offset then return fallback
     select
       when kind = language.tokenid('parseword') then do; mode = 'header'; upperflag = 0; prefix = 0; end
+      when kind = language.tokenid('argword') then do; mode = 'template'; upperflag = 1; prefix = 0; end
       when mode = '' then nop
       when kind = language.tokenid('parseupper') then do; mode = 'header'; upperflag = 1; end
       when kind = language.tokenid('parsevalue') then mode = 'value'

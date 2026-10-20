@@ -63,13 +63,41 @@ start; CLC stage closure also requires the complete plan criteria.
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
 
+<a id="arg-assignment-packet"></a>
+
+## Approved ARG instruction assignment packet
+
+**Exact AST/IR/export contract approved by Adrian on 20 October 2026.** Baseline is
+`36a716b20c99228910d5425ebbabc2c24b85647f` on existing synchronized develop;
+111 unrelated active files have tool-memory fingerprints/modes. ARG-STEP02/03
+are locally qualified/complete; product targets pass and STEP04 is locally committed. The
+[ARG contract](architecture.md#proposed-arg-contract) and
+[ARG-AC01–05 / ARG-STEP01–05](../PLAN.md#current-action-arg) govern this one
+LC-I-11 increment; original CFC/CPARSE criteria and last-stage INTERPRET remain.
+
+| Assignment | Exclusive ownership / deliverable | Independent review |
+|---|---|---|
+| **ARG-WP01 — ARG-STEP01; approved/complete** | One documentation integrator prepared exact CArg(templates:ParseTemplates), retired ArgTarget/items, removed arguments.read/readarg and C v8/five types/53 operations/33 exports; Adrian approved the packet before product edits. | Verify public changes are explicit, no token/span fabrication or compatibility shim, unchanged LCP1/executor/source-adapter/ISA and numbered acceptance preserve whole-instruction boundaries. |
+| **ARG-WP02 — ARG-STEP02; locally qualified** | One serial writer owns `levelc.rxl`, `llcparse`, `llcfrontend`, `llcir`, `llcrxas`, target `llctarget`, and assigned C schema/admission/target fixtures. Reuse ParseTemplates and private template lowering; classify empty CArg before dead-block preparation; retire only the obsolete scalar operation/export/body and update exact admission/version inventories. | ARG-AC01–03: source/AST spans, contextual tokens/ELSE, empty ordinals, packet UPPER, raw arguments/presence, live reads/writes/compound names and authored negative/error behavior. Shared B executor/Unicode/native C remain read-only. |
+| **ARG-WP03 — ARG-STEP03 locally qualified / STEP04 locally committed** | Assigned test writer owns existing frontend/backend selectors, independent ARG positive/error fixtures and case registration; the integrator updates affected direct-IR/target/argv consumers and maintained example views. One build owner prepares affected targets and schedules focused normal Debug/toolchain proof. | ARG-AC01–04: paired B-mode/VM cells, both C IR modes, assembler-off with a separate assembler-on control, exact v7 refusal/current schema/export checks, bare/comma-only blank-equivalent dead-code shape and full caller/helper RXAS. Measure any expanded nested aggregate before accepting scheduling/timeout properties. |
+| **ARG-WP04 — ARG-STEP04 locally committed / STEP05 open** | WP-12 read-only final implementation/RXAS/diff review; single docs integrator records concise qualified inputs/commands/results, open shared owners and scoped local commit. | Coordinator independently validates evidence and 111 preserved unrelated files; no push, hosted wait, native refresh, broad aggregate or per-slice sanitizer campaign. ARG-AC05/whole LC-I-11 and all CFC criteria stay open without required shared activation/observation/delivery proof. |
+
+Focused Unicode cases cover a decisive sample such as é/µ/ß/ÿ, emoji and NUL,
+unchanged raw source and unchanged dynamic patterns; reuse qualified shared
+Unicode/executor proof. Do not add BIF surface or a new Unicode campaign merely
+to make fixtures convenient. Native C is a control with a known eager-operand
+limitation; independent expected pool states decide disagreement. No competing
+plan, raw run bundle, duplicated matcher or ARG-specific runtime is commissioned.
+
 <a id="parse-integration-assignment-packet"></a>
 
 ## Approved PARSE integration assignment packet
 
 **Implementation approved by Adrian on 20 October 2026.** Baseline is committed
-`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; current implementation selects C v7/54
+`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; that PARSE checkpoint selected C v7/54
 operations and `llctarget` 34 exports, with bounded local C qualification.
+The approved ARG increment above now selects v8/53/33 without changing PARSE's
+packet, executor or acquisition signatures.
 The [approved integration contract](architecture.md#proposed-c-parse-integration)
 owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,
 two B signatures and CPARSE-AC01–08/STEP01–05. CPARSE-STEP01 is complete and

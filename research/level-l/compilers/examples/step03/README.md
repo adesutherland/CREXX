@@ -16,6 +16,13 @@ quoted `String` occupies byte range `139:150` in the 208-byte source. The IR
 retains `CEB1E6BCA2F09F9982` as the value's bytes; LENGTH's result is a runtime
 contract, not a byte-span calculation.
 
+The current pipeline CArg owns ParseTemplates/ParseTemplate/ParseTarget rather
+than scalar ArgTarget children. Its IR uses raw `parse.source` plus an immutable
+UPPER packet for `parse.execute`; the activation's original argument is retained.
+The [ARG increment](../../PLAN.md#current-action-arg) records the focused source,
+schema and emitted-view qualification. These tree/IR probes themselves do not
+assemble or execute output.
+
 | Input pair | Classic output | G output |
 |---|---|---|
 | Pipeline | [Tree](pipeline-c.tree), [IR](pipeline-c.ir) | [Tree](pipeline-g.tree), [IR](pipeline-g.ir) |

@@ -376,7 +376,7 @@ foreach(_mode opt noopt)
         set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
           TIMEOUT 300 LABELS "library;level-l;compiler-frontends;optimizer-parity")
         if(_group STREQUAL "grammar")
-          # IF adds 44s Debug, SELECT 50s, DO 66s and PARSE 65.86s measured
+          # IF adds 44s Debug, SELECT 50s, DO 66s, PARSE 65.86s and ARG 28.7s measured
           # components. PARSE's focused selector remains available without a
           # duplicate CTest registration; grammar already invokes it.
           # Serialize the expanded grammar workload with a generous hang guard.
@@ -423,6 +423,30 @@ if("c" IN_LIST _languages)
           llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
           library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
       endforeach()
+    endforeach()
+  endforeach()
+  # Isolated ARG: 29 nested commands in 121.816s opt/rxbvm/IR-off Debug.
+  # Pair compiler modes/VMs; unchanged shared-executor cross-cell proof is reused.
+  # Windows has only rxbvm, so its noopt lane uses that available engine too.
+  foreach(_mode opt noopt)
+    set(_arg_vm rxbvm)
+    if(_mode STREQUAL "noopt" AND TARGET rxtvm)
+      set(_arg_vm rxtvm)
+    endif()
+    foreach(_ir on off)
+      set(_test "llcompiler_c_arg_${_mode}_${_ir}_${_arg_vm}")
+      add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/arg/check-arg.py"
+        --build "${CMAKE_BINARY_DIR}"
+        --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+        --mode ${_mode} --vm ${_arg_vm} --ir ${_ir})
+      set_tests_properties(${_test} PROPERTIES
+        PASS_REGULAR_EXPRESSION "ARG[|]phase=all[|].*commands=29[|]failures=0"
+        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+        llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+        library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_arg_vm})
     endforeach()
   endforeach()
   add_custom_target(llcompiler_c_drop_measure

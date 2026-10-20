@@ -1,9 +1,10 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified. The approved
-C PARSE implementation and product targets have local native, shared-B and
-paired C qualification and are locally committed. Complete conditions/TRACE,
-delivery and platform acceptance remain open. ARG subsequently reuses the executor; INTERPRET is last.**
+**Complete C is open. The approved C PARSE integration is locally committed;
+the approved complete-template ARG profile is now locally qualified with paired
+C execution, consumer/RXAS review and a successful product build. Scoped local
+delivery is complete. Complete conditions/TRACE, delivery/platform
+acceptance and ARG-AC05 remain open. INTERPRET is last.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -19,9 +20,131 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
+<a id="current-action-arg"></a>
+
+## Current action: locally qualified complete-template ARG increment
+
+Deliver standalone `ARG [template_list]` as the agreed `PARSE UPPER ARG`
+behavior, using the committed shared executor and current activation. Replace
+the source-only scalar shortcut with arbitrary comma/template support, keeping
+original argument values/presence, live pool ordering, Unicode and authored
+errors. This is LC-I-11/CLC-STEP06 work, not a new ARG splitter or an expansion
+of PROCEDURE, CALL, conditions/TRACE, host invocation or INTERPRET scope.
+
+**Approved by Adrian on 20 October 2026:** the [exact ARG contract](doc/architecture.md#proposed-arg-contract)
+replaces the observable raw AST `CArg(items:ArgTarget+)` with
+`CArg(templates:ParseTemplates)`, reusing the existing template/item nodes and
+retiring `ArgTarget` without a compatibility projection. It also removes the
+obsolete source shortcut's `crexx.c.arguments.read` operation and
+`llctarget.readarg` export/body: C v8 has the same five C types and 53
+operations, and the target has 33 exports. V7 is explicitly refused. LCP1,
+the shared executor/source adapter signatures, generic `block.readarg` and ISA
+remain unchanged. ARG-STEP02/03 are locally qualified/complete; STEP04 is
+locally committed. Whole LC-I-11 remains open under ARG-AC05.
+
+| Criterion | Checkable acceptance / current status |
+|---|---|
+| **ARG-AC01 — Locally qualified** | Approved named AST and complete template grammar retain exact ARG/template/item byte/scalar spans; contextual words/nearest ELSE, empty/leading/trailing/repeated commas and located malformed/dead source pass independent frontend and previous-output controls. |
+| **ARG-AC02 — Locally qualified** | Main/private/nested/recursive activations prove once-only simple UPPER of each selected source, exact word/pattern/position/NUL/Unicode behavior, arbitrary representable ordinals, repeated reads, missing/omitted versus present-empty state and unchanged raw ARG queries. Empty templates read/execute nothing. |
+| **ARG-AC03 — Locally qualified** | Independent source tests prove earlier target writes reach later raw-name operands/compound tails, closing operands use their correctly ordered old/live values, malformed positions retain 26.4 and authored ARG origins, earlier writes survive and later effects do not run. Reuse unchanged shared-executor ownership/finite-relay proof. |
+| **ARG-AC04 — Locally qualified** | Exact v8/five-type/53-operation and 33-export inventories, explicit v7/malformed-schema refusal and affected consumer views pass. Complete caller/helper RXAS and focused execution in paired B-mode/VM cells, both C IR modes and separately selected assembler modes prove one source/packet/executor per invoked template, no scalar shortcut/second splitter/eager operand vector, truthful logical identities and no new C-host/runtime dependency. Bare/comma-only ARG versus blank controls add no operations, frame/default-return work or dead block after EXIT/RETURN; syntax validation remains. Current product targets, independent review and scoped local delivery pass. |
+| **ARG-AC05 — Open; shared owners retained** | Complete LC-I-11 additionally needs required shared-label/fall-through/EXPOSE activations, configured errors/NOVALUE, conditions/resumption, clause/TRACE and declared delivery/platform proof under CLC-STEP03/06/07/10. A bounded private-routine fatal-profile result does not close this row or any CFC criterion. |
+
+1. **ARG-STEP01 — Approved/complete (AC01–05):** Adrian approved the exact C-owned
+   AST revision, v8 operation removal, 33-export target and this implementation packet before product edits;
+   preserve existing PARSE/CFC acceptance and the last-stage INTERPRET gate.
+2. **ARG-STEP02 — Locally qualified/complete (AC01–03):** change `levelc.rxl`, contextual
+   token/layout/diagnostic policy in `llcparse`, and private shared template
+   lowering in `llcfrontend`. Standalone ARG supplies its authored statement,
+   `ParseTemplates`, source kind ARG and implicit upper flag 1; PARSE retains
+   its current AST/source behavior. Classify all-empty ARG before dead-block
+   preparation. Remove the scalar operation/selector/admission/export/body,
+   register C v8 and update exact-schema/metadata consumers; no generic L or
+   shared-runtime algorithm changes.
+3. **ARG-STEP03 — Locally qualified/complete (AC01–04):** add independent frontend/negative,
+   activation/live-order/runtime and small RXAS-shape fixtures to existing
+   maintained test routes. Prepare affected B modules with existing recipes,
+   run focused normal Debug proof and inspect actual caller/shared-helper RXAS.
+   Classify native comparisons against independent expectations. Measure any
+   expanded nested aggregate before retaining serial/generous scheduling.
+4. **ARG-STEP04 — Locally committed/complete (AC01–04):** current schema/user
+   views and concise qualification, independent final-input/diff review,
+   preserved unrelated work and the scoped local commit are complete. No push, hosted wait,
+   broad native refresh or per-slice sanitizer campaign is commissioned.
+5. **ARG-STEP05 — Open; later shared integration (AC05):** close remaining
+   activation/observation/delivery dependencies under their existing owners,
+   then review whole LC-I-11. Preserve CPARSE-AC07/08, engine platform gates
+   and every open CFC criterion rather than inheriting native or direct-B passes.
+
+The shortcut audit found only its source lowering, schema/target tests and
+maintained example snapshots as consumers, with no independent product use.
+Those maintained consumers migrate in this increment; no research-C backward
+compatibility path is retained. Generic L function-argument access is unrelated
+and remains. Baseline is `36a716b20c99228910d5425ebbabc2c24b85647f` on the
+existing synchronized `develop`; 111 unrelated active files were fingerprinted
+in tool memory before the ARG proposal and product edits.
+
+### Local ARG qualification — 20 October 2026
+
+Inputs are the approved ARG source/test/build changes over the baseline above,
+in normal macOS ARM64 Debug. The implementation and test inputs were frozen
+after the focused passes; final documentation/views do not invalidate them.
+The source-only increment changes no shared B parse/Unicode or native algorithm.
+Existing cursor/executor, finite-relay and sanitizer proof is reused at its
+stated boundary; no new sanitizer, broad CTest, hosted, installed/platform,
+release or complete-instruction qualification is claimed.
+
+| Command / maintained selector | Observed result and scope |
+|---|---|
+| `frontend-tests-linked.rxbin ... arg`, opt/rxbvm and noopt/rxtvm | **158/0 each**; raw AST/templates, contextual/ELSE rules, empty ordinals, UPPER packet, Unicode/CRLF byte/scalar spans, malformed/dead/limit controls. Existing PARSE selector **214/0** in opt/rxbvm. |
+| `python3 research/level-l/compilers/tests/arg/check-arg.py --build cmake-build-debug --work <temporary> --mode <mode> --vm <vm> --ir <on\|off>` | Four paired cells: opt/rxbvm and noopt/rxtvm, IR on/off, **29 commands/0 failures each (116 total)**. Opt/on reuses successful source7/shapes12, then corrected refusal6/fatal4; no single full-run timing is claimed for that cell. Other isolated full runs: opt/off **121.816s**, noopt/on **129.664s**, noopt/off **126.772s**. Each source phase separately assembles with optimization off and on. |
+| `c-context-contracts-linked.rxbin ... parse`; direct target/context fixture; `tests/check-target-context.py` | Paired opt/rxbvm and noopt/rxtvm: schema/version/malformed packet **32/0 each**, target behavior **178/0 each**, target RXAS shape **252/0 opt, 255/0 noopt**. Exact current v8/53-op/33-export and explicit v7 refusal; original raw values/presence retained. |
+| Existing `parse-admission-linked.rxbin`, `parse-program-contracts-linked.rxbin`; DROP fixture | Paired admission **91/0 each** and packet **26/0 each**; opt/rxbvm DROP **47/0**. Unchanged packet/runtime contracts retain their earlier broader proof. |
+| `tests/check-parse-frontend.py --mode opt --vm rxbvm --ir on` with the same build/work options | Existing seven-source PARSE corpus **14 commands/0 failures**, **41.381s**, explicit providers and empty native-compiler PATH. |
+| `tests/check-backend.py --case argv-c --case arguments-c` | Opt/rxbvm/IR-on and noopt/rxtvm/IR-off **8 commands/0 failures each**; maintained `check-step07.py` nine-handler shape assertion also passes both captured argv modules. This is focused consumer proof, not a replay of the full STEP07 aggregate. |
+| Existing G `pipeline-g` and read-only native argv controls | **4 commands/0 failures each**. G prints independent `10/0/3`; native argv is a safe control, not the live-operand oracle. |
+| Maintained example views: step03 pipeline tree/IR, step04 pipeline IR/RXAS, step07a scale IR/selected IR/RXAS | Seven readable views refreshed. Current C pipeline and scale RXAS assemble with `-n`, explicitly link and execute to **10/0/3** and **14/21**. Step03 tree/IR inspection is not execution proof. |
+| `cmake --build cmake-build-debug --parallel 4 --target stage-product llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt` | **Pass**, warning/error-free. Completed prerequisite/product steps were retained after the duplicate generator was stopped; the resumed final build took **18.49s** and did not regenerate the C grammar. This is a local Debug product result, not hosted/install/platform qualification. |
+
+Tiny grammar/LR preflight passed before the full grammar. Initial explicit
+lexical reuse passed its internal stamp/limit checks. Final native/version and
+B bootstrap artifact refresh changed the private generator provenance key,
+requiring a legitimate current-tool cold generation (**about 677s**). Its full
+**7,902,062-byte** RXAS is byte-identical to the qualified ARG grammar
+(SHA256 `31488fdf0e6ea996be17c64e0459b38bcb8b6482438d82b3847dfba6a9377fc6`).
+Current RXAS assembly published a genuinely newer output. Ninja retained an
+older recorded mtime, so its duplicate generation was stopped; supported
+`ninja -t restat` refreshed only the relative/absolute aliases of that one
+output after independent edge/equality review. Dry-run then required no grammar
+work. No cache manifest, stamp, guard or algorithm source was changed.
+
+The negative fixture initially asserted an incorrect generic CLI location
+format. Exact authored diagnostics corrected only that oracle: six refusals
+now check identity, line/column/byte, caret, old-output sentinel and no staging
+publication. Passed source/shape phases were reused. Invalid live position
+retains 26.4 at the authored ARG line with earlier writes and no later effects.
+
+Before registration, the full ARG runner was measured alone in normal Debug.
+Four CTests retain these paired modes, `RUN_SERIAL`, the existing backend lock
+and a **900s** hang guard. No unmeasured eight-cell expansion is included.
+
+Actual full caller/helper RXAS review finds one raw acquisition/constant packet/
+executor per invoked template, no scalar reader/store path or eager operands,
+and no executable/frame/dead-block changes for empty ARG versus blank after
+EXIT/RETURN or in IF. Same-IR corpus RXAS is byte-identical across B modes.
+The shared source checkpoints, context/ownership/reference windows, conservative
+registers and runtime validation/UPPER/cursor work remain admitted costs under
+C-OPT-01/02/05. Closure requires context/ABI/lifetime proof and positive/error/
+live-order shape controls; no minimal-frame or performance claim is made.
+The refreshed pipeline is **893 instructions/82 calls**, scale **935/88**.
+Compared with their older stored views, **70** instructions each are the prior
+PARSE five-name bridge addition per two routines; remaining **89/171**
+instructions and seven calls per ARG reflect shared acquisition/checkpoint/
+execution machinery. External helper bodies are outside these caller counts.
+
 <a id="current-action-parse"></a>
 
-## Current action: approved C PARSE implementation
+## Locally qualified C PARSE integration
 
 Deliver all seven agreed PARSE sources—ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR—and complete templates through one shared executor. Earlier
@@ -649,7 +772,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
 | **CLC-STEP05 — Partial; bounded reviews through ITERATE qualified** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews, static DO and named LEAVE/ITERATE are locally qualified; their whole-instruction dependencies remain open. |
-| **CLC-STEP06 — Partial; C PARSE integration gate** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. [PARSE1–3](#current-action-parse) locally qualifies the cursor, shared executor and C integration. Complete conditions/TRACE and platform/delivery proof remain open; ARG/PULL retain separate acceptance using the same executor. |
+| **CLC-STEP06 — Partial; PARSE and complete-template ARG locally qualified** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. [PARSE1–3](#current-action-parse) locally qualifies the cursor, shared executor and C integration. The complete-template [ARG profile](#current-action-arg) is locally qualified; ARG-AC05 and PULL remain open. Complete conditions/TRACE and platform/delivery proof retain their owners. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
 | **CLC-STEP09 — Open throughout** | Inspect caller/helper RXAS every increment and fix direct construction/emission defects immediately. Close C-OPT-01–06, register/call-window/allocation obligations and named remaining costs. Serves AC06/07/10/11. | Uses STEP02 facts and explicit ABI/lifetime rules; final closure follows STEP08. New ISA/storage contracts need approval; production performance edits retain their verdict gate. |

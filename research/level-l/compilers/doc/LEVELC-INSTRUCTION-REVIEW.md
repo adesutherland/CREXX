@@ -286,7 +286,7 @@ then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
 transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
 C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
-current [C v7/54/34 contract](architecture.md#current-c-family-contract) adds PARSE.
+current [C v8/53/33 contract](architecture.md#current-c-family-contract) adds PARSE and retires the scalar ARG shortcut.
 This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
 the separately qualified increment below. Shared
@@ -315,3 +315,29 @@ are separately qualified under the v7 contract. Focused source, CFG, paired exec
 prior-output and independent actual RXAS checks pass with a shared LEAVE
 regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
 resumable conditions, exact recovery and clause/TRACE remain open.
+
+## ARG: authored templates through the shared executor
+
+The [approved ARG contract](architecture.md#proposed-arg-contract) and
+[ARG-AC01–05](../PLAN.md#current-action-arg) own this bounded LC-I-11 increment.
+`CArg(templates:ParseTemplates)` retains the authored ARG instruction and exact
+template/item origins, reusing every PARSE item shape. Private lowering supplies
+source ARG and UPPER=1; no source token or second splitter is manufactured.
+The obsolete ArgTarget/items path, scalar `arguments.read` operation and
+`llctarget.readarg` body/export are removed in C v8/53 operations/33 exports.
+Generic L `block.readarg`, LCP1 and shared B executor/source signatures are
+unchanged; earlier research-C records are refused rather than upgraded.
+
+Nonempty templates each acquire one raw activation ordinal and call the shared
+executor once. Empty comma templates advance ordinal without acquisition or
+execution; bare/comma-only ARG preserves terminated blocks without default
+return/frame work. Full malformed/dead syntax remains checked. UPPER transforms
+only the captured source once; raw patterns/names, originals/presence and later
+PARSE ARG remain unchanged. Shared live-pool ordering governs closing versus
+later operands, target/compound writes, exact remainders and codepoint positions.
+
+The plan records focused frontend/schema/target/runtime/negative proof and
+actual caller/helper RXAS, with native C only a comparison control. Complete
+shared-label/EXPOSE activation, configured NOVALUE/errors, conditions/resumption,
+clause/TRACE and declared delivery/platform obligations remain ARG-AC05 work;
+bounded qualification does not close the whole instruction or complete C.

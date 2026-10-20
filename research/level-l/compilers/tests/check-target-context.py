@@ -209,7 +209,6 @@ def check_adapter(procedures):
         'untiltruth': ('.int', f'value={value},context={context}'),
         'setting': ('.void', f'operation=.string,context={context},value={value}'),
         'digits': ('.rexxvalue..rexxvalue', f'context={context}'),
-        'readarg': ('.rexxvalue..rexxvalue', f'context={context},ordinal=.int'),
         'parsesource': ('.rexxvalue..rexxvalue',
                         f'context={context},kind=.string,ordinal=.int,caller_source=.string,'
                         'source_state=reference .rexxclassicbifs..rexxbifcallcontext'),

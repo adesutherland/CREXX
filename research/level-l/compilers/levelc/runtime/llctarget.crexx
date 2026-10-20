@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -16,7 +16,7 @@ import rexxdostate
 
 /** Acquire one PARSE source without consuming its caller's condition transport.
  * @param context Borrowed authoritative activation, current pool and config.
- * @param kind ARG, PULL, LINEIN, SOURCE or VERSION, as admitted by C v7.
+ * @param kind ARG, PULL, LINEIN, SOURCE or VERSION, as admitted by C v8.
  * @param ordinal Positive raw ARG position, zero for every other source.
  * @param caller_source The C caller's SOURCEINFO text for SOURCE, empty otherwise.
  * @param source_state Caller-owned BIF context storage, reset once on every call.
@@ -395,17 +395,6 @@ digits: procedure = .RexxValue
   callcontext = bifcontext('DIGITS',context)
   result = rexxclassicbifnumeric..rexxclassicbif_digits(reference callcontext)
   return rexxclassicbif_checked(reference callcontext,result)
-
-/** Read an ARG-instruction position, retaining legacy uppercase behavior.
- * @param context borrowed execution bundle
- * @param ordinal one-based position; missing positions remain empty
- * @return uppercase argument text, distinct from raw ARG BIF access */
-readarg: procedure = .RexxValue
-  arg context = reference .rexxclassiccontext..RexxClassicContext, ordinal = .int
-  bundle = dereference context
-  activation = dereference bundle.activation()
-  value = activation.argument(ordinal)
-  return .RexxValue(upper(value.asString()))
 
 /** Select the existing zero-operand ARG BIF against the live activation.
  * @param context borrowed execution bundle

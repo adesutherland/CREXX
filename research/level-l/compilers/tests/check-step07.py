@@ -341,7 +341,7 @@ def classic_shape(text, name):
                'presence': ('arguments', 'append', 'existsarg'),
                'calls': ('arguments', 'append', 'existsarg'),
                'pipeline': ('arguments', 'append', 'lengthvalue'),
-               'numeric': ('digits', 'setting'), 'argv': ('readarg', 'countargs'),
+               'numeric': ('digits', 'setting'), 'argv': ('parsesource', 'countargs'),
                'numeric-fatal': ('setting',)}[name]
     for helper in helpers:
         assert re.search(r'^call [^\n]*llctarget\.'+helper+r'\(\)', text, re.M), helper
@@ -393,13 +393,16 @@ def classic_shape(text, name):
         assert len(re.findall(r'^setnumfrm ', body, re.M)) == len(installs)
         handlers = [i for i, (op, _) in enumerate(instructions) if op == 'sigbrv']
         first_numeric = next(i for i, (op, _) in enumerate(instructions) if op == 'numsci')
-        assert len(handlers) == 4 and max(handlers) < first_numeric, (label, 'own-frame diversion before context installation')
+        finite = {'CLASSIC_SYNTAX', 'DIVISION_BY_ZERO', 'CONVERSION_ERROR', 'INVALID_ARGUMENTS',
+                  'OBJECT_NOT_INITIALIZED', 'REFERENCE_INVALID', 'UNICODE_ERROR', 'OUT_OF_RANGE', 'FAILURE'}
+        assert len(handlers) == len(finite) and max(handlers) < first_numeric, (label, 'own-frame diversion before context installation')
+        assert set(re.findall(r'^sigbrv [^\n]*,"([A-Z_]+)"$', body, re.M)) == finite
         # Each handler target enters the common fatal block. No handler or
         # signal continuation can reach a numeric install in this profile.
         error_body = body[body.index('\nllerror'):]
-        assert len(re.findall(r'^sighalt ', error_body, re.M)) == 4
+        assert set(re.findall(r'^sighalt "([A-Z_]+)"$', error_body, re.M)) == finite
         assert not re.search(r'^(?:setnumdgts|setnumfuz|setnumfrm) ', error_body, re.M)
-        assert len(re.findall(r'^signalorigin [^\n]+\nret$', error_body, re.M)) == 4
+        assert len(re.findall(r'^signalorigin [^\n]+\nret$', error_body, re.M)) == len(finite)
         assert all(target != config_factory for _, _, target, _ in calls)
     if name == 'calls':
         main = re.search(r'^'+functions['$MAIN']+r'\(\)[\s\S]*?(?=^llf\d+\(\)|\Z)',

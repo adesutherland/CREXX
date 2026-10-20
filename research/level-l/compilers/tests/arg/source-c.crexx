@@ -1,0 +1,126 @@
+/* Independent standalone ARG expectations; no native compiler oracle. */
+options levelc
+arg MAIN
+parse arg RAW
+say 'main [' || MAIN || '] [' || RAW || ']'
+arg
+arg ,,,
+/* A sparse 258th position checks ordinals beyond the scalar shortcut. */
+arg ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, MANY
+say 'sparse [' || MANY || ']|' || arg()
+call WORDS '  a  b  '
+call PATTERNS 'abcDef'
+call PRESENCE ' first ',, '',
+call LIVE 'nleft:right', 'x:y', ':', 'left:right', 'mrest', 'x:y z'
+call POSITIONS 'one two three', 'aa:bb cc'
+call UNICODE 'aé🙂b', 'FF'x, 'B5'x, 'DF'x, 'a' || '00'x || 'b'
+call KEYWORDS 'a b c d e f', 'left:right'
+call OUTER 'parent',, ''
+say 'recursive ' || RECURSE(3)
+exit 0
+
+WORDS: procedure
+arg ONE
+say 'whole [' || ONE || ']'
+arg FIRST REST
+say 'words [' || FIRST || ']|[' || REST || ']'
+arg FIRST SECOND TAIL
+say 'three [' || FIRST || ']|[' || SECOND || ']|[' || TAIL || ']'
+arg . TAIL
+say 'drop [' || TAIL || ']'
+arg . .
+return
+
+PATTERNS: procedure
+SEP = 'c'
+arg A 'c' B
+say 'lower-pattern [' || A || ']|[' || B || ']'
+arg A 'C' B
+say 'upper-pattern [' || A || ']|[' || B || ']'
+arg A (SEP) B
+say 'dynamic-pattern [' || A || ']|[' || B || ']|[' || SEP || ']'
+parse arg RAW
+say 'raw-pattern [' || RAW || ']'
+return
+
+PRESENCE: procedure
+arg A, B, C, D
+say 'presence ' || arg() || '|' || arg(1,'E') || '|' || arg(2,'E') || '|' || arg(3,'E') || '|' || arg(4,'E') || '|' || arg(2,'O')
+say 'slots [' || A || ']|[' || B || ']|[' || C || ']|[' || D || ']'
+arg AGAIN,, EMPTY, MISSING
+parse arg RAW
+say 'repeat [' || AGAIN || ']|[' || EMPTY || ']|[' || MISSING || ']|[' || RAW || ']'
+return
+
+LIVE: procedure
+KEY = 'OLD'
+PATTERNS.OLD = '!'
+PATTERNS.N = ':'
+arg KEY 2 PIECE (PATTERNS.KEY) REST
+say 'live ' || KEY || '|' || PIECE || '|' || REST
+SEP = ':'
+arg , SEP (SEP) REST
+say 'closing ' || SEP || '|' || REST
+arg ,, SEP, LEFT (SEP) RIGHT
+say 'commas ' || SEP || '|' || LEFT || '|' || RIGHT
+TAIL = 'old'
+BOX.OLD = 'saved'
+arg ,,,, TAIL 2 BOX.TAIL
+say 'compound ' || TAIL || '|' || BOX.TAIL || '|' || BOX.OLD
+arg ,,,,, A B ':' REST
+say 'section ' || A || '|' || B || '|' || REST
+return
+
+POSITIONS: procedure
+arg 1 A 1 B
+say 'backward ' || A || '|' || B
+arg A B +0 REST
+say 'zero ' || A || '|' || B || '|' || REST
+arg , A ':' +1 B
+say 'relative ' || A || '|' || B
+arg A '' B
+say 'empty-pattern ' || A || '|' || B
+return
+
+UNICODE: procedure
+arg FIRST 3 REST, HIGH, MICRO, SHARP, WITHNUL
+say 'unicode ' || FIRST || '|' || REST || '|' || HIGH || '|' || MICRO || '|' || SHARP
+say 'nul ' || (WITHNUL == ('A' || '00'x || 'B')) || '|' || length(WITHNUL)
+parse arg RAW1, RAW2, RAW3, RAW4, RAW5
+say 'raw-unicode ' || RAW1 || '|' || RAW2 || '|' || RAW3 || '|' || RAW4
+say 'raw-nul ' || (RAW5 == ('a' || '00'x || 'b'))
+return
+
+KEYWORDS: procedure
+arg ARG THEN END WITH UPPER ELSE
+say 'names ' || ARG || '|' || THEN || '|' || END || '|' || WITH || '|' || UPPER || '|' || ELSE
+ELSE = ':'
+arg , A (ELSE) B
+say 'else-pattern ' || A || '|' || B
+if 1 then arg FIRST else arg WRONG
+if 0 then arg WRONG else arg SECOND
+if 1 then arg else nop
+say 'inline ' || FIRST || '|' || SECOND
+return
+
+OUTER: procedure
+arg VALUE, OMITTED, EMPTY
+say 'outer-before ' || VALUE || '|' || arg(2,'E') || '|' || arg(3,'E')
+call INNER 'child'
+arg AGAIN
+parse arg RAW
+say 'outer-after ' || AGAIN || '|' || RAW || '|' || arg()
+return
+
+INNER: procedure
+arg VALUE
+say 'inner ' || VALUE || '|' || arg()
+return
+
+RECURSE: procedure
+arg N
+if N <= 1 then return 1
+VALUE = RECURSE(N - 1)
+arg AGAIN
+if AGAIN <> N then return 99
+return VALUE + AGAIN

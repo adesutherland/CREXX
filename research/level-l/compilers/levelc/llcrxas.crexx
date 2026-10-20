@@ -360,10 +360,6 @@ compilation: class
       form = op.attribute('form') as .string
       if form <> 'scientific' & form <> 'engineering' then call fail('LOWERING: invalid NUMERIC FORM')
     end
-    if name = 'crexx.c.arguments.read' then do
-      bytes = op.attribute('ordinal')
-      if <at..i64>(0) bytes < 1 then call fail('LOWERING: invalid ARG position')
-    end
     if name = 'crexx.c.call' then do
       bytes = op.attribute('function'); boolean = .llir..boolcodec()
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
@@ -1025,13 +1021,6 @@ compilation: class
         call argtext(ordinal,op.attribute('name') as .string)
         call invoke(result(op),symbol,ordinal)
         call emit('null',poolref)
-      end
-      when name = 'arguments.read' then do
-        bytes = op.attribute('ordinal'); ordinal = <at..i64>(0) bytes
-        if ordinal < 1 then do; call fail('LOWERING: invalid ARG position'); return; end
-        symbol = imported('llctarget','llctarget.readarg',v,contexttype || ' .int')
-        call argcopy(1,input(op)); call emit('load',reg(_callbase + 2) || ',' || ordinal)
-        call invoke(result(op),symbol,2)
       end
       when name = 'numeric.digits' | name = 'numeric.fuzz' | name = 'numeric.form' then do
         setting = substr(name,9)

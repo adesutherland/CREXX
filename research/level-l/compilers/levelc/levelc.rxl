@@ -212,8 +212,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   cast.value: rule = primary
   label.statement: rule = labelname as name colon then tree CLabel(name = text(name))
   procedure.statement: rule = procedureword then tree CProcedure()
-  arg.statement: rule = argword arg.target as item (comma arg.target as item)* then tree CArg(items = item+)
-  arg.target: rule = (identifier as name)? then tree ArgTarget(name = text)
+  arg.statement: rule = argword parse.templates as templates then tree CArg(templates = templates)
   numeric.statement: rule = numeric.value | numeric.form
   numeric.value: rule = numericword (digitsword | fuzzword) as setting (expression as value)? then tree CNumeric(setting = text(setting), value = value?)
   numeric.form: rule = numericword formword numeric.form.value

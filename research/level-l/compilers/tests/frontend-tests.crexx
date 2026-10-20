@@ -29,6 +29,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'leave-policy' then call leavepolicytests()
     when 'iterate' then call iteratetests()
     when 'parse' then call parsetests()
+    when 'arg' then call argtests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -168,6 +169,7 @@ grammar: procedure = .void expose examples
   call leavetests()
   call iteratetests()
   call parsetests()
+  call argtests()
   text = .string; source = .string; loopshape = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -303,6 +305,106 @@ parsetests: procedure = .void expose artifacts
   call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects byte-budget multiplication overflow before parsing')
   request = .lltestfrontend..request('c','nop' as .binary,artifacts,'budget.crexx',0)
   call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects zero work/storage budget')
+  return
+
+/** ARG owns authored syntax and reuses the exact PARSE template program. */
+argtests: procedure = .void expose artifacts
+  i = .int
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  templates = .llast..node; template = .llast..node; item = .llast..node; name = .llast..node
+  request = .lltestfrontend..request; graph = .llir..module; operation = .llir..opview
+  packet = .llcparseprogram..checked; codec = .llir..intcodec()
+  source = "ArG . THEN END (upper) +(position) =0002 -0 '3A'x,,,"
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'ARG named template AST: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'CArg' & node.start() = 0 & node.finish() = <blen>(source as .binary),'authored ARG keeps complete instruction span')
+    templates = node.child('templates'); template = templates.child('items',1)
+    call check(templates.kind() = 'ParseTemplates' & templates.count('items') = 4,'ARG shares named templates and all trailing empty positions')
+    call check(template.kind() = 'ParseTemplate' & template.count('items') = 8,'ARG retains every ordered template item')
+    item = template.child('items',2); name = item.child('name')
+    call check(item.kind() = 'ParseTarget' & name.text('spelling') = 'THEN','ARG THEN remains raw target')
+    item = template.child('items',3); name = item.child('name')
+    call check(name.text('spelling') = 'END','ARG END remains raw target')
+    item = template.child('items',4); name = item.child('name')
+    call check(item.kind() = 'ParseVariablePattern' & name.text('spelling') = 'upper','ARG pattern name is not an UPPER token')
+    item = template.child('items',5); name = item.child('operand')
+    call check(item.kind() = 'ParsePosition' & item.text('mode') = '+' & name.text('spelling') = 'position','ARG dynamic position retains raw operand')
+    call check(name.sourcetext() = 'position' & name.start() = pos('position',source) - 1,'ARG dynamic operand has exact authored span')
+    walk = tree.walk('parents first')
+    do while walk.next()
+      item = walk.node()
+      call check(item.kind() <> 'ArgTarget' & item.kind() <> 'ParseSource','ARG has no retired target or fabricated source node')
+    end
+  end
+  source = '/*é*/' || ('0D0A'x as .string) || 'ArG 名 +(位置),,LAST'
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF ARG AST: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    template = node.child('templates').child('items',1); name = template.child('items',1).child('name')
+    call check(node.start() = 8 & node.finish() = <blen>(source as .binary),'ARG span follows exact multibyte comment and CRLF')
+    call check(name.start() = 12 & name.finish() = 15 & name.sourcetext() = '名','Unicode ARG target retains exact byte span')
+    request = .lltestfrontend..request('c',source as .binary,artifacts,'arg.crexx')
+    call check(request.status() = 0,'Unicode/CRLF ARG packet admission: ' || request.error())
+    if request.status() = 0 then do
+      graph = request.graph()
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        if operation.name() <> 'crexx.c.parse.execute' then iterate
+        packet = .llcparseprogram..checked(operation.attribute('program'),source as .binary,'arg.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 9,'ARG packet certifies original Unicode/CRLF byte/scalar positions')
+      end
+    end
+  end
+  source = 'arg ,first,,last,'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'arg.crexx')
+  call check(request.status() = 0,'ARG omitted ordinals lower: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); reads = 0; executions = 0; ordinals = ''
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      call check(operation.name() <> 'crexx.c.arguments.read' & operation.name() <> 'crexx.c.store','ARG has no scalar splitter/store lowering')
+      if operation.name() = 'crexx.c.parse.source' then do
+        reads = reads + 1; ordinals = ordinals || codec.format(operation.attribute('ordinal')) || '|'
+        call check(operation.origin().first() = 0 & operation.attribute('kind') = 'ARG' as .binary,'ARG source is raw and anchors owning clause')
+      end
+      if operation.name() = 'crexx.c.parse.execute' then do
+        executions = executions + 1; bytes = operation.attribute('program')
+        packet = .llcparseprogram..checked(bytes,source as .binary,'arg.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 1 & packet.ordinal() = executions * 2,'ARG packet validates exact source and ordinal gaps')
+        call check(<at..u16>(6) bytes = 1,'ARG implies only packet UPPER bit')
+      end
+    end
+    call check(reads = 2 & executions = 2 & ordinals = '2|4|','only nonempty ARG templates acquire/execute')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then source = 'arg'
+      when 2 then source = 'arg,,, '
+      when 3 then source = 'arg . .; arg 1 1; arg (pattern) +(position)'
+      when 4 then source = 'arg else then end with upper arg'
+      when 5 then source = 'if 1 then if 0 then arg x else arg y'
+      when 6 then source = 'if 1 then arg else nop'
+      when 7 then source = 'if 1 then arg a,; else nop'
+      when 8 then source = 'if 1 then do; arg else then end with upper; end else nop'
+      when 9 then source = "arg '0000'x '11110000'b '' .RC stem.key"
+      otherwise source = 'arg = 1; say arg'
+    end
+    ignored = good('c',source,'core.return','crexx.c.arguments.read')
+    if sample <= 2 then call check(pos('crexx.c.parse.',ignored) = 0,'empty ARG has no acquisition/executor IR')
+  end
+  call bad('c','arg a +name' as .binary,'LL_COMPILER_SYNTAX:','38.2',7)
+  call bad('c','arg a +' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','arg a (x + 1)' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','arg a 1.5' as .binary,'LL_COMPILER_SYNTAX:','38.1',6)
+  call bad('c','exit 0; arg a 1e2' as .binary,'LL_COMPILER_SYNTAX:','38.1',14)
+  call bad('c','arg a 9223372036854775808' as .binary,'LL_COMPILER_LIMIT:','signed descriptor range',6)
+  call bad('c',"arg a 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',6)
+  call bad('c','arg a 1foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',6)
+  call bad('c','arg ..' as .binary,'LL_COMPILER_SYNTAX:','38.1',4)
+  call bad('c','arg .foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',4)
   return
 
 /** LEAVE names are static raw symbols, with request-local STRICTC policy. */

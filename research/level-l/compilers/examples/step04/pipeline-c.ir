@@ -85,17 +85,17 @@ function TWICE -> crexx.c.result
   entry.1:
     %52 = core.argument argument:1 @origin:118
     core.store %52 slot:$context @origin:118
-    %53 = core.load slot:$context @origin:119
-    %54 = crexx.c.arguments.read %53 ordinal="1" @origin:119
-    %55 = core.load slot:$context @origin:119
-    crexx.c.store %55 %54 name="value" @origin:119
-    %56 = core.load slot:$context @origin:127
-    %57 = crexx.c.load %56 name="value" @origin:127
-    core.store %57 slot:$tmp.1 @origin:126
-    %58 = core.constant 32 : crexx.c.value @origin:128
-    %59 = core.load slot:$tmp.1 @origin:126
-    %60 = core.load slot:$context @origin:126
-    %61 = crexx.c.mul %59 %58 %60 @origin:126
-    %62 = crexx.c.return.present %61 @origin:120
-    core.return %62 @origin:120
+    %53 = core.load slot:$context @origin:120
+    %54 = crexx.c.parse.source %53 kind="ARG" ordinal="1" @origin:120
+    %55 = core.load slot:$context @origin:120
+    crexx.c.parse.execute %55 %54 program="4C435031010001009F000000010000000300000001000000000000000E000000D000000010000000706970656C696E652D632E6372657878B7000000BC0000000D00000007000000B4000000B7000000BC0000000D00000007000000B4000000B7000000BC0000000D00000007000000B400000050030C000100010000000100010101000000020000000100000001000000030000000500000076616C7565" @origin:120
+    %56 = core.load slot:$context @origin:128
+    %57 = crexx.c.load %56 name="value" @origin:128
+    core.store %57 slot:$tmp.1 @origin:127
+    %58 = core.constant 32 : crexx.c.value @origin:129
+    %59 = core.load slot:$tmp.1 @origin:127
+    %60 = core.load slot:$context @origin:127
+    %61 = crexx.c.mul %59 %58 %60 @origin:127
+    %62 = crexx.c.return.present %61 @origin:121
+    core.return %62 @origin:121
 
