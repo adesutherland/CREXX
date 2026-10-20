@@ -27,7 +27,7 @@ env:
   SANITIZER_DAILY_ACTIVATED: 'false'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux') && format('-{0}', inputs.qualification) || '' }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:

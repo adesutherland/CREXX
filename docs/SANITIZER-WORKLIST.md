@@ -166,6 +166,9 @@ Both builds retain build-time leaks on. A new hosted target build is necessary
 because the completed runner's build tree is unavailable; no full suite is
 repeated for this diagnosis. Existing normalization diagnosis and all default,
 scheduled and candidate selections retain their behavior. Actionlint passes.
+Isolated diagnostic choices have their own workflow concurrency suffix, so a
+failed platform's replay can run while healthy independent daily jobs finish;
+the default assurance concurrency group and cancellation policy are unchanged.
 
 Next action: inspect the isolated Linux result before deciding a scheduling or
 guard correction. Preserve any valid daily proof, retain the exact passed/unrun
