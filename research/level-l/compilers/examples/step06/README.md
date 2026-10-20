@@ -2,8 +2,7 @@
 
 These are actual outputs from the Level B/Level L compiler. The C views use
 the current borrowed-context ABI; G views retain the existing STEP06 output. The
-[current plan](../../PLAN.md) records modes, commands and
-qualification boundaries. [Coverage](../../doc/poc-coverage.md) maps the whole
+[current plan](../../PLAN.md) tracks instruction status and remaining work. [Coverage](../../doc/poc-coverage.md) maps the whole
 agreed PoC, rather than treating this one example as complete language coverage.
 
 Start each file with `options levelc` or `options levelg`, then:

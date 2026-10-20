@@ -78,7 +78,7 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 For ordinary develop publication, require a successful core product build,
 appropriate focused functional regressions and the relevant normal correctness
-suite. Summarize the exact qualified inputs and outcomes in the current plan.
+suite. Report the exact qualified inputs, outcomes and limitations in conversation.
 Normal automatic workflows provide Release product/smoke, optimizer-parity and
 CodeQL checks; local results do not establish hosted success.
 
@@ -96,11 +96,11 @@ and why the benefit warrants its time. Reuse valid results when code/test/build
 inputs are unchanged. History-only merges and documentation changes do not
 invalidate them; do not accumulate extra checks merely for more green results.
 
-Prepare current documentation, a concise validation summary and the expected
-publication status before the first substantive push. Once required local gates
-pass, assume normal workflows will succeed for that preparation, while reporting
-only observed passes as verified. Do not hold the task open for CI or leave a
-planned post-CI documentation update.
+Prepare current documentation and report a concise validation summary and the
+expected publication status in conversation before the first substantive push.
+Once required local gates pass, assume normal workflows will succeed for that
+preparation, while reporting only observed passes as verified. Do not hold the
+task open for CI or leave a planned post-CI documentation update.
 
 Never commit or push solely to mark CI passed, replace pending status or archive
 workflow metadata. Hosted run links provide the result; report observed status
@@ -121,8 +121,9 @@ evidence where the qualified inputs are unchanged; this is not a requirement
 for a new broad benchmark or release-qualification run.
 
 - Compare equivalent inputs with the existing compiler's appropriate B, G and
-  C modes, recording compiler and assembler optimisation separately. An old
-  compiler's excess code or defect is a finding, not an acceptance target.
+  C modes, reporting compiler and assembler optimisation separately in
+  conversation. An old compiler's excess code or defect is a finding, not an
+  acceptance target.
   State expected behaviour from the agreed language contract and independent
   test expectations before using native output as a control. When results
   disagree, retain a minimal case and classify the cause in the new compiler,
@@ -186,7 +187,7 @@ production RXAS/VM performance edits retain their own verdict gate.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
 - Once the required full testing has passed, do not repeat it if no code or
   test/build input has changed. Verify that with the relevant diff or tree
-  hashes and reuse the retained evidence. A history-only merge or
+  hashes and reuse the completed testing. A history-only merge or
   documentation-only commit does not by itself invalidate completed testing.
   Normal automatic publication workflows remain separate checks; use the
   development-publication policy above to choose gates, and do not infer a
@@ -225,23 +226,28 @@ production RXAS/VM performance edits retain their own verdict gate.
   gates. Sanitizer worklist requirements below still apply to actual
   first-party sanitizer findings.
 - Keep documentation current and enduring: architecture, contracts, user guides,
-  active plans/worklists, decisions and concise validation summaries. Update the
-  owning document in place; delete obsolete notes, completed handoffs, duplicate
-  reports and superseded plans after incorporating any lasting information.
+  intended design, known limitations, decisions and simple todo/done plans or
+  worklists. Update the owning document in place; delete obsolete notes, completed
+  handoffs, duplicate reports and superseded plans after incorporating any
+  lasting information.
   This applies to every project and future initiative, including research,
   performance and sanitizer work.
-- Logs, traces, raw samples, generated dumps, run receipts, per-run hash bundles
-  and scratch results are disposable. Use temporary or ignored build locations
-  while actively diagnosing or measuring, then delete them after extracting the
-  useful conclusions. Do not track, commit, archive elsewhere or retain them
-  "for evidence". An ignored directory is not a retention policy. Do not create
+- Observed run reports, result/timing tables, logs, traces, raw samples, generated
+  dumps, run receipts, per-run hash bundles and scratch results are disposable.
+  Use temporary or ignored build locations while actively diagnosing or measuring,
+  then delete them after extracting the useful conclusions. Do not track, commit,
+  archive elsewhere or retain them "for evidence" or as plan history. Active
+  sanitizer findings retain the worklist requirements below. An ignored directory
+  is not a retention policy. Do not create
   dated evidence/run directories or commit junk first to preserve it in Git.
   Existing tracked junk should be removed as part of the relevant cleanup.
-- Record verification in the current owning document: revision or relevant
-  input identity, command, result, scope and limitations. Link to hosted runs
-  when relevant instead of downloading their logs into the tree. Reuse valid
-  results without keeping raw output. Maintained source, regression fixtures,
-  test oracles, example outputs used by tests/docs, licensed data and build
+- Report verification in conversation: revision or relevant input identity,
+  command, result, scope and limitations, with hosted run links when relevant.
+  Keep only lasting contracts, known limitations and current todo/done status
+  in the owning document; do not store observed results or run history in plans
+  or elsewhere. Reuse valid results without keeping run reports or raw output.
+  Maintained source, regression fixtures, test oracles, example outputs used by
+  tests/docs, licensed data and build
   inputs remain legitimate assets; give each a named purpose and owner, rather
   than relabelling an evidence dump as a fixture. Before deletion, check actual
   references and move any real test input into its owning test/fixture directory.
@@ -276,8 +282,8 @@ must contain all three of the following:
    constraints, and any explicitly agreed scope boundaries. A list of immediate
    implementation tasks is not a substitute for the intended outcome.
 2. **Numbered checkable acceptance criteria:** give each criterion a stable ID
-   such as `AC-01`, an observable pass condition, and the test, inspection or
-   retained evidence needed to verify it. Together the criteria must cover the
+   such as `AC-01`, an observable pass condition, and the test or inspection
+   method needed to verify it. Together the criteria must cover the
    full intended outcome, including required failure, lifecycle, packaging and
    platform behavior where applicable. Keep unverified criteria visibly open.
 3. **Numbered implementation steps:** give each step a stable ID such as
@@ -288,12 +294,13 @@ Before implementation, record this plan in the appropriate repository planning
 or worklist file so it survives conversation compaction and session takeover.
 Reuse an existing authoritative plan where one exists; do not create competing
 scope records. Include its path in progress handoffs, and keep criterion/step
-status and evidence references current. Preserve IDs when updating the plan.
+status current as simple todo/done, without observed run results or history.
+Preserve IDs when updating the plan.
 
 After compaction or at session takeover, read the repository instructions and
 the authoritative plan, including its vision and every acceptance criterion,
 before continuing implementation. Reconcile completed and outstanding work with
-the current checkout and retained evidence. Handoffs must identify the plan,
+the current checkout and conversation context. Handoffs must identify the plan,
 accepted scope decisions, unmet criteria, blockers and next steps; they must not
 reduce the objective to the latest task or the easiest remaining subset.
 
@@ -327,21 +334,24 @@ gates.
 
 For performance-programme work, read `performance/AGENTS.md` and
 `performance/ROADMAP.md` before changing benchmarks, profiling automation,
-compiler/assembler optimisations, VM execution paths, or recorded performance
-evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
+compiler/assembler optimisations, VM execution paths, or performance measurements.
+Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
 `performance/DECISIONS.md` for durable accepted/rejected choices. Keep the
-consolidated plans, durable decisions and current result summaries in HEAD.
-The documentation/output rules above apply; do not preserve raw run bundles.
+consolidated plans, durable decisions and current capability/limitation status
+in HEAD.
+Report observed performance results in conversation; do not preserve result
+summaries, run history or raw run bundles.
 
 Outside the Level L research exception above, after an approved production performance edit, follow the mandatory first
 Release verdict in `performance/AGENTS.md` before doing broad closeout work.
 Once the minimum focused correctness checks needed for safe measurement pass,
 freeze implementation, build the ordinary profiling-off Release product, run
-the smallest decisive end-to-end comparison against retained valid baseline
-evidence, report it to Adrian, and stop for direction. The implementation
-remains provisional and revertable until that verdict is accepted. Full Debug
-CTest, sanitizer, install/package proof, harness refinement, follow-on PoCs,
-cleanup, and documentation polish come after this decision gate, not before it.
+the smallest decisive end-to-end comparison against a valid baseline with
+unchanged relevant inputs, report it to Adrian in conversation, and stop for
+direction. The implementation remains provisional and revertable until that
+verdict is accepted. Full Debug CTest, sanitizer, install/package proof, harness
+refinement, follow-on PoCs, cleanup, and documentation polish come after this
+decision gate, not before it.
 
 ## Linux Install Notes
 
@@ -441,5 +451,7 @@ cleanup, and documentation polish come after this decision gate, not before it.
   inspect focused slices with `rg`, `sed` or `tail`. This is mandatory for
   verbose builds, `rxc -d*`, parser/fixed-point traces and syntax-highlighting
   debug runs. Show only the path and relevant excerpts while diagnosing.
-  Delete task-created logs after recording the useful result in the current
-  plan/worklist; never copy them into source, evidence or archive directories.
+  Delete task-created logs after reporting relevant results in conversation and
+  updating any lasting contract, known limitation or active sanitizer finding
+  in its owning document; never copy them into source, evidence or archive
+  directories.

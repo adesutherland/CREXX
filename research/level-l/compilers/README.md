@@ -56,7 +56,7 @@ patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
 executor with implicit UPPER, replacing its scalar shortcut in C v8/53
-operations and the 33-export target. The plan records its focused qualification;
+operations and the 33-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
 

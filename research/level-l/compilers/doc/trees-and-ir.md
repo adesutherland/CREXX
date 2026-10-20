@@ -100,7 +100,7 @@ and `CArg.items` are absent. Its complete authored instruction span, every
 template/item span and empty boundary remain exact, without a fabricated UPPER
 or ParseSource token. The [approved ARG contract](architecture.md#proposed-arg-contract)
 also retires the scalar read operation/export in C v8/53 operations and the
-33-export target. The plan records qualification and remaining shared owners.
+33-export target. The plan tracks instruction status and remaining shared work.
 
 CLabel and CProcedure remain separate nodes. The routine table recognises an
 admitted label followed immediately by PROCEDURE and records the interval up

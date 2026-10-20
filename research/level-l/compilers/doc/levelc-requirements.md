@@ -8,9 +8,8 @@ closed yet.** “Partial” means an admitted bounded route, “Not implemented�
 the new compiler lacks the route, and “Runtime only” means an existing B asset
 still needs new-C integration. Source inspection is not execution qualification.
 
-Current design baseline is `e0b11db9e7293bc1f45e86574cb1f857edb1c038`, including
-the committed shared PARSE cursor. The plan records bounded unchanged-input
-local qualification and remaining real platform proof. Existing native,
+The current design includes the shared PARSE cursor and executor. The plan
+tracks instruction status, remaining work and real-platform obligations. Existing native,
 direct B and G fixtures are reusable controls; their passes never become new-C
 passes without exercising the new compiler.
 
@@ -65,10 +64,8 @@ C profile is locally qualified. Bounded static DO is locally qualified; whole-C/
 dependencies remain open. Root/private owners
 and numeric entry setup remain conservative; argument/result transport remains
 by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
-owns the qualified v2 baseline; DROP-AC01–04 own the v3 increment and
-SELECT-AC01–04 own the v4 increment; [DO-AC01–04](../PLAN.md#current-action-do)
-own the qualified v5 increment. [LEAVE-AC01–04](../PLAN.md#current-action-leave)
-own locally qualified v6/52-op/33-export integration. Complete shared-label activation
+owns the context ABI; the [architecture](architecture.md#current-c-family-contract)
+owns the current schema and the DROP, SELECT, DO and LEAVE/ITERATE contracts. Complete shared-label activation
 remains open. Earlier research C images/IR must be rebuilt, with no compatibility
 bridge. Neutral scalar ABI records still use `crexx.g` names.
 
@@ -109,13 +106,13 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-02 DROP / STEP05 | Partial: ordered v3 forms locally qualified | Direct/indirect lists, arbitrary compounds, dropped/default/empty states, Unicode/configured blanks, private pools and prebound aliases pass independent state/origin/RXAS checks. One captured indirect list uses existing invalid-word continuation. Source EXPOSE, resumable conditions, full diagnostic identities and TRACE remain STEP06/07 dependencies. | [LC-AC-07/53/55/56/62](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-03 assignment / STEP05 | Partial: existing one-write forms locally qualified | Independent source/AST/IR, prebound-context and RXAS checks cover once-only RHS before raw-name storage, omitted RHS, arbitrary tails, stem reset/tombstones, private pools, aliases and exact Unicode/NUL/cache copies. Source-call ordering and same-context mutation are composed proofs; source EXPOSE/shared labels, exact diagnostic identities, resumed conditions/NOVALUE and full TRACE remain open. | [LC-AC-54/63](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-04 NOP / STEP05 | Partial: childless forms locally qualified | Main/IF/group/while/private placements, contextual variable, first-extra-token/dead refusals and unchanged NOP/blank IR/instruction/frame shape pass. Repaired dead-NOP construction preserves later static validation. SELECT/shared labels, exact 21.1 and clause/TRACE/condition observations remain open. | [LC-AC-05/64](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-05 OPTIONS / STEP05 | Partial: bounded COptions forms locally qualified | Retain every optional operand, including header Names; select settings only from a complete first bare-word clause using request-local comments. Current zero-word B processor is specialized away; preserve operand effects/errors and validate discarded literals/dead source. Request-local static STRICTC is integrated for LEAVE/ITERATE; full header/source-map, shared-label and conditions/TRACE work remains open under [OPTIONS-AC01–04](../PLAN.md#current-action-options). | [LC-AC-66](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-05 OPTIONS / STEP05 | Partial: bounded COptions forms locally qualified | Retain every optional operand, including header Names; select settings only from a complete first bare-word clause using request-local comments. Current zero-word B processor is specialized away; preserve operand effects/errors and validate discarded literals/dead source. Request-local static STRICTC is integrated for LEAVE/ITERATE; full header/source-map, shared-label and conditions/TRACE work remains open under the [OPTIONS contract](architecture.md#approved-options-contract). | [LC-AC-66](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-06 IF / STEP05 | Partial: admitted forms locally qualified | Once-only condition/truth, lazy selected arms/no ELSE, exact text 0/1 and fatal 34.1, nearest/contextual ELSE and optional/default arm minima pass. Both closed arms add no join/default epilogue; dead validation and source remain. SELECT/full DO/shared labels/EXPOSE, full expressions/exact static diagnostics, resumed conditions/NOVALUE and clause/TRACE stay open. | [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-07 SELECT / STEP05 | Partial: admitted forms locally qualified | Ordered lazy WHEN edges, full/empty OTHERWISE, nested/loop/private arms and source-indexed 34.2/7.3 use shared B bodies. [SELECT-AC01–04](../PLAN.md#current-select-proof) pass current focused proof. Shared labels/fall-through/EXPOSE, complete expressions/DO/named transfers, full diagnostic recovery and condition/SIGL/clause/TRACE remain open. | [LC-AC-09/68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-08 DO / STEP05 | Partial: admitted static forms locally qualified | [DO-AC01–04](../PLAN.md#current-do-proof) qualify counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only headers, arbitrary counts, live compound controls, END names and shared errors. Existing shared B state owns numeric/pool algorithms; C owns finite keyed protocol admission and frame cleanup. Source EXPOSE/shared labels, complete expressions, exact recovery/resumable conditions and clause/TRACE remain open. | [LC-AC-03/10–15/17–35/65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-09 LEAVE / STEP05 | Partial: named static forms locally qualified | [LEAVE-AC01–04](../PLAN.md#current-leave-proof) qualify raw nearest/named/shadowed targets within the current routine, crossed-state cleanup without end work, exact default/dead versus STRICTC reached-time 28.1/28.3 and no runtime target search. Shared labels/EXPOSE, SIGNAL/INTERPRET invalidation, exact recovery/resumable conditions and clause/TRACE stay open. | [LC-AC-69](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-10 ITERATE / STEP05 | Partial: named static forms locally qualified | [ITERATE-AC01–04](../PLAN.md#current-iterate-proof) qualify nearest/named raw targets, selected-owner retention and UNTIL/advance/count-entry order, including final FOR advance, live compound tails and default/STRICTC 28.2/28.4. Shared labels/EXPOSE, dynamic loop invalidation, full recovery/resumable conditions and clause/TRACE remain open. | [LC-AC-70](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-11 ARG / STEP06 | Partial: complete-template profile locally qualified | [ARG-AC01–05](../PLAN.md#current-action-arg) require `PARSE UPPER ARG` through the shared executor: arbitrary comma/templates, exact presence/raw arguments, live pool order, Unicode and authored errors/RXAS. The [approved AST/IR/export contract](architecture.md#proposed-arg-contract) uses CArg templates and C v8/53 operations/33 exports, retiring the scalar shortcut. Shared labels/EXPOSE, complete conditions/TRACE and delivery/platform closure remain open. No second splitter or research-C compatibility path. | [LC-AC-38/71](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-07 SELECT / STEP05 | Partial: admitted forms locally qualified | Ordered lazy WHEN edges, full/empty OTHERWISE, nested/loop/private arms and source-indexed 34.2/7.3 use shared B bodies. The [SELECT contract](architecture.md#approved-select-contract) owns the bounded profile. Shared labels/fall-through/EXPOSE, complete expressions/DO/named transfers, full diagnostic recovery and condition/SIGL/clause/TRACE remain open. | [LC-AC-09/68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-08 DO / STEP05 | Partial: admitted static forms locally qualified | The [DO contract](architecture.md#approved-do-contract) covers counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only headers, arbitrary counts, live compound controls, END names and shared errors. Existing shared B state owns numeric/pool algorithms; C owns finite keyed protocol admission and frame cleanup. Source EXPOSE/shared labels, complete expressions, exact recovery/resumable conditions and clause/TRACE remain open. | [LC-AC-03/10–15/17–35/65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-09 LEAVE / STEP05 | Partial: named static forms locally qualified | The [transfer contract](architecture.md#approved-leave-iterate-contract) covers raw nearest/named/shadowed targets within the current routine, crossed-state cleanup without end work, exact default/dead versus STRICTC reached-time 28.1/28.3 and no runtime target search. Shared labels/EXPOSE, SIGNAL/INTERPRET invalidation, exact recovery/resumable conditions and clause/TRACE stay open. | [LC-AC-69](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-10 ITERATE / STEP05 | Partial: named static forms locally qualified | The [transfer contract](architecture.md#approved-leave-iterate-contract) covers nearest/named raw targets, selected-owner retention and UNTIL/advance/count-entry order, including final FOR advance, live compound tails and default/STRICTC 28.2/28.4. Shared labels/EXPOSE, dynamic loop invalidation, full recovery/resumable conditions and clause/TRACE remain open. | [LC-AC-70](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-11 ARG / STEP06 | Partial: complete-template profile locally qualified | The [ARG contract](architecture.md#proposed-arg-contract) requires `PARSE UPPER ARG` through the shared executor: arbitrary comma/templates, exact presence/raw arguments, live pool order, Unicode and authored errors/RXAS. The [approved AST/IR/export contract](architecture.md#proposed-arg-contract) uses CArg templates and C v8/53 operations/33 exports, retiring the scalar shortcut. Shared labels/EXPOSE, complete conditions/TRACE and delivery/platform closure remain open. No second splitter or research-C compatibility path. | [LC-AC-38/71](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-12 PROCEDURE / STEP06 | Partial: private routine subset | First-instruction eligibility, new pool and direct/indirect source-ordered EXPOSE for scalar/stem/resolved compound aliases. Pool binding replaces live view; recursive/callback/INTERPRET eligibility proof retained. No mandatory PROCEDURE after all labels. | [LC-AC-54](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-74-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-13 CALL / STEP06 | Partial: local private routine subset | Local/BIF/static signed external resolution, quoted/VALUE forms, omitted positions, shared-label code and delayed CALL ON/OFF policy. Lower to checked call/handler effects, preserve RESULT drop/value, 43.1/16.1 and provider boundary. Inspect call windows, copies and handler suspension. | [LC-75-01–06](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-14 RETURN / STEP06 | Partial: value/no-value subset | Explicit completion with result presence, function-required 45.1, subroutine RESULT and outermost host status. One code body, recursive cleanup and condition propagation; empty string is a present result. | [LC-76-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
@@ -148,10 +145,11 @@ INTERPRET remain open.
 
 ## SAY dependency packet — CLC-STEP01b
 
-This is the first concrete instruction dependency packet, inspected at local
-`975afbc15` on 19 October 2026. It does not close LC-I-01. The [bounded baseline qualification](../PLAN.md#completed-cabi-proof-and-limits) records unchanged-input
-proof; the [SAY review](LEVELC-INSTRUCTION-REVIEW.md) retains its grammar/RXAS
-findings. This packet adds no new execution verdict. Native whole-SAY acceptance remains a reusable control, not a new-C pass.
+This dependency packet does not close LC-I-01. The
+[context ABI](architecture.md#approved-c-family-revision-and-generated-procedure-abi)
+owns the shared contract; the [SAY review](LEVELC-INSTRUCTION-REVIEW.md)
+retains its grammar/RXAS findings. Native whole-SAY acceptance remains a
+control, not a new-C pass.
 
 Paths under `tests/` below are relative to `research/level-l/compilers/`.
 
@@ -494,9 +492,9 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-035 | Function-name ending-period `51.1` | Not implemented | C-SRC / STEP04; source/host completion STEP07/08 | Emit authored 51.1 for illegal ending-period function names. |
 | LC-REF-036 | Clause/label/null-clause program structure | Partial: private labels | C-SRC / STEP04; source/host completion STEP07/08 | Implement one-body labels/null clauses/fall-through and source/TRACE anchors. |
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | Partial: admitted IF locally qualified | LC-I-06–10 / STEP05 | Complete remaining SELECT/full-DO/shared-label placements, expression/condition/diagnostic and TRACE dependencies in LC-I-06. |
-| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Partial: admitted forms locally qualified | LC-I-06–10 / STEP05 | Retain qualified SELECT-AC01–04 and LC-I-07 shared-label, expression/control, diagnostic/recovery and observation dependencies. |
+| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Partial: admitted forms locally qualified | LC-I-06–10 / STEP05 | Retain the SELECT contract and LC-I-07 shared-label, expression/control, diagnostic/recovery and observation dependencies. |
 | LC-REF-039 | Simple DO grouping and empty body | Partial: simple DO | LC-I-06–10 / STEP05 | Complete simple-group placements, empty bodies, labels and observations. |
-| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: static forms locally qualified | LC-I-06–10 / STEP05 | [DO-AC01–04](../PLAN.md#current-do-proof) qualify header/entry/step timing, arbitrary counts/errors and keyed frame lifetime; whole-instruction dependencies stay open. |
+| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: static forms locally qualified | LC-I-06–10 / STEP05 | The [DO contract](architecture.md#approved-do-contract) covers header/entry/step timing, arbitrary counts/errors and keyed frame lifetime; whole-instruction dependencies stay open. |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | Partial: named static transfers locally qualified | LC-I-06–10 / STEP05 | LEAVE/ITERATE-AC01–04 qualify static targets, distinct crossed-state cleanup/end work and default/STRICTC timing; whole-instruction dependencies stay open. |
 | LC-REF-042 | END-name matching and group-label branch restrictions | Partial: bounded groups | C-SRC / STEP04; source/host completion STEP07/08 | Validate END names and forbidden group-label transfers with correct source. |
 | LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | Partial: operator subset | C-EXPR / STEP04; STEP05/07 contexts | Complete all terms/operators/order with independent values and side effects. |
@@ -572,7 +570,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-QUEUE` | Not implemented | LC-I-18 / STEP06 | Full LC-I-18 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-RETURN` | Partial | LC-I-14 / STEP06 | Full LC-I-14 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-SAY` | Partial | LC-I-01 / STEP05 | Full LC-I-01 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-SELECT` | Partial: admitted forms locally qualified | LC-I-07 / STEP05 | SELECT-AC01–04 pass; full LC-I-07 and shared dependencies remain open. |
+| `SYN-CLASSIC-SELECT` | Partial: admitted forms locally qualified | LC-I-07 / STEP05 | Full LC-I-07 and shared dependencies remain open. |
 | `SYN-CLASSIC-SIGNAL` | Not implemented | LC-I-23 / STEP07 | Full LC-I-23 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-TRACE` | Not implemented | LC-I-24 / STEP07 | Full LC-I-24 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-EXPRESSIONS` | Partial: operator subset | C-EXPR/C-NUM; STEP04/07 | Close LC-REF-043–046/053/054, including power, integer division/remainder and full comparisons. |
@@ -654,10 +652,9 @@ incomplete effect/edge contracts. Runtime tests use direct B callers; Unicode
 also has unchanged G users. VM/RXAS tests use direct assembly independently of
 the new compiler. This triangulation avoids a shared compiler/oracle defect.
 
-Every completion record in the current plan names input revision, decisive
-command/result, observed platform/mode, code-shape outcome and remaining gaps.
-Retain source fixtures and intended documentation outputs, not logs/dumps/run
-receipts. Follow [AGENTS.md](../../../../AGENTS.md) for isolated aggregate
+The plan tracks what is done and what remains; contracts and maintained
+fixtures define acceptance. Retain enduring documentation and source fixtures,
+not logs, dumps or run receipts. Follow [AGENTS.md](../../../../AGENTS.md) for isolated aggregate
 measurement, scheduling and sanitizer scope.
 Reuse unchanged qualified evidence; do not rerun broad QA per instruction.
 

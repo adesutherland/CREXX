@@ -3,7 +3,7 @@
 These are actual Level B/Level L compiler outputs. The C views use the current
 borrowed-context ABI; G views retain the existing STEP05 output. The before
 side disables shared passes and the after side enables them. The
-[current plan](../../PLAN.md) owns their qualification boundary.
+[current plan](../../PLAN.md) tracks remaining compiler work.
 
 Use `options levelc` or `options levelg`, followed by:
 

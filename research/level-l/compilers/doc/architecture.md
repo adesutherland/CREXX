@@ -1,13 +1,9 @@
 # Level C compiler architecture
 
-**Target architecture approved by Adrian, 19 October 2026.** The original
-native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
-the context ABI records completed STEP03d. Current source implements the approved
-C v8 ARG integration over the locally qualified finite PARSE profile; current
-ARG qualification is recorded in the plan. Static named
-LEAVE and ITERATE retain their locally qualified v6 foundation.
-The plan records bounded local qualification.
-The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
+**Target architecture approved by Adrian, 19 October 2026.** Current source
+implements the context ABI, C v8 ARG integration over the finite PARSE profile,
+and static named LEAVE/ITERATE. The [plan](../PLAN.md) owns instruction status,
+remaining work and complete-C acceptance;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
 “Current” below means inspected source, not fresh execution qualification.
@@ -110,7 +106,7 @@ The collection library supplies variable-pool storage. Generic IR definite
 assignment indexes predecessor edges once and schedules changed exits through
 a bounded worklist; it does not introduce a C analysis engine or liveness API.
 Unicode ownership below preserves private ABI, public procedure bodies and G classes.
-Exact qualification and remaining criteria belong to the active plan.
+Remaining work and complete-C acceptance belong to the active plan.
 
 ## Shared Unicode foundation in Level B
 
@@ -125,7 +121,7 @@ documentation. Adrian approved the
 [exact public contract](../../../../lib/rxfnsb/unicode/README.md#public-b-interface)
 after independent verification that minimal B and L bootstrap remain upstream
 of this optional component. Property/simple-mapping and other new interfaces
-remain later exact-contract gates. The plan records qualification separately.
+remain later exact-contract gates; the plan tracks their remaining work.
 
 | Owner | Content and contract |
 |---|---|
@@ -273,7 +269,7 @@ requirements for earlier research C output: use one current `llctarget`
 namespace/product and remove obsolete copied-context adapter bodies. The plan
 owns implementation and qualification; shared B/L consumer contracts remain.
 The intended outcome is one execution-owned configuration and one authoritative
-activation/pool binding for the C subset already admitted at `975afbc15`.
+activation/pool binding for the admitted bounded C subset.
 Remove per-operator configuration construction and copies of live activation
 state while retaining existing expression/BIF bodies and observable results.
 This does not admit more source forms or close an instruction review.
@@ -655,7 +651,7 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v8 IR + current bundle/adapters | Supported through the one-context ABI; the plan records the finite PARSE/ARG qualification boundary. |
+| Current compiler + canonical C v8 IR + current bundle/adapters | Supported through the one-context ABI; the plan identifies remaining PARSE/ARG obligations. |
 | Current selector + C v1/v2/v3/v4/v5/v6/v7/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
@@ -745,7 +741,7 @@ its exact runtime/VM contracts remain at the final STEP11 decision gate.
 
 **Approved by Adrian, 19 October 2026; C v3 source/AST/admission/lowering is
 locally qualified in normal Debug with independent caller/helper review.**
-The [plan](../PLAN.md#current-drop-proof) records its exact bounded proof;
+The [plan](../PLAN.md#current-action-drop) tracks DROP status and remaining work;
 source EXPOSE, conditions/full diagnostics and TRACE retain later owners.
 Reuse the existing [Unicode symbol contract](../../../../compiler/docs/levelc_unicode_and_streams.md#ordinary-values-and-byte-compatibility)
 and [pool methods](../../../../lib/rxfnsc/RexxVariablePool.crexx), including
@@ -805,10 +801,8 @@ The C grammar's generation allowance is `dfa.states=16384`, passed through the
 existing `rxlang --limit` option and atomic generation wrapper; global L defaults
 are unchanged. Its two full name uses and scalar quote bodies expand through
 disjoint UTF-8 boxes and fresh Thompson fragments into the existing unminimized
-subset DFA. The locally qualified Unicode 17 artifact has 5,609 DFA states,
-exceeding the default 4,096. The plan records full counts and normal Debug
-cold-construction observations, separately from target execution and without
-a formal performance claim.
+subset DFA. Unicode name expansion can exceed the default DFA allowance;
+this explicit compiler-specific limit leaves the generic default unchanged.
 `L-CONSTRUCT-01` in the plan assigns later subset-key indexing/equivalent-state
 reduction to generic L, with independent match/priority/Unicode/span proof.
 
@@ -827,7 +821,7 @@ Indirect subsidiary words retain their separate existing
 runtime/configuration validation. Canonical codecs, entry-bound context and
 unsupported-version/previous-output protections remain unchanged.
 
-The plan's DROP-AC01–04 cover source/AST/name/schema admission; independent
+DROP checks cover source/AST/name/schema admission; independent
 ordered scalar/stem/compound/indirect observations; Unicode/configuration/
 alias/private-pool behavior and errors; and caller/helper RXAS plus focused
 qualification. Use the existing direct/indirect/whole-DROP native fixtures as
@@ -861,7 +855,7 @@ that mutates the supplied context before storing provide complementary proof.
 Ordinary private calls create fresh pools, so that composition does not prove a
 source RHS call can mutate its caller through EXPOSE. Source EXPOSE/shared
 labels, exact Classic diagnostics, resumable conditions and full TRACE remain
-the existing STEP04/06/07 dependencies; ASSIGN-AC01–04 track the bounded review.
+the existing STEP04/06/07 dependencies.
 
 <a id="proposed-next-instruction-options"></a>
 
@@ -946,8 +940,8 @@ has no work.
 
 ## Approved SELECT contract
 
-**Approved by Adrian; implemented and locally qualified within the
-[recorded SELECT proof](../PLAN.md#current-select-proof).** [LC-AC-68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
+**Approved by Adrian; the bounded SELECT profile is implemented.** The
+[plan](../PLAN.md#current-action-select) tracks remaining work. [LC-AC-68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
@@ -1010,9 +1004,8 @@ selectors and runtime proofs; no new aggregate or per-slice ASan campaign.
 Whole SELECT retains shared labels/fall-through/EXPOSE, complete expressions/
 DO, dynamic transfer invalidation, exact diagnostic/recovery and condition/SIGL/clause/TRACE
 dependencies. Approval covers only these AST records, C v4 operation contracts
-and two target exports/signal bridge. Focused source/IR/runtime/admission and
-actual caller/helper RXAS qualification passes the linked plan; whole SELECT
-and complete C remain open.
+and two target exports/signal bridge. Whole SELECT and complete C remain open
+under the plan and the requirements ledger.
 
 <a id="proposed-do-contract"></a>
 <a id="approved-do-contract"></a>
@@ -1020,8 +1013,8 @@ and complete C remain open.
 ## Approved DO contract
 
 **APPROVED by Adrian on 20 October 2026; implemented and locally qualified
-within the bounded static profile.** [DO-AC01–04 and CLC-STEP05.DO1–3](../PLAN.md#current-action-do)
-record the bounded LC-I-08 qualification against
+within the bounded static profile.** The [plan](../PLAN.md#current-action-do)
+tracks remaining LC-I-08 work against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
 The qualified DO increment introduced **version 5 / 51 operations** and
 **32 exports**, retaining the four existing C types and context procedure ABI.
@@ -1195,8 +1188,8 @@ clause/TRACE remain open; approval of this bounded increment closes no CFC crite
 ## Approved LEAVE and ITERATE contract
 
 **APPROVED by Adrian on 20 October 2026. Named LEAVE, named ITERATE and the
-shared v6 foundation are locally qualified in the
-[current plan](../PLAN.md#current-action-iterate).** Complete the bounded static-transfer behavior of LC-I-09, then
+shared v6 foundation are implemented; the
+[current plan](../PLAN.md#current-action-iterate) tracks remaining work.** Complete the bounded static-transfer behavior of LC-I-09, then
 LC-I-10, using the qualified DO ownership protocol. The shared decision is
 **C v6 / 52 operations, four unchanged types and 33 target exports**, refusing
 v5 without a compatibility path. No generic L, shared B runtime, native compiler
@@ -1283,10 +1276,8 @@ owners. All complete-C criteria remain open and INTERPRET remains last.
 
 ## PARSE machinery review — shared cursor approved
 
-**Adrian approved the shared cursor API on 20 October 2026; its implementation
-is locally qualified and committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
-Real platform proof and C PARSE integration remain open.** ARG must
-subsequently use the same machinery. LC-I-19 / LC-81-01–07 retain the seven
+**The shared cursor and finite C PARSE/ARG integration are implemented.
+Complete conditions/TRACE and real-platform acceptance remain open.** LC-I-19 / LC-81-01–07 retain the seven
 agreed sources (ARG, PULL, SOURCE, LINEIN, VERSION, VALUE and VAR), optional UPPER,
 arbitrary comma/empty templates, targets/dots, literal and variable patterns,
 and absolute/relative positions. The accepted initial EXTERNAL/NUMERIC exclusions
@@ -1318,11 +1309,8 @@ parse value 'Nleft:right' with key 2 piece (patterns.key) rest
 say key || '|' || piece || '|' || rest
 ```
 
-The read-only native control on the ITERATE-qualified inputs instead prints
-`N|left:right|`. `rxc-c -n -i <bin>`, `rxas -n`, unstripped `rxlink` and
-`rxbvm --no-autoload` all succeeded
-(four commands, 1.248s). Actual RXAS reads `PATTERNS.KEY` before `parseplan`,
-then writes KEY afterward. The v2 completed-capture shortcut matches an earlier
+The native lowerer reads `PATTERNS.KEY` before `parseplan`, then writes KEY
+afterward, producing `N|left:right|`. The v2 completed-capture shortcut matches an earlier
 target name; it cannot represent this indirect dependency through the live pool.
 This is a native lowering limitation, not an oracle to copy or a request to
 change native C. The snippet and expected result own the future regression;
@@ -1378,8 +1366,7 @@ all CFC criteria remain open.
 
 ## Approved generic PARSE cursor contract
 
-**APPROVED by Adrian on 20 October 2026; locally qualified in normal Debug and
-focused Apple ASan. Real platform proof remains open.** Expose the existing PARSE kernel through one shared cursor
+**Approved and implemented; real-platform acceptance remains open.** Expose the existing PARSE kernel through one shared cursor
 primitive, allowing a consumer to apply completed fields before resolving later
 live operands. This is a built-in VM service using native RXPA bindings:
 `rxparse.cursor`, source type `.rxparse..cursor`. Existing bindings supply
@@ -1509,13 +1496,9 @@ occur. ARG then uses that same executor.
 
 ### Acceptance and implementation steps
 
-AC01–04 have passed local proof; AC05's local core/static boundary is qualified
-while real platform proof remains **open**. AC06 has passed consumer/RXAS proof,
-documentation and cleanup; local delivery is committed at
-`e0b11db9e7293bc1f45e86574cb1f857edb1c038`. The
-[PLAN qualification](../PLAN.md#parse-cursor-local-qualification) records the
-sole command/result summary and its limits; the criteria below remain the
-authoritative contract.
+The cursor and mandatory bindings are implemented. Real-platform acceptance
+under AC05 remains open. The [plan](../PLAN.md#current-action-parse) tracks
+remaining work; the criteria below define the enduring contract.
 
 | ID | Checkable closure |
 |---|---|
@@ -1524,40 +1507,35 @@ authoritative contract.
 | **PARSE-ENGINE-AC03** | Source/plan/supply/text snapshot controls, copy/alias close, two interleaved cursors, repeated use and normal/abrupt/fatal/teardown paths prove current-VM ownership. Failed construction publishes no cursor or leaked storage; uninitialized/foreign/forged receivers refuse. |
 | **PARSE-ENGINE-AC04** | Checked representation/allocation products and finite item/event progress cover large/edge inputs without wrap, replay or growing tail copies. Retained state and lazy drop text have checkable bounds; document ordinary OOM/HALT and platform limits without quota or prompt-native-interruption claims. |
 | **PARSE-ENGINE-AC05** | Source/build review proves one kernel and mandatory normal/static/embedded/single-threaded delivery, exact `DECL_ONLY` metadata, retention/freshness and idempotent initialization. Source/manifests and local constructorless/NUTF8 simulations establish their local boundaries; real CMS/TSO/Windows guest proof remains open until separately observed. Preserve 31-bit/text ownership checks, with no optional-provider or native frontend fallback. |
-| **PARSE-ENGINE-AC06** | Independent B consumers outside the C compiler include the section/word composition above; unchanged frozen/direct PARSE regressions and focused toolchain/both-engine tests qualify the implementation. Readable caller/helper RXAS checks required protocol/ownership work and simple static baselines without a broad benchmark. Current docs/scheduling and scoped cleanup/local delivery state exact inputs, results and limits; this does not close C PARSE/ARG or CFC. |
+| **PARSE-ENGINE-AC06** | Independent B consumers outside the C compiler include the section/word composition above; unchanged frozen/direct PARSE regressions and focused toolchain/both-engine tests qualify the implementation. Readable caller/helper RXAS checks required protocol/ownership work and simple static baselines without a broad benchmark. Documentation retains contracts, scheduling requirements and known limits; qualification results belong in conversation; this does not close C PARSE/ARG or CFC. |
 
 1. **PARSE-ENGINE-STEP01 — Approved/complete (AC01–06):** exact API,
    independent order/error expectations and platform boundary were reviewed;
    Adrian approved the shared cursor prerequisite on 20 October 2026.
-2. **PARSE-ENGINE-STEP02 — Locally complete (AC01–05):** one private kernel
-   serves the opcode and built-in cursor; owned state, checked failures and
-   mandatory bindings/declarations passed independent review and local tests.
-3. **PARSE-ENGINE-STEP03 — Locally qualified (AC01–06):** independent consumers,
-   existing opcode/direct regressions, both VM engines, maintained Apple ASan,
-   kernel-only NUTF8 and actual constructorless static smoke passed. Real
-   31-bit/CMS/TSO/Windows and Linux LeakSanitizer proof remain open.
-4. **PARSE-ENGINE-STEP04 — Locally committed (AC01–06):**
-   independent/root source and RXAS review, local qualification, documentation
-   and task-only cleanup are complete at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
-   C PARSE integration retains its
-   normalization proof and separate exact-contract gate.
+2. **PARSE-ENGINE-STEP02 — Implemented (AC01–05):** one private kernel serves
+   the opcode and built-in cursor with owned state, checked failures and
+   mandatory bindings/declarations.
+3. **PARSE-ENGINE-STEP03 — Platform acceptance open (AC01–06):** retain
+   independent consumers, opcode/direct regressions, both VM engines and
+   applicable sanitizer checks. Real 31-bit/CMS/TSO/Windows and Linux
+   LeakSanitizer acceptance remain open.
+4. **PARSE-ENGINE-STEP04 — Local delivery complete (AC01–06):** retain current
+   source/RXAS contracts, regression fixtures and platform limits. C PARSE
+   integration owns its separate normalization and acceptance contract.
 
 <a id="proposed-c-parse-integration"></a>
 
 ## Approved complete C PARSE integration
 
-**APPROVED by Adrian on 20 October 2026. CPARSE-STEP01 is complete;
-CPARSE-STEP02 has local normal Debug and focused Apple ASan proof;
-STEP03/04 are locally qualified in the finite fatal-error profile. STEP05
-conditions/TRACE and full delivery/platform qualification remain open.**
+**Approved and implemented in the finite fatal-error profile. CPARSE-STEP05
+conditions/TRACE and full delivery/platform acceptance remain open.**
 Approval covers the exact contracts below, shared cursor/B-library reuse,
 focused tests, actual RXAS review and scoped local commits, using the agreed
-Sol 6.1 Extra High workers. Baseline is `e0b11db9e7293bc1f45e86574cb1f857edb1c038`:
-C v6/52 operations, 33 `llctarget` exports and the committed seven-callable
-cursor. The outcome is all seven agreed PARSE sources and complete templates,
+Sol 6.1 Extra High workers. The integration uses the seven-callable shared
+cursor. Its outcome is all seven agreed PARSE sources and complete templates,
 including live dependencies, backward/equal/zero movement, empty patterns,
 Unicode/configured blanks and arbitrary representable comma positions. ARG
-subsequently uses this executor; its instruction acceptance is separate. PULL
+uses this executor; its instruction acceptance is separate. PULL
 also has its own instruction review. EXTERNAL/NUMERIC retain the current
 exclusion and final Release 1 decision; INTERPRET remains last.
 
@@ -2021,10 +1999,10 @@ validation/call/scan costs are stated; static counts are not speed claims.
 
 ### Integration acceptance and implementation steps
 
-The acceptance contract below is **approved**. AC01–06 have bounded local
-compiler/runtime proof, including normal Debug and focused native Apple ASan.
-Complete condition/TRACE/platform obligations remain open under AC07/08. The current
-plan owns exact inputs and qualification boundaries. These criteria refine CLC-STEP06.PARSE3 and
+The acceptance contract below is **approved**. The bounded compiler/runtime
+integration is implemented; complete condition/TRACE/platform obligations remain
+open under AC07/08. The current plan tracks status and remaining work. These
+criteria refine CLC-STEP06.PARSE3 and
 serve CFC-AC01–04/06–12 without closing those complete-C criteria.
 
 | ID | Checkable pass condition |
@@ -2044,7 +2022,6 @@ serve CFC-AC01–04/06–12 without closing those complete-C criteria.
 2. **CPARSE-STEP02 — Locally qualified; real platforms open (AC02/05/08):** implemented v3 in the
    single kernel with independent non-C consumers, legacy compatibility,
    mandatory delivery and applicable native qualification; no C source logic.
-   The current plan records the exact normal input/commands/results and limits.
 3. **CPARSE-STEP03 — Locally qualified; shared B executor (AC03–05/07):** packet
    validation, existing-scan word distribution, live writes/reads and finite
    relays have direct B proof. Keep complete typed-condition/TRACE integration visibly
@@ -2063,12 +2040,12 @@ serve CFC-AC01–04/06–12 without closing those complete-C criteria.
 
 ## Approved standalone ARG contract
 
-**Exact AST/IR/export contract approved by Adrian on 20 October 2026;
-ARG-AC01–04 are locally qualified, including the current product targets;
-scoped local delivery is complete. ARG-AC05 remains open.** This LC-I-11 increment applies the agreed `ARG [template_list]`
+**Exact AST/IR/export contract approved and implemented. Shared acceptance
+under ARG-AC05 remains open.** This LC-I-11 increment applies the agreed `ARG [template_list]`
 meaning, `PARSE UPPER ARG`, through the locally qualified cursor/LCP1/shared-B
-executor. The [current plan](../PLAN.md#current-action-arg) owns ARG-AC01–05
-and ARG-STEP01–05. Complete CFC, PARSE observations/platforms and last-stage
+executor. This section owns the ARG contract and required checks; the
+[current plan](../PLAN.md#current-action-arg) tracks its status and remaining
+work. Complete CFC, PARSE observations/platforms and last-stage
 INTERPRET retain their existing acceptance and owners.
 
 ### Exact public C-owned changes
@@ -2140,7 +2117,7 @@ provenance. Complete NOVALUE/resumption/TRACE is still ARG-AC05 work.
 
 ### Required focused proof and ownership
 
-ARG-AC01–04 require independent raw AST/negative, activation/presence, live-order,
+Required checks include independent raw AST/negative, activation/presence, live-order,
 Unicode/NUL and runtime/error oracles; actual readable caller/shared-helper RXAS;
 v8/53-operation/33-export admission and explicit v7 refusal; affected existing
 PARSE/DROP/argv/call consumers and regenerated maintained views. Bare/comma-only

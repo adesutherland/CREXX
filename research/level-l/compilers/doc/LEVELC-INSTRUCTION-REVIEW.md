@@ -73,14 +73,10 @@ runtime helper work; it does not hide decoding in a target helper. Source
 records for literal evaluation and output describe different authored ranges;
 they must not be deleted just to reduce metadata counts.
 
-Retained local qualification at `06a548321662e6dc4e91899363eb12831b4d952c`
-passed the 40-command SAY workload: independent literal/order/error expectations,
-both compiler IR modes and VMs with assembler optimisation disabled, all 256
-ordinals and no runtime radix decoding. Focused frontend/product and Apple ASan
-checks passed for this bounded repair. These are reused results, not a new run;
-whole SAY stays open for required shared-expression/TRACE obligations above; deferred historical host edge parity does not block it. Review and
-closure are separate states. The bounded DROP, assignment and NOP reviews below
-follow that SAY disposition; LC-I-06 IF is the current individual review.
+The bounded SAY route is implemented. Retain independent literal/order/error
+expectations, both compiler IR modes and VMs, separate assembler optimization,
+all 256 ordinals and the absence of runtime radix decoding. Shared-expression
+and TRACE obligations remain open; the plan identifies the current instruction.
 
 ## DROP: ordered names and borrowed pool effects
 
@@ -100,12 +96,9 @@ The compiler neither splits subsidiary words nor implements compound tails.
 | Refusal and atomicity | Malformed source, including unreachable source, preserves a previous output. Generic valid graphs with invalid reachable/dead load/store/drop names publish no RXAS and remain byte-identical. Existing schema/context tests reject previous/unknown C versions. | Full Classic diagnostic identity, resumable conditions and TRACE remain shared later obligations. |
 | Caller and helper work | Structural checks require ordered existing drop/read/conversion calls, one capture and borrowed pool/configuration getters; inspect their receiver cleanup and existing pool bodies. A synthetic execution marker detects an accidentally entered C root wrapper in the B-root fixture. | Root owners, entry numeric setup, fatal dispatch and conservative temporaries retain C-OPT owners; no optimal-frame or speed claim follows. |
 
-The focused normal Debug workload and its isolated scheduling measurement are
-owned by `tests/check-drop.py` and DROP-AC01–04 in the current plan. The 40-command
-positive component and 15 source refusals pass, with separate component timing;
-no single successful full-workload timing is claimed. Existing C admission and
-affected frontend checks also pass. Source EXPOSE, resumable conditions, complete
-diagnostic identities and TRACE remain open, so whole LC-I-02 remains partial.
+`tests/check-drop.py` owns the focused source, admission and execution checks.
+Source EXPOSE, resumable conditions, complete diagnostic identities and TRACE
+remain open, so whole LC-I-02 remains partial.
 Existing native C DROP fixtures and shared B pool/Unicode proofs
 remain read-only semantic controls, not inherited passes for the new compiler.
 
@@ -119,7 +112,7 @@ The existing frontend already evaluates the RHS before one raw-name
 `setSymbolValue`. The pool owns classification, case-preserved substituted tails,
 aliases and value/cache storage. No product defect or new API/schema is assumed.
 
-[ASSIGN-AC01–04](../PLAN.md#current-action-assignment) require independent source,
+Assignment requires independent source,
 AST/IR, prebound-context and caller/helper RXAS proof. Source marker calls and
 old-value reads establish once-only RHS-before-write order. An exported test IR
 body mutates the supplied live context before its store; a B owner observes the
@@ -128,9 +121,8 @@ proofs: private source calls have fresh pools and cannot mutate the parent by
 inheriting a prebound alias. Do not copy native fixture EXPOSE, counted DO or
 C2X forms into the admitted source profile merely to obtain a test.
 
-The bounded review is locally qualified by the [composed normal Debug
-checks](../PLAN.md#current-assignment-proof) and independent actual caller/fatal
-RXAS inspection. No product change was needed. Whole LC-I-03 remains partial
+The [plan](../PLAN.md#current-action-assignment) tracks assignment status and
+remaining work. Whole LC-I-03 remains partial
 for source EXPOSE/shared-label, exact Classic diagnostic, resumed
 condition/NOVALUE and full clause/TRACE dependencies under STEP04/06/07.
 Existing native and shared B passes are controls, not inherited assignment
@@ -144,8 +136,7 @@ same-clause operand. The generated grammar already projects `Nop()` and the
 frontend emits no operation for it. Structural traversal and NOP keep an
 already-terminated block closed; only later emitting statements prepare a dead
 block after their normal visit/budget check, preserving dead-source validation.
-[NOP-AC01–04](../PLAN.md#current-action-nop)
-qualify authored AST spans, supported main/IF/group/while/private placements,
+NOP checks cover authored AST spans, supported main/IF/group/while/private placements,
 contextual NOP variable names and first-extra-token refusals, including dead
 source. Reached and post-terminator NOP should add no IR value/effect, helper,
 call, default, unreachable return path or frame demand against a valid control;
@@ -157,17 +148,16 @@ no new runtime/schema/API or orchestration is needed. Native NOP fixtures are
 read-only semantic controls; their historical ignored-tail bug is not an
 acceptance target. SELECT placements, shared labels, exact Classic 21.1 and
 clause/condition/TRACE observations retain STEP04/05/06/07 owners. Whole LC-I-04
-stays partial until those dependencies close. The bounded review is locally
-qualified by the [focused Debug proof](../PLAN.md#current-nop-proof) and
-independent actual RXAS comparison. The repaired dead-NOP construction adds no
+stays partial until those dependencies close; the
+[plan](../PLAN.md#current-action-nop) tracks that work. Dead-NOP construction adds no
 unreachable return helper or frame slot, while following dead semantic errors
 still refuse. Existing frontend/backend defaults retain the regression; no new
 orchestrator, grammar, schema or runtime change was needed.
 
 ## OPTIONS: retained expressions and current empty processor
 
-[OPTIONS-AC01–04](../PLAN.md#current-action-options) track the
-[approved contract](architecture.md#approved-options-contract). Each clause is
+The [approved OPTIONS contract](architecture.md#approved-options-contract)
+defines the source and execution checks. Each clause is
 `COptions(value:expression?)`, including the first static header. Only a complete
 first nonempty bare-word clause selects approved C/Classic/comment settings;
 quoted/operator/call/later forms retain ordinary runtime expression semantics.
@@ -183,10 +173,9 @@ errors, normal visits and budgets remain; dead malformed literals still refuse.
 Reached/post-terminator blank controls must show no extra value, helper, frame
 or dead return while retaining the same header and truthful source metadata.
 
-Focused existing frontend/backend selectors and independent runtime cases pass
-the [bounded normal Debug qualification](../PLAN.md#current-options-proof),
-with independent actual reached/dead/operand/fatal RXAS review. Existing B
-no-word and generic L comment/budget proof are reused on unchanged inputs. No runtime word, API,
+The [plan](../PLAN.md#current-action-options) tracks OPTIONS status and
+remaining work. Existing B no-word and generic L comment/budget contracts
+remain shared dependencies. No runtime word, API,
 family revision or native implementation is added. A future processor word or
 effect requires C review, regression qualification and consumer recompilation.
 Whole LC-I-05 retains full header controls/source maps, shared-label,
@@ -195,8 +184,7 @@ close those outcomes.
 
 ## IF: one condition and only the selected arm
 
-[IF-AC01–04](../PLAN.md#current-action-if) qualify the existing admitted
-IF/THEN/ELSE contract. Source parsing keeps original spans and binds ELSE to
+IF checks cover the admitted IF/THEN/ELSE contract. Source parsing keeps original spans and binds ELSE to
 the nearest open IF. An admitted instruction can occupy either arm; optional
 operands must not consume their owner's contextual ELSE, while ordinary `else`
 variable operands remain legal outside that boundary. Missing condition, THEN
@@ -215,9 +203,8 @@ Both source arms and later dead statements remain statically checked. Existing
 per-EXIT fallback packets, owner/numeric setup and fatal handlers are separate
 costs, not removable IF work. Private source routines still have fresh pools.
 
-Focused independent frontend/backend selectors, runtime expectations and actual
-RXAS inspection pass the [bounded Debug proof](../PLAN.md#current-if-proof).
-The repaired optional-arm parser and lazy join construction retain source
+The [plan](../PLAN.md#current-action-if) tracks IF status and remaining work.
+The optional-arm parser and lazy join construction retain source
 validation and contextual effects. Whole LC-I-06 remains partial
 for SELECT/full DO/shared labels/EXPOSE, complete expressions and exact static
 diagnostics, resumed conditions/NOVALUE and clause/TRACE observations under
@@ -226,8 +213,8 @@ The approved SELECT increment is reviewed separately below.
 
 ## SELECT: ordered WHEN checks and source-backed no-match delivery
 
-[SELECT-AC01–04](../PLAN.md#current-action-select) own the approved bounded
-SELECT review. CSelect retains ordered CWhen/COtherwise and original spans;
+The [SELECT contract](architecture.md#approved-select-contract) owns the bounded
+source and execution checks. CSelect retains ordered CWhen/COtherwise and original spans;
 OTHERWISE is one optional final instruction list and may be empty. Each reached
 WHEN evaluates once and performs contextual truth before its selected body.
 Later tests/arms remain dormant after the first exact text `1`; exact text `0`
@@ -246,9 +233,7 @@ SELECT creates no loop frame. Only structurally open arm endpoints join;
 LEAVE/ITERATE target the surrounding loop. Cold absent-result/core-return
 closure after the divergent missing operation is required by the current IR,
 not an unused join. Both source arms and later dead source remain validated.
-Focused selectors, paired B/IR/VM runtime, admission/metadata/atomicity controls
-and independent actual caller/helper inspection pass the
-[bounded Debug proof](../PLAN.md#current-select-proof). Whole
+The [plan](../PLAN.md#current-action-select) tracks status and remaining work. Whole
 LC-I-07 retains shared labels/fall-through/EXPOSE, complete expressions/DO/named
 transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
 
@@ -257,28 +242,25 @@ transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
 
 ## DO: approved full headers and explicit loop-state ownership
 
-[DO-AC01–04](../PLAN.md#current-action-do) track the
-[exact contract](architecture.md#approved-do-contract), approved by Adrian on
-20 October 2026. The [bounded local Debug proof](../PLAN.md#current-do-proof)
-qualifies normalized headers/END names, all counted/controlled/FOREVER and WHILE/UNTIL
-forms, shared-runtime order/errors and unnamed-transfer integration. That v5
-qualification used
-static function-local text keys and hidden owned state, not first-class borrowed
+The [exact DO contract](architecture.md#approved-do-contract) covers
+normalized headers/END names, counted/controlled/FOREVER and WHILE/UNTIL forms,
+shared-runtime order/errors and unnamed transfers. Its state uses static
+function-local text keys and hidden owned storage, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
 Named END checks are included; the qualified v6 LEAVE increment below integrates
 shared invalid-target delivery. The separately qualified ITERATE increment below uses that foundation. Shared labels/EXPOSE, complete expressions/exact recovery and
-resumable conditions/SIGL/clause/TRACE remain open. Independent source/CFG,
-metadata/protocol, runtime/error and actual caller/helper RXAS checks pass;
-this closes the admitted increment, not whole-instruction or complete-C delivery.
+resumable conditions/SIGL/clause/TRACE remain open. Retain independent
+source/CFG, metadata/protocol, runtime/error and caller/helper RXAS checks;
+the admitted increment does not close whole-instruction or complete-C delivery.
 
 <a id="leave-static-targets-and-request-policy"></a>
 
 ## LEAVE: static raw targets and request-local errors
 
 The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
-and [LEAVE-AC01–04](../PLAN.md#current-action-leave) own this locally qualified bounded implementation, with
-[focused Debug proof](../PLAN.md#current-leave-proof). Optional names compare authored symbols
+owns the LEAVE-AC01–04 checks; the [plan](../PLAN.md#current-action-leave)
+tracks status and remaining work. Optional names compare authored symbols
 using shared Classic casing without tail substitution or runtime pool lookup;
 nearest ELSE remains the existing IF authority even when a loop is named ELSE.
 Valid edges close crossed states inner-to-outer including the selected loop,
@@ -299,8 +281,8 @@ and clause/TRACE remain open; bounded local qualification does not close them.
 ## ITERATE: preserve the selected loop and enter its end work
 
 The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
-and [ITERATE-AC01–04](../PLAN.md#current-iterate-proof) qualify the bounded static
-nearest/named profile. Resolve raw names within this routine using shared
+owns the ITERATE-AC01–04 checks for the static nearest/named profile; the
+[plan](../PLAN.md#current-action-iterate) tracks status and remaining work. Resolve raw names within this routine using shared
 Classic casing; close only crossed inner states, retain the selected owner and
 jump to its existing UNTIL/advance/count-entry path. True UNTIL skips advance;
 false UNTIL and count exhaustion retain the final step. Groups/SELECT and
@@ -311,15 +293,14 @@ Default C rejects provable invalid targets even in dead source (28.2 without a
 repetitive loop, 28.4 for a missing name); STRICTC signals only when reached.
 Malformed syntax always refuses. The v6/52/33 foundation, header/admission and
 shared transfer bridge were unchanged in this slice; current PARSE additions
-are separately qualified under the v7 contract. Focused source, CFG, paired execution,
-prior-output and independent actual RXAS checks pass with a shared LEAVE
-regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
+use the current C contract. Retain source, CFG, paired execution, prior-output
+and actual RXAS checks, including the shared LEAVE regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
 resumable conditions, exact recovery and clause/TRACE remain open.
 
 ## ARG: authored templates through the shared executor
 
-The [approved ARG contract](architecture.md#proposed-arg-contract) and
-[ARG-AC01–05](../PLAN.md#current-action-arg) own this bounded LC-I-11 increment.
+The [approved ARG contract](architecture.md#proposed-arg-contract) owns the
+requirements for this bounded LC-I-11 increment.
 `CArg(templates:ParseTemplates)` retains the authored ARG instruction and exact
 template/item origins, reusing every PARSE item shape. Private lowering supplies
 source ARG and UPPER=1; no source token or second splitter is manufactured.
@@ -336,8 +317,8 @@ only the captured source once; raw patterns/names, originals/presence and later
 PARSE ARG remain unchanged. Shared live-pool ordering governs closing versus
 later operands, target/compound writes, exact remainders and codepoint positions.
 
-The plan records focused frontend/schema/target/runtime/negative proof and
-actual caller/helper RXAS, with native C only a comparison control. Complete
+The [plan](../PLAN.md#current-action-arg) tracks ARG status and remaining work;
+native C remains a comparison control. Complete
 shared-label/EXPOSE activation, configured NOVALUE/errors, conditions/resumption,
 clause/TRACE and declared delivery/platform obligations remain ARG-AC05 work;
 bounded qualification does not close the whole instruction or complete C.

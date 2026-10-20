@@ -226,6 +226,6 @@ The maintained checks for this implemented bounded contract are:
 Full replacement, arbitrary defaults, references, conditions/TRACE, proper B
 self-hosting and INTERPRET retain their named later gates.
 
-The [current plan](../PLAN.md) records qualified inputs, reused controls and
-remaining delivery/platform limits. Bounded scalar-call proof does not establish
+The [current plan](../PLAN.md) tracks instruction status and remaining
+delivery/platform work. Bounded scalar-call proof does not establish
 complete C, B/G replacement or hosted qualification.

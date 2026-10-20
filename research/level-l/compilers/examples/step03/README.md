@@ -19,8 +19,8 @@ contract, not a byte-span calculation.
 The current pipeline CArg owns ParseTemplates/ParseTemplate/ParseTarget rather
 than scalar ArgTarget children. Its IR uses raw `parse.source` plus an immutable
 UPPER packet for `parse.execute`; the activation's original argument is retained.
-The [ARG increment](../../PLAN.md#current-action-arg) records the focused source,
-schema and emitted-view qualification. These tree/IR probes themselves do not
+The [ARG contract](../../doc/architecture.md#proposed-arg-contract) defines
+its source, schema and emission requirements. These tree/IR probes themselves do not
 assemble or execute output.
 
 | Input pair | Classic output | G output |
@@ -45,5 +45,5 @@ that refusal is expected, and no successful IR is emitted. The local Git
 attributes preserve its literal CRLF bytes and retain the generated dumps
 without trimming source trivia or printed framing.
 
-Regeneration and qualification details are in the
-[current plan](../../PLAN.md).
+The [frontend manual](../../doc/frontends.md) describes regeneration;
+the [current plan](../../PLAN.md) tracks instruction status and remaining work.
