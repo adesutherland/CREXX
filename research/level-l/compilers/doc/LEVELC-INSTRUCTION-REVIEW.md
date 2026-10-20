@@ -233,7 +233,7 @@ WHEN evaluates once and performs contextual truth before its selected body.
 Later tests/arms remain dormant after the first exact text `1`; exact text `0`
 continues. Invalid values use the existing distinct 34.2 helper behavior.
 
-The current C-owned family is v4/43 operations. Its two additions are
+The SELECT increment used C-owned family v4/43 operations. Its two additions are
 `when.truth(value,context)` and attribute-free `select.missing`; the target adds
 `whentruth` and `selectmissing` to its existing 23 exports. The no-match bridge
 reuses shared 7.3 message/source and forwards its captured ERROR event with
@@ -252,17 +252,21 @@ and independent actual caller/helper inspection pass the
 LC-I-07 retains shared labels/fall-through/EXPOSE, complete expressions/DO/named
 transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
 
-## DO: proposed full headers and explicit loop-state ownership
+<a id="do-proposed-full-headers-and-explicit-loop-state-ownership"></a>
+<a id="do-contract"></a>
 
-[DO-AC01–04](../PLAN.md#current-action-do) will track the
-[proposed exact contract](architecture.md#proposed-do-contract), pending Adrian's
-approval. Current implementation remains the group/WHILE subset. The proposal
-adds normalized headers/END names, all counted/controlled/FOREVER and WHILE/UNTIL
+## DO: approved full headers and explicit loop-state ownership
+
+[DO-AC01–04](../PLAN.md#current-action-do) track the
+[exact contract](architecture.md#approved-do-contract), approved by Adrian on
+20 October 2026. The [bounded local Debug proof](../PLAN.md#current-do-proof)
+qualifies normalized headers/END names, all counted/controlled/FOREVER and WHILE/UNTIL
 forms, shared-runtime order/errors and unnamed-transfer integration. C v5 uses
 static function-local text keys and hidden owned state, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
 Named END checks are included; named LEAVE/ITERATE and invalid-target delivery
 remain LC-I-09/10. Shared labels/EXPOSE, complete expressions/exact recovery and
-resumable conditions/SIGL/clause/TRACE remain open. No implementation or whole
-instruction qualification is claimed by recording this proposal.
+resumable conditions/SIGL/clause/TRACE remain open. Independent source/CFG,
+metadata/protocol, runtime/error and actual caller/helper RXAS checks pass;
+this closes the admitted increment, not whole-instruction or complete-C delivery.

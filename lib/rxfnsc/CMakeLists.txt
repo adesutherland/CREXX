@@ -358,6 +358,11 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
   )
 endforeach()
 
+# Compiler hosts reuse this self-contained member without linking the runtime
+# aggregate. Keep the existing member command as its only producer.
+add_custom_target(rxfnsc_unicode_properties_member DEPENDS
+  "${RXFNSC_MEMBER_ROOT}/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
+
 set(_rxfnsc_control_file ${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_link_$<CONFIG>.ctl)
 set(_rxfnsc_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
 set(_rxfnsc_link_image "${_rxfnsc_link_root}/rxfnsc.rxbin")

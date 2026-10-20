@@ -8,6 +8,8 @@ import llsource
 import llcir
 import llcparse
 import llcompilercontracts
+import llcdoprotocol
+import rexxclassicunicodeproperties
 
 /** Classic routine: one source statement interval and its result contract. */
 routine: class
@@ -87,6 +89,12 @@ request: class
   _loops = .int
   _breaks = .object[]
   _continues = .object[]
+  _hasbreaks = .int[]
+  _hascontinues = .int[]
+  _breakalive = .int[]
+  _continuealive = .int[]
+  _loopkeys = .string[]
+  _donumber = .int
   _bindscope = .int[]
   _bindnames = .string[]
   _bindtypes = .string[]
@@ -134,6 +142,10 @@ request: class
       if _error <> '' then return
       _graph = _builder.finish()
       if _graph.error() <> '' then _error = _graph.error()
+      if _error = '' then do
+        protocol = .llcdoprotocol..checked(reference _graph,_budget * 64,_budget)
+        if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
+      end
     on signal as problem
       if _building then _error = _builder.error()
       if _error = '' then _error = 'LL_COMPILER_INVALID: ' || problem.message()
@@ -255,7 +267,7 @@ request: class
     do scope = 1 to _routines[0] while _error = ''
       _scope = scope
       _current = _routines[_scope] as .routine; _fn = _functions[_scope] as .llir..function
-      _blocknumber = 0; _tempnumber = 0; _loops = 0; _terminated = 0; _alive = 1
+      _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _terminated = 0; _alive = 1
       _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
       do
         _contextslot = _fn.slot('$context',type('context'))
@@ -300,9 +312,14 @@ request: class
     if tick(node) = 0 then return
     i = .int
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    target = .llir..block
     /* Visit structural/non-emitting statements without reopening a terminated
      * block. Later emitting statements still lower in checked dead code. */
     nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop'
+    if kind = 'CDo' then do
+      header = node.child('header')
+      nonemitting = header.count('repetition') = 0 & header.count('condition') = 0
+    end
     if kind = 'COptions' then do
       nonemitting = 1
       if node.count('value') then nonemitting = simpleliteral(node.child('value'))
@@ -352,6 +369,7 @@ request: class
         built = op.finish()
       end
       when kind = 'CSelect' then call selection(node)
+      when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
         value = expression(node.child('condition')); if _error <> '' then return
         value = truth(value,origin)
@@ -377,23 +395,17 @@ request: class
         else _terminated = 1
         _alive = yesalive | noalive
       end
-      when kind = 'While' then do
-        header = newblock('while.test'); bodyblock = newblock('while.body'); after = newblock('while.after')
-        call _block.jump(header,origin); _block = header
-        value = expression(node.child('condition')); if _error <> '' then return
-        value = truth(value,origin); call _block.branch(value,bodyblock,after,origin)
-        _loops = _loops + 1; _breaks[_loops] = after as .object; _continues[_loops] = header as .object
-        incoming = _alive; _block = bodyblock; _terminated = 0
-        call statement(node.child('body'))
-        if _terminated = 0 then call _block.jump(header,origin)
-        _loops = _loops - 1; _block = after; _terminated = 0; _alive = incoming
-      end
       when kind = 'Leave' | kind = 'Iterate' then do
         if _loops = 0 then do
           call fail(node,'FLOW: ' || kind || ' requires a surrounding loop'); return
         end
-        target = _breaks[_loops] as .llir..block
-        if kind = 'Iterate' then target = _continues[_loops] as .llir..block
+        if kind = 'Iterate' then do
+          target = loopcontinue(_loops); _continuealive[_loops] = _continuealive[_loops] | _alive
+        end
+        else do
+          target = loopafter(_loops); _breakalive[_loops] = _breakalive[_loops] | _alive
+          if _loopkeys[_loops] <> '' then built = dostate('close',_loopkeys[_loops],origin)
+        end
         call _block.jump(target,origin); _terminated = 1; _alive = 0
       end
       when kind = 'Return' then do
@@ -403,7 +415,9 @@ request: class
             op = _block.operation(_contract.operation('crexx.c.return.present'),origin); call op.input('value',value)
           end
           else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
-          built = op.finish(); call _block.returnvalue(built.result(),origin)
+          built = op.finish(); value = built.result()
+          call closeactive(origin)
+          call _block.returnvalue(value,origin)
         end
         _terminated = 1; _alive = 0
       end
@@ -412,6 +426,7 @@ request: class
         else value = _block.constantbytes(type('value'),'0' as .binary,origin)
         if _error <> '' then return
 
+        call closeactive(origin)
         op = _block.operation(_contract.operation('crexx.' || 'c' || '.exit'),origin); call op.input('value',value); built = op.finish()
         /* EXIT never returns. The final core terminator closes the structural
          * block; it is unreachable after this explicitly diverging operation. */
@@ -450,6 +465,175 @@ request: class
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
+    return
+  /** Ordinary grouping never owns a transfer target. Repetitive DO targets
+   * and edge-local closes are separate from the checked dead-source cursor. */
+  loopafter: method = .llir..block
+    arg level = .int
+    if _hasbreaks[level] = 0 then do
+      target = newblock('do.after'); _breaks[level] = target as .object; _hasbreaks[level] = 1
+    end
+    return _breaks[level] as .llir..block
+  loopcontinue: method = .llir..block
+    arg level = .int
+    if _hascontinues[level] = 0 then do
+      target = newblock('do.continue'); _continues[level] = target as .object; _hascontinues[level] = 1
+    end
+    return _continues[level] as .llir..block
+  dostate: method = .llir..opview
+    arg action = .string, key = .string, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.do.' || action),origin)
+    call op.attribute('key',key as .binary)
+    return op.finish()
+  docapture: method = .void
+    arg key = .string, part = .string, value = .llir..valuehandle, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.do.capture'),origin)
+    call op.input('value',value); call op.attribute('key',key as .binary); call op.attribute('part',part as .binary)
+    built = op.finish()
+    return
+  closeactive: method = .void
+    arg origin = .llir..origin
+    do level = _loops to 1 by -1
+      if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
+    end
+    return
+  doloop: method = .void
+    arg node = .llast..node
+    header = node.child('header'); ending = node.child('ending')
+    if tick(header) = 0 | tick(ending) = 0 then return
+    repetition = .llast..node; condition = .llast..node; modifier = .llast..node; named = .llast..node
+    origin = at(node); headerorigin = at(header); endorigin = at(ending)
+    testorigin = .llir..origin
+    kind = ''; name = ''; conditionkind = ''; key = ''; seen = ''; i = .int
+    value = .llir..valuehandle; built = .llir..opview; op = .llir..opdraft
+    entry = .llir..block; body = .llir..block; test = .llir..block; exhausted = .llir..block
+    after = .llir..block; advance = .llir..block; continuing = .llir..block
+    if header.count('repetition') then do
+      repetition = header.child('repetition'); kind = repetition.kind()
+      if tick(repetition) = 0 then return
+      if wordpos(kind,'DoCount DoForever DoControl') = 0 then do; call fail(repetition,'PROFILE: invalid DO repetition'); return; end
+      if kind = 'DoControl' then do
+        named = repetition.child('name'); if tick(named) = 0 then return
+        name = named.text('spelling')
+        do i = 1 to repetition.count('modifiers')
+          modifier = repetition.child('modifiers',i); if tick(modifier) = 0 then return
+          part = lower(modifier.text('keyword'))
+          if wordpos(part,'to by for') = 0 then do; call fail(modifier,'SYNTAX: invalid DO modifier'); return; end
+          if wordpos(part,seen) > 0 then do; call fail(modifier,'SYNTAX: RXC-LC-27.1: duplicate DO ' || upper(part)); return; end
+          seen = seen || ' ' || part
+        end
+      end
+    end
+    if header.count('condition') then do
+      condition = header.child('condition'); conditionkind = condition.kind()
+      if tick(condition) = 0 then return
+      if conditionkind <> 'DoWhile' & conditionkind <> 'DoUntil' then do; call fail(condition,'PROFILE: invalid DO condition'); return; end
+    end
+    if ending.count('name') then do
+      named = ending.child('name'); if tick(named) = 0 then return
+      if name = '' then do; call fail(named,'SYNTAX: RXC-LC-10.3: END name requires a controlled DO'); return; end
+      if rexxclassic_unicode_upper(name) <> rexxclassic_unicode_upper(named.text('spelling')) then do
+        call fail(named,'SYNTAX: RXC-LC-10.2: END name does not match DO control symbol'); return
+      end
+    end
+    if kind = '' & conditionkind = '' then do; call statement(node.child('body')); return; end
+    stateful = kind = 'DoCount' | kind = 'DoControl'; incoming = _alive
+    if stateful then do
+      _donumber = _donumber + 1; key = 'do.' || _donumber
+      op = _block.operation(_contract.operation('crexx.c.do.new'),headerorigin)
+      call op.input('context',_block.load(_contextslot,headerorigin))
+      call op.attribute('key',key as .binary); call op.attribute('name',name as .binary); built = op.finish()
+      if kind = 'DoCount' then do
+        value = expression(repetition.child('value')); if _error <> '' then return
+        call docapture(key,'repeat',value,at(repetition))
+      end
+      else do
+        value = expression(repetition.child('initial')); if _error <> '' then return
+        call docapture(key,'start',value,at(repetition.child('initial')))
+        do i = 1 to repetition.count('modifiers')
+          modifier = repetition.child('modifiers',i)
+          value = expression(modifier.child('value')); if _error <> '' then return
+          call docapture(key,lower(modifier.text('keyword')),value,at(modifier))
+        end
+      end
+      built = dostate('start',key,headerorigin)
+    end
+    _loops = _loops + 1; level = _loops
+    _loopkeys[level] = key; _hasbreaks[level] = 0; _hascontinues[level] = 0
+    _breakalive[level] = 0; _continuealive[level] = 0
+    body = newblock('do.body')
+    entry = body
+    if conditionkind = 'DoWhile' then do; test = newblock('do.while'); entry = test; end
+    if stateful then entry = newblock('do.entry')
+    call _block.jump(entry,origin)
+    if stateful then do
+      _block = entry; built = dostate('entry',key,headerorigin)
+      exhausted = newblock('do.exhausted'); after = loopafter(level)
+      chosen = body
+      if conditionkind = 'DoWhile' then chosen = test
+      call _block.branch(built.result(),chosen,exhausted,headerorigin)
+      _block = exhausted; built = dostate('close',key,endorigin.derive())
+      call _block.jump(after,endorigin); _breakalive[level] = incoming
+    end
+    if conditionkind = 'DoWhile' then do
+      _block = test; _terminated = 0; _alive = incoming
+      value = expression(condition.child('value')); if _error <> '' then return
+      testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
+      value = truth(value,testorigin,'crexx.c.while.truth'); after = loopafter(level)
+      if stateful then do
+        exhausted = newblock('do.while.exit')
+        call _block.branch(value,body,exhausted,testorigin)
+        _block = exhausted; built = dostate('close',key,endorigin.derive()); call _block.jump(after,endorigin)
+      end
+      else call _block.branch(value,body,after,testorigin)
+      _breakalive[level] = incoming
+    end
+    if stateful = 0 & conditionkind <> 'DoUntil' then do
+      _continues[level] = entry as .object; _hascontinues[level] = 1
+    end
+    _block = body; _terminated = 0; _alive = incoming
+    call statement(node.child('body')); if _error <> '' then return
+    if _terminated = 0 then do
+      continuing = loopcontinue(level); _continuealive[level] = _continuealive[level] | _alive
+      call _block.jump(continuing,endorigin)
+    end
+    if (stateful | conditionkind = 'DoUntil') & _hascontinues[level] then do
+      _block = _continues[level] as .llir..block; _terminated = 0; _alive = _continuealive[level]
+      if conditionkind = 'DoUntil' then do
+        value = expression(condition.child('value')); if _error <> '' then return
+        testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
+        value = truth(value,testorigin,'crexx.c.until.truth'); after = loopafter(level)
+        advance = entry
+        if stateful then advance = newblock('do.advance')
+        if stateful then do
+          exhausted = newblock('do.until.exit')
+          call _block.branch(value,exhausted,advance,testorigin)
+          _block = exhausted; built = dostate('close',key,endorigin.derive()); call _block.jump(after,endorigin)
+        end
+        else call _block.branch(value,after,advance,testorigin)
+        _breakalive[level] = _breakalive[level] | _continuealive[level]
+        _block = advance
+      end
+      if stateful then do
+        built = dostate('advance',key,endorigin); call _block.jump(entry,endorigin)
+      end
+    end
+    else if conditionkind = 'DoUntil' then do
+      /* A closed body still owns static validation of its unreachable UNTIL
+       * operand. Simple literals need no dead value/helper construction. */
+      if simpleliteral(condition.child('value')) then value = expression(condition.child('value'),'',1)
+      else do
+        _block = newblock('unreachable.until'); _terminated = 0; _alive = 0
+        value = expression(condition.child('value')); if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.return.absent'),endorigin.derive()); built = op.finish()
+        call _block.returnvalue(built.result(),endorigin.derive())
+      end
+    end
+    _loops = _loops - 1
+    if _hasbreaks[level] then do
+      _block = _breaks[level] as .llir..block; _terminated = 0; _alive = _breakalive[level]
+    end
+    else do; _terminated = 1; _alive = 0; end
     return
   /** Ordered SELECT tests share ordinary statement lowering. Semantic liveness
    * and structural completion stay separate, including checked dead source. */

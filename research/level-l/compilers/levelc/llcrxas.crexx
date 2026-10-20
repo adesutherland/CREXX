@@ -7,10 +7,7 @@ import llcir
 import llcompilercontracts
 import llsource
 import llrxastext
-import llcgrammar
-import lllanguage
-import lllimits
-import llcore
+import llcdoprotocol
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -52,9 +49,9 @@ compilation: class
   _classiccatalog = .llcompilercontracts..catalog
   _classicready = .int
   _classes = .string[]
-  _symbolgrammar = .lllanguage..definition
-  _symbolpolicy = .lllimits..policy
-  _symbolready = .int
+  _doprotocol = .llcdoprotocol..checked
+  _doowners = .int[]
+  _dofatal = .int[]
   _records = .object[]
   _recordbytes = .int
   _writer = .llir..writer
@@ -62,7 +59,7 @@ compilation: class
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
-    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _symbolready = 0
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0
     return
   fail: method = .void
     arg reason = .string
@@ -362,27 +359,11 @@ compilation: class
     end
     _selectlines[op.id()] = at.line()
     return
-  /** Source and direct IR use one generated variable-symbol authority. Keep
-   * its immutable definition per selector; each name is checked in linear work
-   * without a growing linear memo or a compiler-host Classic runtime import. */
+  /** All raw variable attributes share the compiler-internal C authority. */
   checksymbol: method = .void
     arg name = .string
-    if _symbolready = 0 then do
-      _symbolgrammar = llcgrammar..language()
-      _symbolpolicy = .lllimits..policy()
-      ok = _symbolpolicy.set('source.bytes',min(_limit,2147483647))
-      ok = _symbolpolicy.set('scan.work',max(10000000,min(_limit,134217727) * 16))
-      if _symbolpolicy.error() <> '' then do; call fail('LIMIT: ' || _symbolpolicy.error()); return; end
-      _symbolready = 1
-    end
-    bytes = name as .binary
-    scan = .lllanguage..request(_symbolgrammar,bytes,_symbolpolicy)
-    lexstatus = scan.lex(0)
-    if lexstatus = 2 | lexstatus = 3 then do; call fail('LIMIT: variable-symbol admission: ' || scan.error()); return; end
-    if lexstatus <> 0 then do; call fail('LOWERING: invalid variable symbol'); return; end
-    tokens = scan.tokens()
-    if tokens.size() <> 1 then do; call fail('LOWERING: invalid variable symbol'); return; end
-    if tokens.symbol(0) <> _symbolgrammar.tokenid('identifier') | tokens.start(0) <> 0 | tokens.finish(1) <> <blen>(bytes) then call fail('LOWERING: invalid variable symbol')
+    call _doprotocol.symbol(name)
+    if _doprotocol.error() <> '' then _error = _doprotocol.error()
     return
   /** Direct graphs can carry host codecs not identified by their manifest.
    * Recheck every payload with the selected canonical codec, including unused
@@ -596,6 +577,10 @@ compilation: class
       if _error <> '' then return
       call checkcontextslots()
       if _error <> '' then return
+      _doprotocol = .llcdoprotocol..checked(reference _graph,_limit,_limit)
+      if _doprotocol.status() then do
+        _error = _doprotocol.error(); _offset = _doprotocol.offset(); return
+      end
       do i = 1 to store.count(3)
         op = _graph.operation(i); _origin = op.origin().id(); _offset = op.origin().first()
         call checkoperation(op)
@@ -664,6 +649,15 @@ compilation: class
         id = store.get(3,id,3)
       end
     end
+    /* Strong loop storage is not an IR value or a transient call argument.
+     * Its address is stable through every helper call and every iteration. */
+    _phase = 'DO owner allocation'; cleanuporder = .int[]; _dofatal = cleanuporder
+    do i = 1 to _doprotocol.owners()
+      owner = _doprotocol.cleanup(i)
+      if _doprotocol.function(owner) <> _fn then iterate
+      _doowners[owner] = next; next = next + 1
+      _dofatal[_dofatal[0] + 1] = owner
+    end
     /* Use the same selector for planning and emission. Hidden helper calls
      * therefore participate without a second arity table to maintain. */
     _phase = 'frame planning'; _workbase = next; next = next + 11
@@ -698,6 +692,11 @@ compilation: class
     _phase = 'metadata'; name = 'llprogram.' || store.text(store.get(1,_fn,1))
     if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',llrxastext..quote(name as .binary) || '="b" ' || llrxastext..quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || llrxastext..quote(args as .binary))
+    /* Recycled frames may retain old values. Clear owners before installing
+     * handlers or executing any fallible numeric/context setup. */
+    do i = 1 to _dofatal[0]
+      call emit('null',reg(_doowners[_dofatal[i]]))
+    end
     do
       filename = ''
       firstop = store.get(2,store.get(1,_fn,3),2)
@@ -735,6 +734,12 @@ compilation: class
       call emit('llerror' || _fn || ':')
       do i = 1 to 4
         call emit('sighalt',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+      end
+      if _dofatal[0] > 0 then do
+        /* Unwinding restores receiver permutations first. Release remaining
+         * private borrow slots before owners, preserving r0/location/scratch. */
+        do i = 1 to _maxargs; call emit('null',reg(_callbase + i)); end
+        do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
       end
       symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
       call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
@@ -870,6 +875,9 @@ compilation: class
     arg op = .llir..opview, name = .string
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
+    if wordpos(name,'do.new do.capture do.start do.entry do.advance do.close') > 0 then do
+      call dooperation(op,name); return
+    end
     if wordpos(name,'add sub mul div eq ne lt le gt ge strict concat blank abut and or xor') then do
       call adapter(op,'binaryop',v,'.string ' || v || ' ' || v || ' ' || contexttype,name); return
     end
@@ -879,6 +887,8 @@ compilation: class
     select
       when name = 'truth' then call adapter(op,'truth','.int',v || ' ' || contexttype)
       when name = 'when.truth' then call adapter(op,'whentruth','.int',v || ' ' || contexttype)
+      when name = 'while.truth' then call adapter(op,'whiletruth','.int',v || ' ' || contexttype)
+      when name = 'until.truth' then call adapter(op,'untiltruth','.int',v || ' ' || contexttype)
       when name = 'select.missing' then do
         line = _selectlines[op.id()]
         if line < 1 then do; call fail('LOWERING: SELECT missing origin was not admitted'); return; end
@@ -944,4 +954,31 @@ compilation: class
       end
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
+    return
+  /** Keys select one stable strong owner; only the synchronous call window
+   * contains a borrowed reference. Count start is a protocol-only marker. */
+  dooperation: method = .void
+    arg op = .llir..opview, name = .string
+    symbol = .string
+    owner = _doprotocol.owner(op.id())
+    if owner = 0 then do; call fail('LOWERING: unadmitted DO state key'); return; end
+    storage = reg(_doowners[owner]); state = '.rexxdostate..rexxdostate'
+    if name = 'do.close' then do; call emit('null',storage); return; end
+    if name = 'do.start' & _doprotocol.controlled(owner) = 0 then return
+    if name = 'do.new' then do
+      symbol = imported('llctarget','llctarget.donew',state,'reference@.rexxclassiccontext..rexxclassiccontext .string')
+      call argcopy(1,input(op)); call argtext(2,op.attribute('name') as .string)
+      call invoke(storage,symbol,2); return
+    end
+    call argcopy(1,storage,1)
+    if name = 'do.capture' then do
+      symbol = imported('llctarget','llctarget.docapture','.void','reference@' || state || ' .string .rexxvalue..rexxvalue')
+      call argtext(2,op.attribute('part') as .string); call argcopy(3,input(op))
+      call invoke('',symbol,3); return
+    end
+    target = 'dostart'; resulttype = '.void'
+    if name = 'do.entry' then do; target = 'doentry'; resulttype = '.int'; end
+    if name = 'do.advance' then target = 'doadvance'
+    symbol = imported('llctarget','llctarget.' || target,resulttype,'reference@' || state)
+    call invoke(result(op),symbol,1)
     return

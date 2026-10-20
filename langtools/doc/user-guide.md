@@ -3622,10 +3622,18 @@ child inheritance and parent restoration. The direct fixture
 `research/level-l/compilers/tests/target-context.crexx` demonstrates the same
 boundary independently. Generated C uses one required context reference and one
 fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. C-family v4/43 operations and the 25-export target are the current
+configuration. C-family v5/51 operations and the 32-export target are the approved current
 research contract: rebuild earlier C images/IR; no legacy bridge is provided.
 SELECT adds contextual WHEN truth and a shared no-match error bridge; the
-borrowed-context procedure ABI is unchanged. INTERPRET remains unimplemented,
+borrowed-context procedure ABI is unchanged. The
+[DO contract](../../research/level-l/compilers/doc/architecture.md#approved-do-contract)
+adds counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only header
+captures and hidden frame-owned state delegated to shared `RexxDoState`.
+Grouping and state-free repetition allocate no DO state. END names compare
+authored symbols using shared Classic casing; named LEAVE/ITERATE, shared
+labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
+forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof).
+INTERPRET remains unimplemented,
 and the current fatal-condition profile remains nonresumable.
 
 Ordinary C text follows the agreed Unicode codepoint model, preserving codes

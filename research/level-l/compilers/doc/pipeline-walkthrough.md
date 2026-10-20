@@ -142,10 +142,12 @@ main's initial state and the shared UTF8 configuration.
 
 ## Loops, calls and short-circuiting
 
-The complete dumps contain `while.test`, `while.body` and `while.after` blocks.
-LEAVE targets the after block; ITERATE targets the test. Both use typed hidden
-slots for values crossing blocks. G's source variable is a typed local slot;
-Classic reads and writes its pool, including the defined unset-name behaviour.
+The G pipeline contains `while.test`, `while.body` and `while.after` blocks;
+Classic's normalized CDo uses `do.while`, `do.body` and `do.after`.
+LEAVE targets the after block; WHILE's ITERATE targets its test. Block edges,
+rather than printed layout, define execution order. G's source variable is a
+typed local slot; Classic reads and writes its pool, including the defined
+unset-name behaviour, and uses contextual `crexx.c.while.truth`.
 
 A G call has a registered typed signature and `target="TWICE"` attribute. A
 Classic call carries its original argument packet, the borrowed context and a

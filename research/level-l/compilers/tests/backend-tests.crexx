@@ -19,6 +19,8 @@ main: procedure = .int expose checks failures artifacts outputfile
       when 'options' then call optionschecks(outputfile)
       when 'if' then call ifchecks(outputfile)
       when 'select' then call selectchecks(outputfile)
+      when 'do' then call dochecks(outputfile)
+      when 'do-final' then call dochecks(outputfile,1)
       otherwise return 2
     end
   end
@@ -31,6 +33,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call optionschecks()
     call ifchecks()
     call selectchecks()
+    call dochecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -171,6 +174,71 @@ ifchecks: procedure = .void expose artifacts
     graph = request.emissiongraph(); text = graph.dump()
     call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
     call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
+  return
+
+/** Keyed DO owns state only for count/control and preserves header order. */
+dochecks: procedure = .void expose artifacts
+  arg inspect = '', repaironly = 0
+  source = .string; text = .string; assembly = .string; sample = .int; optimise = .int; selected = .int
+  states = .int; captures = .int; starts = .int; written = .int
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview; entryvalue = .int; whileblock = .int; guarded = .int; i = .int
+  do sample = 1 to 10
+    if repaironly & sample <> 9 then iterate
+    select sample
+      when 1 then do; source = 'do; nop; end'; states = 0; captures = 0; starts = 0; end
+      when 2 then do; source = 'do forever; leave; end'; states = 0; captures = 0; starts = 0; end
+      when 3 then do; source = 'do while flag; leave; end'; states = 0; captures = 0; starts = 0; end
+      when 4 then do; source = 'do until flag; nop; end'; states = 0; captures = 0; starts = 0; end
+      when 5 then do; source = 'do 2; nop; end'; states = 1; captures = 1; starts = 0; end
+      when 6 then do; source = 'do i=1 to 2 by 1 for 1; nop; end i'; states = 1; captures = 4; starts = 1; end
+      when 7 then do; source = 'do 2; do forever; leave; end; end'; states = 1; captures = 1; starts = 0; end
+      when 8 then do; source = 'do i=1 for 2; select; when flag then iterate; otherwise leave; end; end'; states = 1; captures = 2; starts = 1; end
+      when 9 then do; source = 'do 2; do j=1 for 2; exit 0; end; end; exit 0; p: procedure; do 2; do k=1 for 2; return 7; end; end'; states = 4; captures = 6; starts = 2; end
+      otherwise do; source = "do until '1'; leave; end"; states = 0; captures = 0; starts = 0; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'do-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'DO endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      call check(occurrences(text,'crexx.c.do.new ') = states,'one static constructor per counted/controlled header ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.do.capture ') = captures,'one capture per authored header term ' || sample || '/' || optimise)
+      if states = 0 then call check(pos('crexx.c.do.',text) = 0,'state-free DO has no owned state protocol ' || sample || '/' || optimise)
+      if sample = 10 then call check(pos('crexx.c.until.truth',text) = 0 & pos('crexx.c.do.advance',text) = 0,'closed body cannot execute UNTIL or advance ' || optimise)
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.donew(),') = states,'one factory call per static state ' || sample || '/' || optimise)
+      call check(occurrences(assembly,',llctarget.dostart(),') = starts,'count start emits no runtime start call ' || sample || '/' || optimise)
+      call check(pos('.srcstep',assembly) > 0 & pos('do-shape.crexx',assembly) > 0,'DO source/fatal locations retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 5 | sample = 6 | sample = 8 | sample = 9) then written = writebinary(inspect || '-do-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
+  end
+  source = "do i=mark('S',1) for mark('F',2) by mark('B',1) to mark('T',3) while mark('W',1); leave; end; exit 0; mark: procedure; arg label,value; return value"
+  do optimise = 0 to 1
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'do-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful header/WHILE source accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 5 & occurrences(text,'crexx.c.requirevalue ') = 5,'one evaluation/result check per authored term ' || optimise || '/' || selected)
+      call check(occurrences(text,'crexx.c.do.capture ') = 4 & occurrences(text,'crexx.c.do.start ') = 1 & occurrences(text,'crexx.c.while.truth ') = 1,'captures/start/contextual WHILE are retained ' || optimise || '/' || selected)
+      entryvalue = 0; whileblock = 0; guarded = 0
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        if operation.name() = 'crexx.c.do.entry' then entryvalue = operation.result().id()
+        if operation.name() = 'crexx.c.while.truth' then whileblock = operation.blockid()
+      end
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        if operation.name() <> 'core.branch' then iterate
+        if operation.input(1).id() = entryvalue then guarded = operation.successor(1) = whileblock
+      end
+      call check(entryvalue > 0 & whileblock > 0 & guarded,'count/TO true edge alone reaches WHILE work ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-do-once-' || optimise || '.rxas',output.text() as .binary)
   end
   return
 

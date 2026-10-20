@@ -58,6 +58,12 @@ dropword: token = 53
 selectword: token = 54
 whenword: token = 55
 otherwiseword: token = 56
+foreverword: token = 57
+untilword: token = 58
+toword: token = 59
+byword: token = 60
+forword: token = 61
+docontrol: token = 62
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -131,10 +137,22 @@ parse: parser semantics contextfree input tokens start program backend lr1
   iterate.statement: rule = iterateword then tree Iterate()
   nop.statement: rule = nopword then tree Nop()
   options.statement: rule = optionsword (expression as value)? then tree COptions(value = value?)
-  block: rule = do.group | do.while
-  do.group: rule = doword separator statements as body endword then tree Block(body = body)
-  do.while: rule = doword whileword expression as condition separator statements as body endword
-    then tree While(condition = condition, body = body)
+  block: rule = doword do.header as header separator statements as body do.end as ending
+    then tree CDo(header = header, body = body, ending = ending)
+  do.header: rule = (do.repetition as repetition)? (do.condition as condition)?
+    then tree DoHeader(repetition = repetition?, condition = condition?)
+  do.repetition: rule = do.control | do.count | do.forever
+  do.count: rule = expression as value then tree DoCount(value = value)
+  do.forever: rule = foreverword then tree DoForever()
+  do.control: rule = do.name as name assign expression as initial (do.modifier as modifier)*
+    then tree DoControl(name = name, initial = initial, modifiers = modifier*)
+  do.name: rule = docontrol then tree Name(spelling = text)
+  do.modifier: rule = (toword | byword | forword) as keyword expression as value
+    then tree DoModifier(keyword = text(keyword), value = value)
+  do.condition: rule = do.while | do.until
+  do.while: rule = whileword expression as value then tree DoWhile(value = value)
+  do.until: rule = untilword expression as value then tree DoUntil(value = value)
+  do.end: rule = endword (name.value as name)? then tree DoEnd(name = name?)
   expression: rule = logical.or
   logical.or: rule = logical.and as item ((or | xor) as op logical.and as item)*
     then tree Chain(operands = item+, operators = op*)

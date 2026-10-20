@@ -93,9 +93,11 @@ Chain|73:74|0
 Chain|73:74|0
 Chain|73:74|0
 Number|73:74|0
-While|75:117|do while total > 0
+CDo|75:117|do while total > 0
   total = total - 1
 end
+DoHeader|78:93|while total > 0
+DoWhile|78:93|while total > 0
 Chain|84:93|total > 0
 Chain|84:93|total > 0
 Chain|84:93|total > 0
@@ -121,6 +123,7 @@ Name|104:109|total
 Chain|112:113|1
 Number|112:113|1
 minus|110:111|-
+DoEnd|114:117|end
 Say|118:127|say total
 Chain|122:127|total
 Chain|122:127|total

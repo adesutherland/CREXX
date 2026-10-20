@@ -9,6 +9,7 @@ import lllimits
 import llcgrammar
 import llcomments
 import llsource
+import rexxclassicunicodeproperties
 
 /** One parse request owns source, diagnostics and projected AST. Token layout
  * inserts only zero-width concatenation/separation tokens; original spans are
@@ -52,7 +53,8 @@ parsed: class
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; after = ''
     arm = 0; operandmode = ''
-    owners = .string[]; ownercount = 0
+    doheader = 0; dofirst = 0; docondition = 0
+    owners = .string[]; ownercontrols = .string[]; ownercount = 0; endcontrol = ''
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
       kind = layout.symbol(i); first = layout.start(i); last = layout.finish(i + 1)
@@ -74,11 +76,31 @@ parsed: class
       end
       if kind = sep then do; namespaceclause = 0; exports = 0; end
       if kind = sep & depth = 0 then operandmode = ''
+      if kind = sep & depth = 0 then doheader = 0
+      endname = 0
+      /* A matching ELSE at the END-name boundary wins before a delimiter or
+       * another ELSE; an ordinary following instruction keeps the outer arm.
+       * Use the shared variable casing, not keyword promotion's ASCII rules. */
+      if after = 'END' & endcontrol <> '' & kind = id & spelling = 'ELSE' then do
+        if rexxclassic_unicode_upper(endcontrol) = 'ELSE' then do
+          endname = next = sep | next = -1
+          if next = id & layout.symbol(i + 2) <> equals then do
+            lookahead = binsubstr(source,layout.start(i + 1) + 1,layout.finish(i + 2) - layout.start(i + 1)) as .string
+            if verify(lookahead,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then endname = upper(lookahead) = 'ELSE'
+          end
+        end
+      end
       if kind = id then do
         if next = colon then kind = language.tokenid('labelname')
         else if depth = 0 then do
-          if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
-          else if after = 'DO' & spelling = 'WHILE' then word = 'WHILE'
+          if endname then nop
+          else if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
+          else if doheader & docondition = 0 & dofirst & next = equals then do
+            kind = language.tokenid('docontrol')
+            ownercontrols[ownercount] = binsubstr(source,first + 1,last - first) as .string
+          end
+          else if doheader & docondition = 0 & next <> equals & wordpos(spelling,'TO BY FOR WHILE UNTIL') > 0 then word = spelling
+          else if doheader & dofirst & next <> equals & spelling = 'FOREVER' then word = spelling
           else if after = 'NUMERIC' & wordpos(spelling,'DIGITS FUZZ FORM') > 0 then word = spelling
           else if after = 'FORM' & wordpos(spelling,'SCIENTIFIC ENGINEERING') > 0 then word = spelling
           else if condition > 0 & spelling = 'THEN' & term then do
@@ -107,11 +129,14 @@ parsed: class
         end
       end
       if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
-      if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; end
+      if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; ownercontrols[ownercount] = ''; end
       if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
       if word = 'END' then do
+        endcontrol = ''
         do while ownercount > 0
-          closed = owners[ownercount]; ownercount = ownercount - 1
+          closed = owners[ownercount]
+          if closed = 'group' then endcontrol = ownercontrols[ownercount]
+          ownercount = ownercount - 1
           if closed = 'group' | closed = 'select' then leave
         end
       end
@@ -122,6 +147,11 @@ parsed: class
       if kind = opening then depth = depth + 1
       if kind = closing then depth = depth - 1
       if word = 'IF' | word = 'WHEN' then condition = condition + 1
+      if word = 'DO' then do; doheader = 1; dofirst = 1; docondition = 0; end
+      else if doheader & kind <> sep then do
+        dofirst = 0
+        if word = 'WHILE' | word = 'UNTIL' then docondition = 1
+      end
       /* Empty operands complete only their admitted prefix positions. The
        * first assignment '=' consumes its head; later equals are operators. */
       if clause & depth = 0 & kind = id & next = equals then operandmode = 'assignment-head'
@@ -302,7 +332,7 @@ headerpolicy: procedure = .llcomments..rules
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))

@@ -57,12 +57,15 @@ source, operators, shared labels, pools, conditions and host contracts are open.
 SAY's adjacent radix-literal repair has retained proof, not whole-SAY closure.
 
 The current implementation selects one `llctarget` borrowed-context surface and
-C-family v4/43 operations with one required context-reference procedure argument,
-contextual DROP/WHEN truth and source-indexed SELECT no-match handling. Root/private owners
+C-family v5/51 operations with one required context-reference procedure argument,
+contextual DROP/WHEN truth, source-indexed SELECT no-match handling and keyed
+frame-owned DO state. Bounded static DO is locally qualified; whole-C/shared
+dependencies remain open. Root/private owners
 and numeric entry setup remain conservative; argument/result transport remains
 by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
 owns the qualified v2 baseline; DROP-AC01–04 own the v3 increment and
-SELECT-AC01–04 own current v4 qualification. Complete shared-label activation
+SELECT-AC01–04 own the v4 increment; [DO-AC01–04](../PLAN.md#current-action-do)
+own current v5 qualification. Complete shared-label activation
 remains open. Earlier research C images/IR must be rebuilt, with no compatibility
 bridge. Neutral scalar ABI records still use `crexx.g` names.
 
@@ -106,7 +109,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-05 OPTIONS / STEP05 | Partial: bounded COptions forms locally qualified | Retain every optional operand, including header Names; select settings only from a complete first bare-word clause using request-local comments. Current zero-word B processor is specialized away; preserve operand effects/errors and validate discarded literals/dead source. Full header/STRICTC/source-map, shared-label and conditions/TRACE work remains open under [OPTIONS-AC01–04](../PLAN.md#current-action-options). | [LC-AC-66](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-06 IF / STEP05 | Partial: admitted forms locally qualified | Once-only condition/truth, lazy selected arms/no ELSE, exact text 0/1 and fatal 34.1, nearest/contextual ELSE and optional/default arm minima pass. Both closed arms add no join/default epilogue; dead validation and source remain. SELECT/full DO/shared labels/EXPOSE, full expressions/exact static diagnostics, resumed conditions/NOVALUE and clause/TRACE stay open. | [LC-AC-02/67](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-07 SELECT / STEP05 | Partial: admitted forms locally qualified | Ordered lazy WHEN edges, full/empty OTHERWISE, nested/loop/private arms and source-indexed 34.2/7.3 use shared B bodies. [SELECT-AC01–04](../PLAN.md#current-select-proof) pass current focused proof. Shared labels/fall-through/EXPOSE, complete expressions/DO/named transfers, full diagnostic recovery and condition/SIGL/clause/TRACE remain open. | [LC-AC-09/68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
-| LC-I-08 DO / STEP05 | Partial: group/while subset | Explicit loop-entry/test/body/step/exit blocks and runtime state only where needed. Counted/controlled/FOREVER/WHILE/UNTIL combinations, scalar/compound control, arbitrary numeric count, END-name checks and negative syntax. Header terms evaluated at specified times, not each iteration. | [LC-AC-03/10–15/17–35/65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
+| LC-I-08 DO / STEP05 | Partial: admitted static forms locally qualified | [DO-AC01–04](../PLAN.md#current-do-proof) qualify counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only headers, arbitrary counts, live compound controls, END names and shared errors. Existing shared B state owns numeric/pool algorithms; C owns finite keyed protocol admission and frame cleanup. Source EXPOSE/shared labels, complete expressions, exact recovery/resumable conditions and clause/TRACE remain open. | [LC-AC-03/10–15/17–35/65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-09 LEAVE / STEP05 | Partial: unnamed subset | Resolve named/unnamed active-loop destination, clear crossed loop state, preserve default/STRICTC reached-time error distinction. No unnecessary runtime search for statically proved target; dynamic cases stay explicit. | [LC-AC-69](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-10 ITERATE / STEP05 | Partial: unnamed subset | Transfer to correct target's step/test point, preserving step timing, active outer loops and cleanup. Cover every DO form and named/invalid target; do not implement as LEAVE or direct body jump. | [LC-AC-70](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
 | LC-I-11 ARG / STEP06 | Partial: scalar comma subset | `PARSE UPPER ARG` through one runtime template executor, with frame argument presence and arbitrary comma/templates. Missing versus empty, placeholders, Unicode upper rules and authored errors. No second ARG splitter. | [LC-AC-38/71](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria) |
@@ -475,7 +478,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | Partial: admitted IF locally qualified | LC-I-06–10 / STEP05 | Complete remaining SELECT/full-DO/shared-label placements, expression/condition/diagnostic and TRACE dependencies in LC-I-06. |
 | LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Partial: admitted forms locally qualified | LC-I-06–10 / STEP05 | Retain qualified SELECT-AC01–04 and LC-I-07 shared-label, expression/control, diagnostic/recovery and observation dependencies. |
 | LC-REF-039 | Simple DO grouping and empty body | Partial: simple DO | LC-I-06–10 / STEP05 | Complete simple-group placements, empty bodies, labels and observations. |
-| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: WHILE subset | LC-I-06–10 / STEP05 | Complete every DO header, entry/step timing, arbitrary counts and errors. |
+| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: static forms locally qualified | LC-I-06–10 / STEP05 | [DO-AC01–04](../PLAN.md#current-do-proof) qualify header/entry/step timing, arbitrary counts/errors and keyed frame lifetime; whole-instruction dependencies stay open. |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | Partial: unnamed transfers | LC-I-06–10 / STEP05 | Complete named/unnamed targets, crossed-state cleanup and default/STRICTC timing. |
 | LC-REF-042 | END-name matching and group-label branch restrictions | Partial: bounded groups | C-SRC / STEP04; source/host completion STEP07/08 | Validate END names and forbidden group-label transfers with correct source. |
 | LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | Partial: operator subset | C-EXPR / STEP04; STEP05/07 contexts | Complete all terms/operators/order with independent values and side effects. |

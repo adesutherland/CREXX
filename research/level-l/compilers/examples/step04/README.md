@@ -13,7 +13,9 @@ The Classic IR and RXAS views use the current borrowed-context ABI, with
 compiler IR optimisation and assembler optimisation both disabled. Earlier literal,
 pipeline and error execution is retained for the unchanged body behavior. The
 current C views add the approved header Name read, qualified by focused OPTIONS
-execution; this refresh does not replay the full walkthrough. G views retain
+execution. The pipeline view now uses the approved state-free DO/WHILE lowering
+and contextual truth helper; only its maintained IR/RXAS views were refreshed.
+This refresh does not replay the full walkthrough. G views retain
 their earlier qualification. The pipeline source uses
 `length('α漢🙂')`, which returns three codepoints from nine UTF-8 payload bytes.
 The image prints the unchanged expected `10`, `0`, `3` with autoload disabled

@@ -21,9 +21,13 @@ p.add_argument('--native-controls', action='store_true')
 p.add_argument('--inspect', type=Path, help='temporary directory for representative caller RXAS review')
 p.add_argument('--c-only', action='store_true',
                help='check existing C calls in restricted compiler-host and static-target roots')
+p.add_argument('--do-metadata', action='store_true',
+               help='run only the focused DO target metadata controls (requires --c-only)')
 p.add_argument('--select-metadata', action='store_true',
                help='run only the focused SELECT target metadata controls (requires --c-only)')
 a = p.parse_args()
+if a.do_metadata and (not a.c_only or a.select_metadata):
+    p.error('--do-metadata requires --c-only and excludes --select-metadata')
 if a.select_metadata and not a.c_only:
     p.error('--select-metadata requires --c-only')
 if a.c_only and (a.installed or a.native_controls):
@@ -157,7 +161,7 @@ def metadata_image(directory, signature, *, exported=True, duplicate=False):
     run(directory.name+'-assemble', [tool('rxas'), '-n', asm])
 
 
-def classic_metadata(select_only=False):
+def classic_metadata(select_only=False, do_only=False):
     """Selected ABI mutations are assembled for import only, never executed.
 
     A valid authored class catalog is admitted first. Each negative changes
@@ -200,6 +204,8 @@ def classic_metadata(select_only=False):
     target = (backend/'llctarget.rxas').read_text(encoding='utf-8')
     source = root/'backend/numeric-c.crexx'
     select_source = root/'backend/select-missing-c.crexx'
+    do_source = work/'do-metadata.crexx'
+    do_source.write_text('options levelc; do i=1 to 2 by 1 for 1 while flag; nop; end; do until flag; nop; end; exit 0\n')
 
     def fixture(label, package, text):
         directory = work/label
@@ -213,12 +219,14 @@ def classic_metadata(select_only=False):
         return directory
 
     directory = fixture('c-valid-catalog', 'rxfnsc', valid)
-    for ir in (['on'] if select_only else ['off', 'on']):
-        compile_source('c', select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
+    for ir in (['on'] if select_only or do_only else ['off', 'on']):
+        compile_source('c', do_source if do_only else select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
                        label='c-valid-catalog-'+ir, imports=directory)
-    if not select_only:
+    if not select_only and not do_only:
         compile_source('c', select_source, work/'c-select-valid-catalog.rxas',
                        label='c-select-valid-catalog', imports=directory)
+        compile_source('c', do_source, work/'c-do-valid-catalog.rxas',
+                       label='c-do-valid-catalog', imports=directory)
 
     cases = [
         ('c-target-optional', 'llctarget', 'context=reference '+ct,
@@ -252,10 +260,18 @@ def classic_metadata(select_only=False):
          'llctarget.selectmissing'),
         ('c-select-missing-optional', 'llctarget', 'line=.string', '?line=.string',
          'llctarget.selectmissing'),
+        ('c-do-new-result', 'llctarget', '".rexxdostate..rexxdostate"', '".rexxvalue..rexxvalue"', 'llctarget.donew'),
+        ('c-do-capture-state', 'llctarget', 'state=reference .rexxdostate..rexxdostate', 'state=.rexxdostate..rexxdostate', 'llctarget.docapture'),
+        ('c-do-start-nominal', 'llctarget', 'state=reference .rexxdostate..rexxdostate', 'state=reference .foreign..rexxdostate', 'llctarget.dostart'),
+        ('c-do-entry-result', 'llctarget', '".int"', '".boolean"', 'llctarget.doentry'),
+        ('c-do-advance-optional', 'llctarget', 'state=reference .rexxdostate..rexxdostate', '?state=reference .rexxdostate..rexxdostate', 'llctarget.doadvance'),
+        ('c-do-while-context', 'llctarget', 'context=reference '+ct, '?context=reference '+ct, 'llctarget.whiletruth'),
+        ('c-do-until-result', 'llctarget', '".int"', '".string"', 'llctarget.untiltruth'),
     ]
     for label, package, before, after, name in cases:
         is_select = label.startswith('c-select-')
-        if select_only and not is_select:
+        is_do = label.startswith('c-do-')
+        if (select_only and not is_select) or (do_only and not is_do):
             continue
         text = target if package == 'llctarget' else valid
         pattern = re.compile(r'(^\s*\.meta "'+re.escape(name)+r'"="b"[^\n]*$)', re.M)
@@ -264,11 +280,11 @@ def classic_metadata(select_only=False):
         replacement = matches[0].group().replace(before, after, 1)
         text = text[:matches[0].start()]+replacement+text[matches[0].end():]
         directory = fixture(label, package, text)
-        for ir in (['on'] if is_select else ['off', 'on']):
+        for ir in (['on'] if is_select or is_do else ['off', 'on']):
             # Identity mutations deliberately exercise selected-call lookup;
             # all other cases reach a concrete signature or class refusal.
             message = b'not found' if label == 'c-member-identity' else b'incompatible'
-            reject(select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
+            reject(do_source if is_do else select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
 
 
 def classic_construction(text, name):
@@ -383,6 +399,10 @@ def classic_shape(text, name):
 
 
 try:
+    if a.do_metadata:
+        classic_metadata(do_only=True)
+        print(f'DO_METADATA|commands={len(records)}|failures=0')
+        raise SystemExit(0)
     if a.select_metadata:
         classic_metadata(select_only=True)
         print(f'SELECT_METADATA|commands={len(records)}|failures=0')

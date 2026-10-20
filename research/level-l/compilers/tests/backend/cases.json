@@ -323,5 +323,92 @@
     "error": "RXC-LC-7.3",
     "error_line": 3,
     "args": []
+  },
+  {
+    "name": "do",
+    "level": "c",
+    "source": "do-c.crexx",
+    "output": "before\ncount\ncount\ncount\nlarge\nexponent\nforever 2\nwhile 0\nuntil 2\nto-suppressed 2\nfor-zero 5\nfor-final 1\nadvanced 2\nUNTIL-CHECK\nuntil-unstepped 1\nleave-unstepped 1\nmutated 13.0\ncompound 1.0 11\nouter 1\nouter 2\nselect-transfer 2\nFIRST SECOND parent\nunicode 2\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-scale",
+    "level": "c",
+    "source": "do-scale-c.crexx",
+    "output": "scale 1.00\nscale 2.00\nafter-scale 3.00\nfraction 0.500\nfraction 1.000\nfraction 1.500\nnegative 3\nnegative 2\nnegative 1\nzero-by 2\nzero-by 2\nzero-after 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-order",
+    "level": "c",
+    "source": "do-order-c.crexx",
+    "output": "S\nT\nB\nF\ncontrol 2\nS\nT\nF\nB\ncontrol 2\nS\nB\nT\nF\ncontrol 2\nS\nB\nF\nT\ncontrol 2\nS\nF\nT\nB\ncontrol 2\nS\nF\nB\nT\ncontrol 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-count-error",
+    "level": "c",
+    "source": "do-count-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-26.2",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-for-error",
+    "level": "c",
+    "source": "do-for-error-c.crexx",
+    "output": "before\nS\nF\n",
+    "error": "RXC-LC-26.3",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-to-error",
+    "level": "c",
+    "source": "do-to-error-c.crexx",
+    "output": "before\nS\nT\n",
+    "error": "RXC-LC-41.4",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-by-error",
+    "level": "c",
+    "source": "do-by-error-c.crexx",
+    "output": "before\nS\nB\n",
+    "error": "RXC-LC-41.5",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-start-error",
+    "level": "c",
+    "source": "do-start-error-c.crexx",
+    "output": "before\nS\nT\nB\nF\n",
+    "error": "RXC-LC-41.6",
+    "error_line": 4,
+    "args": []
+  },
+  {
+    "name": "do-while-error",
+    "level": "c",
+    "source": "do-while-error-c.crexx",
+    "output": "before\nW\n",
+    "error": "RXC-LC-34.3",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-until-error",
+    "level": "c",
+    "source": "do-until-error-c.crexx",
+    "output": "before\nbody\nU\n",
+    "error": "RXC-LC-34.4",
+    "error_line": 3,
+    "args": []
   }
 ]

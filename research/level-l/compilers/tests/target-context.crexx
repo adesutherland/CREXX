@@ -8,12 +8,13 @@ import rexxclassicconfig
 import rexxclassiccontext
 import rexxclassicbifs
 import rexxclassicbifnumeric
+import rexxdostate
 import llctarget
 
 main: procedure = .int expose checks failures
   arg argv = .string[]
   if argv[0] > 1 then return 2
-  if argv[0] = 1 then if argv[1] <> 'select' then return 2
+  if argv[0] = 1 then if argv[1] <> 'select' & argv[1] <> 'do' then return 2
   checks = 0; failures = 0
   if argv[0] = 0 then do
     call expressions()
@@ -21,9 +22,93 @@ main: procedure = .int expose checks failures
     call borrowedowners()
     call numericframes()
   end
-  call selectcases()
+  if argv[0] = 0 then do
+    call selectcases()
+    call docases()
+  end
+  else if argv[1] = 'do' then call docases()
+  else call selectcases()
   say 'TARGET_CONTEXT|checks=' || checks || '|failures=' || failures
   return failures
+
+/* Exercise adapter mutation through borrowed state. Shared B tests own the
+ * count/control algorithms; generated C separately owns source timing/lifetime. */
+docases: procedure = .void
+  ignored = .int
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  state = llctarget..donew(reference context,'')
+  call llctarget..docapture(reference state,'repeat',.RexxValue('2'))
+  call check(llctarget..doentry(reference state) = 1,'borrowed count starts')
+  call llctarget..doadvance(reference state)
+  call check(llctarget..doentry(reference state) = 1,'first advance mutates the same state')
+  call llctarget..doadvance(reference state)
+  call check(llctarget..doentry(reference state) = 0,'second advance exhausts the owner')
+  state = llctarget..donew(reference context,'')
+  call llctarget..docapture(reference state,'repeat',.RexxValue('0'))
+  call check(llctarget..doentry(reference state) = 0,'reconstructed state has independent zero count')
+  call pool.setSymbolValue('KEY',.RexxValue('a'))
+  state = llctarget..donew(reference context,'ITEMS.KEY')
+  call llctarget..docapture(reference state,'start',.RexxValue('1.0'))
+  call llctarget..docapture(reference state,'to',.RexxValue('2'))
+  call llctarget..docapture(reference state,'by',.RexxValue('1'))
+  call llctarget..docapture(reference state,'for',.RexxValue('1'))
+  call llctarget..dostart(reference state)
+  call valuecheck(pool.stemSymbolValue('ITEMS','a'),'1.0','start writes the borrowed pool')
+  call check(llctarget..doentry(reference state) = 1,'controlled first entry')
+  call pool.setSymbolValue('KEY',.RexxValue('b'))
+  call pool.setSymbolValue('ITEMS.KEY',.RexxValue('10'))
+  call llctarget..doadvance(reference state)
+  call valuecheck(pool.stemSymbolValue('ITEMS','a'),'1.0','old compound tail is untouched')
+  call valuecheck(pool.stemSymbolValue('ITEMS','b'),'11','advance resolves the current tail and value')
+  call check(llctarget..doentry(reference state) = 0,'FOR count mutates the original controlled state')
+  call check(llctarget..whiletruth(.RexxValue('0'),reference context) = 0 & llctarget..whiletruth(.RexxValue('1'),reference context) = 1,'WHILE exact logical values')
+  call check(llctarget..untiltruth(.RexxValue('0'),reference context) = 0 & llctarget..untiltruth(.RexxValue('1'),reference context) = 1,'UNTIL exact logical values')
+  caught = 0
+  do
+    ignored = llctarget..whiletruth(.RexxValue('1.0'),reference context)
+  on signal classic_syntax as problem
+    caught = pos('RXC-LC-34.3',problem.message()) = 1
+  end
+  call check(caught,'WHILE distinct 34.3 identity')
+  caught = 0
+  do
+    ignored = llctarget..untiltruth(.RexxValue('1.0'),reference context)
+  on signal classic_syntax as problem
+    caught = pos('RXC-LC-34.4',problem.message()) = 1
+  end
+  call check(caught,'UNTIL distinct 34.4 identity')
+  state = llctarget..donew(reference context,'J')
+  call llctarget..docapture(reference state,'start',.RexxValue('invalid'))
+  call llctarget..docapture(reference state,'for',.RexxValue('0'))
+  caught = 0
+  do
+    call llctarget..dostart(reference state)
+  on signal classic_syntax as problem
+    caught = pos('RXC-LC-41.6:',problem.message()) = 1
+  end
+  call check(caught,'start validation remains delayed until start, even FOR zero')
+  original = .rexxdostate..RexxDoState(reference pool,'')
+  originalmessage = ''; originalfile = ''; originalline = 0; originalsource = ''
+  originalmodule = -1; originaladdress = -1
+  do
+    call original.setRepeatCount(.RexxValue('1.5'))
+  on signal error as raw
+    originalmessage = raw.message(); originalfile = raw.file(); originalline = raw.line(); originalsource = raw.source()
+    originalmodule = raw.module(); originaladdress = raw.address()
+  end
+  state = llctarget..donew(reference context,'')
+  caught = 0
+  do
+    call llctarget..docapture(reference state,'repeat',.RexxValue('1.5'))
+  on signal classic_syntax as bridged
+    caught = pos('RXC-LC-26.2:',bridged.message()) = 1 & bridged.message() == originalmessage
+    call check(originalmodule >= 0 & originaladdress > 0 & bridged.module() >= 0 & bridged.address() > 0 & bridged.file() == originalfile & bridged.line() = originalline & originalline > 0 & bridged.source() == originalsource,'DO bridge retains valid raw IDs and unchanged helper source')
+  end
+  call check(caught,'DO bridge forwards unchanged count error message')
+  return
 
 /* The direct B bridge preserves the existing helper's raw event origin.
  * Generated C separately supplies the visible SELECT line and fatal policy. */

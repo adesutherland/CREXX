@@ -1,0 +1,30 @@
+options levelc
+do i=mark('S',1) to mark('T',3) by mark('B',1) for mark('F',1)
+  nop
+end
+say 'control' i
+do i=mark('S',1) to mark('T',3) for mark('F',1) by mark('B',1)
+  nop
+end
+say 'control' i
+do i=mark('S',1) by mark('B',1) to mark('T',3) for mark('F',1)
+  nop
+end
+say 'control' i
+do i=mark('S',1) by mark('B',1) for mark('F',1) to mark('T',3)
+  nop
+end
+say 'control' i
+do i=mark('S',1) for mark('F',1) to mark('T',3) by mark('B',1)
+  nop
+end
+say 'control' i
+do i=mark('S',1) for mark('F',1) by mark('B',1) to mark('T',3)
+  nop
+end
+say 'control' i
+exit 0
+mark: procedure
+  arg label,value
+  say label
+  return value

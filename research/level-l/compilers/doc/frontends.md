@@ -176,8 +176,12 @@ labels and PROCEDURE remain separate AST nodes; semantic inventory pairs the
 admitted entry with its statement interval. Label-only shared-pool routines and
 fall-through into a procedure entry receive profile diagnostics.
 
-Both languages lower IF, DO WHILE, LEAVE, ITERATE and RETURN to the common
-block/edge structure. EXIT has a diverging compiler operation; a structural
+Both languages lower IF, loops, LEAVE, ITERATE and RETURN to the common
+block/edge structure. Classic's [approved static DO forms](architecture.md#approved-do-contract)
+use ordered header captures and function-local state keys, checked by the
+compiler-owned `llcdoprotocol` before source-graph publication and again after
+transformation/loaded-graph admission. G retains its existing DO WHILE profile.
+EXIT has a diverging compiler operation; a structural
 return closes its block but is unreachable under that contract. General flow
 services must refuse to claim complete coverage when their accepted termination
 profile excludes such a diverging extension. Neither graph shape nor an effect

@@ -35,14 +35,14 @@ has count zero, rather than a fake value.
 | Kind | Fields | Purpose |
 |---|---|---|
 | Program | `body: Sequence`; G also `routines: GProcedure*` | Top-level unit; Classic labels remain in the statement sequence. |
-| Sequence / Block | `items: node*` / `body: Sequence` | Authored order / explicit DO group. |
+| Sequence / Block (G) | `items: node*` / `body: Sequence` | Authored order / typed-language DO group. |
 | Number / String / Name | `spelling: text` | Exact numeral, quoted literal (including an adjacent Classic X/B suffix) or unresolved name. |
 | Chain | `operands: node+`, `operators: node*` | One precedence level, left-to-right order. Exactly one fewer operator than operand. A zero-operator chain is transparent during lowering. |
 | Operator tokens | no fields; kind is `plus`, `minus`, `times`, `divide`, `assign`, `ne`, `lt`, `le`, `gt`, `ge`, `strict`, `concat`, `blank`, `abut`, `and`, `or`, `xor`, `not` | Operator identity and its original span; `assign` means equality when used in a comparison chain. |
 | Prefix / Group | `operator: node, value: node` / `value: node` | Unary operation / explicit parentheses. |
 | Assignment | `name: text`, `value: node` (optional for C) | Assignment is separate from declaration. Missing C RHS means empty value. |
 | IfThen / IfElse | `condition: node, yes: node`; IfElse adds `no: node` | Matched/unmatched grammar preserves nearest-IF ELSE association. |
-| While | `condition: node, body: Sequence` | Pre-test DO WHILE. |
+| While (G) | `condition: node, body: Sequence` | Typed-language pre-test DO WHILE. |
 | Leave / Iterate / Nop | no fields | Innermost loop transfer / no operation. |
 | Say / Return / Exit | `value: node?` | Optional authored value; each instruction has its own semantics. |
 | Call / Invoke | `name: text, arguments: Arguments` | Expression call / CALL instruction. |
@@ -81,6 +81,12 @@ as an uninitialised C-language variable.
 
 ### Classic nodes
 
+Classic DO uses `CDo(header:DoHeader, body:Sequence, ending:DoEnd)` for all
+grouping and repetitive forms. Optional repetition/condition children, raw
+control/END names and ordered modifiers follow the
+[approved DO schema](architecture.md#approved-do-contract); G's Block/While
+schema is unchanged.
+
 | Kind | Fields |
 |---|---|
 | CLabel | `name: text` |
@@ -92,7 +98,8 @@ as an uninitialised C-language variable.
 CLabel and CProcedure remain separate nodes. The routine table recognises an
 admitted label followed immediately by PROCEDURE and records the interval up
 to the next label. It rejects shared-pool labels and reachable fall-through into
-a label. Dynamic source names remain uppercase pool keys. They never become G
+a label. Dynamic source names retain authored spelling for shared Classic pool
+resolution. They never become G
 local variables or acquire typed default semantics.
 
 ### Where IF's fields come from

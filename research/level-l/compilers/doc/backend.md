@@ -57,6 +57,7 @@ implicitly grant it RXAS semantics.
 | Call window | Count followed by contiguous argument registers, outside every live slot/value | Maximum call arity measured before selection; result and arguments are disjoint |
 | Selected instruction | Mnemonic, final ordered operand text and origin ID | Constructed only by fixed selectors, checked registers/labels/call names and exact literal quoting |
 | Import cache | Package catalogs and checked callable signatures | B-only RXBIN007 reader, result/arity/type/optional checks and per-position presence masks |
+| Classic DO facts | Function-local text keys, finite phase/owner stacks and hidden strong state registers | C-owned original/final protocol checks; no escaping state value or SDK lifetime rule |
 | Output | Level L writer sections and owned origin-tagged chunks | Per-section and total byte budgets, finish/stream error checks |
 
 Selection allocates stable value locations, runs the selector without output
@@ -75,6 +76,11 @@ requires two arguments. Main's wrapper uses two registers for G and sixteen for 
 The public minimum register-budget argument remains 16. No liveness reuse is
 introduced. Jumps to the next emitted block fall through, retaining its label
 and resetting source/context state at that entry.
+Classic counted/controlled DO adds one hidden owner per static key, outside
+IR values and the call window. Owners initialize before fallible setup; helper
+calls borrow them synchronously, and normal/transfer/fatal exits clear them in
+the [approved lifetime order](architecture.md#approved-do-contract).
+Grouping and state-free repetition add no DO owner.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;

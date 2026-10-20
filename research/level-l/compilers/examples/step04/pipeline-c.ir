@@ -43,59 +43,59 @@ function $MAIN -> crexx.c.result
     crexx.c.say %28 @origin:50
     core.jump -> if.join.4 @origin:21
   if.join.4:
-    core.jump -> while.test.5 @origin:58
-  while.test.5:
-    %29 = core.load slot:$context @origin:65
-    %30 = crexx.c.load %29 name="total" @origin:65
-    core.store %30 slot:$tmp.4 @origin:61
-    %31 = core.constant 30 : crexx.c.value @origin:69
-    %32 = core.load slot:$tmp.4 @origin:61
-    %33 = core.load slot:$context @origin:61
-    %34 = crexx.c.gt %32 %31 %33 @origin:61
-    %35 = core.load slot:$context @origin:58
-    %36 = crexx.c.truth %34 %35 @origin:58
-    core.branch %36 -> while.body.6 -> while.after.7 @origin:58
-  while.body.6:
-    %37 = core.load slot:$context @origin:78
-    %38 = crexx.c.load %37 name="total" @origin:78
-    core.store %38 slot:$tmp.5 @origin:76
-    %39 = core.constant 31 : crexx.c.value @origin:80
-    %40 = core.load slot:$tmp.5 @origin:76
-    %41 = core.load slot:$context @origin:76
-    %42 = crexx.c.sub %40 %39 %41 @origin:76
-    %43 = core.load slot:$context @origin:71
-    crexx.c.store %43 %42 name="total" @origin:71
-    core.jump -> while.test.5 @origin:58
-  while.after.7:
-    %44 = core.load slot:$context @origin:88
-    %45 = crexx.c.load %44 name="total" @origin:88
-    crexx.c.say %45 @origin:81
-    %46 = core.constant CEB1E6BCA2F09F9982 : crexx.c.value @origin:104
-    core.store %46 slot:$tmp.6 @origin:97
-    %47 = core.load slot:$tmp.6 @origin:97
-    %48 = core.load slot:$context @origin:97
-    %49 = crexx.c.length %47 %48 @origin:97
-    crexx.c.say %49 @origin:89
-    %50 = core.constant 30 : crexx.c.value @origin:112
-    crexx.c.exit %50 @origin:105
-    %51 = crexx.c.return.absent @origin:105
-    core.return %51 @origin:105
+    core.jump -> do.while.6 @origin:59
+  do.body.5:
+    %37 = core.load slot:$context @origin:82
+    %38 = crexx.c.load %37 name="total" @origin:82
+    core.store %38 slot:$tmp.5 @origin:80
+    %39 = core.constant 31 : crexx.c.value @origin:84
+    %40 = core.load slot:$tmp.5 @origin:80
+    %41 = core.load slot:$context @origin:80
+    %42 = crexx.c.sub %40 %39 %41 @origin:80
+    %43 = core.load slot:$context @origin:75
+    crexx.c.store %43 %42 name="total" @origin:75
+    core.jump -> do.while.6 @origin:61
+  do.while.6:
+    %29 = core.load slot:$context @origin:68
+    %30 = crexx.c.load %29 name="total" @origin:68
+    core.store %30 slot:$tmp.4 @origin:64
+    %31 = core.constant 30 : crexx.c.value @origin:72
+    %32 = core.load slot:$tmp.4 @origin:64
+    %33 = core.load slot:$context @origin:64
+    %34 = crexx.c.gt %32 %31 %33 @origin:64
+    %35 = core.load slot:$context @origin:73
+    %36 = crexx.c.while.truth %34 %35 @origin:73
+    core.branch %36 -> do.body.5 -> do.after.7 @origin:73
+  do.after.7:
+    %44 = core.load slot:$context @origin:92
+    %45 = crexx.c.load %44 name="total" @origin:92
+    crexx.c.say %45 @origin:85
+    %46 = core.constant CEB1E6BCA2F09F9982 : crexx.c.value @origin:108
+    core.store %46 slot:$tmp.6 @origin:101
+    %47 = core.load slot:$tmp.6 @origin:101
+    %48 = core.load slot:$context @origin:101
+    %49 = crexx.c.length %47 %48 @origin:101
+    crexx.c.say %49 @origin:93
+    %50 = core.constant 30 : crexx.c.value @origin:116
+    crexx.c.exit %50 @origin:109
+    %51 = crexx.c.return.absent @origin:109
+    core.return %51 @origin:109
 function TWICE -> crexx.c.result
   argument 1 crexx.c.context required
   entry.1:
-    %52 = core.argument argument:1 @origin:114
-    core.store %52 slot:$context @origin:114
-    %53 = core.load slot:$context @origin:115
-    %54 = crexx.c.arguments.read %53 ordinal="1" @origin:115
-    %55 = core.load slot:$context @origin:115
-    crexx.c.store %55 %54 name="value" @origin:115
-    %56 = core.load slot:$context @origin:123
-    %57 = crexx.c.load %56 name="value" @origin:123
-    core.store %57 slot:$tmp.1 @origin:122
-    %58 = core.constant 32 : crexx.c.value @origin:124
-    %59 = core.load slot:$tmp.1 @origin:122
-    %60 = core.load slot:$context @origin:122
-    %61 = crexx.c.mul %59 %58 %60 @origin:122
-    %62 = crexx.c.return.present %61 @origin:116
-    core.return %62 @origin:116
+    %52 = core.argument argument:1 @origin:118
+    core.store %52 slot:$context @origin:118
+    %53 = core.load slot:$context @origin:119
+    %54 = crexx.c.arguments.read %53 ordinal="1" @origin:119
+    %55 = core.load slot:$context @origin:119
+    crexx.c.store %55 %54 name="value" @origin:119
+    %56 = core.load slot:$context @origin:127
+    %57 = crexx.c.load %56 name="value" @origin:127
+    core.store %57 slot:$tmp.1 @origin:126
+    %58 = core.constant 32 : crexx.c.value @origin:128
+    %59 = core.load slot:$tmp.1 @origin:126
+    %60 = core.load slot:$context @origin:126
+    %61 = crexx.c.mul %59 %58 %60 @origin:126
+    %62 = crexx.c.return.present %61 @origin:120
+    core.return %62 @origin:120
 

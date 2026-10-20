@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -10,6 +10,7 @@ import rexxclassicbifs
 import rexxclassicbifarg
 import rexxclassicbiflength
 import rexxclassicbifnumeric
+import rexxdostate
 
 /** Literal and pool helpers own values only during construction; pool access borrows storage. */
 literal: procedure = .RexxValue
@@ -154,6 +155,135 @@ selectmissing: procedure = .void
     assembler signalorigin "CLASSIC_SYNTAX",message,problem
   end
   return
+
+/** Construct one caller-owned loop state, borrowing the bundle's live pool.
+ * @param context Borrowed current execution owners.
+ * @param name Raw control symbol, or empty for counted repetition.
+ * @return Owning state value; no reference to helper-local storage escapes.
+ * @signal CLASSIC_SYNTAX Shared ERROR, retaining its bound origin. */
+donew: procedure = .rexxdostate..RexxDoState
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, name = .string
+  bundle = dereference context
+  pool_ref = reference .rexxpool..RexxVariablePool
+  pool_ref = bundle.pool()
+  result = .rexxdostate..RexxDoState
+  do
+    result = .rexxdostate..RexxDoState(pool_ref,name)
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return result
+
+/** Capture one already evaluated header term through the shared validator.
+ * @param state Synchronous borrow of the executing C frame's strong owner.
+ * @param part start, to, by, repeat or for, admitted by the C protocol.
+ * @param value Once-only authored operand.
+ * @signal CLASSIC_SYNTAX Shared ERROR, retaining its bound origin. */
+docapture: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg state = reference .rexxdostate..RexxDoState, part = .string, value = .rexxvalue..RexxValue
+  current = dereference state
+  do
+    select
+      when part = 'start' then call current.setStart(value)
+      when part = 'to' then call current.setTo(value)
+      when part = 'by' then call current.setBy(value)
+      when part = 'repeat' then call current.setRepeatCount(value)
+      when part = 'for' then call current.setForCount(value)
+      otherwise call bad('invalid DO capture part')
+    end
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return
+
+/** Validate/assign the initial control only after all header captures.
+ * @param state Borrowed caller-owned controlled DO state.
+ * @signal CLASSIC_SYNTAX Shared ERROR, retaining its bound origin. */
+dostart: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg state = reference .rexxdostate..RexxDoState
+  current = dereference state
+  do
+    call current.startControl()
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return
+
+/** Check fixed count/endpoint before evaluating a source WHILE expression.
+ * @param state Borrowed caller-owned repetitive DO state.
+ * @return Zero or one from the shared entry check.
+ * @signal CLASSIC_SYNTAX Shared ERROR, retaining its bound origin. */
+doentry: procedure = .int
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg state = reference .rexxdostate..RexxDoState
+  current = dereference state
+  result = 0
+  do
+    result = current.entryAllowed() as .int
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return result
+
+/** Step the currently resolved control and decrement its exact count.
+ * @param state Borrowed caller-owned repetitive DO state.
+ * @signal CLASSIC_SYNTAX Shared ERROR, retaining its bound origin. */
+doadvance: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg state = reference .rexxdostate..RexxDoState
+  current = dereference state
+  do
+    call current.advance()
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return
+
+/** Apply the shared WHILE-value contract in the caller's numeric context.
+ * @param value Evaluated condition.
+ * @param context Borrowed execution bundle.
+ * @return Zero or one; invalid text raises Classic 34.3. */
+whiletruth: procedure = .int
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('LOGICALWHILEVALUE',context)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  result = rexxclassicbif_checked(reference callcontext,result)
+  return result.logicalValue() as .int
+
+/** Apply the shared UNTIL-value contract in the caller's numeric context.
+ * @param value Evaluated condition.
+ * @param context Borrowed execution bundle.
+ * @return Zero or one; invalid text raises Classic 34.4. */
+untiltruth: procedure = .int
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  callcontext = bifcontext('LOGICALUNTILVALUE',context)
+  result = rexxclassic_expression_unary(reference callcontext,value)
+  result = rexxclassicbif_checked(reference callcontext,result)
+  return result.logicalValue() as .int
 
 /** Validate and commit one stored activation setting using its existing owner.
  * The executing C caller installs the validated settings in its own VM frame.

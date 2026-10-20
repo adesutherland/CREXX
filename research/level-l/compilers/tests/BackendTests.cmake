@@ -45,6 +45,9 @@ add_custom_target(llcompiler_provenance_measure
 # 14 default tool commands. Retain the existing generous serial scheduling.
 # SELECT shape components measure 38–39s in Debug; three corpus cases add
 # 21 default tool commands. Retain the existing generous serial scheduling.
+# DO adds 70 default tool commands; its isolated 40-command source component
+# measures 100s and the paired 146-check shape component 64s in Debug.
+# This extends component evidence; no new full-aggregate timing is claimed.
 # Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
 foreach(_mode opt noopt)
   foreach(_vm rxbvm rxtvm)
@@ -69,7 +72,7 @@ foreach(_mode opt noopt)
           --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_test} PROPERTIES
-        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=40[|]commands=295[|]failures=0"
+        PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=50[|]commands=365[|]failures=0"
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test}

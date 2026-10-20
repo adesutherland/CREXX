@@ -20,6 +20,8 @@ main: procedure = .int expose failures checks artifacts examples
     when 'if' then call iftests()
     when 'if-errors' then call iferrors()
     when 'select' then call selecttests()
+    when 'do' then call dotests()
+    when 'do-literals' then call doliteraltests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -155,7 +157,8 @@ grammar: procedure = .void expose examples
   call optionstests()
   call iftests()
   call selecttests()
-  text = .string; source = .string
+  call dotests()
+  text = .string; source = .string; loopshape = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
     do nameindex = 1 to 3
@@ -167,7 +170,8 @@ grammar: procedure = .void expose examples
     text = good(language,'if 1; then; say 1; else; say 2','if.no')
     text = good(language,'then=1; else=2; say then; say else; say 3','core.return')
     text = good(language,'if 1 then if 0 then say 1 else say 2','if.join')
-    text = good(language,'do; do while 1; if 1 then leave; iterate; end; end','while.test')
+    loopshape = 'while.test'; if language = 'c' then loopshape = 'crexx.c.while.truth'
+    text = good(language,'do; do while 1; if 1 then leave; iterate; end; end',loopshape)
     text = good(language,'if 1 then do; say 1; end' || ('0D0A'x as .string) || 'else say 2','if.no')
   end
   text = good('c','if = 2; then = 3; else = 4; say if then else','crexx.c.blank')
@@ -175,6 +179,124 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** Static DO retains raw header/END spelling and authored modifier order. */
+dotests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  header = .llast..node; repetition = .llast..node; condition = .llast..node
+  ending = .llast..node; name = .llast..node; modifier = .llast..node
+  source = .string; ignored = .string; expected = .string; order = .string
+  sample = .int; i = .int; crlf = '0D0A'x as .string
+  source = 'Do α.key = 1 FoR 2 bY .5 To 3 UnTiL flag' || crlf || "say '漢🙂'" || crlf || 'EnD Α.KEY'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF controlled DO parses: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    header = node.child('header'); repetition = header.child('repetition'); condition = header.child('condition'); ending = node.child('ending')
+    call check(node.kind() = 'CDo' & header.kind() = 'DoHeader' & repetition.kind() = 'DoControl' & condition.kind() = 'DoUntil' & ending.kind() = 'DoEnd','normalized DO header/condition/ending nodes')
+    call check(node.start() = 0 & node.finish() = <blen>(source as .binary) & node.sourcetext() = source,'full original UTF-8/CRLF DO extent')
+    name = repetition.child('name')
+    call check(name.text('spelling') = 'α.key' & name.start() = 3 & name.finish() = 9,'control spelling and byte span retained')
+    call check(repetition.count('modifiers') = 3,'all authored modifiers retained')
+    do i = 1 to 3
+      modifier = repetition.child('modifiers',i)
+      call check(modifier.kind() = 'DoModifier' & modifier.text('keyword') = word('FoR bY To',i),'modifier order/raw spelling ' || i)
+      call check(pos(modifier.text('keyword'),modifier.sourcetext()) = 1,'modifier span starts at authored keyword ' || i)
+    end
+    name = ending.child('name')
+    call check(name.text('spelling') = 'Α.KEY' & ending.finish() = <blen>(source as .binary),'END raw name/full extent retained')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then do; source = 'do; ; end'; expected = ''; end
+      when 2 then do; source = 'do 2; nop; end'; expected = 'DoCount'; end
+      when 3 then do; source = 'do forever; leave; end'; expected = 'DoForever'; end
+      when 4 then do; source = 'do while 1; leave; end'; expected = ''; end
+      when 5 then do; source = 'do until 1; nop; end'; expected = ''; end
+      when 6 then do; source = 'do 2 while flag; nop; end'; expected = 'DoCount'; end
+      when 7 then do; source = 'do forever until flag; nop; end'; expected = 'DoForever'; end
+      when 8 then do; source = 'do i = 1 for 2; nop; end i'; expected = 'DoControl'; end
+      when 9 then do; source = 'do a.key = 1 to 2 while flag; nop; end A.KEY'; expected = 'DoControl'; end
+      otherwise do; source = 'do for=1 by 0 for 1 until flag; nop; end FOR'; expected = 'DoControl'; end
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'DO form parses ' || sample || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1); header = node.child('header')
+    call check(node.kind() = 'CDo','normalized CDo kind ' || sample)
+    if expected = '' then call check(header.count('repetition') = 0,'group/condition-only DO has no repetition child ' || sample)
+    else do
+      repetition = header.child('repetition')
+      call check(repetition.kind() = expected,'optional repetition kind ' || sample)
+    end
+    ignored = good('c',source,'core.return')
+  end
+  do sample = 1 to 6
+    order = word('to,by,for to,for,by by,to,for by,for,to for,to,by for,by,to',sample)
+    source = 'do i=1'
+    do i = 1 to 3
+      source = source || ' ' || word(changestr(',',order,' '),i) || ' 2'
+    end
+    source = source || '; nop; end I'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'all six modifier permutations parse ' || order)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); repetition = tree.root().child('body').child('items',1).child('header').child('repetition')
+    do i = 1 to 3
+      modifier = repetition.child('modifiers',i)
+      call check(modifier.text('keyword') = word(changestr(',',order,' '),i),'permutation keeps written order ' || order || '/' || i)
+    end
+  end
+  ignored = good('c','if 1 then do 1; if 0 then nop else options; end else nop','crexx.c.do.new')
+  ignored = good('c','select; when 1 then do 1; options; end; otherwise; end','crexx.c.do.new')
+  ignored = good('c','do 2; do; select; when 1 then iterate; end; end; end','crexx.c.do.advance')
+  ignored = good('c','exit 0; p: procedure; do 2; return 1; end','crexx.c.do.close')
+  ignored = good('c','do σ=1 for 0; end Σ','crexx.c.do.start')
+  ignored = good('c','do µ=1 for 0; end µ','crexx.c.do.start')
+  ignored = good('c','if flag then do else=1 for 0; end ELSE else nop','crexx.c.do.start')
+  ignored = good('c','if flag then do else=1 for 0; end ELSE; else nop','crexx.c.do.start')
+  ignored = good('c','do else=1 for 0; end ELSE','crexx.c.do.start')
+  do sample = 1 to 2
+    source = 'if flag then do i=1 for 0; end else nop'
+    if sample = 2 then source = 'if flag then do else=1 for 0; end else nop'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'ELSE before an ordinary arm remains the IF delimiter ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    ending = node.child('yes').child('ending'); name = node.child('no')
+    call check(node.kind() = 'IfElse' & ending.count('name') = 0 & name.kind() = 'Nop','optional END name does not steal the IF arm ' || sample)
+  end
+  call bad('c','do µ=1 for 0; end Μ' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','do i=1; end j' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','exit 0; do i=1; end j' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','do; end i' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.3')
+  call bad('c','do 2; end i' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.3')
+  do sample = 1 to 3
+    order = word('to by for',sample)
+    call bad('c',('do i=1 ' || order || ' 2 ' || order || ' 3; end i') as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-27.1')
+  end
+  do sample = 1 to 8
+    select sample
+      when 1 then source = 'do i=; end'
+      when 2 then source = 'do i=1 to; end'
+      when 3 then source = 'do i=1 by; end'
+      when 4 then source = 'do i=1 for; end'
+      when 5 then source = 'do while; end'
+      when 6 then source = 'do until; end'
+      when 7 then source = 'do 1; nop'
+      otherwise source = 'do forever 2; end'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+  end
+  call bad('c',"exit 0; do i='GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call doliteraltests()
+  call bad('c','do 0; interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
+  return
+
+/* A closed body still validates its discarded UNTIL operand. */
+doliteraltests: procedure = .void
+  call bad('c',"do until 'GG'x; leave; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
   return
 
 /** SELECT retains authored clauses while its ordinary arms keep their AST. */

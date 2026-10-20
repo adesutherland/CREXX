@@ -192,12 +192,20 @@ def check_context(procedures, attributes):
 
 def check_adapter(procedures):
     value, context = '.rexxvalue', 'reference ' + CONTEXT_TYPE
+    state = 'reference .rexxdostate..rexxdostate'
     signatures = {
         'binaryop': ('.rexxvalue..rexxvalue', f'operation=.string,left={value},right={value},context={context}'),
         'unaryop': ('.rexxvalue..rexxvalue', f'operation=.string,value={value},context={context}'),
         'truth': ('.int', f'value={value},context={context}'),
         'whentruth': ('.int', f'value={value},context={context}'),
         'selectmissing': ('.void', 'line=.string'),
+        'donew': ('.rexxdostate..rexxdostate', f'context={context},name=.string'),
+        'docapture': ('.void', f'state={state},part=.string,value=.rexxvalue..rexxvalue'),
+        'dostart': ('.void', f'state={state}'),
+        'doentry': ('.int', f'state={state}'),
+        'doadvance': ('.void', f'state={state}'),
+        'whiletruth': ('.int', f'value={value},context={context}'),
+        'untiltruth': ('.int', f'value={value},context={context}'),
         'setting': ('.void', f'operation=.string,context={context},value={value}'),
         'digits': ('.rexxvalue..rexxvalue', f'context={context}'),
         'readarg': ('.rexxvalue..rexxvalue', f'context={context},ordinal=.int'),
@@ -251,7 +259,8 @@ def check_adapter(procedures):
                                        '.rexxpool..rexxvariablepool', '.rexxclassicconfig..rexxclassicconfig'}}
         require(not any(op == 'copy' and operands.split(',')[-1] in owner_registers
                         for op, operands in p.instructions), f'{p.name}: copied live owner value')
-    for name in ['binaryop', 'unaryop', 'truth', 'whentruth', 'digits']:
+    for name in ['binaryop', 'unaryop', 'truth', 'whentruth', 'digits',
+                 'donew', 'docapture', 'dostart', 'doentry', 'doadvance', 'whiletruth', 'untiltruth']:
         require(not any(op in {'numsci', 'numeng', 'setnumdgts', 'setnumfuz', 'setnumfrm'}
                         for op, _ in procedures[name].instructions), f'{name}: inherited numeric frame reset')
     helper = procedures['bifcontext']
@@ -270,6 +279,8 @@ def check_adapter(procedures):
         'unaryop': 'rexxclassicbifs.rexxclassic_expression_unary',
         'truth': 'rexxclassicbifs.rexxclassic_expression_unary',
         'whentruth': 'rexxclassicbifs.rexxclassic_expression_unary',
+        'whiletruth': 'rexxclassicbifs.rexxclassic_expression_unary',
+        'untiltruth': 'rexxclassicbifs.rexxclassic_expression_unary',
         'digits': 'rexxclassicbifnumeric.rexxclassicbif_digits',
         'countargs': 'rexxclassicbifarg.rexxclassicbif_arg',
         'existsarg': 'rexxclassicbifarg.rexxclassicbif_arg',
@@ -279,6 +290,17 @@ def check_adapter(procedures):
         p = procedures[name]
         require(p.call_index('bifcontext') < p.call_index(entry) < p.call_index(CHECKED),
                 f'{name}: expected direct existing implementation followed by checked delivery')
+    for name in ('donew', 'docapture', 'dostart', 'doentry', 'doadvance'):
+        p = procedures[name]
+        captures = [(i, args.split(',')[1]) for i, (op, args) in enumerate(p.instructions)
+                    if op == 'sigbrv' and args.endswith(',"ERROR"')]
+        bridges = [(i, args.split(',')[-1]) for i, (op, args) in enumerate(p.instructions)
+                   if op == 'signalorigin' and args.startswith('"CLASSIC_SYNTAX",')]
+        require(len(captures) == len(bridges) == 1
+                and captures[0][1] == bridges[0][1] and captures[0][0] < bridges[0][0],
+                f'{name}: forward the captured shared ERROR event unchanged')
+        require(any('rexxdostate.rexxdostate.' in target for _, target in p.calls()),
+                f'{name}: delegate existing shared state implementation')
     missing = procedures['selectmissing']
     helper_sites = [index for index, target in missing.calls()
                     if target == 'rexxvalue.rexxvalue_select_missing']

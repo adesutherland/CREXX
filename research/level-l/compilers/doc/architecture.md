@@ -2,8 +2,8 @@
 
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
-the context ABI records completed STEP03d and the current approved C v4/SELECT
-implementation. Qualification remains in the plan.
+the context ABI records completed STEP03d and the current approved C v5/DO
+implementation. The plan records bounded local qualification.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
@@ -39,11 +39,11 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; ordered DROP and SELECT projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; locally qualified bounded DROP/SELECT/static DO projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
-| `levelc/runtime/llctarget.crexx` | One current B target: ten borrowed-context adapters and one no-match bridge reuse shared B bodies; no per-operation default config/pool or copied activation. Fourteen literal/pool/packet/result helpers remain. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One 32-export B target delegates contextual expressions/BIFs, DO state and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
@@ -443,7 +443,8 @@ Keep only the helpers used by the clean selector: `literal`, `poolnew`,
 `absent`, `requirevalue`, `setresult`, `status` and `failuremessage`. Together
 with the nine entries above these form the 23-export foundation. SELECT adds
 two entries under its [approved contract](#approved-select-contract), giving
-the current 25 exports. Remove
+25 exports. The [approved DO contract](#approved-do-contract) adds seven,
+giving the current 32 exports. Remove
 `contextnew`, the old nine bodies, compatibility bridge/build entries and
 old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
 the current implementations. The private `bifcontext` remains internal.
@@ -465,8 +466,8 @@ introduced into static applications.
 
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d is locally complete; DROP introduced C family version 3 and
-SELECT advances it to version 4 without changing the context ABI.** Use the following semantic contract and generated procedure
+**CLC-STEP03d is locally complete; current DO uses C family version 5 without
+changing the context ABI.** Use the following semantic contract and generated procedure
 ABI, with one clean current C target and no compatibility bridge for earlier
 research C programs. The five shared B callables and nine borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
@@ -475,9 +476,9 @@ record or RXAS/VM operation is introduced. Complete labels, conditions and
 INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 4. The neutral scalar names do not load the G
+types and `crexx.c` version 5. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1/2/3 are never reinterpreted as version 4. Within version 4, the complete C
+versions 1/2/3/4 are never reinterpreted as version 5. Within version 5, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -503,7 +504,8 @@ at each pool operation, so an observed `bindPool` replacement remains live.
 
 The following table preserves the 40 context-foundation operations; approved
 DROP adds the 41st operation [below](#proposed-next-instruction-drop), and
-[SELECT](#approved-select-contract) adds operations 42/43. Names have
+[SELECT](#approved-select-contract) adds operations 42/43, and
+[DO](#approved-do-contract) adds operations 44–51. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
 `crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
@@ -591,7 +593,7 @@ The selected configuration factory's `?requested_profile=.string` stays
 optional in metadata and is supplied explicitly. Existing `poolnew()` owns
 the explicit `.RexxVariablePool(1)` construction; no duplicate pool-factory
 selection is added to the C emitter.
-The nine foundational adapters and the two SELECT entries remain required-only. Legacy short type spellings may
+All current target exports retain required-only signatures. Legacy short type spellings may
 match only their explicit known owner-qualified identities, never arbitrary
 basenames or class/interface assignability. Preserve the existing hidden
 receiver ABI: pass a live receiver alias with its established call-window
@@ -618,8 +620,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v4 IR + current bundle/adapters | Supported through the one-context ABI. |
-| Current selector + C v1/v2/v3/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v5 IR + current bundle/adapters | Supported through the one-context ABI. |
+| Current selector + C v1/v2/v3/v4/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -888,7 +890,7 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. SELECT separately advances the current family to v4/43.
+   had 41 operations. SELECT introduced v4/43; current DO uses v5/51.
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
    comment switches/conflicts, quoted markers and independent requests. Source
@@ -909,10 +911,11 @@ has no work.
 
 **Approved by Adrian; implemented and locally qualified within the
 [recorded SELECT proof](../PLAN.md#current-select-proof).** [LC-AC-68](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria)
-is the reference contract. The approved C-owned change keeps the current four
-types and required-context procedure ABI, advances `crexx.c` to **version 4 /
-43 operations**, and extends `llctarget` from 23 to **25 exports**. Its existing
-41 operations stay unchanged; version 3 is rejected rather than reinterpreted.
+is the reference contract. The SELECT increment retained four types and the
+required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
+and extended `llctarget` from 23 to **25 exports** without changing its earlier
+41 operations. Current [DO v5/51/32](#approved-do-contract) supersedes that
+version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
 | Contract | Exact approved shape |
@@ -976,17 +979,18 @@ actual caller/helper RXAS qualification passes the linked plan; whole SELECT
 and complete C remain open.
 
 <a id="proposed-do-contract"></a>
+<a id="approved-do-contract"></a>
 
-## Proposed DO contract
+## Approved DO contract
 
-**Pending Adrian's approval; no DO implementation is authorized by this
-proposal.** [DO-AC01–04 and CLC-STEP05.DO1–3](../PLAN.md#current-action-do)
-will qualify the bounded LC-I-08 increment against
+**APPROVED by Adrian on 20 October 2026; implemented and locally qualified
+within the bounded static profile.** [DO-AC01–04 and CLC-STEP05.DO1–3](../PLAN.md#current-action-do)
+record the bounded LC-I-08 qualification against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
-The proposed C-owned revision is **version 5 / 51 operations**, retaining the
+The approved C-owned revision is **version 5 / 51 operations**, retaining the
 four existing C types and context procedure ABI; `llctarget` has **32 exports**.
 Version 4 is refused, with no compatibility path. No generic L, B runtime,
-native compiler or VM API/algorithm changes are proposed.
+native compiler or VM API/algorithm changes are commissioned.
 
 | Normalized source AST | Fields |
 |---|---|
@@ -1004,7 +1008,9 @@ Preserve full node/operand/keyword byte spans, null clauses, contextual keyword
 variables and IF/SELECT/group ownership. A named END is permitted only for a
 controlled DO and must match its authored control symbol, without compound-tail
 substitution, using the existing shared Classic Unicode casing (including the
-micro-sign exception). Missing END, wrong/end-on-noncontrol names, duplicate
+micro-sign exception). A matching `ELSE` END name is retained at a following
+delimiter/EOF or before a second `ELSE`; `ELSE` followed by an ordinary arm
+belongs to the enclosing IF. Missing END, wrong/end-on-noncontrol names, duplicate
 TO/BY/FOR and missing/invalid header operands receive located refusals, even in
 dead source. END validation adds no named LEAVE/ITERATE support.
 
@@ -1065,7 +1071,8 @@ binding or duplicated decimal-count algorithm is introduced.
 
 Each static `do.new` owns one hidden strong `RexxDoState` register in its C
 frame, outside IR values and the disjoint call window. Initialize hidden owners
-to null at entry. The factory returns the owning value into that register;
+to null before installing fatal handlers or executing fallible numeric/context
+entry setup. The factory returns the owning value into that register;
 only a synchronous helper call borrows it with `mkref`. Never return a reference
 to helper-local storage or copy mutable state. The pool owner outlives this
 frame's loop state. `do.close` releases transient call references, then nulls
@@ -1086,7 +1093,10 @@ Run this read-only check before writer publication on fresh, loaded and final
 post-transform graphs. Generic LLIR verification remains the owner of record,
 type, block-local-value and terminator integrity; it supplies no DO lifetime
 proof. Bound private tables and work before allocation using existing request
-limits; exhaustion refuses atomically rather than disabling admission.
+limits; exhaustion refuses atomically rather than disabling admission. Fresh
+frontend validation uses its existing source-work budget, with workspace bounded
+by `budget * 64`. Selector validation uses existing `output.bytes` for both
+workspace and work; it adds no public limit parameter or fixed hidden work cap.
 
 1. **All records:** check exact v5 descriptors/codecs/imports, nonempty keys,
    valid names/parts and one `do.new` per key per function. Every keyed operation,
@@ -1146,14 +1156,98 @@ unsupported source copying. No new aggregate or per-slice ASan is commissioned.
 Unnamed transfers cover every admitted repetitive form and skip groups/SELECT;
 named LEAVE/ITERATE and invalid-target delivery remain LC-I-09/10 work. Shared
 labels/EXPOSE, full expressions/exact recovery, resumable conditions/SIGL and
-clause/TRACE remain open; this bounded proposal closes no CFC criterion.
+clause/TRACE remain open; approval of this bounded increment closes no CFC criterion.
+
+<a id="proposed-leave-iterate-contract"></a>
+<a id="approved-leave-iterate-contract"></a>
+
+## Approved LEAVE and ITERATE contract
+
+**APPROVED by Adrian on 20 October 2026. Implementation waits for DO
+qualification and its reviewed local commit.** Complete the bounded static-transfer behavior of LC-I-09, then
+LC-I-10, using the qualified DO ownership protocol. The shared decision is
+**C v6 / 52 operations, four unchanged types and 33 target exports**, refusing
+v5 without a compatibility path. No generic L, shared B runtime, native compiler
+or VM API/algorithm change is commissioned.
+
+Extend existing `Leave` and `Iterate` with `name?:Name`; retain every raw symbol
+and instruction/name byte span. A name is one variable symbol, never an
+expression or pool lookup. Resolve within the current source routine only:
+unnamed transfers select the innermost repetitive DO; named transfers select
+the innermost controlled DO matching the authored symbol under shared Classic
+Unicode casing, including the micro-sign exception. Never substitute compound
+tails or normalize the stored spelling. Groups, IF and SELECT are not targets;
+an inactive caller loop is unavailable. Malformed names and surplus same-clause
+operands receive located compile-time refusals under both policies; wider exact
+diagnostic/recovery obligations remain with C-SRC.
+
+### Static policy and the error operation
+
+The existing complete-first-bare-OPTIONS-clause classifier recognizes ASCII
+`STRICTC` for this C request, for example `OPTIONS LEVELC STRICTC`. Each parse
+starts with strict policy off. A private linked output carries the fully
+validated header choice; read-only `parsed.strictc() -> .int` publishes 0/1 only
+with successful parsing (0 on failure). The frontend reads it after parse
+success. Duplicate STRICTC is idempotent; quoted, later, call-shaped or otherwise
+non-static expressions do not enable it. Existing comment/numeric compatibility
+checks remain transactional, and the leading COptions expression still executes
+once. SRCMAP and the rest of the open header contract are unchanged.
+
+Ordinary C refuses every source-provable invalid target, including dead source.
+STRICTC validates syntax everywhere but raises an invalid-target error only if
+the instruction executes. No repetitive loop gives LEAVE **28.1** / ITERATE
+**28.2**, even with an authored name. A name that misses the available controlled
+loops gives **28.3 / 28.4**. Retain the authored name unchanged for diagnostics.
+
+| Appended C operation | Exact contract |
+|---|---|
+| `crexx.c.transfer.invalid` | No inputs/results; required attributes `code:crexx.g.text, name:crexx.g.text`; state `none`, failure `condition`, termination `diverges` in the current nonresumable C profile |
+| Appended target export | `llctarget.invalidtransfer(code=.string, name=.string) -> .void`; both arguments required |
+
+All records, including dead/loaded records, require one of the four exact codes.
+A nonempty name must be one admitted raw symbol; 28.3/28.4 require a nonempty
+name, while 28.1/28.2 also permit a valid authored name. The shim calls existing
+`rexxdostate_invalid_transfer(code,name)` and relays its unchanged message and
+bound ERROR event with `signalorigin CLASSIC_SYNTAX`. It adds no error-message
+algorithm, context argument, target search or serialized line. Authored transfer
+origin drives the visible C location; raw shared-helper origin remains bound.
+
+### Transfer edges, cleanup and acceptance
+
+Valid targets use existing core jumps and edge-local `do.close`, with no new
+runtime transfer operation. LEAVE closes crossed states inner-to-outer including
+the selected loop, then jumps to its continuation. ITERATE closes only crossed
+inner states, retains the selected state in Body, and jumps to its normal
+UNTIL/advance point. Thus LEAVE skips checks/steps; ITERATE preserves their DO
+order. State-free crossed loops contribute no owner. Keep all source visits and
+structural terminators. The invalid operation stops protocol transfer like
+`select.missing`, with the existing cold absent/core.return closure; common fatal
+diversion releases borrows and all owners. It creates no normal cleanup edge or
+resumable transfer claim. Recheck fresh and post-transform graphs before output.
+
+| Separate acceptance IDs | Checkable closure |
+|---|---|
+| `LEAVE-AC01`; `ITERATE-AC01` | Raw optional-name AST/spans and independent nearest/named/shadowed/compound/Unicode targets, group/IF/SELECT wrappers and private-call isolation; malformed and dead syntax refuses. |
+| `LEAVE-AC02`; `ITERATE-AC02` | Default invalid targets refuse even dead; STRICTC signals the instruction's two exact identities only when reached, preserving prior output. Same-process default/strict and quoted/later header controls prove request isolation. |
+| `LEAVE-AC03`; `ITERATE-AC03` | LEAVE preserves control values and skips all crossed end work; ITERATE closes inner owners and preserves selected UNTIL/step/count/entry timing. Nested stateful/state-free and repeated private-call cases prove lifetime boundaries. |
+| `LEAVE-AC04`; `ITERATE-AC04` | Exact v6/52-op/33-export and code/name admission, atomic fresh/loaded/post-transform refusal, ERROR-origin bridge, and IR-off/on caller/helper RXAS. Valid transfers add only required closes/jumps; focused existing Debug fixtures, docs and cleanup qualify each instruction separately. |
+
+`CLC-STEP05.LEAVE1` records expectations and the exact-contract approval;
+`LEAVE2` implements shared AST/header/schema/bridge and LEAVE with independent
+fixtures; `LEAVE3` qualifies and locally commits the reviewed slice. Then
+`CLC-STEP05.ITERATE1–3` review expectations, implement and qualify ITERATE using
+the same approved ABI. Named ITERATE must remain explicitly refused until its
+step is implemented. Reuse unchanged DO/B/L proof; no new aggregate or per-slice
+sanitizer campaign is commissioned. Shared labels/EXPOSE, SIGNAL/INTERPRET loop
+invalidation, resumable conditions, exact recovery and clause/TRACE retain their
+owners. All complete-C criteria remain open and INTERPRET remains last.
 
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |
 |---|---|---|
 | C-OPT-01: unnecessary setup | C requirement analysis | Constant SAY versus VALUE/host pool/TRACE/dynamic execution; safe constant-only case has no unused pool construction |
-| C-OPT-02: registers and temporaries | Generic L liveness, target allocation | Loops, handlers, calls, aliases and cleanup; frame demand follows simultaneously live values, not all source temporaries |
+| C-OPT-02: registers and temporaries | Generic L liveness; C target allocation | Loops, handlers, calls, aliases and cleanup; frame demand follows simultaneously live values, not all source temporaries. Per-function global owner/slot/block filtering remains conservative compile-time allocation work; later per-function indices must preserve identical RXAS, frames and cleanup for functions with sparse loop owners. No whole-selector linearity or runtime-copying claim follows. |
 | C-OPT-03: arithmetic/context | C facts, direct runtime entries, existing primitives first | Mutation, recursion, conversions, overflow, LOSTDIGITS and spelling; no avoidable config construction/name dispatch per known operation |
 | C-OPT-04: pool/name access | C binding/alias proof, runtime lookup | EXPOSE, DROP, compound-tail mutation, VALUE and callbacks invalidate cached binding/value facts |
 | C-OPT-05: calls/BIFs | C ABI selector and existing short-call forms | Omitted/empty/RESULT, failure cleanup and hidden helper work; stateful helpers are not assumed pure |

@@ -26,6 +26,8 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers rxfnsl)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
       list(APPEND _producers rxfnsc)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
+      list(APPEND _producers rxfnsc_unicode_properties_member)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
       list(APPEND _producers llrxastext)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
@@ -50,6 +52,7 @@ endfunction()
 set(_base "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
 set(_text "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
 set(_io "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
+set(_classic_names "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
 set(_front "${CMAKE_CURRENT_BINARY_DIR}/frontends")
 file(MAKE_DIRECTORY "${_front}")
 foreach(_language IN LISTS _languages)
@@ -93,7 +96,12 @@ foreach(_mode opt noopt)
     endif()
     set(_langdir "${CMAKE_CURRENT_BINARY_DIR}/${_owner}/${_mode}")
     set(_host ${_shared} "${_front}/ll${_language}grammar.rxbin")
-    foreach(_part ir parse frontend rxas)
+    set(_parts ir parse frontend rxas)
+    if(_language STREQUAL "c")
+      list(APPEND _host "${_classic_names}")
+      set(_parts ir doprotocol parse frontend rxas)
+    endif()
+    foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
       ll_compile(${_module} "${CMAKE_CURRENT_SOURCE_DIR}/${_owner}/${_module}.crexx" "${_langdir}" ${_base} ${_host})
       list(APPEND _host "${_langdir}/${_module}.rxbin")
@@ -140,6 +148,7 @@ foreach(_mode opt noopt)
     set(_c_contract_inputs ${_base} ${_shared}
       "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
     ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
@@ -157,6 +166,7 @@ foreach(_mode opt noopt)
     add_custom_target(llcompiler_c_context_contracts_${_mode}
       DEPENDS "${_dir}/c-context-contracts-linked.rxbin" "${_c_contract_runtime}")
     set(_c_drop_inputs ${_c_contract_inputs}
+      "${_classic_names}"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparse.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcfrontend.rxbin")
     ll_compile(drop-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/drop/contracts.crexx"
@@ -288,7 +298,7 @@ foreach(_mode opt noopt)
         set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
           TIMEOUT 300 LABELS "library;level-l;compiler-frontends;optimizer-parity")
         if(_group STREQUAL "grammar")
-          # IF adds a measured 44s Debug component; SELECT adds 50s.
+          # IF adds a measured 44s Debug component; SELECT adds 50s and DO 66s.
           # Serialize the expanded grammar workload with a generous hang guard.
           set_tests_properties(${_test} PROPERTIES TIMEOUT 900
             RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
@@ -370,9 +380,10 @@ if("c" IN_LIST _languages)
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
-  # C calls: 121 commands in the representative cell, 68 in the other cells;
+  # C calls: 136 commands in the representative cell, 68 in the other cells;
   # existing 110-command Debug baseline 96s; focused SELECT metadata adds
   # 11 default commands (its independent 12-command control measured 13s).
+  # DO adds one valid metadata compile and seven single-field refusals (15).
   # This is component evidence, not a fresh full-aggregate measurement.
   # Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
   # Serialize nested tools; 1800s is a hang guard for slower hosts.
@@ -382,7 +393,7 @@ if("c" IN_LIST _languages)
         set(_calls "llcompiler_c_calls_${_mode}_${_vm}")
         set(_commands 68)
         if(_mode STREQUAL "opt" AND _vm STREQUAL "rxbvm")
-          set(_commands 121)
+          set(_commands 136)
         endif()
         add_test(NAME ${_calls}
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
