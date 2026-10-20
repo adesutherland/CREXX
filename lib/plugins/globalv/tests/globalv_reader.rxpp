@@ -1,0 +1,41 @@
+/* GLOBALV persistence test: read a value written by another program. */
+options levelg
+
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+
+namespace globalv_reader
+
+import _rxsysb
+import rxfnsb
+
+main: procedure = .int
+  store_file = globalv_store_file()
+  say "GLOBALV LOG"
+  say "  SOURCE = " store_file
+  say "  TARGET = globalv_reader.rxpp :message"
+
+  message = ""
+  address globalv "SELECT SHARED GET :message"
+  if rc <> 0 then do
+    say "GLOBALV GET failed, rc=" rc
+    return 1
+  end
+
+  say "globalv_reader read SHARED.MESSAGE =" message
+  if message <> "Written by globalv_writer" then return 1
+  return 0
+
+exit main()
+
+globalv_store_file: procedure = .string
+  directory = getenv("GLOBALV_HOME")
+  if directory = "" then do
+    directory = getenv("APPDATA")
+    if directory <> "" then directory = directory || "/globalv"
+    else do
+      directory = getenv("HOME")
+      if directory = "" then directory = "."
+      else directory = directory || "/.globalv"
+    end
+  end
+  return directory || "/lasting.globalv"
