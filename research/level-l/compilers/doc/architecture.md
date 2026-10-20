@@ -1271,7 +1271,8 @@ owners. All complete-C criteria remain open and INTERPRET remains last.
 ## PARSE machinery review — shared cursor approved
 
 **Adrian approved the shared cursor API on 20 October 2026; its implementation
-is locally qualified. Real platform proof and C PARSE integration remain open.** ARG must
+is locally qualified and committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
+Real platform proof and C PARSE integration remain open.** ARG must
 subsequently use the same machinery. LC-I-19 / LC-81-01–07 retain the seven
 agreed sources (ARG, PULL, SOURCE, LINEIN, VERSION, VALUE and VAR), optional UPPER,
 arbitrary comma/empty templates, targets/dots, literal and variable patterns,
@@ -1497,7 +1498,8 @@ occur. ARG then uses that same executor.
 
 AC01–04 have passed local proof; AC05's local core/static boundary is qualified
 while real platform proof remains **open**. AC06 has passed consumer/RXAS proof,
-documentation and cleanup and is ready for scoped local commit. The
+documentation and cleanup; local delivery is committed at
+`e0b11db9e7293bc1f45e86574cb1f857edb1c038`. The
 [PLAN qualification](../PLAN.md#parse-cursor-local-qualification) records the
 sole command/result summary and its limits; the criteria below remain the
 authoritative contract.
@@ -1521,10 +1523,480 @@ authoritative contract.
    existing opcode/direct regressions, both VM engines, maintained Apple ASan,
    kernel-only NUTF8 and actual constructorless static smoke passed. Real
    31-bit/CMS/TSO/Windows and Linux LeakSanitizer proof remain open.
-4. **PARSE-ENGINE-STEP04 — Ready for scoped local commit (AC01–06):**
+4. **PARSE-ENGINE-STEP04 — Locally committed (AC01–06):**
    independent/root source and RXAS review, local qualification, documentation
-   and task-only cleanup are complete. C PARSE integration retains its
+   and task-only cleanup are complete at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
+   C PARSE integration retains its
    normalization proof and separate exact-contract gate.
+
+<a id="proposed-c-parse-integration"></a>
+
+## Approved complete C PARSE integration
+
+**APPROVED by Adrian on 20 October 2026. CPARSE-STEP01 is complete;
+CPARSE-STEP02 is current. Product implementation and qualification remain open.**
+Approval covers the exact contracts below, shared cursor/B-library reuse,
+focused tests, actual RXAS review and scoped local commits, using the agreed
+Sol 6.1 Extra High workers. Baseline is `e0b11db9e7293bc1f45e86574cb1f857edb1c038`:
+C v6/52 operations, 33 `llctarget` exports and the committed seven-callable
+cursor. The outcome is all seven agreed PARSE sources and complete templates,
+including live dependencies, backward/equal/zero movement, empty patterns,
+Unicode/configured blanks and arbitrary representable comma positions. ARG
+subsequently uses this executor; its instruction acceptance is separate. PULL
+also has its own instruction review. EXTERNAL/NUMERIC retain the current
+exclusion and final Release 1 decision; INTERPRET remains last.
+
+### Why a versioned section mode is needed
+
+The committed cursor fixes event ordering, not Classic section normalization.
+The forward outer-section/inner-word proof above is valid within its tested
+scope. Read-only probes with the existing cursor, and independent authored
+expectations checked with Regina where its dialect agrees, expose additional
+gaps. For source `one two three`, `1 a 1 b` must yield the whole source twice;
+`a b +0 rest` must yield `one|two three|one two three`; and `a b '' rest` must
+yield `one|two three|`. The existing packed route instead captures only a word
+at a backward/equal numeric boundary and reverses the empty-pattern sections.
+For source `aa:bb cc`, `a ':' +1 b` must yield `aa|bb cc`; the current outer
+composition yields `aa|b cc`. A raw-target flag alone cannot correct the
+control-only anchor transition. These are retained future regression inputs,
+not authority to repair native C or change v1/v2 behavior.
+
+**Approved minimal generic addition: packed descriptor version 3, section
+mode, through the existing cursor API and one shared kernel.** Its 12-byte
+header is `0x50,0x03`, LE16 header length 12, LE16 item count, LE16 stored
+section count, LE16 external count, policy byte, zero byte. Policy bit 0 retains
+the Classic numeric-error policy; every other bit is zero. Each item begins
+with u8 kind/u8 flags. Kind 1 denotes a raw section target, with only flag bit
+0 store and no payload. Kind 2 has flags zero, LE32 literal byte count,
+LE32 codepoint count, then literal bytes. Kinds 3/4/5 are ABS/PLUS/MINUS,
+flags zero plus LE64 nonnegative movement no larger than RXINTEGER_MAX.
+Kinds 7/8/9/10 are dynamic LITERAL/ABS/PLUS/MINUS, flags zero plus LE16
+zero-based external index. Kind 6 and numeric overlay flags are invalid in v3.
+Dynamic flags must be zero: v3 admits external operands only, not completed
+capture shortcuts. Targets permit only the existing store bit; result indexes
+are assigned in stored-target order, drops use zero. Nonzero item counts,
+16-bit item/result/external counts, 32-bit literal byte/scalar counts, exact
+length and full text/reference validation remain mandatory. Adjacent section
+targets without a separating control are invalid; arbitrary consecutive or
+targetless controls are valid. Empty templates are represented outside the
+kernel, which still rejects a zero-item descriptor.
+
+The exact v3 state is source length `n`, prior match start `m` and end-exclusive
+`e`, initially `m=e=1`, with positions clamped to `[1,n+1]`. A target's closing
+control determines its capture start `s`: relative plus/minus uses `m`; every
+other closing control uses `e`. This is a kind test, never early evaluation of
+a later operand. A nonempty string control searches from `e`; a match at `p`
+of length `l` captures `[s,p)` and sets `m=p,e=p+l`. No match, or an empty
+literal/dynamic pattern, captures `[s,n+1)` and sets `m=e=n+1`. Absolute numeric
+control computes `p=clamp(max(1,value))`; relative plus/minus computes
+`p=clamp(m +/- value)` using checked/saturating arithmetic before narrowing.
+Movement values retain the existing nonnegative whole-string conversion and
+Classic `26.4` policy. Numeric control captures `[s,p)` when `p>s`, otherwise
+`[s,n+1)`, then sets `m=e=p`. At template end a pending target captures
+`[e,n+1)`. Every control updates state even without a pending target; a pending
+target yields exactly one Field before a later control's Input. A control
+needed to close that target requests its Input before that Field.
+
+The equations are the approved interpretation of the
+[IBM positional-pattern rules](https://www.ibm.com/docs/en/cics-ts/6.x?topic=parsing-templates-that-contain-positional-numeric-patterns)
+and [string/relative special case](https://www.ibm.com/docs/en/zvm/7.2?topic=parsing-combining-string-positional-patterns-special-case),
+supported by 22 existing-cursor probes and 31 bounded Regina controls. The
+cursor probes used `rxc -n`, `rxas -n`, explicit `rxlink` and `rxbvm
+--no-autoload`; these are feasibility observations, not v3 implementation or
+new-C qualification. Temporary probe files were deleted.
+
+All matching, codepoint indexing, movement, anchors and section spans remain
+in `interpreter/rxvmparse.c`, reusing its storage/search/conversion helpers.
+V1/v2 and existing direct instructions preserve their exact transitions and
+regressions. V3 is admitted only by the cursor factory; the existing `parseplan`
+opcode driver explicitly rejects v3 before publishing results. Both drivers
+retain one private kernel, without an additional opcode contract. No opcode,
+RXBIN feature, RXPA host service, callable, callback or generic L API is added.
+This descriptor contract received separate approval on 20 October 2026;
+it was not part of the earlier cursor approval. Native product qualification applies to its
+eventual implementation; local design review is no runtime/platform proof.
+
+### Source AST, acquisition and comma normalization
+
+Use named C AST nodes, not a runtime template parser. `Parse` has required
+`source`, `templates`, and Boolean `upper`; `ParseSource` has canonical `kind`
+ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR, zero or one expression `value` only
+for VALUE, exactly one raw `Name` for VAR, and neither for the others.
+An omitted VALUE expression lowers to an empty value with a truthful zero-width
+origin at the VALUE/WITH boundary, so `PARSE VALUE WITH target` is admitted.
+`ParseTemplates.items` contains at least one `ParseTemplate`, including empty
+ones. Each template has ordered `items`: `ParseTarget(name)`, `ParseDrop()`,
+`ParseLiteral(value,spelling)`, `ParseVariablePattern(name)`, or
+`ParsePosition(mode,operand)` with mode ABS/PLUS/MINUS and exactly one authored
+numeric literal or raw variable name. These nodes retain original half-open
+byte spans, scalar columns, clause IDs and decoded/spelled literal distinctions.
+The C source policy recognizes PARSE/source/UPPER/WITH only in their grammar
+positions; WITH is required only for VALUE. Validate the complete tree,
+including unreachable text, malformed tails, unsupported sources and invalid
+radix/position/name forms, before publishing IR/output. Do not generalize a
+parenthesized variable operand into an arbitrary expression.
+Retain contextual source/missing VAR/missing WITH/malformed-template diagnostics;
+EXTERNAL/NUMERIC and unagreed LOWER/CASELESS spellings receive invalid-PARSE-type
+diagnostics rather than aliases. Static and dynamic position conversion errors
+retain their distinct authored tokens and the agreed runtime `26.4` identity.
+
+| Source | Once-only producer, before any target write |
+|---|---|
+| ARG | New `parse.source(context; kind=ARG, ordinal)` calls the current activation's raw `argument(ordinal)` for each selected comma position; omissions/missing positions parse as empty while presence bits and originals remain unchanged. Empty templates advance ordinal without a read or cursor. Existing `arguments.read` remains unchanged because its existing ARG-instruction adapter uppercases and cannot implement plain PARSE ARG. |
+| VALUE | Ordinary C expression lowering, exactly once even with an empty template; an omitted expression supplies an empty value. Retain effects and resulting value before parsing. |
+| VAR | Existing C `load(context; name)` once, preserving raw-name/tail lookup and source aliasing before any write, even with an empty template. |
+| PULL | Existing configuration `pullText()` once, selected queue first then its default-input route, including an empty first template. No duplicate queue/input implementation. |
+| LINEIN | Existing `rexxclassicbifstream.rexxclassicbif_linein` with zero actual arguments and caller-owned `RexxBifCallContext` bound to current config/pool/activation. The C caller immediately checks its error and NOTREADY fields as specified below; do not lose them in an adapter-local context, substitute `lineinText()` or consume a queued entry. |
+| SOURCE | Emit SOURCEINFO in the generated C procedure, then `config.sourceText(info,activation.programSourceMode())`. Calling SOURCEINFO inside the adapter would describe the adapter. Preserve root COMMAND/FUNCTION/SUBROUTINE, logical source identity and spaces. |
+| VERSION | Existing configuration `versionText()` once; no compiler-host version constant. |
+
+For non-ARG sources the first comma template receives that acquired value;
+every subsequent position receives empty text, without reacquisition or replay.
+An empty first template still consumes/evaluates the source. Each invoked
+template executor snapshots `source.asString(1)` once in the inherited numeric
+frame and, when UPPER is set,
+uses the checked existing Classic `rexxclassicbif_upper` with the borrowed
+configuration. This uses shared simple casing, never expanding full casing or
+normalization. UPPER changes only the captured source, never literal/dynamic
+patterns, the original variable or the activation's original arguments.
+An empty program performs required source conversion/UPPER then
+returns without a cursor. Omitted empty ARG positions need no executor.
+
+### Exact approved C IR and B target surface
+
+The approved integration advances only `crexx.c` to **version 7, 54 operations**; the
+existing 52 declarations and their effects remain byte-identical. Add one
+C-owned type `parseprogram`, registered with the existing `.llir..bytescodec`.
+It may occur only as the `program` attribute below, never as a value,
+parameter, result, constant operation or slot. The generic LLIR format stays
+v2; neutral scalars stay `crexx.g` v1. V6 is rejected rather than reinterpreted.
+
+| Operation | Exact ordered inputs | Exact ordered attributes | Result / effects |
+|---|---|---|---|
+| `crexx.c.parse.source` | `context:C` | `kind:T ordinal:I` | `value:V`; state `context.input`, failure `condition.resource`, termination `returns` |
+| `crexx.c.parse.execute` | `context:C source:V` | `program:crexx.c.parseprogram` | none; state `context.input.output.observation`, failure `condition.resource`, termination `returns` |
+
+Each listed field occurs exactly once, in that order, with no extra attribute
+or input. `kind` is exactly uppercase ARG/PULL/LINEIN/SOURCE/VERSION;
+`ordinal` is positive for ARG and exactly zero otherwise. No generic
+string dispatch or source-kind value is accepted. Both operations are
+effectful and have no evaluator: no folding, deletion, duplication or motion
+across pool, I/O, condition or observation effects. Admission verifies the
+entire canonical family, opaque-context provenance, enum, program and every
+dead operation before allocation/emission. Malformed input preserves the
+graph and previous output and produces no partial RXAS.
+
+These are the complete new required B signatures; no defaults or optional
+arguments are permitted. Both declare inherited DIGITS/FUZZ/FORM when calling
+existing checked BIF bodies. The producer metadata and C selector's independent
+expected signatures must agree exactly. Construct each `RexxBifCallContext`
+using its current configuration **before** binding caller pool and activation,
+so the pool's Unicode-name policy is never reset by a BYTE-default context:
+
+```text
+llctarget.parsesource(
+  context = reference .rexxclassiccontext..RexxClassicContext,
+  kind = .string, ordinal = .int, caller_source = .string,
+  source_state = reference .rexxclassicbifs..RexxBifCallContext)
+    -> .rexxvalue..RexxValue
+
+rexxclassicparse.execute(
+  context = reference .rexxclassiccontext..RexxClassicContext,
+  source = .rexxvalue..RexxValue, program = .binary) -> .void
+```
+
+`parsesource` is the one justified acquisition adapter, increasing `llctarget`
+to **34 exports**; its SOURCE case receives the C caller's SOURCEINFO result,
+the other cases require an empty `caller_source`. Its located failure belongs
+to the source AST. `execute` is a direct shared `rxfnsc` export, with no second
+`llctarget.execute` forwarding body. The selector loads `program` as an RXAS
+binary constant (`load rN,0x<hex bytes>`) and makes one counted call with the
+three required arguments. Both exports are ordinary procedures (no receiver),
+with metadata language flag `b`, exact result, ordered type/arity and all
+optional flags false. Independent metadata refusal controls include missing,
+wrong-arity/type/result/language/optional declarations. `execute` returns void;
+`parsesource` returns a detached value, never a cursor/context/BIF reference.
+Their metadata is checked through explicit runtime artifacts; neither adapter
+nor target bytecode is linked into the compiler host. No native C parser/backend
+service is a dependency.
+
+The selector reserves/clears stable typed `source_state` storage for each live
+source-operation window and passes its reference as argument 5; that value may
+be uninitialized on first use. The adapter first checks `<refvalid>` and, before
+any method/attribute access or binding, replaces that caller-owned value through
+its reference with the existing
+`.rexxclassicbifs..RexxBifCallContext.expression(kind)` factory result, never the
+default factory that allocates unused owned pool/config objects. This is
+exactly one lean factory/reset per source call,
+with no redundant caller-side factory. The reset is necessary even on reuse:
+`setConfig` on a previously bound
+context may dereference its old, now-stale pool after `bindPool` replacement.
+The exact existing factory metadata identity is
+`rexxclassicbifs.rexxbifcallcontext.§factory.expression`, language `b`, result
+`.rexxclassicbifs..rexxbifcallcontext`, one required `.string`, no receiver.
+The acquisition adapter's producer build explicitly imports that factory;
+the C selector imports the existing context class/checkpoint methods, without
+emitting or binding an unused factory call in the C caller. On every
+call the adapter then uses `clearError()` (which clears condition fields),
+`setArguments(empty_values,empty_presence)` (both arrays have count zero),
+`setConfig(bundle.config())`, `setCallerPool(bundle.pool())`, then
+`setCallerActivation(bundle.activation())`; LINEIN uses this same object and
+other kinds return it cleared. It retains only references to stable bundle
+owners, never adapter-local objects. After return, before conversion or template work,
+the C caller inspects `hasError()/errorDetail()` and raises the existing
+authored CLASSIC_SYNTAX if needed. Then it reads `conditionId()` and
+`conditionDescription()`: nonzero conditions use existing
+`activation.queueCallCondition(id,description,authored_line)` and enabled
+`signalPolicy(id)>0` emits the existing typed
+`.rexxclassicconditionevent..RexxClassicConditionEvent(id,description)` through
+`signal CLASSIC_CONDITION,event` **in the C caller**, at the source operation's
+origin. This preserves NOTREADY data and source before the context is reused;
+no new class, result packet or signal ABI is required. CALL delivery remains
+at its authored clause checkpoint; handler transfer/resumption CFG and actual
+TRACE behavior retain CPARSE-AC07. Clear call-window references after return and
+null `source_state` after its checkpoint or on fatal/unwind before its borrowed
+owners expire. Before release, snapshot error detail/condition fields into
+ordinary value/string locals so queue/raise never dereferences a cleared state.
+Required imported members are `hasError()->.boolean`, `errorDetail()->.string`,
+`conditionId()->.int`, `conditionDescription()->.string`,
+`queueCallCondition(.int,.string,.int)->.boolean` and
+`signalPolicy(.int)->.int`, with their existing receiver metadata. The existing
+event factory is `rexxclassicconditionevent.rexxclassicconditionevent.§factory`,
+language `b`, result `.rexxclassicconditionevent..rexxclassicconditionevent`,
+two required arguments `.int .string`, no receiver. Test this transport now with a prebound activation/pool and
+injected EOF/NOTREADY/error producer: verify OFF, CALL and SIGNAL policies,
+first-use uninitialized storage, cleared reused/rebound state, pending CALL
+fields/causing line, typed SIGNAL payload and original
+caller source before any template execution. Source SIGNAL/CALL syntax is not
+needed to exercise the producer contract through a direct harness. A finite
+string relay never substitutes for this object-payload path.
+
+### Immutable template-program byte format
+
+The shared B `rexxclassicparse` executor owns the **LCP1 version 1** runtime
+envelope below; the C compiler is its producer and independently validates
+that contract. This is one packet per comma template, not a new generic L
+serialization or mutable runtime object. All integers below are
+unsigned little-endian, with no padding. Every length is a byte count unless
+named otherwise. Header offsets and widths are fixed:
+
+| Offset | Width | Value |
+|---|---|---|
+| 0 | 4 | ASCII `LCP1` |
+| 4 | 2 | packet version `1` |
+| 6 | 2 | flags: bit 0 UPPER, all others zero |
+| 8 | 4 | exact total packet length |
+| 12 | 4 | 1-based comma-template ordinal |
+| 16 | 4 | origin count, at least one |
+| 20 | 4 | section count |
+| 24 | 4 | dynamic input occurrence count |
+| 28 | 4 | outer v3 descriptor byte length |
+| 32 | 4 | original compilation-unit source byte length |
+| 36 | 4 | logical-source-ID byte length |
+
+After the 40-byte header come, in order: the nonempty strict-UTF8 logical ID;
+`origin_count` fixed 20-byte origin records; the outer descriptor; section
+records; and input records, ending exactly at total length. An origin is five
+u32s: zero-based byte start/end-exclusive, 1-based scalar line/column, and
+1-based clause ID. Origin 1 is the complete template, including a truthful
+zero-width empty-template boundary. IDs refer to this table, never addresses
+or host paths.
+Origins 2 through `outer_item_count+1` map every outer item in descriptor order,
+including static/targetless controls. Additional origins belong to input names
+or individual authored targets and must be referenced; section origins equal
+their outer item's origin. Empty programs have only origin 1. Source compilation
+checks truthful byte/scalar mapping against its owned source bytes. Loaded IR
+checks structural spans and retained provenance against available source
+records; if original bytes are absent it cannot certify source authenticity
+and must not reopen host paths or invent missing source text.
+
+A section record is `(u32 outer_item, u32 origin_id, u32 target_count)` followed
+by that many targets. A target is `(u8 kind, u8 zero, u16 zero, u32 origin_id,
+u32 name_bytes, name_bytes of raw UTF8 name)`, with kind 0 drop/1 store.
+Drops have zero name bytes; stores require a valid nonempty raw C variable
+symbol. Sections occur in outer-target order and cover every outer target
+exactly once; `target_count` is positive and includes drops. The outer target
+store bit is set iff the section has a store target; all-drop sections remain
+lazy Fields. This ordered target list is the word-distribution program; no
+ASCII inner-cursor descriptor is stored or executed.
+
+An input record is `(u32 outer_item, u32 origin_id, u32 name_bytes, raw UTF8
+name)`. It covers one dynamic operand occurrence, in outer-item order; each
+receives a distinct 1-based external slot even when names repeat. The descriptor
+stores that record's ordinal minus one as its LE16 external index and must
+refer to exactly these occurrence slots in order, with no capture flags
+or unmatched/unused references. Input kind is determined by its descriptor
+item, not duplicated in the packet. Control-only/targetless templates still
+carry their controls and input maps. Empty templates alone have zero outer
+bytes/sections/inputs. Static-only patterns/positions and all-dot runs are
+valid without dynamic records.
+
+Packet size/source offsets fit u32 and the current checked VM/host extent;
+descriptor items/sections/inputs retain the 65,535 bound; authored-target and
+origin totals are u32 and additionally bounded by packet length, host extent
+and existing request work/storage limits. Check subtraction/products before reads or
+allocation, reject trailing bytes, unknown flags/versions/kinds, invalid names,
+Unicode/literal counts, missing/duplicate maps, unsorted or out-of-range IDs
+and mismatched descriptor counts. No truncation, quota default or new platform
+exclusion is inferred. Compiler admission and the shared executor independently
+validate packets before a cursor or pool effect. The direct executor requires
+the current configuration's UTF8 profile; BYTE is refused rather than silently
+reinterpreted. Runtime names use existing
+`rexxclassicdatatype.rexxclassic_datatype_symbol_kind(value,config)` with that
+configuration and the exact source target/operand restrictions; the BYTE-default
+`rexxclassic_symbol_kind` shortcut is unsuitable. Compiler names use the
+generated-language symbol authority already used by `llcdoprotocol`.
+The compiler's packet builder/admission share one C-only codec. The B executor
+has its own trust-boundary envelope/map decoder and depends on no compiler/L
+module. This duplicated boundary validation is not a second parsing algorithm;
+generic descriptor validity/execution remains the kernel's authority. The
+executor owns its packet snapshot during execution and borrows bundle roots;
+cursor construction separately validates/snapshots
+the outer descriptor/source. Earlier user output remains intact on refusal.
+
+### Shared executor ordering, word policy and observations
+
+The compiler groups each maximal authored target/dot run into one outer v3
+section target; authored controls remain ordered and are never pre-evaluated.
+`rxparse.cursor` owns the complete outer state. On Input, resolve that physical
+occurrence's raw name through the **current** `context.pool().symbolValue`,
+convert once with `.asString(1)` in the inherited numeric frame and supply;
+do not cache names, tail resolutions or values across occurrences. On Field,
+retain one owned section text snapshot and distribute its ordered targets
+before calling the next outer `next()`. If the entire section consists of
+drops and no observer requests text, acknowledge without `text()`, a section
+copy, a word scan, `RexxValue` allocation or pool write. If a drop observer
+needs individual fields, materialize the section once and use the same scan.
+
+Word distribution belongs privately to shared `rexxclassicparse`, reusing
+`rexxclassic_find_text_nonblank(text,start,other_blanks)` and
+`rexxclassic_find_text_blank(text,start,other_blanks)` from
+`RexxClassicCharacterScan`. That existing owner supplies Unicode White_Space
+plus `config.textOtherBlanks()`; no Unicode table or scan loop is copied into
+the compiler/VM. C retains its UTF8/codepoint profile. The legacy kernel's
+ASCII-only word operations, `RexxValue.parseWordTemplate` and repeated
+WORD/SUBWORD calls cannot establish this contract.
+
+For one target, use the whole raw section. For `k>1`, each of the first `k-1`
+targets skips all leading configured blanks, captures the maximal nonblank
+word, then advances past **exactly one** following separator; exhaustion yields
+empty. The final target receives the untouched suffix, including remaining
+leading/trailing blanks. Use monotonic zero-based scalar offsets into the
+single snapshot, not repeatedly copied shrinking tails. Dots consume identical
+fields; an unobserved drop needs no `RexxValue` or pool write. Each store wraps
+its field and calls current `pool.setSymbolValue(raw_name,value)` immediately,
+resolving compound tails at that moment. Thus repeated targets, stem aliases
+and earlier writes affect later names and dynamic reads. The current B pool
+owner supplies tail rules; the executor adds no private variable cache.
+
+Private authored checkpoints are: source acquisition; conversion/UPPER;
+before each Input read/supply; before each target write; and after each
+store/drop observation before acknowledgement. Packet origin/ordinal is the
+lookup key. The existing C source/clause owner emits one statement anchor;
+these checkpoints must survive optimization. TRACE's owner later consumes
+field text and raw target/drop identity at these points, using lazy drop text
+only when requested. No observer callback, trace formatter or generic signal
+ABI is introduced here. Pool `resolveSymbolName` suppresses tail NOVALUE and
+`symbolValue` currently does not produce final-read NOVALUE; retaining raw names
+alone cannot prove that condition. Its actual producer/handler integration is
+a C-POOL/C-OBS dependency, not permission to implement a second pool. Actual
+configured TRACE output, NOVALUE production,
+typed conditions and resumed handlers remain explicit STEP03/07 dependencies;
+retaining hooks is not a passing TRACE/condition test or whole-PARSE closure.
+
+### Failure, cleanup and code-shape contract
+
+For the current nonresumable text-error profile, the exact named relay set is
+CLASSIC_SYNTAX, DIVISION_BY_ZERO, CONVERSION_ERROR, INVALID_ARGUMENTS,
+OBJECT_NOT_INITIALIZED, REFERENCE_INVALID, UNICODE_ERROR, OUT_OF_RANGE and
+FAILURE. Extend generated C's current four-name fatal bridge to this set and
+test every added name; CLASSIC_SYNTAX needs an explicit handler rather than
+relying on a catch-all. Retain the original bound signal and original message
+bytes and the active origin/physical-item/action IDs, then close the constructed
+cursor before any diagnostic formatting. On failure only, format the suffix
+` [PARSE logical-id:line:column template=N item=M action=A]`, where `A` is
+`input#J`, `target#J`, `control` or `source`; N/J are 1-based template/occurrence
+or authored-target ordinals, M is the 1-based physical item, and M=0 is reserved
+for validated-program conversion/construction before an event exists.
+Pre-event failures use template origin 1, never a fabricated item span.
+The suffix is bounded by logical-ID bytes plus 128, with
+checked size arithmetic. Relay with static
+`signalorigin "NAME",original_message || suffix,problem`.
+The original message is a byte-identical prefix; the full relayed message is
+intentionally annotated. Name and raw module/address remain those of the
+bound event; authored context does not replace raw helper fault provenance.
+Invalid packets without a validated item map retain the caller clause/default
+context. On invalid numeric supply retain `CLASSIC_SYNTAX`/`RXC-LC-26.4` and the
+operand origin. Earlier acknowledged writes survive; no later read/write runs.
+
+Track a cursor as live only after successful construction. Close it on Done,
+every admitted caught failure, and every explicit abort before relaying the
+original event; failed construction must not trigger a close on an uninitialized
+result. Release section/reference temporaries after the last use. A relay
+followed by a direct B caller's skip returns immediately, never re-enters the
+loop or writes later targets. This finite text relay is implementable with
+existing instructions; there is no catch-all dynamic-name/payload-preserving
+`signalorigin`. Do not flatten CLASSIC_CONDITION object payloads, pretend to
+resume NOVALUE or promise generic resumable cleanup. Those wider protocols
+retain their exact gate and full PARSE acceptance remains open until integrated.
+Existing `rexxclassic_signal_record` recognizes a Classic error code only when
+the message starts with `RXC-LC-`; the suffix preserves that identity. A direct
+B harness must pass the relayed event through the existing recorder and verify
+RC/.MN, in addition to raw origin and exact original-message prefix. The C
+fatal profile may add its existing clause context after this shared relay;
+the later full condition owner intercepts before fatal decoration. This proof
+does not close complete handler/resumption behavior or add a signal ABI.
+VM last-owner/session teardown remains fallback for uncaught HALT/fatal paths,
+with no prompt native-interruption or lexical-finalization claim.
+
+Readable RXAS must show one source acquisition, no C-host absolute path,
+compile-time binary packet loads, one shared executor call per invoked comma
+template, no cursor machinery in generated C and no eager dynamic-operand
+vector. Inspect helper work too: one outer cursor, at most one live section
+snapshot, monotonic existing scans, ordered raw-name writes and all named
+cleanup/relay paths. Simple whole-source, one word run, static position,
+all-dot, live-pattern and backward cases have structural checks in both
+compiler modes with RXAS optimization separately on/off and both concrete VMs.
+No target-count acceptance switch, prefix replay, growing-tail copies or
+unconditional per-field source/clock update is permitted. Necessary snapshot,
+validation/call/scan costs are stated; static counts are not speed claims.
+
+### Integration acceptance and implementation steps
+
+The acceptance contract below is **approved; all implementation criteria remain
+open**. They refine CLC-STEP06.PARSE3 and
+serve CFC-AC01–04/06–12 without closing those complete-C criteria.
+
+| ID | Checkable pass condition |
+|---|---|
+| **CPARSE-AC01** | Independent AST/admission fixtures cover seven sources, UPPER, empty/leading/trailing/repeated comma positions, arbitrary target/dot/control runs, literal/radix/dynamic operands and located malformed/dead source; previous output survives refusal. Exact v7 declarations/metadata/packet malformed controls refuse atomically. |
+| **CPARSE-AC02** | Direct generic B consumers prove cursor v3 transitions, control-only anchors, backward/equal/zero/oversize positions, empty/missing/repeated patterns, Unicode/NUL and Input/Field order. Direct assembly proves `parseplan` rejects v3 atomically and unchanged v1/v2/direct consumers pass. No duplicated matcher, callable or opcode is introduced. |
+| **CPARSE-AC03** | Direct shared-B and independent new-C tests prove earlier writes/later live reads, old-value operands that close pending sections, repeated/compound/stem/drop/alias targets and exact final remainders with Unicode White_Space/configured blanks. No eager lookahead, shrinking tails or prefix replay. |
+| **CPARSE-AC04** | Seven-source state/effect tests prove once-only acquisition/conversion/UPPER, queue versus LINEIN distinction, exact raw ARG values/presence, non-ARG extra commas receiving empty, SOURCE root mode/logical path/spaces and VERSION runtime identity. Empty templates still consume required sources without a cursor. Direct prebound source-state tests prove LINEIN error/NOTREADY under OFF/CALL/SIGNAL, first-use uninitialized storage and exactly one reset, clean reuse/rebinding, pending CALL line and typed SIGNAL transport before template execution without a new condition ABI. |
+| **CPARSE-AC05** | Every named text failure retains identity/raw provenance, the byte-identical original-message prefix and exact bounded authored suffix, earlier writes and no later effects. Direct B recorder checks prove Classic RC/.MN survives this shared relay. Failed factory, drop-only, normal/error/skip/teardown and repeated/interleaved executions prove close-before-format, ownership/cleanup and unchanged packet/source snapshots, checked size/work limits and recovery. |
+| **CPARSE-AC06** | Complete caller/helper RXAS structural checks cover simple/static/dynamic/backward/drop cases, separate compiler/assembler modes and both VMs. Measured focused Debug aggregates are serialized with evidence-based generous timeouts; tests use independent expectations, classifying native disagreements rather than copying them. |
+| **CPARSE-AC07** | Source/clause/field/drop observations and required configured errors, NOVALUE, typed conditions and resumed handlers are integrated with their STEP03/07 owners. Positive/failure/resumption TRACE checks establish the agreed practical contract. A current fatal-profile slice or checkpoint inventory alone leaves this criterion and whole PARSE open. |
+| **CPARSE-AC08** | Explicit C host/runtime manifests, required metadata/freshness, direct/linked/service/install routes and declared platforms prove no native source-compiler or target-runtime host dependency. Native v3 changes receive applicable normal/sanitizer/platform proof; existing engine platform and CFC gates remain open until observed. ARG/PULL gain separate instruction acceptance using the same executor. |
+
+1. **CPARSE-STEP01 — Approved/complete (AC01–08):** Adrian approved exact v3,
+   v7, packet, two B signatures, ownership, qualification and stage boundaries
+   on 20 October 2026 before product edits.
+2. **CPARSE-STEP02 — Current; implementation open (AC02/05/08):** implement v3 in the
+   single kernel with independent non-C consumers, legacy compatibility,
+   mandatory delivery and applicable native qualification; no C source logic.
+3. **CPARSE-STEP03 — Shared B executor (AC03–05/07):** implement packet
+   validation, existing-scan word distribution, live writes/reads and finite
+   relays, with direct B tests. Keep typed-condition/TRACE integration visibly
+   open until its owner supplies qualified contracts; no replacement ABI.
+4. **CPARSE-STEP04 — C integration (AC01/03–06/08):** implement named AST,
+   source acquisition adapter, v7 registration/admission, constant packet
+   construction and direct calls; independently verify seven-source behavior,
+   malformed imports, emitted shape and focused toolchain routes.
+5. **CPARSE-STEP05 — Complete instruction review (AC01–08):** separately
+   integrate/verify remaining conditions/TRACE and declared platform/delivery
+   obligations, then review LC-I-19. Schedule ARG and PULL as individual
+   instruction assignments reusing the executor; retain all twelve CFC criteria
+   and last-stage INTERPRET until their own complete proof.
 
 ## Optimisation ownership
 

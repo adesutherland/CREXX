@@ -63,6 +63,43 @@ start; CLC stage closure also requires the complete plan criteria.
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
 
+<a id="parse-integration-assignment-packet"></a>
+
+## Approved PARSE integration assignment packet
+
+**Implementation approved by Adrian on 20 October 2026.** Baseline is committed
+`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; actual C remains v6/52 operations
+and `llctarget` 33 exports. The [approved integration contract](architecture.md#proposed-c-parse-integration)
+owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,
+two B signatures and CPARSE-AC01–08/STEP01–05. CPARSE-STEP01 is complete and
+STEP02 is current. Approval covers shared cursor/B reuse, focused tests,
+actual RXAS review and scoped local commits with Sol 6.1 Extra High workers.
+The coordinator assigns exclusive paths and schedules builds before product
+work; push/publication is not commissioned by this packet. Do not
+implement native C fixes, ARG/PULL instruction closure or INTERPRET incidentally.
+
+| Assignment / phase | Exclusive write ownership to assign and deliverable | Required independent review |
+|---|---|---|
+| **PARSE-WP01 — CPARSE-STEP02** | Named `interpreter/rxvmparse.c`/private header, cursor-driver admission and opcode guard, and assigned `tests/rxpa/parse_cursor*` fixtures. Implement exact v3 section transitions through the existing seven-callable built-in service and shared kernel; preserve v1/v2/direct operations. Root build/static manifests only through the single assigned integrator. | AC02/05/08: direct non-C B/assembly transition, targetless/live-input, malformed, lifetime/resource and compatibility controls. Reviewer checks actual movement/empty-pattern/anchor cases and both VM drivers; source/manifests do not prove real platforms. |
+| **PARSE-WP02 — CPARSE-STEP03** | New shared `lib/rxfnsc/RexxClassicParse.crexx`, named direct-B functional tests and the one acquisition export in existing `levelc/runtime/llctarget.crexx`. Own runtime LCP1 envelope/map validation, existing CharacterScan word distribution, current raw-name reads/writes, exact finite cleanup/relays and checked source adapters. Shared `rxfnsc`/target CMake/metadata entries via assigned integrator only. | AC03–05/07: direct consumers with independent expected pool/ARG/source/UPPER/blank state; all-drop laziness, skip/error cleanup and original signal provenance. Conditions/TRACE seams remain open until actual STEP03/07 integration; no invented generic signal ABI. |
+| **PARSE-WP03 — CPARSE-STEP04** | Named `levelc.rxl`, `llcparse`, `llcfrontend`, `llcir`, `llcrxas` and a single C-owned `levelc/llcparseprogram.crexx` codec/admission module, plus assigned `tests/parse` fixtures. Own named AST, exact source/comma lowering, immutable LCP1 construction, all-record/dead/loaded admission and constant-binary target calls. Codec is shared inside the compiler, with no runtime dependency on it. | AC01/03–06/08: independently authored forms/errors/order tests, malformed packet/schema/import controls, old-output preservation, compiler-host closure and complete caller/helper RXAS. Import exact metadata through explicit artifacts; target runtime is never linked into compiler host. |
+| **PARSE-WP04 — CPARSE-STEP05** | Read-only final diff/source/RXAS review; own only explicitly assigned acceptance fixtures and the canonical four planning/docs paths through one documentation integrator. Review LC-I-19 against every CPARSE criterion, identifying current fatal-profile versus full observation/platform boundaries. ARG and PULL receive separate later instruction packets. | Verify worker evidence against exact inputs and independent expectations. Keep full criterion open when its conditions/TRACE/platform proof is absent; completed cursor or native status cannot substitute. No additional broad run merely to accumulate green checks. |
+
+Implementation starts with one generic worker and an independent contract/test
+reviewer; only disjoint shared-B/compiler preparation may overlap after their
+exact interface checkpoint is stable. There is one writer per selector, runtime
+adapter, manifest and planning file. Builds/tests in a shared output tree are
+scheduled centrally. New aggregates are measured in isolated normal Debug,
+serialized with generous evidence-based timeout properties; native v3 changes
+retain applicable sanitizer obligations. Reuse valid unchanged-input proof and
+do not dispatch overnight matrices for this routine research integration.
+
+Each worker's handoff states all open CPARSE/CFC obligations, exact changed
+paths/input identity, mode/platform and code-shape results. Read-only native C
+and Regina controls are classified when they disagree with the independent
+contract. Keep only lasting conclusions and maintained fixtures; delete probe
+files/logs instead of creating another report, run directory or handoff plan.
+
 ## Assignment template
 
 The coordinator supplies these fields in each worker prompt:

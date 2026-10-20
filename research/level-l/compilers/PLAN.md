@@ -1,10 +1,11 @@
 # Complete Classic C compiler in B and Level L
 
 **Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified.
-Current: the shared PARSE cursor is locally qualified in normal Debug and
-focused Apple ASan. Real constrained-platform runtime proof remains open.
-C PARSE integration has a later normalization/exact-contract gate, followed by
-ARG using the same engine.**
+Current: the shared PARSE cursor is committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`,
+with normal Debug and focused Apple ASan proof. Real constrained-platform runtime
+proof remains open. Adrian approved the complete C PARSE integration design on
+20 October 2026; CPARSE-STEP01 is complete and STEP02 is current. ARG
+subsequently uses the same executor.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -22,7 +23,7 @@ Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integ
 
 <a id="current-action-parse"></a>
 
-## Current action: shared PARSE cursor implementation
+## Current action: approved C PARSE implementation
 
 Deliver PARSE's agreed source/template behavior through one shared executor,
 then use that executor for ARG. Earlier completed writes must be visible to
@@ -31,37 +32,41 @@ template prefixes. The [machinery review](doc/architecture.md#parse-machinery-re
 records existing investment and the native live-pool ordering limitation;
 native output remains a read-only control, not the new compiler's oracle.
 
-The [generic cursor contract](doc/architecture.md#proposed-parse-cursor-contract),
-**approved by Adrian on 20 October 2026**,
-owns the exact API, events, errors and lifecycle, with the single acceptance
-matrix **PARSE-ENGINE-AC01–06**: event/order semantics; validation/errors;
-ownership/lifecycle; finite resources/HALT; one kernel with mandatory core/static
-delivery; and independent consumers, existing-consumer compatibility and actual
-RXAS proof. Its **PARSE-ENGINE-STEP01–04** own approval/boundary freeze,
-kernel/provider implementation, independent tests/build delivery and final
-qualification/review/cleanup. STEP01–03 have their local proof; STEP04 has passed
-independent review, documentation and cleanup and is ready for scoped local
-commit. AC05 retains real platform proof as open. These IDs are not a second C
-integration acceptance matrix.
+Done: the [approved generic cursor](doc/architecture.md#proposed-parse-cursor-contract)
+is locally committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
+**PARSE-ENGINE-STEP01–04** and AC01–04/local AC05–06 have their retained
+proof below; real platform AC05 remains open. The architecture owns that
+engine's API, acceptance and lifecycle, separately from C integration.
 
 **CLC-STEP06.PARSE1 — Approved/complete:** existing kernel/exits,
 independent ordering expectations and core/static build feasibility are reviewed.
 Adrian approved the exact shared cursor prerequisite on 20 October 2026.
 **CLC-STEP06.PARSE2 — Locally qualified:** the approved built-in VM service
 passes PARSE-ENGINE-AC01–04 and local AC05/06 proof below; real platform proof
-remains open and scoped local commit is next. No additional API/ISA or native C
+remains open; local delivery is committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
+No additional API/ISA or native C
 feature is authorised by this approval.
-**CLC-STEP06.PARSE3 — Later exact-contract gate:** after that prerequisite,
-review C source acquisition, templates, AST/IR/target operations, live pool
-effects, diagnostics/conditions and code shape before C integration. Record
-its own checkable criteria and obtain approval for exact new contracts first.
-ARG subsequently consumes the same executor rather than introducing another.
+**CLC-STEP06.PARSE3 — Approved; implementation open:** Adrian approved the
+[integration contract](doc/architecture.md#proposed-c-parse-integration)
+specifies all seven sources, templates, C AST/IR/target records, one shared B
+executor, live pool effects, authored observations and cleanup. Its
+**CPARSE-AC01–08 / CPARSE-STEP01–05** preserve complete PARSE as the outcome;
+the reviewed forward composition alone does not cover backward/equal positions
+or empty patterns. Approval covers the exact generic descriptor addition and
+C/B interfaces, shared cursor/B-library reuse, focused qualification, emitted
+RXAS review and scoped local commits. **CPARSE-STEP01 is complete; STEP02 is
+current**, followed by the shared B executor and C integration. ARG then reuses
+the executor under its own LC-I-11 acceptance; PULL retains LC-I-16 acceptance.
 
 The seven agreed PARSE sources and current EXTERNAL/NUMERIC exclusions retain
 their ledger dispositions. Shared labels/EXPOSE, host/condition/TRACE and all
-twelve CFC criteria remain open; INTERPRET remains last. This action is
-the approved generic cursor prerequisite only; local engine qualification does
-not close C PARSE/ARG, full backward/anchor normalization or the platform gates.
+twelve CFC criteria remain open; INTERPRET remains last. No C integration or
+descriptor change is implemented yet. The approved documentation baseline
+passes `git diff --check` over the four owning documents at product input
+`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; no build input changed or build repeated.
+Local engine qualification does not close C PARSE/ARG, full backward/anchor
+normalization or the platform gates. Detailed assignments live in
+[work packages](doc/agent-work-packages.md#parse-integration-assignment-packet).
 
 <a id="parse-cursor-local-qualification"></a>
 
@@ -170,8 +175,8 @@ Shared v6 metadata/admission/header/direct bridge/Unicode proof is reused;
 no second shared matrix, source-slice ASan, installed/hosted/platform or whole-C
 qualification is claimed. Shared labels/EXPOSE, dynamic loop invalidation,
 resumable conditions, exact recovery and clause/TRACE remain open; all twelve
-CFC criteria remain open and INTERPRET remains last. PARSE machinery review is
-next, with ARG using that engine after exact-contract approval.
+CFC criteria remain open and INTERPRET remains last. The current PARSE
+integration proposal is linked above; ARG later uses that executor.
 
 <a id="current-action-leave"></a>
 
