@@ -563,3 +563,22 @@ The archive/caller fixes have focused macOS replays; unchanged parser algorithms
 and common expected data retain prior proof. The next pushed substantive repair
 runs the same complete eight-cell gate. Successful previous jobs are evidence
 for their inputs, not substitutes for changed package-consumer checks.
+
+
+The second hosted run at `b99d30bc5` confirms Linux cREXX/ooRexx/NetRexx
+and Windows cREXX, including its explicit filename-limit probe and installed
+consumer. Further boundary repairs from that run:
+
+- CSV-06: NetRexx's consumer launch used an absolute Unicode classpath and Java
+  failed to find Usage. Use `.` for the explicit subprocess working directory,
+  matching the documented installed command. Runtime-only JAR closure remains
+  unchanged; the positive Unicode file/path tests remain in place.
+- CSV-07: Windows ooRexx passes a raw command tail to Rexx, so Python's argv
+  escaping changes the example's literal double quotes into backslash quotes.
+  The harness now supplies the documented raw quoted tail for actual Windows
+  ooRexx. Regina keeps its ordinary argv convention, with runtime identity
+  determining the choice. The package's argument convention is unchanged.
+- CSV-05 refinement: Windows presents the same server path with both RUNNER~1
+  and runneradmin. Canonicalize both the CIM process path and disposable SDK
+  path before comparing; terminate only the matching PID. This repairs the
+  cleanup failure without broad process-name termination.

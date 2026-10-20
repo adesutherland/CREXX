@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check(runtime):
     runtime = runtime.expanduser().resolve(strict=True)
+    # ooRexx on Windows passes the raw command tail to Rexx. Python's normal
+    # argv quoting would insert backslashes before the example's literal quotes.
+    raw_tail = (os.name == 'nt' and b'Open Object Rexx' in subprocess.check_output(
+        [str(runtime), '-v'], stderr=subprocess.STDOUT))
     build = runpy.run_path(str(ROOT / 'packaging/build_classic.py'))['build']
     with tempfile.TemporaryDirectory(prefix='rexx csv installed ') as temp:
         temp = Path(temp)
@@ -32,7 +36,10 @@ def check(runtime):
         def run(command_string=None, success=True, script='classic_demo.rexx', marker='PASS: CSV example;'):
             args = [str(runtime), script]
             if command_string is not None:
-                args.append(command_string)
+                if raw_tail:
+                    args = subprocess.list2cmdline(args) + ' ' + command_string
+                else:
+                    args.append(command_string)
             log = temp / 'command.log'
             with log.open('wb') as out:
                 result = subprocess.run(args, cwd=installed, stdout=out,

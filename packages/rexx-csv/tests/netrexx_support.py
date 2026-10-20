@@ -23,7 +23,7 @@ class Toolchain:
                                        stderr=subprocess.STDOUT, timeout=timeout)
         text = log.read_text(encoding='utf-8', errors='replace')
         if completed.returncode or 'Warning' in text or 'FAIL' in text:
-            raise RuntimeError(f'Command failed ({completed.returncode}): {args[0]}\n' + text[:6500])
+            raise RuntimeError(f'Command failed ({completed.returncode}) in {directory}: {list(map(str, args))}\n' + text[:6500])
         return text
 
     def compile(self, directory, sources):
@@ -32,7 +32,7 @@ class Toolchain:
 
     def run(self, directory, main, *arguments):
         # Never put the compiler JAR or checkout on the consumer's classpath.
-        return self.command([self.java, '-cp', str(directory) + os.pathsep + str(self.runtime),
+        return self.command([self.java, '-cp', '.' + os.pathsep + str(self.runtime),
                              main, *arguments], directory)
 
     def copy_library(self, directory):

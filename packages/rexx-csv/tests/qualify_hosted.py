@@ -137,19 +137,20 @@ if __name__ == '__main__':
             if os.name == 'nt' and args.runtime == 'oorexx':
                 # ooRexx starts a persistent API server. Stop only this downloaded
                 # copy before removing its executable; never kill by name alone.
-                env = os.environ.copy()
                 exe = Path(temp) / 'sdk' / LOCK['oorexx-windows']['executable']
-                env['CSV_OOREXX_RXAPI'] = str(exe.with_name('rxapi.exe'))
-                cleanup = '''
-                $ErrorActionPreference = 'Stop'
+                server = exe.with_name('rxapi.exe').resolve()
+                inventory = '''
+                [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
                 Get-CimInstance Win32_Process -Filter "Name = 'rxapi.exe'" |
-                  Where-Object { $_.ExecutablePath -ieq $env:CSV_OOREXX_RXAPI } |
-                  ForEach-Object {
-                    $p = Get-Process -Id $_.ProcessId
-                    Stop-Process -InputObject $p -Force
-                    if (-not $p.WaitForExit(10000)) { throw 'ooRexx API server did not exit' }
-                    Write-Output 'Stopped the disposable ooRexx API server'
-                  }
+                  Select-Object ProcessId, ExecutablePath | ConvertTo-Json -Compress
                 '''
-                subprocess.run(['powershell', '-NoProfile', '-Command', cleanup],
-                               env=env, check=True, timeout=30)
+                data = subprocess.check_output(['powershell', '-NoProfile', '-Command', inventory],
+                                               timeout=30).decode('utf-8-sig').strip()
+                processes = json.loads(data) if data else []
+                if isinstance(processes, dict):
+                    processes = [processes]
+                for process in processes:
+                    path = process['ExecutablePath']
+                    # resolve() normalizes the runner's RUNNER~1 versus runneradmin paths.
+                    if path and Path(path).resolve() == server:
+                        run('taskkill', '/PID', str(process['ProcessId']), '/F')
