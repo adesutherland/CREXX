@@ -10,7 +10,7 @@ on:
       qualification:
         description: Qualification scope (default retains both full platform jobs)
         type: choice
-        options: [full, daily, candidate, normalization-linux, services-linux]
+        options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux]
         default: full
       source_ref:
         description: Optional source commit for focused or candidate qualification
@@ -20,6 +20,30 @@ on:
         description: Optional ordinary continuation regex (manual candidate only; empty retains full)
         type: string
         default: ''
+      runtime_regex:
+        description: Exact runtime selector (continuation-linux only; focused receipt)
+        type: string
+        default: ''
+      expected_native_key:
+        description: Required prior platform/toolchain/dependency key for continuation
+        type: string
+        default: ''
+      expected_tests:
+        description: Required selected CTest count including fixtures for continuation
+        type: number
+        default: 0
+      expected_universe:
+        description: Required complete non-measurement CTest count for continuation
+        type: number
+        default: 0
+      expected_names_sha256:
+        description: Required SHA256 of sorted selected names with final newline
+        type: string
+        default: ''
+      expected_universe_sha256:
+        description: Required SHA256 of sorted complete non-measurement names
+        type: string
+        default: ''
 
 # Qualification does not activate the scheduled daily policy. Master rollout
 # requires Adrian's separate decision after the clean candidate measurements.
@@ -27,7 +51,7 @@ env:
   SANITIZER_DAILY_ACTIVATED: 'false'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux') && format('-{0}', inputs.qualification) || '' }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux' || inputs.qualification == 'continuation-linux') && format('-{0}', inputs.qualification) || '' }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:
@@ -99,10 +123,13 @@ jobs:
               rows=[{**rows[0],'name':'Linux original full qualification','profile':'full'},
                     {**rows[0],'name':'Linux separated daily qualification','profile':'daily'},
                     {**rows[1],'name':'Apple separated daily qualification','profile':'daily'}]
+          if os.environ.get('REQUESTED_SCOPE')=='continuation-linux':
+              rows=[{**rows[0],'name':'Linux bounded original-producer continuation','profile':'full'}]
           with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
               stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\nnative_configs='+json.dumps(previous.get('native_configs',{}))+'\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
-              stream.write('Profile: **'+decision['profile']+'**. '+decision['reason']+'\n')
+              label='bounded full-profile selection / focused proof' if os.environ.get('REQUESTED_SCOPE')=='continuation-linux' else decision['profile']
+              stream.write('Profile: **'+label+'**. '+decision['reason']+'\n')
           PYTHON
 
   sanitizer:
@@ -130,6 +157,13 @@ jobs:
           QA_PROFILE: ${{ matrix.profile }}
           QA_PLATFORM: ${{ matrix.platform }}
           QA_BASELINES: ${{ needs.assurance-gate.outputs.native_configs }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_CONTINUATION_REGEX: ${{ inputs.runtime_regex }}
+          QA_EXPECTED_NATIVE_KEY: ${{ inputs.expected_native_key }}
+          QA_EXPECTED_TESTS: ${{ inputs.expected_tests }}
+          QA_EXPECTED_UNIVERSE: ${{ inputs.expected_universe }}
+          QA_EXPECTED_NAMES_SHA256: ${{ inputs.expected_names_sha256 }}
+          QA_EXPECTED_UNIVERSE_SHA256: ${{ inputs.expected_universe_sha256 }}
         run: |
           set -euo pipefail
           common=(-DCMAKE_BUILD_TYPE=Debug -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
@@ -149,6 +183,23 @@ jobs:
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
           export QA_NATIVE_KEY
           QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
+          if [ "$QA_QUALIFICATION" = continuation-linux ]; then
+            python3 - <<'PYTHON'
+          import hashlib, json, os, pathlib, subprocess
+          assert os.environ['QA_EXPECTED_NATIVE_KEY'] and os.environ['QA_NATIVE_KEY']==os.environ['QA_EXPECTED_NATIVE_KEY'], 'Prior platform/toolchain/dependency configuration differs; reused cells are not qualified'
+          pattern=os.environ['QA_CONTINUATION_REGEX']
+          assert pattern, 'Continuation requires an explicit selector'
+          expected=int(os.environ['QA_EXPECTED_TESTS']); universe=int(os.environ['QA_EXPECTED_UNIVERSE'])
+          assert 0 < expected < universe, 'Continuation must remain a bounded focused selection'
+          command=['ctest','--test-dir',str(pathlib.Path(os.environ['RUNNER_TEMP'])/'debugasan'),'--show-only=json-v1','-LE','^performance-measurement$']
+          all_names={value['name'] for value in json.loads(subprocess.check_output(command,text=True))['tests']}
+          selected={value['name'] for value in json.loads(subprocess.check_output(command+['-R',pattern],text=True))['tests']}
+          assert len(all_names)==universe and len(selected)==expected and selected < all_names, 'Continuation inventory differs from the reviewed scope'
+          digest=lambda names: hashlib.sha256(('\n'.join(sorted(names))+'\n').encode()).hexdigest()
+          assert digest(selected)==os.environ['QA_EXPECTED_NAMES_SHA256'] and digest(all_names)==os.environ['QA_EXPECTED_UNIVERSE_SHA256'], 'Continuation names differ from the reviewed exact inventory'
+          print('Matched prior native configuration; bounded selection:',len(selected),'of',len(all_names))
+          PYTHON
+          fi
           effective=$(python3 - <<'PYTHON'
           import importlib.util,json,os
           spec=importlib.util.spec_from_file_location('p','tools/sanitizer-policy.py'); p=importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
@@ -216,12 +267,16 @@ jobs:
         env:
           QA_PROFILE: ${{ steps.configure.outputs.profile }}
           QA_PLATFORM: ${{ matrix.platform }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_CONTINUATION_REGEX: ${{ inputs.runtime_regex }}
         run: |
           set -euo pipefail
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          selection=()
+          if [ "$QA_QUALIFICATION" = continuation-linux ]; then selection+=(--regex "$QA_CONTINUATION_REGEX"); fi
           tools/asan-run.sh --build-dir "$RUNNER_TEMP/debugasan" --phase full \
             --profile "$QA_PROFILE" --build-jobs 4 --test-jobs 8 \
-            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail
+            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail "${selection[@]}"
 
       - name: Verify complete assurance or exact qualified reuse
         id: proof
@@ -232,10 +287,16 @@ jobs:
           QA_INPUT_KEY: ${{ steps.identity.outputs.key }}
           QA_TARGET: ${{ needs.assurance-gate.outputs.target_sha }}
           QA_REUSED: ${{ steps.qualified.outputs.cache-hit }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_EXPECTED_NATIVE_KEY: ${{ inputs.expected_native_key }}
+          QA_EXPECTED_TESTS: ${{ inputs.expected_tests }}
+          QA_EXPECTED_UNIVERSE: ${{ inputs.expected_universe }}
+          QA_EXPECTED_NAMES_SHA256: ${{ inputs.expected_names_sha256 }}
+          QA_EXPECTED_UNIVERSE_SHA256: ${{ inputs.expected_universe_sha256 }}
         run: |
           set -euo pipefail
           python3 - <<'PYTHON'
-          import json, os, pathlib
+          import hashlib, json, os, pathlib
           profile=os.environ['QA_PROFILE']; platform=os.environ['QA_PLATFORM']
           scope='daily' if profile=='daily' else 'broad'
           path=pathlib.Path('.ci-assurance')/(platform+'-'+scope+'.json')
@@ -243,6 +304,15 @@ jobs:
               result=json.loads(path.read_text())
           else:
               result=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'debugasan/asan-logs/latest/result.json').read_text())
+          if os.environ['QA_QUALIFICATION']=='continuation-linux':
+              assert result['complete'] and result['scope']=='focused' and result['identity']['preparation']=='original-producers', 'Continuation cannot certify complete broad assurance'
+              assert result['native_configuration_key']==os.environ['QA_EXPECTED_NATIVE_KEY'], 'Prior native configuration changed'
+              assert result['executed']==int(os.environ['QA_EXPECTED_TESTS']) and len(result['universe'])==int(os.environ['QA_EXPECTED_UNIVERSE']), 'Continuation scope changed'
+              digest=lambda names: hashlib.sha256(('\n'.join(sorted(names))+'\n').encode()).hexdigest()
+              assert digest(result['selected'])==os.environ['QA_EXPECTED_NAMES_SHA256'] and digest(result['universe'])==os.environ['QA_EXPECTED_UNIVERSE_SHA256'], 'Continuation names changed'
+              with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+                  stream.write('Original-producer bounded continuation: '+str(result['executed'])+' tests; FOCUSED only. No single-run broad-pass marker or cache entry.\n')
+              raise SystemExit(0)
           assert result['complete'] and result['scope']==scope, 'Incomplete/focused result cannot certify selected scope'
           assert result['reusable_input_key']==os.environ['QA_INPUT_KEY'], 'Qualified input key changed'
           compact={key:result[key] for key in ('complete','scope','reusable_input_key','native_configuration_key','executed')}
@@ -253,13 +323,14 @@ jobs:
           PYTHON
 
       - name: Retain independently qualified platform scope
-        if: steps.execution.outcome == 'success'
+        if: steps.execution.outcome == 'success' && inputs.qualification != 'continuation-linux'
         uses: actions/cache/save@v5
         with:
           path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
           key: crexx-sanitizer-v2-${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}-${{ steps.identity.outputs.key }}
 
       - name: Publish compact scope result
+        if: inputs.qualification != 'continuation-linux'
         uses: actions/upload-artifact@v7
         with:
           name: sanitizer-proof-${{ matrix.platform }}-${{ steps.configure.outputs.profile }}

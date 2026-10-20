@@ -187,6 +187,15 @@ seconds, after timing out at 1200 seconds in the eight-slot pool. This is a
 scheduling repair, not a reduced normalization scope; SAN-QA-020 records the
 focused and outstanding broad qualification.
 
+The four `levell_services_*` cells use `RUN_SERIAL` and a 900-second functional
+hang guard. Their complete callable-generation/service/atomic-publication
+contract passes unchanged Linux isolation in 7 seconds ordinary Debug and
+118 seconds ASan/LSan, after one threaded cell exhausted the former pooled
+300-second limit. Keep all requests, independent expected results and the
+per-mode/VM output paths. SAN-QA-021 records the diagnosis and the explicitly
+approved bounded Linux qualification continuation; its focused receipt cannot
+publish a single-run broad-pass marker.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh

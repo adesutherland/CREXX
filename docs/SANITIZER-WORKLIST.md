@@ -129,8 +129,8 @@ Downloaded temporary logs were inspected and deleted after this summary.
 
 ### SAN-QA-021 — Level L callable-service aggregate exhausts pooled deadline
 
-Status: **unchanged isolated Linux replay pending; no product or scheduling
-change yet**. Owner: Codex under the approved qualification task. This is a QA
+Status: **unchanged isolated Linux replay verified; scheduling repair and
+bounded qualification in progress**. Owner: Codex under the approved qualification task. This is a QA
 finding; no new memory-safety diagnostic was observed.
 
 [Candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
@@ -143,8 +143,8 @@ selected cells: **3,035 pass**, `levell_services_opt_rxtvm` times out at
 Complete logs contain no sanitizer diagnostic, non-timeout failure or compiler
 warning. No completed broad assurance marker is written.
 
-The four `levell_services_{opt,noopt}_{rxtvm,rxbvm}` cells currently have
-TIMEOUT 300 without RUN_SERIAL. They overlap each other and the broad pool;
+The failed revision's four `levell_services_{opt,noopt}_{rxtvm,rxbvm}` cells had
+TIMEOUT 300 without RUN_SERIAL. They overlapped each other and the broad pool;
 switch cases pass in 238.31/235.40 seconds and threaded noopt in 293.20 seconds.
 The retained service contract exercises independent requests, exact CLI/service
 artifact parity, bounded/error outputs, metadata rejection, atomic publication
@@ -170,12 +170,63 @@ Isolated diagnostic choices have their own workflow concurrency suffix, so a
 failed platform's replay can run while healthy independent daily jobs finish;
 the default assurance concurrency group and cancellation policy are unchanged.
 
-Next action: inspect the isolated Linux result before deciding a scheduling or
-guard correction. Preserve any valid daily proof, retain the exact passed/unrun
-inventories, and complete the necessary clean daily and Linux broad gates.
-An explicit composite cannot manufacture a complete broad sanitizer marker.
-Record any actual first-party sanitizer diagnostic as its own SAN-nnn before
-unrelated work. Diagnostic copies are disposable after extracting this summary.
+[Isolated replay 39443810221](https://github.com/adesutherland/CREXX/actions/runs/39443810221)
+passes **2/2 including integrity** in both trees, with the result metadata
+confirming the exact failed `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8` source.
+The unchanged service takes **7.07 seconds** ordinary Debug and **118.24 seconds**
+Linux ASan/LSan; build and test leaks remain on. The ordinary target build takes
+282 seconds; instrumented target build 1,012 seconds. Complete logs have no
+compiler warning or sanitizer diagnostic. Its distinct per-mode/VM publication
+paths and read-only shared inputs exclude a shared output-name collision.
+This isolates the pooled scheduling defect. All four cells now use RUN_SERIAL
+and a **900-second** functional hang backstop, more than 7.6 times the measured
+isolated ASan duration. All requests, corpus/oracles and output paths remain.
+Generated normal and ASan inventories verify all four retain their oracle,
+RUN_SERIAL TRUE and TIMEOUT 900. Runner selection `^levell_services_` with eight
+test jobs passes **5/5 including integrity**, serially, in **23.02 seconds**
+normal Debug (service cells 5.55–5.90 seconds) and **96.62 seconds** maintained
+Apple ASan (23.06–24.82 seconds). Apple build/test leaks are off for its runtime
+capability limit. No compiler or runtime product code changes accompany this
+QA repair.
+
+**Explicit acceptance revision, 20 October:** Adrian approved “Approve bounded
+continuation (recommended)” after being shown the unchanged-product evidence,
+original interrupted scope and the missing single-run marker. Conditional on
+the now-passing isolated Linux replay, this replaces a fresh complete Linux
+CTest repetition for this QA-only interruption with the following exact proof:
+retain the original instrumented build/preparation and 3,035 passing names,
+retain the isolated failed service, then execute all 257 unfinished names plus
+`crexx_spaced_source_smoke` again in an original-producer instrumented tree.
+CTest adds the integrity setup: **258 owning names, 259 actual selected names**.
+The spaced-source replay recreates the one already-passed CTest-only native
+child producer for the final native audit. SDK/install/project/native-driver
+children are already in the unfinished set; full ALL/qa-prep recreates the
+native CMake targets and the manual decimal archive-link harness.
+
+Independent set checks and fresh CTest discovery prove the union is exactly
+**U=3,293**, with only spaced-source and integrity deliberately repeated and no
+omissions. No new native, producer, runtime or oracle source changes accompany
+the scheduling repair. Reuse additionally requires the same actual platform,
+compiler/toolchain, flags and dependency configuration. The manual
+`continuation-linux` route checks that prior native key and the exact selected
+and universe name hashes/counts before building and after execution. It runs
+the full original instrumented build and qa-prep with pre/post native audits,
+but its receipt must remain **FOCUSED** and publishes no broad cache/proof.
+Twelve disposable checks execute the actual workflow Python branches: positive
+scope plus mismatched native configuration, count and exact name/universe
+hashes, incomplete/false-broad and external-donor rejection. No focused cache or
+marker is created. Actionlint and `git diff --check` pass.
+The selector and per-run hashes remain disposable operational inputs, not
+tracked receipts. An independent concurrency suffix permits this bounded job
+beside healthy daily qualification without changing default assurance grouping.
+
+This explicit revision preserves AC IDs, both clean daily platform executions,
+the exact U−10 daily membership, all 20 previously unrun normalization/structured
+cells and native child closure. It does **not** assert a single-run Linux broad
+pass, relax future full/weekly/release/SAN scopes, or weaken any marker rule or
+first-party SAN finding's closure requirements. The bounded continuation and
+both clean daily outcomes remain pending. Any actual first-party sanitizer
+diagnostic retains its own SAN-nnn disposition before unrelated work.
 
 ### Where the time goes
 
@@ -941,9 +992,9 @@ explicit programme gap, owned by its research plan; this snapshot does not
 qualify the newer compiler or claim retirement/self-hosting. Independent
 Level L/new-C source/oracles and the default research option OFF are unchanged.
 
-**Remaining qualification before activation:** publish the timeout and compatible
-preparation/policy commits together; dispatch one exact-head candidate with
-three isolated fresh jobs: Linux original full U (including all four
+**Initial qualification plan, before the candidate findings:** the timeout and
+compatible preparation/policy commits were published together, then dispatched
+with three isolated fresh jobs: Linux original full U (including all four
 normalization and all 16 structured-flow cases), Linux separated daily and
 Apple separated daily. Linux's ordinary donor also runs full ordinary
 correctness. Measure ordinary preparation, native build and CTest separately
@@ -953,6 +1004,9 @@ daily pass nor this local qualification is a new broad/platform pass. Expected
 publication status is hotfix implementation with candidate qualification
 pending, scheduled activation disabled, and no master/develop promotion. Hosted
 run links own later observed outcomes; do not add a CI-status-only commit.
+The current remaining gate is the explicitly approved bounded Linux completion
+under SAN-QA-021 plus both clean daily platform executions; that later decision
+supersedes a new complete Linux CTest repetition for this QA-only interruption.
 
 ### Candidate correction: standalone bootstrap declaration fixture
 
@@ -1014,9 +1068,9 @@ Focused repair proof on Apple arm64, original producers and one test job:
   all ten behavioral contracts pass again in **3.02 seconds** after phase timing
   output is added.
 
-The repaired exact-head candidate retains **three fresh, complete sanitizer
-jobs**: Linux original full U, Linux separated daily U−10 and Apple separated
-daily U−10. This repeat is required by AC05's clean candidate execution, not
+The bootstrap-repaired exact-head candidate was dispatched with **three fresh,
+complete sanitizer jobs**: Linux original full U, Linux separated daily U−10 and
+Apple separated daily U−10. This repeat was required by AC05's clean candidate execution, not
 additional unchanged assurance. Strict completion/profile markers are unchanged.
 The runner reports elapsed wall seconds for each logged phase, so native build,
 qa-preparation and CTest costs can be extracted from one diagnostic artifact copy.
@@ -1036,8 +1090,9 @@ all pass; integrity deliberately overlaps. This explicit ordinary union does
 not manufacture a single-run broad sanitizer marker. Product/producer/library
 and all remaining ordinary test inputs are identical to `2d167496c`; only the
 bootstrap helper inclusion/snapshots, this unrun worker helper and manual
-continuation wiring change. Clean candidate outcomes and Linux broad closure
-remain pending; scheduled activation stays disabled.
+continuation wiring change. The subsequent services timeout and approved Linux
+bounded completion are owned by SAN-QA-021 above; both clean daily outcomes
+remain pending and scheduled activation stays disabled.
 
 ### Numbered acceptance criteria
 
@@ -1064,9 +1119,10 @@ remain pending; scheduled activation stays disabled.
 5. **SCOPE-AC05 — open:** after profile approval, measure one clean execution
    on Linux and Apple, separating ordinary preparation, sanitizer build and
    runtime/native-tool scope, against the provisional two-hour target. Reuse
-   unchanged valid full Apple evidence; finish outstanding Linux broad proof
-   after its timeout repair. The approved qualification includes these clean candidate executions and the
-   missing Linux broad proof; it does not authorize another coverage or benchmark campaign.
+   unchanged valid full Apple evidence; finish outstanding Linux coverage by
+   the explicitly approved SAN-QA-021 bounded original-producer union after its
+   timeout repair, with no single-run broad marker. The approved qualification includes these clean candidate executions and the
+   approved Linux original-producer coverage; it does not authorize another coverage or benchmark campaign.
 6. **SCOPE-AC06 — current implementation docs reconciled; final qualification report pending:** update `AGENTS.md`, the sanitizer guide, this worklist
    (including its stale CI-enforcement footer) and affected owning test docs
    coherently. Record exact qualified inputs, commands, results and limitations;
@@ -1111,7 +1167,8 @@ remain pending; scheduled activation stays disabled.
    proposals, not an automatic expansion of this delivery.
 5. **SCOPE-STEP05 — normal focused proof verified; hosted candidate pending (AC01/05/08/09):** qualify affected
    normal Debug tests and independent oracles, focused maintained sanitizers,
-   one measured candidate profile per platform and necessary Linux broad proof.
+   one measured clean daily profile per platform and the explicitly approved
+   bounded Linux original-producer completion under SAN-QA-021.
    Compare coverage/scenario obligations with the baseline and report gaps;
    reuse valid unchanged results.
 6. **SCOPE-STEP06 — depends on STEP05 and approval (AC06/07):** reconcile
