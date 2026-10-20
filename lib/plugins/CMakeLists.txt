@@ -201,4 +201,14 @@ if(TARGET _odbc_mock)
             LABELS "interpreter;plugins;rxpa;odbc;compatibility")
 endif()
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(
+    TESTS rxpa_bundled_cipher_concurrency rxpa_bundled_hash_concurrency rxpa_bundled_stack_concurrency
+      rxpa_bundled_strings_concurrency rxpa_bundled_getpi_concurrency rxpa_bundled_id_concurrency
+      rxpa_bundled_float_concurrency rxpa_bundled_stats_concurrency rxpa_bundled_vector_concurrency
+      rxpa_bundled_fs_concurrency rxpa_bundled_platform_concurrency rxpa_dynamic_session_factory_failure_rollback
+    TARGETS test_rxpa_concurrency)
+crexx_register_test_prep_targets(TESTS rxpa_odbc_mock_prepared_sessions TARGETS test_rxpa_odbc _odbc_mock)
+crexx_register_test_prep_targets(TESTS rxpa_odbc_old_host_default_session TARGETS test_rxpa_odbc_old_host _odbc_mock)
+
 crexx_finalize_directory_qa_tiers()

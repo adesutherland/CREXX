@@ -277,14 +277,11 @@ def preparation_plan(build, profile):
     definitions, _ = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
     selected = profile_names(build, profile, definitions)
     targets = {}
-    paths = {}
     for line in (build / 'qa-build-targets.tsv').read_text().splitlines():
         name, kind, path = line.split('\t')
         if name in targets:
             raise ValueError('duplicate configured build target: ' + name)
         targets[name] = kind
-        if path:
-            paths[os.path.normpath(path)] = name
     required = set()
     missing = []
     for test in definitions['tests']:
@@ -295,13 +292,11 @@ def preparation_plan(build, profile):
         declared = properties.get('CREXX_DAILY_PREP_TARGETS', properties.get('CREXX_PREP_TARGETS', []))
         if isinstance(declared, str):
             declared = declared.split(';') if declared else []
-        command = test.get('command', [])
-        direct = paths.get(os.path.normpath(command[0])) if command else None
-        if not declared and not direct and properties.get('CREXX_PREP_NONE') not in (True, 1, 'TRUE', 'ON', '1'):
+        # CTest can omit command[] until an executable exists. Ownership must
+        # be declarative in both cold and warm trees; paths are not a fallback.
+        if not declared and properties.get('CREXX_PREP_NONE') not in (True, 1, 'TRUE', 'ON', '1'):
             missing.append(name)
         required.update(declared)
-        if direct:
-            required.add(direct)
     if missing:
         raise ValueError('selected tests have no declared prerequisite owner: ' + ', '.join(sorted(missing)))
     # All runtime autoload/native provider packages remain daily. Their native

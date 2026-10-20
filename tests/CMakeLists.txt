@@ -403,6 +403,9 @@ endforeach()
 
 set_tests_properties(crexx_expected_failure_contract PROPERTIES CREXX_PREP_NONE TRUE)
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS rxinteger_contract TARGETS test_rxinteger_contract)
+
 crexx_finalize_directory_qa_tiers()
 
 # Repository ownership and package composition: no compiler or nested build in

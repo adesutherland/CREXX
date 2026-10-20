@@ -242,6 +242,34 @@ crexx_finalize_qa_fixtures()
             with self.assertRaisesRegex(ValueError,'outside its instrumented tree'):
                 F.runtime_paths(native,Path(sys.executable),[native/'image.rxbin'])
 
+    @unittest.skipUnless(shutil.which('ninja') and shutil.which('git'), 'Cold native planning fixture requires Ninja and Git')
+    def test_cold_and_warm_native_preparation_match(self):
+        source=self.root/'cold-source'; source.mkdir(); command('git','init','-q',source)
+        build=self.root/'cold-build'
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(ColdNative C)
+enable_testing()
+include("@HELPER@")
+foreach(name rxc rxas rxlink rxvm rxbvm rxtvm crexx library classlib rxfnsc rxfnsg)
+ add_custom_target(${name})
+endforeach()
+file(WRITE "${CMAKE_BINARY_DIR}/host.c" "int main(void) { return 0; }\\n")
+add_executable(owned_host "${CMAKE_BINARY_DIR}/host.c")
+add_test(NAME future_native_contract COMMAND owned_host)
+set_tests_properties(future_native_contract PROPERTIES CREXX_PREP_TARGETS owned_host)
+crexx_finalize_qa_fixtures()
+'''.replace('@HELPER@',(ROOT/'cmake/CrexxQaFixtures.cmake').as_posix()))
+        command('cmake','-S',source,'-B',build,'-G','Ninja')
+        definitions,_=P.ctest_inventory(['--test-dir',str(build)])
+        cold_test=next(t for t in definitions['tests'] if t['name']=='future_native_contract')
+        self.assertFalse(cold_test.get('command'))
+        cold=P.preparation_plan(build,'daily')
+        command('cmake','--build',build,'--target','owned_host')
+        definitions,_=P.ctest_inventory(['--test-dir',str(build)])
+        warm_test=next(t for t in definitions['tests'] if t['name']=='future_native_contract')
+        self.assertTrue(warm_test.get('command'))
+        self.assertEqual(cold,P.preparation_plan(build,'daily'))
+
     def test_selected_preparation_fails_unknown_owner_and_retains_native_children(self):
         build=self.root/'prepared'; build.mkdir()
         baseline=('rxc','rxas','rxlink','rxvm','rxbvm','rxtvm','crexx','library','classlib','rxfnsc','rxfnsg')
@@ -250,7 +278,7 @@ crexx_finalize_qa_fixtures()
                          'ordinary_image\tUTILITY\t', 'unused_weekly_image\tUTILITY\t',
                          'implicit_provider\tMODULE_LIBRARY\t'+str(build/'provider.rxplugin')])
         (build/'qa-build-targets.tsv').write_text('\n'.join(registry)+'\n')
-        tests=[{'name':'host','command':[str(build/'host')], 'properties':[]},
+        tests=[{'name':'host','command':[str(build/'host')], 'properties':[{'name':'CREXX_PREP_TARGETS','value':'owned_host'}]},
                {'name':'wrapper','command':['cmake','-P','runtime.cmake'], 'properties':[
                    {'name':'CREXX_PREP_TARGETS','value':'unused_weekly_image'},
                    {'name':'CREXX_DAILY_PREP_TARGETS','value':'ordinary_image;rxvm'}]},
@@ -263,6 +291,12 @@ crexx_finalize_qa_fixtures()
             self.assertIn('implicit_provider',value['targets'])
             self.assertNotIn('unused_weekly_image',value['targets'])
             self.assertFalse(set(value['targets']) & {'all','ALL','qa-prep'})
+            tests[0].pop('command')
+            self.assertEqual(value,P.preparation_plan(build,'daily'))
+            tests[0]['command']=[str(build/'host')]
+            tests[0]['properties']=[]
+            with self.assertRaisesRegex(ValueError,'host'):P.preparation_plan(build,'daily')
+            tests[0]['properties']=[{'name':'CREXX_PREP_TARGETS','value':'owned_host'}]
             tests.append({'name':'future_wrapper','command':['cmake','-P','new.cmake'],'properties':[]})
             with self.assertRaisesRegex(ValueError,'future_wrapper'):P.preparation_plan(build,'daily')
             tests.pop()

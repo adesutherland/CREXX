@@ -338,8 +338,9 @@ sanitizer exit. A synthetic behavioral contract also proves that existing
 semantic PASS expressions cannot mask sanitizer headers: sanitizer-only FAIL
 expressions are appended without replacing owning oracles, and the final result
 validator rejects such JUnit output. No actual sanitizer finding is implied.
-Focused registered normal/ASan and clean revised platform qualification remain
-open; these ordinary measurements are not formal performance results.
+Focused registered normal/ASan qualification passes as recorded below; clean
+revised platform qualification remains open. These ordinary measurements are
+not formal performance results.
 
 At each comparable quiescent point compare live logical allocations (including
 class counts) and `live_capacity_bytes` against the warmed state, separately
@@ -443,8 +444,10 @@ complete:
 Current local implementation discovery, after six measured registrations, is
 **U=3,304 / daily=1,294**, excluding exactly the reviewed 2,010 names. Actual CTest
 parsing (including automatic fixtures), rather than set arithmetic alone,
-confirms this. Selected preparation resolves 1,075 explicit targets with no
-unknown owner and no ALL/qa-prep fallback. This is configuration/ownership
+confirms this. The repaired cold and warm configurations both resolve **1,078
+explicit preparation targets**, with no unknown owner and no ALL/qa-prep
+fallback. The original 1,075 targets remain, with three previously implicit
+fixture owners now explicit. This is configuration/ownership
 inspection; the clean selective platform builds remain required. The fifteen
 behavioral strategy contracts pass under a nonempty inherited affected policy
 (6.94 seconds), including exact membership, affected JSON canonicalization,
@@ -509,7 +512,8 @@ unchanged evidence; do not dispatch redundant full-suite campaigns.
 
 ### SAN-QA-020 — Linux Unicode normalization exhausts its CTest deadline
 
-Status: **isolated Linux diagnosis verified; scheduling repair and broad proof open**.
+Status: **closed as a QA scheduling finding, 20 October; all four repaired
+Linux cells pass in the approved original-producer continuation below**.
 Owner: Codex under Adrian's approved implementation/qualification task.
 This is a QA finding; no new memory-safety finding was observed.
 
@@ -580,9 +584,10 @@ Repaired normal Debug four-cell qualification passes locally on Apple arm64:
 **4/4**, serially, in **70.63 seconds** (16.16/18.66 seconds threaded,
 18.86/16.89 seconds switch). It reuses unchanged product/fixture inputs after
 CMake regenerates the declared scheduling; all four retain TIMEOUT 1200.
-Repaired Linux four-cell and broad assurance remain open, as does SAN-QA-019's
-Linux confirmation. The combined final Linux qualification owns these checks;
-no second unchanged hosted build is launched just to recheck this property. No memory-safety finding was observed.
+The approved Linux original-producer continuation below subsequently passes
+all four repaired cells (249.28–360.43 seconds), completing this QA finding and
+SAN-QA-019's Linux matrix confirmation without a single-run broad-pass claim.
+No memory-safety finding was observed.
 The replay's dependency configure reports fetching DSLSH develop; the current
 remote identity is `383e5daab0ffcf6ec83e02db7a01a27709dabb2c` (July 28), with no
 apparent recent drift. Its exact fetched commit is not printed by these logs;
@@ -591,8 +596,8 @@ Downloaded temporary logs were inspected and deleted after this summary.
 
 ### SAN-QA-021 — Level L callable-service aggregate exhausts pooled deadline
 
-Status: **unchanged isolated Linux replay verified; scheduling repair and
-bounded qualification in progress**. Owner: Codex under the approved qualification task. This is a QA
+Status: **closed as a QA scheduling finding, 20 October; isolated Linux replay
+and the explicitly approved bounded original-producer union pass**. Owner: Codex under the approved qualification task. This is a QA
 finding; no new memory-safety diagnostic was observed.
 
 [Candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
@@ -688,9 +693,26 @@ normalization/structured cells and native child closure. The later approved
 VM-priority revision above replaces daily membership while preserving the
 original-producer union and clean platform gates. It does **not** assert a single-run Linux broad
 pass, relax future full/weekly/release/SAN scopes, or weaken any marker rule or
-first-party SAN finding's closure requirements. The bounded continuation and
-both clean daily outcomes remain pending. Any actual first-party sanitizer
+first-party SAN finding's closure requirements. The bounded continuation passes as recorded below; both clean revised daily
+outcomes remain pending. Any actual first-party sanitizer
 diagnostic retains its own SAN-nnn disposition before unrelated work.
+
+**Verified bounded completion:** [Linux continuation 39449515918](https://github.com/adesutherland/CREXX/actions/runs/39449515918)
+checks out `c167a6f0ee2b926406b94b0d7566b39f9602e9a2` and passes **259/259**
+exact selected names, with no skips, warning or sanitizer diagnostic. Before and
+after execution its universe/name hashes and native configuration key match the
+approved guards; build/test leak detection stays on. Original instrumented build
+is 4,103 seconds, qa-prep 66, native pre-audit 13 (603 objects/308 products),
+CTest **8,918.88 seconds**, and post-audit 25 (611 objects/591 products).
+All four normalization cells pass at **249.28–360.43 seconds**, all sixteen
+structured-flow cells at **98.41–197.11 seconds**, and spaced-source replay at
+11.16 seconds. Neither source-lock owner nor services is in this continuation;
+the unchanged failed service is covered by the isolated Linux proof above.
+Together with the retained 3,035 passes, this completes Adrian's approved
+**U=3,293 original-producer union**. Its complete receipt remains **FOCUSED**;
+no single-run broad cache/marker is published. Clean revised daily Linux/Apple
+qualification and the separate activation gate remain open. The sole downloaded
+artifact is deleted after extracting this summary.
 
 ### SAN-QA-022 — completed daily runtime fails final donor identity validation
 
@@ -904,6 +926,28 @@ stays absent. Maintained Apple ASan then passes the same two owners (4.01 and
 2.42 seconds) within the nine-case focus below, including final identity and
 native post-audit. Revised clean platform execution remains open. The final
 identity guard stays fail-closed.
+
+**Cold preparation follow-up:** [Revised daily 39481125540](https://github.com/adesutherland/CREXX/actions/runs/39481125540)
+at `22665126453f012859d91b911809ac2945ac9a63` fails ordinary preparation before
+any product build or CTest: Linux after 11 seconds, Apple after 14 seconds.
+Both report the same **49 undeclared native owners**. Cold CTest JSON omits
+`command[]` for executables not yet built, while the prior populated local tree
+allowed executable-path inference to hide those missing declarations. This is
+our preparation-planner defect, not a product or sanitizer diagnostic.
+
+The repair declares native/fixture ownership at configure time and removes
+command-path inference entirely. Missing declarations fail in cold and warm
+trees alike. Fresh Apple discovery gives U=3,304, daily=1,294, **zero missing
+owners and 1,078 targets**, identical to the populated tree. All 1,075 prior
+targets remain; `address_llm_fixture_bin`, `odbc_mock_prepared_runtime` and
+`ts_linein_stdin_fixtures` explicitly restore their generated inputs. Direct
+harness executables remain declared alongside supplemental prerequisites.
+The same shared declarations cover the identical Linux 49-owner failure list;
+actual clean Linux construction remains the hosted gate. A miniature real
+CMake/CTest cold-to-warm executable fixture and strict missing-owner negative
+contract pass **2/2 in 0.57 seconds**. No product, runtime or oracle body changes;
+the focused native nine-case proof above remains valid. The next required run
+is revised daily on both platforms, with no repeated original-full campaign.
 
 Separate local runner limitation: an inventory configured through `/var` while
 the runner resolves its build root to `/private/var` is rejected before test
@@ -1784,10 +1828,10 @@ remain pending and scheduled activation stays disabled.
 
 ### Numbered acceptance criteria
 
-1. **SCOPE-AC01 — investigation verified, repair open:** account for the
-   latest run's tested SHA, failures, incomplete selection and phase costs as
-   above. Close SAN-QA-020 by isolated Linux evidence and a justified repair;
-   preserve SAN-QA-019's outstanding Linux verification.
+1. **SCOPE-AC01 — timeout repairs and Linux verification complete:** account for
+   tested inputs, failures, selection and phase costs above. SAN-QA-019/020/021
+   pass their focused checks and the approved Linux original-producer union;
+   SAN-QA-022 preparation integration still needs clean revised platform proof.
 2. **SCOPE-AC02 — VM-priority amendment approved; implementation/platform execution open:** map native modules,
    instruction families, value/lifetime/failure scenarios, providers and
    platforms to existing tests and explicit gaps. The approved VM-REV-AC01
@@ -1808,9 +1852,8 @@ remain pending and scheduled activation stays disabled.
 5. **SCOPE-AC05 — open:** after profile approval, measure one clean execution
    on Linux and Apple, separating ordinary preparation, sanitizer build and
    runtime/native-tool scope, against the provisional two-hour target. Reuse
-   unchanged valid full Apple evidence; finish outstanding Linux coverage by
-   the explicitly approved SAN-QA-021 bounded original-producer union after its
-   timeout repair, with no single-run broad marker. The approved qualification includes these clean candidate executions and the
+   unchanged valid full Apple evidence and the now-verified SAN-QA-021 bounded
+   Linux original-producer union, with no single-run broad marker. The approved qualification includes these clean candidate executions and the
    approved Linux original-producer coverage; it does not authorize another coverage or benchmark campaign.
 6. **SCOPE-AC06 — current implementation docs reconciled; final qualification report pending:** update `AGENTS.md`, the sanitizer guide, this worklist
    (including its stale CI-enforcement footer) and affected owning test docs
@@ -1837,7 +1880,7 @@ remain pending and scheduled activation stays disabled.
    temporary artifact copy, source fixture/registration, runner, existing
    policy and generated local CTest inventory. Record findings here. No
    qualification runs were launched for this review.
-2. **SCOPE-STEP02 — diagnosis verified; repair qualification in progress (AC01/07):** prepare and replay the
+2. **SCOPE-STEP02 — verified, including approved Linux continuation (AC01/07):** prepare and replay the
    unchanged Linux normalization failures in isolation; diagnose before
    editing scheduling or product code. Present a separate implementation plan
    and retain applicable decision gates if product changes prove necessary.
@@ -1975,8 +2018,8 @@ artifact.
 
 ### SAN-QA-019 — structured-flow matrix exceeds its shared-pool deadline
 
-Status: **repair locally qualified for hotfix/develop publication; overnight
-Linux confirmation pending**. Owner: Codex, under Adrian's request to diagnose,
+Status: **closed as a QA scheduling finding, 20 October; all sixteen Linux
+cells pass in the approved SAN-QA-021 original-producer continuation above**. Owner: Codex, under Adrian's request to diagnose,
 repair and publish from the existing hotfix checkout. Affected revision:
 `016e6a65466c65a5c722b96452d95025acb463b2`.
 

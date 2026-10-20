@@ -185,7 +185,7 @@ their 1200-second hang backstop and complete Unicode corpus. The unchanged Linux
 threaded cases pass isolated Debug in 24-25 seconds and ASan/LSan in 262-266
 seconds, after timing out at 1200 seconds in the eight-slot pool. This is a
 scheduling repair, not a reduced normalization scope; SAN-QA-020 records the
-focused and outstanding broad qualification.
+focused and approved Linux original-producer qualification.
 
 The four `levell_services_*` cells use `RUN_SERIAL` and a 900-second functional
 hang guard. Their complete callable-generation/service/atomic-publication
@@ -308,7 +308,10 @@ tools/asan-run.sh --build-dir <native-tree> --profile daily --phase full --build
 Use both leak options off only on Apple. Daily preparation freshly configures and
 discovers the actual fixture-closed selection, derives explicit per-owner/native
 child targets, and builds that union before sealing; it never falls back to ALL
-or `qa-prep`. Missing wrapper ownership fails closed. Other profiles retain ALL
+or `qa-prep`. Every selected owner must declare its prerequisites at configure
+time: cold CTest may omit an executable command until it exists, so executable
+paths are never an ownership fallback. Missing ownership fails in cold and warm
+trees alike. Other profiles retain ALL
 plus `qa-prep`. A mandatory validation target binds source/configuration,
 actual fetched dependency contents/commits and producer binaries once per build;
 each audited command copies/checks its whole output/byproduct owner set. Missing,

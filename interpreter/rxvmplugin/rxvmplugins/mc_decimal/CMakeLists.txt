@@ -134,6 +134,13 @@ set_tests_properties(mc_decimal_manual_test1 PROPERTIES PASS_REGULAR_EXPRESSION
 add_test(NAME mc_decimal_full_tests COMMAND mc_decimal_full_tests)
 set_tests_properties(mc_decimal_full_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS decnumber_test TARGETS decnumber_test)
+crexx_register_test_prep_targets(TESTS mc_decimal_test1 mc_decimal_test2 mc_decimal_test3 TARGETS mc_decimal_test_harness)
+crexx_register_test_prep_targets(TESTS mc_decimal_dyn_test1 TARGETS mc_decimal_dyn_test_harness mc_decimal_dynamic)
+crexx_register_test_prep_targets(TESTS mc_decimal_manual_test1 TARGETS mc_decimal_manual_test_harness)
+crexx_register_test_prep_targets(TESTS mc_decimal_full_tests TARGETS mc_decimal_full_tests mc_decimal_dynamic)
+
 crexx_finalize_directory_qa_tiers()
 
 # Published products owned by this component.

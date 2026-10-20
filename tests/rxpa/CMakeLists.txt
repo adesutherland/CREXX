@@ -744,4 +744,18 @@ crexx_register_test_prep_targets(
     TESTS rxpa_external_sdk_consumer
     TARGETS stage-product)
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS cri17_attached_provider_control-rxbvml TARGETS cri17_attached_provider_control-rxbvml)
+crexx_register_test_prep_targets(TESTS cri17_attached_provider_control-rxvml TARGETS cri17_attached_provider_control-rxvml)
+crexx_register_test_prep_targets(TESTS rxpa_process_reentrant_manifest rxpa_dynamic_context_ownership
+    TARGETS test_rxpa_concurrency _rxpa_dynlink)
+crexx_register_test_prep_targets(TESTS rxpa_invalid_manifest_is_legacy
+    TARGETS test_rxpa_concurrency _rxpa_invalid_manifest)
+foreach(_qa_mode noopt opt)
+    crexx_register_test_prep_targets(TESTS rxpa_dynlink_compile_${_qa_mode} TARGETS rxc _rxpa_dynlink library)
+    crexx_register_test_prep_targets(TESTS rxpa_classdecl_dynamic_compile_${_qa_mode} TARGETS rxc _rxpa_classdecl library)
+    crexx_register_test_prep_targets(TESTS rxpa_staticlink_compile_${_qa_mode} TARGETS rxc_staticlink library)
+    crexx_register_test_prep_targets(TESTS rxpa_classdecl_static_compile_${_qa_mode} TARGETS rxc_classdecl_static library)
+endforeach()
+
 crexx_finalize_directory_qa_tiers()
