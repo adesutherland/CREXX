@@ -365,7 +365,11 @@ foreach(_unicode_normalization_runner IN LISTS _math_numeric_runners)
   set_tests_properties(
     "ts_unicode_normalization_${_unicode_normalization_runner}_noopt"
     "ts_unicode_normalization_${_unicode_normalization_runner}_opt"
-    PROPERTIES TIMEOUT 1200)
+    # Each complete Unicode corpus is CPU intensive. The unchanged threaded
+    # cells pass isolated Linux ASan/LSan in 262-266 seconds but exhausted the
+    # 1200-second limit in the eight-slot pool. Keep every assertion and give
+    # each cell the runner; the existing limit retains over 4x measured margin.
+    PROPERTIES RUN_SERIAL TRUE TIMEOUT 1200)
 endforeach()
 
 foreach(_binfile IN LISTS REXXBINS)

@@ -47,8 +47,8 @@ by this review. Resolve the current failure rather than excluding it.
 
 ### SAN-QA-020 — Linux Unicode normalization exhausts its CTest deadline
 
-Status: **open; timeout observed, cause not yet established by an isolated
-Linux replay**. Owner: Codex/Adrian's next approved implementation task.
+Status: **isolated Linux diagnosis verified; scheduling repair and broad proof open**.
+Owner: Codex under Adrian's approved implementation/qualification task.
 This is a QA finding; no new memory-safety finding was observed.
 
 - Reviewed [Sanitizer QA 39366632770](https://github.com/adesutherland/CREXX/actions/runs/39366632770).
@@ -93,6 +93,39 @@ This is a QA finding; no new memory-safety finding was observed.
   If an actual sanitizer report appears, create its own SAN-nnn entry and
   follow all existing memory-finding closure rules. Moving the corpus to
   weekly execution alone cannot close SAN-QA-020.
+
+### SAN-QA-020 isolated Linux diagnosis and repair
+
+[Focused run 39407904028](https://github.com/adesutherland/CREXX/actions/runs/39407904028)
+passes on the original `e5c066b87945dc697df6c771fc5a56a20962c772`; checkout
+logs confirm the actual commit. The selected regex is exactly
+`^ts_unicode_normalization_rxtvm_(noopt|opt)$`, with `--test-jobs 1`,
+`--leaks on`, and build leaks on in both trees. Ordinary Debug passes **2/2**
+in **24.75/24.37 seconds**, **49.34 seconds** total. Maintained Linux x64
+ASan/LSan passes **2/2** in **265.42/261.81 seconds**, **527.34 seconds** total.
+Complete build and test logs contain no sanitizer diagnostic or compiler warning.
+The ordinary configure/build/test step takes 7m13s; the sanitizer step 30m21s
+(including approximately 21m25s target build and 8m47s tests). These are bounded
+hosted diagnostic observations, not product performance measurements.
+
+The unchanged complete corpus finishes with over 4.5x margin beneath its
+1200-second limit when isolated, establishing the shared-pool scheduling defect.
+All four normalization cells now declare `RUN_SERIAL TRUE`; retain TIMEOUT 1200,
+the full Unicode corpus and every transformation/predicate/identity oracle.
+Repaired normal Debug four-cell qualification passes locally on Apple arm64:
+`tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --regex
+'^ts_unicode_normalization_' --test-jobs 8 --leaks off --no-live-tail` passes
+**4/4**, serially, in **70.63 seconds** (16.16/18.66 seconds threaded,
+18.86/16.89 seconds switch). It reuses unchanged product/fixture inputs after
+CMake regenerates the declared scheduling; all four retain TIMEOUT 1200.
+Repaired Linux four-cell and broad assurance remain open, as does SAN-QA-019's
+Linux confirmation. The combined final Linux qualification owns these checks;
+no second unchanged hosted build is launched just to recheck this property. No memory-safety finding was observed.
+The replay's dependency configure reports fetching DSLSH develop; the current
+remote identity is `383e5daab0ffcf6ec83e02db7a01a27709dabb2c` (July 28), with no
+apparent recent drift. Its exact fetched commit is not printed by these logs;
+new donor seals must bind actual dependency contents instead of branch names.
+Downloaded temporary logs were inspected and deleted after this summary.
 
 ### Where the time goes
 
@@ -638,7 +671,7 @@ mappable coverage, not proof that every compiled function was covered. Raw
 profiles, exported data, scratch harnesses, logs and diagnostic build are
 discarded after this summary; permanent fixtures and original assertions remain.
 
-### Exact membership proposal for approval
+### Exact membership approved for implementation
 
 **Recommended first tranche: move ten existing cells from daily sanitizer
 execution to weekly broad/affected-family execution. Delete no test or oracle.**
@@ -673,7 +706,7 @@ matrices. Cost or a `compiler` label alone does not establish redundancy.
 Do not drop the second engine, static providers, noopt globally, live resource
 or error-path tests. Do not shorten the normalization corpus or its assertions.
 
-**Implementation order requested for approval:**
+**Approved implementation order:**
 
 1. Finish the unchanged isolated Linux timeout investigation, repair its
    scheduling/deadline cause if confirmed, and complete the outstanding
@@ -714,7 +747,9 @@ not zero risk. Coverage does not prove size/history/concurrency equivalence.
 The new research compiler still needs its bounded real workload and service
 lifecycle acceptance; the current overnight default does not include it.
 Scheduled deployment still requires the separate narrow master-workflow decision.
-No selection, workflow, runner, product source or permanent test has changed.
+At the end of bounded measurement no selection, workflow, runner, product
+source or permanent test had changed. The subsequent approved implementation
+and qualification status is recorded below.
 
 Review verification: all ten proposed names were checked against the generated
 U inventory (exactly one match each); no SAN/normalization name is moved; all
@@ -723,6 +758,66 @@ difference is empty for functions, regions and branch outcomes. `git diff
 --check` passes. Only this worklist is changed. Measurement builds, profiles,
 exports, logs, helper scripts and five expression scratch directories have
 been removed; the unrelated untracked cache remains untouched.
+
+### Approved implementation design and current qualification
+
+The dispatch-only replay route is published as `2fa4dad72a3b9db27251ddbcbcf94f4b51eaa029`.
+[Linux replay 39407904028](https://github.com/adesutherland/CREXX/actions/runs/39407904028)
+checks out the unchanged failing `e5c066b87945dc697df6c771fc5a56a20962c772`
+and runs the two threaded normalization cells in normal Debug, then maintained
+ASan/LSan, both with one CTest worker and Linux leaks enabled. This is diagnosis;
+it cannot record broad assurance. YAML parsing, actionlint and `git diff --check`
+pass. The unchanged replay has passed as recorded above; normalization scheduling is
+being repaired before profile/preparation implementation. No selection change
+has been activated.
+
+The preparation implementation will use the existing CMake custom-command
+owners. An explicit external ordinary fixture option will replace only audited
+bytecode-generation commands with checked copies of their output/byproduct sets;
+ordinary defaults and unknown generators retain their original commands. The
+ordinary donor is sealed after its build/preparation, binding maintained source
+contents, platform, relevant generator/configuration/tool identity and output
+hashes. Reject missing, partial or stale donors; validate all source artifacts
+before publishing output and remove stale destinations on failure. Retain native
+prerequisites and native output paths. Build every native executable, library,
+provider and harness in the sanitizer tree, including embedded generated-C
+compilation. The installed `crexx` driver already records effective native C and
+link flags for child builds; the first-party external SDK fixture needs explicit
+parent sanitizer-flag forwarding. This is a preparation gap, not a sanitizer
+finding.
+
+Full/weekly/native-tool profiles must use original instrumented generation and
+must reject trees used for external fixtures, including a tree subsequently
+reconfigured with the donor option cleared. Daily selection remains exactly
+U minus the ten approved names. Unknown tests stay; no command/label ownership
+classification removes further tests. Affected native/shared/unknown changes or
+missing comparison history select broad U. Manual/tag defaults stay full. A
+tested weekly/daily policy can be implemented with activation disabled until
+platform qualification and the separate master decision. Success identities
+include platform, effective configuration, profile, preparation mode and selected
+inputs; an empty selection fails and a daily/focused pass cannot write broad
+assurance.
+
+Shared Classic preparation is limited to the expression contract and BIF audit.
+Keep every runtime oracle, expected exit (including 28), diagnostic identity and
+CRLF normalization. Use CTest setup fixtures so isolated `-R` runs prepare their
+inputs and setup failures prevent consumers. Serialize/lock preparation, bind it
+to producer/source/library hashes, publish atomically and clean scratch output.
+The generic BIF linked helper's other consumers retain their current behavior.
+
+Further source-audit constraints: validate source/configuration/dependency identity
+once per mandatory build validation, not once per copied file, then check each
+owner's artifact hashes. Include actual configured external dependency contents
+and identities (DSLSH can be fetched from a moving branch), and reject changed
+inputs at final qualification. Local source mutation during a run invalidates
+proof. Keep mixed native-adapter generation original: its BYPRODUCTS include
+provider DSOs, which cannot be taken from an ordinary donor. The audited fixture
+helper accepts only explicit source/RXAS/RXBIN/generated-C outputs; native binaries
+remain owned by instrumented targets. Copy the full Stage G generated source,
+RXAS and RXBIN set; retain Level L's original L1/L2 compare-files verification.
+A disposable CMake argument-boundary experiment passed for literal and escaped
+semicolons; the permanent independent fixture must also cover spaces, generator
+expressions, multiple commands/byproducts, ordering and failure blocking consumers.
 
 ### Numbered acceptance criteria
 
@@ -750,8 +845,8 @@ been removed; the unrelated untracked cache remains untouched.
    on Linux and Apple, separating ordinary preparation, sanitizer build and
    runtime/native-tool scope, against the provisional two-hour target. Reuse
    unchanged valid full Apple evidence; finish outstanding Linux broad proof
-   after its timeout repair. No broad coverage or benchmark campaign is
-   authorised merely by this strategy review.
+   after its timeout repair. The approved qualification includes these clean candidate executions and the
+   missing Linux broad proof; it does not authorize another coverage or benchmark campaign.
 6. **SCOPE-AC06 — open:** update `AGENTS.md`, the sanitizer guide, this worklist
    (including its stale CI-enforcement footer) and affected owning test docs
    coherently. Record exact qualified inputs, commands, results and limitations;
@@ -777,7 +872,7 @@ been removed; the unrelated untracked cache remains untouched.
    temporary artifact copy, source fixture/registration, runner, existing
    policy and generated local CTest inventory. Record findings here. No
    qualification runs were launched for this review.
-2. **SCOPE-STEP02 — in progress, approved (AC01/07):** prepare and replay the
+2. **SCOPE-STEP02 — diagnosis verified; repair qualification in progress (AC01/07):** prepare and replay the
    unchanged Linux normalization failures in isolation; diagnose before
    editing scheduling or product code. Present a separate implementation plan
    and retain applicable decision gates if product changes prove necessary.
@@ -787,7 +882,7 @@ been removed; the unrelated untracked cache remains untouched.
    identify genuine gaps and propose exact profile membership and dependencies.
    The map, 87-cell results and exact ten-name proposal above are complete.
    Unmeasured families stay included; no full-profile or Linux qualification
-   is claimed. Approval of the result remains open before any selection change.
+   is claimed. Adrian approved the exact result on 20 October; qualification precedes activation.
 4. **SCOPE-STEP04 — depends on approved STEP03 result (AC02/03/04/08):**
    add justified focused boundary/state tests, implement separate fixture and
    native-instrumentation preparation, then explicit runner profiles and
@@ -2690,11 +2785,18 @@ repair commit or worktree identity, exact final commands, and broad result.
 
 ## CI enforcement
 
-`.github/workflows/sanitizers.yml` adds automatic fresh Linux x64 ASan/LSan and
-macOS arm64 ASan jobs for pushes and pull requests to `develop` or `master`.
-Both use `tools/asan-run.sh --phase full`, so sanitizer-instrumented build-time
-execution of `rxc`, `rxas`, and `rxlink` precedes complete CTest.  The workflow
-is present locally but cannot supply the required Linux closure result until it
-runs from a committed revision on an available runner.  Its stable job names
-must also be configured as required checks in GitHub branch protection or a
-repository ruleset before merge blocking is enforced.
+`.github/workflows/sanitizers.yml` currently runs full Linux x64 ASan/LSan
+and macOS arm64 ASan for version tags and default manual dispatch. Scheduled
+invocations resolve current `develop` and skip an exact SHA already qualified by
+both full platform jobs. Ordinary pushes and pull requests do not invoke this
+workflow; full sanitizer jobs are not universal develop publication gates.
+The explicit `normalization-linux` dispatch is an isolated diagnosis route and
+cannot write a broad-assurance marker. Linux build/test leaks stay enabled;
+Apple LeakSanitizer is unsupported.
+
+The effective scheduled definition is still on `master`, with its existing
+240-minute job guard. Hotfix has the 360-minute guard and focused dispatch route;
+this is not scheduled activation. The approved daily/preparation changes remain
+subject to clean platform qualification and the separate narrow master-workflow
+decision. Hosted run links establish observed results; local policy or a stable
+job name alone does not establish successful execution or branch protection.

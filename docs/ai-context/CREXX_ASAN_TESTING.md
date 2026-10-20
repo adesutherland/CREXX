@@ -180,6 +180,13 @@ isolated unchanged LL1 controls pass in Debug and Apple ASan. Keep all cells
 and their semantic/resource assertions enabled. Measurements and the repair
 disposition are recorded as SAN-QA-019 in the sanitizer worklist.
 
+The four `ts_unicode_normalization_*` cells likewise use `RUN_SERIAL`, retaining
+their 1200-second hang backstop and complete Unicode corpus. The unchanged Linux
+threaded cases pass isolated Debug in 24-25 seconds and ASan/LSan in 262-266
+seconds, after timing out at 1200 seconds in the eight-slot pool. This is a
+scheduling repair, not a reduced normalization scope; SAN-QA-020 records the
+focused and outstanding broad qualification.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh
