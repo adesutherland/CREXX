@@ -427,6 +427,15 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.qualification == 'identity-linux'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      QA_IDENTITY_TESTS: >-
+        sanitizer_strategy_contract import_discovery_snapshot project_dependencies
+        import_resolution_report levelc_implicit_source_tree levelc_address_source_tree
+        levelc_procedure_source_tree levelc_return_source_tree levelc_exit_source_tree
+        levelc_select_source_tree levelc_arg_template_source_tree levelc_pull_source_tree
+        levelc_parse_source_tree levelc_push_source_tree levelc_queue_source_tree
+        levelc_signal_source_tree levelc_call_expression_source_tree levelc_call_resolution_source_tree
+        levelc_strictc_transfer_source_tree classlib_rexxdoc_coverage
     steps:
       - uses: actions/checkout@v5
         with:
@@ -445,11 +454,32 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tools/asan-run.sh --build-dir "$RUNNER_TEMP/debug" --phase build \
-            --build-target rxc --build-target rxas --build-target rxvm --build-target library \
-            --build-target test_import_discovery_snapshot --build-target test_project_dependencies \
-            --build-target test_import_resolution_report --build-jobs 4 --build-leaks on --no-live-tail
+          python3 - <<'PYTHON'
+          import json, os, pathlib, re, subprocess
+          build=pathlib.Path(os.environ['RUNNER_TEMP'])/'debug'
+          names=os.environ['QA_IDENTITY_TESTS'].split()
+          pattern='^('+'|'.join(map(re.escape,names))+')$'
+          inventory=json.loads(subprocess.check_output(['ctest','--test-dir',str(build),'--show-only=json-v1','-R',pattern],text=True))
+          assert {test['name'] for test in inventory['tests']}==set(names)|{'sanitizer_fixture_integrity'}
+          declared=set()
+          for test in inventory['tests']:
+              for prop in test['properties']:
+                  if prop['name']=='CREXX_PREP_TARGETS':
+                      value=prop['value']; declared.update(value.split(';') if isinstance(value,str) else value)
+          # These older tests lack per-test declarations: the three native
+          # executables and RexxDoc's compiler/assembler/VM/library commands.
+          targets=declared|{'test_import_discovery_snapshot','test_import_resolution_report',
+                            'rxc','rxas','rxvm','library'}
+          expected={'classlib','library','rxc','rxfnsc','rxas','rxvm',
+                    'test_import_discovery_snapshot','test_project_dependencies','test_import_resolution_report'}
+          assert targets==expected, 'Review changed source-probe producer ownership before running'
+          print('Declared preparation targets:',sorted(declared),flush=True)
+          command=['tools/asan-run.sh','--build-dir',str(build),'--phase','build']
+          for target in sorted(targets): command+=['--build-target',target]
+          subprocess.run(command+['--build-jobs','4','--build-leaks','on','--no-live-tail'],check=True)
+          PYTHON
       - name: Stop at the first per-test input drift
+        id: probe
         shell: bash
         run: |
           set -euo pipefail
@@ -461,13 +491,7 @@ jobs:
           config=f.json_read(build/f.CONFIG)
           dependency=f.dependency_identity(config)
           assert dependency=={'DSLSH_SOURCE_DIR':{'commit':'383e5daab0ffcf6ec83e02db7a01a27709dabb2c','contents':'dfc44b44e4344b0c152fb8f278d694b96f2386ac1fe1f220af201cdbdab7d010'}}, 'External dependency differs from the failed candidate'
-          names=['sanitizer_strategy_contract','import_discovery_snapshot','project_dependencies','import_resolution_report',
-                 'levelc_implicit_source_tree','levelc_address_source_tree','levelc_procedure_source_tree',
-                 'levelc_return_source_tree','levelc_exit_source_tree','levelc_select_source_tree',
-                 'levelc_arg_template_source_tree','levelc_pull_source_tree','levelc_parse_source_tree',
-                 'levelc_push_source_tree','levelc_queue_source_tree','levelc_signal_source_tree',
-                 'levelc_call_expression_source_tree','levelc_call_resolution_source_tree',
-                 'levelc_strictc_transfer_source_tree','classlib_rexxdoc_coverage']
+          names=os.environ['QA_IDENTITY_TESTS'].split()
           pattern='^('+'|'.join(map(re.escape,names))+')$'
           discovered=json.loads(subprocess.check_output(['ctest','--test-dir',str(build),'--show-only=json-v1','-R',pattern],text=True))
           selected={test['name'] for test in discovered['tests']}
@@ -499,9 +523,21 @@ jobs:
               status=subprocess.run(command).returncode
               after=snapshot(); drift=changes(before,after)
               print('SOURCE_IDENTITY_PROBE '+json.dumps({'test':name,'status':status,'drift':drift}),flush=True)
-              assert status==0 and not drift, 'Owning test failed or changed inputs: '+name
+              if status or drift:
+                  with open(os.environ['GITHUB_OUTPUT'],'a') as output: output.write('failed_owner='+name+'\n')
+                  raise AssertionError('Owning test failed or changed inputs: '+name)
           print('All20 owning tests preserve exact source/configuration/dependency inputs; no daily/broad assurance published.')
           PYTHON
+      - name: Upload failing owning-test diagnostics
+        if: failure() && steps.probe.outputs.failed_owner != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-identity-linux-owner
+          path: |
+            ${{ runner.temp }}/debug/compiler/tests/*source_tree.log
+            ${{ runner.temp }}/debug/compiler/tests/levelc_strictc_transfer*.log
+          if-no-files-found: warn
+          retention-days: 14
       - name: Upload bounded probe diagnostics
         if: always()
         uses: actions/upload-artifact@v7

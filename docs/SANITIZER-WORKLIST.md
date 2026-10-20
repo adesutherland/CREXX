@@ -280,8 +280,9 @@ native child/donor routing. Do not repeat a complete daily run solely to obtain
 richer diagnostics; use the smallest justified reproduction once scoped.
 
 The authorized next probe is one ordinary Linux Debug job, `identity-linux`,
-with only `rxc`, `rxas`, `rxvm`, `library` and three native import/project test
-prerequisites. Twenty owning names cover the RexxDoc source working directory,
+with `rxc`, `rxas`, `rxvm`, `library`, `classlib`, `rxfnsc` and three native import/project test
+prerequisites, derived from all selected owners' declared preparation plus the
+audited commands of older tests without declarations. Twenty owning names cover the RexxDoc source working directory,
 15 absolute source-tree compiler diagnostic cases, the strategy/Git fixture,
 and three native import/project file-writer contracts. Fresh generated discovery
 selects exactly those 20 plus integrity. In-memory source/dependency per-file
@@ -296,6 +297,38 @@ If all 20 preserve their inputs, the next smallest candidate is the installed
 consumer/driver and private nested-build group, whose absolute paths and child
 builds could mutate a parent/source tree; that follow-up needs its own scoped
 inspection rather than an automatic daily repeat.
+
+The first full-SHA [ordinary probe 39455864152](https://github.com/adesutherland/CREXX/actions/runs/39455864152)
+builds the initially listed seven prerequisites in **299 seconds**. Strategy,
+import-discovery, project-dependency and import-report owners all preserve exact
+source/configuration/dependency inputs. The fifth owner,
+`levelc_implicit_source_tree`, fails compilation in 0.07 seconds with **no input
+drift**; the probe stops before the remaining 15 owners. Its compile log was
+outside the initial artifact upload. This is a diagnostic setup defect, not
+attribution of the daily failure. An earlier abbreviated-SHA dispatch stopped
+at checkout before any product work; further dispatches use verified full SHAs.
+
+The source test explicitly declares `rxc;library;classlib;rxfnsc`; the initial
+probe omitted the latter libraries and their certified exit dependency.
+An isolated copied ordinary tool directory reproduces `Failed to load certified
+exit module 'rxcexits'`; supplying the declared library closure makes the exact
+same source/oracle invocation pass. The corrected workflow derives preparation
+from **all 20** owners, adds audited undeclared native/RexxDoc commands and
+asserts the resulting **nine-target** union. Failed owning-test private logs
+are now uploaded alongside the runner diagnostic bundle. A fresh empty Ninja
+configuration proves that union contains all seven required library/exit/provider
+output producers. Staging only those tools, images/providers and three native
+test executables in that isolated tree passes **21/21 in 55 seconds**, through
+the runner with a focused-only result and unchanged input identities. This is
+an isolated prerequisite/runtime proof using existing ordinary binaries, not a
+new clean native compilation or sanitizer claim. Actionlint and diff checks pass.
+The focused corrected Linux probe remains necessary to finish cause attribution.
+
+Separate local runner limitation: an inventory configured through `/var` while
+the runner resolves its build root to `/private/var` is rejected before test
+selection. The isolated proof uses the same canonical root spelling throughout.
+That conservative path-alias rejection cannot explain the Linux post-test
+identity drift; its exact native-product path handling remains a local limitation.
 
 ### Where the time goes
 
