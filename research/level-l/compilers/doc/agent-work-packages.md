@@ -83,14 +83,17 @@ Standing user authority permits stepwise reviewed local commits before INTERPRET
   C/raw-IR/caller/helper RXAS. Coordinator validates scoped qualification and
   commit paths; continue the next named feature/instruction after each commit.
 
-### Queued RETURN assignment
+### RETURN local profile and next EXIT assignment
 
 The [RETURN contract](architecture.md#return-contract) owns RRET-AC01–05;
-RETURN1 is reviewed, RETURN2/3 start after CALL2 is locally committed. The serial
+RETURN1–3 are complete for the local source/completion profile. The serial
 C integrator owns `llcparse`, docs/CMake and builds. The independent fixture
 writer owns only new `tests/return/{source-c.crexx,source-c.expected,contracts.crexx,
 host.crexx,check-return.py}`; the reviewer remains read-only. Reuse current packets,
 cleanup/status and CALL2/PROCEDURE proof; no grammar/schema/B/L/VM API changes.
+The [EXIT contract](architecture.md#exit-contract) is the next serial increment;
+freeze its call guards, proved terminals and forced cleanup before production
+edits. Independent EXIT fixtures retain their separately assigned owners.
 
 The [queued PULL contract](architecture.md#pull-contract) assigns a later serial
 C source/lowering and independent fixture increment through the existing PARSE

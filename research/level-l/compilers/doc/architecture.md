@@ -2574,7 +2574,7 @@ all helper calls participate in ordinary frame/call-window sizing.
 
 ## RETURN source and completion contract
 
-This internally reviewed LC-I-14 increment follows CALL2. It completes bounded
+This locally delivered LC-I-14 profile completes bounded
 source continuation and contextual RETURN diagnostics while reusing the existing
 return.present/return.empty/return.absent packets, activation completion, private
 pool/DO cleanup and signed64 programReturnCode boundary. It adds no grammar,
@@ -2612,9 +2612,10 @@ RETURN names, assignments, function calls and labels retain contextual meaning.
    owner-release RXAS. Bare45.1 retains authored origin; caller44.1 additionally
    retains target text. LC-REF-072/STEP07–08/CFC-AC03 remain open.
 
-Implementation starts after the CALL2 local commit. Delayed-handler policy,
-external expressions, general host text-result exchange and EXIT program-root
-propagation retain their separate owners.
+The maintained `tests/return` source, AST, host and RXAS controls own this local
+profile. Delayed-handler policy, exact traceback, external expressions, general
+host text-result exchange and EXIT program-root propagation retain their
+separate owners.
 
 <a id="exit-contract"></a>
 

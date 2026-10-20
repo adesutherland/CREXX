@@ -68,6 +68,12 @@ routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain
 their separate source locations. Static signed providers and delayed handlers
 remain named CALL features; external function expressions remain deferred.
 
+RETURN preserves present empty text separately from an absent result and uses
+the existing full signed64 main-status boundary. Physical comma continuations
+retain original source spans; malformed RETURN expressions, including dead
+source, report contextual35.1. Exact traceback, conditions and broader host/
+platform completion remain open under the [RETURN contract](doc/architecture.md#return-contract).
+
 C compiler workers retain one private prepared language definition. Source
 parsing and name admission borrow its validated DFA/LR data and CFG metadata;
 comments, limits, tokens and diagnostics stay local to each request. See the

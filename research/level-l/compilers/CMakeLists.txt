@@ -258,6 +258,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/call-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_call_contracts_${_mode}
       DEPENDS "${_dir}/call-contracts-linked.rxbin")
+    ll_compile(return-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/return/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/return-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/return-contracts-linked"
+        "${_dir}/return-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/return-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_return_contracts_${_mode}
+      DEPENDS "${_dir}/return-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -572,6 +580,32 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_call_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_call_vm})
+  endforeach()
+  # RETURN shares one source compilation across source, cleanup and B-host
+  # controls in each complementary lane. Keep nested tools serialized.
+  foreach(_mode opt noopt)
+    set(_return_vm rxbvm)
+    set(_return_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_return_ir off)
+      if(TARGET rxtvm)
+        set(_return_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_return_${_mode}_${_return_ir}_${_return_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/return/check-return.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_return_vm} --ir ${_return_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "RETURN_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_return_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_return_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

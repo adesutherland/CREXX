@@ -12,7 +12,7 @@ import llsource
 import rexxclassicunicodeproperties
 
 /** One parse request owns source, diagnostics and projected AST. Token layout
- * inserts only zero-width concatenation/separation tokens; original spans are
+ * filters continuations and inserts zero-width separators; original spans are
  * never rewritten. The generated LR grammar owns syntactic decisions. */
 parsed: class
   _tree = .llast..tree
@@ -49,11 +49,42 @@ parsed: class
       end
       return
     end
-    layout = request.tokens()
+    rawlayout = request.tokens()
     id = language.tokenid('identifier'); sep = language.tokenid('separator')
     opening = language.tokenid('open'); closing = language.tokenid('close')
     colon = language.tokenid('colon'); equals = language.tokenid('assign'); comma = language.tokenid('comma')
     kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int; emptyrhs = .int
+    /* Successful lexing owns comment masking. Filter only a visible physical
+     * continuation, retaining original spans/gaps and any second separator.
+     * One suffix scan plus one advancing pass is bounded by the source budget;
+     * the output never has more tokens than the admitted lexer stream. */
+    if rawlayout.size() > limit then do
+      _status = 2; _offset = 0; _error = 'LL_COMPILER_LIMIT: token-layout budget exceeded'; return
+    end
+    significant = rawlayout.size() - 1
+    do while significant >= 0
+      if rawlayout.symbol(significant) <> sep then leave
+      significant = significant - 1
+    end
+    layout = .llcore..stream.tokens(source)
+    do i = 0 to rawlayout.size() - 1
+      kind = rawlayout.symbol(i); first = rawlayout.start(i); last = rawlayout.finish(i + 1)
+      if kind = comma & rawlayout.symbol(i + 1) = sep & significant > i + 1 then do
+        newlinefirst = rawlayout.start(i + 1); newlineend = rawlayout.finish(i + 2)
+        newline = binsubstr(source,newlinefirst + 1,newlineend - newlinefirst)
+        if newline = '0A'x as .binary | newline = '0D'x as .binary then do
+          i = i + 1
+          if newline = '0D'x as .binary & rawlayout.symbol(i + 1) = sep then do
+            if rawlayout.start(i + 1) = newlineend & rawlayout.finish(i + 2) = newlineend + 1 then do
+              if binsubstr(source,newlineend + 1,1) = '0A'x as .binary then i = i + 1
+            end
+          end
+          iterate
+        end
+      end
+      if first = last then ok = layout.synthetic(kind,first)
+      else ok = layout.append(kind,first,last)
+    end
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; after = ''
     arm = 0; operandmode = ''
@@ -318,7 +349,9 @@ parsed: class
     _status = request.parse_tokens(joined)
     if _status <> 0 then do
       _error = syntaxmessage(request.error()); _offset = request.offset()
-      _error = parsemessage(language_ref,joined,_offset,_error)
+      decorated = parsemessage(language_ref,joined,_offset,_error)
+      if decorated == _error then _error = returnmessage(language_ref,reference joined,reference _offset,_error)
+      else _error = decorated
       return
     end
     _tree = request.ast(); _status = _tree.status(); _error = _tree.error()
@@ -506,6 +539,37 @@ parsemessage: procedure = .string
     end
   end
   return fallback
+
+/** Only a classified RETURN owns 35.1. Variables, labels and quoted/function
+ * names cannot activate this decoration; lexical and PARSE failures win. */
+returnmessage: procedure = .string
+  arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
+  language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
+  i = .int
+  active = 0; previouskind = -1; previousstart = 0; failedkind = -1
+  separator = language.tokenid('separator'); returnword = language.tokenid('returnword')
+  do i = 0 to tokens.size() - 1
+    first = tokens.start(i)
+    if first > offset then leave
+    kind = tokens.symbol(i)
+    if first = offset then failedkind = kind
+    if kind = returnword then active = 1
+    else if kind = separator | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword') then do
+      if first < offset then active = 0
+    end
+    if first < offset & kind <> separator then do
+      previouskind = kind; previousstart = first
+    end
+  end
+  if active = 0 then return fallback
+  if failedkind = separator | offset >= tokens.bytes() then do
+    operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+    do i = 1 to words(operators)
+      if previouskind = language.tokenid(word(operators,i)) then do; offset = previousstart; leave; end
+    end
+  end
+  prefix = 'LL_COMPILER_SYNTAX: '
+  return prefix || 'RXC-LC-35.1: invalid RETURN expression; ' || substr(fallback,length(prefix) + 1)
 
 tokenname: procedure = .string
   arg name = .string
