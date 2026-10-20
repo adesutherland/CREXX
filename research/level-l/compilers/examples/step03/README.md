@@ -6,7 +6,7 @@ and `frontend-probe` Level B consumers, as described in the
 [frontend manual](../../doc/frontends.md). The [walkthrough](../../doc/pipeline-walkthrough.md)
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
-The Classic IR views use the current C v9 context/entry ABI: generated
+The Classic IR views use the current C v10 context/entry ABI: generated
 parameter setup and checked main/label dispatch lead into one source-unit body.
 The C source trees retain COptions and its header Name expression. DO uses
 normalized CDo/DoWhile and contextual while.truth. The pipeline calls

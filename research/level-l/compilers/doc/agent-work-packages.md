@@ -63,13 +63,49 @@ start; CLC stage closure also requires the complete plan criteria.
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
 
+<a id="call-assignment-packet"></a>
+
+## CALL assignment packet
+
+The [CALL contract](architecture.md#call-contract) and
+[CALL1–4 plan](../PLAN.md#current-action-call) own scope and CCALL-AC01–07.
+Standing user authority permits stepwise reviewed local commits before INTERPRET.
+
+- **CALL-WP01:** serial Sol 6.1 Extra High C integrator owns grammar/parser,
+  frontend/IR/admission/catalogue/selector/target, all docs/AGENTS/CMake and shared
+  build/test execution. CALL2 is locally qualified; continue RETURN/EXIT prerequisites;
+  CALL3 follows EXIT and provider review, CALL4 follows STEP07. Preserve
+  prepared-language reuse and existing B runtime algorithms.
+- **CALL-WP02:** independently assigned runtime worker owns only `tests/call/**`;
+  audit B signatures/condition/result ownership read-only, write focused source,
+  metadata/admission/error and shape oracles. No concurrent shared builds.
+- **CALL-WP03:** independent reviewer reads native sources/contracts and final
+  C/raw-IR/caller/helper RXAS. Coordinator validates scoped qualification and
+  commit paths; continue the next named feature/instruction after each commit.
+
+### Queued RETURN assignment
+
+The [RETURN contract](architecture.md#return-contract) owns RRET-AC01–05;
+RETURN1 is reviewed, RETURN2/3 start after CALL2 is locally committed. The serial
+C integrator owns `llcparse`, docs/CMake and builds. The independent fixture
+writer owns only new `tests/return/{source-c.crexx,source-c.expected,contracts.crexx,
+host.crexx,check-return.py}`; the reviewer remains read-only. Reuse current packets,
+cleanup/status and CALL2/PROCEDURE proof; no grammar/schema/B/L/VM API changes.
+
+The [queued PULL contract](architecture.md#pull-contract) assigns a later serial
+C source/lowering and independent fixture increment through the existing PARSE
+source/executor. Start after RETURN/EXIT and the CALL3 provider review; preserve
+bare acquisition and the named shared host/observation/platform owners.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet
 
 **Approved static/fatal profile locally qualified; CPROC-AC07 and whole LC-I-12 remain open.**
 The [approved contract](architecture.md#proposed-procedure-contract) owns the
-AST, v9/58-operation entry/IR ABI, existing B method use, cleanup and CPROC-AC01–07.
+AST, PROCEDURE entry/IR baseline, existing B method use, cleanup and CPROC-AC01–07.
+The [current CALL contract](architecture.md#call-contract) supersedes its family
+version/count with C10/61/36; old C schemas are not admitted.
 The [plan](../PLAN.md#current-action-procedure) owns PROCEDURE1–4; CALL follows.
 
 - **PROCEDURE-WP01 — design complete:** one documentation integrator owns this
@@ -137,7 +173,7 @@ plan, raw run bundle, duplicated matcher or ARG-specific runtime is commissioned
 **Implementation approved and delivered in the finite fatal-error profile.**
 The ARG increment introduced v8/53 operations and 33 target exports; the
 [approved PROCEDURE protocol](architecture.md#proposed-procedure-contract) advances
-the current C family to v9/58 and the two-argument source-unit ABI. ARG leaves PARSE's packet,
+the shared source-unit ABI; the CALL contract owns current C v10/61/36. ARG leaves PARSE's packet,
 executor and acquisition signatures unchanged.
 The [approved integration contract](architecture.md#proposed-c-parse-integration)
 owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,

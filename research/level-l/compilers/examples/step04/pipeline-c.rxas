@@ -605,7 +605,7 @@ null r81
 null r83
 ret r45
 llb7:
-.srcstep 41 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+.srcstep 41 52 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
 load r100,"pipeline-c.crexx:3:23"
 load r101,0
 call r46,llctarget.arguments(),r101
@@ -630,12 +630,8 @@ call r48,llctarget.poolread(),r101
 null r102
 null r103
 null r90
-.srcstep 41 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
-load r100,"pipeline-c.crexx:3:23"
 copy r49,r5
 load r50,1
-.srcstep 49 0 17 "pipeline-c.crexx" 3 29 34 "if total > 4 then say twice(total)"
-load r100,"pipeline-c.crexx:3:29"
 copy r102,r49
 copy r103,r48
 copy r104,r50
@@ -647,9 +643,9 @@ call r51,llctarget.append(),r101
 null r102
 null r103
 null r104
-.srcstep 41 0 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
-load r100,"pipeline-c.crexx:3:23"
 copy r5,r51
+.srcstep 41 52 17 "pipeline-c.crexx" 3 23 35 "if total > 4 then say twice(total)"
+load r100,"pipeline-c.crexx:3:23"
 copy r52,r5
 copy r53,r1
 copy r96,r52
@@ -694,6 +690,17 @@ call r91,rexxclassiccontext.rexxclassiccontext.config(),r101
 swap r88,r102
 null r102
 unlink r88
+linkref r89,r90
+load r103,3
+swap r89,r102
+load r101,2
+settp r102,256
+settp r103,768
+call r99,rexxpool.rexxvariablepool.setcalltrapsigl(),r101
+swap r89,r102
+null r102
+null r103
+unlink r89
 mkref r102,r96
 copy r103,r90
 copy r104,r91
@@ -719,10 +726,13 @@ null r90
 null r91
 null r96
 copy r102,r54
-load r101,1
+load r103,"TWICE"
+load r101,2
 settp r102,768
+settp r103,768
 call r55,llctarget.requirevalue(),r101
 null r102
+null r103
 .srcstep 33 0 65 "pipeline-c.crexx" 3 19 35 "if total > 4 then say twice(total)"
 load r100,"pipeline-c.crexx:3:19"
 copy r102,r55
@@ -1231,8 +1241,10 @@ rexxactivation.rexxactivationarguments.begininternalfunction() .expose=rexxactiv
   .meta "rexxactivation.rexxactivationarguments.begininternalfunction"="b" ".void" rexxactivation.rexxactivationarguments.begininternalfunction() ""
 rexxclassiccontext.rexxclassiccontext.config() .expose=rexxclassiccontext.rexxclassiccontext.config
   .meta "rexxclassiccontext.rexxclassiccontext.config"="b" "reference .rexxclassicconfig..rexxclassicconfig" rexxclassiccontext.rexxclassiccontext.config() ""
+rexxpool.rexxvariablepool.setcalltrapsigl() .expose=rexxpool.rexxvariablepool.setcalltrapsigl
+  .meta "rexxpool.rexxvariablepool.setcalltrapsigl"="b" ".void" rexxpool.rexxvariablepool.setcalltrapsigl() "line=.int"
 llctarget.requirevalue() .expose=llctarget.requirevalue
-  .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments"
+  .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments,name=.string"
 llctarget.sayvalue() .expose=llctarget.sayvalue
   .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
 llctarget.whiletruth() .expose=llctarget.whiletruth

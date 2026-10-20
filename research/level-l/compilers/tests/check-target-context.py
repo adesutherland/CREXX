@@ -219,11 +219,11 @@ def check_adapter(procedures):
     require({p.export for p in procedures.values() if p.export}
             == {'llctarget.' + name for name in signatures} | {
                 'llctarget.' + name for name in ('literal', 'poolnew', 'poolread', 'poolwrite',
-                    'sayvalue', 'arguments', 'mainargs', 'append', 'present', 'absent',
+                    'sayvalue', 'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing',
                     'requirevalue', 'setresult', 'status', 'failuremessage')},
             'adapter: expected exactly the clean context and packet/helper surface')
     helpers = {'literal', 'poolnew', 'poolread', 'poolwrite', 'sayvalue',
-               'arguments', 'mainargs', 'append', 'present', 'absent',
+               'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing',
                'requirevalue', 'setresult', 'status', 'failuremessage'}
     implementation = set(signatures) | helpers | {'bifcontext'}
     require(set(procedures) - implementation in (set(), {'bad'})

@@ -102,12 +102,18 @@ or ParseSource token. The [approved ARG contract](architecture.md#proposed-arg-c
 also retires the scalar read operation/export in C v8/53 operations and the
 33-export target. The plan tracks instruction status and remaining shared work.
 
-CLabel and CProcedure remain separate nodes. The routine table recognises an
-admitted label followed immediately by PROCEDURE and records the interval up
-to the next label. It rejects shared-pool labels and reachable fall-through into
-a label. Dynamic source names retain authored spelling for shared Classic pool
-resolution. They never become G
-local variables or acquire typed default semantics.
+CLabel and CProcedure remain separate nodes. One source-unit body has a checked
+entry0 for main and positive first-occurrence label entries; adjacent labels,
+fall-through and shared pools do not require PROCEDURE. Group labels are
+observation-only. An executed PROCEDURE privately binds that activation and
+applies ordered EXPOSE. See the [shared-entry contract](architecture.md#proposed-procedure-contract).
+
+Ordinary CALL retains `Invoke(name,arguments)` and `Call(name,arguments)`;
+`InvokeQuoted`/`CallQuoted` preserve raw literal spelling and distinguish local
+bypass. Constant-symbol expression nodes retain spelling and lower to shared
+whole-name-cased literal text. Names never become G locals or typed defaults.
+The [CALL contract](architecture.md#call-contract) owns C v10/61, required-result
+identity and the 36-export target; dynamic/provider/handler scope stays explicit.
 
 ### Where IF's fields come from
 

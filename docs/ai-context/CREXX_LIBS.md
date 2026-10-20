@@ -100,19 +100,17 @@ an unbound factory result or empty getter result and leaves a rejected rebind
 unchanged. Keep all owners initialized and in stable storage while borrowed.
 
 The research C target has one namespace, `llctarget`, in `llctarget.rxbin`.
-Ten adapters consume the borrowed bundle and reuse existing checked BIF and
-expression entries; fourteen helpers retain value/argument/result transport.
-The no-match bridge reuses the shared SELECT helper and forwards its ERROR
-event through CLASSIC_SYNTAX, completing the current 25-export surface.
-Compiler policy remains in `research/level-l/compilers`; the shared B class
-owns no compiler or VM policy. Generated C procedures take one required bundle
-reference, create child owners in the caller and share the root UTF8 config.
-Numeric adapters inherit VM settings. `setting` changes validated activation
-state; generated C installs those settings in its own executing frame. Earlier
-research C images and C-family v1/v2/v3 IR must be rebuilt through the current
-compiler; there is no compatibility bridge. Shared B/L consumer contracts
-remain unchanged. See the
-[borrowed-context contract](../../research/level-l/compilers/doc/architecture.md#borrowed-classic-context-contract).
+Its borrowed-context/result/loop/PARSE adapters call the existing shared B
+implementations. The current PROCEDURE baseline has 33 exports; the ordinary
+CALL contract adds three transport helpers for 36 exports. Compiler policy
+remains in `research/level-l/compilers`; shared B classes own no compiler or
+VM policy. Generated C source units take `(context, entry)` and share one body.
+Callers own fresh child activations and bundles, borrowing current pool/config;
+only an executed PROCEDURE creates a private pool. Numeric adapters inherit VM
+settings and generated C installs validated activation settings in its frame.
+Earlier research C images/IR must be rebuilt; there is no compatibility bridge.
+See the [current C contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
+and [CALL binding contract](../../research/level-l/compilers/doc/architecture.md#call-contract).
 
 The CMake build treats each `rxfnsc` member as an isolated source compilation.
 Its own source and only its declared transitive `rxfnsc` source dependencies

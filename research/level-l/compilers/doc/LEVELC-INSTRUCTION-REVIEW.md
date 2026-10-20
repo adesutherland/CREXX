@@ -270,7 +270,8 @@ transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
 C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
 [C family contract](architecture.md#current-c-family-contract) retains PARSE and the
-removal of the scalar ARG shortcut; the approved PROCEDURE increment advances it to v9/58/33.
+removal of the scalar ARG shortcut and PROCEDURE's shared entries. The
+[current CALL contract](architecture.md#call-contract) advances it to C v10/61/36.
 This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
 the separately qualified increment below. Dynamic loop invalidation,

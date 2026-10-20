@@ -185,6 +185,8 @@ def main():
                 execute(assembly, 'source', expected, assembler=assembler)
 
         if args.phase in ('all', 'refusals'):
+            # Group-only targets remain nonentries; tests/call owns their
+            # reached43.1 behavior now that unresolved ordinary calls compile.
             negatives = (
                 ('bare-main', 'procedure', b'17.1'),
                 ('after-nop', 'p: nop; procedure', b'17.1'),
@@ -197,7 +199,6 @@ def main():
                 ('indirect-expression', 'p: procedure expose (name + 1)', None),
                 ('unclosed-indirect', 'p: procedure expose (name', None),
                 ('unknown-tail', 'p: procedure strange', None),
-                ('group-target', 'call INNER; exit 0; do; INNER: nop; end', None),
             )
             for name, statement, code in negatives:
                 source = work / (name + '.crexx')

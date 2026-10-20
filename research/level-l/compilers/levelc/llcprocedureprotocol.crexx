@@ -182,6 +182,10 @@ checked: class
         if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
           ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
         end
+        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' then do
+          contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
+          ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+        end
         if name = 'crexx.c.procedure.enter' then group = opid
         else if name = 'crexx.c.procedure.expose' then do
           if group = 0 then do; call fail('LOWERING: EXPOSE requires its contiguous PROCEDURE group',opid); return; end
@@ -254,7 +258,7 @@ checked: class
         if id = 0 & entryname <> '' then do; call fail('LOWERING: entry zero requires its empty name sentinel',test); return; end
         if id > 0 then do
           if entryname = '' | entryname <> rexxclassic_unicode_upper(entryname) then do; call fail('LOWERING: entry name must be canonical and nonempty',test); return; end
-          call _symbols.symbol(entryname)
+          call _symbols.label(entryname)
           if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
           key = fn || ':' || entryname
           if charge(<blen>(key as .binary) + 1) = 0 | reserve(<blen>(key as .binary) + 64,1) = 0 then return

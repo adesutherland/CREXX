@@ -22,7 +22,7 @@ function $MAIN -> crexx.c.result
     %14 = core.load slot:$tmp.2 @origin:24
     %15 = core.load slot:$context @origin:24
     %16 = crexx.c.call %14 %15 target="$MAIN" entry="1" function="true" @origin:24
-    %17 = crexx.c.requirevalue %16 @origin:24
+    %17 = crexx.c.requirevalue %16 name="PROBE" @origin:24
     %18 = core.load slot:$tmp.1 @origin:13
     %19 = core.load slot:$context @origin:13
     %20 = crexx.c.and %18 %17 %19 @origin:13
@@ -34,7 +34,7 @@ function $MAIN -> crexx.c.result
     %23 = core.load slot:$tmp.4 @origin:39
     %24 = core.load slot:$context @origin:39
     %25 = crexx.c.call %23 %24 target="$MAIN" entry="1" function="true" @origin:39
-    %26 = crexx.c.requirevalue %25 @origin:39
+    %26 = crexx.c.requirevalue %25 name="PROBE" @origin:39
     %27 = core.load slot:$tmp.3 @origin:26
     %28 = core.load slot:$context @origin:26
     %29 = crexx.c.or %27 %26 %28 @origin:26

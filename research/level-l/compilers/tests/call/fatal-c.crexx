@@ -1,0 +1,37 @@
+/* One source compilation; independent reached failures selected by raw ARG. */
+options levelc
+parse arg MODE
+do
+INNER:
+nop
+end
+select
+  when MODE = 'missing' then call ABSENT MARK('M1'),,MARK('M2')
+  when MODE = 'quoted-lower' then call 'length' MARK('Q')
+  when MODE = 'quoted-constant' then call '7' MARK('N')
+  when MODE = 'quoted-policy' then call 'ON' MARK('O')
+  when MODE = 'quoted-empty' then call '' MARK('E')
+  when MODE = 'quoted-nul' then call '410042'x MARK('Z')
+  when MODE = 'group' then call INNER MARK('G')
+  when MODE = 'unicode-missing' then say μ(MARK('U'))
+  when MODE = 'dotted-missing' then say p.q(MARK('D'))
+  when MODE = 'too-few' then call SUBSTR
+  when MODE = 'omitted' then call SUBSTR , 2
+  when MODE = 'raw-slots' then call QUEUED ,;
+  when MODE = 'value-invalid-name' then call 'VALUE' 'has blank'
+  when MODE = 'bare-function' then say EMPTY()
+  when MODE = 'eof-function' then say TRAILING()
+  otherwise say 'UNEXPECTED MODE'
+end
+say 'UNREACHED'
+exit 0
+MARK:
+parse arg TOKEN
+say 'mark ' || TOKEN
+return TOKEN
+7:
+return
+EMPTY:
+procedure
+return
+TRAILING:

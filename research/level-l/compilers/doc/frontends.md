@@ -168,8 +168,9 @@ installs its validated settings; child return restores the parent frame.
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
 | `parse.source/execute` | PARSE and standalone ARG share raw source acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty comma templates skip acquisition/execution and preserve ordinal gaps. Live names/presence/original arguments retain the shared runtime contract. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
-| `call` | Resolved local target, argument packet, borrowed context and function/subroutine attribute; fresh private child owners and explicit returned-value presence. |
-| `return.present/absent`, `requirevalue`, `setresult` | Distinguish RETURN with/without value; expression calls require a value; CALL sets or drops RESULT. |
+| `call` | Resolved local entry, argument packet, borrowed context and function/subroutine attribute; fresh child activation/bundle initially share the current pool. |
+| `bif`, `call.missing` | Exact named shared BIF binding or reached missing43.1 after actual evaluation; preserve raw presence. |
+| `return.present/empty/absent`, `requirevalue`, `setresult` | Present value, authored bare RETURN45.1 in a function, or generated EOF absence; expression EOF fails44.1 with target identity, and CALL sets or drops RESULT/.RESULT. |
 | `length`, `say`, `exit` | Actual Classic BIF contract, observable output and process exit. |
 
 These names carry the `crexx.c.` prefix in IR. No contextual Classic constant

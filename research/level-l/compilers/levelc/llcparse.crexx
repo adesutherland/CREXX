@@ -96,6 +96,14 @@ parsed: class
           end
         end
       end
+      labeltoken = kind = id | kind = language.tokenid('number') | kind = language.tokenid('typename') | kind = language.tokenid('constantname') | kind = language.tokenid('parsedot')
+      if labeltoken & next = colon & parsemode = '' then do
+        rawlabel = binsubstr(source,first + 1,last - first) as .string
+        if pos('+',rawlabel) > 0 | pos('-',rawlabel) > 0 then do
+          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: invalid signed-exponent label'; return
+        end
+        kind = language.tokenid('labelname')
+      end
       if kind = id then do
         if next = colon & parsemode = '' then kind = language.tokenid('labelname')
         else if proceduretail > 0 then do
@@ -157,6 +165,18 @@ parsed: class
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
       end
+      if word = 'CALL' then do
+        if next = id then do
+          policyhead = upper(binsubstr(source,layout.start(i + 1) + 1,layout.finish(i + 2) - layout.start(i + 1)) as .string)
+          if policyhead = 'ON' | policyhead = 'OFF' then do
+            _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: delayed CALL policy is owned by CALL4'; return
+          end
+        end
+        callable = next = id | next = language.tokenid('number') | next = language.tokenid('string') | next = language.tokenid('typename') | next = language.tokenid('constantname') | next = language.tokenid('parsedot')
+        if callable = 0 then do
+          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-19.2: CALL requires a symbol or string target'; return
+        end
+      end
       /* Source placement is independent of the activation's executed window.
        * Any authored label can open it, including an observation-only group
        * label; executed enclosing instructions still consume eligibility. */
@@ -208,7 +228,7 @@ parsed: class
       if clause & depth = 0 & kind = id & next = equals then operandmode = 'assignment-head'
       if word = 'ARG' then operandmode = 'arg'
       if word = 'CALL' then operandmode = 'call-head'
-      if operandmode = 'call-head' & depth = 0 & kind = id then operandmode = 'call'
+      if operandmode = 'call-head' & depth = 0 & word <> 'CALL' then operandmode = 'call'
       emptyrhs = 0
       if operandmode = 'assignment-head' & depth = 0 & kind = equals then do
         emptyrhs = 1; operandmode = 'assignment'
@@ -280,9 +300,10 @@ parsed: class
         end
       end
 
-      leftterm = previous = id | previous = number | previous = string | previous = closing | ('c' = 'g' & previous = language.tokenid('presence'))
-      rightterm = kind = id | kind = number | kind = string | kind = opening | ('c' = 'g' & kind = language.tokenid('presence'))
-      function = previous = id & kind = opening & previousend = first
+      leftterm = previous = id | previous = number | previous = string | previous = closing | previous = language.tokenid('constantname') | previous = language.tokenid('typename') | previous = language.tokenid('parsedot') | ('c' = 'g' & previous = language.tokenid('presence'))
+      rightterm = kind = id | kind = number | kind = string | kind = opening | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot') | ('c' = 'g' & kind = language.tokenid('presence'))
+      target = previous = id | previous = number | previous = string | previous = language.tokenid('typename') | previous = language.tokenid('constantname') | previous = language.tokenid('parsedot')
+      function = target & kind = opening & previousend = first
       if dropping = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword then do
         token = language.tokenid('abut')
         if first > previousend then token = language.tokenid('blank')

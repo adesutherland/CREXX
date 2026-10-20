@@ -6,7 +6,7 @@ with `rxas -n` to disable assembler optimisation separately. The
 [backend](../../doc/backend.md) owns register/call selection and the
 [current plan](../../PLAN.md) lists remaining compiler work.
 
-Classic uses the C v9 context/entry ABI and one shared source body. Its local
+Classic uses the C v10 context/entry ABI and one shared source body. Its local
 call constructs a fresh activation borrowing the caller pool; PROCEDURE creates
 a private pool only when reached. ARG uses the shared PARSE executor, and
 finite fatal relays preserve the original event and authored location. The

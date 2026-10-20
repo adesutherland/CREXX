@@ -37,7 +37,7 @@ compiler invocation or library initialiser is implied.
 ## Emission review
 
 Inspect complete emitted modules, including wrappers/cold handlers, separately
-from linked helper bodies. C uses the current v9 context/entry ABI and one
+from linked helper bodies. C uses the current v10 context/entry ABI and one
 source-unit body; its fresh child activation initially borrows the caller pool,
 then PROCEDURE creates the private pool and binds it before ARG executes. The
 views enable compiler IR optimisation. Compiler and assembler optimisation are

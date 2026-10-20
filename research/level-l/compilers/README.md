@@ -48,7 +48,8 @@ supported. The [target architecture](doc/architecture.md),
 open stages are not implemented capability. Shared Unicode algorithms and the
 23 procedural entrypoints now belong to the optional B `rxunicode-core` component;
 C adapters use that core directly, while G retains its API and two wrapper
-classes. New-compiler BIF binding and live activation/context work remain open.
+classes. Ordinary CALL binds all 95 direct shared BIF names; complete BIF/host
+semantics and wider activation/condition work remain open.
 
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
@@ -56,10 +57,16 @@ patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
 executor with implicit UPPER, replacing its scalar shortcut. The
-[current C v9/58-operation contract](doc/architecture.md#current-c-family-contract)
-retains the 33-export target. The plan tracks instruction status and remaining work;
+[current C v10/61-operation contract](doc/architecture.md#current-c-family-contract)
+uses the 36-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
+
+Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
+packets and local-before-BIF resolution; quoted targets skip locals. Missing
+routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain
+their separate source locations. Static signed providers and delayed handlers
+remain named CALL features; external function expressions remain deferred.
 
 C compiler workers retain one private prepared language definition. Source
 parsing and name admission borrow its validated DFA/LR data and CFG metadata;

@@ -18,31 +18,31 @@ function $MAIN -> crexx.c.result
     %12 = crexx.c.arguments.empty @origin:19
     core.store %12 slot:$tmp.1 @origin:19
     %13 = core.constant 37 : crexx.c.value @origin:26
-    %14 = core.load slot:$tmp.1 @origin:19
-    %15 = core.constant true : core.boolean @origin:19
+    %14 = core.load slot:$tmp.1 @origin:27
+    %15 = core.constant true : core.boolean @origin:27
     %16 = crexx.c.arguments.append %14 %13 %15 @origin:27
-    core.store %16 slot:$tmp.1 @origin:19
+    core.store %16 slot:$tmp.1 @origin:27
     %17 = core.load slot:$tmp.1 @origin:19
     %18 = core.load slot:$context @origin:19
     %19 = crexx.c.call %17 %18 target="$MAIN" entry="1" function="true" @origin:19
-    %20 = crexx.c.requirevalue %19 @origin:19
+    %20 = crexx.c.requirevalue %19 name="SCALE" @origin:19
     crexx.c.say %20 @origin:11
     %21 = crexx.c.arguments.empty @origin:36
     core.store %21 slot:$tmp.2 @origin:36
     %22 = core.constant 37 : crexx.c.value @origin:43
-    %23 = core.load slot:$tmp.2 @origin:36
-    %24 = core.constant true : core.boolean @origin:36
+    %23 = core.load slot:$tmp.2 @origin:44
+    %24 = core.constant true : core.boolean @origin:44
     %25 = crexx.c.arguments.append %23 %22 %24 @origin:44
-    core.store %25 slot:$tmp.2 @origin:36
+    core.store %25 slot:$tmp.2 @origin:44
     %26 = core.constant 33 : crexx.c.value @origin:51
-    %27 = core.load slot:$tmp.2 @origin:36
-    %28 = core.constant true : core.boolean @origin:36
+    %27 = core.load slot:$tmp.2 @origin:52
+    %28 = core.constant true : core.boolean @origin:52
     %29 = crexx.c.arguments.append %27 %26 %28 @origin:52
-    core.store %29 slot:$tmp.2 @origin:36
+    core.store %29 slot:$tmp.2 @origin:52
     %30 = core.load slot:$tmp.2 @origin:36
     %31 = core.load slot:$context @origin:36
     %32 = crexx.c.call %30 %31 target="$MAIN" entry="1" function="true" @origin:36
-    %33 = crexx.c.requirevalue %32 @origin:36
+    %33 = crexx.c.requirevalue %32 name="SCALE" @origin:36
     crexx.c.say %33 @origin:28
     %34 = core.constant 30 : crexx.c.value @origin:60
     crexx.c.exit %34 @origin:53

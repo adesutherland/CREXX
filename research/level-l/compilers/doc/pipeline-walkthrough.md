@@ -156,7 +156,10 @@ unset-name behaviour, and uses contextual `crexx.c.while.truth`.
 A G call has a registered typed signature and `target="TWICE"` attribute. A
 Classic call carries its original argument packet, the borrowed context and a
 function/subroutine attribute, and yields a result-presence packet. CALL updates
-RESULT; expression use requires a value.
+RESULT/.RESULT; expression use requires a value. Static quoted targets bypass
+local labels, and direct BIF bindings preserve the original presence vectors.
+Authored bare RETURN and EOF absence have distinct callee/caller errors under
+the [current CALL contract](architecture.md#call-contract).
 The imports are checked against actual runtime metadata by the Level B reader,
 not guessed from source names or supplied by the native compiler.
 

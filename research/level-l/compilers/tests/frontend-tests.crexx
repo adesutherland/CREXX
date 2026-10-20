@@ -814,7 +814,8 @@ selecttests: procedure = .void expose artifacts
   text = good('c',source,'crexx.c.when.truth')
   call check(pos('name="BEFORE"',text) = 0 & pos('name="BETWEEN"',text) = 0,'SELECT observation labels never enter the callable map')
   text = good('c','exit 0; select; before:; when 1 then nop; end','crexx.c.when.truth')
-  call bad('c','call before; exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_CALL:','16.1')
+  text = good('c','call before; exit 0; select; before:; when 1 then nop; end','crexx.c.call.missing','crexx.c.call ')
+  call check(pos('name="BEFORE"',text) > 0 & pos('crexx.c.entry.test ',text,pos('crexx.c.entry.test ',text) + 1) = 0,'group-only label remains unresolved with no positive entry')
   do sample = 1 to 14
     select sample
       when 1 then source = 'select 1; when 1 then nop; end'
@@ -1186,7 +1187,8 @@ calls: procedure = .void
   call check(pos('name="P"',text) > 0 & pos('function P',text) = 0,'shared label is a checked entry in one source body')
   text = good('c','say 1; p: procedure; return 2','crexx.c.procedure.enter')
   call check(pos('name="P"',text) > 0,'source-legal fall-through retains executed PROCEDURE guard')
-  call bad('c','say missing()' as .binary,'LL_COMPILER_CALL:','unknown Classic routine')
+  text = good('c','say missing()','crexx.c.call.missing','crexx.c.call ')
+  call check(pos('crexx.c.requirevalue',text) > 0 & pos('name="MISSING"',text) > 0,'unresolved function retains reached failure and exact invocation identity')
   call bad('g','say length(''a'')' as .binary,'LL_COMPILER_IMPORT:','requires import')
   call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','cannot read nonexistent.rxbin')
   return

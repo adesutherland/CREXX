@@ -38,12 +38,12 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/identifier-token labels, ordered PROCEDURE EXPOSE and LENGTH/ARG/DIGITS only. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/constant-symbol labels, ordered PROCEDURE EXPOSE and ordinary CALL/direct shared BIF bindings. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/llcparseprogram.crexx` | C-owned LCP1 construction and independent packet admission reuse the compilation-owned source index and existing strict text codec. | Keep runtime envelope ownership in shared B and generic descriptor execution in the cursor kernel. |
-| `levelc/runtime/llctarget.crexx` | One 33-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One 36-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF host contracts and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, PARSE execution, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Checked context/entry dispatch selects one shared source body; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; review includes wrappers, cold handlers and helper bodies separately. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
@@ -444,7 +444,8 @@ two entries under its [approved contract](#approved-select-contract), giving
 24 exports. The [approved DO contract](#approved-do-contract) adds seven;
 the [transfer contract](#approved-leave-iterate-contract) adds `invalidtransfer`,
 giving the 32-export foundation. The [PARSE acquisition adapter](#proposed-c-parse-integration)
-adds `parsesource`, giving the current 33 exports after ARG retires `readarg`. Remove
+adds `parsesource`, giving 33 exports after ARG retires `readarg`;
+the [CALL contract](#call-contract) adds three transport exports for 36. Remove
 `contextnew`, the old nine bodies, compatibility bridge/build entries and
 old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
 the current implementations. The private `bifcontext` remains internal.
@@ -469,8 +470,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-current C to v9 and the two-argument source-unit ABI. The approved static/fatal
-profile is locally qualified.** Use the following contract with one current
+C to the two-argument source-unit ABI. The CALL contract advances the
+current family to v10/61 and the target to 36 exports; its local qualification
+is tracked in the plan. The approved PROCEDURE static/fatal profile is qualified.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -478,9 +480,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 9. The neutral scalar names do not load the G
+types and `crexx.c` version 10. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–8 are never reinterpreted as version 9. Within version 9, the complete C
+versions 1–9 are never reinterpreted as version 10. Within version 10, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -508,9 +510,11 @@ attribute of `parse.execute`; constants, slots, parameters and results of this
 type are refused. Its [LCP1 contract](#proposed-c-parse-integration) belongs to
 the shared B executor and its independent C producer/admission boundary.
 
-The following table owns the 53 base descriptors. The five appended v9
+The following table owns the 53 base descriptors, with the requirevalue name
+attribute updated by the [CALL contract](#call-contract). The five appended v9
 descriptors and entry/procedure protocol are owned by the
-[approved PROCEDURE contract](#proposed-procedure-contract). The retired
+[approved PROCEDURE contract](#proposed-procedure-contract); the three appended
+v10 descriptors belong to the [CALL contract](#call-contract). The retired
 scalar `arguments.read` operation remains absent. In canonical registration order DROP is 5,
 SELECT is 41/42, DO is 43–50, transfer.invalid is 51 and PARSE is 52/53. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
@@ -547,7 +551,7 @@ state/failure/observation proof.
 | `arguments.exists` | `context:C ordinal:V option:V` | — | V | `context` | `condition` |
 | `return.present` | `value:V` | — | R | `none` | `resource` |
 | `return.absent` | — | — | R | `none` | `resource` |
-| `requirevalue` | `result:R` | — | V | `none` | `missing.result` |
+| `requirevalue` | `result:R` | `name:T` | V | `none` | `missing.result` |
 | `setresult` | `context:C result:R` | — | — | `context` | `condition` |
 | `call` | `arguments:A context:C` | `target:T entry:I function:B` | R | `context.output` | `condition` |
 | `length` | `value:V context:C` | — | V | `context` | `condition` |
@@ -641,7 +645,7 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v9 IR + current bundle/adapters | Approved two-argument source-unit ABI; PROCEDURE implementation/qualification and later PARSE/ARG obligations remain open. |
+| Current compiler + canonical C v10 IR + current bundle/adapters | Two-argument shared source-unit ABI and ordinary CALL bindings; complete condition/TRACE, PARSE/ARG and delivery obligations remain open. |
 | Current selector + C v1–v8/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
@@ -908,7 +912,7 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. The current C v9/58 descriptors are owned by the
+   had 41 operations. The current C v10/61 descriptors are owned by the
    [C-family table](#current-c-family-contract).
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
@@ -934,7 +938,7 @@ has no work.
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
-41 operations. Current [C v9/58/33](#current-c-family-contract) supersedes that
+41 operations. Current [C v10/61/36](#current-c-family-contract) supersedes that
 version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
@@ -1006,7 +1010,7 @@ tracks remaining LC-I-08 work against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
 The qualified DO increment introduced **version 5 / 51 operations** and
 **32 exports**, retaining the four existing C types and context procedure ABI.
-The [current v9/58/33 contract](#current-c-family-contract) supersedes that
+The [current v10/61/36 contract](#current-c-family-contract) supersedes that
 version boundary without changing the DO descriptors. No generic L, B runtime,
 native compiler or VM API/algorithm changes are commissioned.
 
@@ -1699,7 +1703,7 @@ rexxclassicparse.execute(
 
 `parsesource` is the one justified acquisition adapter. The original PARSE
 integration gave `llctarget` 34 exports; ARG's scalar retirement leaves the
-current **33 exports**. Its SOURCE case receives the C caller's SOURCEINFO result,
+33-export PARSE/ARG baseline; the current CALL contract has **36 exports**. Its SOURCE case receives the C caller's SOURCEINFO result,
 the other cases require an empty `caller_source`. Its located failure belongs
 to the source AST. `execute` is a direct shared `rxfnsc` export, with no second
 `llctarget.execute` forwarding body. The selector loads `program` as an RXAS
@@ -2237,7 +2241,8 @@ activation signals existing INVALID_ARGUMENTS with detail
 `LLC-ENTRY: activation does not match entry kind`. Exhausted dispatch reaches
 `entry.invalid`, which signals INVALID_ARGUMENTS with detail
 `LLC-ENTRY: invalid source-unit entry identity`. Both are generated-ABI invariant
-errors, distinct from source missing-label 16.1 and authored PROCEDURE 17.1;
+errors, distinct from missing SIGNAL/handler label16.1, reached ordinary
+missing-routine43.1 and authored PROCEDURE17.1;
 the current finite fatal profile cannot resume them. As for existing divergent
 C operations, entry.invalid retains a generated cold absent-result/core.return
 closure solely to satisfy ordinary IR block structure; it cannot execute.
@@ -2364,7 +2369,7 @@ CLC-STEP06.PROCEDURE1–4 and CFC-AC02/03/06/09/11 without closing complete C.
 | **CPROC-AC02** | One body, deterministic checked entries, Unicode/dotted/$MAIN/reserved-dot names, adjacent/duplicate/trailing labels, fall-through, recursion and fresh/shared activations. Group labels cannot be called or bypass owner construction; direct IR multi-unit/exported-zero and wrong-activation controls cover the declared ABI. |
 | **CPROC-AC03** | Independent pool expectations cover private isolation and direct/indirect scalar/stem/exact-compound aliases, source-order tail dependencies, captured lists/configured blanks/invalid-word continuation, duplicates, Unicode/NUL, nested aliases and stem assignment/DROP propagation. Reuse existing pool algorithms and keep originals/argument presence intact across ARG/PARSE. |
 | **CPROC-AC04** | Stable owners and flag-zero/committed paths survive recursion, normal/absent return, EXIT and all finite fatal relays; ordinary bundle rereads remain valid. Checked-reference controls exercise precommit and committed exposure failures; constructor/allocation cleanup is inspected structurally, without allocation-fault injection or resumption claims. Inspect restore-before-release and preserved raw event/tag/location; fatal tests assert identity/origin and no later effects without claiming resumption. |
-| **CPROC-AC05** | Exact v9/58/five-type/33-export and two-argument metadata; v8/forged/dead schema, bad maps/slots/IDs/names/context/kind, detached exposures and missing consume before semantic work refuse. Bounded all-record/reachable checks preserve DO ownership, input graphs, previous output and resource-limit atomicity on fresh/loaded/transformed IR. |
+| **CPROC-AC05** | Exact PROCEDURE v9/58/five-type/33-export baseline (superseded by [current C10/61/36](#call-contract)) and two-argument metadata; v8/forged/dead schema, bad maps/slots/IDs/names/context/kind, detached exposures and missing consume before semantic work refuse. Bounded all-record/reachable checks preserve DO ownership, input graphs, previous output and resource-limit atomicity on fresh/loaded/transformed IR. |
 | **CPROC-AC06** | Full caller/helper RXAS in representative compiler/IR/assembler modes and both VMs: one source body, direct integer dispatch, no runtime name search, no pool allocation on shared calls, pool/expose work only when reached, necessary once-only consume, truthful logical source and ordered cleanup. Include label-free/shared-only/simple private cases. Linear checked dispatch and existing context/numeric/window/register costs are explicit bounded baselines, not speed claims. |
 | **CPROC-AC07** | Keep whole LC-I-12 open for configured errors/NOVALUE, complete conditions/resumption/SIGL/clause/TRACE, callback/host and declared service/install/platform proof, and later INTERPRET eligibility/transfers. Preserve ARG-AC05, CPARSE-AC07/08 and every CFC criterion; native or direct-B results never substitute for new-C acceptance. |
 
@@ -2441,6 +2446,254 @@ initializer; this profile adds no concurrent C-worker or new platform matrix.
    private C prepared owner and request-local comment overrides implemented.
 3. **CPREP-STEP03 — complete local profile:** focused generic/C acceptance and
    full caller/helper inspection; retain the declared lifecycle/platform scope.
+
+<a id="call-contract"></a>
+
+## CALL and required-result contract
+
+The standing pre-INTERPRET authority covers this design and its reviewed local
+feature commits. CALL2's ordinary static profile is locally qualified for
+CCALL-AC01–04/07; signed statement providers and
+delayed traps retain CALL3/4 ownership. Whole LC-I-13 and complete C remain open.
+The source contract is LC-75-01–06, with shared RETURN semantics from LC-76.
+
+Targets are static symbols or decoded strings, including X/B string literals.
+Decoded quoted target text, including empty/NUL-containing text, remains exact.
+An unresolved name fails43.1 when reached after actual effects; absence of a target
+token is source19.2. Provider-symbol representability does not change source validity.
+There is no dynamic `CALL VALUE` form: VALUE is an ordinary callable name.
+Unquoted names use existing shared whole-name simple uppercase and resolve
+local first occurrence, then the direct shared BIF catalogue; statement CALL
+may subsequently bind a visible signed provider. External function expressions
+remain outside the accepted native integration boundary. Quoted spelling stays exact and skips locals. Numeric,
+constant-symbol and period-starting targets/labels retain their Classic lexical
+rules; signs inside exponent targets do not make a callable local label.
+Invoke/Call preserve the raw name field; InvokeQuoted/CallQuoted distinguish
+decoded string targets without replacing source spelling. Constant expression
+nodes retain spelling and lower through shared whole-name casing to literal text.
+Group labels remain observation-only and cannot bypass active DO/SELECT owners.
+
+Evaluate supplied actuals once left to right before dispatch or missing-target
+failure; preserve omissions and explicit empty text, including trailing omitted
+positions. Local calls retain fresh child activation/shared pool semantics.
+At internal label entry, ordinary SIGL is the invoking line after actual evaluation
+and before entry; direct BIF/missing calls leave SIGL unchanged. Leave
+reserved .SIGL to its existing owner. A private callee sees SIGL only through
+EXPOSE. Statement completion uses existing applyCallResult for RESULT/.RESULT
+presence/drop without assigning RC. Missing ordinary calls raise 43.1 when
+reached; missing delayed handlers raise 16.1. A bare RETURN in a function raises
+45.1 at the authored RETURN, while EOF/no result raises 44.1 with target identity
+at the invoking expression. Explicit empty strings remain present.
+Diagnostic target text uses existing `_trace_escape_text`: Unicode is retained,
+controls such as NUL are displayed as escapes and literal backslashes doubled.
+Lookup/IR name bytes remain exact. Generic SIGNALORIGIN currently has a
+terminated-message boundary; full length-bearing condition/message transport
+remains shared STEP07 error work, not a source-name restriction.
+
+### C v10 ordinary-call interfaces
+
+C v10 has five types and 61 operations: retain the 58 v9 descriptors, append the
+three below and add required `name:crexx.g.text` to requirevalue. Older schemas
+are refused, including malformed or unused declarations. No generic L/VM or
+shared B API changes are required. Every row returns normally unless its existing
+condition transport diverts; no evaluator is registered.
+
+| Operation | Ordered inputs | Attributes | Output | State / failure |
+|---|---|---|---|---|
+| `return.empty` | `context:C` | — | R | context / condition.resource |
+| `bif` | `arguments:A context:C` | `name:T` | V | context.input.output.observation / condition.resource |
+| `call.missing` | `arguments:A context:C` | `name:T` | R | context / condition |
+| `requirevalue` (changed) | `result:R` | `name:T` | V | none / missing.result |
+
+C-owned `llcbifs.entry(name:string)->string` returns the exact named shared
+entry or empty; `llcbifs.activation(name:string)->int` identifies ARG, ADDRESS,
+CONDITION and TRACE's second activation argument. It is one binding catalogue,
+not a second BIF dispatcher/algorithm. Both frontend and selector validate the
+named signature from current rxfnsc metadata. Raw/loaded/dead IR must name a
+catalogued BIF and preserve canonical context provenance and source origins.
+Existing exact LENGTH/ARG/DIGITS specializations remain valid where their full
+argument forms agree with the shared entry; other forms use the generic binding.
+
+The target grows from 33 to 36 exports. `emptyreturn(context:reference
+RexxClassicContext)->RexxActivationArguments` checks existing isFunctionCall,
+raises 45.1 before completion, then returns an absent packet. Generated EOF and
+structural closure keep pure absent(). `requirevalue(result:RexxActivationArguments,
+name:string)->RexxValue` reports 44.1. `missing(name:string)->RexxActivationArguments`
+reports reached 43.1. `bifarguments(context:reference RexxClassicContext,name:string,
+values:reference RexxValue[],presence:reference int[])->RexxBifCallContext` reuses expression(name),
+binds config before caller pool and activation, and forwards raw values/presence
+arrays through setArguments; argumentCount() is not raw BIF arity. C validates
+current META_ATTR field types/options and positive distinct ordinals through
+llbinmeta.field(12,...,4), then LINKATTR1/MKREF/UNLINK creates scoped vector
+references into the stable packet. The compiler-common nominal signature reader admits the exact trailing `[*]`
+vector spelling (including references), while each selected call still checks
+its exact type. Malformed dimensions/void vectors are refused; this does not
+admit source array syntax. No ordinal is hardcoded. The helper retains
+no vector borrow in its result; existing setArguments owns its snapshots. Generated
+code calls the selected named entry, passes current activation only for its
+four declared entries, then reuses rexxclassicbif_checked. No legacy name-based
+shared dispatcher is used. End helper borrows before normal/fatal owner cleanup;
+all helper calls participate in ordinary frame/call-window sizing.
+
+### Acceptance and feature boundaries
+
+1. **CCALL-AC01:** symbol/quoted/constant targets, exact AST spelling/spans,
+   local priority/quoted bypass and dead malformed source have independent
+   positive/error controls. Dynamic CALL is not inferred.
+2. **CCALL-AC02:** source-order once-only actuals, raw omissions/present-empty,
+   recursion/shared/private pools and SIGL survive nested calls. Exact RESULT
+   pair/drop and unchanged RC are observed, including aliases.
+3. **CCALL-AC03:** all 95 names bind exact existing direct signatures; representative
+   string/numeric/Unicode/pool/activation BIFs execute. Raw trailing omissions
+   retain shared argument errors. Full BIF host semantics keep their ledger owners.
+4. **CCALL-AC04:** reached missing43.1 follows actual effects; dead missing is safe.
+   Bare function RETURN45.1 preserves the authored callee origin; EOF44.1 preserves
+   the caller origin and target text. Exact routine/message traceback remains
+   LC-REF-072/STEP07–08/CFC-AC03 work. Normal/fatal shared/private cleanup and
+   atomic failed compilation remain.
+5. **CCALL-AC05 (CALL3):** visible source/binary signed providers use exactly one
+   required by-value RexxActivationArguments and void result, fresh private pool
+   and UTF8 config with inherited numeric/ADDRESS/TRACE/condition-policy state,
+   host services, result/error restoration and static missing-provider boundary.
+   Source-produced providers use prebuilt owning-compiler metadata imports,
+   never request-time native source delegation. This covers statement CALL and later delayed
+   handlers only; external function expressions, general late provider search,
+   source loading/native callbacks and a new host resolver remain deferred.
+6. **CCALL-AC06 (CALL4):** four-condition CALL ON/OFF replaces SIGNAL policy,
+   delayed clause checkpoints, suppression/buffered HALT, SIGL/CONDITION data,
+   nested restoration and local/BIF/external handlers use existing B owners.
+   Missing ADDRESS/I/O/host producers remain with their instruction/host rows.
+7. **CCALL-AC07:** independent focused normal Debug/raw/loaded/transformed admission,
+   readable caller/helper RXAS and necessary CLI/service/product consumers cover
+   the changed feature. No per-label clone, runtime text BIF dispatch, fresh
+   table load or avoidable repeated source record. Native C is a read-only control;
+   future conditions/TRACE/platform/INTERPRET acceptance remains open.
+
+
+<a id="return-contract"></a>
+
+## RETURN source and completion contract
+
+This internally reviewed LC-I-14 increment follows CALL2. It completes bounded
+source continuation and contextual RETURN diagnostics while reusing the existing
+return.present/return.empty/return.absent packets, activation completion, private
+pool/DO cleanup and signed64 programReturnCode boundary. It adds no grammar,
+schema, target, B/L/VM API or result/status algorithm. Whole LC-76 remains open
+for the shared conditions, exact traceback, host and platform owners.
+
+One linear layout-token pass in the main C token stream precedes
+keyword/concatenation classification. Leading OPTIONS header discovery retains
+its separate OPTIONS/STEP04 source-policy owner, including continued headers.
+Remove a comma followed by physical LF, CR or CRLF only when a significant token
+follows. Keep the final authored comma at EOF, including after trailing blanks,
+comments or null separators. Existing masked lexer tokens own comment handling:
+block-comment internal newlines are hidden, line-comment EOL remains visible.
+Do not rescan comments or change original bytes/spans. Treat CRLF as one break;
+preserve other blank lines. A semicolon never qualifies as continuation.
+
+Retain original token gaps so a continued or spaced function-like form cannot
+become an adjacent invocation. `CALL p a,;` keeps its omission; in `CALL p a,,`
+or `PARSE ARG a,,` followed by a physical newline and another token, remove only
+the final continuation comma and preserve the argument/template delimiter.
+Lexer/comment failures retain precedence. Malformed RETURN expressions report
+35.1 at the bad token or final authored comma, including dead source; ordinary
+RETURN names, assignments, function calls and labels retain contextual meaning.
+
+1. **RRET-AC01:** LF/CRLF/comment continuations and continued function gaps have
+   independent positive controls with original AST byte/scalar spans.
+2. **RRET-AC02:** live/dead incomplete or surplus RETURN tails produce contextual
+   35.1 and atomic failed output, including comma+LF+EOF and trailing comments.
+3. **RRET-AC03:** once-only Unicode/NUL/empty/absent results and private-loop
+   restoration use existing owned packets and cleanup, with source/RXAS controls.
+4. **RRET-AC04:** a tiny B host/test-only exported entry0 checks the exact signed64,
+   nonwhole and absent main-status boundary without an OS8-bit-status assumption.
+5. **RRET-AC05:** reuse CALL2 fresh/loaded/transformed context/origin refusals and
+   PROCEDURE lifetime proof; inspect result-before-DO-close and restore-before-
+   owner-release RXAS. Bare45.1 retains authored origin; caller44.1 additionally
+   retains target text. LC-REF-072/STEP07–08/CFC-AC03 remain open.
+
+Implementation starts after the CALL2 local commit. Delayed-handler policy,
+external expressions, general host text-result exchange and EXIT program-root
+propagation retain their separate owners.
+
+<a id="exit-contract"></a>
+
+## EXIT program-root contract — queued after RETURN
+
+The internally reviewed LC-I-15 increment uses the existing activation program
+root and exit-request/result APIs. C v11 retains five types, revises `exit` and
+adds one operation for 62 total; the 36 target exports and B/VM APIs are unchanged.
+
+| Operation | Ordered inputs | Output | State / failure / termination |
+|---|---|---|---|
+| `exit` (changed) | `result:R context:C` | — | context / condition.resource / diverges |
+| `program.exiting` | `context:C` | core.boolean | context / condition / returns |
+
+Neither operation has an evaluator. Explicit EXIT first creates an owned
+present/absent packet, records its value/presence on the existing program root,
+then performs common program-unwind cleanup and returns that same packet.
+Bare EXIT uses absent(), never return.empty(). Only the root status bridge
+narrows the completed result; source-unit bodies do not emit VM EXIT.
+
+After each internal call, preserve its result in a typed carrier and query the
+canonical live context before any requirevalue, RESULT update, later actual,
+operand, condition or PARSE write. A visible core.branch selects an unwind
+return of the same owned packet or the normal continuation. Reuse existing
+expression/argument spills; only the result carrier is new. C admission proves
+the call/carrier/query/branch and return ownership using bounded indexed facts,
+accepting the existing L forwarding, pruning and renumbering normal forms.
+Keep generated guard provenance distinct from the authored invoking operation.
+
+Only proved program-unwind terminals may discard DO owners in any phase,
+including a partly evaluated Collect/Ready header. Reuse deepest-first fatal
+DO teardown, then pool restoration and private-owner release, even in units
+without PROCEDURE. Ordinary RETURN/do.close admission is unchanged. External
+provider-root isolation follows CALL3; delayed-handler checkpoint-before-exit
+ordering follows STEP07. Neither is silently delivered by local propagation.
+
+1. **CEXIT-AC01:** optional presence, once-only full scalar results, root status
+   and contextual source35.1 have independent positive/error controls.
+2. **CEXIT-AC02:** propagation precedes result observation and remaining evaluation,
+   including nested calls and partially evaluated DO headers.
+3. **CEXIT-AC03:** owned packet/borrow/pool/DO cleanup and existing B root isolation
+   have lifetime controls; checked-reference failures retain event and origin.
+4. **CEXIT-AC04:** current schema and raw/dead/loaded/transformed guard admission
+   preserve context, ownership, limits and atomic output.
+5. **CEXIT-AC05:** readable RXAS proves no unit VM EXIT/status narrowing, unchanged
+   exports and bounded caller/helper/window/source cleanup.
+6. **CEXIT-AC06 — open shared scope:** CALL3 provider lifecycle, STEP07 handlers,
+   STEP08 host completion and declared platforms retain their separate gates.
+
+**CEXIT-STEP01** records this reviewed contract; **STEP02** starts C IR/frontend/
+protocol/selector implementation after RETURN commits; **STEP03** assigns focused
+independent fixtures, complementary qualification, RXAS review and a local commit
+for AC01–05. AC06 and whole-instruction/full-C acceptance remain open.
+
+<a id="pull-contract"></a>
+
+## PULL shared-parser contract — queued
+
+The reviewed LC-I-16 route adds `CPull(templates:ParseTemplates)` and contextual
+PULL classification/template joining. Lower through the existing PULL source
+adapter and UPPER parse executor; no IR/target/B/L/VM API or parsing algorithm
+changes. Bare or empty-first PULL consumes PROCEDURE eligibility and acquires
+one source packet even without a cursor. Never apply CArg's nonemitting shortcut.
+Later comma templates receive empty text without another queue/input read.
+
+1. **PULL-AC01:** contextual forms/templates and source spans preserve independent
+   queued/default-input/EOF controls and malformed/dead-source atomic refusal.
+2. **PULL-AC02:** bare/empty-first forms acquire once, with queue depth and later
+   comma-template empty sources observed independently.
+3. **PULL-AC03:** shared UPPER/template semantics preserve Unicode/NUL and live
+   private/EXPOSE pool effects using existing source/execute ownership.
+4. **PULL-AC04:** focused admission/cleanup and readable RXAS reuse PARSE proof;
+   no duplicate read, alternate executor or new runtime transport.
+5. **PULL-AC05 — open shared scope:** configured NOTREADY/host behavior, conditions,
+   TRACE and declared platforms remain CPARSE/STEP07–08 obligations.
+
+**PULL-STEP01** is reviewed; **STEP02/03** queue source/lowering, focused fixtures,
+qualification and a local profile commit after RETURN/EXIT and the deferred
+CALL3 provider review. Whole LC-I-16 remains open for AC05.
 
 ## Optimisation ownership
 
@@ -2549,5 +2802,6 @@ B/G and RexxScript shared-library consumers and library doc tags.
 Every increment checks independent values/state/errors, source/TRACE, compiler
 and RXAS opt/no-opt separately, direct/linked and affected installed/host paths.
 Inspect complete representative RXAS and helpers. Keep structural regressions
-and purposeful worked examples; delete diagnostics after recording conclusions
-in the plan. There is no evidence/archive subtree in this architecture.
+and purposeful worked examples; retain enduring contracts/known limitations
+and report verification in conversation, then delete diagnostics. There is no
+evidence/archive subtree in this architecture.

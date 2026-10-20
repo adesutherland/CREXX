@@ -114,11 +114,16 @@ signature: class
 
 validtype: procedure = .int
   arg text = .string
-  /* Selected frontend calls are scalar; full class names are retained for the
-   * Classic backend contract, without admitting authored object syntax. */
+  text = lower(text)
+  /* Selected calls still enforce their own exact signatures. Nominal metadata
+   * includes the borrowed vector form used by C transport, not source arrays. */
   if left(lower(text),10) = 'reference ' then do
     text = strip(substr(text,11))
     if text = '.void' | left(lower(text),10) = 'reference ' then return 0
+  end
+  if right(text,3) = '[*]' then do
+    text = left(text,length(text) - 3)
+    if text = '.void' then return 0
   end
   if left(text,1) <> '.' | length(text) < 2 then return 0
   rest = substr(text,2)

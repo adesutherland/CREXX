@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append countargs existsarg present absent emptyreturn bifarguments missing requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -108,9 +108,32 @@ present: procedure = .RexxActivationArguments
   return result
 absent: procedure = .RexxActivationArguments
   return .RexxActivationArguments()
+/** Complete an authored bare RETURN; EOF uses absent() without this check. */
+emptyreturn: procedure = .RexxActivationArguments
+  arg context = reference .RexxClassicContext
+  bundle = dereference context
+  activation_ref = bundle.activation()
+  activation = dereference activation_ref
+  if activation.isFunctionCall() then call bad('RXC-LC-45.1: Data expected on RETURN instruction because this routine was called as a function')
+  return .RexxActivationArguments()
+
+/** Reached unresolved ordinary invocation, after all actuals were evaluated. */
+missing: procedure = .RexxActivationArguments
+  arg name = .string
+  call bad('RXC-LC-43.1: Routine not found: ' || _trace_escape_text(name))
+  return .RexxActivationArguments()
+
+/** Borrow current services and retain the full raw positional BIF vector. */
+bifarguments: procedure = .RexxBifCallContext
+  arg context = reference .RexxClassicContext, name = .string, values_ref = reference .RexxValue[], presence_ref = reference .int[]
+  values = dereference values_ref; presence = dereference presence_ref
+  result = bifcontext(name,context)
+  call result.setArguments(values,presence)
+  return result
+
 requirevalue: procedure = .RexxValue
-  arg result = .RexxActivationArguments
-  if result.hasReturnValue() = 0 then call bad('RXC-LC-45.1: Data expected on RETURN instruction because this routine was called as a function')
+  arg result = .RexxActivationArguments, name = .string
+  if result.hasReturnValue() = 0 then call bad('RXC-LC-44.1: No data returned from function ' || _trace_escape_text(name))
   return result.returnValue()
 setresult: procedure = .void
   arg poolref = reference .RexxVariablePool, result = .RexxActivationArguments

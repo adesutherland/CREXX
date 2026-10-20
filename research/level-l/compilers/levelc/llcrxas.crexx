@@ -4,6 +4,7 @@ namespace llcrxas expose compilation
 import rxfnsb
 import llir
 import llcir
+import llcbifs
 import llcompilercontracts
 import llsource
 import llrxastext
@@ -55,6 +56,8 @@ compilation: class
   _catalogs = .object[]
   _classiccatalog = .llcompilercontracts..catalog
   _classicready = .int
+  _bifvalues = .int
+  _bifpresence = .int
   _classes = .string[]
   _procedureprotocol = .llcprocedureprotocol..checked
   _savedpool = .int
@@ -75,7 +78,7 @@ compilation: class
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
-    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   fail: method = .void
     arg reason = .string
@@ -326,13 +329,27 @@ compilation: class
     return
   checkoperation: method = .void
     arg op = .llir..opview
-    name = op.name(); bytes = .binary; packet = .llcparseprogram..checked
+    name = op.name(); bytes = .binary; packet = .llcparseprogram..checked; symbol = .string
     if name = 'core.constant' then do
       type = typename(op.result().type().id())
       if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then call fail('LOWERING: unsupported constant type ' || type)
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
     if name = 'crexx.c.select.missing' then call checkselectorigin(op)
+    if wordpos(name,'crexx.c.return.empty crexx.c.bif crexx.c.call.missing crexx.c.requirevalue') > 0 then do
+      call checkselectorigin(op,'CALL/RETURN')
+      if _error <> '' then return
+      _parseclauses[op.id()] = op.origin().first() + 1
+      if name = 'crexx.c.bif' then do
+        bifname = op.attribute('name') as .string; symbol = llcbifs..entry(bifname)
+        if symbol = '' then do; call fail('LOWERING: unknown direct Classic BIF'); return; end
+        types = 'reference@.rexxclassicbifs..rexxbifcallcontext'
+        if llcbifs..activation(bifname) then types = types || ' reference@.rexxactivation..rexxactivationarguments'
+        symbol = imported('rxfnsc',symbol,'.rexxvalue..rexxvalue',types)
+        if _error <> '' then return
+        call checkbiflayout()
+      end
+    end
     if name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.enter' then do
       call checkselectorigin(op,'PROCEDURE transition'); _parseclauses[op.id()] = op.origin().first() + 1
     end
@@ -383,6 +400,21 @@ compilation: class
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
       symbol = localname(op.attribute('target') as .string)
     end
+    return
+  /** One immutable catalogue validates raw transport once per selector request.
+   * Each operation still checks its exact BIF export, origin and live context. */
+  checkbiflayout: method = .void
+    if _bifvalues > 0 then return
+    owner = 'rexxactivation.rexxactivationarguments'
+    if _classiccatalog.field(11,owner,'',2) <> 'b' then do; call fail('IMPORT: incompatible Classic argument owner'); return; end
+    if _classiccatalog.field(12,owner || '.values','',2) <> 'b' | _classiccatalog.field(12,owner || '.presence','',2) <> 'b' | _classiccatalog.field(12,owner || '.values','',3) <> '.rexxvalue[*]' | _classiccatalog.field(12,owner || '.presence','',3) <> '.int[*]' | _classiccatalog.field(12,owner || '.slot_count','',3) <> '.int' | _classiccatalog.field(12,owner || '.supplied_count','',3) <> '.int' then do; call fail('IMPORT: incompatible raw Classic argument transport'); return; end
+    valuesindex = _classiccatalog.field(12,owner || '.values','',4)
+    presenceindex = _classiccatalog.field(12,owner || '.presence','',4)
+    if _classiccatalog.error() <> '' then do; call fail('IMPORT: ' || _classiccatalog.error()); return; end
+    if valuesindex = '' | presenceindex = '' then do; call fail('IMPORT: missing Classic argument field index'); return; end
+    values = valuesindex as .int; presence = presenceindex as .int
+    if values <= 0 | presence <= 0 | values = presence then do; call fail('IMPORT: incompatible Classic argument field indices'); return; end
+    _bifvalues = values; _bifpresence = presence
     return
   /** No-match diagnostics require one unambiguous authored source location.
    * Check every operation before creating the writer, including dead/loaded IR.
@@ -606,6 +638,16 @@ compilation: class
     call invoke('',symbol,1,receiver)
     call emit('unlink',receiver)
     call binding(context,'pool',parentpool); call binding(context,'config',config)
+    line = 0
+    if op.origin().kind() = 'exact' then do
+      call checkselectorigin(op,'internal invocation')
+      if _error <> '' then return
+      line = _selectlines[op.id()]
+    end
+    call emit('linkref',receiver || ',' || parentpool)
+    symbol = member('rexxpool.rexxvariablepool','setcalltrapsigl','.void','.int')
+    call emit('load',reg(_callbase + 2) || ',' || line); call invoke('',symbol,2,receiver)
+    call emit('unlink',receiver)
     /* A separate child bundle borrows the current caller pool. Only an
      * executed procedure.enter may allocate and replace this binding. */
     symbol = member('rexxclassiccontext.rexxclassiccontext','§factory','.rexxclassiccontext..rexxclassiccontext','reference@.rexxactivation..rexxactivationarguments reference@.rexxpool..rexxvariablepool reference@.rexxclassicconfig..rexxclassicconfig')
@@ -621,7 +663,8 @@ compilation: class
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
-    i = .int; origin = .llir..origin
+    i = .int; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
+    key = .string; known = .string; extent = .int
     do
       if _graph.error() <> '' then do; _error = _graph.error(); return; end
 
@@ -658,8 +701,9 @@ compilation: class
         call checkoperation(op)
         if _error <> '' then return
       end
-      /* Setup carrying the same exact origin belongs to that PARSE clause.
-       * Keep spans untouched; only reuse the admitted grouping key. */
+      /* Setup with the same origin or exact source boundary belongs to its
+       * admitted clause. Argument wrappers may have distinct origin IDs from
+       * the call they contain; keep both precise spans and one grouping key. */
       do i = 1 to store.count(3)
         if _parseclauses[i] > 0 then do
           origin = _graph.operation(i).origin()
@@ -670,12 +714,34 @@ compilation: class
               end
             end
             _originclauses[origin.id()] = _parseclauses[i]
+            if origin.kind() = 'exact' then do
+              key = store.get(9,origin.id(),1) || ':' || origin.first() || ':' || origin.last()
+              known = clausekeys.get(key)
+              if known <> '' then do
+                if known as .int <> _parseclauses[i] then do
+                  call fail('SOURCE: one exact boundary has conflicting clause keys'); return
+                end
+              end
+              else do
+                extent = 64 + <blen>(key as .binary)
+                if extent > _limit - clausebytes then do
+                  call fail('LIMIT: source clause workspace exceeds output.bytes budget'); return
+                end
+                clausebytes = clausebytes + extent
+                clausekeys[key] = _parseclauses[i] as .string
+              end
+            end
           end
         end
       end
       do i = 1 to store.count(3)
         origin = _graph.operation(i).origin()
         if origin.id() > 0 & origin.id() <= _originclauses[0] then _parseclauses[i] = _originclauses[origin.id()]
+        if origin.id() > 0 & origin.kind() = 'exact' then do
+          key = store.get(9,origin.id(),1) || ':' || origin.first() || ':' || origin.last()
+          known = clausekeys.get(key)
+          if known <> '' then _parseclauses[i] = known as .int
+        end
       end
       _phase = 'entry'; _writer = .llir..writer(_limit)
       call _writer.line('.globals=0')
@@ -1076,7 +1142,17 @@ compilation: class
       when name = 'digits' then call adapter(op,'digits',v,contexttype)
       when name = 'return.present' then call adapter(op,'present',a,v)
       when name = 'return.absent' then call adapter(op,'absent',a,'')
-      when name = 'requirevalue' then call adapter(op,'requirevalue',v,a)
+      when name = 'return.empty' then call adapter(op,'emptyreturn',a,contexttype)
+      when name = 'bif' then call bifoperation(op)
+      when name = 'requirevalue' then do
+        symbol = imported('llctarget','llctarget.requirevalue',v,a || ' .string')
+        call argcopy(1,input(op)); call argtext(2,op.attribute('name') as .string)
+        call invoke(result(op),symbol,2)
+      end
+      when name = 'call.missing' then do
+        symbol = imported('llctarget','llctarget.missing',a,'.string')
+        call argtext(1,op.attribute('name') as .string); call invoke(result(op),symbol,1)
+      end
       when name = 'setresult' then do
         poolref = reg(_workbase + 2); call binding(input(op),'pool',poolref)
         symbol = imported('llctarget','llctarget.setresult','.void','reference@' || p || ' ' || a)
@@ -1124,6 +1200,36 @@ compilation: class
       end
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
+    return
+  /** Only binding and transport live in C; the selected B entry validates
+   * its own arguments and owns every Classic BIF algorithm. */
+  bifoperation: method = .void
+    arg op = .llir..opview
+    name = op.attribute('name') as .string
+    owner = reg(_workbase + 6); activation = reg(_workbase + 4)
+    receiver = reg(_workbase); valuesref = reg(_workbase + 2); presenceref = reg(_workbase + 3)
+    /* Metadata proves these are distinct array attributes of the stable
+     * packet. Detach the temporary field links before any fallible call. */
+    call emit('linkattr1',receiver || ',' || input(op) || ',' || _bifvalues)
+    call emit('mkref',valuesref || ',' || receiver); call emit('unlink',receiver)
+    call emit('linkattr1',receiver || ',' || input(op) || ',' || _bifpresence)
+    call emit('mkref',presenceref || ',' || receiver); call emit('unlink',receiver)
+    symbol = imported('llctarget','llctarget.bifarguments','.rexxclassicbifs..rexxbifcallcontext','reference@.rexxclassiccontext..rexxclassiccontext .string reference@.rexxvalue[*] reference@.int[*]')
+    call argcopy(1,input(op,2)); call argtext(2,name); call argcopy(3,valuesref); call argcopy(4,presenceref)
+    call invoke(owner,symbol,4)
+    call emit('null',valuesref); call emit('null',presenceref)
+    types = 'reference@.rexxclassicbifs..rexxbifcallcontext'; count = 1
+    if llcbifs..activation(name) then do
+      call binding(input(op,2),'activation',activation)
+      types = types || ' reference@.rexxactivation..rexxactivationarguments'; count = 2
+    end
+    symbol = imported('rxfnsc',llcbifs..entry(name),'.rexxvalue..rexxvalue',types)
+    call argcopy(1,owner,1)
+    if count = 2 then call argcopy(2,activation)
+    call invoke(result(op),symbol,count)
+    symbol = imported('rxfnsc','rexxclassicbifs.rexxclassicbif_checked','.rexxvalue..rexxvalue','reference@.rexxclassicbifs..rexxbifcallcontext .rexxvalue..rexxvalue')
+    call argcopy(1,owner,1); call argcopy(2,result(op)); call invoke(result(op),symbol,2)
+    call emit('null',activation); call emit('null',owner)
     return
   /** C-owned dispatch and transitions select existing B methods. Integer
    * mismatch does not touch the context, and enter validates eligibility once. */

@@ -18,26 +18,26 @@ function $MAIN -> crexx.c.result
     %8 = crexx.c.arguments.empty @origin:19
     core.store %8 slot:$tmp.1 @origin:19
     %9 = core.constant 37 : crexx.c.value @origin:26
-    %10 = core.constant true : core.boolean @origin:19
+    %10 = core.constant true : core.boolean @origin:27
     %11 = crexx.c.arguments.append %8 %9 %10 @origin:27
-    core.store %11 slot:$tmp.1 @origin:19
+    core.store %11 slot:$tmp.1 @origin:27
     %12 = core.load slot:$context @origin:19
     %13 = crexx.c.call %11 %12 target="$MAIN" entry="1" function="true" @origin:19
-    %14 = crexx.c.requirevalue %13 @origin:19
+    %14 = crexx.c.requirevalue %13 name="SCALE" @origin:19
     crexx.c.say %14 @origin:11
     %15 = crexx.c.arguments.empty @origin:36
     core.store %15 slot:$tmp.2 @origin:36
     %16 = core.constant 37 : crexx.c.value @origin:43
-    %17 = core.constant true : core.boolean @origin:36
+    %17 = core.constant true : core.boolean @origin:44
     %18 = crexx.c.arguments.append %15 %16 %17 @origin:44
-    core.store %18 slot:$tmp.2 @origin:36
+    core.store %18 slot:$tmp.2 @origin:44
     %19 = core.constant 33 : crexx.c.value @origin:51
-    %20 = core.constant true : core.boolean @origin:36
+    %20 = core.constant true : core.boolean @origin:52
     %21 = crexx.c.arguments.append %18 %19 %20 @origin:52
-    core.store %21 slot:$tmp.2 @origin:36
+    core.store %21 slot:$tmp.2 @origin:52
     %22 = core.load slot:$context @origin:36
     %23 = crexx.c.call %21 %22 target="$MAIN" entry="1" function="true" @origin:36
-    %24 = crexx.c.requirevalue %23 @origin:36
+    %24 = crexx.c.requirevalue %23 name="SCALE" @origin:36
     crexx.c.say %24 @origin:28
     %25 = core.constant 30 : crexx.c.value @origin:60
     crexx.c.exit %25 @origin:53

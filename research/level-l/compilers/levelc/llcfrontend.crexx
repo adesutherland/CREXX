@@ -6,6 +6,7 @@ import llast
 import llir
 import llsource
 import llcir
+import llcbifs
 import llcparse
 import llcparseprogram
 import llcompilercontracts
@@ -385,7 +386,7 @@ request: class
         if node.count('operators') <> 0 | node.count('operands') <> 1 then return 0
         node = node.child('operands',1)
       end
-      else return kind = 'String' | kind = 'Number'
+      else return kind = 'String' | kind = 'Number' | kind = 'Constant'
     end
   statement: method = .void
     arg node = .llast..node
@@ -488,7 +489,10 @@ request: class
             value = expression(node.child('value')); if _error <> '' then return
             op = _block.operation(_contract.operation('crexx.c.return.present'),origin); call op.input('value',value)
           end
-          else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+          else do
+            op = _block.operation(_contract.operation('crexx.c.return.empty'),origin)
+            call op.input('context',_block.load(_contextslot,origin))
+          end
           built = op.finish(); value = built.result()
           call closeactive(origin)
           call _block.returnvalue(value,origin)
@@ -510,7 +514,7 @@ request: class
         end
         _terminated = 1; _alive = 0
       end
-      when kind = 'Invoke' then value = invocation(node,0)
+      when kind = 'Invoke' | kind = 'InvokeQuoted' then value = invocation(node,0)
       when kind = 'Parse' | kind = 'CArg' then call parsestatement(node)
       when kind = 'CNumeric' then do
         setting = lower(node.text('setting'))
@@ -988,7 +992,10 @@ request: class
   /** One literal decoder serves expressions and static PARSE patterns. */
   stringliteral: method = .string
     arg node = .llast..node
-    spelling = node.text('spelling'); quote = left(spelling,1)
+    return decodestring(node,node.text('spelling'))
+  decodestring: method = .string
+    arg node = .llast..node, spelling = .string
+    quote = left(spelling,1)
     if right(spelling,1) <> quote then return ordinalliteral(node,spelling)
     text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
     do while i <= length(text)
@@ -1013,6 +1020,10 @@ request: class
           if discardliteral then return invalid
           return _block.constantbytes(type('value'),spelling as .binary,origin)
         end
+      end
+      when kind = 'Constant' then do
+        if discardliteral then return invalid
+        return _block.constantbytes(type('value'),rexxclassic_unicode_upper(node.text('spelling')) as .binary,origin)
       end
       when kind = 'String' then do
         decoded = stringliteral(node)
@@ -1052,7 +1063,7 @@ request: class
         end
         return value
       end
-      when kind = 'Call' then return invocation(node,1)
+      when kind = 'Call' | kind = 'CallQuoted' then return invocation(node,1)
       otherwise call fail(node,'PROFILE: unsupported expression ' || kind)
     end
     return invalid
@@ -1076,27 +1087,31 @@ request: class
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
     invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
-    /* Generated identifier tokens use the shared whole-name simple casing
-     * once, without the variable pool's compound-tail resolution. */
-    if namework(name) = 0 then return invalid
-    name = rexxclassic_unicode_upper(name)
+    quoted = node.kind() = 'InvokeQuoted' | node.kind() = 'CallQuoted'
+    if quoted then name = decodestring(node,name)
+    else do
+      if namework(name) = 0 then return invalid
+      name = rexxclassic_unicode_upper(name)
+    end
+    if _error <> '' then return invalid
     arguments = node.child('arguments'); count = arguments.count('items')
     if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
-    target = findroutine(name)
+    target = 0
+    if quoted = 0 then target = findroutine(name)
     if _error <> '' then return invalid
+    bif = ''; if target = 0 then bif = llcbifs..entry(name)
     argument = .llast..node; value = .llir..valuehandle
     op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
-
-    result = .llir..valuehandle
-    if target = 0 then do
-      if wordpos(name,'LENGTH ARG DIGITS') = 0 then do
-        call fail(node,'CALL: RXC-LC-16.1: unknown Classic routine ' || name); return invalid
-      end
-      if (name = 'LENGTH' & count <> 1) | (name = 'DIGITS' & count <> 0) | (name = 'ARG' & count <> 0 & count <> 2) then do
-        call fail(node,'CALL: BIF argument form outside the admitted profile'); return invalid
-      end
+    result = .llir..valuehandle; specialized = 0
+    if bif <> '' then do
       call classiccontract(node,name)
       if _error <> '' then return invalid
+      specialized = (name = 'LENGTH' & count = 1) | (name = 'DIGITS' & count = 0) | (name = 'ARG' & (count = 0 | count = 2))
+      do i = 1 to count
+        if arguments.child('items',i).count('value') = 0 then specialized = 0
+      end
+    end
+    if specialized then do
       if name = 'DIGITS' then do
         op = _block.operation(_contract.operation('crexx.c.digits'),origin)
         call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); value = built.result()
@@ -1109,16 +1124,11 @@ request: class
         saved = .object[]
         do i = 1 to count
           argument = arguments.child('items',i)
-          if argument.count('value') = 0 then do
-            call fail(argument,'CALL: missing BIF argument'); return invalid
-          end
           value = expression(argument.child('value'))
           if _error <> '' then return invalid
           slot = temporary(type('value')); call _block.store(slot,value,origin); saved[i] = slot as .object
         end
         if name = 'LENGTH' then do
-          call classiccontract(node,'LENGTH')
-          if _error <> '' then return invalid
           op = _block.operation(_contract.operation('crexx.c.length'),origin)
           slot = saved[1] as .llir..slot; call op.input('value',_block.load(slot,origin))
           call op.input('context',_block.load(_contextslot,origin))
@@ -1131,9 +1141,6 @@ request: class
         end
         built = op.finish(); value = built.result()
       end
-      if expressioncall then return value
-      op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
-      call op.input('value',value); built = op.finish(); result = built.result()
     end
     else do
       op = _block.operation(_contract.operation('crexx.c.arguments.empty'),origin); built = op.finish()
@@ -1143,21 +1150,38 @@ request: class
         if present then value = expression(argument.child('value'))
         else value = defaultvalue('value',at(argument))
         if _error <> '' then return invalid
-        op = _block.operation(_contract.operation('crexx.c.arguments.append'),at(argument))
-        call op.input('arguments',_block.load(packet,origin)); call op.input('value',value)
-        call op.input('present',_block.constant(_contract.boolean(),present as .string,origin)); built = op.finish()
-        call _block.store(packet,built.result(),origin)
+        itemorigin = at(argument)
+        op = _block.operation(_contract.operation('crexx.c.arguments.append'),itemorigin)
+        call op.input('arguments',_block.load(packet,itemorigin)); call op.input('value',value)
+        call op.input('present',_block.constant(_contract.boolean(),present as .string,itemorigin)); built = op.finish()
+        call _block.store(packet,built.result(),itemorigin)
       end
-      op = _block.operation(_contract.operation('crexx.c.call'),origin)
+      operation = 'call'
+      if target = 0 then do
+        operation = 'call.missing'
+        if bif <> '' then operation = 'bif'
+      end
+      op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
-      call op.attribute('target','$MAIN' as .binary)
-      integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
-      boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
-      built = op.finish(); result = built.result()
+      if target > 0 then do
+        call op.attribute('target','$MAIN' as .binary)
+        integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
+        boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
+      end
+      else call op.attribute('name',name as .binary)
+      built = op.finish()
+      if bif <> '' then value = built.result()
+      else result = built.result()
+    end
+    if bif <> '' then do
+      if expressioncall then return value
+      op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
+      call op.input('value',value); built = op.finish(); result = built.result()
     end
     if expressioncall then do
       op = _block.operation(_contract.operation('crexx.c.requirevalue'),origin)
-      call op.input('result',result); built = op.finish(); return built.result()
+      call op.input('result',result); call op.attribute('name',name as .binary)
+      built = op.finish(); return built.result()
     end
     op = _block.operation(_contract.operation('crexx.c.setresult'),origin)
     call op.input('context',_block.load(_contextslot,origin)); call op.input('result',result); built = op.finish()
@@ -1182,15 +1206,13 @@ request: class
       end
       _hasclassic = 1
     end
-    symbol = 'rexxclassicbiflength.rexxclassicbif_length'; count = 1
-    if name = 'ARG' then do; symbol = 'rexxclassicbifarg.rexxclassicbif_arg'; count = 2; end
-    if name = 'DIGITS' then symbol = 'rexxclassicbifnumeric.rexxclassicbif_digits'
+    symbol = llcbifs..entry(name); count = 1 + llcbifs..activation(name)
     signature = _classic.lookup(symbol)
     if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
     else if signature.result() <> '.rexxvalue..rexxvalue' | signature.arguments() <> count then call fail(node,'IMPORT: incompatible Classic ' || name || ' contract')
     else if signature.type(1) <> 'reference .rexxbifcallcontext' then call fail(node,'IMPORT: incompatible Classic BIF context')
     else if signature.optional(1) then call fail(node,'IMPORT: optional Classic context is incompatible')
-    else if name = 'ARG' then do
+    else if count = 2 then do
       if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
     end
     return

@@ -99,9 +99,14 @@ temporary call windows. The callee creates a private pool only when PROCEDURE
 executes. Getters resolve live pool bindings through the bundle; receiver
 aliases use the existing swap/restoration and unlink protocol. Argument/result
 packets retain value semantics. Callee NUMERIC updates do not modify its caller's
-activation or VM frame. Each admitted private PROCEDURE has its own pool; CALL applies the returned presence packet to
-RESULT and clears RESULT when no value is returned. Expression calls require a
-value. Main forwards VM `-a` arguments as an ordered presence packet.
+activation or VM frame. Each admitted private PROCEDURE has its own pool; CALL
+applies the returned presence packet to RESULT/.RESULT and drops both when no
+value is returned. Authored bare RETURN checks function kind at the callee;
+an expression receiving EOF absence fails44.1 at its invoking target.
+Direct BIFs borrow metadata-checked raw argument vectors synchronously and use
+the existing named entries and checked-error builder; the
+[CALL contract](architecture.md#call-contract) owns the exact interfaces.
+Main forwards VM `-a` arguments as an ordered presence packet.
 
 ## Semantics and literals
 

@@ -1,0 +1,149 @@
+/* Independent CALL binding, operand-order and optional-result expectations. */
+options levelc
+ORDER = ''
+RC = 'unchanged'
+.SIGL = 'reserved'
+call LENGTH 'ignored'
+say 'local ' || RESULT || '|' || .RESULT
+call 'LENGTH' 'é🙂'
+say 'quoted ' || RESULT || '|' || .RESULT
+call '4C 45 4E 47 54 48'x 'abcd'
+say 'hex ' || RESULT
+call '01001100 01000101 01001110 01000111 01010100 01001000'b 'abc'
+say 'binary ' || RESULT
+say 'quoted-function ' || 'LENGTH'('abc')
+say 'quoted-gap ' || 'LENGTH' ('abc')
+say 'quoted-comment-gap ' || 'LENGTH'/* gap */('abc')
+call SUBSTR 'aé🙂z', 2, 2
+say 'substr ' || RESULT
+call TRANSLATE 'café'
+say 'translate ' || RESULT
+call MAX 1, 3, 2
+say 'max ' || RESULT
+call GRAPHEMECOUNT 'é🙂'
+say 'graphemes ' || RESULT
+SHARED = 'before'
+call VALUE 'ignored'
+say 'local-value ' || RESULT
+call 'VALUE' 'SHARED', 'after'
+say 'value ' || RESULT || '|' || SHARED
+call ARG
+say 'argc ' || RESULT
+SIGL = 'sentinel'
+call 'LENGTH' 'a'
+say 'bif-sigl ' || SIGL || '|' || .SIGL
+call RELAY MARK('a'),,MARK('b'),;
+say 'order ' || ORDER || '|' || RESULT || '|' || .RESULT
+call RELAY '',,''
+say 'empty-slots ' || RESULT
+call RELAY , '',;
+say 'leading-slot ' || RESULT
+call EMPTY
+say 'empty-result ' || SYMBOL('RESULT') || '|' || SYMBOL('.RESULT') || '|' || (RESULT == '')
+call VOID
+say 'absent ' || SYMBOL('RESULT') || '|' || SYMBOL('.RESULT')
+say 'rc ' || RC
+call ALIASRESULT
+say 'alias-after ' || SYMBOL('RESULT') || '|' || SYMBOL('.RESULT')
+call RECURSE 2
+say 'recursion ' || RESULT
+say 'function ' || MARK('c') || '|' || ORDER
+say 'function-result ' || RESULT || '|' || .RESULT
+if 0 then call NEVER MARK('UNREACHED')
+call SIGLSHARED
+say 'sigl-shared ' || RESULT || '|' || .SIGL
+call SIGLPRIVATE
+say 'sigl-private ' || RESULT || '|' || .SIGL
+call SIGLEXPOSED
+say 'sigl-exposed ' || RESULT || '|' || .SIGL
+call 7
+say 'constant ' || RESULT
+call 1.2
+say 'constant ' || RESULT
+call 1.20
+say 'constant ' || RESULT
+call .5
+say 'constant ' || RESULT
+call 7E2
+say 'constant ' || RESULT
+call 700
+say 'constant ' || RESULT
+call 7dogs
+say 'constant ' || RESULT
+call .foo
+say 'constant ' || RESULT
+call ..foo
+say 'constant ' || RESULT
+call .5abc
+say 'constant ' || RESULT
+call .
+say 'constant ' || RESULT
+say 'constant-concat ' || (7dogs 'x')
+say 'constant-group ' || (7dogs ('x'))
+say 'constant-dot-left ' || (.foo 'x')
+say 'constant-dot-right ' || ('x' .foo)
+say 'constant-function ' || 7dogs()
+say 'sigl-nested ' || SIGLNESTED(
+  MARK('n'))
+parse var SHARED POOLCOPY
+say 'pool ' || POOLCOPY || '|' || SYMBOL('SHARED')
+exit 0
+
+LENGTH:
+return 'local-length'
+VALUE:
+return 'local-value'
+MARK:
+procedure expose ORDER
+parse arg TOKEN
+ORDER = ORDER || TOKEN
+return TOKEN
+RELAY:
+procedure
+return ARG() || '|' || ARG(1,'E') || '|' || ARG(2,'E') || '|' || ARG(3,'E') || '|' || ARG(4,'E') || '|' || ARG(1) || '|' || ARG(3)
+EMPTY:
+return ''
+VOID:
+return
+ALIASRESULT:
+procedure expose RESULT
+call 'LENGTH' 'xyz'
+say 'alias-inside ' || RESULT || '|' || .RESULT
+return
+RECURSE:
+procedure
+parse arg N
+if N = 0 then return 1
+return RECURSE(N - 1) + 1
+SIGLSHARED:
+return SIGL
+SIGLPRIVATE:
+procedure
+return SIGL
+SIGLEXPOSED:
+procedure expose SIGL
+return SIGL
+7:
+return 'integer'
+1.2:
+return 'decimal'
+1.20:
+return 'decimal-precision'
+.5:
+return 'fraction'
+7E2:
+return 'exponent'
+700:
+return 'integer-700'
+7dogs:
+return 'digit-symbol'
+.foo:
+return 'dot-name'
+..foo:
+return 'dots-name'
+.5abc:
+return 'dot-digit-symbol'
+.:
+return 'dot'
+SIGLNESTED:
+return SIGL

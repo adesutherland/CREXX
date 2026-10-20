@@ -72,6 +72,7 @@ parsevar: token = 67
 parsewith: token = 68
 parsedot: token = 69
 exposeword: token = 70
+constantname: token = 71
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -88,6 +89,7 @@ scan: lexer input utf8
   numeric.literal: rule = numeric ("d" | "D")? then emit number
   name.literal: rule = name | reserved then emit identifier
   type.literal: rule = "." name then emit typename
+  constant.literal: rule = (digit (letter | digit | ".")* | "." (letter | digit | ".")+) then emit constantname
   single.literal: rule = "'" (squote.body | "''")* "'" then emit string
   double.literal: rule = '"' (dquote.body | '""')* '"' then emit string
   terminator: rule = (newline | ";") then emit separator
@@ -139,7 +141,8 @@ parse: parser semantics contextfree input tokens start program backend lr1
   otherwise.body: rule = (statement as item)? separator (separator | (statement as item separator))*
     then tree Sequence(items = item*)
   say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
-  call.statement: rule = callword identifier as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
+  call.statement: rule = callword (identifier | number | typename | constantname | parsedot) as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
+  call.quoted: rule = callword string as name arguments as arguments then tree InvokeQuoted(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
   exit.statement: rule = exitword (expression as value)? then tree Exit(value = value?)
   leave.statement: rule = leaveword (name.value as name)? then tree Leave(name = name?)
@@ -177,15 +180,17 @@ parse: parser semantics contextfree input tokens start program backend lr1
     then tree Chain(operands = item+, operators = op*)
   unary: rule = prefix | cast.value
   prefix: rule = (plus | minus | not) as op unary as value then tree Prefix(operator = op, value = value)
-  primary: rule = number.value | string.value | name.value | call.value | group.value
+  primary: rule = number.value | string.value | constant.value | name.value | call.value | call.value.quoted | group.value
   number.value: rule = number then tree Number(spelling = text)
   string.value: rule = string then tree String(spelling = text)
+  constant.value: rule = (constantname | typename | parsedot) as spelling then tree Constant(spelling = text(spelling))
   name.value: rule = identifier then tree Name(spelling = text)
   group.value: rule = open expression as value close then tree Group(value = value)
-  call.value: rule = identifier as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
+  call.value: rule = (identifier | number | typename | constantname | parsedot) as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
+  call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?

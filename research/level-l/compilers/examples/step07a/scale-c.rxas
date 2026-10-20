@@ -163,7 +163,7 @@ call r14,llctarget.poolread(),r84
 null r85
 null r86
 null r73
-.srcstep 19 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
+.srcstep 19 20 17 "scale-c.crexx" 2 5 13 "say scale(7)"
 load r83,"scale-c.crexx:2:5"
 load r84,0
 call r15,llctarget.arguments(),r84
@@ -175,11 +175,7 @@ load r84,1
 settp r85,768
 call r16,llctarget.literal(),r84
 null r85
-.srcstep 19 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
-load r83,"scale-c.crexx:2:5"
 load r17,1
-.srcstep 27 0 17 "scale-c.crexx" 2 11 12 "say scale(7)"
-load r83,"scale-c.crexx:2:11"
 copy r85,r15
 copy r86,r16
 copy r87,r17
@@ -191,9 +187,9 @@ call r18,llctarget.append(),r84
 null r85
 null r86
 null r87
-.srcstep 19 0 17 "scale-c.crexx" 2 5 13 "say scale(7)"
-load r83,"scale-c.crexx:2:5"
 copy r3,r18
+.srcstep 19 20 17 "scale-c.crexx" 2 5 13 "say scale(7)"
+load r83,"scale-c.crexx:2:5"
 copy r19,r1
 copy r79,r18
 linkref r71,r19
@@ -237,6 +233,17 @@ call r74,rexxclassiccontext.rexxclassiccontext.config(),r84
 swap r71,r85
 null r85
 unlink r71
+linkref r72,r73
+load r86,2
+swap r72,r85
+load r84,2
+settp r85,256
+settp r86,768
+call r82,rexxpool.rexxvariablepool.setcalltrapsigl(),r84
+swap r72,r85
+null r85
+null r86
+unlink r72
 mkref r85,r79
 copy r86,r73
 copy r87,r74
@@ -262,10 +269,13 @@ null r73
 null r74
 null r79
 copy r85,r20
-load r84,1
+load r86,"SCALE"
+load r84,2
 settp r85,768
+settp r86,768
 call r21,llctarget.requirevalue(),r84
 null r85
+null r86
 .srcstep 11 0 17 "scale-c.crexx" 2 1 13 "say scale(7)"
 load r83,"scale-c.crexx:2:1"
 copy r85,r21
@@ -273,7 +283,7 @@ load r84,1
 settp r85,768
 call r82,llctarget.sayvalue(),r84
 null r85
-.srcstep 36 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+.srcstep 36 33 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
 load r83,"scale-c.crexx:3:5"
 load r84,0
 call r22,llctarget.arguments(),r84
@@ -285,11 +295,7 @@ load r84,1
 settp r85,768
 call r23,llctarget.literal(),r84
 null r85
-.srcstep 36 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r83,"scale-c.crexx:3:5"
 load r24,1
-.srcstep 44 0 17 "scale-c.crexx" 3 11 12 "say scale(7,3)"
-load r83,"scale-c.crexx:3:11"
 copy r85,r22
 copy r86,r23
 copy r87,r24
@@ -301,8 +307,6 @@ call r25,llctarget.append(),r84
 null r85
 null r86
 null r87
-.srcstep 36 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r83,"scale-c.crexx:3:5"
 copy r4,r25
 .srcstep 51 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
 load r83,"scale-c.crexx:3:13"
@@ -311,11 +315,7 @@ load r84,1
 settp r85,768
 call r26,llctarget.literal(),r84
 null r85
-.srcstep 36 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r83,"scale-c.crexx:3:5"
 load r27,1
-.srcstep 52 0 17 "scale-c.crexx" 3 13 14 "say scale(7,3)"
-load r83,"scale-c.crexx:3:13"
 copy r85,r25
 copy r86,r26
 copy r87,r27
@@ -327,9 +327,9 @@ call r28,llctarget.append(),r84
 null r85
 null r86
 null r87
-.srcstep 36 0 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
-load r83,"scale-c.crexx:3:5"
 copy r4,r28
+.srcstep 36 33 17 "scale-c.crexx" 3 5 15 "say scale(7,3)"
+load r83,"scale-c.crexx:3:5"
 copy r29,r1
 copy r79,r28
 linkref r71,r29
@@ -373,6 +373,17 @@ call r74,rexxclassiccontext.rexxclassiccontext.config(),r84
 swap r71,r85
 null r85
 unlink r71
+linkref r72,r73
+load r86,3
+swap r72,r85
+load r84,2
+settp r85,256
+settp r86,768
+call r82,rexxpool.rexxvariablepool.setcalltrapsigl(),r84
+swap r72,r85
+null r85
+null r86
+unlink r72
 mkref r85,r79
 copy r86,r73
 copy r87,r74
@@ -398,10 +409,13 @@ null r73
 null r74
 null r79
 copy r85,r30
-load r84,1
+load r86,"SCALE"
+load r84,2
 settp r85,768
+settp r86,768
 call r31,llctarget.requirevalue(),r84
 null r85
+null r86
 .srcstep 28 0 17 "scale-c.crexx" 3 1 15 "say scale(7,3)"
 load r83,"scale-c.crexx:3:1"
 copy r85,r31
@@ -1214,8 +1228,10 @@ rexxactivation.rexxactivationarguments.begininternalfunction() .expose=rexxactiv
   .meta "rexxactivation.rexxactivationarguments.begininternalfunction"="b" ".void" rexxactivation.rexxactivationarguments.begininternalfunction() ""
 rexxclassiccontext.rexxclassiccontext.config() .expose=rexxclassiccontext.rexxclassiccontext.config
   .meta "rexxclassiccontext.rexxclassiccontext.config"="b" "reference .rexxclassicconfig..rexxclassicconfig" rexxclassiccontext.rexxclassiccontext.config() ""
+rexxpool.rexxvariablepool.setcalltrapsigl() .expose=rexxpool.rexxvariablepool.setcalltrapsigl
+  .meta "rexxpool.rexxvariablepool.setcalltrapsigl"="b" ".void" rexxpool.rexxvariablepool.setcalltrapsigl() "line=.int"
 llctarget.requirevalue() .expose=llctarget.requirevalue
-  .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments"
+  .meta "llctarget.requirevalue"="b" ".rexxvalue..rexxvalue" llctarget.requirevalue() "result=.rexxactivationarguments,name=.string"
 llctarget.sayvalue() .expose=llctarget.sayvalue
   .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
 llctarget.present() .expose=llctarget.present

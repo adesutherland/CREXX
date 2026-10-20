@@ -147,6 +147,8 @@ def main():
         # Compile refusal is independent of optimizer cleanup. Representative
         # malformed unreachable source runs in both IR modes; other distinct
         # boundaries run once rather than multiplying a syntax-only matrix.
+        # Unresolved Unicode/dotted calls are reached43.1 controls in tests/call;
+        # declared-name casing and lookup remain exercised above.
         negatives = [
             ('empty', 'drop', b'LL_COMPILER_SYNTAX'),
             ('empty-reference', 'drop ()', b'LL_COMPILER_SYNTAX'),
@@ -159,8 +161,6 @@ def main():
             ('emoji-name', 'drop 🙂', b'LL_COMPILER_SYNTAX'),
             ('combining-name', 'drop é', b'LL_COMPILER_SYNTAX'),
             ('dead-malformed', 'if 0 then drop (a+1)', b'LL_COMPILER_SYNTAX'),
-            ('unicode-call', 'say μ()', b'RXC-LC-16.1'),
-            ('dotted-call', 'say p.q()', b'RXC-LC-16.1'),
         ]
         for name, source, diagnostic in negatives:
             path = work / (name + '.crexx')
@@ -171,8 +171,6 @@ def main():
                 result = compile_c('opt', path, output, ir, failure=True)
                 message = result.stdout + result.stderr
                 assert re.search(re.escape(diagnostic) + rb'(?: at|:)', message), (name, message)
-                if diagnostic == b'RXC-LC-16.1':
-                    assert b'unknown Classic routine' in message, (name, message)
                 assert path.name.encode() + b':' in message and b'line ' in message and b'column ' in message and b'^' in message, (name, message)
                 assert output.read_bytes() == b'preserve previous output\n', name
     label = 'DROP_REFUSALS' if args.refusals_only else 'DROP'

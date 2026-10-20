@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols doprotocol parseprogram procedureprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs doprotocol parseprogram procedureprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -151,6 +151,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llclanguage.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsymbols.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbifs.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
@@ -249,6 +250,14 @@ foreach(_mode opt noopt)
       LABELS "compiler;level-l;optimizer-parity")
     crexx_register_test_prep_targets(TESTS ${_prepared_shape}
       TARGETS llcompiler_c_prepared_${_mode})
+    ll_compile(call-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/call/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/call-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/call-contracts-linked"
+        "${_dir}/call-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/call-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_call_contracts_${_mode}
+      DEPENDS "${_dir}/call-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -537,6 +546,32 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_procedure_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_procedure_vm})
+  endforeach()
+  # Complementary host/IR/assembler/VM lanes retain independent CALL oracles.
+  # Serialize nested tools; this generous deadline protects against hangs.
+  foreach(_mode opt noopt)
+    set(_call_vm rxbvm)
+    set(_call_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_call_ir off)
+      if(TARGET rxtvm)
+        set(_call_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_call_${_mode}_${_call_ir}_${_call_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/call/check-call.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_call_vm} --ir ${_call_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "CALL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_call_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_call_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

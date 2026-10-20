@@ -1,0 +1,47 @@
+local local-length|local-length
+quoted 2|2
+hex 4
+binary 3
+quoted-function 3
+quoted-gap LENGTH abc
+quoted-comment-gap LENGTH abc
+substr é🙂
+translate CAFÉ
+max 3
+graphemes 2
+local-value local-value
+value before|after
+argc 0
+bif-sigl sentinel|reserved
+order ab|3|1|0|1|0|a|b|3|1|0|1|0|a|b
+empty-slots 3|1|0|1|0||
+leading-slot 2|0|1|0|0||
+empty-result VAR|VAR|1
+absent LIT|LIT
+rc unchanged
+alias-inside 3|3
+alias-after LIT|LIT
+recursion 3
+function c|abc
+function-result 3|3
+sigl-shared 53|reserved
+sigl-private SIGL|reserved
+sigl-exposed 57|reserved
+constant integer
+constant decimal
+constant decimal-precision
+constant fraction
+constant exponent
+constant integer-700
+constant digit-symbol
+constant dot-name
+constant dots-name
+constant dot-digit-symbol
+constant dot
+constant-concat 7DOGS x
+constant-group 7DOGS x
+constant-dot-left .FOO x
+constant-dot-right x .FOO
+constant-function digit-symbol
+sigl-nested 86
+pool after|VAR

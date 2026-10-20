@@ -163,15 +163,26 @@ must not delegate to native source compiler services.
 
 Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
 conditions/TRACE and INTERPRET. Design the complete architecture before
-implementation approval; implement INTERPRET last. Review instructions one at
+implementation; implement INTERPRET last. Review instructions one at
 a time with individual semantics, errors, RXAS quality and shared dependencies.
 Maintain independent Level L tests. Keep compiler policy, generic L services,
 shared B runtime/Unicode libraries and RXAS/VM infrastructure separately owned.
 Adrian approved the C-only plan and shared B Unicode extraction on 19 October
 2026. Preserve G/C interfaces and one algorithm/data owner; exact new public
-API and ISA contracts retain their decision gates.
+API and ISA contracts retain their decision gates outside the authority below.
 
-Retain language/API/platform decision gates and explicit exclusions. Inspect
+Adrian authorized stepwise implementation of the remaining agreed Level C
+instructions and shared features, with a reviewed local commit after each,
+stopping before INTERPRET without further user approval. Record exact contracts
+and obtain internal coordinator review before implementation. This authority
+covers necessary C/L/shared-runtime interfaces within the agreed architecture;
+it does not authorize INTERPRET, native C compiler changes, publication, new
+platform or host scope, a second runtime algorithm, or unrelated native changes.
+Needed RXAS/VM support remains within the agreed plan after exact internal
+contract review and its applicable native/performance qualification. Preserve unrelated active work and the existing checkout.
+
+Retain explicit exclusions and language/API/platform decisions outside that
+standing authority. Inspect
 actual RXAS and helper work throughout; native C may be faulty or inefficient.
 The emitted-code rules and Level L research performance exception apply;
 production RXAS/VM performance edits retain their own verdict gate.
@@ -182,7 +193,10 @@ production RXAS/VM performance edits retain their own verdict gate.
   present an implementation plan before editing. Include the vision and intended
   outcomes, numbered checkable acceptance criteria, and numbered implementation
   steps, following the plan and session-continuity rules below.
-- Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
+- Pause for user approval before language-design decisions, syntax changes or
+  architectural shifts unless existing explicit authority covers them. The
+  pre-INTERPRET Level C authority above supersedes repeated approval pauses
+  within that scope; the user remains the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
 - Once the required full testing has passed, do not repeat it if no code or

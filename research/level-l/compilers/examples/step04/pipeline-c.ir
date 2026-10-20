@@ -63,14 +63,14 @@ function $MAIN -> crexx.c.result
     core.store %26 slot:$tmp.3 @origin:41
     %27 = core.load slot:$context @origin:48
     %28 = crexx.c.load %27 name="total" @origin:48
-    %29 = core.load slot:$tmp.3 @origin:41
-    %30 = core.constant true : core.boolean @origin:41
+    %29 = core.load slot:$tmp.3 @origin:49
+    %30 = core.constant true : core.boolean @origin:49
     %31 = crexx.c.arguments.append %29 %28 %30 @origin:49
-    core.store %31 slot:$tmp.3 @origin:41
+    core.store %31 slot:$tmp.3 @origin:49
     %32 = core.load slot:$tmp.3 @origin:41
     %33 = core.load slot:$context @origin:41
     %34 = crexx.c.call %32 %33 target="$MAIN" entry="1" function="true" @origin:41
-    %35 = crexx.c.requirevalue %34 @origin:41
+    %35 = crexx.c.requirevalue %34 name="TWICE" @origin:41
     crexx.c.say %35 @origin:33
     core.jump -> if.join.9 @origin:21
   if.no.8:
