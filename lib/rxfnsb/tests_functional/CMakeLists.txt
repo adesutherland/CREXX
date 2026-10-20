@@ -206,11 +206,15 @@ set_tests_properties(ts_linein_stdin_prompt PROPERTIES
 set(_linein_stdin_driver_workdir
         "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_driver")
 file(MAKE_DIRECTORY "${_linein_stdin_driver_workdir}")
+# The driver deliberately publishes adjacent outputs and a persistent lock.
+# Give each test its own source copy so the immutable checkout stays untouched.
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx"
+        "${_linein_stdin_driver_workdir}/ts_linein_stdin.crexx" COPYONLY)
 add_test(
         NAME ts_linein_stdin_crexx_driver
         COMMAND $<TARGET_FILE:linein_stdin_harness>
                 $<TARGET_FILE:crexx>
-                ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                "${_linein_stdin_driver_workdir}/ts_linein_stdin.crexx"
                 30000
         WORKING_DIRECTORY "${_linein_stdin_driver_workdir}"
 )
@@ -225,11 +229,13 @@ if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(_linein_tty_driver_workdir
             "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_tty")
     file(MAKE_DIRECTORY "${_linein_tty_driver_workdir}")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx"
+            "${_linein_tty_driver_workdir}/ts_linein_stdin.crexx" COPYONLY)
     add_test(
             NAME ts_linein_stdin_crexx_tty
             COMMAND $<TARGET_FILE:linein_tty_harness>
                     $<TARGET_FILE:crexx>
-                    ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                    "${_linein_tty_driver_workdir}/ts_linein_stdin.crexx"
                     30000
             WORKING_DIRECTORY "${_linein_tty_driver_workdir}"
     )
