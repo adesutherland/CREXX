@@ -1,0 +1,26 @@
+/* rexx-csv consumer example, MIT; see ../LICENSE. */
+options levelb
+import rxfnsb
+import rexx_csv
+
+arg paths = .string[]
+text = 'name,city' || '0a'x || '"Ada, Jr.","Montréal"' || '0a'x
+/* Read bytes so the host cannot translate embedded CRLF. The cast validates UTF-8. */
+if paths[0] > 0 then text = readbinary(paths[1]) as .string
+document = csvparse(text)
+if document.ok() = 0 then do
+  say document.error_code() "record" document.error_record() "field" document.error_field()
+  exit 1
+end
+rows = document.rows()
+output = csvwrite(rows)
+if output.ok() = 0 then do
+  say output.error()
+  exit 1
+end
+if paths[0] > 1 then do
+  call writebinary paths[2], output.text() as .binary
+  say "PASS: CSV file example;" document.row_count() "rows"
+end
+else say "PASS: CSV example;" document.row_count() "rows;" document.field(2, 1)
+exit 0

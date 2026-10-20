@@ -1,0 +1,284 @@
+/* Shared L001-L010 and JVM B001-B003/B005 contracts; MIT License. */
+options binary
+import rexxcsv.Csv
+import rexxcsv.CsvRow
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.nio.charset.CodingErrorAction
+import java.nio.charset.CharacterCodingException
+class CsvContracts public final
+  method main(args = String[]) public static
+    ownership()
+    unicodeBoundary()
+    fieldLimits()
+    countLimits()
+    largeLimits()
+    say 'PASS: complete NetRexx boundary/lifecycle contracts'
+
+  method repeated(piece = String, count = int) private static returns String
+    builder = StringBuilder()
+    loop for count
+      builder.append(piece)
+    end
+    return builder.toString()
+
+  method single(text = String) private static returns CsvRow
+    fields = String[1]
+    fields[0] = text
+    return Csv.row(fields)
+
+  method writeOne(text = String) private static returns rexxcsv.CsvOutput
+    rows = CsvRow[1]
+    rows[0] = single(text)
+    return Csv.write(rows)
+
+  method copies(row = CsvRow, count = int) private static returns CsvRow[]
+    rows = CsvRow[count]
+    loop i = int 0 to count - 1
+      rows[i] = row
+    end
+    return rows
+
+  method ownership() private static
+    lf = String(Character.toChars(10))
+    crlf = String(Character.toChars(13)) || lf
+    text = String '0012,' || CsvChecks.text('c3a9f09f9982') || ',"a' || crlf || 'b",'
+    first = Csv.parse(text)
+    CsvChecks.flag('B001 first', first.ok(), 1)
+    failed = Csv.parse('"unfinished')
+    CsvChecks.diagnostic('B001 failure', failed, 'E_UNCLOSED_QUOTE', 1, 1, '')
+    second = Csv.parse('later')
+    text = 'changed'
+    CsvChecks.equal('B001 retained', first.field(1, 1), '0012')
+    CsvChecks.equal('B001 later', second.field(1, 1), 'later')
+    CsvChecks.equal('B001 Unicode', first.field(1, 2), CsvChecks.text('c3a9f09f9982'))
+    CsvChecks.equal('B001 CRLF', first.field(1, 3), 'a' || crlf || 'b')
+    fields = String[2]
+    fields[0] = 'original'
+    fields[1] = ''
+    row = Csv.row(fields)
+    fields[0] = 'mutated'
+    CsvChecks.equal('B002 row snapshot', row.field(1), 'original')
+    CsvChecks.equal('B002 empty', row.field(2), '')
+    changed = row.withField(1, 'new')
+    CsvChecks.equal('B002 immutable edit', changed.field(1), 'new')
+    CsvChecks.equal('B002 immutable original', row.field(1), 'original')
+    rows = first.rows()
+    rows[0] = row
+    CsvChecks.equal('B002 document snapshot', first.field(1, 1), '0012')
+    output = Csv.write(rows)
+    rows[0] = changed
+    CsvChecks.equal('B002 output snapshot', output.text(), 'original,""' || crlf)
+    again = Csv.parse(Csv.write(first.rows()).text())
+    CsvChecks.equal('B003 nested', again.field(1, 3), first.field(1, 3))
+    other = first.rows()
+    CsvChecks.equal('B003 fresh rows', other[0].field(1), '0012')
+    rejectedOutput = Csv.write(copies(Csv.row(String[0]), 1))
+    CsvChecks.diagnostic('B001 writer failure', rejectedOutput, 'E_EMPTY_ROW', 1, 0, '')
+    laterOutput = writeOne('later')
+    CsvChecks.equal('B001 retained writer after failure', output.text(), 'original,""' || crlf)
+    CsvChecks.equal('B001 writer recovery', laterOutput.text(), 'later' || crlf)
+    CsvChecks.number('B002 invalid field count', first.fieldCount(0), -1)
+    CsvChecks.number('B002 invalid field count', first.fieldCount(2), -1)
+    loop which = int 1 to 12
+      misuse(which)
+    end
+    emptyRow = Csv.row(String[0])
+    CsvChecks.number('B002 zero fields constructible', emptyRow.fieldCount(), 0)
+    CsvChecks.diagnostic('B002 zero-field write', Csv.write(copies(emptyRow, 1)), 'E_EMPTY_ROW', 1, 0, '')
+    CsvChecks.equal('B003 empty table', Csv.write(CsvRow[0]).text(), '')
+    say 'PASS: B001-B003 owned arrays, immutable edits, nested calls, recovery and API misuse'
+
+  method misuse(which = int) private static
+    first = Csv.parse('a,b')
+    row = single('value')
+    caught = boolean 0
+    do
+      select
+        when which = 1 then first.field(0, 1)
+        when which = 2 then first.field(1, 0)
+        when which = 3 then first.field(1, 3)
+        when which = 4 then row.field(-1)
+        when which = 5 then row.withField(2, 'new')
+        when which = 6 then row.withField(1, String null)
+        when which = 7 then Csv.parse(String null)
+        when which = 8 then Csv.row(String[] null)
+        when which = 9 then Csv.row(String[1])
+        when which = 10 then Csv.write(CsvRow[] null)
+        when which = 11 then Csv.write(CsvRow[1])
+        otherwise Csv.parse('"unfinished').field(1, 1)
+      end
+    catch IllegalArgumentException
+      caught = 1
+    end
+    CsvChecks.flag('B002 API misuse ' || which, caught, 1)
+
+  method unicodeBoundary() private static
+    /* Surrogates remain raw Java strings in constructors; entry points check them. */
+    high = String(Character.toChars(55296))
+    low = String(Character.toChars(56320))
+    bad = String[6]
+    bad[0] = high
+    bad[1] = low
+    bad[2] = high || 'a'
+    bad[3] = low || high
+    bad[4] = 'a' || low
+    bad[5] = CsvChecks.text('00') || high
+    loop item over bad
+      CsvChecks.diagnostic('B005 surrogate parse', Csv.parse(item), 'E_ARGUMENT', 0, 0, '')
+      CsvChecks.diagnostic('B005 surrogate write', writeOne(item), 'E_ARGUMENT', 0, 0, '')
+    end
+    CsvChecks.diagnostic('B005 surrogate precondition before size', Csv.parse(repeated('a', 16777217) || high), 'E_ARGUMENT', 0, 0, '')
+    valid = String[8]
+    valid[0] = String(Character.toChars(128))
+    valid[1] = String(Character.toChars(2047))
+    valid[2] = String(Character.toChars(2048))
+    valid[3] = String(Character.toChars(55295))
+    valid[4] = String(Character.toChars(57344))
+    valid[5] = String(Character.toChars(65535))
+    valid[6] = String(Character.toChars(65536))
+    valid[7] = String(Character.toChars(1114111))
+    loop item over valid
+      CsvChecks.equal('B005 valid scalars', Csv.parse(item).field(1, 1), item)
+      CsvChecks.equal('B005 scalar round trip', Csv.parse(writeOne(item).text()).field(1, 1), item)
+    end
+    invalid = String '80 c0af c1bf c2 e08080 eda080 f0808080 f4908080 f5808080 f09f99 e228a1 ff'
+    loop hex over invalid.split(' ')
+      caught = boolean 0
+      do
+        decoder = StandardCharsets.UTF_8.newDecoder()
+        decoder.onMalformedInput(CodingErrorAction.REPORT)
+        decoder.onUnmappableCharacter(CodingErrorAction.REPORT)
+        decoder.decode(ByteBuffer.wrap(CsvChecks.bytes(hex)))
+      catch CharacterCodingException
+        caught = 1
+      end
+      CsvChecks.flag('B005 caller UTF8 rejection', caught, 1)
+    end
+    say 'PASS: B005 strict UTF-8 caller decoding and JVM scalar/surrogate boundaries'
+
+  method fieldLimits() private static
+    crlf = String(Character.toChars(13)) || String(Character.toChars(10))
+    values = String[4]
+    values[0] = repeated('a', 1048576)
+    values[1] = repeated(CsvChecks.text('c3a9'), 524288)
+    values[2] = repeated(String(Character.toChars(128578)), 262144)
+    values[3] = repeated('e' || String(Character.toChars(769)), 349525) || 'a'
+    loop text over values
+      CsvChecks.number('L001/L002 UTF8 bytes independently', text.getBytes(StandardCharsets.UTF_8).length, 1048576)
+      accepted = Csv.parse(text)
+      CsvChecks.flag('L001/L002 accepted', accepted.ok(), 1)
+      CsvChecks.equal('L001/L002 complete field', accepted.field(1, 1), text)
+      CsvChecks.diagnostic('L001/L002 excess', Csv.parse(text || 'a'), 'E_LIMIT', 1, 1, 'field_bytes')
+      output = writeOne(text)
+      CsvChecks.flag('L007 accepted', output.ok(), 1)
+      CsvChecks.equal('L007 exact output', output.text(), text || crlf)
+      CsvChecks.diagnostic('L007 field excess', writeOne(text || 'a'), 'E_LIMIT', 1, 1, 'field_bytes')
+    end
+    nul = String(Character.toChars(0))
+    CsvChecks.diagnostic('NUL before size', Csv.parse(values[0] || nul), 'E_NUL', 1, 1, '')
+    CsvChecks.diagnostic('size before NUL', Csv.parse(values[0] || 'a' || nul), 'E_LIMIT', 1, 1, 'field_bytes')
+    CsvChecks.diagnostic('writer NUL before size', writeOne(values[0] || nul), 'E_NUL', 1, 1, '')
+    CsvChecks.diagnostic('writer size before NUL', writeOne(values[0] || 'a' || nul), 'E_LIMIT', 1, 1, 'field_bytes')
+    say 'PASS: L001/L002/L007 ASCII, Latin, supplementary and decomposed UTF-8 byte limits'
+
+  method countLimits() private static
+    lf = String(Character.toChars(10))
+    crlf = String(Character.toChars(13)) || lf
+    text = String repeated('a' || lf, 10000)
+    accepted = Csv.parse(text)
+    CsvChecks.number('L003 records', accepted.rowCount(), 10000)
+    CsvChecks.equal('L003 final row', accepted.field(10000, 1), 'a')
+    CsvChecks.diagnostic('L003 excess', Csv.parse(text || 'a' || lf), 'E_LIMIT', 10001, 1, 'records')
+    CsvChecks.flag('L007 records accepted', Csv.write(copies(single('a'), 10000)).ok(), 1)
+    CsvChecks.diagnostic('L007 records excess', Csv.write(copies(single('a'), 10001)), 'E_LIMIT', 10001, 1, 'records')
+    text = repeated(',', 1023)
+    accepted = Csv.parse(text)
+    CsvChecks.number('L004 width', accepted.fieldCount(1), 1024)
+    CsvChecks.equal('L004 last field', accepted.field(1, 1024), '')
+    CsvChecks.diagnostic('L004 excess', Csv.parse(text || ','), 'E_LIMIT', 1, 1025, 'fields_per_record')
+    fields = String[1024]
+    java.util.Arrays.fill(fields, '')
+    row = Csv.row(fields)
+    CsvChecks.flag('L007 width accepted', Csv.write(copies(row, 1)).ok(), 1)
+    fields = String[1025]
+    java.util.Arrays.fill(fields, '')
+    CsvChecks.diagnostic('L007 width excess', Csv.write(copies(Csv.row(fields), 1)), 'E_LIMIT', 1, 1025, 'fields_per_record')
+    text = repeated(repeated(',', 99) || lf, 1000)
+    accepted = Csv.parse(text)
+    CsvChecks.number('L005 rows', accepted.rowCount(), 1000)
+    loop r = int 1 to 1000
+      CsvChecks.number('L005 width', accepted.fieldCount(r), 100)
+      loop c = int 1 to 100
+        CsvChecks.equal('L005 every indexed cell', accepted.field(r, c), '')
+      end
+    end
+    CsvChecks.diagnostic('L005 excess', Csv.parse(text || lf), 'E_LIMIT', 1001, 1, 'total_fields')
+    fields = String[100]
+    java.util.Arrays.fill(fields, '')
+    row = Csv.row(fields)
+    expected = String repeated(repeated('"",', 99) || '""' || crlf, 1000)
+    CsvChecks.equal('L007 all fields', Csv.write(copies(row, 1000)).text(), expected)
+    rows = CsvRow[1001]
+    java.util.Arrays.fill(rows, row)
+    rows[1000] = single('')
+    CsvChecks.diagnostic('L007 total excess', Csv.write(rows), 'E_LIMIT', 1001, 1, 'total_fields')
+    say 'PASS: L003-L005/L007 row/column/total boundaries and all 100,000 indexed cells'
+
+  method largeLimits() private static
+    lf = String(Character.toChars(10))
+    crlf = String(Character.toChars(13)) || lf
+    field = String repeated('a', 1048573)
+    text = String repeated('"' || field || '",', 15) || '"' || field || '"' || lf
+    CsvChecks.number('L006 exact bytes', text.getBytes(StandardCharsets.UTF_8).length, 16777216)
+    accepted = Csv.parse(text)
+    CsvChecks.flag('L006 accepted', accepted.ok(), 1)
+    CsvChecks.number('L006 width', accepted.fieldCount(1), 16)
+    loop c = int 1 to 16
+      CsvChecks.equal('L006 every field', accepted.field(1, c), field)
+    end
+    CsvChecks.diagnostic('L006 input excess', Csv.parse(text.substring(0, text.length() - 1) || crlf), 'E_LIMIT', 0, 0, 'input_bytes')
+    CsvChecks.diagnostic('L010 preflight', Csv.parse('x"' || repeated('a', 16777215)), 'E_LIMIT', 0, 0, 'input_bytes')
+    ascii = String repeated('a', 1048576)
+    fields = String[16]
+    java.util.Arrays.fill(fields, ascii)
+    fields[15] = repeated('a', 1048559)
+    row = Csv.row(fields)
+    output = Csv.write(copies(row, 1))
+    CsvChecks.flag('L008 accepted', output.ok(), 1)
+    CsvChecks.number('L008 exact bytes', output.text().getBytes(StandardCharsets.UTF_8).length, 16777216)
+    again = Csv.parse(output.text())
+    CsvChecks.flag('L008 read back', again.ok(), 1)
+    loop c = int 1 to 16
+      CsvChecks.equal('L008 every field', again.field(1, c), fields[c - 1])
+    end
+    CsvChecks.diagnostic('L008 output excess', Csv.write(copies(row.withField(16, fields[15] || 'a'), 1)), 'E_LIMIT', 1, 16, 'output_bytes')
+    row = row.withField(16, ascii)
+    CsvChecks.equal('16 MiB constructor payload', row.field(16), ascii)
+    CsvChecks.diagnostic('16 MiB payload framing excess', Csv.write(copies(row, 1)), 'E_LIMIT', 1, 16, 'output_bytes')
+    quotes = String repeated('"', 1048576)
+    last = String repeated('"', 1048562) || 'aaa'
+    fields = String[8]
+    java.util.Arrays.fill(fields, quotes)
+    fields[7] = last
+    row = Csv.row(fields)
+    output = Csv.write(copies(row, 1))
+    CsvChecks.flag('L009 quotes accepted', output.ok(), 1)
+    CsvChecks.number('L009 exact bytes', output.text().getBytes(StandardCharsets.UTF_8).length, 16777216)
+    again = Csv.parse(output.text())
+    CsvChecks.flag('L009 read back', again.ok(), 1)
+    loop c = int 1 to 8
+      CsvChecks.equal('L009 every field', again.field(1, c), fields[c - 1])
+    end
+    CsvChecks.diagnostic('L009 quote output excess', Csv.write(copies(row.withField(8, last || 'a'), 1)), 'E_LIMIT', 1, 8, 'output_bytes')
+    text = repeated(crlf, 524288)
+    output = writeOne(text)
+    CsvChecks.flag('L009 embedded CRLF', output.ok(), 1)
+    CsvChecks.number('L009 CRLF output bytes', output.text().getBytes(StandardCharsets.UTF_8).length, 1048580)
+    CsvChecks.equal('L009 CRLF exact', output.text(), '"' || text || '"' || crlf)
+    CsvChecks.equal('L009 CRLF parse', Csv.parse('"' || text || '"').field(1, 1), text)
+    CsvChecks.diagnostic('L009 CRLF field excess', writeOne(text || 'a'), 'E_LIMIT', 1, 1, 'field_bytes')
+    CsvChecks.diagnostic('L009 quoted field excess', Csv.parse('"' || text || 'a"'), 'E_LIMIT', 1, 1, 'field_bytes')
+    CsvChecks.diagnostic('L009 doubled quote excess', Csv.parse('"' || repeated('"', 2097154) || '"'), 'E_LIMIT', 1, 1, 'field_bytes')
+    CsvChecks.equal('B003 final recovery', Csv.parse('recovered').field(1, 1), 'recovered')
+    say 'PASS: L006/L008-L010 16 MiB input/output and quote-expansion round trips, CRLF and preflight'

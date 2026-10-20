@@ -80,6 +80,7 @@ code before editing user-facing docs.
 | `tools/rxbuild`, `tools/build-system/{levelg,audit}`, `tools/texttools` | Named build tools, build-graph observation and document generation |
 | `third_party` | Root-level vendored re2c, Lemon, AVL and UTF-8 inputs; no vendor pruning |
 | `examples`, component `tests`, `tests` | User examples, component regressions, cross-component regressions |
+| `packages` | Independently distributed source packages; each owns its specification, variants, examples, fixtures and packaging |
 | `research/pipes` | The unshipped pipe proposal and its two prototypes |
 | `ports` | Maintained constrained-host build/package adapters |
 | `scripts`, `packaging`, `.github` | Automation, packaging assets and workflow definitions |

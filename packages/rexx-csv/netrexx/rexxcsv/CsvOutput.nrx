@@ -1,0 +1,41 @@
+/* rexx-csv, MIT License; see ../../LICENSE. Copyright 2026 Adrian Sutherland. */
+options binary
+package rexxcsv
+
+/** Checked canonical output; no partial output is exposed on failure. */
+class CsvOutput public final
+  properties private
+    content = String
+    code = String
+    recordNumber = int
+    fieldNumber = int
+    limitName = String
+
+  method CsvOutput(text = String, fault = String, record = int, column = int, limit = String) shared
+    content = text
+    code = fault
+    recordNumber = record
+    fieldNumber = column
+    limitName = limit
+
+  /** @return true on success. */
+  method ok() public returns boolean
+    return code.length() = 0
+  /** @return exact canonical text; empty on failure. */
+  method text() public returns String
+    return content
+  /** @return shared CSV code, binding E_ARGUMENT, or empty on success. */
+  method errorCode() public returns String
+    return code
+  /** @return logical error record, zero for success/precondition failure. */
+  method errorRecord() public returns int
+    return recordNumber
+  /** @return logical error field, zero for success/precondition failure. */
+  method errorField() public returns int
+    return fieldNumber
+  /** @return shared resource limit name, or empty. */
+  method errorLimit() public returns String
+    return limitName
+  /** @return readable non-normative diagnostic, or empty. */
+  method error() public returns String
+    return Csv.message(code, limitName)

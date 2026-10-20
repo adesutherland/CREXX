@@ -1,0 +1,43 @@
+/* Shared test assertions and exact fixture transport; MIT License. */
+options binary
+import java.nio.charset.StandardCharsets
+import rexxcsv.CsvDocument
+import rexxcsv.CsvOutput
+class CsvChecks public final
+  method bytes(hex = String) public static returns byte[]
+    bytes = byte[hex.length() % 2]
+    loop i = int 0 to bytes.length - 1
+      n = int Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16)
+      bytes[i] = byte n
+    end
+    return bytes
+
+  method text(hex = String) public static returns String
+    return String(bytes(hex), StandardCharsets.UTF_8)
+
+  method equal(label = String, actual = String, expected = String) public static
+    if \actual.equals(expected) then signal IllegalStateException('FAIL ' || label || ': text differs')
+  method number(label = String, actual = long, expected = long) public static
+    if actual \= expected then signal IllegalStateException('FAIL ' || label || ': expected ' || expected || ', got ' || actual)
+  method flag(label = String, actual = boolean, expected = boolean) public static
+    if actual \= expected then signal IllegalStateException('FAIL ' || label || ': status differs')
+
+  method diagnostic(label = String, value = CsvDocument, code = String, record = int, column = int, limit = String) public static
+    flag(label, value.ok(), 0)
+    equal(label, value.errorCode(), code)
+    number(label, value.errorRecord(), record)
+    number(label, value.errorField(), column)
+    equal(label, value.errorLimit(), limit)
+    flag(label, value.error().length() > 0, 1)
+    number(label, value.rowCount(), 0)
+    number(label, value.rows().length, 0)
+    number(label, value.fieldCount(1), -1)
+
+  method diagnostic(label = String, value = CsvOutput, code = String, record = int, column = int, limit = String) public static
+    flag(label, value.ok(), 0)
+    equal(label, value.errorCode(), code)
+    number(label, value.errorRecord(), record)
+    number(label, value.errorField(), column)
+    equal(label, value.errorLimit(), limit)
+    flag(label, value.error().length() > 0, 1)
+    equal(label, value.text(), '')

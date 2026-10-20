@@ -1,0 +1,75 @@
+{
+  "crexx-linux": {
+    "version": "1.0.0-beta.3",
+    "assets": [
+      {
+        "url": "https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-linux-x64.zip",
+        "sha256": "3a293348623d9aaef7299e5aaa0eb8904b98bc27e8726457100a4d6d515ae649"
+      }
+    ],
+    "executable": "CREXX-linux-x64/bin/rxc"
+  },
+  "crexx-windows": {
+    "version": "1.0.0-beta.3",
+    "assets": [
+      {
+        "url": "https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-windows-x64-signed.zip",
+        "sha256": "bb83bda9545c7506592a1d1c71d1f1110b6da65b7431255afd64722aaebab539"
+      }
+    ],
+    "executable": "CREXX-windows-x64/bin/rxc.exe"
+  },
+  "regina-linux": {
+    "version": "3.9.7",
+    "assets": [
+      {
+        "url": "https://downloads.sourceforge.net/project/regina-rexx/regina-rexx/3.9.7/libregina3_3.9.7-1-amd64-Ubuntu-24.04.deb",
+        "sha256": "1190bcb0ce14513ae5d9260f497565706b4a3109e8a3f831327b73ac7f57a2e6"
+      },
+      {
+        "url": "https://downloads.sourceforge.net/project/regina-rexx/regina-rexx/3.9.7/regina-rexx_3.9.7-1-amd64-Ubuntu-24.04.deb",
+        "sha256": "5570d1cb8e62b0edeb5f1b9bdecfcd2379eb1a4f93a5984e479e486b6312e2e1"
+      }
+    ],
+    "executable": "/usr/bin/regina"
+  },
+  "regina-windows": {
+    "version": "3.9.7",
+    "assets": [
+      {
+        "url": "https://downloads.sourceforge.net/project/regina-rexx/regina-rexx/3.9.7/Regina397w64.zip",
+        "sha256": "7cc7993bcbcabea57e38f17468ad94081503b4d1b1685964891567b093860add"
+      }
+    ],
+    "executable": "regina.exe"
+  },
+  "oorexx-linux": {
+    "version": "5.1.0",
+    "assets": [
+      {
+        "url": "https://downloads.sourceforge.net/project/oorexx/oorexx/5.1.0/oorexx-5.1.0-12973.ubuntu2404.x86_64.deb",
+        "sha256": "05074a21d60497d6209b00b9c13aef30e66a41cbbe328e8f3bb123c4ee1efdcd"
+      }
+    ],
+    "executable": "/usr/local/bin/rexx"
+  },
+  "oorexx-windows": {
+    "version": "5.1.0",
+    "assets": [
+      {
+        "url": "https://downloads.sourceforge.net/project/oorexx/oorexx/5.1.0/portable/oorexx-5.1.0-12973.windows.x86_64-portable-release.zip",
+        "sha256": "6208977dd9b224001c9cff262a4e6d1c6ef62622e48ef83a89d87c9e5d4e80d8"
+      }
+    ],
+    "executable": "oorexx-5.1.0-12973.windows.x86_64-portable-release/bin/rexx.exe"
+  },
+  "netrexx": {
+    "version": "5.10-GA",
+    "assets": [
+      {
+        "url": "https://www.netrexx.org/files/NetRexx-5.10-GA.zip",
+        "sha256": "ede777b7277806451ff406d89a64eacca2e187bef9f3b0d32297af4437c86976"
+      }
+    ]
+  }
+}
