@@ -66,6 +66,11 @@ endif()
 install(FILES "${_pprint_bundle}"
         DESTINATION examples/exits/pprint)
 
+
+crexx_register_test_prep_targets(
+    TESTS example_pprint_exit
+    TARGETS example_pprint_exit_artifacts rxvm)
+
 crexx_finalize_directory_qa_tiers()
 
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS example_pprint_exit_artifacts)

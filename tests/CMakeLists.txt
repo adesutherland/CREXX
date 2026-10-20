@@ -400,6 +400,9 @@ foreach(_binfile ${REXXTESTBINS})
    set(_prev_dependency ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
+
+set_tests_properties(crexx_expected_failure_contract PROPERTIES CREXX_PREP_NONE TRUE)
+
 crexx_finalize_directory_qa_tiers()
 
 # Repository ownership and package composition: no compiler or nested build in

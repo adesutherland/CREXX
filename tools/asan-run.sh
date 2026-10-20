@@ -45,7 +45,7 @@ Phases:
 Options:
   --build-dir DIR        Build directory. Default: cmake-build-debugasan.
   --profile PROFILE      full (default), weekly, native, affected, or daily.
-                         Daily excludes exactly ten approved names; other profiles retain broad scope.
+                         Daily uses the approved VM panel and explicit affected families; other profiles retain broad scope.
                          Full/weekly/native/affected reject external-fixture trees.
   --build-jobs N         Build parallelism. Default: 4.
   --build-target TARGET  Build only this target in --phase build. Repeatable.
@@ -254,9 +254,35 @@ run_cmake_build() {
     run_logged "$name" "$build_leaks" cmake --build "$build_dir" "$@" --parallel "$build_jobs"
 }
 
+run_daily_build() {
+    local source_dir
+    source_dir=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["CMAKE_HOME_DIRECTORY"])' "$build_dir/qa-fixture-config.json")
+    run_logged configure "$build_leaks" cmake -S "$source_dir" -B "$build_dir"
+    run_logged preparation-plan "$build_leaks" python3 "$script_dir/sanitizer-policy.py" prep \
+        --build-dir "$build_dir" --profile daily --output "$log_dir/preparation.json"
+    local selected_targets=()
+    local target
+    while IFS= read -r target; do selected_targets+=("$target"); done < <(
+        python3 -c 'import json,sys;print("\n".join(json.load(open(sys.argv[1]))["targets"]))' "$log_dir/preparation.json")
+    [[ "${#selected_targets[@]}" -gt 0 ]] || die "empty daily prerequisite plan"
+    run_cmake_build selected-build --target "${selected_targets[@]}"
+    run_logged prepared-prerequisites "$build_leaks" python3 "$script_dir/sanitizer-policy.py" prep \
+        --build-dir "$build_dir" --profile daily --verify-plan "$log_dir/preparation.json" \
+        --output "$build_dir/.qa-daily-preparation.json"
+}
+
 run_ctest() {
     local name=$1
     shift
+    # Builds can regenerate CTest registration. Resolve fixture closure only
+    # after that regeneration, never from the pre-build inventory.
+    local effective_exclude="$exclude_regex"
+    local profile_exclude
+    profile_exclude=$(python3 "$script_dir/sanitizer-policy.py" exclude --profile "$profile" --build-dir "$build_dir")
+    if [[ -n "$profile_exclude" ]]; then
+        if [[ -n "$effective_exclude" ]]; then effective_exclude="($profile_exclude)|($effective_exclude)";
+        else effective_exclude=$profile_exclude; fi
+    fi
     local args=(--test-dir "$build_dir" --output-on-failure --no-tests=error)
     if [[ "$stop_on_failure" -eq 1 ]]; then
         args+=(--stop-on-failure)
@@ -264,8 +290,8 @@ run_ctest() {
     if [[ -n "$regex" ]]; then
         args+=(-R "$regex")
     fi
-    if [[ -n "$exclude_regex" ]]; then
-        args+=(-E "$exclude_regex")
+    if [[ -n "$effective_exclude" ]]; then
+        args+=(-E "$effective_exclude")
     fi
     if [[ -n "$exclude_label" ]]; then
         args+=(-LE "$exclude_label")
@@ -282,9 +308,13 @@ run_ctest() {
     args+=(--parallel "$test_jobs")
     run_logged fixture-validation "$test_leaks" python3 "$script_dir/sanitizer-fixtures.py" \
         validate --build-dir "$build_dir" --artifacts
-    run_logged selection "$test_leaks" python3 "$script_dir/sanitizer-policy.py" \
-        inventory --build-dir "$build_dir" --profile "$profile" \
-        --output "$log_dir/selection.json" -- "${args[@]}" "$@"
+    local selection_args=(inventory --build-dir "$build_dir" --profile "$profile"
+        --output "$log_dir/selection.json")
+    if [[ "$phase" == full && "$profile" == daily ]]; then
+        selection_args+=(--preparation-plan "$build_dir/.qa-daily-preparation.json")
+    fi
+    selection_args+=(-- "${args[@]}" "$@")
+    run_logged selection "$test_leaks" python3 "$script_dir/sanitizer-policy.py" "${selection_args[@]}"
     run_logged "$name" "$test_leaks" ctest "${args[@]}" \
         --output-junit "$log_dir_abs/ctest.xml" "$@"
     if [[ "$phase" != "full" ]]; then qualify_ctest; fi
@@ -367,14 +397,6 @@ if [[ -n "$exclude_regex_file" ]]; then
     [[ -f "$exclude_regex_file" ]] || die "exclude regex file not found: $exclude_regex_file"
     exclude_regex=$(tr -d '\n' < "$exclude_regex_file")
 fi
-profile_exclude=$(python3 "$script_dir/sanitizer-policy.py" exclude --profile "$profile")
-if [[ -n "$profile_exclude" ]]; then
-    if [[ -n "$exclude_regex" ]]; then
-        exclude_regex="($profile_exclude)|($exclude_regex)"
-    else
-        exclude_regex=$profile_exclude
-    fi
-fi
 if [[ -n "$exclude_label" ]]; then
     exclude_label="(^performance-measurement$)|($exclude_label)"
 else
@@ -421,13 +443,19 @@ case "$phase" in
     build)
         if [[ "${#build_targets[@]}" -gt 0 ]]; then
             run_cmake_build build --target "${build_targets[@]}"
+        elif [[ "$profile" == daily ]]; then
+            run_daily_build
         else
             run_cmake_build build
         fi
         ;;
     full)
-        run_cmake_build build
-        run_cmake_build qa-prep --target qa-prep
+        if [[ "$profile" == daily ]]; then
+            run_daily_build
+        else
+            run_cmake_build build
+            run_cmake_build qa-prep --target qa-prep
+        fi
         run_logged native-closure "$build_leaks" python3 "$script_dir/sanitizer-fixtures.py" native --build-dir "$build_dir" --if-sanitized
         run_ctest ctest
         run_logged native-closure-after-tests "$test_leaks" python3 "$script_dir/sanitizer-fixtures.py" native --build-dir "$build_dir" --if-sanitized

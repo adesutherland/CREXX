@@ -19,7 +19,7 @@ import tempfile
 SCHEMA = 1
 MANIFEST = 'qa-fixtures.json'
 CONFIG = 'qa-fixture-config.json'
-ALLOWED = {'.rxbin', '.rxas', '.crexx', '.rexx', '.c'}
+ALLOWED = {'.rxbin', '.rxas', '.crexx', '.rexx', '.c', '.qa-output'}
 
 
 def digest(path):
@@ -271,6 +271,28 @@ def copy_files(build, names):
         raise
 
 
+def runtime_paths(build, runner, paths):
+    """Reject accidental ordinary VM/provider routing before execution."""
+    build = Path(build).resolve()
+    root, _ = donor(build)
+    if root is None:
+        return
+    root = Path(root).resolve()
+    observed = [str(runner), *paths]
+    home = os.environ.get('CREXX_HOME')
+    if home:
+        observed.append(home)
+    observed.extend(path for path in os.environ.get('CREXX_PROVIDER_PATH', '').split(os.pathsep) if path)
+    for name in observed:
+        path = Path(name).resolve()
+        if root == path or root in path.parents:
+            raise ValueError('runtime VM/provider/image path routes to ordinary donor: ' + str(path))
+        if path != build and build not in path.parents:
+            raise ValueError('runtime VM/provider/image path is outside its instrumented tree: ' + str(path))
+        if not path.exists():
+            raise ValueError('runtime VM/provider/image path is missing: ' + str(path))
+
+
 def native_format(header):
     archive = header.startswith((b'!<arch>\n', b'!<thin>\n'))
     elf = (header.startswith(b'\x7fELF') and len(header) >= 18 and
@@ -380,11 +402,14 @@ def native_closure(build, if_sanitized=False):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command', choices=('prepare', 'seal', 'validate', 'copy', 'native'))
+    p.add_argument('command', choices=('prepare', 'seal', 'validate', 'copy', 'native', 'runtime'))
     p.add_argument('--build-dir', type=Path, required=True)
     p.add_argument('--build-jobs', type=int, default=4)
+    p.add_argument('--profile', choices=('full', 'daily'), default='full')
     p.add_argument('--build-leaks', choices=('on', 'off'), default='on')
     p.add_argument('--files', nargs='+')
+    p.add_argument('--runner', type=Path)
+    p.add_argument('--runtime-paths', nargs='*', default=[])
     p.add_argument('--artifacts', action='store_true')
     p.add_argument('--if-sanitized', action='store_true')
     a = p.parse_args()
@@ -393,9 +418,10 @@ def main():
         # before sealing. seal is also exposed for independent fixture tests.
         runner = Path(__file__).with_name('asan-run.sh')
         base = [str(runner), '--build-dir', str(a.build_dir.resolve()), '--phase', 'build',
-                '--build-jobs', str(a.build_jobs), '--build-leaks', a.build_leaks, '--no-live-tail']
+                '--profile', a.profile, '--build-jobs', str(a.build_jobs), '--build-leaks', a.build_leaks, '--no-live-tail']
         subprocess.run(base, check=True)
-        subprocess.run([*base, '--build-target', 'qa-prep'], check=True)
+        if a.profile == 'full':
+            subprocess.run([*base, '--build-target', 'qa-prep'], check=True)
         seal(a.build_dir)
     elif a.command == 'seal':
         seal(a.build_dir)
@@ -405,6 +431,10 @@ def main():
         if not a.files:
             p.error('copy requires --files')
         copy_files(a.build_dir, a.files)
+    elif a.command == 'runtime':
+        if a.runner is None:
+            p.error('runtime requires --runner')
+        runtime_paths(a.build_dir, a.runner, a.runtime_paths)
     else:
         native_closure(a.build_dir, a.if_sanitized)
 

@@ -39,7 +39,7 @@ function(crexx_add_fixture_command)
     endif()
     set(_files)
     foreach(_file IN LISTS FIX_OUTPUT FIX_BYPRODUCTS)
-        if(NOT _file MATCHES "\\.(rxbin|rxas|crexx|rexx|c)$" OR _file MATCHES "\\$<")
+        if(NOT _file MATCHES "\\.(rxbin|rxas|crexx|rexx|c|qa-output)$" OR _file MATCHES "\\$<")
             message(FATAL_ERROR "Unaudited QA fixture output: ${_file}")
         endif()
         get_filename_component(_absolute "${_file}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
@@ -81,6 +81,11 @@ function(_crexx_qa_native_outputs directory)
     get_property(_targets DIRECTORY "${directory}" PROPERTY BUILDSYSTEM_TARGETS)
     foreach(_target IN LISTS _targets)
         get_target_property(_type "${_target}" TYPE)
+        set(_path "")
+        if(_type MATCHES "^(EXECUTABLE|STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY)$")
+            set(_path "$<TARGET_FILE:${_target}>")
+        endif()
+        set_property(GLOBAL APPEND PROPERTY CREXX_QA_BUILD_TARGETS "${_target}\t${_type}\t${_path}")
         if(CREXX_QA_AUDIT_NATIVE_SOURCES AND NOT _type MATCHES "^(UTILITY|INTERFACE_LIBRARY)$")
             set_property(TARGET "${_target}" PROPERTY EXPORT_COMPILE_COMMANDS ON)
         endif()
@@ -94,6 +99,26 @@ function(_crexx_qa_native_outputs directory)
     endforeach()
 endfunction()
 
+# CTest semantic PASS expressions can override a late nonzero sanitizer exit.
+# Keep those semantic oracles and reject diagnostic headers before CTest output
+# truncation, appending to any owning failure expressions. Ordinary builds retain
+# their original properties.
+function(crexx_apply_sanitizer_failure_guards)
+    if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+        return()
+    endif()
+    get_property(_tests DIRECTORY PROPERTY TESTS)
+    foreach(_test IN LISTS _tests)
+        set_property(TEST "${_test}" APPEND PROPERTY
+            FAIL_REGULAR_EXPRESSION
+            "ERROR: (AddressSanitizer|LeakSanitizer):"
+            "SUMMARY: (AddressSanitizer|LeakSanitizer):"
+            "AddressSanitizer:DEADLYSIGNAL"
+            "AddressSanitizer: CHECK failed"
+            "LeakSanitizer has encountered a fatal error")
+    endforeach()
+endfunction()
+
 function(crexx_finalize_qa_fixtures)
     get_property(_files GLOBAL PROPERTY CREXX_QA_FIXTURE_FILES)
     list(REMOVE_DUPLICATES _files)
@@ -101,6 +126,18 @@ function(crexx_finalize_qa_fixtures)
     string(JOIN "\n" _file_text ${_files})
     file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/qa-fixture-files.txt" CONTENT "${_file_text}\n")
     _crexx_qa_native_outputs("${CMAKE_SOURCE_DIR}")
+    get_property(_build_targets GLOBAL PROPERTY CREXX_QA_BUILD_TARGETS)
+    if(TARGET rxvm)
+        list(APPEND _build_targets "rxvm\tUTILITY\t${CMAKE_BINARY_DIR}/bin/rxvm${CMAKE_EXECUTABLE_SUFFIX}")
+        # Replace the utility entry with the concrete product alias entry.
+        list(REMOVE_ITEM _build_targets "rxvm\tUTILITY\t")
+    endif()
+    string(JOIN "\n" _build_target_text ${_build_targets})
+    set(_build_registry "${CMAKE_BINARY_DIR}/qa-build-targets.tsv")
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(_build_registry "${CMAKE_BINARY_DIR}/qa-build-targets-$<CONFIG>.tsv")
+    endif()
+    file(GENERATE OUTPUT "${_build_registry}" CONTENT "${_build_target_text}\n")
     get_property(_native GLOBAL PROPERTY CREXX_QA_NATIVE_OUTPUTS)
     if(TARGET rxvm)
         list(APPEND _native "${CMAKE_BINARY_DIR}/bin/rxvm${CMAKE_EXECUTABLE_SUFFIX}")
@@ -140,13 +177,14 @@ function(crexx_finalize_qa_fixtures)
         add_test(NAME sanitizer_strategy_contract
             COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tools/tests/test_sanitizer_strategy.py")
         set_tests_properties(sanitizer_strategy_contract PROPERTIES
-            RUN_SERIAL TRUE TIMEOUT 300 LABELS "essential;sanitizer;contract"
+            CREXX_PREP_NONE TRUE RUN_SERIAL TRUE TIMEOUT 300 LABELS "essential;sanitizer;contract"
             ENVIRONMENT "CREXX_QA_REQUIRE_ASAN=${CREXX_QA_AUDIT_NATIVE_SOURCES}")
         find_package(Python3 REQUIRED COMPONENTS Interpreter)
         add_test(NAME sanitizer_fixture_integrity
             COMMAND "${Python3_EXECUTABLE}" "${CREXX_QA_FIXTURE_HELPER}"
                 validate --build-dir "${CMAKE_BINARY_DIR}" --artifacts)
         set_tests_properties(sanitizer_fixture_integrity PROPERTIES
-            FIXTURES_SETUP qa-fixture-integrity TIMEOUT 120 LABELS "essential;sanitizer;contract")
+            CREXX_PREP_NONE TRUE FIXTURES_SETUP qa-fixture-integrity TIMEOUT 120 LABELS "essential;sanitizer;contract")
     endif()
+    crexx_apply_sanitizer_failure_guards()
 endfunction()

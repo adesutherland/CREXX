@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from unittest.mock import patch
 
 ROOT = Path(os.environ.get('CREXX_TEST_ROOT', Path(__file__).resolve().parents[2]))
@@ -31,16 +32,25 @@ def command(*argv, success=True):
 
 class Strategy(unittest.TestCase):
     def setUp(self):
+        # Default-policy assertions are independent of the enclosing affected
+        # workflow; individual cases explicitly exercise nonempty restoration.
+        environment = patch.dict(os.environ, {'CREXX_QA_AFFECTED_TESTS':'[]'})
+        environment.start()
+        self.addCleanup(environment.stop)
         self.temporary = tempfile.TemporaryDirectory(prefix='crexx-strategy-')
         self.root = Path(self.temporary.name)
         self.addCleanup(self.temporary.cleanup)
 
     def test_cadence_and_exact_default_keep(self):
-        self.assertEqual(len(P.DAILY_MOVED), 10)
+        self.assertEqual(len(P.DAILY_MOVED), 2010)
+        with patch.object(Path, 'read_text', return_value=json.dumps({'schema':1,'weekly_only':{'one':['duplicate','duplicate']}})):
+            with self.assertRaisesRegex(ValueError, 'duplicate'):
+                P.weekly_groups()
         for name in P.DAILY_MOVED:
             self.assertRegex(name, P.excluded('daily'))
-        for name in ('future_native_contract', 'binary_global_import_types',
-                     'ts_unicode_normalization_rxtvm_opt', 'ts_unicode_normalization_rxbvm_noopt'):
+        for name in ('future_native_contract', 'arg_semantics_scalar_run_opt',
+                     'ts_unicode_normalization_rxtvm_opt', 'san002_wide_decimal_extract_rxbvm_opt',
+                     'llist_test_noopt', 'rxvm_memory_contract'):
             self.assertNotRegex(name, P.excluded('daily'))
         for profile in P.BROAD_PROFILES:
             self.assertEqual(P.excluded(profile), '')
@@ -59,9 +69,76 @@ class Strategy(unittest.TestCase):
         self.assertEqual(P.platform_profile('daily', False, '', 'new'), 'daily')
         for name in ('lib/CMakeLists.txt', 'lib/plugins/vector/CMakeLists.txt',
                      'tests/rxpa/CMakeLists.txt', 'compiler/rxcp.c', 'new/control.unknown',
-                     'compiler/tests/rexx_src/levelc_bif_reference_audit.expected',
-                     'langtools/tests/ts_llstructuredflow.crexx', 'cmake/new.cmake'):
+                     'compiler/tests/rexx_src/san003_inline_scoped_array_actual.crexx', 'cmake/new.cmake'):
             self.assertEqual(decide(changes=[name]), 'full', name)
+
+    def test_affected_source_ownership_and_platform_absence(self):
+        def decision(name):
+            value = P.decide('schedule', True, 2, [name])
+            self.assertEqual(value['profile'], 'daily', name)
+            return set(value['affected_tests'])
+        for name in ('langtools/rexx/some_source.crexx', 'lib/rxfnsl/rexx/llast.crexx',
+                     'research/level-l/compilers/src/compiler.crexx', 'lib/rxfnsg/rexx/general.crexx'):
+            self.assertEqual(decision(name), set(), name)
+        for name in ('lib/rxfnsl/unicode/algorithm.crexx', 'lib/rxfnsg/unicode/data/UnicodeData.txt',
+                     'lib/rxfnsg/rexx/unicode_case_mapping.crexx.in'):
+            self.assertEqual(decision(name), P.WEEKLY_GROUPS['unicode-runtime-matrix'])
+        self.assertEqual(decision('lib/rxfnsl/rexx/llir.crexx'), P.WEEKLY_GROUPS['level-l-workload-matrix'])
+        self.assertEqual(decision('langtools/rexx/llgenerate.crexx'),
+                         {'levell_services_noopt_rxbvm', 'levell_services_noopt_rxtvm'})
+        structured=decision('langtools/tests/ts_llstructuredflow.crexx')
+        self.assertEqual(len(structured), 14)
+        self.assertTrue(all(name.startswith('ts_llstructuredflow_') for name in structured))
+        self.assertEqual(len(decision('compiler/tests/rexx_src/levelc_bif_reference_audit.expected')), 5)  # four owners + shared setup
+        # A platform can omit known reference names; new tests remain default keep.
+        universe={'future_native_contract','binary_global_import_types','arg_semantics_scalar_run_opt'}
+        self.assertEqual(universe-P.DAILY_MOVED, {'future_native_contract','arg_semantics_scalar_run_opt'})
+        restored='binary_global_import_types'
+        with patch.dict(os.environ, {'CREXX_QA_AFFECTED_TESTS':json.dumps([restored])}):
+            self.assertNotRegex(restored, P.excluded('daily'))
+            self.assertRegex('arg_semantics_scalar_opt', P.excluded('daily'))
+        with patch.dict(os.environ, {'CREXX_QA_AFFECTED_TESTS':'["unknown"]'}):
+            with self.assertRaisesRegex(ValueError, 'unaudited'):
+                P.excluded('daily')
+
+    @unittest.skipUnless(shutil.which('ninja'), 'Independent CTest fixture requires Ninja')
+    def test_real_ctest_daily_fixture_closure(self):
+        source=self.root/'fixture-source'; source.mkdir()
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(DailyFixture NONE)
+enable_testing()
+add_test(NAME levelc_bif_reference_audit_prepare COMMAND "${CMAKE_COMMAND}" -E true)
+set_tests_properties(levelc_bif_reference_audit_prepare PROPERTIES FIXTURES_SETUP required-owner)
+add_test(NAME future_native_contract COMMAND "${CMAKE_COMMAND}" -E true)
+set_tests_properties(future_native_contract PROPERTIES FIXTURES_REQUIRED required-owner)
+add_test(NAME arg_semantics_scalar_opt COMMAND "${CMAKE_COMMAND}" -E true)
+add_test(NAME arg_semantics_scalar_opt_future COMMAND "${CMAKE_COMMAND}" -E true)
+''')
+        build=self.root/'fixture-build'
+        command('cmake','-S',source,'-B',build,'-G','Ninja')
+        pattern=P.excluded('daily',build)
+        # Keep the full expression out of CreateProcess's Windows argument
+        # limit. CTest's in-process script handler still compiles/applies it.
+        pattern_file=self.root/'exclude.txt'; pattern_file.write_text(pattern)
+        script=self.root/'select.cmake'; junit=self.root/'selected.xml'
+        script.write_text('''set(CTEST_SOURCE_DIRECTORY "@SOURCE@")
+set(CTEST_BINARY_DIRECTORY "@BUILD@")
+set(CTEST_CMAKE_GENERATOR "Ninja")
+ctest_start(Experimental)
+file(READ "@PATTERN@" pattern)
+ctest_test(EXCLUDE "${pattern}" OUTPUT_JUNIT "@JUNIT@" RETURN_VALUE status)
+if(NOT status EQUAL 0)
+ message(FATAL_ERROR "Miniature selected tests failed")
+endif()
+'''.replace('@SOURCE@',source.as_posix()).replace('@BUILD@',build.as_posix()).replace('@PATTERN@',pattern_file.as_posix()).replace('@JUNIT@',junit.as_posix()))
+        command('ctest','-S',script,'--output-on-failure')
+        actual={case.attrib['name'] for case in ET.parse(junit).getroot().findall('.//testcase')}
+        expected={'future_native_contract','levelc_bif_reference_audit_prepare','arg_semantics_scalar_opt_future'}
+        self.assertEqual(actual,expected)
+        self.assertEqual(P.profile_names(build,'daily'),expected)
+        for name in P.DAILY_MOVED:
+            if name!='levelc_bif_reference_audit_prepare': self.assertRegex(name,pattern)
+        self.assertNotRegex('arg_semantics_scalar_opt_future',pattern)
 
     def mini_project(self):
         source = self.root / 'source with spaces'
@@ -69,7 +146,9 @@ class Strategy(unittest.TestCase):
         command('git', 'init', '-q', source)
         (source / 'emit.py').write_text('import json,sys\nfrom pathlib import Path\nPath(sys.argv[1]).write_text(json.dumps(sys.argv[2:]))\n')
         cmake = '''cmake_minimum_required(VERSION 3.24)
-project(FixtureContract NONE)
+project(FixtureContract C)
+file(WRITE "${CMAKE_BINARY_DIR}/native.c" "int main(void) { return 0; }\n")
+add_executable(contract_native "${CMAKE_BINARY_DIR}/native.c")
 include(CTest)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 include("@MODULE@")
@@ -116,6 +195,8 @@ crexx_finalize_qa_fixtures()
         command('cmake','-S',source,'-B',multi,'-G','Ninja Multi-Config')
         self.assertTrue((multi/'qa-native-files-Debug.txt').is_file())
         self.assertTrue((multi/'qa-native-files-Release.txt').is_file())
+        self.assertIn('/Debug/contract_native', (multi/'qa-build-targets-Debug.tsv').read_text().replace('.exe',''))
+        self.assertIn('/Release/contract_native', (multi/'qa-build-targets-Release.tsv').read_text().replace('.exe',''))
         command('cmake', '-S', source, '-B', donor, '-G', 'Ninja')
         command('cmake', '--build', donor)
         self.assertEqual(json.loads((donor/'original.rxbin').read_text()),
@@ -143,6 +224,53 @@ crexx_finalize_qa_fixtures()
         (source/'emit.py').write_text('changed producer input')
         with self.assertRaisesRegex(ValueError, 'mismatch'):
             F.validate(native)
+
+    def test_runtime_paths_reject_ordinary_vm_and_provider_routes(self):
+        native=self.root/'native'; donor=self.root/'ordinary'
+        for tree in (native,donor):
+            (tree/'bin').mkdir(parents=True)
+            (tree/'bin/rxvm').write_text('native entry')
+            (tree/'image.rxbin').write_text('owned image')
+        with patch.object(F,'donor',return_value=(donor,{})), patch.dict(os.environ,{'CREXX_HOME':'','CREXX_PROVIDER_PATH':''}):
+            F.runtime_paths(native,native/'bin/rxvm',[native/'image.rxbin',native/'bin'])
+            with self.assertRaisesRegex(ValueError,'ordinary donor'):
+                F.runtime_paths(native,donor/'bin/rxvm',[native/'image.rxbin'])
+            for variable in ('CREXX_HOME','CREXX_PROVIDER_PATH'):
+                with patch.dict(os.environ,{variable:str(donor/'bin')}):
+                    with self.assertRaisesRegex(ValueError,'ordinary donor'):
+                        F.runtime_paths(native,native/'bin/rxvm',[native/'image.rxbin'])
+            with self.assertRaisesRegex(ValueError,'outside its instrumented tree'):
+                F.runtime_paths(native,Path(sys.executable),[native/'image.rxbin'])
+
+    def test_selected_preparation_fails_unknown_owner_and_retains_native_children(self):
+        build=self.root/'prepared'; build.mkdir()
+        baseline=('rxc','rxas','rxlink','rxvm','rxbvm','rxtvm','crexx','library','classlib','rxfnsc','rxfnsg')
+        registry=[name+'\tUTILITY\t' for name in baseline]
+        registry.extend(['owned_host\tEXECUTABLE\t'+str(build/'host'),
+                         'ordinary_image\tUTILITY\t', 'unused_weekly_image\tUTILITY\t',
+                         'implicit_provider\tMODULE_LIBRARY\t'+str(build/'provider.rxplugin')])
+        (build/'qa-build-targets.tsv').write_text('\n'.join(registry)+'\n')
+        tests=[{'name':'host','command':[str(build/'host')], 'properties':[]},
+               {'name':'wrapper','command':['cmake','-P','runtime.cmake'], 'properties':[
+                   {'name':'CREXX_PREP_TARGETS','value':'unused_weekly_image'},
+                   {'name':'CREXX_DAILY_PREP_TARGETS','value':'ordinary_image;rxvm'}]},
+               {'name':'qa_control','command':['python','contract.py'], 'properties':[
+                   {'name':'CREXX_PREP_NONE','value':True}]}]
+        with patch.object(P,'ctest_inventory',return_value=({'tests':tests},set(t['name'] for t in tests))), patch.object(F,'identity',return_value={'source':'same'}), patch.object(P,'fixture_tools',return_value=F):
+            value=P.preparation_plan(build,'daily')
+            self.assertIn('owned_host',value['targets'])
+            self.assertIn('ordinary_image',value['targets'])
+            self.assertIn('implicit_provider',value['targets'])
+            self.assertNotIn('unused_weekly_image',value['targets'])
+            self.assertFalse(set(value['targets']) & {'all','ALL','qa-prep'})
+            tests.append({'name':'future_wrapper','command':['cmake','-P','new.cmake'],'properties':[]})
+            with self.assertRaisesRegex(ValueError,'future_wrapper'):P.preparation_plan(build,'daily')
+            tests.pop()
+            tests[2]['properties'][0]['value']='FALSE'
+            with self.assertRaisesRegex(ValueError,'qa_control'):P.preparation_plan(build,'daily')
+            tests[2]['properties'][0]['value']=True
+            tests[1]['properties'][1]['value']='missing_fixture_target'
+            with self.assertRaisesRegex(ValueError,'missing_fixture_target'):P.preparation_plan(build,'daily')
 
     @unittest.skipUnless(shutil.which('git'), 'Source-identity contracts require Git')
     def test_missing_history_and_test_consumed_docs(self):
@@ -318,6 +446,19 @@ with m.locked(pathlib.Path(sys.argv[2])):
         with patch.object(P.platform, 'machine', return_value='other-architecture'):
             self.assertNotEqual(key, P.canonical_input(b, 'full', environment))
         self.assertNotEqual(key, P.canonical_input(b, 'full', {**environment,'ASAN_OPTIONS':'detect_leaks=0'}))
+        restored=['binary_global_import_types','ts_unicode_normalization_rxbvm_noopt']
+        pretty={**environment,'CREXX_QA_AFFECTED_TESTS':json.dumps(list(reversed(restored)),indent=2)}
+        with patch.dict(os.environ,pretty):
+            direct=P.canonical_input(a,'daily')
+            self.assertEqual(direct,P.canonical_input(a,'daily',{**environment,'CREXX_QA_AFFECTED_TESTS':json.dumps(restored)}))
+            cli=command(sys.executable,ROOT/'tools/sanitizer-policy.py','key','--build-dir',a,'--profile','daily').stdout.strip()
+            self.assertEqual(cli,direct)
+            output=self.root/'inventory.json'
+            with patch.object(P,'ctest_inventory',return_value=({'tests':[{'name':'future_test','properties':[]}]},{'future_test'})):
+                P.inventory(a,'daily',[],output)
+            self.assertEqual(F.json_read(output)['reusable_input_key'],cli)
+        with patch.dict(os.environ,{**environment,'CREXX_QA_AFFECTED_TESTS':''}):
+            self.assertEqual(P.canonical_input(a,'daily'),P.canonical_input(a,'daily',{**environment,'CREXX_QA_AFFECTED_TESTS':'[]'}))
 
     @unittest.skipIf(os.name=='nt', 'The maintained shell runner is exercised on Linux and Apple')
     def test_runner_failed_post_audit_cannot_publish(self):
@@ -345,10 +486,50 @@ raise SystemExit('unexpected control command')
                                '--leaks','on','--build-leaks','on','--no-live-tail'],
                               env=environment,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=30)
         self.assertNotEqual(result.returncode,0,result.stdout)
-        self.assertEqual((self.root/'audits').read_text(),'2')
+        self.assertEqual((self.root/'audits').read_text(),'2',result.stdout)
         self.assertTrue((self.root/'executed').exists())
         self.assertFalse((self.root/'unexpected-complete').exists())
         self.assertEqual(list((self.root/'logs').glob('*/result.json')),[])
+
+    def test_late_sanitizer_diagnostic_cannot_be_masked_by_success_text(self):
+        source=self.root/'late-exit-source'; source.mkdir()
+        build=self.root/'late-exit-build'
+        (source/'late.py').write_text('import sys\nprint("SUSTAINED_VM|failures=0", flush=True)\nprint("==123==ERROR: LeakSanitizer: detected memory leaks", file=sys.stderr, flush=True)\nsys.exit(9)\n')
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(LateExit NONE)
+enable_testing()
+add_test(NAME late COMMAND "@PYTHON@" "${CMAKE_CURRENT_SOURCE_DIR}/late.py")
+if(SEMANTIC_REGEX)
+ set_tests_properties(late PROPERTIES PASS_REGULAR_EXPRESSION "SUSTAINED_VM[|]failures=0")
+endif()
+set_tests_properties(late PROPERTIES FAIL_REGULAR_EXPRESSION "OWNING_FAILURE_ORACLE")
+include("@HELPER@")
+crexx_apply_sanitizer_failure_guards()
+'''.replace('@PYTHON@',Path(sys.executable).as_posix()).replace('@HELPER@',(ROOT/'cmake/CrexxQaFixtures.cmake').as_posix()))
+        command('cmake','-S',source,'-B',build,'-DSEMANTIC_REGEX=OFF')
+        junit=build/'ctest.xml'
+        command('ctest','--test-dir',build,'--output-junit',junit,success=False)
+        # Existing semantic PASS expressions intentionally remain; the central
+        # completion check must reject their otherwise green late diagnostic.
+        command('cmake','-S',source,'-B',build,'-DSEMANTIC_REGEX=ON')
+        command('ctest','--test-dir',build,'--output-junit',junit)
+        identity={'preparation':'original-producers','native_products':{}}
+        selection=build/'selection.json'; result=build/'result.json'
+        F.json_write(selection,{'identity':identity,'selected':['late']})
+        with patch.object(F,'validate'), patch.object(P,'fixture_tools',return_value=F), patch.object(P,'result_identity',return_value=identity):
+            with self.assertRaisesRegex(ValueError,'sanitizer diagnostic in CTest output: late'):
+                P.complete(build,selection,junit,result)
+            for fatal in ('==123==LeakSanitizer has encountered a fatal error',
+                          'AddressSanitizer: CHECK failed: internal condition'):
+                junit.write_text('<testsuite><testcase name="late"><system-out>'+fatal+'</system-out></testcase></testsuite>')
+                with self.assertRaisesRegex(ValueError,'sanitizer diagnostic in CTest output: late'):
+                    P.complete(build,selection,junit,result)
+        self.assertFalse(result.exists())
+        command('cmake','-S',source,'-B',build,'-DCMAKE_C_FLAGS=-fsanitize=address')
+        definitions,_=P.ctest_inventory(['--test-dir',str(build)])
+        properties={item['name']:item['value'] for item in definitions['tests'][0]['properties']}
+        self.assertIn('OWNING_FAILURE_ORACLE',properties['FAIL_REGULAR_EXPRESSION'])
+        command('ctest','--test-dir',build,'--output-junit',junit,success=False)
 
     def test_complete_scope_rejects_false_broad(self):
         build=self.root/'build'; build.mkdir()
@@ -359,15 +540,19 @@ raise SystemExit('unexpected control command')
                   'execution':{'ASAN_OPTIONS':'detect_leaks=1', 'LSAN_OPTIONS':'',
                                'CREXX_QA_BUILD_LEAKS':'on', 'CREXX_QA_PHASE':'full'}}
         selection=build/'selection.json'; junit=build/'ctest.xml'; result=build/'result.json'
-        def execute(value, selected=names, xml=None, after=None):
-            F.json_write(selection, {'profile':'full', 'universe':names, 'selected':selected,
-                                     'identity':value, 'selected_definitions':[]})
+        def execute(value, selected=names, xml=None, after=None, profile='full', preparation='prepared'):
+            F.json_write(selection, {'profile':profile, 'universe':names, 'selected':selected,
+                                     'profile_selected':names, 'identity':value, 'selected_definitions':[], 'daily_preparation':preparation})
             junit.write_text(xml or '<testsuite><testcase name="one"/><testcase name="two"/></testsuite>')
             result.unlink(missing_ok=True)
-            with patch.object(P, 'result_identity', return_value=after or value), patch.object(F, 'validate'), patch.object(P, 'fixture_tools', return_value=F):
+            with patch.object(P, 'result_identity', return_value=after or value), patch.object(P, 'profile_names', return_value=set(names)), patch.object(F, 'validate'), patch.object(P, 'fixture_tools', return_value=F), patch.object(P, 'preparation_plan', return_value='prepared'):
                 P.complete(build, selection, junit, result)
             return F.json_read(result)['scope']
         self.assertEqual(execute(identity), 'broad')
+        self.assertEqual(execute(identity,profile='daily'),'daily')
+        with self.assertRaisesRegex(ValueError, 'exact completed selected prerequisite'):
+            execute(identity, profile='daily', preparation=None)
+        self.assertEqual(execute(identity,['one'],'<testsuite><testcase name="one"/></testsuite>',profile='daily'),'focused')
         original={**identity,'native_products':{'original':'same'}}
         self.assertEqual(execute(original,after={**identity,'native_products':{'original':'same','new':'owned'}}),'broad')
         with self.assertRaisesRegex(ValueError,'native inputs changed'):

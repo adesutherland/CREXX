@@ -1,0 +1,72 @@
+/* Fixed-shape value, reference and unwind workload; all oracles are literal. */
+options levelb numeric_classic
+namespace sustainedvalues expose cycle
+import rxfnsb
+
+cycle: procedure = .int
+  payload = '00FF41C3A9FE'x as .binary
+  duplicate = payload
+  <at..u8>(1) duplicate = 17
+  if <at..u8>(1) payload <> 255 | <at..u8>(1) duplicate <> 17 then return 1
+  aliasref = reference payload
+  alias = dereference aliasref
+  <at..u8>(5) alias = 42
+  if <at..u8>(5) payload <> 42 then return 2
+  text = 'A' || '00'x || 'é'
+  if text as .binary <> '4100C3A9'x as .binary then return 3
+  number = wide()
+  coefficient = .string; exponent = .int
+  assembler dextr coefficient,exponent,number
+  if coefficient <> '1.2345678901234567890123456789012' | exponent <> 31 then return 4
+  items = .string[]
+  items[1] = text; items[2] = 'retained value'
+  saved = items
+  items[1] = 'changed'
+  if saved[1] <> text | saved[2] <> 'retained value' then return 5
+  scalar = 7
+  scalarref = reference scalar
+  scalaralias = dereference scalarref
+  scalaralias = 19
+  if snapshot scalarref <> 19 | scalar <> 19 then return 6
+  dead = reference .int
+  dead = expired()
+  if <refvalid>(dead) <> 0 then return 7
+  caught = 0
+  do
+    ignored = snapshot dead
+  on signal reference_invalid as problem
+    if problem.name() = 'REFERENCE_INVALID' then caught = caught + 1
+  end
+  do
+    ignoredbytes = <at..binary>(5, 2) payload
+  on signal out_of_range as problem
+    if problem.name() = 'OUT_OF_RANGE' then caught = caught + 1
+  end
+  do
+    call unwind()
+  on signal invalid_arguments as problem
+    if problem.name() = 'INVALID_ARGUMENTS' then caught = caught + 1
+  end
+  if caught <> 3 then return 8
+  if nested(4) <> 11 then return 9
+  return 0
+
+wide: procedure = .decimal
+  numeric digits 32
+  return '12345678901234567890123456789012' as .decimal
+
+expired: procedure = reference .int
+  local = .int
+  local = 17
+  return reference local
+
+unwind: procedure = .void
+  owned = .string[]
+  owned[1] = 'frame-owned string surviving until unwind'
+  assembler signal 'INVALID_ARGUMENTS', 'sustained frame unwind'
+  return
+
+nested: procedure = .int
+  arg depth = .int
+  if depth = 0 then return 1
+  return depth + nested(depth - 1)

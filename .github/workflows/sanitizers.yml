@@ -117,8 +117,8 @@ jobs:
           from datetime import datetime, timezone
           requested='daily' if os.environ.get('REQUESTED_SCOPE')=='daily' else 'full'
           decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),changed,requested)
-          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile']},
-                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile']}]
+          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile'],'affected':decision.get('affected_tests',[])},
+                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile'],'affected':decision.get('affected_tests',[])}]
           if os.environ.get('REQUESTED_SCOPE')=='candidate':
               rows=[{**rows[0],'name':'Linux original full qualification','profile':'full'},
                     {**rows[0],'name':'Linux separated daily qualification','profile':'daily'},
@@ -138,6 +138,8 @@ jobs:
     if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
+    env:
+      CREXX_QA_AFFECTED_TESTS: ${{ toJSON(matrix.affected) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.assurance-gate.outputs.matrix) }}
@@ -242,11 +244,16 @@ jobs:
         shell: bash
         env:
           QA_PLATFORM: ${{ matrix.platform }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
         run: |
           set -euo pipefail
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          preparation_profile=daily
+          # The legacy explicit three-job candidate includes full ordinary
+          # correctness; revised manual daily qualification reuses that proof.
+          if [ "$QA_QUALIFICATION" = candidate ] && [ "$QA_PLATFORM" = linux ]; then preparation_profile=full; fi
           python3 tools/sanitizer-fixtures.py prepare --build-dir "$RUNNER_TEMP/ordinary" \
-            --build-jobs 4 --build-leaks "$leaks"
+            --profile "$preparation_profile" --build-jobs 4 --build-leaks "$leaks"
 
       - name: Candidate ordinary correctness (Linux donor)
         if: inputs.qualification == 'candidate' && steps.configure.outputs.profile == 'daily' && matrix.platform == 'linux'

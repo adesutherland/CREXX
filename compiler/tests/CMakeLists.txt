@@ -4,6 +4,7 @@ project(CompilerTests C)
 
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxQaRuntimeCase.cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -1809,6 +1810,15 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     # argument handling or inlining are caught even when compiler-output
     # goldens still match within one mode.
     
+    set(_qa_simple_runtime FALSE)
+    if(NOT RUNTIME_MODULES)
+        set(_qa_simple_runtime TRUE)
+        foreach(_qa_mode IN ITEMS noopt opt)
+            crexx_add_qa_runtime_case("${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}"
+                "${_qa_mode}" _qa_${_qa_mode}_script _qa_${_qa_mode}_target)
+        endforeach()
+    endif()
+
     # No-opt script
     set(NOOPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_noopt.cmake")
     set(NOOPT_CONTENT "set(full_out \"\")\n")
@@ -1830,6 +1840,9 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     string(APPEND NOOPT_CONTENT "if(NOT full_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
     file(GENERATE OUTPUT "${NOOPT_SCRIPT}" CONTENT "${NOOPT_CONTENT}")
 
+    if(CREXX_QA_FIXTURE_TREE AND _qa_simple_runtime)
+        set(NOOPT_SCRIPT "${_qa_noopt_script}")
+    endif()
     add_test(NAME ${NAME}_run_noopt
              COMMAND ${CMAKE_COMMAND} -P "${NOOPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -1865,10 +1878,21 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     string(APPEND OPT_CONTENT "if(NOT full_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
     file(GENERATE OUTPUT "${OPT_SCRIPT}" CONTENT "${OPT_CONTENT}")
 
+    if(CREXX_QA_FIXTURE_TREE AND _qa_simple_runtime)
+        set(OPT_SCRIPT "${_qa_opt_script}")
+    endif()
     add_test(NAME ${NAME}_run_opt
              COMMAND ${CMAKE_COMMAND} -P "${OPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME}_run_opt PROPERTIES LABELS "linked_opt")
+    set_tests_properties(${NAME}_run_noopt ${NAME}_run_opt PROPERTIES
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library")
+    if(_qa_simple_runtime)
+        foreach(_qa_mode IN ITEMS noopt opt)
+            set_tests_properties(${NAME}_run_${_qa_mode} PROPERTIES
+                CREXX_DAILY_PREP_TARGETS "${_qa_${_qa_mode}_target};rxvm;library")
+        endforeach()
+    endif()
 endmacro()
 
 function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
@@ -9773,4 +9797,18 @@ set_tests_properties(classic_stream_lifecycle PROPERTIES
 
 # Include the late Classic fixtures and their producers in directory QA prep.
 crexx_force_raw_diagnostics_for_directory_tests()
+
+set(_qa_runtime_vms rxbvm)
+if(TARGET rxtvm)
+    list(APPEND _qa_runtime_vms rxtvm)
+endif()
+
+crexx_register_test_prep_targets(
+    TESTS rxc_invalid_binary_to_string_runtime structured_exit_debug_run
+    TARGETS rxc rxas rxvm library compiler_exit_bin)
+
+crexx_register_test_prep_targets(
+    TESTS gate_f_levelg_rxbvm_noopt gate_f_levelg_rxbvm_opt gate_f_levelg_rxtvm_noopt gate_f_levelg_rxtvm_opt gate_f_task_method_import_rxbvm_noopt gate_f_task_method_import_rxbvm_opt gate_f_task_method_import_rxtvm_noopt gate_f_task_method_import_rxtvm_opt gate_f_taskwork_import_rxbvm_noopt gate_f_taskwork_import_rxbvm_opt gate_f_taskwork_import_rxtvm_noopt gate_f_taskwork_import_rxtvm_opt signal_control_unwind_rxbvm_noopt signal_control_unwind_rxbvm_opt signal_control_unwind_rxtvm_noopt signal_control_unwind_rxtvm_opt
+    TARGETS rxc rxas rxlink ${_qa_runtime_vms} library classlib rxfnsc)
+
 crexx_finalize_directory_qa_tiers()

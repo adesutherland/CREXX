@@ -74,6 +74,11 @@ endfunction()
 # labels remain intact; this adds exactly one scheduling tier so CTest
 # selections do not have to infer intent from a component or test name.
 function(crexx_finalize_directory_qa_tiers)
+    # Test properties belong to their defining scope on our CMake 3.24 minimum.
+    # Apply sanitizer failure guards here, after the owner's declarations.
+    if(COMMAND crexx_apply_sanitizer_failure_guards)
+        crexx_apply_sanitizer_failure_guards()
+    endif()
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
     foreach(_crexx_test IN LISTS _crexx_tests)
         get_property(_crexx_labels TEST "${_crexx_test}" PROPERTY LABELS)

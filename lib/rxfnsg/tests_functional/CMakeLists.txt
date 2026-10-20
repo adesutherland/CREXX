@@ -669,4 +669,9 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_codec_${_http_runner}_opt")
 endforeach()
 
+
+crexx_register_test_prep_targets(
+    TESTS ts_http_policy_skipped_copy_reassignment_shape
+    TARGETS ts_http_policy)
+
 crexx_finalize_directory_qa_tiers()

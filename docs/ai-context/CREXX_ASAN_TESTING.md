@@ -269,19 +269,31 @@ rejected for these profiles, even after clearing its CMake option. Build-only,
 filtered, partial, rerun-failed, ordinary Debug or Linux leak-off results cannot
 certify broad sanitizer assurance. Empty selections fail. Both native source
 compile flags and final native product/provider symbols are audited before and
-after full test execution; the product `rxvm` alias/copy must match the concrete
+after full test execution. Sanitizer builds append exact diagnostic FAIL
+expressions without replacing semantic PASS/FAIL oracles, and final JUnit
+validation rejects sanitizer headers even in otherwise passing cells; the product `rxvm` alias/copy must match the concrete
 instrumented engine. The external SDK consumer inherits the owning sanitizer
 compiler/configuration/linker flags, including named Asan configurations.
 
-The separately approved `daily` profile retains every current non-measurement
-test except the exact ten names in [the owning worklist](../SANITIZER-WORKLIST.md#exact-membership-approved-for-implementation).
-Unknown/new tests stay included; all normalization and native/SAN tests remain.
-Full ordinary correctness coverage is unchanged. Native/shared/unknown build
-changes, changed moved-family contracts, missing comparison history or an
-unqualified platform/toolchain/dependency configuration select full coverage. The implemented cadence policy selects weekly full on Sunday
-and otherwise daily only after activation and compatible comparison history.
-**Scheduled daily activation is still disabled.** Scheduled definitions load
-from master and require Adrian's separate decision after qualification.
+The approved VM-priority `daily` profile uses the exact reviewed weekly-only
+manifest in `tools/sanitizer-weekly-tests.json`, intersected with generated
+platform discovery. The Apple reference snapshot keeps 1,288 existing cases and
+moves 2,010 to weekly/affected; six bounded sustained-state VM cells bring daily
+to 1,294. These are reference counts, not another platform's count oracle or a
+wall-time promise. Unknown/new names stay daily. See [the owning scope and
+risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--approved-implementation-qualification-open).
+Full ordinary correctness is unchanged. Omitted producer/semantic/optimizer
+histories may first be detected weekly; no native branch/history equivalence is
+claimed. Closed producer SAN triggers remain weekly/affected, with original
+full closure intact; VM/provider SAN regressions remain daily.
+
+Native/shared/build/unknown changes and missing compatible native baseline select
+full coverage. Source-only Level L/new-C edits use ordinary full semantics plus
+the fixed runtime panel unless an explicit affected ownership mapping restores
+named histories; Unicode/shared graph/service changes have such mappings.
+Weekly full runs on Sunday after activation. **Scheduled daily activation is
+still disabled.** Scheduled definitions load from master and require Adrian's
+separate decision after clean platform qualification.
 
 Daily runtime preparation may use `-DCREXX_QA_FIXTURE_TREE=<ordinary-tree>`.
 Configure both fresh single-config Ninja trees with the same source, compiler,
@@ -289,12 +301,15 @@ platform, options and explicit `CREXX_BUILD_TIMESTAMP`/`CREXX_BUILD_COMMIT`;
 add the maintained ASan flags only to the native tree. Then run:
 
 ```sh
-python3 tools/sanitizer-fixtures.py prepare --build-dir <ordinary-tree> --build-jobs 4
+python3 tools/sanitizer-fixtures.py prepare --build-dir <ordinary-tree> --profile daily --build-jobs 4
 tools/asan-run.sh --build-dir <native-tree> --profile daily --phase full --build-jobs 4 --test-jobs 8 --build-leaks on --leaks on
 ```
 
-Use both leak options off only on Apple. The ordinary donor build and `qa-prep`
-finish before sealing. A mandatory validation target binds source/configuration,
+Use both leak options off only on Apple. Daily preparation freshly configures and
+discovers the actual fixture-closed selection, derives explicit per-owner/native
+child targets, and builds that union before sealing; it never falls back to ALL
+or `qa-prep`. Missing wrapper ownership fails closed. Other profiles retain ALL
+plus `qa-prep`. A mandatory validation target binds source/configuration,
 actual fetched dependency contents/commits and producer binaries once per build;
 each audited command copies/checks its whole output/byproduct owner set. Missing,
 partial, changed or unowned artifacts fail before consumers, and copy failure
@@ -305,9 +320,14 @@ proof. Seals/owner manifests are disposable operational build state.
 Only explicitly audited source/RXAS/RXBIN/generated-C commands use the donor.
 Mixed native-adapter and unknown generators keep original instrumented commands;
 there can still be instrumented preparation cost. Generated embedded C is
-compiled in the native tree. Every native VM, provider, archive, child executable
-and host tool remains native-tree owned. Direct/native compiler, assembler,
-linker, driver and SAN regressions continue exercising instrumented producers.
+compiled in the native tree. Every executed native VM, provider, archive, child
+executable and embedded host remains native-tree owned. Simple compiler runtime
+wrappers preserve their producer stdout/stderr and golden oracle through owned
+ordinary generated artifacts, then execute the instrumented VM with native
+runtime/provider paths and their original working directory. Explicit route
+guards reject donor VM/home/provider paths. Complex native/driver/embedding
+wrappers retain original instrumented producer commands and their residual cost;
+fewer CTest names alone do not remove that cost.
 The complete/full profile retains original instrumented library generation,
 including the original SAN-008 trigger. This split claims runtime assurance,
 not donor-producer memory-safety proof.
@@ -319,9 +339,18 @@ same interprocess lock, with hash-owned atomic publication. Isolated `ctest -R`
 automatically includes setup; failed setup blocks consumers. Source/tool/library
 changes invalidate preparation. Other generic linked-test consumers are unchanged.
 
-Workflow dispatch `candidate` runs three disjoint clean jobs: Linux original
-full, Linux separated daily and Apple separated daily. The Linux donor also
-runs full ordinary correctness as an independently timed qualification step.
+The six sustained cells reuse each engine's explicit runtime/context across
+warmed three-batch value/reference (1,000 operations), provider failure/recovery
+(1,000) and Level L request (ten) scenarios. Internal logical ownership/capacity
+and provider/handle counters must plateau at comparable boundaries; final
+teardown checks ownership zero. The 2 MiB bound is only the empty central depot
+reserve, not total heap or RSS. Serial 1,800-second limits are hang backstops.
+
+Workflow dispatch `daily` runs the two clean revised daily platform jobs. The
+legacy `candidate` route additionally runs Linux original full and ordinary
+correctness; it is not the revised qualification request. The already-approved
+bounded original-producer continuation retains its explicit reused-cell union
+and focused-only marker. No fresh full run is implied by the daily gate.
 `normalization-linux` retains the original two-cell Debug then leak-on ASan
 replay route with optional `source_ref`; it cannot write broad assurance.
 

@@ -727,4 +727,21 @@ if(CREXX_VM_PROFILING)
     endforeach()
 endif()
 
+
+crexx_register_test_prep_targets(
+    TESTS rxpa_native_return_class_import rcc_provider_unused_import_elided
+    TARGETS rxc rxas rxlink library _rcc_provider _rcc_provider_static)
+
+crexx_register_test_prep_targets(
+    TESTS rcc_provider_wrong_identity_rejected
+    TARGETS rcc_provider_autoload_test _rxpa_dynlink rxvm)
+
+crexx_register_test_prep_targets(
+    TESTS rxpa_signature_diagnostics
+    TARGETS rxc rxas rxvm rxbvm library classlib _rxpa_bad_signatures)
+
+crexx_register_test_prep_targets(
+    TESTS rxpa_external_sdk_consumer
+    TARGETS stage-product)
+
 crexx_finalize_directory_qa_tiers()

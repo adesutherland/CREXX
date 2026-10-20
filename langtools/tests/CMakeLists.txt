@@ -424,3 +424,8 @@ add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/check-products.cmake")
 set_tests_properties(levell_product_inventory PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_PRODUCTS[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
 crexx_register_test_prep_targets(TESTS levell_product_inventory TARGETS rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+
+# Bounded persistent-VM measurement targets; register after isolated Debug timing.
+include("${CMAKE_SOURCE_DIR}/interpreter/tests/sustained_vm.cmake")
+# Isolated ordinary Debug fixes the bounded workloads; deadline is hang protection.
+crexx_register_sustained_vm_tests(1000 1000 10 1800)

@@ -12,14 +12,37 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
-MOVED = {
-    'expression': ('classic_expression_contract_opt', 'classic_expression_contract_linked_noopt'),
-    'bif': ('levelc_bif_reference_audit_opt', 'levelc_bif_reference_audit_linked_noopt'),
-    'structured-flow': tuple(f'ts_llstructuredflow_{backend}_noopt_{engine}'
-                             for backend in ('lr1', 'packrat', 'earley')
-                             for engine in ('rxbvm', 'rxtvm')),
-}
-DAILY_MOVED = frozenset(name for family in MOVED.values() for name in family)
+def weekly_groups():
+    # A reviewed snapshot of exact names, never a live cwd/label/name heuristic.
+    value = json.loads(Path(__file__).with_name('sanitizer-weekly-tests.json').read_text())
+    if value.get('schema') != 1:
+        raise ValueError('unsupported sanitizer membership policy')
+    raw = value['weekly_only']
+    if not isinstance(raw, dict) or any(not isinstance(tests, list) for tests in raw.values()):
+        raise ValueError('invalid weekly sanitizer groups')
+    flat = [test for tests in raw.values() for test in tests]
+    if any(not isinstance(test, str) or not test for test in flat) or len(flat) != len(set(flat)):
+        raise ValueError('duplicate/invalid weekly sanitizer name')
+    return {name: frozenset(tests) for name, tests in raw.items()}
+
+
+WEEKLY_GROUPS = weekly_groups()
+DAILY_MOVED = frozenset(test for tests in WEEKLY_GROUPS.values() for test in tests)
+
+
+def parse_affected(value):
+    value = json.loads(value or '[]')
+    if not isinstance(value, list) or any(not isinstance(name, str) for name in value):
+        raise ValueError('affected sanitizer selection must be a list of exact names')
+    if len(value) != len(set(value)) or not set(value) <= DAILY_MOVED:
+        raise ValueError('affected selection contains a duplicate or unaudited weekly name')
+    return frozenset(value)
+
+
+def affected_tests():
+    return parse_affected(os.environ.get('CREXX_QA_AFFECTED_TESTS', '[]'))
+
+
 BROAD_PROFILES = {'full', 'weekly', 'native', 'affected'}
 PROFILES = sorted(BROAD_PROFILES | {'daily'})
 
@@ -31,8 +54,22 @@ def fixture_tools():
     return module
 
 
-def excluded(profile):
-    return '^(' + '|'.join(map(re.escape, sorted(DAILY_MOVED))) + ')$' if profile == 'daily' else ''
+def excluded(profile, build=None):
+    if profile != 'daily':
+        return ''
+    names = set(DAILY_MOVED - affected_tests())
+    if build is not None:
+        names.difference_update(profile_names(build, profile))
+    # CMake's regex engine has a compiled-size limit and only nine capture
+    # groups. Factor only exact admitted mode pairs: every generated leaf is
+    # still one reviewed name, with no wildcard/default exclusion of new names.
+    pairs = {name[:-6] for name in names
+             if name.endswith('_noopt') and name[:-6] + '_opt' in names}
+    rest = names - {base + suffix for base in pairs for suffix in ('_noopt', '_opt')}
+    branches = list(map(re.escape, sorted(rest)))
+    if pairs:
+        branches.append('(' + '|'.join(map(re.escape, sorted(pairs))) + ')_(noopt|opt)')
+    return '^(' + '|'.join(branches) + ')$'
 
 
 def decide(event, activated, weekday, changed=None, requested='full'):
@@ -46,22 +83,52 @@ def decide(event, activated, weekday, changed=None, requested='full'):
         return {'profile': 'weekly', 'reason': 'weekly broad safety net with original instrumented producers'}
     if changed is None:
         return {'profile': 'full', 'reason': 'missing qualification history or unavailable comparison'}
-    # Uncertain/shared/native changes restore every family and original producer
-    # scope. This conservative first tranche does not infer narrow native impact.
+    # Native/build/control changes retain conservative original-producer broad
+    # fallback. Source language ownership alone does not force that campaign.
     known_roots = ('lib/', 'langtools/', 'research/level-l/', 'compiler/tests/rexx_src/',
                    'tests/', 'examples/', 'docs/')
+    restore = set()
     for name in changed:
-        if (Path(name).name in {'CMakeLists.txt', 'AGENTS.md'} or
-                any(family in name for family in ('classic_expression_contract',
-                                                  'levelc_bif_reference_audit', 'ts_llstructuredflow'))):
-            return {'profile': 'full', 'reason': f'build/policy or affected moved-family contract: {name}'}
-        allowed_suffix = Path(name).suffix.lower() in {'.crexx', '.rexx', '.expected', '.md', '.tex'}
-        allowed_suffix = allowed_suffix or (Path(name).suffix.lower() == '.txt' and '/unicode/data/' in name)
-        if (not name.startswith(known_roots) and name not in ('README.md', 'AGENTS.md') or
-                not allowed_suffix or
-                name.startswith(('lib/rxfnsl/', 'langtools/'))):
+        if Path(name).name in {'CMakeLists.txt', 'AGENTS.md'}:
+            return {'profile': 'full', 'reason': f'build/policy control changed: {name}'}
+        suffix = Path(name).suffix.lower()
+        allowed = suffix in {'.crexx', '.rexx', '.expected', '.rxas', '.levell', '.rxl', '.md', '.tex'} or name.endswith(('.crexx.in', '.rexx.in'))
+        allowed = allowed or (suffix == '.txt' and '/unicode/data/' in name)
+        if (not name.startswith(known_roots) and name != 'README.md') or not allowed:
             return {'profile': 'full', 'reason': f'native/shared/uncertain affected scope: {name}'}
-    return {'profile': 'daily', 'reason': 'known source/document-only scope; unknown and new CTests stay included'}
+        # Closed producer SAN trigger edits retain original instrumented scope.
+        if any(trigger in name for trigger in ('san001', 'san003', 'san004', 'san006', 'san007', 'san008',
+                                               'san010', 'san011', 'san012', 'binary_global_import_types',
+                                               'frame_control_ast', 'compiler_contract_builder')):
+            return {'profile': 'full', 'reason': f'producer SAN trigger changed: {name}'}
+        if suffix in {'.md', '.tex'}:
+            continue
+        # These named contracts alter the retained panel's native allocation or
+        # request/graph histories. Other source-only edits use ordinary full
+        # semantics plus the fixed daily panel, not every Level L permutation.
+        unicode_owner = (name.startswith(('lib/rxfnsg/unicode/', 'lib/rxfnsl/unicode/')) or
+                         name.startswith('lib/rxfnsg/rexx/unicode') or
+                         name.startswith('lib/rxfnsb/rexx/rxunicode'))
+        if unicode_owner:
+            restore.update(WEEKLY_GROUPS['unicode-runtime-matrix'])
+        if name in {'lib/rxfnsl/rexx/llir.crexx', 'lib/rxfnsl/rexx/llcfg.crexx',
+                    'lib/rxfnsl/rexx/llflow.crexx', 'langtools/rexx/llfront.crexx'}:
+            # Shared graph/front-end storage feeds all configured backends.
+            restore.update(WEEKLY_GROUPS['level-l-workload-matrix'])
+        if name in {'langtools/rexx/llgenerate.crexx', 'langtools/tests/services.crexx'}:
+            restore.update(test for test in WEEKLY_GROUPS['level-l-workload-matrix']
+                           if test.startswith('levell_services_'))
+        if name.startswith('langtools/tests/'):
+            stem = Path(name).stem
+            prefix = 'ast_' if stem == 'ast-probe' else stem + '_'
+            restore.update(test for test in WEEKLY_GROUPS['level-l-workload-matrix']
+                           if test.startswith(prefix))
+        if name.startswith('compiler/tests/rexx_src/'):
+            stem = Path(name).stem
+            restore.update(test for test in DAILY_MOVED
+                           if test == stem or test.startswith(stem + '_'))
+    return {'profile': 'daily', 'affected_tests': sorted(restore),
+            'reason': 'VM-priority daily scope plus exact affected source-family names; new tests default keep'}
 
 
 def changed_files(source, base, head):
@@ -96,7 +163,7 @@ def result_identity(build):
         'preparation': 'external-ordinary-fixtures' if config.get('CREXX_QA_FIXTURE_TREE') else 'original-producers',
         'execution': {key: os.environ.get(key, '') for key in (
             'ASAN_OPTIONS', 'LSAN_OPTIONS', 'CREXX_QA_BUILD_LEAKS', 'CREXX_QA_PHASE',
-            'ImageVersion', 'ImageOS', 'RUNNER_ARCH', 'RUNNER_OS')},
+            'ImageVersion', 'ImageOS', 'RUNNER_ARCH', 'RUNNER_OS', 'CREXX_QA_AFFECTED_TESTS')},
         'host': {'system': platform.system(), 'machine': platform.machine(),
                  'release': platform.release(), 'mac_version': platform.mac_ver()[0]},
         'routing': {key: hashlib.sha256(os.environ.get(key, '').encode()).hexdigest()
@@ -156,8 +223,9 @@ def canonical_input(build, profile, execution=None, native_only=False):
         result = subprocess.run([name, *arguments], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         native_tools[name] = result.stdout.decode().splitlines()[0]
     native_tools['python'] = platform.python_version()
-    execution = execution or {key: os.environ.get(key, '') for key in
-                              ('ASAN_OPTIONS', 'LSAN_OPTIONS', 'CREXX_QA_BUILD_LEAKS', 'CREXX_QA_PHASE')}
+    execution = dict(execution or {key: os.environ.get(key, '') for key in
+                              ('ASAN_OPTIONS', 'LSAN_OPTIONS', 'CREXX_QA_BUILD_LEAKS', 'CREXX_QA_PHASE', 'CREXX_QA_AFFECTED_TESTS')})
+    execution['CREXX_QA_AFFECTED_TESTS'] = json.dumps(sorted(parse_affected(execution.get('CREXX_QA_AFFECTED_TESTS', '[]'))))
     value = {'schema': 1, 'profile': 'broad' if profile in BROAD_PROFILES else profile,
              'preparation': 'external-ordinary-fixtures' if config.get('CREXX_QA_FIXTURE_TREE') else 'original-producers',
              'source': tools.source_identity(source), 'configuration': configuration,
@@ -169,6 +237,8 @@ def canonical_input(build, profile, execution=None, native_only=False):
              'routing': {key: normalize(os.environ.get(key, '')) for key in
                          ('PATH', 'CREXX_HOME', 'CREXX_PROVIDER_PATH', 'CREXX_LIBRARY_PATH',
                           'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS')}}
+    if native_only or profile in BROAD_PROFILES:
+        value['execution'].pop('CREXX_QA_AFFECTED_TESTS', None)
     if native_only:
         for key in ('source', 'profile', 'preparation'):
             value.pop(key)
@@ -179,17 +249,90 @@ def platform_profile(requested, scheduled, expected, current):
     return 'full' if requested == 'daily' and scheduled and (not expected or expected != current) else requested
 
 
-def inventory(build, profile, args, output):
+def profile_names(build, profile, definitions=None):
+    if definitions is None:
+        definitions, _ = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
+    tests = {test['name']: test for test in definitions['tests']}
+    kept = set(tests) if profile != 'daily' else set(tests) - (DAILY_MOVED - affected_tests())
+    # Explicit -E also suppresses setup tests in CTest. Preserve every fixture
+    # owner needed by the default-kept or restored consumers, including future
+    # consumers of an existing weekly fixture. This only adds prerequisites.
+    properties = {name: {item['name']: item['value'] for item in test['properties']}
+                  for name, test in tests.items()}
+    while True:
+        required = {fixture for name in kept
+                    for fixture in properties[name].get('FIXTURES_REQUIRED', [])}
+        owners = {name for name, props in properties.items()
+                  if required.intersection(props.get('FIXTURES_SETUP', []) + props.get('FIXTURES_CLEANUP', []))}
+        if owners <= kept:
+            return kept
+        kept.update(owners)
+
+
+def preparation_plan(build, profile):
+    """Selected fixture/native target graph; an unknown wrapper fails closed."""
+    if profile != "daily":
+        raise ValueError("selective preparation is reserved for daily runtime scope")
+    build = Path(build).resolve()
+    definitions, _ = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
+    selected = profile_names(build, profile, definitions)
+    targets = {}
+    paths = {}
+    for line in (build / 'qa-build-targets.tsv').read_text().splitlines():
+        name, kind, path = line.split('\t')
+        if name in targets:
+            raise ValueError('duplicate configured build target: ' + name)
+        targets[name] = kind
+        if path:
+            paths[os.path.normpath(path)] = name
+    required = set()
+    missing = []
+    for test in definitions['tests']:
+        name = test['name']
+        if name not in selected:
+            continue
+        properties = {item['name']: item['value'] for item in test['properties']}
+        declared = properties.get('CREXX_DAILY_PREP_TARGETS', properties.get('CREXX_PREP_TARGETS', []))
+        if isinstance(declared, str):
+            declared = declared.split(';') if declared else []
+        command = test.get('command', [])
+        direct = paths.get(os.path.normpath(command[0])) if command else None
+        if not declared and not direct and properties.get('CREXX_PREP_NONE') not in (True, 1, 'TRUE', 'ON', '1'):
+            missing.append(name)
+        required.update(declared)
+        if direct:
+            required.add(direct)
+    if missing:
+        raise ValueError('selected tests have no declared prerequisite owner: ' + ', '.join(sorted(missing)))
+    # All runtime autoload/native provider packages remain daily. Their native
+    # objects and implicit provider paths are not inferable from command[0].
+    required.update(name for name, kind in targets.items()
+                    if kind in ('MODULE_LIBRARY', 'SHARED_LIBRARY'))
+    required.update(('rxc', 'rxas', 'rxlink', 'rxvm', 'rxbvm', 'rxtvm', 'crexx',
+                     'library', 'classlib', 'rxfnsc', 'rxfnsg'))
+    unknown = required - targets.keys()
+    if unknown or required.intersection(('all', 'ALL', 'qa-prep', 'qa-prep-all')):
+        raise ValueError('invalid selected prerequisite targets: ' + ', '.join(sorted(unknown)))
+    return {'profile': profile, 'selected': sorted(selected), 'targets': sorted(required),
+            'configuration': fixture_tools().identity(build)}
+
+
+def inventory(build, profile, args, output, preparation=None):
     tools = fixture_tools()
-    _, universe = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
+    universe_definitions, universe = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
     definitions, selected = ctest_inventory(args)
     if not selected:
         raise ValueError('empty sanitizer selection')
-    if profile == 'daily' and not DAILY_MOVED <= universe:
-        raise ValueError('approved daily family names are missing; review the profile')
+    prepared = None
+    if preparation is not None:
+        prepared = tools.json_read(preparation)
+        if profile != 'daily' or prepared != preparation_plan(build, profile):
+            raise ValueError('selected prerequisite build does not match current daily inputs')
+    # Platform-absent known names are legitimate; newly registered names remain
+    # selected. Never require the Apple reference inventory on another platform.
     tools.json_write(output, {'profile': profile, 'universe': sorted(universe),
-                             'selected': sorted(selected), 'identity': result_identity(build),
-                             'selected_definitions': definitions['tests'],
+                             'selected': sorted(selected), 'profile_selected': sorted(profile_names(build, profile, universe_definitions)), 'affected_tests': sorted(affected_tests()) if profile == 'daily' else [], 'identity': result_identity(build),
+                             'selected_definitions': definitions['tests'], 'daily_preparation': prepared,
                              'reusable_input_key': canonical_input(build, profile),
                              'native_configuration_key': canonical_input(build, 'full', native_only=True)})
     print(f'{profile}: selected {len(selected)} of {len(universe)} non-measurement CTests')
@@ -218,8 +361,22 @@ def complete(build, selection, junit, output):
     if any(case.find('failure') is not None or case.find('error') is not None or
            case.find('skipped') is not None for case in cases):
         raise ValueError('failed or unexecuted tests cannot qualify sanitizer assurance')
+    # CTest PASS_REGULAR_EXPRESSION can admit a nonzero child exit after its
+    # semantic success text. A late process-exit LSan report must still block
+    # assurance, including reports in otherwise passing test output.
+    diagnostic = re.compile(r'(?:^|\n)\s*(?:==[0-9]+==)?(?:ERROR: (?:AddressSanitizer|LeakSanitizer):|SUMMARY: (?:AddressSanitizer|LeakSanitizer):|AddressSanitizer:DEADLYSIGNAL|AddressSanitizer: CHECK failed|LeakSanitizer has encountered a fatal error)', re.MULTILINE)
+    for case in cases:
+        if diagnostic.search('\n'.join(case.itertext())):
+            raise ValueError('sanitizer diagnostic in CTest output: ' + case.attrib['name'])
     full = set(before['selected']) == set(before['universe'])
-    daily = set(before['selected']) == set(before['universe']) - DAILY_MOVED
+    restored = set(before.get('affected_tests', []))
+    declared = parse_affected(before['identity']['execution'].get('CREXX_QA_AFFECTED_TESTS', '[]'))
+    if before['profile'] == 'daily' and (not restored <= DAILY_MOVED or restored != declared):
+        raise ValueError('affected daily names are not bound to the execution policy')
+    expected_daily = profile_names(build, 'daily') if before['profile'] == 'daily' else set()
+    if before['profile'] == 'daily' and set(before.get('profile_selected', [])) != expected_daily:
+        raise ValueError('canonical daily fixture scope changed during qualification')
+    daily = set(before['selected']) == expected_daily
     own = before['identity']['preparation'] == 'original-producers'
     config = before['identity']['configuration']
     mode = config.get('CMAKE_BUILD_TYPE', '').upper()
@@ -233,6 +390,9 @@ def complete(build, selection, junit, output):
                   (config.get('CMAKE_SYSTEM_NAME') == 'Linux' and 'detect_leaks=1' in execution['ASAN_OPTIONS'] and
                    not any(value in execution['LSAN_OPTIONS'] for value in ('detect_leaks=0', 'detect_leaks=false')) and
                    execution['CREXX_QA_BUILD_LEAKS'] == 'on')))
+    if daily and supported and before['profile'] == 'daily':
+        if before.get('daily_preparation') != preparation_plan(build, 'daily'):
+            raise ValueError('daily assurance requires the exact completed selected prerequisite build')
     scope = ('broad' if full and own and supported and before['profile'] in BROAD_PROFILES else
              'daily' if daily and supported and before['profile'] == 'daily' else 'focused')
     key = hashlib.sha256(json.dumps({'profile': before['profile'], 'identity': after_identity,
@@ -244,11 +404,13 @@ def complete(build, selection, junit, output):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command', choices=('exclude', 'decide', 'inventory', 'complete', 'key', 'native-key'))
+    p.add_argument('command', choices=('exclude', 'decide', 'inventory', 'complete', 'key', 'native-key', 'prep'))
     p.add_argument('--profile', choices=PROFILES, default='full')
     p.add_argument('--build-dir', type=Path)
     p.add_argument('--output', type=Path)
     p.add_argument('--selection', type=Path)
+    p.add_argument('--verify-plan', type=Path)
+    p.add_argument('--preparation-plan', type=Path)
     p.add_argument('--junit', type=Path)
     p.add_argument('--leaks', choices=('on', 'off'), default='on')
     p.add_argument('--build-leaks', choices=('on', 'off'), default='on')
@@ -266,15 +428,22 @@ def main():
                            if part and not part.startswith('detect_leaks='))
         execution = {'ASAN_OPTIONS': 'detect_leaks=' + ('1' if a.leaks == 'on' else '0') + (':' + options if options else ''),
                      'LSAN_OPTIONS': os.environ.get('LSAN_OPTIONS', ''),
-                     'CREXX_QA_BUILD_LEAKS': a.build_leaks, 'CREXX_QA_PHASE': 'full'}
+                     'CREXX_QA_BUILD_LEAKS': a.build_leaks, 'CREXX_QA_PHASE': 'full',
+                     'CREXX_QA_AFFECTED_TESTS': json.dumps(sorted(affected_tests()))}
         print(canonical_input(a.build_dir, a.profile, execution, native_only=a.command == 'native-key'))
     elif a.command == 'exclude':
-        print(excluded(a.profile))
+        print(excluded(a.profile, a.build_dir))
     elif a.command == 'decide':
         print(json.dumps(decide(a.event, a.activated == 'on', a.weekday,
                                changed_files(a.source, a.base, a.head), a.profile)))
+    elif a.command == 'prep':
+        value = preparation_plan(a.build_dir, a.profile)
+        if a.verify_plan and value != fixture_tools().json_read(a.verify_plan):
+            raise ValueError('selected preparation inputs changed during build')
+        fixture_tools().json_write(a.output, value)
+        print('Selected prerequisites: ' + str(len(value['targets'])) + ' targets for ' + str(len(value['selected'])) + ' tests')
     elif a.command == 'inventory':
-        inventory(a.build_dir, a.profile, extra, a.output)
+        inventory(a.build_dir, a.profile, extra, a.output, a.preparation_plan)
     else:
         complete(a.build_dir, a.selection, a.junit, a.output)
 
