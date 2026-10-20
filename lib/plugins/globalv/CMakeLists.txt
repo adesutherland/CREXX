@@ -21,7 +21,7 @@ target_include_directories(globalv PRIVATE
         "${_globalv_upstream_dir}")
 set_target_properties(globalv PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS globalv RUNTIME DESTINATION bin)
+crexx_install_targets(globalv)
 
 add_dynamic_plugin_target(globalv_plugin
         PROVIDER_ID rxglobalv
