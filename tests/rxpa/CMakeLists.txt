@@ -9,6 +9,34 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
+# The SDK consumer is a separate CMake project. Instrument its first-party C
+# and C++ providers/child executables too, retaining ordinary consumer defaults.
+set(_sdk_sanitizer_cache "")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _sdk_configuration)
+set(_sdk_effective_flags "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS_${_sdk_configuration}} ${CMAKE_CXX_FLAGS_${_sdk_configuration}}")
+if(_sdk_effective_flags MATCHES "-fsanitize=address")
+    set(_sdk_sanitizer_cache "${CMAKE_CURRENT_BINARY_DIR}/sdk-sanitizer-cache.cmake")
+    set(_sdk_cache_text "# Owning sanitizer build flags for first-party external SDK fixtures.\n")
+    set(_sdk_variables CMAKE_C_COMPILER CMAKE_CXX_COMPILER CMAKE_BUILD_TYPE
+        CMAKE_CONFIGURATION_TYPES CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(_sdk_configurations Debug Release RelWithDebInfo MinSizeRel Asan Ubsan
+        ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE})
+    foreach(_stem IN ITEMS CMAKE_C_FLAGS CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS
+            CMAKE_SHARED_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS)
+        list(APPEND _sdk_variables "${_stem}")
+        foreach(_configuration IN LISTS _sdk_configurations)
+            string(TOUPPER "${_configuration}" _configuration)
+            list(APPEND _sdk_variables "${_stem}_${_configuration}")
+        endforeach()
+    endforeach()
+    list(REMOVE_DUPLICATES _sdk_variables)
+    foreach(_variable IN LISTS _sdk_variables)
+        string(APPEND _sdk_cache_text
+            "set(${_variable} [==[${${_variable}}]==] CACHE STRING \"Owning sanitizer fixture configuration\" FORCE)\n")
+    endforeach()
+    file(GENERATE OUTPUT "${_sdk_sanitizer_cache}" CONTENT "${_sdk_cache_text}")
+endif()
+
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
@@ -36,6 +64,7 @@ add_test(
                 -DPACKAGE_RELATIVE_DIR=${CREXX_CMAKE_PACKAGE_INSTALL_DIR}
                 -DCONSUMER_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/external_sdk
                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_external_sdk_consumer_ws
+                -DPARENT_SANITIZER_CACHE=${_sdk_sanitizer_cache}
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES

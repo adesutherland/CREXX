@@ -2,8 +2,7 @@ name: Sanitizer QA
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   schedule:
     - cron: '47 3 * * *'
   workflow_dispatch:
@@ -11,12 +10,17 @@ on:
       qualification:
         description: Qualification scope (default retains both full platform jobs)
         type: choice
-        options: [full, normalization-linux]
+        options: [full, daily, candidate, normalization-linux]
         default: full
       source_ref:
-        description: Optional source commit for an unchanged focused replay
+        description: Optional source commit for focused or candidate qualification
         type: string
         default: ''
+
+# Qualification does not activate the scheduled daily policy. Master rollout
+# requires Adrian's separate decision after the clean candidate measurements.
+env:
+  SANITIZER_DAILY_ACTIVATED: 'false'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,136 +32,241 @@ permissions:
 
 jobs:
   assurance-gate:
-    name: Check for an unqualified develop change
+    if: inputs.qualification != 'normalization-linux'
+    name: Resolve qualified inputs and conservative profile
     runs-on: ubuntu-24.04
     outputs:
-      should_run: ${{ steps.decision.outputs.should_run }}
-      target_sha: ${{ steps.target.outputs.target_sha }}
-
+      target_sha: ${{ steps.decision.outputs.target_sha }}
+      profile: ${{ steps.decision.outputs.profile }}
+      matrix: ${{ steps.decision.outputs.matrix }}
+      native_configs: ${{ steps.decision.outputs.native_configs }}
     steps:
-      - name: Resolve the commit to qualify
+      - name: Resolve source
         id: target
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REQUESTED_SOURCE: ${{ inputs.source_ref }}
         run: |
           set -euo pipefail
-
-          target_sha="${GITHUB_SHA}"
-          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            target_sha="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" \
-                --jq '.object.sha'
-            )"
+          target_sha="${REQUESTED_SOURCE:-$GITHUB_SHA}"
+          if [ "$GITHUB_EVENT_NAME" = schedule ]; then
+            target_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" --jq '.object.sha')
           fi
-          echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
 
-      - name: Look for successful sanitizer assurance of this develop commit
-        id: qualified
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          ref: ${{ steps.target.outputs.target_sha }}
+
+      - name: Last jointly qualified broad comparison
         if: github.event_name == 'schedule'
         uses: actions/cache/restore@v5
         with:
-          path: .ci-assurance/sanitizer-qualified-sha
-          key: crexx-sanitizer-qualified-${{ steps.target.outputs.target_sha }}
-          lookup-only: true
+          path: .ci-assurance/history.json
+          key: crexx-sanitizer-history-${{ steps.target.outputs.target_sha }}
+          restore-keys: crexx-sanitizer-history-
 
-      - name: Decide whether sanitizer assurance is required
+      - name: Select profile and independent platform jobs
         id: decision
         shell: bash
+        env:
+          REQUESTED_SCOPE: ${{ inputs.qualification }}
         run: |
           set -euo pipefail
-
-          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "Manual and version-tag sanitizer runs are unconditional." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          if [ "${{ steps.qualified.outputs.cache-hit }}" = "true" ]; then
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping sanitizer QA: develop ${{ steps.target.outputs.target_sha }} already passed the scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "Running sanitizer QA: develop ${{ steps.target.outputs.target_sha }} has not passed a scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, pathlib, subprocess
+          spec=importlib.util.spec_from_file_location('policy','tools/sanitizer-policy.py')
+          policy=importlib.util.module_from_spec(spec); spec.loader.exec_module(policy)
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          event='tag' if os.environ['GITHUB_REF'].startswith('refs/tags/') else ('schedule' if os.environ['GITHUB_EVENT_NAME']=='schedule' else 'manual')
+          history=pathlib.Path('.ci-assurance/history.json')
+          previous=json.loads(history.read_text()) if history.exists() else {}
+          base=previous.get('head','')
+          changed=policy.changed_files('.',base,head)
+          from datetime import datetime, timezone
+          requested='daily' if os.environ.get('REQUESTED_SCOPE')=='daily' else 'full'
+          decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),changed,requested)
+          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile']},
+                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile']}]
+          if os.environ.get('REQUESTED_SCOPE')=='candidate':
+              rows=[{**rows[0],'name':'Linux original full qualification','profile':'full'},
+                    {**rows[0],'name':'Linux separated daily qualification','profile':'daily'},
+                    {**rows[1],'name':'Apple separated daily qualification','profile':'daily'}]
+          with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
+              stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\nnative_configs='+json.dumps(previous.get('native_configs',{}))+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+              stream.write('Profile: **'+decision['profile']+'**. '+decision['reason']+'\n')
+          PYTHON
 
   sanitizer:
     name: ${{ matrix.name }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true' && inputs.qualification != 'normalization-linux'
+    if: inputs.qualification != 'normalization-linux'
     runs-on: ${{ matrix.os }}
-    # Full macOS ASan took 239.5 minutes before structured-flow isolation.
-    # Leave headroom beyond each test's own measured hang backstop.
     timeout-minutes: 360
-
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Linux x64 ASan/LSan
-            os: ubuntu-24.04
-            platform: linux
-            cmake_args: ""
-          - name: macOS arm64 ASan
-            os: macos-15
-            platform: macos
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
-
+      matrix: ${{ fromJSON(needs.assurance-gate.outputs.matrix) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           ref: ${{ needs.assurance-gate.outputs.target_sha }}
-
-      - name: Python for core QA
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Configure instrumented Debug build
+      - name: Configure matching ordinary and instrumented inputs
+        id: configure
         shell: bash
+        env:
+          QA_PROFILE: ${{ matrix.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_BASELINES: ${{ needs.assurance-gate.outputs.native_configs }}
         run: |
           set -euo pipefail
-          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
-            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
-            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
-            ${{ matrix.cmake_args }}
-
-      - name: Full instrumented build and CTest
-        shell: bash
-        run: |
-          set -euo pipefail
-          sanitizer_args=(
-            --build-dir "${RUNNER_TEMP}/debugasan"
-            --phase full
-            --build-jobs 4
-            --test-jobs 8
-            --exclude-label '^performance-measurement$'
-            --no-live-tail
-          )
-
-          if [ "${{ matrix.platform }}" = "macos" ]; then
-            sanitizer_args+=(--build-leaks off --leaks off)
-          else
-            sanitizer_args+=(--build-leaks on --leaks on)
+          common=(-DCMAKE_BUILD_TYPE=Debug -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+            "-DCREXX_BUILD_TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)"
+            "-DCREXX_BUILD_COMMIT=${{ needs.assurance-gate.outputs.target_sha }}")
+          if [ "$QA_PLATFORM" = macos ]; then common+=(-DCMAKE_OSX_ARCHITECTURES=arm64); fi
+          fixture=()
+          if [ "$QA_PROFILE" = daily ]; then
+            cmake -S . -G Ninja -B "$RUNNER_TEMP/ordinary" "${common[@]}"
+            fixture+=("-DCREXX_QA_FIXTURE_TREE=$RUNNER_TEMP/ordinary")
           fi
+          native=(-DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
+            -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address
+            -DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address)
+          cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}" "${fixture[@]}" "${native[@]}"
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          export QA_NATIVE_KEY
+          QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
+          effective=$(python3 - <<'PYTHON'
+          import importlib.util,json,os
+          spec=importlib.util.spec_from_file_location('p','tools/sanitizer-policy.py'); p=importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
+          baselines=json.loads(os.environ['QA_BASELINES'])
+          print(p.platform_profile(os.environ['QA_PROFILE'],os.environ['GITHUB_EVENT_NAME']=='schedule',baselines.get(os.environ['QA_PLATFORM'],''),os.environ['QA_NATIVE_KEY']))
+          PYTHON
+          )
+          if [ "$effective" != "$QA_PROFILE" ]; then
+            echo 'Missing compatible broad native configuration; restoring full original generation.' >> "$GITHUB_STEP_SUMMARY"
+            python3 -c 'import os,pathlib,shutil; shutil.rmtree(pathlib.Path(os.environ["RUNNER_TEMP"])/"debugasan")'
+            cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}" "${native[@]}"
+          fi
+          echo "profile=$effective" >> "$GITHUB_OUTPUT"
 
-          tools/asan-run.sh "${sanitizer_args[@]}"
+      - name: Compute platform/configuration/profile input key
+        id: identity
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          key=$(python3 tools/sanitizer-policy.py key --build-dir "$RUNNER_TEMP/debugasan" \
+            --profile "$QA_PROFILE" --leaks "$leaks" --build-leaks "$leaks")
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          scope=broad; if [ "$QA_PROFILE" = daily ]; then scope=daily; fi
+          echo "cache_scope=$scope" >> "$GITHUB_OUTPUT"
 
-      - name: Upload sanitizer logs
-        if: always()
+      - name: Reuse only this platform and complete profile
+        id: qualified
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          key: crexx-sanitizer-v2-${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}-${{ steps.identity.outputs.key }}
+
+      - name: Prepare and seal ordinary fixtures
+        if: steps.configure.outputs.profile == 'daily' && steps.qualified.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          QA_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          python3 tools/sanitizer-fixtures.py prepare --build-dir "$RUNNER_TEMP/ordinary" \
+            --build-jobs 4 --build-leaks "$leaks"
+
+      - name: Candidate full ordinary correctness (Linux donor)
+        if: inputs.qualification == 'candidate' && steps.configure.outputs.profile == 'daily' && matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/asan-run.sh --build-dir "$RUNNER_TEMP/ordinary" --phase ctest \
+            --profile full --test-jobs 8 --leaks on --no-live-tail
+
+      - name: Complete instrumented build and selected runtime scope
+        id: execution
+        if: steps.qualified.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          tools/asan-run.sh --build-dir "$RUNNER_TEMP/debugasan" --phase full \
+            --profile "$QA_PROFILE" --build-jobs 4 --test-jobs 8 \
+            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail
+
+      - name: Verify complete assurance or exact qualified reuse
+        id: proof
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_INPUT_KEY: ${{ steps.identity.outputs.key }}
+          QA_TARGET: ${{ needs.assurance-gate.outputs.target_sha }}
+          QA_REUSED: ${{ steps.qualified.outputs.cache-hit }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import json, os, pathlib
+          profile=os.environ['QA_PROFILE']; platform=os.environ['QA_PLATFORM']
+          scope='daily' if profile=='daily' else 'broad'
+          path=pathlib.Path('.ci-assurance')/(platform+'-'+scope+'.json')
+          if os.environ['QA_REUSED']=='true':
+              result=json.loads(path.read_text())
+          else:
+              result=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'debugasan/asan-logs/latest/result.json').read_text())
+          assert result['complete'] and result['scope']==scope, 'Incomplete/focused result cannot certify selected scope'
+          assert result['reusable_input_key']==os.environ['QA_INPUT_KEY'], 'Qualified input key changed'
+          compact={key:result[key] for key in ('complete','scope','reusable_input_key','native_configuration_key','executed')}
+          compact.update(platform=platform,profile=profile,requested_head=os.environ['QA_TARGET'])
+          path.parent.mkdir(exist_ok=True); path.write_text(json.dumps(compact)+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+              stream.write(platform+' '+profile+': '+('reused qualified inputs' if os.environ['QA_REUSED']=='true' else str(result['executed'])+' tests executed')+'; scope='+scope+'\n')
+          PYTHON
+
+      - name: Retain independently qualified platform scope
+        if: steps.execution.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          key: crexx-sanitizer-v2-${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}-${{ steps.identity.outputs.key }}
+
+      - name: Publish compact scope result
         uses: actions/upload-artifact@v7
         with:
-          name: sanitizer-logs-${{ matrix.platform }}
+          name: sanitizer-proof-${{ matrix.platform }}-${{ steps.configure.outputs.profile }}
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          retention-days: 14
+
+      - name: Upload diagnostic logs
+        if: always() && steps.qualified.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-logs-${{ matrix.platform }}-${{ steps.configure.outputs.profile }}
           path: |
             ${{ runner.temp }}/debugasan/asan-logs
-          if-no-files-found: error
+            ${{ runner.temp }}/ordinary/asan-logs
+          if-no-files-found: warn
           retention-days: 14
 
   normalization-linux:
@@ -221,27 +330,36 @@ jobs:
           retention-days: 14
 
   record-assurance:
-    name: Record qualified develop commit
-    needs:
-      - assurance-gate
-      - sanitizer
+    name: Record jointly qualified broad comparison
+    needs: [assurance-gate, sanitizer]
     if: >-
-      always() &&
-      github.event_name == 'schedule' &&
-      needs.assurance-gate.outputs.should_run == 'true' &&
-      needs.sanitizer.result == 'success'
+      always() && github.event_name == 'schedule' && needs.sanitizer.result == 'success'
     runs-on: ubuntu-24.04
-
     steps:
-      - name: Write assurance marker
-        shell: bash
-        run: |
-          mkdir -p .ci-assurance
-          echo "${{ needs.assurance-gate.outputs.target_sha }}" \
-            > .ci-assurance/sanitizer-qualified-sha
-
-      - name: Retain assurance marker
-        uses: actions/cache/save@v5
+      - uses: actions/download-artifact@v7
         with:
-          path: .ci-assurance/sanitizer-qualified-sha
-          key: crexx-sanitizer-qualified-${{ needs.assurance-gate.outputs.target_sha }}
+          pattern: sanitizer-proof-*
+          path: .ci-assurance/proofs
+          merge-multiple: true
+      - name: Verify both required broad platforms
+        id: joint
+        shell: bash
+        env:
+          QA_TARGET: ${{ needs.assurance-gate.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import json, os, pathlib
+          proofs=[json.loads(path.read_text()) for path in pathlib.Path('.ci-assurance/proofs').glob('*.json')]
+          assert len(proofs)==2 and {value['platform'] for value in proofs}=={'linux','macos'}
+          assert all(value['complete'] and value['requested_head']==os.environ['QA_TARGET'] for value in proofs)
+          broad=all(value['scope']=='broad' for value in proofs)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as stream: stream.write('broad='+str(broad).lower()+'\n')
+          if broad:
+              pathlib.Path('.ci-assurance/history.json').write_text(json.dumps({'head':os.environ['QA_TARGET'], 'platform_keys':{value['platform']:value['reusable_input_key'] for value in proofs}, 'native_configs':{value['platform']:value['native_configuration_key'] for value in proofs}})+'\n')
+          PYTHON
+      - uses: actions/cache/save@v5
+        if: steps.joint.outputs.broad == 'true'
+        with:
+          path: .ci-assurance/history.json
+          key: crexx-sanitizer-history-${{ needs.assurance-gate.outputs.target_sha }}

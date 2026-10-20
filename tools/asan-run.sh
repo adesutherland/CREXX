@@ -9,6 +9,8 @@ test_jobs=8
 test_jobs_set=0
 build_targets=()
 phase="full"
+profile="full"
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 build_leaks="on"
 test_leaks="off"
 test_leaks_set=0
@@ -38,9 +40,13 @@ Phases:
   --phase ctest          Run ctest only. Use after the required qa-prep target.
   --phase focused-lsan   Build focused dependencies, then focused LSan tests.
   --phase rerun-failed   Run ctest --rerun-failed.
+  --phase verify-native Verify built native source/object/provider instrumentation.
 
 Options:
   --build-dir DIR        Build directory. Default: cmake-build-debugasan.
+  --profile PROFILE      full (default), weekly, native, affected, or daily.
+                         Daily excludes exactly ten approved names; other profiles retain broad scope.
+                         Full/weekly/native/affected reject external-fixture trees.
   --build-jobs N         Build parallelism. Default: 4.
   --build-target TARGET  Build only this target in --phase build. Repeatable.
   --test-jobs N          CTest parallelism. Default: 8, except focused-lsan defaults to 1.
@@ -249,7 +255,7 @@ run_cmake_build() {
 run_ctest() {
     local name=$1
     shift
-    local args=(--test-dir "$build_dir" --output-on-failure)
+    local args=(--test-dir "$build_dir" --output-on-failure --no-tests=error)
     if [[ "$stop_on_failure" -eq 1 ]]; then
         args+=(--stop-on-failure)
     fi
@@ -272,7 +278,20 @@ run_ctest() {
         args+=(--fixture-exclude-any "$fixture_exclude_any")
     fi
     args+=(--parallel "$test_jobs")
-    run_logged "$name" "$test_leaks" ctest "${args[@]}" "$@"
+    run_logged fixture-validation "$test_leaks" python3 "$script_dir/sanitizer-fixtures.py" \
+        validate --build-dir "$build_dir" --artifacts
+    run_logged selection "$test_leaks" python3 "$script_dir/sanitizer-policy.py" \
+        inventory --build-dir "$build_dir" --profile "$profile" \
+        --output "$log_dir/selection.json" -- "${args[@]}" "$@"
+    run_logged "$name" "$test_leaks" ctest "${args[@]}" \
+        --output-junit "$log_dir_abs/ctest.xml" "$@"
+    if [[ "$phase" != "full" ]]; then qualify_ctest; fi
+}
+
+qualify_ctest() {
+    run_logged qualification "$test_leaks" python3 "$script_dir/sanitizer-policy.py" \
+        complete --build-dir "$build_dir" --selection "$log_dir/selection.json" \
+        --junit "$log_dir/ctest.xml" --output "$log_dir/result.json"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -282,6 +301,7 @@ while [[ $# -gt 0 ]]; do
         --build-target) build_targets+=("${2:?}"); shift 2 ;;
         --test-jobs) test_jobs=${2:?}; test_jobs_set=1; shift 2 ;;
         --phase) phase=${2:?}; shift 2 ;;
+        --profile) profile=${2:?}; shift 2 ;;
         --leaks) test_leaks=${2:?}; test_leaks_set=1; shift 2 ;;
         --build-leaks) build_leaks=${2:?}; shift 2 ;;
         --regex) regex=${2:?}; shift 2 ;;
@@ -305,8 +325,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$phase" in
-    build|full|ctest|focused-lsan|rerun-failed) ;;
+    build|full|ctest|focused-lsan|rerun-failed|verify-native) ;;
     *) die "unknown phase: $phase" ;;
+esac
+case "$profile" in
+    full|weekly|native|affected)
+        if [[ -f "$build_dir/.crexx-external-fixtures-used" ]]; then
+            die "$profile requires a fresh original-producer tree; this tree has used external fixtures"
+        fi
+        ;;
+    daily) ;;
+    *) die "unknown profile: $profile" ;;
 esac
 if [[ "${#build_targets[@]}" -gt 0 && "$phase" != "build" ]]; then
     die "--build-target is only valid with --phase build"
@@ -331,22 +360,37 @@ if [[ "$stop_on_failure" == "auto" ]]; then
     fi
 fi
 BASE_ASAN_OPTIONS=$(strip_detect_leaks_option "${ASAN_OPTIONS:-}")
+export CREXX_QA_BUILD_LEAKS="$build_leaks" CREXX_QA_PHASE="$phase"
 if [[ -n "$exclude_regex_file" ]]; then
     [[ -f "$exclude_regex_file" ]] || die "exclude regex file not found: $exclude_regex_file"
     exclude_regex=$(tr -d '\n' < "$exclude_regex_file")
+fi
+profile_exclude=$(python3 "$script_dir/sanitizer-policy.py" exclude --profile "$profile")
+if [[ -n "$profile_exclude" ]]; then
+    if [[ -n "$exclude_regex" ]]; then
+        exclude_regex="($profile_exclude)|($exclude_regex)"
+    else
+        exclude_regex=$profile_exclude
+    fi
+fi
+if [[ -n "$exclude_label" ]]; then
+    exclude_label="(^performance-measurement$)|($exclude_label)"
+else
+    exclude_label='^performance-measurement$'
 fi
 
 if [[ -z "$log_root" ]]; then
     log_root="$build_dir/asan-logs"
 fi
 timestamp=$(date +%Y%m%d-%H%M%S)
-log_dir="$log_root/$timestamp-$phase"
-mkdir -p "$log_dir"
+mkdir -p "$log_root"
+log_dir=$(mktemp -d "$log_root/$timestamp-$phase.XXXXXX")
 log_dir_abs=$(cd "$log_dir" && pwd)
 ln -sfn "$log_dir_abs" "$log_root/latest"
 
 cat > "$log_dir/run.env" <<EOF
 phase=$phase
+profile=$profile
 build_dir=$build_dir
 build_jobs=$build_jobs
 test_jobs=$test_jobs
@@ -382,7 +426,10 @@ case "$phase" in
     full)
         run_cmake_build build
         run_cmake_build qa-prep --target qa-prep
+        run_logged native-closure "$build_leaks" python3 "$script_dir/sanitizer-fixtures.py" native --build-dir "$build_dir" --if-sanitized
         run_ctest ctest
+        run_logged native-closure-after-tests "$test_leaks" python3 "$script_dir/sanitizer-fixtures.py" native --build-dir "$build_dir" --if-sanitized
+        qualify_ctest
         ;;
     ctest)
         run_ctest ctest
@@ -394,6 +441,9 @@ case "$phase" in
         ;;
     rerun-failed)
         run_ctest rerun-failed --rerun-failed
+        ;;
+    verify-native)
+        run_logged native-closure "$build_leaks" python3 "$script_dir/sanitizer-fixtures.py" native --build-dir "$build_dir"
         ;;
 esac
 

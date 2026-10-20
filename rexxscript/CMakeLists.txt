@@ -64,7 +64,7 @@ foreach(_binfile IN LISTS REXXSCRIPT_BINS)
     list(APPEND _rexxscript_import_roots
       "${REXXSCRIPT_MEMBER_ROOT}/${_dep}")
   endforeach()
-  add_custom_command(
+  crexx_add_fixture_command(
     OUTPUT "${_binfile}"
     BYPRODUCTS
       "${_member_source}"
@@ -115,7 +115,7 @@ string(APPEND _rexxscript_control_text
 
 file(GENERATE OUTPUT ${_rexxscript_control_file} CONTENT "${_rexxscript_control_text}")
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${_rexxscript_link_image}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_rexxscript_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_rexxscript_control_file}
@@ -167,7 +167,7 @@ crexx_add_import_root(rexxscript_runner_imports
     rxfnsc
     rexxscript
   COMMENT "Staging deterministic RexxScript runner imports ...")
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${REXXSCRIPT_RUNNER_C}"
   BYPRODUCTS
     "${REXXSCRIPT_RUNNER_STAGED_SOURCE}"

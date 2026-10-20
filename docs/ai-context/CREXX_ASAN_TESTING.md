@@ -246,22 +246,91 @@ record that the command was validated only in the sanitizer tree.
 
 ## Overnight assurance and exceptional qualification
 
-`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs for
-each workflow invocation:
+The default manual/version-tag scope and currently effective scheduled policy
+retain two non-optional full jobs: Linux x64 ASan/LSan, with leak detection on
+during build and tests, and Apple arm64 ASan, with unsupported Apple LSan off.
+Both use fresh Debug trees, original instrumented producers and the complete
+non-measurement CTest set. Neither job is `continue-on-error`. Ordinary Windows
+and optional provider configurations retain their separate owning QA.
 
-* Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
-  and complete CTest phases.
-* macOS arm64 runs AddressSanitizer with leak detection disabled because the
-  Apple runtime does not provide supported LeakSanitizer coverage.
+`tools/asan-run.sh --profile full --phase full` is the maintained broad command.
+`weekly`, `native` and `affected` currently use that same complete scope and
+original generation. A tree ever populated from an external ordinary donor is
+rejected for these profiles, even after clearing its CMake option. Build-only,
+filtered, partial, rerun-failed, ordinary Debug or Linux leak-off results cannot
+certify broad sanitizer assurance. Empty selections fail. Both native source
+compile flags and final native product/provider symbols are audited before and
+after full test execution; the product `rxvm` alias/copy must match the concrete
+instrumented engine. The external SDK consumer inherits the owning sanitizer
+compiler/configuration/linker flags, including named Asan configurations.
 
-Both jobs configure fresh Debug trees and invoke `tools/asan-run.sh --phase
-full`.  The instrumented build therefore executes generated-product tools such
-as `rxc`, `rxas`, and `rxlink` under the sanitizer before CTest starts.  Do not
-replace these jobs with a CTest-only step or mark either job
-`continue-on-error`.  Logs are uploaded even when a job fails so the first
-build-time or test-time report remains attributable.
+The separately approved `daily` profile retains every current non-measurement
+test except the exact ten names in [the owning worklist](../SANITIZER-WORKLIST.md#exact-membership-approved-for-implementation).
+Unknown/new tests stay included; all normalization and native/SAN tests remain.
+Full ordinary correctness coverage is unchanged. Native/shared/unknown build
+changes, changed moved-family contracts, missing comparison history or an
+unqualified platform/toolchain/dependency configuration select full coverage. The implemented cadence policy selects weekly full on Sunday
+and otherwise daily only after activation and compatible comparison history.
+**Scheduled daily activation is still disabled.** Scheduled definitions load
+from master and require Adrian's separate decision after qualification.
 
-These full jobs are mandatory **when this workflow is invoked**; they are
+Daily runtime preparation may use `-DCREXX_QA_FIXTURE_TREE=<ordinary-tree>`.
+Configure both fresh single-config Ninja trees with the same source, compiler,
+platform, options and explicit `CREXX_BUILD_TIMESTAMP`/`CREXX_BUILD_COMMIT`;
+add the maintained ASan flags only to the native tree. Then run:
+
+```sh
+python3 tools/sanitizer-fixtures.py prepare --build-dir <ordinary-tree> --build-jobs 4
+tools/asan-run.sh --build-dir <native-tree> --profile daily --phase full --build-jobs 4 --test-jobs 8 --build-leaks on --leaks on
+```
+
+Use both leak options off only on Apple. The ordinary donor build and `qa-prep`
+finish before sealing. A mandatory validation target binds source/configuration,
+actual fetched dependency contents/commits and producer binaries once per build;
+each audited command copies/checks its whole output/byproduct owner set. Missing,
+partial, changed or unowned artifacts fail before consumers, and copy failure
+invalidates the complete destination owner set. Final validation rejects changed
+inputs. Mutating a local source/dependency tree during qualification invalidates
+proof. Seals/owner manifests are disposable operational build state.
+
+Only explicitly audited source/RXAS/RXBIN/generated-C commands use the donor.
+Mixed native-adapter and unknown generators keep original instrumented commands;
+there can still be instrumented preparation cost. Generated embedded C is
+compiled in the native tree. Every native VM, provider, archive, child executable
+and host tool remains native-tree owned. Direct/native compiler, assembler,
+linker, driver and SAN regressions continue exercising instrumented producers.
+The complete/full profile retains original instrumented library generation,
+including the original SAN-008 trigger. This split claims runtime assurance,
+not donor-producer memory-safety proof.
+
+Expression and BIF audits share checked two-mode compile/assemble preparation
+through CTest setup fixtures. Each original runtime cell and independent oracle
+remains; linked consumers create only their required linked image under the
+same interprocess lock, with hash-owned atomic publication. Isolated `ctest -R`
+automatically includes setup; failed setup blocks consumers. Source/tool/library
+changes invalidate preparation. Other generic linked-test consumers are unchanged.
+
+Workflow dispatch `candidate` runs three disjoint clean jobs: Linux original
+full, Linux separated daily and Apple separated daily. The Linux donor also
+runs full ordinary correctness as an independently timed qualification step.
+`normalization-linux` retains the original two-cell Debug then leak-on ASan
+replay route with optional `source_ref`; it cannot write broad assurance.
+
+Reusable success is keyed by platform/image, profile, preparation mode, source
+and dependency contents, effective flags/options, compiler/build-tool identities
+and runtime/leak policy. Equivalent full/weekly/native/affected requests reuse
+one broad scope; daily stays distinct. Broad history also binds native toolchain,
+dependency and host configuration before scheduled daily can be selected.
+Exact observed artifact/configuration identities are
+recorded separately. Canonical reuse normalizes relocated build/source paths
+and generated timestamp/commit/dirty presentation metadata, preserving semantic
+version inputs and channel. Manual/tag runs stay unconditional. Each successful
+platform scope is retained independently; joint broad history requires both
+platforms complete. Daily/focused/incomplete results never become broad history.
+Uploaded diagnostics and operational cache summaries are not committed evidence;
+extract useful findings into the worklist and delete local task logs.
+
+These full jobs are mandatory **when the full workflow scope is invoked**; they are
 not mandatory before every `develop` publication. Ordinary development changes
 can be integrated after the core build and appropriate functional tests pass,
 with relevant focused sanitizer checks when warranted. Full sanitizer assurance

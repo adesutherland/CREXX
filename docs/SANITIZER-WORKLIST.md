@@ -13,7 +13,7 @@ exact ten-cell daily reduction, separated fixture/native preparation and shared
 Classic preparation, qualified before activation. The existing scheduled policy
 remains effective until qualification and the separate master-workflow decision.
 See [measured results](#bounded-measurement-results) and the
-[exact membership proposal](#exact-membership-proposal-for-approval).
+[exact membership proposal](#exact-membership-approved-for-implementation).
 Implementation uses the existing synchronized hotfix checkout. Focused hosted
 qualification is authorized; no master activation or release promotion is
 authorized. The local Linux ARM64 VM has no configured usable SSH identity, so a
@@ -73,13 +73,13 @@ This is a QA finding; no new memory-safety finding was observed.
   --phase full --build-jobs 4 --test-jobs 8
   --exclude-label '^performance-measurement$' --no-live-tail`, with
   `--build-leaks on --leaks on` on Linux and both off on Apple.
-- The normalization registration has `TIMEOUT 1200` without `RUN_SERIAL`.
+- The failed revision had `TIMEOUT 1200` without `RUN_SERIAL`.
   Its unchanged fixture checks 20,034 official rows, 400,680 transformation
   relations, 400,680 predicates and 1,094,978 unlisted scalar identities per
   form, in each of four optimizer/VM combinations. Contention is a credible
   explanation, supported by the other long-running Unicode cases, but a
   product slowdown or hang has not been ruled out.
-- Next action after approval: prepare the exact failing inputs, replay the two
+- Approved diagnostic action, now completed below: prepare the exact failing inputs, replay the two
   unchanged cases once under isolated normal Linux Debug and maintained Linux
   ASan/LSan scheduling through the runner, and inspect any diagnostic before
   deciding the repair. Proposed selection:
@@ -768,7 +768,7 @@ and runs the two threaded normalization cells in normal Debug, then maintained
 ASan/LSan, both with one CTest worker and Linux leaks enabled. This is diagnosis;
 it cannot record broad assurance. YAML parsing, actionlint and `git diff --check`
 pass. The unchanged replay has passed as recorded above; normalization scheduling is
-being repaired before profile/preparation implementation. No selection change
+repaired and locally verified before profile/preparation implementation. No selection change
 has been activated.
 
 The preparation implementation will use the existing CMake custom-command
@@ -805,6 +805,24 @@ inputs and setup failures prevent consumers. Serialize/lock preparation, bind it
 to producer/source/library hashes, publish atomically and clean scratch output.
 The generic BIF linked helper's other consumers retain their current behavior.
 
+Normal Debug shared Classic qualification passes **11/11** (eight runtime
+cells, two setup fixtures and integrity) in **268.20 seconds**, using
+`tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --regex
+'^(classic_expression_contract|levelc_bif_reference_audit)_' --test-jobs 1
+--leaks off --no-live-tail`. BIF preparation is 97.22 seconds and its runtime
+cells 0.25–1.31 seconds; expression preparation is 83.40 seconds, direct runtime
+7.05–7.10 and linked consumers 34.62–35.01 seconds including their first link.
+These are bounded normal Debug observations, not an ASan or speedup claim.
+Independent recording-stub comparison against the original harness verifies
+all 44 runtime sources, language modes, expected values/exits and diagnostic
+fragments, plus all eight source-error bodies/codes, unchanged. Generated
+CTest discovery confirms isolated `-R` includes integrity, owning preparation
+and exactly the requested runtime cell. Shared preparation compiles/assembles
+both modes; linking occurs only for consumers that need it, under the same lock.
+A source/product identity change invalidates preparation. A linked image must
+have a matching published owner hash before execution; unowned interrupted
+outputs are rebuilt. Disposable focused logs were inspected then deleted.
+
 Further source-audit constraints: validate source/configuration/dependency identity
 once per mandatory build validation, not once per copied file, then check each
 owner's artifact hashes. Include actual configured external dependency contents
@@ -819,25 +837,92 @@ A disposable CMake argument-boundary experiment passed for literal and escaped
 semicolons; the permanent independent fixture must also cover spaces, generator
 expressions, multiple commands/byproducts, ordering and failure blocking consumers.
 
+### Local implementation qualification and candidate gate
+
+The implementation retains the original ordinary/full test behavior, adds four
+preparation/integrity CTests and implements daily as **U minus exactly ten**.
+Current Apple discovery is **U=3,298**, daily **3,288**; the original coverage
+measurement used U=3,294 before these infrastructure additions. All four
+normalization cells retain RUN_SERIAL and TIMEOUT 1200; native/SAN and unknown
+new names remain included. No product C, Rexx library or research compiler
+source changed in this tranche.
+
+- Core/SDK/stage preparation passes through `tools/asan-run.sh --build-dir
+  cmake-build-debug --phase build --build-target cri07_rxpa_sdk_consumer_prereqs
+  --build-target stage-optional --build-jobs 6 --build-leaks off --no-live-tail`,
+  with no compiler warnings or sanitizer diagnostics.
+- Focused normal Debug passes **12/12 in 131.51 seconds** using runner phase
+  ctest, one test job, leaks off and regex
+  `^(sanitizer_strategy_contract|rxpa_external_sdk_consumer|crexx_project_build_contract|crexx_native_.*)$`.
+  SDK takes 27.19 seconds, project/incremental/provider contract 88.61 seconds,
+  and eight native driver/packaging cases 0.97–5.18 seconds. This validates
+  ordinary routing/package correctness; candidate ASan execution remains open.
+- Ten independent behavioral contracts pass in **2.90 seconds**. They execute
+  actual CMake custom commands to compare ordinary forwarding, semicolons,
+  spaces, generator expressions and multiple commands/byproducts; verify
+  multi-config ordinary generation; reject stale/missing owner members and
+  changed source/configuration/actual dependency content; block consumers after
+  failure; exercise interprocess locking and interrupted/unowned linked-image
+  publication; audit provider-own compile flags and the product VM entrypoint;
+  check cadence/default-keep/platform/profile reuse and false-broad cases.
+  The actual runner also executes a controlled CTest then fails its post-test
+  native audit, proving no success completion or result is published.
+- Fresh real CREXX ordinary/Ninja and ASan/Ninja configurations agree on 95
+  relevant settings and actual DSLSH commit/content identity
+  `383e5daab0ffcf6ec83e02db7a01a27709dabb2c`. Temporary configure trees/logs
+  were removed. Canonical reuse is tested across relocation/history metadata,
+  with semantic/configuration/tool/dependency/host/preparation differences
+  still separated. Equivalent broad profile labels share one broad cache scope.
+- Native closure verifies effective flags for built source objects, nested SDK
+  provider sources, product VM routing, driver child flag files and linked
+  native products/copies throughout the build tree. CMake private compiler
+  probes and relocatable objects are distinguished from executable/provider
+  outputs; objects retain their separate flag audit. Newly built CTest targets
+  are audited after execution and included in final observed identity; changing
+  an already-present native product invalidates the run.
+
+Existing logical-state oracles are retained: allocator bounded reserve then
+zero trim/live allocations, exact wrong-owner/overflow counts; stem ownership
+and zero teardown counts; worker missing/signal failure followed by successful
+request, zero running requests and exact failure/cancellation/destruction
+counts. Linux full and both daily candidate jobs execute these existing tests.
+The future new-C compiler-service lifecycle/resource criterion remains an
+explicit programme gap, owned by its research plan; this snapshot does not
+qualify the newer compiler or claim retirement/self-hosting. Independent
+Level L/new-C source/oracles and the default research option OFF are unchanged.
+
+**Remaining qualification before activation:** publish the timeout and compatible
+preparation/policy commits together; dispatch one exact-head candidate with
+three isolated fresh jobs: Linux original full U (including all four
+normalization and all 16 structured-flow cases), Linux separated daily and
+Apple separated daily. Linux's ordinary donor also runs full ordinary
+correctness. Measure ordinary preparation, native build and CTest separately
+against the provisional two-hour target, without turning that target into a
+kill timer. Reuse the unchanged prior full Apple product evidence; neither a
+daily pass nor this local qualification is a new broad/platform pass. Expected
+publication status is hotfix implementation with candidate qualification
+pending, scheduled activation disabled, and no master/develop promotion. Hosted
+run links own later observed outcomes; do not add a CI-status-only commit.
+
 ### Numbered acceptance criteria
 
 1. **SCOPE-AC01 — investigation verified, repair open:** account for the
    latest run's tested SHA, failures, incomplete selection and phase costs as
    above. Close SAN-QA-020 by isolated Linux evidence and a justified repair;
    preserve SAN-QA-019's outstanding Linux verification.
-2. **SCOPE-AC02 — bounded review verified; implementation profile open:** map native modules,
+2. **SCOPE-AC02 — mapping and exact membership locally verified; platform execution pending:** map native modules,
    instruction families, value/lifetime/failure scenarios, providers and
    platforms to existing tests and explicit gaps. Measure the bounded
    per-family native-coverage comparison before deciding reductions. Every
    moved family has its owner, retained counterpart, residual risk and trigger;
    preserve SAN variants and distinct dispatch/ABI/ownership paths.
-3. **SCOPE-AC03 — open, revised for separated preparation:** from clean inputs,
+3. **SCOPE-AC03 — local ownership/compatibility verified; clean platform proof pending:** from clean inputs,
    ordinary fixture preparation and the instrumented VM/provider closure
    produce compatible, traceable artifacts without stale/missing dependencies.
    Prove which native binaries execute in all selected host/subprocess paths.
    The native-tool profile retains instrumented producer tests, Linux leaks
    stay on, and full-profile selection retains the existing broad set.
-4. **SCOPE-AC04 — open:** policy fixtures prove daily/weekly/affected-change/
+4. **SCOPE-AC04 — behavioral policy and failure fixtures verified; hosted integration pending:** policy fixtures prove daily/weekly/affected-change/
    manual/tag decisions, missing-history fallback, platform/profile-qualified
    reuse, failure propagation and no false broad-success marker. No workflow
    is `continue-on-error`; incomplete execution is reported as incomplete.
@@ -847,7 +932,7 @@ expressions, multiple commands/byproducts, ordering and failure blocking consume
    unchanged valid full Apple evidence; finish outstanding Linux broad proof
    after its timeout repair. The approved qualification includes these clean candidate executions and the
    missing Linux broad proof; it does not authorize another coverage or benchmark campaign.
-6. **SCOPE-AC06 — open:** update `AGENTS.md`, the sanitizer guide, this worklist
+6. **SCOPE-AC06 — current implementation docs reconciled; final qualification report pending:** update `AGENTS.md`, the sanitizer guide, this worklist
    (including its stale CI-enforcement footer) and affected owning test docs
    coherently. Record exact qualified inputs, commands, results and limitations;
    delete task-created diagnostics. Keep existing SAN closure requirements.
@@ -856,12 +941,12 @@ expressions, multiple commands/byproducts, ordering and failure blocking consume
    20 October. Qualify before activation; Adrian separately decides the master exception.
    Publication follows the authority in the implementation request. Verify
    the effective scheduled definition before claiming rollout complete.
-8. **SCOPE-AC08 — open:** retained direct and real-workload tests check expected
+8. **SCOPE-AC08 — existing state oracles retained/inspected; candidate execution pending:** retained direct and real-workload tests check expected
    values, errors, aliasing and resource state, including repeated requests,
    failure/recovery and teardown. Compiler/engine parity is not the sole oracle.
    Verify logical allocation/handle balance and bounded documented reserves;
    ASan/LSan alone does not satisfy the lifecycle requirement.
-9. **SCOPE-AC09 — open:** full ordinary language/tool acceptance, independent
+9. **SCOPE-AC09 — ordinary/research ownership preserved; candidate ordinary full proof pending:** full ordinary language/tool acceptance, independent
    Level L/new-C coverage, emitted-code quality and existing platform/packaging
    requirements remain intact. Record current native dependencies and optional
    untested configurations; do not infer retirement or self-hosting completion.
@@ -883,13 +968,13 @@ expressions, multiple commands/byproducts, ordering and failure blocking consume
    The map, 87-cell results and exact ten-name proposal above are complete.
    Unmeasured families stay included; no full-profile or Linux qualification
    is claimed. Adrian approved the exact result on 20 October; qualification precedes activation.
-4. **SCOPE-STEP04 — depends on approved STEP03 result (AC02/03/04/08):**
+4. **SCOPE-STEP04 — implemented and locally verified; platform proof in STEP05 (AC02/03/04/08):**
    add justified focused boundary/state tests, implement separate fixture and
    native-instrumentation preparation, then explicit runner profiles and
    cadence/qualification records. Check selection, dependency and policy
    fixtures. Fuzzing, TSan and optimization pilots are separately bounded
    proposals, not an automatic expansion of this delivery.
-5. **SCOPE-STEP05 — depends on STEP02/04 (AC01/05/08/09):** qualify affected
+5. **SCOPE-STEP05 — normal focused proof verified; hosted candidate pending (AC01/05/08/09):** qualify affected
    normal Debug tests and independent oracles, focused maintained sanitizers,
    one measured candidate profile per platform and necessary Linux broad proof.
    Compare coverage/scenario obligations with the baseline and report gaps;

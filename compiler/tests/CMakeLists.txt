@@ -9647,38 +9647,45 @@ foreach(_bif_mode IN ITEMS opt noopt)
         LABELS "compiler;levelg" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
 
-# Reference audit uses existing single-program direct and linked harnesses.
+# Prepare the two compiler modes once; retain all four runtime oracles.
+set(_bif_fixture_dir "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/bif-reference")
+add_test(NAME levelc_bif_reference_audit_prepare
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/levelc_bif_reference_audit.py
+        --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_bif_fixture_dir}" --prepare)
+set_tests_properties(levelc_bif_reference_audit_prepare PROPERTIES
+    FIXTURES_SETUP classic-bif-reference RUN_SERIAL TRUE TIMEOUT 2400
+    LABELS "compiler;levelc;comprehensive"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 foreach(_bif_mode IN ITEMS opt noopt)
+    set(_bif_flags)
     if(_bif_mode STREQUAL "noopt")
-        set(_bif_noopt ON)
-        set(_bif_flags -n)
-    else()
-        set(_bif_noopt OFF)
-        set(_bif_flags)
+        list(APPEND _bif_flags --noopt)
     endif()
-    add_test(NAME levelc_bif_reference_audit_${_bif_mode}
-        COMMAND ${CMAKE_COMMAND}
-            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
-            -DRXLINK=$<TARGET_FILE:rxlink> -DRXVM=${CREXX_RXVM_EXECUTABLE}
-            -DBINDIR=${CMAKE_BINARY_DIR}/bin -DNAME=levelc_bif_reference_audit_direct
-            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_reference_audit.rexx
-            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_reference_audit.expected
-            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} -DNOOPT=${_bif_noopt} -DDIRECT=ON
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
-    set_tests_properties(levelc_bif_reference_audit_${_bif_mode} PROPERTIES
-        LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 600 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
-    add_test(NAME levelc_bif_reference_audit_linked_${_bif_mode}
-        COMMAND ${CMAKE_COMMAND}
-            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
-            -DRXLINK=$<TARGET_FILE:rxlink> -DRXVM=${CMAKE_BINARY_DIR}/bin/rxvm
-            -DBINDIR=${CMAKE_BINARY_DIR}/bin -DNAME=levelc_bif_reference_audit
-            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_reference_audit.rexx
-            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_reference_audit.expected
-            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} -DNOOPT=${_bif_noopt}
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
-    set_tests_properties(levelc_bif_reference_audit_linked_${_bif_mode} PROPERTIES
-        LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 600 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    foreach(_bif_link IN ITEMS direct linked)
+        set(_bif_name "levelc_bif_reference_audit_${_bif_mode}")
+        set(_bif_runtime_flags ${_bif_flags})
+        if(_bif_link STREQUAL "linked")
+            set(_bif_name "levelc_bif_reference_audit_linked_${_bif_mode}")
+            list(APPEND _bif_runtime_flags --linked)
+        endif()
+        add_test(NAME ${_bif_name}
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/levelc_bif_reference_audit.py
+                --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_bif_fixture_dir}" ${_bif_runtime_flags})
+        set_tests_properties(${_bif_name} PROPERTIES
+            FIXTURES_REQUIRED classic-bif-reference
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 600
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
 endforeach()
+
+set(_expression_fixture_dir "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/expression")
+add_test(NAME classic_expression_contract_prepare
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/classic_expression_contract.py
+        --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_expression_fixture_dir}" --prepare)
+set_tests_properties(classic_expression_contract_prepare PROPERTIES
+    FIXTURES_SETUP classic-expression RUN_SERIAL TRUE TIMEOUT 2400
+    LABELS "compiler;levelc;comprehensive"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 
 # LC-CLOSE: isolated Debug/ASan pilot measurements are recorded in the Level C
 # worklist. Keep these nested toolchain aggregates out of the broad worker pool;
@@ -9693,9 +9700,16 @@ foreach(_closeout_mode IN ITEMS opt noopt linked_opt linked_noopt)
     endif()
     foreach(_closeout_family IN ITEMS expression clock)
         set(_closeout_name classic_${_closeout_family}_contract_${_closeout_mode})
+        set(_closeout_fixture_flags)
+        if(_closeout_family STREQUAL "expression")
+            set(_closeout_fixture_flags --fixture-dir "${_expression_fixture_dir}")
+        endif()
         add_test(NAME ${_closeout_name} COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/classic_${_closeout_family}_contract.py
-            --bindir ${CMAKE_BINARY_DIR}/bin ${_closeout_flags})
+            --bindir ${CMAKE_BINARY_DIR}/bin ${_closeout_fixture_flags} ${_closeout_flags})
+        if(_closeout_family STREQUAL "expression")
+            set_property(TEST ${_closeout_name} APPEND PROPERTY FIXTURES_REQUIRED classic-expression)
+        endif()
         set_tests_properties(${_closeout_name} PROPERTIES
             LABELS "compiler;levelc;comprehensive"
             RUN_SERIAL TRUE TIMEOUT 1200

@@ -162,6 +162,15 @@ function(crexx_finalize_directory_qa_tiers)
             endif()
         endif()
 
+        # An isolated -R selection still validates any external ordinary
+        # fixtures before it can consume them. In original-producer trees the
+        # setup verifies that no external donor is configured.
+        if(NOT _crexx_tier STREQUAL "performance-measurement" AND
+           NOT _crexx_test STREQUAL "sanitizer_fixture_integrity")
+            set_property(TEST "${_crexx_test}" APPEND PROPERTY
+                    FIXTURES_REQUIRED qa-fixture-integrity)
+        endif()
+
         get_property(_crexx_prep_targets TEST "${_crexx_test}" PROPERTY
                 CREXX_PREP_TARGETS)
         if(_crexx_prep_targets AND
