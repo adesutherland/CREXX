@@ -254,6 +254,29 @@ assemble: procedure expose cells. ends.
 utf8_valid: procedure
   parse arg text
   ascii = xrange('00'x, '7f'x)
+  if verify(text, ascii, 'N') = 0 then return 1
+  total = length(text)
+  start = 1
+  do while start <= total
+    size = min(4096, total - start + 1)
+    /* Keep a scalar crossing the chunk boundary together. An invalid run
+     * cannot force unbounded lookahead; the unchanged scalar check rejects it.
+     */
+    do extra = 1 to 3
+      if start + size > total then leave
+      byte = c2d(substr(text, start + size, 1))
+      if byte < 128 | byte > 191 then leave
+      size = size + 1
+    end
+    if utf8_chunk(substr(text, start, size)) = 0 then return 0
+    start = start + size
+  end
+  return 1
+
+/* Bound BIF value arguments: Regina copies large operands in this loop. */
+utf8_chunk: procedure
+  parse arg text
+  ascii = xrange('00'x, '7f'x)
   p = 1
   size = length(text)
   do while p <= size

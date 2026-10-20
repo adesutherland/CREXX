@@ -72,6 +72,21 @@ do i = 2 to words(scalars)
   bytes = x2c(word(scalars, i))
   call check 'B005 valid scalar', get('rexx_csv'('PARSE', bytes), 1, 1), bytes
 end
+/* Every alignment around a 4 KiB UTF-8 validation chunk. */
+do prefix_count = 4093 to 4099
+  prefix = copies('a', prefix_count)
+  do scalar = 1 to 3
+    bytes = x2c(word('c3a9 e0a080 f09f9982', scalar))
+    text = prefix || bytes || 'z'
+    call check 'B005 chunk scalar', get('rexx_csv'('PARSE', text), 1, 1), text
+    call check 'B005 chunk writer', 'rexx_csv'('TEXT', 'rexx_csv'('WRITE', 'rexx_csv'('ROW', text))), text || '0d0a'x
+  end
+  do invalid_index = 1 to words(invalid)
+    text = prefix || x2c(word(invalid, invalid_index))
+    call error 'B005 chunk invalid parse', 'rexx_csv'('PARSE', text), 'E_ARGUMENT', 0, 0, ''
+    call error 'B005 chunk invalid writer', 'rexx_csv'('WRITE', 'rexx_csv'('ROW', text)), 'E_ARGUMENT', 0, 0, ''
+  end
+end
 say 'PASS: B001-B003/B005 ownership, recovery, API errors and UTF-8 boundary'
 
 end
@@ -83,9 +98,13 @@ if section = 'all' | section = 'fields' then do
 call progress 'START: fields'
 /* Inclusive decoded-byte bounds, independently checked in bytes. */
 call check 'L002 byte count', length(unicode), '1048576'
-do which = 1 to 2
-  if which = 1 then text = ascii
-  else text = unicode
+do which = 1 to 4
+  select
+    when which = 1 then text = ascii
+    when which = 2 then text = unicode
+    when which = 3 then text = copies('f09f9982'x, 262144)
+    otherwise text = copies('65cc81'x, 349525) || 'a'
+  end
   call progress 'START: fields variant' which 'parse accepted'
   accepted = 'rexx_csv'('PARSE', text)
   call good 'L001/L002 accepted', accepted

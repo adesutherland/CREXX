@@ -641,3 +641,43 @@ large Latin UTF-8 parse/write operations. This gives a concrete candidate for
 pathological cost rather than proof of an infinite loop. Publish instrumentation
 without an automatic duplicate matrix, then dispatch the targeted Windows
 Regina diagnostic and preserve the seven successful unchanged cells.
+
+
+CSV-08 minimal reproduction: the existing UTF-8 helper on valid repeated Latin
+text takes 0.109/0.364/1.441s at 32,768/65,536/131,072 scalars on local Regina;
+a scratch version applying the same scalar checks to bounded, scalar-aligned
+4 KiB chunks takes 0.036/0.072/0.145s. These diagnostic samples identify scaling,
+not formal speed claims. Windows diagnostics pass ownership/installed consumer,
+large 16 MiB and quote-expansion groups; field/count groups are investigated
+separately. No infinite-loop conclusion is established.
+
+STEP-08.4 repair: bound UTF-8 BIF operands to at most 4,099 bytes, extending a
+4,096-byte chunk by at most three continuation bytes. Keep the existing exact
+scalar validator and failure ordering. Add valid/invalid 2/3/4-byte and truncated/
+surrogate boundary regressions at every nearby chunk alignment; retain all old
+assertions and add supplementary/decomposed maximum-field cases. Acceptance is
+the same checked results/limits on both Classic runtimes and both hosted OSes,
+plus visibly advancing isolated groups and full normal qualification. There is
+no public API, opaque representation, native or shared CSV profile change.
+
+
+Windows diagnostics at 8d3e343e8 pass ownership plus installed consumer
+(run 39441875640), counts (39441997768), large (39442002835) and quotes
+(39442007269). Only fields (39441993861) remains slow and is stopped for its
+checkpoint log. The bounded UTF-8 repair passes the expanded local Regina
+field group in 6.3s versus 86.4s before (now also supplementary/decomposed
+maximum fields), and full ooRexx grouped checks/installed consumer pass locally.
+The wrapper retains the all-ASCII fast path; private scalar checks are unchanged.
+These observations guide a focused Windows repeat, not a formal benchmark.
+
+
+Current repaired Classic source SHA-256: `7d28d3ddf2394ccfe1a48e8eeeb6aa4be9b3182e5eb10e6f1c6efdc76aad8421`.
+It supersedes the original `af292f...` source identity for further Classic
+qualification; earlier platform results above remain historical baseline proof.
+The final local Regina ownership/expanded-fields/large/quotes and fresh consumer
+pass after the ASCII fast path is restored (fields 6.2s); the final counts
+replay runs separately. Full ooRexx and consumer checks also passed the chunk
+repair, and the final ASCII-only path retains the previously qualified scan.
+Next hosted check is Windows Regina fields, followed by full Classic platform
+gates. The cREXX/NetRexx library, fixtures, harnesses and runtime pins are unchanged,
+so their successful hosted cells remain valid.
