@@ -955,6 +955,80 @@ selection. The isolated proof uses the same canonical root spelling throughout.
 That conservative path-alias rejection cannot explain the Linux post-test
 identity drift; its exact native-product path handling remains a local limitation.
 
+### SAN-QA-023 — sustained VM providers follow their ELF support archives
+
+Status: **repair locally qualified; clean daily platform gate open**.
+Owner: Codex, under Adrian's request to finish the sanitizer hotfix on `hotfix`.
+
+Linux [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
+at `0f4cfe914ea1cdf0d7b3055280e2872fd88c9956` fails in ordinary selective
+preparation while linking `sustained_vm_rxbvm` and `sustained_vm_rxtvm`.
+Their force-loaded `_sustainedvm_static` and `fs_static` archives follow
+`librxpa.a`; ELF archive scanning therefore leaves provider `rxpa_*` references
+unresolved. This is a test-harness link-order defect, before sanitizer runtime
+execution, with no observed memory-safety diagnostic.
+Both harnesses are normal build targets, so this defect also blocks an ordinary
+Linux ALL build containing them; its reach is not limited to sanitizer execution.
+
+Intended outcome: both existing sustained harnesses link on Linux and Apple,
+and both approved daily platform jobs complete with their independent runtime,
+ownership and final identity checks. Preserve the exact VM-focused selection,
+ordinary/full and original-producer proof, Linux leak checks and fail-closed
+identity validation. Scheduled daily activation remains disabled; no master
+activation is authorized.
+
+- **QA023-AC01 — done:** force-loaded providers precede their support archives;
+  inspect the generated link commands and build both existing harness targets.
+- **QA023-AC02 — done:** the six permanent sustained lifecycle regressions pass
+  normal Debug and maintained Apple ASan, with their existing oracles and bounds.
+- **QA023-AC03 — todo:** clean Linux ASan/LSan and Apple ASan daily jobs complete
+  through final validation; reuse compatible passing proof and do not repeat
+  the original full suite. Report exact inputs and hosted outcomes in conversation.
+- **QA023-AC04 — todo:** publish the repair on `hotfix`, remove task diagnostics,
+  and verify schedule activation remains false.
+
+1. **QA023-STEP01 — done (AC01):** diagnose both failed link commands and move
+   provider registration before support libraries in the owning test harness.
+2. **QA023-STEP02 — done (AC01/02):** rebuild only the affected harness targets
+   and run the six existing lifecycle regressions, Debug then Apple ASan.
+3. **QA023-STEP03 — todo (AC03/04), depends on STEP02:** commit/push the repair,
+   qualify the approved daily profile, inspect failures if any, and monitor
+   lightly until both platform jobs pass. No language/API/architecture change.
+
+### SAN-QA-024 — split runtime preparation omits certified exits
+
+Status: **cold-build regression and local focus qualified; platform gate open**.
+Owner: Codex, under the same hotfix request as SAN-QA-023.
+
+Apple ordinary preparation in [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
+at `0f4cfe914ea1cdf0d7b3055280e2872fd88c9956` invokes both scalar argument
+fixture producers before `rxcexits.rxbin` is ready. `rxc` reports `INTERNAL EXIT
+ERROR: Failed to load certified exit module 'rxcexits'`. The split runtime
+helper omitted the `compiler_exit_bin` target and its output dependency.
+The existing general compile matrix already declares that prerequisite.
+This is a distinct preparation dependency defect, with no sanitizer report.
+It affects selective split fixture preparation. Ordinary compiler CTest scripts
+retain their existing producer execution unless an external donor is configured.
+
+Intended outcome: a selected runtime fixture builds from cold inputs with its
+certified exits ready, preserving producer diagnostics, ordinary golden oracles,
+native runtime routing and whole-owner sealing. Selection and activation policy
+remain unchanged.
+
+- **QA024-AC01 — done:** a permanent miniature cold CMake build exercises the
+  actual split runtime helper and fails without its certified-exit dependency.
+- **QA024-AC02 — done:** the repaired selected fixtures build in normal Debug
+  and maintained Apple ASan; paired scalar runtime oracles pass unchanged.
+- **QA024-AC03 — todo:** both clean daily platform jobs pass preparation and
+  final validation, sharing QA023-AC03 qualification without a full-suite rerun.
+
+1. **QA024-STEP01 — done (AC01/02):** add target and output prerequisites in
+   `CrexxQaRuntimeCase.cmake`; leave compiler behavior untouched.
+2. **QA024-STEP02 — done (AC01/02):** add and run a cold helper regression,
+   rebuild the two scalar preparation targets and run their paired oracles.
+3. **QA024-STEP03 — todo (AC03), depends on STEP02:** publish separately from
+   the ELF link repair but qualify both compatible commits together.
+
 ### Where the time goes
 
 Times below come from hosted job/step timestamps and CTest's final wall time.

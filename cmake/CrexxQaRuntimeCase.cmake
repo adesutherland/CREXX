@@ -37,7 +37,9 @@ function(crexx_add_qa_runtime_case NAME SOURCE MODE OUT_SCRIPT OUT_TARGET)
     crexx_add_fixture_command(OUTPUT "${_image}" "${_output}"
         BYPRODUCTS ${_byproducts}
         COMMAND "${CMAKE_COMMAND}" -P "${_produce}"
-        DEPENDS rxc rxas rxlink library "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${SOURCE}" "${_produce}"
+        DEPENDS rxc rxas rxlink compiler_exit_bin library
+            "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${SOURCE}" "${_produce}"
         VERBATIM)
     set(_target "qa-runtime-${NAME}-${MODE}")
     add_custom_target("${_target}" DEPENDS "${_image}" "${_output}")

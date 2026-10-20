@@ -140,6 +140,55 @@ endif()
             if name!='levelc_bif_reference_audit_prepare': self.assertRegex(name,pattern)
         self.assertNotRegex('arg_semantics_scalar_opt_future',pattern)
 
+    @unittest.skipUnless(os.name != 'nt' and shutil.which('ninja'), 'Cold producer fixture requires executable scripts and Ninja')
+    def test_split_runtime_cold_build_prepares_certified_exits(self):
+        source = self.root / 'split source'
+        source.mkdir()
+        build = self.root / 'split build'
+        producer = '''#!@PYTHON@
+from pathlib import Path
+import sys
+tool = Path(sys.argv[0]).name
+if tool == 'rxc' and not Path('@EXITS@').is_file():
+    sys.exit("INTERNAL EXIT ERROR: Failed to load certified exit module 'rxcexits'")
+output = sys.argv[sys.argv.index('-o') + 1]
+Path(output + ('.rxas' if tool == 'rxc' else '')).write_text('owned fixture')
+'''.replace('@PYTHON@', sys.executable).replace('@EXITS@', (build/'bin/rxcexits.rxbin').as_posix())
+        for tool in ('rxc', 'rxas', 'rxlink'):
+            executable = source / tool
+            executable.write_text(producer)
+            executable.chmod(0o755)
+        (source/'sample.crexx').write_text('fixture source')
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(SplitRuntimeContract NONE)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+foreach(tool IN ITEMS rxc rxas rxlink)
+ add_executable(${tool} IMPORTED)
+ set_target_properties(${tool} PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/${tool}")
+endforeach()
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+ COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
+add_custom_target(compiler_exit_bin DEPENDS "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
+file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "fixture library")
+add_custom_target(library)
+function(crexx_add_fixture_command)
+ add_custom_command(${ARGV})
+endfunction()
+include("@HELPER@")
+foreach(mode IN ITEMS noopt opt)
+ crexx_add_qa_runtime_case(sample "${CMAKE_SOURCE_DIR}/sample.crexx" ${mode} script target)
+endforeach()
+'''.replace('@HELPER@', (ROOT/'cmake/CrexxQaRuntimeCase.cmake').as_posix()))
+        command('cmake', '-S', source, '-B', build, '-G', 'Ninja')
+        command('cmake', '--build', build, '--target', 'qa-runtime-sample-noopt', 'qa-runtime-sample-opt', '--parallel', '4')
+        self.assertTrue((build/'bin/rxcexits.rxbin').is_file())
+        for mode, suffix in (('noopt', ''), ('opt', '-linked')):
+            self.assertTrue((build/f'qa-runtime/sample_{mode}/sample_run_{mode}{suffix}.rxbin').is_file())
+        # Losing the generated module must rebuild its owner before producers.
+        (build/'bin/rxcexits.rxbin').unlink()
+        command('cmake', '--build', build, '--target', 'qa-runtime-sample-noopt', 'qa-runtime-sample-opt')
+        self.assertTrue((build/'bin/rxcexits.rxbin').is_file())
+
     def mini_project(self):
         source = self.root / 'source with spaces'
         source.mkdir()

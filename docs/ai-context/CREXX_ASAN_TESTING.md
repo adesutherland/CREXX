@@ -331,6 +331,10 @@ runtime/provider paths and their original working directory. Explicit route
 guards reject donor VM/home/provider paths. Complex native/driver/embedding
 wrappers retain original instrumented producer commands and their residual cost;
 fewer CTest names alone do not remove that cost.
+Split runtime producers depend on both `compiler_exit_bin` and its published
+`rxcexits.rxbin` before invoking `rxc`, including cold selective builds. The
+sustained harnesses place force-loaded static providers before RXPA/support
+archives so ELF linkers resolve provider references in their normal scan order.
 The complete/full profile retains original instrumented library generation,
 including the original SAN-008 trigger. This split claims runtime assurance,
 not donor-producer memory-safety proof.
