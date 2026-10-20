@@ -64,6 +64,17 @@ the DO local commit, under the approved v6 contract.
 
 ### Current DO proof
 
+**DO-F01 — Repaired/qualified, DO-AC03 exact capture parts:** word-list
+membership admitted padded ` repeat ` and controlled `to by` attributes in
+forged IR; source lowering already emits canonical parts. Exact equality with
+the selected token now rejects both. Against retained `a33f65b7` v5 tools,
+`c-context-contracts … do-exact` reproduces 6 checks / 2 refusal failures
+(4 commands, 5.158s); replacing only the repaired protocol passes 6/0
+(4 commands, 2.334s), warning-free. Both fixtures remain generic-valid and
+input-preserving. Default coverage retains the two controls; unchanged 313-check
+admission/source/runtime proof below is reused, with no v6, native or grammar
+build in this prerequisite.
+
 Normal Debug qualifies `46593174` plus the reviewed frozen DO source/fixture
 patch. Affected B C modules, hosts and fixtures were prepared warning-free
 with existing native tools. Native/core product, generic L, shared B runtime

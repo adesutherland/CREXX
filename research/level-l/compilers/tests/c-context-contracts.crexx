@@ -11,8 +11,13 @@ main: procedure = .int expose checks failures
   arg argv = .string[]
   if argv[0] < 1 | argv[0] > 2 then return 2
   selector = 'all'; if argv[0] = 2 then selector = argv[2]
-  if selector <> 'all' & selector <> 'do' then return 2
+  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' then return 2
   checks = 0; failures = 0; mode = .int
+  if selector = 'do-exact' then do
+    call doexactparts(argv[1])
+    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
   call versionrefusal(argv[1],4)
   call versionrefusal(argv[1],6)
   if selector = 'all' then do
@@ -29,6 +34,7 @@ main: procedure = .int expose checks failures
   call doschema()
   call forgedschema(argv[1],7)
   call docontracts(argv[1])
+  call doexactparts(argv[1])
   say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
@@ -393,6 +399,17 @@ docontracts: procedure = .void
   call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'key-work refusal preserves graph and earlier owned output')
   return
 
+/* Enum attributes are exact byte strings, not WORDPOS phrases. Both fixtures
+ * otherwise complete a legal count/control protocol and are generic-valid. */
+doexactparts: procedure = .void
+  arg artifacts = .string
+  do mode = 51 to 52
+    graph = dograph(mode)
+    call check(graph.error() = '', 'exact DO part fixture is generic-valid ' || mode || ': ' || graph.error())
+    if graph.error() = '' then call doadmission(artifacts,graph,0,'exact DO capture part ' || mode)
+  end
+  return
+
 doadmission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
@@ -432,7 +449,8 @@ dograph: procedure = .llir..module
   context = fn.slot('context',contract.type('crexx.c.context'))
   entry = fn.block('entry'); argument = entry.readarg(1,at); call entry.store(context,argument,at)
   key = 'outer'; part = 'repeat'; name = ''
-  if mode = 2 | mode = 43 then do; part = 'start'; name = 'µ.key'; end
+  if mode = 2 | mode = 43 | mode = 52 then do; part = 'start'; name = 'µ.key'; end
+  if mode = 51 then part = ' repeat '
   if mode = 2 then key = 'do.λ'
   if mode = 47 then key = 'same'
   if mode = 48 then key = '646F2EC3A9'x as .string
@@ -473,6 +491,7 @@ dograph: procedure = .llir..module
     operation = doemit(entry,contract,at,context,'capture',key,'by')
     operation = doemit(entry,contract,at,context,'capture',key,'to')
   end
+  if mode = 52 then operation = doemit(entry,contract,at,context,'capture',key,'to by')
   block = entry
   if mode = 43 then do
     left = fn.block('capture.left'); right = fn.block('capture.right'); joined = fn.block('capture.join')

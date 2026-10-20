@@ -209,6 +209,9 @@ checked: class
         key = text(op,'part'); if _error <> '' then return
         part = wordpos(key,'start to by for repeat')
         if part = 0 then do; call fail('LOWERING: invalid DO capture part',opid); return; end
+        if key \== word('start to by for repeat',part) then do
+          call fail('LOWERING: invalid DO capture part',opid); return
+        end
         if (_controlled[owner] = 0 & part <> 5) | (_controlled[owner] & part = 5) then do
           call fail('LOWERING: DO capture part disagrees with constructor mode',opid); return
         end
