@@ -10,7 +10,7 @@ on:
       qualification:
         description: Qualification scope (default retains both full platform jobs)
         type: choice
-        options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux]
+        options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux, identity-linux]
         default: full
       source_ref:
         description: Optional source commit for focused or candidate qualification
@@ -51,7 +51,7 @@ env:
   SANITIZER_DAILY_ACTIVATED: 'false'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux' || inputs.qualification == 'continuation-linux') && format('-{0}', inputs.qualification) || '' }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux' || inputs.qualification == 'continuation-linux' || inputs.qualification == 'identity-linux') && format('-{0}', inputs.qualification) || '' }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:
@@ -60,7 +60,7 @@ permissions:
 
 jobs:
   assurance-gate:
-    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux'
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
     name: Resolve qualified inputs and conservative profile
     runs-on: ubuntu-24.04
     outputs:
@@ -135,7 +135,7 @@ jobs:
   sanitizer:
     name: ${{ matrix.name }}
     needs: assurance-gate
-    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux'
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
     strategy:
@@ -419,6 +419,95 @@ jobs:
           path: |
             ${{ runner.temp }}/debug/asan-logs
             ${{ runner.temp }}/debugasan/asan-logs
+          if-no-files-found: error
+          retention-days: 14
+
+  identity-linux:
+    name: Linux ordinary source identity diagnosis
+    if: github.event_name == 'workflow_dispatch' && inputs.qualification == 'identity-linux'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ inputs.source_ref || github.sha }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Configure ordinary unchanged native inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "$RUNNER_TEMP/debug" -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+      - name: Build only source-aware probe prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/asan-run.sh --build-dir "$RUNNER_TEMP/debug" --phase build \
+            --build-target rxc --build-target rxas --build-target rxvm --build-target library \
+            --build-target test_import_discovery_snapshot --build-target test_project_dependencies \
+            --build-target test_import_resolution_report --build-jobs 4 --build-leaks on --no-live-tail
+      - name: Stop at the first per-test input drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, pathlib, re, subprocess
+          spec=importlib.util.spec_from_file_location('fixtures','tools/sanitizer-fixtures.py')
+          f=importlib.util.module_from_spec(spec); spec.loader.exec_module(f)
+          build=pathlib.Path(os.environ['RUNNER_TEMP'])/'debug'
+          config=f.json_read(build/f.CONFIG)
+          dependency=f.dependency_identity(config)
+          assert dependency=={'DSLSH_SOURCE_DIR':{'commit':'383e5daab0ffcf6ec83e02db7a01a27709dabb2c','contents':'dfc44b44e4344b0c152fb8f278d694b96f2386ac1fe1f220af201cdbdab7d010'}}, 'External dependency differs from the failed candidate'
+          names=['sanitizer_strategy_contract','import_discovery_snapshot','project_dependencies','import_resolution_report',
+                 'levelc_implicit_source_tree','levelc_address_source_tree','levelc_procedure_source_tree',
+                 'levelc_return_source_tree','levelc_exit_source_tree','levelc_select_source_tree',
+                 'levelc_arg_template_source_tree','levelc_pull_source_tree','levelc_parse_source_tree',
+                 'levelc_push_source_tree','levelc_queue_source_tree','levelc_signal_source_tree',
+                 'levelc_call_expression_source_tree','levelc_call_resolution_source_tree',
+                 'levelc_strictc_transfer_source_tree','classlib_rexxdoc_coverage']
+          pattern='^('+'|'.join(map(re.escape,names))+')$'
+          discovered=json.loads(subprocess.check_output(['ctest','--test-dir',str(build),'--show-only=json-v1','-R',pattern],text=True))
+          selected={test['name'] for test in discovered['tests']}
+          assert selected==set(names)|{'sanitizer_fixture_integrity'}, 'Source probe selection changed'
+          def files(root):
+              root=pathlib.Path(root)
+              listed=b''.join(subprocess.check_output(['git','-C',str(root),*args]) for args in
+                  (['ls-files','--cached','--recurse-submodules','-z'],['ls-files','--others','--exclude-standard','-z']))
+              return {name:f.digest(root/name) for name in set(listed.decode().split('\0'))- {''}
+                      if f.source_path_in_identity(name) and (root/name).is_file()}
+          def snapshot():
+              return {'identity':f.identity(build),'source_files':files(config['CMAKE_HOME_DIRECTORY']),
+                      'dependency_files':files(config['DSLSH_SOURCE_DIR'])}
+          def changes(before,after):
+              result={}
+              if before['identity']!=after['identity']:
+                  result['identity']=f.identity_mismatch_details(build,before['identity'],after['identity'])
+              for owner in ('source_files','dependency_files'):
+                  left,right=before[owner],after[owner]
+                  changed=sorted(name for name in left.keys()|right.keys() if left.get(name)!=right.get(name))
+                  if changed: result[owner]={'count':len(changed),'paths':changed[:20],'truncated':len(changed)>20}
+              return result
+          baseline=snapshot()
+          for name in names:
+              before=snapshot()
+              assert not changes(baseline,before), 'Input drift between owning tests: '+json.dumps(changes(baseline,before))
+              command=['tools/asan-run.sh','--build-dir',str(build),'--phase','ctest','--regex','^'+re.escape(name)+'$',
+                       '--test-jobs','1','--build-leaks','on','--leaks','on','--no-live-tail']
+              status=subprocess.run(command).returncode
+              after=snapshot(); drift=changes(before,after)
+              print('SOURCE_IDENTITY_PROBE '+json.dumps({'test':name,'status':status,'drift':drift}),flush=True)
+              assert status==0 and not drift, 'Owning test failed or changed inputs: '+name
+          print('All20 owning tests preserve exact source/configuration/dependency inputs; no daily/broad assurance published.')
+          PYTHON
+      - name: Upload bounded probe diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-identity-linux
+          path: ${{ runner.temp }}/debug/asan-logs
           if-no-files-found: error
           retention-days: 14
 

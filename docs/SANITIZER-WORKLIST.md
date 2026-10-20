@@ -228,6 +228,75 @@ first-party SAN finding's closure requirements. The bounded continuation and
 both clean daily outcomes remain pending. Any actual first-party sanitizer
 diagnostic retains its own SAN-nnn disposition before unrelated work.
 
+### SAN-QA-022 — completed daily runtime fails final donor identity validation
+
+Status: **cause under investigation; clean daily qualification remains open**.
+Owner: Codex under the approved preparation/profile qualification. This is an
+integration finding, with no observed sanitizer or runtime test diagnostic.
+
+The Linux separated daily job in [candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
+uses `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8`. Ordinary donor preparation
+passes in **10m28s** (617 seconds build, 11 preparation). Its explicitly selected
+ordinary continuation passes **35/35** in approximately 411 seconds: 34 owning
+names plus repeated integrity, giving the documented ordinary union of 3,293
+with the retained 3,259 unchanged passes. This is an exact union proof, not a
+general claim that an arbitrary ordinary regex supplies full correctness.
+
+The instrumented build takes **1,120 seconds**, preparation 18 seconds, native
+pre-audit 9 seconds (603 objects, 307 products), inventory 2 seconds and CTest
+approximately **6,876 seconds**. Every selected daily name passes: **3,283/3,283**,
+none skipped or unrun. All four normalization cells pass at 120.17–183.95 seconds;
+the ten retained structured-flow cells pass at 46.50–98.82 seconds. The original
+six moved structured cells remain owned by the approved original-producer
+continuation. The post-test native audit also passes in 17 seconds (611 objects,
+592 products/copies). Complete downloaded logs contain no sanitizer diagnostic,
+non-timeout runtime failure or compiler warning.
+
+Final qualification then rejects `ordinary fixture source/configuration/dependency
+mismatch: /home/runner/work/_temp/ordinary`. The existing exception reports an
+aggregate mismatch; the exact differing source, configuration or dependency
+field is not recoverable from that artifact. Integrity passed after build and
+before the runtime selection, bounding the drift to selected CTest execution.
+The guard remains fail-closed: no result or complete daily cache is published,
+and passing runtime/native checks do **not** satisfy the clean daily gate.
+Apple daily and the approved original-producer continuation remain independent
+active jobs until their actual final validation is inspected.
+
+The whole Linux job takes **2h31m56s**, including the one-off **6m54s** ordinary
+correctness qualification. Daily operational cost is approximately **2h25m**
+including ordinary donor, instrumented build/preparation/audits and runtime,
+exceeding the provisional two-hour target. This is a completed daily runtime
+observation; the interrupted original full CTest is not a completed cost control.
+
+The next action is exact drift attribution before any repair, exclusion or
+reseal. Bounded diagnostics now name changed identity components, configuration
+keys and source/dependency Git paths without printing file contents or flag
+values; permanent negative cases retain rejection for all three drift kinds.
+All ten behavioral contracts pass locally in **3.15 seconds**, including filtered/truncated path hints and final-run configuration drift rejection. The same maintained Apple ASan strategy CTest passes **1/1 in 3.26 seconds** with a focused-only result; build/test leaks are off for the Apple capability limit. Actionlint, exact generated discovery and the actual workflow change detector's unchanged/source/dependency/identity/truncation cases pass. A focused normal
+Debug `classlib_rexxdoc_coverage` replay passes **2/2 including integrity in
+0.92 seconds** without identity drift; this one source-working-directory test
+is not established as the Linux cause. The same local Apple ASan selection passes **2/2 in 2.03 seconds**, also without drift. Static inspection also checks implicit
+native child/donor routing. Do not repeat a complete daily run solely to obtain
+richer diagnostics; use the smallest justified reproduction once scoped.
+
+The authorized next probe is one ordinary Linux Debug job, `identity-linux`,
+with only `rxc`, `rxas`, `rxvm`, `library` and three native import/project test
+prerequisites. Twenty owning names cover the RexxDoc source working directory,
+15 absolute source-tree compiler diagnostic cases, the strategy/Git fixture,
+and three native import/project file-writer contracts. Fresh generated discovery
+selects exactly those 20 plus integrity. In-memory source/dependency per-file
+hashes and configuration identities are compared around each owning test, with
+bounded changed-path counts and immediate failure on any drift; snapshots are
+not retained as assets. Actual dependency commit and contents must match the
+failed Linux job. No donor is resealed and no assurance cache is published.
+Product/native/source-oracle bodies remain those of `e1b8a9f9b`; changes since
+that revision are the documented service scheduling repair, workflow/docs and
+bounded QA diagnostics/tests. The native/library generation inputs are unchanged.
+If all 20 preserve their inputs, the next smallest candidate is the installed
+consumer/driver and private nested-build group, whose absolute paths and child
+builds could mutate a parent/source tree; that follow-up needs its own scoped
+inspection rather than an automatic daily repeat.
+
 ### Where the time goes
 
 Times below come from hosted job/step timestamps and CTest's final wall time.

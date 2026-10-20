@@ -48,6 +48,13 @@ def json_write(path, value):
         temporary.unlink(missing_ok=True)
 
 
+def source_path_in_identity(name, include_docs=True):
+    path = Path(name)
+    return not ((not include_docs and (name.startswith('docs/') or
+                                      path.suffix.lower() in {'.md', '.tex', '.pdf'})) or
+                path.suffix.lower() == '.pyc' or '__pycache__' in path.parts)
+
+
 def source_identity(root, include_docs=True):
     root = Path(root).resolve()
     tracked = subprocess.check_output(
@@ -58,10 +65,7 @@ def source_identity(root, include_docs=True):
     for name in sorted(set((tracked + untracked).decode().split('\0')) - {''}):
         path = root / name
         # Documentation/history-only updates do not invalidate generated code.
-        if (not path.is_file() or
-                (not include_docs and (name.startswith('docs/') or path.suffix.lower() in {'.md', '.tex', '.pdf'})) or
-                path.suffix.lower() == '.pyc' or
-                '__pycache__' in path.parts):
+        if not path.is_file() or not source_path_in_identity(name, include_docs):
             continue
         h.update(name.encode() + b'\0' + digest(path).encode() + b'\n')
     return h.hexdigest()
@@ -153,6 +157,44 @@ def donor(build):
     return root, manifest
 
 
+def changed_git_paths(root, include_docs=True, limit=12):
+    """Bounded failure diagnostics; never substitute Git status for identity."""
+    names = set()
+    for arguments in (['diff', '--name-only', '-z', 'HEAD'],
+                      ['ls-files', '--others', '--exclude-standard', '-z']):
+        result = subprocess.run(['git', '-C', str(root), *arguments],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            names.update(result.stdout.decode(errors='replace').split('\0'))
+    names = sorted(name for name in names - {''} if source_path_in_identity(name, include_docs))
+    return {'count': len(names), 'paths': names[:limit], 'truncated': len(names) > limit}
+
+
+def identity_mismatch_details(build, expected, actual, include_docs=False):
+    """Name the changed components without printing source or flag values."""
+    fields = sorted(key for key in expected.keys() | actual.keys()
+                    if expected.get(key) != actual.get(key))
+    details = ['components=' + ','.join(fields)]
+    config_path = Path(build) / CONFIG
+    config = json_read(config_path) if config_path.exists() else actual.get('configuration', {})
+    if 'source' in fields and config.get('CMAKE_HOME_DIRECTORY'):
+        details.append('source paths=' + repr(changed_git_paths(config['CMAKE_HOME_DIRECTORY'], include_docs)))
+    if 'configuration' in fields:
+        left, right = expected.get('configuration', {}), actual.get('configuration', {})
+        keys = sorted(key for key in left.keys() | right.keys() if left.get(key) != right.get(key))
+        details.append('configuration keys=' + ','.join(keys[:12]))
+    if 'dependencies' in fields:
+        left, right = expected.get('dependencies', {}), actual.get('dependencies', {})
+        for name in sorted(left.keys() | right.keys())[:12]:
+            if left.get(name) != right.get(name):
+                before, after = left.get(name, {}), right.get(name, {})
+                keys = sorted(key for key in before.keys() | after.keys()
+                              if before.get(key) != after.get(key))
+                paths = changed_git_paths(config[name]) if config.get(name) else []
+                details.append('dependency ' + name + ' fields=' + ','.join(keys) + ' paths=' + repr(paths))
+    return '; '.join(details)
+
+
 def validate(build, artifacts=False):
     build = Path(build).resolve()
     root, manifest = donor(build)
@@ -163,7 +205,8 @@ def validate(build, artifacts=False):
         actual = identity(candidate)
         # Contents and actual checkout identity both matter for external code.
         if actual != expected:
-            raise ValueError(f'ordinary fixture source/configuration/dependency mismatch: {candidate}')
+            raise ValueError(f'ordinary fixture source/configuration/dependency mismatch: {candidate}; '
+                             + identity_mismatch_details(candidate, expected, actual))
     for name, checksum in manifest['producers'].items():
         if digest(root / name) != checksum:
             raise ValueError(f'ordinary fixture producer changed after sealing: {name}')

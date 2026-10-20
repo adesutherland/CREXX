@@ -205,7 +205,8 @@ def complete(build, selection, junit, output):
     before_inputs = {key: value for key, value in before['identity'].items() if key != 'native_products'}
     after_inputs = {key: value for key, value in after_identity.items() if key != 'native_products'}
     if before_inputs != after_inputs or any(after_products.get(name) != value for name, value in before_products.items()):
-        raise ValueError('source/configuration/dependency/preparation/native inputs changed during qualification')
+        raise ValueError('source/configuration/dependency/preparation/native inputs changed during qualification; '
+                         + tools.identity_mismatch_details(build, before['identity'], after_identity, include_docs=True))
     # CTest may legitimately build additional native targets. Full scope audits
     # them after tests; record their observed identities with the final result.
 
