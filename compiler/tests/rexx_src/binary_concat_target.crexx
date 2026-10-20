@@ -1,0 +1,35 @@
+/* Text concatenation keeps its operation type before destination conversion. */
+options levelb
+namespace binary_concat_target expose textjoin blankjoin byteleft byteright
+import rxfnsb
+
+main: procedure = .int
+  source = "call '4C454E475448'x 'abc',, ''" as .binary
+  source = 'call 1.20' || '0A'x || '1.20: return'
+  say 'original=' || bin2x(source)
+  say 'text=' || bin2x(textjoin('α',('00'x as .string) || 'β'))
+  say 'blank=' || bin2x(blankjoin('α','β'))
+  say 'empty=' || bin2x(textjoin('',''))
+  say 'binary-left=' || bin2x(byteleft('00FF'x as .binary,'λ'))
+  say 'binary-right=' || bin2x(byteright('λ','00FF'x as .binary))
+  source = '00FF'x as .binary
+  source = source || 'λ'
+  say 'self=' || bin2x(source)
+  return 0
+
+/* Exported bodies retain nonconstant operands for the RXAS assertions. */
+textjoin: procedure = .binary
+  arg left = .string, right = .string
+  return left || right
+
+blankjoin: procedure = .binary
+  arg left = .string, right = .string
+  return left right
+
+byteleft: procedure = .binary
+  arg left = .binary, right = .string
+  return left || right
+
+byteright: procedure = .binary
+  arg left = .string, right = .binary
+  return left || right

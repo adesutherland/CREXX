@@ -1233,7 +1233,10 @@ void emit_expression(ASTNode *node, void *payload) {
         case OP_SCONCAT:
             if (!op) op="sconcat";
             if (!node->output) node->output = output_f();
-            if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) {
+            /* The expression's operands have been promoted to value_type.
+             * A binary destination alone still needs text concat followed by
+             * the ordinary result promotion. */
+            if (node->value_type == TP_BINARY) {
                 if (child1->output) output_concat(node->output, child1->output);
                 if (child2->output) output_concat(node->output, child2->output);
                 temp1 = mprintf("   bconcat %c%d,%c%d,%c%d\n",

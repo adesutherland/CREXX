@@ -288,6 +288,27 @@ set_tests_properties(binary_global_import_types PROPERTIES
     RUN_SERIAL TRUE
     TIMEOUT 900)
 
+set(_binary_concat_vms)
+set(_binary_concat_prep rxc rxas rxlink rxbvm library)
+if(TARGET rxtvm)
+    list(APPEND _binary_concat_vms -DRXTVM=$<TARGET_FILE:rxtvm>)
+    list(APPEND _binary_concat_prep rxtvm)
+endif()
+add_test(NAME binary_concat_target
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXBVM=$<TARGET_FILE:rxbvm>
+        ${_binary_concat_vms}
+        -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_concat_target.crexx
+        -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/golden/run/binary_concat_target.out
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/binary_concat_target_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_concat_target.cmake)
+set_tests_properties(binary_concat_target PROPERTIES
+    LABELS "compiler;binary;regression;optimizer-parity"
+    RUN_SERIAL TRUE TIMEOUT 1800
+    CREXX_PREP_TARGETS "${_binary_concat_prep}")
+
 add_test(NAME binary_storage_selector_dependencies
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
