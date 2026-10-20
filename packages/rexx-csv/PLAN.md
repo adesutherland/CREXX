@@ -582,3 +582,15 @@ consumer. Further boundary repairs from that run:
   and runneradmin. Canonicalize both the CIM process path and disposable SDK
   path before comparing; terminate only the matching PID. This repairs the
   cleanup failure without broad process-name termination.
+
+
+CSV-06 follow-up: the relative classpath fixes JVM class loading from the
+Unicode installed directory. The next Windows run then exposed the Java
+launcher's Ω-to-? conversion in application argv (`InvalidPathException`).
+Keep the Unicode working-directory/compilation proof, use relative ASCII
+file arguments for the complete Windows consumer, and retain an explicit
+Ω filename probe with output preservation. The example now reports invalid
+paths as a caller file error. All Unicode CSV bytes and parser/writer oracles
+remain unchanged. Arbitrary Unicode Windows CLI filenames remain a documented
+host boundary for all four tested launchers, not a qualified CSV capability.
+The fresh NetRexx archive/consumer replay passes locally after this example fix.

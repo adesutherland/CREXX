@@ -4,6 +4,7 @@ import rexxcsv.Csv
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.OpenOption
+import java.nio.file.InvalidPathException
 import java.nio.charset.StandardCharsets
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.CharacterCodingException
@@ -18,6 +19,9 @@ class NetRexxDemo public final
       System.exit(1)
     catch IOException
       say 'CSV file I/O failed'
+      System.exit(1)
+    catch InvalidPathException
+      say 'Invalid file path'
       System.exit(1)
     end
 

@@ -80,3 +80,8 @@ canonical output can be parsed back under the same limits.
 See `rexx-csv-SPEC.md` for the approved complete API, Unicode and error precedence.
 This local source archive is unpublished. Live rexxpository selection/metadata
 and upload require their separate checks/authorization.
+
+On the tested Windows runner, use ASCII command-line filenames (spaces work).
+The Java launcher loses Ω in argv on its native code page; this is separate
+from exact Unicode CSV contents. Use the relative `.` classpath from the
+installed directory, with `;` as the Windows classpath separator.

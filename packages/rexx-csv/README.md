@@ -117,8 +117,9 @@ It reads/writes bytes with CHARIN/CHAROUT and checks UTF-8 in the library.
 Paths can contain spaces. On macOS/Linux the examples also qualify Unicode
 filenames. The tested Windows cREXX Beta 3, Regina and ooRexx launchers use a
 legacy command-line filename boundary: use ASCII paths there. Unicode CSV
-**content** remains fully tested and supported; NetRexx also tests Unicode
-filenames on Windows. CSV/encoding failure leaves an
+**content** remains fully tested and supported. The Java launcher also loses
+Ω in Windows command-line arguments on this runner; use relative ASCII
+filenames there. The NetRexx installed consumer still runs from a Unicode directory. CSV/encoding failure leaves an
 existing output untouched; file-write failure has ordinary caller I/O semantics.
 
 ## NetRexx usage
