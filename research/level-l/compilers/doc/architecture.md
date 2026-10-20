@@ -67,6 +67,13 @@ Do not import historical statuses into the new requirements ledger.
 | `assembler/`, `binutils/`, `disassembler/`, `linker/`, `interpreter/` | ISA/encoding, machine optimisation, execution, generic owned code images | Classic grammar/AST, BIF-name dispatch or source-level EXPOSE rules |
 | `platform/`, RXPA providers, `ports/single-threaded/` | OS transport, codecs, clocks, maintained CMS/TSO profiles | Compiler language decisions or duplicate runtime algorithms |
 
+Foundational execution capabilities follow the
+[built-in VM service principle](../../../../docs/ai-context/RXVM_INTERPRETER.md#built-in-vm-services):
+mandatory core availability, existing native bindings/lifetime and one semantic
+owner. An ISA extension requires justified instruction-level support and its
+own exact-contract approval; this does not move compiler or Classic policy
+into the VM.
+
 ```mermaid
 flowchart TD
   Seed[Native B build seed] --> L[Level L SDK and tools]
@@ -1261,9 +1268,10 @@ owners. All complete-C criteria remain open and INTERPRET remains last.
 
 <a id="parse-machinery-review"></a>
 
-## PARSE machinery review — exact API decision pending
+## PARSE machinery review — shared cursor approved
 
-**PARSE is next; no executor extension is approved or implemented.** ARG must
+**Adrian approved the shared cursor API on 20 October 2026; its implementation
+is locally qualified. Real platform proof and C PARSE integration remain open.** ARG must
 subsequently use the same machinery. LC-I-19 / LC-81-01–07 retain the seven
 agreed sources (ARG, PULL, SOURCE, LINEIN, VERSION, VALUE and VAR), optional UPPER,
 arbitrary comma/empty templates, targets/dots, literal and variable patterns,
@@ -1306,15 +1314,39 @@ This is a native lowering limitation, not an oracle to copy or a request to
 change native C. The snippet and expected result own the future regression;
 the diagnostic files are disposable.
 
-### Pending engine decision
+A distinct section boundary is apparent from source inspection: for source
+`x:y z`, authored template `a b ':' rest` requires `a='x'`, `b=''`,
+`rest='y z'`. Native normalization emits `ABS(1), TARGET(a), WORD(6), TARGET(b),
+LITERAL(':'), TARGET(rest)`. Packed kind 6 closes a word against the current
+source before the later literal search, producing `x:y`, `z`, empty. Merely
+delaying the pool writes cannot repair those already captured fields. Preserve
+that existing packed-opcode behavior independently of Classic normalization.
 
-Review a minimal resumable/checkpoint surface over the **existing** generic
+### Approved engine direction
+
+The approved prerequisite exposes a minimal resumable/checkpoint surface over the **existing** generic
 kernel, with completed-field events and live external-operand requests. It must
 expose earlier completed writes before later reads, yet request a dynamic
 delimiter against the old pool when that delimiter is needed to finish the
 current field. Static lookahead must not read future operands early. Source,
 cursor, capture/relative/literal anchors, pending sections and drops remain
 engine-owned; C must not replay prefixes or implement a second cursor machine.
+
+**Field completion means packed-plan completion, not automatic completion of an
+authored Classic section.** A concrete C composition captures each maximal
+target run as one outer packed target, keeping explicit patterns/positions in
+order and omitting kind 6 within that run. On its section Field, apply a constant
+word-only plan through the same kernel/existing word primitives, then perform
+authored raw-name writes before advancing the outer cursor. For `x:y z`, the
+outer plan captures `x` and `y z`; a word-only plan on `x` yields `a='x', b=''`.
+The earlier absolute-2 example's first section writes `N` before the later Input; an Input
+closing an unfinished section still reads the old pool first. This requires no
+C cursor arithmetic, second algorithm or prefix/suffix replay. Cost is outer
+capture plus bounded section copying and one word pass per section; authored
+backward ranges may revisit text, without repeatedly copying an unconsumed
+tail. The independent B composition consumer qualifies this prerequisite's
+forward section/word route; full backward/anchor equivalence belongs to the
+later C normalization gate.
 
 Existing exact instructions remain useful. Compiled segments are an alternative
 only if their full state/order equivalence can be demonstrated without replay
@@ -1323,24 +1355,28 @@ or duplicated algorithms; no such general route is presently established.
 route; the reproduced semantic gap justifies this review, not automatic opcode
 or runtime-API approval.
 
-The concrete [cursor proposal](#proposed-parse-cursor-contract) below records
-the exact prerequisite for approval. C AST/IR/target integration has a later
+The concrete [cursor contract](#proposed-parse-cursor-contract) below records
+the exact prerequisite approved on 20 October 2026. C AST/IR/target integration has a later
 contract gate; ARG shares the eventual executor. Wider host/condition/TRACE and
 all CFC criteria remain open.
 
 <a id="proposed-parse-cursor-contract"></a>
 
-## Proposed generic PARSE cursor contract
+## Approved generic PARSE cursor contract
 
-**UNAPPROVED — awaiting Adrian's exact API decision; no implementation is
-authorised.** Expose the existing PARSE kernel through one shared cursor
+**APPROVED by Adrian on 20 October 2026; locally qualified in normal Debug and
+focused Apple ASan. Real platform proof remains open.** Expose the existing PARSE kernel through one shared cursor
 primitive, allowing a consumer to apply completed fields before resolving later
-live operands. The native class
-`rxparse.cursor`, source type `.rxparse..cursor`, is implemented entirely with
-existing C RXPA factories/methods. It parses no template source and knows no
-Classic pool, target name, C source span or TRACE formatting policy. Its inputs
-are text and an existing packed v1/v2 descriptor; no new descriptor version,
-ISA/RXBIN feature, RXPA host service, callback or generic L API is proposed.
+live operands. This is a built-in VM service using native RXPA bindings:
+`rxparse.cursor`, source type `.rxparse..cursor`. Existing bindings supply
+factory/method dispatch, metadata and resource lifetime; the shared VM kernel
+owns parsing. RXPA is the binding interface, not optional/dynamic packaging or
+the source of parsing semantics. Field/Input checkpoints serve observable
+write/read ordering, without a speed claim. The service parses no template
+source and knows no Classic pool, target name, C source span or TRACE formatting
+policy. Its inputs are text and an existing packed v1/v2 descriptor; no new
+descriptor version, ISA/RXBIN feature, RXPA host service, callback or generic L
+API is proposed.
 
 ### Exact public surface and events
 
@@ -1364,7 +1400,7 @@ Ready/Field/Input cursor becomes Failed, while Done/Failed/Closed stay terminal.
 Only Done's repeated `next` is valid. `close` clears event IDs/text from every
 phase; ordinary uninitialized/foreign/forged receiver guards still apply.
 
-Every semantically completed target, including a dot, yields Field in authored
+Every completed packed target, including a drop, yields Field in descriptor
 order. Drop uses slot zero: a consumer that ignores it allocates no result
 string and performs no target write. Lazy `text` leaves future
 [placeholder observations](https://www.ibm.com/docs/en/zos/3.1.0?topic=trace-format-output)
@@ -1422,8 +1458,9 @@ Check subtraction/division and representation before allocation/products,
 including source offset plus one. Existing descriptor item/result/dynamic counts
 remain 16-bit and literal byte/character counts 32-bit. Work follows finite
 byte/item/event progress, with no prefix replay or repeated copying of the
-unconsumed tail. Cursor memory consists of one source/plan snapshot, bounded
-item/capture state and active operand bytes; caller-owned text copies have
+unconsumed tail. Cursor memory consists of one source/plan snapshot, an
+O(codepoints) offset index for non-ASCII Unicode source, bounded item/capture
+state and active operand bytes; caller-owned text copies have
 ordinary VM lifetimes. Existing allocation/OOM and dispatch HALT behavior apply.
 There is no new configurable work/space quota or promise of prompt interruption
 inside one native call. Finite bounds are not a formal speed claim.
@@ -1456,32 +1493,38 @@ is invented in this prerequisite. Empty/omitted templates create no cursor,
 while required source acquisition/consumption and comma-position effects still
 occur. ARG then uses that same executor.
 
-### Proposed acceptance and implementation steps
+### Acceptance and implementation steps
 
-All acceptance criteria and implementation remain **open**. The
-[current PLAN card](../PLAN.md#current-action-parse) references this sole matrix.
+AC01–04 have passed local proof; AC05's local core/static boundary is qualified
+while real platform proof remains **open**. AC06 has passed consumer/RXAS proof,
+documentation and cleanup and is ready for scoped local commit. The
+[PLAN qualification](../PLAN.md#parse-cursor-local-qualification) records the
+sole command/result summary and its limits; the criteria below remain the
+authoritative contract.
 
 | ID | Checkable closure |
 |---|---|
-| **PARSE-ENGINE-AC01** | Exact seven-callable metadata and event/phase tests prove authored Field/drop order, one Input per external occurrence, same-slot rereads, old-value triggering versus earlier completed writes and terminal behavior. An independent live-pool consumer produces `N\|left\|right` for the confirmed counterexample; no early lookahead read or prefix replay. |
+| **PARSE-ENGINE-AC01** | Exact seven-callable metadata and event/phase tests prove packed Field/drop order, one Input per external occurrence, same-slot rereads, old-value triggering versus earlier completed writes and terminal behavior. An independent live-pool consumer produces `N\|left\|right` for the confirmed counterexample; no early lookahead read or prefix replay. |
 | **PARSE-ENGINE-AC02** | Complete malformed/truncated/trailing/count/flag/index/capture/Unicode/overflow and protocol controls refuse before publication as specified. Dynamic conversion checks both existing policies, preserves earlier acknowledged writes and prevents later events; consumer failures preserve their original bound event after close. |
 | **PARSE-ENGINE-AC03** | Source/plan/supply/text snapshot controls, copy/alias close, two interleaved cursors, repeated use and normal/abrupt/fatal/teardown paths prove current-VM ownership. Failed construction publishes no cursor or leaked storage; uninitialized/foreign/forged receivers refuse. |
 | **PARSE-ENGINE-AC04** | Checked representation/allocation products and finite item/event progress cover large/edge inputs without wrap, replay or growing tail copies. Retained state and lazy drop text have checkable bounds; document ordinary OOM/HALT and platform limits without quota or prompt-native-interruption claims. |
-| **PARSE-ENGINE-AC05** | Source/build review proves one kernel and mandatory normal/static/embedded/single-threaded delivery, exact `DECL_ONLY` metadata, retention/freshness and idempotent initialization. Check constructorless/no-TLS/31-bit/text ownership boundaries on declared platforms; unverified platform proof remains open. No optional-provider or native frontend fallback. |
-| **PARSE-ENGINE-AC06** | Independent B consumers outside the C compiler, unchanged frozen/direct PARSE regressions and focused toolchain/both-engine tests qualify the implementation. Readable caller/helper RXAS checks required protocol/ownership work and simple static baselines without a broad benchmark. Current docs/scheduling and scoped cleanup/local delivery state exact inputs, results and limits; this does not close C PARSE/ARG or CFC. |
+| **PARSE-ENGINE-AC05** | Source/build review proves one kernel and mandatory normal/static/embedded/single-threaded delivery, exact `DECL_ONLY` metadata, retention/freshness and idempotent initialization. Source/manifests and local constructorless/NUTF8 simulations establish their local boundaries; real CMS/TSO/Windows guest proof remains open until separately observed. Preserve 31-bit/text ownership checks, with no optional-provider or native frontend fallback. |
+| **PARSE-ENGINE-AC06** | Independent B consumers outside the C compiler include the section/word composition above; unchanged frozen/direct PARSE regressions and focused toolchain/both-engine tests qualify the implementation. Readable caller/helper RXAS checks required protocol/ownership work and simple static baselines without a broad benchmark. Current docs/scheduling and scoped cleanup/local delivery state exact inputs, results and limits; this does not close C PARSE/ARG or CFC. |
 
-1. **PARSE-ENGINE-STEP01 — Awaiting approval (AC01–06):** freeze this exact API,
-   independent order/error expectations and platform boundary; obtain Adrian's
-   decision before product edits.
-2. **PARSE-ENGINE-STEP02 — Not started (AC01–05):** after approval, factor the
-   single private kernel, preserve the opcode driver and implement the native
-   cursor/provider with owned state and checked failures.
-3. **PARSE-ENGINE-STEP03 — Not started (AC01–06):** integrate mandatory runtime/
-   declaration/static manifests and independent focused fixtures; qualify the
-   approved toolchain/engine/lifecycle boundaries and inspect actual RXAS.
-4. **PARSE-ENGINE-STEP04 — Not started (AC01–06):** complete independent/root
-   review, concise qualification/docs, task-only cleanup and scoped local
-   delivery. Then open C PARSE integration's separate exact-contract gate.
+1. **PARSE-ENGINE-STEP01 — Approved/complete (AC01–06):** exact API,
+   independent order/error expectations and platform boundary were reviewed;
+   Adrian approved the shared cursor prerequisite on 20 October 2026.
+2. **PARSE-ENGINE-STEP02 — Locally complete (AC01–05):** one private kernel
+   serves the opcode and built-in cursor; owned state, checked failures and
+   mandatory bindings/declarations passed independent review and local tests.
+3. **PARSE-ENGINE-STEP03 — Locally qualified (AC01–06):** independent consumers,
+   existing opcode/direct regressions, both VM engines, maintained Apple ASan,
+   kernel-only NUTF8 and actual constructorless static smoke passed. Real
+   31-bit/CMS/TSO/Windows and Linux LeakSanitizer proof remain open.
+4. **PARSE-ENGINE-STEP04 — Ready for scoped local commit (AC01–06):**
+   independent/root source and RXAS review, local qualification, documentation
+   and task-only cleanup are complete. C PARSE integration retains its
+   normalization proof and separate exact-contract gate.
 
 ## Optimisation ownership
 

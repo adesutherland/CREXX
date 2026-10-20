@@ -1,0 +1,17 @@
+/* Mandatory core-only smoke: no bytecode library or optional provider. */
+options levelb
+import rxparse
+main: procedure = .int
+  cursor = .rxparse..cursor('x:y','50020C0003000200010000000101070000000101'x as .binary)
+  alias = cursor
+  if cursor.next() <> 2 | cursor.item() <> 2 | cursor.slot() <> 1 then return 1
+  call alias.supply(':')
+  if cursor.next() <> 1 | cursor.item() <> 1 | cursor.slot() <> 1 then return 2
+  saved = cursor.text()
+  if saved <> 'x' then return 3
+  if alias.next() <> 1 | alias.text() <> 'y' then return 4
+  if cursor.next() <> 0 | cursor.next() <> 0 then return 5
+  call alias.close(); call cursor.close()
+  if saved <> 'x' | cursor.item() <> 0 then return 6
+  say 'PARSE_CURSOR_CORE_PASS'
+  return 0

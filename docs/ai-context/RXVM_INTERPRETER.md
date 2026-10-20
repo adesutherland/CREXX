@@ -46,6 +46,17 @@ code in the existing `sig_atomic_t` mask without reclassifying Level B errors.
 The Level C condition dispatcher and producers remain under the whole-SIGNAL
 instruction review.
 
+## Built-in VM services
+
+For foundational capabilities on which the toolchain depends, prefer a built-in
+VM service using existing native RXPA bindings when ordinary calls can express
+the contract. Such services must be available in the mandatory core, including
+static/embedded builds; RXPA supplies bindings and resource lifetime, while one
+explicit semantic owner implements the behavior. This is independent of optional
+plugin packaging. Extend the ISA only when instruction-level execution or
+operand integration is justified. Each new capability still requires its own
+scope and exact-contract approval; this principle authorizes no unrelated work.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `interpreter/rxvml/rxvm.h`):
@@ -2220,9 +2231,11 @@ The handler bounds-checks the header, reference indexes, and every item; rejects
 trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
 `CLASSIC_SYNTAX` with `RXC-LC-26.4` for an invalid dynamic numeric position
 when the policy bit is set. An unflagged version-2 plan retains
-`CONVERSION_ERROR`. It uses Unicode
-code-point positions in UTF builds and has no load-time cache or private
-prepared representation.
+`CONVERSION_ERROR`. Counted numeric operands must be whole strings; an embedded
+NUL cannot terminate a valid prefix and hide a suffix. It uses Unicode code-point
+positions in UTF builds and byte positions under NUTF8. There is no load-time
+cache: the opcode and native cursor use one private kernel with owned,
+fully checked per-invocation execution state.
 For a backward relative control without a literal-pattern anchor, the pending
 field is stored from its capture start while the next field begins at the
 moved cursor. A backward control using a literal-pattern anchor retains the
@@ -2234,6 +2247,79 @@ instructions and every remaining supported exit form uses `parseplan`, including
 logging/TRACE and explicit `INTO`. Ordered source-level assignments remain
 outside the VM primitive, preserving repeated targets, source aliases, trimming,
 and TRACE source metadata. There is no runtime textual PARSE executor.
+
+### Native PARSE cursor
+
+**Development interface; locally qualified in normal Debug and focused Apple
+ASan. Real platform proof remains open.** The
+built-in VM service `.rxparse..cursor(source=.string, plan=.binary)` exposes the
+same packed v1/v2 kernel incrementally. Both factory arguments are required.
+Native RXPA bindings provide its factory/method dispatch, metadata and resource
+lifetime; parsing belongs to the shared VM kernel. The service is mandatory core
+code, including CLI/embedded and constructorless static registration, rather
+than an optional or dynamically loaded plugin. Field/Input checkpoints let a
+consumer perform visible writes before later live operand reads; this is a
+correctness boundary, not a speed claim. It accepts a compiled descriptor, not
+template source. This prerequisite does not implement the research compiler's
+C PARSE/ARG source integration.
+
+`next() -> .int` returns `0` Done, `1` Field or `2` Input. For a Field,
+`item() -> .int` gives its 1-based packed target item and `slot() -> .int` its
+1-based stored-result index; a drop has slot zero. `text() -> .string` lazily
+returns a fresh owned text copy. Process the field before calling `next()`
+again, which acknowledges it. Ignoring a drop requires no text allocation or
+target write. Completion follows the packed descriptor: it is not necessarily
+completion of an authored Classic template section. Higher-level consumers own
+section normalization and ordered visible assignments.
+
+For an Input, `item()` identifies that physical dynamic occurrence and `slot()`
+its 1-based external-operand index. Call `supply(text=.string) -> .void` exactly
+once before `next()`. Supply snapshots/converts the value, clears the event and
+returns the cursor to Ready. Distinct occurrences request independently even
+when their slot repeats; internal lookahead cannot read future values early.
+Earlier completed packed fields precede later Input, while an Input needed to
+finish a pending field precedes that field. Captured-reference operands resolve
+inside the kernel only after their capture is complete.
+
+`text()` is valid only for Field. Wrong-phase `next`, `text` or `supply` raises
+`INVALID_ARGUMENTS` and makes a live Ready/Field/Input cursor Failed. Done,
+Failed and Closed remain terminal; Done's `next()` repeatedly returns zero.
+`item()`/`slot()` do not advance: they return zero in Ready/Done/Closed and retain
+the failing IDs in Failed. `close() -> .void` is nonraising/idempotent for a
+successfully constructed current-VM cursor and clears those IDs. Normal
+uninitialized, forged or foreign-receiver guards still apply.
+
+Source, plan and supplied operand storage is owned; no borrowed RXPA handle or
+string view survives a native call. Returned text survives later events, source
+mutation and close. Copying a cursor aliases one session-affine resource rather
+than cloning execution; closing any alias closes them all. Independent cursors
+can interleave. Explicitly close on normal and error paths; last-owner/VM
+finalization is fallback cleanup, without a prompt lexical-finalization promise.
+A failed factory publishes no initialized cursor: preserve its original failure
+and do not mask it by calling a method on the unconstructed result.
+
+The factory validates the complete plan/source before publication or any event:
+nonzero item count, version/flags, boundaries/counts, exact trailing length,
+literal text/counts and external/completed-capture indexes. Malformed plans,
+protocol misuse and forged/foreign receivers raise `INVALID_ARGUMENTS`; an
+uninitialized receiver raises `OBJECT_NOT_INITIALIZED`. Invalid Unicode raises
+`UNICODE_ERROR`, unrepresentable storage extents/products `OUT_OF_RANGE`, and
+allocation/publication failures `FAILURE`. Dynamic numeric failures retain the
+v2 policy described above, leave earlier acknowledged writes visible and stop
+later events. Consumer-side pool failures remain the consumer's event to
+preserve after closing its constructed cursor.
+
+Unicode builds retain strict UTF8/codepoint units; NUTF8 retains byte units.
+State owns source/plan copies, bounded item/capture data, active operands and an
+O(codepoints) offset index for non-ASCII Unicode input. Existing 16-bit descriptor
+counts, 32-bit literal counts and checked native sizes bound representation;
+there is no new configurable work/space quota. Native calls retain existing
+allocation/OOM and interruption limits, with dispatch HALT checks between calls.
+Local constructorless static smoke and kernel-only NUTF8 tests do not establish
+real 31-bit/CMS/TSO/Windows runtime qualification. Apple LeakSanitizer is
+unsupported; Linux LeakSanitizer and hosted proof remain unverified. See the
+[owning contract](../../research/level-l/compilers/doc/architecture.md#proposed-parse-cursor-contract)
+and [local qualification](../../research/level-l/compilers/PLAN.md#parse-cursor-local-qualification).
 
 ### Pooled float operands
 

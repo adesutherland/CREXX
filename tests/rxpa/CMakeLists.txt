@@ -12,6 +12,93 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
+# Mandatory core cursor: two authored B images, one producer per image, then
+# individual VM tests. No optional provider/package or runtime autoload path.
+set(_parse_cursor_artifacts)
+foreach(mode IN ITEMS opt noopt)
+    set(_parse_flags)
+    if(mode STREQUAL "noopt")
+        set(_parse_flags -n)
+    endif()
+    set(_parse_program "${CMAKE_CURRENT_BINARY_DIR}/parse_cursor_${mode}")
+    add_custom_command(OUTPUT "${_parse_program}-linked.rxbin"
+        BYPRODUCTS "${_parse_program}.rxas" "${_parse_program}.rxbin"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import ${_parse_flags}
+            -i "${CMAKE_BINARY_DIR}/bin" -o "${_parse_program}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/parse_cursor.crexx"
+        COMMAND $<TARGET_FILE:rxas> -n -o "${_parse_program}" "${_parse_program}"
+        COMMAND $<TARGET_FILE:rxlink> -o "${_parse_program}-linked" "${_parse_program}"
+            "${CMAKE_BINARY_DIR}/bin/library" "${CMAKE_BINARY_DIR}/bin/classlib"
+            "${CMAKE_BINARY_DIR}/bin/rxfnsc" "${CMAKE_BINARY_DIR}/bin/rxunicode-core"
+        DEPENDS rxc rxas rxlink compiler_exit_bin library classlib rxfnsc rxunicode_core
+            "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
+            "${CMAKE_CURRENT_SOURCE_DIR}/parse_cursor.crexx"
+        VERBATIM)
+    list(APPEND _parse_cursor_artifacts "${_parse_program}-linked.rxbin")
+    foreach(engine IN ITEMS rxbvm rxtvm)
+        if(NOT TARGET ${engine})
+            continue()
+        endif()
+        add_test(NAME rxparse_cursor_${engine}_${mode}
+            COMMAND $<TARGET_FILE:${engine}> --no-autoload "${_parse_program}-linked")
+        set_tests_properties(rxparse_cursor_${engine}_${mode} PROPERTIES
+            LABELS "parse;rxpa;core;ownership;regression;optimizer-parity"
+            PASS_REGULAR_EXPRESSION "PARSE_CURSOR\\|checks=[0-9]+\\|failures=0"
+            FAIL_REGULAR_EXPRESSION "FAIL\\||PANIC:|ERROR:"
+            TIMEOUT 90)
+        crexx_register_test_prep_targets(TESTS rxparse_cursor_${engine}_${mode}
+            TARGETS rxparse_cursor_artifacts ${engine})
+    endforeach()
+endforeach()
+add_custom_target(rxparse_cursor_artifacts DEPENDS ${_parse_cursor_artifacts})
+set(_parse_core "${CMAKE_CURRENT_BINARY_DIR}/parse_cursor_core")
+add_custom_command(OUTPUT "${_parse_core}.rxbin"
+    BYPRODUCTS "${_parse_core}.rxas"
+    COMMAND $<TARGET_FILE:rxc> --no-exe-import -x -o "${_parse_core}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/parse_cursor_core.crexx"
+    COMMAND $<TARGET_FILE:rxas> -n -o "${_parse_core}" "${_parse_core}"
+    DEPENDS rxc rxas "${CMAKE_CURRENT_SOURCE_DIR}/parse_cursor_core.crexx"
+    VERBATIM)
+add_custom_target(rxparse_cursor_core_artifact DEPENDS "${_parse_core}.rxbin")
+
+# Private host-failure injection compiles the actual binding source; no public
+# hook, extra provider or alternate cursor implementation enters the product.
+add_executable(test_parse_cursor_native EXCLUDE_FROM_ALL parse_cursor_native.c)
+target_compile_features(test_parse_cursor_native PRIVATE c_std_99)
+target_include_directories(test_parse_cursor_native PRIVATE
+    ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+    ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/assembler
+    ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/platform
+    ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/third_party/utf8)
+target_link_libraries(test_parse_cursor_native PRIVATE rxbvml rxpashim)
+add_test(NAME rxparse_cursor_native_boundary COMMAND test_parse_cursor_native)
+set_tests_properties(rxparse_cursor_native_boundary PROPERTIES
+    LABELS "parse;rxpa;core;ownership;regression" TIMEOUT 90)
+crexx_register_test_prep_targets(TESTS rxparse_cursor_native_boundary
+    TARGETS test_parse_cursor_native)
+
+add_executable(test_parse_cursor_imports EXCLUDE_FROM_ALL parse_cursor_imports.c)
+target_link_libraries(test_parse_cursor_imports PRIVATE rxclib)
+add_test(NAME rxparse_cursor_repeated_import COMMAND test_parse_cursor_imports)
+set_tests_properties(rxparse_cursor_repeated_import PROPERTIES
+    LABELS "parse;compiler;metadata;core;regression" TIMEOUT 90)
+crexx_register_test_prep_targets(TESTS rxparse_cursor_repeated_import
+    TARGETS test_parse_cursor_imports)
+
+add_executable(test_parse_cursor_bytes EXCLUDE_FROM_ALL parse_cursor_bytes.c
+    ${CMAKE_SOURCE_DIR}/interpreter/rxvmparse.c ${CMAKE_SOURCE_DIR}/platform/rxinteger.c)
+target_compile_definitions(test_parse_cursor_bytes PRIVATE NUTF8=1)
+target_compile_features(test_parse_cursor_bytes PRIVATE c_std_99)
+target_include_directories(test_parse_cursor_bytes PRIVATE
+    ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/platform
+    ${CMAKE_SOURCE_DIR}/binutils/include)
+add_test(NAME rxparse_cursor_byte_units COMMAND test_parse_cursor_bytes)
+set_tests_properties(rxparse_cursor_byte_units PROPERTIES
+    LABELS "parse;core;portability;regression" TIMEOUT 90)
+crexx_register_test_prep_targets(TESTS rxparse_cursor_byte_units TARGETS test_parse_cursor_bytes)
+
 add_custom_target(cri07_rxpa_sdk_consumer_prereqs
         DEPENDS rxc rxas rxvm rxbvm crexx library rxfnsg
                 _hash _hash_static

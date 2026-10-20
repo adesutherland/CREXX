@@ -45,6 +45,18 @@ message handles. Reuse these main-library facilities in tools instead of adding
 private OS plugins or shell wrappers. See the human `rxfs` reference and
 `lib/plugins/fs/rxfs_test.crexx` for executable ownership/failure controls.
 
+The built-in VM service `.rxparse..cursor(source=.string, plan=.binary)` uses
+native RXPA bindings for object dispatch, metadata and lifetime. Its incremental
+packed-PARSE Field/Input events preserve visible-write/live-read ordering.
+The development implementation is locally qualified in normal Debug and focused
+Apple ASan, without a speed claim; real platform proof remains open.
+Source/plan snapshots and shared alias-close ownership belong to the cursor,
+while source acquisition, section normalization and live pool writes remain
+consumer policy. The shared VM kernel is mandatory core infrastructure, with
+no runtime template-source parser or optional/dynamically loaded plugin. See the
+[cursor API, lifecycle, errors and limits](RXVM_INTERPRETER.md#native-parse-cursor).
+Research C PARSE/ARG integration retains its separate exact-contract gate.
+
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
 

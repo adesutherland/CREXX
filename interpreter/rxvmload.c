@@ -46,6 +46,7 @@
 #include "rxvmsock.h"
 #include "rxpa.h"
 #include "rxcrexxcmd.h"
+#include "rxvmparse_bindings.h"
 
 // RXPA (Plugin Architecture) Support declarations  for this file
 
@@ -380,6 +381,7 @@ static int rxinimod_common(rxvm_context *context,
                            rxvm_runtime *runtime,
                            unsigned char owns_runtime) {
     if (!context || !runtime) return 0;
+    rxvm_parse_cursor_init();
 #if defined(CREXX_VM_CLASSIC_PROVIDERS) && defined(CREXX_VM_SINGLE_THREADED)
     { extern void crexx_cstream_init(void); extern void crexx_mainframe_fs_init(void);
       crexx_cstream_init(); crexx_mainframe_fs_init(); }
