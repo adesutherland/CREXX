@@ -5,8 +5,46 @@
  */
 
 .globals=0
+.meta "unwind_missing.shape"="b" ".unknown" .interface
+.meta "unwind_missing.shape"="factory" "*" ".shape" "value=.string" .member
 
 main() .locals=16
+    /* The profiling census retains its original bounded call workload and
+     * exact counters. Default execution also covers linked-window cases. */
+    ieq r0,a0,1
+    brf linked_cases,r0
+    seq r0,a1,"census"
+    brt canonical_cases,r0
+linked_cases:
+    call r0,linked_receiver()
+    brf fail_linked_window,r0
+    call r0,swapped_linked_window()
+    brf fail_linked_window,r0
+    call r0,duplicate_linked_window()
+    brf fail_linked_window,r0
+    call r0,two_linked_slots()
+    brf fail_linked_window,r0
+    call r0,rebound_window()
+    brf fail_linked_window,r0
+    load r1,"incoming"
+    call2 r0,duplicate_incoming(),r1,r1
+    brf fail_linked_window,r0
+    load r14,0
+    call1 r0,fused_linked_window(),r14
+    brf fail_linked_window,r0
+    load r14,1
+    call1 r0,fused_linked_window(),r14
+    brf fail_linked_window,r0
+    call r0,factory_linked_window()
+    brf fail_linked_window,r0
+    load r14,1
+    call1 r0,recycled_identity(),r14
+    brf fail_linked_window,r0
+    load r14,0
+    call1 r0,recycled_identity(),r14
+    brf fail_linked_window,r0
+
+canonical_cases:
     load r1,"scalar"
 
     setattrs r2,1
@@ -68,6 +106,10 @@ fail_nested_argument:
     say "FAIL: nested argument-slot call mapping"
     ret 1
 
+fail_linked_window:
+    say "FAIL: permanent linked call-window mapping"
+    ret 1
+
 forward() .locals=5
     load r0,3
     swap r1,a1
@@ -91,4 +133,232 @@ nested_argument_window() .locals=1
 
 nested_argument_caught:
     seq r0,a1,"nested-argument"
+    ret r0
+
+/* An optimized receiver can already occupy the call window through LINKREF.
+ * Its owned base is absent, and no call preparation swap needs reversing. */
+linked_receiver() .locals=7
+    load r1,"receiver"
+    mkref r2,r1
+    linkref r5,r2
+    load r4,1
+    sigbr linked_receiver_caught,"INVALID_ARGUMENTS"
+    settpcall r0,mutate_one(),r4,r5,256
+    ret 0
+linked_receiver_caught:
+    seq r0,r1,"callee"
+    brf linked_receiver_bad,r0
+    load r5,"handler"
+    seq r0,r1,"handler"
+    brf linked_receiver_bad,r0
+    unlink r5
+    load r5,"unlinked"
+    seq r0,r1,"handler"
+    ret r0
+linked_receiver_bad:
+    ret 0
+
+/* The linked call slot can itself be swapped. Missing base storage cannot
+ * mean that restoration may skip that slot. */
+swapped_linked_window() .locals=8
+    load r1,"receiver"
+    link r5,r1
+    load r2,"argument"
+    load r4,1
+    sigbr swapped_linked_caught,"INVALID_ARGUMENTS"
+    swap r5,r2
+    call r0,mutate_one(),r4
+    swap r5,r2
+    ret 0
+swapped_linked_caught:
+    seq r0,r2,"callee"
+    brf swapped_linked_bad,r0
+    load r5,"handler"
+    seq r0,r1,"handler"
+    ret r0
+swapped_linked_bad:
+    ret 0
+
+/* Equal alias pointers still have distinct register identities. Both links
+ * must survive independent call preparation and the callee's mutations. */
+duplicate_linked_window() .locals=9
+    load r1,"shared"
+    link r5,r1
+    link r6,r1
+    load r2,"left"
+    load r3,"right"
+    load r4,2
+    sigbr duplicate_linked_caught,"INVALID_ARGUMENTS"
+    swapn r5,r2,r6,r3
+    call r0,mutate_two(),r4
+    swapn r5,r2,r6,r3
+    ret 0
+duplicate_linked_caught:
+    seq r0,r2,"left-callee"
+    brf duplicate_linked_bad,r0
+    seq r0,r3,"right-callee"
+    brf duplicate_linked_bad,r0
+    unlink r5
+    load r5,"unlinked"
+    load r6,"handler"
+    seq r0,r1,"handler"
+    ret r0
+duplicate_linked_bad:
+    ret 0
+
+mutate_one() .locals=0
+    load a1,"callee"
+    signal "INVALID_ARGUMENTS","linked call window"
+    ret
+
+mutate_two() .locals=0
+    load a1,"left-callee"
+    load a2,"right-callee"
+    signal "INVALID_ARGUMENTS","duplicate linked call window"
+    ret
+
+/* Both window slots are linked and then exchanged with one another. */
+two_linked_slots() .locals=8
+    load r1,"left"
+    load r2,"right"
+    link r5,r1
+    link r6,r2
+    load r4,2
+    sigbr two_linked_caught,"INVALID_ARGUMENTS"
+    swap r5,r6
+    call r0,mutate_two(),r4
+    swap r5,r6
+    ret 0
+two_linked_caught:
+    seq r0,r1,"right-callee"
+    brf two_linked_bad,r0
+    seq r0,r2,"left-callee"
+    brf two_linked_bad,r0
+    load r5,"handler-left"
+    load r6,"handler-right"
+    seq r0,r1,"handler-left"
+    brf two_linked_bad,r0
+    seq r0,r2,"handler-right"
+    ret r0
+two_linked_bad:
+    ret 0
+
+/* Rebinding a displaced slot preserves its label. Normal reverse swaps and
+ * caught-branch restoration must carry the same new binding back home. */
+rebound_window() .locals=8
+    load r1,"receiver"
+    load r2,"argument"
+    load r3,"replacement"
+    link r5,r1
+    load r4,1
+    swap r5,r2
+    unlink r2
+    link r2,r3
+    call r0,normal_one(),r4
+    swap r5,r2
+    seq r0,r2,"callee"
+    brf rebound_bad,r0
+    load r5,"normal"
+    seq r0,r3,"normal"
+    brf rebound_bad,r0
+    link r5,r1
+    sigbr rebound_caught,"INVALID_ARGUMENTS"
+    swap r5,r2
+    unlink r2
+    link r2,r3
+    call r0,mutate_one(),r4
+    swap r5,r2
+    ret 0
+rebound_caught:
+    seq r0,r2,"callee"
+    brf rebound_bad,r0
+    load r5,"branch"
+    seq r0,r3,"branch"
+    ret r0
+rebound_bad:
+    ret 0
+
+normal_one() .locals=0
+    load a1,"callee"
+    ret
+
+/* Entry pointers may alias, but a1 and a2 remain distinct mapping slots. */
+duplicate_incoming() .locals=3
+    load r1,"argument"
+    sigbr incoming_caught,"INVALID_ARGUMENTS"
+    load a0,2
+    swap a1,r1
+    call r0,mutate_two(),a0
+    swap a1,r1
+    ret 0
+incoming_caught:
+    seq r0,r1,"left-callee"
+    brf incoming_bad,r0
+    seq r0,a1,"right-callee"
+    brf incoming_bad,r0
+    load a2,"handler"
+    seq r0,a1,"handler"
+    ret r0
+incoming_bad:
+    ret 0
+
+/* The final staging swap may be inside either call-bearing fused opcode. */
+fused_linked_window() .locals=8
+    load r1,"receiver"
+    load r2,"argument"
+    link r5,r1
+    load r4,1
+    sigbr fused_caught,"INVALID_ARGUMENTS"
+    brf fused_plain,a1
+    settpswapcall r0,mutate_one(),r4,r5,256,r2
+    swap r5,r2
+    ret 0
+fused_plain:
+    swapcall r0,mutate_one(),r4,r5,r2
+    swap r5,r2
+    ret 0
+fused_caught:
+    seq r0,r2,"callee"
+    brf fused_bad,r0
+    load r5,"handler"
+    seq r0,r1,"handler"
+    ret r0
+fused_bad:
+    ret 0
+
+/* Factory selection can fail before a child frame exists, as native calls
+ * do. The cold interrupted-instruction decoder must use the same inverse. */
+factory_linked_window() .locals=8
+    load r1,"receiver"
+    load r2,"argument"
+    link r5,r1
+    load r4,1
+    sigbr factory_caught,"FUNCTION_NOT_FOUND"
+    swap r5,r2
+    srcfprocsel r0,"rxsig1|unwind_missing.shape|.shape|value=.string",r4
+    swap r5,r2
+    ret 0
+factory_caught:
+    seq r0,r2,"argument"
+    brf factory_bad,r0
+    load r5,"handler"
+    seq r0,r1,"handler"
+    ret r0
+factory_bad:
+    ret 0
+
+/* A frame returned with an intentional non-window permutation is recycled.
+ * Its next activation must reset every identity just as it resets pointers. */
+recycled_identity() .locals=5
+    brf recycled_call,a1
+    swap r1,r2
+    ret 1
+recycled_call:
+    load r1,1
+    load r2,"argument"
+    sigbr recycled_caught,"INVALID_ARGUMENTS"
+    call r0,mutate_one(),r1
+    ret 0
+recycled_caught:
+    seq r0,r2,"callee"
     ret r0

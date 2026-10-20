@@ -4052,6 +4052,7 @@ RX_INLINE stack_frame *frame_f(
     size_t pointer_bytes;
     size_t value_count;
     size_t value_bytes;
+    size_t identity_bytes;
     int i, j;
     size_t frame_size;
     value *value_buffer;
@@ -4143,8 +4144,10 @@ RX_INLINE stack_frame *frame_f(
             !rxvm_checked_size_mul(sizeof(value*), pointer_count, &pointer_bytes) ||
             !rxvm_checked_size_add(local_count, 1, &value_count) ||
             !rxvm_checked_size_mul(sizeof(value), value_count, &value_bytes) ||
+            !rxvm_checked_size_mul(sizeof(uint32_t), nominal_num_locals, &identity_bytes) ||
             !rxvm_checked_size_add(sizeof(stack_frame), pointer_bytes, &frame_size) ||
-            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size)) {
+            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size) ||
+            !rxvm_checked_size_add(frame_size, identity_bytes, &frame_size)) {
             return 0;
         }
 
@@ -4158,6 +4161,9 @@ RX_INLINE stack_frame *frame_f(
         this->baselocals = (value**)(this + 1);
         this->locals = this->baselocals + nominal_num_locals;
         value_buffer = (value*)(this->locals + nominal_num_locals);
+        /* value contains uint32_t members, so its array's end also aligns the
+         * identity array. Keep values at their existing alignment/offset. */
+        this->local_identity = (uint32_t*)(value_buffer + value_count);
 
         /* Link Locals */
 #ifdef CREXX_VM_PROFILING
@@ -4336,6 +4342,9 @@ RX_INLINE stack_frame *frame_f(
     this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
     this->caller_arg_base = UINT32_MAX;
+    /* Both complete frame extents were checked against INT_MAX above. Reset
+     * every active slot on reuse, including globals, a0 and incoming aliases. */
+    for (i = 0; i < num_locals; i++) this->local_identity[i] = (uint32_t)i;
 #ifdef CREXX_VM_PROFILING
     rxvm_profile_record_frame_phase(
             RXVM_PROFILE_FRAME_FINALIZE,
@@ -4397,9 +4406,10 @@ static void free_external_entry_arguments(stack_frame *frame) {
     }
 }
 
-/* Restore the active pointer permutation created by compiler call-window
- * swaps.  Call-window registers have unique base storage, so locating each
- * displaced base pointer identifies the source register for the inverse swap.
+/* Reverse canonical compiler call-window swaps using unique slot identities.
+ * LINK/UNLINK rebind a slot without changing its permutation identity; SWAP
+ * moves that identity with the binding. Value pointers can be duplicated or
+ * replace owned bases, so they cannot identify the inverse permutation.
  * Values are not copied or reset: arg expose and reference mutations survive. */
 static int rxvm_restore_call_argument_mapping(
         stack_frame *caller, size_t arg_base, size_t arg_count
@@ -4419,20 +4429,20 @@ static int rxvm_restore_call_argument_mapping(
 
     for (arg = 0; arg < arg_count; arg++) {
         size_t slot = arg_base + arg;
-        value *slot_base = caller->baselocals[slot];
-
-        if (!slot_base) return 0;
-        if (caller->locals[slot] == slot_base) continue;
+        if (caller->local_identity[slot] == slot) continue;
 
         for (source = 0; source < caller->number_locals; source++) {
-            if (caller->locals[source] == slot_base) break;
+            if (caller->local_identity[source] == slot) break;
         }
         if (source == caller->number_locals) return 0;
 
         {
             value *mapped = caller->locals[slot];
+            uint32_t identity = caller->local_identity[slot];
             caller->locals[slot] = caller->locals[source];
             caller->locals[source] = mapped;
+            caller->local_identity[slot] = caller->local_identity[source];
+            caller->local_identity[source] = identity;
 #ifdef CREXX_VM_PROFILING
             if (restored_slots) (*restored_slots)++;
 #endif
@@ -4997,8 +5007,13 @@ typedef int instructions;
 #define RXVM_SWAP_PAIR(first_, second_)                                        \
     do {                                                                       \
         value *swap_value__ = REG_OP(first_);                                  \
+        uint32_t swap_identity__ =                                             \
+                current_frame->local_identity[REG_IDX(first_)];                \
         REG_OP(first_) = REG_OP(second_);                                      \
         REG_OP(second_) = swap_value__;                                        \
+        current_frame->local_identity[REG_IDX(first_)] =                       \
+                current_frame->local_identity[REG_IDX(second_)];               \
+        current_frame->local_identity[REG_IDX(second_)] = swap_identity__;      \
         RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(first_),               \
                                   REG_IDX(second_));                            \
     } while (0)

@@ -2889,13 +2889,7 @@ RXVM_HANDLER(MOVE_REG_REG, VM_ADVANCE(2); /* Deprecated */
 
 RXVM_HANDLER(SWAP_REG_REG, VM_ADVANCE(2); /* Deprecated */
             DEBUG("TRACE - SWAP R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-            {
-                value *v_temp;
-                v_temp = op1R;
-                op1R = op2R;
-                op2R = v_temp;
-                RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(1), REG_IDX(2));
-            }
+            RXVM_SWAP_PAIR(1, 2);
             DISPATCH;
 
 

@@ -278,6 +278,7 @@ struct stack_frame {
     char unicode_loaded_here;
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;     /* Locals pointer mapping (after swaps / links) */
+    uint32_t *local_identity; /* Unique slot permutation, independent of linked value pointers */
 };
 
 #ifdef NDEBUG  // RELEASE

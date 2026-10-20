@@ -283,6 +283,7 @@ struct stack_frame {
     char unicode_loaded_here;        /* Whether this frame loaded Unicode support */
     value **baselocals;              /* Array of initial / fixed pointers */
     value **locals;                  /* Active pointer map to variable values */
+    uint32_t *local_identity;        /* Unique slot identities, permuted with locals */
 };
 ```
 
@@ -323,11 +324,23 @@ caller's contiguous call window. Normal return still executes the
 compiler-emitted reverse swaps and pays no restoration scan. If a branch-style
 signal handler discards the callee before those instructions run, the unwind
 path uses that one index plus `number_args` to restore the caller's active
-pointer permutation. It finds each displaced call-slot base pointer in the
-caller's active map and performs the inverse pointer swap, preserving mutations
-and pre-call links instead of resetting values. The base pointer may be
-frame-owned local storage or an incoming argument's recorded entry pointer;
-neither case copies the value.
+pointer permutation. Each active slot has a unique u32 identity initialized on
+frame activation/reuse. Primitive and fused pointer SWAPs exchange identities;
+LINK/UNLINK changes a binding without changing its identity. The cold path finds
+the displaced call-slot identity and inversely swaps pointers and identities,
+preserving mutations and links without copying/resetting values. Linked
+receivers can hide their owned base pointer, and distinct slots can alias one
+value, so value-pointer equality cannot identify this inverse permutation.
+This restores canonical compiler call-window swaps; it does not reconstruct
+arbitrary intentional earlier SWAP state.
+
+The identity array occupies the existing checked frame allocation after owned
+values, retaining alignment and the full INT_MAX frame bound. Its structural
+cost is one pointer/frame, four bytes per allocated nominal slot, one identity
+store per active slot at activation and one u32 exchange per pointer SWAP.
+There is no per-call allocation or normal-return restoration scan; the cold
+scan remains O(argument count × local count). These costs are not performance
+or peak-resource measurements.
 
 `CALL1` through `CALL4` are direct-bytecode alternatives for the common fixed
 arities. They capture their explicitly named caller value pointers before
@@ -340,8 +353,8 @@ procedures; compiler-generated imported/native, dynamic and higher-arity calls
 retain the counted path.
 
 Native calls have no child frame; their cold branch path recovers the counted
-window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`, or
-`SETTPCALL` instruction. All five forms carry the argument-count register at
+window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`,
+`SETTPCALL` or `SRCFPROCSEL` factory-selector instruction. All six forms carry the argument-count register at
 operand position three, so the fixed runtime image supplies the window base
 without a generic operand scan. Any future call-bearing fused opcode must be
 added to this cold decoder as part of its signal/unwind contract.
