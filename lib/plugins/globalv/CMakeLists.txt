@@ -38,6 +38,7 @@ target_include_directories(globalv_plugin_static PRIVATE
 target_link_libraries(globalv_plugin PRIVATE Threads::Threads)
 target_link_libraries(globalv_plugin_static PRIVATE Threads::Threads)
 add_rxpa_provider_package(globalv_plugin INSTALL PROVIDER_ID rxglobalv)
+crexx_install_targets(globalv_plugin globalv_plugin_static)
 
 # The ADDRESS facade is installed separately from library.rxbin. Applications
 # opt in by loading rxglobalv_address.rxbin together with rxglobalv.rxplugin.
