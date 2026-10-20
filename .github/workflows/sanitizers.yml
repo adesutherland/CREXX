@@ -10,7 +10,7 @@ on:
       qualification:
         description: Qualification scope (default retains both full platform jobs)
         type: choice
-        options: [full, daily, candidate, normalization-linux]
+        options: [full, daily, candidate, normalization-linux, services-linux]
         default: full
       source_ref:
         description: Optional source commit for focused or candidate qualification
@@ -36,7 +36,7 @@ permissions:
 
 jobs:
   assurance-gate:
-    if: inputs.qualification != 'normalization-linux'
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux'
     name: Resolve qualified inputs and conservative profile
     runs-on: ubuntu-24.04
     outputs:
@@ -108,7 +108,7 @@ jobs:
   sanitizer:
     name: ${{ matrix.name }}
     needs: assurance-gate
-    if: inputs.qualification != 'normalization-linux'
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
     strategy:
@@ -278,10 +278,12 @@ jobs:
           retention-days: 14
 
   normalization-linux:
-    name: Linux x64 isolated normalization diagnosis
-    if: github.event_name == 'workflow_dispatch' && inputs.qualification == 'normalization-linux'
+    name: Linux x64 isolated timeout diagnosis
+    if: github.event_name == 'workflow_dispatch' && (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux')
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      QA_DIAGNOSTIC: ${{ inputs.qualification }}
     steps:
       - name: Checkout original failing inputs
         uses: actions/checkout@v5
@@ -298,20 +300,32 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          targets=(--build-target ts_unicode_normalization)
+          regex='^ts_unicode_normalization_rxtvm_(noopt|opt)$'
+          if [ "$QA_DIAGNOSTIC" = services-linux ]; then
+            targets=(--build-target levell_services_opt --build-target rxtvm)
+            regex='^levell_services_opt_rxtvm$'
+          fi
           cmake -S . -G Ninja -B "${RUNNER_TEMP}/debug" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
           tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
-            --phase build --build-target ts_unicode_normalization \
+            --phase build "${targets[@]}" \
             --build-jobs 4 --build-leaks on --no-live-tail
           tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
-            --phase ctest --regex '^ts_unicode_normalization_rxtvm_(noopt|opt)$' \
+            --phase ctest --regex "$regex" \
             --test-jobs 1 --leaks on --no-live-tail
 
       - name: Isolated maintained ASan and LSan replay
         shell: bash
         run: |
           set -euo pipefail
+          targets=(--build-target ts_unicode_normalization)
+          regex='^ts_unicode_normalization_rxtvm_(noopt|opt)$'
+          if [ "$QA_DIAGNOSTIC" = services-linux ]; then
+            targets=(--build-target levell_services_opt --build-target rxtvm)
+            regex='^levell_services_opt_rxtvm$'
+          fi
           cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
@@ -320,17 +334,17 @@ jobs:
             -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
             -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
           tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
-            --phase build --build-target ts_unicode_normalization \
+            --phase build "${targets[@]}" \
             --build-jobs 4 --build-leaks on --no-live-tail
           tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
-            --phase ctest --regex '^ts_unicode_normalization_rxtvm_(noopt|opt)$' \
+            --phase ctest --regex "$regex" \
             --test-jobs 1 --leaks on --no-live-tail
 
       - name: Upload focused diagnostic logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: sanitizer-normalization-linux
+          name: ${{ inputs.qualification == 'services-linux' && 'sanitizer-services-linux' || 'sanitizer-normalization-linux' }}
           path: |
             ${{ runner.temp }}/debug/asan-logs
             ${{ runner.temp }}/debugasan/asan-logs

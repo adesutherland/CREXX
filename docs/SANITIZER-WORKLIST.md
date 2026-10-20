@@ -127,6 +127,53 @@ apparent recent drift. Its exact fetched commit is not printed by these logs;
 new donor seals must bind actual dependency contents instead of branch names.
 Downloaded temporary logs were inspected and deleted after this summary.
 
+### SAN-QA-021 — Level L callable-service aggregate exhausts pooled deadline
+
+Status: **unchanged isolated Linux replay pending; no product or scheduling
+change yet**. Owner: Codex under the approved qualification task. This is a QA
+finding; no new memory-safety diagnostic was observed.
+
+[Candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
+checks out `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8`. Its original-producer
+Linux full job completes the instrumented build in **2,506 seconds**, qa-prep
+in **43 seconds** and native pre-audit in **8 seconds** (603 built source
+objects and 308 products/provider copies). CTest then executes 3,036 of 3,293
+selected cells: **3,035 pass**, `levell_services_opt_rxtvm` times out at
+**300.03 seconds**, and **257 remain unrun**. CTest wall time is 3,192.82 seconds.
+Complete logs contain no sanitizer diagnostic, non-timeout failure or compiler
+warning. No completed broad assurance marker is written.
+
+The four `levell_services_{opt,noopt}_{rxtvm,rxbvm}` cells currently have
+TIMEOUT 300 without RUN_SERIAL. They overlap each other and the broad pool;
+switch cases pass in 238.31/235.40 seconds and threaded noopt in 293.20 seconds.
+The retained service contract exercises independent requests, exact CLI/service
+artifact parity, bounded/error outputs, metadata rejection, atomic publication
+and destination preservation. Its corpus and every oracle remain unchanged.
+Normal ordinary Linux had already passed all four among the retained 3,259
+cells. The two daily candidate jobs remain active; their result is not inferred
+from this separate full-job timeout.
+
+Before changing the workload or scheduling, replay only the unchanged failed
+name with one test job through the runner. Local Apple arm64 original-producer
+Debug passes **2/2 including integrity in 6.19 seconds** (service 6.08); the same
+maintained Apple ASan selection passes **2/2 in 27.65 seconds** (service 27.54),
+with Apple build/test leaks off. These bounded local results do not establish
+the Linux mechanism. The dispatch-only `services-linux` diagnostic choice uses
+the exact failed `e1b8a9f9b` source, builds targets `levell_services_opt` and
+`rxtvm` in ordinary Debug, then maintained ASan/LSan, and runs
+`--phase ctest --regex '^levell_services_opt_rxtvm$' --test-jobs 1 --leaks on`.
+Both builds retain build-time leaks on. A new hosted target build is necessary
+because the completed runner's build tree is unavailable; no full suite is
+repeated for this diagnosis. Existing normalization diagnosis and all default,
+scheduled and candidate selections retain their behavior. Actionlint passes.
+
+Next action: inspect the isolated Linux result before deciding a scheduling or
+guard correction. Preserve any valid daily proof, retain the exact passed/unrun
+inventories, and complete the necessary clean daily and Linux broad gates.
+An explicit composite cannot manufacture a complete broad sanitizer marker.
+Record any actual first-party sanitizer diagnostic as its own SAN-nnn before
+unrelated work. Diagnostic copies are disposable after extracting this summary.
+
 ### Where the time goes
 
 Times below come from hosted job/step timestamps and CTest's final wall time.
