@@ -71,6 +71,7 @@ parsevalue: token = 66
 parsevar: token = 67
 parsewith: token = 68
 parsedot: token = 69
+exposeword: token = 70
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -211,7 +212,11 @@ parse: parser semantics contextfree input tokens start program backend lr1
   assignment: rule = identifier as name assign (expression as value)? then tree Assignment(name = text(name), value = value?)
   cast.value: rule = primary
   label.statement: rule = labelname as name colon then tree CLabel(name = text(name))
-  procedure.statement: rule = procedureword then tree CProcedure()
+  procedure.statement: rule = procedureword (procedure.exposes as exposes)? then tree CProcedure(exposes = exposes?)
+  procedure.exposes: rule = exposeword procedure.expose as item (procedure.expose as item)* then tree ProcedureExposes(items = item+)
+  procedure.expose: rule = procedure.direct | procedure.indirect
+  procedure.direct: rule = name.value as name then tree ProcedureExposeDirect(name = name)
+  procedure.indirect: rule = open name.value as name close then tree ProcedureExposeIndirect(name = name)
   arg.statement: rule = argword parse.templates as templates then tree CArg(templates = templates)
   numeric.statement: rule = numeric.value | numeric.form
   numeric.value: rule = numericword (digitsword | fuzzword) as setting (expression as value)? then tree CNumeric(setting = text(setting), value = value?)

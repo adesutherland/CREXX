@@ -8,6 +8,7 @@ import llcompilercontracts
 import llsource
 import llrxastext
 import llcdoprotocol
+import llcprocedureprotocol
 import llcparseprogram
 import llscalar
 
@@ -55,6 +56,15 @@ compilation: class
   _classiccatalog = .llcompilercontracts..catalog
   _classicready = .int
   _classes = .string[]
+  _procedureprotocol = .llcprocedureprotocol..checked
+  _savedpool = .int
+  _privatepool = .int
+  _poolcommitted = .int
+  _cleanupresult = .int
+  _savedevent = .int
+  _savedtag = .int
+  _savedlocation = .int
+  _cleanupnumber = .int
   _doprotocol = .llcdoprotocol..checked
   _doowners = .int[]
   _dofatal = .int[]
@@ -323,6 +333,14 @@ compilation: class
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
     if name = 'crexx.c.select.missing' then call checkselectorigin(op)
+    if name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.enter' then do
+      call checkselectorigin(op,'PROCEDURE transition'); _parseclauses[op.id()] = op.origin().first() + 1
+    end
+    if name = 'crexx.c.procedure.expose' then do
+      call checkselectorigin(op,'EXPOSE item')
+      group = _procedureprotocol.group(op.id())
+      _parseclauses[op.id()] = _graph.operation(group).origin().first() + 1
+    end
     if name = 'crexx.c.parse.source' then do
       kind = op.attribute('kind') as .string; bytes = op.attribute('ordinal'); ordinal = <at..i64>(0) bytes
       if wordpos(kind,'ARG PULL LINEIN SOURCE VERSION') = 0 then do; call fail('LOWERING: invalid PARSE source kind'); return; end
@@ -364,7 +382,6 @@ compilation: class
       bytes = op.attribute('function'); boolean = .llir..boolcodec()
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
       symbol = localname(op.attribute('target') as .string)
-      if symbol = 'llf1' then call fail('LOWERING: call target must be a private routine')
     end
     return
   /** No-match diagnostics require one unambiguous authored source location.
@@ -478,8 +495,9 @@ compilation: class
     do f = 1 to store.count(1)
       resulttype = typename(store.get(1,f,2)); count = store.get(1,f,5); first = store.get(1,f,4)
       do
-        if resulttype <> 'crexx.c.result' | count <> 1 then call fail('LOWERING: Classic function ABI')
+        if resulttype <> 'crexx.c.result' | count <> 2 then call fail('LOWERING: Classic function ABI')
         else if typename(store.get(12,first,2)) <> 'crexx.c.context' | store.get(12,first,3) then call fail('LOWERING: Classic parameter ABI')
+        else if typename(store.get(12,first + 1,2)) <> 'crexx.g.int64' | store.get(12,first + 1,3) then call fail('LOWERING: Classic entry parameter ABI')
       end
     end
     return
@@ -563,18 +581,18 @@ compilation: class
     call argtext(1,'UTF8'); call invoke(config,symbol,1)
     call emit('mkref',configref || ',' || config)
     call newbundle(bundle,activation,pool,configref)
-    call argcopy(1,bundle,1); call invoke('r0','llf1',1)
+    call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke('r0','llf1',2)
     symbol = imported('llctarget','llctarget.status','.int','.rexxactivation..rexxactivationarguments')
     call argcopy(1,'r0'); call invoke('r0',symbol,1)
     call emit('null',bundle); call emit('null',configref)
     call emit('null',activation); call emit('null',pool); call emit('null',config)
     call emit('ret','r0')
     return
-  /** All child construction precedes borrowing. These hidden locals belong
-   * to the caller until the synchronous child invocation returns/unwinds. */
-  privatecall: method = .void
+  /** The caller owns the fresh activation and separate bundle throughout the
+   * synchronous invocation; both borrow the live parent pool/configuration. */
+  internalcall: method = .void
     arg op = .llir..opview
-    activation = reg(_workbase + 8); pool = reg(_workbase + 9); bundle = reg(_workbase + 10)
+    activation = reg(_workbase + 8); bundle = reg(_workbase + 10)
     parentactivation = reg(_workbase + 4); parentpool = reg(_workbase + 2); config = reg(_workbase + 3)
     receiver = reg(_workbase + 1); context = input(op,2)
     call emit('copy',activation || ',' || input(op))
@@ -586,20 +604,19 @@ compilation: class
     if <at..u8>(0) bytes then kind = 'begininternalfunction'
     symbol = member('rexxactivation.rexxactivationarguments',kind,'.void')
     call invoke('',symbol,1,receiver)
-    symbol = member('rexxactivation.rexxactivationarguments','enterprocedure','.void')
-    call invoke('',symbol,1,receiver); call emit('unlink',receiver)
+    call emit('unlink',receiver)
     call binding(context,'pool',parentpool); call binding(context,'config',config)
-    symbol = imported('llctarget','llctarget.poolnew','.rexxpool..rexxvariablepool','')
-    call invoke(pool,symbol,0)
-    call emit('link',receiver || ',' || pool)
-    symbol = member('rexxpool.rexxvariablepool','inheritcommandstatus','.void','reference@.rexxpool..rexxvariablepool')
-    call argcopy(2,parentpool); call invoke('',symbol,2,receiver); call emit('unlink',receiver)
-    call newbundle(bundle,activation,pool,config)
+    /* A separate child bundle borrows the current caller pool. Only an
+     * executed procedure.enter may allocate and replace this binding. */
+    symbol = member('rexxclassiccontext.rexxclassiccontext','§factory','.rexxclassiccontext..rexxclassiccontext','reference@.rexxactivation..rexxactivationarguments reference@.rexxpool..rexxvariablepool reference@.rexxclassicconfig..rexxclassicconfig')
+    call argcopy(1,activation,1); call argcopy(2,parentpool); call argcopy(3,config)
+    call invoke(bundle,symbol,3)
     symbol = localname(op.attribute('target') as .string)
-    call argcopy(1,bundle,1); call invoke(result(op),symbol,1)
+    bytes = op.attribute('entry'); entry = <at..i64>(0) bytes
+    call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',' || entry); call invoke(result(op),symbol,2)
     call emit('null',bundle)
     call emit('null',parentactivation); call emit('null',parentpool); call emit('null',config)
-    call emit('null',activation); call emit('null',pool)
+    call emit('null',activation)
     return
   run: method = .void
     if _ready then return
@@ -624,6 +641,11 @@ compilation: class
       _phase = 'context-slot admission'
       call checkcontextslots()
       if _error <> '' then return
+      _phase = 'source-unit admission'
+      _procedureprotocol = .llcprocedureprotocol..checked(reference _graph,_limit,_limit)
+      if _procedureprotocol.status() then do
+        _error = _procedureprotocol.error(); _offset = _procedureprotocol.offset(); return
+      end
       _phase = 'DO admission'
       _doprotocol = .llcdoprotocol..checked(reference _graph,_limit,_limit)
       if _doprotocol.status() then do
@@ -699,7 +721,7 @@ compilation: class
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
     store = dereference _store; blocks = .int[]
-    _phase = 'slot allocation'; next = 1
+    _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
     do i = 1 to store.count(5)
       if store.get(5,i,1) = _fn then do
         _slots[i] = next; next = next + 1
@@ -719,6 +741,12 @@ compilation: class
         id = store.get(3,id,3)
       end
     end
+    _savedpool = -1; _privatepool = -1; _poolcommitted = -1
+    if _procedureprotocol.hasprocedure(_fn) then do
+      _savedpool = next; _privatepool = next + 1; _poolcommitted = next + 2
+      _cleanupresult = next + 3; _savedevent = next + 4; _savedtag = next + 5; _savedlocation = next + 6
+      next = next + 7
+    end
     _parsestate = -1
     if hasparse then do; _parsestate = next; next = next + 1; end
     /* Strong loop storage is not an IR value or a transient call argument.
@@ -737,6 +765,9 @@ compilation: class
     _maxargs = -1; _needsscratch = 0; _sizing = 1; _fallthrough = 0
     do; _maxargs = 2; _needsscratch = 1; end
     call installnumeric('a1')
+    if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+    call exitcleanup()
+    call fatalbody()
     do i = 1 to blocks[0] while _error = ''
       id = store.get(2,blocks[i],2)
       do while id > 0 & _error = ''
@@ -745,7 +776,7 @@ compilation: class
         id = store.get(3,id,3)
       end
     end
-    _sizing = 0
+    _sizing = 0; _cleanupnumber = 0
     if _error <> '' then return
     _phase = 'frame limits'; _scratch = -1; _location = -1; _callbase = -1
     if _needsscratch then do; _scratch = next; next = next + 1; end
@@ -760,7 +791,7 @@ compilation: class
     call clearsource()
     _routine = store.text(store.get(1,_fn,1))
     _phase = 'signature'; first = store.get(1,_fn,4)
-    args = 'context=' || targettype(store.get(12,first,2))
+    args = 'context=' || targettype(store.get(12,first,2)) || ',entry=.int'
     _phase = 'metadata'; name = 'llprogram.' || store.text(store.get(1,_fn,1))
     if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',llrxastext..quote(name as .binary) || '="b" ' || llrxastext..quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || llrxastext..quote(args as .binary))
@@ -770,6 +801,9 @@ compilation: class
       call emit('null',reg(_doowners[_dofatal[i]]))
     end
     if _parsestate >= 0 then call emit('null',reg(_parsestate))
+    if _savedpool >= 0 then do
+      call emit('null',reg(_privatepool)); call emit('load',reg(_poolcommitted) || ',0')
+    end
     do
       filename = ''
       firstop = store.get(2,store.get(1,_fn,3),2)
@@ -781,6 +815,7 @@ compilation: class
     end
     call emit('numsci','18,1,2')
     call installnumeric('a1')
+    if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
     if store.get(1,_fn,3) <> blocks[1] then call emit('br','llb' || store.get(1,_fn,3))
     do blockindex = 1 to blocks[0]
       b = blocks[blockindex]; _fallthrough = 0
@@ -796,7 +831,11 @@ compilation: class
         id = store.get(3,id,3)
       end
     end
-    do
+    call fatalbody()
+    call flush()
+    return
+  fatalbody: method = .void
+      i = .int
       _origin = 0
       do i = 1 to 9
         call emit('llerror' || _fn || '_' || i || ':')
@@ -808,12 +847,17 @@ compilation: class
       do i = 1 to 9
         call emit('sighalt',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary))
       end
-      if _dofatal[0] > 0 | _parsestate >= 0 then do
-        /* Unwinding restores receiver permutations first. Release remaining
-         * private borrow slots before owners, preserving r0/location/scratch. */
-        do i = 1 to _maxargs; call emit('null',reg(_callbase + i)); end
-        if _parsestate >= 0 then call emit('null',reg(_parsestate))
-        do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
+      if _savedpool >= 0 then do
+        call emit('copy',reg(_savedevent) || ',r0')
+        call emit('copy',reg(_savedtag) || ',' || reg(_scratch))
+        call emit('copy',reg(_savedlocation) || ',' || reg(_location))
+      end
+      call exitcleanup(1)
+      if _savedpool >= 0 then do
+        call emit('copy','r0,' || reg(_savedevent))
+        call emit('copy',reg(_scratch) || ',' || reg(_savedtag))
+        call emit('copy',reg(_location) || ',' || reg(_savedlocation))
+        call emit('null',reg(_savedevent)); call emit('null',reg(_savedlocation))
       end
       symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
       call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
@@ -825,8 +869,35 @@ compilation: class
         call emit('signalorigin',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary) || ',' || reg(_location) || ',r0')
         call emit('ret')
       end
+    return
+  /** Release transient borrowers before restoring the live bundle, then drop
+   * the replacement owner. The flag-zero edge never reads the saved pool. */
+  exitcleanup: method = .void
+    arg fatal = 0
+    i = .int
+    if _savedpool < 0 & fatal = 0 then return
+    /* Cold VM unwind restores call-window swaps but preserves links. Detach
+     * both possible method receivers before clearing their borrowed storage. */
+    if fatal then do
+      call emit('unlink',reg(_workbase)); call emit('unlink',reg(_workbase + 1))
     end
-    call flush()
+    do i = 1 to _maxargs; call emit('null',reg(_callbase + i)); end
+    do i = 0 to 10; call emit('null',reg(_workbase + i)); end
+    if _parsestate >= 0 then call emit('null',reg(_parsestate))
+    do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
+    if _savedpool < 0 then return
+    /* Each terminal site needs a distinct local label. */
+    prefix = 'llrestore' || _fn || '_' || _cleanupnumber
+    _cleanupnumber = _cleanupnumber + 1
+    call emit('brf',prefix || '_done,' || reg(_poolcommitted))
+    receiver = reg(_workbase)
+    call emit('linkref',receiver || ',a1')
+    symbol = member('rexxclassiccontext.rexxclassiccontext','bindpool','.void','reference@.rexxpool..rexxvariablepool')
+    call argcopy(2,reg(_savedpool)); call invoke(reg(_cleanupresult),symbol,2,receiver)
+    call emit('unlink',receiver)
+    call emit('load',reg(_poolcommitted) || ',0')
+    call emit(prefix || '_done:')
+    call emit('null',reg(_savedpool)); call emit('null',reg(_privatepool)); call emit('null',reg(_cleanupresult))
     return
   /** Explicit no-source anchor prevents generated entries/handlers inheriting
    * the last authored record of a preceding routine. */
@@ -947,6 +1018,7 @@ compilation: class
         if op.successor(2) <> _fallthrough then call emit('br','llb' || op.successor(2))
       end
       when name = 'core.return' then do
+        call exitcleanup()
         if op.inputs() then call emit('ret',input(op))
         else call emit('ret')
       end
@@ -961,6 +1033,7 @@ compilation: class
     symbol = .string
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
+    if wordpos(name,'entry.test entry.invalid procedure.consume procedure.enter procedure.expose') > 0 then do; call procedureoperation(op,name); return; end
     if name = 'parse.source' then do; call parsesource(op); return; end
     if name = 'parse.execute' then do
       symbol = imported('rxfnsc','rexxclassicparse.execute','.void',contexttype || ' ' || v || ' .binary')
@@ -1036,16 +1109,88 @@ compilation: class
         context = input(op); if setting <> 'form' then context = input(op,2)
         call installnumeric(context)
       end
-      when name = 'call' then call privatecall(op)
+      when name = 'call' then call internalcall(op)
       when name = 'exit' then do
         symbol = imported('llctarget','llctarget.present',a,v)
         call argcopy(1,input(op)); call invoke(reg(_scratch),symbol,1)
         symbol = imported('llctarget','llctarget.status','.int',a)
         call argcopy(1,reg(_scratch)); call invoke(reg(_scratch),symbol,1)
+        if _savedpool >= 0 then do
+          call emit('copy',reg(_savedtag) || ',' || reg(_scratch))
+          call exitcleanup(); call emit('copy',reg(_scratch) || ',' || reg(_savedtag))
+        end
+        else call exitcleanup()
         call emit('exit',reg(_scratch))
       end
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
+    return
+  /** C-owned dispatch and transitions select existing B methods. Integer
+   * mismatch does not touch the context, and enter validates eligibility once. */
+  procedureoperation: method = .void
+    arg op = .llir..opview, name = .string
+    symbol = .string; bytes = .binary; membername = .string; config = .string
+    prefix = 'llprocedure' || _fn || '_' || op.id()
+    receiver = reg(_workbase + 1); activation = reg(_workbase + 4)
+    if name = 'entry.invalid' then do
+      call emit('signal','"INVALID_ARGUMENTS","LLC-ENTRY: invalid source-unit entry identity"')
+      return
+    end
+    if name = 'entry.test' then do
+      bytes = op.attribute('id'); id = <at..i64>(0) bytes
+      call emit('load',result(op) || ',0')
+      call emit('beq',prefix || '_match,' || input(op,2) || ',' || id)
+      call emit('br',prefix || '_done')
+      call emit(prefix || '_match:')
+      call binding(input(op),'activation',activation)
+      call emit('linkref',receiver || ',' || activation)
+      symbol = member('rexxactivation.rexxactivationarguments','procedureeligible','.boolean')
+      call invoke(reg(_workbase + 5),symbol,1,receiver)
+      call emit('unlink',receiver); call emit('null',activation)
+      expected = id > 0
+      call emit('beq',prefix || '_valid,' || reg(_workbase + 5) || ',' || expected)
+      call emit('signal','"INVALID_ARGUMENTS","LLC-ENTRY: activation does not match entry kind"')
+      call emit(prefix || '_valid:'); call emit('load',result(op) || ',1')
+      call emit(prefix || '_done:')
+      return
+    end
+    if name = 'procedure.consume' | name = 'procedure.enter' then do
+      call binding(input(op),'activation',activation)
+      call emit('linkref',receiver || ',' || activation)
+      membername = 'consumefirstinstruction'
+      if name = 'procedure.enter' then membername = 'enterprocedure'
+      symbol = member('rexxactivation.rexxactivationarguments',membername,'.void')
+      call invoke('',symbol,1,receiver)
+      call emit('unlink',receiver); call emit('null',activation)
+      if name = 'procedure.consume' then return
+      if _privatepool < 0 then do; call fail('LOWERING: PROCEDURE owner was not planned'); return; end
+      symbol = imported('llctarget','llctarget.poolnew','.rexxpool..rexxvariablepool','')
+      call invoke(reg(_privatepool),symbol,0)
+      call emit('link',receiver || ',' || reg(_privatepool))
+      symbol = member('rexxpool.rexxvariablepool','inheritcommandstatus','.void','reference@.rexxpool..rexxvariablepool')
+      call argcopy(2,reg(_savedpool)); call invoke('',symbol,2,receiver)
+      call emit('unlink',receiver)
+      call emit('linkref',receiver || ',' || input(op))
+      symbol = member('rexxclassiccontext.rexxclassiccontext','bindpool','.void','reference@.rexxpool..rexxvariablepool')
+      call argcopy(2,reg(_privatepool),1); call invoke('',symbol,2,receiver)
+      /* Commit immediately after the checked atomic bind, before any later
+       * fallible helper. The strong owner stays in this stable frame slot. */
+      call emit('load',reg(_poolcommitted) || ',1'); call emit('unlink',receiver)
+      return
+    end
+    if _privatepool < 0 then do; call fail('LOWERING: EXPOSE owner was not planned'); return; end
+    call emit('link',receiver || ',' || reg(_privatepool))
+    bytes = op.attribute('indirect'); count = 3
+    membername = 'exposesymbol'; types = '.string reference@.rexxpool..rexxvariablepool'
+    if <at..u8>(0) bytes then do
+      membername = 'exposeindirect'; types = types || ' reference@.rexxclassicconfig..rexxclassicconfig'; count = 4
+      config = reg(_workbase + 3); call binding(input(op),'config',config)
+      call argcopy(4,config)
+    end
+    symbol = member('rexxpool.rexxvariablepool',membername,'.void',types)
+    call argtext(2,op.attribute('name') as .string); call argcopy(3,reg(_savedpool))
+    call invoke('',symbol,count,receiver); call emit('unlink',receiver)
+    if count = 4 then call emit('null',config)
     return
   /** Acquisition returns one value while its caller-owned transport retains
    * errors/NOTREADY. The typed event is raised here at the authored C anchor. */

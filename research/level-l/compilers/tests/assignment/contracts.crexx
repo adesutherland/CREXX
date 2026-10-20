@@ -86,8 +86,12 @@ provider: procedure = .void expose artifacts
   contract = registry.finish(); builder = .llir..builder(contract)
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   call fn.exportas('assignfixture.run'); ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64'))
   block = fn.block('entry'); at = builder.synthetic('test-only supplied-context assignment effects')
-  context = block.readarg(1,at)
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  call block.store(context_slot,block.readarg(1,at),at)
+  block = entrybody(fn,contract,block,context_slot,at)
+  context = block.load(context_slot,at)
   draft = block.operation(contract.operation('crexx.c.load'),at)
   call draft.input('context',context); call draft.attribute('name','cached' as .binary)
   operation = draft.finish(); cached = operation.result()
@@ -121,3 +125,22 @@ provider: procedure = .void expose artifacts
   call check(bin2x(saved) = bin2x(graph.binary()),'selection preserves graph')
   if backend.status() = 0 then call check(writebinary(destination,output.text() as .binary) > 0,'provider RXAS written for B host')
   return
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

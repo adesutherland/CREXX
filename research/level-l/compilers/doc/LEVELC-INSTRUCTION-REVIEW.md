@@ -23,7 +23,7 @@ accepted LC-UNICODE model govern radix literals and fixed U+0000–U+00FF ordina
 | Obligation | New path and evidence | Remaining boundary |
 |---|---|---|
 | Bare and expression forms | `levelc.rxl` creates `Say(value?)`; `llcfrontend.statement` lowers the expression once, then one `crexx.c.say`. Existing frontend grammar/syntax tests plus `tests/say/forms-c.crexx`. | Full expression/BIF coverage belongs to shared semantics and CFC-AC02. |
-| Evaluation/output order | Ordinary numeric/string expressions, IF/group and private-procedure call with inner output before outer output. `tests/say/forms-c.crexx` has independent expected bytes. | EXPOSE, shared-frame labels and general calls remain PROCEDURE/CALL dependencies. |
+| Evaluation/output order | Ordinary numeric/string expressions, IF/group and private-procedure call with inner output before outer output. `tests/say/forms-c.crexx` has independent expected bytes. | General call forms and conditions/TRACE retain CALL/shared owners; static shared entries and EXPOSE are implemented. |
 | Text and ordinals | `llcparse` joins only an adjacent single X/B symbol to a C String token; `llcfrontend.ordinalliteral` validates and uses B `b2x`/`x2c` at compilation. Existing `core.constant` preserves exact UTF-8 text. | No G radix-literal expansion. No general BIF admission is implied by compiler-side decoding. |
 | Output route | `llcrxas.classic` calls checked `llctarget.sayvalue`; its B implementation calls `RexxValue.asString(1)` and the existing VM SAY instruction. | Modern SAY checks the current route, bare line, once-only expression, visible Unicode/numeric text, order and ordinary errors. Further historical callback/byte-exact host edge parity is deferred and unclaimed; retain existing native controls without adding a peripheral matrix. |
 | Syntax and expression failure | Focused malformed literal/expression tests preserve existing output files. Runtime division aborts before the failing SAY or any later output, with authored location. | Classic numeric diagnostic identities for all source errors, caught conditions and full TRACE/clause observations remain open. |
@@ -89,15 +89,15 @@ The compiler neither splits subsidiary words nor implements compound tails.
 
 | Obligation | Implementation and independent expectation | Remaining boundary |
 |---|---|---|
-| Source names and item spans | The generated UTF-8 lexer supplies the same Unicode-letter/punctuation/dot rule to parsing and selector name admission. `tests/drop/contracts.crexx` checks micro-sign/Greek identity, parentheses-inclusive byte spans, ordered raw attributes and item origins. | Routine/call names retain the ASCII-undotted profile. Full symbols, shared labels and host name access retain STEP04/06/08 owners. |
+| Source names and item spans | The generated UTF-8 lexer supplies the same Unicode-letter/punctuation/dot rule to parsing and selector name admission. `tests/drop/contracts.crexx` checks micro-sign/Greek identity, parentheses-inclusive byte spans, ordered raw attributes and item origins. | Identifier-token routine/call names use shared Unicode whole-name casing; numeric/quoted labels, expanded CALL forms and host name access retain STEP04/06/08 owners. |
 | Contextual list boundaries | Source fixtures distinguish ordinary THEN/ELSE targets, a completed prior IF, a completed ELSE arm, a real nested outer ELSE and DO-contained lists. Following expressions resume ordinary concatenation. | Full IF/DO instruction review remains separate. |
-| Ordered state | One direct item calls `dropSymbol` once. Each indirect item reads its carrier at that point, captures `symbolValue(...).asString(0)` once and calls `dropIndirectList` once. Independent output covers substitution after an earlier drop, self-carrier capture, arbitrary tails, defaults/tombstones and dropped versus empty. | NOVALUE policy and complete assignment/EXPOSE reviews remain open. |
-| Shared aliases and configuration | A test-only exported C body is invoked by a B root with stable borrowed owners, exact lowercase compound-tail aliases and configured extra blanks. The parent uppercase tail survives whole-stem drop; the alias can subsequently restore the lowercase tail. Captured self-carrier lists continue after invalid words. | This proves prebound alias integration; it does not implement source EXPOSE or replace the shared pool's existing tests. |
+| Ordered state | One direct item calls `dropSymbol` once. Each indirect item reads its carrier at that point, captures `symbolValue(...).asString(0)` once and calls `dropIndirectList` once. Independent output covers substitution after an earlier drop, self-carrier capture, arbitrary tails, defaults/tombstones and dropped versus empty. | Configured NOVALUE, complete diagnostics and condition/TRACE observations remain open. |
+| Shared aliases and configuration | A test-only exported C body is invoked by a B root with stable borrowed owners, exact lowercase compound-tail aliases and configured extra blanks. The parent uppercase tail survives whole-stem drop; the alias can subsequently restore the lowercase tail. Captured self-carrier lists continue after invalid words. | Prebound alias integration composes with source EXPOSE; the shared pool retains its independent tests. |
 | Refusal and atomicity | Malformed source, including unreachable source, preserves a previous output. Generic valid graphs with invalid reachable/dead load/store/drop names publish no RXAS and remain byte-identical. Existing schema/context tests reject previous/unknown C versions. | Full Classic diagnostic identity, resumable conditions and TRACE remain shared later obligations. |
 | Caller and helper work | Structural checks require ordered existing drop/read/conversion calls, one capture and borrowed pool/configuration getters; inspect their receiver cleanup and existing pool bodies. A synthetic execution marker detects an accidentally entered C root wrapper in the B-root fixture. | Root owners, entry numeric setup, fatal dispatch and conservative temporaries retain C-OPT owners; no optimal-frame or speed claim follows. |
 
 `tests/check-drop.py` owns the focused source, admission and execution checks.
-Source EXPOSE, resumable conditions, complete diagnostic identities and TRACE
+Resumable conditions, complete diagnostic identities and TRACE
 remain open, so whole LC-I-02 remains partial.
 Existing native C DROP fixtures and shared B pool/Unicode proofs
 remain read-only semantic controls, not inherited passes for the new compiler.
@@ -116,14 +116,14 @@ Assignment requires independent source,
 AST/IR, prebound-context and caller/helper RXAS proof. Source marker calls and
 old-value reads establish once-only RHS-before-write order. An exported test IR
 body mutates the supplied live context before its store; a B owner observes the
-selected tail, aliases and cache flags before formatting. These are composed
-proofs: private source calls have fresh pools and cannot mutate the parent by
-inheriting a prebound alias. Do not copy native fixture EXPOSE, counted DO or
-C2X forms into the admitted source profile merely to obtain a test.
+selected tail, aliases and cache flags before formatting. These compose
+with shared-entry calls and ordered EXPOSE through the same live pool binding.
+Native fixtures remain read-only controls; unsupported BIF/source forms do not
+become admitted merely to obtain a test.
 
 The [plan](../PLAN.md#current-action-assignment) tracks assignment status and
 remaining work. Whole LC-I-03 remains partial
-for source EXPOSE/shared-label, exact Classic diagnostic, resumed
+for exact Classic diagnostic, resumed
 condition/NOVALUE and full clause/TRACE dependencies under STEP04/06/07.
 Existing native and shared B passes are controls, not inherited assignment
 acceptance.
@@ -146,8 +146,8 @@ Preserve truthful source records.
 Reuse existing narrow frontend/backend tests and qualified tools/grammar;
 no new runtime/schema/API or orchestration is needed. Native NOP fixtures are
 read-only semantic controls; their historical ignored-tail bug is not an
-acceptance target. SELECT placements, shared labels, exact Classic 21.1 and
-clause/condition/TRACE observations retain STEP04/05/06/07 owners. Whole LC-I-04
+acceptance target. Fresh-entry NOP consumes eligibility; exact Classic 21.1,
+wider dynamic placements and clause/condition/TRACE retain STEP04/07/11 owners. Whole LC-I-04
 stays partial until those dependencies close; the
 [plan](../PLAN.md#current-action-nop) tracks that work. Dead-NOP construction adds no
 unreachable return helper or frame slot, while following dead semantic errors
@@ -178,8 +178,8 @@ remaining work. Existing B no-word and generic L comment/budget contracts
 remain shared dependencies. No runtime word, API,
 family revision or native implementation is added. A future processor word or
 effect requires C review, regression qualification and consumer recompilation.
-Whole LC-I-05 retains full header controls/source maps, shared-label,
-exact diagnostic and conditions/TRACE dependencies; this increment does not
+Whole LC-I-05 retains full header controls/source maps, exact diagnostic
+and conditions/TRACE dependencies; this increment does not
 close those outcomes.
 
 ## IF: one condition and only the selected arm
@@ -201,12 +201,13 @@ Both RETURN/EXIT arms and nested closed arms need no predecessorless join or
 default absent-result epilogue; WHILE LEAVE/ITERATE retain their real targets.
 Both source arms and later dead statements remain statically checked. Existing
 per-EXIT fallback packets, owner/numeric setup and fatal handlers are separate
-costs, not removable IF work. Private source routines still have fresh pools.
+costs, not removable IF work. Internal calls share the caller pool until
+PROCEDURE executes and binds a private one.
 
 The [plan](../PLAN.md#current-action-if) tracks IF status and remaining work.
 The optional-arm parser and lazy join construction retain source
 validation and contextual effects. Whole LC-I-06 remains partial
-for SELECT/full DO/shared labels/EXPOSE, complete expressions and exact static
+for complete expressions, dynamic entries and exact static
 diagnostics, resumed conditions/NOVALUE and clause/TRACE observations under
 STEP04/05/06/07. Shared B truth and generic L algorithms retain their owners.
 The approved SELECT increment is reviewed separately below.
@@ -234,8 +235,8 @@ LEAVE/ITERATE target the surrounding loop. Cold absent-result/core-return
 closure after the divergent missing operation is required by the current IR,
 not an unused join. Both source arms and later dead source remain validated.
 The [plan](../PLAN.md#current-action-select) tracks status and remaining work. Whole
-LC-I-07 retains shared labels/fall-through/EXPOSE, complete expressions/DO/named
-transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
+LC-I-07 retains complete expressions, dynamic transfers, exact diagnostic
+recovery and condition/SIGL/clause/TRACE owners.
 
 <a id="do-proposed-full-headers-and-explicit-loop-state-ownership"></a>
 <a id="do-contract"></a>
@@ -249,7 +250,7 @@ function-local text keys and hidden owned storage, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
 Named END checks are included; the qualified v6 LEAVE increment below integrates
-shared invalid-target delivery. The separately qualified ITERATE increment below uses that foundation. Shared labels/EXPOSE, complete expressions/exact recovery and
+shared invalid-target delivery. The separately qualified ITERATE increment below uses that foundation. Complete expressions/exact recovery and
 resumable conditions/SIGL/clause/TRACE remain open. Retain independent
 source/CFG, metadata/protocol, runtime/error and caller/helper RXAS checks;
 the admitted increment does not close whole-instruction or complete-C delivery.
@@ -268,11 +269,12 @@ then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
 transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
 C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
-current [C v8/53/33 contract](architecture.md#current-c-family-contract) adds PARSE and retires the scalar ARG shortcut.
+[C family contract](architecture.md#current-c-family-contract) retains PARSE and the
+removal of the scalar ARG shortcut; the approved PROCEDURE increment advances it to v9/58/33.
 This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
-the separately qualified increment below. Shared
-labels/EXPOSE, dynamic loop invalidation, resumable conditions, exact recovery
+the separately qualified increment below. Dynamic loop invalidation,
+resumable conditions, exact recovery
 and clause/TRACE remain open; bounded local qualification does not close them.
 
 
@@ -286,15 +288,15 @@ owns the ITERATE-AC01–04 checks for the static nearest/named profile; the
 Classic casing; close only crossed inner states, retain the selected owner and
 jump to its existing UNTIL/advance/count-entry path. True UNTIL skips advance;
 false UNTIL and count exhaustion retain the final step. Groups/SELECT and
-state-free wrappers add no target or owner. Private source routines retain
-fresh pools and cannot target caller loops.
+state-free wrappers add no target or owner. Calls enter with an empty loop
+stack and cannot target caller loops, whether their pool is shared or private.
 
 Default C rejects provable invalid targets even in dead source (28.2 without a
 repetitive loop, 28.4 for a missing name); STRICTC signals only when reached.
 Malformed syntax always refuses. The v6/52/33 foundation, header/admission and
 shared transfer bridge were unchanged in this slice; current PARSE additions
 use the current C contract. Retain source, CFG, paired execution, prior-output
-and actual RXAS checks, including the shared LEAVE regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
+and actual RXAS checks, including the shared LEAVE regression. Wider source/dynamic entries, SIGNAL/INTERPRET invalidation,
 resumable conditions, exact recovery and clause/TRACE remain open.
 
 ## ARG: authored templates through the shared executor
@@ -319,6 +321,6 @@ later operands, target/compound writes, exact remainders and codepoint positions
 
 The [plan](../PLAN.md#current-action-arg) tracks ARG status and remaining work;
 native C remains a comparison control. Complete
-shared-label/EXPOSE activation, configured NOVALUE/errors, conditions/resumption,
+configured NOVALUE/errors, dynamic activation, conditions/resumption,
 clause/TRACE and declared delivery/platform obligations remain ARG-AC05 work;
 bounded qualification does not close the whole instruction or complete C.

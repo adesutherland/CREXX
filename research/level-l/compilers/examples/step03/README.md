@@ -6,15 +6,13 @@ and `frontend-probe` Level B consumers, as described in the
 [frontend manual](../../doc/frontends.md). The [walkthrough](../../doc/pipeline-walkthrough.md)
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
-The Classic IR views use the current borrowed-context ABI, generated through
-the existing Debug frontend probe without IR optimisation. The C source trees now retain `COptions` and the header
-Name expression; the C IR retains its pool read. G views retain their earlier
-qualification. The pipeline DO views now use normalized CDo/DoWhile and the
-contextual while.truth operation, refreshed through the same probes. The C pipeline calls
-`length('α漢🙂')`: the payload has three codepoints and nine UTF-8 bytes. Its
-quoted `String` occupies byte range `139:150` in the 208-byte source. The IR
-retains `CEB1E6BCA2F09F9982` as the value's bytes; LENGTH's result is a runtime
-contract, not a byte-span calculation.
+The Classic IR views use the current C v9 context/entry ABI: generated
+parameter setup and checked main/label dispatch lead into one source-unit body.
+The C source trees retain COptions and its header Name expression. DO uses
+normalized CDo/DoWhile and contextual while.truth. The pipeline calls
+`length('α漢🙂')`: three codepoints occupy nine UTF-8 payload bytes. Its quoted
+String spans bytes `139:150`; the IR preserves `CEB1E6BCA2F09F9982` as value
+bytes. LENGTH's result is a runtime contract, not a byte-span calculation.
 
 The current pipeline CArg owns ParseTemplates/ParseTemplate/ParseTarget rather
 than scalar ArgTarget children. Its IR uses raw `parse.source` plus an immutable

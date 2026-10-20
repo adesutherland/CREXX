@@ -1,0 +1,134 @@
+/* Independent source expectations for shared entries and private generations. */
+options levelc
+X = 'root'
+call SHARED 'MiXeD',, ''
+say 'shared ' || X || '|' || RESULT
+call PRIVATE 'child'
+say 'private ' || X
+KEY = 'b'
+BOX.KEY = 'lower'
+BOX.B = 'upper'
+NAMES = 'one / 1bad two'
+ONE = '1'
+TWO = '2'
+HIDDEN = 'root hidden'
+call ORDERED
+say 'ordered ' || KEY || '|' || BOX.KEY || '|' || BOX.B || '|' || ONE || '|' || TWO || '|' || HIDDEN
+call REVERSED
+say 'reversed ' || BOX.KEY || '|' || BOX.B
+call WHOLE
+say 'whole ' || BOX.KEY || '|' || BOX.B
+call EXACT
+say 'exact ' || BOX.KEY || '|' || BOX.B
+N = 3
+TOTAL = 0
+call RECURSIVE
+say 'recursive ' || N || '|' || TOTAL
+TAIL = 'µ'
+U.TAIL = 'before'
+call UNICODE
+say 'unicode ' || U.TAIL
+KEY = 'a' || '00'x || 'FF'x
+BOX.KEY = 'nul before'
+call NULALIAS
+say 'nul ' || (BOX.KEY == 'nul after') || '|' || LENGTH(KEY)
+call é
+call dotted.name
+call .RC
+call $MAIN
+call ALIAS.FIRST
+call TRAILING
+say 'trailing ' || RESULT
+exit 0
+
+SHARED:
+arg X, OMITTED, EMPTY
+parse arg RAW
+return RAW || '|' || ARG() || '|' || ARG(2,'E') || '|' || ARG(3,'E')
+
+PRIVATE:
+procedure
+arg X
+say 'private-child ' || X
+return
+
+ORDERED:
+procedure expose KEY BOX.KEY ONE (NAMES)
+say 'before ' || KEY || '|' || BOX.KEY || '|' || ONE || '|' || TWO || '|' || HIDDEN
+drop BOX.KEY
+say 'dropped ' || BOX.KEY
+BOX.KEY = 'changed'
+KEY = 'B'
+say 'switched ' || BOX.KEY
+KEY = 'b'
+call NESTED
+ONE = 'X'
+TWO = 'Y'
+HIDDEN = 'private hidden'
+return
+
+NESTED:
+procedure expose KEY BOX.KEY
+BOX.KEY = 'deep'
+return
+
+REVERSED:
+procedure expose BOX.KEY KEY
+BOX.KEY = 'private'
+return
+
+WHOLE:
+procedure expose BOX.
+BOX.B = 'stem change'
+return
+
+EXACT:
+procedure expose KEY BOX.KEY
+BOX. = 'local default'
+say 'reset ' || BOX.KEY || '|' || BOX.B
+drop BOX.
+say 'stem-drop ' || BOX.KEY || '|' || BOX.B
+BOX.KEY = 'restored'
+return
+
+RECURSIVE:
+procedure expose N TOTAL
+if N = 0 then return
+N = N - 1
+TOTAL = TOTAL + 1
+call RECURSIVE
+TOTAL = TOTAL + 1
+return
+
+UNICODE:
+procedure expose TAIL U.TAIL
+U.TAIL = 'after'
+return
+
+NULALIAS:
+procedure expose KEY BOX.KEY
+BOX.KEY = 'nul after'
+return
+
+é:
+say 'first unicode'
+É:
+say 'second unicode'
+return
+
+dotted.name:
+say 'dotted'
+return
+.RC:
+say 'reserved label'
+return
+$MAIN:
+say 'source main label'
+return
+ALIAS.FIRST:
+/* Neither this comment nor adjacent/null labels consume eligibility. */
+; ALIAS.SECOND: ;
+procedure
+say 'adjacent'
+return
+TRAILING:

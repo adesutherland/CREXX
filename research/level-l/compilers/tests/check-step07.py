@@ -184,12 +184,14 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         c+'.activation': ('reference '+at, ''),
         c+'.pool': ('reference '+pt, ''),
         c+'.config': ('reference '+ft, ''),
+        c+'.bindpool': ('.void', 'pool=reference '+pt),
         config+'.§factory': (ft, '?profile=.string'),
         a+'.numericdigits': ('.int', ''), a+'.numericfuzz': ('.int', ''),
         a+'.numericform': ('.int', ''),
         a+'.inheritsignalpolicy': ('.void', 'caller=reference '+at),
         a+'.begininternalfunction': ('.void', ''),
         a+'.begininternalcall': ('.void', ''), a+'.enterprocedure': ('.void', ''),
+        a+'.procedureeligible': ('.boolean', ''), a+'.consumefirstinstruction': ('.void', ''),
         pool+'.inheritcommandstatus': ('.void', 'caller=reference '+pt),
         'rexxclassicbifnumeric.rexxclassicbif_digits':
             ('.rexxvalue..rexxvalue', 'context=reference .rexxbifcallcontext'),
@@ -321,22 +323,19 @@ def classic_construction(text, name):
 
 
 def classic_shape(text, name):
-    # Pin semantic call identities and packet ABI, not physical registers or
-    # a repeated copy/load sequence. Runtime expectations prove presence/order.
+    # One checked unit owns every source label. Packet presence, numeric
+    # inheritance and the independent runtime outputs retain their old checks.
     declarations = re.findall(
         r'^\s*\.meta "llprogram\.([^"]+)"="b" "[^"]+" (llf\d+)\(\) "([^"]*)"',
         text, re.M)
-    functions = {identity: label for identity, label, _ in declarations}
-    expected = {'scale': {'$MAIN', 'SCALE'}, 'presence': {'$MAIN', 'PROBE'},
-                'calls': {'$MAIN', 'HOLES', 'RECURSE', 'MARK', 'PAIR'},
-                'pipeline': {'$MAIN', 'TWICE'}, 'numeric': {'$MAIN', 'CHANGE'}, 'argv': {'$MAIN'},
-                'numeric-fatal': {'$MAIN', 'INVALID'}}[name]
-    assert set(functions) == expected and len(declarations) == len(expected), declarations
-    for identity, label, arguments in declarations:
-        assert len(re.findall(r'^'+label+r'\(\) \.locals=', text, re.M)) == 1, identity
-        types = [argument.split('=', 1)[1] for argument in arguments.split(',')]
-        assert arguments == 'context=reference .rexxclassiccontext..rexxclassiccontext', arguments
-        assert types == ['reference .rexxclassiccontext..rexxclassiccontext'], arguments
+    signature = 'context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int'
+    assert declarations == [('$MAIN', 'llf1', signature)], declarations
+    labels = {'scale': ('SCALE',), 'presence': ('PROBE',),
+              'calls': ('HOLES', 'RECURSE', 'MARK', 'PAIR'),
+              'pipeline': ('TWICE',), 'numeric': ('CHANGE',), 'argv': (),
+              'numeric-fatal': ('INVALID',)}[name]
+    identities = re.findall(r'^beq llprocedure1_\d+_match,[^,\n]+,(\d+)$', text, re.M)
+    assert identities == [str(i) for i in range(len(labels) + 1)], ('dense integer dispatch', identities)
     helpers = {'scale': ('arguments', 'append', 'existsarg'),
                'presence': ('arguments', 'append', 'existsarg'),
                'calls': ('arguments', 'append', 'existsarg'),
@@ -347,32 +346,51 @@ def classic_shape(text, name):
         assert re.search(r'^call [^\n]*llctarget\.'+helper+r'\(\)', text, re.M), helper
     if 'append' in helpers:
         assert re.search(r'\.meta "llctarget\.append"=[^\n]*present=\.int', text)
-    assert not re.search(r'\.expose=llprogram\.', text), 'private routines became public entries'
+    assert not re.search(r'\.expose=llprogram\.', text), 'unit became a public source entry'
     assert 'llctarget2' not in text and 'contextnew' not in text, 'obsolete C target bridge'
     bodies = {match[1]: match[2] for match in re.finditer(
         r'^(main|llf\d+)\(\) \.locals=\d+([^\n]*\n[\s\S]*?)(?=^(?:main|llf\d+)\(\) \.locals=|\Z)', text, re.M)}
-    assert set(bodies) == {'main', *functions.values()}, bodies.keys()
+    assert set(bodies) == {'main', 'llf1'}, bodies.keys()
     config_factory = 'rexxclassicconfig.rexxclassicconfig.§factory'
     bundle_factory = 'rexxclassiccontext.rexxclassiccontext.§factory'
+    pool_getter = 'rexxclassiccontext.rexxclassiccontext.pool'
+    config_getter = 'rexxclassiccontext.rexxclassiccontext.config'
+    activation_owner = 'rexxactivation.rexxactivationarguments.'
     assert len(re.findall(r'^call [^\n]*'+re.escape(config_factory)+r'\(\)', text, re.M)) == 1
     assert re.search(r'^load r\d+,"UTF8"$', bodies['main'], re.M), 'root configuration policy'
     for label, body in bodies.items():
-        instructions = [(row.split(' ', 1)+[''])[:2] for row in body.splitlines()
-                        if row and not row.startswith('.') and not row.endswith(':')]
+        instructions, source_lines, line = [], [], 0
+        for row in body.splitlines():
+            origin = re.match(r'^\.srcstep \d+ \d+ \d+ "[^"]*" (\d+) ', row)
+            if origin:
+                line = int(origin[1])
+            if row and not row.startswith('.') and not row.endswith(':'):
+                instructions.append((row.split(' ', 1)+[''])[:2])
+                source_lines.append(line)
         calls = [(i, *re.fullmatch(r'(r\d+),([^,]+)\(\),(r\d+)', args).groups())
                  for i, (op, args) in enumerate(instructions) if op == 'call']
-        private = [call for call in calls if re.fullmatch(r'llf\d+', call[2])]
+        local = [call for call in calls if re.fullmatch(r'llf\d+', call[2])]
         pools = [call for call in calls if call[2] == 'llctarget.poolnew']
         bundles = [call for call in calls if call[2] == bundle_factory]
-        assert len(pools) == len(bundles) == len(private), (label, 'caller-owned child/root owners')
+        assert len(bundles) == len(local), (label, 'one separate bundle per root/child call')
+        assert len(pools) == (1 if label == 'main' else len(labels)), (label, 'root or reached PROCEDURE pool sites')
         assert not any(op == 'deref' for op, _ in instructions), (label, 'copied authoritative owner')
-        for index, destination, target, window in private:
-            slot = 'r'+str(int(window[1:])+1)
+        entry_calls = []
+        for index, destination, target, window in local:
+            assert target == 'llf1', (label, target, 'single source unit')
+            first = 'r'+str(int(window[1:])+1)
             writes = [(op, args.split(',')[1]) for op, args in instructions[:index]
-                      if op in ('copy', 'mkref') and args.startswith(slot+',')]
+                      if op in ('copy', 'mkref') and args.startswith(first+',')]
             preceding = [call for call in bundles if call[0] < index][-1]
-            assert writes[-1] == ('mkref', preceding[1]), (label, target, 'bundle reference')
-            assert instructions[index+1] == ['null', slot], (label, target, 'reference window cleanup')
+            assert writes[-1] == ('mkref', preceding[1]), (label, 'bundle reference')
+            assert instructions[index+1] == ['null', first], (label, 'reference window cleanup')
+            second = 'r'+str(int(window[1:])+2)
+            entry_writes = [(op, args.split(',', 1)[1]) for op, args in instructions[:index]
+                            if op in ('load', 'copy') and args.startswith(second+',')]
+            assert entry_writes[-1][0] == 'load', (label, 'explicit entry identity')
+            entry = int(entry_writes[-1][1])
+            assert entry == 0 if label == 'main' else 1 <= entry <= len(labels)
+            entry_calls.append((source_lines[index], entry))
         for index, destination, target, window in bundles:
             base = int(window[1:])
             fields = []
@@ -381,35 +399,44 @@ def classic_shape(text, name):
                 writes = [(op, args.split(',')[1]) for op, args in instructions[:index]
                           if op in ('copy', 'mkref') and args.startswith(slot+',')]
                 fields.append(writes[-1])
-            assert [op for op, _ in fields] == ['mkref', 'mkref', 'copy'], (label, 'borrow stable activation/pool and shared config')
-            assert fields[1][1] == [call for call in pools if call[0] < index][-1][1], (label, 'fresh private pool')
+            if label == 'main':
+                assert [op for op, _ in fields] == ['mkref', 'mkref', 'copy'], 'root owns activation/pool and shares config'
+                assert fields[1][1] == pools[0][1], 'root pool owner'
+            else:
+                assert [op for op, _ in fields] == ['mkref', 'copy', 'copy'], 'child owns activation and borrows caller pool/config'
+                assert fields[1][1] == [call for call in calls if call[0] < index and call[2] == pool_getter][-1][1], 'borrow current caller pool'
+                assert fields[2][1] == [call for call in calls if call[0] < index and call[2] == config_getter][-1][1], 'borrow caller configuration'
+                policy = [call for call in calls if call[0] < index and call[2] == activation_owner+'inheritsignalpolicy'][-1]
+                region = [call[2] for call in calls if policy[0] <= call[0] < index]
+                assert not any(method in region for method in ('llctarget.poolnew', activation_owner+'enterprocedure', 'rexxpool.rexxvariablepool.inheritcommandstatus')), 'call setup must share until reached PROCEDURE'
         if label == 'main':
             continue
-        assert re.findall(r'^numsci (.*)$', body, re.M) == ['18,1,2'], (label, 'Classic standard at entry')
+        assert sum(target == activation_owner+'enterprocedure' for _, _, target, _ in calls) == len(labels)
+        assert sum(target == activation_owner+'procedureeligible' for _, _, target, _ in calls) == len(labels)+1
+        assert sum(target == activation_owner+'inheritsignalpolicy' for _, _, target, _ in calls) == len(local)
+        assert sum(target in (activation_owner+'begininternalcall', activation_owner+'begininternalfunction') for _, _, target, _ in calls) == len(local)
+        assert re.findall(r'^numsci (.*)$', body, re.M) == ['18,1,2'], 'Classic standard at unit entry'
         settings = sum(target == 'llctarget.setting' for _, _, target, _ in calls)
         installs = re.findall(r'^setnumfuz 0\nsetnumdgts r\d+\nsetnumfuz r\d+\nsetnumfrm r\d+$', body, re.M)
-        assert len(installs) == settings+1, (label, 'entry/successful NUMERIC install count', len(installs), settings)
+        assert len(installs) == settings+1, ('entry/successful NUMERIC install count', len(installs), settings)
         assert len(re.findall(r'^setnumdgts ', body, re.M)) == len(installs)
         assert len(re.findall(r'^setnumfrm ', body, re.M)) == len(installs)
         handlers = [i for i, (op, _) in enumerate(instructions) if op == 'sigbrv']
         first_numeric = next(i for i, (op, _) in enumerate(instructions) if op == 'numsci')
         finite = {'CLASSIC_SYNTAX', 'DIVISION_BY_ZERO', 'CONVERSION_ERROR', 'INVALID_ARGUMENTS',
                   'OBJECT_NOT_INITIALIZED', 'REFERENCE_INVALID', 'UNICODE_ERROR', 'OUT_OF_RANGE', 'FAILURE'}
-        assert len(handlers) == len(finite) and max(handlers) < first_numeric, (label, 'own-frame diversion before context installation')
+        assert len(handlers) == len(finite) and max(handlers) < first_numeric, 'own-frame diversion before context installation'
         assert set(re.findall(r'^sigbrv [^\n]*,"([A-Z_]+)"$', body, re.M)) == finite
-        # Each handler target enters the common fatal block. No handler or
-        # signal continuation can reach a numeric install in this profile.
         error_body = body[body.index('\nllerror'):]
         assert set(re.findall(r'^sighalt "([A-Z_]+)"$', error_body, re.M)) == finite
         assert not re.search(r'^(?:setnumdgts|setnumfuz|setnumfrm) ', error_body, re.M)
         assert len(re.findall(r'^signalorigin [^\n]+\nret$', error_body, re.M)) == len(finite)
         assert all(target != config_factory for _, _, target, _ in calls)
-    if name == 'calls':
-        main = re.search(r'^'+functions['$MAIN']+r'\(\)[\s\S]*?(?=^llf\d+\(\)|\Z)',
-                         text, re.M).group()
-        calls = re.findall(r'^call [^,\n]+,(llf\d+)\(\)', main, re.M)
-        assert calls == [functions[identity] for identity in
-                         ('HOLES', 'HOLES', 'RECURSE', 'MARK', 'MARK', 'PAIR')], calls
+        if name == 'calls':
+            by_line = {}
+            for line, entry in entry_calls:
+                by_line.setdefault(line, []).append(entry)
+            assert by_line == {2: [1], 3: [1], 4: [2], 5: [3, 3, 4], 18: [2]}, ('source call order/recursive identity', by_line)
 
 
 try:

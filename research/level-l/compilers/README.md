@@ -55,10 +55,23 @@ VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
-executor with implicit UPPER, replacing its scalar shortcut in C v8/53
-operations and the 33-export target. The plan tracks instruction status and remaining work;
+executor with implicit UPPER, replacing its scalar shortcut. The
+[current C v9/58-operation contract](doc/architecture.md#current-c-family-contract)
+retains the 33-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
+
+C compiler workers retain one private prepared language definition. Source
+parsing and name admission borrow its validated DFA/LR data and CFG metadata;
+comments, limits, tokens and diagnostics stay local to each request. See the
+[prepared-language contract](doc/architecture.md#proposed-prepared-language-reuse).
+
+The approved PROCEDURE increment uses one source-unit body with checked main/label
+entries. Internal calls initially share the caller pool; only an executed
+PROCEDURE creates a private pool and applies direct/indirect EXPOSE in source
+order. Its [entry/lifetime contract](doc/architecture.md#proposed-procedure-contract)
+requires explicit return/fatal restoration. This static/fatal profile is locally qualified;
+complete conditions/TRACE, host/platform integration and INTERPRET remain open.
 
 [The walkthrough](doc/pipeline-walkthrough.md) and maintained examples describe
 the implemented PoC. C completion proceeds instruction by instruction, ending

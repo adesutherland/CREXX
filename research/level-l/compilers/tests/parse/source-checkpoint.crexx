@@ -30,7 +30,7 @@ main: procedure = .int expose checks failures
     call expirePool(reference context)
     say 'PARSE_C_REFERENCE_INVALID|before'
     do
-      completion = parsecore..run(reference context)
+      completion = parsecore..run(reference context,0)
       say 'UNREACHED|C returned after expired pool'
     on signal reference_invalid
       say 'UNREACHED|outer B recovered a fatal C error'
@@ -45,7 +45,7 @@ main: procedure = .int expose checks failures
     call pool.setSymbolValue('y',.RexxValue('sentinel-y'))
     entered = 0; caught = 0
     do
-      completion = parsecore..run(reference context)
+      completion = parsecore..run(reference context,0)
       entered = 1
     on signal classic_condition as problem
       event = problem.payload() as .rexxclassicconditionevent..RexxClassicConditionEvent

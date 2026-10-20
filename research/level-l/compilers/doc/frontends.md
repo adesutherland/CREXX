@@ -149,11 +149,13 @@ comment or longer identifier after the quote retains ordinary concatenation.
 G's admitted literal syntax is unchanged. Decoding adds no target operation or
 runtime helper call. See the [SAY instruction review](LEVELC-INSTRUCTION-REVIEW.md).
 
-Each function receives one required borrowed-context reference. The caller owns
-its activation, pool and bundle in stable storage; the root also owns the shared
-UTF8 configuration. Arguments remain ordered presence packets. Private calls
-construct child owners after evaluating their actuals and inherit the parent's
-numeric state. NUMERIC validates the live activation, then the executing C frame
+Each source unit receives required borrowed-context and integer-entry
+parameters. The caller owns a fresh activation and separate child bundle that
+initially borrows its current pool; the root owns the UTF8 configuration.
+Arguments remain ordered presence packets. Internal calls evaluate actuals
+before constructing child owners and inherit the parent's numeric state.
+Only executed PROCEDURE replaces the live pool; see the
+[current entry/lifetime contract](architecture.md#proposed-procedure-contract). NUMERIC validates the live activation, then the executing C frame
 installs its validated settings; child return restores the parent frame.
 
 | Operation | Contract |

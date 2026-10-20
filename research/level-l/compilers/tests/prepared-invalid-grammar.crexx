@@ -1,0 +1,8 @@
+/* cREXX License (MIT). Invalid owner test double, never a production grammar. */
+options levelb
+namespace llcgrammar expose language
+import lllanguage
+
+language: procedure = .lllanguage..definition
+  absent = .lllanguage..definition
+  return absent

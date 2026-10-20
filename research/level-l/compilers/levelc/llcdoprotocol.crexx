@@ -4,9 +4,7 @@ namespace llcdoprotocol expose checked
 import rxfnsb
 import llir
 import llscalar
-import llcgrammar
-import lllanguage
-import lllimits
+import llcsymbols
 
 /** Read-only, once-only facts over a caller-owned checked graph. The caller
  * keeps the graph alive; this internal service never publishes or mutates IR.
@@ -39,8 +37,7 @@ checked: class
   _masks = .int[]
   _levels = .int[]
   _cleanup = .int[]
-  _symbolgrammar = .lllanguage..definition
-  _symbolpolicy = .lllimits..policy
+  _symbols = .llcsymbols..checked
   _symbolready = .int
   _textbytes = .int
   *: factory
@@ -93,28 +90,16 @@ checked: class
   cleanup: method = .int
     arg ordinal = .int
     call run(); return _cleanup[ordinal]
-  /** One generated variable-symbol authority for both DO and the selector's
-   * existing load/store/drop checks. Definition construction is request-local.
-   */
+  /** Lexical admission shares the generated owner, not graph execution. */
   symbol: method = .void
     arg name = .string
     if _error <> '' then return
     if charge(length(name) + 1) = 0 then return
     if _symbolready = 0 then do
-      _symbolgrammar = llcgrammar..language(); _symbolpolicy = .lllimits..policy()
-      ok = _symbolpolicy.set('source.bytes',min(_limit,2147483647))
-      ok = _symbolpolicy.set('scan.work',max(10000000,min(_limit,134217727) * 16))
-      if _symbolpolicy.error() <> '' then do; call fail('LIMIT: ' || _symbolpolicy.error()); return; end
-      _symbolready = 1
+      _symbols = .llcsymbols..checked(_limit,_budget); _symbolready = 1
     end
-    bytes = name as .binary
-    scan = .lllanguage..request(_symbolgrammar,bytes,_symbolpolicy)
-    lexstatus = scan.lex(0)
-    if lexstatus = 2 | lexstatus = 3 then do; call fail('LIMIT: variable-symbol admission: ' || scan.error()); return; end
-    if lexstatus <> 0 then do; call fail('LOWERING: invalid variable symbol'); return; end
-    tokens = scan.tokens()
-    if tokens.size() <> 1 then do; call fail('LOWERING: invalid variable symbol'); return; end
-    if tokens.symbol(0) <> _symbolgrammar.tokenid('identifier') | tokens.start(0) <> 0 | tokens.finish(1) <> <blen>(bytes) then call fail('LOWERING: invalid variable symbol')
+    call _symbols.symbol(name)
+    if _symbols.error() <> '' then _error = _symbols.error()
     return
   text: method = .string
     arg op = .llir..opview, name = .string
@@ -314,7 +299,7 @@ checked: class
             if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
             divergent = 1; leave
           end
-          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' then do
+          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' then do
             divergent = 1; leave
           end
           otherwise nop

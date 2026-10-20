@@ -6,7 +6,7 @@ import llcore
 import llast
 import lllanguage
 import lllimits
-import llcgrammar
+import llclanguage
 import llcomments
 import llsource
 import rexxclassicunicodeproperties
@@ -28,14 +28,17 @@ parsed: class
     if limit < 1 | <blen>(source) > limit then do
       _error = 'LL_COMPILER_LIMIT: source byte budget exceeded'; _status = 2; return
     end
-    language = llcgrammar..language()
+    language_ref = llclanguage..prepared()
+    if <refvalid>(language_ref) = 0 then do
+      _status = 3; _error = 'LL_BORROW_OWNER: C language preparation failed'; return
+    end
+    language = dereference language_ref
     policy = .lllimits..policy()
     ok = policy.set('source.bytes',limit)
     comments = .llcomments..rules
-    comments = headerpolicy(language,source,policy,reference _status,reference _error,reference _offset,reference _strictc)
+    comments = headerpolicy(language_ref,source,policy,reference _status,reference _error,reference _offset,reference _strictc)
     if _status <> 0 then return
-    call language.usecomments(comments)
-    request = .lllanguage..request(language,source,policy)
+    request = .lllanguage..request.borrowed(language_ref,source,policy,comments)
     _status = request.lex(0)
     if _status <> 0 then do
       _error = request.error(); _offset = request.offset()
@@ -55,7 +58,7 @@ parsed: class
     clause = 1; depth = 0; condition = 0; after = ''
     arm = 0; operandmode = ''
     doheader = 0; dofirst = 0; docondition = 0
-    parsemode = ''
+    parsemode = ''; proceduretail = 0; procedureallowed = 0
     owners = .string[]; ownercontrols = .string[]; ownercount = 0; endcontrol = ''
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
@@ -79,7 +82,7 @@ parsed: class
       if kind = sep then do; namespaceclause = 0; exports = 0; end
       if kind = sep & depth = 0 then operandmode = ''
       if kind = sep & depth = 0 then doheader = 0
-      if kind = sep & depth = 0 then parsemode = ''
+      if kind = sep & depth = 0 then do; parsemode = ''; proceduretail = 0; end
       endname = 0
       /* A matching ELSE at the END-name boundary wins before a delimiter or
        * another ELSE; an ordinary following instruction keeps the outer arm.
@@ -95,6 +98,14 @@ parsed: class
       end
       if kind = id then do
         if next = colon & parsemode = '' then kind = language.tokenid('labelname')
+        else if proceduretail > 0 then do
+          if proceduretail = 1 then do
+            if spelling <> 'EXPOSE' then do
+              _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-25.17: expected EXPOSE after PROCEDURE'; return
+            end
+            kind = language.tokenid('exposeword'); proceduretail = 2
+          end
+        end
         else if parsemode <> '' then do
           if parsemode = 'source' | parsemode = 'header' then do
             if parsemode = 'header' & spelling = 'UPPER' then do
@@ -146,6 +157,18 @@ parsed: class
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
       end
+      /* Source placement is independent of the activation's executed window.
+       * Any authored label can open it, including an observation-only group
+       * label; executed enclosing instructions still consume eligibility. */
+      if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then procedureallowed = 0
+      if clause & kind <> sep & kind <> language.tokenid('labelname') then do
+        if word = 'PROCEDURE' & procedureallowed = 0 then do
+          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-17.1: misplaced PROCEDURE'; return
+        end
+        procedureallowed = 0
+      end
+      if kind = colon then procedureallowed = 1
+      if word = 'PROCEDURE' then proceduretail = 1
       /* Actual statement owners determine ELSE eligibility. DO and SELECT
        * hide enclosing IF owners until their END restores them. */
       if clause & kind <> sep & arm = 0 & word <> 'ELSE' & word <> 'THEN' then do
@@ -267,14 +290,14 @@ parsed: class
       end
       if first = last then ok = joined.synthetic(kind,first)
       else ok = joined.append(kind,first,last)
-      if kind = dropword then dropping = 1
+      if kind = dropword | kind = language.tokenid('exposeword') then dropping = 1
       if parsevarname & kind = id then do; parsetemplate = 1; parsevarname = 0; end
       beforeprevious = previous; previous = kind; previousend = last; previousstart = first
     end
     _status = request.parse_tokens(joined)
     if _status <> 0 then do
       _error = syntaxmessage(request.error()); _offset = request.offset()
-      _error = parsemessage(language,joined,_offset,_error)
+      _error = parsemessage(language_ref,joined,_offset,_error)
       return
     end
     _tree = request.ast(); _status = _tree.status(); _error = _tree.error()
@@ -296,7 +319,8 @@ parsed: class
  * quotes/comments; raw separators merely frame a candidate for exact lexing.
  * A failed candidate never contributes partial static settings. */
 headerpolicy: procedure = .llcomments..rules
-  arg language = .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int
+  arg language_ref = reference .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int
+  language = dereference language_ref
   status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref; strictc = dereference strictc_ref
   byte = .int; i = .int; setting = .int
   result = language.comments()
@@ -323,7 +347,7 @@ headerpolicy: procedure = .llcomments..rules
     status = preparedstatus; error = prepared.error(); offset = prepared.offset(); return result
   end
   if first = extent then return result
-  candidate = .lllanguage..request(language,binsubstr(source,1,finish),policy)
+  candidate = .lllanguage..request.borrowed(language_ref,binsubstr(source,1,finish),policy)
   candidatestatus = candidate.lex(0)
   if candidatestatus <> 0 then do
     /* A raw delimiter inside a quoted runtime expression can truncate this
@@ -410,8 +434,9 @@ syntaxmessage: procedure = .string
  * inspects only classified prefixes at the failed location; LR still owns
  * all template syntax and the frontend owns numeric/literal admission. */
 parsemessage: procedure = .string
-  arg language = .lllanguage..definition, tokens = .llcore..stream, offset = .int, fallback = .string
+  arg language_ref = reference .lllanguage..definition, tokens = .llcore..stream, offset = .int, fallback = .string
   i = .int; j = .int; kind = .int
+  language = dereference language_ref
   mode = ''; upperflag = 0; prefix = 0; failedkind = -1
   do i = 0 to tokens.size() - 1
     if tokens.start(i) > offset then leave

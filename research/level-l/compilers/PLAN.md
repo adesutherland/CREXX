@@ -7,9 +7,8 @@ host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
 seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 
-**Complete C remains open. Last locally delivered: LC-I-11 ARG. Current: LC-I-12 PROCEDURE,
-CLC-STEP06.PROCEDURE1 (design; exact API pending approval). Following:
-LC-I-13 CALL.** PARSE was delivered ahead of its queue position as the shared
+**Complete C remains open. Last locally delivered profile: LC-I-12 PROCEDURE.
+Next: LC-I-13 CALL individual design/review.** PARSE was delivered ahead of its queue position as the shared
 executor prerequisite for ARG; this does not skip PROCEDURE or close PARSE.
 
 [Requirements](doc/levelc-requirements.md) owns the full item crosswalk;
@@ -28,19 +27,19 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | Instruction | Status | Remaining work / owner |
 |---|---|---|
 | <a id="say-validation"></a>**LC-I-01 SAY / CLC-STEP05** | Bounded output/expression route; radix-literal repair qualified. | Complete expressions, configured errors and source/TRACE: STEP03/04/07; host edges: STEP08. |
-| <a id="current-action-drop"></a><a id="current-drop-proof"></a>**LC-I-02 DROP / CLC-STEP05** | Ordered direct/indirect Unicode names and shared pool operations locally delivered. | Source EXPOSE/shared labels: STEP06; configured errors/NOVALUE/TRACE: STEP03/07. |
-| <a id="current-action-assignment"></a><a id="current-assignment-proof"></a>**LC-I-03 assignment / CLC-STEP05** | Once-only RHS then one raw-name write; stems, aliases and exact text locally qualified. | Source-call EXPOSE/shared-label composition: STEP06; errors/NOVALUE/TRACE: STEP03/07. |
-| <a id="current-action-nop"></a><a id="current-nop-proof"></a>**LC-I-04 NOP / CLC-STEP05** | Childless forms and dead-code construction repair locally delivered. | Shared-entry eligibility delta: PROCEDURE; exact diagnostics/clause/TRACE: STEP04/07. |
-| <a id="current-action-options"></a><a id="current-options-proof"></a>**LC-I-05 OPTIONS / CLC-STEP05** | COptions, request-local header policy and no-word specialization locally delivered. | Shared-entry eligibility delta: PROCEDURE; full header/source/diagnostics/TRACE: STEP04/07. |
-| <a id="current-action-if"></a><a id="current-if-proof"></a>**LC-I-06 IF / CLC-STEP05** | Optional-arm/contextual ELSE and minimal open joins locally delivered. | Shared-label/pool composition: STEP06; complete expressions/recovery/conditions/TRACE: STEP03/04/07. |
-| <a id="current-action-select"></a><a id="current-select-proof"></a>**LC-I-07 SELECT / CLC-STEP05** | Ordered lazy WHEN/OTHERWISE, shared truth and source-indexed errors locally delivered. | Group-label/shared-pool composition: STEP06; complete expression/error/condition/TRACE owners: STEP03/04/07. |
-| <a id="current-action-do"></a><a id="current-do-proof"></a>**LC-I-08 DO / CLC-STEP05** | Static counted/controlled/FOREVER/WHILE/UNTIL, once-only ordered headers and owned state locally delivered. | Shared labels/EXPOSE: STEP06; complete expressions/recovery/conditions/TRACE: STEP03/04/07; dynamic invalidation: STEP11. |
-| <a id="current-action-leave"></a><a id="current-leave-proof"></a>**LC-I-09 LEAVE / CLC-STEP05** | Nearest/named static targets, cleanup and default/STRICTC errors locally delivered. | Shared labels/EXPOSE: STEP06; exact recovery/conditions/TRACE: STEP07; SIGNAL/INTERPRET invalidation: STEP07/11. |
-| <a id="current-action-iterate"></a><a id="current-iterate-proof"></a>**LC-I-10 ITERATE / CLC-STEP05** | Nearest/named targets and selected UNTIL/advance/entry continuation locally delivered. | Same shared/dynamic owners as LEAVE; preserve final FOR advance and selected owner. |
-| <a id="current-action-arg"></a>**LC-I-11 ARG / CLC-STEP06 — last delivered** | Complete-template `PARSE UPPER ARG` profile, C v8/53 operations, 33 target exports; ARG-STEP04 locally committed. | ARG-AC05: shared labels/EXPOSE, configured errors, resumption/clause/TRACE and delivery/platform: STEP03/06/07/10. |
-| **LC-I-12 PROCEDURE / CLC-STEP06 — current** | **CLC-STEP06.PROCEDURE1: design; exact public AST/C IR/generated-entry API pending approval.** Existing private-routine route is a bounded foundation. | One source-unit body/entry dispatch, shared-pool calls, executed eligibility and ordered direct/indirect EXPOSE; explicit return/fatal restoration. PROCEDURE1–4 below. |
-| **LC-I-13 CALL / CLC-STEP06 — following** | Existing direct private local calls/presence are a foundation. Start its individual review after PROCEDURE's approved local increment. | Complete local/BIF/static signed-provider resolution, quoted/VALUE forms, omissions/results and delayed CALL traps; STEP06/07/08. |
-| **LC-I-14 RETURN / CLC-STEP06** | Value/absent private return packets implemented. | Main/subroutine/function result requirements, shared-body recursion and abrupt cleanup; STEP06/07/08. |
+| <a id="current-action-drop"></a><a id="current-drop-proof"></a>**LC-I-02 DROP / CLC-STEP05** | Ordered direct/indirect Unicode names and shared pool operations locally delivered. | Configured errors/NOVALUE/TRACE: STEP03/07; dynamic entry composition: STEP11. |
+| <a id="current-action-assignment"></a><a id="current-assignment-proof"></a>**LC-I-03 assignment / CLC-STEP05** | Once-only RHS then one raw-name write; stems, aliases and exact text locally qualified. | Errors/NOVALUE/TRACE: STEP03/07; dynamic entry composition: STEP11. |
+| <a id="current-action-nop"></a><a id="current-nop-proof"></a>**LC-I-04 NOP / CLC-STEP05** | Childless forms and dead-code construction repair locally delivered. | Exact diagnostics/clause/TRACE: STEP04/07. |
+| <a id="current-action-options"></a><a id="current-options-proof"></a>**LC-I-05 OPTIONS / CLC-STEP05** | COptions, request-local header policy and no-word specialization locally delivered. | Full header/source/diagnostics/TRACE: STEP04/07. |
+| <a id="current-action-if"></a><a id="current-if-proof"></a>**LC-I-06 IF / CLC-STEP05** | Optional-arm/contextual ELSE and minimal open joins locally delivered. | Complete expressions/recovery/conditions/TRACE: STEP03/04/07. |
+| <a id="current-action-select"></a><a id="current-select-proof"></a>**LC-I-07 SELECT / CLC-STEP05** | Ordered lazy WHEN/OTHERWISE, shared truth and source-indexed errors locally delivered. | Complete expression/error/condition/TRACE owners: STEP03/04/07. |
+| <a id="current-action-do"></a><a id="current-do-proof"></a>**LC-I-08 DO / CLC-STEP05** | Static counted/controlled/FOREVER/WHILE/UNTIL, once-only ordered headers and owned state locally delivered. | Complete expressions/recovery/conditions/TRACE: STEP03/04/07; dynamic invalidation: STEP11. |
+| <a id="current-action-leave"></a><a id="current-leave-proof"></a>**LC-I-09 LEAVE / CLC-STEP05** | Nearest/named static targets, cleanup and default/STRICTC errors locally delivered. | Exact recovery/conditions/TRACE: STEP07; SIGNAL/INTERPRET invalidation: STEP07/11. |
+| <a id="current-action-iterate"></a><a id="current-iterate-proof"></a>**LC-I-10 ITERATE / CLC-STEP05** | Nearest/named targets and selected UNTIL/advance/entry continuation locally delivered. | Same observation/dynamic owners as LEAVE; preserve final FOR advance and selected owner. |
+| <a id="current-action-arg"></a>**LC-I-11 ARG / CLC-STEP06** | Complete-template `PARSE UPPER ARG` with raw presence and live shared/private pool composition locally qualified. | ARG-AC05: configured errors, resumption/clause/TRACE and delivery/platform: STEP03/07/10. |
+| **LC-I-12 PROCEDURE / CLC-STEP06 — last delivered profile** | Static shared entries, executed eligibility, ordered EXPOSE and normal/fatal restoration locally qualified; CPROC-AC01–06. | CPROC-AC07: complete source forms/observations, callbacks/dynamic eligibility, host/delivery/platforms; whole LC-I-12 remains open. |
+| **LC-I-13 CALL / CLC-STEP06 — next review** | Direct shared-entry local calls and presence packets are the foundation; its individual design/review is next. | Complete local/BIF/static signed-provider resolution, quoted/VALUE forms, omissions/results and delayed CALL traps; STEP06/07/08. |
+| **LC-I-14 RETURN / CLC-STEP06** | Value/absent return packets and shared-body cleanup implemented. | Main/subroutine/function result requirements, shared-body recursion and abrupt cleanup; STEP06/07/08. |
 | **LC-I-15 EXIT / CLC-STEP06** | Basic termination route implemented. | Program-root propagation, optional value/EOF, once-only finalization and host completion; STEP06/08. |
 | **LC-I-16 PULL / CLC-STEP06** | Not integrated as a standalone instruction. PARSE source adapter is reusable. | Acquire queue or configured input once, then shared UPPER executor; EOF/NOTREADY and nested isolation; STEP06/07/08. |
 | **LC-I-17 PUSH / CLC-STEP06** | Not implemented. | Once-only optional expression and selected-queue front insertion; shared queue/host adapter, errors/ownership: STEP06/08. |
@@ -55,22 +54,22 @@ passes. Shared dependencies retain their named owners while the queue advances.
 
 <a id="current-action-procedure"></a>
 
-## Current task: LC-I-12 PROCEDURE
+## Last delivered profile: LC-I-12 PROCEDURE
 
-**CLC-STEP06.PROCEDURE1 is current: design; exact API pending approval.**
+**PROCEDURE1–4 and CPREP-STEP01–03 are locally qualified for their approved profiles. [PROCEDURE contract](doc/architecture.md#proposed-procedure-contract); [prepared-language reuse](doc/architecture.md#proposed-prepared-language-reuse). CALL review follows.**
 Labels share the caller pool; a validly executed PROCEDURE creates a private
 pool and applies direct/indirect EXPOSE in source order. Use one source-unit
 body with checked entries, existing B pool/activation algorithms and explicit
 normal/fatal cleanup. Preserve the full instruction and later shared obligations.
 
-1. **CLC-STEP06.PROCEDURE1 — Current:** specify/review exact AST, C IR/entry ABI,
-   eligibility and lifetime contracts; obtain Adrian's API approval before code.
-2. **CLC-STEP06.PROCEDURE2 — Pending:** implement shared-entry/fall-through and
-   first-label precedence; child activations initially share caller pools.
-3. **CLC-STEP06.PROCEDURE3 — Pending:** implement ordered EXPOSE, executed
-   eligibility and pool restoration; add independent semantics/error/RXAS checks.
-4. **CLC-STEP06.PROCEDURE4 — Pending:** qualify/review the approved increment,
-   commit locally under coordinator authority, then review LC-I-13 CALL.
+1. **CLC-STEP06.PROCEDURE1 — Approved/complete (CPROC-AC01–07):** exact AST/IR/entry ABI,
+   eligibility and lifetime contracts approved by Adrian; retain their boundaries.
+2. **CLC-STEP06.PROCEDURE2 — Complete local profile (AC02/05/06):** shared-entry/fall-through,
+   first-label precedence and child activations initially sharing caller pools.
+3. **CLC-STEP06.PROCEDURE3 — Complete local profile (AC01/03–06):** ordered EXPOSE, executed
+   eligibility, pool restoration and independent semantics/error/RXAS checks.
+4. **CLC-STEP06.PROCEDURE4 — Complete local profile (AC01–06); AC07 open:** next
+   work is LC-I-13 CALL individual design/review.
 
 No native C feature, second runtime algorithm, compatibility shim, push or
 hosted campaign is commissioned. INTERPRET remains last.
@@ -89,7 +88,7 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | <a id="active-first-implementation-increment"></a><a id="shared-b-unicode-interface-and-c-adapter-migration"></a><a id="active-c-contract-baseline-increment"></a><a id="active-borrowed-classic-context-increment"></a>**CLC-STEP03** | Partial: borrowed context/shared B Unicode foundations delivered. Complete activation/pool/alias ownership, recursion, restoration, abrupt paths and needed direct/BIF APIs; preserve existing B/G/public metadata contracts and one algorithm/data owner. |
 | **CLC-STEP04** | Partial: complete contextual source/Unicode names, exact byte/scalar origins, dead-source validation, expressions/numeric semantics and BF01–05 bindings. No native frontend dependency. |
 | **CLC-STEP05** | Partial: finish shared dependencies of the delivered LC-I-01–10 profiles in the instruction table. |
-| **CLC-STEP06** | Current: PROCEDURE design, then CALL and remaining LC-I-11–19. Complete shared entries, EXPOSE, presence/results and signed providers; retain ARG/PARSE/PULL obligations. |
+| **CLC-STEP06** | Current: CALL review after the delivered PROCEDURE profile, then remaining LC-I-11–19. Complete call forms, presence/results and signed providers; retain ARG/PARSE/PULL obligations. |
 | **CLC-STEP07** | Partial: LC-I-20–24, conditions/resumption, clause clocks, diagnostics/source/TRACE and BF07/09. |
 | **CLC-STEP08** | Not started as a full stage: remaining BIF/host adapters, exact-length invocation/completion, callback pools, queues/streams/clocks/HALT, concurrency and declared platforms. New host APIs/exclusions require approval. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. New ISA/storage contracts need approval; production performance edits retain their verdict gate. |
@@ -129,8 +128,6 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
 
 ## Outstanding decisions and dependencies
 
-- **PROCEDURE:** exact named AST, C-owned entry/IR ABI and cleanup protocol
-  await Adrian's approval after independent review. No product edits before it.
 - **Shared observations:** configured errors/NOVALUE, typed conditions, resumed
   handlers, clause/field/drop observations and practical TRACE remain STEP03/07
   work; ARG-AC05 and CPARSE-AC07 stay open.

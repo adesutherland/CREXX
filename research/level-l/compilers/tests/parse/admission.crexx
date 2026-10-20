@@ -43,13 +43,21 @@ fixture: procedure = .void
   if mode = 5 then origin = file.origin(0,10)
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   type = contract.type('crexx.c.context'); if mode = 11 then type = contract.type('crexx.c.parseprogram')
-  ignored = fn.argument(type); entry = fn.block('entry'); block = entry
+  ignored = fn.argument(type)
+  ignored = fn.argument(contract.type('crexx.g.int64')); entry = fn.block('entry'); block = entry
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  generated = builder.synthetic('test-only PARSE admission unit entry')
+  if mode <> 11 then do
+    call entry.store(context_slot,entry.readarg(1,generated),generated)
+    entry = entrybody(fn,contract,entry,context_slot,generated); block = entry
+  end
   if mode > 1 then do
     operation = entry.operation(contract.operation('crexx.c.return.absent'),origin)
     absent = operation.finish(); call entry.returnvalue(absent.result(),origin)
     block = fn.block('dead')
   end
-  context = block.readarg(1,origin)
+  context = .llir..valuehandle
+  if mode <> 11 then context = block.load(context_slot,origin)
   if mode = 9 then unused = block.constantbytes(contract.type('crexx.c.parseprogram'),program,origin)
   else if mode = 10 then slot = fn.slot('forbidden program',contract.type('crexx.c.parseprogram'))
   else if mode >= 6 & mode <= 8 then do
@@ -102,3 +110,22 @@ admitted: procedure = .void
   end
   call check(bin2x(saved) = bin2x(graph.binary()),lane || ' admission is immutable ' || mode)
   return
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

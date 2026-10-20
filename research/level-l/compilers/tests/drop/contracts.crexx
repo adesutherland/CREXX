@@ -58,7 +58,7 @@ sourcecontracts: procedure = .void expose artifacts
   contract = registry.finish(); data = dereference contract.data()
   descriptor = contract.operation('crexx.c.drop')
   id = descriptor.id()
-  call check(descriptor.valid() & data.ops() = 53,'current v8 retains DROP in the 53-operation contextual family')
+  call check(descriptor.valid() & data.ops() = 58,'current v9 retains DROP in the 58-operation contextual family')
   call check(data.arity(id,1) = 1 & data.fieldname(id,1,1) = 'context' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.context' & data.arity(id,2) = 0,'DROP consumes context and returns no value')
   call check(data.arity(id,3) = 2 & data.fieldname(id,3,1) = 'name' & data.fieldname(id,3,2) = 'indirect' & data.typename(data.fieldtype(id,3,1)) = 'crexx.g.text' & data.typename(data.fieldtype(id,3,2)) = 'core.boolean','DROP attributes are ordered name:text then indirect:boolean')
   call check(data.effectvalue(id,1) = 'context' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'returns','DROP retains state and condition effects')
@@ -86,13 +86,17 @@ namecontracts: procedure = .void expose artifacts
     contract = registry.finish(); builder = .llir..builder(contract)
     fn = builder.function('$MAIN',contract.type('crexx.c.result'))
     ignored = fn.argument(contract.type('crexx.c.context'))
-    at = builder.synthetic('independent C name admission'); entry = fn.block('entry'); block = entry
+    ignored = fn.argument(contract.type('crexx.g.int64'))
+    at = builder.synthetic('independent C name admission'); entry = fn.block('entry')
+    context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+    call entry.store(context_slot,entry.readarg(1,at),at)
+    entry = entrybody(fn,contract,entry,context_slot,at); block = entry
     if dead then do
       draft = entry.operation(contract.operation('crexx.c.return.absent'),at)
       operation = draft.finish(); call entry.returnvalue(operation.result(),at)
       block = fn.block('dead')
     end
-    context = block.readarg(1,at)
+    context = block.load(context_slot,at)
     value = .llir..valuehandle
     if opname = 'store' then value = block.constantbytes(contract.type('crexx.c.value'),'held' as .binary,at)
     draft = block.operation(contract.operation('crexx.c.' || opname),at)
@@ -123,7 +127,13 @@ provider: procedure = .void expose artifacts
   file = builder.source('drop-provider.crexx','drop items. (names)' as .binary)
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   call fn.exportas('dropfixture.run'); ignored = fn.argument(contract.type('crexx.c.context'))
-  block = fn.block('entry'); at = file.origin(0,19); context = block.readarg(1,at)
+  ignored = fn.argument(contract.type('crexx.g.int64'))
+  block = fn.block('entry'); at = file.origin(0,19)
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  generated = builder.synthetic('test-only supplied DROP unit entry')
+  call block.store(context_slot,block.readarg(1,generated),generated)
+  block = entrybody(fn,contract,block,context_slot,generated)
+  context = block.load(context_slot,at)
   markerat = builder.synthetic('test-only root execution marker')
   marker = block.constantbytes(contract.type('crexx.c.value'),'DROP_PROVIDER' as .binary,markerat)
   draft = block.operation(contract.operation('crexx.c.say'),markerat)
@@ -145,3 +155,22 @@ provider: procedure = .void expose artifacts
   call check(bin2x(saved) = bin2x(graph.binary()),'provider selection preserves graph')
   if backend.status() = 0 then call check(writebinary(destination,output.text() as .binary) > 0,'provider RXAS published for B host integration')
   return
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

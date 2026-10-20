@@ -143,11 +143,17 @@ def normal_body(text):
 def check_provider_shape(text):
     body = normal_body(text)
     assert '.expose=assignfixture.run' in body
-    assert 'context=reference .rexxclassiccontext..rexxclassiccontext' in body
+    assert 'context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int' in body
+    assert re.findall(r'^llf\d+\(\)', text, re.M) == ['llf1()'], 'one supplied-context unit'
     assert len(re.findall(r'^call [^\n]*,llctarget.poolread\(\),', body, re.M)) == 3
     assert len(re.findall(r'^call [^\n]*,llctarget.poolwrite\(\),', body, re.M)) == 8
     assert not re.search(r'^deref |asstring|resolve|split', body, re.M | re.I)
-    assert not re.search(r'^br(?:t|f)? ', body, re.M)
+    assert re.findall(r'^beq llprocedure1_\d+_match,[^,\n]+,(\d+)$', body, re.M) == ['0'], 'checked exported entry zero'
+    blocks = re.findall(r'^llb\d+:\n([\s\S]*?)(?=^llb\d+:|\Z)', body, re.M)
+    semantic = [block for block in blocks if ',llctarget.poolread(),' in block]
+    assert len(semantic) == 1, 'one straight-line assignment semantic block'
+    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', semantic[0], re.M), 'assignment effects introduce no branch'
+    assert ',llctarget.poolnew(),' not in body and '.bindpool(),' not in body, 'supplied shared entry adds no private pool'
     assert body.index('"key"') < body.index('"items.key"'), 'tail mutation precedes raw compound store'
 
 
@@ -155,8 +161,12 @@ def check_source_shape(text):
     # Private marker is the only source call. Argument/result ownership may
     # surround it; substitution and final write follow it, never precede it.
     body = normal_body(text)
-    calls = list(re.finditer(r'^call [^\n]*,llf2\(\),', body, re.M))
+    assert re.findall(r'^llf\d+\(\)', text, re.M) == ['llf1()'], 'one source-unit body'
+    calls = list(re.finditer(r'^call [^,\n]+,llf1\(\),(r\d+)$', body, re.M))
     assert len(calls) == 1, 'one marker invocation'
+    entry_slot = 'r' + str(int(calls[0][1][1:]) + 2)
+    entries = re.findall(r'^load '+entry_slot+r',([^\n]+)$', body[:calls[0].start()], re.M)
+    assert entries[-1] == '1', 'marker uses the first positive source entry'
     following = body[calls[0].end():]
     first_write = re.search(r'^call [^\n]*,llctarget.poolwrite\(\),', following, re.M)
     assert first_write and '"items.key"' in following[:first_write.end()]

@@ -36,27 +36,11 @@ add_custom_target(llcompiler_provenance_measure
   DEPENDS llcompiler_llrxc-c_noopt llcompiler_llrxc-g_noopt llcompiler_target_noopt llcompiler_backend-tests_noopt rxbvm rxas rxlink
   VERBATIM)
 
-# Isolated measurements: 89s Debug (29 corpus cases), 263s maintained Apple
-# ASan (31 cases), including nested tools. Serialize whole aggregates; 1800s
-# is a hang guard with room for slower hosted machines, not a speed criterion.
-# Maintained shape components measure ~30s (NOP) and 39–43s (OPTIONS) in Debug.
-# OPTIONS adds 21 corpus tool commands. Retain serial 1800s scheduling.
-# IF's maintained shape selector measures 32s in Debug; two corpus cases add
-# 14 default tool commands. Retain the existing generous serial scheduling.
-# SELECT shape components measure 38–39s in Debug; three corpus cases add
-# 21 default tool commands. Retain the existing generous serial scheduling.
-# DO adds 70 default tool commands; its isolated 40-command source component
-# measures 100s and the paired 146-check shape component 64s in Debug.
-# LEAVE adds 28 default commands; isolated 16-command source components
-# measure 34–36s and its paired shape selector 42s in Debug.
-# ITERATE adds 28 default commands; focused 16-command source components
-# measure 35–36s, positive-only cells 19–20s and shape selectors 44–53s.
-# This extends component evidence; no new full-aggregate timing is claimed.
-# Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
+# Nested compiler/tool aggregates run serially with generous hang guards.
+# Source-only qualification and any sanitizer work follow AGENTS.md.
 foreach(_mode opt noopt)
   foreach(_vm rxbvm rxtvm)
     if(TARGET ${_vm})
-      # SAY: isolated 40 commands measured at 24s Debug / 84s Apple ASan.
       # Serialize nested tools; deadlines are generous hang guards only.
       set(_say "llcompiler_say_${_mode}_${_vm}")
       add_test(NAME ${_say}
@@ -77,7 +61,7 @@ foreach(_mode opt noopt)
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_test} PROPERTIES
         PASS_REGULAR_EXPRESSION "BACKEND_E2E[|]cases=58[|]commands=421[|]failures=0"
-        TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}

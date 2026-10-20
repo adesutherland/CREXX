@@ -26,10 +26,13 @@ null r13
 null r14
 null r15
 mkref r13,r11
-load r12,1
+load r14,0
+load r12,2
 settp r13,768
+settp r14,768
 call r0,llf1(),r12
 null r13
+null r14
 copy r13,r0
 load r12,1
 settp r13,768
@@ -41,178 +44,281 @@ null r9
 null r10
 null r8
 ret r0
-llf1() .locals=28
+llf1() .locals=34
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
-load r24,"branch-c.crexx: entering $MAIN"
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int"
+load r30,"branch-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+sigbrv llerror1_5,r0,"OBJECT_NOT_INITIALIZED"
+sigbrv llerror1_6,r0,"REFERENCE_INVALID"
+sigbrv llerror1_7,r0,"UNICODE_ERROR"
+sigbrv llerror1_8,r0,"OUT_OF_RANGE"
+sigbrv llerror1_9,r0,"FAILURE"
 numsci 18,1,2
-linkref r12,a1
-swap r12,r26
-load r25,1
-settp r26,256
-call r16,rexxclassiccontext.rexxclassiccontext.activation(),r25
-swap r12,r26
-null r26
-unlink r12
-linkref r13,r16
-swap r13,r26
-load r25,1
-settp r26,256
-call r17,rexxactivation.rexxactivationarguments.numericdigits(),r25
-swap r13,r26
-null r26
-swap r13,r26
-load r25,1
-settp r26,256
-call r18,rexxactivation.rexxactivationarguments.numericfuzz(),r25
-swap r13,r26
-null r26
-swap r13,r26
-load r25,1
-settp r26,256
-call r19,rexxactivation.rexxactivationarguments.numericform(),r25
-swap r13,r26
-null r26
-unlink r13
-null r16
+linkref r18,a1
+swap r18,r32
+load r31,1
+settp r32,256
+call r22,rexxclassiccontext.rexxclassiccontext.activation(),r31
+swap r18,r32
+null r32
+unlink r18
+linkref r19,r22
+swap r19,r32
+load r31,1
+settp r32,256
+call r23,rexxactivation.rexxactivationarguments.numericdigits(),r31
+swap r19,r32
+null r32
+swap r19,r32
+load r31,1
+settp r32,256
+call r24,rexxactivation.rexxactivationarguments.numericfuzz(),r31
+swap r19,r32
+null r32
+swap r19,r32
+load r31,1
+settp r32,256
+call r25,rexxactivation.rexxactivationarguments.numericform(),r31
+swap r19,r32
+null r32
+unlink r19
+null r22
 setnumfuz 0
-setnumdgts r17
-setnumfuz r18
-setnumfrm r19
+setnumdgts r23
+setnumfuz r24
+setnumfrm r25
 llb1:
 .srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
-load r24,"branch-c.crexx: generated code in $MAIN"
-copy r2,a1
-copy r1,r2
-.srcstep 10 0 17 "branch-c.crexx" 1 9 15 "options levelc"
-load r24,"branch-c.crexx:1:9"
-copy r3,r1
-linkref r12,r3
-swap r12,r26
-load r25,1
-settp r26,256
-call r14,rexxclassiccontext.rexxclassiccontext.pool(),r25
-swap r12,r26
-null r26
-unlink r12
-copy r26,r14
-load r27,"levelc"
-load r25,2
-settp r26,768
-settp r27,768
-call r4,llctarget.poolread(),r25
-null r26
-null r27
-null r14
-.srcstep 18 0 17 "branch-c.crexx" 2 4 5 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:4"
-load r26,"1"
-load r25,1
-settp r26,768
-call r5,llctarget.literal(),r25
-null r26
-.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:1"
-copy r6,r1
-copy r26,r5
-copy r27,r6
-load r25,2
-settp r26,768
-settp r27,768
-call r7,llctarget.truth(),r25
-null r26
-null r27
-.srcstep 19 0 98 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx: generated code in $MAIN"
-load r8,1
-.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:1"
-brt llb2,r8
-br llb3
+load r30,"branch-c.crexx: generated code in $MAIN"
+copy r3,a1
+copy r1,r3
+copy r4,a2
+copy r2,r4
 llb2:
-.srcstep 27 0 17 "branch-c.crexx" 2 15 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:15"
-load r26,"yes"
-load r25,1
-settp r26,768
-call r9,llctarget.literal(),r25
-null r26
-.srcstep 20 0 65 "branch-c.crexx" 2 11 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:11"
-copy r26,r9
-load r25,1
-settp r26,768
-call r23,llctarget.sayvalue(),r25
-null r26
-.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:1"
+.srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
+load r30,"branch-c.crexx: generated code in $MAIN"
+copy r5,r1
+copy r6,r2
+load r7,0
+beq llprocedure1_8_match,r6,0
+br llprocedure1_8_done
+llprocedure1_8_match:
+linkref r18,r5
+swap r18,r32
+load r31,1
+settp r32,256
+call r22,rexxclassiccontext.rexxclassiccontext.activation(),r31
+swap r18,r32
+null r32
+unlink r18
+linkref r19,r22
+swap r19,r32
+load r31,1
+settp r32,256
+call r23,rexxactivation.rexxactivationarguments.procedureeligible(),r31
+swap r19,r32
+null r32
+unlink r19
+null r22
+beq llprocedure1_8_valid,r23,0
+signal "INVALID_ARGUMENTS","LLC-ENTRY: activation does not match entry kind"
+llprocedure1_8_valid:
+load r7,1
+llprocedure1_8_done:
+brt llb3,r7
 br llb4
 llb3:
-.srcstep 35 0 17 "branch-c.crexx" 3 10 14 "else say 'no'"
-load r24,"branch-c.crexx:3:10"
-load r26,"no"
-load r25,1
-settp r26,768
-call r10,llctarget.literal(),r25
-null r26
-.srcstep 28 0 17 "branch-c.crexx" 3 6 14 "else say 'no'"
-load r24,"branch-c.crexx:3:6"
-copy r26,r10
-load r25,1
-settp r26,768
-call r23,llctarget.sayvalue(),r25
-null r26
+.srcstep 10 0 17 "branch-c.crexx" 1 9 15 "options levelc"
+load r30,"branch-c.crexx:1:9"
+copy r8,r1
+linkref r18,r8
+swap r18,r32
+load r31,1
+settp r32,256
+call r20,rexxclassiccontext.rexxclassiccontext.pool(),r31
+swap r18,r32
+null r32
+unlink r18
+copy r32,r20
+load r33,"levelc"
+load r31,2
+settp r32,768
+settp r33,768
+call r9,llctarget.poolread(),r31
+null r32
+null r33
+null r20
+.srcstep 18 0 17 "branch-c.crexx" 2 4 5 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:4"
+load r32,"1"
+load r31,1
+settp r32,768
+call r10,llctarget.literal(),r31
+null r32
 .srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
-load r24,"branch-c.crexx:2:1"
+load r30,"branch-c.crexx:2:1"
+copy r11,r1
+copy r32,r10
+copy r33,r11
+load r31,2
+settp r32,768
+settp r33,768
+call r12,llctarget.truth(),r31
+null r32
+null r33
+.srcstep 19 0 98 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx: generated code in $MAIN"
+load r13,1
+.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:1"
+brt llb5,r13
+br llb6
 llb4:
 .srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
-load r24,"branch-c.crexx: generated code in $MAIN"
-load r25,0
-call r11,llctarget.absent(),r25
-ret r11
+load r30,"branch-c.crexx: generated code in $MAIN"
+signal "INVALID_ARGUMENTS","LLC-ENTRY: invalid source-unit entry identity"
+load r31,0
+call r14,llctarget.absent(),r31
+ret r14
+llb5:
+.srcstep 27 0 17 "branch-c.crexx" 2 15 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:15"
+load r32,"yes"
+load r31,1
+settp r32,768
+call r15,llctarget.literal(),r31
+null r32
+.srcstep 20 0 65 "branch-c.crexx" 2 11 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:11"
+copy r32,r15
+load r31,1
+settp r32,768
+call r29,llctarget.sayvalue(),r31
+null r32
+.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:1"
+br llb7
+llb6:
+.srcstep 35 0 17 "branch-c.crexx" 3 10 14 "else say 'no'"
+load r30,"branch-c.crexx:3:10"
+load r32,"no"
+load r31,1
+settp r32,768
+call r16,llctarget.literal(),r31
+null r32
+.srcstep 28 0 17 "branch-c.crexx" 3 6 14 "else say 'no'"
+load r30,"branch-c.crexx:3:6"
+copy r32,r16
+load r31,1
+settp r32,768
+call r29,llctarget.sayvalue(),r31
+null r32
+.srcstep 11 0 65 "branch-c.crexx" 2 1 20 "if 1 then say 'yes'"
+load r30,"branch-c.crexx:2:1"
+llb7:
+.srcstep 2 0 98 "branch-c.crexx" 1 1 15 "options levelc"
+load r30,"branch-c.crexx: generated code in $MAIN"
+load r31,0
+call r17,llctarget.absent(),r31
+ret r17
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r23,1
+load r29,1
 br llerror1
 llerror1_2:
-load r23,2
+load r29,2
 br llerror1
 llerror1_3:
-load r23,3
+load r29,3
 br llerror1
 llerror1_4:
-load r23,4
+load r29,4
+br llerror1
+llerror1_5:
+load r29,5
+br llerror1
+llerror1_6:
+load r29,6
+br llerror1
+llerror1_7:
+load r29,7
+br llerror1
+llerror1_8:
+load r29,8
+br llerror1
+llerror1_9:
+load r29,9
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r26,r0
-copy r27,r24
-load r25,2
-settp r26,768
-settp r27,768
-call r24,llctarget.failuremessage(),r25
+sighalt "OBJECT_NOT_INITIALIZED"
+sighalt "REFERENCE_INVALID"
+sighalt "UNICODE_ERROR"
+sighalt "OUT_OF_RANGE"
+sighalt "FAILURE"
+unlink r18
+unlink r19
+null r32
+null r33
+null r18
+null r19
+null r20
+null r21
+null r22
+null r23
+null r24
+null r25
 null r26
 null r27
-beq llraise1_1,r23,1
-beq llraise1_2,r23,2
-beq llraise1_3,r23,3
+null r28
+copy r32,r0
+copy r33,r30
+load r31,2
+settp r32,768
+settp r33,768
+call r30,llctarget.failuremessage(),r31
+null r32
+null r33
+beq llraise1_1,r29,1
+beq llraise1_2,r29,2
+beq llraise1_3,r29,3
+beq llraise1_4,r29,4
+beq llraise1_5,r29,5
+beq llraise1_6,r29,6
+beq llraise1_7,r29,7
+beq llraise1_8,r29,8
+llraise1_9:
+signalorigin "FAILURE",r30,r0
+ret
+llraise1_8:
+signalorigin "OUT_OF_RANGE",r30,r0
+ret
+llraise1_7:
+signalorigin "UNICODE_ERROR",r30,r0
+ret
+llraise1_6:
+signalorigin "REFERENCE_INVALID",r30,r0
+ret
+llraise1_5:
+signalorigin "OBJECT_NOT_INITIALIZED",r30,r0
+ret
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r24,r0
+signalorigin "INVALID_ARGUMENTS",r30,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r24,r0
+signalorigin "CONVERSION_ERROR",r30,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r24,r0
+signalorigin "DIVISION_BY_ZERO",r30,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r24,r0
+signalorigin "CLASSIC_SYNTAX",r30,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
@@ -232,6 +338,10 @@ rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexx
   .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
 rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
   .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
+llctarget.failuremessage() .expose=llctarget.failuremessage
+  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
+rexxactivation.rexxactivationarguments.procedureeligible() .expose=rexxactivation.rexxactivationarguments.procedureeligible
+  .meta "rexxactivation.rexxactivationarguments.procedureeligible"="b" ".boolean" rexxactivation.rexxactivationarguments.procedureeligible() ""
 llctarget.poolread() .expose=llctarget.poolread
   .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "poolref=reference .rexxvariablepool,name=.string"
 rexxclassiccontext.rexxclassiccontext.pool() .expose=rexxclassiccontext.rexxclassiccontext.pool
@@ -240,9 +350,7 @@ llctarget.literal() .expose=llctarget.literal
   .meta "llctarget.literal"="b" ".rexxvalue..rexxvalue" llctarget.literal() "text=.string"
 llctarget.truth() .expose=llctarget.truth
   .meta "llctarget.truth"="b" ".int" llctarget.truth() "value=.rexxvalue,context=reference .rexxclassiccontext..rexxclassiccontext"
-llctarget.sayvalue() .expose=llctarget.sayvalue
-  .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
 llctarget.absent() .expose=llctarget.absent
   .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
-llctarget.failuremessage() .expose=llctarget.failuremessage
-  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
+llctarget.sayvalue() .expose=llctarget.sayvalue
+  .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"

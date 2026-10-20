@@ -10,9 +10,10 @@ import llcparse
 import llcparseprogram
 import llcompilercontracts
 import llcdoprotocol
+import llcprocedureprotocol
 import rexxclassicunicodeproperties
 
-/** Classic routine: one source statement interval and its result contract. */
+/** First source-unit entry identity and its result contract. */
 routine: class
   _name = .string
   _result = .string
@@ -82,6 +83,10 @@ request: class
   _callsymbols = .string[]
   _callpackages = .string[]
   _routines = .object[]
+  _routineids = .stem
+  _entrybytes = .int
+  _sourceentries = .int[]
+  _nextinstructions = .int[]
   _functions = .object[]
   _current = .routine
   _scope = .int
@@ -107,6 +112,8 @@ request: class
   _explicit = .int[]
   _slots = .object[]
   _contextslot = .llir..slot
+  _entryslot = .llir..slot
+  _sourceblocks = .object[]
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -141,7 +148,6 @@ request: class
       _registry = .llir..schema(); call llcir..registerfamilies(reference _registry)
       call inventory()
       if _error <> '' then return
-      if _error <> '' then return
       _contract = _registry.finish()
       if _contract.error() <> '' then do
         _error = _contract.error(); return
@@ -154,6 +160,10 @@ request: class
       if _error <> '' then return
       _graph = _builder.finish()
       if _graph.error() <> '' then _error = _graph.error()
+      if _error = '' then do
+        entries = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
+        if entries.status() then do; _error = entries.error(); _offset = entries.offset(); end
+      end
       if _error = '' then do
         protocol = .llcdoprotocol..checked(reference _graph,_bytebudget,_budget)
         if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
@@ -205,50 +215,47 @@ request: class
     return _file.origin(node.start(),node.finish(),node.origin())
   findroutine: method = .int
     arg name = .string
-    do i = 1 to _routines[0]
-      item = _routines[i] as .routine
-      if item.name() = upper(name) then return i
-    end
-    return 0
-  /** Variable recognition is wider than this existing private-call profile.
-   * Do not silently merge newly lexable Unicode or dotted routine names. */
-  routinename: method = .int
+    if namework(name) = 0 then return 0
+    found = _routineids.get(name)
+    if found = '' then return 0
+    return found as .int
+  namework: method = .int
     arg name = .string
-    if name = '' then return 0
-    return verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 & verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789') = 0
-  inventory: method = .void
-    root = _tree.root(); body = root.child('body')
-    main = .routine('$MAIN','int64',body,1,body.count('items'))
-    call main.resulttype('result')
-    _namespace = ''
-
-    if _namespace = '' then _routines[1] = main as .object
-    item = .routine; node = .llast..node; next = .llast..node; part = .llast..node; parameter = .llast..node
-    name = .string; result = .string; ptype = .string; i = .int; j = .int
-    do i = 1 to body.count('items')
-      node = body.child('items',i)
-      if node.kind() <> 'CLabel' then iterate
-      name = node.text('name')
-      if routinename(name) = 0 then do
-        call fail(node,'PROFILE: routine name is outside the ASCII-undotted profile'); return
-      end
-      name = upper(name)
-      if findroutine(name) > 0 then do
-        call fail(node,'BIND: duplicate routine ' || name); return
-      end
-      if i = body.count('items') then do
-        call fail(node,'PROFILE: Classic label requires PROCEDURE'); return
-      end
-      next = body.child('items',i + 1)
-      if next.kind() <> 'CProcedure' then do
-        call fail(node,'PROFILE: shared-pool labels are outside this profile'); return
-      end
-      item = _routines[_routines[0]] as .routine; call item.endat(i - 1)
-      _routines[_routines[0]] = item as .object
-      item = .routine(name,'result',body,i + 2,body.count('items'))
-      _routines[_routines[0] + 1] = item as .object
+    extent = <blen>(name as .binary)
+    if extent > (_budget - _work) <idiv> 2 then do
+      call fail(_tree.root(),'LIMIT: frontend label-name work budget exceeded'); return 0
     end
-
+    _work = _work + extent * 2
+    return _error = ''
+  entryspace: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail(_tree.root(),'LIMIT: invalid frontend entry dimensions'); return 0; end
+    if count > (_bytebudget - _entrybytes) <idiv> width then do
+      call fail(_tree.root(),'LIMIT: frontend entry workspace exceeded'); return 0
+    end
+    _entrybytes = _entrybytes + count * width
+    return 1
+  inventory: method = .void
+    root = _tree.root(); body = root.child('body'); _entrybytes = 0
+    if entryspace(body.count('items'),24) = 0 then return
+    _routines[1] = .routine('$MAIN','result',body,1,body.count('items')) as .object
+    _namespace = ''; _routineids = .stem()
+    do i = 1 to body.count('items') while _error = ''
+      node = body.child('items',i)
+      if tick(node) = 0 then return
+      if node.kind() <> 'CLabel' then iterate
+      raw = node.text('name'); if namework(raw) = 0 then return
+      name = rexxclassic_unicode_upper(raw)
+      if namework(name) = 0 then return
+      _sourceentries[i] = 0
+      if _routineids.get(name) <> '' then iterate
+      if entryspace(96,1) = 0 then return
+      if entryspace(<blen>(name as .binary),2) = 0 then return
+      entry = _routines[0] + 1
+      _routines[entry] = .routine(name,'result',body,i,body.count('items')) as .object
+      _sourceentries[i] = entry
+      call _routineids.set(name,entry as .string)
+    end
     return
   type: method = .llir..typeid
     arg name = .string
@@ -265,40 +272,101 @@ request: class
     _tempnumber = _tempnumber + 1
     return _fn.slot('$tmp.' || _tempnumber,type)
   lowerall: method = .void
-    item = .routine; fn = .llir..function; index = .int; i = .int; j = .int
-    slot = .llir..slot; op = .llir..opdraft; built = .llir..opview
-    fallback = .llir..valuehandle; value = .llir..valuehandle; defaultorigin = .llir..origin
-    do i = 1 to _routines[0]
-      item = _routines[i] as .routine
-      fn = _builder.function(item.name(),type(item.result()))
-      do
-        index = fn.argument(type('context'))
+    i = .int; node = .llast..node; target = .llir..block; labelblock = .llir..block
+    op = .llir..opdraft; built = .llir..opview
+    _scope = 1; _current = _routines[1] as .routine
+    _fn = _builder.function('$MAIN',type('result'))
+    ignored = _fn.argument(type('context')); ignored = _fn.argument(type('int64'))
+    _functions[1] = _fn as .object
+    _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _terminated = 0; _alive = 1
+    body = _current.body(); origin = at(body).derive()
+    _block = newblock('entry')
+    _contextslot = _fn.slot('$context',type('context'))
+    _entryslot = _fn.slot('$entry',type('int64'))
+    call _block.store(_contextslot,_block.readarg(1,origin),origin)
+    call _block.store(_entryslot,_block.readarg(2,origin),origin)
+    dispatch = newblock('entry.dispatch'); call _block.jump(dispatch,origin)
+    mainbody = newblock('source.main'); previouslabel = 0
+    do i = 1 to body.count('items') while _error = ''
+      node = body.child('items',i)
+      if tick(node) = 0 then return
+      if node.kind() = 'CLabel' then do
+        if previouslabel = 0 then labelblock = newblock('source.label')
+        _sourceblocks[i] = labelblock as .object
+        previouslabel = 1
       end
-      _functions[i] = fn as .object
+      else previouslabel = 0
     end
-    do scope = 1 to _routines[0] while _error = ''
-      _scope = scope
-      _current = _routines[_scope] as .routine; _fn = _functions[_scope] as .llir..function
-      _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _terminated = 0; _alive = 1
-      _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
-      do
-        _contextslot = _fn.slot('$context',type('context'))
-        call _block.store(_contextslot,_block.readarg(1,origin),origin)
-      end
-      do i = _current.first() to _current.last() while _error = ''
-        call statement(_current.body().child('items',i))
-      end
-      if _error <> '' then return
-      if _scope < _routines[0] & _alive & _terminated = 0 then do
-        call fail(_current.body(),'PROFILE: fall-through into a Classic label is outside this profile'); return
-      end
-      if _terminated = 0 then do
-
-        if _current.result() = 'void' then call _block.returnvoid(origin)
-        else do
-          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
-          call _block.returnvalue(built.result(),origin)
+    following = body.count('items') + 1
+    do i = body.count('items') to 1 by -1
+      if tick(body) = 0 then return
+      if body.child('items',i).kind() = 'CLabel' then _nextinstructions[i] = following
+      else following = i
+    end
+    integer = .llir..intcodec(); landing = .llir..block; landingposition = 0
+    do i = 1 to _routines[0] while _error = ''
+      if tick(body) = 0 then return
+      item = _routines[i] as .routine; target = mainbody; name = ''
+      if i > 1 then do
+        name = item.name(); target = _sourceblocks[item.first()] as .llir..block
+        j = _nextinstructions[item.first()]
+        if j <= body.count('items') then do
+          first = body.child('items',j)
+          if first.kind() <> 'CProcedure' then do
+            if j <> landingposition then do
+              landing = newblock('entry.consume'); _block = landing; consumeorigin = at(first)
+              op = _block.operation(_contract.operation('crexx.c.procedure.consume'),consumeorigin)
+              call op.input('context',_block.load(_contextslot,consumeorigin)); built = op.finish()
+              call _block.jump(target,origin); landingposition = j
+            end
+            target = landing
+          end
         end
+      end
+      _block = dispatch
+      op = _block.operation(_contract.operation('crexx.c.entry.test'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.input('entry',_block.load(_entryslot,origin))
+      call op.attribute('id',integer.parse((i - 1) as .string)); call op.attribute('name',name as .binary)
+      built = op.finish(); next = newblock('entry.next')
+      call _block.branch(built.result(),target,next,origin); dispatch = next
+    end
+    _block = dispatch
+    op = _block.operation(_contract.operation('crexx.c.entry.invalid'),origin); built = op.finish()
+    op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+    call _block.returnvalue(built.result(),origin)
+    _block = mainbody
+    do i = 1 to body.count('items') while _error = ''
+      node = body.child('items',i)
+      if node.kind() = 'CLabel' then do
+        target = _sourceblocks[i] as .llir..block
+        if _block.id() <> target.id() then do
+          if _terminated = 0 then call _block.jump(target,at(node).derive())
+          _block = target; _terminated = 0
+        end
+        if _sourceentries[i] > 0 then _alive = 1
+      end
+      else call statement(node)
+    end
+    if _error <> '' then return
+    if _terminated = 0 then do
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+      call _block.returnvalue(built.result(),origin)
+    end
+    return
+  procedurestatement: method = .void
+    arg node = .llast..node
+    origin = at(node)
+    op = _block.operation(_contract.operation('crexx.c.procedure.enter'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    if node.count('exposes') then do
+      exposes = node.child('exposes'); boolean = .llir..boolcodec()
+      do i = 1 to exposes.count('items') while _error = ''
+        item = exposes.child('items',i); itemorigin = at(item)
+        op = _block.operation(_contract.operation('crexx.c.procedure.expose'),itemorigin)
+        call op.input('context',_block.load(_contextslot,itemorigin))
+        call op.attribute('name',item.child('name').text('spelling') as .binary)
+        call op.attribute('indirect',boolean.parse((item.kind() = 'ProcedureExposeIndirect') as .string))
+        built = op.finish()
       end
     end
     return
@@ -326,7 +394,7 @@ request: class
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
     /* Visit structural/non-emitting statements without reopening a terminated
      * block. Later emitting statements still lower in checked dead code. */
-    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop'
+    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop' | kind = 'CLabel'
     if kind = 'CDo' then do
       header = node.child('header')
       nonemitting = header.count('repetition') = 0 & header.count('condition') = 0
@@ -352,7 +420,8 @@ request: class
       when kind = 'COptions' then do
         if node.count('value') then value = expression(node.child('value'),'',nonemitting)
       end
-      when kind = 'Nop' then nop
+      when kind = 'Nop' | kind = 'CLabel' then nop
+      when kind = 'CProcedure' then call procedurestatement(node)
       when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
         item = node.child('items',i); itemorigin = at(item)
         if item.kind() <> 'DropDirect' & item.kind() <> 'DropIndirect' then do
@@ -1007,19 +1076,21 @@ request: class
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
     invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
-    if routinename(name) = 0 then do
-      call fail(node,'PROFILE: routine name is outside the ASCII-undotted profile'); return invalid
-    end
-    name = upper(name)
+    /* Generated identifier tokens use the shared whole-name simple casing
+     * once, without the variable pool's compound-tail resolution. */
+    if namework(name) = 0 then return invalid
+    name = rexxclassic_unicode_upper(name)
     arguments = node.child('arguments'); count = arguments.count('items')
     if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
-    target = findroutine(name); argument = .llast..node; value = .llir..valuehandle
+    target = findroutine(name)
+    if _error <> '' then return invalid
+    argument = .llast..node; value = .llir..valuehandle
     op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
 
     result = .llir..valuehandle
     if target = 0 then do
       if wordpos(name,'LENGTH ARG DIGITS') = 0 then do
-        call fail(node,'CALL: unknown Classic routine ' || name); return invalid
+        call fail(node,'CALL: RXC-LC-16.1: unknown Classic routine ' || name); return invalid
       end
       if (name = 'LENGTH' & count <> 1) | (name = 'DIGITS' & count <> 0) | (name = 'ARG' & count <> 0 & count <> 2) then do
         call fail(node,'CALL: BIF argument form outside the admitted profile'); return invalid
@@ -1079,7 +1150,8 @@ request: class
       end
       op = _block.operation(_contract.operation('crexx.c.call'),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
-      call op.attribute('target',name as .binary)
+      call op.attribute('target','$MAIN' as .binary)
+      integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
       boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
       built = op.finish(); result = built.result()
     end

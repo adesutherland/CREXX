@@ -1,7 +1,7 @@
 # Level C compiler architecture
 
 **Target architecture approved by Adrian, 19 October 2026.** Current source
-implements the context ABI, C v8 ARG integration over the finite PARSE profile,
+implements the context ABI, complete-template ARG over the finite PARSE profile,
 and static named LEAVE/ITERATE. The [plan](../PLAN.md) owns instruction status,
 remaining work and complete-C acceptance;
 [requirements](levelc-requirements.md) map coverage and
@@ -38,14 +38,14 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, ASCII private PROCEDURE labels/calls and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; current PARSE qualification and wider source/instruction coverage remain open. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/identifier-token labels, ordered PROCEDURE EXPOSE and LENGTH/ARG/DIGITS only. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/llcparseprogram.crexx` | C-owned LCP1 construction and independent packet admission reuse the compilation-owned source index and existing strict text codec. | Keep runtime envelope ownership in shared B and generic descriptor execution in the cursor kernel. |
 | `levelc/runtime/llctarget.crexx` | One 33-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, PARSE execution, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
-| Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
+| Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Checked context/entry dispatch selects one shared source body; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; review includes wrappers, cold handlers and helper bodies separately. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
 
 Some old BIF/reference paragraphs still describe DATE/TIME refresh and streams
@@ -274,13 +274,13 @@ Remove per-operator configuration construction and copies of live activation
 state while retaining existing expression/BIF bodies and observable results.
 This does not admit more source forms or close an instruction review.
 
-The following selector migration will cover the existing scalar expressions, assignments, structured
-control, NUMERIC forms, private PROCEDURE routines, argument/result presence
-and LENGTH/ARG/DIGITS forms. It does not add shared-label/fall-through calling,
-EXPOSE syntax, condition handlers, new BIF names, signed external calls, host
-invocation APIs or dynamic compilation. Those remain with their owning steps.
-The completed runtime baseline supplies the five-callable B bundle and nine
-direct-host adapters below; generated C still needs the approved migration.
+The STEP03d selector migration covers scalar expressions, assignments, structured
+control, NUMERIC forms, argument/result presence and LENGTH/ARG/DIGITS. The
+[current PROCEDURE contract](#proposed-procedure-contract) supersedes its private
+label/pool route with shared entries and executed EXPOSE. Condition handlers,
+new BIF names, signed external calls, host invocation APIs and dynamic compilation
+retain their owning steps. The shared runtime supplies the five-callable B bundle
+and nine direct-host adapters below.
 The existing Unicode procedures and algorithms are unchanged.
 
 #### Approved shared B surface
@@ -349,23 +349,15 @@ therefore passes the authoritative bundle by reference and never substitutes
 a value copy when a live binding is required. It must not overwrite, move,
 resize away or recycle any referenced owner while a borrow is live.
 
-For the admitted private-PROCEDURE call profile, each caller call window owns
-the child's argument/activation object, private pool and bundle until the child
-returns. Populate arguments in source order, inherit state with the existing
-`inheritSignalPolicy`, and mark the invocation using `beginInternalCall` or
-`beginInternalFunction`. Use existing `enterProcedure` validation and pool
-initialisation/status inheritance; no new inheritance algorithm is added.
-Construct the bundle only after those owners occupy stable storage. Nested
-calls borrow the same root configuration and create fresh child activation
-state; a child NUMERIC change cannot modify the parent's activation.
-
-The callee uses the supplied binding rather than constructing another pool.
-Rebinding in direct runtime tests can use another caller-owned pool, proving
-that subsequent reads and BIF contexts observe the same authoritative bundle.
-This is not permission to implement the later shared-label/PROCEDURE protocol
-inside this slice. Any later callee-local replacement must restore or end every
-borrow before that local dies; it cannot leave a caller-owned bundle referring
-to returned-frame storage.
+Each synchronous caller owns a fresh child activation and separate bundle.
+Populate arguments in source order, inherit state with existing
+`inheritSignalPolicy`, then select `beginInternalCall` or
+`beginInternalFunction`. The child initially borrows the caller's current pool
+and root configuration. Only executing PROCEDURE creates and binds a stable
+callee-owned private pool; the [shared-entry contract](#proposed-procedure-contract)
+owns exact entry and cleanup rules. Every replacement must restore the supplied
+binding and end borrows before its owner dies. A child NUMERIC change cannot
+modify the parent's activation or VM frame.
 
 Keep existing fresh return-presence packets for now. They contain returned
 value/presence, not a copied live child activation or references to child local
@@ -476,19 +468,19 @@ introduced into static applications.
 
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d is locally complete; current C uses family version 8 without
-changing the context ABI.** Use the following semantic contract and generated procedure
-ABI, with one clean current C target and no compatibility bridge for earlier
-research C programs. The five shared B callables and eight borrowed signatures
+**CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
+current C to v9 and the two-argument source-unit ABI. The approved static/fatal
+profile is locally qualified.** Use the following contract with one current
+C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
-record or RXAS/VM operation is introduced. Complete labels, conditions and
-INTERPRET retain their later gates.
+record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follows the approved contract below; complete
+conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 8. The neutral scalar names do not load the G
+types and `crexx.c` version 9. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1/2/3/4/5/6/7 are never reinterpreted as version 8. Within version 8, the complete C
+versions 1–8 are never reinterpreted as version 9. Within version 9, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -499,7 +491,7 @@ borrowed argument/activation packet and a fresh return-presence packet. They
 retain the existing byte codec in the semantic registry. `context` uses that
 same nominal codec registration but denotes only a live reference to an
 authoritative `RexxClassicContext`; its runtime payload is never serialized in
-IR. It may originate only at the one required function parameter and flow
+IR. It may originate only at required function parameter 1 and flow
 through reference-value copies and local slots. A context slot is bound once
 in its function's entry block, from parameter 1 or an earlier proven entry
 alias, before entry reads; every later/dead-block read requires that binding.
@@ -516,9 +508,10 @@ attribute of `parse.execute`; constants, slots, parameters and results of this
 type are refused. Its [LCP1 contract](#proposed-c-parse-integration) belongs to
 the shared B executor and its independent C producer/admission boundary.
 
-The following table owns all 53 current descriptors. V8 removes only the
-scalar `arguments.read` operation; all remaining declarations keep their
-relative order/fields/effects. In canonical registration order DROP is 5,
+The following table owns the 53 base descriptors. The five appended v9
+descriptors and entry/procedure protocol are owned by the
+[approved PROCEDURE contract](#proposed-procedure-contract). The retired
+scalar `arguments.read` operation remains absent. In canonical registration order DROP is 5,
 SELECT is 41/42, DO is 43–50, transfer.invalid is 51 and PARSE is 52/53. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
@@ -556,7 +549,7 @@ state/failure/observation proof.
 | `return.absent` | — | — | R | `none` | `resource` |
 | `requirevalue` | `result:R` | — | V | `none` | `missing.result` |
 | `setresult` | `context:C result:R` | — | — | `context` | `condition` |
-| `call` | `arguments:A context:C` | `target:T function:B` | R | `context.output` | `condition` |
+| `call` | `arguments:A context:C` | `target:T entry:I function:B` | R | `context.output` | `condition` |
 | `length` | `value:V context:C` | — | V | `context` | `condition` |
 | `exit` | `value:V` | — | — | `process` | `exit` |
 | `drop` | `context:C` | `name:T indirect:B` | — | `context` | `condition` |
@@ -574,7 +567,8 @@ state/failure/observation proof.
 
 `form` admits only the current
 `scientific`/`engineering` spellings; `target`
-must identify an existing private routine. `function` is a required canonical
+must identify an owning source-unit function, with `entry` naming a declared
+positive entry in that function. `function` is a required canonical
 Boolean attribute: true selects `beginInternalFunction`, false selects
 `beginInternalCall`. It is static invocation metadata, not another argument
 or source-language feature. Ordered actual evaluation and explicit omitted
@@ -588,11 +582,11 @@ contract below. Standalone ARG uses those same operations with packet UPPER=1.
 Every generated source-unit procedure, including `$MAIN`, has precisely:
 
 ```text
-(context = reference .rexxclassiccontext..RexxClassicContext)
+(context = reference .rexxclassiccontext..RexxClassicContext, entry = .int)
     -> .rexxactivation..RexxActivationArguments
 ```
 
-The sole argument is required, with no default or expose modifier. The result
+Both arguments are required, with no default or expose modifier. The result
 is the existing fresh presence packet; it cannot contain references to child
 owners. Expression calls still use `requirevalue`; statement calls still
 apply/drop `RESULT` in the caller's current pool using existing behavior.
@@ -600,18 +594,14 @@ The VM `main(argv)` entry and integer completion status are unchanged.
 
 Root entry finishes `mainargs(argv)`, constructs one UTF8 configuration and one
 Unicode-name pool in dedicated stable locals, then constructs one bundle using
-their references. It passes `reference bundle` to `$MAIN`. A private call first
-finishes all argument-packet construction, puts that activation in its final
-caller-owned local, calls existing `inheritSignalPolicy(parent.activation())`,
-the selected `beginInternal*` and `enterProcedure`, and initializes a fresh
-private pool with existing command-status inheritance from `parent.pool()`.
-Only then does it construct the child bundle with the parent's configuration
-reference and call the callee with `reference childBundle`. The caller owns
-these locals until return/unwind; callees construct no replacement pool.
-Nested calls have distinct owner windows. Normal return clears borrowed call
-arguments and temporary aliases before releasing bundle/activation/pool owners;
-abrupt paths use existing VM unwind cleanup. This introduces no shared-label
-entry or later PROCEDURE/EXPOSE protocol.
+their references. It passes `(reference bundle, 0)` to `$MAIN`. Internal
+calls finish their argument packet, construct a fresh child activation and
+separate bundle that initially borrows the caller's current pool/configuration,
+and pass its admitted positive entry ID. Existing inheritSignalPolicy and
+beginInternal* methods establish inherited state and eligibility. Only an
+executed PROCEDURE creates a private pool; its ordered exposures and all
+normal/EXIT/fatal restoration follow the
+[approved source-unit protocol](#proposed-procedure-contract).
 
 Select the existing exported class factories/methods through the independent
 metadata reader. In particular, use the existing
@@ -651,8 +641,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v8 IR + current bundle/adapters | Supported through the one-context ABI; the plan identifies remaining PARSE/ARG obligations. |
-| Current selector + C v1/v2/v3/v4/v5/v6/v7/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v9 IR + current bundle/adapters | Approved two-argument source-unit ABI; PROCEDURE implementation/qualification and later PARSE/ARG obligations remain open. |
+| Current selector + C v1–v8/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -742,7 +732,8 @@ its exact runtime/VM contracts remain at the final STEP11 decision gate.
 **Approved by Adrian, 19 October 2026; C v3 source/AST/admission/lowering is
 locally qualified in normal Debug with independent caller/helper review.**
 The [plan](../PLAN.md#current-action-drop) tracks DROP status and remaining work;
-source EXPOSE, conditions/full diagnostics and TRACE retain later owners.
+conditions/full diagnostics and TRACE retain later owners; static shared-entry
+EXPOSE composition follows the current PROCEDURE contract.
 Reuse the existing [Unicode symbol contract](../../../../compiler/docs/levelc_unicode_and_streams.md#ordinary-values-and-byte-compatibility)
 and [pool methods](../../../../lib/rxfnsc/RexxVariablePool.crexx), including
 `dropSymbol(name=.string)->.void` and
@@ -786,11 +777,10 @@ C parser production consuming it. In particular, `.RCx`/`.RESULTx` must not
 split into a reserved-dot variable plus another target or concatenated value;
 reducing the sink must preserve that refusal and the original error position.
 Preserve raw ARG destination names too; the shared PARSE executor uppercases
-the captured argument without changing target/operand names. The wider variable lexer does not
-expand the current ASCII-undotted routine/call-name profile: validate those
-names separately and refuse unsupported shapes rather than collapsing Unicode
-identities. Full routine-name integration remains open in STEP04/06; include
-this boundary in the shared-symbol regressions.
+the captured argument without changing target/operand names. Routine/local-CALL
+names admit the current identifier-token Unicode, punctuation and dotted forms,
+using shared whole-name casing. Numeric/quoted labels and expanded CALL forms
+remain STEP04/06 work; preserve those boundaries in shared-symbol regressions.
 [L token/tree byte offsets](../../../../langtools/doc/user-guide.md#input-profiles)
 and original source bytes remain unchanged. Switching to scalar `utf8` also
 expands the quoted-body sets beyond U+00FF, preserving existing Greek/CJK/emoji
@@ -810,12 +800,13 @@ In v3, each `load`, `store` and `drop` name attribute must be exactly one valid
 C variable symbol. `dropSymbol` assumes this precondition; it is not a runtime
 source-name validator. One private C-owned admission check uses the
 same generated C symbol lexer rule and requires one variable token spanning
-all input bytes: reuse `llcgrammar.language()` and existing
-`lllanguage.request(...).lex(0)`, then check token kind/count and original
-start/end offsets. Each selector retains one generated definition and budget
-policy; it lexes each name without rebuilding tables or adding a growing linear
-name memo. The same generated definition serves source lexing and
-name admission; no source parsing or new public service is needed. This adds
+all input bytes. `llcsymbols.checked` borrows the private
+`llclanguage` owner through `lllanguage.request.borrowed(...).lex(0)` and checks
+kind/count and original offsets. Each checker owns its name budget/policy;
+source parsing and frontend/backend admission share the same resident generated
+definition under the [prepared-language contract](#proposed-prepared-language-reuse).
+Symbol/error queries do not start DO graph traversal. No source-name parser or
+growing linear name memo is introduced. This adds
 no compiler-host `rxfnsc` dependency or duplicate Unicode classifier.
 Indirect subsidiary words retain their separate existing
 runtime/configuration validation. Canonical codecs, entry-bound context and
@@ -829,8 +820,8 @@ read-only comparison inputs, with new-C independent expectations and pool
 tests. Include `drop names (names)`, subsidiary `key items.key`, invalid words
 followed by valid names, arbitrary tails, dropped-versus-empty/default state,
 Unicode letters/blanks/micro sign and malformed unreachable source. Prebound
-context/IR tests can prove alias integration while source EXPOSE and resumable
-conditions keep their later owners. Distinguish `µ` from Greek `μ`/`Μ` across
+context/IR tests prove alias integration alongside source EXPOSE; resumable
+conditions and dynamic entries retain their owners. Distinguish `µ` from Greek `μ`/`Μ` across
 assignment/read/drop; `names='names victim'; drop(names)` must retain its captured
 list after dropping its carrier. A prebound lowercase compound-tail alias must
 survive whole-stem DROP without affecting an unrelated parent tail. Bound DROP
@@ -850,12 +841,10 @@ passes the exact `RexxValue` to `RexxVariablePool.setSymbolValue` once. The pool
 owns post-RHS tail substitution, final classification, stem reset and alias
 propagation. Compiler-side tail capture or text conversion is not required.
 
-Source call/read-before-store inspection and a test-only exported C IR body
-that mutates the supplied context before storing provide complementary proof.
-Ordinary private calls create fresh pools, so that composition does not prove a
-source RHS call can mutate its caller through EXPOSE. Source EXPOSE/shared
-labels, exact Classic diagnostics, resumable conditions and full TRACE remain
-the existing STEP04/06/07 dependencies.
+Source call/read-before-store checks and a test-only exported C IR body verify
+that a supplied-context mutation precedes the write. Shared-entry calls and
+ordered EXPOSE compose with this same live-pool route. Exact Classic diagnostics,
+resumable conditions, full TRACE and dynamic entries retain STEP04/07/11 ownership.
 
 <a id="proposed-next-instruction-options"></a>
 
@@ -894,10 +883,9 @@ has no work.
    `COMMENTS_HASH`/`COMMENTS_NOHASH` and `COMMENTS_DASH`/`COMMENTS_NODASH`
    explicitly enable/disable their line forms; `COMMENTS_NOSLASH` is accepted,
    `COMMENTS_SLASH` refused, and opposite switches for one form conflict.
-   Repeated identical switches are harmless. Generated `language()` constructs
-   fresh definition/comment-rule owners per call with no globals. Replace only
-   that request's rules through existing `llcomments.rules` and
-   `lllanguage.definition.usecomments`, preserving quote
+   Repeated identical switches are harmless. The prepared definition remains
+   read-only. Discovery and final parsing borrow it while the final request
+   receives a copied local `llcomments.rules` override, preserving quote
    shielding, original bytes/spans and request isolation. No native pre-scan,
    second comment algorithm, Unicode-profile switch or B/G dispatch is added.
    Unknown bare words do not change file settings; their ordinary expression
@@ -920,7 +908,7 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. The current C v8/53 descriptors are owned by the
+   had 41 operations. The current C v9/58 descriptors are owned by the
    [C-family table](#current-c-family-contract).
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
@@ -930,8 +918,9 @@ has no work.
    source; prior output survives rejection. IR-off/on RXAS must retain operand
    work/errors while showing no OPTIONS processor call or unused bare/literal
    helper/default/frame growth. Focused normal Debug reuses existing tools and
-   comment/runtime proofs; SELECT/shared labels, exact Classic diagnostics and
-   full conditions/TRACE retain their later owners. Adding any recognized word
+   comment/runtime proofs; exact Classic diagnostics and full conditions/TRACE
+   retain their later owners. Fresh-entry OPTIONS consumes eligibility under
+   the current PROCEDURE contract; zero-work comparisons require consumed state. Adding any recognized word
    or other effect to `applyOptions` invalidates this specialization and requires
    C contract review, consumer regressions and recompilation before integration.
 
@@ -945,7 +934,7 @@ has no work.
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
-41 operations. Current [C v8/53/33](#current-c-family-contract) supersedes that
+41 operations. Current [C v9/58/33](#current-c-family-contract) supersedes that
 version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
@@ -963,8 +952,8 @@ clause, including nested SELECT. Preserve null clauses, nearest ELSE, keyword
 variables and ordinary statement dispatch for every admitted arm. Missing,
 stray, duplicate or out-of-order clauses, missing operands/arms/END and named
 END receive located refusal, including dead source. Retained CLabel nodes at
-legal clause boundaries remain a shared-label profile refusal until STEP06;
-they must not be silently discarded.
+legal clause boundaries are observation-only, and never callable entries that
+bypass their SELECT owner; full TRACE remains open.
 
 Lower to ordered test edges: evaluate each WHEN once until the first exact
 logical 1, execute only its body, then skip remaining tests and arms. Last false
@@ -1001,9 +990,8 @@ version and fresh/loaded origin refusals preserve prior output. Direct shims
 and IR-off/on caller/helper RXAS must prove retained checks, dormant later arms
 and no unused join/default construction. Reuse existing focused Debug
 selectors and runtime proofs; no new aggregate or per-slice ASan campaign.
-Whole SELECT retains shared labels/fall-through/EXPOSE, complete expressions/
-DO, dynamic transfer invalidation, exact diagnostic/recovery and condition/SIGL/clause/TRACE
-dependencies. Approval covers only these AST records, C v4 operation contracts
+Whole SELECT retains complete expressions, dynamic transfer invalidation, exact
+diagnostic/recovery and condition/SIGL/clause/TRACE dependencies. Approval covers only these AST records, C v4 operation contracts
 and two target exports/signal bridge. Whole SELECT and complete C remain open
 under the plan and the requirements ledger.
 
@@ -1018,7 +1006,7 @@ tracks remaining LC-I-08 work against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
 The qualified DO increment introduced **version 5 / 51 operations** and
 **32 exports**, retaining the four existing C types and context procedure ABI.
-The [current v8/53/33 contract](#current-c-family-contract) supersedes that
+The [current v9/58/33 contract](#current-c-family-contract) supersedes that
 version boundary without changing the DO descriptors. No generic L, B runtime,
 native compiler or VM API/algorithm changes are commissioned.
 
@@ -1179,7 +1167,7 @@ unsupported source copying. No new aggregate or per-slice ASan is commissioned.
 Unnamed transfers cover every admitted repetitive form and skip groups/SELECT;
 named LEAVE/ITERATE and invalid-target delivery are separately qualified under
 the [transfer contract](#approved-leave-iterate-contract). Shared
-labels/EXPOSE, full expressions/exact recovery, resumable conditions/SIGL and
+dynamic entries, full expressions/exact recovery, resumable conditions/SIGL and
 clause/TRACE remain open; approval of this bounded increment closes no CFC criterion.
 
 <a id="proposed-leave-iterate-contract"></a>
@@ -1268,8 +1256,8 @@ resumable transfer claim. Recheck fresh and post-transform graphs before output.
 LEAVE with independent fixtures. `CLC-STEP05.ITERATE1–3` separately qualified
 ITERATE using the same approved ABI and existing DO end path. Reuse unchanged
 DO/B/L proof; no new aggregate or per-slice
-sanitizer campaign is commissioned. Shared labels/EXPOSE, SIGNAL/INTERPRET loop
-invalidation, resumable conditions, exact recovery and clause/TRACE retain their
+sanitizer campaign is commissioned. SIGNAL/INTERPRET loop invalidation,
+resumable conditions, exact recovery and clause/TRACE retain their
 owners. All complete-C criteria remain open and INTERPRET remains last.
 
 <a id="parse-machinery-review"></a>
@@ -2007,7 +1995,7 @@ serve CFC-AC01–04/06–12 without closing those complete-C criteria.
 
 | ID | Checkable pass condition |
 |---|---|
-| **CPARSE-AC01** | Independent AST/admission fixtures cover seven sources, UPPER, empty/leading/trailing/repeated comma positions, arbitrary target/dot/control runs, literal/radix/dynamic operands and located malformed/dead source; previous output survives refusal. Exact selected C declarations/metadata/packet malformed controls refuse atomically (originally v7, current v8 after the approved ARG retirement). |
+| **CPARSE-AC01** | Independent AST/admission fixtures cover seven sources, UPPER, empty/leading/trailing/repeated comma positions, arbitrary target/dot/control runs, literal/radix/dynamic operands and located malformed/dead source; previous output survives refusal. Exact current C-family declarations/metadata/packet malformed controls refuse atomically. |
 | **CPARSE-AC02** | Direct generic B consumers prove cursor v3 transitions, control-only anchors, backward/equal/zero/oversize positions, empty/missing/repeated patterns, Unicode/NUL and Input/Field order. Direct assembly proves `parseplan` rejects v3 atomically and unchanged v1/v2/direct consumers pass. No duplicated matcher, callable or opcode is introduced. |
 | **CPARSE-AC03** | Direct shared-B and independent new-C tests prove earlier writes/later live reads, old-value operands that close pending sections, repeated/compound/stem/drop/alias targets and exact final remainders with Unicode White_Space/configured blanks. No eager lookahead, shrinking tails or prefix replay. |
 | **CPARSE-AC04** | Seven-source state/effect tests prove once-only acquisition/conversion/UPPER, queue versus LINEIN distinction, exact raw ARG values/presence, non-ARG extra commas receiving empty, SOURCE root mode/logical path/spaces and VERSION runtime identity. Empty templates still consume required sources without a cursor. Direct prebound source-state tests prove LINEIN error/NOTREADY under OFF/CALL/SIGNAL, first-use uninitialized storage and exactly one reset, clean reuse/rebinding, pending CALL line and typed SIGNAL transport before template execution without a new condition ABI. |
@@ -2135,8 +2123,324 @@ final diff and RXAS. Builds are scheduled by the coordinator in normal Debug;
 an expanded nested aggregate is measured in isolation before its retained
 serial/generous timeout is accepted. Approval also commissions a scoped local
 commit after qualification, with no push or hosted wait. Whole LC-I-11 remains
-open until ARG-AC05's shared activation/observation/delivery owners supply their
+open until ARG-AC05's configured observation/delivery owners supply their
 proof; native or direct-B passes never substitute for new-C coverage.
+
+<a id="proposed-procedure-contract"></a>
+
+## Approved PROCEDURE and shared-entry contract
+
+**Approved static/fatal profile implemented and locally qualified; whole LC-I-12 remains open.**
+Deliver LC-I-12's static bare PROCEDURE and ordered direct/indirect EXPOSE on
+one source-unit body. Internal calls start with a fresh activation sharing the
+caller's current pool; only executing PROCEDURE creates a private pool. This
+replaces the research compiler's per-label private routines. The complete
+instruction retains later configured-condition/TRACE, host/callback, platform
+and INTERPRET obligations. Native C is a read-only control, never the oracle or
+a source-compilation dependency.
+
+### Source AST and placement
+
+```text
+CProcedure(exposes: ProcedureExposes?)
+ProcedureExposes(items: (ProcedureExposeDirect | ProcedureExposeIndirect)+)
+ProcedureExposeDirect(name: Name)
+ProcedureExposeIndirect(name: Name)
+```
+
+Bare PROCEDURE has no `exposes` child. EXPOSE requires at least one item;
+parentheses contain exactly one raw variable Name. Preserve authored spelling
+and instruction/list/item/Name byte spans and scalar columns; the indirect
+item includes its parentheses and the list includes EXPOSE. Do not resolve
+compound tails or capture subsidiary words in the AST. Existing generated C
+variable recognition, keyword context and nearest-ELSE ownership remain the
+source authorities. No arbitrary list-length limit is introduced.
+
+Static placement and execution eligibility are separate checks. A PROCEDURE
+must be the first instruction lexically following an authored label, ignoring
+comments/null clauses; THEN/ELSE/OTHERWISE and another instruction end that
+source window. Misplaced clauses refuse with authored 17.1 even in dead or
+uncalled source: `p: nop; procedure` and `if 0 then procedure` are invalid.
+`p: nop; q: procedure` is source-legal: calling q succeeds, while reaching it
+after p's NOP raises runtime 17.1. Main fall-through and a second reached
+PROCEDURE likewise fail at the authored clause before allocation or exposure.
+A group label may reopen the lexical window, but cannot become an entry that
+bypasses its executed DO/IF/SELECT. Wider label/THEN grammar remains C-SRC work.
+
+### One body, names and entry ABI
+
+Every source-unit IR function and its generated RXAS procedure has exactly:
+
+```text
+(context: reference .rexxclassiccontext..RexxClassicContext, entry: .int)
+    -> .rexxactivation..RexxActivationArguments
+```
+
+Both arguments are required without defaults/expose modifiers; `entry` uses
+existing `crexx.g.int64` in C IR.
+The source compiler emits one `$MAIN` function containing the complete unit.
+Raw C IR may contain several such unit functions; each owns an independent
+entry map, context/entry slots and cleanup. Existing explicit export metadata
+uses this same signature; no per-label callable wrappers or cloned source tails.
+
+Entry 0 is the main-position sentinel with `name=''`, entered by the root
+wrapper or deliberate direct unit callers with an ineligible activation.
+Positive IDs are dense 1..N, assigned to first occurrences of distinct
+canonical top-level labels in source order. Adjacent distinct labels can share
+a body position. Later duplicates keep their fall-through/source positions and
+never replace the first target. Trailing labels are callable and fall through
+to the ordinary absent-result epilogue. Labels inside active groups are
+observation-only and never enter the callable map or bypass loop construction.
+
+Admit the existing generated C identifier-token label/local-call surface,
+including its Unicode, punctuation, dotted and reserved-dot identifier forms;
+remove the old ASCII-undotted guard. Canonicalize the literal whole label with
+existing `rexxclassic_unicode_upper`; do not substitute tails, normalize text,
+use ASCII-only uppercasing or add a Unicode algorithm. Numeric/quoted labels
+and expanded CALL forms retain C-SRC/LC-I-13 ownership. Source `$MAIN:` is an
+ordinary positive label: its namespace is distinct from the unit function and
+empty-name entry-0 sentinel. Reserved-dot label names never access pool state.
+
+### Approved C v9 schema
+
+Keep the five existing C types, core v1, neutral scalar family v1 and LLIR v2.
+Advance only `crexx.c` to **v9 / 58 operations**: retain the 53 v8 descriptors
+in order, change `call` as below and append these five descriptors in table
+order. Retain the **33 target exports**; select existing B methods directly
+through checked metadata. V8 and earlier refuse rather than migrate. No new
+B public API, generic L service/transport, RXBIN record or VM opcode is proposed.
+`C`, `I`, `T`, `B`, `A`, `R` denote context, int64, text, core.boolean,
+arguments and result; new operations have no result unless shown.
+
+| Operation | Ordered inputs | Ordered attributes | Output | State / failure / termination |
+|---|---|---|---|---|
+| Existing `call`, revised | `arguments:A context:C` | `target:T entry:I function:B` | `value:R` | unchanged `context.output / condition / returns` |
+| 54 `entry.test` | `context:C entry:I` | `id:I name:T` | `value:B` | `context / condition / returns` |
+| 55 `entry.invalid` | — | — | — | `none / condition / diverges` |
+| 56 `procedure.consume` | `context:C` | — | — | `context / condition / returns` |
+| 57 `procedure.enter` | `context:C` | — | — | `context / condition.resource / returns` |
+| 58 `procedure.expose` | `context:C` | `name:T indirect:B` | — | `context / condition.resource / returns` |
+
+`call.target` names the owning unit function; `entry` must be a declared
+positive ID in that function. The frontend resolves source local names to that
+pair; every call constructs a fresh child activation and bundle. `function`
+continues to select existing beginInternalFunction versus beginInternalCall.
+Argument evaluation/presence and fresh result packets retain their existing
+contract. Source internal calls never enter 0 or reinterpret it as a routine.
+
+`entry.test` first compares integers directly. A mismatch returns false without
+reading context. On a match it checks existing `procedureEligible()`: entry 0
+requires false, a positive entry requires true. This exposes the conditional
+reference/state/error effect honestly; it is not a pure generic comparison
+with a hidden guard. No constant evaluator is registered. A mismatched
+activation signals existing INVALID_ARGUMENTS with detail
+`LLC-ENTRY: activation does not match entry kind`. Exhausted dispatch reaches
+`entry.invalid`, which signals INVALID_ARGUMENTS with detail
+`LLC-ENTRY: invalid source-unit entry identity`. Both are generated-ABI invariant
+errors, distinct from source missing-label 16.1 and authored PROCEDURE 17.1;
+the current finite fatal profile cannot resume them. As for existing divergent
+C operations, entry.invalid retains a generated cold absent-result/core.return
+closure solely to satisfy ordinary IR block structure; it cannot execute.
+
+The function entry binds one read-only entry slot from required parameter 2,
+like the existing context slot from parameter 1. A generated setup block binds
+them and jumps to a separate first dispatch block, preserving the loads through
+generic same-block forwarding. Each dispatch block loads
+those slots, performs its one entry.test and branches on that result: true to
+the declared entry block, false to the next ID, with the final false edge to
+entry.invalid. This ordinary CFG exposes every entry to generic analyses.
+The map is finite, dense, ordered, function-local and has unique canonical
+positive names; slot writes after binding, foreign blocks and other entry.test
+uses refuse. Dispatch has generated provenance, not a fabricated source clause.
+The matching entry check validates the eligibility needed by this static ABI;
+it does not claim host-authenticated provenance beyond the caller contract.
+
+### Eligibility, ordered effects and admission
+
+`procedure.consume` calls existing consumeFirstInstruction. A reached ordinary
+instruction consumes eligibility, including NOP, bare/literal OPTIONS, empty or
+comma-only ARG and bare DO; comments, labels and null clauses do not. Place the
+transition on the fresh entry edge before the first source instruction or its
+operand effects; ordinary fall-through can join after that edge. Thus adjacent
+labels can share one transition, already-consumed paths need no repeated calls,
+and otherwise non-emitting instructions gain only their necessary eligibility
+effect. A trailing empty entry uses a generated absent-result/return epilogue
+without inventing an executed instruction. Dead no-ops retain static validation
+without added blocks, helpers or frame demand. Elision requires proof that
+eligibility is already consumed; future handlers/INTERPRET invalidate any
+assumption that source entries alone are the activation's entry points.
+
+`procedure.enter` first calls the existing enterProcedure method, which checks
+eligibility, raises CLASSIC_SYNTAX 17.1 on failure and consumes eligibility on
+success. Preserve that event with the authored C clause; allocate no pool before
+success. Construct one stable private owner, call
+`privatePool.inheritCommandStatus(savedEntryPoolRef)`, bind the authoritative
+bundle to the new owner with existing bindPool and mark the binding committed. `procedure.expose` calls that pool's existing exposeSymbol
+or exposeIndirect with the immutable immediate-caller pool reference and current
+configuration. Exposures are consecutive, left-to-right operations after their
+enter in the same block, allowing only necessary context loads between them;
+each retains its authored item origin and enclosing PROCEDURE identity. Multiple
+source-legal PROCEDURE groups are allowed; a second reached enter fails at runtime.
+Enter and consume carry the owned exact source origin of their authored clause;
+expose carries its owned exact item span within the same source/enter span.
+The selector derives the enclosing clause identity from that enter, without a
+serialized line/identity attribute or source reparse. Invalid/mismatched origins
+refuse even in dead records. Existing B metadata signatures remain unchanged:
+exposeSymbol takes `(name:string,parent:reference pool)`, exposeIndirect adds
+`config_ref:reference config`, and bindPool takes `(pool:reference pool)`;
+all return void.
+
+Admission checks canonical schema/types/attributes/names/origins and contiguous
+exposure groups in every record, including dead records. A bounded C-owned
+reachable-CFG protocol tracks unions of FreshShared, ConsumedShared and Private:
+matched positive entry seeds FreshShared, main seeds ConsumedShared; consume
+maps FreshShared to ConsumedShared and retains the other states. No semantic
+operation or operand construction may precede consume/enter on a FreshShared
+path, except declared dispatch setup or the generated empty-entry epilogue.
+That epilogue is only generated return.absent immediately consumed by terminal
+core.return, with mechanical context loads/cleanup allowed but no intervening
+semantic operation or successor back into the body; it does not consume
+eligibility. The frontend proves the empty source position, and admission
+checks this terminal shape.
+Enter's successful continuation is Private; ConsumedShared/Private paths signal
+runtime 17.1, not a compilation rejection. Expose requires the successful
+Private continuation and its structural group. Joins preserve possible states.
+Keep existing DO phase/stack checks on every admitted entry edge; no entry can
+arrive with an unconstructed loop owner. The frontend proves source nesting,
+first-label order and erased no-op obligations; raw IR that omits a source NOP
+is a different IR program. The selector validates declared IR invariants without
+reparsing source to invent missing source semantics. Run the same bounded checks
+on fresh, loaded and transformed graphs before atomic publication. Check workspace
+and name-byte products before allocation; use existing graph/work/byte/register
+limits, with no new public budget. The three-state unions grow monotonically;
+charge traversed records/edges/names and bound changed-state queue storage.
+Exhaustion refuses atomically without publishing output or mutating input.
+
+### Owners and exit cleanup
+
+The call window owns the child argument/activation and separate child bundle,
+borrowing the parent's configuration/current pool. Call inheritSignalPolicy,
+then the selected beginInternal method; do not call enterProcedure, poolnew or
+inheritCommandStatus at the call site. Never pass the parent's authoritative
+bundle as the child: its pool replacement must remain independent.
+
+Only units containing procedure.enter need hidden saved-entry-pool, private
+owner and committed-binding flag storage. Initialize owner/flag before fallible
+entry setup. Capture the checked entry pool once into a stable reference; a
+flag-zero cleanup must not read uninitialized storage after an earlier failure.
+One owner suffices because at most one enter can succeed. Keep parent owners
+live across synchronous children; all pool operations resolve the bundle's
+current binding, so PARSE/ARG and BIF helpers observe replacement immediately.
+
+The VM cold unwind restores call-window swaps and preserves receiver links;
+the selector must unlink both receiver locals before clearing their storage.
+Every explicit/default/EOF RETURN, current direct VM EXIT and all nine finite
+fatal paths must end transient call/parse/BIF/DO borrows, restore the bundle to
+its saved entry pool if committed, clear the flag, then release references and
+the private owner. RETURN forms its owned presence packet, and EXIT preserves
+its completion value, before cleanup.
+Construction failures before binding leave the old binding intact; failures
+after binding must restore it before owner expiry. Normal direct callers can
+reread the bundle after return without a stale reference or changed parent view.
+Fatal cleanup preserves the original raw event, signal discriminator and
+authored location in dedicated stable storage before any cleanup call; those
+calls must not use
+invoke's default scratch destination and overwrite the discriminator. Restore
+before formatting/relaying the original signal, without replacing its identity
+or provenance. The current fatal profile stays nonresumable: use subprocess
+identity/origin/no-later-marker checks plus structural cleanup ordering, not an
+outer B handler that continues after failed C. Resumable restoration remains
+with the later condition owner.
+
+### Acceptance and implementation ownership
+
+**CPROC-AC01–06 are locally qualified for this approved static/fatal profile.
+CPROC-AC07 and whole LC-I-12 remain open.** These criteria serve
+CLC-STEP06.PROCEDURE1–4 and CFC-AC02/03/06/09/11 without closing complete C.
+
+| ID | Checkable contract / required inspection |
+|---|---|
+| **CPROC-AC01** | Exact ordered AST/spans and contextual names; malformed EXPOSE/parentheses/nonvariable tails and dead source refuse at authored locations. Distinguish static misplaced 17.1 from legal main/late/second runtime 17.1; include group labels and nearest-ELSE boundaries. |
+| **CPROC-AC02** | One body, deterministic checked entries, Unicode/dotted/$MAIN/reserved-dot names, adjacent/duplicate/trailing labels, fall-through, recursion and fresh/shared activations. Group labels cannot be called or bypass owner construction; direct IR multi-unit/exported-zero and wrong-activation controls cover the declared ABI. |
+| **CPROC-AC03** | Independent pool expectations cover private isolation and direct/indirect scalar/stem/exact-compound aliases, source-order tail dependencies, captured lists/configured blanks/invalid-word continuation, duplicates, Unicode/NUL, nested aliases and stem assignment/DROP propagation. Reuse existing pool algorithms and keep originals/argument presence intact across ARG/PARSE. |
+| **CPROC-AC04** | Stable owners and flag-zero/committed paths survive recursion, normal/absent return, EXIT and all finite fatal relays; ordinary bundle rereads remain valid. Checked-reference controls exercise precommit and committed exposure failures; constructor/allocation cleanup is inspected structurally, without allocation-fault injection or resumption claims. Inspect restore-before-release and preserved raw event/tag/location; fatal tests assert identity/origin and no later effects without claiming resumption. |
+| **CPROC-AC05** | Exact v9/58/five-type/33-export and two-argument metadata; v8/forged/dead schema, bad maps/slots/IDs/names/context/kind, detached exposures and missing consume before semantic work refuse. Bounded all-record/reachable checks preserve DO ownership, input graphs, previous output and resource-limit atomicity on fresh/loaded/transformed IR. |
+| **CPROC-AC06** | Full caller/helper RXAS in representative compiler/IR/assembler modes and both VMs: one source body, direct integer dispatch, no runtime name search, no pool allocation on shared calls, pool/expose work only when reached, necessary once-only consume, truthful logical source and ordered cleanup. Include label-free/shared-only/simple private cases. Linear checked dispatch and existing context/numeric/window/register costs are explicit bounded baselines, not speed claims. |
+| **CPROC-AC07** | Keep whole LC-I-12 open for configured errors/NOVALUE, complete conditions/resumption/SIGL/clause/TRACE, callback/host and declared service/install/platform proof, and later INTERPRET eligibility/transfers. Preserve ARG-AC05, CPARSE-AC07/08 and every CFC criterion; native or direct-B results never substitute for new-C acceptance. |
+
+The single C writer owns frontend/schema/selector integration; independent
+workers own assigned fixtures/review and audit shared B metadata read-only.
+After approval use focused normal Debug, the relevant existing correctness and
+consumer routes, full caller/helper inspection and the product build. Measure
+any expanded nested aggregate before serial/generous scheduling is accepted;
+reuse unchanged native/B/L qualification, with no automatic per-slice sanitizer
+or broad hosted campaign. Report results in conversation. The
+[work packet](agent-work-packages.md#procedure-assignment-packet) assigns paths;
+[PLAN](../PLAN.md#current-action-procedure) owns the four steps and delivery queue.
+
+<a id="proposed-prepared-language-reuse"></a>
+
+## Approved prepared-language reuse
+
+**CPREP-AC01–05 are locally qualified under the ownership and platform scope below.** Reuse the generated C
+language's validated packed DFA, LR tables, production index and metadata
+through source parsing, frontend/backend symbol checks and later requests in
+the same compiler worker. Do not reload, revalidate or copy those large objects
+at request/reader boundaries. Keep source, comments, limits, tokens, trees,
+diagnostics and IR admission request-local. Existing owning L constructors
+remain valid general-purpose APIs; research C migrates to the borrowed route.
+No native frontend, VM operation, Unicode algorithm or serialized format changes.
+
+The [L borrowed API](../../../../langtools/doc/user-guide.md#proposed-borrowed-language-requests)
+owns the exact factories, read-only scalar queries, supported LR1 route and
+borrower failure/lifetime contract. C introduces no public L policy or mutable
+reference getters.
+
+A private C module owns one strong definition, constructed by
+`llcgrammar.language()` in its module initializer. Publish it only after the
+existing loaded-image and generated-definition construction checks succeed;
+failed initialization leaves no usable prepared owner. Module initialization
+runs once per mutable VM overlay/worker. C modules pass its private reference
+internally to parsing and name admission; no source-C/runtime/public compile
+service API exposes a mutable owner. The initializer never replaces or mutates
+the published definition. The owner is pinned to its loaded C module/grammar instance and is never
+retargeted. A new owner instance or worker prepares and validates its own tables;
+advancing an unrelated program generation need not replace an unchanged module
+overlay. Changed grammar artifacts require a new prepared owner, not implicit
+invalidation or a VM generation hook. Imported metadata and runtime artifact
+freshness remain separate per-request checks. Direct raw frontend/backend
+requests use this same C owner. Move the existing C name-lexing check out of DO
+protocol execution: a symbol/error query must not trigger an extra DO traversal;
+retain the normal source/frontend/backend DO and PROCEDURE proofs per input.
+
+One bounded generated definition remains resident per compiler worker. Existing
+request source/scan/parse/name/IR work and allocation limits still apply; source
+or graph failure does not poison the prepared owner. New or changed external
+images still pass existing `loaded` validation before any borrow. Each source
+and each fresh/loaded/transformed IR graph retains its normal admission checks.
+This contract does not remove the separate DO/PROCEDURE proofs or authorize an
+unchecked cache, global cross-worker handle or INTERPRET owner protocol.
+
+The independent `ts_llborrowed` fixture and generic RXAS checker own the
+reader/lifetime/diagnostic contracts. C prepared-language and PROCEDURE fixtures
+own repeated source/name/IR admission and policy isolation. Per-worker storage
+is inherited from the unchanged VM module-overlay lifecycle and inspected C
+initializer; this profile adds no concurrent C-worker or new platform matrix.
+
+| ID | Checkable acceptance |
+|---|---|
+| **CPREP-AC01** | One complete preparation per worker/owning module instance; later parser/frontend/backend name requests borrow the same physical DFA/LR/CFG storage. Inspect readable RXAS and loading instrumentation for no hot-path heavy-object copies, repeated `loaded` calls or production/grammar copies. |
+| **CPREP-AC02** | Interleaved default/hash/dash comment requests and different limits keep independent policies, tokens, diagnostics and byte spans; source/name acceptance and OPTIONS/STRICTC behavior stay unchanged. |
+| **CPREP-AC03** | Live owners outlast readers; expired definition/DFA/table references refuse atomically. Request-owned tokens/AST/output remain valid after readers end. Separate workers have separate owners; no mutation/rebinding is permitted during borrowing. |
+| **CPREP-AC04** | Malformed/incompatible images never publish an owner; valid changed images require fresh validation/preparation and cannot reuse an old artifact owner. Ordinary resource refusals and previous output remain intact. Source and raw IR admission still run per input; no lexical/Unicode/name or error algorithm is replaced. |
+| **CPREP-AC05** | Independent non-C DFA/LR consumers exercise borrowed and owning APIs in focused Debug checks; C simple/shared/private and request-policy regressions prove integration. Compare cold preparation with later requests without treating timings as formal performance proof. Preserve existing PROCEDURE acceptance and qualify only affected scopes. |
+
+1. **CPREP-STEP01 — approved/complete:** exact APIs, ownership and supported-backend
+   contract approved by Adrian.
+2. **CPREP-STEP02 — complete:** generic L borrowed readers and scalar CFG queries,
+   private C prepared owner and request-local comment overrides implemented.
+3. **CPREP-STEP03 — complete local profile:** focused generic/C acceptance and
+   full caller/helper inspection; retain the declared lifecycle/platform scope.
 
 ## Optimisation ownership
 

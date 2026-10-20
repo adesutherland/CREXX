@@ -123,7 +123,7 @@ def main():
                 text = output.read_text(encoding='utf-8')
                 assert 'llctarget2' not in text and 'contextnew' not in text
                 assert str(build) not in text and str(work) not in text
-                assert re.search(r'context=reference \.rexxclassiccontext\.\.rexxclassiccontext', text)
+                assert 'context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int' in text
                 run(stem + '-assemble', [tool('rxas'), '-n', output])
                 execute(stem, link_c(stem, output.with_suffix('.rxbin')), expected)
                 if args.inspect:
@@ -132,6 +132,18 @@ def main():
                 if mode == 'opt' and ir == 'on':
                     run(stem + '-asopt-assemble', [tool('rxas'), output])
                     execute(stem + '-asopt', link_c(stem + '-asopt', output.with_suffix('.rxbin')), expected)
+        if not args.refusals_only:
+            # Classic retains micro-sign identity; Greek mu uppercases to Mu.
+            # Distinct outputs prove that boundary and dotted local lookup.
+            path = work / 'routine-names.crexx'
+            path.write_text("options levelc\nsay µ()\nsay μ()\nsay Μ()\nsay p.q()\nexit 0\nµ: procedure\nreturn 'micro'\nμ: procedure\nreturn 'greek'\np.q: procedure\nreturn 'dotted'\n", encoding='utf-8')
+            output = work / 'routine-names.rxas'
+            compile_c('opt', path, output)
+            text = output.read_text(encoding='utf-8')
+            assert re.findall(r'^llf\d+\(\)', text, re.M) == ['llf1()'], 'all routine names share one unit'
+            assert len(re.findall(r'^call [^,\n]+,llf1\(\),', text, re.M)) == 5, 'root plus four checked source calls'
+            run('routine-names-assemble', [tool('rxas'), '-n', output])
+            execute('routine-names', link_c('routine-names', output.with_suffix('.rxbin')), b'micro\ngreek\ngreek\ndotted\n')
         # Compile refusal is independent of optimizer cleanup. Representative
         # malformed unreachable source runs in both IR modes; other distinct
         # boundaries run once rather than multiplying a syntax-only matrix.
@@ -147,9 +159,8 @@ def main():
             ('emoji-name', 'drop 🙂', b'LL_COMPILER_SYNTAX'),
             ('combining-name', 'drop é', b'LL_COMPILER_SYNTAX'),
             ('dead-malformed', 'if 0 then drop (a+1)', b'LL_COMPILER_SYNTAX'),
-            ('unicode-routine', 'exit; µ: procedure; return', b'LL_COMPILER_PROFILE'),
-            ('unicode-call', 'say μ()', b'LL_COMPILER_PROFILE'),
-            ('dotted-call', 'say p.q()', b'LL_COMPILER_PROFILE'),
+            ('unicode-call', 'say μ()', b'RXC-LC-16.1'),
+            ('dotted-call', 'say p.q()', b'RXC-LC-16.1'),
         ]
         for name, source, diagnostic in negatives:
             path = work / (name + '.crexx')
@@ -160,8 +171,8 @@ def main():
                 result = compile_c('opt', path, output, ir, failure=True)
                 message = result.stdout + result.stderr
                 assert re.search(re.escape(diagnostic) + rb'(?: at|:)', message), (name, message)
-                if diagnostic == b'LL_COMPILER_PROFILE':
-                    assert b'routine name is outside the ASCII-undotted profile' in message, (name, message)
+                if diagnostic == b'RXC-LC-16.1':
+                    assert b'unknown Classic routine' in message, (name, message)
                 assert path.name.encode() + b':' in message and b'line ' in message and b'column ' in message and b'^' in message, (name, message)
                 assert output.read_bytes() == b'preserve previous output\n', name
     label = 'DROP_REFUSALS' if args.refusals_only else 'DROP'
@@ -184,15 +195,20 @@ def check_provider_shape(text):
     assert methods.count('rexxclassiccontext.rexxclassiccontext.pool') >= 2
     assert not re.search(r'^deref ', text, re.M), 'copied authoritative owner'
     assert '.expose=dropfixture.run' in text
-    assert 'context=reference .rexxclassiccontext..rexxclassiccontext' in text
+    assert 'context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int' in text
     # Source records remain authored; no compiler-side word/tail loop is emitted.
     assert 'drop-provider.crexx' in text and 'drop items. (names)' in text
     assert not any('word' in target or 'split' in target or 'resolve' in target for target in methods)
-    # Fatal dispatch has its own branch ladder. The normal body containing
-    # these two straight-line DROP items has no list-control loop.
+    # Checked entry dispatch is separate from the two DROP items. Their
+    # semantic block retains the original no-list-control-loop property.
     body = re.search(r'^llf1\(\) \.locals=[\s\S]*?(?=^llerror|\Z)', text, re.M)
     assert body is not None
-    assert not re.search(r'^br(?:t|f)? ', body.group(), re.M), 'unexpected normal DROP list loop'
+    assert re.findall(r'^beq llprocedure1_\d+_match,[^,\n]+,(\d+)$', body.group(), re.M) == ['0'], 'checked exported entry zero'
+    blocks = re.findall(r'^llb\d+:\n([\s\S]*?)(?=^llb\d+:|\Z)', body.group(), re.M)
+    semantic = [block for block in blocks if ','+direct+'(),' in block]
+    assert len(semantic) == 1, 'one straight-line DROP semantic block'
+    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', semantic[0], re.M), 'unexpected normal DROP list loop'
+    assert ',llctarget.poolnew(),' not in body.group() and '.bindpool(),' not in body.group(), 'supplied shared entry adds no private pool'
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 crexx_schedule_directory_qa_tier_finalization()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(_products "${CMAKE_CURRENT_BINARY_DIR}/products")
 file(MAKE_DIRECTORY "${_products}")
 set(_languages)
@@ -99,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir doprotocol parseprogram parse frontend rxas)
+      set(_parts ir language symbols doprotocol parseprogram procedureprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -148,8 +149,12 @@ foreach(_mode opt noopt)
     set(_c_contract_inputs ${_base} ${_shared}
       "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llclanguage.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsymbols.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
+      ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
     ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
@@ -187,6 +192,7 @@ foreach(_mode opt noopt)
       "${_classic_names}"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparse.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcfrontend.rxbin")
+    list(REMOVE_DUPLICATES _c_drop_inputs)
     ll_compile(drop-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/drop/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/drop-contracts-linked.rxbin"
@@ -195,6 +201,62 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_c_drop_contracts_${_mode}
       DEPENDS "${_dir}/drop-contracts-linked.rxbin")
+    ll_compile(prepared-invalid-grammar "${CMAKE_CURRENT_SOURCE_DIR}/tests/prepared-invalid-grammar.crexx"
+      "${_dir}" ${_base})
+    ll_compile(prepared-language "${CMAKE_CURRENT_SOURCE_DIR}/tests/prepared-language.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/prepared-language-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-linked"
+        "${_dir}/prepared-language.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_drop_inputs} VERBATIM)
+    set(_c_invalid_inputs ${_c_drop_inputs})
+    list(REMOVE_ITEM _c_invalid_inputs "${_front}/llcgrammar.rxbin")
+    list(APPEND _c_invalid_inputs "${_dir}/prepared-invalid-grammar.rxbin")
+    add_custom_command(OUTPUT "${_dir}/prepared-language-invalid-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-invalid-linked"
+        "${_dir}/prepared-language.rxbin" ${_c_invalid_inputs}
+      DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_invalid_inputs} VERBATIM)
+    add_custom_target(llcompiler_c_prepared_${_mode}
+      DEPENDS "${_dir}/prepared-language-linked.rxbin"
+        "${_dir}/prepared-language-invalid-linked.rxbin" ${_c_contract_runtime})
+    set(_prepared_vm rxbvm)
+    if(_mode STREQUAL "noopt" AND TARGET rxtvm)
+      set(_prepared_vm rxtvm)
+    endif()
+    foreach(_prepared_case valid invalid)
+      set(_prepared_image "${_dir}/prepared-language-linked.rxbin")
+      set(_prepared_args)
+      if(_prepared_case STREQUAL "invalid")
+        set(_prepared_image "${_dir}/prepared-language-invalid-linked.rxbin")
+        set(_prepared_args invalid)
+      endif()
+      set(_prepared_test "llcompiler_c_prepared_${_prepared_case}_${_mode}_${_prepared_vm}")
+      add_test(NAME ${_prepared_test} COMMAND $<TARGET_FILE:${_prepared_vm}>
+        "${_prepared_image}" -a "${_dir}/context-contract-runtime" ${_prepared_args})
+      set_tests_properties(${_prepared_test} PROPERTIES
+        PASS_REGULAR_EXPRESSION "C_PREPARED[|]checks=[0-9]+[|]failures=0"
+        TIMEOUT 300 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "compiler;level-l;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_prepared_test}
+        TARGETS llcompiler_c_prepared_${_mode} ${_prepared_vm})
+    endforeach()
+    set(_prepared_shape "llcompiler_c_prepared_rxas_${_mode}")
+    add_test(NAME ${_prepared_shape} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-prepared-rxas.py"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}")
+    set_tests_properties(${_prepared_shape} PROPERTIES
+      PASS_REGULAR_EXPRESSION "C_PREPARED_RXAS[|]PASS" TIMEOUT 30
+      LABELS "compiler;level-l;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_prepared_shape}
+      TARGETS llcompiler_c_prepared_${_mode})
+    ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/procedure-contracts-linked"
+        "${_dir}/procedure-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/procedure-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_procedure_contracts_${_mode}
+      DEPENDS "${_dir}/procedure-contracts-linked.rxbin")
     ll_compile(assignment-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/assignment-contracts-linked.rxbin"
@@ -448,6 +510,33 @@ if("c" IN_LIST _languages)
         llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
         library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_arg_vm})
     endforeach()
+  endforeach()
+  # Complementary lanes cover both host/IR modes and available VM engines.
+  # Each launches nested tools and direct-host probes, so serialize the whole
+  # aggregate. The timeout is a generous hang guard, not a speed criterion.
+  foreach(_mode opt noopt)
+    set(_procedure_vm rxbvm)
+    set(_procedure_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_procedure_ir off)
+      if(TARGET rxtvm)
+        set(_procedure_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_procedure_${_mode}_${_procedure_ir}_${_procedure_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/check-procedure.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_procedure_vm} --ir ${_procedure_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "PROCEDURE[|]phase=all[|].*commands=[0-9]+[|]failures=0"
+      TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_procedure_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_procedure_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

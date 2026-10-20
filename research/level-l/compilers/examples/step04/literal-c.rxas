@@ -26,10 +26,13 @@ null r13
 null r14
 null r15
 mkref r13,r11
-load r12,1
+load r14,0
+load r12,2
 settp r13,768
+settp r14,768
 call r0,llf1(),r12
 null r13
+null r14
 copy r13,r0
 load r12,1
 settp r13,768
@@ -41,131 +44,234 @@ null r9
 null r10
 null r8
 ret r0
-llf1() .locals=23
+llf1() .locals=29
 .srcstep 0 0 6 "" 0 0 0 ""
-.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext"
-load r19,"literal-c.crexx: entering $MAIN"
+.meta "llprogram.$MAIN"="b" ".rexxactivation..rexxactivationarguments" llf1() "context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int"
+load r25,"literal-c.crexx: entering $MAIN"
 sigbrv llerror1_1,r0,"CLASSIC_SYNTAX"
 sigbrv llerror1_2,r0,"DIVISION_BY_ZERO"
 sigbrv llerror1_3,r0,"CONVERSION_ERROR"
 sigbrv llerror1_4,r0,"INVALID_ARGUMENTS"
+sigbrv llerror1_5,r0,"OBJECT_NOT_INITIALIZED"
+sigbrv llerror1_6,r0,"REFERENCE_INVALID"
+sigbrv llerror1_7,r0,"UNICODE_ERROR"
+sigbrv llerror1_8,r0,"OUT_OF_RANGE"
+sigbrv llerror1_9,r0,"FAILURE"
 numsci 18,1,2
-linkref r7,a1
-swap r7,r21
-load r20,1
-settp r21,256
-call r11,rexxclassiccontext.rexxclassiccontext.activation(),r20
-swap r7,r21
-null r21
-unlink r7
-linkref r8,r11
-swap r8,r21
-load r20,1
-settp r21,256
-call r12,rexxactivation.rexxactivationarguments.numericdigits(),r20
-swap r8,r21
-null r21
-swap r8,r21
-load r20,1
-settp r21,256
-call r13,rexxactivation.rexxactivationarguments.numericfuzz(),r20
-swap r8,r21
-null r21
-swap r8,r21
-load r20,1
-settp r21,256
-call r14,rexxactivation.rexxactivationarguments.numericform(),r20
-swap r8,r21
-null r21
-unlink r8
-null r11
+linkref r13,a1
+swap r13,r27
+load r26,1
+settp r27,256
+call r17,rexxclassiccontext.rexxclassiccontext.activation(),r26
+swap r13,r27
+null r27
+unlink r13
+linkref r14,r17
+swap r14,r27
+load r26,1
+settp r27,256
+call r18,rexxactivation.rexxactivationarguments.numericdigits(),r26
+swap r14,r27
+null r27
+swap r14,r27
+load r26,1
+settp r27,256
+call r19,rexxactivation.rexxactivationarguments.numericfuzz(),r26
+swap r14,r27
+null r27
+swap r14,r27
+load r26,1
+settp r27,256
+call r20,rexxactivation.rexxactivationarguments.numericform(),r26
+swap r14,r27
+null r27
+unlink r14
+null r17
 setnumfuz 0
-setnumdgts r12
-setnumfuz r13
-setnumfrm r14
+setnumdgts r18
+setnumfuz r19
+setnumfrm r20
 llb1:
 .srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
-load r19,"literal-c.crexx: generated code in $MAIN"
-copy r2,a1
-copy r1,r2
-.srcstep 10 0 17 "literal-c.crexx" 1 9 15 "options levelc"
-load r19,"literal-c.crexx:1:9"
-copy r3,r1
-linkref r7,r3
-swap r7,r21
-load r20,1
-settp r21,256
-call r9,rexxclassiccontext.rexxclassiccontext.pool(),r20
-swap r7,r21
-null r21
-unlink r7
-copy r21,r9
-load r22,"levelc"
-load r20,2
-settp r21,768
-settp r22,768
-call r4,llctarget.poolread(),r20
-null r21
-null r22
-null r9
-.srcstep 18 0 17 "literal-c.crexx" 2 5 7 "say 01"
-load r19,"literal-c.crexx:2:5"
-load r21,"01"
-load r20,1
-settp r21,768
-call r5,llctarget.literal(),r20
-null r21
-.srcstep 11 0 17 "literal-c.crexx" 2 1 7 "say 01"
-load r19,"literal-c.crexx:2:1"
-copy r21,r5
-load r20,1
-settp r21,768
-call r18,llctarget.sayvalue(),r20
-null r21
+load r25,"literal-c.crexx: generated code in $MAIN"
+copy r3,a1
+copy r1,r3
+copy r4,a2
+copy r2,r4
+llb2:
 .srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
-load r19,"literal-c.crexx: generated code in $MAIN"
-load r20,0
-call r6,llctarget.absent(),r20
-ret r6
+load r25,"literal-c.crexx: generated code in $MAIN"
+copy r5,r1
+copy r6,r2
+load r7,0
+beq llprocedure1_8_match,r6,0
+br llprocedure1_8_done
+llprocedure1_8_match:
+linkref r13,r5
+swap r13,r27
+load r26,1
+settp r27,256
+call r17,rexxclassiccontext.rexxclassiccontext.activation(),r26
+swap r13,r27
+null r27
+unlink r13
+linkref r14,r17
+swap r14,r27
+load r26,1
+settp r27,256
+call r18,rexxactivation.rexxactivationarguments.procedureeligible(),r26
+swap r14,r27
+null r27
+unlink r14
+null r17
+beq llprocedure1_8_valid,r18,0
+signal "INVALID_ARGUMENTS","LLC-ENTRY: activation does not match entry kind"
+llprocedure1_8_valid:
+load r7,1
+llprocedure1_8_done:
+brt llb3,r7
+br llb4
+llb3:
+.srcstep 10 0 17 "literal-c.crexx" 1 9 15 "options levelc"
+load r25,"literal-c.crexx:1:9"
+copy r8,r1
+linkref r13,r8
+swap r13,r27
+load r26,1
+settp r27,256
+call r15,rexxclassiccontext.rexxclassiccontext.pool(),r26
+swap r13,r27
+null r27
+unlink r13
+copy r27,r15
+load r28,"levelc"
+load r26,2
+settp r27,768
+settp r28,768
+call r9,llctarget.poolread(),r26
+null r27
+null r28
+null r15
+.srcstep 18 0 17 "literal-c.crexx" 2 5 7 "say 01"
+load r25,"literal-c.crexx:2:5"
+load r27,"01"
+load r26,1
+settp r27,768
+call r10,llctarget.literal(),r26
+null r27
+.srcstep 11 0 17 "literal-c.crexx" 2 1 7 "say 01"
+load r25,"literal-c.crexx:2:1"
+copy r27,r10
+load r26,1
+settp r27,768
+call r24,llctarget.sayvalue(),r26
+null r27
+.srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
+load r25,"literal-c.crexx: generated code in $MAIN"
+load r26,0
+call r11,llctarget.absent(),r26
+ret r11
+llb4:
+.srcstep 2 0 98 "literal-c.crexx" 1 1 15 "options levelc"
+load r25,"literal-c.crexx: generated code in $MAIN"
+signal "INVALID_ARGUMENTS","LLC-ENTRY: invalid source-unit entry identity"
+load r26,0
+call r12,llctarget.absent(),r26
+ret r12
 llerror1_1:
 .srcstep 0 0 6 "" 0 0 0 ""
-load r18,1
+load r24,1
 br llerror1
 llerror1_2:
-load r18,2
+load r24,2
 br llerror1
 llerror1_3:
-load r18,3
+load r24,3
 br llerror1
 llerror1_4:
-load r18,4
+load r24,4
+br llerror1
+llerror1_5:
+load r24,5
+br llerror1
+llerror1_6:
+load r24,6
+br llerror1
+llerror1_7:
+load r24,7
+br llerror1
+llerror1_8:
+load r24,8
+br llerror1
+llerror1_9:
+load r24,9
 llerror1:
 sighalt "CLASSIC_SYNTAX"
 sighalt "DIVISION_BY_ZERO"
 sighalt "CONVERSION_ERROR"
 sighalt "INVALID_ARGUMENTS"
-copy r21,r0
-copy r22,r19
-load r20,2
-settp r21,768
-settp r22,768
-call r19,llctarget.failuremessage(),r20
+sighalt "OBJECT_NOT_INITIALIZED"
+sighalt "REFERENCE_INVALID"
+sighalt "UNICODE_ERROR"
+sighalt "OUT_OF_RANGE"
+sighalt "FAILURE"
+unlink r13
+unlink r14
+null r27
+null r28
+null r13
+null r14
+null r15
+null r16
+null r17
+null r18
+null r19
+null r20
 null r21
 null r22
-beq llraise1_1,r18,1
-beq llraise1_2,r18,2
-beq llraise1_3,r18,3
+null r23
+copy r27,r0
+copy r28,r25
+load r26,2
+settp r27,768
+settp r28,768
+call r25,llctarget.failuremessage(),r26
+null r27
+null r28
+beq llraise1_1,r24,1
+beq llraise1_2,r24,2
+beq llraise1_3,r24,3
+beq llraise1_4,r24,4
+beq llraise1_5,r24,5
+beq llraise1_6,r24,6
+beq llraise1_7,r24,7
+beq llraise1_8,r24,8
+llraise1_9:
+signalorigin "FAILURE",r25,r0
+ret
+llraise1_8:
+signalorigin "OUT_OF_RANGE",r25,r0
+ret
+llraise1_7:
+signalorigin "UNICODE_ERROR",r25,r0
+ret
+llraise1_6:
+signalorigin "REFERENCE_INVALID",r25,r0
+ret
+llraise1_5:
+signalorigin "OBJECT_NOT_INITIALIZED",r25,r0
+ret
 llraise1_4:
-signalorigin "INVALID_ARGUMENTS",r19,r0
+signalorigin "INVALID_ARGUMENTS",r25,r0
 ret
 llraise1_3:
-signalorigin "CONVERSION_ERROR",r19,r0
+signalorigin "CONVERSION_ERROR",r25,r0
 ret
 llraise1_2:
-signalorigin "DIVISION_BY_ZERO",r19,r0
+signalorigin "DIVISION_BY_ZERO",r25,r0
 ret
 llraise1_1:
-signalorigin "CLASSIC_SYNTAX",r19,r0
+signalorigin "CLASSIC_SYNTAX",r25,r0
 ret
 llctarget.mainargs() .expose=llctarget.mainargs
   .meta "llctarget.mainargs"="b" ".rexxactivation..rexxactivationarguments" llctarget.mainargs() "vector=.object"
@@ -185,6 +291,10 @@ rexxactivation.rexxactivationarguments.numericfuzz() .expose=rexxactivation.rexx
   .meta "rexxactivation.rexxactivationarguments.numericfuzz"="b" ".int" rexxactivation.rexxactivationarguments.numericfuzz() ""
 rexxactivation.rexxactivationarguments.numericform() .expose=rexxactivation.rexxactivationarguments.numericform
   .meta "rexxactivation.rexxactivationarguments.numericform"="b" ".int" rexxactivation.rexxactivationarguments.numericform() ""
+llctarget.failuremessage() .expose=llctarget.failuremessage
+  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"
+rexxactivation.rexxactivationarguments.procedureeligible() .expose=rexxactivation.rexxactivationarguments.procedureeligible
+  .meta "rexxactivation.rexxactivationarguments.procedureeligible"="b" ".boolean" rexxactivation.rexxactivationarguments.procedureeligible() ""
 llctarget.poolread() .expose=llctarget.poolread
   .meta "llctarget.poolread"="b" ".rexxvalue..rexxvalue" llctarget.poolread() "poolref=reference .rexxvariablepool,name=.string"
 rexxclassiccontext.rexxclassiccontext.pool() .expose=rexxclassiccontext.rexxclassiccontext.pool
@@ -195,5 +305,3 @@ llctarget.sayvalue() .expose=llctarget.sayvalue
   .meta "llctarget.sayvalue"="b" ".void" llctarget.sayvalue() "value=.rexxvalue"
 llctarget.absent() .expose=llctarget.absent
   .meta "llctarget.absent"="b" ".rexxactivation..rexxactivationarguments" llctarget.absent() ""
-llctarget.failuremessage() .expose=llctarget.failuremessage
-  .meta "llctarget.failuremessage"="b" ".string" llctarget.failuremessage() "object=.object,location=.string"

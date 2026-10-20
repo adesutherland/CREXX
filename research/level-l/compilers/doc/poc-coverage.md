@@ -86,12 +86,14 @@ open: no local desktop run closes them. Full LLCOMP-AC12 remains open.
 
 ## Code quality and remaining work
 
-The [STEP05 full-module counts](../examples/step05/README.md) and
-[STEP06 walkthrough](../examples/step06/README.md) separate instructions,
-calls, frame registers, metadata and bytes. The earlier native B/G/C comparison
-is a dated control, not a current new-backend snapshot or an optimality target.
-Existing structural tests reject unused defaults, gratuitous call windows,
-entry fallthrough jumps, false authored provenance and physical source paths.
+The [STEP05 shape contracts](../examples/step05/README.md) and
+[STEP06 walkthrough](../examples/step06/README.md) preserve source/control
+structure, required dispatch, ownership and diagnostic provenance. Inspect
+complete callers, cold paths and linked helpers separately. Native B/G/C
+controls must use independent expected semantics and matching dialects; their
+excess code is not an acceptance target. Structural tests reject unused
+defaults, gratuitous call windows, redundant jumps, false authored provenance
+and physical source paths.
 
 | Remaining cost/limitation | Reason it is retained | Owner and later closure |
 |---|---|---|

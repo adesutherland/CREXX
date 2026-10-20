@@ -17,12 +17,9 @@ else say 'no'
 | C | [source](branch-c.crexx) | [IR](branch-c.before.ir) | [IR](branch-c.after.ir) | [RXAS](branch-c.before.rxas) | [RXAS](branch-c.after.rxas) |
 | G | [source](branch-g.crexx) | [IR](branch-g.before.ir) | [IR](branch-g.after.ir) | [RXAS](branch-g.before.rxas) | [RXAS](branch-g.after.rxas) |
 
-Earlier execution of the source pairs with `rxas -n` and linked metadata
-established `yes`. The current C view refresh adds the required header Name
-read; focused OPTIONS runtime checks qualify that new work without replaying
-the whole walkthrough. G links `library.rxbin`; C also links
-`llctarget.rxbin` and `rxfnsc.rxbin`. The C runtime's normal class library remains
-available. The commands differ only by the compiler's `-n` switch:
+The source pair must print `yes`. G links `library.rxbin`; C additionally
+links `llctarget.rxbin`, `rxfnsc.rxbin`, `classlib.rxbin` and
+`rxunicode-core.rxbin`. The commands differ only by the compiler's `-n` switch:
 
 ```sh
 llrxc-g -n -i /path/to/bin -o before.rxas branch-g.crexx
@@ -59,15 +56,9 @@ stable owners, numeric installation and condition handlers. Its effectful truth
 check remains before the proved literal branch; only the unreachable arm and
 discard-safe work disappear. No contextual numeric evaluator is assumed.
 
-| Complete module | G before | G after | C before | C after |
-|---|---:|---:|---:|---:|
-| Executable instructions | 17 | 8 | 183 | 164 |
-| Calls | 1 | 1 | 20 | 18 |
-| RXAS bytes | 892 | 559 | 7,878 | 7,289 |
-| Body registers | 7 | 3 | 28 | 25 |
-| Source records | 11 | 7 | 16 | 12 |
-
-[Counts](shapes.json) exclude labels, metadata and external declarations;
-wrappers and cold handlers are included. These are code-shape observations,
-not execution-speed claims. Folded control retains derived source origins;
-remaining expression/error sites retain authored ranges and logical filenames.
+Classic's C v9 checked entry dispatch remains effectful after source branch
+folding. Its canonical setup/dispatch blocks preserve the context/entry slot
+loads through generic transformation. The source `if 1` branch disappears;
+entry-test branches remain. Permanent optimizer checks distinguish these by
+the condition producer rather than a total branch count. Source records retain
+logical filenames, authored ranges and derived origins for folded control.

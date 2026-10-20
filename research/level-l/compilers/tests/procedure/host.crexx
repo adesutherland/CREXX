@@ -1,0 +1,124 @@
+/* cREXX License (MIT). Direct caller owns every borrowed C context target. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import procedurefixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  returned = .rexxactivation..RexxActivationArguments
+  parent = .rexxpool..RexxVariablePool(1)
+  visible = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  call config.setTextOtherBlanks('·')
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText('MiXeD')
+  call activation.append(.rexxvalue..RexxValue('ignored'),0)
+  call activation.appendText('')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  original = reference visible
+  if argv[0] > 0 then do
+    if argv[1] = 'wrong-positive' then do
+      returned = procedurefixture..run(reference context,1)
+      say 'UNREACHED wrong-positive'
+      return 1
+    end
+    if argv[1] = 'wrong-zero' then do
+      call activation.beginInternalCall()
+      returned = procedurefixture..run(reference context,0)
+      say 'UNREACHED wrong-zero'
+      return 1
+    end
+    if argv[1] = 'unknown-entry' then do
+      call activation.beginInternalCall()
+      returned = procedurefixture..run(reference context,99)
+      say 'UNREACHED unknown-entry'
+      return 1
+    end
+    if argv[1] = 'expired-pool' then do
+      context = makeExpiredPool(reference activation,reference config)
+      call activation.beginInternalCall()
+      returned = procedurefixture..run(reference context,1)
+      say 'UNREACHED expired-pool'
+      return 1
+    end
+    if argv[1] = 'expired-config' then do
+      context = makeExpiredConfig(reference activation,reference visible)
+      call activation.beginInternalCall()
+      returned = procedurefixture..run(reference context,1)
+      say 'UNREACHED expired-config'
+      return 1
+    end
+    return 2
+  end
+  returned = procedurefixture..run(reference context,0)
+  rebound = context.pool()
+  call check(\returned.hasReturnValue() & (rebound <refsame> original),'direct exported entry zero returns absent and preserves pool')
+  call check(\activation.procedureEligible(),'entry zero requires and retains an ineligible activation')
+  call parent.setString('shared','root')
+  call parent.setString('key','b')
+  call parent.setStemString('box.','b','lower')
+  call parent.setStemString('box.','B','upper')
+  call parent.setString('extra','old extra')
+  call visible.exposeSymbol('shared',reference parent)
+  call visible.exposeSymbol('key',reference parent)
+  call visible.exposeSymbol('box.key',reference parent)
+  call visible.exposeSymbol('extra',reference parent)
+  call visible.setString('names','extra·/·1bad')
+  call visible.setString('hidden','visible hidden')
+  do entry = 1 to 3
+    call activation.beginInternalCall()
+    returned = procedurefixture..run(reference context,entry)
+    rebound = context.pool()
+    call check(<refvalid>(rebound) & (rebound <refsame> original),'entry ' || entry || ' restores live original binding')
+    if entry = 1 then do
+      call check(returned.hasReturnValue() & returned.returnValue().asString() = 'PRIVATE|MiXeD|0|1','explicit result owns value after private owner expiry')
+      call check(parent.value('shared').asString() = 'root:MiXeD','ordered exposure reaches nested caller alias')
+      call check(parent.stemSymbolValue('box.','b').asString() = 'reset','stem reset reaches exposed lowercase caller tail')
+      call check(parent.stemSymbolValue('box.','B').asString() = 'upper','unexposed uppercase caller tail remains independent')
+      call check(parent.value('extra').asString() = 'exposed','indirect list uses caller configuration and skips invalid names')
+      call check(visible.value('hidden').asString() = 'visible hidden','unexposed assignment remains private')
+      call check(visible.symbolValue('private').asString() = 'PRIVATE','private local never leaks into caller pool')
+    end
+    else call check(\returned.hasReturnValue(),'entry ' || entry || ' returns absent packet')
+    call check(\activation.procedureEligible(),'entry ' || entry || ' consumes PROCEDURE eligibility')
+    call check(activation.argumentCount() = 3 & activation.argument(1).asString() = 'MiXeD' & \activation.argumentExists(2) & activation.argumentExists(3),'entry ' || entry || ' preserves raw arguments/presence')
+  end
+  call check(parent.value('shared').asString() = 'root:MiXeD:absent:eof','explicit absent and EOF paths preserve intended exposed writes')
+  call parent.setString('key','b')
+  call activation.beginInternalFunction()
+  returned = procedurefixture..run(reference context,1)
+  rebound = context.pool()
+  call check(returned.returnValue().asString() = 'PRIVATE|MiXeD|0|1','repeated function call gets a fresh private generation')
+  call check((rebound <refsame> original) & <refvalid>(rebound),'repeated function return restores original pool')
+  call check(activation.isFunctionCall(),'function invocation identity is preserved')
+  current_config = context.config(); original_config = reference config
+  current_activation = context.activation(); original_activation = reference activation
+  call check((current_config <refsame> original_config) & config.textOtherBlanks() = '·','same caller configuration remains borrowed')
+  call check(current_activation <refsame> original_activation,'same caller activation remains borrowed')
+  say 'PROCEDURE_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+/* Reuse the shared context library's returned-frame lifetime controls. The
+ * bundle remains live; only the selected borrowed target has expired. */
+makeExpiredPool: procedure = .rexxclassiccontext..RexxClassicContext
+  arg activation = reference .rexxactivation..RexxActivationArguments, config = reference .rexxclassicconfig..RexxClassicConfig
+  local_pool = .rexxpool..RexxVariablePool()
+  return .rexxclassiccontext..RexxClassicContext(activation,reference local_pool,config)
+
+makeExpiredConfig: procedure = .rexxclassiccontext..RexxClassicContext
+  arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool
+  local_config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  return .rexxclassiccontext..RexxClassicContext(activation,pool,reference local_config)
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return

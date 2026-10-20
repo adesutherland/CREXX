@@ -1,0 +1,369 @@
+/* cREXX License (MIT). Compiler-internal Classic source-unit admission. */
+options levelb
+namespace llcprocedureprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcsymbols
+import llcparseprogram
+import rexxclassicunicodeproperties
+
+/** Request-owned read-only entry/group/eligibility facts. Generic L owns graph
+ * structure; C owns this finite protocol. No source is reparsed for semantics. */
+checked: class
+  _graph = reference .llir..module
+  _store = reference .llir..arena
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _names = .stem
+  _functions = .stem
+  _entries = .int[]
+  _hasprocedure = .int[]
+  _groups = .int[]
+  _dispatch = .int[]
+  _tests = .int[]
+  _invalid = .int[]
+  _uses = .int[]
+  _entryslots = .int[]
+  _contextslots = .int[]
+  _writes = .int[]
+  _before = .int[]
+  _queue = .int[]
+  _symbols = .llcsymbols..checked
+  *: factory
+    arg graph = reference .llir..module, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0
+    _names = .stem(); _functions = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 then do
+      graph = dereference _graph; _offset = graph.operation(opid).origin().first()
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid entry admission dimensions'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do
+      call fail('LIMIT: entry admission exceeds output.bytes workspace'); return 0
+    end
+    _bytes = _bytes + count * width
+    return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do
+      call fail('LIMIT: entry admission work budget exceeded'); return 0
+    end
+    _work = _work + count
+    return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  entries: method = .int
+    arg fn = .int
+    call run(); return _entries[fn]
+  hasentry: method = .int
+    arg fn = .int, id = .int
+    call run(); return id > 0 & id < _entries[fn]
+  hasprocedure: method = .int
+    arg fn = .int
+    call run(); return _hasprocedure[fn]
+  group: method = .int
+    arg opid = .int
+    call run(); return _groups[opid]
+  text: method = .string
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name); size = <blen>(bytes)
+    if reserve(size,1) = 0 | charge(size + 1) = 0 then return ''
+    codec = .llscalar..textcodec()
+    if codec.check(bytes) <> '' then do; call fail('LOWERING: invalid entry text attribute',op.id()); return ''; end
+    return bytes as .string
+  integer: method = .int
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name); codec = .llir..intcodec()
+    if codec.check(bytes) <> '' then do; call fail('LOWERING: invalid entry integer attribute',op.id()); return -1; end
+    return <at..i64>(0) bytes
+  exact: method = .void
+    arg op = .llir..opview
+    origin = op.origin(); bytes = origin.sourcebytes(); extent = <blen>(bytes)
+    if origin.belongs(_store) = 0 | origin.kind() <> 'exact' then do
+      call fail('LOWERING: PROCEDURE transition requires an owned exact source origin',op.id()); return
+    end
+    if origin.first() < 0 | origin.last() <= origin.first() | origin.last() > extent then do
+      call fail('LOWERING: PROCEDURE transition requires a nonempty source-backed span',op.id()); return
+    end
+    if llcparseprogram..sourceboundary(bytes,origin.first()) = 0 | llcparseprogram..sourceboundary(bytes,origin.last()) = 0 then call fail('SOURCE: PROCEDURE origin is not at a Unicode boundary',op.id())
+    return
+  generated: method = .void
+    arg op = .llir..opview
+    origin = op.origin()
+    if origin.belongs(_store) = 0 | (origin.kind() <> 'derived' & origin.kind() <> 'synthetic') then call fail('LOWERING: entry dispatch requires generated provenance',op.id())
+    return
+  /** Dispatch operands must be loads of its two once-bound entry slots. */
+  slot: method = .int
+    arg value = .llir..valuehandle, fn = .int, ordinal = .int
+    store = dereference _store
+    producer = store.get(4,value.id(),1)
+    if store.get(3,producer,1) <> 3 then do; call fail('LOWERING: entry dispatch requires bound slot loads',producer); return 0; end
+    slot = store.get(3,producer,12)
+    if store.get(5,slot,1) <> fn | _writes[slot] <> 1 then do
+      call fail('LOWERING: entry slot must be bound once at function entry',producer); return 0
+    end
+    binding = _entryslots[fn]; if ordinal = 1 then binding = _contextslots[fn]
+    if slot <> binding then do; call fail('LOWERING: entry dispatch uses a different bound slot',producer); return 0; end
+    return slot
+  union: method = .int
+    arg left = .int, right = .int
+    total = left
+    do bit = 1 to 4 by 1
+      if bit = 3 then iterate
+      if (right <idiv> bit) % 2 & (left <idiv> bit) % 2 = 0 then total = total + bit
+    end
+    return total
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    graph = dereference _graph
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid entry admission budget'); return; end
+    _store = graph.storage(); store = dereference _store
+    _symbols = .llcsymbols..checked(_limit,_budget)
+    op = .llir..opview; name = .string; key = .string; targetname = .string
+    fn = .int; b = .int; opid = .int; ordinal = .int; id = .int; value = .int
+    target = .int; state = .int; ignored = .int; terminal = .int; allowed = .int; selectedslot = .int
+    /* Arrays and the at-most-three-changes-per-block queue are checked before
+     * allocation. All record/name/edge traversal spends the existing budget. */
+    if reserve(store.count(1),24) = 0 | reserve(store.count(2),48) = 0 then return
+    if reserve(store.count(3),24) = 0 | reserve(store.count(4),8) = 0 | reserve(store.count(5),8) = 0 then return
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      name = store.text(store.get(1,fn,1)); if reserve(<blen>(name as .binary) + 64,1) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
+      call _functions.set(name,fn as .string)
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      do i = 1 to op.inputs()
+        if charge() = 0 then return
+        value = op.input(i).id(); _uses[value] = _uses[value] + 1
+      end
+      if name = 'core.store' then do
+        slot = store.get(3,opid,12); _writes[slot] = _writes[slot] + 1
+        producer = store.get(4,op.input(1).id(),1)
+        if b = store.get(1,fn,3) & store.get(3,producer,1) = 2 then do
+          ordinal = store.get(3,producer,12)
+          if ordinal = 1 & _contextslots[fn] = 0 then _contextslots[fn] = slot
+          if ordinal = 2 & _entryslots[fn] = 0 then _entryslots[fn] = slot
+        end
+      end
+      if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
+        call exact(op); if _error <> '' then return
+      end
+      if name = 'crexx.c.procedure.enter' then _hasprocedure[fn] = 1
+    end
+    /* All-record exposure grouping also covers unreachable authored clauses. */
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      group = 0; opid = store.get(2,b,2)
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if name = 'crexx.c.procedure.enter' then group = opid
+        else if name = 'crexx.c.procedure.expose' then do
+          if group = 0 then do; call fail('LOWERING: EXPOSE requires its contiguous PROCEDURE group',opid); return; end
+          enter = graph.operation(group).origin(); item = op.origin()
+          if store.get(9,enter.id(),1) <> store.get(9,item.id(),1) | item.first() < enter.first() | item.last() > enter.last() then do
+            call fail('LOWERING: EXPOSE origin is outside its PROCEDURE clause',opid); return
+          end
+          _groups[opid] = group
+          symbol = text(op,'name'); call _symbols.symbol(symbol)
+          if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
+          boolean = .llir..boolcodec(); if boolean.check(op.attribute('indirect')) <> '' then do; call fail('LOWERING: invalid EXPOSE kind',opid); return; end
+        end
+        else if name <> 'core.load' then group = 0
+        else if group > 0 then do
+          if store.get(3,opid,12) <> _contextslots[store.get(2,b,1)] then group = 0
+        end
+        opid = store.get(3,opid,3)
+      end
+    end
+    do fn = 1 to store.count(1)
+      /* Keep setup separate so generic same-block forwarding cannot erase
+       * the canonical context/entry loads in the first dispatch test. */
+      b = store.get(1,fn,3); _dispatch[b] = 1; opid = store.get(2,b,2); entrybound = 0
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        call generated(op); if _error <> '' then return
+        if name = 'core.jump' then leave
+        allowed = 0
+        if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
+        if name = 'core.load' | name = 'core.store' then do
+          selectedslot = store.get(3,opid,12)
+          allowed = selectedslot = _entryslots[fn]
+          if selectedslot = _entryslots[fn] then do
+            if name = 'core.load' & entrybound = 0 then do; call fail('LOWERING: entry slot read precedes parameter binding',opid); return; end
+            if name = 'core.store' then entrybound = 1
+          end
+          if store.get(5,selectedslot,2) = store.get(5,_contextslots[fn],2) then allowed = 1
+        end
+        if allowed = 0 then do; call fail('LOWERING: noncanonical source-unit entry setup',opid); return; end
+        opid = store.get(3,opid,3)
+      end
+      if opid = 0 then do; call fail('LOWERING: source-unit setup requires dispatch jump'); return; end
+      if opid <> store.get(2,b,3) then do; call fail('LOWERING: source-unit dispatch jump must terminate setup',opid); return; end
+      b = store.successor(opid,1); ordinal = 0
+      do forever
+        if charge() = 0 then return
+        if _dispatch[b] then do; call fail('LOWERING: cyclic or shared entry dispatch'); return; end
+        if store.get(2,b,1) <> fn then do; call fail('LOWERING: foreign entry dispatch block'); return; end
+        _dispatch[b] = 1; opid = store.get(2,b,2); test = 0
+        do while opid > 0
+          if charge() = 0 then return
+          op = graph.operation(opid); name = op.name()
+          call generated(op); if _error <> '' then return
+          if name = 'crexx.c.entry.test' then do
+            test = opid; leave
+          end
+          allowed = 0
+          if name = 'core.load' then do
+            selectedslot = store.get(3,opid,12)
+            allowed = selectedslot = _contextslots[fn] | selectedslot = _entryslots[fn]
+          end
+          if allowed = 0 then do; call fail('LOWERING: noncanonical entry dispatch setup',opid); return; end
+          opid = store.get(3,opid,3)
+        end
+        if test = 0 then do; call fail('LOWERING: missing canonical entry test'); return; end
+        id = integer(op,'id'); entryname = text(op,'name')
+        if _error <> '' then return
+        if id <> ordinal then do; call fail('LOWERING: entry IDs must be dense and source ordered',test); return; end
+        if id = 0 & entryname <> '' then do; call fail('LOWERING: entry zero requires its empty name sentinel',test); return; end
+        if id > 0 then do
+          if entryname = '' | entryname <> rexxclassic_unicode_upper(entryname) then do; call fail('LOWERING: entry name must be canonical and nonempty',test); return; end
+          call _symbols.symbol(entryname)
+          if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
+          key = fn || ':' || entryname
+          if charge(<blen>(key as .binary) + 1) = 0 | reserve(<blen>(key as .binary) + 64,1) = 0 then return
+          if _names.get(key) <> '' then do; call fail('LOWERING: duplicate entry name',test); return; end
+          call _names.set(key,id as .string)
+        end
+        ignored = slot(op.input(1),fn,1); ignored = slot(op.input(2),fn,2)
+        if _error <> '' then return
+        branch = store.get(3,test,3)
+        if branch = 0 then do; call fail('LOWERING: entry test requires its branch',test); return; end
+        if branch <> store.get(2,b,3) | store.get(3,branch,1) <> 6 then do; call fail('LOWERING: entry test must directly control its branch',test); return; end
+        call generated(graph.operation(branch)); if _error <> '' then return
+        value = op.result().id()
+        if store.operand(branch,1) <> value | _uses[value] <> 1 then do; call fail('LOWERING: entry test requires one direct branch use',test); return; end
+        target = store.successor(branch,1)
+        if store.get(2,target,1) <> fn then do; call fail('LOWERING: foreign entry target',test); return; end
+        state = 1; if id = 0 then state = 2
+        _before[target] = union(_before[target],state); _tests[test] = 1
+        ordinal = ordinal + 1; next = store.successor(branch,2)
+        if store.get(2,next,1) <> fn then do; call fail('LOWERING: foreign entry continuation',test); return; end
+        first = store.get(2,next,2)
+        if graph.operation(first).name() = 'crexx.c.entry.invalid' then do
+          _invalid[first] = 1; _dispatch[next] = 1
+          call generated(graph.operation(first)); if _error <> '' then return
+          absent = store.get(3,first,3); terminal = store.get(3,absent,3)
+          if graph.operation(absent).name() <> 'crexx.c.return.absent' | terminal <> store.get(2,next,3) then do; call fail('LOWERING: invalid dispatch closure',first); return; end
+          if graph.operation(terminal).name() <> 'core.return' | store.operand(terminal,1) <> graph.operation(absent).result().id() then do; call fail('LOWERING: invalid dispatch terminal',first); return; end
+          call generated(graph.operation(absent)); call generated(graph.operation(terminal))
+          if _error <> '' then return
+          leave
+        end
+        b = next
+      end
+      _entries[fn] = ordinal
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if name = 'crexx.c.entry.test' & _tests[opid] = 0 then do; call fail('LOWERING: entry test outside canonical dispatch',opid); return; end
+      if name = 'crexx.c.entry.invalid' & _invalid[opid] = 0 then do; call fail('LOWERING: invalid entry outside canonical dispatch',opid); return; end
+      if name = 'crexx.c.call' then do
+        targetname = text(op,'target'); if charge(<blen>(targetname as .binary) + 1) = 0 then return
+        found = _functions.get(targetname); id = integer(op,'entry')
+        if found = '' then do; call fail('LOWERING: unknown source-unit call target',opid); return; end
+        if id <= 0 | id >= _entries[found as .int] then do; call fail('LOWERING: call entry is not a positive declared ID',opid); return; end
+      end
+    end
+    /* At most three new state bits can schedule each block. */
+    head = 1; tail = 0
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      if _dispatch[b] & _before[b] <> 0 then do; call fail('LOWERING: entry target re-enters dispatch'); return; end
+      if _before[b] > 0 then do; tail = tail + 1; _queue[tail] = b; end
+    end
+    do while head <= tail
+      b = _queue[head]; head = head + 1; state = _before[b]; opid = store.get(2,b,2); divergent = 0
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        select
+          when name = 'crexx.c.procedure.consume' then do
+            nextstate = 0; if state % 4 > 0 then nextstate = 2
+            if state >= 4 then nextstate = nextstate + 4
+            state = nextstate
+          end
+          when name = 'crexx.c.procedure.enter' then do
+            if state % 2 then state = 4
+            else do; divergent = 1; leave; end
+          end
+          when name = 'crexx.c.procedure.expose' then do
+            if state <> 4 then do; call fail('LOWERING: EXPOSE requires successful private entry',opid); return; end
+          end
+          when name = 'crexx.c.entry.invalid' | name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' then do
+            if state % 2 then do; call fail('LOWERING: fresh entry requires consume before divergent semantic work',opid); return; end
+            divergent = 1; leave
+          end
+          otherwise do
+            if state % 2 then do
+              allowed = name = 'core.jump'
+              if name = 'core.load' then allowed = store.get(3,opid,12) = _contextslots[store.get(2,b,1)]
+              if name = 'crexx.c.return.absent' then do
+                terminal = store.get(3,opid,3)
+                if terminal = store.get(2,b,3) & graph.operation(terminal).name() = 'core.return' then do
+                  if store.operand(terminal,1) = op.result().id() then do
+                    call generated(op); call generated(graph.operation(terminal))
+                    if _error <> '' then return
+                    divergent = 1; leave
+                  end
+                end
+              end
+              if allowed = 0 then do; call fail('LOWERING: fresh entry requires consume or PROCEDURE before semantic work',opid); return; end
+            end
+            if name = 'core.return' | name = 'crexx.c.exit' then do; divergent = 1; leave; end
+          end
+        end
+        opid = store.get(3,opid,3)
+      end
+      if divergent then iterate
+      last = store.get(2,b,3)
+      do edge = 1 to store.get(3,last,9)
+        if charge() = 0 then return
+        target = store.successor(last,edge)
+        if _dispatch[target] then do; call fail('LOWERING: body edge re-enters dispatch',last); return; end
+        merged = union(_before[target],state)
+        if merged <> _before[target] then do
+          _before[target] = merged; tail = tail + 1
+          if tail > store.count(2) * 3 then do; call fail('LIMIT: entry changed-state queue exceeded'); return; end
+          _queue[tail] = target
+        end
+      end
+    end
+    return

@@ -63,6 +63,50 @@ start; CLC stage closure also requires the complete plan criteria.
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
 
+<a id="procedure-assignment-packet"></a>
+
+## Approved PROCEDURE assignment packet
+
+**Approved static/fatal profile locally qualified; CPROC-AC07 and whole LC-I-12 remain open.**
+The [approved contract](architecture.md#proposed-procedure-contract) owns the
+AST, v9/58-operation entry/IR ABI, existing B method use, cleanup and CPROC-AC01–07.
+The [plan](../PLAN.md#current-action-procedure) owns PROCEDURE1–4; CALL follows.
+
+- **PROCEDURE-WP01 — design complete:** one documentation integrator owns this
+  packet, architecture and brief plan links. Runtime and independent reviewers
+  audit APIs, source/error semantics, entry/DO invariants and lifetime read-only.
+- **PROCEDURE-WP02 — local profile complete:** one serial C writer owns `levelc.rxl`,
+  `llcparse`, `llcfrontend`, `llcir`, `llcrxas`, bounded private C admission and
+  required `llcdoprotocol` integration. No shared B algorithm/API, native C,
+  generic L or VM implementation is assigned. Coordinate metadata/view/CMake
+  changes through that writer; no simultaneous frontend/selector writer.
+- **PROCEDURE-WP03 — local profile qualified:** separately assign independent
+  `tests/procedure` fixtures and existing frontend/backend/context/metadata
+  selectors. One build owner schedules affected preparation, focused normal
+  Debug, consumer regressions and product targets. WP-12 reviews the frozen
+  final diff/full caller/helper RXAS against CPROC acceptance; root validates.
+
+Preserve unrelated work, current B/G/Classic consumers, exact target exports
+and truthful source. Only the assigned build owner runs shared preparation/tests;
+do not stage/commit, push or change automation. Any local commit requires
+coordinator authority; wider observations/platform/INTERPRET remain open.
+
+### Approved prepared-language reuse
+
+The [approved contract](architecture.md#proposed-prepared-language-reuse) owns
+the exact L borrowed APIs, private C owner and CPREP-AC01–05. Adrian approved
+CPREP-STEP01; CPREP-STEP02/03 are implemented and locally qualified.
+
+- **CPREP-WP01:** one assigned generic L writer owns `lllanguage`, `llmunch`,
+  `lllr`, `llcfg` and independent borrowed-reader tests. Preserve owning APIs;
+  add no C/Unicode policy or native/VM implementation.
+- **CPREP-WP02:** the serial C integrator owns the private module initializer,
+  parse/header/name integration and CMake/CLI/service consumers. Keep comments,
+  limits and source state request-local; no table-copy fallback.
+- **CPREP-WP03:** independent reviewers check the complete ownership/copy chain;
+  one build owner schedules the focused proofs and reuses unchanged qualification.
+  Preserve the qualified scope and reuse unchanged checks.
+
 <a id="arg-assignment-packet"></a>
 
 ## Approved ARG instruction assignment packet
@@ -91,7 +135,9 @@ plan, raw run bundle, duplicated matcher or ARG-specific runtime is commissioned
 ## Approved PARSE integration assignment packet
 
 **Implementation approved and delivered in the finite fatal-error profile.**
-Current C uses v8/53 operations and 33 target exports; ARG leaves PARSE's packet,
+The ARG increment introduced v8/53 operations and 33 target exports; the
+[approved PROCEDURE protocol](architecture.md#proposed-procedure-contract) advances
+the current C family to v9/58 and the two-argument source-unit ABI. ARG leaves PARSE's packet,
 executor and acquisition signatures unchanged.
 The [approved integration contract](architecture.md#proposed-c-parse-integration)
 owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,

@@ -84,17 +84,19 @@ Grouping and state-free repetition add no DO owner.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
-all Classic routines use one required context reference and return a fresh
-result-presence packet.
+Classic source units use required `(context, entry)` parameters and return a
+fresh result-presence packet. Internal calls select positive checked entries in
+one shared source body; see the [current C ABI](architecture.md#proposed-procedure-contract).
 
 Supplied arguments are copied into the private window with flag 768; omitted
 optional positions get flag 512 without constructing a placeholder value. The call
 writes a distinct result register. The window is cleared after return. G callee reads test original presence
 before selecting their fallback; sole-use literal defaults emit only on the
 missing branch. Qualified G exports retain optional flags in `.meta`, and
-provider-only files have no synthetic main. Classic's caller constructs stable
-activation/pool/bundle owners and copies their reference payloads into temporary
-call windows. Getters resolve live pool bindings through the bundle; receiver
+provider-only files have no synthetic main. Classic's caller owns fresh
+activation/bundle objects and copies borrowed pool/configuration references into
+temporary call windows. The callee creates a private pool only when PROCEDURE
+executes. Getters resolve live pool bindings through the bundle; receiver
 aliases use the existing swap/restoration and unlink protocol. Argument/result
 packets retain value semantics. Callee NUMERIC updates do not modify its caller's
 activation or VM frame. Each admitted private PROCEDURE has its own pool; CALL applies the returned presence packet to

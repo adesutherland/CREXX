@@ -151,7 +151,7 @@ ifchecks: procedure = .void expose artifacts
       graph = request.graph(); text = graph.dump()
       if sample = 5 | sample = 6 then call check(pos('if.join.',text) > 0,'open or missing ELSE retains convergence ' || sample || '/' || optimise)
       else call check(pos('if.join.',text) = 0,'closed arms add no predecessorless join ' || sample || '/' || optimise)
-      call check(occurrences(text,'crexx.c.return.absent') = expected,'only necessary absent result packets ' || sample || '/' || optimise)
+      call check(sourcepackets(graph) = expected,'only necessary absent result packets ' || sample || '/' || optimise)
       output = request.output()
       call check(pos('.srcstep',output.text()) > 0 & pos('if-shape.crexx',output.text()) > 0,'IF source/fatal records retained ' || sample || '/' || optimise)
       if inspect <> '' & (sample = 1 | sample = 2 | sample = 4) then written = writebinary(inspect || '-closed-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
@@ -175,10 +175,10 @@ ifchecks: procedure = .void expose artifacts
     call check(request.status() = 0,'literal condition accepted ' || optimise)
     if request.status() <> 0 then iterate
     graph = request.graph(); text = graph.dump()
-    call check(occurrences(text,'crexx.c.truth ') = 1 & occurrences(text,'core.branch ') = 1,'source retains effectful truth and literal branch')
+    call check(occurrences(text,'crexx.c.truth ') = 1 & sourcebranches(graph) = 1,'source retains effectful truth and literal branch')
     graph = request.emissiongraph(); text = graph.dump()
     call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
-    call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+    call check(sourcebranches(graph) = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
   end
   return
 
@@ -420,7 +420,7 @@ selectchecks: procedure = .void expose artifacts
       graph = request.graph(); text = graph.dump()
       if sample = 5 | sample = 7 then call check(pos('select.join.',text) > 0,'open SELECT endpoints retain convergence ' || sample || '/' || optimise)
       else call check(pos('select.join.',text) = 0,'closed SELECT endpoints add no join ' || sample || '/' || optimise)
-      call check(occurrences(text,'crexx.c.return.absent') = expected,'only EXIT/missing/normal structural packets ' || sample || '/' || optimise)
+      call check(sourcepackets(graph) = expected,'only EXIT/missing/normal structural packets ' || sample || '/' || optimise)
       call check(occurrences(text,'crexx.c.select.missing') = missing,'only absent OTHERWISE emits missing path ' || sample || '/' || optimise)
       output = request.output()
       call check(pos('.srcstep',output.text()) > 0 & pos('select-shape.crexx',output.text()) > 0,'SELECT source/fatal records retained ' || sample || '/' || optimise)
@@ -456,6 +456,34 @@ selectchecks: procedure = .void expose artifacts
     output = request.output(); call check(pos('<source>',output.text()) > 0,'anonymous service keeps its logical source identity')
   end
   return
+
+/** Count authored control separately from the required checked-entry branch.
+ * This preserves the source-fold oracle when dispatch remains effectful. */
+sourcebranches: procedure = .int
+  arg graph = .llir..module
+  store = dereference graph.storage(); count = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'core.branch' then iterate
+    producer = store.get(4,op.input(1).id(),1)
+    if graph.operation(producer).name() <> 'crexx.c.entry.test' then count = count + 1
+  end
+  return count
+
+/** entry.invalid has one mandated cold closure; it is separate from source
+ * EXIT/missing/normal packets whose minimal construction is tested here. */
+sourcepackets: procedure = .int
+  arg graph = .llir..module
+  store = dereference graph.storage(); count = 0; closures = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'crexx.c.return.absent' then iterate
+    first = store.get(2,op.blockid(),2)
+    if graph.operation(first).name() = 'crexx.c.entry.invalid' then closures = closures + 1
+    else count = count + 1
+  end
+  call check(closures = 1,'one required generated invalid-entry closure')
+  return count
 
 irshape: procedure = .string
   arg graph = .llir..module

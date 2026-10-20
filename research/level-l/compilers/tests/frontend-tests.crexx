@@ -811,8 +811,10 @@ selecttests: procedure = .void expose artifacts
     call check(node.count('clauses') = 4 & first.kind() = 'CLabel' & second.kind() = 'CLabel','labels remain ordered clauses, not discarded')
     call check(first.text('name') = 'before' & second.text('name') = 'between','raw label spellings retained')
   end
-  call bad('c',source as .binary,'LL_COMPILER_PROFILE:','CLabel',8)
-  call bad('c','exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_PROFILE:','CLabel')
+  text = good('c',source,'crexx.c.when.truth')
+  call check(pos('name="BEFORE"',text) = 0 & pos('name="BETWEEN"',text) = 0,'SELECT observation labels never enter the callable map')
+  text = good('c','exit 0; select; before:; when 1 then nop; end','crexx.c.when.truth')
+  call bad('c','call before; exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_CALL:','16.1')
   do sample = 1 to 14
     select sample
       when 1 then source = 'select 1; when 1 then nop; end'
@@ -1180,8 +1182,10 @@ calls: procedure = .void
   call bad('g','say f(,); exit 0; f: procedure = .int; arg n=.int,m=.int; return n' as .binary,'LL_COMPILER_CALL:','missing required typed argument')
   call bad('g','say p(); exit 0; p: procedure = .void; return' as .binary,'LL_COMPILER_CALL:','void routine used as a value')
   call bad('g','exit 0; p: procedure = .int; nop' as .binary,'LL_COMPILER_RETURN:','may finish without a value')
-  call bad('c','p: say 1' as .binary,'LL_COMPILER_PROFILE:','shared-pool labels')
-  call bad('c','say 1; p: procedure; return 2' as .binary,'LL_COMPILER_PROFILE:','fall-through')
+  text = good('c','p: say 1','crexx.c.procedure.consume')
+  call check(pos('name="P"',text) > 0 & pos('function P',text) = 0,'shared label is a checked entry in one source body')
+  text = good('c','say 1; p: procedure; return 2','crexx.c.procedure.enter')
+  call check(pos('name="P"',text) > 0,'source-legal fall-through retains executed PROCEDURE guard')
   call bad('c','say missing()' as .binary,'LL_COMPILER_CALL:','unknown Classic routine')
   call bad('g','say length(''a'')' as .binary,'LL_COMPILER_IMPORT:','requires import')
   call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','cannot read nonexistent.rxbin')

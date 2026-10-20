@@ -35,7 +35,16 @@ main: procedure = .int expose checks failures
   division = 'crexx.g.int64.div'; if level = 'c' then division = 'crexx.c.div'
   call check(pos(division,original.dump()) > 0,'source graph retains division')
   call check(pos(division,selected.dump()) = 0,'selected graph removes unreachable division')
-  call check(pos('core.branch',selected.dump()) = 0,'literal branch simplified')
+  store = dereference selected.storage(); branches = 0; dispatches = 0
+  do i = 1 to selected.operations()
+    operation = selected.operation(i)
+    if operation.name() <> 'core.branch' then iterate
+    producer = store.get(4,operation.input(1).id(),1)
+    if selected.operation(producer).name() = 'crexx.c.entry.test' then dispatches = dispatches + 1
+    else branches = branches + 1
+  end
+  expected = 0; if level = 'c' then expected = 1
+  call check(branches = 0 & dispatches = expected,'source literal branch simplified; required checked dispatch retained')
   call save(prefix || '.before.ir',original.dump() || newline)
   call save(prefix || '.after.ir',selected.dump() || newline)
   output = before.output(); call save(prefix || '.before.rxas',output.text())

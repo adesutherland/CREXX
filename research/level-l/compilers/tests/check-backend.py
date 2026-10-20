@@ -60,8 +60,11 @@ env['PATH'] = str(work / 'empty-path')
 
 def run(label, command, success=True, isolated=False):
     before = time.monotonic()
+    # The contracts invocation runs the combined source/graph/shape fixture.
+    # Give that serial nested workload a generous hang guard of its own.
+    limit = 1800 if label == 'contracts' else 180
     result = subprocess.run(command, cwd=work, env=env if isolated else None,
-                            capture_output=True, timeout=180)
+                            capture_output=True, timeout=limit)
     (work / (label + '.stdout')).write_bytes(result.stdout)
     (work / (label + '.stderr')).write_bytes(result.stderr)
     records.append(dict(label=label, command=command, status=result.returncode,

@@ -23,7 +23,7 @@ main: procedure = .int expose checks failures
   call child.exposeSymbol('victim',reference parent)
   call child.exposeSymbol('aux',reference parent)
   call child.setString('names','names·victim·🙂·aux')
-  returned = dropfixture..run(reference context)
+  returned = dropfixture..run(reference context,0)
   call check(\returned.hasReturnValue(),'C provider returns a fresh absent result')
   call check(parent.stemSymbolValue('items.','b').asString() = 'ITEMS.b','whole-stem drop reaches exact lowercase alias')
   call check(parent.stemSymbolValue('items.','B').asString() = 'upper','unrelated uppercase parent tail survives')

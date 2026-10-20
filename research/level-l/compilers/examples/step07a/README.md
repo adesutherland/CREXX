@@ -36,23 +36,12 @@ compiler invocation or library initialiser is implied.
 
 ## Emission review
 
-Counts cover the complete emitted modules, including wrappers and cold handlers;
-helper/library bodies are outside these text counts. New output uses compiler IR
-optimisation on; the native design controls used `rxc -n` / `rxc-c -n`. All were
-previously assembled with `rxas -n` for semantic attribution. The current C
-views include the ordinary header Name read; focused OPTIONS runtime checks
-qualify that work. The current C ARG refresh uses shared source/template
-execution and the existing nine-name PARSE fatal bridge. The refreshed C view
-was assembled with `rxas -n`, linked explicitly and executed for `14`, `21`;
-other retained languages keep their earlier proof. Counts do not establish speed.
-
-| Module | Instructions | Calls (all call variants) | Frame registers | Source records | TRACE events |
-|---|---:|---:|---|---:|---:|
-| new-c | 935 | 88 | 16, 42, 49 | 42 | 0 |
-| new-g | 47 | 3 | 2, 16, 8 | 18 | 0 |
-| native-b | 21 | 3 | 4, 3 | 7 | 11 |
-| native-g | 21 | 3 | 4, 3 | 7 | 11 |
-| native-c | 643 | 113 | 11, 79 | 242 | 16 |
+Inspect complete emitted modules, including wrappers/cold handlers, separately
+from linked helper bodies. C uses the current v9 context/entry ABI and one
+source-unit body; its fresh child activation initially borrows the caller pool,
+then PROCEDURE creates the private pool and binds it before ARG executes. The
+views enable compiler IR optimisation. Compiler and assembler optimisation are
+independent; use `rxas -n` when isolating compiler shape.
 
 The new G caller passes absence directly and the callee guards its literal load;
 no caller default or empty placeholder is built. Required-only signatures avoid
@@ -69,13 +58,9 @@ be removed without an ABI/lifetime proof. Further Classic specialisation remains
 open. Source records retain distinct expression origins; they are not executed
 TRACE events. Full TRACE fidelity still has its separate gate.
 
-The earlier C view had four fatal names per procedure; moving this maintained
-view to the existing nine-name profile contributes 70 of its 241 additional
-instructions. The remaining 171 instructions and seven extra calls per ARG
-belong to conservative shared acquisition/checkpoint/executor machinery,
-including validation/UPPER/cursor work inside helpers. There
-is one acquisition/immutable packet/executor per selected comma template and no
-scalar ARG reader/store path. Uniform source checkpoints and conservative
-registers remain admitted costs in the [current plan](../../PLAN.md#current-action-arg).
-C-OPT-01/02/05 own later specialization under the existing context, ABI and
-lifetime proof requirements; no minimal-frame or performance claim follows.
+Each selected ARG comma template has one source acquisition and immutable
+packet/executor invocation, preserving original arguments and presence. There
+is no scalar ARG reader/store path. Uniform source checkpoints and conservative
+register allocation remain admitted costs. C-OPT-01/02/05 own specialisation
+under context, ABI and lifetime proof; these views do not establish speed or
+minimal frames.
