@@ -1,8 +1,9 @@
 # Complete Classic C compiler in B and Level L
 
 **Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified.
-Next is PARSE machinery review, with ARG consuming the same engine; exact design
-approval is required before that implementation.**
+Current: PARSE1 design review is complete; PARSE2's proposed generic cursor
+prerequisite awaits approval. C PARSE integration has a later exact-contract
+gate, followed by ARG using the same engine. No PARSE implementation is authorised.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -17,6 +18,45 @@ with reuse, missing integration, owners and closure checks. Native passes and
 existing B bodies are controls, not new-C passes. [Architecture](doc/architecture.md)
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
+
+<a id="current-action-parse"></a>
+
+## Current action: PARSE engine approval
+
+Deliver PARSE's agreed source/template behavior through one shared executor,
+then use that executor for ARG. Earlier completed writes must be visible to
+later dynamic operand reads without reading future operands early or replaying
+template prefixes. The [machinery review](doc/architecture.md#parse-machinery-review)
+records existing investment and the native live-pool ordering limitation;
+native output remains a read-only control, not the new compiler's oracle.
+
+The **unapproved** [generic cursor proposal](doc/architecture.md#proposed-parse-cursor-contract)
+owns the exact API, events, errors and lifecycle, with the single acceptance
+matrix **PARSE-ENGINE-AC01–06**: event/order semantics; validation/errors;
+ownership/lifecycle; finite resources/HALT; one kernel with mandatory core/static
+delivery; and independent consumers, existing-consumer compatibility and actual
+RXAS proof. Its **PARSE-ENGINE-STEP01–04** own approval/boundary freeze,
+kernel/provider implementation, independent tests/build delivery and final
+qualification/review/cleanup. All engine implementation and proof remain open;
+these IDs are not a second C integration acceptance matrix.
+
+**CLC-STEP06.PARSE1 — Design review complete:** existing kernel/exits,
+independent ordering expectations and core/static build feasibility are reviewed.
+Record the exact proposed prerequisite before requesting Adrian's approval.
+**CLC-STEP06.PARSE2 — Pending approval:** implement and independently qualify
+only the approved generic engine under PARSE-ENGINE-AC01–06 / STEP01–04;
+no generic API, ISA, native C feature or product edit is authorised yet.
+**CLC-STEP06.PARSE3 — Later exact-contract gate:** after that prerequisite,
+review C source acquisition, templates, AST/IR/target operations, live pool
+effects, diagnostics/conditions and code shape before C integration. Record
+its own checkable criteria and obtain approval for exact new contracts first.
+ARG subsequently consumes the same executor rather than introducing another.
+
+The seven agreed PARSE sources and current EXTERNAL/NUMERIC exclusions retain
+their ledger dispositions. Shared labels/EXPOSE, host/condition/TRACE and all
+twelve CFC criteria remain open; INTERPRET remains last. This action is
+documentation and approval preparation only, with no PARSE implementation or
+implementation qualification.
 
 <a id="current-action-iterate"></a>
 
@@ -491,8 +531,8 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; next PARSE machinery review** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews and static DO are locally qualified with shared dependencies open; named LEAVE is locally qualified; named ITERATE is locally qualified; PARSE machinery review follows, with ARG using the same engine after design approval. |
-| **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
+| **CLC-STEP05 — Partial; bounded reviews through ITERATE qualified** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews, static DO and named LEAVE/ITERATE are locally qualified; their whole-instruction dependencies remain open. |
+| **CLC-STEP06 — Partial; current PARSE engine approval** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. [PARSE1–3](#current-action-parse) separates completed design review, the unapproved generic engine prerequisite and later exact C integration; ARG uses the same engine. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
 | **CLC-STEP09 — Open throughout** | Inspect caller/helper RXAS every increment and fix direct construction/emission defects immediately. Close C-OPT-01–06, register/call-window/allocation obligations and named remaining costs. Serves AC06/07/10/11. | Uses STEP02 facts and explicit ABI/lifetime rules; final closure follows STEP08. New ISA/storage contracts need approval; production performance edits retain their verdict gate. |

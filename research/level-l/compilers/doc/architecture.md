@@ -1259,6 +1259,230 @@ sanitizer campaign is commissioned. Shared labels/EXPOSE, SIGNAL/INTERPRET loop
 invalidation, resumable conditions, exact recovery and clause/TRACE retain their
 owners. All complete-C criteria remain open and INTERPRET remains last.
 
+<a id="parse-machinery-review"></a>
+
+## PARSE machinery review — exact API decision pending
+
+**PARSE is next; no executor extension is approved or implemented.** ARG must
+subsequently use the same machinery. LC-I-19 / LC-81-01–07 retain the seven
+agreed sources (ARG, PULL, SOURCE, LINEIN, VERSION, VALUE and VAR), optional UPPER,
+arbitrary comma/empty templates, targets/dots, literal and variable patterns,
+and absolute/relative positions. The accepted initial EXTERNAL/NUMERIC exclusions
+remain; the existing [LC-GAP-05 ledger row](levelc-requirements.md), rather than
+this review, owns their final Release 1 disposition.
+
+| Existing investment | Reuse and ownership boundary |
+|---|---|
+| Native [PARSE design](../../../../compiler/docs/levelc_working_architecture.md#610-parse-and-templates), LC-81 criteria and maintained fixtures | Carry source, template, order, error and Unicode expectations into independent B/L tests. Native closed rows are controls, not new-C passes or a compiler dependency. |
+| [Frozen PARSE kernel/instructions](../../../../docs/ai-context/RXVM_INTERPRETER.md#frozen-parse-execution) | Retain codepoint positions, literal/relative anchors, pending fields, validation and existing exact/whole-plan consumers. One engine must own cursor semantics. |
+| [B PARSE exit](../../../../compiler/exits/parse/Parse.crexx) | Existing exact paths include ordered assignment/operand evaluation for supported shapes; the general v2 path preloads external operands and writes targets after the whole plan. Neither is an unqualified complete live-pool route. |
+| Shared B values, pools, activation and configuration | C/B owns source acquisition, once-only text capture/UPPER, argument presence/comma selection, live operand reads and ordered raw-name pool writes. Preserve aliases, compound tails, conditions and source; do not put Classic pool policy in the generic kernel. |
+
+### Confirmed live-pool ordering gap
+
+This minimal proposed regression has independent expected output
+`N|left|right`: absolute position 2 completes KEY before the later delimiter
+lookup, so `patterns.key` must then resolve through the newly assigned `N`.
+[IBM's variable-pattern rules](https://www.ibm.com/docs/en/zos/2.5.0?topic=parsing-variable-patterns)
+allow a variable assigned by an earlier completed template section to supply a
+later pattern.
+
+```rexx
+options levelc
+key='OLD'
+patterns.OLD='!'
+patterns.N=':'
+parse value 'Nleft:right' with key 2 piece (patterns.key) rest
+say key || '|' || piece || '|' || rest
+```
+
+The read-only native control on the ITERATE-qualified inputs instead prints
+`N|left:right|`. `rxc-c -n -i <bin>`, `rxas -n`, unstripped `rxlink` and
+`rxbvm --no-autoload` all succeeded
+(four commands, 1.248s). Actual RXAS reads `PATTERNS.KEY` before `parseplan`,
+then writes KEY afterward. The v2 completed-capture shortcut matches an earlier
+target name; it cannot represent this indirect dependency through the live pool.
+This is a native lowering limitation, not an oracle to copy or a request to
+change native C. The snippet and expected result own the future regression;
+the diagnostic files are disposable.
+
+### Pending engine decision
+
+Review a minimal resumable/checkpoint surface over the **existing** generic
+kernel, with completed-field events and live external-operand requests. It must
+expose earlier completed writes before later reads, yet request a dynamic
+delimiter against the old pool when that delimiter is needed to finish the
+current field. Static lookahead must not read future operands early. Source,
+cursor, capture/relative/literal anchors, pending sections and drops remain
+engine-owned; C must not replay prefixes or implement a second cursor machine.
+
+Existing exact instructions remain useful. Compiled segments are an alternative
+only if their full state/order equivalence can be demonstrated without replay
+or duplicated algorithms; no such general route is presently established.
+[PERF-DEC-06](../../../../performance/DECISIONS.md) retains the existing compiled
+route; the reproduced semantic gap justifies this review, not automatic opcode
+or runtime-API approval.
+
+The concrete [cursor proposal](#proposed-parse-cursor-contract) below records
+the exact prerequisite for approval. C AST/IR/target integration has a later
+contract gate; ARG shares the eventual executor. Wider host/condition/TRACE and
+all CFC criteria remain open.
+
+<a id="proposed-parse-cursor-contract"></a>
+
+## Proposed generic PARSE cursor contract
+
+**UNAPPROVED — awaiting Adrian's exact API decision; no implementation is
+authorised.** Expose the existing PARSE kernel through one shared cursor
+primitive, allowing a consumer to apply completed fields before resolving later
+live operands. The native class
+`rxparse.cursor`, source type `.rxparse..cursor`, is implemented entirely with
+existing C RXPA factories/methods. It parses no template source and knows no
+Classic pool, target name, C source span or TRACE formatting policy. Its inputs
+are text and an existing packed v1/v2 descriptor; no new descriptor version,
+ISA/RXBIN feature, RXPA host service, callback or generic L API is proposed.
+
+### Exact public surface and events
+
+Both factory operands and the supply operand are required. The default factory
+has no receiver; methods use the existing hidden receiver ABI.
+
+| Callable | Result | Contract |
+|---|---|---|
+| `*(source=.string, plan=.binary)` | `.rxparse..cursor` | Own snapshots, validate the whole descriptor/source and publish a Ready cursor only on success. |
+| `next()` | `.int` | Advance from Ready; acknowledge the current Field then advance; return `0` Done, `1` Field or `2` Input. Input without supply is an error. Done returns `0` repeatedly. |
+| `item()` | `.int` | Nonadvancing, 1-based packed item ordinal for the current event. |
+| `slot()` | `.int` | Field: 1-based stored-result index, or `0` for a drop target. Input: 1-based external-operand index. |
+| `text()` | `.string` | Field only; lazily return a fresh owned copy of its completed text. Repeated reads do not acknowledge the event. |
+| `supply(text=.string)` | `.void` | Input only, exactly once: snapshot/convert this occurrence's operand, clear the event and return Ready. |
+| `close()` | `.void` | Nonraising and idempotent for a successfully constructed current-VM cursor; close its shared resource and every alias. |
+
+Phases are Ready, Field, Input, Done, Failed and Closed. `item`/`slot` return
+zero in Ready/Done/Closed; Failed retains the failing item/slot for diagnosis.
+Wrong-phase `next`, `text` or `supply` signals `INVALID_ARGUMENTS`: a live
+Ready/Field/Input cursor becomes Failed, while Done/Failed/Closed stay terminal.
+Only Done's repeated `next` is valid. `close` clears event IDs/text from every
+phase; ordinary uninitialized/foreign/forged receiver guards still apply.
+
+Every semantically completed target, including a dot, yields Field in authored
+order. Drop uses slot zero: a consumer that ignores it allocates no result
+string and performs no target write. Lazy `text` leaves future
+[placeholder observations](https://www.ibm.com/docs/en/zos/3.1.0?topic=trace-format-output)
+possible without replay; their formatting remains with the C
+TRACE owner. A Field is acknowledged only by the next `next` call, after the
+consumer's visible write/observation, rather than at an arbitrary internal store.
+
+An Input identifies one physical external-reference occurrence. Internal
+lookahead may reuse that occurrence's supplied snapshot, but each distinct
+occurrence requests anew even when its slot repeats. Static kind lookahead
+must not request future live values. Fields completed by earlier controls are
+yielded/acknowledged before a later Input; an Input needed to finish the current
+section occurs before that section's Fields. Cursor, pending word/section,
+capture start, literal/relative anchors, shared-item reuse, backward movement,
+drops and lookahead remain in the one kernel. Valid completed-capture references
+resolve internally. A later C consumer must use live external requests unless
+the full pool/alias equivalence of a capture shortcut is proved.
+
+### Validation, failures and ownership
+
+Construction checks the entire descriptor before publication or any event:
+version/header/flags, nonzero item count, all boundaries and declared counts,
+exact trailing length, literal byte/character counts and text, numeric encodings,
+external indexes and references to already completed captures. Source and
+literals retain the current build's `.string`/`parseplan` units: strict UTF8 and
+codepoints in Unicode builds, existing byte units under NUTF8. This adds no
+profile switch or Unicode table; C's Unicode platform capability remains a
+separate delivery obligation. Each supplied operand receives the corresponding
+text/conversion checks before use.
+
+Malformed plans, protocol misuse and forged/foreign receivers signal
+`INVALID_ARGUMENTS`; the ordinary uninitialized receiver guard signals
+`OBJECT_NOT_INITIALIZED`. Invalid Unicode text signals `UNICODE_ERROR`,
+unrepresentable storage extents/products `OUT_OF_RANGE`, and allocation or
+publication failure `FAILURE`. Dynamic numeric conversion retains the existing
+shared v2 policy/message owner: flagged plans signal `CLASSIC_SYNTAX` /
+`RXC-LC-26.4`, otherwise `CONVERSION_ERROR`. Preserve the bound native event.
+The first failure is terminal; later fields do not execute, and already
+acknowledged visible writes are not rolled back. A consumer's pool failure is
+outside the engine: close the successfully constructed cursor, then preserve
+and propagate that original failure. Item IDs support later authored attribution
+without placing source/Classic error policy in the generic object.
+
+Native storage owns source/plan bytes, capture spans/indexes and only still-needed
+operand/anchor snapshots. Retain no RXPA register/value/string-view handles
+across calls. Returned text copies survive source/plan mutation, supply, next
+and close. Copies of the cursor share one session-affine, refcounted resource;
+there is no fork or worker transfer. Independent cursors interleave without
+shared progress. Explicit close covers normal/abrupt/fatal cleanup; last-owner
+finalization releases leftovers without promising prompt lexical cleanup.
+A failed factory releases partial storage and publishes no initialized cursor;
+cleanup must not close an unconstructed result and mask its original failure.
+
+Check subtraction/division and representation before allocation/products,
+including source offset plus one. Existing descriptor item/result/dynamic counts
+remain 16-bit and literal byte/character counts 32-bit. Work follows finite
+byte/item/event progress, with no prefix replay or repeated copying of the
+unconsumed tail. Cursor memory consists of one source/plan snapshot, bounded
+item/capture state and active operand bytes; caller-owned text copies have
+ordinary VM lifetimes. Existing allocation/OOM and dispatch HALT behavior apply.
+There is no new configurable work/space quota or promise of prompt interruption
+inside one native call. Finite bounds are not a formal speed claim.
+
+### One engine and mandatory delivery
+
+Factor existing PARSE helpers/state from `rxvmintp.c` into one private
+interpreter C kernel/header. The existing `parseplan` opcode driver and cursor
+driver use that kernel; `parsewords3`, `parsepos2` and `parsewords3d` remain.
+Preserve existing whole-plan/direct contracts and their regressions. Do not
+duplicate a cursor in compiler-generated code, replay plan prefixes, call back
+to B from native execution or add a runtime textual template parser.
+
+Use the documented [native RXPA object bindings](../../../../docs/ai-context/CREXX_LIBS.md#constructing-and-binding-objects-entirely-in-c)
+and session/refcounted payload pattern in
+[`rxpa_objects.c`](../../../../tests/rxpa/rxpa_objects.c). Kernel/binding are
+mandatory core sources in `RXVM_CORE_OBJECT_SOURCES` and the single-threaded
+`vm_sources` manifest, with explicit idempotent catalogue initialization through
+`rxinimod_common` for CLI/embedding and constructorless CMS/TSO. Native compiler
+declarations use `DECL_ONLY` and existing metadata retention/freshness; avoid
+duplicate full/declaration initializers. Preserve 31-bit size checks, text/binary
+ownership and constructorless/no-TLS registration. This is not an optional
+desktop plugin or a B forwarding class and creates no B/L dependency cycle.
+
+Later C integration owns source acquisition/UPPER, normalized template records,
+compile-time constant binary descriptors, raw-name live pool reads/writes,
+authored diagnostics and all-path cursor cleanup. Its AST/IR/target contract
+must be reviewed and approved separately; no C-family revision or target export
+is invented in this prerequisite. Empty/omitted templates create no cursor,
+while required source acquisition/consumption and comma-position effects still
+occur. ARG then uses that same executor.
+
+### Proposed acceptance and implementation steps
+
+All acceptance criteria and implementation remain **open**. The
+[current PLAN card](../PLAN.md#current-action-parse) references this sole matrix.
+
+| ID | Checkable closure |
+|---|---|
+| **PARSE-ENGINE-AC01** | Exact seven-callable metadata and event/phase tests prove authored Field/drop order, one Input per external occurrence, same-slot rereads, old-value triggering versus earlier completed writes and terminal behavior. An independent live-pool consumer produces `N\|left\|right` for the confirmed counterexample; no early lookahead read or prefix replay. |
+| **PARSE-ENGINE-AC02** | Complete malformed/truncated/trailing/count/flag/index/capture/Unicode/overflow and protocol controls refuse before publication as specified. Dynamic conversion checks both existing policies, preserves earlier acknowledged writes and prevents later events; consumer failures preserve their original bound event after close. |
+| **PARSE-ENGINE-AC03** | Source/plan/supply/text snapshot controls, copy/alias close, two interleaved cursors, repeated use and normal/abrupt/fatal/teardown paths prove current-VM ownership. Failed construction publishes no cursor or leaked storage; uninitialized/foreign/forged receivers refuse. |
+| **PARSE-ENGINE-AC04** | Checked representation/allocation products and finite item/event progress cover large/edge inputs without wrap, replay or growing tail copies. Retained state and lazy drop text have checkable bounds; document ordinary OOM/HALT and platform limits without quota or prompt-native-interruption claims. |
+| **PARSE-ENGINE-AC05** | Source/build review proves one kernel and mandatory normal/static/embedded/single-threaded delivery, exact `DECL_ONLY` metadata, retention/freshness and idempotent initialization. Check constructorless/no-TLS/31-bit/text ownership boundaries on declared platforms; unverified platform proof remains open. No optional-provider or native frontend fallback. |
+| **PARSE-ENGINE-AC06** | Independent B consumers outside the C compiler, unchanged frozen/direct PARSE regressions and focused toolchain/both-engine tests qualify the implementation. Readable caller/helper RXAS checks required protocol/ownership work and simple static baselines without a broad benchmark. Current docs/scheduling and scoped cleanup/local delivery state exact inputs, results and limits; this does not close C PARSE/ARG or CFC. |
+
+1. **PARSE-ENGINE-STEP01 — Awaiting approval (AC01–06):** freeze this exact API,
+   independent order/error expectations and platform boundary; obtain Adrian's
+   decision before product edits.
+2. **PARSE-ENGINE-STEP02 — Not started (AC01–05):** after approval, factor the
+   single private kernel, preserve the opcode driver and implement the native
+   cursor/provider with owned state and checked failures.
+3. **PARSE-ENGINE-STEP03 — Not started (AC01–06):** integrate mandatory runtime/
+   declaration/static manifests and independent focused fixtures; qualify the
+   approved toolchain/engine/lifecycle boundaries and inspect actual RXAS.
+4. **PARSE-ENGINE-STEP04 — Not started (AC01–06):** complete independent/root
+   review, concise qualification/docs, task-only cleanup and scoped local
+   delivery. Then open C PARSE integration's separate exact-contract gate.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |
