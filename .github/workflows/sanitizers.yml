@@ -7,6 +7,16 @@ on:
   schedule:
     - cron: '47 3 * * *'
   workflow_dispatch:
+    inputs:
+      qualification:
+        description: Qualification scope (default retains both full platform jobs)
+        type: choice
+        options: [full, normalization-linux]
+        default: full
+      source_ref:
+        description: Optional source commit for an unchanged focused replay
+        type: string
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -75,7 +85,7 @@ jobs:
   sanitizer:
     name: ${{ matrix.name }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && inputs.qualification != 'normalization-linux'
     runs-on: ${{ matrix.os }}
     # Full macOS ASan took 239.5 minutes before structured-flow isolation.
     # Leave headroom beyond each test's own measured hang backstop.
@@ -146,6 +156,66 @@ jobs:
         with:
           name: sanitizer-logs-${{ matrix.platform }}
           path: |
+            ${{ runner.temp }}/debugasan/asan-logs
+          if-no-files-found: error
+          retention-days: 14
+
+  normalization-linux:
+    name: Linux x64 isolated normalization diagnosis
+    if: github.event_name == 'workflow_dispatch' && inputs.qualification == 'normalization-linux'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout original failing inputs
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ inputs.source_ref || github.sha }}
+
+      - name: Python for core QA
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Isolated ordinary Debug control
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debug" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
+            --phase build --build-target ts_unicode_normalization \
+            --build-jobs 4 --build-leaks on --no-live-tail
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
+            --phase ctest --regex '^ts_unicode_normalization_rxtvm_(noopt|opt)$' \
+            --test-jobs 1 --leaks on --no-live-tail
+
+      - name: Isolated maintained ASan and LSan replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
+            --phase build --build-target ts_unicode_normalization \
+            --build-jobs 4 --build-leaks on --no-live-tail
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
+            --phase ctest --regex '^ts_unicode_normalization_rxtvm_(noopt|opt)$' \
+            --test-jobs 1 --leaks on --no-live-tail
+
+      - name: Upload focused diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-normalization-linux
+          path: |
+            ${{ runner.temp }}/debug/asan-logs
             ${{ runner.temp }}/debugasan/asan-logs
           if-no-files-found: error
           retention-days: 14
