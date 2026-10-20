@@ -55,7 +55,18 @@ while source acquisition, section normalization and live pool writes remain
 consumer policy. The shared VM kernel is mandatory core infrastructure, with
 no runtime template-source parser or optional/dynamically loaded plugin. See the
 [cursor API, lifecycle, errors and limits](RXVM_INTERPRETER.md#native-parse-cursor).
-Research C PARSE/ARG integration retains its separate exact-contract gate.
+Packed v3 adds cursor-only Classic sections; `parseplan` continues to admit only
+v1/v2. The same VM kernel owns matching/positions; no new callable is added.
+The shared `rexxclassicparse.execute(context=reference
+.rexxclassiccontext..RexxClassicContext, source=.rexxvalue..RexxValue,
+program=.binary)->.void` owns LCP1 validation, live pool reads/writes and word
+distribution using the existing Classic CharacterScan blank policy. The C host
+constructs/adopts packets independently and never imports this target executor.
+The research `llctarget.parsesource` adapter returns one raw acquired value and
+retains errors/NOTREADY in caller-owned BIF-context storage; generated C performs
+the typed condition checkpoint before executing the template. Complete
+conditions/TRACE, ARG-instruction acceptance and real platform proof retain their
+[integration gates](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
 
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)

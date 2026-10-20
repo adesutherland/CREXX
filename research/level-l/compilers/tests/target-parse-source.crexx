@@ -1,0 +1,168 @@
+/* Direct prebound source acquisition and caller-owned condition transport.
+ * The checkpoint models the existing generated-caller protocol, not a new
+ * source handler/resumption implementation. No template executes on failure.
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import llctarget
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxclassicbifs
+import rexxclassicstream
+import rexxclassicconditionevent
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  state = .rexxclassicbifs..RexxBifCallContext
+  call activation.append(.RexxValue('MiXeD' || ('00'x as .string)),1)
+  call activation.append(.RexxValue('ignored omission'),0)
+  call activation.append(.RexxValue('Third'),1)
+  value = llctarget..parsesource(reference context,'ARG',1,'',reference state)
+  call check(value.asString(1) == 'MiXeD' || ('00'x as .string),'PARSE ARG reads raw case/NUL')
+  call check(pool.unicodeNames(),'first source-state bind preserves Unicode pool policy')
+  call check(state.hasError() = 0 & state.conditionId() = 0,'first uninitialized storage is reset')
+  value = llctarget..parsesource(reference context,'ARG',2,'',reference state)
+  call check(value.asString(1) == '' & activation.argumentExists(2) = 0,'omitted argument remains absent')
+  value = llctarget..parsesource(reference context,'ARG',3,'',reference state)
+  call check(value.asString(1) == 'Third','later ordinal retains original position')
+  value = llctarget..parsesource(reference context,'ARG',99,'',reference state)
+  call check(value.asString(1) == '' & activation.argumentCount() = 3,'missing argument returns empty without frame mutation')
+  call check(activation.argument(1).asString(1) == 'MiXeD' || ('00'x as .string),'raw source leaves original argument unchanged')
+  call state.setError('40.27','old error'); call state.streamNotReady('old stream')
+  args = .RexxValue[]; exists = .int[]
+  args[1] = .RexxValue('old argument'); exists[1] = 1
+  call state.setArguments(args,exists)
+  value = llctarget..parsesource(reference context,'VERSION',0,'',reference state)
+  call check(value.asString(1) == config.versionText(),'runtime VERSION source')
+  call check(state.hasError() = 0 & state.conditionId() = 0 & state.argumentCount() = 0,'reuse clears error condition and actuals')
+  value = llctarget..parsesource(reference context,'SOURCE',0,'SYSTEM COMMAND folder/source with spaces.rexx',reference state)
+  call check(value.asString(1) == 'SYSTEM COMMAND folder/source with spaces.rexx','caller SOURCEINFO identity and spaces')
+  call config.queueText('MiXeD queued')
+  value = llctarget..parsesource(reference context,'PULL',0,'',reference state)
+  call check(value.asString(1) == 'MiXeD queued' & config.queuedCount() = 0,'PULL consumes one queue entry without case change')
+  call notready(reference context,reference state)
+  call state.setError('40.27','RXC-LC-40.27: injected source error')
+  caught = 0; entered = 0
+  do
+    call checkpoint(reference context,reference state,321)
+    entered = 1
+  on signal classic_syntax as problem
+    caught = 1
+    call check(problem.message() == 'RXC-LC-40.27: injected source error','recorded error retains its detail')
+    call check(pos('target-parse-source.crexx',problem.file()) > 0,'error is raised in authored caller fixture')
+  end
+  call check(caught & entered = 0,'source error precedes template execution')
+  call rebound(reference context,reference state)
+  call invalid(reference context)
+  say 'TARGET_PARSE_SOURCE|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+notready: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, state_ref = reference .rexxclassicbifs..RexxBifCallContext
+  bundle = dereference context; config = dereference bundle.config()
+  activation = dereference bundle.activation()
+  state = dereference state_ref
+  -- Keep the caller-owned slot linked; each factory reset expires the prior
+  -- weak token, so every subsequent call takes a fresh reference to this slot.
+  -- A directory cannot supply a text record. Inject its failed read as the
+  -- default stream value; no queue entry or terminal input is consumed.
+  broken = .rexxclassicstream..RexxClassicStream('.','READ')
+  call config.storeStream('',1,broken)
+  call config.queueText('queue survives LINEIN')
+  mode = .int; value = .RexxValue
+  do mode = 0 to 2
+    call activation.setSignalPolicy(5,0)
+    if mode = 1 then call activation.setCallPolicy(5,77)
+    if mode = 2 then call activation.setSignalPolicy(5,88)
+    value = llctarget..parsesource(context,'LINEIN',0,'',reference state)
+    call check(value.asString(1) == '' & state.hasError() = 0 & state.conditionId() = 5,'LINEIN retains NOTREADY transport')
+    call check(config.queuedCount() = 1,'LINEIN bypasses queued text')
+    reached = 0; caught = 0
+    do
+      call checkpoint(context,reference state,321)
+      reached = 1
+    on signal classic_condition as problem
+      event = problem.payload() as .rexxclassicconditionevent..RexxClassicConditionEvent
+      caught = event.conditionId() = 5 & event.description() == ''
+      call check(pos('target-parse-source.crexx',problem.file()) > 0,'typed SIGNAL belongs to caller checkpoint')
+    end
+    if mode = 0 then call check(reached & caught = 0 & activation.hasPendingCallCondition() = 0,'NOTREADY OFF continues')
+    if mode = 1 then do
+      call check(reached & caught = 0 & activation.hasPendingCallCondition(),'NOTREADY CALL queues before template')
+      handler = activation.takeCallCondition()
+      call check(handler = 77 & activation.dispatchedConditionId() = 5 &,
+        activation.dispatchedConditionLine() = 321 & activation.dispatchedConditionDescription() == '', 'CALL retains causing line and payload')
+    end
+    if mode = 2 then call check(reached = 0 & caught & activation.hasPendingCallCondition() = 0,'NOTREADY SIGNAL transfers before template')
+  end
+  call activation.setSignalPolicy(5,0)
+  value = llctarget..parsesource(context,'PULL',0,'',reference state)
+  call check(value.asString(1) == 'queue survives LINEIN' & config.queuedCount() = 0,'queued input survives all LINEIN failures')
+  return
+
+checkpoint: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, state_ref = reference .rexxclassicbifs..RexxBifCallContext, line = .int
+  state = dereference state_ref
+  detail = state.errorDetail(); condition = state.conditionId(); description = state.conditionDescription()
+  if state.hasError() then do
+    assembler signal "CLASSIC_SYNTAX",detail
+    return
+  end
+  if condition <> 0 then do
+    bundle = dereference context; activation = dereference bundle.activation()
+    ignored = activation.queueCallCondition(condition,description,line)
+    if activation.signalPolicy(condition) > 0 then do
+      event = .rexxclassicconditionevent..RexxClassicConditionEvent(condition,description)
+      assembler signal "CLASSIC_CONDITION",event
+      return
+    end
+  end
+  return
+
+rebound: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, state_ref = reference .rexxclassicbifs..RexxBifCallContext
+  state = dereference state_ref
+  bundle = dereference context; original_pool = bundle.pool()
+  call bindTransient(context,reference state)
+  replacement = .rexxpool..RexxVariablePool(1)
+  call bundle.bindPool(reference replacement)
+  -- The source-state's previous pool is expired here. Its lean reset must
+  -- precede setConfig, whose old binding would otherwise dereference it.
+  value = llctarget..parsesource(context,'VERSION',0,'',reference state)
+  call check(replacement.unicodeNames() & value.asString(1) <> '', 'expired old pool is not read during reset')
+  call check(state.hasError() = 0 & state.conditionId() = 0,'rebound reset publishes into the stable caller slot')
+  call bundle.bindPool(original_pool)
+  return
+
+bindTransient: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, state = reference .rexxclassicbifs..RexxBifCallContext
+  temporary_pool = .rexxpool..RexxVariablePool(1)
+  bundle = dereference context; call bundle.bindPool(reference temporary_pool)
+  value = llctarget..parsesource(context,'VERSION',0,'',state)
+  return
+
+invalid: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  empty = reference .rexxclassicbifs..RexxBifCallContext
+  caught = 0
+  do
+    ignored = llctarget..parsesource(context,'VERSION',0,'',empty)
+  on signal reference_invalid
+    caught = 1
+  end
+  call check(caught,'empty source-state reference refuses before use')
+  return

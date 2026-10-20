@@ -11,7 +11,7 @@ main: procedure = .int expose checks failures
   arg argv = .string[]
   if argv[0] < 1 | argv[0] > 2 then return 2
   selector = 'all'; if argv[0] = 2 then selector = argv[2]
-  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' & selector <> 'leave' then return 2
+  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' & selector <> 'leave' & selector <> 'parse' then return 2
   checks = 0; failures = 0; mode = .int
   if selector = 'do-exact' then do
     call doexactparts(argv[1])
@@ -19,7 +19,13 @@ main: procedure = .int expose checks failures
     return failures
   end
   call versionrefusal(argv[1],5)
-  call versionrefusal(argv[1],7)
+  call versionrefusal(argv[1],6)
+  call versionrefusal(argv[1],8)
+  if selector = 'parse' then do
+    call selectschema(); call parseschema()
+    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
   if selector = 'all' | selector = 'leave' then call transfercontracts(argv[1])
   if selector = 'leave' then do
     say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
@@ -27,6 +33,7 @@ main: procedure = .int expose checks failures
   end
   if selector = 'all' then do
     call selectschema()
+    call parseschema()
     do mode = 1 to 6
       call functioncontract(argv[1],mode)
       call forgedschema(argv[1],mode)
@@ -51,6 +58,14 @@ check: procedure = .void expose checks failures
   say 'FAIL|' || label
   return
 
+parseschema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  call check(data.opname(53) = 'crexx.c.parse.source' & data.opname(54) = 'crexx.c.parse.execute','PARSE appends exactly two operations after the unchanged foundation')
+  call doshape(contract,'parse.source','context:crexx.c.context','value:crexx.c.value','kind:crexx.g.text ordinal:crexx.g.int64','context.input','condition.resource')
+  call doshape(contract,'parse.execute','context:crexx.c.context source:crexx.c.value','','program:crexx.c.parseprogram','context.input.output.observation','condition.resource')
+  return
+
 /* Literal expectations for the two appended descriptors complement whole-
  * schema admission. Existing operation IDs and the context ABI stay intact. */
 selectschema: procedure = .void
@@ -60,7 +75,7 @@ selectschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 6 & data.ops() = 52,'current C v6 has exactly 52 operations')
+  call check(version = 7 & data.ops() = 54,'current C v7 has exactly 54 operations')
   call check(data.opname(41) = 'crexx.c.exit' & data.opname(42) = 'crexx.c.when.truth' & data.opname(43) = 'crexx.c.select.missing','SELECT appends descriptors after the unchanged 41 operations')
   descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
@@ -307,8 +322,8 @@ selectadmission: procedure = .void
   call check(bin2x(saved) = bin2x(graph.binary()),label || ' preserves input')
   return
 
-/* Independent literal shapes for the approved C5 extension. Keys use ordinary
- * text attributes: no fifth C type or transferable loop-state value exists. */
+/* Independent literal shapes for the approved C5 extension. DO keys retain
+ * ordinary text attributes; PARSE's later nominal type is not loop state. */
 doschema: procedure = .void
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); data = dereference contract.data()
@@ -319,7 +334,7 @@ doschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 6 & count = 4 & data.ops() = 52,'C6 retains four types and has exactly 52 operations')
+  call check(version = 7 & count = 5 & data.ops() = 54,'C7 has five types and exactly 54 operations')
   names = 'do.new do.capture do.start do.entry do.advance do.close while.truth until.truth'
   do i = 1 to 8
     call check(data.opname(43 + i) = 'crexx.c.' || word(names,i),'DO descriptor append order ' || i)
@@ -352,7 +367,7 @@ doshape: procedure = .void
   call check(data.effectvalue(id,1) = state & data.effectvalue(id,2) = failure & data.effectvalue(id,3) = termination,name || ' exact state/failure/continuation')
   return
 
-/* The shared v6 foundation admits all four identities even while named
+/* The shared transfer foundation admits all four identities even while named
  * ITERATE source remains outside the current instruction slice. Generic
  * origins stay valid: unlike SELECT missing, no line operand is derived. */
 transfercontracts: procedure = .void
@@ -366,7 +381,7 @@ transfercontracts: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 6 & count = 4 & data.ops() = 52,'transfer foundation is exactly C6/four types/52 operations')
+  call check(version = 7 & count = 5 & data.ops() = 54,'transfer foundation retains C7/five types/54 operations')
   call check(data.opname(52) = 'crexx.c.transfer.invalid','transfer appends only descriptor 52')
   call doshape(contract,'transfer.invalid','','','code:crexx.g.text name:crexx.g.text','none','condition','diverges')
   call forgedschema(artifacts,8)

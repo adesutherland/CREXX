@@ -1,0 +1,41 @@
+/* Independent C PARSE source/order/section integration expectations. */
+options levelc
+parse value ' one two ' with FIRST REST
+say 'words [' || FIRST || '] [' || REST || ']'
+parse value 'aa:bb cc' with A ':' B -1 C
+say 'back ' || A || '|' || B || '|' || C
+PATTERNS.N = ':'
+parse value 'Nleft:right' with 1 KEY2 2 LEFT (PATTERNS.KEY2) RIGHT
+say 'live ' || KEY2 || '|' || LEFT || '|' || RIGHT
+parse upper value 'àßa' with WHOLE
+say 'upper ' || WHOLE
+TEXT = ' abc'
+parse var TEXT TEXT REST
+say 'alias [' || TEXT || '] [' || REST || ']'
+parse value 'one two' with A B, C D, E
+say 'commas ' || A || '|' || B || '|' || C || '|' || D || '|' || E
+parse value with EMPTY
+say 'empty [' || EMPTY || ']'
+parse value 'abc' with A '' B
+say 'pattern ' || A || '|' || B
+parse value 'α:🙂 z' with A ':' B +1 C
+say 'scalar ' || A || '|' || B || '|' || C
+parse value SIDE() with
+parse pull PULLED
+parse linein LINE
+say 'input ' || PULLED || '|' || LINE
+parse source PLATFORM MODE PROGRAM
+say 'source ' || MODE
+parse version VERSION
+say 'version ' || (length(VERSION) > 0)
+call ARGCASE 'MiXeD',,'third'
+exit 0
+
+SIDE: procedure
+say 'effect once'
+return 'ignored'
+
+ARGCASE: procedure
+parse arg A,,C,D
+say 'args ' || A || '|' || C || '|' || D || '|' || arg(2,'E')
+return

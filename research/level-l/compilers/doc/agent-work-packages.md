@@ -68,15 +68,19 @@ start; CLC stage closure also requires the complete plan criteria.
 ## Approved PARSE integration assignment packet
 
 **Implementation approved by Adrian on 20 October 2026.** Baseline is committed
-`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; actual C remains v6/52 operations
-and `llctarget` 33 exports. The [approved integration contract](architecture.md#proposed-c-parse-integration)
+`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; current implementation selects C v7/54
+operations and `llctarget` 34 exports, with bounded local C qualification.
+The [approved integration contract](architecture.md#proposed-c-parse-integration)
 owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,
 two B signatures and CPARSE-AC01–08/STEP01–05. CPARSE-STEP01 is complete and
-STEP02 is current. Approval covers shared cursor/B reuse, focused tests,
+STEP02 is locally qualified in normal Debug/focused Apple ASan; STEP03/04 are
+locally qualified in the finite fatal-error profile. STEP05 remains open for
+complete conditions/TRACE and declared delivery/platforms. Approval covers shared cursor/B reuse, focused tests,
 actual RXAS review and scoped local commits with Sol 6.1 Extra High workers.
 The coordinator assigns exclusive paths and schedules builds before product
 work; push/publication is not commissioned by this packet. Do not
-implement native C fixes, ARG/PULL instruction closure or INTERPRET incidentally.
+implement native Classic frontend changes, ARG/PULL instruction closure or
+INTERPRET incidentally.
 
 | Assignment / phase | Exclusive write ownership to assign and deliverable | Required independent review |
 |---|---|---|

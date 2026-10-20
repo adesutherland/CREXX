@@ -210,6 +210,9 @@ def check_adapter(procedures):
         'setting': ('.void', f'operation=.string,context={context},value={value}'),
         'digits': ('.rexxvalue..rexxvalue', f'context={context}'),
         'readarg': ('.rexxvalue..rexxvalue', f'context={context},ordinal=.int'),
+        'parsesource': ('.rexxvalue..rexxvalue',
+                        f'context={context},kind=.string,ordinal=.int,caller_source=.string,'
+                        'source_state=reference .rexxclassicbifs..rexxbifcallcontext'),
         'countargs': ('.rexxvalue..rexxvalue', f'context={context}'),
         'existsarg': ('.rexxvalue..rexxvalue', f'context={context},ordinal={value},option={value}'),
         'lengthvalue': ('.rexxvalue..rexxvalue', f'value={value},context={context}'),
@@ -242,7 +245,8 @@ def check_adapter(procedures):
     for name, signature in signatures.items():
         p = procedures[name]
         require((p.result, p.arguments) == signature, f'{name}: approved signature/defaults changed')
-    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext'] if name not in {'selectmissing', 'invalidtransfer'}}
+    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext']
+                if name not in {'selectmissing', 'invalidtransfer', 'parsesource'}}
     all_calls = [target for p in borrowed.values() for _, target in p.calls()]
     forbidden = {
         '§rexxactivation.rexxactivationarguments.§factory',
@@ -333,6 +337,27 @@ def check_adapter(procedures):
     for name in ['existsarg', 'lengthvalue']:
         require(procedures[name].call_index(BIF + '.setarguments') < procedures[name].call_index(entries[name]),
                 f'{name}: operands/presence must reach the existing BIF context')
+    source = procedures['parsesource']
+    source_order = [BIF + '.§factory.expression', BIF + '.clearerror', BIF + '.setarguments',
+                    BIF + '.setconfig', BIF + '.setcallerpool', BIF + '.setcalleractivation']
+    positions = [source.call_index(target) for target in source_order]
+    require(positions == sorted(positions), 'parsesource: one lean reset, clear, config before pool/activation')
+    require(CHECKED not in {target for _, target in source.calls()},
+            'parsesource: must retain caller-owned errors/NOTREADY for generated C checkpoint')
+    require(not any('sourceinfo' in target for _, target in source.calls()),
+            'parsesource: SOURCEINFO belongs to generated C caller')
+    for target in ('§rexxactivation.rexxactivationarguments.argument',
+                   '§rexxclassicconfig.rexxclassicconfig.pulltext',
+                   '§rexxclassicconfig.rexxclassicconfig.sourcetext',
+                   '§rexxclassicconfig.rexxclassicconfig.versiontext',
+                   'rexxclassicbifstream.rexxclassicbif_linein'):
+        source.call_index(target)
+    state_register = source.variables['state'][1]
+    fresh = [index for index, (op, operands) in enumerate(source.instructions)
+             if op == 'mkref' and operands.split(',')[-1] == state_register]
+    linein = source.call_index('rexxclassicbifstream.rexxclassicbif_linein')
+    require(len(fresh) == 1 and positions[0] < fresh[0] < linein,
+            'parsesource: renew reference from stable linked owner after destructive reset')
     p = procedures['setting']
     require(sum(op == 'linkref' for op, _ in p.instructions) >= 2,
             'setting: bundle and activation must be live links')

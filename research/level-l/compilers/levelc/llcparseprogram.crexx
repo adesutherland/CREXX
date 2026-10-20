@@ -1,0 +1,551 @@
+/* cREXX License (MIT). C-owned LCP1 construction and immutable admission. */
+options levelb
+namespace llcparseprogram expose builder checked sourceboundary
+import rxfnsb
+import llscalar
+import llsource
+
+/** Compiler-internal boundary predicate for already validated UTF8 bytes.
+ * Strict validation belongs to the source/index constructor, once per unit. */
+sourceboundary: procedure = .int
+  arg source = .binary, offset = .int
+  extent = <blen>(source)
+  if offset < 0 | offset > extent then return 0
+  if offset = extent then return 1
+  byte = <at..u8>(offset) source
+  return byte < 128 | byte >= 192
+
+/** Chunked, explicitly little-endian output; never append a growing prefix. */
+packetwriter: class
+  _chunks = .binary[]
+  _size = .int
+  _limit = .int
+  _error = .string
+  *: factory
+    arg limit = .int
+    _size = 0; _limit = limit; _error = ''
+    return
+  blob: method = .void
+    arg bytes = .binary
+    size = <blen>(bytes)
+    if _error <> '' then return
+    if size > _limit - _size then do; _error = 'LIMIT: PARSE packet exceeds byte budget'; return; end
+    _chunks[_chunks[0] + 1] = bytes; _size = _size + size
+    return
+  number: method = .void
+    arg value = .int, width = .int
+    if _error <> '' then return
+    if value < 0 | width < 1 | width > 8 then do; _error = 'LOWERING: invalid PARSE packet integer'; return; end
+    bytes = .binary; call binresize bytes,width
+    rest = value
+    do i = 0 to width - 1
+      <at..u8>(i) bytes = rest % 256; rest = rest <idiv> 256
+    end
+    if rest <> 0 then do; _error = 'LIMIT: PARSE packet integer is not representable'; return; end
+    call blob(bytes)
+    return
+  size: method = .int
+    return _size
+  error: method = .string
+    return _error
+  bytes: method = .binary
+    result = .binary
+    if _error <> '' then return result
+    call binresize result,_size; at = 0
+    do i = 1 to _chunks[0]
+      part = _chunks[i]; size = <blen>(part)
+      call bincopy result,at,part,0,size; at = at + size
+    end
+    return result
+
+/** Structural trust boundary. Symbol grammar remains with C admission;
+ * callers inspect every returned raw name using its generated authority.
+ * Known source bytes additionally certify each original byte/scalar origin. */
+checked: class
+  _packet = .binary
+  _source = .binary
+  _logical = .string
+  _expected = .string
+  _known = .int
+  _limit = .int
+  _error = .string
+  _offset = .int
+  _sourcebytes = .int
+  _ordinal = .int
+  _physical = .int
+  _first = .int[]
+  _last = .int[]
+  _lines = .int[]
+  _columns = .int[]
+  _clauses = .int[]
+  _used = .int[]
+  _kinds = .int[]
+  _flags = .int[]
+  _external = .int[]
+  _names = .string[]
+  _positions = .llsource..index
+  _indexed = .int
+  _ready = .int
+  *: factory
+    arg packet = .binary, source = .binary, logical = .string, known = .int, limit = .int
+    _packet = packet; _source = source; _expected = logical; _known = known; _limit = limit
+    _ready = 0; _error = ''; _offset = 0; _indexed = 0
+    return
+  /** Internal trusted index from the same compilation-unit bytes. */
+  indexed: factory
+    arg packet = .binary, source = .binary, logical = .string, known = .int, limit = .int, positions = .llsource..index
+    _positions = positions
+    _packet = packet; _source = source; _expected = logical; _known = known; _limit = limit
+    _ready = 0; _error = ''; _offset = 0; _indexed = 1
+    return
+  validate: method = .void
+    if _ready then return
+    _ready = 1
+    do
+      call run()
+    on signal as problem
+      if _error = '' then call fail('invalid PARSE packet text or storage: ' || problem.name())
+    end
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = 'LL_COMPILER_PARSEPROGRAM: ' || message
+    return
+  status: method = .int
+    call validate()
+    return _error <> ''
+  error: method = .string
+    call validate()
+    return _error
+  offset: method = .int
+    call validate()
+    return _offset
+  names: method = .int
+    call validate()
+    return _names[0]
+  name: method = .string
+    arg index = .int
+    call validate()
+    return _names[index]
+  logical: method = .string
+    call validate()
+    return _logical
+  ordinal: method = .int
+    call validate()
+    return _ordinal
+  sourcebytes: method = .int
+    call validate()
+    return _sourcebytes
+  clause: method = .int
+    call validate()
+    return _clauses[1]
+  first: method = .int
+    call validate()
+    return _first[1]
+  last: method = .int
+    call validate()
+    return _last[1]
+  span: method = .int
+    arg at = .int, size = .int
+    if _error <> '' then return 0
+    extent = <blen>(_packet)
+    if at < 0 | size < 0 | at > extent then do; call fail('invalid packet extent'); return 0; end
+    if size > extent - at then do; call fail('truncated packet'); return 0; end
+    return 1
+  number: method = .int
+    arg at = .int, width = .int
+    if span(at,width) = 0 then return 0
+    if width = 8 then do
+      if (<at..u8>(at + 7) _packet) > 127 then do; call fail('numeric movement exceeds signed integer range'); return 0; end
+    end
+    value = 0; multiplier = 1
+    do i = 0 to width - 1
+      value = value + (<at..u8>(at + i) _packet) * multiplier
+      if i + 1 < width then multiplier = multiplier * 256
+    end
+    return value
+  text: method = .string
+    arg at = .int, size = .int
+    if span(at,size) = 0 then return ''
+    bytes = binsubstr(_packet,at + 1,size); codec = .llscalar..textcodec()
+    if codec.check(bytes) <> '' then do; call fail('invalid UTF8 packet text'); return ''; end
+    return bytes as .string
+  origin: method = .int
+    arg id = .int
+    if id < 1 | id > _first[0] then do; call fail('origin ID outside table'); return 0; end
+    _used[id] = _used[id] + 1
+    if id > _physical + 1 & _used[id] > 1 then do; call fail('additional origin is referenced more than once'); return 0; end
+    return _error = ''
+  rawname: method = .void
+    arg value = .string
+    if value = '' then do; call fail('empty variable name'); return; end
+    _names[_names[0] + 1] = value
+    return
+  run: method = .void
+    i = .int; item = .int; kind = .int; flags = .int; bytes = .int; id = .int; index = .int
+    size = <blen>(_packet)
+    if _known <> 0 & _known <> 1 then do; call fail('invalid source-availability flag'); return; end
+    if _limit < 40 | size > _limit | size > 4294967295 then do; call fail('packet exceeds byte budget'); return; end
+    if span(0,40) = 0 then return
+    if binsubstr(_packet,1,4) <> 'LCP1' as .binary then do; call fail('packet magic'); return; end
+    if number(4,2) <> 1 | number(6,2) > 1 | number(8,4) <> size then do; call fail('packet version, flags or exact length'); return; end
+    _ordinal = number(12,4); origins = number(16,4); sections = number(20,4)
+    inputs = number(24,4); outerbytes = number(28,4); _sourcebytes = number(32,4); idbytes = number(36,4)
+    if _ordinal < 1 | origins < 1 | sections > 65535 | inputs > 65535 | idbytes < 1 then do; call fail('packet counts'); return; end
+    _logical = text(40,idbytes); at = 40 + idbytes
+    if _error <> '' then return
+    if _expected <> '' & _logical <> _expected then do; call fail('logical source identity mismatch'); return; end
+    extent = <blen>(_source)
+    if _known & _sourcebytes <> extent then do; call fail('original source extent mismatch'); return; end
+    if origins > (size - at) <idiv> 20 then do; call fail('truncated origin table'); return; end
+    positions = .llsource..index
+    if _known then do
+      if _indexed then positions = _positions
+      else do
+        codec = .llscalar..textcodec()
+        if codec.check(_source) <> '' then do; call fail('original source is not strict UTF8'); return; end
+        indexwork = _limit; if indexwork < 10000000 then indexwork = 10000000
+        positions = .llsource..index(_source,1000000,_limit,indexwork)
+      end
+      if positions.error() <> '' then do; call fail(positions.error()); return; end
+    end
+    do i = 1 to origins
+      first = number(at,4); last = number(at + 4,4); line = number(at + 8,4)
+      column = number(at + 12,4); clause = number(at + 16,4); at = at + 20
+      if first > last | last > _sourcebytes | line < 1 | column < 1 | clause < 1 then do; call fail('invalid origin record'); return; end
+      if i > 1 then do
+        if first = last | first < _first[1] | last > _last[1] | clause <> _clauses[1] then do; call fail('item origin outside owning template/clause'); return; end
+      end
+      _first[i] = first; _last[i] = last; _lines[i] = line; _columns[i] = column; _clauses[i] = clause; _used[i] = 0
+      if _known then do
+        if sourceboundary(_source,first) = 0 | sourceboundary(_source,last) = 0 then do; call fail('origin is not at a Unicode boundary'); return; end
+        position = positions.position(first); ending = positions.position(last)
+        if position.error() <> '' | ending.error() <> '' then do; call fail('origin is not at a Unicode boundary'); return; end
+        if position.line() <> line | position.column() <> column then do; call fail('origin line/column mismatch'); return; end
+      end
+    end
+    _used[1] = 1; _offset = _first[1]
+    if outerbytes = 0 then do
+      if sections <> 0 | inputs <> 0 | origins <> 1 | at <> size | _first[1] <> _last[1] then call fail('invalid empty-template packet')
+      return
+    end
+    if outerbytes < 12 | span(at,outerbytes) = 0 then do; call fail('invalid outer descriptor length'); return; end
+    finish = at + outerbytes
+    if number(at,1) <> 80 | number(at + 1,1) <> 3 | number(at + 2,2) <> 12 then do; call fail('outer descriptor is not v3'); return; end
+    count = number(at + 4,2); results = number(at + 6,2); dynamics = number(at + 8,2)
+    if count < 1 | origins < count + 1 | results > count | dynamics <> inputs | number(at + 10,1) <> 1 | number(at + 11,1) <> 0 then do; call fail('outer descriptor header'); return; end
+    _physical = count
+    previousend = _first[1]; previousline = _lines[1]; previouscolumn = _columns[1]
+    do i = 2 to count + 1
+      if _first[i] < previousend | _lines[i] < previousline then do; call fail('physical origins are out of source order'); return; end
+      if _lines[i] = previousline & _columns[i] < previouscolumn then do; call fail('physical origin columns are out of order'); return; end
+      previousend = _last[i]; previousline = _lines[i]; previouscolumn = _columns[i]
+    end
+    at = at + 12; stored = 0; targets = 0; external = 0; previous = 0
+    do item = 1 to count
+      if at > finish - 2 then do; call fail('truncated outer item'); return; end
+      kind = number(at,1); flags = number(at + 1,1); at = at + 2
+      _kinds[item] = kind; _flags[item] = flags; _external[item] = -1
+      _used[item + 1] = 1
+      select
+        when kind = 1 then do
+          if flags > 1 | previous = 1 then do; call fail('invalid or adjacent section targets'); return; end
+          targets = targets + 1; stored = stored + flags
+        end
+        when kind = 2 then do
+          if flags <> 0 | at > finish - 8 then do; call fail('literal descriptor'); return; end
+          bytes = number(at,4); chars = number(at + 4,4); at = at + 8
+          if bytes > finish - at then do; call fail('truncated literal'); return; end
+          literal = text(at,bytes)
+          if length(literal) <> chars then do; call fail('literal codepoint count'); return; end
+          at = at + bytes
+        end
+        when kind >= 3 & kind <= 5 then do
+          if flags <> 0 | at > finish - 8 then do; call fail('numeric descriptor'); return; end
+          movement = number(at,8); at = at + 8
+        end
+        when kind >= 7 & kind <= 10 then do
+          if flags <> 0 | at > finish - 2 then do; call fail('dynamic descriptor'); return; end
+          index = number(at,2); at = at + 2
+          if index <> external | index >= inputs then do; call fail('dynamic occurrence index'); return; end
+          _external[item] = index; external = external + 1
+        end
+        otherwise do; call fail('unsupported section item'); return; end
+      end
+      if _error <> '' then return
+      previous = kind
+    end
+    if at <> finish | targets <> sections | stored <> results | external <> inputs then do; call fail('outer descriptor count or trailing bytes'); return; end
+    nextitem = 1
+    do section = 1 to sections
+      if span(at,12) = 0 then return
+      item = number(at,4); id = number(at + 4,4); targets = number(at + 8,4); at = at + 12
+      do while nextitem <= count
+        if _kinds[nextitem] = 1 then leave
+        nextitem = nextitem + 1
+      end
+      if item <> nextitem | id <> item + 1 | targets < 1 | targets > (size - at) <idiv> 12 then do; call fail('section map coverage/count'); return; end
+      nextitem = nextitem + 1; any = 0; previousend = _first[item + 1]
+      do target = 1 to targets
+        if span(at,12) = 0 then return
+        kind = number(at,1); reserved = number(at + 1,1) + number(at + 2,2)
+        id = number(at + 4,4); bytes = number(at + 8,4); at = at + 12
+        if kind > 1 | reserved <> 0 | origin(id) = 0 then do; call fail('target record'); return; end
+        if _first[id] < previousend | _last[id] > _last[item + 1] then do; call fail('target origin outside associated section'); return; end
+        if id <= count + 1 & id <> item + 1 then do; call fail('target refers to an unrelated physical origin'); return; end
+        previousend = _last[id]
+        name = text(at,bytes); at = at + bytes
+        if kind = 0 then do
+          if bytes <> 0 then do; call fail('drop carries a name'); return; end
+        end
+        else do; any = 1; call rawname(name); end
+        if _error <> '' then return
+      end
+      if _flags[item] <> any then do; call fail('section store flag'); return; end
+    end
+    nextitem = 1
+    do input = 1 to inputs
+      if span(at,12) = 0 then return
+      item = number(at,4); id = number(at + 4,4); bytes = number(at + 8,4); at = at + 12
+      do while nextitem <= count
+        if _kinds[nextitem] >= 7 then leave
+        nextitem = nextitem + 1
+      end
+      if item <> nextitem | origin(id) = 0 then do; call fail('input map coverage'); return; end
+      if _first[id] < _first[item + 1] | _last[id] > _last[item + 1] then do; call fail('input origin outside associated control'); return; end
+      if id <= count + 1 & id <> item + 1 then do; call fail('input refers to an unrelated physical origin'); return; end
+      nextitem = nextitem + 1; call rawname(text(at,bytes)); at = at + bytes
+      if _error <> '' then return
+    end
+    if at <> size then do; call fail('packet trailing bytes'); return; end
+    do i = 1 to origins
+      if _used[i] = 0 then do; call fail('unreferenced additional origin'); return; end
+    end
+    return
+
+/** Compiler-internal producer. The frontend supplies decoded literals and
+ * validated numeric/name forms; this owner only normalizes target runs and
+ * serializes the approved immutable records. Clause is the owning instruction's
+ * zero-based source start plus one, shared across its comma templates. */
+builder: class
+  _logical = .string
+  _source = .binary
+  _ordinal = .int
+  _upper = .boolean
+  _first = .int
+  _last = .int
+  _clause = .int
+  _limit = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _bytes = .binary
+  _phase = .string
+  _kinds = .int[]
+  _texts = .string[]
+  _movements = .int[]
+  _starts = .int[]
+  _ends = .int[]
+  _namestarts = .int[]
+  _nameends = .int[]
+  _outerkind = .int[]
+  _outerflag = .int[]
+  _outerfirst = .int[]
+  _outerlast = .int[]
+  _outerauth = .int[]
+  _runlast = .int[]
+  _targetorigin = .int[]
+  _inputorigin = .int[]
+  _positions = .llsource..index
+  _indexed = .int
+  *: factory
+    arg logical = .string, source = .binary, ordinal = .int, upper = .boolean, first = .int, last = .int, clause = .int, limit = 67108864
+    _logical = logical; _source = source; _ordinal = ordinal; _upper = upper
+    _first = first; _last = last; _clause = clause; _limit = limit
+    _ready = 0; _error = ''; _offset = first; _indexed = 0
+    extent = <blen>(source)
+    if _limit < 40 | extent > _limit | extent > 4294967295 then _error = 'LL_COMPILER_PARSEPROGRAM: source/packet byte budget'
+    if logical = '' | ordinal < 1 | first < 0 | first > last | last > extent | clause < 1 then _error = 'LL_COMPILER_PARSEPROGRAM: invalid template identity/span'
+    return
+  fail: method = .void
+    arg message = .string
+    if _error = '' then _error = 'LL_COMPILER_PARSEPROGRAM: ' || message
+    return
+  add: method = .void
+    arg kind = .int, text = .string, movement = .int, first = .int, last = .int
+    if _error <> '' then return
+    if _ready then do; call fail('builder is sealed'); return; end
+    _offset = first; count = _kinds[0]
+    if first < _first | first >= last | last > _last then do; call fail('item outside template'); return; end
+    if count > 0 then do
+      if first < _ends[count] then do; call fail('items overlap or are out of source order'); return; end
+    end
+    if count >= (_limit <idiv> 64) then do; call fail('template item workspace exceeds byte budget'); return; end
+    index = count + 1; _kinds[index] = kind; _texts[index] = text
+    _movements[index] = movement; _starts[index] = first; _ends[index] = last
+    return
+  target: method = .void
+    arg name = .string, first = .int, last = .int
+    if name = '' then do; call fail('empty target'); return; end
+    call add(1,name,0,first,last)
+    return
+  drop: method = .void
+    arg first = .int, last = .int
+    call add(0,'',0,first,last)
+    return
+  literal: method = .void
+    arg value = .string, first = .int, last = .int
+    call add(2,value,0,first,last)
+    return
+  position: method = .void
+    arg mode = .string, movement = .int, first = .int, last = .int
+    kind = wordpos(mode,'ABS PLUS MINUS')
+    if kind = 0 | movement < 0 then do; call fail('invalid numeric position'); return; end
+    call add(kind + 2,'',movement,first,last)
+    return
+  input: method = .void
+    arg mode = .string, name = .string, first = .int, last = .int, namefirst = .int, namelast = .int
+    kind = wordpos(mode,'LITERAL ABS PLUS MINUS')
+    if kind = 0 | name = '' then do; call fail('invalid dynamic operand'); return; end
+    if namefirst < first | namefirst >= namelast | namelast > last then do; call fail('dynamic name outside control'); return; end
+    call add(kind + 6,name,0,first,last)
+    if _error <> '' then return
+    _namestarts[_kinds[0]] = namefirst; _nameends[_kinds[0]] = namelast
+    return
+  error: method = .string
+    return _error
+  /** Reuse the request's index; no full-source rescan per comma template. */
+  useindex: method = .void
+    arg positions = .llsource..index
+    if _ready then do; call fail('builder is sealed'); return; end
+    _positions = positions; _indexed = 1
+    return
+  offset: method = .int
+    return _offset
+  origin: method = .void
+    arg output = reference .packetwriter, first = .int, last = .int
+    writer = dereference output
+    if sourceboundary(_source,first) = 0 | sourceboundary(_source,last) = 0 then do; call fail('origin is not at an original Unicode boundary'); return; end
+    position = _positions.position(first); ending = _positions.position(last)
+    if position.error() <> '' | ending.error() <> '' then do; call fail('origin is not at an original Unicode boundary'); return; end
+    call writer.number(first,4); call writer.number(last,4)
+    call writer.number(position.line(),4); call writer.number(position.column(),4); call writer.number(_clause,4)
+    return
+  bytes: method = .binary
+    if _ready then return _bytes
+    _ready = 1
+    if _error <> '' then return _bytes
+    do
+      call build()
+    on signal as problem
+      call fail('packet construction ' || _phase || ': ' || problem.name() || ': ' || problem.message())
+    end
+    if _error <> '' then _bytes = ''x as .binary
+    return _bytes
+  build: method = .void
+    outer = .int; kind = .int; first = .int; i = .int
+    _phase = 'source index construction'
+    /* A fresh class attribute is null storage, not a tagged typed-default
+     * object. Track whether an index was explicitly installed. */
+    if _indexed = 0 then do
+      codec = .llscalar..textcodec()
+      if codec.check(_source) <> '' then do; call fail('original source is not strict UTF8'); return; end
+      indexwork = _limit; if indexwork < 10000000 then indexwork = 10000000
+      _positions = .llsource..index(_source,1000000,_limit,indexwork)
+      _indexed = 1
+    end
+    _phase = 'source index status'
+    if _positions.error() <> '' then do; call fail(_positions.error()); return; end
+    /* Each authored target contributes one origin, even in a merged run. */
+    _phase = 'target normalization'
+    targets = 0; sections = 0; stored = 0; dynamics = 0; i = 1
+    do while i <= _kinds[0]
+      outer = _outerkind[0] + 1; _outerfirst[outer] = _starts[i]; _outerauth[outer] = i
+      kind = _kinds[i]
+      if kind = 0 | kind = 1 then do
+        first = i; any = 0
+        do while i <= _kinds[0]
+          if _kinds[i] <> 0 & _kinds[i] <> 1 then leave
+          targets = targets + 1; if _kinds[i] = 1 then any = 1
+          i = i + 1
+        end
+        _outerkind[outer] = 1; _outerflag[outer] = any; _runlast[outer] = i - 1
+        _outerlast[outer] = _ends[i - 1]; sections = sections + 1; stored = stored + any
+      end
+      else do
+        _outerkind[outer] = kind; _outerflag[outer] = 0; _outerlast[outer] = _ends[i]
+        if kind >= 7 then dynamics = dynamics + 1
+        i = i + 1
+      end
+      if outer > 65535 | dynamics > 65535 then do; call fail('descriptor count exceeds 65535'); return; end
+    end
+    count = _outerkind[0]; origins = 1 + count + targets + dynamics
+    _phase = 'origin records'
+    if origins > (_limit <idiv> 20) then do; call fail('origin table exceeds packet budget'); return; end
+    originwriter = .packetwriter(_limit); call origin(reference originwriter,_first,_last)
+    do i = 1 to count
+      call origin(reference originwriter,_outerfirst[i],_outerlast[i])
+    end
+    id = count + 1
+    do i = 1 to _kinds[0]
+      if _kinds[i] = 0 | _kinds[i] = 1 then do
+        id = id + 1; _targetorigin[i] = id
+        call origin(reference originwriter,_starts[i],_ends[i])
+      end
+      else if _kinds[i] >= 7 then do
+        id = id + 1; _inputorigin[i] = id
+        call origin(reference originwriter,_namestarts[i],_nameends[i])
+      end
+    end
+    if _error <> '' then return
+    _phase = 'descriptor and target records'
+    outerwriter = .packetwriter(_limit); sectionwriter = .packetwriter(_limit); inputwriter = .packetwriter(_limit)
+    if count > 0 then do
+      call outerwriter.number(80,1); call outerwriter.number(3,1); call outerwriter.number(12,2)
+      call outerwriter.number(count,2); call outerwriter.number(stored,2); call outerwriter.number(dynamics,2)
+      call outerwriter.number(1,1); call outerwriter.number(0,1)
+    end
+    external = 0
+    do outer = 1 to count
+      kind = _outerkind[outer]; first = _outerauth[outer]
+      call outerwriter.number(kind,1); call outerwriter.number(_outerflag[outer],1)
+      select
+        when kind = 1 then do
+          last = _runlast[outer]
+          call sectionwriter.number(outer,4); call sectionwriter.number(outer + 1,4); call sectionwriter.number(last - first + 1,4)
+          do i = first to last
+            name = _texts[i] as .binary
+            call sectionwriter.number(_kinds[i],1); call sectionwriter.number(0,1); call sectionwriter.number(0,2)
+            call sectionwriter.number(_targetorigin[i],4); call sectionwriter.number(<blen>(name),4); call sectionwriter.blob(name)
+          end
+        end
+        when kind = 2 then do
+          literal = _texts[first] as .binary
+          call outerwriter.number(<blen>(literal),4); call outerwriter.number(length(_texts[first]),4); call outerwriter.blob(literal)
+        end
+        when kind >= 3 & kind <= 5 then call outerwriter.number(_movements[first],8)
+        otherwise do
+          call outerwriter.number(external,2); external = external + 1
+          name = _texts[first] as .binary
+          call inputwriter.number(outer,4); call inputwriter.number(_inputorigin[first],4)
+          call inputwriter.number(<blen>(name),4); call inputwriter.blob(name)
+        end
+      end
+    end
+    if originwriter.error() <> '' | outerwriter.error() <> '' | sectionwriter.error() <> '' | inputwriter.error() <> '' then do; call fail('packet component exceeds byte budget'); return; end
+    _phase = 'packet envelope'
+    idbytes = _logical as .binary
+    size = 40 + <blen>(idbytes) + originwriter.size() + outerwriter.size() + sectionwriter.size() + inputwriter.size()
+    if size > _limit | size > 4294967295 then do; call fail('packet exceeds byte budget'); return; end
+    writer = .packetwriter(_limit)
+    call writer.blob('LCP1' as .binary); call writer.number(1,2); call writer.number(_upper as .int,2)
+    call writer.number(size,4); call writer.number(_ordinal,4); call writer.number(origins,4)
+    call writer.number(sections,4); call writer.number(dynamics,4); call writer.number(outerwriter.size(),4)
+    call writer.number(<blen>(_source),4); call writer.number(<blen>(idbytes),4); call writer.blob(idbytes)
+    call writer.blob(originwriter.bytes()); call writer.blob(outerwriter.bytes()); call writer.blob(sectionwriter.bytes()); call writer.blob(inputwriter.bytes())
+    if writer.error() <> '' then do; call fail(writer.error()); return; end
+    _bytes = writer.bytes()
+    _phase = 'packet admission'
+    validation = .checked.indexed(_bytes,_source,_logical,1,_limit,_positions)
+    if validation.status() then do; _error = validation.error(); _offset = validation.offset(); end
+    return

@@ -57,9 +57,11 @@ source, operators, shared labels, pools, conditions and host contracts are open.
 SAY's adjacent radix-literal repair has retained proof, not whole-SAY closure.
 
 The current implementation selects one `llctarget` borrowed-context surface and
-C-family v6/52 operations with one required context-reference procedure argument,
+C-family v7/54 operations and 34 target exports with one required context-reference procedure argument,
 contextual DROP/WHEN truth, source-indexed SELECT no-match handling and keyed
-frame-owned DO state. Bounded static DO is locally qualified; whole-C/shared
+frame-owned DO state. The approved PARSE implementation adds all seven source
+forms and immutable templates through the shared cursor/B executor; its focused
+C profile is locally qualified. Bounded static DO is locally qualified; whole-C/shared
 dependencies remain open. Root/private owners
 and numeric entry setup remain conservative; argument/result transport remains
 by value. The shared B `RexxClassicContext` is independently qualified. STEP03d
@@ -121,7 +123,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-16 PULL / STEP06 | Not implemented | Acquire selected queue once, otherwise configured input, then shared UPPER PARSE executor. Empty/EOF/NOTREADY, NUL and queue selection, nested contexts; no duplicated transport or template engine. | [LC-78-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-17 PUSH / STEP06 | Not implemented | Evaluate optional expression once, null for bare form, selected queue front insertion. Effects/order, Unicode/NUL and nested isolation; share queue adapter with PULL/QUEUE. | [LC-79-01–04](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-18 QUEUE / STEP06 | Not implemented | Same input semantics as PUSH, tail insertion; FIFO ordering, count/nonconsumption and shared selection. Check linked/host lifecycle; no global queue chosen accidentally. | [LC-80-01–04](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
-| LC-I-19 PARSE / STEP06 | Not implemented; exact integration approved 20 October 2026 | ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR, UPPER, empty/arbitrary comma lists, targets/drops, literal/variable patterns and absolute/relative positions. [CPARSE-AC01–08](architecture.md#proposed-c-parse-integration) specify independent source/order/error/Unicode, v3 section normalization, shared B word policy, packet/ABI, cleanup, observations and delivery proof. Existing cursor proof alone does not close this row. | [LC-AC-39/40/45–52](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-81-01–07](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
+| LC-I-19 PARSE / STEP06 | Partial: finite C integration locally qualified | ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR, UPPER, empty/arbitrary comma lists, targets/drops, literal/variable patterns and absolute/relative positions. [CPARSE-AC01–08](architecture.md#proposed-c-parse-integration) specify independent source/order/error/Unicode, v3 section normalization, shared B word policy, packet/ABI, cleanup, observations and delivery proof. Complete conditions/TRACE/platform obligations remain open; existing cursor/B proof alone does not close this row. | [LC-AC-39/40/45–52](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-81-01–07](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-20 ADDRESS / STEP07 | Not implemented | Selection/swap, transient command, WITH resources and configured environment object protocol. One command evaluation, RC/.RC/.RS, error/failure/notready and resource lifetime. Compiler owns anchors; adapter owns command meaning. Test NUL transport policy explicitly. | [LC-82-01–06](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-21 implicit command / STEP07 | Not implemented | Expression becomes one command through active ADDRESS state and lasting connections. No duplicate host route. Preserve expression errors, warning/source observations, return status and traps. | [LC-83-01–04](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-22 NUMERIC / STEP07 | Partial | DIGITS/FORM/FUZZ default/value forms, once-only expression validation, local inheritance/restoration and BIF/display/arithmetic effects. Invalidate numeric facts; no per-operator rebuilding of unchanged configuration. | [LC-84-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
@@ -132,7 +134,9 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 The approved PARSE contract preserves complete LC-I-19 as the outcome. The committed
 generic engine retains **PARSE-ENGINE-AC01–06** and its open platform boundary;
 the v3 descriptor/C v7/B signatures received separate approval on 20 October
-2026. CPARSE-STEP01 is complete and STEP02 is current; implementation proof is open.
+2026. CPARSE-STEP01 is complete; STEP02 has local normal Debug/focused Apple
+ASan proof. STEP03/04 have bounded shared-B and new-C qualification.
+STEP05 remains open for complete observations, delivery and real platforms.
 Forward section/ASCII-word probes do not prove backward/empty-pattern or
 Unicode/configured-blank semantics. Existing shared CharacterScan owns word
 policy; a new compiler/VM scanner is not commissioned. Fatal text-error proof
@@ -499,8 +503,8 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-044 | Left-associative Classic power | Not implemented | C-EXPR / STEP04; STEP05/07 contexts | Implement and independently test left-associative power and prefix interaction. |
 | LC-REF-045 | Normal/strict comparisons and configured character ordering | Partial: comparison subset | C-EXPR / STEP04; STEP05/07 contexts | Complete normal/strict families and configured character-order tests. |
 | LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | Partial: logical subset | C-EXPR / STEP04; STEP05/07 contexts | Complete eager AND/OR/XOR/NOT and context-specific exact logical failures. |
-| LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | Partial: scalar comma ARG only; integration design approved | LC-I-11/16/19 / STEP06 | CPARSE-AC01/04/07/08: all seven once-only sources, empty/comma behavior, raw argument preservation, simple UPPER and source/condition/platform proof. |
-| LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | Partial: scalar comma ARG only; integration design approved | LC-I-11/16/19 / STEP06 | CPARSE-AC01–03/05–08: v3 backward/anchor/empty-pattern normalization, live ordered fields, shared configured word policy, errors, ownership and observations. |
+| LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | Partial: seven-source C profile locally qualified | LC-I-11/16/19 / STEP06 | CPARSE-AC01/04/07/08: all seven once-only sources, empty/comma behavior, raw argument preservation, simple UPPER and source/condition/platform proof. |
+| LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | Partial: v3/shared B/C profile locally qualified | LC-I-11/16/19 / STEP06 | CPARSE-AC01–03/05–08: v3 backward/anchor/empty-pattern normalization, live ordered fields, shared configured word policy, errors, ownership and observations. |
 | LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | Partial: DROP states/private pools/prebound aliases | C-POOL / STEP03/05/06; STEP08 external API | Complete source EXPOSE, recursive alias lifetime and host access. |
 | LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | Partial: assignment/DROP with prebound aliases | C-POOL / STEP03/05/06; STEP08 external API | Complete source-ordered recursive EXPOSE, host access and condition observations. |
 | LC-REF-051 | Compound-tail evaluation without NOVALUE, final lookup with NOVALUE | Not implemented | C-POOL / STEP03/05/06; STEP08 external API | Test tail substitution suppresses NOVALUE while final lookup may raise it. |
@@ -561,7 +565,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-LEAVE` | Partial | LC-I-09 / STEP05 | Full LC-I-09 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-NOP` | Partial: childless forms locally qualified | LC-I-04 / STEP05 | Close SELECT/shared labels, exact 21.1 and clause/condition/TRACE dependencies in LC-I-04. |
 | `SYN-CLASSIC-NUMERIC` | Partial | LC-I-22 / STEP07 | Full LC-I-22 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-PARSE` | Not implemented | LC-I-19 / STEP06 | Full LC-I-19 check in the instruction ledger; shared dependencies remain open. |
+| `SYN-CLASSIC-PARSE` | Partial: admitted forms locally qualified | LC-I-19 / STEP06 | Full LC-I-19 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-PROCEDURE` | Partial | LC-I-12 / STEP06 | Full LC-I-12 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-PULL` | Not implemented | LC-I-16 / STEP06 | Full LC-I-16 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-PUSH` | Not implemented | LC-I-17 / STEP06 | Full LC-I-17 check in the instruction ledger; shared dependencies remain open. |

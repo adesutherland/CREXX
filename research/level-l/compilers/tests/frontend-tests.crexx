@@ -5,6 +5,7 @@ import lltestfrontend
 import lltestparse
 import llcompilercontracts
 import llcparse
+import llcparseprogram
 import llast
 import llir
 
@@ -27,6 +28,7 @@ main: procedure = .int expose failures checks artifacts examples
     when 'leave' then call leavetests()
     when 'leave-policy' then call leavepolicytests()
     when 'iterate' then call iteratetests()
+    when 'parse' then call parsetests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -165,6 +167,7 @@ grammar: procedure = .void expose examples
   call dotests()
   call leavetests()
   call iteratetests()
+  call parsetests()
   text = .string; source = .string; loopshape = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -186,6 +189,120 @@ grammar: procedure = .void expose examples
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** Source AST, single acquisition and immutable ordered PARSE packets. These
+ * assertions are independent of the shared runtime's matching algorithm. */
+parsetests: procedure = .void expose artifacts
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  sourcekind = .llast..node; templates = .llast..node; template = .llast..node
+  item = .llast..node; name = .llast..node; literal = .llast..node
+  request = .lltestfrontend..request; graph = .llir..module; operation = .llir..opview
+  packet = .llcparseprogram..checked; codec = .llir..intcodec
+  reads = .int; executions = .int; lengths = .int; i = .int; ordinals = .string; ignored = .string
+  source = "PaRsE UpPeR VaLuE ('α' 'β') WiTh . THEN END (upper) +(position) =0002 -0 '3A'x,,,"
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'PARSE named AST accepts ordered contextual tokens: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'Parse' & node.text('upper') = 'UpPeR','authored UPPER spelling retained')
+    sourcekind = node.child('source'); templates = node.child('templates')
+    call check(sourcekind.kind() = 'ParseSource' & sourcekind.text('kind') = 'VaLuE' & sourcekind.count('value') = 1,'VALUE owns exactly its expression')
+    call check(templates.count('items') = 4,'three commas retain trailing empty templates')
+    template = templates.child('items',1)
+    call check(template.count('items') = 8,'all ordered template items retained without concatenation')
+    item = template.child('items',2); name = item.child('name')
+    call check(item.kind() = 'ParseTarget' & name.text('spelling') = 'THEN','THEN remains a target')
+    item = template.child('items',3); name = item.child('name')
+    call check(name.text('spelling') = 'END','END remains a target')
+    item = template.child('items',5); name = item.child('operand')
+    call check(item.kind() = 'ParsePosition' & item.text('mode') = '+' & name.kind() = 'Name' & name.text('spelling') = 'position','dynamic position retains mode and raw Name')
+    call check(name.sourcetext() = 'position' & name.start() = <blen>(left(source,pos('position',source) - 1) as .binary),'dynamic Name keeps exact byte origin')
+    item = template.child('items',8); literal = item.child('value')
+    call check(item.kind() = 'ParseLiteral' & literal.text('spelling') = "'3A'x" & item.text('spelling') = "'3A'x",'static literal preserves decoded-owner child and spelling')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then source = 'parse arg ,x,,y,'
+      when 2 then source = 'parse value with target'
+      when 3 then source = "parse value length(' a ') || 'b' with left right"
+      when 4 then source = 'parse var raw source with upper then end'
+      when 5 then source = 'parse arg else then end with upper'
+      when 6 then source = 'if 1 then if 0 then parse arg x else parse arg y'
+      when 7 then source = 'parse source; parse version; parse pull; parse linein'
+      when 8 then source = "parse value 'aa:bb' with . ':' (pattern) +(position) =9223372036854775807 -0000 rest"
+      when 9 then source = 'parse arg . .; parse var original'
+      otherwise source = "parse value 'α' with '0000'x '11110000'b ''"
+    end
+    ignored = good('c',source,'crexx.c.parse.execute','crexx.c.arguments.read')
+  end
+  source = 'parse arg ,first,,last,'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'parse.crexx')
+  call check(request.status() = 0,'ARG omitted positions lower: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); reads = 0; executions = 0; ordinals = ''; codec = .llir..intcodec()
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.parse.source' then do
+        reads = reads + 1; ordinals = ordinals || (codec.format(operation.attribute('ordinal'))) || '|'
+        call check(operation.origin().first() = 0,'source acquisition anchors owning PARSE')
+      end
+      if operation.name() = 'crexx.c.parse.execute' then do
+        executions = executions + 1
+        packet = .llcparseprogram..checked(operation.attribute('program'),source as .binary,'parse.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 1,'packet validates original byte/scalar origins and instruction clause')
+        call check(packet.ordinal() = executions * 2,'packet preserves empty ARG ordinal gaps')
+      end
+    end
+    call check(reads = 2 & executions = 2 & ordinals = '2|4|','only selected ARG positions read; no missing-presence mutation')
+  end
+  source = 'parse var original ,after,,; parse value length(original) with'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'parse.crexx')
+  call check(request.status() = 0,'empty first/final templates retain source effects: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); loads = 0; executions = 0; lengths = 0
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.load' then loads = loads + 1
+      if operation.name() = 'crexx.c.length' then lengths = lengths + 1
+      if operation.name() = 'crexx.c.parse.execute' then executions = executions + 1
+    end
+    call check(loads = 2 & lengths = 1 & executions = 5,'VAR loads once and VALUE call executes once even with empty templates')
+  end
+  call bad('c','parse' as .binary,'LL_COMPILER_SYNTAX:','25.12')
+  call bad('c','parse upper' as .binary,'LL_COMPILER_SYNTAX:','25.13')
+  call bad('c','parse external target' as .binary,'LL_COMPILER_SYNTAX:','25.12',6)
+  call bad('c','parse upper numeric target' as .binary,'LL_COMPILER_SYNTAX:','25.13',12)
+  call bad('c','parse lower arg target' as .binary,'LL_COMPILER_SYNTAX:','25.12',6)
+  call bad('c','parse var' as .binary,'LL_COMPILER_SYNTAX:','20.1')
+  call bad('c','parse var raw:' as .binary,'LL_COMPILER_SYNTAX:','38.1',13)
+  call bad('c','parse arg:' as .binary,'LL_COMPILER_SYNTAX:','38.1',9)
+  call bad('c',"parse value 'x'" as .binary,'LL_COMPILER_SYNTAX:','38.3')
+  call bad('c','parse value 1 + with x' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','parse value (1 +) with x' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','parse arg a +name' as .binary,'LL_COMPILER_SYNTAX:','38.2',13)
+  call bad('c','parse arg a +' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','parse arg a (x + 1)' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','parse arg a 1.5' as .binary,'LL_COMPILER_SYNTAX:','38.1',12)
+  call bad('c','exit 0; parse arg a 1e2' as .binary,'LL_COMPILER_SYNTAX:','38.1',20)
+  call bad('c','parse arg a 9223372036854775808' as .binary,'LL_COMPILER_LIMIT:','signed descriptor range',12)
+  call bad('c',"parse arg a 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',12)
+  call bad('c','parse arg a 1foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',12)
+  call bad('c','parse arg ..' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  call bad('c','parse arg ..RC' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  call bad('c','parse arg .foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  ignored = good('c',"parse arg . . .RC stem.key 1 foo 1(foo) foo':'bar foo+1 1/**/tail",'crexx.c.parse.execute')
+  ignored = good('c','stem.key=2; x=.5; say x .RC stem.key','name="stem.key"')
+  ignored = good('c','if 1 then parse var else else nop','if.no')
+  ignored = good('c','if 1 then parse value else with a else nop','if.no')
+  ignored = good('c','if 1 then parse value (else) with (else) +(else) a else nop','if.no')
+  ignored = good('c','if 1 then do; parse arg else then end with upper; end else nop','if.no')
+  call bad('c','if 1 then parse var x else' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','if 1 then parse value else with (else + 1) else nop' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  request = .lltestfrontend..request('c','nop' as .binary,artifacts,'budget.crexx',144115188075855872)
+  call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects byte-budget multiplication overflow before parsing')
+  request = .lltestfrontend..request('c','nop' as .binary,artifacts,'budget.crexx',0)
+  call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects zero work/storage budget')
   return
 
 /** LEAVE names are static raw symbols, with request-local STRICTC policy. */

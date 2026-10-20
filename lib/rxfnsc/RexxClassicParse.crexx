@@ -1,0 +1,506 @@
+/* cREXX License (MIT). Shared Classic PARSE packet consumer.
+ * LCP1 owns source policy and live pool effects; rxparse owns section matching.
+ * This module has no compiler, Level L, textual-template or Unicode-data owner.
+ */
+options levelb comments_dash numeric_classic
+namespace rexxclassicparse expose execute
+import rxfnsb
+import rxparse
+import rexxvalue
+import rexxpool
+import rexxclassiccontext
+import rexxclassicconfig
+import rexxclassicbifs
+import rexxclassicdatatype
+import rexxclassiccharacterscan
+
+/** Execute one immutable LCP1 comma-template against borrowed Classic owners.
+ * @param context Live caller-owned activation, pool and UTF8 configuration.
+ * @param source Once-acquired value, captured before any template write.
+ * @param program LCP1 version 1 packet, validated before cursor or pool effects.
+ * @signal INVALID_ARGUMENTS The envelope, map, name or character profile is invalid.
+ * @signal CLASSIC_SYNTAX A reached dynamic position is not a nonnegative whole number.
+ * @return No value. A caller that skips a relayed text error returns immediately.
+ */
+execute: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, source = .rexxvalue..RexxValue, program = .binary
+  worker = .ParseExecution
+  ready = 0
+  message = .string
+  do
+    worker = .ParseExecution()
+    ready = 1
+    call worker.run(context,source,program)
+  on signal classic_syntax as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+    return
+  on signal division_by_zero as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "DIVISION_BY_ZERO",message,problem
+    return
+  on signal conversion_error as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "CONVERSION_ERROR",message,problem
+    return
+  on signal invalid_arguments as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "INVALID_ARGUMENTS",message,problem
+    return
+  on signal object_not_initialized as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "OBJECT_NOT_INITIALIZED",message,problem
+    return
+  on signal reference_invalid as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "REFERENCE_INVALID",message,problem
+    return
+  on signal unicode_error as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "UNICODE_ERROR",message,problem
+    return
+  on signal out_of_range as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "OUT_OF_RANGE",message,problem
+    return
+  on signal failure as problem
+    message = problem.message()
+    if ready then do; call worker.failed(); message = worker.annotate(message); end
+    assembler signalorigin "FAILURE",message,problem
+    return
+  end
+  call worker.close()
+  return
+
+/* Private per-call ownership. The lean factory publishes no borrowed root or
+ * native cursor. A failed validation can therefore close nothing, and a later
+ * consumer failure can close the one successful cursor before formatting.
+ */
+ParseExecution: class
+  _packet = .binary
+  _descriptor = .binary
+  _cursor = .rxparse..cursor
+  _live = .int
+  _valid = .int
+  _bytes = .int
+  _offset = .int
+  _limit = .int
+  _upper = .int
+  _ordinal = .int
+  _logical = .string
+  _logical_bytes = .int
+  _origin_count = .int
+  _start = .int[]
+  _finish = .int[]
+  _line = .int[]
+  _column = .int[]
+  _clause = .int[]
+  _used = .int[]
+  _item_count = .int
+  _item_kind = .int[]
+  _item_flags = .int[]
+  _section_for_item = .int[]
+  _input_for_item = .int[]
+  _section_first = .int[]
+  _section_last = .int[]
+  _section_store = .int[]
+  _target_kind = .int[]
+  _target_origin = .int[]
+  _target_name = .string[]
+  _input_origin = .int[]
+  _input_name = .string[]
+  _active_item = .int
+  _active_origin = .int
+  _active_action = .string
+
+  *: factory
+    _live = 0; _valid = 0; _active_item = 0; _active_origin = 1
+    _active_action = 'source'
+    return
+
+  close: method = .void
+    if _live then do
+      call _cursor.close()
+      _live = 0
+    end
+    return
+
+  /** Capture any kernel-owned failing item before the nonraising close. */
+  failed: method = .void
+    if _live then do
+      physical = _cursor.item()
+      if physical > 0 & physical <= _item_count & physical <> _active_item then do
+        _active_item = physical; _active_origin = physical + 1
+        _active_action = 'control'
+        occurrence = _input_for_item[physical]
+        if occurrence > 0 then do
+          _active_origin = _input_origin[occurrence]
+          _active_action = 'input#' || occurrence
+        end
+      end
+    end
+    call close()
+    return
+
+  /** Formatting is deliberately after close and only for a validated map. */
+  annotate: method = .string
+    arg original = .string
+    if _valid = 0 then return original
+    origin = _active_origin
+    -- Establish the counted bound before formatting. Ordinary string operations
+    -- enforce the actual host allocation extent; failure to decorate must not
+    -- replace the already retained error after its cursor has been closed.
+    maximum = 9223372036854775807
+    if _logical_bytes > maximum - 128 then return original
+    bound = _logical_bytes + 128
+    do
+      suffix = ' [PARSE ' || _logical || ':' || _line[origin] || ':' || _column[origin] ||,
+        ' template=' || _ordinal || ' item=' || _active_item || ' action=' || _active_action || ']'
+      suffix_bytes = suffix as .binary
+      if <blen>(suffix_bytes) > bound then return original
+      return original || suffix
+    on signal out_of_range
+      return original
+    on signal failure
+      return original
+    end
+    return original
+
+  bad: method = .void
+    arg reason = .string
+    message = 'Invalid Classic PARSE program: ' || reason
+    assembler signal "INVALID_ARGUMENTS",message
+    return
+
+  take: method = .int
+    arg width = .int
+    if width < 0 | _offset < 0 | _offset > _limit then do
+      call bad('record extent'); return 0
+    end
+    if width > _limit - _offset then do
+      call bad('truncated record'); return 0
+    end
+    position = _offset
+    _offset = _offset + width
+    return position
+
+  number: method = .int
+    arg width = .int
+    position = take(width)
+    if width = 1 then return <at..u8>(position) _packet
+    if width = 2 then return <at..u16>(position) _packet
+    if width = 4 then return <at..u32>(position) _packet
+    call bad('integer width')
+    return 0
+
+  bytes: method = .binary
+    arg width = .int
+    position = take(width)
+    return <at..binary>(position,width) _packet
+
+  text: method = .string
+    arg width = .int
+    value = bytes(width)
+    return value as .string
+
+  useOrigin: method = .void
+    arg origin = .int
+    if origin < 1 | origin > _origin_count then do
+      call bad('origin reference'); return
+    end
+    if origin > _item_count + 1 & _used[origin] <> 0 then do
+      call bad('duplicate authored origin'); return
+    end
+    _used[origin] = 1
+    return
+
+  itemOrigin: method = .void
+    arg origin = .int, item = .int
+    if origin < 2 | origin > _origin_count then do; call bad('authored origin'); return; end
+    owner = item + 1
+    if origin <= _item_count + 1 & origin <> owner then do
+      call bad('foreign item origin'); return
+    end
+    if _start[origin] < _start[owner] | _finish[origin] > _finish[owner] |,
+       _clause[origin] <> _clause[owner] then do
+      call bad('origin outside owning item'); return
+    end
+    call useOrigin(origin)
+    return
+
+  name: method = .string
+    arg width = .int, config = .rexxclassicconfig..RexxClassicConfig
+    if width < 1 then do; call bad('empty variable name'); return ''; end
+    value = text(width)
+    if rexxclassic_datatype_symbol_kind(.rexxvalue..RexxValue(value),config) <> 1 then do
+      call bad('variable name'); return ''
+    end
+    return value
+
+  validate: method = .void
+    arg program = .binary, config = .rexxclassicconfig..RexxClassicConfig
+    origin = .int; item = .int; kind = .int; name_bytes = .int; value = .string
+    _bytes = <blen>(program)
+    if _bytes < 40 | _bytes > 4294967295 then do
+      call bad('packet extent'); return
+    end
+    _packet = <at..binary>(0,_bytes) program
+    _offset = 0; _limit = _bytes
+    magic = text(4)
+    version = number(2); _upper = number(2)
+    total = number(4); _ordinal = number(4); _origin_count = number(4)
+    section_count = number(4); input_count = number(4); outer_bytes = number(4)
+    source_bytes = number(4); logical_bytes = number(4)
+    if magic <> 'LCP1' | version <> 1 | _upper > 1 | total <> _bytes | _ordinal < 1 then do
+      call bad('header'); return
+    end
+    if section_count > 65535 | input_count > 65535 | _origin_count < 1 | logical_bytes < 1 then do
+      call bad('header counts'); return
+    end
+    _logical_bytes = logical_bytes
+    _logical = text(logical_bytes)
+    if _origin_count > (_bytes - _offset) % 20 then do
+      call bad('origin extent'); return
+    end
+    do origin = 1 to _origin_count
+      _start[origin] = number(4); _finish[origin] = number(4)
+      _line[origin] = number(4); _column[origin] = number(4); _clause[origin] = number(4)
+      _used[origin] = 0
+      if _start[origin] > _finish[origin] | _finish[origin] > source_bytes |,
+         _line[origin] < 1 | _column[origin] < 1 | _clause[origin] < 1 then do
+        call bad('source origin'); return
+      end
+      if origin > 1 then do
+        if _start[origin] < _start[1] | _finish[origin] > _finish[1] |,
+           _start[origin] = _finish[origin] | _clause[origin] <> _clause[1] then do
+          call bad('item origin'); return
+        end
+      end
+    end
+    _used[1] = 1
+    if outer_bytes = 0 then do
+      if section_count <> 0 | input_count <> 0 | _origin_count <> 1 | _offset <> _bytes |,
+         _start[1] <> _finish[1] then do
+        call bad('empty template'); return
+      end
+      _item_count = 0; _valid = 1
+      return
+    end
+    if outer_bytes < 12 | _start[1] = _finish[1] then do
+      call bad('descriptor extent'); return
+    end
+    descriptor_start = _offset
+    _descriptor = bytes(outer_bytes)
+    descriptor_end = _offset
+    _offset = descriptor_start; _limit = descriptor_end
+    mark = number(1); generation = number(1); header_bytes = number(2)
+    _item_count = number(2); stored_count = number(2); external_count = number(2)
+    policy = number(1); reserved = number(1)
+    if mark <> 80 | generation <> 3 | header_bytes <> 12 | _item_count < 1 |,
+       policy <> 1 | reserved <> 0 | external_count <> input_count |,
+       _origin_count < _item_count + 1 then do
+      call bad('section descriptor header'); return
+    end
+    previous_finish = _start[1]; previous_line = _line[1]; previous_column = _column[1]
+    do item = 1 to _item_count
+      origin = item + 1
+      if _start[origin] < previous_finish | _line[origin] < previous_line then do
+        call bad('physical origin order'); return
+      end
+      if _line[origin] = previous_line & _column[origin] < previous_column then do
+        call bad('physical origin columns'); return
+      end
+      previous_finish = _finish[origin]
+      previous_line = _line[origin]; previous_column = _column[origin]
+    end
+    found_sections = 0; found_inputs = 0; found_stored = 0; previous_kind = 0
+    do item = 1 to _item_count
+      kind = number(1); flags = number(1)
+      _item_kind[item] = kind; _item_flags[item] = flags
+      _section_for_item[item] = 0; _input_for_item[item] = 0
+      _used[item + 1] = 1
+      select
+        when kind = 1 then do
+          if flags > 1 | previous_kind = 1 then do; call bad('section target'); return; end
+          found_sections = found_sections + 1
+          _section_for_item[item] = found_sections
+          found_stored = found_stored + flags
+        end
+        when kind = 2 then do
+          if flags <> 0 then do; call bad('literal flags'); return; end
+          byte_count = number(4); character_count = number(4)
+          literal = text(byte_count)
+          actual_characters = .int
+          assembler strlen actual_characters,literal
+          if actual_characters <> character_count then do; call bad('literal character count'); return; end
+        end
+        when kind = 3 | kind = 4 | kind = 5 then do
+          if flags <> 0 then do; call bad('position flags'); return; end
+          position = take(8)
+          if <at..u8>(position + 7) _packet > 127 then do; call bad('position range'); return; end
+        end
+        when kind >= 7 & kind <= 10 then do
+          if flags <> 0 then do; call bad('input flags'); return; end
+          external = number(2)
+          if external <> found_inputs then do; call bad('input occurrence index'); return; end
+          found_inputs = found_inputs + 1
+          _input_for_item[item] = found_inputs
+        end
+        otherwise do; call bad('descriptor item kind'); return; end
+      end
+      previous_kind = kind
+    end
+    if _offset <> descriptor_end | found_sections <> section_count |,
+       found_inputs <> input_count | found_stored <> stored_count then do
+      call bad('descriptor counts'); return
+    end
+    _limit = _bytes
+    target_count = 0; prior_item = 0
+    do section = 1 to section_count
+      item = number(4); origin = number(4); count = number(4)
+      if item <= prior_item | item > _item_count | count < 1 then do
+        call bad('section map'); return
+      end
+      if _section_for_item[item] <> section | origin <> item + 1 then do
+        call bad('section item'); return
+      end
+      if count > (_bytes - _offset) % 12 then do; call bad('target extent'); return; end
+      call useOrigin(origin)
+      _section_first[section] = target_count + 1
+      has_store = 0
+      previous_finish = _start[origin]
+      do target = 1 to count
+        kind = number(1); zero_byte = number(1); zero_word = number(2)
+        target_origin = number(4); name_bytes = number(4)
+        if kind > 1 | zero_byte <> 0 | zero_word <> 0 then do; call bad('target flags'); return; end
+        call itemOrigin(target_origin,item)
+        if _start[target_origin] < previous_finish then do; call bad('target origin order'); return; end
+        previous_finish = _finish[target_origin]
+        target_count = target_count + 1
+        _target_kind[target_count] = kind; _target_origin[target_count] = target_origin
+        if kind = 0 then do
+          if name_bytes <> 0 then do; call bad('drop name'); return; end
+          _target_name[target_count] = ''
+        end
+        else do
+          value = name(name_bytes,config)
+          _target_name[target_count] = value
+          has_store = 1
+        end
+      end
+      _section_last[section] = target_count; _section_store[section] = has_store
+      if _item_flags[item] <> has_store then do; call bad('section store flag'); return; end
+      prior_item = item
+    end
+    prior_item = 0
+    do occurrence = 1 to input_count
+      item = number(4); origin = number(4); name_bytes = number(4)
+      if item <= prior_item | item > _item_count then do; call bad('input map'); return; end
+      if _input_for_item[item] <> occurrence then do; call bad('input item'); return; end
+      call itemOrigin(origin,item)
+      value = name(name_bytes,config)
+      _input_origin[occurrence] = origin; _input_name[occurrence] = value
+      prior_item = item
+    end
+    if _offset <> _bytes then do; call bad('trailing packet bytes'); return; end
+    do origin = 1 to _origin_count
+      if _used[origin] = 0 then do; call bad('unreferenced origin'); return; end
+    end
+    _valid = 1
+    return
+
+  run: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg context = reference .rexxclassiccontext..RexxClassicContext, source = .rexxvalue..RexxValue, program = .binary
+    bundle = dereference context
+    config_ref = bundle.config()
+    config = dereference config_ref
+    if config.isByteProfile() then do; call bad('UTF8 configuration required'); return; end
+    call validate(program,config)
+    captured = source.asString(1)
+    if _upper then do
+      upper_context = .rexxclassicbifs..RexxBifCallContext.expression('UPPER')
+      call upper_context.setConfig(config_ref)
+      pool_ref = bundle.pool(); call upper_context.setCallerPool(pool_ref)
+      activation_ref = bundle.activation(); call upper_context.setCallerActivation(activation_ref)
+      values = .rexxvalue..RexxValue[]; presence = .int[]
+      values[1] = .rexxvalue..RexxValue(captured); presence[1] = 1
+      call upper_context.setArguments(values,presence)
+      upper_value = rexxclassicbif_upper(reference upper_context)
+      upper_value = rexxclassicbif_checked(reference upper_context,upper_value)
+      captured = upper_value.asString(1)
+    end
+    if _item_count = 0 then return
+    _cursor = .rxparse..cursor(captured,_descriptor)
+    _live = 1
+    do forever
+      event = _cursor.next()
+      if event = 0 then leave
+      item = _cursor.item()
+      _active_item = item; _active_origin = item + 1; _active_action = 'control'
+      if event = 2 then do
+        occurrence = _input_for_item[item]
+        _active_origin = _input_origin[occurrence]
+        _active_action = 'input#' || occurrence
+        current_pool = dereference bundle.pool()
+        operand = current_pool.symbolValue(_input_name[occurrence])
+        text_value = operand.asString(1)
+        call _cursor.supply(text_value)
+      end
+      else call distribute(context,_section_for_item[item])
+    end
+    call close()
+    return
+
+  distribute: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg context = reference .rexxclassiccontext..RexxClassicContext, section = .int
+    if _section_store[section] = 0 then return
+    text_value = _cursor.text()
+    text_length = .int
+    assembler strlen text_length,text_value
+    bundle = dereference context
+    current_config = dereference bundle.config()
+    blanks = current_config.textOtherBlanks()
+    scan = 0
+    first = _section_first[section]; last = _section_last[section]
+    do target = first to last
+      _active_origin = _target_origin[target]; _active_action = 'target#' || target
+      field_start = scan; field_length = text_length - scan
+      if target < last then do
+        word_start = rexxclassic_find_text_nonblank(text_value,scan,blanks)
+        if word_start < 0 then do
+          field_start = text_length; field_length = 0; scan = text_length
+        end
+        else do
+          word_end = rexxclassic_find_text_blank(text_value,word_start,blanks)
+          if word_end < 0 then word_end = text_length
+          field_start = word_start; field_length = word_end - word_start
+          scan = word_end
+          if scan < text_length then scan = scan + 1
+        end
+      end
+      if _target_kind[target] = 1 then do
+        field = .string
+        assembler substring field,text_value,field_start,field_length
+        value = .rexxvalue..RexxValue(field)
+        current_pool = dereference bundle.pool()
+        call current_pool.setSymbolValue(_target_name[target],value)
+      end
+    end
+    return

@@ -64,6 +64,13 @@ toword: token = 59
 byword: token = 60
 forword: token = 61
 docontrol: token = 62
+parseword: token = 63
+parseupper: token = 64
+parsekind: token = 65
+parsevalue: token = 66
+parsevar: token = 67
+parsewith: token = 68
+parsedot: token = 69
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -103,6 +110,7 @@ scan: lexer input utf8
   op.17: rule = "|" then emit or
   op.18: rule = "&&" then emit xor
   op.19: rule = "\" then emit not
+  op.20: rule = "." then emit parsedot
 
 parse: parser semantics contextfree input tokens start program backend lr1
   program: rule = statements as body then tree Program(body = body)
@@ -176,7 +184,26 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value: rule = identifier as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement
+  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
+    then tree Parse(source = source, templates = templates, upper = text(upper))
+  parse.upper: rule = parseupper?
+  parse.source: rule = (parsekind as kind) | (parsevalue as kind (expression as value)? parsewith) | (parsevar as kind name.value as name)
+    then tree ParseSource(kind = text(kind), value = value?, name = name?)
+  parse.templates: rule = parse.template as item (comma parse.template as item)*
+    then tree ParseTemplates(items = item+)
+  parse.template: rule = (parse.item as item)* then tree ParseTemplate(items = item*)
+  parse.item: rule = parse.target | parse.drop | parse.literal | parse.pattern | parse.position
+  parse.target: rule = name.value as name then tree ParseTarget(name = name)
+  parse.drop: rule = parsedot then tree ParseDrop()
+  parse.literal: rule = string.value as value then tree ParseLiteral(value = value, spelling = text)
+  parse.pattern: rule = open name.value as name close then tree ParseVariablePattern(name = name)
+  parse.position: rule = parse.position.number | parse.position.variable
+  parse.position.number: rule = parse.position.mode as mode number.value as operand
+    then tree ParsePosition(mode = text(mode), operand = operand)
+  parse.position.mode: rule = (assign | plus | minus)?
+  parse.position.variable: rule = (assign | plus | minus) as mode open name.value as operand close
+    then tree ParsePosition(mode = text(mode), operand = operand)
   drop.statement: rule = dropword drop.item as item (drop.item as item)* then tree CDrop(items = item+)
   drop.item: rule = drop.direct | drop.indirect
   drop.direct: rule = identifier as name then tree DropDirect(name = text(name))

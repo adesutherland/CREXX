@@ -7,6 +7,7 @@ import llir
 import llsource
 import llcir
 import llcparse
+import llcparseprogram
 import llcompilercontracts
 import llcdoprotocol
 import rexxclassicunicodeproperties
@@ -50,6 +51,9 @@ request: class
   _rootpath = .string
   _nesting = .int
   _budget = .int
+  _bytebudget = .int
+  _parsepositions = .llsource..index
+  _parsepositionsready = .int
   _strictc = .int
   _work = .int
   _ready = .int
@@ -108,7 +112,12 @@ request: class
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
     _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
+    _parsepositionsready = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+    if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
+      _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
+    end
+    _bytebudget = budget * 64
     return
   run: method = .void
     if _ready then return
@@ -137,7 +146,7 @@ request: class
       if _contract.error() <> '' then do
         _error = _contract.error(); return
       end
-      _builder = .llir..builder(_contract,_budget,_budget * 64)
+      _builder = .llir..builder(_contract,_budget,_bytebudget)
       _building = 1
       _file = _builder.source(_filename,_source)
       if _error <> '' then return
@@ -146,7 +155,7 @@ request: class
       _graph = _builder.finish()
       if _graph.error() <> '' then _error = _graph.error()
       if _error = '' then do
-        protocol = .llcdoprotocol..checked(reference _graph,_budget * 64,_budget)
+        protocol = .llcdoprotocol..checked(reference _graph,_bytebudget,_budget)
         if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
       end
     on signal as problem
@@ -427,6 +436,7 @@ request: class
         _terminated = 1; _alive = 0
       end
       when kind = 'Invoke' then value = invocation(node,0)
+      when kind = 'Parse' then call parsestatement(node)
       when kind = 'CArg' then do i = 1 to node.count('items')
         targetnode = node.child('items',i); name = strip(targetnode.text('name'))
         if name = '' then iterate
@@ -456,6 +466,128 @@ request: class
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
     return
+  /** PARSE retains one source value and emits immutable, source-owned template
+   * packets. The shared executor owns all live name reads and target writes. */
+  parsestatement: method = .void
+    arg node = .llast..node
+    name = .llast..node; operand = .llast..node; item = .llast..node
+    template = .llast..node; emptyorigin = .llir..origin
+    op = .llir..opdraft; built = .llir..opview
+    mode = .string; decoded = .string; movement = .int; code = .string; indexwork = .int
+    source = node.child('source'); templates = node.child('templates'); origin = at(node)
+    spelling = source.text('kind'); kind = ''
+    if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then kind = upper(spelling)
+    if wordpos(kind,'ARG PULL SOURCE LINEIN VERSION VALUE VAR') = 0 then do
+      code = '25.12'; if node.text('upper') <> '' then code = '25.13'
+      call fail(source,'SYNTAX: RXC-LC-' || code || ': invalid PARSE type ' || spelling); return
+    end
+    uppertext = node.text('upper')
+    if uppertext <> '' then do
+      if verify(uppertext,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') <> 0 | upper(uppertext) <> 'UPPER' then do
+        call fail(node,'SYNTAX: invalid PARSE UPPER flag'); return
+      end
+    end
+    upperflag = uppertext <> ''; value = .llir..valuehandle
+    select
+      when kind = 'VALUE' then do
+        if source.count('value') then value = expression(source.child('value'))
+        else do
+          /* VALUE is five authored ASCII bytes. Its end is a truthful empty
+           * boundary before WITH, including intervening comments/trivia. */
+          emptyorigin = _file.origin(source.start() + 5,source.start() + 5,source.origin())
+          value = defaultvalue('value',emptyorigin)
+        end
+      end
+      when kind = 'VAR' then value = expression(source.child('name'))
+      when kind <> 'ARG' then value = parsesource(kind,0,origin)
+      otherwise nop
+    end
+    if _error <> '' then return
+    do ordinal = 1 to templates.count('items') while _error = ''
+      template = templates.child('items',ordinal)
+      /* Empty ARG positions advance the ordinal without reading arguments. */
+      if kind = 'ARG' & template.count('items') = 0 then iterate
+      if _parsepositionsready = 0 then do
+        indexwork = _bytebudget
+        if indexwork < 10000000 then indexwork = 10000000
+        _parsepositions = .llsource..index(_source,_budget,_bytebudget,indexwork)
+        if _parsepositions.error() <> '' then do
+          call fail(node,'LIMIT: PARSE source index: ' || _parsepositions.error()); return
+        end
+        _parsepositionsready = 1
+      end
+      packet = .llcparseprogram..builder(_filename,_source,ordinal,upperflag,template.start(),template.finish(),node.start() + 1,_bytebudget)
+      call packet.useindex(_parsepositions)
+      do itemindex = 1 to template.count('items') while _error = ''
+        item = template.child('items',itemindex)
+        if tick(item) = 0 then return
+        select item.kind()
+          when 'ParseTarget' then do
+            name = item.child('name'); call packet.target(name.text('spelling'),name.start(),name.finish())
+          end
+          when 'ParseDrop' then call packet.drop(item.start(),item.finish())
+          when 'ParseLiteral' then do
+            decoded = stringliteral(item.child('value'))
+            if _error <> '' then return
+            call packet.literal(decoded,item.start(),item.finish())
+          end
+          when 'ParseVariablePattern' then do
+            name = item.child('name')
+            call packet.input('LITERAL',name.text('spelling'),item.start(),item.finish(),name.start(),name.finish())
+          end
+          when 'ParsePosition' then do
+            mode = item.text('mode'); operand = item.child('operand')
+            select mode
+              when '' then mode = 'ABS'
+              when '=' then mode = 'ABS'
+              when '+' then mode = 'PLUS'
+              when '-' then mode = 'MINUS'
+              otherwise do; call fail(item,'SYNTAX: invalid PARSE position mode'); return; end
+            end
+            if operand.kind() = 'Name' then call packet.input(mode,operand.text('spelling'),item.start(),item.finish(),operand.start(),operand.finish())
+            else if operand.kind() = 'Number' then do
+              movement = parseposition(operand)
+              if _error <> '' then return
+              call packet.position(mode,movement,item.start(),item.finish())
+            end
+            else do; call fail(operand,'SYNTAX: PARSE position requires a number or variable'); return; end
+          end
+          otherwise do; call fail(item,'SYNTAX: invalid PARSE template item'); return; end
+        end
+      end
+      bytes = packet.bytes()
+      if packet.error() <> '' then do
+        _error = packet.error(); _offset = packet.offset(); return
+      end
+      if kind = 'ARG' then value = parsesource(kind,ordinal,origin)
+      else if ordinal > 1 then value = defaultvalue('value',at(template))
+      op = _block.operation(_contract.operation('crexx.c.parse.execute'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.input('source',value)
+      call op.attribute('program',bytes); built = op.finish()
+    end
+    return
+  parsesource: method = .llir..valuehandle
+    arg kind = .string, ordinal = .int, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.parse.source'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('kind',kind as .binary)
+    codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(ordinal as .string))
+    built = op.finish(); return built.result()
+  /** Source positions are unsigned decimal integer tokens. Conversion is
+   * checked before multiplication, independently of the active DIGITS. */
+  parseposition: method = .int
+    arg node = .llast..node
+    spelling = node.text('spelling'); value = 0
+    if spelling = '' | verify(spelling,'0123456789') <> 0 then do
+      call fail(node,'SYNTAX: RXC-LC-38.1: invalid PARSE template at ' || spelling); return 0
+    end
+    do i = 1 to length(spelling)
+      digit = pos(substr(spelling,i,1),'0123456789') - 1
+      if value > 922337203685477580 | (value = 922337203685477580 & digit > 7) then do
+        call fail(node,'LIMIT: PARSE position exceeds signed descriptor range: ' || spelling); return 0
+      end
+      value = value * 10 + digit
+    end
+    return value
   /** Ordinary grouping never owns a transfer target. Repetitive DO targets
    * and edge-local closes are separate from the checked dead-source cursor. */
   loopafter: method = .llir..block
@@ -784,6 +916,18 @@ request: class
     end
     if suffix = 'B' then text = b2x(text)
     return x2c(text)
+  /** One literal decoder serves expressions and static PARSE patterns. */
+  stringliteral: method = .string
+    arg node = .llast..node
+    spelling = node.text('spelling'); quote = left(spelling,1)
+    if right(spelling,1) <> quote then return ordinalliteral(node,spelling)
+    text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
+    do while i <= length(text)
+      ch = substr(text,i,1); decoded = decoded || ch
+      if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
+      i = i + 1
+    end
+    return decoded
   expression: method = .llir..valuehandle
     arg node = .llast..node, expected = '', discardliteral = 0
     invalid = .llir..valuehandle
@@ -802,22 +946,10 @@ request: class
         end
       end
       when kind = 'String' then do
-        spelling = node.text('spelling'); quote = left(spelling,1)
-        if right(spelling,1) <> quote then do
-          ordinaltext = ordinalliteral(node,spelling)
-          if _error <> '' then return invalid
-          if discardliteral then return invalid
-          return _block.constantbytes(type('value'),ordinaltext as .binary,origin)
-        end
-        text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
-        do while i <= length(text)
-          ch = substr(text,i,1); decoded = decoded || ch
-          if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
-          i = i + 1
-        end
+        decoded = stringliteral(node)
+        if _error <> '' then return invalid
         if discardliteral then return invalid
-        target = 'value'
-        return _block.constantbytes(type(target),decoded as .binary,origin)
+        return _block.constantbytes(type('value'),decoded as .binary,origin)
       end
       when kind = 'Name' then do
         name = node.text('spelling')

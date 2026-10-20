@@ -8,6 +8,8 @@ import llcompilercontracts
 import llsource
 import llrxastext
 import llcdoprotocol
+import llcparseprogram
+import llscalar
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -38,6 +40,10 @@ compilation: class
   _fallthrough = .int
   _sourceindexes = .object[]
   _selectlines = .int[]
+  _parselines = .int[]
+  _parseclauses = .int[]
+  _originclauses = .int[]
+  _parsestate = .int
   _lastsource = .string
   _lastlocation = .string
   _routine = .string
@@ -198,6 +204,8 @@ compilation: class
       when type = '.rexxactivationarguments' then type = '.rexxactivation..rexxactivationarguments'
       when type = '.rexxclassicconfig' then type = '.rexxclassicconfig..rexxclassicconfig'
       when type = '.rexxclassiccontext' then type = '.rexxclassiccontext..rexxclassiccontext'
+      when type = '.rexxbifcallcontext' then type = '.rexxclassicbifs..rexxbifcallcontext'
+      when type = '.rexxclassicconditionevent' then type = '.rexxclassicconditionevent..rexxclassicconditionevent'
       otherwise nop
     end
     return prefix || type
@@ -308,13 +316,45 @@ compilation: class
     return
   checkoperation: method = .void
     arg op = .llir..opview
-    name = op.name(); bytes = .binary
+    name = op.name(); bytes = .binary; packet = .llcparseprogram..checked
     if name = 'core.constant' then do
       type = typename(op.result().type().id())
       if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then call fail('LOWERING: unsupported constant type ' || type)
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
     if name = 'crexx.c.select.missing' then call checkselectorigin(op)
+    if name = 'crexx.c.parse.source' then do
+      kind = op.attribute('kind') as .string; bytes = op.attribute('ordinal'); ordinal = <at..i64>(0) bytes
+      if wordpos(kind,'ARG PULL LINEIN SOURCE VERSION') = 0 then do; call fail('LOWERING: invalid PARSE source kind'); return; end
+      if (kind = 'ARG' & ordinal < 1) | (kind <> 'ARG' & ordinal <> 0) then do; call fail('LOWERING: invalid PARSE source ordinal'); return; end
+      call checkselectorigin(op,'PARSE source')
+      _parselines[op.id()] = _selectlines[op.id()]
+      _parseclauses[op.id()] = op.origin().first() + 1
+    end
+    if name = 'crexx.c.parse.execute' then do
+      origin = op.origin(); source = origin.sourcebytes(); bytes = op.attribute('program')
+      known = <blen>(source) > 0
+      logical = llcompilercontracts..sourcename(origin.filename())
+      if known then do
+        positions = sourceindex(origin)
+        if _error <> '' then return
+        packet = .llcparseprogram..checked.indexed(bytes,source,logical,known,_limit,positions)
+      end
+      else packet = .llcparseprogram..checked(bytes,source,logical,known,_limit)
+      if packet.status() then do; _error = packet.error(); return; end
+      if known then do
+        call checkselectorigin(op,'PARSE execute')
+        if _error <> '' then return
+        if packet.clause() <> origin.first() + 1 | packet.first() < origin.first() | packet.last() > origin.last() then do
+          call fail('LOWERING: PARSE program does not belong to its instruction origin'); return
+        end
+      end
+      do i = 1 to packet.names()
+        call checksymbol(packet.name(i))
+        if _error <> '' then return
+      end
+      _parseclauses[op.id()] = packet.clause()
+    end
     if name = 'crexx.c.load' | name = 'crexx.c.store' | name = 'crexx.c.drop' then call checksymbol(op.attribute('name') as .string)
     if name = 'crexx.c.numeric.form' then do
       form = op.attribute('form') as .string
@@ -335,27 +375,31 @@ compilation: class
    * Check every operation before creating the writer, including dead/loaded IR.
    * Only the indexed line is retained privately; it is not a schema attribute. */
   checkselectorigin: method = .void
-    arg op = .llir..opview
+    arg op = .llir..opview, label = 'SELECT missing'
     origin = op.origin()
     if origin.belongs(_store) = 0 then do
-      call fail('LOWERING: SELECT missing requires an owned exact source origin'); return
+      call fail('LOWERING: ' || label || ' requires an owned exact source origin'); return
     end
     if origin.kind() <> 'exact' then do
-      call fail('LOWERING: SELECT missing requires an owned exact source origin'); return
+      call fail('LOWERING: ' || label || ' requires an owned exact source origin'); return
     end
     bytes = origin.sourcebytes(); first = origin.first(); last = origin.last()
     extent = <blen>(bytes)
     if first < 0 | last <= first | last > extent then do
-      call fail('LOWERING: SELECT missing requires a nonempty source-backed span'); return
+      call fail('LOWERING: ' || label || ' requires a nonempty source-backed span'); return
     end
     positions = .llsource..index
     positions = sourceindex(origin)
+    if _error <> '' then return
+    if llcparseprogram..sourceboundary(bytes,first) = 0 | llcparseprogram..sourceboundary(bytes,last) = 0 then do
+      call fail('SOURCE: ' || label || ' origin is not at a Unicode boundary'); return
+    end
     at = positions.position(first); ending = positions.position(last)
     if at.error() <> '' | ending.error() <> '' then do
-      call fail('SOURCE: SELECT missing origin: ' || at.error() || ending.error()); return
+      call fail('SOURCE: ' || label || ' origin: ' || at.error() || ending.error()); return
     end
     if at.line() < 1 | at.column() < 1 then do
-      call fail('SOURCE: SELECT missing requires a valid indexed location'); return
+      call fail('SOURCE: ' || label || ' requires a valid indexed location'); return
     end
     _selectlines[op.id()] = at.line()
     return
@@ -372,7 +416,7 @@ compilation: class
     store = dereference _store; canonical = dereference _canonical.data()
     do i = 1 to store.count(8)
       type = typename(store.get(8,i,1))
-      if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then do
+      if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value crexx.c.parseprogram') = 0 then do
         call fail('LOWERING: unsupported constant type ' || type); return
       end
       codec = canonical.codec(canonical.typeindex(type)) as .llir..typecodec
@@ -386,7 +430,10 @@ compilation: class
   checkcontextslots: method = .void
     store = dereference _store; ready = .int[]
     i = .int; fn = .int; opid = .int; slot = .int; producer = .int; opcode = .int
-    do i = 1 to store.count(5); ready[i] = 0; end
+    do i = 1 to store.count(5)
+      if typename(store.get(5,i,2)) = 'crexx.c.parseprogram' then do; call fail('LOWERING: PARSE program is an attribute, not a runtime slot'); return; end
+      ready[i] = 0
+    end
     do fn = 1 to store.count(1)
       entry = store.get(1,fn,3); opid = store.get(2,entry,2)
       do while opid > 0
@@ -561,7 +608,7 @@ compilation: class
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
-    i = .int
+    i = .int; origin = .llir..origin
     do
       if _graph.error() <> '' then do; _error = _graph.error(); return; end
 
@@ -569,22 +616,48 @@ compilation: class
       _store = _graph.storage(); store = dereference _store; contract = dereference store.contract(); _schema = contract
       canonical = .llir..schema(); call llcir..registerfamilies(reference canonical); expected = canonical.finish()
       _canonical = expected
+      _phase = 'schema admission'
       call checkschema(expected)
       if _error <> '' then return
+      _phase = 'procedure admission'
       call checkfunctions()
       if _error <> '' then return
+      _phase = 'constant admission'
       call checkconstants()
       if _error <> '' then return
+      _phase = 'context-slot admission'
       call checkcontextslots()
       if _error <> '' then return
+      _phase = 'DO admission'
       _doprotocol = .llcdoprotocol..checked(reference _graph,_limit,_limit)
       if _doprotocol.status() then do
         _error = _doprotocol.error(); _offset = _doprotocol.offset(); return
       end
+      _phase = 'operation admission'
       do i = 1 to store.count(3)
         op = _graph.operation(i); _origin = op.origin().id(); _offset = op.origin().first()
+        _parseclauses[i] = 0
         call checkoperation(op)
         if _error <> '' then return
+      end
+      /* Setup carrying the same exact origin belongs to that PARSE clause.
+       * Keep spans untouched; only reuse the admitted grouping key. */
+      do i = 1 to store.count(3)
+        if _parseclauses[i] > 0 then do
+          origin = _graph.operation(i).origin()
+          if origin.id() > 0 then do
+            if origin.id() <= _originclauses[0] then do
+              if _originclauses[origin.id()] > 0 & _originclauses[origin.id()] <> _parseclauses[i] then do
+                call fail('PARSE: one instruction origin has conflicting clause keys'); return
+              end
+            end
+            _originclauses[origin.id()] = _parseclauses[i]
+          end
+        end
+      end
+      do i = 1 to store.count(3)
+        origin = _graph.operation(i).origin()
+        if origin.id() > 0 & origin.id() <= _originclauses[0] then _parseclauses[i] = _originclauses[origin.id()]
       end
       _phase = 'entry'; _writer = .llir..writer(_limit)
       call _writer.line('.globals=0')
@@ -614,7 +687,7 @@ compilation: class
       _output = _writer.finish()
       if _output.error() <> '' then _error = _output.error()
     on signal as problem
-      if _error = '' then call fail('BACKEND: ' || _phase || ': ' || problem.name() || ' at backend line ' || problem.line() || ': ' || problem.message())
+      if _error = '' then call fail('BACKEND: ' || _phase || ': ' || problem.name() || ' at module ' || problem.module() || ' address ' || problem.address() || ' (' || problem.file() || ':' || problem.line() || '): ' || problem.message())
     end
     return
   flush: method = .void
@@ -636,19 +709,22 @@ compilation: class
         _slots[i] = next; next = next + 1
       end
     end
-    _phase = 'value allocation'
+    _phase = 'value allocation'; hasparse = 0
     do b = 1 to store.count(2)
       if store.get(2,b,1) <> _fn then iterate
       blocks[blocks[0] + 1] = b
       id = store.get(2,b,2)
       do while id > 0
         op = _graph.operation(id)
+        if op.name() = 'crexx.c.parse.source' then hasparse = 1
         do r = 1 to op.results()
           _registers[op.result(r).id()] = next; next = next + 1
         end
         id = store.get(3,id,3)
       end
     end
+    _parsestate = -1
+    if hasparse then do; _parsestate = next; next = next + 1; end
     /* Strong loop storage is not an IR value or a transient call argument.
      * Its address is stable through every helper call and every iteration. */
     _phase = 'DO owner allocation'; cleanuporder = .int[]; _dofatal = cleanuporder
@@ -697,13 +773,14 @@ compilation: class
     do i = 1 to _dofatal[0]
       call emit('null',reg(_doowners[_dofatal[i]]))
     end
+    if _parsestate >= 0 then call emit('null',reg(_parsestate))
     do
       filename = ''
       firstop = store.get(2,store.get(1,_fn,3),2)
       if firstop > 0 then filename = llcompilercontracts..sourcename(_graph.operation(firstop).origin().filename()) || ': '
       call emit('load',reg(_location) || ',' || llrxastext..quote((filename || 'entering ' || _routine) as .binary))
-      do i = 1 to 4
-        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+      do i = 1 to 9
+        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary))
       end
     end
     call emit('numsci','18,1,2')
@@ -718,37 +795,38 @@ compilation: class
       id = store.get(2,b,2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
-        call source(op.origin())
+        call source(op.origin(),_parseclauses[op.id()])
         call selectop(op)
         id = store.get(3,id,3)
       end
     end
     do
       _origin = 0
-      do i = 1 to 4
+      do i = 1 to 9
         call emit('llerror' || _fn || '_' || i || ':')
         if i = 1 then call clearsource()
         call emit('load',reg(_scratch) || ',' || i)
-        if i < 4 then call emit('br','llerror' || _fn)
+        if i < 9 then call emit('br','llerror' || _fn)
       end
       call emit('llerror' || _fn || ':')
-      do i = 1 to 4
-        call emit('sighalt',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary))
+      do i = 1 to 9
+        call emit('sighalt',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary))
       end
-      if _dofatal[0] > 0 then do
+      if _dofatal[0] > 0 | _parsestate >= 0 then do
         /* Unwinding restores receiver permutations first. Release remaining
          * private borrow slots before owners, preserving r0/location/scratch. */
         do i = 1 to _maxargs; call emit('null',reg(_callbase + i)); end
+        if _parsestate >= 0 then call emit('null',reg(_parsestate))
         do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
       end
       symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
       call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
-      do i = 1 to 3
+      do i = 1 to 8
         call emit('beq','llraise' || _fn || '_' || i || ',' || reg(_scratch) || ',' || i)
       end
-      do i = 4 to 1 by -1
+      do i = 9 to 1 by -1
         call emit('llraise' || _fn || '_' || i || ':')
-        call emit('signalorigin',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS',i) as .binary) || ',' || reg(_location) || ',r0')
+        call emit('signalorigin',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary) || ',' || reg(_location) || ',r0')
         call emit('ret')
       end
     end
@@ -763,28 +841,38 @@ compilation: class
   /** Reuse the existing request-local index for admission and source emission. */
   sourceindex: method = .llsource..index
     arg origin = .llir..origin
+    phase = _phase; _phase = 'source index lookup'
     store = dereference _store; sourceid = store.get(9,origin.id(),1)
     positions = .llsource..index
+    if sourceid < 1 then do; call fail('SOURCE: origin has no source record'); return positions; end
     if sourceid <= _sourceindexes[0] then do
-      if _sourceindexes[sourceid] is .llsource..index then positions = _sourceindexes[sourceid] as .llsource..index
+      if _sourceindexes[sourceid] is .llsource..index then do
+        positions = _sourceindexes[sourceid] as .llsource..index
+        _phase = phase; return positions
+      end
     end
-    if initialized(positions) = 0 then do
-      positions = .llsource..index(origin.sourcebytes())
-      _sourceindexes[sourceid] = positions as .object
-    end
+    _phase = 'source UTF8 validation'
+    bytes = origin.sourcebytes(); codec = .llscalar..textcodec()
+    message = codec.check(bytes)
+    if message <> '' then do; call fail('SOURCE: ' || message); return positions; end
+    _phase = 'source index construction'
+    positions = .llsource..index(bytes)
+    _sourceindexes[sourceid] = positions as .object
+    _phase = phase
     return positions
   source: method = .void
-    arg origin = .llir..origin
+    arg origin = .llir..origin, clause = 0
     key = .string; location = .string
     if origin.id() = 0 then do; call clearsource(); return; end
     kind = origin.kind()
     if kind = 'synthetic' then do
       key = '6 "" 0 0 0 ""'; location = 'generated code in ' || _routine
-      call sourcerecord(key,location)
+      call sourcerecord(key,location,clause)
       return
     end
     positions = .llsource..index
     positions = sourceindex(origin)
+    if _error <> '' then return
     bytes = origin.sourcebytes()
     at = positions.position(origin.first())
     if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return; end
@@ -803,15 +891,16 @@ compilation: class
     location = filename || ':' || line || ':' || column
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
     key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(binsubstr(bytes,first + 1,last - first))
-    call sourcerecord(key,location)
+    call sourcerecord(key,location,clause)
     return
   /** A source anchor and diagnostic context are independent state. Equal line
    * numbers alone are insufficient: range, flags and text also identify it. */
   sourcerecord: method = .void
-    arg key = .string, location = .string
-    if key <> _lastsource then do
-      call emit('.srcstep',_origin || ' 0 ' || key)
-      _lastsource = key
+    arg key = .string, location = .string, clause = 0
+    identity = clause || ':' || key
+    if identity <> _lastsource then do
+      call emit('.srcstep',_origin || ' ' || clause || ' ' || key)
+      _lastsource = identity
     end
     if location <> _lastlocation then do
       call emit('load',reg(_location) || ',' || llrxastext..quote(location as .binary))
@@ -873,8 +962,17 @@ compilation: class
     return
   classic: method = .void
     arg op = .llir..opview, name = .string
+    symbol = .string
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
+    if name = 'parse.source' then do; call parsesource(op); return; end
+    if name = 'parse.execute' then do
+      symbol = imported('rxfnsc','rexxclassicparse.execute','.void',contexttype || ' ' || v || ' .binary')
+      call argcopy(1,input(op)); call argcopy(2,input(op,2))
+      call emit('load',reg(_callbase + 3) || ',0x' || bin2x(op.attribute('program')))
+      call invoke('',symbol,3)
+      return
+    end
     if wordpos(name,'do.new do.capture do.start do.entry do.advance do.close') > 0 then do
       call dooperation(op,name); return
     end
@@ -959,6 +1057,51 @@ compilation: class
       end
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
+    return
+  /** Acquisition returns one value while its caller-owned transport retains
+   * errors/NOTREADY. The typed event is raised here at the authored C anchor. */
+  parsesource: method = .void
+    arg op = .llir..opview
+    symbol = .string
+    kind = op.attribute('kind') as .string; bits = op.attribute('ordinal'); ordinal = <at..i64>(0) bits
+    state = reg(_parsestate); receiver = reg(_workbase + 1)
+    condition = reg(_workbase + 5); description = reg(_workbase + 6)
+    flag = reg(_workbase + 7); detail = reg(_workbase + 8); event = reg(_workbase + 9)
+    info = reg(_workbase + 10); activation = reg(_workbase + 4)
+    prefix = 'llparse' || _fn || '_' || op.id(); owner = 'rexxclassicbifs.rexxbifcallcontext'
+    if kind = 'SOURCE' then do
+      symbol = imported('library','rxfnsb.sourceinfo','.string','')
+      call invoke(info,symbol,0)
+    end
+    else call emit('load',info || ',""')
+    signature = 'reference@.rexxclassiccontext..rexxclassiccontext .string .int .string reference@.rexxclassicbifs..rexxbifcallcontext'
+    symbol = imported('llctarget','llctarget.parsesource','.rexxvalue..rexxvalue',signature)
+    call argcopy(1,input(op)); call argtext(2,kind); call emit('load',reg(_callbase + 3) || ',' || ordinal)
+    call argcopy(4,info); call argcopy(5,state,1); call invoke(result(op),symbol,5); call emit('null',info)
+    call emit('link',receiver || ',' || state)
+    symbol = member(owner,'haserror','.boolean'); call invoke(flag,symbol,1,receiver)
+    call emit('brf',prefix || '_ready,' || flag)
+    symbol = member(owner,'errordetail','.string'); call invoke(detail,symbol,1,receiver)
+    call emit('unlink',receiver); call emit('null',state)
+    call emit('signal','"CLASSIC_SYNTAX",' || detail); call emit('ret')
+    call emit(prefix || '_ready:')
+    symbol = member(owner,'conditionid','.int'); call invoke(condition,symbol,1,receiver)
+    symbol = member(owner,'conditiondescription','.string'); call invoke(description,symbol,1,receiver)
+    call emit('unlink',receiver); call emit('null',state)
+    call emit('beq',prefix || '_done,' || condition || ',0')
+    call binding(input(op),'activation',activation); call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','queuecallcondition','.boolean','.int .string .int')
+    call argcopy(2,condition); call argcopy(3,description); call emit('load',reg(_callbase + 4) || ',' || _parselines[op.id()])
+    call invoke('',symbol,4,receiver)
+    symbol = member('rexxactivation.rexxactivationarguments','signalpolicy','.int','.int')
+    call argcopy(2,condition); call invoke(flag,symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',activation)
+    call emit('ble',prefix || '_done,' || flag || ',0')
+    eventtype = '.rexxclassicconditionevent..rexxclassicconditionevent'
+    symbol = member('rexxclassicconditionevent.rexxclassicconditionevent','§factory',eventtype,'.int .string')
+    call argcopy(1,condition); call argcopy(2,description); call invoke(event,symbol,2)
+    call emit('signal','"CLASSIC_CONDITION",' || event); call emit('null',event)
+    call emit(prefix || '_done:'); call emit('null',description)
     return
   /** Keys select one stable strong owner; only the synchronous call window
    * contains a borrowed reference. Count start is a protocol-only marker. */

@@ -1,0 +1,110 @@
+/* cREXX License (MIT). Independent C packet construction/admission controls. */
+options levelb
+import rxfnsb
+import llcparseprogram
+import llsource
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  source = "a b ':' c +(p)" as .binary
+  producer = .llcparseprogram..builder('packet-c',source,2,0,0,<blen>(source),1)
+  call producer.target('a',0,1); call producer.target('b',2,3)
+  call producer.literal(':',4,7); call producer.target('c',8,9)
+  call producer.input('PLUS','p',10,14,12,13)
+  packet = producer.bytes()
+  call check(producer.error() = '' & <blen>(packet) > 40,'build mixed maximal sections: ' || producer.error())
+  if producer.error() <> '' then return failures
+  call check(bin2x(packet) = bin2x(producer.bytes()),'sealed packet is deterministic')
+  accepted = .llcparseprogram..checked(packet,source,'packet-c',1,67108864)
+  call check(accepted.status() = 0 & accepted.names() = 4,'complete mixed packet validates')
+  call check(accepted.ordinal() = 2 & accepted.clause() = 1,'template position and owning clause preserved')
+  call check(accepted.name(1) = 'a' & accepted.name(2) = 'b' & accepted.name(3) = 'c' & accepted.name(4) = 'p','raw targets and operand retained in order')
+  saved = bin2x(packet)
+  bad = packet; <at..u8>(4) bad = 2; call refuses(bad,source,'packet version')
+  bad = packet; <at..u8>(6) bad = 2; call refuses(bad,source,'unknown flag')
+  bad = packet; <at..u8>(8) bad = 0; call refuses(bad,source,'exact total length')
+  bad = binsubstr(packet,1,<blen>(packet) - 1); call refuses(bad,source,'truncated target/input record')
+  bad = packet; call binresize bad,<blen>(packet) + 1
+  <at..u8>(<blen>(packet)) bad = 0; call refuses(bad,source,'trailing bytes')
+  call check(saved = bin2x(packet),'failed admission leaves original packet immutable')
+  mismatch = .llcparseprogram..checked(packet,source,'other-source',1,67108864)
+  call check(mismatch.status() <> 0,'logical identity cannot be substituted')
+  mismatch = .llcparseprogram..checked(packet,'x' as .binary,'packet-c',1,67108864)
+  call check(mismatch.status() <> 0,'known original source length checked')
+  missing = .llcparseprogram..checked(packet,''x as .binary,'packet-c',0,67108864)
+  call check(missing.status() = 0,'loaded packet permits unavailable source without reopening files')
+  bad = packet; <at..u32>(56) bad = 2
+  missing = .llcparseprogram..checked(bad,''x as .binary,'packet-c',0,67108864)
+  call check(missing.status() <> 0,'loaded first physical origin cannot precede its template line')
+  bad = packet; <at..u32>(60) bad = 2
+  missing = .llcparseprogram..checked(bad,''x as .binary,'packet-c',0,67108864)
+  call check(missing.status() <> 0,'loaded first physical origin cannot precede its template column')
+  positions = .llsource..index(source)
+  accepted = .llcparseprogram..checked.indexed(packet,source,'packet-c',1,67108864,positions)
+  call check(accepted.status() = 0,'request-owned index certifies the same original origins')
+  reused = .llcparseprogram..builder('packet-c',source,2,0,0,14,1)
+  call reused.useindex(positions)
+  call reused.target('a',0,1); call reused.target('b',2,3)
+  call reused.literal(':',4,7); call reused.target('c',8,9)
+  call reused.input('PLUS','p',10,14,12,13)
+  call check(bin2x(reused.bytes()) = bin2x(packet) & reused.error() = '', 'builder reuses trusted index without changing packet bytes')
+  limited = .llcparseprogram..checked(packet,source,'packet-c',1,40)
+  call check(limited.status() <> 0,'packet byte limit checked')
+  call empties(); call unicodeorigins(); call invalidbuilders()
+  say 'PARSE_PROGRAM|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+refuses: procedure = .void
+  arg packet = .binary, source = .binary, label = .string
+  rejected = .llcparseprogram..checked(packet,source,'packet-c',1,67108864)
+  call check(rejected.status() <> 0,label)
+  return
+
+empties: procedure = .void
+  source = 'parse arg ,' as .binary
+  producer = .llcparseprogram..builder('empty-c',source,1,1,10,10,1)
+  packet = producer.bytes()
+  accepted = .llcparseprogram..checked(packet,source,'empty-c',1,67108864)
+  call check(producer.error() = '' & accepted.status() = 0 & accepted.names() = 0,'empty position has no outer descriptor')
+  source = '. .' as .binary
+  producer = .llcparseprogram..builder('drop-c',source,1,0,0,3,1)
+  call producer.drop(0,1); call producer.drop(2,3)
+  packet = producer.bytes(); accepted = .llcparseprogram..checked(packet,source,'drop-c',1,67108864)
+  call check(producer.error() = '' & accepted.status() = 0 & accepted.names() = 0,'all-drop section carries no named stores')
+  source = '(p)' as .binary
+  producer = .llcparseprogram..builder('control-c',source,1,0,0,3,1)
+  call producer.input('LITERAL','p',0,3,1,2)
+  packet = producer.bytes(); accepted = .llcparseprogram..checked(packet,source,'control-c',1,67108864)
+  call check(producer.error() = '' & accepted.status() = 0 & accepted.names() = 1,'targetless dynamic control is retained')
+  return
+
+unicodeorigins: procedure = .void
+  source = 'é a' as .binary
+  producer = .llcparseprogram..builder('unicode-c',source,1,0,3,4,4)
+  call producer.target('a',3,4)
+  packet = producer.bytes(); accepted = .llcparseprogram..checked(packet,source,'unicode-c',1,67108864)
+  call check(producer.error() = '' & accepted.status() = 0,'byte origin after multibyte scalar keeps scalar column')
+  producer = .llcparseprogram..builder('unicode-c',source,1,0,1,2,1)
+  call producer.target('a',1,2)
+  packet = producer.bytes()
+  call check(producer.error() <> '' & <blen>(packet) = 0,'split Unicode origin refuses before packet publication')
+  return
+
+invalidbuilders: procedure = .void
+  source = 'a b' as .binary
+  producer = .llcparseprogram..builder('invalid-c',source,1,0,0,3,1)
+  call producer.target('a',2,3); call producer.target('b',0,1)
+  packet = producer.bytes()
+  call check(producer.error() <> '' & <blen>(packet) = 0,'out-of-order source items refuse atomically')
+  producer = .llcparseprogram..builder('invalid-c',source,1,0,0,3,1)
+  call producer.input('ABS','x',0,1,1,3)
+  packet = producer.bytes()
+  call check(producer.error() <> '' & <blen>(packet) = 0,'operand origin cannot escape control')
+  return

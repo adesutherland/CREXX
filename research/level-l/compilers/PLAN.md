@@ -1,11 +1,9 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified.
-Current: the shared PARSE cursor is committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`,
-with normal Debug and focused Apple ASan proof. Real constrained-platform runtime
-proof remains open. Adrian approved the complete C PARSE integration design on
-20 October 2026; CPARSE-STEP01 is complete and STEP02 is current. ARG
-subsequently uses the same executor.**
+**Complete C is open. CLC-STEP05.ITERATE1–3 are locally qualified. The approved
+C PARSE implementation and product targets have local native, shared-B and
+paired C qualification and are locally committed. Complete conditions/TRACE,
+delivery and platform acceptance remain open. ARG subsequently reuses the executor; INTERPRET is last.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -25,95 +23,157 @@ Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integ
 
 ## Current action: approved C PARSE implementation
 
-Deliver PARSE's agreed source/template behavior through one shared executor,
-then use that executor for ARG. Earlier completed writes must be visible to
-later dynamic operand reads without reading future operands early or replaying
-template prefixes. The [machinery review](doc/architecture.md#parse-machinery-review)
-records existing investment and the native live-pool ordering limitation;
-native output remains a read-only control, not the new compiler's oracle.
+Deliver all seven agreed PARSE sources—ARG, PULL, SOURCE, LINEIN, VERSION,
+VALUE and VAR—and complete templates through one shared executor. Earlier
+writes must be visible to later dynamic operand reads, without eager lookahead
+or prefix replay. This includes UPPER, arbitrary representable comma positions,
+backward/equal/zero movement, empty patterns, Unicode/configured blanks,
+authored origins and cleanup. The [machinery review](doc/architecture.md#parse-machinery-review)
+records the native compiler's live-pool limitation; native output remains a
+read-only control, not the new compiler's oracle.
 
-Done: the [approved generic cursor](doc/architecture.md#proposed-parse-cursor-contract)
-is locally committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
-**PARSE-ENGINE-STEP01–04** and AC01–04/local AC05–06 have their retained
-proof below; real platform AC05 remains open. The architecture owns that
-engine's API, acceptance and lifecycle, separately from C integration.
+Adrian approved the [exact integration contract](doc/architecture.md#proposed-c-parse-integration)
+on 20 October 2026: cursor descriptor v3, C v7 AST/IR/target records, LCP1,
+one shared B executor, the three-argument execute and five-argument source
+adapter, live pool effects and finite relays. No additional API/ISA or native
+C frontend feature is authorized. EXTERNAL/NUMERIC retain their current ledger
+exclusions and final Release 1 decision. ARG and PULL retain separate LC-I-11
+and LC-I-16 acceptance using this executor.
 
-**CLC-STEP06.PARSE1 — Approved/complete:** existing kernel/exits,
-independent ordering expectations and core/static build feasibility are reviewed.
-Adrian approved the exact shared cursor prerequisite on 20 October 2026.
-**CLC-STEP06.PARSE2 — Locally qualified:** the approved built-in VM service
-passes PARSE-ENGINE-AC01–04 and local AC05/06 proof below; real platform proof
-remains open; local delivery is committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`.
-No additional API/ISA or native C
-feature is authorised by this approval.
-**CLC-STEP06.PARSE3 — Approved; implementation open:** Adrian approved the
-[integration contract](doc/architecture.md#proposed-c-parse-integration)
-specifies all seven sources, templates, C AST/IR/target records, one shared B
-executor, live pool effects, authored observations and cleanup. Its
-**CPARSE-AC01–08 / CPARSE-STEP01–05** preserve complete PARSE as the outcome;
-the reviewed forward composition alone does not cover backward/equal positions
-or empty patterns. Approval covers the exact generic descriptor addition and
-C/B interfaces, shared cursor/B-library reuse, focused qualification, emitted
-RXAS review and scoped local commits. **CPARSE-STEP01 is complete; STEP02 is
-current**, followed by the shared B executor and C integration. ARG then reuses
-the executor under its own LC-I-11 acceptance; PULL retains LC-I-16 acceptance.
+**CLC-STEP06.PARSE1 is approved/complete. CLC-STEP06.PARSE2 is locally
+qualified. CLC-STEP06.PARSE3 is locally committed with bounded qualification.**
+The original [generic cursor](doc/architecture.md#proposed-parse-cursor-contract)
+is committed at `e0b11db9e7293bc1f45e86574cb1f857edb1c038`;
+**PARSE-ENGINE-STEP01–04** and **PARSE-ENGINE-AC01–04 / local AC05–06**
+retain their proof. Real platform PARSE-ENGINE-AC05 remains open. The v3
+addition, shared executor and C integration have their separate acceptance below.
 
-The seven agreed PARSE sources and current EXTERNAL/NUMERIC exclusions retain
-their ledger dispositions. Shared labels/EXPOSE, host/condition/TRACE and all
-twelve CFC criteria remain open; INTERPRET remains last. No C integration or
-descriptor change is implemented yet. The approved documentation baseline
-passes `git diff --check` over the four owning documents at product input
-`e0b11db9e7293bc1f45e86574cb1f857edb1c038`; no build input changed or build repeated.
-Local engine qualification does not close C PARSE/ARG, full backward/anchor
-normalization or the platform gates. Detailed assignments live in
-[work packages](doc/agent-work-packages.md#parse-integration-assignment-packet).
+### Acceptance and remaining work
+
+The full [CPARSE-AC01–08 contract](doc/architecture.md#integration-acceptance-and-implementation-steps)
+remains authoritative; these statuses distinguish bounded proof from whole
+criterion closure.
+
+| Criterion | Current proof / remaining closure |
+|---|---|
+| **CPARSE-AC01** | Named seven-source/template AST, located refusals and v7 admission are implemented; focused frontend, paired source, current CORE/admission/schema, existing DROP compatibility and final product targets pass locally. |
+| **CPARSE-AC02** | V3 transitions, Input/Field order, controls, Unicode/NUL and atomic `parseplan` refusal are locally qualified in normal Debug and focused Apple ASan; v1/v2 compatibility is retained. |
+| **CPARSE-AC03** | Direct shared-B live reads/writes, targets/drops and exact word remainders pass all four B/VM cells. The independent C source corpus passes opt/rxbvm and noopt/rxtvm, each with IR on/off and both assembler modes. |
+| **CPARSE-AC04** | Direct adapter/state behavior and NOTREADY OFF/CALL/SIGNAL pass all four cells. Paired C seven-source corpus and actual opt/rxbvm and noopt/rxtvm source checkpoints pass, including a separate expired-pool fatal control. |
+| **CPARSE-AC05** | Direct failure/lifecycle proof passes, including nine named synthetic relays, preserved provenance/message/RC, exactly-once close and no later writes. These checks do not establish complete C resumption or naturally occurring OOM/Unicode faults. |
+| **CPARSE-AC06** | Actual caller/helper RXAS reviews, both target shape checks and paired source/product checks pass locally; code-shape obligations and admitted costs are recorded below. |
+| **CPARSE-AC07 — Open** | Full configured errors/NOVALUE, source/clause/field/drop observations, typed conditions, resumed handlers and positive/failure/resumption TRACE retain their STEP03/07 owners. The current fatal profile and source checkpoints do not close this criterion. |
+| **CPARSE-AC08 — Open** | Local manifests, metadata and explicit-provider routes have focused proof. Complete service/install/relocation and declared platform delivery, existing engine platform gates and ARG/PULL acceptance remain open. |
+
+| Step | Current disposition and dependency |
+|---|---|
+| **CPARSE-STEP01 — Approved/complete (AC01–08)** | Exact contracts, ownership, independent expectations and stage boundaries were approved before implementation. |
+| **CPARSE-STEP02 — Locally qualified (AC02/05/08)** | V3 uses the existing cursor/kernel; no additional matcher, opcode or callable. Real platform proof remains open. |
+| **CPARSE-STEP03 — Direct B slice locally qualified (AC03–05/07)** | Packet validation, existing-scan word distribution, live effects, source adapter and finite relays pass direct proof. Complete conditions/TRACE remain with STEP05 and their existing owners. |
+| **CPARSE-STEP04 — Bounded slice locally committed/qualified (AC01/03–06/08)** | Named AST, constant packet construction, source acquisition, v7 admission, direct calls, all planned focused functional/shape checks and final product targets pass. Independent review and scoped local delivery are complete. |
+| **CPARSE-STEP05 — Open (AC01–08)** | Integrate and verify remaining conditions/TRACE and declared platform/delivery obligations, then complete LC-I-19 review. Schedule ARG/PULL separately; preserve all twelve CFC criteria and last-stage INTERPRET. |
+
+### Native unwind prerequisite
+
+The expired-pool C lifecycle control exposed a separate native assertion:
+counted-call restoration inferred swaps from value pointers, but a permanently
+linked receiver can hide its owned base and duplicate aliases can share pointers.
+The approved repair tracks unique frame-private slot identities. LINK/UNLINK
+rebind pointers without changing identity; primitive/fused SWAP moves both maps;
+cold unwind reverses canonical compiler call-window preparation without copying
+values or losing mutations. It does not infer arbitrary intentional earlier SWAP
+state or alter the call ABI.
+
+| Criterion | Checkable local result / remaining boundary |
+|---|---|
+| **UNWIND-AC01 — Locally qualified** | Permanent cases reproduce the old assertion and cover linked in-place/swapped receivers, two aliases, duplicate incoming arguments, rebinding, normal/branch, fused/factory and recycled frames. |
+| **UNWIND-AC02 — Locally qualified** | Checked/aligned u32 identities cover the existing INT_MAX frame bound and reset every active slot on activation/reuse. Coordinator and independent invariant/diff review pass. |
+| **UNWIND-AC03 — Locally qualified** | Native/reference/cursor controls and direct B triggers pass both VMs. The original generated-C trigger follows the expected fatal path in opt/rxbvm and noopt/rxtvm, with no native assertion or later marker. |
+| **UNWIND-AC04 — Focused Apple ASan qualified; broader platforms open** | The same focused native group passes the maintained Apple runner with no finding. Platform limits below remain; no performance claim follows. |
+
+1. **UNWIND-STEP01 — Approved/complete (AC01–04):** minimal reproduction and
+   invariant/alternative review preceded edits.
+2. **UNWIND-STEP02 — Implemented/reviewed (AC01/02):** checked frame identities,
+   centralized SWAP handling, cold inversion and permanent regressions.
+3. **UNWIND-STEP03 — Locally qualified (AC01–04):** focused normal/Apple ASan,
+   both-VM direct triggers and the corrected generated-C fatal oracle pass.
+4. **UNWIND-STEP04 — Locally committed (AC02–04):** VM guide, concise
+   qualification and independent review are delivered in `8a8291363`. Broader
+   platform proof remains open.
+
+The repair adds one pointer/frame, four bytes per allocated nominal slot, one
+identity store per active slot on activation and one u32 exchange per pointer
+SWAP. Cold restoration remains O(arguments × locals), with no per-call
+allocation. These are structural costs, not timing or peak-memory claims.
 
 <a id="parse-cursor-local-qualification"></a>
 
-### Shared cursor local qualification — 20 October 2026
+### Local qualification — 20 October 2026
 
-Inputs: reviewed kernel/binding/driver, per-context compiler declarations,
-core/static manifests and independent `tests/rxpa/parse_cursor*` fixtures over
-`19199a2918`. The required `cmake --build cmake-build-debug --parallel 4
---target stage-product` passed in about 227s without warnings; shared bytecode
-libraries and `rxlink` remained byte-identical. Qualification is local, not
-hosted or release proof.
+Inputs are the reviewed develop worktree over `11746a3c6a42`: native v3/unwind,
+shared B executor/source adapter and their maintained fixtures, and C frontend/
+codec/selector/manifests. Checks below retain their stated input and mode
+boundaries. The separate unwind repair is committed at `8a8291363`, cursor v3
+at `f6f87754b`, and this integration change records the qualified B/C delivery.
+Affected preparation is
+warning-free in normal Debug. Grammar regeneration used the explicitly validated
+lexer/current tool and a full RXAS byte comparison; no freshness guard was weakened.
 
-- Four B consumer cells (compiler opt/noopt × `rxbvm`/`rxtvm`) each passed
-  **162/0**, using `rxc --no-exe-import` (noopt adds `-n`), `rxas -n`,
-  unstripped `rxlink` and VM `--no-autoload`. Independent live-pool KEY2 and
-  section/word composition passed. Both readable RXAS modes were reviewed:
-  direct native methods preserve Input/Field/write order, alias ownership and
-  terminal catches. `field()` has 36 executable instructions, 11 locals and
-  five cursor calls plus three assertion calls in both modes. Inlining makes
-  the combined optimized main frame unsuitable for a per-procedure comparison;
-  native snapshot/index work is separate, with no speed claim.
-- Serial focused Debug CTest passed native boundary **65/0**, repeated imports
-  **3 requests × 7 callables**, kernel-only NUTF8 byte/range **11/0**, and
-  `nr14_frozen_parse_contract|parse_levelg_contract` **2/2** (10.23s). Use
-  `ctest --test-dir cmake-build-debug --parallel 1 --output-on-failure -R`
-  with `^rxparse_cursor_(native_boundary|repeated_import)$`,
-  `^rxparse_cursor_byte_units$` or
-  `^(nr14_frozen_parse_contract|parse_levelg_contract)$`. The final null-operand
-  guard replayed only `^rxparse_cursor_native_boundary$`.
-- Real constructorless single-threaded static core smoke/state passed **2/2**
-  (0.51s): `ctest --test-dir cmake-build-debug/rxparse-single --parallel 1
-  --output-on-failure -R '^(single_vm_parse_cursor|single_vm_state)$'`.
-  This exercises mandatory registration without autoload or bytecode libraries;
-  NUTF8 is a separate kernel-only test, without a mixed VM value ABI.
-- Maintained Apple ASan rebuilt `rxbvm`, `rxtvm`, `test_parse_cursor_native`,
-  `test_parse_cursor_imports` and `test_parse_cursor_bytes` using
-  `tools/asan-run.sh --phase build --build-dir cmake-build-debugasan
-  --build-jobs 4 --build-leaks off` with repeated `--build-target` options.
-  `tools/asan-run.sh --phase ctest --build-dir cmake-build-debugasan
-  --test-jobs 1 --leaks off --regex '^rxparse_cursor_'` passed **7/7** (2.29s),
-  with the same counts and exact passed normal bytecode. No sanitizer finding
-  was observed. Existing Apple SDK `sprintf` deprecation sites warned only
-  during this rebuild; normal product qualification was warning-free.
+For the native rows, normal invocation is `ctest --test-dir cmake-build-debug
+--parallel 1 --output-on-failure -R <selector>`. Apple ASan uses
+`tools/asan-run.sh --phase ctest --build-dir cmake-build-debugasan --test-jobs 1
+--leaks off --regex <selector>` after affected-target preparation through the
+same maintained runner with four build jobs.
 
-Apple LeakSanitizer is unsupported; Linux LeakSanitizer, real 31-bit/CMS/TSO/
-Windows runtime and hosted proof remain unverified. Source/manifests and the
-local static/NUTF8 controls do not substitute for those platform runs.
+C CORE invocation is `python3 research/level-l/compilers/tests/parse/check-core.py`
+with `--bin cmake-build-debug/bin`,
+`--host cmake-build-debug/research/level-l/compilers/backend/<mode>/parse-core-backend-linked.rxbin`,
+`--artifacts cmake-build-debug/research/level-l/compilers/backend/<mode>/context-contract-runtime`
+and `--vm cmake-build-debug/bin/<vm>`. A checkpoint-only run adds
+`--phase checkpoint`.
+The direct noopt/rxtvm packet fixture takes no arguments; admission takes
+`-a <artifacts>`, and `c-context-contracts` takes `-a <artifacts> parse`,
+using the same artifact directory.
+
+| Scope / command or maintained selector | Observed result and boundary |
+|---|---|
+| Cursor v3: `^rxparse_cursor_` | Normal Debug **7/7** and focused Apple ASan **7/7**: native **551/0**, NUTF8 byte/range **22/0**, B **264/0** in opt/noopt × both VMs, including repeated imports. The later native union below refreshes this group on the repaired VMs. |
+| Legacy cursor: `^(nr14_frozen_parse_contract\|parse_levelg_contract)$` | **2/2** normal Debug; unchanged v1/v2/opcode/B/G contracts retained. The committed prerequisite also retains constructorless static **2/2**; this is separate from real constrained-platform v3 runtime proof. |
+| Unwind/reference/native/cursor union: `^(rxparse_cursor_\|rxassignalcallunwindtests$\|rxasreferencetests$\|rxasreferencecatchtests$\|rxasperf2(referenceguard\|partialreference\|exactrelink)tests$\|rxpa_native_unwind_funcs_dynamic_(opt\|noopt)$)` | **15/15** normal Debug and **15/15** focused Apple ASan, no finding. Expanded full/census fixture passes both VMs × assembler opt/noopt (**8 cells**); optimized direct B trigger catches the original pool error on both VMs. Profiling counters were not rerun. |
+| Shared B: `testRexxClassicParse_{opt,noopt}-linked.rxbin` and `backend/{opt,noopt}/target-parse-source-linked.rxbin`, `--no-autoload` | **125/0** executor and **29/0** source adapter each in opt/noopt × both repaired VMs (**8 cells**). Final maintained images and VMs/providers were privately snapshotted for execution only, then deleted. The registered source fixture's actual `-x` recipe is covered. |
+| `python3 lib/rxfnsc/tests_functional/check_classic_parse_relays.py --source-root . --bin-dir cmake-build-debug/bin --mode <opt\|noopt>` | Reused **163/0** in each of four cells: synthetic named errors injected into unchanged real handler bodies, including exactly-once constructed/failed-factory close. Explicit UTF8 runner I/O preserves generated bytes. Measured noopt/opt preparation plus both-VM runs were 3.03/3.69s; CTest is serial with a 600s hang guard. |
+| C source/shape: focused frontend selector; `python3 research/level-l/compilers/tests/check-parse-frontend.py --build cmake-build-debug --work <temporary> --mode <mode> --vm <vm> --ir <on\|off>` | Selector **214/0**; paired opt/rxbvm and noopt/rxtvm corpus **14 commands per IR mode** (**56 total**), each with assembler opt/noopt. Seven sources/live order/Unicode, located refusal sentinels and caller shape pass with no native compiler on PATH and explicit providers. |
+| C context/adapter: `research/level-l/compilers/tests/check-target-context.py` over actual opt/noopt RXAS | Opt **256/0**, noopt **259/0**, including the 34-export surface and source-state reset/fresh-reference/order contract. |
+| C packet/admission/context: `backend/noopt/{parse-program-contracts,parse-admission,c-context-contracts}-linked.rxbin`, current rxtvm `--no-autoload` | **26/0**, **91/0** and PARSE selector **25/0**. Current opt/rxbvm admission/schema also pass **91/0** and **25/0**. Admission includes absent-original-source acceptance and conflicting same-positive-origin clause refusal on fresh/loaded IR, with immutable input and no output. |
+| Existing DROP contracts, current opt/rxbvm | **47/0**, including the current exact 54-operation schema shape; the PARSE schema addition preserves the existing instruction's checks. |
+| C CORE invocation above | Corrected opt/rxbvm checkpoint **7 commands / 0 failures**; full noopt/rxtvm CORE **43 checks / 43 commands / 0 failures** (35.534s). Successful tools have strict stdout/stderr expectations. OFF/CALL/SIGNAL checkpoints are separate from the subprocess expired-pool fatal oracle: REFERENCE_INVALID, original detail/raw RexxClassicContext provenance, no later marker or native assertion. |
+| Final product: `cmake --build cmake-build-debug --parallel 4 --target stage-product llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt` | **Pass**, 44.201s, no compiler warnings/errors and no repeated C grammar generation. All planned local functional/shape/product checks and scoped local delivery are complete. No complete-PARSE or hosted/platform claim follows. |
+| Unchanged G control: maintained step01 `pipeline-g`, assembler `-n`, link, current rxbvm | **4 commands** produce independent `10/0/3`, with no G source/build change. This G smoke does not exercise C v7 admission or establish new G acceptance. |
+
+The C checkpoint preserves the [existing nonresumable fatal profile](doc/architecture.md):
+`sighalt` precedes `signalorigin`, so an outer B skip handler cannot resume that
+C frame. The corrected subprocess oracle verifies this contract; complete C
+condition/resumption behavior remains CPARSE-AC07 work, not a policy change.
+
+Actual caller/helper RXAS review confirms one packet/executor per invoked
+template, direct caller SOURCEINFO, no hoisted live operands, skipped empty ARG
+gaps, one cursor/owned section snapshot and two existing CharacterScan sites.
+There is no eager operand vector, shrinking-tail copy or prefix replay. Native
+B noopt→opt locals are execute **14→15**, run **25→40**, distribute **29→33**,
+validate **140→152**, parsesource **39→47**. C's nine finite bridges add **35
+executable instructions per procedure** over the former four-name shape: five
+ordinary-path installs and 30 cold instructions. OPTIONS pool reads, uniform
+source checkpoints and conservative context/register allocation remain admitted
+costs. Static shapes/counts establish neither speed nor peak resources.
+
+Apple LeakSanitizer is unsupported; existing Apple SDK `sprintf` deprecations
+occur only in the sanitizer rebuild. Linux LSan, real 31-bit/CMS/TSO/Windows
+runtime, hosted/release and complete service/install/relocation proof remain
+unverified. Local static/NUTF8 controls do not substitute for these platforms.
+The unwind assertion was not a sanitizer finding. Disposable diagnostics and
+private replay snapshots are deleted; no logs, receipts or evidence bundles are
+retained. **CPARSE-STEP05, CPARSE-AC07/08 and all CFC-AC01–12 remain open;
+INTERPRET remains last.**
 
 <a id="current-action-iterate"></a>
 
@@ -589,7 +649,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
 | **CLC-STEP05 — Partial; bounded reviews through ITERATE qualified** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews, static DO and named LEAVE/ITERATE are locally qualified; their whole-instruction dependencies remain open. |
-| **CLC-STEP06 — Partial; C PARSE integration gate** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. [PARSE1–3](#current-action-parse) separates the locally qualified generic cursor, open platform proof and later normalization/exact C integration; ARG uses the same engine. |
+| **CLC-STEP06 — Partial; C PARSE integration gate** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. [PARSE1–3](#current-action-parse) locally qualifies the cursor, shared executor and C integration. Complete conditions/TRACE and platform/delivery proof remain open; ARG/PULL retain separate acceptance using the same executor. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |
 | **CLC-STEP09 — Open throughout** | Inspect caller/helper RXAS every increment and fix direct construction/emission defects immediately. Close C-OPT-01–06, register/call-window/allocation obligations and named remaining costs. Serves AC06/07/10/11. | Uses STEP02 facts and explicit ABI/lifetime rules; final closure follows STEP08. New ISA/storage contracts need approval; production performance edits retain their verdict gate. |

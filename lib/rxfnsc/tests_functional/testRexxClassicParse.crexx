@@ -1,0 +1,414 @@
+/* Independent LCP1 consumer fixtures. The private builder authors the public
+ * envelope directly; it neither imports the C codec nor computes parse spans.
+ * Its synthetic, ordered one-byte origins test runtime structural attribution;
+ * truthful compiler source maps have separate new-C fixtures.
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import rexxclassicparse
+import rexxclassiccontext
+import rexxclassicconfig
+import rexxclassicbifs
+import rexxactivation
+import rexxpool
+import rexxvalue
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call wordcases(reference context)
+  call patterns(reference context)
+  call live(reference context)
+  call refusals(reference context)
+  call errors(reference context)
+  say 'CLASSIC_PARSE|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return
+
+valuecheck: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext, name = .string, expected = .string, label = .string
+  bundle = dereference context
+  pool = dereference bundle.pool()
+  call check(pool.symbolValue(name).asString(1) == expected,label)
+  return
+
+wordcases: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  config = dereference bundle.config()
+  p = .Program(); call p.section('A B C')
+  call rexxclassicparse..execute(context,.RexxValue('  alpha  beta   gamma  '),p.make(0))
+  call valuecheck(context,'A','alpha','first word skips leading blanks')
+  call valuecheck(context,'B','beta','second word skips remaining separators')
+  call valuecheck(context,'C','  gamma  ','last word retains raw remainder')
+  p = .Program(); call p.section('WHOLE')
+  call rexxclassicparse..execute(context,.RexxValue('  raw text  '),p.make(0))
+  call valuecheck(context,'WHOLE','  raw text  ','single target retains all blanks')
+  p = .Program(); call p.section('A B C')
+  call rexxclassicparse..execute(context,.RexxValue('a'),p.make(0))
+  call valuecheck(context,'A','a','short source first')
+  call valuecheck(context,'B','','short source missing word')
+  call valuecheck(context,'C','','short source final remainder')
+  call rexxclassicparse..execute(context,.RexxValue('a' || ' ' || 'b' || ' ' || ' c'),p.make(0))
+  call valuecheck(context,'A','a','Unicode NBSP separator')
+  call valuecheck(context,'B','b','Unicode EM SPACE separator')
+  call valuecheck(context,'C',' c','one Unicode separator consumed')
+  call config.setTextOtherBlanks('·')
+  call rexxclassicparse..execute(context,.RexxValue('a·b··c'),p.make(0))
+  call valuecheck(context,'A','a','configured blank first')
+  call valuecheck(context,'B','b','configured blank second')
+  call valuecheck(context,'C','·c','configured remainder exact')
+  call config.setTextOtherBlanks('')
+  p = .Program(); call p.section('SAME . SAME')
+  call rexxclassicparse..execute(context,.RexxValue('a b c'),p.make(0))
+  call valuecheck(context,'SAME','c','drops consume and repeated targets overwrite in order')
+  p = .Program(); call p.section('. . .')
+  call rexxclassicparse..execute(context,.RexxValue('all fields discarded'),p.make(0))
+  call valuecheck(context,'SAME','c','all-drop section performs no write')
+  p = .Program(); call p.section('A B')
+  call rexxclassicparse..execute(context,.RexxValue('é🙂 mixed'),p.make(1))
+  call valuecheck(context,'A','É🙂','shared simple uppercase with supplementary scalar')
+  call valuecheck(context,'B','MIXED','uppercase remainder')
+  p = .Program()
+  call rexxclassicparse..execute(context,.RexxValue('source still converted'),p.make(1))
+  call check(1,'empty template validates and returns without cursor')
+  return
+
+patterns: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  kind = .int; p = .Program
+  do kind = 3 to 5
+    p = .Program(); call p.section('A B'); call p.position(kind,0); call p.section('REST')
+    call rexxclassicparse..execute(context,.RexxValue('one two three'),p.make(0))
+    call valuecheck(context,'A','one','nonforward section first word')
+    call valuecheck(context,'B','two three','nonforward section complete remainder')
+    call valuecheck(context,'REST','one two three','nonforward section moves next start')
+  end
+  p = .Program(); call p.section('A B'); call p.literal(':'); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('x:y z'),p.make(0))
+  call valuecheck(context,'A','x','literal closes section before word splitting')
+  call valuecheck(context,'B','','literal section has no second word')
+  call valuecheck(context,'REST','y z','literal suffix is captured once')
+  p = .Program(); call p.section('A B'); call p.literal(''); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('one two three'),p.make(0))
+  call valuecheck(context,'A','one','empty pattern first word')
+  call valuecheck(context,'B','two three','empty pattern closes at end')
+  call valuecheck(context,'REST','','empty pattern suffix is empty')
+  p = .Program(); call p.section('A'); call p.literal(':'); call p.section('B C')
+  call p.position(4,0); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('aa:bb cc'),p.make(0))
+  call valuecheck(context,'A','aa','anchored leading section')
+  call valuecheck(context,'B',':bb','relative anchor includes matching literal')
+  call valuecheck(context,'C','cc','anchored remainder word distribution')
+  call valuecheck(context,'REST',':bb cc','zero relative movement retains literal start')
+  p = .Program(); call p.section('A'); call p.literal('東京'); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('λ' || ('00'x as .string) || '東京🙂 z'),p.make(0))
+  call valuecheck(context,'A','λ' || ('00'x as .string),'Unicode and NUL source exact')
+  call valuecheck(context,'REST','🙂 z','multicodepoint delimiter')
+  return
+
+live: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  pool = dereference bundle.pool()
+  call pool.setString('KEY','OLD')
+  call pool.setStemString('PATTERNS.','OLD','!')
+  call pool.setStemString('PATTERNS.','N',':')
+  p = .Program(); call p.section('KEY'); call p.position(3,2)
+  call p.section('PIECE'); call p.input(7,'PATTERNS.KEY'); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('Nleft:right'),p.make(0))
+  call valuecheck(context,'KEY','N','completed section writes KEY')
+  call valuecheck(context,'PIECE','left','later compound operand resolves updated KEY')
+  call valuecheck(context,'REST','right','live delimiter split')
+  call pool.setString('DELIM','/')
+  p = .Program(); call p.section('DELIM'); call p.input(7,'DELIM'); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('left/right'),p.make(0))
+  call valuecheck(context,'DELIM','left','closing operand reads before current section writes')
+  call valuecheck(context,'REST','right','closing operand used old value')
+  call pool.setString('KEY','OLD')
+  p = .Program(); call p.section('KEY BOX.KEY')
+  call rexxclassicparse..execute(context,.RexxValue('N value'),p.make(0))
+  call valuecheck(context,'BOX.N','value','compound target tail resolves at its own write')
+  call pool.setString('DELIM','b')
+  p = .Program(); call p.section('A'); call p.input(7,'DELIM'); call p.section('REST')
+  call rexxclassicparse..execute(context,.RexxValue('ab'),p.make(1))
+  call valuecheck(context,'A','AB','UPPER does not uppercase pattern operands')
+  call valuecheck(context,'REST','','unchanged lowercase pattern is absent')
+  call valuecheck(context,'DELIM','b','pattern variable unchanged')
+  p = .Program(); call p.section('A B')
+  source = .RexxValue('source remains separate')
+  call rexxclassicparse..execute(context,source,p.make(0))
+  call check(source.asString(1) == 'source remains separate','source value survives target writes')
+  return
+
+refusals: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  p = .Program(); call p.section('A B'); call p.literal(':'); call p.section('REST')
+  original = p.make(0)
+  bundle = dereference context; pool = dereference bundle.pool()
+  origins = 40 + length('direct-parse.rexx')
+  descriptor = origins + 20 * (<at..u32>(16) original)
+  sections = descriptor + (<at..u32>(28) original)
+  first_target = sections + 12; second_target = first_target + 13
+  final_target = second_target + 13 + 12
+  mode = .int; caught = .int; packet = .binary
+  do mode = 1 to 28
+    packet = original
+    select
+      when mode = 1 then <at..u8>(0) packet = 0
+      when mode = 2 then <at..u16>(4) packet = 2
+      when mode = 3 then <at..u16>(6) packet = 2
+      when mode = 4 then <at..u32>(8) packet = <blen>(packet) - 1
+      when mode = 5 then <at..u32>(12) packet = 0
+      when mode = 6 then <at..u32>(16) packet = 0
+      when mode = 7 then <at..u32>(20) packet = 0
+      when mode = 8 then <at..u32>(24) packet = 1
+      when mode = 9 then <at..u32>(36) packet = 0
+      when mode = 10 then packet = binsubstr(packet,1,<blen>(packet) - 1)
+      when mode = 11 then packet = packet || ('00'x as .binary)
+      when mode = 12 then <at..u32>(40 + length('direct-parse.rexx') + 20 + 4) packet = 0
+      when mode = 13 then <at..u32>(origins + 20 + 16) packet = 2
+      when mode = 14 then <at..u32>(first_target + 4) packet = 1
+      when mode = 15 then <at..u32>(first_target + 4) packet = 3
+      when mode = 16 then <at..u32>(first_target + 4) packet = 7
+      when mode = 17 then <at..u32>(second_target + 4) packet = 5
+      when mode = 18 then <at..u32>(origins + 5 * 20) packet = 0
+      when mode = 19 then <at..u32>(origins + 2 * 20) packet = 1
+      when mode = 20 then <at..u32>(descriptor + 20) packet = 2
+      when mode = 21 then <at..u8>(descriptor + 10) packet = 0
+      when mode = 22 then <at..u32>(final_target + 4) packet = 4
+      when mode = 23 then <at..u32>(sections + 4) packet = 3
+      when mode = 24 then <at..u8>(first_target + 12) packet = 32
+      when mode = 25 then <at..u8>(descriptor + 13) packet = 0
+      when mode = 26 then <at..u8>(descriptor + 15) packet = 1
+      when mode = 27 then <at..u32>(16) packet = 4294967295
+      otherwise <at..u32>(sections + 8) packet = 4294967295
+    end
+    caught = 0
+    call pool.setString('A','untouched')
+    do
+      call rexxclassicparse..execute(context,.RexxValue('should not write'),packet)
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught,'malformed packet refused ' || mode)
+    call valuecheck(context,'A','untouched','refusal precedes every target effect ' || mode)
+  end
+  p = .Program(); call p.section('A'); call p.input(7,'DELIM'); call p.section('REST')
+  original = p.make(0)
+  input_record = <blen>(original) - 12 - length('DELIM')
+  do mode = 1 to 4
+    packet = original
+    select
+      when mode = 1 then <at..u32>(input_record + 4) packet = 1
+      when mode = 2 then <at..u32>(input_record + 4) packet = 2
+      when mode = 3 then <at..u32>(input_record + 4) packet = 5
+      otherwise <at..u32>(input_record) packet = 1
+    end
+    caught = 0
+    do
+      call rexxclassicparse..execute(context,.RexxValue('should not write'),packet)
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught,'input map cannot borrow unrelated origin/item ' || mode)
+    call valuecheck(context,'A','untouched','input map refuses before target effects ' || mode)
+  end
+  bundle = dereference context; config = dereference bundle.config()
+  call config.useByteProfile()
+  caught = 0
+  do
+    call rexxclassicparse..execute(context,.RexxValue('no profile coercion'),original)
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught & config.isByteProfile(),'BYTE direct profile refused without mutation')
+  call config.useUtf8Profile()
+  return
+
+errors: procedure = .void
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context; pool = dereference bundle.pool()
+  call pool.setString('BAD','Q')
+  call pool.setString('CURRENT','untouched'); call pool.setString('LATER','untouched')
+  p = .Program(); call p.section('EARLY'); call p.position(3,2)
+  call p.section('CURRENT'); call p.input(8,'BAD'); call p.section('LATER')
+  packet = p.make(0); caught = 0
+  do
+    call rexxclassicparse..execute(context,.RexxValue('Nlater'),packet)
+  on signal classic_syntax as problem
+    caught = 1
+    call check(pos('RXC-LC-26.4',problem.message()) = 1,'numeric failure retains original message prefix')
+    call check(pos(' [PARSE direct-parse.rexx:17:',problem.message()) > 0,'failure has authored logical source')
+    call check(pos(' template=1 item=4 action=input#1]',problem.message()) > 0,'failure has physical occurrence and action')
+    call check(problem.module() >= 0 & problem.address() > 0,'failure retains raw bound provenance')
+    runtime_condition = problem as .runtime_signal
+    call rexxclassic_signal_record(bundle.pool(),bundle.activation(),runtime_condition)
+  end
+  call check(caught,'dynamic numeric error relayed')
+  call valuecheck(context,'RC','26','existing recorder retains Classic RC')
+  call valuecheck(context,'.MN','26.4','existing recorder retains Classic message number')
+  call valuecheck(context,'EARLY','N','earlier completed write survives error')
+  call valuecheck(context,'CURRENT','untouched','unfinished section has no write')
+  call valuecheck(context,'LATER','untouched','later section has no write')
+  -- A subsequent call proves cleanup/reuse without retaining native cursor state.
+  p = .Program(); call p.section('RECOVERED')
+  call rexxclassicparse..execute(context,.RexxValue('recovered'),p.make(0))
+  call valuecheck(context,'RECOVERED','recovered','clean execution after failed cursor')
+  return
+
+Program: class
+  _items = .binary
+  _item_count = .int
+  _section_count = .int
+  _input_count = .int
+  _target_count = .int
+  _stored_count = .int
+  _source_bytes = .int
+  _kind = .int[]
+  _flags = .int[]
+  _start = .int[]
+  _finish = .int[]
+  _first = .int[]
+  _last = .int[]
+  _target = .string[]
+  _target_item = .int[]
+  _target_start = .int[]
+  _input = .string[]
+  _input_item = .int[]
+
+  *: factory
+    _item_count = 0; _section_count = 0; _input_count = 0; _target_count = 0
+    _stored_count = 0; _source_bytes = 0
+    return
+
+  item: method = .void
+    arg kind = .int, flags = .int, width = .int
+    header = '0000'x as .binary
+    <at..u8>(0) header = kind; <at..u8>(1) header = flags
+    _items = _items || header
+    _item_count = _item_count + 1
+    _kind[_item_count] = kind; _flags[_item_count] = flags
+    _start[_item_count] = _source_bytes
+    _source_bytes = _source_bytes + width
+    _finish[_item_count] = _source_bytes
+    return
+
+  section: method = .void
+    arg targets = .string
+    count = words(targets); stored = 0
+    index = .int; value = .string
+    do index = 1 to count
+      value = word(targets,index)
+      if value <> '.' then stored = 1
+    end
+    call item(1,stored,count)
+    _section_count = _section_count + 1; _stored_count = _stored_count + stored
+    _first[_item_count] = _target_count + 1
+    do index = 1 to count
+      value = word(targets,index)
+      _target_count = _target_count + 1
+      _target[_target_count] = value; _target_item[_target_count] = _item_count
+      _target_start[_target_count] = _start[_item_count] + index - 1
+    end
+    _last[_item_count] = _target_count
+    return
+
+  literal: method = .void
+    arg value = .string
+    call item(2,0,1)
+    bytes = value as .binary
+    payload = .binary; call binresize payload,8
+    <at..u32>(0) payload = <blen>(bytes); <at..u32>(4) payload = length(value)
+    _items = _items || payload || bytes
+    return
+
+  position: method = .void
+    arg kind = .int, amount = .int
+    call item(kind,0,1)
+    payload = .binary; call binresize payload,8
+    <at..i64>(0) payload = amount
+    _items = _items || payload
+    return
+
+  input: method = .void
+    arg kind = .int, name = .string
+    call item(kind,0,1)
+    payload = '0000'x as .binary
+    <at..u16>(0) payload = _input_count
+    _items = _items || payload
+    _input_count = _input_count + 1
+    _input[_input_count] = name; _input_item[_input_count] = _item_count
+    return
+
+  origin: method = .binary
+    arg first = .int, last = .int
+    result = .binary; call binresize result,20
+    <at..u32>(0) result = first; <at..u32>(4) result = last
+    <at..u32>(8) result = 17; <at..u32>(12) result = first + 1
+    <at..u32>(16) result = 1
+    return result
+
+  make: method = .binary
+    arg upper = .int
+    logical = 'direct-parse.rexx' as .binary
+    origins = origin(0,_source_bytes)
+    item = .int; target = .int; occurrence = .int; name = .binary; record = .binary
+    do item = 1 to _item_count
+      record = origin(_start[item],_finish[item]); origins = origins || record
+    end
+    do target = 1 to _target_count
+      record = origin(_target_start[target],_target_start[target] + 1); origins = origins || record
+    end
+    descriptor = ''x as .binary
+    if _item_count > 0 then do
+      descriptor = '50030C000000000000000100'x as .binary
+      <at..u16>(4) descriptor = _item_count; <at..u16>(6) descriptor = _stored_count
+      <at..u16>(8) descriptor = _input_count
+      descriptor = descriptor || _items
+    end
+    sections = ''x as .binary
+    do item = 1 to _item_count
+      if _kind[item] <> 1 then iterate
+      record = ''x as .binary; call binresize record,12
+      <at..u32>(0) record = item; <at..u32>(4) record = item + 1
+      <at..u32>(8) record = _last[item] - _first[item] + 1
+      sections = sections || record
+      do target = _first[item] to _last[item]
+        record = ''x as .binary; call binresize record,12
+        <at..u32>(4) record = _item_count + 1 + target
+        if _target[target] = '.' then name = ''x as .binary
+        else do; <at..u8>(0) record = 1; name = _target[target] as .binary; end
+        <at..u32>(8) record = <blen>(name)
+        sections = sections || record || name
+      end
+    end
+    inputs = ''x as .binary
+    do occurrence = 1 to _input_count
+      record = ''x as .binary; call binresize record,12
+      item = _input_item[occurrence]; name = _input[occurrence] as .binary
+      <at..u32>(0) record = item; <at..u32>(4) record = item + 1
+      <at..u32>(8) record = <blen>(name)
+      inputs = inputs || record || name
+    end
+    header = .binary; call binresize header,40
+    <at..u8>(0) header = 76; <at..u8>(1) header = 67
+    <at..u8>(2) header = 80; <at..u8>(3) header = 49
+    <at..u16>(4) header = 1; <at..u16>(6) header = upper
+    <at..u32>(12) header = 1; <at..u32>(16) header = 1 + _item_count + _target_count
+    <at..u32>(20) header = _section_count; <at..u32>(24) header = _input_count
+    <at..u32>(28) header = <blen>(descriptor); <at..u32>(32) header = _source_bytes
+    <at..u32>(36) header = <blen>(logical)
+    packet = header || logical || origins || descriptor || sections || inputs
+    <at..u32>(8) packet = <blen>(packet)
+    return packet

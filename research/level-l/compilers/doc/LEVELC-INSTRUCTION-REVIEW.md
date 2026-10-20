@@ -266,7 +266,7 @@ qualification used
 static function-local text keys and hidden owned state, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
-Named END checks are included; the current v6 LEAVE increment below integrates
+Named END checks are included; the qualified v6 LEAVE increment below integrates
 shared invalid-target delivery. The separately qualified ITERATE increment below uses that foundation. Shared labels/EXPOSE, complete expressions/exact recovery and
 resumable conditions/SIGL/clause/TRACE remain open. Independent source/CFG,
 metadata/protocol, runtime/error and actual caller/helper RXAS checks pass;
@@ -285,7 +285,9 @@ Valid edges close crossed states inner-to-outer including the selected loop,
 then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
 transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
-C v6/52 operations and 33 exports are the current exact surface; this LEAVE
+C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
+current [C v7/54/34 contract](architecture.md#current-c-family-contract) adds PARSE.
+This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
 the separately qualified increment below. Shared
 labels/EXPOSE, dynamic loop invalidation, resumable conditions, exact recovery
@@ -307,8 +309,9 @@ fresh pools and cannot target caller loops.
 
 Default C rejects provable invalid targets even in dead source (28.2 without a
 repetitive loop, 28.4 for a missing name); STRICTC signals only when reached.
-Malformed syntax always refuses. The existing v6/52/33/header/admission and
-shared error bridge remain unchanged. Focused source, CFG, paired execution,
+Malformed syntax always refuses. The v6/52/33 foundation, header/admission and
+shared transfer bridge were unchanged in this slice; current PARSE additions
+are separately qualified under the v7 contract. Focused source, CFG, paired execution,
 prior-output and independent actual RXAS checks pass with a shared LEAVE
 regression. Complete source labels/EXPOSE, SIGNAL/INTERPRET invalidation,
 resumable conditions, exact recovery and clause/TRACE remain open.

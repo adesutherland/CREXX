@@ -43,7 +43,7 @@ function(ll_compile NAME SOURCE DIRECTORY)
   string(MAKE_C_IDENTIFIER "${DIRECTORY}_${NAME}" _key)
   crexx_add_import_root(${_key}_imports DIRECTORY "${DIRECTORY}/imports-${NAME}"
     OUTPUT_VARIABLE _imports FILES ${_files} DEPENDS ${_files} ${_producers})
-  add_custom_command(OUTPUT "${DIRECTORY}/${NAME}.rxbin"
+  add_custom_command(OUTPUT "${DIRECTORY}/${NAME}.rxbin" "${DIRECTORY}/${NAME}.rxas"
     COMMAND $<TARGET_FILE:rxc> ${_flags} -x --no-exe-import -i "${DIRECTORY}/imports-${NAME}"
       -o "${DIRECTORY}/${NAME}" "${SOURCE}"
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${DIRECTORY}/${NAME}"
@@ -99,7 +99,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir doprotocol parse frontend rxas)
+      set(_parts ir doprotocol parseprogram parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -149,6 +149,7 @@ foreach(_mode opt noopt)
       "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
     ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
@@ -160,11 +161,28 @@ foreach(_mode opt noopt)
     crexx_add_import_root(llcompiler_c_context_contract_runtime_${_mode}
       DIRECTORY "${_dir}/context-contract-runtime"
       OUTPUT_VARIABLE _c_contract_runtime
-      FILES "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin"
-      DEPENDS rxfnsc llcompiler_target_${_mode}
-        "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin")
+      FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin"
+      DEPENDS library rxfnsc llcompiler_target_${_mode}
+        "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin")
     add_custom_target(llcompiler_c_context_contracts_${_mode}
       DEPENDS "${_dir}/c-context-contracts-linked.rxbin" "${_c_contract_runtime}")
+    # Independent packet and selector fixtures, separate from source grammar.
+    foreach(_parse_fixture program-contracts admission core-backend)
+      ll_compile(parse-${_parse_fixture}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/parse/${_parse_fixture}.crexx"
+        "${_dir}" ${_c_contract_inputs})
+      add_custom_command(OUTPUT "${_dir}/parse-${_parse_fixture}-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/parse-${_parse_fixture}-linked"
+          "${_dir}/parse-${_parse_fixture}.rxbin" ${_c_contract_inputs}
+        DEPENDS rxlink "${_dir}/parse-${_parse_fixture}.rxbin" ${_c_contract_inputs} VERBATIM)
+    endforeach()
+    get_target_property(_c_runtime_rxas rxfnsc CREXX_RXFNSC_MEMBER_RXAS)
+    add_custom_target(llcompiler_c_parse_core_${_mode}
+      DEPENDS "${_dir}/parse-program-contracts-linked.rxbin"
+        "${_dir}/parse-admission-linked.rxbin"
+        "${_dir}/parse-core-backend-linked.rxbin" "${_c_contract_runtime}"
+        "${_dir}/llctarget.rxas" ${_c_runtime_rxas})
+    add_dependencies(llcompiler_c_parse_core_${_mode} rxfnsc)
     set(_c_drop_inputs ${_c_contract_inputs}
       "${_classic_names}"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparse.rxbin"
@@ -196,6 +214,32 @@ foreach(_mode opt noopt)
           TIMEOUT 300 LABELS "level-l;levelc;compiler-backend;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_contracts_test}
           TARGETS llcompiler_c_context_contracts_${_mode} llcompiler_target_${_mode} rxfnsc ${_vm})
+      endif()
+    endforeach()
+
+    ll_compile(target-parse-source "${CMAKE_CURRENT_SOURCE_DIR}/tests/target-parse-source.crexx" "${_dir}"
+      "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      "${_dir}/llctarget.rxbin")
+    set(_parse_source_runtime "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+    add_custom_command(OUTPUT "${_dir}/target-parse-source-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -o "${_dir}/target-parse-source-linked"
+        "${_dir}/target-parse-source.rxbin" "${_dir}/llctarget.rxbin" ${_parse_source_runtime}
+      DEPENDS rxlink classlib rxunicode_core "${_dir}/target-parse-source.rxbin"
+        "${_dir}/llctarget.rxbin" ${_parse_source_runtime} VERBATIM)
+    add_custom_target(llcompiler_target_parse_source_${_mode}
+      DEPENDS "${_dir}/target-parse-source-linked.rxbin")
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        set(_test "llcompiler_target_parse_source_${_mode}_${_vm}")
+        add_test(NAME ${_test} COMMAND $<TARGET_FILE:${_vm}>
+          --no-autoload "${_dir}/target-parse-source-linked.rxbin")
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "TARGET_PARSE_SOURCE[|]checks=[0-9]+[|]failures=0"
+          TIMEOUT 300 LABELS "library;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_test}
+          TARGETS llcompiler_target_parse_source_${_mode} fs cstream ${_vm})
       endif()
     endforeach()
 
@@ -231,6 +275,40 @@ foreach(_mode opt noopt)
           TIMEOUT 300 LABELS "library;levelc;compiler-backend;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_context_test}
           TARGETS llcompiler_target_context_${_mode} fs cstream ${_vm})
+      endif()
+    endforeach()
+    foreach(_vm rxbvm rxtvm)
+      if(TARGET ${_vm})
+        foreach(_fixture program-contracts admission)
+          set(_test "llcompiler_c_parse_${_fixture}_${_mode}_${_vm}")
+          set(_arguments)
+          if(_fixture STREQUAL "admission")
+            list(APPEND _arguments -a "${_dir}/context-contract-runtime")
+          endif()
+          add_test(NAME ${_test} COMMAND $<TARGET_FILE:${_vm}>
+            --no-autoload "${_dir}/parse-${_fixture}-linked.rxbin" ${_arguments})
+          set_tests_properties(${_test} PROPERTIES
+            PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300
+            LABELS "level-l;levelc;compiler-backend;optimizer-parity")
+          crexx_register_test_prep_targets(TESTS ${_test}
+            TARGETS llcompiler_c_parse_core_${_mode} ${_vm})
+        endforeach()
+        # Isolated opt/rxbvm CORE: 42 commands in 34.361s. The checkpoint-only
+        # phase qualifies its added lifecycle control without replaying others.
+        # Serialize nested tool use; 600s is a generous hang guard.
+        set(_test "llcompiler_c_parse_core_${_mode}_${_vm}")
+        add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+          "${CMAKE_CURRENT_SOURCE_DIR}/tests/parse/check-core.py"
+          --bin "${CMAKE_BINARY_DIR}/bin"
+          --host "${_dir}/parse-core-backend-linked.rxbin"
+          --artifacts "${_dir}/context-contract-runtime" --vm $<TARGET_FILE:${_vm}>)
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "PARSE_CORE[|]checks=[0-9]+[|]commands=[0-9]+[|]failures=0"
+          TIMEOUT 600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+          LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+          llcompiler_c_parse_core_${_mode} library classlib rxfnsc rxunicode_core
+          compiler_exit_bin fs cstream rxc rxas rxlink ${_vm})
       endif()
     endforeach()
   endif()
@@ -298,7 +376,9 @@ foreach(_mode opt noopt)
         set_tests_properties(${_test} PROPERTIES PASS_REGULAR_EXPRESSION "failures=0"
           TIMEOUT 300 LABELS "library;level-l;compiler-frontends;optimizer-parity")
         if(_group STREQUAL "grammar")
-          # IF adds a measured 44s Debug component; SELECT adds 50s and DO 66s.
+          # IF adds 44s Debug, SELECT 50s, DO 66s and PARSE 65.86s measured
+          # components. PARSE's focused selector remains available without a
+          # duplicate CTest registration; grammar already invokes it.
           # Serialize the expanded grammar workload with a generous hang guard.
           set_tests_properties(${_test} PROPERTIES TIMEOUT 900
             RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
@@ -324,6 +404,27 @@ if("c" IN_LIST _languages)
     list(APPEND _drop_vms rxtvm)
     list(APPEND _drop_vm_args --vm rxtvm)
   endif()
+  # Isolated opt/rxbvm source PARSE: 14 commands in 37.670s IR-on / 38.288s
+  # IR-off, each including both assembler modes. Preserve serial scheduling.
+  foreach(_mode opt noopt)
+    foreach(_vm IN LISTS _drop_vms)
+      foreach(_ir on off)
+        set(_test "llcompiler_c_parse_frontend_${_mode}_${_ir}_${_vm}")
+        add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+          "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-parse-frontend.py"
+          --build "${CMAKE_BINARY_DIR}"
+          --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+          --mode ${_mode} --vm ${_vm} --ir ${_ir})
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "PARSE_FRONTEND[|]commands=[0-9]+[|]failures=0"
+          TIMEOUT 600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+          LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
+        crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+          llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+          library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
+      endforeach()
+    endforeach()
+  endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
       --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/drop-measure"

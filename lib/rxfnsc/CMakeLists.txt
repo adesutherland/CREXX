@@ -137,15 +137,19 @@ set(RXFNSC_MODULES
   RexxClassicDiagnosticCatalog
   RexxDoState
   RexxClassicBifs
+  RexxClassicParse
   RexxClassicBitFunctions
   ${RXFNSC_DIRECT_BIF_MODULES}
 )
 
 set(RXFNSC_BINS)
+set(RXFNSC_MEMBER_RXAS)
 set(RXFNSC_MEMBER_ROOT "${CMAKE_CURRENT_BINARY_DIR}/members")
 foreach(MOD IN LISTS RXFNSC_MODULES)
   list(APPEND RXFNSC_BINS
     "${RXFNSC_MEMBER_ROOT}/${MOD}/${MOD}.rxbin")
+  list(APPEND RXFNSC_MEMBER_RXAS
+    "${RXFNSC_MEMBER_ROOT}/${MOD}/${MOD}.rxas")
 endforeach()
 
 set(RXFNSC_MEMBER_BUILD_DEPS
@@ -225,6 +229,7 @@ set(RXFNSC_DEPS_RexxClassicAddress RexxClassicState RexxActivationArguments Rexx
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue RexxClassicState RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicContext RexxActivationArguments RexxVariablePool RexxClassicConfig)
+set(RXFNSC_DEPS_RexxClassicParse RexxClassicContext RexxClassicBifs RexxClassicDatatype RexxClassicCharacterScan RexxValue RexxVariablePool RexxActivationArguments RexxClassicConfig)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue RexxClassicStream)
@@ -327,10 +332,9 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     set(_rxfnsc_primary_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
   endif()
   add_custom_command(
-    OUTPUT "${_binfile}"
+    OUTPUT "${_binfile}" "${_member_dir}/${_basename}.rxas"
     BYPRODUCTS
       "${_member_source}"
-      "${_member_dir}/${_basename}.rxas"
       ${_rxfnsc_staged_sources}
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_source_root}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -410,6 +414,9 @@ add_custom_command(
 add_custom_target(rxfnsc ALL
   DEPENDS "${_rxfnsc_publish_image}"
 )
+# QA consumers read real producer metadata from every member's readable RXAS.
+# Export the exact co-output set without creating a second compilation rule.
+set_property(TARGET rxfnsc PROPERTY CREXX_RXFNSC_MEMBER_RXAS "${RXFNSC_MEMBER_RXAS}")
 
 add_dependencies(rxfnsc library classlib)
 

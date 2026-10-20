@@ -50,6 +50,13 @@ open stages are not implemented capability. Shared Unicode algorithms and the
 C adapters use that core directly, while G retains its API and two wrapper
 classes. New-compiler BIF binding and live activation/context work remain open.
 
+The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
+VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
+patterns and absolute/relative positions. It constructs immutable binary
+templates for the shared B executor and mandatory VM cursor. Its finite C
+profile is locally qualified; complete conditions/TRACE, declared platforms and
+the separate ARG/PULL instruction reviews remain open in the plan.
+
 [The walkthrough](doc/pipeline-walkthrough.md) and maintained examples describe
 the implemented PoC. C completion proceeds instruction by instruction, ending
 with INTERPRET. Correct execution and emitted-code quality are both acceptance

@@ -55,6 +55,7 @@ parsed: class
     clause = 1; depth = 0; condition = 0; after = ''
     arm = 0; operandmode = ''
     doheader = 0; dofirst = 0; docondition = 0
+    parsemode = ''
     owners = .string[]; ownercontrols = .string[]; ownercount = 0; endcontrol = ''
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
@@ -78,6 +79,7 @@ parsed: class
       if kind = sep then do; namespaceclause = 0; exports = 0; end
       if kind = sep & depth = 0 then operandmode = ''
       if kind = sep & depth = 0 then doheader = 0
+      if kind = sep & depth = 0 then parsemode = ''
       endname = 0
       /* A matching ELSE at the END-name boundary wins before a delimiter or
        * another ELSE; an ordinary following instruction keeps the outer arm.
@@ -92,7 +94,30 @@ parsed: class
         end
       end
       if kind = id then do
-        if next = colon then kind = language.tokenid('labelname')
+        if next = colon & parsemode = '' then kind = language.tokenid('labelname')
+        else if parsemode <> '' then do
+          if parsemode = 'source' | parsemode = 'header' then do
+            if parsemode = 'header' & spelling = 'UPPER' then do
+              kind = language.tokenid('parseupper'); parsemode = 'source'
+            end
+            else if spelling = 'VALUE' then do
+              kind = language.tokenid('parsevalue'); parsemode = 'value'
+            end
+            else if spelling = 'VAR' then do
+              kind = language.tokenid('parsevar'); parsemode = 'var'
+            end
+            else do
+              kind = language.tokenid('parsekind'); parsemode = 'template'
+            end
+          end
+          else if parsemode = 'var' then parsemode = 'template'
+          else if parsemode = 'value' & depth = 0 & spelling = 'WITH' then do
+            kind = language.tokenid('parsewith'); parsemode = 'template'
+          end
+          else if parsemode = 'template' & depth = 0 & spelling = 'ELSE' & ownercount > 0 then do
+            if owners[ownercount] = 'if' then do; word = 'ELSE'; parsemode = ''; end
+          end
+        end
         else if depth = 0 then do
           if endname then nop
           else if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
@@ -113,10 +138,10 @@ parsed: class
               if owners[ownercount] = 'if' then word = 'ELSE'
             end
           end
-          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE PARSE EXPOSE') > 0 then do
+          else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP SELECT WHEN OTHERWISE') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
@@ -130,6 +155,7 @@ parsed: class
         end
       end
       if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
+      if word = 'PARSE' then parsemode = 'header'
       if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; ownercontrols[ownercount] = ''; end
       if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
       if word = 'END' then do
@@ -207,17 +233,32 @@ parsed: class
       previous = kind
     end
     joined = .llcore..stream.tokens(source)
-    previous = -1; previousend = 0; beforeprevious = -1
+    previous = -1; previousend = 0; previousstart = 0; beforeprevious = -1
     number = language.tokenid('number'); string = language.tokenid('string')
     callword = language.tokenid('callword'); dropword = language.tokenid('dropword'); dropping = 0
+    parsing = 0; parsetemplate = 0; parsevarname = 0; dot = language.tokenid('parsedot')
     do i = 0 to normalized.size() - 1
       kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
       if kind = sep | kind = thenword | kind = elseword then dropping = 0
+      if kind = sep | kind = thenword | kind = elseword then do; parsing = 0; parsetemplate = 0; parsevarname = 0; end
+      if kind = language.tokenid('parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
+      if kind = language.tokenid('parsevalue') then do; parsing = 2; parsetemplate = 0; end
+      if kind = language.tokenid('parsevar') then parsevarname = 1
+      if kind = language.tokenid('parsekind') | kind = language.tokenid('parsewith') then do; parsing = 1; parsetemplate = 1; end
+      /* A constant symbol cannot become multiple template items merely
+       * because this narrower lexer recognizes its numeric/dot prefix.
+       * Punctuation delimits; comments/whitespace preserve an authored gap. */
+      if parsetemplate & previousend = first then do
+        if (previous = number & kind = id) | (previous = dot & (kind = dot | kind = id)) then do
+          _status = 1; _offset = previousstart
+          _error = 'LL_COMPILER_SYNTAX: RXC-LC-38.1: invalid parsing template constant symbol'; return
+        end
+      end
 
       leftterm = previous = id | previous = number | previous = string | previous = closing | ('c' = 'g' & previous = language.tokenid('presence'))
       rightterm = kind = id | kind = number | kind = string | kind = opening | ('c' = 'g' & kind = language.tokenid('presence'))
       function = previous = id & kind = opening & previousend = first
-      if dropping = 0 & leftterm & rightterm & function = 0 & beforeprevious <> callword then do
+      if dropping = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword then do
         token = language.tokenid('abut')
         if first > previousend then token = language.tokenid('blank')
         ok = joined.synthetic(token,previousend)
@@ -225,11 +266,14 @@ parsed: class
       if first = last then ok = joined.synthetic(kind,first)
       else ok = joined.append(kind,first,last)
       if kind = dropword then dropping = 1
-      beforeprevious = previous; previous = kind; previousend = last
+      if parsevarname & kind = id then do; parsetemplate = 1; parsevarname = 0; end
+      beforeprevious = previous; previous = kind; previousend = last; previousstart = first
     end
     _status = request.parse_tokens(joined)
     if _status <> 0 then do
-      _error = syntaxmessage(request.error()); _offset = request.offset(); return
+      _error = syntaxmessage(request.error()); _offset = request.offset()
+      _error = parsemessage(language,joined,_offset,_error)
+      return
     end
     _tree = request.ast(); _status = _tree.status(); _error = _tree.error()
     return
@@ -339,7 +383,7 @@ headerpolicy: procedure = .llcomments..rules
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for parse'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))
@@ -359,6 +403,60 @@ syntaxmessage: procedure = .string
     end
   end
   return 'LL_COMPILER_SYNTAX: ' || text
+
+/** Decorate the LR failure with Classic PARSE's contextual identity. This
+ * inspects only classified prefixes at the failed location; LR still owns
+ * all template syntax and the frontend owns numeric/literal admission. */
+parsemessage: procedure = .string
+  arg language = .lllanguage..definition, tokens = .llcore..stream, offset = .int, fallback = .string
+  i = .int; j = .int; kind = .int
+  mode = ''; upperflag = 0; prefix = 0; failedkind = -1
+  do i = 0 to tokens.size() - 1
+    if tokens.start(i) > offset then leave
+    kind = tokens.symbol(i)
+    if tokens.start(i) = offset then failedkind = kind
+    if mode = 'value' & kind = language.tokenid('parsewith') & tokens.start(i) = offset then return fallback
+    select
+      when kind = language.tokenid('parseword') then do; mode = 'header'; upperflag = 0; prefix = 0; end
+      when mode = '' then nop
+      when kind = language.tokenid('parseupper') then do; mode = 'header'; upperflag = 1; end
+      when kind = language.tokenid('parsevalue') then mode = 'value'
+      when kind = language.tokenid('parsevar') then mode = 'var'
+      when kind = language.tokenid('parsekind') | kind = language.tokenid('parsewith') then mode = 'template'
+      when mode = 'var' & kind = language.tokenid('identifier') then mode = 'template'
+      when kind = language.tokenid('separator') | kind = language.tokenid('elseword') then do
+        if tokens.start(i) < offset then mode = ''
+      end
+      otherwise nop
+    end
+    if mode = 'template' then do
+      if kind = language.tokenid('assign') | kind = language.tokenid('plus') | kind = language.tokenid('minus') then prefix = 1
+      else if tokens.start(i) < offset then prefix = 0
+    end
+  end
+  select mode
+    when '' then return fallback
+    when 'header' then do
+      code = '25.12'; if upperflag then code = '25.13'
+      return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': PARSE requires a source type'
+    end
+    when 'var' then return 'LL_COMPILER_SYNTAX: RXC-LC-20.1: PARSE VAR requires a variable name'
+    when 'value' then do
+      /* A present WITH following a malformed expression is not missing.
+       * Preserve the LR expected-token message for that existing expression. */
+      do j = i to tokens.size() - 1
+        kind = tokens.symbol(j)
+        if kind = language.tokenid('separator') | kind = language.tokenid('elseword') then leave
+        if kind = language.tokenid('parsewith') then return fallback
+      end
+      return 'LL_COMPILER_SYNTAX: RXC-LC-38.3: PARSE VALUE instruction requires WITH keyword'
+    end
+    otherwise do
+      if prefix & failedkind = language.tokenid('identifier') then return 'LL_COMPILER_SYNTAX: RXC-LC-38.2: invalid parsing position'
+      return 'LL_COMPILER_SYNTAX: RXC-LC-38.1: invalid parsing template'
+    end
+  end
+  return fallback
 
 tokenname: procedure = .string
   arg name = .string

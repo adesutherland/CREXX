@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',6)
+  c = schema.family('crexx.c',7)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -31,6 +31,7 @@ registerfamilies: procedure = .void
   types[9] = c.type('arguments',.llir..bytescodec() as .object) as .object
   types[10] = c.type('result',.llir..bytescodec() as .object) as .object
   types[11] = schema.boolean() as .object
+  types[12] = c.type('parseprogram',.llir..bytescodec() as .object) as .object
   k = .int; name = .string
   call llscalar..declare(c,'load',types,'context:7',6,'name:2','context','condition')
   call llscalar..declare(c,'store',types,'context:7 value:6',0,'name:2','context','condition')
@@ -70,4 +71,6 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'while.truth',types,'value:6 context:7',11,'','context','condition')
   call llscalar..declare(c,'until.truth',types,'value:6 context:7',11,'','context','condition')
   call llscalar..declare(c,'transfer.invalid',types,'',0,'code:2 name:2','none','condition','diverges')
+  call llscalar..declare(c,'parse.source',types,'context:7',6,'kind:2 ordinal:1','context.input','condition.resource')
+  call llscalar..declare(c,'parse.execute',types,'context:7 source:6',0,'program:12','context.input.output.observation','condition.resource')
   return

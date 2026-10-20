@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -10,7 +10,62 @@ import rexxclassicbifs
 import rexxclassicbifarg
 import rexxclassicbiflength
 import rexxclassicbifnumeric
+import rexxclassicbifstream
+import rexxclassicconfig
 import rexxdostate
+
+/** Acquire one PARSE source without consuming its caller's condition transport.
+ * @param context Borrowed authoritative activation, current pool and config.
+ * @param kind ARG, PULL, LINEIN, SOURCE or VERSION, as admitted by C v7.
+ * @param ordinal Positive raw ARG position, zero for every other source.
+ * @param caller_source The C caller's SOURCEINFO text for SOURCE, empty otherwise.
+ * @param source_state Caller-owned BIF context storage, reset once on every call.
+ * @return Detached raw value; the caller checks error/NOTREADY before parsing.
+ * @signal REFERENCE_INVALID Caller-owned source-state storage is not live.
+ * @signal INVALID_ARGUMENTS Source kind, ordinal or caller metadata is invalid.
+ */
+parsesource: procedure = .rexxvalue..RexxValue
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg context = reference .rexxclassiccontext..RexxClassicContext, kind = .string, ordinal = .int, caller_source = .string, source_state = reference .rexxclassicbifs..RexxBifCallContext
+  if <refvalid>(source_state) = 0 then do
+    assembler signal "REFERENCE_INVALID", "Classic PARSE source state reference is not live"
+    return .rexxvalue..RexxValue('')
+  end
+  if kind <> 'ARG' & kind <> 'PULL' & kind <> 'LINEIN' & kind <> 'SOURCE' & kind <> 'VERSION' then do
+    assembler signal "INVALID_ARGUMENTS", "Invalid Classic PARSE source kind"
+    return .rexxvalue..RexxValue('')
+  end
+  if (kind = 'ARG' & ordinal < 1) | (kind <> 'ARG' & ordinal <> 0) |,
+     (kind <> 'SOURCE' & caller_source <> '') then do
+    assembler signal "INVALID_ARGUMENTS", "Invalid Classic PARSE source operands"
+    return .rexxvalue..RexxValue('')
+  end
+  bundle = dereference context
+  state = dereference source_state
+  /* Reset linked storage without reading an old context whose formerly bound
+   * pool may already have expired. Direct factory publication replaces the
+   * value's weak token; obtain a fresh token from the same caller-owned slot
+   * before forwarding it. No reference to helper-local context storage escapes. */
+  state = .rexxclassicbifs..RexxBifCallContext.expression(kind)
+  current_state_ref = reference state
+  call state.clearError()
+  values = .rexxvalue..RexxValue[]; presence = .int[]
+  call state.setArguments(values,presence)
+  config_ref = bundle.config(); call state.setConfig(config_ref)
+  pool_ref = bundle.pool(); call state.setCallerPool(pool_ref)
+  activation_ref = bundle.activation(); call state.setCallerActivation(activation_ref)
+  activation = dereference activation_ref
+  config = dereference config_ref
+  select
+    when kind = 'ARG' then return activation.argument(ordinal)
+    when kind = 'PULL' then return .rexxvalue..RexxValue(config.pullText())
+    when kind = 'LINEIN' then return rexxclassicbifstream..rexxclassicbif_linein(current_state_ref)
+    when kind = 'SOURCE' then return .rexxvalue..RexxValue(config.sourceText(caller_source,activation.programSourceMode()))
+    otherwise return .rexxvalue..RexxValue(config.versionText())
+  end
+  return .rexxvalue..RexxValue('')
 
 /** Literal and pool helpers own values only during construction; pool access borrows storage. */
 literal: procedure = .RexxValue
