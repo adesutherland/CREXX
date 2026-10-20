@@ -185,6 +185,7 @@ run_logged() {
     local logfile_abs
     local rc=0
     local monitor_pid=""
+    local started_seconds=$SECONDS
 
     echo "==> $name"
     echo "    log: $logfile"
@@ -235,6 +236,7 @@ run_logged() {
 
     active_pid=""
     active_name=""
+    printf '\nElapsed wall seconds: %s\n' "$((SECONDS - started_seconds))" >> "$logfile"
 
     if [[ "$rc" -ne 0 ]]; then
         echo "==> $name failed with rc $rc"

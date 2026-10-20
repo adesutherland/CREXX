@@ -904,6 +904,91 @@ publication status is hotfix implementation with candidate qualification
 pending, scheduled activation disabled, and no master/develop promotion. Hosted
 run links own later observed outcomes; do not add a CI-status-only commit.
 
+### Candidate correction: standalone bootstrap declaration fixture
+
+At `2d167496c6d67b96adc89f57bc705328de017b7c`, candidate run
+[39419769451](https://github.com/adesutherland/CREXX/actions/runs/39419769451)
+prepares/seals Linux ordinary fixtures in 11m01s and Apple ordinary fixtures in
+20m52s. Linux's extra ordinary correctness step then executes 3,260 of 3,293
+selected cells: 3,259 pass, `rxlang_bootstrap_build_order` fails immediately
+(0.04s), and 33 remain unrun. CTest takes 1,826.00 seconds. No timeout or
+sanitizer report is involved. Its private CMake root copies the real Level L
+build declarations but includes only the import-root helper; those declarations
+now also require `CrexxQaFixtures.cmake`. The correction includes that real
+module, preserving the existing instrumented stand-ins and all clean/no-op,
+missing-L2, source-change and final-no-op freshness assertions. Native product,
+producer commands, fixture outputs and every other runtime oracle are unchanged.
+The public standalone bootstrap root needs the same include, and its lifecycle
+and older comment snapshot copy both required modules. The latter receives only
+that compatibility copy correction; its pre-existing snapshot/path limitations
+are outside this repair. This is a test harness integration defect within
+SCOPE-AC03/04, not a memory-safety finding.
+
+The Linux ordinary build also reports one `-Wformat-truncation` warning in
+`driver/tests/project_failure_helper.c`. Its checked path construction now
+reserves the complete maximum suffix and rejects truncated `snprintf` results.
+Only `crexx_project_worker_diagnostics` owns that fake producer; it was among
+the 33 unrun cells. Native product code and the other 3,259 passing cells'
+owning sources/oracles are unchanged. Apple ordinary preparation emits no
+compiler warnings. The canceled Apple instrumented build/preparation emits
+303 macOS SDK `sprintf` deprecation warnings across unchanged first-party and
+DSLSH source sites; that observed warning limitation is retained, without a
+blanket suppression or a claim about the historical baseline warning count.
+
+Both remaining sanitizer jobs select the deterministically broken bootstrap
+fixture. They were canceled at 13:02 UTC rather than consuming the remaining
+hours on known-invalid candidates. Linux was still building; Apple had entered
+CTest after its pre-test native audit verified **634 built native source
+objects and 312 products/provider copies**. One downloaded diagnostic copy per
+job was inspected: no sanitizer diagnostic was emitted. These are partial
+observations, not completed profile proof. Downloaded/task-created diagnostics
+are deleted after this summary.
+
+Focused repair proof on Apple arm64, original producers and one test job:
+
+- Runner phase ctest with regex
+  `^(rxlang_bootstrap_build_order|sanitizer_strategy_contract)$` passes **3/3**
+  (including integrity) in **20.14 seconds** normal Debug and **19.44 seconds**
+  maintained ASan. All ten independent policy/preparation behaviors pass; all
+  original bootstrap clean/missing-L2/source-change/no-op assertions remain.
+- Public `langtools/bootstrap` configures independently with ordinary host
+  tools, then runner phase build target `rexx/lllimits.rxbin` executes original
+  compile/assemble commands and produces the 18,783-byte image. No external
+  fixture marker is created; the temporary tree is removed. This bounded
+  forwarding proof does not rerun the separately owned full lifecycle campaign.
+- Runner builds target `project_failure_helper` warning-clean in both trees;
+  regex `^crexx_project_worker_diagnostics$` passes **2/2** including integrity
+  in **1.49 seconds** ordinary Debug and **3.82 seconds** Apple ASan. Apple
+  build/test leak detection is off because its runtime lacks LSan support.
+- Actionlint, runner shell syntax and `git diff --check` pass for the correction;
+  all ten behavioral contracts pass again in **3.02 seconds** after phase timing
+  output is added.
+
+The repaired exact-head candidate retains **three fresh, complete sanitizer
+jobs**: Linux original full U, Linux separated daily U−10 and Apple separated
+daily U−10. This repeat is required by AC05's clean candidate execution, not
+additional unchanged assurance. Strict completion/profile markers are unchanged.
+The runner reports elapsed wall seconds for each logged phase, so native build,
+qa-preparation and CTest costs can be extracted from one diagnostic artifact copy.
+Only ordinary correctness continues from valid retained evidence: optional
+manual candidate input `ordinary_regex` selects precisely the failed cell plus
+all 33 unrun cells (34), with the integrity setup added automatically (35).
+The empty input still runs full ordinary correctness; an arbitrary regex
+receipt never establishes full ordinary coverage. The approved continuation is:
+
+```text
+^(INT|QUIT|TERM|crexx_(driver_output_lock|process_runtime|project_build_contract|project_worker_diagnostics)|product_install_inventory|rexxscript1_rxbvm|rexxscript_ast_(noopt|opt)_(rxbvm|rxtvm)|rxas_label_cycles|rxbuild_demo_build_order|rxlang_bootstrap_build_order|rxpa_(external_sdk_consumer|signature_diagnostics)|ts_llstructuredflow_(earley|ll1|lr1|packrat)_(noopt|opt)_(rxbvm|rxtvm))$
+```
+
+Generated discovery verifies exactly 34 owning names match. The prior 3,259
+ordinary passes plus these 34 owning cells cover U=3,293, provided the latter
+all pass; integrity deliberately overlaps. This explicit ordinary union does
+not manufacture a single-run broad sanitizer marker. Product/producer/library
+and all remaining ordinary test inputs are identical to `2d167496c`; only the
+bootstrap helper inclusion/snapshots, this unrun worker helper and manual
+continuation wiring change. Clean candidate outcomes and Linux broad closure
+remain pending; scheduled activation stays disabled.
+
 ### Numbered acceptance criteria
 
 1. **SCOPE-AC01 — investigation verified, repair open:** account for the

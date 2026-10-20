@@ -13,7 +13,9 @@ shutil.copytree(root/'langtools',source/'langtools')
 (source/'lib/rxfnsg/unicode').mkdir(parents=True)
 for name in ['LevelL.cmake','gennorm2.levell']:
  shutil.copyfile(root/'lib/rxfnsg/unicode'/name,source/'lib/rxfnsg/unicode'/name)
-(source/'cmake').mkdir();shutil.copy2(root/'cmake/CrexxImportRoots.cmake',source/'cmake/CrexxImportRoots.cmake')
+(source/'cmake').mkdir()
+for name in ['CrexxImportRoots.cmake', 'CrexxQaFixtures.cmake']:
+ shutil.copy2(root/'cmake'/name,source/'cmake'/name)
 (blocked/'re2c').write_text('#!/bin/sh\necho forbidden-re2c-invocation >> "'+str(out/'forbidden-re2c.log')+'"\nexit 97\n');(blocked/'re2c').chmod(0o755)
 env=dict(os.environ,PATH=str(blocked)+os.pathsep+os.environ['PATH']);records=[]
 def run(name,args,success=True):

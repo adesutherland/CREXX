@@ -16,6 +16,10 @@ on:
         description: Optional source commit for focused or candidate qualification
         type: string
         default: ''
+      ordinary_regex:
+        description: Optional ordinary continuation regex (manual candidate only; empty retains full)
+        type: string
+        default: ''
 
 # Qualification does not activate the scheduled daily policy. Master rollout
 # requires Adrian's separate decision after the clean candidate measurements.
@@ -193,13 +197,17 @@ jobs:
           python3 tools/sanitizer-fixtures.py prepare --build-dir "$RUNNER_TEMP/ordinary" \
             --build-jobs 4 --build-leaks "$leaks"
 
-      - name: Candidate full ordinary correctness (Linux donor)
+      - name: Candidate ordinary correctness (Linux donor)
         if: inputs.qualification == 'candidate' && steps.configure.outputs.profile == 'daily' && matrix.platform == 'linux'
         shell: bash
+        env:
+          QA_ORDINARY_REGEX: ${{ inputs.ordinary_regex }}
         run: |
           set -euo pipefail
+          selection=()
+          if [ -n "$QA_ORDINARY_REGEX" ]; then selection+=(--regex "$QA_ORDINARY_REGEX"); fi
           tools/asan-run.sh --build-dir "$RUNNER_TEMP/ordinary" --phase ctest \
-            --profile full --test-jobs 8 --leaks on --no-live-tail
+            --profile full --test-jobs 8 --leaks on --no-live-tail "${selection[@]}"
 
       - name: Complete instrumented build and selected runtime scope
         id: execution
