@@ -198,7 +198,9 @@ python3 tests/check_classic_package.py --runtime /path/to/oorexx/bin/rexx
 
 The runner identifies the interpreter through PARSE VERSION, transports fixture
 strings as exact UTF-8 hex literals and uses the shared JSON oracle without
-runtime-specific expectations. `--common-only` runs just the literal fixtures.
+runtime-specific expectations. `--common-only` runs just the literal fixtures. `--groups fields` selects a
+Classic diagnostic group; the default runs all five groups in fresh processes
+with live progress and elapsed times. A selected subset is not full qualification.
 Full checks include every row endpoint and all 100,000 cells through indexed
 writing/canonical-byte comparison, accepted/first-excess limits,
 16 MiB round trips, immutable edits, nested calls, numeric context, malformed
@@ -238,7 +240,8 @@ Python 3.12 is test tooling. Runtime assets and consumers are disposable;
 nothing is uploaded to rexxpository by the workflow.
 
 Pushes affecting this package on hotfix2/develop/master and relevant pull
-requests start qualification; manual dispatch is also declared. For a
+requests start qualification. Manual dispatch can select a runtime, platform
+and Classic diagnostic group; `all` retains the full qualification scope. For a
 focused local replay on a disposable Linux/Windows x64 CI machine:
 
 ```sh

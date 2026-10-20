@@ -12,6 +12,22 @@ on:
       - packages/rexx-csv/**
       - .github/workflows/csv-qualification.yml
   workflow_dispatch:
+    inputs:
+      runtime:
+        description: Runtime selection; all runs the full matrix
+        type: choice
+        options: [all, crexx, regina, oorexx, netrexx]
+        default: all
+      platform:
+        description: Hosted platform selection
+        type: choice
+        options: [all, ubuntu-24.04, windows-2025]
+        default: all
+      classic_group:
+        description: Classic contract group; a subset is a diagnostic, not full qualification
+        type: choice
+        options: [all, ownership, fields, counts, large, quotes]
+        default: all
 
 permissions:
   contents: read
@@ -26,8 +42,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025]
-        runtime: [crexx, regina, oorexx, netrexx]
+        os: ${{ fromJSON(inputs.platform != '' && inputs.platform != 'all' && format('["{0}"]', inputs.platform) || '["ubuntu-24.04", "windows-2025"]') }}
+        runtime: ${{ fromJSON(inputs.runtime != '' && inputs.runtime != 'all' && format('["{0}"]', inputs.runtime) || '["crexx", "regina", "oorexx", "netrexx"]') }}
     env:
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
@@ -52,8 +68,10 @@ jobs:
       - name: Qualify fixtures, contracts and fresh source-package consumer
         env:
           CSV_RUNTIME: ${{ matrix.runtime }}
+          CSV_CLASSIC_GROUP: ${{ inputs.classic_group || 'all' }}
         shell: python
         run: |
           import os, subprocess, sys
           subprocess.run([sys.executable, 'packages/rexx-csv/tests/qualify_hosted.py',
-                          '--runtime', os.environ['CSV_RUNTIME']], check=True)
+                          '--runtime', os.environ['CSV_RUNTIME'],
+                          '--classic-group', os.environ['CSV_CLASSIC_GROUP']], check=True)

@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -105,15 +106,36 @@ def constructor_source():
     return ('\n'.join(lines + ["say 'PASS: 1,024-field ROW and first excess writer coordinate'", 'exit 0', HELPERS]) + '\n').replace('rexx_csv(', "'rexx_csv'(")
 
 
-def run(runtime, source, directory, label, timeout=600):
+def run(runtime, source, directory, label, timeout=600, arguments=()):
     log = directory / 'command.log'
-    with log.open('wb') as out:
-        result = subprocess.run([str(runtime), str(source)], cwd=directory, stdout=out,
-                                stderr=subprocess.STDOUT, timeout=timeout)
+    started = time.monotonic()
+    print(f'START: {label}', flush=True)
+    timed_out = False
+    with log.open('wb') as out, log.open('rb') as progress:
+        process = subprocess.Popen([str(runtime), str(source), *arguments], cwd=directory,
+                                   stdout=out, stderr=subprocess.STDOUT)
+        try:
+            while process.poll() is None:
+                for line in progress.readlines():
+                    print(line.decode('utf-8', errors='replace').rstrip(), flush=True)
+                if time.monotonic() - started > timeout:
+                    timed_out = True
+                    process.kill()
+                    break
+                time.sleep(0.2)
+            process.wait()
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+        for line in progress.readlines():
+            print(line.decode('utf-8', errors='replace').rstrip(), flush=True)
     output = log.read_text(encoding='utf-8', errors='replace')
-    if result.returncode or 'FAIL' in output or 'PASS:' not in output:
-        raise RuntimeError(f'{label}: exit {result.returncode}\n' + '\n'.join(output.splitlines()[:30]))
-    print(output.strip(), flush=True)
+    elapsed = time.monotonic() - started
+    if timed_out or process.returncode or 'FAIL' in output or 'PASS:' not in output:
+        reason = 'timeout' if timed_out else f'exit {process.returncode}'
+        raise RuntimeError(f'{label}: {reason} after {elapsed:.1f}s\n' + output[-6500:])
+    print(f'PASS: {label} ({elapsed:.1f}s)', flush=True)
     return output
 
 
@@ -121,6 +143,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--runtime', required=True, type=Path)
     parser.add_argument('--common-only', action='store_true')
+    parser.add_argument('--groups', nargs='+', choices=('ownership', 'fields', 'counts', 'large', 'quotes'),
+                        default=['ownership', 'fields', 'counts', 'large', 'quotes'])
     args = parser.parse_args()
     runtime = args.runtime.expanduser().resolve(strict=True)
     manifest = json.loads((ROOT / 'tests/fixtures/cases.json').read_text(encoding='utf-8'))
@@ -143,7 +167,9 @@ def main():
             run(runtime, source, directory, 'variadic constructors')
             source = directory / 'contracts.rexx'
             shutil.copy2(ROOT / 'classic/tests/contracts.rexx', source)
-            run(runtime, source, directory, 'Classic contracts', timeout=1800)
+            for group in args.groups:
+                run(runtime, source, directory, 'Classic contracts ' + group,
+                    timeout=1800, arguments=[group])
 
 
 if __name__ == '__main__':

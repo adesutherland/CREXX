@@ -78,7 +78,7 @@ def identify(command, expected):
     return '\n'.join(text.splitlines()[:6])
 
 
-def qualify(runtime, directory):
+def qualify(runtime, directory, classic_group='all'):
     system = platform.system().lower()
     if system not in ('linux', 'windows') or platform.machine().lower() not in ('amd64', 'x86_64'):
         raise RuntimeError('This bootstrap supports Linux/Windows x64 hosted runners only')
@@ -105,8 +105,10 @@ def qualify(runtime, directory):
         run(sys.executable, ROOT / 'tests/check_package.py', '--bin', binary)
     elif runtime in ('regina', 'oorexx'):
         identity = identify([executable, '-v'], entry['version'])
-        run(sys.executable, ROOT / 'tests/check_classic.py', '--runtime', executable)
+        # Exercise the quick installed CLI boundary before large in-memory checks.
         run(sys.executable, ROOT / 'tests/check_classic_package.py', '--runtime', executable)
+        group_args = ['--groups', classic_group] if classic_group != 'all' else []
+        run(sys.executable, ROOT / 'tests/check_classic.py', '--runtime', executable, *group_args)
     else:
         java_home = Path(os.environ['JAVA_HOME'])
         java = java_home / ('bin/java.exe' if system == 'windows' else 'bin/java')
@@ -115,24 +117,29 @@ def qualify(runtime, directory):
                                     'org.netrexx.process.NetRexxC', '-help'], '5.10')
         run(sys.executable, ROOT / 'tests/check_netrexx.py', '--sdk', sdk, '--java-home', java_home)
         run(sys.executable, ROOT / 'tests/check_netrexx_package.py', '--sdk', sdk, '--java-home', java_home)
+    partial = runtime in ('regina', 'oorexx') and classic_group != 'all'
+    scope = 'diagnostic group ' + classic_group if partial else 'full qualification'
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
         with Path(summary).open('a', encoding='utf-8') as out:
-            out.write(f'## PASS: {runtime} / {system} x64\n\n')
+            out.write(f'## PASS: {runtime} / {system} x64 — {scope}\n\n')
             out.write(f'Revision: `{os.environ.get("GITHUB_SHA", "local")}`\n\n')
             out.write(f'```text\n{identity}\n```\n\n')
-            out.write('71 shared fixtures and round trips, full boundary/lifecycle contracts, '
+            contracts = 'selected contract group' if partial else 'full boundary/lifecycle contracts'
+            out.write(f'71 shared fixtures and round trips, {contracts}, '
                       'and a fresh source-package consumer passed.\n')
-    print(f'PASS: hosted qualification {runtime}/{system}', flush=True)
+    print(f'PASS: hosted {scope} {runtime}/{system}', flush=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--runtime', choices=('crexx', 'regina', 'oorexx', 'netrexx'), required=True)
+    parser.add_argument('--classic-group', default='all',
+                        choices=('all', 'ownership', 'fields', 'counts', 'large', 'quotes'))
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='csv-qualification-') as temp:
         try:
-            qualify(args.runtime, Path(temp))
+            qualify(args.runtime, Path(temp), args.classic_group)
         finally:
             if os.name == 'nt' and args.runtime == 'oorexx':
                 # ooRexx starts a persistent API server. Stop only this downloaded

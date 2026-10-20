@@ -1,5 +1,10 @@
 /* Shared L001-L010 and Classic B001-B003/B005 contracts. MIT License. */
+parse arg section
+if section = '' then section = 'all'
+if wordpos(section, 'all ownership fields counts large quotes') = 0 then exit 2
 numeric digits 4
+if section = 'all' | section = 'ownership' then do
+call progress 'START: ownership'
 caller.1 = 'retained'
 cells.1 = 'private caller cell'
 text = '0012,' || 'c3a9f09f9982'x || ',"a' || '0d0a'x || 'b",'
@@ -69,20 +74,29 @@ do i = 2 to words(scalars)
 end
 say 'PASS: B001-B003/B005 ownership, recovery, API errors and UTF-8 boundary'
 
-/* Inclusive decoded-byte bounds, independently checked in bytes. */
+end
+numeric digits 20
 ascii = copies('a', 1048576)
 unicode = copies('c3a9'x, 524288)
+
+if section = 'all' | section = 'fields' then do
+call progress 'START: fields'
+/* Inclusive decoded-byte bounds, independently checked in bytes. */
 call check 'L002 byte count', length(unicode), '1048576'
 do which = 1 to 2
   if which = 1 then text = ascii
   else text = unicode
+  call progress 'START: fields variant' which 'parse accepted'
   accepted = 'rexx_csv'('PARSE', text)
   call good 'L001/L002 accepted', accepted
   call check 'L001/L002 field', get(accepted, 1, 1), text
+  call progress 'START: fields variant' which 'parse excess'
   call error 'L001/L002 excess', 'rexx_csv'('PARSE', text || 'a'), 'E_LIMIT', 1, 1, 'field_bytes'
+  call progress 'START: fields variant' which 'write accepted'
   written = 'rexx_csv'('WRITE', 'rexx_csv'('ROW', text))
   call good 'L007 field accepted', written
   call check 'L007 exact bytes', 'rexx_csv'('TEXT', written), text || '0d0a'x
+  call progress 'START: fields variant' which 'write excess'
   call error 'L007 field excess', 'rexx_csv'('WRITE', 'rexx_csv'('ROW', text || 'a')), 'E_LIMIT', 1, 1, 'field_bytes'
 end
 /* NUL at the first excess position wins; an earlier excess wins over later NUL. */
@@ -92,6 +106,10 @@ call error 'writer NUL before size', 'rexx_csv'('WRITE', 'rexx_csv'('ROW', ascii
 call error 'writer size before NUL', 'rexx_csv'('WRITE', 'rexx_csv'('ROW', ascii || 'a' || '00'x)), 'E_LIMIT', 1, 1, 'field_bytes'
 say 'PASS: L001/L002/L007 decoded ASCII/UTF-8 field limits and error order'
 
+end
+
+if section = 'all' | section = 'counts' then do
+call progress 'START: counts'
 text = copies('a' || '0a'x, 10000)
 accepted = 'rexx_csv'('PARSE', text)
 call good 'L003 accepted', accepted
@@ -114,6 +132,7 @@ accepted = 'rexx_csv'('PARSE', text)
 call good 'L005 accepted', accepted
 call check 'L005 rows', 'rexx_csv'('ROW_COUNT', accepted), '1000'
 do r = 1 to 1000
+  if r // 100 = 0 then call progress 'START: count row' r
   call check 'L005 indexed width', 'rexx_csv'('FIELD_COUNT', accepted, r), '100'
   call check 'L005 first indexed field', get(accepted, r, 1), ''
   call check 'L005 last indexed field', get(accepted, r, 100), ''
@@ -132,10 +151,15 @@ rows = 'rexx_csv'('TABLE', rows, 'rexx_csv'('ROW', ''))
 call error 'L007 total excess', 'rexx_csv'('WRITE', rows), 'E_LIMIT', 1001, 1, 'total_fields'
 say 'PASS: L003-L005/L007 count boundaries; every row endpoint; all 100,000 cells via indexed writer'
 
+end
+
+if section = 'all' | section = 'large' then do
+call progress 'START: large'
 /* 16 MiB input; every field checked against independent construction. */
 field = copies('a', 1048573)
 text = copies('"' || field || '",', 15) || '"' || field || '"' || '0a'x
 call check 'L006 input bytes', length(text), '16777216'
+call progress 'START: 16 MiB parse'
 accepted = 'rexx_csv'('PARSE', text)
 call good 'L006 accepted', accepted
 call check 'L006 width', 'rexx_csv'('FIELD_COUNT', accepted, 1), '16'
@@ -146,6 +170,7 @@ call error 'L006 excess', 'rexx_csv'('PARSE', left(text, length(text) - 1) || '0
 call error 'L010 preflight', 'rexx_csv'('PARSE', 'x"' || copies('a', 16777215)), 'E_LIMIT', 0, 0, 'input_bytes'
 /* Constructor grows only a 16-field row here, never a whole document loop. */
 row = 'rexx_csv'('ROW', ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, ascii, copies('a', 1048559))
+call progress 'START: 16 MiB write'
 written = 'rexx_csv'('WRITE', row)
 call good 'L008 accepted', written
 call check 'L008 output bytes', length('rexx_csv'('TEXT', written)), '16777216'
@@ -164,12 +189,18 @@ call check '16 MiB payload last', get(row, 1, 16), ascii
 call error '16 MiB payload output framing', 'rexx_csv'('WRITE', row), 'E_LIMIT', 1, 16, 'output_bytes'
 say 'PASS: L006/L008/L010 16 MiB input/output, preflight and every round-trip field'
 
+end
+
+if section = 'all' | section = 'quotes' then do
+call progress 'START: quotes'
 quotes = copies('"', 1048576)
 last = copies('"', 1048562) || 'aaa'
 row = 'rexx_csv'('ROW', quotes, quotes, quotes, quotes, quotes, quotes, quotes, last)
+call progress 'START: quote expansion write'
 written = 'rexx_csv'('WRITE', row)
 call good 'L009 quote output', written
 call check 'L009 bytes', length('rexx_csv'('TEXT', written)), '16777216'
+call progress 'START: quote expansion parse'
 again = 'rexx_csv'('PARSE', 'rexx_csv'('TEXT', written))
 call good 'L009 read back', again
 do c = 1 to 7
@@ -188,7 +219,14 @@ call check 'L009 quoted field accepted', get('rexx_csv'('PARSE', '"' || crlf || 
 call error 'L009 quoted field excess', 'rexx_csv'('PARSE', '"' || crlf || 'a"'), 'E_LIMIT', 1, 1, 'field_bytes'
 call error 'L009 doubled quote decoded excess', 'rexx_csv'('PARSE', '"' || copies('"', 2097154) || '"'), 'E_LIMIT', 1, 1, 'field_bytes'
 say 'PASS: L009 doubled-quote expansion and embedded CRLF boundaries'
+end
 exit 0
+
+progress: procedure
+  parse arg message
+  say message
+  call stream 'stdout', 'C', 'FLUSH'
+  return
 
 check: procedure
   parse arg label, actual, expected

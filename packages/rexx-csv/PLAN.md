@@ -604,3 +604,40 @@ unchanged by this final documentation clarification. Reuse the current hosted
 qualification for those inputs; a documentation-only push uses `[skip ci]` to
 avoid starting another identical long-running matrix. This is not a CI-status
 commit and records no unobserved pass.
+
+
+### CSV-08 — suspected Windows Regina stall; progress/isolation repair
+
+At Adrian's request, the final Windows Regina job was stopped after more than
+23 minutes in the combined contracts. Its common 71 fixtures and 1,024-field
+constructor had passed; Linux Regina completed the full job in 7m13s. The
+cancelled [run](https://github.com/adesutherland/CREXX/actions/runs/39437398301)
+retains seven successful cells. Elapsed time does not prove a loop: the harness
+buffered all contract output until completion, so forward progress was unknown.
+Windows Regina full qualification remains open.
+
+Next actions under STEP-08.4: preserve every assertion and common fixture,
+split Classic contracts into independently selectable ownership/fields/counts/
+large/quotes groups, flush named progress markers, stream them from a temporary
+log during execution, and retain the final diagnostic tail on timeout. Put the
+quick installed consumer before large contracts. Add manual runtime/platform/
+group selection so a diagnostic rerun need not repeat the seven successful
+cells. Subset runs must be labelled diagnostic, never full qualification.
+First run Windows Regina ownership plus installed consumer, then isolate the
+stalled group and operation; repair its actual cause before repeating the
+complete Windows Regina gate. Do not increase the deadline merely to hide it.
+Library sources and literal expected results are unchanged. Assertion-line
+multisets before/after instrumentation are equal; local grouped checks validate
+the revised harness before publishing. Full qualification still requires every
+group, with the existing lifecycle assertions kept together in one process.
+
+
+The revised harness streams named operations and flushes Rexx stdout. All
+original assertion lines are retained unchanged. Local ooRexx passes every
+group: ownership 0.2s, fields 1.2s, counts 10.6s, large 2.7s, quotes 1.0s
+(diagnostic scheduling observations, not a formal performance claim). Local
+Regina's ownership group passes, but its field group advances slowly through
+large Latin UTF-8 parse/write operations. This gives a concrete candidate for
+pathological cost rather than proof of an infinite loop. Publish instrumentation
+without an automatic duplicate matrix, then dispatch the targeted Windows
+Regina diagnostic and preserve the seven successful unchanged cells.
