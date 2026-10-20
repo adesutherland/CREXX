@@ -46,8 +46,23 @@ def check(binary):
         run(tool("crexx"), "-program", "csv-demo", "crexx_demo.crexx", "rexx_csv.crexx")
         _, text = run(tool("rxvm"), "csv-demo.rxbin")
         assert "PASS: CSV example; 2 rows; Ada, Jr." in text, text
-        source = installed / "input Ω file.csv"
-        target = installed / "output Ω file.csv"
+        # Beta 3's Windows CLI uses narrow argv. Probe this separately from
+        # CSV's Unicode text contract; the portable file example uses ASCII paths.
+        if os.name == 'nt':
+            source, target = installed / 'probe Ω input.csv', installed / 'probe Ω output.csv'
+            source.write_bytes(b'name,city\nAda,London\n')
+            target.write_bytes(b'keep existing output')
+            status, text = run(tool('rxvm'), 'csv-demo.rxbin', '-a', source, target, success=False)
+            if status:
+                assert target.read_bytes() == b'keep existing output', text
+                assert 'READBINARY cannot open' in text, text
+                print('LIMIT: Windows Beta 3 CLI cannot transport Ω filenames; existing output preserved')
+            else:
+                assert target.read_bytes() == b'name,city\r\nAda,London\r\n'
+                print('PASS: Windows Unicode filename probe')
+        tag = '' if os.name == 'nt' else 'Ω '
+        source = installed / ('input ' + tag + 'file.csv')
+        target = installed / ('output ' + tag + 'file.csv')
         source.write_bytes('name,city\r\n"Ada, Jr.","Montréal"\n'.encode("utf-8"))
         _, text = run(tool("rxvm"), "csv-demo.rxbin", "-a", source, target)
         expected = 'name,city\r\n"Ada, Jr.",Montréal\r\n'.encode("utf-8")

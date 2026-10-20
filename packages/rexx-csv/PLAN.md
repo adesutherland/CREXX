@@ -498,8 +498,8 @@ actual run, not by workflow preparation. Extra JVM versions remain open.
 | --- | --- | --- | --- |
 | STEP-08.1 | Pin official runtime assets and versions; inspect platform launchers and make harness execution portable without changing the CSV oracle. | AC-02–AC-08 | Complete: assets downloaded/checksummed; executable suffix/VM selection repaired |
 | STEP-08.2 | Add a focused eight-cell GitHub Actions matrix with full fixture/contracts and fresh source-install checks. Use generous hang-protection limits and independent runtime jobs. Depends on STEP-08.1. | AC-02–AC-10 | Workflow implemented; actual success requires hosted runs |
-| STEP-08.3 | Validate changed harness paths locally, review/stage CSV-only work, commit and push hotfix2. Preserve unrelated Lotto work. Depends on STEP-08.2. | AC-08, AC-10 | Pending |
-| STEP-08.4 | Run the matrix on the pushed revision, inspect failures and repair their actual causes. Claim each cell only after observed success, with the hosted run providing the result and logs. | AC-02–AC-10 | Pending |
+| STEP-08.3 | Validate changed harness paths locally, review/stage CSV-only work, commit and push hotfix2. Preserve unrelated Lotto work. Depends on STEP-08.2. | AC-08, AC-10 | Complete: initial publication 1c41e219e; substantive hosted repairs follow |
+| STEP-08.4 | Run the matrix on the pushed revision, inspect failures and repair their actual causes. Claim each cell only after observed success, with the hosted run providing the result and logs. | AC-02–AC-10 | Hosted gate in progress; findings/repairs below |
 
 Publication preparation: this is a source-library increment with unchanged
 native inputs. Prior product build and macOS proofs above are reused. Only the
@@ -528,3 +528,38 @@ by the hosted cell. Prior core/native inputs and qualification remain unchanged.
 Publication scope is the CSV package, its workflow and the packages ownership
 row in DOCS_MAP; existing Lotto edits are excluded. Successful hosted jobs own
 observed Linux/Windows outcomes; live package selection/upload is still open.
+
+
+### First hosted findings and repairs
+
+The first [eight-cell run](https://github.com/adesutherland/CREXX/actions/runs/39435441183)
+uses commit `1c41e219e9b6b3148f18f3cc690ad8f2b4c4cd5f`. Linux cREXX,
+ooRexx and NetRexx passed. Windows cREXX, ooRexx and NetRexx passed all
+shared fixtures and full contracts before failing at the package/host boundary.
+
+- CSV-02: Regina's unquoted external name becomes uppercase and cannot find
+  the lowercase file on Linux's case-sensitive filesystem. All Classic callers,
+  examples and API documentation now use `'rexx_csv'(...)`. The dispatcher,
+  operations, values and common oracle are unchanged. This is a portable Rexx
+  call convention correction, not a new interface design.
+- CSV-03: NetRexx's archive builder used host path strings as tar member names,
+  yielding backslashes on Windows. It now uses POSIX archive member names.
+  The exact eight-member assertion remains, rather than accepting malformed names.
+- CSV-04: Native Windows cREXX Beta 3/ooRexx 5.1.0 command-line paths containing
+  Ω are converted to O. This is the runtime filename boundary outside the
+  in-memory CSV contract. B004 requires spaced paths and exact bytes, not an
+  arbitrary-Unicode native filename contract. Keep every Unicode CSV/limit
+  expectation unchanged and run the complete consumer on spaced ASCII Windows
+  paths; retain a separate Ω probe checking output preservation and explicitly
+  reporting the capability limit. macOS/Linux and NetRexx retain positive Ω
+  filename tests. Correct the examples' overbroad Windows filename claim.
+  No native SDK is patched or its binary identity disguised. General Windows
+  Unicode filename support is not established by this source-package qualification.
+- CSV-05: ooRexx's Windows API server outlives the interpreter and locks rxapi.exe.
+  Cleanup now stops only the server whose executable path matches this job's
+  disposable SDK, then removes its files. It does not terminate servers by name.
+
+The archive/caller fixes have focused macOS replays; unchanged parser algorithms
+and common expected data retain prior proof. The next pushed substantive repair
+runs the same complete eight-cell gate. Successful previous jobs are evidence
+for their inputs, not substitutes for changed package-consumer checks.

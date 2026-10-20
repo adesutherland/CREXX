@@ -60,7 +60,9 @@ rxvm csv-demo.rxbin -a "input file.csv" "output file.csv"
 `crexx -program` builds the program; `rxvm` launches it. An input file must
 contain valid UTF-8. The example reads/writes binary files and explicitly
 converts between UTF-8 bytes and text so embedded newline sequences survive.
-It writes canonical CSV only when an output path is supplied.
+It writes canonical CSV only when an output path is supplied. On Windows
+Beta 3, use ASCII command-line filenames; spaces and Unicode CSV contents
+are supported, but arbitrary Unicode CLI filenames are not.
 
 ## Regina and ooRexx usage
 
@@ -68,20 +70,21 @@ One file, `classic/rexx_csv.rexx`, runs on both interpreters. Qualified versions
 are Regina 3.9.7 and ooRexx 5.1.0 r12973 on macOS ARM64; older versions and
 Linux/Windows qualification is recorded by the hosted matrix described below. There are no native or ooRexx
 class dependencies. Put the file with your application and run from that
-directory so the external function can be found.
+directory so the external function can be found. Quote the lowercase external
+name as shown: Regina otherwise searches for uppercase REXX_CSV on Linux.
 
 ```rexx
-document = rexx_csv('PARSE', 'name,city' || '0a'x || 'Ada,London')
-if rexx_csv('OK', document) = 0 then do
-  say rexx_csv('ERROR_CODE', document)
+document = 'rexx_csv'('PARSE', 'name,city' || '0a'x || 'Ada,London')
+if 'rexx_csv'('OK', document) = 0 then do
+  say 'rexx_csv'('ERROR_CODE', document)
   exit 1
 end
-cell = rexx_csv('FIELD', document, 2, 1)
-if rexx_csv('OK', cell) = 0 then exit 1
-say rexx_csv('TEXT', cell)
-changed = rexx_csv('WITH_FIELD', document, 2, 1, 'Grace')
-written = rexx_csv('WRITE', changed)
-if rexx_csv('OK', written) = 1 then say rexx_csv('TEXT', written)
+cell = 'rexx_csv'('FIELD', document, 2, 1)
+if 'rexx_csv'('OK', cell) = 0 then exit 1
+say 'rexx_csv'('TEXT', cell)
+changed = 'rexx_csv'('WITH_FIELD', document, 2, 1, 'Grace')
+written = 'rexx_csv'('WRITE', changed)
+if 'rexx_csv'('OK', written) = 1 then say 'rexx_csv'('TEXT', written)
 ```
 
 `ROW` builds a row from string arguments; `TABLE` combines rows/tables.
@@ -111,7 +114,11 @@ Classic command-line scripts receive one command string. This example accepts
 zero, one or two double-quoted paths inside that string; filenames containing
 literal double quotes are outside the example's argument convention.
 It reads/writes bytes with CHARIN/CHAROUT and checks UTF-8 in the library.
-Both paths can contain spaces and Unicode. CSV/encoding failure leaves an
+Paths can contain spaces. On macOS/Linux the examples also qualify Unicode
+filenames. The tested Windows cREXX Beta 3, Regina and ooRexx launchers use a
+legacy command-line filename boundary: use ASCII paths there. Unicode CSV
+**content** remains fully tested and supported; NetRexx also tests Unicode
+filenames on Windows. CSV/encoding failure leaves an
 existing output untouched; file-write failure has ordinary caller I/O semantics.
 
 ## NetRexx usage
@@ -216,7 +223,8 @@ Python and JSON are development tools and are absent from the installed consumer
 [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml)
 runs eight independent x64 jobs: Ubuntu 24.04 and Windows 2025 for cREXX,
 Regina, ooRexx and NetRexx. Each job runs the full checks above, including a
-fresh installed consumer with spaced/Unicode paths. A green job qualifies its
+fresh installed consumer with spaced paths and exact Unicode CSV bytes.
+Separate Windows filename probes report the native launcher limitations above. A green job qualifies its
 exact commit and runtime; the workflow definition alone establishes no pass.
 
 `tests/hosted-runtimes.json` pins official downloads and SHA-256 checksums:

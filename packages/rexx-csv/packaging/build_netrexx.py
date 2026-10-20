@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def build(destination):
-    members = {str(p.relative_to(ROOT / 'netrexx')): p
+    members = {p.relative_to(ROOT / 'netrexx').as_posix(): p
                for p in sorted((ROOT / 'netrexx/rexxcsv').glob('*.nrx'))}
     members.update({
         'NetRexxDemo.nrx': ROOT / 'examples/NetRexxDemo.nrx',

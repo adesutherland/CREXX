@@ -41,3 +41,7 @@ handles text only; callers own files and encoding selection.
 The [MIT license](rexx-csv-LICENSE.txt) covers this package's original source
 and documentation. Separate Regina/ooRexx and NetRexx source bindings are also qualified on
 macOS; this archive contains the cREXX binding.
+
+On Windows Beta 3, use ASCII command-line filenames (spaces are supported).
+Its native CLI does not preserve Ω filenames; this is separate from Unicode
+CSV contents, which remain exact UTF-8.

@@ -203,7 +203,9 @@ that the released baseline actually provides.
 ### Regina and ooRexx — approved D-04 interface
 
 Use one external Classic Rexx file, `classic/rexx_csv.rexx`, called as
-`rexx_csv(operation, arguments...)`. Operation names are case-insensitive;
+`'rexx_csv'(operation, arguments...)`. Quote the lowercase external name so
+Regina finds `rexx_csv.rexx` on case-sensitive filesystems. This preserves the
+function signature and operation semantics. Operation names are case-insensitive;
 field values are never case-folded or trimmed. The implementation uses ordinary
 Rexx strings, stems local to that external activation and shared built-ins.
 It requires no ooRexx classes, native extension, JSON library or caller-stem
@@ -217,19 +219,19 @@ after nested/later calls and caller input mutation. No close/reset is needed.
 
 | Call | Result |
 | --- | --- |
-| `rexx_csv('PARSE', text)` | Checked document value, with the shared CSV diagnostics. |
-| `rexx_csv('ROW', field1, field2, ...)` | Owned row value; zero fields are representable, and fail only when written. |
-| `rexx_csv('TABLE', rowOrTable1, rowOrTable2, ...)` | Owned concatenated table value; zero operands produce zero rows. Existing successful documents/tables may be operands. |
-| `rexx_csv('WITH_FIELD', table, row, column, text)` | New table value with one existing field replaced; the original stays unchanged. |
-| `rexx_csv('WRITE', table)` | Checked write value whose text follows the shared canonical rules. A successful parse document may be used directly. |
-| `rexx_csv('OK', value)` | 1 for a valid successful value, otherwise 0. |
-| `rexx_csv('ROW_COUNT', documentOrTable)` | Row count; zero for a valid failed parse, -1 for invalid API usage. A row value counts as one row. |
-| `rexx_csv('FIELD_COUNT', documentOrTable, row)` | Field count, or -1 for a failed document/invalid row or value. |
-| `rexx_csv('FIELD', documentOrTable, row, column)` | Checked field value; invalid coordinates return `E_ARGUMENT`, never an ambiguous empty field. |
-| `rexx_csv('TEXT', fieldOrWriteValue)` | Exact field/output string; empty on failure or a value of the wrong kind. Check `OK` first. |
-| `rexx_csv('ERROR_CODE', value)` | Shared CSV code, binding-only `E_ARGUMENT` for API misuse, or empty on success. |
-| `rexx_csv('ERROR_RECORD', value)` / `ERROR_FIELD` | Shared logical coordinates, or zero for success/API misuse. |
-| `rexx_csv('ERROR_LIMIT', value)` / `ERROR` | Limit name and readable diagnostic, respectively; empty on success. |
+| `'rexx_csv'('PARSE', text)` | Checked document value, with the shared CSV diagnostics. |
+| `'rexx_csv'('ROW', field1, field2, ...)` | Owned row value; zero fields are representable, and fail only when written. |
+| `'rexx_csv'('TABLE', rowOrTable1, rowOrTable2, ...)` | Owned concatenated table value; zero operands produce zero rows. Existing successful documents/tables may be operands. |
+| `'rexx_csv'('WITH_FIELD', table, row, column, text)` | New table value with one existing field replaced; the original stays unchanged. |
+| `'rexx_csv'('WRITE', table)` | Checked write value whose text follows the shared canonical rules. A successful parse document may be used directly. |
+| `'rexx_csv'('OK', value)` | 1 for a valid successful value, otherwise 0. |
+| `'rexx_csv'('ROW_COUNT', documentOrTable)` | Row count; zero for a valid failed parse, -1 for invalid API usage. A row value counts as one row. |
+| `'rexx_csv'('FIELD_COUNT', documentOrTable, row)` | Field count, or -1 for a failed document/invalid row or value. |
+| `'rexx_csv'('FIELD', documentOrTable, row, column)` | Checked field value; invalid coordinates return `E_ARGUMENT`, never an ambiguous empty field. |
+| `'rexx_csv'('TEXT', fieldOrWriteValue)` | Exact field/output string; empty on failure or a value of the wrong kind. Check `OK` first. |
+| `'rexx_csv'('ERROR_CODE', value)` | Shared CSV code, binding-only `E_ARGUMENT` for API misuse, or empty on success. |
+| `'rexx_csv'('ERROR_RECORD', value)` / `ERROR_FIELD` | Shared logical coordinates, or zero for success/API misuse. |
+| `'rexx_csv'('ERROR_LIMIT', value)` / `ERROR` | Limit name and readable diagnostic, respectively; empty on success. |
 
 Constructors wrap field values without applying writer limits prematurely, so
 an oversized field or zero-field row still receives its specified diagnostic
@@ -245,16 +247,16 @@ an invalid cell and a valid empty field without requiring an ooRexx exception
 facility. All row/column coordinates remain one-based. For example:
 
 ```rexx
-document = rexx_csv('PARSE', text)
-if rexx_csv('OK', document) = 0 then do
-  say rexx_csv('ERROR_CODE', document)
+document = 'rexx_csv'('PARSE', text)
+if 'rexx_csv'('OK', document) = 0 then do
+  say 'rexx_csv'('ERROR_CODE', document)
   exit 1
 end
-cell = rexx_csv('FIELD', document, 2, 1)
-if rexx_csv('OK', cell) = 1 then say rexx_csv('TEXT', cell)
-changed = rexx_csv('WITH_FIELD', document, 2, 1, 'Ada')
-written = rexx_csv('WRITE', changed)
-if rexx_csv('OK', written) = 1 then say rexx_csv('TEXT', written)
+cell = 'rexx_csv'('FIELD', document, 2, 1)
+if 'rexx_csv'('OK', cell) = 1 then say 'rexx_csv'('TEXT', cell)
+changed = 'rexx_csv'('WITH_FIELD', document, 2, 1, 'Ada')
+written = 'rexx_csv'('WRITE', changed)
+if 'rexx_csv'('OK', written) = 1 then say 'rexx_csv'('TEXT', written)
 ```
 
 Parsing/writing retain all shared limits, BOM/newline rules and failure

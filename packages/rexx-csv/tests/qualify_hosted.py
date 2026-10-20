@@ -131,4 +131,25 @@ if __name__ == '__main__':
     parser.add_argument('--runtime', choices=('crexx', 'regina', 'oorexx', 'netrexx'), required=True)
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='csv-qualification-') as temp:
-        qualify(args.runtime, Path(temp))
+        try:
+            qualify(args.runtime, Path(temp))
+        finally:
+            if os.name == 'nt' and args.runtime == 'oorexx':
+                # ooRexx starts a persistent API server. Stop only this downloaded
+                # copy before removing its executable; never kill by name alone.
+                env = os.environ.copy()
+                exe = Path(temp) / 'sdk' / LOCK['oorexx-windows']['executable']
+                env['CSV_OOREXX_RXAPI'] = str(exe.with_name('rxapi.exe'))
+                cleanup = '''
+                $ErrorActionPreference = 'Stop'
+                Get-CimInstance Win32_Process -Filter "Name = 'rxapi.exe'" |
+                  Where-Object { $_.ExecutablePath -ieq $env:CSV_OOREXX_RXAPI } |
+                  ForEach-Object {
+                    $p = Get-Process -Id $_.ProcessId
+                    Stop-Process -InputObject $p -Force
+                    if (-not $p.WaitForExit(10000)) { throw 'ooRexx API server did not exit' }
+                    Write-Output 'Stopped the disposable ooRexx API server'
+                  }
+                '''
+                subprocess.run(['powershell', '-NoProfile', '-Command', cleanup],
+                               env=env, check=True, timeout=30)

@@ -81,7 +81,7 @@ def common_source(cases):
                 check(ident + ' invalid count', "rexx_csv('FIELD_COUNT', value, 1)", -1)
             check(ident + ' atomic text', "rexx_csv('TEXT', value)", '')
     lines += [f"say 'PASS: {len(cases)} common fixtures and valid round trips'", 'exit 0', HELPERS]
-    return '\n'.join(lines) + '\n'
+    return ('\n'.join(lines) + '\n').replace('rexx_csv(', "'rexx_csv'(")
 
 
 def constructor_source():
@@ -102,7 +102,7 @@ def constructor_source():
                                  ('ERROR_RECORD', '1'), ('ERROR_FIELD', '1025'),
                                  ('ERROR_LIMIT', 'fields_per_record'), ('TEXT', '')]:
                 lines.append(f"call check 'constructor excess', rexx_csv('{op}', written), '{expected}'")
-    return '\n'.join(lines + ["say 'PASS: 1,024-field ROW and first excess writer coordinate'", 'exit 0', HELPERS]) + '\n'
+    return ('\n'.join(lines + ["say 'PASS: 1,024-field ROW and first excess writer coordinate'", 'exit 0', HELPERS]) + '\n').replace('rexx_csv(', "'rexx_csv'(")
 
 
 def run(runtime, source, directory, label, timeout=600):

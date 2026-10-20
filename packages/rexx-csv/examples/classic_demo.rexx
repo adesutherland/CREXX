@@ -52,18 +52,18 @@ if names.0 > 0 then do
     exit 1
   end
 end
-document = rexx_csv('PARSE', text)
-if rexx_csv('OK', document) = 0 then do
-  say rexx_csv('ERROR_CODE', document) 'record' rexx_csv('ERROR_RECORD', document) 'field' rexx_csv('ERROR_FIELD', document)
+document = 'rexx_csv'('PARSE', text)
+if 'rexx_csv'('OK', document) = 0 then do
+  say 'rexx_csv'('ERROR_CODE', document) 'record' 'rexx_csv'('ERROR_RECORD', document) 'field' 'rexx_csv'('ERROR_FIELD', document)
   exit 1
 end
 /* WITH_FIELD demonstrates editing without changing document:
- * changed = rexx_csv('WITH_FIELD', document, 2, 1, 'Ada')
- * output = rexx_csv('WRITE', changed)
+ * changed = 'rexx_csv'('WITH_FIELD', document, 2, 1, 'Ada')
+ * output = 'rexx_csv'('WRITE', changed)
  */
-output = rexx_csv('WRITE', document)
-if rexx_csv('OK', output) = 0 then do
-  say rexx_csv('ERROR', output)
+output = 'rexx_csv'('WRITE', document)
+if 'rexx_csv'('OK', output) = 0 then do
+  say 'rexx_csv'('ERROR', output)
   exit 1
 end
 if names.0 > 1 then do
@@ -73,12 +73,12 @@ if names.0 > 1 then do
     say 'Cannot open output file:' target
     exit 1
   end
-  remaining = charout(target, rexx_csv('TEXT', output), 1)
+  remaining = charout(target, 'rexx_csv'('TEXT', output), 1)
   call stream target, 'C', 'CLOSE'
   if remaining \= 0 then do
     say 'Could not write the complete output file'
     exit 1
   end
 end
-say 'PASS: CSV example;' rexx_csv('ROW_COUNT', document) 'rows'
+say 'PASS: CSV example;' 'rexx_csv'('ROW_COUNT', document) 'rows'
 exit 0

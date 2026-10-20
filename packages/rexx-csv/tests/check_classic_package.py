@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check an unpublished Classic archive as a consumer on one actual runtime."""
 import argparse
+import os
 from pathlib import Path
 import runpy
 import subprocess
@@ -19,7 +20,8 @@ def check(runtime):
         build(artifact)
         build(repeat)
         assert artifact.read_bytes() == repeat.read_bytes(), 'artifact is nondeterministic'
-        installed = temp / 'Installed CSV package Ω with spaces'
+        tag = '' if os.name == 'nt' else 'Ω '
+        installed = temp / ('Installed CSV package ' + tag + 'with spaces')
         installed.mkdir()
         with tarfile.open(artifact) as archive:
             assert len(archive.getmembers()) == 5
@@ -46,7 +48,20 @@ def check(runtime):
         (installed / 'usage.rexx').write_text(snippet, encoding='utf-8')
         _, text = run(script='usage.rexx', marker='Grace,London')
         assert text.startswith('Ada\n'), text
-        source, target = installed / 'input Ω file.csv', installed / 'output Ω file.csv'
+        if os.name == 'nt':
+            source, target = installed / 'probe Ω input.csv', installed / 'probe Ω output.csv'
+            source.write_bytes(b'name,city\nAda,London\n')
+            target.write_bytes(b'keep existing output')
+            status, text = run(f'"{source}" "{target}"', success=False)
+            if status:
+                assert 'Cannot open input' in text, text
+                assert target.read_bytes() == b'keep existing output', text
+                print('LIMIT: Windows Classic CLI cannot transport Ω filenames; existing output preserved')
+            else:
+                assert target.read_bytes() == b'name,city\r\nAda,London\r\n'
+                print('PASS: Windows Unicode filename probe')
+        source = installed / ('input ' + tag + 'file.csv')
+        target = installed / ('output ' + tag + 'file.csv')
         paths = f'"{source}" "{target}"'
         original = 'name,city\r\n"Ada, Jr.","Montréal"\n'.encode('utf-8')
         expected = 'name,city\r\n"Ada, Jr.",Montréal\r\n'.encode('utf-8')
@@ -75,7 +90,7 @@ def check(runtime):
         status, text = run(f'"{installed / "missing.csv"}" "{target}"', success=False)
         assert status != 0 and 'Cannot open input' in text, text
         assert target.read_bytes() == b'', 'open failure replaced output'
-    print('PASS: deterministic Classic source archive; fresh consumer; spaced/Unicode paths; exact UTF-8/CRLF; failure preserves output')
+    print('PASS: deterministic Classic source archive; fresh consumer; spaced paths; exact UTF-8/CRLF; failure preserves output')
 
 
 if __name__ == '__main__':

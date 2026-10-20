@@ -6,7 +6,8 @@ Older runtimes, Linux and Windows remain unqualified. There is no native,
 ooRexx class, JSON or Python runtime dependency. NetRexx uses a separate binding.
 
 Extract all five files into an application directory. Keep `rexx_csv.rexx`
-with the calling application and run with that directory as the working
+with the calling application and quote the lowercase external name as shown
+below, so Regina finds it on case-sensitive filesystems. Run with that directory as the working
 directory. No build step is needed. This archive is unpublished; live
 rexxpository selection/metadata remains to be verified before publication.
 
@@ -21,22 +22,24 @@ Each runtime receives one command string; double quotes delimit the file paths
 inside it. The example supports zero, one or two quoted paths, without literal
 double quotes in a filename. With two paths it replaces the output after valid
 UTF-8 decoding, CSV parsing and canonical writing succeed. It uses CHARIN and
-CHAROUT to preserve embedded CR/LF bytes. File open/write failures are caller
+CHAROUT to preserve embedded CR/LF bytes. Paths can contain spaces. Use ASCII
+filenames on Windows: the tested native launchers do not preserve Ω filenames.
+This is separate from Unicode CSV contents, which remain exact UTF-8. File open/write failures are caller
 I/O errors; this small example does not promise atomic replacement on disk
 failure. Parsing/writing are in memory and return atomic checked values.
 
 ```rexx
-document = rexx_csv('PARSE', 'name,city' || '0a'x || 'Ada,London')
-if rexx_csv('OK', document) = 0 then do
-  say rexx_csv('ERROR_CODE', document)
+document = 'rexx_csv'('PARSE', 'name,city' || '0a'x || 'Ada,London')
+if 'rexx_csv'('OK', document) = 0 then do
+  say 'rexx_csv'('ERROR_CODE', document)
   exit 1
 end
-cell = rexx_csv('FIELD', document, 2, 1)
-if rexx_csv('OK', cell) = 0 then exit 1
-say rexx_csv('TEXT', cell)
-changed = rexx_csv('WITH_FIELD', document, 2, 1, 'Grace')
-written = rexx_csv('WRITE', changed)
-if rexx_csv('OK', written) = 1 then say rexx_csv('TEXT', written)
+cell = 'rexx_csv'('FIELD', document, 2, 1)
+if 'rexx_csv'('OK', cell) = 0 then exit 1
+say 'rexx_csv'('TEXT', cell)
+changed = 'rexx_csv'('WITH_FIELD', document, 2, 1, 'Grace')
+written = 'rexx_csv'('WRITE', changed)
+if 'rexx_csv'('OK', written) = 1 then say 'rexx_csv'('TEXT', written)
 ```
 
 `ROW` builds a row from string arguments, `TABLE` combines rows or tables.
