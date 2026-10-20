@@ -354,7 +354,12 @@ teardown checks ownership zero. The 2 MiB bound is only the empty central depot
 reserve, not total heap or RSS. Serial 1,800-second limits are hang backstops.
 
 Workflow dispatch `daily` runs the two clean revised daily platform jobs. The
-legacy `candidate` route additionally runs Linux original full and ordinary
+optional `daily_platform` selector defaults to `both`; use `linux` or `macos`
+only for an explicit manual daily retry when the other platform's unchanged
+proof remains valid. It cannot narrow full, candidate or scheduled assurance.
+Workflow command arrays remain nonempty under `set -u` for Apple Bash 3.2;
+optional selectors are appended to complete commands.
+The legacy `candidate` route additionally runs Linux original full and ordinary
 correctness; it is not the revised qualification request. The already-approved
 bounded original-producer continuation retains its explicit reused-cell union
 and focused-only marker. No fresh full run is implied by the daily gate.

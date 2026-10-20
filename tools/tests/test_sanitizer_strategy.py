@@ -189,6 +189,111 @@ endforeach()
         command('cmake', '--build', build, '--target', 'qa-runtime-sample-noopt', 'qa-runtime-sample-opt')
         self.assertTrue((build/'bin/rxcexits.rxbin').is_file())
 
+    def workflow_block(self, name):
+        workflow = (ROOT/'.github/workflows/sanitizers.yml').read_text().splitlines()
+        start = workflow.index('      - name: ' + name)
+        start = workflow.index('        run: |', start) + 1
+        body = []
+        for line in workflow[start:]:
+            if line.startswith('          '): body.append(line[10:])
+            elif not line: body.append('')
+            else: break
+        return '\n'.join(body).replace('${{ needs.assurance-gate.outputs.target_sha }}', 'a' * 40)
+
+    @unittest.skipUnless(Path('/bin/bash').is_file(), 'Workflow shell contract requires Bash')
+    def test_workflow_commands_preserve_optional_arguments(self):
+        source = self.root/'workflow source'
+        (source/'tools').mkdir(parents=True)
+        bindir = source/'bin'; bindir.mkdir()
+        log = self.root/'calls.jsonl'
+        recorder = '''#!@PYTHON@
+import json, os, sys
+from pathlib import Path
+name = Path(sys.argv[0]).name
+with open(os.environ['CALL_LOG'], 'a') as stream:
+    stream.write(json.dumps([name, sys.argv[1:]]) + '\\n')
+if name == 'python3': print(os.environ['QA_PROFILE'])
+'''.replace('@PYTHON@', sys.executable)
+        for executable in (bindir/'cmake', bindir/'python3', source/'tools/asan-run.sh'):
+            executable.write_text(recorder); executable.chmod(0o755)
+        environment = {**os.environ, 'PATH': str(bindir)+os.pathsep+os.environ['PATH'],
+            'CALL_LOG': str(log), 'RUNNER_TEMP': str(self.root/'runner temp'),
+            'GITHUB_OUTPUT': str(self.root/'output'), 'GITHUB_STEP_SUMMARY': str(self.root/'summary'),
+            'GITHUB_EVENT_NAME': 'workflow_dispatch', 'QA_BASELINES': '{}'}
+        shells = sorted({str(Path(p).resolve()) for p in ('/bin/bash', shutil.which('bash') or '/bin/bash')})
+
+        def execute(shell, name, **values):
+            log.unlink(missing_ok=True)
+            result = subprocess.run([shell, '-c', self.workflow_block(name)], cwd=source,
+                env={**environment, **values}, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.assertEqual(result.returncode, 0, result.stdout)
+            return [json.loads(line) for line in log.read_text().splitlines()]
+
+        for shell in shells:
+            for profile in ('full', 'daily'):
+                calls = execute(shell, 'Configure matching ordinary and instrumented inputs',
+                    QA_PROFILE=profile, QA_PLATFORM='macos', QA_QUALIFICATION=profile)
+                cmake = [args for name, args in calls if name == 'cmake']
+                self.assertEqual(len(cmake), 2 if profile == 'daily' else 1)
+                self.assertIn('-DCMAKE_C_FLAGS=-fsanitize=address -fno-omit-frame-pointer', cmake[-1])
+                donor = '-DCREXX_QA_FIXTURE_TREE=' + environment['RUNNER_TEMP'] + '/ordinary'
+                self.assertEqual(donor in cmake[-1], profile == 'daily')
+            for platform in ('linux', 'macos'):
+                for qualification in ('daily', 'continuation-linux'):
+                    regex = '^(one|two with spaces)$'
+                    calls = execute(shell, 'Complete instrumented build and selected runtime scope',
+                        QA_PROFILE='daily', QA_PLATFORM=platform, QA_QUALIFICATION=qualification,
+                        QA_CONTINUATION_REGEX=regex)
+                    self.assertEqual(len(calls), 1)
+                    self.assertEqual(calls[0][0], 'asan-run.sh')
+                    args = calls[0][1]
+                    self.assertIn(environment['RUNNER_TEMP'] + '/debugasan', args)
+                    self.assertEqual(args[args.index('--leaks') + 1], 'off' if platform == 'macos' else 'on')
+                    self.assertEqual(args[args.index('--build-leaks') + 1], 'off' if platform == 'macos' else 'on')
+                    self.assertEqual(args[-2:] == ['--regex', regex], qualification == 'continuation-linux')
+            for regex in ('', '^(one|two with spaces)$'):
+                calls = execute(shell, 'Candidate ordinary correctness (Linux donor)',
+                    QA_PROFILE='full', QA_ORDINARY_REGEX=regex)
+                self.assertEqual(len(calls), 1)
+                args = calls[0][1]
+                self.assertEqual('--regex' in args, bool(regex))
+                if regex: self.assertEqual(args[-2:], ['--regex', regex])
+
+    @unittest.skipUnless(Path('/bin/bash').is_file(), 'Workflow matrix contract requires Bash')
+    def test_manual_daily_platform_selection_cannot_narrow_full_scope(self):
+        source = self.root/'matrix'; source.mkdir()
+        (source/'tools').symlink_to(ROOT/'tools', target_is_directory=True)
+        bindir=source/'bin'; bindir.mkdir()
+        git=bindir/'git'; git.write_text('#!/bin/sh\nprintf "%s\\n" ' + 'a'*40 + '\n'); git.chmod(0o755)
+        output=source/'output'
+        environment={**os.environ, 'PATH': str(bindir)+os.pathsep+os.environ['PATH'],
+            'GITHUB_OUTPUT': str(output), 'GITHUB_STEP_SUMMARY': str(source/'summary'),
+            'GITHUB_REF': 'refs/heads/hotfix', 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+            'SANITIZER_DAILY_ACTIVATED': 'false'}
+
+        def execute(scope, platform, success=True, event='workflow_dispatch'):
+            output.unlink(missing_ok=True)
+            result=subprocess.run(['/bin/bash','-c',self.workflow_block('Select profile and independent platform jobs')],
+                cwd=source,env={**environment,'REQUESTED_SCOPE':scope,'DAILY_PLATFORM':platform,'GITHUB_EVENT_NAME':event},
+                text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            self.assertEqual(result.returncode==0,success,result.stdout)
+            if not success:
+                self.assertFalse(output.exists())
+                return
+            values=dict(line.split('=',1) for line in output.read_text().splitlines())
+            return json.loads(values['matrix'])['include']
+
+        for scope in ('full','daily'):
+            rows=execute(scope,'both')
+            self.assertEqual({row['platform'] for row in rows},{'linux','macos'})
+            self.assertTrue(all(row['profile']==scope for row in rows))
+        for platform in ('linux','macos'):
+            rows=execute('daily',platform)
+            self.assertEqual([(row['platform'],row['profile']) for row in rows],[(platform,'daily')])
+            execute('full',platform,success=False)
+            execute('candidate',platform,success=False)
+        execute('daily','macos',success=False,event='schedule')
+
     def mini_project(self):
         source = self.root / 'source with spaces'
         source.mkdir()

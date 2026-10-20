@@ -12,6 +12,11 @@ on:
         type: choice
         options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux, identity-linux]
         default: full
+      daily_platform:
+        description: Manual daily retry platform (full assurance always retains both)
+        type: choice
+        options: [both, linux, macos]
+        default: both
       source_ref:
         description: Optional source commit for focused or candidate qualification
         type: string
@@ -102,6 +107,7 @@ jobs:
         shell: bash
         env:
           REQUESTED_SCOPE: ${{ inputs.qualification }}
+          DAILY_PLATFORM: ${{ inputs.daily_platform || 'both' }}
         run: |
           set -euo pipefail
           python3 - <<'PYTHON'
@@ -125,6 +131,11 @@ jobs:
                     {**rows[1],'name':'Apple separated daily qualification','profile':'daily'}]
           if os.environ.get('REQUESTED_SCOPE')=='continuation-linux':
               rows=[{**rows[0],'name':'Linux bounded original-producer continuation','profile':'full'}]
+          platform=os.environ['DAILY_PLATFORM']
+          assert platform in ('both','linux','macos'), 'Unknown daily retry platform'
+          if platform!='both':
+              assert event=='manual' and os.environ.get('REQUESTED_SCOPE')=='daily', 'Platform selection is only for explicit manual daily retries'
+              rows=[row for row in rows if row['platform']==platform]
           with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
               stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\nnative_configs='+json.dumps(previous.get('native_configs',{}))+'\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
@@ -172,16 +183,16 @@ jobs:
             "-DCREXX_BUILD_TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)"
             "-DCREXX_BUILD_COMMIT=${{ needs.assurance-gate.outputs.target_sha }}")
           if [ "$QA_PLATFORM" = macos ]; then common+=(-DCMAKE_OSX_ARCHITECTURES=arm64); fi
-          fixture=()
+          configure=(cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}")
           if [ "$QA_PROFILE" = daily ]; then
             cmake -S . -G Ninja -B "$RUNNER_TEMP/ordinary" "${common[@]}"
-            fixture+=("-DCREXX_QA_FIXTURE_TREE=$RUNNER_TEMP/ordinary")
+            configure+=("-DCREXX_QA_FIXTURE_TREE=$RUNNER_TEMP/ordinary")
           fi
           native=(-DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
             -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address
             -DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address)
-          cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}" "${fixture[@]}" "${native[@]}"
+          "${configure[@]}" "${native[@]}"
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
           export QA_NATIVE_KEY
           QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
@@ -262,10 +273,10 @@ jobs:
           QA_ORDINARY_REGEX: ${{ inputs.ordinary_regex }}
         run: |
           set -euo pipefail
-          selection=()
-          if [ -n "$QA_ORDINARY_REGEX" ]; then selection+=(--regex "$QA_ORDINARY_REGEX"); fi
-          tools/asan-run.sh --build-dir "$RUNNER_TEMP/ordinary" --phase ctest \
-            --profile full --test-jobs 8 --leaks on --no-live-tail "${selection[@]}"
+          command=(tools/asan-run.sh --build-dir "$RUNNER_TEMP/ordinary" --phase ctest
+            --profile full --test-jobs 8 --leaks on --no-live-tail)
+          if [ -n "$QA_ORDINARY_REGEX" ]; then command+=(--regex "$QA_ORDINARY_REGEX"); fi
+          "${command[@]}"
 
       - name: Complete instrumented build and selected runtime scope
         id: execution
@@ -279,11 +290,11 @@ jobs:
         run: |
           set -euo pipefail
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
-          selection=()
-          if [ "$QA_QUALIFICATION" = continuation-linux ]; then selection+=(--regex "$QA_CONTINUATION_REGEX"); fi
-          tools/asan-run.sh --build-dir "$RUNNER_TEMP/debugasan" --phase full \
-            --profile "$QA_PROFILE" --build-jobs 4 --test-jobs 8 \
-            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail "${selection[@]}"
+          command=(tools/asan-run.sh --build-dir "$RUNNER_TEMP/debugasan" --phase full
+            --profile "$QA_PROFILE" --build-jobs 4 --test-jobs 8
+            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail)
+          if [ "$QA_QUALIFICATION" = continuation-linux ]; then command+=(--regex "$QA_CONTINUATION_REGEX"); fi
+          "${command[@]}"
 
       - name: Verify complete assurance or exact qualified reuse
         id: proof

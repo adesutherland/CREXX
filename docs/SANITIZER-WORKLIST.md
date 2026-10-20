@@ -1029,6 +1029,47 @@ remain unchanged.
 3. **QA024-STEP03 — todo (AC03), depends on STEP02:** publish separately from
    the ELF link repair but qualify both compatible commits together.
 
+### SAN-QA-025 — Bash 3.2 rejects empty workflow argument arrays
+
+Status: **shell repair and focused compatibility proof verified; Apple daily gate open**.
+Owner: Codex under the current hotfix request.
+
+Apple [daily qualification 39486953165](https://github.com/adesutherland/CREXX/actions/runs/39486953165)
+at `b5697694c0786146d698c310d1fb0aa779c67860` completes ordinary selective
+preparation and sealing, then fails before starting the instrumented runner:
+`selection[@]: unbound variable`. Bash 3.2 treats an empty array as unset under
+`set -u`. The configure step's optional fixture array has the same defect for
+full profiles; the optional ordinary selector shares the pattern. This is a
+workflow portability defect, not a sanitizer or runtime finding.
+
+Intended outcome: preserve identical argument boundaries, profile and leak
+policy on the maintained Apple and Linux shells, with and without optional
+selectors. Keep fail-fast shell settings and preserve ordinary, daily, full and
+focused semantics. Replace empty optional arrays with always-nonempty command
+arrays. A manual daily-only platform selector defaults to both, rejects narrowing
+full/scheduled scopes, and allows the failed Apple job to retry without repeating
+healthy Linux execution. No schedule activation or broad rerun is authorized by
+this repair.
+
+- **QA025-AC01 — done:** execute the actual configure and runner workflow blocks
+  with recording tools under available Bash implementations, including Apple's
+  `/bin/bash` 3.2; verify full/daily setup, empty and nonempty selectors, space-
+  containing paths and Linux/Apple leak arguments. A negative control must
+  reproduce the original empty-array failure under Bash 3.2. Execute the actual
+  matrix decision block to prove default-both and daily-only narrowing guards.
+- **QA025-AC02 — done:** compatibility contracts, actionlint and focused normal
+  Debug / maintained Apple ASan strategy CTests pass; reuse unchanged runtime
+  and preparation proof.
+- **QA025-AC03 — todo:** publish the shell repair and complete clean daily
+  platform proof, retaining valid independently passing Linux execution.
+
+1. **QA025-STEP01 — done (AC01):** remove all three optional empty-array
+   expansions in the sanitizer workflow using populated command arrays.
+2. **QA025-STEP02 — done (AC01/02):** add actual workflow-block execution tests,
+   reproduce the Bash 3.2 failure and validate both selector forms and profiles.
+3. **QA025-STEP03 — todo (AC03), depends on STEP02:** publish the compatible
+   workflow repair and qualify only the outstanding platform work.
+
 ### Where the time goes
 
 Times below come from hosted job/step timestamps and CTest's final wall time.
