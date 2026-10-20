@@ -21,6 +21,8 @@ main: procedure = .int expose checks failures artifacts outputfile
       when 'select' then call selectchecks(outputfile)
       when 'do' then call dochecks(outputfile)
       when 'do-final' then call dochecks(outputfile,1)
+      when 'leave' then call leavechecks(outputfile)
+      when 'leave-invalid' then call leavechecks(outputfile,1)
       otherwise return 2
     end
   end
@@ -34,6 +36,7 @@ main: procedure = .int expose checks failures artifacts outputfile
     call ifchecks()
     call selectchecks()
     call dochecks()
+    call leavechecks()
     if outputfile <> '' then call literals()
   end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
@@ -174,6 +177,58 @@ ifchecks: procedure = .void expose artifacts
     graph = request.emissiongraph(); text = graph.dump()
     call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
     call check(occurrences(text,'core.branch ') = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
+  return
+
+/** A static LEAVE edge closes exactly crossed owners and then jumps. */
+leavechecks: procedure = .void expose artifacts
+  arg inspect = '', invalidonly = 0
+  source = .string; sample = .int; optimise = .int; selected = .int
+  expected = .int; first = .int; closes = .int; jumps = .int; invalid = .int
+  written = .int; i = .int; text = .string; assembly = .string
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview
+  do sample = 1 to 6
+    if invalidonly & sample <> 6 then iterate
+    expected = 1
+    select sample
+      when 1 then do; source = 'do i=1; do j=1; leave i; end; end'; expected = 2; end
+      when 2 then source = 'do i=1 for 1; do i=10 for 1; leave i; end; end'
+      when 3 then source = 'do i=1; do forever; do; select; when 1 then leave i; end; end; end; end'
+      when 4 then source = 'do 2; do 3; leave; end; end'
+      when 5 then do; source = 'do A.KEY=1; do j=1; leave a.key; end; end'; expected = 2; end
+      otherwise do; source = 'options levelc strictc; do i=1; do j=1; leave Ghost; end; end'; expected = 0; end
+    end
+    first = pos('leave',source) - 1
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'leave-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'LEAVE shape accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      do selected = 0 to 1
+        graph = request.graph(); if selected then graph = request.emissiongraph()
+        text = graph.dump(); closes = 0; jumps = 0; invalid = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.origin().first() <> first then iterate
+          if operation.name() = 'crexx.c.do.close' then closes = closes + 1
+          if operation.name() = 'core.jump' then jumps = jumps + 1
+          if operation.name() = 'crexx.c.transfer.invalid' then do
+            invalid = invalid + 1
+            call check((operation.attribute('code') as .string) = '28.3' & (operation.attribute('name') as .string) = 'Ghost','invalid edge retains exact code/raw name')
+          end
+        end
+        call check(closes = expected,'LEAVE edge closes only crossed owners ' || sample || '/' || optimise || '/' || selected)
+        if sample < 6 then do
+          call check(jumps = 1 & invalid = 0,'valid LEAVE is one direct jump ' || sample || '/' || optimise || '/' || selected)
+          call check(pos('crexx.c.load ',text) = 0,'static target adds no runtime pool-name read ' || sample || '/' || optimise || '/' || selected)
+        end
+        else call check(jumps = 0 & invalid = 1,'invalid edge has no normal cleanup/jump continuation')
+      end
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.invalidtransfer(),') = (sample = 6),'only invalid transfer calls the shared error bridge')
+      call check(pos('.srcstep',assembly) > 0 & pos('leave-shape.crexx',assembly) > 0,'LEAVE keeps authored source/fatal metadata')
+      if inspect <> '' then written = writebinary(inspect || '-leave-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
   end
   return
 

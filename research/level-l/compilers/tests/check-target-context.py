@@ -199,6 +199,7 @@ def check_adapter(procedures):
         'truth': ('.int', f'value={value},context={context}'),
         'whentruth': ('.int', f'value={value},context={context}'),
         'selectmissing': ('.void', 'line=.string'),
+        'invalidtransfer': ('.void', 'code=.string,name=.string'),
         'donew': ('.rexxdostate..rexxdostate', f'context={context},name=.string'),
         'docapture': ('.void', f'state={state},part=.string,value=.rexxvalue..rexxvalue'),
         'dostart': ('.void', f'state={state}'),
@@ -241,7 +242,7 @@ def check_adapter(procedures):
     for name, signature in signatures.items():
         p = procedures[name]
         require((p.result, p.arguments) == signature, f'{name}: approved signature/defaults changed')
-    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext'] if name != 'selectmissing'}
+    borrowed = {name: procedures[name] for name in [*signatures, 'bifcontext'] if name not in {'selectmissing', 'invalidtransfer'}}
     all_calls = [target for p in borrowed.values() for _, target in p.calls()]
     forbidden = {
         '§rexxactivation.rexxactivationarguments.§factory',
@@ -301,26 +302,28 @@ def check_adapter(procedures):
                 f'{name}: forward the captured shared ERROR event unchanged')
         require(any('rexxdostate.rexxdostate.' in target for _, target in p.calls()),
                 f'{name}: delegate existing shared state implementation')
-    missing = procedures['selectmissing']
-    helper_sites = [index for index, target in missing.calls()
-                    if target == 'rexxvalue.rexxvalue_select_missing']
-    inline_sites = [index for index, (op, operands) in enumerate(missing.instructions)
-                    if op == 'signal' and operands.startswith('"ERROR",')
-                    and missing.sources[index] is not None
-                    and Path(missing.sources[index][0]).name == 'RexxValue.crexx'
-                    and 'signal "ERROR"' in missing.sources[index][2]]
-    require(len(helper_sites) + len(inline_sites) == 1,
-            'selectmissing: expected the existing helper call or its source-backed inline ERROR')
-    captures = [(index, operands.split(',')[1])
-                for index, (op, operands) in enumerate(missing.instructions)
-                if op == 'sigbrv' and operands.endswith(',"ERROR"')]
-    bridges = [(index, operands.split(',')[-1])
-               for index, (op, operands) in enumerate(missing.instructions)
-               if op == 'signalorigin' and operands.startswith('"CLASSIC_SYNTAX",')]
-    require(len(captures) == len(bridges) == 1
-            and captures[0][1] == bridges[0][1]
-            and captures[0][0] < (helper_sites + inline_sites)[0] < bridges[0][0],
-            'selectmissing: bind one ERROR event and forward that same event through signalorigin')
+    for name, helper, filename in (
+            ('selectmissing', 'rexxvalue.rexxvalue_select_missing', 'RexxValue.crexx'),
+            ('invalidtransfer', 'rexxdostate.rexxdostate_invalid_transfer', 'RexxDoState.crexx')):
+        missing = procedures[name]
+        helper_sites = [index for index, target in missing.calls() if target == helper]
+        inline_sites = [index for index, (op, operands) in enumerate(missing.instructions)
+                        if op == 'signal' and operands.startswith('"ERROR",')
+                        and missing.sources[index] is not None
+                        and Path(missing.sources[index][0]).name == filename
+                        and 'signal "ERROR"' in missing.sources[index][2]]
+        require(len(helper_sites) + len(inline_sites) == 1,
+                f'{name}: expected existing helper call or source-backed inline ERROR')
+        captures = [(index, operands.split(',')[1])
+                    for index, (op, operands) in enumerate(missing.instructions)
+                    if op == 'sigbrv' and operands.endswith(',"ERROR"')]
+        bridges = [(index, operands.split(',')[-1])
+                   for index, (op, operands) in enumerate(missing.instructions)
+                   if op == 'signalorigin' and operands.startswith('"CLASSIC_SYNTAX",')]
+        require(len(captures) == len(bridges) == 1
+                and captures[0][1] == bridges[0][1]
+                and captures[0][0] < (helper_sites + inline_sites)[0] < bridges[0][0],
+                f'{name}: bind one ERROR and forward that same event through signalorigin')
     binary = procedures['binaryop']
     transport = binary.call_index('bifcontext')
     for name in ['strictcompareequal', 'concat', 'spaceconcat']:

@@ -50,6 +50,7 @@ request: class
   _rootpath = .string
   _nesting = .int
   _budget = .int
+  _strictc = .int
   _work = .int
   _ready = .int
   _building = .int
@@ -94,6 +95,7 @@ request: class
   _breakalive = .int[]
   _continuealive = .int[]
   _loopkeys = .string[]
+  _loopnames = .string[]
   _donumber = .int
   _bindscope = .int[]
   _bindnames = .string[]
@@ -105,7 +107,7 @@ request: class
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
-    _ready = 0; _nesting = nesting; _building = 0
+    _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
     return
   run: method = .void
@@ -116,6 +118,7 @@ request: class
       if parsed.status() <> 0 then do
         _error = parsed.error(); _offset = parsed.offset(); return
       end
+      _strictc = parsed.strictc()
       _tree = parsed.ast()
       if _tree.isrecovered() then do
         _error = 'LL_COMPILER_RECOVERED: executable IR requires clean input'; return
@@ -395,17 +398,16 @@ request: class
         else _terminated = 1
         _alive = yesalive | noalive
       end
-      when kind = 'Leave' | kind = 'Iterate' then do
+      when kind = 'Leave' then call leaveloop(node,origin)
+      when kind = 'Iterate' then do
+        if node.count('name') then do
+          named = node.child('name'); if tick(named) = 0 then return
+          call fail(named,'PROFILE: named ITERATE is outside this frontend profile'); return
+        end
         if _loops = 0 then do
           call fail(node,'FLOW: ' || kind || ' requires a surrounding loop'); return
         end
-        if kind = 'Iterate' then do
-          target = loopcontinue(_loops); _continuealive[_loops] = _continuealive[_loops] | _alive
-        end
-        else do
-          target = loopafter(_loops); _breakalive[_loops] = _breakalive[_loops] | _alive
-          if _loopkeys[_loops] <> '' then built = dostate('close',_loopkeys[_loops],origin)
-        end
+        target = loopcontinue(_loops); _continuealive[_loops] = _continuealive[_loops] | _alive
         call _block.jump(target,origin); _terminated = 1; _alive = 0
       end
       when kind = 'Return' then do
@@ -497,6 +499,42 @@ request: class
       if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
     end
     return
+  /** Select a static source-loop binding. Names never read the pool or expand
+   * compound tails; only the common symbol-casing rule defines identity. */
+  leaveloop: method = .void
+    arg node = .llast..node, origin = .llir..origin
+    name = ''; selected = _loops; level = .int
+    op = .llir..opdraft; built = .llir..opview
+    if node.count('name') then do
+      named = node.child('name'); if tick(named) = 0 then return
+      name = named.text('spelling'); selected = 0
+      identity = rexxclassic_unicode_upper(name)
+      do level = _loops to 1 by -1
+        _work = _work + 1
+        if _work > _budget then do; call fail(named,'LIMIT: frontend work budget exceeded'); return; end
+        if _loopnames[level] = identity then do; selected = level; leave; end
+      end
+    end
+    if selected = 0 then do
+      code = '28.1'; if _loops > 0 then code = '28.3'
+      if _strictc = 0 then do
+        call fail(node,'FLOW: RXC-LC-' || code || ': invalid LEAVE target "' || name || '"'); return
+      end
+      op = _block.operation(_contract.operation('crexx.c.transfer.invalid'),origin)
+      call op.attribute('code',code as .binary); call op.attribute('name',name as .binary); built = op.finish()
+      /* The current fatal profile never resumes this operation. A cold packet
+       * and core return still close the generic structural block. */
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin.derive()); built = op.finish()
+      call _block.returnvalue(built.result(),origin.derive())
+      _terminated = 1; _alive = 0; return
+    end
+    target = loopafter(selected)
+    _breakalive[selected] = _breakalive[selected] | _alive
+    do level = _loops to selected by -1
+      if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
+    end
+    call _block.jump(target,origin); _terminated = 1; _alive = 0
+    return
   doloop: method = .void
     arg node = .llast..node
     header = node.child('header'); ending = node.child('ending')
@@ -560,6 +598,7 @@ request: class
     end
     _loops = _loops + 1; level = _loops
     _loopkeys[level] = key; _hasbreaks[level] = 0; _hascontinues[level] = 0
+    _loopnames[level] = rexxclassic_unicode_upper(name)
     _breakalive[level] = 0; _continuealive[level] = 0
     body = newblock('do.body')
     entry = body

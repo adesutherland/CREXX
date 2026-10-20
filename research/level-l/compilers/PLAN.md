@@ -1,8 +1,8 @@
 # Complete Classic C compiler in B and Level L
 
-**Complete C is open. CLC-STEP05.DO1–3 and the generic L lexer reuse
-prerequisite are locally qualified. The approved LEAVE increment follows the
-scoped DO local commit; no LEAVE implementation is included here.**
+**Complete C is open. CLC-STEP05.LEAVE1–3 are locally qualified.
+Next is the separately approved named ITERATE increment; its implementation
+starts after the scoped LEAVE local commit.**
 
 Deliver one explicitly selected Classic C compiler and reusable compile service,
 written in B using Level L parsing, IR, transformation and emission. Complete
@@ -18,88 +18,69 @@ existing B bodies are controls, not new-C passes. [Architecture](doc/architectur
 owns contracts; [work packages](doc/agent-work-packages.md) own assignments.
 Astra reviews/coordinates; Sol 6.1 Extra High workers implement, build and integrate.
 
-<a id="current-action-do"></a>
+<a id="current-action-leave"></a>
 
-## Completed static DO increment; next approved LEAVE
+## Completed named LEAVE increment
 
-Complete LC-I-08's static DO forms and unnamed LEAVE/ITERATE integration within
-the admitted source/expression profile. Preserve header evaluation, numeric and
-live control-variable state, nested targets, original source and failures; reuse
-existing B DO/value/pool/numeric/Unicode bodies rather than duplicating them.
-The [approved exact contract](doc/architecture.md#approved-do-contract) owns the
-AST, eight operations, seven exports and finite protocol; the
-[instruction review](doc/LEVELC-INSTRUCTION-REVIEW.md#do-contract)
-records its bounded language scope. The approved revision uses C v5 with
-four existing types/51 operations and 32 target exports, refusing v4. Static text
-keys scoped to each function select hidden owned state; no first-class DO state type,
-SDK/ISA/native API or algorithm change is commissioned. **Exact-contract approval
-was granted on 20 October 2026; the bounded local proof below passes.**
+Complete LC-I-09's admitted static nearest/named transfers while preserving
+control values, source, ownership and failures. Resolve authored names within
+the current source routine using the shared Classic symbol-casing rule, never
+pool lookup or compound-tail substitution. Reuse the qualified DO protocol and
+shared invalid-transfer helper. Adrian approved the
+[exact shared transfer contract](doc/architecture.md#approved-leave-iterate-contract)
+on 20 October 2026; DO is qualified and locally committed. This increment adds
+the shared optional-name AST/STRICTC/v6 foundation and implements named LEAVE.
+It retains four C types, advances C to v6/52 operations and the target to 33
+exports, and refuses v5. Named ITERATE remains an explicit profile refusal until
+its separate step. No SDK, shared-runtime algorithm, native or VM API changes
+are commissioned.
 
 | ID / status | Approved checkable closure |
 |---|---|
-| **DO-AC01 — Locally qualified: source/AST** | Independent AST/span and syntax controls cover grouping, counted/controlled/FOREVER and standalone/combined WHILE/UNTIL, authored TO/BY/FOR order, scalar/compound controls, null clauses and admitted main/nested/private/IF/SELECT placements. END names compare authored symbols without tail substitution using shared Classic Unicode casing; missing/wrong/noncontrol names, malformed/duplicate/incompatible headers and dead source refuse with locations and prior-output preservation. |
-| **DO-AC02 — Locally qualified: runtime/order/errors** | Independent markers/state/error expectations prove once-only count capture and controlled start capture before once-only modifiers in all six written orders, immediate modifier validation before control start/assignment (including FOR 0), count/TO entry before WHILE, UNTIL before advance after body/ITERATE, LEAVE skipping both, and the final count-limited advance. Cover zero/large/exponent counts, signed/zero BY, spelling/scale, live compound-tail/body mutation, nested/private ownership and unnamed transfers skipping groups/SELECT; retain shared 26.2/26.3, 41.4–41.6 and distinct 34.3/34.4 with visible C locations and bound raw helper-origin forwarding under the current fatal profile. |
-| **DO-AC03 — Locally qualified: exact ABI/protocol admission** | Exact four-type v5/51-op and 32-export metadata controls admit only the architecture's descriptors/signatures. Bounded C-owned all-record validation checks key/name/part declarations and one constructor per function-local key, including dead records; reachable-only Collect/Ready/Body/FalseExit stack/phase/mask and merge/backedge proof rejects invalid order, non-top use, re-entry and unmatched cleanup. Fresh, loaded and post-transform graphs receive the same checks before publication, preserving input graphs/prior output on refusal. Generic LLIR retains record/type/terminator integrity; unreachable components receive no invented execution facts. |
-| **DO-AC04 — Locally qualified: ownership/RXAS/qualification** | IR-off/on caller/helper inspection proves stable hidden strong owners and synchronous borrowed helper references, no escaping/copyable IR state, correct normal/LEAVE/RETURN/EXIT/fatal reverse-depth cleanup and retained outer state for state-free inner exits. State-free forms allocate no DO state; count-mode start emits no helper call; captures/configuration and joins contain no avoidable repetition. Focused existing Debug selectors/runtime/admission controls, representative paired B/IR/VM cells and independent RXAS review qualify the change with unchanged shared B/L/native proof reused, checked grammar reuse where eligible, current docs and task-only cleanup; no new aggregate, per-slice ASan or broad campaign. |
+| **LEAVE-AC01 — Locally qualified: source/targets** | Independent optional-Name AST and original instruction/name byte spans cover nearest, named/shadowed/raw compound and Unicode controls through group/IF/SELECT wrappers and private routines. Eligible inline IF keeps bare `leave else` as LEAVE plus ELSE; ordinary/grouped ELSE names and `leave i else` retain nearest-ELSE ownership. Malformed/surplus/dead syntax refuses with locations; named ITERATE still refuses explicitly. |
+| **LEAVE-AC02 — Locally qualified: policy/errors** | Ordinary requests reject all source-provable invalid LEAVE targets, including dead/uncalled source: 28.1 without a repetitive loop, even named, and 28.3 for a missing name inside loops. STRICTC checks syntax everywhere but invokes the shared unchanged error only when reached, with authored name and visible C location/raw helper event. Same-process enable/default/failure, duplicate/quoted/later/call-shaped header controls prove request-local static policy and failed parsed.strictc()=0; prior output survives refusal. |
+| **LEAVE-AC03 — Locally qualified: execution/lifetime** | Independent markers/control states prove LEAVE skips crossed UNTIL/advance work, preserves current values, selects the innermost matching controlled loop and closes crossed owners inner-to-outer including its target. State-free crossed loops add no owner, group/SELECT wrappers are skipped, unrelated outer state survives and repeated private calls remain isolated; no source EXPOSE/shared-pool claim is inferred. |
+| **LEAVE-AC04 — Locally qualified: ABI/admission/quality** | Exact v6/52-op/33-export metadata and all-record code/name controls admit only the approved schema/signature, including dead/loaded records. Fresh and post-transform invalid graphs refuse atomically without graph/prior-output mutation. Direct ERROR-origin bridge checks and IR-off/on caller/helper RXAS show only required closes/jumps for valid transfers, no runtime name search, and invalid cold closure/common fatal cleanup. Focused existing Debug selectors and representative paired B/IR/VM cases, reviewed docs and task-only cleanup qualify the bounded slice; reuse unchanged DO/B/L/native proof and checked warm grammar. |
 
-**CLC-STEP05.DO1 — Approved/complete (AC01–04):** vision, exact architecture,
-independent expectations and dependencies reviewed; Adrian approved the recorded
-contract on 20 October 2026.
-**CLC-STEP05.DO2 — Complete (AC01–04):** approved
-grammar/parser/frontend, v5 admission/selector, seven delegating target shims
-and focused independent fixtures are implemented. Qualified tooling/shared
-runtime and checked lexer reuse are retained; no algorithms are duplicated.
-**CLC-STEP05.DO3 — Locally qualified/complete (AC01–04):** focused source,
-order/error, ABI/protocol and ownership proof passes, including independent
-actual caller/helper RXAS review. Owning docs and scheduling are current;
-whole-instruction dependencies remain open.
+**CLC-STEP05.LEAVE1 — Approved/complete (AC01–04):** exact architecture,
+independent expectations and dependencies recorded before product edits.
+**CLC-STEP05.LEAVE2 — Complete (AC01–04):** approved shared AST/header/schema/
+bridge and named LEAVE are implemented, retaining all source validation and
+existing nearest-ELSE authority.
+**CLC-STEP05.LEAVE3 — Locally qualified/complete (AC01–04):** the focused
+Debug proof and independent actual RXAS review below pass. Owning docs and
+scheduling are current; whole-instruction dependencies remain open.
 
-All twelve CFC criteria remain open. Named LEAVE/ITERATE and invalid-target
-delivery remain LC-I-09/10 work. Full expressions, shared labels/EXPOSE, exact
-recovery, resumable conditions/SIGL and clause/TRACE retain their owners;
-INTERPRET remains last. Named transfer implementation begins separately after
-the DO local commit, under the approved v6 contract.
+<a id="current-leave-proof"></a>
 
-<a id="current-do-proof"></a>
+### Current LEAVE proof
 
-### Current DO proof
+Normal Debug qualifies the frozen LEAVE source/fixtures on `579a8377`, with
+separately qualified B seed repair `63184ae42`. Merge `2b536f6df` reconciles
+unrelated upstream GLOBALV additions without changing these inputs; no GLOBALV
+qualification is claimed. Affected modules/hosts/fixtures were prepared
+warning-free through direct recipes; final frontend/backend fixtures are
+`b776d7bf` / `f5bba6ab`. The seed's required core `stage-product`
+proof below is reused; no merge-only rebuild or research grammar refresh.
 
-**DO-F01 — Repaired/qualified, DO-AC03 exact capture parts:** word-list
-membership admitted padded ` repeat ` and controlled `to by` attributes in
-forged IR; source lowering already emits canonical parts. Exact equality with
-the selected token now rejects both. Against retained `a33f65b7` v5 tools,
-`c-context-contracts … do-exact` reproduces 6 checks / 2 refusal failures
-(4 commands, 5.158s); replacing only the repaired protocol passes 6/0
-(4 commands, 2.334s), warning-free. Both fixtures remain generic-valid and
-input-preserving. Default coverage retains the two controls; unchanged 313-check
-admission/source/runtime proof below is reused, with no v6, native or grammar
-build in this prerequisite.
-
-Normal Debug qualifies `46593174` plus the reviewed frozen DO source/fixture
-patch. Affected B C modules, hosts and fixtures were prepared warning-free
-with existing native tools. Native/core product, generic L, shared B runtime
-and Unicode inputs are unchanged; their prior stage-product and focused proof
-are reused. No native refresh, source-slice ASan, installed/hosted/platform or
-whole-C qualification is claimed.
-
-| Command / inspection | Observed result and scope |
+| Command / inspection | Observed result and boundary |
 |---|---|
-| Exact parser/tiny-lexer preflight; checked warm grammar recipe; `rxas` | Pass in 8.884 / 10.894 / 3.776s, no diagnostics. Actual grammar: 29,709 NFA / 5,609 DFA / 2,683 LR, 7,774,129 RXAS bytes. Generator `4e1b2a23…700a5`, capsule/manifest bytes and mtimes unchanged; no cold lexical construction. |
-| `frontend-tests-linked -a do`; focused `do-literals` | Reuse 217/0 source/AST/span/header/END/dead-error checks; final closed-body malformed UNTIL assertion passes 5/0 after four fixture preparation/execution commands (6.918s). Default grammar/DO coverage retains it. |
-| `backend-tests-linked -a … do`; focused `do-final` | Opt reuses 130 passing original assertions plus corrected 26/0 focused replay (29.348s); noopt/rxtvm passes 146/0 (63.651s), internally both IR modes. Ten endpoint cases and once-only marker CFG assertions include closed UNTIL, nested RETURN/EXIT and SELECT/loop transfers. This is composed opt proof, not one wholly green initial run. |
-| `target-context-linked -a do`; `check-target-context.py` | 16/0 in each opt/rxbvm and noopt/rxtvm cell; actual helper shape 234/0 and 237/0. Seven exact borrowed-state shims, repeated mutation, shared errors/message/source and bound-event forwarding pass. |
-| `c-context-contracts-linked -a … do`; DROP maintenance | 313/0 focused protocol checks: exact v5/51, fresh/loaded/selected graphs, dead declarations versus reachable phases, keys/merges/backedges/LIFO, bounded refusal and immutable/atomic output. Opt DROP maintenance passes 47/0; unchanged B algorithms are reused. |
-| `check-backend.py` selected ten `do-…` cases, `--ir on/off` | All ten independent runtime cases qualify across paired opt/rxbvm and noopt/rxtvm, both IR modes. Opt/on is composed proof after the exact ARG-uppercase oracle correction and a three-command assembly/link/execution replay; passed unchanged cases are reused. Other cells each pass 40 commands in 100.106 / 100.749 / 100.154s. Assembler `-n` isolates compiler IR. |
-| `check-step07.py --c-only --do-metadata`; CLI refusal sentinels | Metadata 16/0 commands in 30.579s: valid catalogue plus seven one-field new-signature mutations preserve prior output. Three CLI sentinels preserve caller output/no staging residue: duplicate modifier and malformed dead UNTIL in both IR modes. Six maintenance commands plus sentinels pass in 20.283s. |
-| Complete readable caller/helper RXAS | Root and independent review clear count/control/once/nested/SELECT/reentry and 26.2/41.6/34.4 fatal paths in sampled IR modes. Owners initialize before fallible setup; synchronous aliases clear before reverse-depth owners; RETURN packet precedes cleanup; fatal preserves result/diagnostic origin. State-free forms allocate no owner, count start calls no helper, and closed paths add no spare join/advance. Ordinary context/packet/frame work remains an admitted C-OPT baseline, not a speed claim. |
-| Existing pipeline view consumers; CTest registration | Four commands (9.019s) refresh only step03 pipeline C AST/IR and step04 pipeline C IR/RXAS: CDo/DoWhile and contextual while.truth with truthful spans. No new walkthrough assembly/link/runtime proof; unchanged G and other C views are reused. Backend 50 cases/365 commands and representative C calls 136/others 68 retain serial locks and generous 900/1800s hang guards. Isolated new 40-command runtime component 100.106s plus prior 295-command aggregate 89s support scheduling; no new full-aggregate timing is claimed. |
+| Checked warm C grammar recipe and `rxas` | Pass in 10.951/3.872s: 29,709 NFA / 5,609 DFA / 2,707 LR, 7,778,155 RXAS bytes. Capsule/manifest bytes and mtimes unchanged. This pre-seed-refresh table remains byte-identical and qualified; changed native/stamp identities are not rewritten to force reuse. |
+| `frontend-tests … leave`; focused `leave-policy` and `options-refusals` | Reuse 132 passing assertions from the initial 136-check run, plus repaired policy replay 21/0 and reduced OPTIONS refusals 40/0. This is composed proof after B-SEED-01, not a wholly green initial run. Raw spans/targets, nearest ELSE, default/dead refusals and request-local STRICTC are covered. |
+| `backend-tests … leave`; focused `leave-invalid` | Opt uses 90 passing positive assertions plus 18/0 focused invalid replay; noopt/rxtvm passes 108/0 in 42.137s, internally both IR modes. Disposable-link preparation corrections changed no product/oracle. Default coverage retains all six cases. |
+| `target-context … leave`; `check-target-context.py` | Direct bridge 14/0 in each paired B/VM cell; helper shape 238/0 opt and 241/0 noopt. Exact 33 exports, four unchanged shared errors and bound raw ERROR event/source forwarding pass. Source-bearing direct fixtures are linked unstripped. |
+| `c-context-contracts … leave`; DROP count maintenance | 166/0 in 30.532s: exact v6/52 schema, fresh/loaded/selected graphs, all-record code/name/dead checks, atomic limits/input/prior-output controls. DROP maintenance 47/0. Unchanged DO 313, B pool/Unicode and shared-runtime proof are reused. |
+| `check-backend.py` four selected `leave-…` cases, IR on/off | All four paired opt/rxbvm and noopt/rxtvm cells pass 16 commands each in 34.330/35.526/35.452/35.897s. Independent state/markers, reentry, dormant STRICTC and visible 28.1/28.3 locations pass; assembler `-n` isolates compiler IR. |
+| `check-step07.py --c-only --leave-metadata`; CLI refusal sentinels | Metadata 10/0 commands in 16.093s; four one-field new-signature mutations preserve prior output. Three distinct CLI refusals retain caller output/no staging residue: default dead invalid target and malformed default/STRICTC syntax across both IR modes. |
+| One native C read-only control; complete caller/helper RXAS | Native compiler `-n`/assembler `-n` prints independently expected `outer 1 10` in four commands. Root and peer review clear required closes/jumps, skipped end work, stable owners, reentry and fatal cleanup/raw source; 20 same-IR capture pairs are byte-identical across B hosts. No runtime target search is added. Ordinary context/packet/frame costs remain admitted C-OPT baseline costs, not speed or minimum-frame claims. |
+| Maintained view consumers and CTest properties | Two current-consumer relinks and three probes reproduce four pipeline C AST/IR/RXAS views byte-for-byte under v6; no asset rewrite or walkthrough runtime replay. Default backend 54 cases/393 commands and representative C calls 145/others 68 retain serial locks and generous 900/1800s hang guards. The new 16-command runtime components (34–36s), shape component (42s) and metadata component support scheduling; no new full-aggregate measurement is claimed. |
 
-The exact LEAVE/ITERATE v6 contract is approved for the next increment after
-this DO local commit. Its named-transfer delivery does not change the frozen
-v5 proof or close source EXPOSE/shared labels, full expressions, exact recovery,
-resumable conditions/SIGL or clause/TRACE. All twelve CFC criteria remain open.
+No source EXPOSE/shared-pool inference, resumed-condition/TRACE, installed,
+hosted, cross-platform, fresh sanitizer or whole-C qualification is claimed.
+Named ITERATE remains an explicit profile refusal until its separate increment.
+All twelve CFC criteria remain open; INTERPRET remains last.
 
-## Completed B-SEED-01 prerequisite: preserve linked-output stores
+### Completed B-SEED-01 prerequisite: preserve linked-output stores
 
 **Locally qualified; separate seed correctness repair.** The minimal B procedure links an integer
 reference, then assigns a scalar argument through it. Qualified native `rxc`
@@ -143,6 +124,92 @@ policy replay is composed proof, not a wholly green initial run. Qualified
 inputs are `579a8377` plus the reviewed flow/reference patch and the existing
 pending LEAVE consumer; no LEAVE feature is included in this prerequisite.
 No ASan, broad matrix, API or performance claim is added.
+
+Then CLC-STEP05.ITERATE1–3 implements named ITERATE using the same approved
+foundation. Shared labels/EXPOSE, SIGNAL/INTERPRET loop invalidation, resumable
+conditions/SIGL, complete expressions/exact recovery and clause/TRACE retain
+their owners. All twelve CFC criteria stay open; INTERPRET remains last.
+
+<a id="current-action-do"></a>
+
+## Completed static DO increment
+
+Complete LC-I-08's static DO forms and unnamed LEAVE/ITERATE integration within
+the admitted source/expression profile. Preserve header evaluation, numeric and
+live control-variable state, nested targets, original source and failures; reuse
+existing B DO/value/pool/numeric/Unicode bodies rather than duplicating them.
+The [approved exact contract](doc/architecture.md#approved-do-contract) owns the
+AST, eight operations, seven exports and finite protocol; the
+[instruction review](doc/LEVELC-INSTRUCTION-REVIEW.md#do-contract)
+records its bounded language scope. The approved revision uses C v5 with
+four existing types/51 operations and 32 target exports, refusing v4. Static text
+keys scoped to each function select hidden owned state; no first-class DO state type,
+SDK/ISA/native API or algorithm change is commissioned. **Exact-contract approval
+was granted on 20 October 2026; the bounded local proof below passes.**
+
+| ID / status | Approved checkable closure |
+|---|---|
+| **DO-AC01 — Locally qualified: source/AST** | Independent AST/span and syntax controls cover grouping, counted/controlled/FOREVER and standalone/combined WHILE/UNTIL, authored TO/BY/FOR order, scalar/compound controls, null clauses and admitted main/nested/private/IF/SELECT placements. END names compare authored symbols without tail substitution using shared Classic Unicode casing; missing/wrong/noncontrol names, malformed/duplicate/incompatible headers and dead source refuse with locations and prior-output preservation. |
+| **DO-AC02 — Locally qualified: runtime/order/errors** | Independent markers/state/error expectations prove once-only count capture and controlled start capture before once-only modifiers in all six written orders, immediate modifier validation before control start/assignment (including FOR 0), count/TO entry before WHILE, UNTIL before advance after body/ITERATE, LEAVE skipping both, and the final count-limited advance. Cover zero/large/exponent counts, signed/zero BY, spelling/scale, live compound-tail/body mutation, nested/private ownership and unnamed transfers skipping groups/SELECT; retain shared 26.2/26.3, 41.4–41.6 and distinct 34.3/34.4 with visible C locations and bound raw helper-origin forwarding under the current fatal profile. |
+| **DO-AC03 — Locally qualified: exact ABI/protocol admission** | Exact four-type v5/51-op and 32-export metadata controls admit only the architecture's descriptors/signatures. Bounded C-owned all-record validation checks key/name/part declarations and one constructor per function-local key, including dead records; reachable-only Collect/Ready/Body/FalseExit stack/phase/mask and merge/backedge proof rejects invalid order, non-top use, re-entry and unmatched cleanup. Fresh, loaded and post-transform graphs receive the same checks before publication, preserving input graphs/prior output on refusal. Generic LLIR retains record/type/terminator integrity; unreachable components receive no invented execution facts. |
+| **DO-AC04 — Locally qualified: ownership/RXAS/qualification** | IR-off/on caller/helper inspection proves stable hidden strong owners and synchronous borrowed helper references, no escaping/copyable IR state, correct normal/LEAVE/RETURN/EXIT/fatal reverse-depth cleanup and retained outer state for state-free inner exits. State-free forms allocate no DO state; count-mode start emits no helper call; captures/configuration and joins contain no avoidable repetition. Focused existing Debug selectors/runtime/admission controls, representative paired B/IR/VM cells and independent RXAS review qualify the change with unchanged shared B/L/native proof reused, checked grammar reuse where eligible, current docs and task-only cleanup; no new aggregate, per-slice ASan or broad campaign. |
+
+**CLC-STEP05.DO1 — Approved/complete (AC01–04):** vision, exact architecture,
+independent expectations and dependencies reviewed; Adrian approved the recorded
+contract on 20 October 2026.
+**CLC-STEP05.DO2 — Complete (AC01–04):** approved
+grammar/parser/frontend, v5 admission/selector, seven delegating target shims
+and focused independent fixtures are implemented. Qualified tooling/shared
+runtime and checked lexer reuse are retained; no algorithms are duplicated.
+**CLC-STEP05.DO3 — Locally qualified/complete (AC01–04):** focused source,
+order/error, ABI/protocol and ownership proof passes, including independent
+actual caller/helper RXAS review. Owning docs and scheduling are current;
+whole-instruction dependencies remain open.
+
+All twelve CFC criteria remain open. Named LEAVE/ITERATE and invalid-target
+delivery remain LC-I-09/10 work. Full expressions, shared labels/EXPOSE, exact
+recovery, resumable conditions/SIGL and clause/TRACE retain their owners;
+INTERPRET remains last. Named transfers are delivered separately under the
+approved v6 contract and current action above.
+
+<a id="current-do-proof"></a>
+
+### Current DO proof
+
+**DO-F01 — Repaired/qualified, DO-AC03 exact capture parts:** word-list
+membership admitted padded ` repeat ` and controlled `to by` attributes in
+forged IR; source lowering already emits canonical parts. Exact equality with
+the selected token now rejects both. Against retained `a33f65b7` v5 tools,
+`c-context-contracts … do-exact` reproduces 6 checks / 2 refusal failures
+(4 commands, 5.158s); replacing only the repaired protocol passes 6/0
+(4 commands, 2.334s), warning-free. Both fixtures remain generic-valid and
+input-preserving. Default coverage retains the two controls; unchanged 313-check
+admission/source/runtime proof below is reused, with no v6, native or grammar
+build in this prerequisite.
+
+Normal Debug qualifies `46593174` plus the reviewed frozen DO source/fixture
+patch. Affected B C modules, hosts and fixtures were prepared warning-free
+with existing native tools. Native/core product, generic L, shared B runtime
+and Unicode inputs are unchanged; their prior stage-product and focused proof
+are reused. No native refresh, source-slice ASan, installed/hosted/platform or
+whole-C qualification is claimed.
+
+| Command / inspection | Observed result and scope |
+|---|---|
+| Exact parser/tiny-lexer preflight; checked warm grammar recipe; `rxas` | Pass in 8.884 / 10.894 / 3.776s, no diagnostics. Actual grammar: 29,709 NFA / 5,609 DFA / 2,683 LR, 7,774,129 RXAS bytes. Generator `4e1b2a23…700a5`, capsule/manifest bytes and mtimes unchanged; no cold lexical construction. |
+| `frontend-tests-linked -a do`; focused `do-literals` | Reuse 217/0 source/AST/span/header/END/dead-error checks; final closed-body malformed UNTIL assertion passes 5/0 after four fixture preparation/execution commands (6.918s). Default grammar/DO coverage retains it. |
+| `backend-tests-linked -a … do`; focused `do-final` | Opt reuses 130 passing original assertions plus corrected 26/0 focused replay (29.348s); noopt/rxtvm passes 146/0 (63.651s), internally both IR modes. Ten endpoint cases and once-only marker CFG assertions include closed UNTIL, nested RETURN/EXIT and SELECT/loop transfers. This is composed opt proof, not one wholly green initial run. |
+| `target-context-linked -a do`; `check-target-context.py` | 16/0 in each opt/rxbvm and noopt/rxtvm cell; actual helper shape 234/0 and 237/0. Seven exact borrowed-state shims, repeated mutation, shared errors/message/source and bound-event forwarding pass. |
+| `c-context-contracts-linked -a … do`; DROP maintenance | 313/0 focused protocol checks: exact v5/51, fresh/loaded/selected graphs, dead declarations versus reachable phases, keys/merges/backedges/LIFO, bounded refusal and immutable/atomic output. Opt DROP maintenance passes 47/0; unchanged B algorithms are reused. |
+| `check-backend.py` selected ten `do-…` cases, `--ir on/off` | All ten independent runtime cases qualify across paired opt/rxbvm and noopt/rxtvm, both IR modes. Opt/on is composed proof after the exact ARG-uppercase oracle correction and a three-command assembly/link/execution replay; passed unchanged cases are reused. Other cells each pass 40 commands in 100.106 / 100.749 / 100.154s. Assembler `-n` isolates compiler IR. |
+| `check-step07.py --c-only --do-metadata`; CLI refusal sentinels | Metadata 16/0 commands in 30.579s: valid catalogue plus seven one-field new-signature mutations preserve prior output. Three CLI sentinels preserve caller output/no staging residue: duplicate modifier and malformed dead UNTIL in both IR modes. Six maintenance commands plus sentinels pass in 20.283s. |
+| Complete readable caller/helper RXAS | Root and independent review clear count/control/once/nested/SELECT/reentry and 26.2/41.6/34.4 fatal paths in sampled IR modes. Owners initialize before fallible setup; synchronous aliases clear before reverse-depth owners; RETURN packet precedes cleanup; fatal preserves result/diagnostic origin. State-free forms allocate no owner, count start calls no helper, and closed paths add no spare join/advance. Ordinary context/packet/frame work remains an admitted C-OPT baseline, not a speed claim. |
+| Existing pipeline view consumers; CTest registration | Four commands (9.019s) refresh only step03 pipeline C AST/IR and step04 pipeline C IR/RXAS: CDo/DoWhile and contextual while.truth with truthful spans. No new walkthrough assembly/link/runtime proof; unchanged G and other C views are reused. Backend 50 cases/365 commands and representative C calls 136/others 68 retain serial locks and generous 900/1800s hang guards. Isolated new 40-command runtime component 100.106s plus prior 295-command aggregate 89s support scheduling; no new full-aggregate timing is claimed. |
+
+The exact LEAVE/ITERATE v6 contract is approved for the next increment after
+this DO local commit. Its named-transfer delivery does not change the frozen
+v5 proof or close source EXPOSE/shared labels, full expressions, exact recovery,
+resumable conditions/SIGL or clause/TRACE. All twelve CFC criteria remain open.
 
 ## Completed prerequisite: generic L lexical construction reuse
 
@@ -360,7 +427,7 @@ NUMERIC, SIGNAL and TRACE instruction reviews occur later.
 | **CLC-STEP02 — Partial** | Supply registered exceptional/resumable edges, observations, facts/invalidation, liveness and checked rewrites as consumers require. Independent non-C/G tests prove correctness, limits and atomic failure. Serves AC07/10/11. | STEP01 contracts; approve new public L APIs/schemas. Keep block-local values/cross-block slots; no required SSA rewrite. |
 | **CLC-STEP03 — Partial** | Complete remaining live activation/pool/context, direct operations/BIF ABI and one-body labels, recursion, EXPOSE, restoration and abrupt paths. Close remaining property/simple-map/traversal/budget contracts only where needed. Serves AC02/03/09/11/12. | Existing Unicode/CTX pieces are complete. Each later extension needs the relevant STEP01/02 contract and exact ABI approval; direct B and new-C proof are distinct. |
 | **CLC-STEP04 — Partial** | Complete contextual source/Unicode names, AST/source maps, static errors even in unreachable text, all expressions/numeric semantics and BF01–05 bindings. Independent values, effects, diagnostics and RXAS checks close C-SRC/C-EXPR. Serves AC01–03/06/07/09/11. | Required L/runtime services from STEP02/03; no native frontend dependency. |
-| **CLC-STEP05 — Partial; next approved LEAVE** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews and static DO are locally qualified with shared dependencies open; approved LEAVE follows the DO local commit. |
+| **CLC-STEP05 — Partial; next ITERATE1** | Review LC-I-01–10 individually: SAY through ITERATE. Close every form, error, order, pool/loop effect and source observation in the ledger. Serves AC01–03/06/07. | STEP04 plus each instruction's shared dependencies. Prior bounded reviews and static DO are locally qualified with shared dependencies open; named LEAVE is locally qualified; the approved named ITERATE increment follows its local commit. |
 | **CLC-STEP06 — Partial** | Review LC-I-11–19 individually: ARG through PARSE. Complete one PARSE executor, shared labels/fall-through, presence/results, EXPOSE and static signed providers; integrate BF05/06/08 as needed. Serves AC01–04/06/09/11. | Needed STEP03–05 services. ARG may introduce shared PARSE infrastructure before full PARSE review. |
 | **CLC-STEP07 — Partial** | Review LC-I-20–24 individually: ADDRESS, commands, NUMERIC, SIGNAL, TRACE. Complete conditions, clause clocks, source/error/TRACE observations and BF07/09. Serves AC01–04/06/09. | Required STEP06 control/activation contracts and host adapters; early foundations do not close these instructions. |
 | **CLC-STEP08 — Not started** | Complete remaining BIF/host contracts: exact-length invocation/completion, callback-window pools, queues/streams, clocks/HALT and declared platform adapters. Qualify all static reference capabilities. Serves AC01–04/09/11/12. | Deliver needed adapters alongside earlier consumers; full closure follows STEP04–07. New host APIs and capability exclusions need approval. Reuse existing B bodies. |

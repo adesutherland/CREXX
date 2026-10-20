@@ -14,7 +14,7 @@ import llctarget
 main: procedure = .int expose checks failures
   arg argv = .string[]
   if argv[0] > 1 then return 2
-  if argv[0] = 1 then if argv[1] <> 'select' & argv[1] <> 'do' then return 2
+  if argv[0] = 1 then if argv[1] <> 'select' & argv[1] <> 'do' & argv[1] <> 'leave' then return 2
   checks = 0; failures = 0
   if argv[0] = 0 then do
     call expressions()
@@ -25,11 +25,41 @@ main: procedure = .int expose checks failures
   if argv[0] = 0 then do
     call selectcases()
     call docases()
+    call transfercases()
   end
   else if argv[1] = 'do' then call docases()
+  else if argv[1] = 'leave' then call transfercases()
   else call selectcases()
   say 'TARGET_CONTEXT|checks=' || checks || '|failures=' || failures
   return failures
+
+/* The shared error helper owns all four message identities. Different inline
+ * call sites need valid raw event IDs and equal helper source, not equal PCs. */
+transfercases: procedure = .void
+  code = .string; name = .string; sample = .int; caught = .int
+  do sample = 1 to 4
+    code = word('28.1 28.2 28.3 28.4',sample); name = ''
+    if sample > 2 then name = 'MiXeD.key'
+    originalmessage = ''; originalfile = ''; originalline = 0; originalsource = ''
+    originalmodule = -1; originaladdress = -1
+    do
+      call rexxdostate_invalid_transfer(code,name)
+    on signal error as raw
+      originalmessage = raw.message(); originalfile = raw.file(); originalline = raw.line(); originalsource = raw.source()
+      originalmodule = raw.module(); originaladdress = raw.address()
+    end
+    call check(pos('RXC-LC-' || code || ':',originalmessage) = 1,'shared invalid transfer identity ' || code)
+    caught = 0
+    do
+      call llctarget..invalidtransfer(code,name)
+    on signal classic_syntax as bridged
+      caught = bridged.message() == originalmessage
+      call check(originalmodule >= 0 & originaladdress > 0 & bridged.module() >= 0 & bridged.address() > 0 & bridged.file() == originalfile & bridged.line() = originalline & originalline > 0 & bridged.source() == originalsource,'invalid transfer preserves raw helper source ' || code)
+    end
+    call check(caught,'invalid transfer forwards unchanged bound message ' || code)
+    if sample > 2 then call check(pos(name,originalmessage) > 0,'authored transfer name remains unchanged ' || code)
+  end
+  return
 
 /* Exercise adapter mutation through borrowed state. Shared B tests own the
  * count/control algorithms; generated C separately owns source timing/lifetime. */

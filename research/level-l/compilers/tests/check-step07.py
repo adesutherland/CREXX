@@ -21,15 +21,17 @@ p.add_argument('--native-controls', action='store_true')
 p.add_argument('--inspect', type=Path, help='temporary directory for representative caller RXAS review')
 p.add_argument('--c-only', action='store_true',
                help='check existing C calls in restricted compiler-host and static-target roots')
+p.add_argument('--leave-metadata', action='store_true',
+               help='run only focused invalid-transfer metadata controls (requires --c-only)')
 p.add_argument('--do-metadata', action='store_true',
                help='run only the focused DO target metadata controls (requires --c-only)')
 p.add_argument('--select-metadata', action='store_true',
                help='run only the focused SELECT target metadata controls (requires --c-only)')
 a = p.parse_args()
-if a.do_metadata and (not a.c_only or a.select_metadata):
-    p.error('--do-metadata requires --c-only and excludes --select-metadata')
-if a.select_metadata and not a.c_only:
-    p.error('--select-metadata requires --c-only')
+if sum((a.leave_metadata, a.do_metadata, a.select_metadata)) > 1:
+    p.error('choose at most one focused metadata selection')
+if (a.leave_metadata or a.do_metadata or a.select_metadata) and not a.c_only:
+    p.error('focused metadata selection requires --c-only')
 if a.c_only and (a.installed or a.native_controls):
     p.error('--c-only uses build-linked compiler images; installed/native controls remain mixed-mode checks')
 if a.c_only and a.vm not in ('rxbvm', 'rxtvm'):
@@ -161,7 +163,7 @@ def metadata_image(directory, signature, *, exported=True, duplicate=False):
     run(directory.name+'-assemble', [tool('rxas'), '-n', asm])
 
 
-def classic_metadata(select_only=False, do_only=False):
+def classic_metadata(select_only=False, do_only=False, leave_only=False):
     """Selected ABI mutations are assembled for import only, never executed.
 
     A valid authored class catalog is admitted first. Each negative changes
@@ -206,6 +208,8 @@ def classic_metadata(select_only=False, do_only=False):
     select_source = root/'backend/select-missing-c.crexx'
     do_source = work/'do-metadata.crexx'
     do_source.write_text('options levelc; do i=1 to 2 by 1 for 1 while flag; nop; end; do until flag; nop; end; exit 0\n')
+    leave_source = work/'leave-metadata.crexx'
+    leave_source.write_text('options levelc strictc; leave MiXeD; exit 0\n')
 
     def fixture(label, package, text):
         directory = work/label
@@ -219,14 +223,16 @@ def classic_metadata(select_only=False, do_only=False):
         return directory
 
     directory = fixture('c-valid-catalog', 'rxfnsc', valid)
-    for ir in (['on'] if select_only or do_only else ['off', 'on']):
-        compile_source('c', do_source if do_only else select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
+    for ir in (['on'] if select_only or do_only or leave_only else ['off', 'on']):
+        compile_source('c', leave_source if leave_only else do_source if do_only else select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
                        label='c-valid-catalog-'+ir, imports=directory)
-    if not select_only and not do_only:
+    if not select_only and not do_only and not leave_only:
         compile_source('c', select_source, work/'c-select-valid-catalog.rxas',
                        label='c-select-valid-catalog', imports=directory)
         compile_source('c', do_source, work/'c-do-valid-catalog.rxas',
                        label='c-do-valid-catalog', imports=directory)
+        compile_source('c', leave_source, work/'c-leave-valid-catalog.rxas',
+                       label='c-leave-valid-catalog', imports=directory)
 
     cases = [
         ('c-target-optional', 'llctarget', 'context=reference '+ct,
@@ -260,6 +266,10 @@ def classic_metadata(select_only=False, do_only=False):
          'llctarget.selectmissing'),
         ('c-select-missing-optional', 'llctarget', 'line=.string', '?line=.string',
          'llctarget.selectmissing'),
+        ('c-leave-result', 'llctarget', '".void"', '".int"', 'llctarget.invalidtransfer'),
+        ('c-leave-code-optional', 'llctarget', 'code=.string', '?code=.string', 'llctarget.invalidtransfer'),
+        ('c-leave-name-optional', 'llctarget', 'name=.string', '?name=.string', 'llctarget.invalidtransfer'),
+        ('c-leave-name-type', 'llctarget', 'name=.string', 'name=.int', 'llctarget.invalidtransfer'),
         ('c-do-new-result', 'llctarget', '".rexxdostate..rexxdostate"', '".rexxvalue..rexxvalue"', 'llctarget.donew'),
         ('c-do-capture-state', 'llctarget', 'state=reference .rexxdostate..rexxdostate', 'state=.rexxdostate..rexxdostate', 'llctarget.docapture'),
         ('c-do-start-nominal', 'llctarget', 'state=reference .rexxdostate..rexxdostate', 'state=reference .foreign..rexxdostate', 'llctarget.dostart'),
@@ -271,7 +281,8 @@ def classic_metadata(select_only=False, do_only=False):
     for label, package, before, after, name in cases:
         is_select = label.startswith('c-select-')
         is_do = label.startswith('c-do-')
-        if (select_only and not is_select) or (do_only and not is_do):
+        is_leave = label.startswith('c-leave-')
+        if (select_only and not is_select) or (do_only and not is_do) or (leave_only and not is_leave):
             continue
         text = target if package == 'llctarget' else valid
         pattern = re.compile(r'(^\s*\.meta "'+re.escape(name)+r'"="b"[^\n]*$)', re.M)
@@ -280,11 +291,11 @@ def classic_metadata(select_only=False, do_only=False):
         replacement = matches[0].group().replace(before, after, 1)
         text = text[:matches[0].start()]+replacement+text[matches[0].end():]
         directory = fixture(label, package, text)
-        for ir in (['on'] if is_select or is_do else ['off', 'on']):
+        for ir in (['on'] if is_select or is_do or is_leave else ['off', 'on']):
             # Identity mutations deliberately exercise selected-call lookup;
             # all other cases reach a concrete signature or class refusal.
             message = b'not found' if label == 'c-member-identity' else b'incompatible'
-            reject(do_source if is_do else select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
+            reject(leave_source if is_leave else do_source if is_do else select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
 
 
 def classic_construction(text, name):
@@ -399,6 +410,10 @@ def classic_shape(text, name):
 
 
 try:
+    if a.leave_metadata:
+        classic_metadata(leave_only=True)
+        print(f'LEAVE_METADATA|commands={len(records)}|failures=0')
+        raise SystemExit(0)
     if a.do_metadata:
         classic_metadata(do_only=True)
         print(f'DO_METADATA|commands={len(records)}|failures=0')

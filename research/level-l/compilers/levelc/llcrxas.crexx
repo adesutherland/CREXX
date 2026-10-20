@@ -895,6 +895,11 @@ compilation: class
         symbol = imported('llctarget','llctarget.selectmissing','.void','.string')
         call argtext(1,line as .string); call invoke('',symbol,1)
       end
+      when name = 'transfer.invalid' then do
+        symbol = imported('llctarget','llctarget.invalidtransfer','.void','.string .string')
+        call argtext(1,op.attribute('code') as .string); call argtext(2,op.attribute('name') as .string)
+        call invoke('',symbol,2)
+      end
       when name = 'drop' then call dropoperation(op)
       when name = 'say' then call adapter(op,'sayvalue','.void',v)
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')

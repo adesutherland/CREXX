@@ -3469,8 +3469,10 @@ file settings. `LEVELC` and `NUMERIC_CLASSIC` are accepted. Nested block comment
 remain enabled; `COMMENTS_HASH`/`COMMENTS_NOHASH` and
 `COMMENTS_DASH`/`COMMENTS_NODASH` select request-local line comments.
 `COMMENTS_NOSLASH` is accepted; slash comments, incompatible levels/numeric
-policy, conflicting switches and known unsupported static controls such as
-`STRICTC`/`srcmap` are rejected. Identical switches may repeat. The header's bare
+policy, conflicting switches and unsupported `SRCMAP` are rejected. `STRICTC`
+selects reached-only invalid LEAVE-target errors for this request; default C
+rejects source-provable invalid LEAVE targets even in dead source. Identical switches
+may repeat; quoted/later/call-shaped STRICTC stays an ordinary operand. Header
 words still have their ordinary expression evaluation.
 
 ```rexx
@@ -3622,7 +3624,7 @@ child inheritance and parent restoration. The direct fixture
 `research/level-l/compilers/tests/target-context.crexx` demonstrates the same
 boundary independently. Generated C uses one required context reference and one
 fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. C-family v5/51 operations and the 32-export target are the approved current
+configuration. C-family v6/52 operations and the 33-export target are the approved current
 research contract: rebuild earlier C images/IR; no legacy bridge is provided.
 SELECT adds contextual WHEN truth and a shared no-match error bridge; the
 borrowed-context procedure ABI is unchanged. The
@@ -3630,9 +3632,14 @@ borrowed-context procedure ABI is unchanged. The
 adds counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only header
 captures and hidden frame-owned state delegated to shared `RexxDoState`.
 Grouping and state-free repetition allocate no DO state. END names compare
-authored symbols using shared Classic casing; named LEAVE/ITERATE, shared
-labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
-forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof).
+authored symbols using shared Classic casing. LEAVE accepts an optional raw
+control name, resolves the innermost matching controlled loop within this
+routine and closes crossed states without end checks/steps or pool-name search.
+Named ITERATE remains explicitly unsupported until its following increment;
+shared labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
+forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof);
+[named LEAVE proof](../../research/level-l/compilers/PLAN.md#current-leave-proof)
+covers static targets and request-local invalid-target policy.
 INTERPRET remains unimplemented,
 and the current fatal-condition profile remains nonresumable.
 

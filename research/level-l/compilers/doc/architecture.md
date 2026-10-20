@@ -2,8 +2,9 @@
 
 **Target architecture approved by Adrian, 19 October 2026.** The original
 native/reference audit used `016e6a65466c65a5c722b96452d95025acb463b2`;
-the context ABI records completed STEP03d and the current approved C v5/DO
-implementation. The plan records bounded local qualification.
+the context ABI records completed STEP03d and the current approved C v6
+implementation. Named LEAVE is locally qualified; named ITERATE follows
+separately. The plan records bounded local qualification.
 The [plan](../PLAN.md#c-first-delivery-milestone) owns qualification and sequence;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
@@ -39,11 +40,11 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; locally qualified bounded DROP/SELECT/static DO projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; locally qualified bounded DROP/SELECT/static DO/named LEAVE projection/lowering, limited operators, ASCII private PROCEDURE labels/calls, simple ARG and LENGTH/ARG/DIGITS only. Shared-pool labels/fall-through refused. | Qualify each instruction increment; wider source/instruction coverage remains substantially smaller than native C. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
-| `levelc/runtime/llctarget.crexx` | One 32-export B target delegates contextual expressions/BIFs, DO state and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One 33-export B target delegates contextual expressions/BIFs, DO state and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF bindings and prove any specialization's state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Current wrapper/body frames are 16/27; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; walkthrough counts include wrappers/cold handlers and exclude helper bodies/metadata. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
@@ -443,8 +444,9 @@ Keep only the helpers used by the clean selector: `literal`, `poolnew`,
 `absent`, `requirevalue`, `setresult`, `status` and `failuremessage`. Together
 with the nine entries above these form the 23-export foundation. SELECT adds
 two entries under its [approved contract](#approved-select-contract), giving
-25 exports. The [approved DO contract](#approved-do-contract) adds seven,
-giving the current 32 exports. Remove
+25 exports. The [approved DO contract](#approved-do-contract) adds seven;
+the [transfer contract](#approved-leave-iterate-contract) adds `invalidtransfer`,
+giving the current 33 exports. Remove
 `contextnew`, the old nine bodies, compatibility bridge/build entries and
 old-image/legacy-signature tests. Preserve applicable RexxDoc tags when moving
 the current implementations. The private `bifcontext` remains internal.
@@ -464,9 +466,11 @@ the previous output. Incompatible packages must not accidentally select
 an old same-name signature. No new runtime product or compiler dependency is
 introduced into static applications.
 
+<a id="current-c-family-contract"></a>
+
 #### Approved C-family revision and generated procedure ABI
 
-**CLC-STEP03d is locally complete; current DO uses C family version 5 without
+**CLC-STEP03d is locally complete; current C uses family version 6 without
 changing the context ABI.** Use the following semantic contract and generated procedure
 ABI, with one clean current C target and no compatibility bridge for earlier
 research C programs. The five shared B callables and nine borrowed signatures
@@ -476,9 +480,9 @@ record or RXAS/VM operation is introduced. Complete labels, conditions and
 INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 5. The neutral scalar names do not load the G
+types and `crexx.c` version 6. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1/2/3/4 are never reinterpreted as version 5. Within version 5, the complete C
+versions 1/2/3/4/5 are never reinterpreted as version 6. Within version 6, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -502,10 +506,11 @@ unsupported producer/use. The former `numeric` and `pool` types and `pool.new`
 operation remain absent. Resolve the current pool from the bundle
 at each pool operation, so an observed `bindPool` replacement remains live.
 
-The following table preserves the 40 context-foundation operations; approved
-DROP adds the 41st operation [below](#proposed-next-instruction-drop), and
-[SELECT](#approved-select-contract) adds operations 42/43, and
-[DO](#approved-do-contract) adds operations 44–51. Names have
+The following table owns all 52 current descriptors: 40 context-foundation
+operations, [DROP](#proposed-next-instruction-drop) at 41,
+[SELECT](#approved-select-contract) at 42/43,
+[DO](#approved-do-contract) at 44–51 and
+[transfer.invalid](#approved-leave-iterate-contract) at 52. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
 `crexx.g.int64` and `crexx.g.text`. An output, when present, is named `value`.
@@ -513,7 +518,9 @@ the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 the bundle, including existing BIF pool-policy setters; it does not assert
 read-only access. `condition` includes the existing reference, initialization,
 conversion, numeric, argument and resource conditions without changing their
-names or diagnostic policy. All rows terminate as `returns` except `exit`.
+names or diagnostic policy. All rows terminate as `returns` except `exit`,
+`select.missing` and `transfer.invalid`, which terminate as `diverges` under
+the current nonresumable C profile.
 No evaluator is registered for context-dependent operations, including truth.
 For exact literal bytes `0`/`1`, C construction may supply a separate derived
 core Boolean to the branch while retaining the effectful runtime truth call.
@@ -544,8 +551,18 @@ state/failure/observation proof.
 | `call` | `arguments:A context:C` | `target:T function:B` | R | `context.output` | `condition` |
 | `length` | `value:V context:C` | — | V | `context` | `condition` |
 | `exit` | `value:V` | — | — | `process` | `exit` |
+| `drop` | `context:C` | `name:T indirect:B` | — | `context` | `condition` |
+| `when.truth` | `value:V context:C` | — | B | `context` | `condition` |
+| `select.missing` | — | — | — | `none` | `condition` |
+| `do.new` | `context:C` | `key:T name:T` | — | `loop.context` | `condition.resource` |
+| `do.capture` | `value:V` | `key:T part:T` | — | `loop.context` | `condition` |
+| `do.start do.advance` | — | `key:T` | — | `loop.context` | `condition` |
+| `do.entry` | — | `key:T` | B | `loop.context` | `condition` |
+| `do.close` | — | `key:T` | — | `loop` | `none` |
+| `while.truth until.truth` | `value:V context:C` | — | B | `context` | `condition` |
+| `transfer.invalid` | — | `code:T name:T` | — | `none` | `condition` |
 
-`exit` has termination `diverges`. `form` admits only the current
+`form` admits only the current
 `scientific`/`engineering` spellings; `ordinal` must be positive; `target`
 must identify an existing private routine. `function` is a required canonical
 Boolean attribute: true selects `beginInternalFunction`, false selects
@@ -620,8 +637,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v5 IR + current bundle/adapters | Supported through the one-context ABI. |
-| Current selector + C v1/v2/v3/v4/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C v6 IR + current bundle/adapters | Supported through the one-context ABI. |
+| Current selector + C v1/v2/v3/v4/v5/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -872,11 +889,12 @@ has no work.
    shielding, original bytes/spans and request isolation. No native pre-scan,
    second comment algorithm, Unicode-profile switch or B/G dispatch is added.
    Unknown bare words do not change file settings; their ordinary expression
-   evaluation remains. Full header controls remain open under LC-I-05 /
-   LC-REF-064, STRICTC under LC-I-09 / LC-REF-041, and source-map integration
-   under C-SRC / LC-REF-002; these are later obligations, not exclusions.
-   Known but unsupported static controls such as STRICTC/srcmap receive a
-   located PROFILE refusal; quoted or later values do not select static settings.
+   evaluation remains. The [transfer contract](#approved-leave-iterate-contract)
+   adds request-local STRICTC for invalid-transfer policy; it does not add a
+   runtime OPTIONS processor word. Wider header controls remain open under
+   LC-I-05 / LC-REF-064 and source-map integration under C-SRC / LC-REF-002.
+   Unsupported static SRCMAP receives a located PROFILE refusal; quoted or
+   later values do not select static settings.
 3. **Runtime expression.** Evaluate an operand exactly once using
    existing expression operations, including Name reads, calls, function-result
    requirements, context/failure effects and source origins; only its unused
@@ -890,7 +908,8 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. SELECT introduced v4/43; current DO uses v5/51.
+   had 41 operations. The current C v6/52 descriptors are owned by the
+   [C-family table](#current-c-family-contract).
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
    comment switches/conflicts, quoted markers and independent requests. Source
@@ -914,15 +933,14 @@ has no work.
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
-41 operations. Current [DO v5/51/32](#approved-do-contract) supersedes that
+41 operations. Current [C v6/52/33](#current-c-family-contract) supersedes that
 version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
 | Contract | Exact approved shape |
 |---|---|
 | Source AST | `CSelect(clauses:(CWhen\|COtherwise\|CLabel)+)`; `CWhen(condition:expression, body:statement)`; `COtherwise(body:Sequence)`. At least one WHEN, at most one final OTHERWISE; its Sequence may be empty. Preserve ordered clauses and authored byte spans. |
-| `crexx.c.when.truth` | Inputs `value:V context:C`; output `value:core.boolean`; no attributes. State `context`, failure `condition`, termination `returns`. |
-| `crexx.c.select.missing` | No inputs/results/attributes. State `none`, failure `condition`, termination `diverges` under the current nonresumable C profile. |
+| C descriptors | `when.truth` and `select.missing` retain their exact fields/effects in the [current C-family table](#current-c-family-contract). |
 | `llctarget..whentruth` | `(value=.rexxvalue..RexxValue, context=reference .rexxclassiccontext..RexxClassicContext) -> .int` |
 | `llctarget..selectmissing` | `(line=.string) -> .void` |
 
@@ -987,9 +1005,10 @@ and complete C remain open.
 within the bounded static profile.** [DO-AC01–04 and CLC-STEP05.DO1–3](../PLAN.md#current-action-do)
 record the bounded LC-I-08 qualification against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
-The approved C-owned revision is **version 5 / 51 operations**, retaining the
-four existing C types and context procedure ABI; `llctarget` has **32 exports**.
-Version 4 is refused, with no compatibility path. No generic L, B runtime,
+The qualified DO increment introduced **version 5 / 51 operations** and
+**32 exports**, retaining the four existing C types and context procedure ABI.
+The [current v6/52/33 contract](#current-c-family-contract) supersedes that
+version boundary without changing the DO descriptors. No generic L, B runtime,
 native compiler or VM API/algorithm changes are commissioned.
 
 | Normalized source AST | Fields |
@@ -1020,15 +1039,8 @@ by exact bytes within its function; the frontend supplies stable local names
 such as `do.1`. Keys are attributes, never raw arena/operation IDs or runtime
 values. All eight operations terminate `returns`.
 
-| New `crexx.c` operation | Inputs → results | Attributes | State / failure |
-|---|---|---|---|
-| `do.new` | `context:C` → none | `key:T name:T` | `loop.context` / `condition.resource` |
-| `do.capture` | `value:V` → none | `key:T part:T` | `loop.context` / `condition` |
-| `do.start` | none → none | `key:T` | `loop.context` / `condition` |
-| `do.entry` | none → `value:B` | `key:T` | `loop.context` / `condition` |
-| `do.advance` | none → none | `key:T` | `loop.context` / `condition` |
-| `do.close` | none → none | `key:T` | `loop` / `none` |
-| `while.truth`; `until.truth` | `value:V context:C` → `value:B` | none | `context` / `condition` |
+The eight exact operation descriptors are owned by the
+[current C-family table](#current-c-family-contract), at IDs 44–51.
 
 `do.new.name` is empty for counted repetition or an admitted raw variable
 symbol for controlled repetition. `part` is exactly `start`, `to`, `by`,
@@ -1098,7 +1110,7 @@ frontend validation uses its existing source-work budget, with workspace bounded
 by `budget * 64`. Selector validation uses existing `output.bytes` for both
 workspace and work; it adds no public limit parameter or fixed hidden work cap.
 
-1. **All records:** check exact v5 descriptors/codecs/imports, nonempty keys,
+1. **All records:** check current canonical descriptors/codecs/imports, nonempty keys,
    valid names/parts and one `do.new` per key per function. Every keyed operation,
    including dead records, must resolve that constructor in its own function.
    Constructor mode fixes permitted capture parts: count permits `repeat`;
@@ -1163,8 +1175,9 @@ clause/TRACE remain open; approval of this bounded increment closes no CFC crite
 
 ## Approved LEAVE and ITERATE contract
 
-**APPROVED by Adrian on 20 October 2026. Implementation waits for DO
-qualification and its reviewed local commit.** Complete the bounded static-transfer behavior of LC-I-09, then
+**APPROVED by Adrian on 20 October 2026. Named LEAVE and the shared v6
+foundation are locally qualified in the [current plan](../PLAN.md#current-action-leave);
+named ITERATE remains the separate next increment.** Complete the bounded static-transfer behavior of LC-I-09, then
 LC-I-10, using the qualified DO ownership protocol. The shared decision is
 **C v6 / 52 operations, four unchanged types and 33 target exports**, refusing
 v5 without a compatibility path. No generic L, shared B runtime, native compiler
@@ -1180,6 +1193,11 @@ tails or normalize the stored spelling. Groups, IF and SELECT are not targets;
 an inactive caller loop is unavailable. Malformed names and surplus same-clause
 operands receive located compile-time refusals under both policies; wider exact
 diagnostic/recovery obligations remain with C-SRC.
+
+Keep existing actual-owner nearest-ELSE disambiguation: eligible inline
+`if f then leave else; say x` is bare LEAVE followed by an ELSE arm. A raw ELSE
+target remains valid outside that ambiguity or inside an explicit group; optional
+transfer names do not gain the matching-END lookahead exception.
 
 ### Static policy and the error operation
 
@@ -1199,10 +1217,10 @@ the instruction executes. No repetitive loop gives LEAVE **28.1** / ITERATE
 **28.2**, even with an authored name. A name that misses the available controlled
 loops gives **28.3 / 28.4**. Retain the authored name unchanged for diagnostics.
 
-| Appended C operation | Exact contract |
-|---|---|
-| `crexx.c.transfer.invalid` | No inputs/results; required attributes `code:crexx.g.text, name:crexx.g.text`; state `none`, failure `condition`, termination `diverges` in the current nonresumable C profile |
-| Appended target export | `llctarget.invalidtransfer(code=.string, name=.string) -> .void`; both arguments required |
+The [current C-family table](#current-c-family-contract) owns descriptor 52,
+`crexx.c.transfer.invalid`. Its target export is
+`llctarget.invalidtransfer(code=.string, name=.string) -> .void`, with both
+arguments required.
 
 All records, including dead/loaded records, require one of the four exact codes.
 A nonempty name must be one admitted raw symbol; 28.3/28.4 require a nonempty

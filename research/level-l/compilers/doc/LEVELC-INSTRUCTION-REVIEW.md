@@ -189,7 +189,7 @@ with independent actual reached/dead/operand/fatal RXAS review. Existing B
 no-word and generic L comment/budget proof are reused on unchanged inputs. No runtime word, API,
 family revision or native implementation is added. A future processor word or
 effect requires C review, regression qualification and consumer recompilation.
-Whole LC-I-05 retains full header controls/STRICTC/source maps, shared-label,
+Whole LC-I-05 retains full header controls/source maps, shared-label,
 exact diagnostic and conditions/TRACE dependencies; this increment does not
 close those outcomes.
 
@@ -261,12 +261,31 @@ transfers, exact diagnostic recovery and condition/SIGL/clause/TRACE owners.
 [exact contract](architecture.md#approved-do-contract), approved by Adrian on
 20 October 2026. The [bounded local Debug proof](../PLAN.md#current-do-proof)
 qualifies normalized headers/END names, all counted/controlled/FOREVER and WHILE/UNTIL
-forms, shared-runtime order/errors and unnamed-transfer integration. C v5 uses
+forms, shared-runtime order/errors and unnamed-transfer integration. That v5
+qualification used
 static function-local text keys and hidden owned state, not first-class borrowed
 IR state values. All-record declaration checks and executable-CFG phase/LIFO
 proof are distinct; checked dead source receives no invented live-owner facts.
-Named END checks are included; named LEAVE/ITERATE and invalid-target delivery
-remain LC-I-09/10. Shared labels/EXPOSE, complete expressions/exact recovery and
+Named END checks are included; the current v6 LEAVE increment below integrates
+shared invalid-target delivery. Named ITERATE remains LC-I-10 work. Shared labels/EXPOSE, complete expressions/exact recovery and
 resumable conditions/SIGL/clause/TRACE remain open. Independent source/CFG,
 metadata/protocol, runtime/error and actual caller/helper RXAS checks pass;
 this closes the admitted increment, not whole-instruction or complete-C delivery.
+
+<a id="leave-static-targets-and-request-policy"></a>
+
+## LEAVE: static raw targets and request-local errors
+
+The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
+and [LEAVE-AC01–04](../PLAN.md#current-action-leave) own this locally qualified bounded implementation, with
+[focused Debug proof](../PLAN.md#current-leave-proof). Optional names compare authored symbols
+using shared Classic casing without tail substitution or runtime pool lookup;
+nearest ELSE remains the existing IF authority even when a loop is named ELSE.
+Valid edges close crossed states inner-to-outer including the selected loop,
+then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
+transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
+instructions and preserves the shared helper's raw event through the bridge.
+C v6/52 operations and 33 exports are the current exact surface; named ITERATE
+remains a profile refusal until the separate following increment. Shared
+labels/EXPOSE, dynamic loop invalidation, resumable conditions, exact recovery
+and clause/TRACE remain open; bounded local qualification does not close them.

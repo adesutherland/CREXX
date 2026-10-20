@@ -175,6 +175,18 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name()
+      if name = 'crexx.c.transfer.invalid' then do
+        code = text(op,'code'); if _error <> '' then return
+        if code \== '28.1' & code \== '28.2' & code \== '28.3' & code \== '28.4' then do
+          call fail('LOWERING: invalid transfer error code',opid); return
+        end
+        targetname = text(op,'name'); if _error <> '' then return
+        if targetname == '' & (code == '28.3' | code == '28.4') then do
+          call fail('LOWERING: named transfer error requires a name',opid); return
+        end
+        if targetname \== '' then call symbol(targetname)
+        if _error <> '' then do; _offset = op.origin().first(); return; end
+      end
       do i = 1 to op.inputs()
         if charge() = 0 then return
         n = op.input(i).id(); _uses[n] = _uses[n] + 1
@@ -302,7 +314,7 @@ checked: class
             if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
             divergent = 1; leave
           end
-          when name = 'crexx.c.select.missing' then do
+          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' then do
             divergent = 1; leave
           end
           otherwise nop

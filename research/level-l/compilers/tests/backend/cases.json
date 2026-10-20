@@ -410,5 +410,39 @@
     "error": "RXC-LC-34.4",
     "error_line": 3,
     "args": []
+  },
+  {
+    "name": "leave",
+    "level": "c",
+    "source": "leave-c.crexx",
+    "output": "outer 1 10\nshadow 10\nshadow-final 11\nraw-tail 1 88 1\nunicode 1 1\nwrappers 1\nelse-name 1\nelse-group 1\ninline 1\nnamed-inline 1\n1 1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "leave-strict-dead",
+    "level": "c",
+    "source": "leave-strict-dead-c.crexx",
+    "output": "before\nafter 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "leave-outside-error",
+    "level": "c",
+    "source": "leave-outside-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.1:",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "leave-missing-error",
+    "level": "c",
+    "source": "leave-missing-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.3:",
+    "error_line": 5,
+    "args": []
   }
 ]

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue setting digits arguments mainargs append readarg countargs existsarg present absent requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -150,6 +150,22 @@ selectmissing: procedure = .void
   message = .string
   do
     call rexxvalue_select_missing(line)
+  on signal error as problem
+    message = problem.message()
+    assembler signalorigin "CLASSIC_SYNTAX",message,problem
+  end
+  return
+
+/** Relay a statically invalid transfer only when its C instruction executes.
+ * @param code Exact contextual Classic transfer identity (28.1 through 28.4).
+ * @param name Authored target symbol, or empty for an unnamed transfer.
+ * @signal CLASSIC_SYNTAX The unchanged shared ERROR message and bound origin.
+ * @return No value; generated C uses its nonresumable fatal path. */
+invalidtransfer: procedure = .void
+  arg code = .string, name = .string
+  message = .string
+  do
+    call rexxdostate_invalid_transfer(code,name)
   on signal error as problem
     message = problem.message()
     assembler signalorigin "CLASSIC_SYNTAX",message,problem

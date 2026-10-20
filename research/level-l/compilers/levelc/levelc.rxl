@@ -133,8 +133,8 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.statement: rule = callword identifier as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
   exit.statement: rule = exitword (expression as value)? then tree Exit(value = value?)
-  leave.statement: rule = leaveword then tree Leave()
-  iterate.statement: rule = iterateword then tree Iterate()
+  leave.statement: rule = leaveword (name.value as name)? then tree Leave(name = name?)
+  iterate.statement: rule = iterateword (name.value as name)? then tree Iterate(name = name?)
   nop.statement: rule = nopword then tree Nop()
   options.statement: rule = optionsword (expression as value)? then tree COptions(value = value?)
   block: rule = doword do.header as header separator statements as body do.end as ending

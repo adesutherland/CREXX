@@ -19,9 +19,10 @@ parsed: class
   _error = .string
   _offset = .int
   _status = .int
+  _strictc = .int
   *: factory
     arg source = .binary, limit = 1000000
-    _error = ''; _offset = 0; _status = 0
+    _error = ''; _offset = 0; _status = 0; _strictc = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
 
     if limit < 1 | <blen>(source) > limit then do
@@ -31,7 +32,7 @@ parsed: class
     policy = .lllimits..policy()
     ok = policy.set('source.bytes',limit)
     comments = .llcomments..rules
-    comments = headerpolicy(language,source,policy,reference _status,reference _error,reference _offset)
+    comments = headerpolicy(language,source,policy,reference _status,reference _error,reference _offset,reference _strictc)
     if _status <> 0 then return
     call language.usecomments(comments)
     request = .lllanguage..request(language,source,policy)
@@ -234,6 +235,10 @@ parsed: class
     return
   status: method = .int
     return _status
+  /** Static source policy belongs to this successful parse only. */
+  strictc: method = .int
+    if _status <> 0 then return 0
+    return _strictc
   error: method = .string
     return _error
   offset: method = .int
@@ -245,8 +250,8 @@ parsed: class
  * quotes/comments; raw separators merely frame a candidate for exact lexing.
  * A failed candidate never contributes partial static settings. */
 headerpolicy: procedure = .llcomments..rules
-  arg language = .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int
-  status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref
+  arg language = .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int
+  status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref; strictc = dereference strictc_ref
   byte = .int; i = .int; setting = .int
   result = language.comments()
   prepared = .llsource..prepared(source,language.encoding(),'','',policy.limit('source.bytes'),0,result,policy.limit('scan.work'))
@@ -298,14 +303,15 @@ headerpolicy: procedure = .llcomments..rules
   end
   /* Every operand is now a bare word. Validate all settings before replacing
    * this request's comment rules; the leading expression still executes. */
-  hash = 0; dash = 0
+  hash = 0; dash = 0; requestedstrict = 0
   do i = index + 1 to tokens.size() - 1
     raw = binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)) as .string
     spelling = ''
     if verify(raw,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 then spelling = upper(raw)
     message = ''
     if wordpos(spelling,'LEVELA LEVELB LEVELD LEVELG LEVELL NUMERIC_COMMON COMMENTS_SLASH') > 0 then message = 'incompatible source option '
-    if wordpos(spelling,'STRICTC SRCMAP') > 0 then message = 'unsupported static source option '
+    if spelling = 'SRCMAP' then message = 'unsupported static source option '
+    if spelling = 'STRICTC' then requestedstrict = 1
     if spelling = 'COMMENTS_HASH' | spelling = 'COMMENTS_NOHASH' then do
       setting = 1; if spelling = 'COMMENTS_NOHASH' then setting = -1
       if hash <> 0 & hash <> setting then message = 'incompatible source option '
@@ -327,6 +333,7 @@ headerpolicy: procedure = .llcomments..rules
   if result.error() <> '' then do
     status = 3; offset = 0; error = result.error()
   end
+  else strictc = requestedstrict
   return result
 
 /** Translate internal token labels without losing the LR expected-token set. */

@@ -380,10 +380,12 @@ if("c" IN_LIST _languages)
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
       fs cstream rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
-  # C calls: 136 commands in the representative cell, 68 in the other cells;
+  # C calls: 145 commands in the representative cell, 68 in the other cells;
   # existing 110-command Debug baseline 96s; focused SELECT metadata adds
   # 11 default commands (its independent 12-command control measured 13s).
   # DO adds one valid metadata compile and seven single-field refusals (15).
+  # LEAVE adds one valid compile and four single-field refusals (9); its
+  # independent 10-command metadata component measured 16s in Debug.
   # This is component evidence, not a fresh full-aggregate measurement.
   # Source-only qualification uses Debug; sanitizer scheduling follows AGENTS.md.
   # Serialize nested tools; 1800s is a hang guard for slower hosts.
@@ -393,7 +395,7 @@ if("c" IN_LIST _languages)
         set(_calls "llcompiler_c_calls_${_mode}_${_vm}")
         set(_commands 68)
         if(_mode STREQUAL "opt" AND _vm STREQUAL "rxbvm")
-          set(_commands 136)
+          set(_commands 145)
         endif()
         add_test(NAME ${_calls}
           COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"

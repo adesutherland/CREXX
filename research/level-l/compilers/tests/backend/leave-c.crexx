@@ -1,0 +1,69 @@
+options levelc
+do i=1 to 3
+  do j=10 to 12
+    leave I
+  end
+end
+say 'outer' i j
+do i=1 for 1
+  do i=10 for 3
+    leave i
+  end
+  say 'shadow' i
+end
+say 'shadow-final' i
+x='x'; y='y'; key='x'; a.x=99; a.y=88
+do A.key=1 for 2
+  key='y'
+  do j=1 for 2
+    leave a.KEY
+  end
+end
+say 'raw-tail' a.x a.y j
+do σ=1 for 2
+  leave Σ
+end
+do µ=1 for 2
+  leave µ
+end
+say 'unicode' σ µ
+do outer=1 for 2 until marker()
+  do forever
+    do
+      select
+        when 1 then leave OUTER
+      end
+    end
+  end
+end
+say 'wrappers' outer
+do else=1 for 2
+  leave else
+end ELSE
+say 'else-name' else
+do else=1 for 2
+  if 1 then do
+    leave else
+  end
+end ELSE
+say 'else-group' else
+do else=1 for 2
+  if 1 then leave else say 'bad-inline'
+end ELSE
+say 'inline' else
+do i=1 for 2
+  if 1 then leave i else say 'bad-named'
+end
+say 'named-inline' i
+say owned() owned()
+exit 0
+owned: procedure
+  do local=1 for 3
+    do nested=1 for 3
+      leave LOCAL
+    end
+  end
+  return local
+marker: procedure
+  say 'bad-until'
+  return 1
