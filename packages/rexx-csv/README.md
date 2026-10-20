@@ -113,6 +113,8 @@ regina classic_demo.rexx '"input file.csv" "output file.csv"'
 Classic command-line scripts receive one command string. This example accepts
 zero, one or two double-quoted paths inside that string; filenames containing
 literal double quotes are outside the example's argument convention.
+The installed [Classic README](packaging/README-classic.md) also gives the
+different native Windows `cmd.exe` launch commands.
 It reads/writes bytes with CHARIN/CHAROUT and checks UTF-8 in the library.
 Paths can contain spaces. On macOS/Linux the examples also qualify Unicode
 filenames. The tested Windows cREXX Beta 3, Regina and ooRexx launchers use a

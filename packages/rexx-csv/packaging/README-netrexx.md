@@ -2,7 +2,8 @@
 
 A pure NetRexx CSV parser/writer. MIT licensed. Qualified on macOS ARM64 with
 NetRexx 5.10-GA (build 18-20260320-1410) and Temurin JDK 26.0.1+8.
-Other JVM versions and Linux/Windows remain unqualified. Class-file target 52
+Other JVM versions remain unqualified. Linux/Windows results for each exact
+revision are recorded by [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml). Class-file target 52
 alone does not prove Java 8 compatibility. No native plugin, third-party CSV
 parser, JSON or Python runtime dependency is needed.
 

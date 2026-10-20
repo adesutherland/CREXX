@@ -2,7 +2,8 @@
 
 One pure Rexx CSV parser/writer for Regina and ooRexx. MIT licensed.
 Qualified on macOS ARM64 with Regina 3.9.7 and ooRexx 5.1.0 r12973.
-Older runtimes, Linux and Windows remain unqualified. There is no native,
+Older runtimes remain unqualified. Linux/Windows results for each exact
+revision are recorded by [CSV qualification](https://github.com/adesutherland/CREXX/actions/workflows/csv-qualification.yml). There is no native,
 ooRexx class, JSON or Python runtime dependency. NetRexx uses a separate binding.
 
 Extract all five files into an application directory. Keep `rexx_csv.rexx`
@@ -17,6 +18,18 @@ regina classic_demo.rexx
 regina classic_demo.rexx '"input file.csv" "output file.csv"'
 /path/to/oorexx/bin/rexx classic_demo.rexx '"input file.csv" "output file.csv"'
 ```
+
+On Windows `cmd.exe`, the launchers transport that command string differently:
+
+```bat
+C:\Regina\regina.exe classic_demo.rexx "\"input file.csv\" \"output file.csv\""
+C:\ooRexx\rexx.exe classic_demo.rexx "input file.csv" "output file.csv"
+```
+
+The Regina command supplies one argv value containing literal quotes; ooRexx
+uses the raw command tail. These are `cmd.exe` commands; other shells may apply
+different native argument escaping. Use ASCII application/input/output paths
+on Windows, including installation directories. Spaces are supported.
 
 Each runtime receives one command string; double quotes delimit the file paths
 inside it. The example supports zero, one or two quoted paths, without literal

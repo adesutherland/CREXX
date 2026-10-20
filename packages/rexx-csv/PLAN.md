@@ -594,3 +594,13 @@ paths as a caller file error. All Unicode CSV bytes and parser/writer oracles
 remain unchanged. Arbitrary Unicode Windows CLI filenames remain a documented
 host boundary for all four tested launchers, not a qualified CSV capability.
 The fresh NetRexx archive/consumer replay passes locally after this example fix.
+
+
+Installed documentation now gives the distinct native Windows cmd.exe quoting
+commands for Regina and ooRexx and points to the hosted gate for Linux/Windows
+results, rather than freezing an obsolete pending-platform claim in each
+archive. The executable README snippets and all source/test/build inputs are
+unchanged by this final documentation clarification. Reuse the current hosted
+qualification for those inputs; a documentation-only push uses `[skip ci]` to
+avoid starting another identical long-running matrix. This is not a CI-status
+commit and records no unobserved pass.
