@@ -1,0 +1,13 @@
+/* Owning B preparation supplies one ordinary static statement provider. */
+options levelb
+namespace addressprobe expose observe
+import rexxactivation
+import rexxvalue
+
+observe: procedure = .void
+  arg frame = .RexxActivationArguments
+  inherited = frame.addressEnvironment() || '|' || frame.addressConnection('O')
+  call frame.setAddressEnvironment('CHILD')
+  call frame.setAddressConnection('O','REPLACE','STREAM','child.txt')
+  call frame.setReturnValue(.RexxValue(inherited))
+  return

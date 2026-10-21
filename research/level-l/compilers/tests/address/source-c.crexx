@@ -1,0 +1,142 @@
+/* Explicit ADDRESS only; implicit command observations have their own owner. */
+options levelc
+parse arg MODE
+if MODE = 'plan' then do
+  address 'KEEP'
+  address 'BRIDGE-TEST' 'plan :SCALAR :ITEMS[] ${SCALAR} :EMPTY :UNSET' with input stem INPUT. output replace stem OUTPUT. error stem ERRORS.
+  OBSENV = ADDRESS()
+  OBSOUT = ADDRESS('O')
+  return 'plan done'
+end
+if MODE = 'private' then do
+  call PRIVATECOMMAND
+  return RESULT
+end
+if MODE = 'loop' then do
+  do 2
+    address 'BRIDGE-TEST' 'again :SCALAR'
+  end
+  return SCALAR
+end
+if MODE = 'radix' then do
+  address 'BRIDGE-TEST' '3A5343414C4152'x
+  return RC
+end
+if MODE = 'dynamic' then do
+  COMMAND = 'text :SCALAR'
+  address 'BRIDGE-TEST' COMMAND
+  return RC
+end
+if MODE = 'lexical-tail' then do
+  address 'BRIDGE-TEST' ('prefix') || ' ${ :SCALAR'
+  return RC
+end
+if MODE = 'nul' then do
+  address 'BRIDGE-TEST' '41 00 42'x
+  return RC
+end
+if MODE = 'unknown' then do
+  address '__ADDRESS_UNREGISTERED__' 'not dispatched by an OS'
+  return RC
+end
+if MODE = 'external-state' then do
+  PATH = 'parent.txt'
+  address 'ALT' with error stem ERR.
+  address 'PARENT' with output stream PATH
+  call addressprobe.observe
+  OBSENV = ADDRESS()
+  OBSOUT = ADDRESS('O')
+  address
+  OBSALT = ADDRESS()
+  OBSERR = ADDRESS('E')
+  return RESULT
+end
+if MODE = 'exit-command' then do
+  call PRIVATEEXIT
+  UNREACHED = 'after private command'
+  return 'bad'
+end
+if MODE = 'exit-environment' then do
+  address value ESCAPE()
+  UNREACHED = 'after environment'
+  return 'bad'
+end
+if MODE = 'late' then call LATEENTRY
+if MODE = 'bad-count' then call PRIVATEFAIL
+ADDRESS = 7
+WITH = 8
+COUNT = 0
+address 1.20
+FIXED = ADDRESS()
+address 7E2
+FIXED = FIXED || '|' || ADDRESS()
+address 7d
+FIXED = FIXED || '|' || ADDRESS()
+address .env
+say 'fixed=' || FIXED || '|' || ADDRESS()
+address +4
+UNARY = ADDRESS()
+address -4
+UNARY = UNARY || '|' || ADDRESS()
+address \0
+say 'unary=' || UNARY || '|' || ADDRESS()
+OUTPUT = 'keyword.txt'
+address 'KEYWORD' with input stream OUTPUT
+OUTPUT = 'changed.txt'
+say 'keyword=' || ADDRESS('I')
+address ALPHA
+address 'BETA'
+address
+say 'selection=' || ADDRESS()
+address value CHOOSE()
+say 'value=' || ADDRESS() || ':' || COUNT
+address ('PAREN')
+say 'paren=' || ADDRESS()
+address ('PAR') || 'EN'
+say 'group-tail=' || ADDRESS()
+PATH = 'first.txt'
+address 'ALPHA' with output, /* retain the original physical gap */
+  stream PATH
+PATH = 'second.txt'
+say 'stream=' || ADDRESS('O')
+call PRIVATECHANGE
+say 'private=' || RESULT || ':' || ADDRESS() || ':' || ADDRESS('O')
+call WITH
+say 'context=' || ADDRESS || ':' || RESULT
+if 'é' = 'é' then address CREXX ''
+say 'empty=' || RC || ':' || ADDRESS()
+return 0
+
+CHOOSE:
+COUNT = COUNT + 1
+return 'GAMMA'
+PRIVATECHANGE:
+procedure
+address 'DELTA'
+return ADDRESS()
+WITH:
+return 'contextual'
+PRIVATECOMMAND:
+procedure expose SCALAR ITEMS.
+address 'BRIDGE-TEST' 'private :SCALAR :ITEMS[]'
+return 'private done'
+PRIVATEEXIT:
+procedure expose COUNT PAYLOAD
+LOCAL = 'private changed'
+address 'BRIDGE-TEST' ESCAPE()
+UNREACHED = 'after creation'
+return 'bad'
+ESCAPE:
+COUNT = COUNT + 1
+exit PAYLOAD
+PRIVATEFAIL:
+procedure expose INPUT.
+address 'BRIDGE-TEST' 'empty' with input stem INPUT.
+say 'UNREACHED command failure'
+return
+LATEENTRY:
+address 'KEEP'
+LATEPROCEDURE:
+procedure
+say 'UNREACHED eligibility'
+return

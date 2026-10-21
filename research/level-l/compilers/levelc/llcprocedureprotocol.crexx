@@ -121,6 +121,12 @@ checked: class
     arg queryid = .int
     call run(); if _error <> '' then return 0
     return _querycalls[queryid]
+  /** Private normal continuation fact, owned by the same proved CALL guard. */
+  falsepredecessor: method = .int
+    arg blockid = .int
+    call run(); if _error <> '' then return 0
+    if _falseblocks[blockid] = 0 then return 0
+    return _predops[blockid]
   belongs: method = .int
     arg graph_ref = reference .llir..module
     call run()
@@ -460,6 +466,7 @@ checked: class
     end
     return total
   run: method = .void
+    contextinput = .int
     if _ready then return
     _ready = 1
     graph = dereference _graph
@@ -517,6 +524,11 @@ checked: class
         end
         if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' | name = 'crexx.c.push' | name = 'crexx.c.queue' then do
           contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
+          ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
+          contextinput = 1
+          if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' then contextinput = 2
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end
         if name = 'crexx.c.procedure.enter' then group = opid

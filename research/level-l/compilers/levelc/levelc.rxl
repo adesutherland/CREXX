@@ -76,6 +76,15 @@ constantname: token = 71
 pullword: token = 72
 pushword: token = 73
 queueword: token = 74
+addressword: token = 75
+addressenv: token = 76
+addressquoted: token = 77
+addressvalue: token = 78
+addresswith: token = 79
+addressoption: token = 80
+addressposition: token = 81
+addresskind: token = 82
+addressresource: token = 83
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -146,6 +155,23 @@ parse: parser semantics contextfree input tokens start program backend lr1
   say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
   push.statement: rule = pushword (expression as value)? then tree CPush(value = value?)
   queue.statement: rule = queueword (expression as value)? then tree CQueue(value = value?)
+  address.statement: rule = addressword (address.target as target)? (address.connections as connections)?
+    then tree CAddress(target = target?, connections = connections?)
+  address.target: rule = address.fixed | address.quoted | address.value
+  address.fixed: rule = addressenv as environment (expression as command)?
+    then tree AddressFixed(environment = text(environment), command = command?)
+  address.quoted: rule = addressquoted as environment (expression as command)?
+    then tree AddressQuoted(environment = text(environment), command = command?)
+  address.value: rule = addressvalue expression as environment
+    then tree AddressValue(environment = environment)
+  address.connections: rule = addresswith address.connection as item (address.connection as item)*
+    then tree AddressConnections(items = item+)
+  address.connection: rule = addressoption as option (address.position as position)? address.spec as spec
+    then tree AddressConnection(option = text(option), position = position?, spec = spec)
+  address.position: rule = addressposition then tree AddressPosition(spelling = text)
+  address.spec: rule = addresskind as kind (address.resource as resource)?
+    then tree AddressSpec(kind = text(kind), resource = resource?)
+  address.resource: rule = addressresource then tree Name(spelling = text)
   call.statement: rule = callword (identifier | number | typename | constantname | parsedot) as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
   call.quoted: rule = callword string as name arguments as arguments then tree InvokeQuoted(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
@@ -195,7 +221,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | push.statement | queue.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?

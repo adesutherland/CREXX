@@ -12,6 +12,7 @@ import llsource
 import llrxastext
 import llcdoprotocol
 import llcprocedureprotocol
+import llccommandprotocol
 import llcparseprogram
 import llscalar
 
@@ -48,7 +49,9 @@ compilation: class
   _needsscratch = .int
   _maxargs = .int
   _fallthrough = .int
-  _sourceindexes = .object[]
+  _sourceindexes = .llsource..index[]
+  _sourcebytes = .binary[]
+  _sourceworkspace = .int
   _selectlines = .int[]
   _parselines = .int[]
   _parseclauses = .int[]
@@ -68,6 +71,9 @@ compilation: class
   _bifpresence = .int
   _classes = .string[]
   _procedureprotocol = .llcprocedureprotocol..checked
+  _commandprotocol = .llccommandprotocol..checked
+  _commandowners = .int[]
+  _commandcleanup = .int[]
   _savedpool = .int
   _privatepool = .int
   _poolcommitted = .int
@@ -343,6 +349,20 @@ compilation: class
   checkoperation: method = .void
     arg op = .llir..opview
     name = op.name(); bytes = .binary; packet = .llcparseprogram..checked; symbol = .string
+    opid = .int; clausefirst = .int; constructor = .int
+    if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
+      call checkselectorigin(op,'command ADDRESS')
+      opid = op.id(); clausefirst = op.origin().first() + 1
+      owner = _commandprotocol.owner(opid)
+      if owner > 0 then do
+        constructor = _commandprotocol.constructor(owner)
+        clausefirst = _graph.operation(constructor).origin().first() + 1
+      end
+      anchor = _commandprotocol.sourceanchor(opid)
+      if anchor > 0 then clausefirst = _graph.operation(anchor).origin().first() + 1
+      _parseclauses[opid] = clausefirst
+      if name = 'crexx.c.command.run' then _parselines[opid] = _selectlines[opid]
+    end
     if name = 'core.constant' then do
       type = typename(op.result().type().id())
       if wordpos(type,'core.boolean crexx.g.int64 crexx.g.text crexx.c.value') = 0 then call fail('LOWERING: unsupported constant type ' || type)
@@ -394,8 +414,9 @@ compilation: class
       known = <blen>(source) > 0
       logical = llcompilercontracts..sourcename(origin.filename())
       if known then do
-        positions = sourceindex(origin)
+        positions_ref = sourceindex(origin)
         if _error <> '' then return
+        positions = dereference positions_ref
         packet = .llcparseprogram..checked.indexed(bytes,source,logical,known,_limit,positions)
       end
       else packet = .llcparseprogram..checked(bytes,source,logical,known,_limit)
@@ -475,6 +496,7 @@ compilation: class
    * Only the indexed line is retained privately; it is not a schema attribute. */
   checkselectorigin: method = .void
     arg op = .llir..opview, label = 'SELECT missing'
+    byte = .int
     origin = op.origin()
     if origin.belongs(_store) = 0 then do
       call fail('LOWERING: ' || label || ' requires an owned exact source origin'); return
@@ -482,15 +504,20 @@ compilation: class
     if origin.kind() <> 'exact' then do
       call fail('LOWERING: ' || label || ' requires an owned exact source origin'); return
     end
-    bytes = origin.sourcebytes(); first = origin.first(); last = origin.last()
+    first = origin.first(); last = origin.last()
+    positions_ref = sourceindex(origin)
+    if _error <> '' then return
+    positions = dereference positions_ref
+    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    bytes_ref = reference _sourcebytes[sourceid]; bytes = dereference bytes_ref
     extent = <blen>(bytes)
     if first < 0 | last <= first | last > extent then do
       call fail('LOWERING: ' || label || ' requires a nonempty source-backed span'); return
     end
-    positions = .llsource..index
-    positions = sourceindex(origin)
-    if _error <> '' then return
-    if llcparseprogram..sourceboundary(bytes,first) = 0 | llcparseprogram..sourceboundary(bytes,last) = 0 then do
+    firstboundary = 1; lastboundary = 1
+    if first < extent then do; byte = <at..u8>(first) bytes; firstboundary = byte < 128 | byte >= 192; end
+    if last < extent then do; byte = <at..u8>(last) bytes; lastboundary = byte < 128 | byte >= 192; end
+    if firstboundary = 0 | lastboundary = 0 then do
       call fail('SOURCE: ' || label || ' origin is not at a Unicode boundary'); return
     end
     at = positions.position(first); ending = positions.position(last)
@@ -647,6 +674,115 @@ compilation: class
     symbol = member('rexxclassicconfig.rexxclassicconfig',name || 'text','.void','.string')
     call argcopy(2,text); call invoke('',symbol,2,receiver)
     call emit('unlink',receiver); call emit('null',config); call emit('null',text)
+    return
+  /** One Classic conversion in a disposable private window. */
+  addresstext: method = .void
+    arg value = .string
+    symbol = member('rexxvalue.rexxvalue','asstring','.string','.int','1')
+    call argcopy(1,value); call emit('load',reg(_callbase + 2) || ',1')
+    call invoke(reg(_workbase + 9),symbol,2)
+    return
+  /** Resource names are admitted attrs: only STREAM reads the current pool. */
+  addressresource: method = .void
+    arg op = .llir..opview
+    text = reg(_workbase + 9); kind = op.attribute('kind') as .string
+    if kind <> 'STREAM' then do
+      call emit('load',text || ',' || llrxastext..quote(op.attribute('resource'))); return
+    end
+    pool = reg(_workbase + 2); value = reg(_workbase + 8)
+    call binding(input(op),'pool',pool)
+    symbol = imported('llctarget','llctarget.poolread','.rexxvalue..rexxvalue','reference@.rexxpool..rexxvariablepool .string')
+    call argcopy(1,pool); call argtext(2,op.attribute('resource') as .string); call invoke(value,symbol,2)
+    call emit('null',pool); call addresstext(value); call emit('null',value)
+    return
+  addressoperation: method = .void
+    arg op = .llir..opview, name = .string
+    symbol = .string; opid = .int; owner = .int; ownerregister = .int
+    ownerclass = 'rexxclassicaddress.rexxclassicaddresscommand'
+    receiver = reg(_workbase + 1); activation = reg(_workbase + 4); pool = reg(_workbase + 2); text = reg(_workbase + 9)
+    storage = .string; context = input(op)
+    if name = 'command.new' | name = 'address.select' then context = input(op,2)
+    if left(name,8) = 'command.' then do
+      opid = op.id(); owner = _commandprotocol.owner(opid)
+      ownerregister = _commandowners[owner]; storage = reg(ownerregister)
+    end
+    select
+      when name = 'address.swap' | name = 'address.select' then do
+        if name = 'address.select' then call addresstext(input(op))
+        call binding(context,'activation',activation); call emit('linkref',receiver || ',' || activation)
+        count = 1
+        if name = 'address.select' then do
+          symbol = member('rexxactivation.rexxactivationarguments','setaddressenvironment','.void','.string'); count = 2
+          call argcopy(2,text)
+        end
+        else symbol = member('rexxactivation.rexxactivationarguments','swapaddressenvironment','.void')
+        call invoke('',symbol,count,receiver); call emit('unlink',receiver); call emit('null',activation)
+        if name = 'address.select' then call emit('null',text)
+      end
+      when name = 'command.new' then do
+        call addresstext(input(op)); call binding(context,'pool',pool); call binding(context,'activation',activation)
+        symbol = member(ownerclass,'§factory','.rexxclassicaddress..rexxclassicaddresscommand','reference@.rexxpool..rexxvariablepool reference@.rexxactivation..rexxactivationarguments .string .string')
+        call argcopy(1,pool); call argcopy(2,activation); call argtext(3,op.attribute('environment') as .string); call argcopy(4,text)
+        call invoke(storage,symbol,4); call emit('null',pool); call emit('null',activation); call emit('null',text)
+      end
+      when name = 'address.connection' | name = 'command.connection' then do
+        call addressresource(op)
+        if name = 'address.connection' then do
+          call binding(context,'activation',activation); call emit('linkref',receiver || ',' || activation)
+          symbol = member('rexxactivation.rexxactivationarguments','setaddressconnection','.void','.string .string .string .string')
+        end
+        else do
+          call emit('link',receiver || ',' || storage)
+          symbol = member(ownerclass,'withconnection','.void','.string .string .string .string')
+        end
+        call argtext(2,op.attribute('option') as .string); call argtext(3,op.attribute('position') as .string)
+        call argtext(4,op.attribute('kind') as .string); call argcopy(5,text); call invoke('',symbol,5,receiver)
+        call emit('unlink',receiver); call emit('null',text)
+        if name = 'address.connection' then call emit('null',activation)
+      end
+      when name = 'command.binding' then do
+        call emit('link',receiver || ',' || storage)
+        symbol = member(ownerclass,'withbinding','.void','.string .string')
+        call argtext(2,op.attribute('kind') as .string); call argtext(3,op.attribute('name') as .string); call invoke('',symbol,3,receiver)
+        call emit('unlink',receiver)
+      end
+      when name = 'command.run' then do
+        call emit('link',receiver || ',' || storage)
+        symbol = member(ownerclass,'run','._rxsysb..addressresponse'); call invoke('',symbol,1,receiver); call emit('null',reg(_scratch))
+        detail = reg(_workbase + 8); condition = reg(_workbase + 5); description = reg(_workbase + 6)
+        symbol = member(ownerclass,'syntaxerror','.string'); call invoke(detail,symbol,1,receiver)
+        symbol = member(ownerclass,'conditionid','.int'); call invoke(condition,symbol,1,receiver)
+        symbol = member(ownerclass,'conditiondescription','.string'); call invoke(description,symbol,1,receiver)
+        call emit('unlink',receiver); call emit('null',storage)
+        prefix = 'llcommand' || _fn || '_' || op.id()
+        call emit('strlen',reg(_workbase + 7) || ',' || detail)
+        call emit('beq',prefix || '_ready,' || reg(_workbase + 7) || ',0')
+        call emit('signal','"CLASSIC_SYNTAX",' || detail); call emit('ret')
+        call emit(prefix || '_ready:'); call emit('null',detail)
+        call conditiontransition(context,prefix,_parselines[op.id()])
+      end
+      otherwise call fail('LOWERING: unsupported command operation')
+    end
+    return
+  /** Shared producer route; adapter fields are owned before any transfer. */
+  conditiontransition: method = .void
+    arg context = .string, prefix = .string, line = .int
+    receiver = reg(_workbase + 1); activation = reg(_workbase + 4); condition = reg(_workbase + 5)
+    description = reg(_workbase + 6); flag = reg(_workbase + 7); event = reg(_workbase + 9)
+    call emit('beq',prefix || '_done,' || condition || ',0')
+    call binding(context,'activation',activation); call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','queuecallcondition','.boolean','.int .string .int')
+    call argcopy(2,condition); call argcopy(3,description); call emit('load',reg(_callbase + 4) || ',' || line)
+    call invoke('',symbol,4,receiver)
+    symbol = member('rexxactivation.rexxactivationarguments','signalpolicy','.int','.int')
+    call argcopy(2,condition); call invoke(flag,symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',activation)
+    call emit('ble',prefix || '_done,' || flag || ',0')
+    eventtype = '.rexxclassicconditionevent..rexxclassicconditionevent'
+    symbol = member('rexxclassicconditionevent.rexxclassicconditionevent','§factory',eventtype,'.int .string')
+    call argcopy(1,condition); call argcopy(2,description); call invoke(event,symbol,2)
+    call emit('signal','"CLASSIC_CONDITION",' || event); call emit('null',event)
+    call emit(prefix || '_done:'); call emit('null',description)
     return
   /** Values are validated integers, never reparsed text. Keep every install
    * in the executing C frame, after normal return from a successful setter. */
@@ -864,6 +1000,11 @@ compilation: class
       if _doprotocol.status() then do
         _error = _doprotocol.error(); _offset = _doprotocol.offset(); return
       end
+      _phase = 'command admission'
+      _commandprotocol = .llccommandprotocol..checked(reference _graph,reference _procedureprotocol,_limit,_limit)
+      if _commandprotocol.status() then do
+        _error = _commandprotocol.error(); _offset = _commandprotocol.offset(); return
+      end
       _phase = 'operation admission'
       do i = 1 to store.count(3)
         op = _graph.operation(i); _origin = op.origin().id(); _offset = op.origin().first()
@@ -965,7 +1106,7 @@ compilation: class
     return
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
-    anchor = .int; clause = .int
+    anchor = .int; clause = .int; commandowner = .int; ownerregister = .int
     store = dereference _store; blocks = .int[]
     _signals = 'CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE'
     if _hasexternal[_fn] then _signals = _signals || ' FUNCTION_NOT_FOUND'
@@ -1005,6 +1146,12 @@ compilation: class
       if _doprotocol.function(owner) <> _fn then iterate
       _doowners[owner] = next; next = next + 1
       _dofatal[_dofatal[0] + 1] = owner
+    end
+    _phase = 'command owner allocation'; emptycommands = .int[]; _commandcleanup = emptycommands
+    do i = 1 to _commandprotocol.owners()
+      if _commandprotocol.function(i) <> _fn then iterate
+      _commandowners[i] = next; next = next + 1
+      _commandcleanup[_commandcleanup[0] + 1] = i
     end
     /* Use the same selector for planning and emission. Hidden helper calls
      * therefore participate without a second arity table to maintain. */
@@ -1048,6 +1195,10 @@ compilation: class
      * handlers or executing any fallible numeric/context setup. */
     do i = 1 to _dofatal[0]
       call emit('null',reg(_doowners[_dofatal[i]]))
+    end
+    do i = 1 to _commandcleanup[0]
+      commandowner = _commandcleanup[i]; ownerregister = _commandowners[commandowner]
+      call emit('null',reg(ownerregister))
     end
     if _parsestate >= 0 then call emit('null',reg(_parsestate))
     if _savedpool >= 0 then do
@@ -1125,7 +1276,7 @@ compilation: class
    * the replacement owner. The flag-zero edge never reads the saved pool. */
   exitcleanup: method = .void
     arg fatal = 0, program = 0
-    i = .int
+    i = .int; commandowner = .int; ownerregister = .int
     if _savedpool < 0 & fatal = 0 & program = 0 then return
     /* Cold VM unwind restores call-window swaps but preserves links. Detach
      * both possible method receivers before clearing their borrowed storage. */
@@ -1136,6 +1287,10 @@ compilation: class
     do i = 0 to 10; call emit('null',reg(_workbase + i)); end
     if _parsestate >= 0 then call emit('null',reg(_parsestate))
     do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
+    do i = 1 to _commandcleanup[0]
+      commandowner = _commandcleanup[i]; ownerregister = _commandowners[commandowner]
+      call emit('null',reg(ownerregister))
+    end
     if _savedpool < 0 then return
     /* Each terminal site needs a distinct local label. */
     prefix = 'llrestore' || _fn || '_' || _cleanupnumber
@@ -1157,27 +1312,36 @@ compilation: class
     _lastsource = ''; _lastlocation = ''
     return
   /** Reuse the existing request-local index for admission and source emission. */
-  sourceindex: method = .llsource..index
+  sourceindex: method = reference .llsource..index
     arg origin = .llir..origin
     phase = _phase; _phase = 'source index lookup'
     store = dereference _store; sourceid = store.get(9,origin.id(),1)
-    positions = .llsource..index
-    if sourceid < 1 then do; call fail('SOURCE: origin has no source record'); return positions; end
+    invalid = reference .llsource..index
+    if sourceid < 1 then do; call fail('SOURCE: origin has no source record'); return invalid; end
     if sourceid <= _sourceindexes[0] then do
-      if _sourceindexes[sourceid] is .llsource..index then do
-        positions = _sourceindexes[sourceid] as .llsource..index
-        _phase = phase; return positions
+      if initialized(_sourceindexes[sourceid]) then do
+        _phase = phase; return reference _sourceindexes[sourceid]
       end
     end
     _phase = 'source UTF8 validation'
-    bytes = origin.sourcebytes(); codec = .llscalar..textcodec()
-    message = codec.check(bytes)
-    if message <> '' then do; call fail('SOURCE: ' || message); return positions; end
+    bytes = origin.sourcebytes(); extent = <blen>(bytes)
+    /* One cached source and one index own their payloads. Reserve a
+     * conservative line-per-byte index plus both retained byte payloads. */
+    if extent > (_limit - _sourceworkspace - 32) <idiv> 18 then do
+      call fail('LIMIT: source index workspace exceeded'); return invalid
+    end
+    _sourceworkspace = _sourceworkspace + extent * 18 + 32
+    codec = .llscalar..textcodec(); message = codec.check(bytes)
+    if message <> '' then do; call fail('SOURCE: ' || message); return invalid; end
     _phase = 'source index construction'
     positions = .llsource..index(bytes)
-    _sourceindexes[sourceid] = positions as .object
+    if positions.error() <> '' then do; call fail('LIMIT: ' || positions.error()); return invalid; end
+    assembler move _sourceindexes[sourceid],positions
+    assembler null positions
+    assembler move _sourcebytes[sourceid],bytes
+    assembler null bytes
     _phase = phase
-    return positions
+    return reference _sourceindexes[sourceid]
   source: method = .void
     arg origin = .llir..origin, clause = 0, diagnostic = 0
     key = .string; location = .string
@@ -1189,10 +1353,11 @@ compilation: class
       call sourcerecord(key,location,clause)
       return
     end
-    positions = .llsource..index
-    positions = sourceindex(origin)
+    positions_ref = sourceindex(origin)
     if _error <> '' then return
-    bytes = origin.sourcebytes()
+    positions = dereference positions_ref
+    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    bytes_ref = reference _sourcebytes[sourceid]; bytes = dereference bytes_ref
     at = positions.position(origin.first())
     if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return; end
     line = at.line(); column = at.column(); first = at.first(); last = at.last()
@@ -1219,8 +1384,9 @@ compilation: class
     arg origin = .llir..origin
     filename = llcompilercontracts..sourcename(origin.filename())
     if origin.kind() <> 'exact' then return filename || ': generated code in ' || _routine
-    positions = sourceindex(origin)
+    positions_ref = sourceindex(origin)
     if _error <> '' then return ''
+    positions = dereference positions_ref
     at = positions.position(origin.first())
     if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return ''; end
     return filename || ':' || at.line() || ':' || at.column()
@@ -1299,6 +1465,7 @@ compilation: class
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
     if wordpos(name,'entry.test entry.invalid procedure.consume procedure.enter procedure.expose') > 0 then do; call procedureoperation(op,name); return; end
     if name = 'parse.source' then do; call parsesource(op); return; end
+    if left(name,8) = 'address.' | left(name,8) = 'command.' then do; call addressoperation(op,name); return; end
     if name = 'parse.execute' then do
       symbol = imported('rxfnsc','rexxclassicparse.execute','.void',contexttype || ' ' || v || ' .binary')
       call argcopy(1,input(op)); call argcopy(2,input(op,2))
@@ -1550,20 +1717,7 @@ compilation: class
     symbol = member(owner,'conditionid','.int'); call invoke(condition,symbol,1,receiver)
     symbol = member(owner,'conditiondescription','.string'); call invoke(description,symbol,1,receiver)
     call emit('unlink',receiver); call emit('null',state)
-    call emit('beq',prefix || '_done,' || condition || ',0')
-    call binding(input(op),'activation',activation); call emit('linkref',receiver || ',' || activation)
-    symbol = member('rexxactivation.rexxactivationarguments','queuecallcondition','.boolean','.int .string .int')
-    call argcopy(2,condition); call argcopy(3,description); call emit('load',reg(_callbase + 4) || ',' || _parselines[op.id()])
-    call invoke('',symbol,4,receiver)
-    symbol = member('rexxactivation.rexxactivationarguments','signalpolicy','.int','.int')
-    call argcopy(2,condition); call invoke(flag,symbol,2,receiver)
-    call emit('unlink',receiver); call emit('null',activation)
-    call emit('ble',prefix || '_done,' || flag || ',0')
-    eventtype = '.rexxclassicconditionevent..rexxclassicconditionevent'
-    symbol = member('rexxclassicconditionevent.rexxclassicconditionevent','§factory',eventtype,'.int .string')
-    call argcopy(1,condition); call argcopy(2,description); call invoke(event,symbol,2)
-    call emit('signal','"CLASSIC_CONDITION",' || event); call emit('null',event)
-    call emit(prefix || '_done:'); call emit('null',description)
+    call conditiontransition(input(op),prefix,_parselines[op.id()])
     return
   /** Keys select one stable strong owner; only the synchronous call window
    * contains a borrowed reference. Count start is a protocol-only marker. */

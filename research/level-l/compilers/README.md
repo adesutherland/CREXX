@@ -75,6 +75,16 @@ composition retain one shared queue owner. Shared host/condition/TRACE/platform
 work remains open under the [PUSH](doc/architecture.md#push-contract) and
 [QUEUE](doc/architecture.md#queue-contract) contracts.
 
+Explicit ADDRESS supports lasting environment selection, VALUE expressions,
+bare current/alternate swaps and transient commands with ordered WITH resources.
+For example, `address 'ENV' 'command :ITEMS[]' with output stream FILE` snapshots
+FILE at that connection and passes a lexical counted-stem binding through the
+existing B adapter. Commands evaluate once; operand EXIT skips construction and
+dispatch. The adapter owns request snapshots, redirects, binding writeback and
+RC/.RC/.RS. [The ADDRESS contract](doc/architecture.md#address-c-command-contract)
+keeps implicit commands/warnings, configured conditions/resumption, TRACE and
+host/platform closure explicit.
+
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing
 routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain

@@ -1,0 +1,241 @@
+/* cREXX License (MIT). C-private finite command-owner admission. */
+options levelb
+namespace llccommandprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcsymbols
+import llcprocedureprotocol
+
+/** Borrow a caller-owned immutable graph and its completed entry/program proof.
+ * No command handle or runtime resource is stored in generic L values. */
+checked: class
+  _graph = reference .llir..module
+  _program = reference .llcprocedureprotocol..checked
+  _store = reference .llir..arena
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _keys = .stem
+  _constructors = .int[]
+  _functions = .int[]
+  _owners = .int[]
+  _segments = .int[]
+  _runs = .int[]
+  _anchors = .int[]
+  _symbols = .llcsymbols..checked
+  *: factory
+    arg graph = reference .llir..module, program = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _program = program; _limit = bytes; _budget = work
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _keys = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 then do
+      graph = dereference _graph; _offset = graph.operation(opid).origin().first()
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid command admission dimensions'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do; call fail('LIMIT: command admission workspace exceeded'); return 0; end
+    _bytes = _bytes + count * width; return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do; call fail('LIMIT: command admission work budget exceeded'); return 0; end
+    _work = _work + count; return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  owners: method = .int
+    call run(); return _constructors[0]
+  owner: method = .int
+    arg opid = .int
+    call run(); return _owners[opid]
+  constructor: method = .int
+    arg id = .int
+    call run(); return _constructors[id]
+  sourceanchor: method = .int
+    arg opid = .int
+    call run(); return _anchors[opid]
+  function: method = .int
+    arg id = .int
+    call run(); return _functions[id]
+  text: method = .string
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name); extent = <blen>(bytes)
+    if charge(extent + 1) = 0 then return ''
+    if extent > _limit - _bytes then do; call fail('LIMIT: command attribute workspace exceeded',op.id()); return ''; end
+    codec = .llscalar..textcodec()
+    if codec.check(bytes) <> '' then do; call fail('LOWERING: command attribute is not text',op.id()); return ''; end
+    return bytes as .string
+  origin: method = .int
+    arg op = .llir..opview, constructor = 0
+    graph = dereference _graph; store = dereference _store
+    at = op.origin(); id = at.id()
+    if charge(8) = 0 then return 0
+    if at.kind() <> 'exact' | at.first() >= at.last() | store.get(9,id,1) = 0 then do
+      call fail('LOWERING: command operation requires an owned exact authored origin',op.id()); return 0
+    end
+    if constructor > 0 then do
+      parent = graph.operation(constructor).origin()
+      if store.get(9,parent.id(),1) <> store.get(9,id,1) | at.first() < parent.first() | at.last() > parent.last() then do
+        call fail('LOWERING: command origin is outside its constructor statement',op.id()); return 0
+      end
+      if op.name() = 'crexx.c.command.run' then do
+        if at.first() <> parent.first() | at.last() <> parent.last() then do
+          call fail('LOWERING: command run substitutes its authored statement',op.id()); return 0
+        end
+      end
+    end
+    return 1
+  connection: method = .void
+    arg op = .llir..opview
+    option = text(op,'option'); position = text(op,'position'); kind = text(op,'kind'); resource = text(op,'resource')
+    if _error <> '' then return
+    valid = (option == 'I' & position == 'INPUT') | ((option == 'O' | option == 'E') & (position == 'REPLACE' | position == 'APPEND'))
+    valid = valid & (kind == 'NORMAL' | kind == 'STREAM' | kind == 'STEM')
+    if kind == 'NORMAL' then valid = valid & resource == '' & position \== 'APPEND'
+    if valid = 0 then do; call fail('LOWERING: command connection has an invalid tuple',op.id()); return; end
+    if kind = 'NORMAL' then return
+    if charge(<blen>(resource as .binary) + 1) = 0 then return
+    call _symbols.symbol(resource)
+    if _symbols.error() <> '' then do
+      if left(_symbols.error(),18) == 'LL_COMPILER_LIMIT:' then _error = _symbols.error()
+      else call fail('LOWERING: command resource requires a variable symbol',op.id())
+      return
+    end
+    if kind = 'STEM' then do
+      if right(resource,1) <> '.' | pos('.',resource) <> length(resource) then call fail('LOWERING: command resource requires a simple stem',op.id())
+    end
+    return
+  binding: method = .void
+    arg op = .llir..opview
+    kind = text(op,'kind'); name = text(op,'name')
+    if _error <> '' then return
+    if (kind \== 'VAR' & kind \== 'STEM') | length(name) = 0 then do; call fail('LOWERING: command binding has an invalid kind/name',op.id()); return; end
+    if verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') > 0 | verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789') > 0 then do
+      call fail('LOWERING: command binding requires an ASCII anchor basename',op.id()); return
+    end
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if <refvalid>(_graph) = 0 | <refvalid>(_program) = 0 then do; call fail('LOWERING: command proof owner is not live'); return; end
+    graph = dereference _graph; program = dereference _program
+    if program.status() <> 0 | program.belongs(_graph) = 0 then do; call fail('LOWERING: command proof belongs to another or invalid graph'); return; end
+    _store = graph.storage(); store = dereference _store
+    /* First count only: no command workspaces are allocated for other units. */
+    found = 0; op = .llir..opview; key = .string; id = .int; owner = .int; name = .string
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      name = graph.operation(id).name()
+      if left(name,16) = 'crexx.c.command.' | left(name,16) = 'crexx.c.address.' then found = 1
+    end
+    if found = 0 then return
+    if reserve(store.count(3) + 1,48) = 0 then return
+    _symbols = .llcsymbols..checked(_limit,_budget)
+    /* One all-record index: exact keys are function-local and injectively hex
+     * encoded, so embedded punctuation/NUL cannot alias a different key. */
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(id); name = op.name()
+      if left(name,16) <> 'crexx.c.command.' & left(name,16) <> 'crexx.c.address.' then iterate
+      if origin(op) = 0 then return
+      if name = 'crexx.c.address.connection' | name = 'crexx.c.command.connection' then call connection(op)
+      if name = 'crexx.c.command.binding' then call binding(op)
+      if _error <> '' then return
+      if left(name,16) <> 'crexx.c.command.' then iterate
+      key = text(op,'key'); extent = <blen>(key as .binary)
+      if extent = 0 then do; call fail('LOWERING: command key is empty',id); return; end
+      if reserve(extent,2) = 0 | charge(extent * 2 + 32) = 0 then return
+      qualified = store.get(2,op.blockid(),1) || ':' || bin2x(key as .binary)
+      known = _keys.get(qualified)
+      if known = '' then do
+        if reserve(80,1) = 0 then return
+        owner = _constructors[0] + 1; _constructors[owner] = 0; _functions[owner] = store.get(2,op.blockid(),1)
+        call _keys.set(qualified,owner as .string)
+      end
+      else owner = known as .int
+      _owners[id] = owner
+      if name = 'crexx.c.command.new' then do
+        if _constructors[owner] <> 0 then do; call fail('LOWERING: command key has duplicate constructors',id); return; end
+        _constructors[owner] = id
+      end
+      if name = 'crexx.c.command.run' then _runs[owner] = _runs[owner] + 1
+    end
+    /* Lasting WITH children keep their exact resource subspans, but share
+     * the selecting ADDRESS's clause. A foreign/standalone child ends the
+     * candidate, never bridges another authored statement. */
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      candidate = 0; id = store.get(2,b,2)
+      do while id > 0
+        if charge() = 0 then return
+        op = graph.operation(id); name = op.name()
+        select name
+          when 'crexx.c.address.select' then candidate = id
+          when 'core.load' then nop
+          when 'crexx.c.address.connection' then do
+            if candidate > 0 then do
+              parent = graph.operation(candidate).origin(); child = op.origin()
+              if store.get(9,parent.id(),1) = store.get(9,child.id(),1) & child.first() >= parent.first() & child.last() <= parent.last() then _anchors[id] = candidate
+              else candidate = 0
+            end
+          end
+          otherwise candidate = 0
+        end
+        id = store.get(3,id,3)
+      end
+    end
+    /* Each normal path operation belongs to one segment at most. Only an
+     * already-proved private CALL false edge can continue an open owner. */
+    do owner = 1 to _constructors[0]
+      constructor = _constructors[owner]
+      if constructor = 0 | _runs[owner] <> 1 then do; call fail('LOWERING: command key requires one constructor and one run',constructor); return; end
+      id = constructor; phase = 0; done = 0
+      do while done = 0
+        if id = 0 then do; call fail('LOWERING: command segment ends before run',constructor); return; end
+        if charge() = 0 then return
+        if _segments[id] <> 0 then do; call fail('LOWERING: command segments overlap or cycle',id); return; end
+        _segments[id] = owner; op = graph.operation(id); name = op.name()
+        if _owners[id] > 0 then do
+          if _owners[id] <> owner then do; call fail('LOWERING: command keys interleave',id); return; end
+          if origin(op,constructor) = 0 then return
+          select name
+            when 'crexx.c.command.new' then do
+              if id <> constructor then do; call fail('LOWERING: command constructor appears inside another segment',id); return; end
+            end
+            when 'crexx.c.command.connection' then do
+              if phase > 0 then do; call fail('LOWERING: command connection follows binding',id); return; end
+            end
+            when 'crexx.c.command.binding' then phase = 1
+            when 'crexx.c.command.run' then done = 1
+            otherwise do; call fail('LOWERING: command has an unsupported operation',id); return; end
+          end
+        end
+        else if name = 'core.branch' then do
+          nextblock = op.successor(2)
+          if program.falsepredecessor(nextblock) <> id then do; call fail('LOWERING: command crosses an ordinary CFG edge',id); return; end
+          id = store.get(2,nextblock,2); iterate
+        end
+        else if name <> 'core.load' & name <> 'crexx.c.call' & program.programneutral(id) = 0 then do
+          call fail('LOWERING: command segment contains an unproved operation or edge',id); return
+        end
+        id = store.get(3,id,3)
+      end
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if _owners[id] > 0 & _segments[id] = 0 then do; call fail('LOWERING: command use is detached from its constructor',id); return; end
+    end
+    return

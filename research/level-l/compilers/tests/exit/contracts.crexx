@@ -87,7 +87,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 14 & data.ops() = 65 & count = 5,'exact C14/65/five-type schema')
+  call check(version = 15 & data.ops() = 72 & count = 5,'exact C15/72/five-type schema')
   call shape(contract,'exit','result:crexx.c.result context:crexx.c.context','','context','condition.resource','diverges')
   call shape(contract,'program.exiting','context:crexx.c.context','value:core.boolean','context','condition','returns')
   call check(data.opname(62) = 'crexx.c.program.exiting','append-only program query operation')

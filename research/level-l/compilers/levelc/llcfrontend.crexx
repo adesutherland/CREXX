@@ -9,10 +9,12 @@ import llcir
 import llcbifs
 import llcbindings
 import llcparse
+import llcore
 import llcparseprogram
 import llcompilercontracts
 import llcdoprotocol
 import llcprocedureprotocol
+import llccommandprotocol
 import rexxclassicunicodeproperties
 
 /** First source-unit entry identity and its result contract. */
@@ -118,6 +120,14 @@ request: class
   _contextslot = .llir..slot
   _entryslot = .llir..slot
   _sourceblocks = .object[]
+  _commandnumber = .int
+  _commandfirst = .stem
+  _commandcount = .stem
+  _anchorseen = .stem
+  _anchorkinds = .string[]
+  _anchornames = .string[]
+  _anchorfirst = .int[]
+  _anchorlast = .int[]
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -169,6 +179,9 @@ request: class
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
       end
+      _entrybytes = 0
+      call addressplans(reference parsed)
+      if _error <> '' then return
       _registry = .llir..schema(); call llcir..registerfamilies(reference _registry)
       call inventory()
       if _error <> '' then return
@@ -187,6 +200,10 @@ request: class
       if _error = '' then do
         entries = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
         if entries.status() then do; _error = entries.error(); _offset = entries.offset(); end
+        if _error = '' then do
+          commands = .llccommandprotocol..checked(reference _graph,reference entries,_bytebudget,_budget)
+          if commands.status() then do; _error = commands.error(); _offset = commands.offset(); end
+        end
         if _error = '' then do
           protocol = .llcdoprotocol..checked.withprogram(reference _graph,reference entries,_bytebudget,_budget)
           if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
@@ -252,15 +269,15 @@ request: class
     _work = _work + extent * 2
     return _error = ''
   entryspace: method = .int
-    arg count = .int, width = .int
-    if count < 0 | width < 1 then do; call fail(_tree.root(),'LIMIT: invalid frontend entry dimensions'); return 0; end
+    arg count = .int, width = .int, reason = 'entry'
+    if count < 0 | width < 1 then do; call fail(_tree.root(),'LIMIT: invalid frontend ' || reason || ' dimensions'); return 0; end
     if count > (_bytebudget - _entrybytes) <idiv> width then do
-      call fail(_tree.root(),'LIMIT: frontend entry workspace exceeded'); return 0
+      call fail(_tree.root(),'LIMIT: frontend ' || reason || ' workspace exceeded'); return 0
     end
     _entrybytes = _entrybytes + count * width
     return 1
   inventory: method = .void
-    root = _tree.root(); body = root.child('body'); _entrybytes = 0
+    root = _tree.root(); body = root.child('body')
     if entryspace(body.count('items'),24) = 0 then return
     _routines[1] = .routine('$MAIN','result',body,1,body.count('items')) as .object
     _namespace = ''; _routineids = .stem()
@@ -302,7 +319,7 @@ request: class
     _fn = _builder.function('$MAIN',type('result'))
     ignored = _fn.argument(type('context')); ignored = _fn.argument(type('int64'))
     _functions[1] = _fn as .object
-    _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _terminated = 0; _alive = 1
+    _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _commandnumber = 0; _terminated = 0; _alive = 1
     body = _current.body(); origin = at(body).derive()
     _block = newblock('entry')
     _contextslot = _fn.slot('$context',type('context'))
@@ -485,6 +502,7 @@ request: class
         op = _block.operation(_contract.operation('crexx.c.' || lower(substr(kind,2))),origin)
         call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
+      when kind = 'CAddress' then call addressstatement(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
@@ -570,6 +588,228 @@ request: class
   /** PARSE, ARG and PULL share immutable, source-owned template packets. The
    * standalone instructions retain identity and privately imply source/UPPER.
    * The shared executor owns all live name reads and target writes. */
+  /** One source-ordered pass over the clean original lexer stream. The parsed
+   * owner remains live in run; no stream/source copy is returned per command. */
+  addressplans: method = .void
+    arg parsed_ref = reference .llcparse..parsed
+    parsed = dereference parsed_ref
+    walk = _tree.walk('parents first'); cursor = 0; ready = 0
+    node = .llast..node; target = .llast..node; command = .llast..node
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'CAddress' | node.count('target') = 0 then iterate
+      target = node.child('target')
+      if target.kind() = 'AddressValue' then iterate
+      if target.count('command') = 0 then iterate
+      if ready = 0 then do
+        _commandfirst = .stem(); _commandcount = .stem(); _anchorseen = .stem(); ready = 1
+      end
+      do
+        tokens_ref = parsed.sourcetokens(); tokens = dereference tokens_ref
+        command = target.child('command'); key = node.start() as .string
+        if entryspace(96 + length(key),1,'command binding') = 0 then return
+        call _commandfirst.set(key,(_anchorkinds[0] + 1) as .string)
+        before = _anchorkinds[0]
+        do while cursor < tokens.size()
+          if tick(node) = 0 then return
+          if tokens.start(cursor) >= command.finish() then leave
+          if tokens.start(cursor) >= command.start() then do
+            call scananchors(node,tokens.start(cursor),tokens.finish(cursor + 1),tokens.symbol(cursor) = 3)
+            if _error <> '' then return
+          end
+          cursor = cursor + 1
+        end
+        call _commandcount.set(key,(_anchorkinds[0] - before) as .string)
+      end
+    end
+    return
+  anchorstart: method = .int
+    arg byte = .int
+    return byte = 95 | (byte >= 65 & byte <= 90) | (byte >= 97 & byte <= 122)
+  anchorpart: method = .int
+    arg byte = .int
+    return anchorstart(byte) | (byte >= 48 & byte <= 57)
+  /** Byte traversal is monotone within disjoint original tokens; UTF8 source
+   * is never repeatedly sliced at scalar offsets to discover ASCII anchors. */
+  scananchors: method = .void
+    arg node = .llast..node, first = .int, last = .int, allowcolon = .int
+    j = .int
+    source_ref = reference _source; source = dereference source_ref
+    i = first; braces = 1; begin = .int; finish = .int; after = .int; stemflag = .int; valid = .int
+    do while i < last
+      if tick(node) = 0 then return
+      byte = <at..u8>(i) source; begin = -1; finish = -1; after = i + 1; stemflag = 0
+      if braces & byte = 36 & i + 1 < last then do
+        if <at..u8>(i + 1) source = 123 then do
+          j = i + 2
+          do while j < last
+            if tick(node) = 0 then return
+            if <at..u8>(j) source = 125 then leave
+            j = j + 1
+          end
+          if j < last & j > i + 2 then do
+            begin = i + 2; finish = j; after = j + 1
+            if finish - begin > 2 then do
+              if <at..u8>(finish - 2) source = 91 & <at..u8>(finish - 1) source = 93 then do
+                stemflag = 1; finish = finish - 2
+              end
+            end
+            if stemflag = 0 & finish > begin then do
+              if <at..u8>(finish - 1) source = 46 then do; stemflag = 1; finish = finish - 1; end
+            end
+          end
+          /* One failed suffix search disables later brace searches, while
+           * the ordinary pass still discovers any later colon anchors. */
+          else if j >= last then braces = 0
+        end
+      end
+      if byte = 58 & allowcolon then do
+        previouscolon = 0
+        if i > first then previouscolon = <at..u8>(i - 1) source = 58
+        if previouscolon = 0 & i + 1 < last then do
+          if anchorstart(<at..u8>(i + 1) source) then do
+            begin = i + 1; j = begin + 1
+            do while j < last
+              if tick(node) = 0 then return
+              if anchorpart(<at..u8>(j) source) = 0 then leave
+              j = j + 1
+            end
+            finish = j; after = j
+            if j + 1 < last then do
+              if <at..u8>(j) source = 91 & <at..u8>(j + 1) source = 93 then do; stemflag = 1; after = j + 2; end
+            end
+            if stemflag = 0 & j < last then do
+              if <at..u8>(j) source = 46 then do
+                safe = j + 1 = last
+                if j + 1 < last then do
+                  nextbyte = <at..u8>(j + 1) source
+                  safe = nextbyte = 32 | nextbyte = 9 | nextbyte = 10 | nextbyte = 13 | nextbyte = 34 | nextbyte = 39
+                end
+                if safe then do; stemflag = 1; after = j + 1; end
+              end
+            end
+          end
+        end
+      end
+      if begin >= 0 then do
+        valid = finish > begin
+        if valid then valid = anchorstart(<at..u8>(begin) source)
+        do j = begin + 1 to finish - 1 while valid
+          if tick(node) = 0 then return
+          valid = anchorpart(<at..u8>(j) source)
+        end
+        if valid then do
+          extent = finish - begin
+          if entryspace(extent,4,'command binding') = 0 then return
+          if entryspace(128,1,'command binding') = 0 then return
+          if extent > (_budget - _work) <idiv> 4 then do
+            call fail(node,'LIMIT: frontend command binding work budget exceeded'); return
+          end
+          _work = _work + extent * 4
+          name = upper(binsubstr(source,begin + 1,extent) as .string)
+          kind = 'VAR'; if stemflag then kind = 'STEM'
+          key = (node.start() as .string) || ':' || kind || ':' || name
+          if _anchorseen.get(key) = '' then do
+            call _anchorseen.set(key,'1'); n = _anchorkinds[0] + 1
+            _anchorkinds[n] = kind; _anchornames[n] = name; _anchorfirst[n] = first; _anchorlast[n] = last
+          end
+        end
+      end
+      i = after
+    end
+    return
+  /** Validate the complete authored WITH list before emitting its operations. */
+  addressstatement: method = .void
+    arg node = .llast..node
+    i = .int; option = .string; position = .string; kind = .string; name = .string
+    origin = at(node); target = .llast..node; connections = .llast..node
+    item = .llast..node; spec = .llast..node; resource = .llast..node
+    value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    directions = ''; commandkey = ''; environment = ''; transient = 0
+    if node.count('connections') then do
+      connections = node.child('connections')
+      if node.count('target') = 0 then do; call fail(connections,'SYNTAX: RXC-LC-25.5: ADDRESS WITH requires an environment'); return; end
+      do i = 1 to connections.count('items')
+        item = connections.child('items',i); option = upper(item.text('option')); spec = item.child('spec'); kind = upper(spec.text('kind'))
+        if wordpos(option,'INPUT OUTPUT ERROR') = 0 | wordpos(option,directions) > 0 then do
+          call fail(item,'SYNTAX: RXC-LC-25.5: invalid or duplicate ADDRESS direction'); return
+        end
+        directions = directions || ' ' || option; position = ''; code = '25.6'
+        if option = 'OUTPUT' then code = '25.7'
+        if option = 'ERROR' then code = '25.14'
+        if item.count('position') then do
+          position = upper(item.child('position').text('spelling'))
+          if option = 'INPUT' then do; call fail(item.child('position'),'SYNTAX: RXC-LC-25.6: INPUT does not accept a position'); return; end
+          code = '25.8'; if position = 'REPLACE' then code = '25.9'
+        end
+        if wordpos(kind,'NORMAL STREAM STEM') = 0 | (position <> '' & kind = 'NORMAL') then do
+          call fail(spec,'SYNTAX: RXC-LC-' || code || ': invalid ADDRESS connection type'); return
+        end
+        if kind <> 'NORMAL' then do
+          if spec.count('resource') = 0 then do
+            code = '53.1'; if kind = 'STEM' then code = '53.2'
+            call fail(spec,'SYNTAX: RXC-LC-' || code || ': ADDRESS resource requires a variable symbol'); return
+          end
+          resource = spec.child('resource'); name = resource.text('spelling')
+          if kind = 'STEM' then do
+            if right(name,1) <> '.' | pos('.',name) <> length(name) then do
+              call fail(resource,'SYNTAX: RXC-LC-53.3: ADDRESS STEM requires a simple stem'); return
+            end
+          end
+        end
+      end
+    end
+    if node.count('target') = 0 then do
+      op = _block.operation(_contract.operation('crexx.c.address.swap'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); return
+    end
+    target = node.child('target'); transient = 0
+    if target.kind() <> 'AddressValue' then transient = target.count('command') > 0
+    if target.kind() = 'AddressValue' then value = expression(target.child('environment'))
+    else do
+      environment = target.text('environment')
+      if target.kind() = 'AddressQuoted' then environment = decodestring(target,environment)
+      /* Constant symbols preserve their authored bytes; the shared ADDRESS
+       * state owns runtime environment normalization. */
+      if transient then value = expression(target.child('command'))
+      else value = _block.constantbytes(type('value'),environment as .binary,at(target))
+    end
+    if _error <> '' then return
+    if transient then do
+      _commandnumber = _commandnumber + 1; commandkey = 'command.' || _commandnumber
+      op = _block.operation(_contract.operation('crexx.c.command.new'),origin)
+      call op.attribute('key',commandkey as .binary); call op.attribute('environment',environment as .binary)
+      call op.input('command',value)
+    end
+    else do
+      op = _block.operation(_contract.operation('crexx.c.address.select'),origin); call op.input('environment',value)
+    end
+    call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    if node.count('connections') then do i = 1 to connections.count('items')
+      item = connections.child('items',i); itemorigin = at(item); option = left(upper(item.text('option')),1)
+      position = 'REPLACE'; if option = 'I' then position = 'INPUT'
+      if item.count('position') then position = upper(item.child('position').text('spelling'))
+      spec = item.child('spec'); kind = upper(spec.text('kind')); name = ''
+      if spec.count('resource') then name = spec.child('resource').text('spelling')
+      operation = 'address.connection'; if transient then operation = 'command.connection'
+      op = _block.operation(_contract.operation('crexx.c.' || operation),itemorigin)
+      call op.input('context',_block.load(_contextslot,itemorigin))
+      if transient then call op.attribute('key',commandkey as .binary)
+      call op.attribute('option',option as .binary); call op.attribute('position',position as .binary)
+      call op.attribute('kind',kind as .binary); call op.attribute('resource',name as .binary); built = op.finish()
+    end
+    if transient then do
+      key = node.start() as .string; first = _commandfirst.get(key) as .int; count = _commandcount.get(key) as .int
+      do i = first to first + count - 1
+        bindingorigin = _file.origin(_anchorfirst[i],_anchorlast[i],'exact')
+        op = _block.operation(_contract.operation('crexx.c.command.binding'),bindingorigin)
+        call op.input('context',_block.load(_contextslot,bindingorigin)); call op.attribute('key',commandkey as .binary)
+        call op.attribute('kind',_anchorkinds[i] as .binary); call op.attribute('name',_anchornames[i] as .binary); built = op.finish()
+      end
+      op = _block.operation(_contract.operation('crexx.c.command.run'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key',commandkey as .binary); built = op.finish()
+    end
+    return
   parsestatement: method = .void
     arg node = .llast..node
     name = .llast..node; operand = .llast..node; item = .llast..node

@@ -1,0 +1,166 @@
+/* One pure B provider checks the C adapter, not another ADDRESS algorithm. */
+options levelb
+import rxfnsb
+import _rxsysb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import addressfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0; calls = 0
+  call _reset_address_environments()
+  provider = .AddressFixtureEnvironment('BRIDGE-TEST')
+  call provider.observe(reference calls)
+  call _register_address_environment('BRIDGE-TEST',provider)
+  if argv[0] > 0 then do
+    if argv[1] <> 'late' & argv[1] <> 'bad-count' then return 2
+    visible = .rexxpool..RexxVariablePool()
+    call visible.setStemString('INPUT','0','bad')
+    say 'ADDRESS_FATAL|before'
+    returned = invokeFixture(argv[1],reference visible)
+    say 'UNREACHED late ADDRESS host'
+    return 1
+  end
+  call runCase('plan','plan done',1,reference calls)
+  call runCase('private','private done',1,reference calls)
+  call runCase('loop','old!!',2,reference calls)
+  call runCase('radix','0',1,reference calls)
+  call runCase('dynamic','0',1,reference calls)
+  call runCase('lexical-tail','0',1,reference calls)
+  call runCase('nul','0',1,reference calls)
+  call runCase('unknown','30',0,reference calls)
+  call runCase('external-state','PARENT|REPLACE STREAM parent.txt',0,reference calls)
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call runCase('exit-command',payload,0,reference calls)
+  call runCase('exit-environment',payload,0,reference calls)
+  call _reset_address_environments()
+  say 'ADDRESS_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+runCase: procedure = .void
+  arg mode = .string, expected = .string, dispatches = .int, calls_ref = reference .int
+  calls = dereference calls_ref
+  before = calls
+  parent = .rexxpool..RexxVariablePool()
+  call parent.setSymbolValue('ITEMS.',.rexxvalue..RexxValue('default'))
+  call parent.setStemString('ITEMS','0','1'); call parent.setStemString('ITEMS','1','old item')
+  call parent.setStemString('ITEMS','9','outside'); call parent.setStemString('ITEMS','named','named tail')
+  visible = .rexxpool..RexxVariablePool()
+  call visible.exposeSymbol('ITEMS.',reference parent)
+  call visible.setString('SCALAR','old'); call visible.setString('EMPTY','old empty')
+  call visible.setString('LOCAL','caller local'); call visible.setString('UNREACHED','untouched')
+  call visible.setString('COUNT','0')
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call visible.setString('PAYLOAD',payload)
+  call visible.setStemString('INPUT','0','1'); call visible.setStemString('INPUT','1',payload)
+  returned = invokeFixture(mode,reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == expected,mode || ': exact owned completion after helper expiry')
+  call check(calls - before = dispatches,mode || ': exact once-only dispatch count')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local',mode || ': private local restoration')
+  call check(visible.symbolValue('UNREACHED').asString() == 'untouched',mode || ': no late effects')
+  if mode = 'plan' then do
+    call check(visible.symbolValue('OBSENV').asString() == 'KEEP' & visible.symbolValue('OBSOUT').asString() == 'REPLACE NORMAL ', 'transient command does not replace active environment/connections')
+    call check(visible.symbolValue('SCALAR').asString() == payload & visible.symbolValue('EMPTY').asString() == '', 'lexical scalar update preserves Unicode NUL empty and trailing blank')
+    call check(\visible.symbolHasValue('UNSET'),'unmatched lexical scalar stays unset')
+    call check(parent.stemSymbolValue('ITEMS','0').asString() == '2' & parent.stemSymbolValue('ITEMS','2').asString() == 'direct tail','counted request owner survives real dispatcher and EXPOSE')
+    call check(parent.stemSymbolValue('ITEMS','9').asString() == 'outside' & parent.stemSymbolValue('ITEMS','named').asString() == 'named tail','projection preserves outside/nonnumeric tails')
+    call check(parent.stemSymbolValue('ITEMS','missing').asString() == 'default','projection preserves default')
+    call check(visible.stemSymbolValue('OUTPUT','1').asString() == 'captured' & visible.stemSymbolValue('ERRORS','1').asString() == 'problem','transient WITH endpoints reach existing B capture')
+    call check(visible.symbolValue('RC').asString() == '7' & visible.symbolValue('.RC').asString() == '7' & visible.symbolValue('.RS').asString() == '1','unhandled ERROR completes with existing status fields')
+  end
+  if mode = 'private' then call check(parent.stemSymbolValue('ITEMS','1').asString() == payload & visible.symbolValue('SCALAR').asString() == payload,'private binding copyback reaches exposed caller only')
+  if mode = 'unknown' then call check(visible.symbolValue('.RS').asString() == '1','unknown environment retains shared30/ERROR mapping')
+  if mode = 'external-state' then do
+    call check(visible.symbolValue('OBSENV').asString() == 'PARENT' & visible.symbolValue('OBSOUT').asString() == 'REPLACE STREAM parent.txt','signed child mutates only its own active state')
+    call check(visible.symbolValue('OBSALT').asString() == 'ALT' & visible.symbolValue('OBSERR').asString() == 'REPLACE STEM ERR.','signed child preserves caller alternate state and connections')
+  end
+  return
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string, pool_ref = reference .rexxpool..RexxVariablePool
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,pool_ref,reference config)
+  returned = addressfixture..run(reference context,0)
+  rebound = context.pool(); rebound_activation = context.activation(); rebound_config = context.config()
+  original_activation = reference activation; original_config = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> pool_ref),mode || ': restore live original pool')
+  call check((rebound_activation <refsame> original_activation) & (rebound_config <refsame> original_config),mode || ': keep activation/config borrows')
+  call check(activation.programExitRequested() = (left(mode,5) == 'exit-'),mode || ': existing program root propagation')
+  if left(mode,5) == 'exit-' then do
+    pool = dereference pool_ref
+    call check(pool.symbolValue('COUNT').asString() == '1',mode || ': EXIT operand runs once')
+    call check(activation.returnValue().asString() == returned.returnValue().asString(),mode || ': root and packet agree exactly')
+  end
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+AddressFixtureEnvironment: class implements .addressenvironment
+  _name = .string
+  _calls = reference .int
+  *: match
+    arg env_name = .string
+    if _address_normalize_environment_name(env_name) == 'BRIDGE-TEST' then return 100
+    return 0
+  *: factory
+    arg env_name = .string
+    _name = env_name
+    return
+  environment_name: method = .string
+    return _name
+  environment_id: method = .string
+    return _name
+  observe: method = .void
+    arg calls = reference .int
+    _calls = calls
+    return
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls
+    calls = calls + 1
+    payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+    text = request.get_command()
+    response = .addressresponse(0)
+    if left(text,5) == 'again' then do
+      call check(request.get_binding_count() = 1,'loop retains one lexical descriptor')
+      call response.add_updated_binding('var','SCALAR','SCALAR',request.get_binding_value('SCALAR') || '!','')
+      return response
+    end
+    if left(text,4) == 'plan' | left(text,7) == 'private' then do
+      expected = 2; if left(text,4) == 'plan' then expected = 4
+      call check(request.get_binding_count() = expected,'deduplicate lexical kind/name preserving first order')
+      first = request.get_binding(1); second = request.get_binding(2)
+      call check(first.get_kind() == 'var' & first.get_internal_name() == 'SCALAR' & second.get_kind() == 'stem' & second.get_internal_name() == 'ITEMS','ordered scalar and counted-stem plans')
+      call check(request.get_binding_value('SCALAR') == 'old' & request.get_binding_stem_value(2,'1') == 'old item','snapshot live current shared/private pool')
+      call request.set_binding_stem_value(2,'0','2'); call request.set_binding_stem_value(2,'2','direct tail')
+      call response.add_updated_binding('var','SCALAR','SCALAR',payload,'')
+      call response.add_updated_binding('var','EMPTY','EMPTY','','')
+      call response.add_updated_binding('stem','ITEMS.1','ITEMS',payload,'')
+      if left(text,4) == 'plan' then do
+        input_endpoint = request.get_stdin_endpoint()
+        call check((input_endpoint.input_snapshot() as .string) == (payload || ('0A'x as .string)),'WITH input snapshot exact bytes')
+        output_endpoint = request.get_stdout_endpoint(); error_endpoint = request.get_stderr_endpoint()
+        call output_endpoint.native_emit('captured' || ('0A'x as .string)); call output_endpoint.finish()
+        call error_endpoint.native_emit('problem' || ('0A'x as .string)); call error_endpoint.finish()
+        call response.set_rc(7); call response.set_condition_name('ERROR')
+      end
+      return response
+    end
+    if text == 'prefix ${ :SCALAR' then do
+      call check(request.get_binding_count() = 1 & request.get_binding_value('SCALAR') == 'old','grouped command tail and later colon survive incomplete dollar anchor')
+      return response
+    end
+    call check(request.get_binding_count() = 0,'radix-decoded/runtime text creates no lexical anchors')
+    call check(text == ':SCALAR' | text == 'text :SCALAR' | text == ('A' || ('00'x as .string) || 'B'),'provider retains exact decoded command value')
+    return response

@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings parseprogram procedureprotocol doprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs bindings parseprogram procedureprotocol doprotocol commandprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -156,6 +156,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccommandprotocol.rxbin"
       ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
@@ -293,6 +294,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_queue_insertion_contracts_${_mode}
       DEPENDS "${_dir}/llc-queue-insertion-contracts-linked.rxbin")
+    ll_compile(address-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/address/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/address-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/address-contracts-linked"
+        "${_dir}/address-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/address-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_address_contracts_${_mode}
+      DEPENDS "${_dir}/address-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -726,6 +735,31 @@ if("c" IN_LIST _languages)
         llcompiler_queue_insertion_contracts_${_mode}
         library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_insertion_vm})
     endforeach()
+  endforeach()
+  # Explicit ADDRESS reuses one source image for state, bindings and cleanup.
+  foreach(_mode opt noopt)
+    set(_address_vm rxbvm)
+    set(_address_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_address_ir off)
+      if(TARGET rxtvm)
+        set(_address_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_address_${_mode}_${_address_ir}_${_address_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/address/check-address.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_address_vm} --ir ${_address_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "ADDRESS_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_address_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_address_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
