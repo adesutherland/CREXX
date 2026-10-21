@@ -1,0 +1,4 @@
+/* A plain source has no TRACE-only executable cost. */
+options levelc
+say 'constant'
+return 0

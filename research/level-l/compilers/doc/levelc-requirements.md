@@ -42,10 +42,13 @@ passes without exercising the new compiler.
   TRACE targets only the native Level C practical scope approved 2026-10-06 in
   [TRACE requirements](../../../../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md)
   and LC-I-24 of the compatibility worklist. The [conformance profile](levelc-conformance.md#practical-trace-target)
-  records its interactive, skip/suppress, SCAN and event-coverage limitations;
-  it does not claim new-C TRACE is implemented. Minor formatting/event-coverage
+  records its implemented practical contract and interactive, skip/suppress,
+  SCAN and event-coverage limitations. Minor formatting/event-coverage
   differences within that scope are recorded for later judgment, not expanded
   delivery gates. Correct displayed values and ordinary behavior remain material.
+  LC-I-24 completion does not inherit passes for other instructions' outstanding
+  condition/source integration checks; those retain their existing criteria
+  under the same practical TRACE scope.
 - Host ADDRESS NUL transport, full host/source/configuration APIs and real HALT
   are separate tracked obligations. Their prior deferral is not full-C closure.
   The selected NUL rejection/transport policy must be explicit at the adapter.
@@ -136,8 +139,8 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-20 ADDRESS / STEP07 | Partial: explicit keyed profile locally qualified, CADDR-AC01–05/07 | Selection/swap, transient command, WITH resources and configured environment object protocol. One command evaluation, RC/.RC/.RS, error/failure/notready and resource lifetime. Compiler owns anchors; adapter owns command meaning. Test NUL transport policy explicitly. | [LC-82-01–06](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-21 implicit command / STEP07 | Partial: active commands and owned warnings locally qualified, CADDR-AC01–07 local profile | Expression becomes one command through active ADDRESS state and lasting connections. No duplicate host route. Preserve expression errors, warning/source observations, return status and traps. CADDR-AC08 keeps configured conditions/resumption, TRACE, host/NUL transport and platforms open. | [LC-83-01–04](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-22 NUMERIC / STEP07 | Partial: source-integration profile locally qualified, NUM-C-AC01–06 | DIGITS/FORM/FUZZ default/value forms, once-only shared validation, local inheritance/restoration and representative BIF/display/arithmetic effects use the [NUMERIC contract](architecture.md#numeric-c-contract). No per-operator rebuilding of unchanged configuration. NUM-C-AC07 retains configured conditions/LOSTDIGITS, TRACE, broader host/platform scope and numeric fact invalidation. | [LC-84-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
-| LC-I-23 SIGNAL / STEP07 | **Complete: agreed whole instruction, CSIGNAL-AC01–07** | The [complete contract](architecture.md#signal-complete-contract) includes direct/quoted/VALUE transfers, seven-condition ON/OFF, actual SYNTAX/NOVALUE/LOSTDIGITS/ADDRESS producers, same-frame handler cleanup and typed payload/origin preservation with all required helpers/dependencies. Preserve first-label order, strict canonical text, SIGL/.SIGL, activation/private state and causing-event errors. [Conformance qualifications](levelc-conformance.md) retain practical TRACE, real host HALT, broader host/platform acceptance, delayed CALL and INTERPRET; these are not unfinished SIGNAL subdeliveries. | [LC-AC-76](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-85-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
-| LC-I-24 TRACE / STEP07 | Not implemented | Compile clause/result events with current VM metadata/exit protocol, share activation option/query state and command inhibition. Verify actual displayed values/origins and approved practical divergences. Disabled tracing must not require avoidable formatting/allocation. | [LC-AC-77](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-86-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
+| LC-I-23 SIGNAL / STEP07 | **Complete: agreed whole instruction, CSIGNAL-AC01–07** | The [complete contract](architecture.md#signal-complete-contract) includes direct/quoted/VALUE transfers, seven-condition ON/OFF, actual SYNTAX/NOVALUE/LOSTDIGITS/ADDRESS producers, same-frame handler cleanup and typed payload/origin preservation with all required helpers/dependencies. Preserve first-label order, strict canonical text, SIGL/.SIGL, activation/private state and causing-event errors. [Conformance qualifications](levelc-conformance.md) retain approved TRACE limitations, real host HALT, broader host/platform acceptance, delayed CALL and INTERPRET; these are not unfinished SIGNAL subdeliveries. | [LC-AC-76](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-85-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
+| LC-I-24 TRACE / STEP07 | Complete for the agreed practical contract | [CTRACE-AC01–07](architecture.md#trace-complete-contract): shared activation options/query, command inhibition/reporting, retained truthful scalar/source events, restoration/errors and disabled-cost controls. Accepted practical/presentation limitations are in the conformance profile; whole-compiler/platform/delivery QA remains open. | [LC-AC-77](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-86-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-25 INTERPRET / STEP11 | Not implemented | Same compiler in group mode, live caller state, source-once semantics, complete/no-label groups, nested compile/execute, CALL-handler resumption versus SIGNAL discard, caller routines, RETURN/EXIT and bounded resident ownership. Include all LC-87 proof cases and installed/platform lifecycle; no second evaluator. | [LC-87-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 
 The approved PARSE contract preserves complete LC-I-19 as the outcome. The committed
@@ -521,7 +524,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-054 | Exact logical values and contextual `34.*` identities | Partial: IF 34.1 locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Complete remaining WHEN/loop/logical identities and resumed condition/origin/TRACE contracts; bounded IF proof is not all contexts. |
 | LC-REF-055 | Function/CALL omitted arguments and resolution order | Partial: local/BIF/static signed CALL profiles | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Complete local/BIF/static-external resolution, source order and omissions. |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | Partial: shared-entry result presence | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Prove required function result 45.1 and RESULT/.RESULT drop/presence lifecycle. |
-| LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | Not implemented | C-HOST / STEP08 | Provide real HALT and clause-boundary trap/TRACE initialization without unused clocks. |
+| LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | Partial: practical TRACE entry/restore and immediate SIGNAL delivered | C-HOST / STEP07/08 | Preserve clock-free source markers and existing observer ownership; real HALT, delayed traps and broader clause/host initialization remain open. |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | Partial: explicit keyed profile delivered; conditions/host/NUL remain open | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Complete ADDRESS selection/swap/transient/WITH resources and NUL disposition. |
 | LC-REF-059 | CALL ON/OFF delayed condition handlers | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Implement delayed CALL handlers, policy replacement, suspension and resumption. |
 | LC-REF-060 | DROP direct and parenthesized variable lists | Partial: ordered v3 forms locally qualified | C-POOL / STEP03/05/06; STEP08 external API | Retain ordered/captured-list/Unicode/static-alias contracts; close configured conditions, full diagnostics, TRACE and host/dynamic dependencies. |
@@ -534,7 +537,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | Local owned source/completion profile | C-ACT and LC-I-13–15 / STEP06; STEP07/08 observations/host | Preserve main/subroutine/function presence and cleanup; complete configured observations and broader host/platform proof. |
 | LC-REF-068 | SAY default output and optional empty expression | Partial: SAY/radix subset | LC-I-01 / STEP05; STEP07/08 observations/host | Complete modern expression/output order and ordinary errors; further historical host edge parity is deferred and unclaimed. |
 | LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | Complete for the agreed SIGNAL contract | C-OBS and LC-I-23 / STEP07; shared qualifications STEP08/11 | All SIGNAL targets/traps, causing-event state and crossed-control cleanup use CSIGNAL-AC01–07; named conformance qualifications remain explicit. |
-| LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | Not implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Implement approved practical TRACE state/display/inhibition and divergences. |
+| LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | Complete for the agreed practical TRACE contract | C-OBS and LC-I-13/20/21/23/24 / STEP07; shared delivery STEP08 | CTRACE-AC01–07 implements options/query, command state and truthful retained observations with the explicit practical divergences; formal whole-compiler/platform QA remains open. |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | Immediate SIGNAL delivery complete; real HALT and broader host scope open | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | All seven SIGNAL policies/delivery and actual admitted producers retain nested ownership; controlled HALT is not real host/asynchronous HALT. |
 | LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | Partial: logical fatal origins | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Bind messages/.MN/source traceback; preserve original condition and mapped origin. |
 | LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | Immediate SIGNAL complete; delayed CALL/HALT buffering open | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Immediate delivery and nested restoration use the complete SIGNAL contract; delayed delivery and buffered HALT retain CALL4 acceptance. |
@@ -582,7 +585,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-SAY` | Partial | LC-I-01 / STEP05 | Full LC-I-01 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-SELECT` | Partial: admitted forms locally qualified | LC-I-07 / STEP05 | Full LC-I-07 and shared dependencies remain open. |
 | `SYN-CLASSIC-SIGNAL` | Complete for the agreed instruction | LC-I-23 / STEP07 | CSIGNAL-AC01–07 close all source forms and required helpers; retain the ledger's named cross-cutting qualifications. |
-| `SYN-CLASSIC-TRACE` | Not implemented | LC-I-24 / STEP07 | Full LC-I-24 check in the instruction ledger; shared dependencies remain open. |
+| `SYN-CLASSIC-TRACE` | Complete for the agreed practical TRACE contract | LC-I-24 / STEP07 | Bare/static/VALUE, contextual/dead forms and exact error admission use CTRACE-AC01–07; retain shared full-C acceptance and practical limitations. |
 | `SYN-CLASSIC-EXPRESSIONS` | Partial: operator subset | C-EXPR/C-NUM; STEP04/07 | Close LC-REF-043–046/053/054, including power, integer division/remainder and full comparisons. |
 | `SYN-CLASSIC-BIF-CALL` | All 95 names bound; whole BIF-CHECK open | BF01–09; STEP04/06/07/08 | Close every one of the 95 binding rows with BIF-CHECK, including LC-REF-055. |
 | `SYN-CLASSIC-LOCAL-CALL` | Partial: shared-entry local calls | C-ACT/C-ABI; STEP03/06/07 | Close LC-I-11–15 and LC-REF-055/056/061/067; complete resolution, dynamic entries and outcomes. |
@@ -648,9 +651,11 @@ Unicode, provider and TRACE exceptions explicitly. A discrepancy gets a minimal
 case classified as new compiler, native compiler, shared runtime or bad oracle.
 Never weaken an independent expectation merely to match native output.
 
-Exercise compiler optimisation on/off with RXAS optimisation independently on/
-off for the changed semantics; affected direct/linked/service/installed routes
-and both concrete VMs are additional dimensions, not interchangeable labels.
+At the named formal QA milestones, cover compiler optimisation on/off with RXAS
+optimisation independently on/off; affected direct/linked/service/installed
+routes and both concrete VMs are additional dimensions, not interchangeable
+labels. Select proportionate development checks through AGENTS.md; a feature
+increment does not automatically invoke that matrix.
 Use representative RXAS structural assertions rather than register snapshots:
 allocations/config construction, live registers, calls/windows, copies, branch
 structure, cleanup and observation anchors. Include constant-only SAY, numeric

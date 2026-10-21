@@ -18,6 +18,7 @@ import llccommandprotocol
 import llcparseprogram
 import llscalar
 import llcsymbols
+import llctraceemit
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -65,6 +66,12 @@ compilation: class
   _sourceline = .int
   _lastfaultline = .int
   _handlersactive = .int
+  _hastrace = .int
+  _traceactive = .int
+  _traceoutermode = .int
+  _traceouterformat = .int
+  _traceevent = .int
+  _tracescratch = .int
   _captureowner = .int
   _capturepayload = .int
   _capturetag = .int
@@ -271,7 +278,7 @@ compilation: class
       signature = catalog.lookup(name)
       if signature.error() = '' then _catalogs[found] = catalog as .object
     end
-    if signature.error() <> '' then call fail('IMPORT: ' || signature.error())
+    if signature.error() <> '' then call fail('IMPORT: ' || name || ': ' || signature.error())
     if _error = '' then do
       n = _names[0] + 1; _names[n] = name; _signatures[n] = signature
     end
@@ -283,7 +290,7 @@ compilation: class
     if signature.flags_text() <> 'b' | qualifiedtype(signature.result()) <> result | signature.arguments() <> words(arguments) then call fail('IMPORT: incompatible target signature ' || name)
     else do i = 1 to words(arguments)
       expected = word(arguments,i); expected = changestr('@',expected,' ')
-      if qualifiedtype(signature.type(i)) <> expected | signature.optional(i) <> (substr(optional,i,1) = '1') then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
+      if qualifiedtype(signature.type(i)) <> expected | signature.optional(i) <> (substr(optional,i,1) = '1') | signature.exposed(i) then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
     end
     if _error <> '' then return ''
     return name
@@ -302,6 +309,8 @@ compilation: class
       when type = '.rexxbifcallcontext' then type = '.rexxclassicbifs..rexxbifcallcontext'
       when type = '.rexxclassicconditionevent' then type = '.rexxclassicconditionevent..rexxclassicconditionevent'
       when type = '.runtime_signal' then type = '.rxfnsb..runtime_signal'
+      when type = '.tracecontext' then type = '.rxfnsb..tracecontext'
+      when type = '.trace_interrupt_raw' then type = '.rxfnsb..trace_interrupt_raw'
       otherwise nop
     end
     return prefix || type
@@ -416,8 +425,15 @@ compilation: class
     name = op.name(); bytes = .binary; packet = .llcparseprogram..checked; symbol = .string
     opid = .int; clausefirst = .int; constructor = .int
     if name = 'crexx.c.clause.begin' then do
+      _parseclauses[op.id()] = op.origin().first() + 1
       call checkselectorigin(op,'clause begin')
       if _error <> '' then return
+    end
+    if name = 'crexx.c.trace' then do
+      call checkselectorigin(op,'TRACE')
+      if _error <> '' then return
+      _parseclauses[op.id()] = op.origin().first() + 1
+      _hastrace = 1
     end
     if wordpos(name,'crexx.c.signal.mark crexx.c.signal.name crexx.c.signal.invalid') > 0 then do
       call checkselectorigin(op,'SIGNAL')
@@ -457,10 +473,14 @@ compilation: class
       call checkselectorigin(op,'CALL/RETURN')
       if _error <> '' then return
       _parseclauses[op.id()] = op.origin().first() + 1
-      if name = 'crexx.c.call.external' then call checkexternal(op)
+      if name = 'crexx.c.call.external' then do
+        _hastrace = 1
+        call checkexternal(op)
+      end
       if _error <> '' then return
       if name = 'crexx.c.bif' then do
         bifname = op.attribute('name') as .string; symbol = llcbifs..entry(bifname)
+        if bifname = 'TRACE' then _hastrace = 1
         if symbol = '' then do; call fail('LOWERING: unknown direct Classic BIF'); return; end
         types = 'reference@.rexxclassicbifs..rexxbifcallcontext'
         if llcbifs..activation(bifname) then types = types || ' reference@.rexxactivation..rexxactivationarguments'
@@ -1043,11 +1063,13 @@ compilation: class
       call emit('move',result(op) || ',' || activation)
     end
     call emit('null',activation); call emit('null',parent); call emit('null',pool)
+    call tracesync(input(op,2))
     return
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
     i = .int; op = .llir..opview; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
+    signature = .llcompilercontracts..signature; j = .int
     key = .string; known = .string; extent = .int
     do
       if _bound then do
@@ -1130,6 +1152,7 @@ compilation: class
       if _commandprotocol.status() then do
         _error = _commandprotocol.error(); _offset = _commandprotocol.offset(); return
       end
+      _hastrace = _export <> ''
       _phase = 'operation admission'
       _selectorsymbols = .llcsymbols..checked(_limit,_limit)
       do i = 1 to store.count(3)
@@ -1203,12 +1226,46 @@ compilation: class
         _phase = 'function ' || f; _fn = f; call procedurebody()
         if _error <> '' then return
       end
+      if _hastrace then do
+        if _reglimit < 48 then do; call fail('LIMIT: TRACE handler exceeds register budget'); return; end
+        requirements = llctraceemit..imports()
+        do i = 1 to words(requirements)
+          name = word(requirements,i); package = 'library'
+          if left(name,10) = 'rexxvalue.' then package = 'rxfnsc'
+          signature = importsignature(package,name)
+          if _error <> '' then return
+          specification = llctraceemit..contract(name)
+          if specification = '' then do; call fail('IMPORT: missing private TRACE ABI ' || name); return; end
+          contract_offset = pos('|',specification)
+          expected_result = left(specification,contract_offset - 1)
+          contract_rest = substr(specification,contract_offset + 1)
+          contract_offset = pos('|',contract_rest)
+          argument_types = left(contract_rest,contract_offset - 1)
+          contract_rest = substr(contract_rest,contract_offset + 1)
+          contract_offset = pos('|',contract_rest)
+          optional_flags = left(contract_rest,contract_offset - 1)
+          exposed_flags = substr(contract_rest,contract_offset + 1)
+          if specification = '' | signature.flags_text() <> 'b' | qualifiedtype(signature.result()) <> expected_result | signature.arguments() <> words(argument_types) then do
+            call fail('IMPORT: incompatible TRACE support signature ' || name); return
+          end
+          do j = 1 to signature.arguments()
+            if qualifiedtype(signature.type(j)) <> word(argument_types,j) | signature.optional(j) <> (substr(optional_flags,j,1) = '1') | signature.exposed(j) <> (substr(exposed_flags,j,1) = '1') then do
+              call fail('IMPORT: incompatible TRACE support argument ' || name || ':' || j); return
+            end
+          end
+        end
+        if _error <> '' then return
+        helper = llctraceemit..handler(_limit)
+        call _writer.append(reference helper)
+        if _writer.error() <> '' then do; _error = _writer.error(); return; end
+      end
       do i = 1 to _names[0]
         signature = _signatures[i]
         call _writer.line(_names[i] || '() .expose=' || _names[i])
         args = ''
         do j = 1 to signature.arguments()
           if j > 1 then args = args || ','
+          if signature.exposed(j) then args = args || 'expose '
           if signature.optional(j) then args = args || '?'
           args = args || signature.paramname(j) || '=' || signature.type(j)
         end
@@ -1305,6 +1362,12 @@ compilation: class
       _commandcleanup[_commandcleanup[0] + 1] = i
     end
     _handlersactive = next; next = next + 1
+    _traceactive = -1; _traceoutermode = -1; _traceouterformat = -1
+    if _hastrace then do
+      _traceactive = next; _traceoutermode = next + 1; _traceouterformat = next + 2
+      _traceevent = next + 3; _tracescratch = next + 4
+      next = next + 5
+    end
     _captureowner = -1; _capturepayload = -1; _capturetag = -1
     _captureline = -1; _capturebusy = -1; _faultline = -1
     if signalfacts.protection(_fn) > 0 then do
@@ -1322,6 +1385,7 @@ compilation: class
     do; _maxargs = 2; _needsscratch = 1; end
     call installnumeric('a1')
     if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+    if _hastrace then call traceenter()
     call exitcleanup()
     call fatalbody()
     do i = 1 to blocks[0] while _error = ''
@@ -1353,6 +1417,10 @@ compilation: class
     if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',llrxastext..quote(name as .binary) || '="b" ' || llrxastext..quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || llrxastext..quote(args as .binary))
     call emit('load',reg(_handlersactive) || ',0')
+    if _hastrace then do
+      call emit('load',reg(_traceactive) || ',0')
+      call traceenter()
+    end
     if _captureowner >= 0 then do
       call emit('null',reg(_captureowner)); call emit('null',reg(_capturepayload)); call emit('null',reg(_capturetag))
       call emit('load',reg(_captureline) || ',0'); call emit('load',reg(_capturebusy) || ',0')
@@ -1395,6 +1463,7 @@ compilation: class
     if _captureowner < 0 then do
       call installnumeric('a1')
       if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+      if _hastrace then call tracesync('a1')
     end
     if store.get(1,_fn,3) <> blocks[1] then call emit('br','llb' || store.get(1,_fn,3))
     previouscold = 0
@@ -1412,13 +1481,19 @@ compilation: class
       previouscold = cold
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
+        /* Trace-only clause observations retain metadata at the reached
+         * boundary, without reviving a lazy-clock operation or its context. */
+        if _hastrace & op.name() = 'crexx.c.clause.begin' & clausefacts.erased(id) then do
+          call source(op.origin(),_parseclauses[id],0,1)
+        end
         if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
           anchor = entryfacts.programanchor(id); clause = _parseclauses[id]
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
-          call source(op.origin(),clause,anchor)
+          call source(op.origin(),clause,anchor,op.name() = 'crexx.c.clause.begin')
           if _captureowner >= 0 & signalfacts.owner(id) = 0 then call faultsite(op)
           call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
+          if _hastrace then call traceevent(op,clause)
         end
         id = store.get(3,id,3)
       end
@@ -1544,7 +1619,7 @@ compilation: class
     _phase = phase
     return reference _sourceindexes[sourceid]
   source: method = .void
-    arg origin = .llir..origin, clause = 0, diagnostic = 0
+    arg origin = .llir..origin, clause = 0, diagnostic = 0, traceclause = 0
     key = .string; location = .string
     if origin.id() = 0 then do; call clearsource(); return; end
     kind = origin.kind()
@@ -1572,13 +1647,14 @@ compilation: class
       if flags = 17 then flags = 65
       else if flags = 34 then flags = 98
     end
+    if _hastrace & traceclause & (flags <has> 64) = 0 then flags = flags + 64
     filename = llcompilercontracts..sourcename(origin.filename())
     _sourceline = line
     location = filename || ':' || line || ':' || column
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
     if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
     key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(binsubstr(bytes,first + 1,last - first))
-    call sourcerecord(key,location,clause)
+    call sourcerecord(key,location,clause,traceclause)
     return
   /** Proved mechanical unwind transport keeps its generated source record and
    * uses its call/EXIT anchor for diagnostics. Reuse the existing source index. */
@@ -1595,13 +1671,13 @@ compilation: class
   /** A source anchor and diagnostic context are independent state. Equal line
    * numbers alone are insufficient: range, flags and text also identify it. */
   sourcerecord: method = .void
-    arg key = .string, location = .string, clause = 0
+    arg key = .string, location = .string, clause = 0, metadataonly = 0
     identity = clause || ':' || key
     if identity <> _lastsource then do
       call emit('.srcstep',_origin || ' ' || clause || ' ' || key)
       _lastsource = identity
     end
-    if location <> _lastlocation then do
+    if metadataonly = 0 & location <> _lastlocation then do
       call emit('load',reg(_location) || ',' || llrxastext..quote(location as .binary))
       _lastlocation = location
     end
@@ -1659,6 +1735,7 @@ compilation: class
         call emit('load',reg(_handlersactive) || ',1')
         if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
         call installnumeric('a1')
+        if _hastrace then call tracesync('a1')
         if op.successor(1) <> _fallthrough then call emit('br','llb' || op.successor(1))
       end
       when name = 'core.jump' then do
@@ -1735,6 +1812,7 @@ compilation: class
       when name = 'return.present' then call adapter(op,'present',a,v)
       when name = 'return.absent' then call adapter(op,'absent',a,'')
       when name = 'return.empty' then call adapter(op,'emptyreturn',a,contexttype)
+      when name = 'trace' then call traceoperation(op)
       when name = 'bif' then call bifoperation(op)
       when name = 'requirevalue' then do
         symbol = imported('llctarget','llctarget.requirevalue',v,a || ' .string')
@@ -1783,6 +1861,89 @@ compilation: class
     return
   /** Select admitted same-frame SIGNAL work. Table payload/transport has no
    * runtime representation; name transport aliases one owned scalar register. */
+  /** Metadata observes the owned value after its actual producer. No
+   * conversion, helper call or artificial executable boundary is introduced. */
+  traceevent: method = .void
+    arg op = .llir..opview, clause = .int
+    name = op.name(); kind = ''; mask = 4; value = 0
+    if op.origin().kind() <> 'exact' then return
+    if name = 'crexx.c.store' then do; kind = 'A'; mask = 6; value = op.input(2).id(); end
+    else if name = 'crexx.c.load' then do; kind = 'V'; mask = 6; value = op.result().id(); end
+    else if name = 'core.constant' then do
+      if typename(op.result().type().id()) = 'crexx.c.value' then do; kind = 'L'; value = op.result().id(); end
+    end
+    else if left(name,8) = 'crexx.c.' then do
+      part = substr(name,9)
+      if wordpos(part,'add sub mul div eq ne lt le gt ge strict concat blank abut and or xor') > 0 then kind = 'O'
+      else if wordpos(part,'positive negative not') > 0 then kind = 'P'
+      else if part = 'bif' | part = 'requirevalue' then kind = 'F'
+      if kind <> '' then value = op.result().id()
+    end
+    if kind = '' | value = 0 then return
+    call emit('.traceevent',llrxastext..quote(kind as .binary) || ' ' || mask || ' "R" "O" "o" ' || _registers[value] || ' ' || op.origin().id() || ' ' || clause || ' 1 "" ""')
+    return
+  /** Convert once through RexxValue and update the sole option-state owner. */
+  traceoperation: method = .void
+    arg op = .llir..opview
+    text = reg(_workbase + 9); activation = reg(_workbase + 4); receiver = reg(_workbase + 1)
+    symbol = member('rexxvalue.rexxvalue','asstring','.string','.int','1')
+    call argcopy(1,input(op)); call emit('load',reg(_callbase + 2) || ',1'); call invoke(text,symbol,2)
+    call binding(input(op,2),'activation',activation); call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','settraceoption','.boolean','.string')
+    call argcopy(2,text); call invoke(reg(_workbase + 5),symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',activation); call emit('null',text)
+    prefix = 'lltrace' || _fn || '_' || op.id()
+    call emit('brt',prefix || '_valid,' || reg(_workbase + 5))
+    call emit('signal','"CLASSIC_SYNTAX","RXC-LC-24.1: Invalid TRACE option"'); call emit('ret')
+    call emit(prefix || '_valid:'); call tracesync(input(op,2))
+    return
+  /** Save the outer observer separately from the child invocation's policy.
+   * The active flag makes every normal/fatal teardown idempotent. */
+  traceenter: method = .void
+    symbol = imported('library','rxfnsb._trace_current_mode','.string','')
+    call invoke(reg(_traceoutermode),symbol,0)
+    symbol = imported('library','rxfnsb._trace_current_format','.string','')
+    call invoke(reg(_traceouterformat),symbol,0)
+    call emit('sigpush','"BREAKPOINT"'); call emit('load',reg(_traceactive) || ',1')
+    return
+  /** VM delivery is disabled while reconfiguring the existing controller.
+   * The breakpoint handler is the direct parent-register observer. */
+  tracesync: method = .void
+    arg context = .string
+    activation = reg(_workbase + 4); receiver = reg(_workbase + 1); text = reg(_workbase + 9)
+    call emit('bpoff')
+    call binding(context,'activation',activation); call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','tracesetting','.string')
+    call invoke(text,symbol,1,receiver); call emit('unlink',receiver); call emit('null',activation)
+    symbol = imported('library','rxfnsb._trace_mode_from_option','.string','.string')
+    call argcopy(1,text); call invoke(text,symbol,1)
+    symbol = imported('library','rxfnsb._trace_set','.void','.string')
+    call argcopy(1,text); call invoke('',symbol,1)
+    symbol = imported('library','rxfnsb._trace_needs_breakpoints','.int','.string')
+    call argcopy(1,text); call invoke(reg(_workbase + 5),symbol,1)
+    prefix = 'lltracesync' || _fn || '_' || _cleanupnumber; _cleanupnumber = _cleanupnumber + 1
+    call emit('brf',prefix || '_done,' || reg(_workbase + 5))
+    call emit('sigcall','__rxtrace_handler(),"BREAKPOINT"'); call emit('bpon')
+    call emit(prefix || '_done:'); call emit('null',text)
+    return
+  traceleave: method = .void
+    prefix = 'lltraceleave' || _fn || '_' || _cleanupnumber; _cleanupnumber = _cleanupnumber + 1
+    call emit('brf',prefix || '_done,' || reg(_traceactive))
+    call emit('copy',reg(_traceevent) || ',r0'); call emit('copy',reg(_tracescratch) || ',' || reg(_scratch))
+    call emit('bpoff')
+    symbol = imported('library','rxfnsb._trace_set','.void','.string')
+    call argcopy(1,reg(_traceoutermode)); call invoke('',symbol,1)
+    symbol = imported('library','rxfnsb._trace_set_format','.void','.string')
+    call argcopy(1,reg(_traceouterformat)); call invoke('',symbol,1)
+    call emit('sigpop','"BREAKPOINT"'); call emit('load',reg(_traceactive) || ',0')
+    symbol = imported('library','rxfnsb._trace_needs_breakpoints','.int','.string')
+    call argcopy(1,reg(_traceoutermode)); call invoke(reg(_workbase + 5),symbol,1)
+    call emit('brf',prefix || '_quiet,' || reg(_workbase + 5)); call emit('bpon')
+    call emit(prefix || '_quiet:'); call emit('null',reg(_traceoutermode)); call emit('null',reg(_traceouterformat))
+    call emit('copy','r0,' || reg(_traceevent)); call emit('copy',reg(_scratch) || ',' || reg(_tracescratch))
+    call emit('null',reg(_traceevent)); call emit('null',reg(_tracescratch))
+    call emit(prefix || '_done:')
+    return
   /** Canonical context is argument1; the proof erases marker-only loads.
    * Begin only invalidates the existing activation's lazy sample. */
   clauseoperation: method = .void
@@ -1808,6 +1969,7 @@ compilation: class
   restorepolicies: method = .void
     i = .int
     prefix = 'llpolicies' || _fn || '_' || _cleanupnumber; _cleanupnumber = _cleanupnumber + 1
+    if _hastrace then call traceleave()
     call emit('brf',prefix || '_done,' || reg(_handlersactive))
     do i = words(_signals) to 1 by -1
       call emit('sigpop',llrxastext..quote(word(_signals,i) as .binary))
@@ -1876,6 +2038,7 @@ compilation: class
     if name = 'signal.capture' then do
       call emit('copy',reg(_captureowner) || ',r0')
       call rawcondition(reg(_captureowner),reg(_capturetag),4)
+      if _hastrace then call tracesync('a1')
       call emit('beq',prefix || '_fresh,' || reg(_capturebusy) || ',0')
       call conditionrelay(result(op),prefix || '_cold'); call emit('ret',result(op))
       call emit(prefix || '_fresh:')
@@ -2054,6 +2217,14 @@ compilation: class
     call invoke(reg(_workbase + 6),symbol,1,receiver); call emit('unlink',receiver)
     call emit('null',activation); call emit('null',owner)
     call conditiontransition(input(op,2),prefix,_sourceline)
+    if name = 'TRACE' then do
+      /* A directly owned empty packet is a pure state query. Rewritten or
+       * independently authored packet flows retain conservative synchronization. */
+      store = dereference _store; packetproducer = store.get(4,op.input(1).id(),1)
+      synchronize = 1
+      if packetproducer > 0 then synchronize = _graph.operation(packetproducer).name() <> 'crexx.c.arguments.empty'
+      if synchronize then call tracesync(input(op,2))
+    end
     return
   /** C-owned dispatch and transitions select existing B methods. Integer
    * mismatch does not touch the context, and enter validates eligibility once. */

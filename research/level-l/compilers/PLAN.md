@@ -7,10 +7,10 @@ host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
 seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 
-**Complete C remains open. SIGNAL, including its required helpers/dependencies,
-is complete for the agreed contract with the named cross-cutting qualifications.
-Begin-only clause clocks are locally qualified. Next: practical TRACE; INTERPRET
-remains last.** PARSE was
+**Complete C remains open. SIGNAL and practical TRACE, including their required
+helpers/dependencies, are complete for their agreed contracts with the named
+cross-cutting qualifications. Begin-only clause clocks are locally qualified.
+Formal QA follows compiler feature completion; INTERPRET remains last.** PARSE was
 delivered ahead of its queue position as the shared executor prerequisite for
 ARG; this does not skip PROCEDURE or close PARSE.
 
@@ -27,6 +27,9 @@ instruction. A row marked Complete closes its agreed
 [ledger contract](doc/levelc-requirements.md#whole-instruction-work-units), with
 its named cross-cutting qualifications. Shared dependencies retain their owners
 while the queue advances; complete C remains a separate milestone.
+Remaining TRACE references in other rows retain their unverified whole-instruction
+integration checks under the agreed practical scope; they do not expand LC-I-24
+to interactive debugging, numeric suppression or complete expression events.
 
 | Instruction | Status | Remaining work / owner |
 |---|---|---|
@@ -52,20 +55,24 @@ while the queue advances; complete C remains a separate milestone.
 | **LC-I-20 ADDRESS / CLC-STEP07** | Explicit selection/swap, transient commands/WITH, lexical anchors and owned command lifecycle locally qualified; CADDR-AC01–05/07 explicit profile. | CADDR-AC08: configured conditions/resumption, TRACE, native host/NUL transport and declared platforms; whole LC-I-20 remains open. |
 | **LC-I-21 implicit command / CLC-STEP07** | Active-ADDRESS commands, lasting connections and owned source warnings locally qualified; CADDR-AC01–07 local profile. | Configured conditions/resumption, TRACE, host/NUL transport and declared platforms: CADDR-AC08 / STEP07/08. |
 | **LC-I-22 NUMERIC / CLC-STEP07** | Default/fixed/dynamic forms, once-only shared validation, frame installation and call restoration locally qualified; NUM-C-AC01–06. | NUM-C-AC07: configured conditions/LOSTDIGITS, TRACE, broader diagnostics/host/platform scope and numeric fact invalidation; STEP02/03/04/07/08. |
-| **LC-I-23 SIGNAL / CLC-STEP07** | **Complete:** all transfers, seven-condition ON/OFF, actual producers, same-frame cleanup and typed relay; CSIGNAL-AC01–07. | Practical TRACE, real host HALT, broader host/platform acceptance, delayed CALL and INTERPRET retain their named qualifications. |
-| **LC-I-24 TRACE / CLC-STEP07** | Not implemented in new C. | Agreed practical VM observations/options/query/command inhibition and disabled-cost proof; STEP07/08. |
+| **LC-I-23 SIGNAL / CLC-STEP07** | **Complete:** all transfers, seven-condition ON/OFF, actual producers, same-frame cleanup and typed relay; CSIGNAL-AC01–07. | Real host HALT, broader host/platform acceptance, delayed CALL and INTERPRET retain their named qualifications. |
+| **LC-I-24 TRACE / CLC-STEP07** | **Complete:** agreed practical options/query, command inhibition/reporting, source/live-value observations and observer restoration; CTRACE-AC01–07. | Accepted practical/presentation limitations remain explicit; formal whole-compiler/platform/delivery acceptance stays open. |
 | **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
 
-## Next increment: CLC-STEP07 — TRACE
+## Current instruction status: CLC-STEP07
 
 [Complete SIGNAL](doc/architecture.md#signal-complete-contract) includes every
 agreed source form, seven-condition ON/OFF, actual producers, typed payload/origin
 transport, visible exception flow and same-frame cleanup, together with its
 required helpers/dependencies. CSIGNAL-AC01–07 and STEP01–03 are complete.
 
-Next implement TRACE within the approved native practical ceiling. Keep its
-exact contract and independent expectations ahead of implementation, review
-coherent code and representative RXAS early, then freeze one focused batch.
+[Whole TRACE contract](doc/architecture.md#trace-complete-contract):
+CTRACE-STEP01–03 and AC01–07 are complete for the approved native practical
+ceiling. Early coherent source/representative RXAS review and the focused
+Debug opt compiler, IR-on, assembler-opt rxbvm checks qualify this local
+feature. C21 appends only `trace(value,context)`; shared B retains option/command
+semantics and the private generated handler reuses its trace services. Formal
+compiler QA follows feature completion; all CFC criteria remain open.
 INTERPRET remains last and outside the standing implementation authority.
 
 Adrian authorized the remaining agreed C instructions/features stepwise, with
@@ -92,6 +99,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 | **CLABEL-STEP01–03** | [Label/arm and local-entry prerequisite](doc/architecture.md#label-arm-prerequisite) locally qualified for AC01–05; C17 schema/runtime unchanged. Its inventory supports complete SIGNAL. |
 | **CLAUSE-STEP01–03** | [Begin-only clause-clock contract](doc/architecture.md#clause-clock-contract): STEP01–03 locally complete: actual DATE/TIME observations, finite owner admission and focused complementary qualification. Completion and TRACE stay separate; SIGNAL handler integration is delivered. |
 | **CSIGNAL-STEP01–03** | [Complete SIGNAL](doc/architecture.md#signal-complete-contract): STEP01–03 and CSIGNAL-AC01–07 complete for the agreed instruction, including all required helpers/dependencies. Named cross-cutting qualifications remain explicit. |
+| **CTRACE-STEP01–03** | [Complete practical TRACE](doc/architecture.md#trace-complete-contract): STEP01–03 and CTRACE-AC01–07 complete for the agreed practical contract, including metadata/observer dependencies. Full-C and formal QA criteria remain open. |
 
 No native C frontend implementation, second runtime algorithm, push or hosted
 campaign is commissioned. Needed generic exception representation and the
@@ -131,7 +139,7 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | **CLC-STEP04** | Partial: complete contextual source/Unicode names, exact byte/scalar origins, dead-source validation, expressions/numeric semantics and BF01–05 bindings. No native frontend dependency. |
 | **CLC-STEP05** | Partial: finish shared dependencies of the delivered LC-I-01–10 profiles in the instruction table. |
 | **CLC-STEP06** | Local LC-I-11–19 profiles delivered; remaining full scope stays explicit. ADDRESS/implicit commands and NUMERIC source profiles delivered; CALL4 follows clause/condition dependencies. Retain ARG/PARSE/PULL and broader completion obligations. |
-| **CLC-STEP07** | Partial: ADDRESS/NUMERIC profiles, begin-only clause clocks and complete SIGNAL delivered. Practical TRACE is next; delayed CALL, broader clause/source observations and BF07/09 remain. |
+| **CLC-STEP07** | Partial: ADDRESS/NUMERIC profiles, begin-only clause clocks, complete SIGNAL and practical TRACE delivered. Delayed CALL, broader clause/source observations and BF07/09 remain. |
 | **CLC-STEP08** | Not started as a full stage: remaining BIF/host adapters, exact-length invocation/completion, callback pools, queues/streams/clocks/HALT, concurrency and declared platforms. New host APIs/exclusions require approval. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. Needed ISA/storage contracts receive internal review under standing authority; production performance edits retain their qualification gate. |
 | <a id="step07a-validation"></a>**CLC-STEP10** | Not started: complete static ledger and CLI/service/install/cold/incremental/relocated/platform delivery, independent walkthrough/review. Static acceptance is not complete C. |
@@ -184,7 +192,7 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
 ## Outstanding decisions and dependencies
 
 - **Shared observations:** configured errors/NOVALUE, typed conditions, resumed
-  handlers, clause/field/drop observations and practical TRACE remain STEP03/07
+  handlers and complete clause/field/drop observations remain STEP03/07
   work; ARG-AC05 and CPARSE-AC07 stay open.
 - **Delivery/platforms:** CPARSE-AC08, PARSE-ENGINE-AC05 real constrained platforms,
   UNWIND-AC04 broader-platform proof and complete CLI/service/install/relocation

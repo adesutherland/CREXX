@@ -71,14 +71,25 @@ reached. Seven-condition ON/OFF uses shared activation policy and condition
 recording, same-frame handlers and typed payload/origin transport. Actual
 NOVALUE reads, LOSTDIGITS checks and shared BIF/PARSE/ADDRESS producers use
 the [whole SIGNAL contract](doc/architecture.md#signal-complete-contract).
-Practical TRACE, real host HALT, broader host/platform acceptance and INTERPRET
+Real host HALT, broader host/platform acceptance and INTERPRET
 retain their explicit [conformance qualifications](doc/levelc-conformance.md).
+
+**TRACE is complete for the agreed practical scope.** Bare/static/VALUE forms
+and TRACE() share activation state; existing B services own option parsing,
+command inhibition/reporting and output. The generated observer reads live
+scalar values from VM metadata and restores enclosing handler/controller state
+on normal and abrupt completion. The [contract](doc/architecture.md#trace-complete-contract)
+and [conformance profile](doc/levelc-conformance.md#practical-trace-target) record
+the approved interactive/count/SCAN/event-coverage limitations and minor
+presentation differences. Focused component qualification does not close
+formal whole-compiler QA or the remaining C requirements.
 
 The begin-only [CLAUSE1 profile](doc/architecture.md#clause-clock-contract)
 locally qualifies lazy DATE/TIME samples in the current activation, including
 ordered DO captures, repeated WHILE and first/repeated UNTIL. Clock-free owners
-emit no reset, context transport or marker metadata. Completion/checkpoint/TRACE
-and wider clock host/platform behavior remain separate.
+emit no clock reset or clock-only context transport. Practical TRACE retains
+source metadata without activating clocks. Completion/checkpoints and wider
+clock host/platform behavior remain separate.
 
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable

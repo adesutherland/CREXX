@@ -1,0 +1,182 @@
+/* Independent practical TRACE values, state and ordinary completion lanes. */
+options levelc
+parse arg MODE
+if MODE = 'values' then signal VALUES
+if MODE = 'counts' then signal COUNTS
+if MODE = 'labels' then do
+  trace labels
+  call QUIETLABEL
+  say 'LABELS|quiet'
+  return 0
+end
+if MODE = 'asm' then do
+  trace asm
+  ASMPAYLOAD = 'asm-actual'
+  trace off
+  say 'EXTENSION|asm'
+  return 0
+end
+if MODE = 'llm' then do
+  trace llm
+  LLMPAYLOAD = '雪'
+  trace off
+  say 'EXTENSION|llm'
+  return 0
+end
+if MODE = 'inhibit' then do
+  trace !L
+  address 'TRACE-TEST' 'inhibited :SCALAR' with input stem INPUT.
+  SAVEDRC = RC
+  OLD = trace('O')
+  return SAVEDRC || '|' || OLD
+end
+if MODE = 'commands' then do
+  trace value OPTION
+  address 'TRACE-TEST' 'ok'
+  address 'TRACE-TEST' 'positive'
+  address 'TRACE-TEST' 'negative'
+  address 'TRACE-TEST' 'failure'
+  trace o
+  return RC
+end
+if MODE = 'exit' then do
+  trace labels
+  call PRIVATEEXIT
+  UNREACHED = 'after private call'
+  return 'bad'
+end
+if MODE = 'invalid' then do
+  COUNT = 0
+  trace value BADOPTION()
+  UNREACHED = 'after rejected trace'
+  return 'bad'
+end
+if MODE = 'scan' then do
+  trace value 'scan'
+  return 'bad'
+end
+if MODE = 'bif-invalid' then do
+  BAD = trace('scan')
+  return 'bad'
+end
+if MODE = 'bif-count' then do
+  BAD = trace('O','R')
+  return 'bad'
+end
+if MODE = 'fatal-value' then do
+  trace results
+  VALUE = 1 / 0
+  return 'bad'
+end
+if MODE = 'caught' | MODE = 'caught-bif' then do
+  trace results
+  COUNT = 0
+  UNREACHED = 'untouched'
+  signal on syntax name CAUGHT
+  call BADCHILD
+  say 'AFTER_CHILD|' || trace() || '|' || COUNT || '|' || UNREACHED
+  return 0
+end
+
+trace
+say 'STATE|bare=' || trace()
+call trace 'L'
+say 'STATE|call=' || RESULT || '|' || trace()
+trace RAS
+OLD = trace('O')
+say 'STATE|first=' || OLD || '|' || trace()
+trace ENV
+OLD = trace('O')
+say 'STATE|env=' || OLD
+trace ?!L
+say 'STATE|prefix=' || trace()
+trace ??!!L
+say 'STATE|even=' || trace()
+trace +2
+say 'STATE|positive=' || trace()
+trace -2
+say 'STATE|negative=' || trace()
+trace 0
+say 'STATE|zero=' || trace()
+trace value '?!L'
+trace
+say 'STATE|reset=' || trace()
+trace value 'labels suffix'
+COUNT = 0
+trace value MAKEOPTION()
+say 'STATE|once=' || COUNT || '|' || trace()
+trace value word('L zebra',1 + \(time('L') == time('L')))
+say 'STATE|clock=' || trace()
+OLD = trace('')
+say 'STATE|bif-reset=' || OLD || '|' || trace()
+trace labels
+call CHILDSTATE
+say 'STATE|child=' || RESULT || '|' || trace()
+trace off
+say 'STATE|off=' || trace()
+return 0
+
+MAKEOPTION:
+COUNT = COUNT + 1
+return '?labels suffix'
+CHILDSTATE:
+procedure
+BEFORE = trace()
+trace !L
+return BEFORE || '>' || trace()
+QUIETLABEL:
+return
+PRIVATEEXIT:
+procedure expose COUNT PAYLOAD
+LOCAL = 'private changed'
+trace value ESCAPE()
+UNREACHED = 'after skipped trace setter'
+return 'bad'
+ESCAPE:
+COUNT = COUNT + 1
+exit PAYLOAD
+BADOPTION:
+COUNT = COUNT + 1
+say 'TRACE_ACTUAL|' || COUNT
+return 'zebra'
+BADCHILD:
+procedure expose MODE COUNT UNREACHED
+COUNT = COUNT + 1
+trace labels
+if MODE = 'caught-bif' then BAD = trace('scan')
+else trace value 'zebra'
+UNREACHED = 'after rejected child'
+return 'bad'
+CAUGHT:
+OLD = trace('O')
+say 'CAUGHT|' || OLD || '|' || COUNT || '|' || UNREACHED || '|' || condition('C')
+return 0
+
+VALUES:
+trace results
+PAYLOAD = '雪é' || x2c('00') || 'tail '
+COPY = PAYLOAD
+say 'VALUE|' || COPY
+trace intermediates
+N = 1
+do J = 1 to 2
+  N = N + J
+end
+if N = 4 then do
+  BRANCH = 'right'
+end
+else BRANCH = 'wrong'
+say 'FLOW|' || N || '|' || BRANCH
+trace off
+say 'QUIET|done'
+return 0
+
+COUNTS:
+trace ?R
+trace -2
+A = 'kept-one'
+B = 'kept-two'
+pull INPUT
+trace off
+say 'COUNTS|' || A || '|' || B || '|' || INPUT
+return 0

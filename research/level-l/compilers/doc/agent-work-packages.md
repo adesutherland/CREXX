@@ -117,19 +117,34 @@ retain their own owners; former prerequisite source leases are closed.
 [Whole SIGNAL](architecture.md#signal-complete-contract) CSIGNAL-AC01–07 and
 STEP01–03 are complete: direct/quoted/VALUE, seven-condition ON/OFF, real
 producers, visible exceptional flow, same-frame cleanup and typed payload/origin.
-C20 has 85 operations, five C types and 36 target exports. Its generic, B runtime
-and SIGNALORIGIN dependencies belong to the same instruction.
+SIGNAL introduced C20 with 85 operations, five C types and 36 target exports;
+the current family is C21 after TRACE. Its generic, B runtime and SIGNALORIGIN
+dependencies belong to the same instruction.
 
 The integrator owns shared production/runtime/CMake/docs and preparation;
 disjoint proof work owns explicitly assigned `llcsignalprotocol` and related
 protocol paths. Independent writers own assigned `tests/signal` and
 `interpreter/tests/tests_signal_origin.rxas`. Registered complementary cells
 remain regressions; their existence does not require running both for each edit.
-Practical TRACE is next. Controlled HALT is not asynchronous host HALT;
+Practical TRACE is assigned below. Controlled HALT is not asynchronous host HALT;
 nonresumable original-event C failure, broader host/platform acceptance, helper
 raw-location presentation, delayed CALL and INTERPRET retain the explicit
 [conformance qualifications](levelc-conformance.md). They do not split SIGNAL
 into unfinished micro-deliveries.
+
+### TRACE
+
+The [complete practical contract](architecture.md#trace-complete-contract)
+owns the completed CTRACE-AC01–07/STEP01–03 and LC-I-24. One frontend/IR writer owns
+`levelc.rxl`, `llcparse`, `llcfrontend` and `llcir`; one selector writer owns
+`llcrxas` and the private host-only `llctraceemit`. Independent fixtures and
+oracles belong in `tests/trace`. The integrator owns CMake, affected existing
+schema assertions, documentation, shared preparation and the local commit.
+Review coherent source and first representative RXAS early, then batch material
+fixes and freeze. Shared B remains the option/command/controller owner; no native
+C frontend change, target export, VM/ISA extension or INTERPRET is included.
+One selected normal configuration/VM qualifies this development feature;
+complete-C/platform/delivery QA remains a later milestone.
 
 <a id="procedure-assignment-packet"></a>
 

@@ -1007,6 +1007,7 @@ request: class
       when kind = 'CCommand' then call commandstatement(node)
       when kind = 'CSignal' | kind = 'CSignalValue' then call signalstatement(node)
       when kind = 'CSignalOn' | kind = 'CSignalOff' then call conditionpolicy(node)
+      when kind = 'CTrace' | kind = 'CTraceValue' then call tracestatement(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
@@ -1093,6 +1094,54 @@ request: class
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
+    return
+  /** Static admission recognizes syntax only. The activation's shared
+   * RexxTraceState remains the sole owner of option updates and toggles. */
+  traceoption: method = .int
+    arg node = .llast..node, option = .string
+    extent = <blen>(option as .binary)
+    if extent > (_budget - _work) <idiv> 2 then do
+      call fail(node,'LIMIT: frontend TRACE option work budget exceeded'); return 0
+    end
+    _work = _work + extent * 2
+    bits = option as .binary; first = 0; codepoint = .int
+    do while first < extent
+      assembler bgetu8 codepoint,bits,first
+      if codepoint <> 63 & codepoint <> 33 then leave
+      first = first + 1
+    end
+    if first = extent then return 1
+    remainder = substr(option,first + 1); head = left(remainder,1)
+    if head = '+' | head = '-' | pos(head,'0123456789') > 0 then do
+      digits = remainder
+      if head = '+' | head = '-' then digits = substr(remainder,2)
+      if digits <> '' & verify(digits,'0123456789') = 0 then return 1
+    end
+    else if pos(translate(head),'ACEFILNOR') > 0 then return 1
+    call fail(node,'SYNTAX: RXC-LC-24.1: Invalid TRACE option')
+    return 0
+  tracestatement: method = .void
+    arg node = .llast..node
+    origin = at(node); value = .llir..valuehandle
+    if node.kind() = 'CTraceValue' then value = expression(node.child('value'))
+    else do
+      spelling = ''
+      if node.count('option') then do
+        option = node.child('option')
+        if tick(option) = 0 then return
+        if option.kind() = 'String' then spelling = stringliteral(option)
+        else do
+          spelling = option.text('spelling')
+          if option.kind() = 'TraceSigned' then spelling = option.text('sign') || spelling
+        end
+        if _error <> '' then return
+        if traceoption(option,spelling) = 0 then return
+      end
+      value = _block.constantbytes(type('value'),spelling as .binary,origin)
+    end
+    if _error <> '' then return
+    op = _block.operation(_contract.operation('crexx.c.trace'),origin)
+    call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
     return
   /** PARSE, ARG and PULL share immutable, source-owned template packets. The
    * standalone instructions retain identity and privately imply source/UPPER.
@@ -2062,8 +2111,8 @@ request: class
     if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
     else if signature.result() <> '.rexxvalue..rexxvalue' | signature.arguments() <> count then call fail(node,'IMPORT: incompatible Classic ' || name || ' contract')
     else if signature.type(1) <> 'reference .rexxbifcallcontext' then call fail(node,'IMPORT: incompatible Classic BIF context')
-    else if signature.optional(1) then call fail(node,'IMPORT: optional Classic context is incompatible')
+    else if signature.optional(1) | signature.exposed(1) then call fail(node,'IMPORT: optional or exposed Classic context is incompatible')
     else if count = 2 then do
-      if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
+      if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) | signature.exposed(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
     end
     return

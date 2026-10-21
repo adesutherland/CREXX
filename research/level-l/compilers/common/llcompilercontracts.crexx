@@ -44,6 +44,7 @@ signature: class
   _types = .string[]
   _names = .string[]
   _optional = .int[]
+  _exposed = .int[]
   _error = .string
   _options = .string
   *: factory
@@ -67,9 +68,15 @@ signature: class
         if split < 2 then do
           _error = 'argument needs name=type'; return
         end
-        name = strip(left(item,split - 1)); type = lower(strip(substr(item,split + 1)))
+        /* Metadata puts the EXPOSE qualifier before the optional marker.
+         * Retain it separately; callable policy still belongs to each caller.
+         * Normalize only formal-field whitespace, never type/default text. */
+        name = strip(translate(left(item,split - 1),'      ','090A0B0C0D20'x as .string),'L')
+        exposed = left(name,7) == 'expose '
+        if exposed then name = substr(name,8)
+        name = strip(name); type = lower(strip(substr(item,split + 1)))
         optional = left(name,1) = '?'
-        if optional then name = substr(name,2)
+        if optional then name = strip(substr(name,2))
         if validtype(type) = 0 then do
           type = literaltype(type)
           if type <> '' then optional = 1
@@ -83,7 +90,7 @@ signature: class
         do j = 1 to _names[0]
           if upper(_names[j]) == upper(name) then do; _error = 'duplicate formal name'; return; end
         end
-        n = _types[0] + 1; _types[n] = type; _names[n] = name; _optional[n] = optional
+        n = _types[0] + 1; _types[n] = type; _names[n] = name; _optional[n] = optional; _exposed[n] = exposed
       end
     end
     if depth <> 0 then _error = 'unbalanced argument type'
@@ -109,6 +116,9 @@ signature: class
   optional: method = .int
     arg ordinal = .int
     return _optional[ordinal]
+  exposed: method = .int
+    arg ordinal = .int
+    return _exposed[ordinal]
   flags_text: method = .string
     return _options
 

@@ -17,11 +17,12 @@ A binding route does not establish complete BIF, host or platform conformance.
 
 The [whole SIGNAL contract](architecture.md#signal-complete-contract) combines
 retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
-cleanup and typed payload/origin transport as one complete C20 instruction:
-85 operations, five C types and 36 target exports. Its required helpers and
-dependencies are included. Practical TRACE is next; new-C TRACE is
-**not implemented**; source/debug records and shared runtime state do not
-establish TRACE instruction or event support.
+cleanup and typed payload/origin transport as one complete instruction.
+The [whole practical TRACE contract](architecture.md#trace-complete-contract)
+adds source forms, shared activation options/query state, command inhibition
+and a private observer over existing B services. The current C21 family has
+86 operations, five C types and 36 target exports. These instructions include
+their required helpers and dependencies; complete C remains open.
 
 Controlled typed HALT exercises condition delivery, not real host/asynchronous
 HALT. Default unhandled C events are nonresumable HALT with their original tag,
@@ -55,9 +56,11 @@ into separate prerequisite or partial-profile deliveries.
   [language guide](../../../../docs/books/crexx_language_reference/statements.md#level-c-classic-signal)
   and [whole SIGNAL contract](architecture.md#signal-complete-contract).
 
-## Practical TRACE target
+<a id="practical-trace-target"></a>
 
-The target is the native **Level C practical scope approved 2026-10-06**, as
+## Implemented practical TRACE
+
+The implemented contract is the native **Level C practical scope approved 2026-10-06**, as
 defined in [TRACE requirements](../../../../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md)
 and native [LC-I-24 / LC-AC-77](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps).
 It does not require broader TRACE functionality for this compiler:
@@ -75,12 +78,24 @@ It does not require broader TRACE functionality for this compiler:
 - TRACE ENV selects Classic Error via its first letter E; the B/G environment
   extension is separate. ADDRESS classification remains coarse: N/E report
   nonzero RC or a condition; F reports negative RC or FAILURE.
+- As in native C, an unexported command-only unit without TRACE, a TRACE BIF or
+  an external-call boundary does not activate the shared controller at startup.
+  Its initial N option state alone therefore produces no command records.
+  Explicit Normal or bare TRACE activates the existing command reporting.
 
-These are accepted baseline limitations, not newly discovered new-C failures.
-Minor formatting or event-coverage differences within this scope are recorded
-for later judgment rather than repeatedly reopening delivery qualification.
+The new compiler omits the native text `>  >` file-transition marker; LLM
+records retain logical filenames. A multiline composite clause can produce
+additional truthful source records. These presentation differences and the
+partial event coverage above are accepted within this practical scope.
 Incorrect displayed values, changed ordinary behavior, wrong targets/results,
 or broken state, ownership, error and resource semantics remain material defects.
+
+Focused development qualification uses the Debug optimized compiler with IR
+transformation and assembler optimization on rxbvm. It covers instruction/BIF
+state, internal/provider restoration, owned EXIT and fatal cleanup, actual
+Unicode/NUL values, command statuses/inhibition, source/errors and raw C21
+contracts. It does not establish full compiler, platform or delivery acceptance;
+formal QA follows feature completion.
 
 Begin-only activation clause clocks are locally qualified under
 [CLAUSE1](architecture.md#clause-clock-contract); complete observations remain open.
@@ -92,8 +107,7 @@ with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
-retain complete clause/clock observations, delayed CALL4 handlers, practical
-TRACE, remaining
+retain complete clause/clock observations, delayed CALL4 handlers, remaining
 expression/BIF/host/lifecycle contracts, delivery and declared platforms.
 INTERPRET remains required and last. Accepted profile choices do not close these
 obligations or establish full conformance.

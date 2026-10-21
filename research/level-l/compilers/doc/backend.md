@@ -178,9 +178,15 @@ so they cannot inherit the preceding routine's location. The current VM printer
 may display that empty source anchor as `:0:0`; it is not an authored location.
 Improving that presentation is separate from this B-only repair.
 
-The IR has no real authored clause association yet. Source records therefore
-use clause ID zero rather than pretending origin IDs are clause IDs. Full clause
-grouping and TRACE-event fidelity remain open. The backend suppresses identical
+General IR origins and the G frontend do not imply an authored clause identity;
+their records retain clause ID zero. C's admitted clause-begin protocol supplies
+actual statement-head identities. TRACE-capable C units retain these boundaries
+as source metadata even when the clock proof erases executable begin work; TRACE
+does not introduce DATE/TIME sampling. Retained scalar events name live produced
+RexxValues, and the private handler reads the interrupted frame directly through
+the shared B controller. The approved partial coverage and differences belong
+to the [practical conformance profile](levelc-conformance.md#practical-trace-target).
+The backend suppresses identical
 straight-path anchors and location writes, but resets its emission state at
 block entries because control-flow predecessors can leave different dynamic
 location state. Different expressions on one line can still need separate

@@ -94,6 +94,9 @@ signalon: token = 89
 signaloff: token = 90
 signalcondition: token = 91
 signalhandlername: token = 92
+traceword: token = 93
+tracevalue: token = 94
+traceoption: token = 95
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -182,6 +185,14 @@ parse: parser semantics contextfree input tokens start program backend lr1
   signal.symbol: rule = signalname then tree Name(spelling = text)
   signal.string: rule = string then tree String(spelling = text)
   signal.value: rule = signalword signalvalue expression as value then tree CSignalValue(value = value)
+  trace.statement: rule = trace.static | trace.value
+  trace.static: rule = traceword (trace.option as option)? then tree CTrace(option = option?)
+  trace.option: rule = trace.symbol | trace.string | trace.signed
+  trace.symbol: rule = traceoption then tree TraceOption(spelling = text)
+  trace.string: rule = string then tree String(spelling = text)
+  trace.signed: rule = (plus | minus) as sign number as number
+    then tree TraceSigned(sign = text(sign), spelling = text(number))
+  trace.value: rule = traceword tracevalue expression as value then tree CTraceValue(value = value)
   address.statement: rule = addressword (address.target as target)? (address.connections as connections)?
     then tree CAddress(target = target?, connections = connections?)
   address.target: rule = address.fixed | address.quoted | address.value
@@ -248,7 +259,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | command.statement | signal.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | command.statement | signal.statement | trace.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?

@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -160,6 +160,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsignalprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccommandprotocol.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llctraceemit.rxbin"
       ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
@@ -329,6 +330,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_numeric_contracts_${_mode}
       DEPENDS "${_dir}/numeric-contracts-linked.rxbin")
+    ll_compile(trace-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/trace/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/trace-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/trace-contracts-linked"
+        "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_trace_contracts_${_mode}
+      DEPENDS "${_dir}/trace-contracts-linked.rxbin")
     ll_compile(label-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/labels/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/label-contracts-linked.rxbin"
@@ -887,6 +896,21 @@ if("c" IN_LIST _languages)
       llcompiler_clause_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_clause_vm})
   endforeach()
+  # Complete practical TRACE uses one component lane. The runner can select
+  # other modes for later formal QA; registration does not commission a matrix.
+  set(_trace_test llcompiler_c_trace_opt_on_rxbvm)
+  add_test(NAME ${_trace_test} COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/trace/check-trace.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_trace_test}"
+    --mode opt --vm rxbvm --ir on)
+  set_tests_properties(${_trace_test} PROPERTIES
+    PASS_REGULAR_EXPRESSION "TRACE_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+    TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;trace")
+  crexx_register_test_prep_targets(TESTS ${_trace_test} TARGETS
+    llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_trace_contracts_opt
+    library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink rxbvm)
   # One whole-SIGNAL runner owns retained static, condition and native controls.
   # Two complementary nested cells serialize all toolchain work; the generous
   # timeout is hang protection, not a performance acceptance threshold.

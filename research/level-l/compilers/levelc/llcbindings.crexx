@@ -226,7 +226,7 @@ prepared: class
           if signature.flags_text() \== 'b' | signature.result() \== '.void' | signature.arguments() <> 1 then do
             call fail('provider requires void and one by-value activation: ' || _callables[n]); return
           end
-          if signature.optional(1) | (signature.type(1) \== '.rexxactivationarguments' & signature.type(1) \== '.rexxactivation..rexxactivationarguments') then do
+          if signature.optional(1) | signature.exposed(1) | (signature.type(1) \== '.rexxactivationarguments' & signature.type(1) \== '.rexxactivation..rexxactivationarguments') then do
             call fail('provider requires one required by-value activation: ' || _callables[n]); return
           end
           _callables[n] = held.name(); _sizes[n] = extent * 4 + 128

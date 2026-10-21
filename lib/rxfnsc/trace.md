@@ -6,24 +6,33 @@
 TRACE([option]) -> string
 ```
 
-This is the standalone Level C `RexxValue` BIF implemented by
-`RexxClassicBifTrace.crexx`. It is separate from the Level B trace/debugger
-runtime and from the compiler's TRACE statement exit.
+`RexxClassicBifTrace.crexx` supplies a direct pool adapter and the compiled
+Classic invocation adapter `rexxclassicbif_trace_frame`. Both use the shared
+`RexxTraceState` option parser. The compiler connects successful invocation
+updates to the existing Level B trace controller; the BIF itself owns no VM
+breakpoint handler or source-event formatter.
 
 ## Result and state
 
 `TRACE()` returns the setting that was in effect before the call. With no
 argument, or with an omitted optional argument, it is a pure query. The result
-is the current single option letter, prefixed with `?` when interactive tracing
-is enabled.
+contains the current mode and active `?`/`!` prefixes, in that order.
 
 When an argument is present:
 
-1. each leading `?` toggles interactive tracing;
-2. an empty remainder selects Normal (`N`);
-3. otherwise the uppercased first remainder character becomes the setting;
-4. `O` also clears interactive tracing;
-5. the result is still the previous setting.
+1. empty text resets Normal (`N`) and clears both prefixes;
+2. each leading `?` or `!` toggles the corresponding flag;
+3. prefixes alone preserve the current mode;
+4. alphabetic options use their first letter; exact `AS`/`ASM` and `LL`/`LLM`
+   retain the existing extensions;
+5. signed ASCII integer text is validated without narrowing: zero selects Off,
+   while a nonzero count preserves the mode without enacting skip/suppression;
+6. `O` clears both prefixes; invalid options leave all state unchanged.
+
+The result remains the setting before the call. The approved practical scope
+does not prompt for interactive input, enact numeric counts or accept SCAN.
+`ENV` selects Classic Error by its first letter. See
+[TRACE requirements](../../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md).
 
 For example, starting from Normal:
 
@@ -33,21 +42,21 @@ current  = trace()           /* R */
 previous = trace("?i")       /* R; current setting becomes ?I */
 ```
 
-The caller's `RexxVariablePool` owns the per-activation state. A child pool may
-copy it with `inheritTraceState`; subsequent changes remain activation-local.
+Compiled Classic uses `RexxActivationArguments` state, even when caller and child
+share a variable pool. Children inherit their activation state and changes remain
+local. The direct compatibility adapter uses its caller's `RexxVariablePool`;
+a child pool may copy that state with `inheritTraceState`.
 
 ## Arguments and errors
 
-The CheckArgs contract is `oACEFILNOR`. The optional value may contain leading
-question marks followed by a value whose first effective character is one of
-`A C E F I L N O R`. Empty text and question marks with no remaining letter
-are valid and select Normal. Invalid options set `RXC-LC-40.28`; more than one
-argument sets `RXC-LC-40.4`.
+The CheckArgs contract is `oANY`; the shared state parser validates the full
+option text after normal argument checking. Invalid options set
+`RXC-LC-40.28`; more than one argument sets `RXC-LC-40.4`.
 
-Classic `TRACE()` does not expose the cREXX statement extensions `ASM`, `LLM`,
-`ENV`, output targets, or namespace controls. Those belong to the separate
-Level B/compiler-exit runtime.
+Output targets, environment rereading and namespace controls belong to the
+Level B/compiler-exit runtime, rather than this Classic BIF.
 
 `testRexxClassicBifTrace.crexx` calls `rexxclassicbif_trace` directly in
-optimized and unoptimized harnesses. Compiler lowering remains on the
-deprecated compatibility path until the later bulk Level C lowering change.
+optimized and unoptimized harnesses. Compiled Classic selects the frame adapter;
+the research compiler's independent fixtures live in
+`research/level-l/compilers/tests/trace`.

@@ -156,7 +156,7 @@ compilation: class
     else do i = 1 to words(arguments)
       expected = word(arguments,i); expected = changestr('@',expected,' ')
       expected = changestr('.rexxvalue..',expected,'.'); expected = changestr('.rexxpool..',expected,'.'); expected = changestr('.rexxactivation..',expected,'.')
-      if signature.type(i) <> expected | signature.optional(i) then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
+      if signature.type(i) <> expected | signature.optional(i) | signature.exposed(i) then call fail('IMPORT: incompatible target argument ' || name || ':' || i)
     end
     if _error <> '' then return ''
     return name
@@ -288,6 +288,7 @@ compilation: class
         args = ''
         do j = 1 to signature.arguments()
           if j > 1 then args = args || ','
+          if signature.exposed(j) then args = args || 'expose '
           if signature.optional(j) then args = args || '?'
           args = args || signature.paramname(j) || '=' || signature.type(j)
         end
@@ -558,7 +559,10 @@ compilation: class
       present = <at..u8>(i - 1) mask
       if present > 1 then do; call fail('LOWERING: invalid presence byte'); return; end
       if fn > 0 then do; expected = view.argumenttype(i).id(); optional = view.optional(i); end
-      else do; expected = importtype(signature.type(i)); optional = signature.optional(i); end
+      else do
+        if signature.exposed(i) then do; call fail('IMPORT: exposed typed source arguments are unsupported'); return; end
+        expected = importtype(signature.type(i)); optional = signature.optional(i)
+      end
       if present = 0 & optional = 0 then do; call fail('LOWERING: missing required argument'); return; end
       if present then do
         supplied = supplied + 1

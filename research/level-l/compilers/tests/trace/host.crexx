@@ -1,0 +1,120 @@
+/* Existing environment protocol and borrowed activation; no tracing algorithm. */
+options levelb
+import rxfnsb
+import _rxsysb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import tracefixture
+import externaltracefixture
+
+main: procedure = .int expose checks failures callbacks
+  arg argv = .string[]
+  checks = 0; failures = 0; calls = 0; callbacks = 0
+  returned = .rexxactivation..RexxActivationArguments
+  call _reset_address_environments()
+  provider = .TraceFixtureEnvironment('TRACE-TEST')
+  call provider.observe(reference calls)
+  call _register_address_environment('TRACE-TEST',provider)
+  if argv[0] > 0 then do
+    if argv[1] <> 'commands' then return 2
+    if argv[0] <> 2 then return 2
+    returned = invokeFixture('commands',argv[2])
+    call check(returned.hasReturnValue() & returned.returnValue().asString() == '8','command lane preserves final RC')
+    call check(calls = 4,'command lane dispatches each authored command once')
+  end
+  else do
+    returned = invokeFixture('inhibit','')
+    call check(returned.hasReturnValue() & returned.returnValue().asString() == '0|!L','inhibited command has RC zero and prior prefix setting')
+    call check(calls = 0,'inhibited command skips the provider and malformed input count validation')
+    returned = invokeFixture('exit','')
+    payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+    call check(returned.hasReturnValue() & returned.returnValue().asString() == payload,'operand EXIT retains exact owned Unicode NUL trailing-space completion')
+    returned = invokeFixture('external','')
+    call check(returned.hasReturnValue() & returned.returnValue().asString() == 'N>?L','signed provider inherits parent state and returns its private change')
+  end
+  call _reset_address_environments()
+  say 'TRACE_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments expose callbacks
+  arg mode = .string, option = .string
+  activation = .rexxactivation..RexxActivationArguments(); call activation.appendText(mode)
+  visible = .rexxpool..RexxVariablePool()
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call visible.setString('COUNT','0'); call visible.setString('PAYLOAD',payload)
+  call visible.setString('LOCAL','caller local'); call visible.setString('UNREACHED','untouched')
+  call visible.setString('OPTION',option); call visible.setString('SCALAR','unchanged')
+  call visible.setStemString('INPUT','0','bad count')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  call _trace_set('N')
+  assembler sigpush 'BREAKPOINT'
+  assembler sigcall priorBreakpoint(),'BREAKPOINT'
+  before_callbacks = callbacks
+  returned = .rexxactivation..RexxActivationArguments
+  if mode == 'external' then returned = externaltracefixture..run(reference context,0)
+  else returned = tracefixture..run(reference context,0)
+  assembler signal 'BREAKPOINT','prior handler restoration probe'
+  call check(callbacks = before_callbacks + 1,'actual prior BREAKPOINT handler restored after normal/EXIT completion')
+  assembler sigpop 'BREAKPOINT'
+  call check(_trace_current_mode() == 'N','enclosing shared controller restored after normal/EXIT completion')
+  call _trace_set('O')
+  rebound = context.pool(); original = reference visible
+  rebound_activation = context.activation(); original_activation = reference activation
+  rebound_config = context.config(); original_config = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> original),'live original pool restored')
+  call check((rebound_activation <refsame> original_activation) & (rebound_config <refsame> original_config),'activation and configuration borrows retained')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local' & visible.symbolValue('UNREACHED').asString() == 'untouched','normal/EXIT private cleanup prevents late effects')
+  if mode == 'inhibit' then call check(visible.symbolValue('SCALAR').asString() == 'unchanged','inhibited lexical binding has no copyback')
+  if mode == 'external' then call check(activation.traceSetting() == 'N','foreign provider cannot replace parent activation setting')
+  if mode == 'exit' then do
+    call check(visible.symbolValue('COUNT').asString() == '1','TRACE VALUE EXIT operand runs once')
+    call check(activation.traceSetting() == 'L','operand EXIT bypasses the outer TRACE setter')
+    call check(activation.programExitRequested() & activation.hasReturnValue() & activation.returnValue().asString() == payload,'root and returned packets own the same full EXIT value')
+  end
+  else call check(activation.programExitRequested() = 0,'ordinary completion does not request program EXIT')
+  return returned
+
+priorBreakpoint: procedure = .int expose callbacks
+  arg raw = .trace_interrupt_raw
+  callbacks = callbacks + 1
+  assembler bpoff
+  return 0
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+TraceFixtureEnvironment: class implements .addressenvironment
+  _calls = reference .int
+  *: match
+    arg env_name = .string
+    if _address_normalize_environment_name(env_name) == 'TRACE-TEST' then return 100
+    return 0
+  *: factory
+    arg env_name = .string
+    return
+  environment_name: method = .string
+    return 'TRACE-TEST'
+  environment_id: method = .string
+    return 'TRACE-TEST'
+  observe: method = .void
+    arg calls = reference .int
+    _calls = calls
+    return
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls; calls = calls + 1
+    text = request.get_command(); response = .addressresponse(0)
+    if text == 'positive' then call response.set_rc(7)
+    if text == 'negative' then call response.set_rc(-3)
+    if text == 'failure' then do
+      call response.set_rc(8); call response.set_condition_name('FAILURE')
+    end
+    return response

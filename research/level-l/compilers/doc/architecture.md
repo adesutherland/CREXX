@@ -40,6 +40,8 @@ and feature work are outside this delivery.
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
 | `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/constant-symbol labels, ordered PROCEDURE EXPOSE and ordinary CALL/direct shared BIF bindings. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
+| `levelc/llctraceemit.crexx` | Private emitted frame-local TRACE observer, checked existing B service signatures and retained scalar event metadata. | Reuse B option/controller/output owners; keep raw parent-register reads in the direct handler and compiler code outside the target closure. |
+| `common/llcompilercontracts.crexx` | Retains existing B exposed/optional formal qualifiers independently of bare names; C/G emitters preserve them. | Metadata recognition does not expand either source-call profile; owning admissions retain required by-value contracts. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
 | `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
 | `levelc/llcparseprogram.crexx` | C-owned LCP1 construction and independent packet admission reuse the compilation-owned source index and existing strict text codec. | Keep runtime envelope ownership in shared B and generic descriptor execution in the cursor kernel. |
@@ -471,11 +473,11 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v20/85 with
+C to the two-argument source-unit ABI. The current family is v21/86 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
-commands and the complete SIGNAL descriptors. SIGNAL implementation and
-qualification are in progress. Local instruction qualification is tracked in
+commands, the complete SIGNAL descriptors and the practical TRACE operation.
+Local instruction qualification is tracked in
 the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
@@ -484,9 +486,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 whole-C observations and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 20. The neutral scalar names do not load the G
+types and `crexx.c` version 21. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–19 are never reinterpreted as version 20. Within version 20, the complete C
+versions 1–20 are never reinterpreted as version 21. Within version 21, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -4203,7 +4205,7 @@ Deliver SIGNAL as one instruction, including its necessary helpers, generic
 control-flow representation and existing VM payload correction, then qualify
 and commit the whole batch. The retained [static transfer mechanics](#signal-static-contract)
 remain the foundation; they are not a separate partial delivery or pending
-qualification task. Full C, delayed CALL, practical TRACE/platform acceptance
+qualification task. Full C, delayed CALL, broader platform acceptance
 and INTERPRET keep their own enduring criteria.
 
 ### Source and activation semantics
@@ -4332,7 +4334,7 @@ indexed passes, held arena/opview and once-borrowed CPROC/SIGNAL/DO facts; no
 per-op reference-owner discovery, table decode/copy or general CFG fixed point.
 Validate all declarations/records including dead, fresh, loaded and transformed
 graphs; preserve graph identity, prechecked-limit locality and atomic output.
-C20 has85 operations, the existing five C types and36 target exports. Append
+C20 introduced 85 operations, the existing five C types and 36 target exports. Append
 these seven descriptors in order; `T=crexx.g.text`, `I=crexx.g.int64`, `C` is the
 canonical bound context and `R` the owned existing result carrier. No event
 value type is added. All terminate `returns`; state/failure shown explicitly.
@@ -4412,7 +4414,7 @@ intentional. No RXPA relay, hook, new VM opcode or native frontend change.
 ### Whole-instruction acceptance and implementation
 
 **Status: Complete for CSIGNAL-AC01–07 and STEP01–03**, subject to the named
-practical TRACE, real host HALT, host/platform, delayed CALL and INTERPRET
+real host HALT, host/platform, delayed CALL and INTERPRET
 qualifications. These are shared delivery boundaries, not partial SIGNAL tasks.
 
 1. **CSIGNAL-AC01 — complete:** all legal source forms, seven conditions, default/
@@ -4454,6 +4456,115 @@ qualifications. These are shared delivery boundaries, not partial SIGNAL tasks.
   review, batch material fixes, then freeze the complete source and fixtures.
 - **CSIGNAL-STEP03 — complete:** one consolidated focused qualification, enduring
   status/cleanup and one local complete-SIGNAL commit; AC01–07. No push.
+
+<a id="trace-complete-contract"></a>
+
+## Complete practical TRACE
+
+LC-I-24 implements the approved native practical scope in
+[TRACE requirements](../../../../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md)
+and the [conformance profile](levelc-conformance.md#practical-trace-target).
+This is one instruction, including its necessary source, runtime and observation
+dependencies. It does not commission INTERPRET or native C frontend changes.
+
+The C-owned grammar admits bare TRACE, one static symbol/string/integer or signed
+integer option, and TRACE VALUE expression, including contextual arms and dead
+source validation. Bare TRACE supplies empty text (Normal). Malformed operands
+use 19.6 (a missing VALUE expression uses 35.1); unsupported/invalid options use
+24.1 at their authored source, while
+the existing TRACE BIF retains 40.28. Static first-letter admission is compiler
+syntax policy; `RexxTraceState` remains the sole execution option parser.
+
+C21 appends operation 86, `trace(value:V,context:C)->void`, with
+`context.observation` state, `condition.resource` failure and `returns`
+termination; no evaluator or target export. Evaluate VALUE once, including its
+ordinary abrupt/EXIT path, convert the retained RexxValue through its shared
+text service and call the activation's existing `setTraceOption`. TRACE() keeps
+its existing frame binding and returns the old setting. Successful updates
+synchronize the existing shared controller, with no second option engine.
+
+The compiler-common metadata adapter must retain the existing B formal grammar
+`[expose whitespace][?]name=type` from
+[metadata conformance](../../../../compiler/docs/metadata_conformance.md).
+TRACE's existing raw-context and pending-value services use exposed formals.
+Read that qualifier into a private signature flag, retain bare `paramname`,
+validate duplicate names independently of qualifiers and serialize exposure
+before optionality. C and G keep their existing source-call admission limits:
+understanding metadata does not authorize new exposed source-call forms.
+Focused positive/negative signature controls and the real TRACE imports qualify
+this necessary shared dependency; no native reader or runtime ABI is changed.
+
+One private generated BREAKPOINT handler owns frame-local `metalinkpreg` reads;
+an extra wrapper at that read would inspect the wrong frame. A C-owned emitter
+reuses shared B trace contexts, metadata lookup, event batching, modes, output
+and escaping. No VM/ISA change or runtime dependency on compiler/L code is
+introduced. Save/restore the enclosing BREAKPOINT policy and controller state
+across entry, internal/external returns, caught failures and root teardown.
+The handler has a module-local procedure reference and no global callable
+metadata: independently compiled C units must link without sharing its identity.
+Child activations inherit settings; child changes never replace their parent's
+state. Keep signal/PROCEDURE/DO/command ownership and existing fatal relay intact.
+
+Source records use stable logical filenames and authored clause identities,
+without making TRACE turn on DATE/TIME clocks. Retained scalar events are
+metadata attached after their producer, naming the actual live RexxValue:
+assignment `A` and read `V` use R/I mask 6; literal `L`, binary `O`, prefix `P`
+and function `F` use I mask 4. Do not reconstruct removed values or trace
+compiler-created context/packet work. Group classic source display by authored
+clause, while preserving executed loop/branch entries. Event coverage remains
+partial within the approved ceiling; every displayed Unicode/control/NUL value
+must be truthful and escaped onto one line.
+
+The new-C text observer omits native `>  >` file-transition markers; LLM retains
+the logical filename. Multiline composite clauses can produce extra truthful
+source records. These are accepted presentation deviations, not permission to
+display an incorrect value, origin or execution path.
+
+`!` uses the existing ADDRESS inhibition before binding/dispatch and produces
+RC zero. `?` changes reported state without input; signed counts are validated,
+zero selects Off and nonzero counts are not enacted. Labels is quiet; SCAN is
+rejected. ENV uses Classic E; ASM/LLM retain their existing extensions. N/E/F
+keep the documented coarse command classification. Ordinary unexported source
+without TRACE instruction/BIF or external calls gets no trace-only setup.
+As in native C, this includes command-only startup: initial N activation state
+alone does not activate the shared controller, so those command records are
+absent until explicit TRACE/setting synchronization. This inherited partial
+record coverage is retained rather than introducing a separate command engine.
+Exported entries and external-call units retain bounded observer setup and
+restoration at their call boundary: incoming settings and foreign B providers
+can change the shared controller. There are no per-expression runtime
+instrumentation calls/conversions for scalar events. A proved direct empty
+TRACE() argument packet skips redundant synchronization; other packet flows
+retain conservative synchronization until operand absence is proved under
+C-OPT-01. Disabled execution uses no breakpoint
+delivery; metadata is not an executable instrumentation cost.
+
+1. **CTRACE-AC01:** all source forms, contextual/dead forms, first-letter options,
+   prefixes/counts and exact static/dynamic/BIF errors have independent oracles.
+2. **CTRACE-AC02:** instruction/BIF state, old-setting result, once-only VALUE,
+   internal/provider inheritance and parent restoration survive normal/abrupt
+   completion; no prompt or count behavior is invented.
+3. **CTRACE-AC03:** inhibition and C/N/E/F command reporting use the existing
+   command owner, with no inhibited host/binding work and correct RC/state.
+4. **CTRACE-AC04:** representative source/value observations have truthful
+   logical origins, actual Unicode/NUL text, ordering, loop/branch behavior and
+   material error/control/state/cleanup semantics; document minor deviations.
+5. **CTRACE-AC05:** early coherent source and representative caller/helper RXAS
+   review verifies live event registers, frame reads, handler/controller cleanup
+   and disabled cost. No duplicate runtime algorithm or native frontend change.
+6. **CTRACE-AC06:** selected component checks pass in one normal configuration
+   and VM, with necessary affected contract updates and reused prepared inputs.
+   Full compiler/platform/delivery acceptance remains formal later QA.
+7. **CTRACE-AC07:** all helpers/dependencies above are delivered together,
+   enduring docs/status are current, scratch is removed and TRACE is committed
+   once locally. No push; INTERPRET remains last and requires its own approval.
+
+- **CTRACE-STEP01 — complete:** record the whole contract and independent
+  expectations, with internal coordinator review before product edits.
+- **CTRACE-STEP02 — complete:** implement the whole instruction and dependencies;
+  review coherent source/first RXAS early, batch material fixes, then freeze.
+- **CTRACE-STEP03 — complete:** focused component qualification, lasting docs/status,
+  cleanup and one local commit; keep complete-C acceptance open.
 
 <a id="retained-c-operation-views"></a>
 
@@ -4503,9 +4614,11 @@ sanitizer, signing and release proof are distinct. Missing facilities are open
 cells, not an implicit desktop-only definition of completion. Retain native-C,
 B/G and RexxScript shared-library consumers and library doc tags.
 
-Every increment checks independent values/state/errors, source/TRACE, compiler
-and RXAS opt/no-opt separately, direct/linked and affected installed/host paths.
-Inspect complete representative RXAS and helpers. Keep structural regressions
+Select increment checks under the repository testing lifecycle: independent
+values/state/errors and representative source/TRACE and caller/helper RXAS.
+Compiler/RXAS modes, direct/linked and installed/host/platform coverage retain
+their named integration and final acceptance gates; they are not an automatic
+per-feature matrix. Keep structural regressions
 and purposeful worked examples; retain enduring contracts/known limitations
 and report verification in conversation, then delete diagnostics. There is no
 evidence/archive subtree in this architecture.
