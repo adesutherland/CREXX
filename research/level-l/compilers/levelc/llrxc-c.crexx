@@ -3,6 +3,7 @@ options levelb
 import rxfnsb
 import llccompiler
 import llcbindings
+import llcdiagnostics
 import llcompilercontracts
 import llfileoutput
 main: procedure = .int
@@ -39,7 +40,11 @@ main: procedure = .int
   do
     source = readbinary(sourcefile)
     request = .llccompiler..request(source,artifacts,llcompilercontracts..sourcename(sourcefile,1),1000000,512,67108864,65536,optimise,providers,routine_export)
-    if request.status() <> 0 then do; say request.diagnostic(); return 1; end
+    status = request.status(); warnings = request.warnings(); warning = .llcdiagnostics..warning
+    do i = 1 to warnings[0]
+      warning = warnings[i]; call lineout 'stderr',warning.text()
+    end
+    if status <> 0 then do; say request.diagnostic(); return 1; end
     message = llfileoutput..publish(request.output(),output)
     if message <> '' then do; say message; return 1; end
   on signal as problem

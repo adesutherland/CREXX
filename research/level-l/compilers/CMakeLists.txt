@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings parseprogram procedureprotocol doprotocol commandprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol doprotocol commandprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -153,6 +153,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsymbols.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbifs.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbindings.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdiagnostics.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
@@ -270,6 +271,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs} VERBATIM)
     add_custom_target(llcompiler_call_external_contracts_${_mode}
       DEPENDS "${_dir}/call-external-contracts-linked.rxbin")
+    ll_compile(command-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/command/contracts.crexx"
+      "${_dir}" ${_c_external_inputs})
+    add_custom_command(OUTPUT "${_dir}/command-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/command-contracts-linked"
+        "${_dir}/command-contracts.rxbin" ${_c_external_inputs}
+      DEPENDS rxlink "${_dir}/command-contracts.rxbin" ${_c_external_inputs} VERBATIM)
+    add_custom_target(llcompiler_command_contracts_${_mode}
+      DEPENDS "${_dir}/command-contracts-linked.rxbin")
     ll_compile(return-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/return/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/return-contracts-linked.rxbin"
@@ -760,6 +769,31 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_address_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_address_vm})
+  endforeach()
+  # Implicit commands and owned warnings share the explicit command lifecycle.
+  foreach(_mode opt noopt)
+    set(_command_vm rxbvm)
+    set(_command_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_command_ir off)
+      if(TARGET rxtvm)
+        set(_command_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_command_${_mode}_${_command_ir}_${_command_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/command/check-command.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_command_vm} --ir ${_command_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "COMMAND_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_command_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_command_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

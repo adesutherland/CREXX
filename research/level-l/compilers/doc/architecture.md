@@ -471,9 +471,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v15/72 with
+C to the two-argument source-unit ABI. The current family is v16/73 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
-static signed statement providers, selected-queue PUSH/QUEUE and the keyed ADDRESS interface. Local instruction qualification is tracked in the plan.** Use the following contract with one current
+static signed statement providers, selected-queue PUSH/QUEUE and keyed explicit/active command interfaces. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -481,9 +481,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 15. The neutral scalar names do not load the G
+types and `crexx.c` version 16. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–14 are never reinterpreted as version 15. Within version 15, the complete C
+versions 1–15 are never reinterpreted as version 16. Within version 16, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -3183,9 +3183,16 @@ command, WITH direction, position/type and raw resource. Contextual words remain
 ordinary names in assignments, labels, calls, EXPOSE, other expressions and DO
 headers. Preserve closed/open IF ownership, continuation gaps and original
 UTF8 byte/scalar spans. SIGNAL, TRACE and INTERPRET retain their existing profile
-fences. The later `CCommand(value)` alternative covers valid expression-only
+fences. The `CCommand(value)` alternative covers valid expression-only
 clauses. Promote only a nonassignment clause head where needed to distinguish
 it from Assignment, then retain the existing adjacency/blank/abut rules.
+The private classifier inserts one zero-width `commandword` before an otherwise
+unowned expression-start token at a real clause boundary. It retains the
+original expression token and gaps. Existing keyword/label/profile decisions
+precede this insertion; an unquoted symbol token followed by `=` keeps its
+assignment/refusal ownership, including numeric/constant/dot symbols. Grouped
+equality and quoted expression heads retain ordinary expression syntax. The
+marker is never an authored anchor or warning span.
 
 An explicit command evaluates its expression once before constructing its
 adapter, then reads/applies transient resources in source order. An implicit
@@ -3211,7 +3218,7 @@ append these seven void operations to the current 65, with no evaluator:
 | `command.binding` | `context:C`; `key:T,kind:T,name:T` | `context` / `condition.resource` |
 | `command.run` | `context:C`; `key:T` | `context.input.output.observation` / `condition.resource` |
 
-All terminate normally. The separate queued implicit-command increment uses C16/73,
+All terminate normally. The separate implicit-command increment uses C16/73,
 appending `command.active(command:V,context:C){key:T}->void`, with the same
 constructor state/failure and the existing five types. It enters the same
 configuration/binding/run protocol. `command.new` stores the exact decoded fixed
@@ -3290,7 +3297,7 @@ kind/name keys without rewalking prior source, and retain first-seen order.
 The resulting ordered plan calls the B bridge only; it never snapshots a pool
 at compilation time. Each runtime run takes fresh snapshots.
 
-The later implicit-command increment adds owned C-only
+Implicit commands expose owned C-only
 `llcdiagnostics.warning` records and `warnings()->warning[]` on frontend and
 compiler request. Records have read-only `severity/code/message/filename/first/
 last/line/column/text` getters; first/last are zero-based UTF8 byte bounds and
@@ -3299,6 +3306,7 @@ line/column are one-based scalar coordinates. Severity is `warning`, code is
 formats filename, stored line/column, severity, code and message without keeping
 a source copy. Returned arrays/records remain owned after request expiry; no
 indexed compiler accessor or new out-of-range policy is added.
+Its exact text is `filename:line:column: warning RXC-LC-IMPLICIT_ADDRESS: Implicit ADDRESS command`.
 
 After a clean parse and before lowering/optimisation, visit every authored
 CCommand, including dead source, once in source order. Unwrap Group and
@@ -3308,8 +3316,17 @@ assignments, accepted instructions or string-headed commands. Source heads lie
 inside disjoint clauses. Reuse the source index for the first warning on a line,
 cache its bounds/column, and advance through disjoint UTF8 gap slices for later
 heads on that line; no full-prefix rescan or per-record source copy.
+After AST head classification, select the original lexer token at that head's
+start: `MAKE()` warns on `MAKE`, a prefix warns on its operator, and a nonconcat
+chain warns on its first token. A separate monotonically advancing warning-token
+cursor and the binding-plan cursor together visit at most twice the raw stream.
 
 Reserve pending record/payload and coordinate work under the frontend budgets.
+Use the existing work ceiling and derived byte ceiling (`64 * budget`), with
+warning/index payload sharing the frontend's retained workspace accounting.
+Reserve each monotone byte gap and source-index search bound before coordinate
+work; charge the same-line scalar-gap conversion once. Build a local pending
+array and publish it only when collection completes.
 On collection exhaustion, publish no partial list and fail sticky
 `LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget` or
 `LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget`. Once
@@ -3326,7 +3343,7 @@ output behavior; no warning suppression, recovery or warn-as-error API is added.
    agree with ADDRESS() and inherited/restored internal, private, recursive and
    signed-provider state; source/B-host controls reuse existing CALL ABI proof.
 3. **CADDR-AC03:** one in-process B environment verifies explicit/transient and
-   later implicit commands, ordered WITH resources, RC/.RC/.RS, empty/unknown
+   implicit commands, ordered WITH resources, RC/.RC/.RS, empty/unknown
    behavior and lexical VAR/counted-STEM snapshots/writeback; reuse ADDR-B tests.
 4. **CADDR-AC04:** operand EXIT skips command dispatch/later effects and preserves
    same owned packet/root/private pools; normal/fatal paths end command borrows
@@ -3352,9 +3369,10 @@ output behavior; no warning suppression, recovery or warn-as-error API is added.
   independent source/host/tiny raw/RXAS controls and scoped consumer checks;
   AC01–05/07 explicit scope, preserving AC08. Normal producer identities govern
   grammar reuse; no timestamp/freshness bypass.
-- **CADDR-STEP03 — next:** implement/qualify implicit C16 command source and warning
-  projection through the same command owner/run, then separate local commit;
-  AC01–07, retaining AC08 and INTERPRET-last.
+- **CADDR-STEP03 — locally complete:** implicit C16 command source and owned
+  warning projection use the same command owner/run, with independent source,
+  host, warning-lifetime/limit and tiny raw controls; AC01–07 local profile,
+  retaining AC08 and INTERPRET-last.
 
 ## Optimisation ownership
 

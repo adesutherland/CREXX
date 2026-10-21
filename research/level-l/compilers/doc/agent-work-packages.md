@@ -110,8 +110,8 @@ remains shared work. The [QUEUE contract](architecture.md#queue-contract) assign
 the locally delivered AC01–04 profile to the serial integrator for production/
 schema/docs/CMake and the independent reviewer for neutral `tests/queue-insertion`
 plus thin PUSH/QUEUE fixture entries. No parallel shared builds; AC05 remains
-shared scope. Explicit ADDRESS is locally delivered; implicit commands/warnings
-follow the reviewed shared-B/C contract.
+shared scope. Explicit ADDRESS and implicit commands/warnings are locally
+delivered through the reviewed shared-B/C contract.
 
 The [ADDRESS B bridge](architecture.md#address-b-binding-bridge) is a separate
 prerequisite. Its worker owns only `_address.crexx`, `RexxClassicAddress.crexx`,
@@ -125,8 +125,10 @@ locally delivered C15 keyed explicit profile to the serial integrator for parser
 proof/selector, CMake and owning documentation. The independent fixture worker
 owns `tests/address`; review checks emitted owner/borrow/condition cleanup and
 source/clause observations. The B prerequisite is delivered separately. The
-C16 implicit-command/warning step follows the ADDRESS commit; CADDR-AC08 and
-whole LC-I-20/21 retain their shared condition/host/platform owners.
+C16 implicit-command/warning profile is locally delivered. The independent
+worker owns `tests/command` source/host/warning/raw controls; the same integrator
+owns production and preparation. CADDR-AC08 and whole LC-I-20/21 retain their
+shared condition/host/platform owners.
 
 <a id="procedure-assignment-packet"></a>
 

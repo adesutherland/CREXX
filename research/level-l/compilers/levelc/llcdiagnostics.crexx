@@ -1,0 +1,39 @@
+/* cREXX License (MIT). Owned Classic source-warning projection. */
+options levelb
+namespace llcdiagnostics expose warning
+
+/** Immutable source coordinates; no source or request reference escapes.
+ * @param filename stable logical source name
+ * @param first zero-based first byte of the authored head token
+ * @param last zero-based exclusive last byte of the authored head token
+ * @param line one-based source line
+ * @param column one-based Unicode scalar column
+ */
+warning: class
+  _filename = .string
+  _first = .int
+  _last = .int
+  _line = .int
+  _column = .int
+  *: factory
+    arg filename = .string, first = .int, last = .int, line = .int, column = .int
+    _filename = filename; _first = first; _last = last; _line = line; _column = column
+    return
+  severity: method = .string
+    return 'warning'
+  code: method = .string
+    return 'RXC-LC-IMPLICIT_ADDRESS'
+  message: method = .string
+    return 'Implicit ADDRESS command'
+  filename: method = .string
+    return _filename
+  first: method = .int
+    return _first
+  last: method = .int
+    return _last
+  line: method = .int
+    return _line
+  column: method = .int
+    return _column
+  text: method = .string
+    return _filename || ':' || _line || ':' || _column || ': warning RXC-LC-IMPLICIT_ADDRESS: Implicit ADDRESS command'

@@ -3324,6 +3324,24 @@ nested/private program roots, and `QUEUED()` does not consume entries. Wider
 host/condition/TRACE/platform closure remains open under the
 [queue contract](../../research/level-l/compilers/doc/architecture.md#queue-contract).
 
+Classic `ADDRESS` selects/swaps lasting environments or executes one transient
+command with ordered `WITH` resources and lexical VAR/counted-STEM anchors.
+An expression-only clause executes through the current environment and lasting
+connections, captured after its expression converts to command text. Both routes
+share the B command adapter. Operand EXIT skips construction and dispatch.
+Configured conditions/resumption, TRACE, native host/NUL transport and declared
+platforms retain their [separate gates](../../research/level-l/compilers/doc/architecture.md#address-c-command-contract).
+
+`llrxc-c` prints `RXC-LC-IMPLICIT_ADDRESS` warnings once to stderr for implicit
+commands whose classified head is not a literal string. Grouped strings and
+left-string concatenations suppress the warning; assignments and explicit
+instructions do not warn. Warnings do not change successful status or output
+publication. C frontend/service `warnings()` returns owned immutable records
+with severity/code/message, filename, exact byte bounds, scalar line/column and
+formatted text. An empty array denotes no collected warnings; completed records
+remain available after later lowering/backend failure and after request expiry.
+The getter prepares frontend work only, without emitting RXAS.
+
 A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
 `rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
 import/link `llccompiler` and call its own request with the same arguments:

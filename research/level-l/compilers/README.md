@@ -81,9 +81,13 @@ For example, `address 'ENV' 'command :ITEMS[]' with output stream FILE` snapshot
 FILE at that connection and passes a lexical counted-stem binding through the
 existing B adapter. Commands evaluate once; operand EXIT skips construction and
 dispatch. The adapter owns request snapshots, redirects, binding writeback and
-RC/.RC/.RS. [The ADDRESS contract](doc/architecture.md#address-c-command-contract)
-keeps implicit commands/warnings, configured conditions/resumption, TRACE and
-host/platform closure explicit.
+RC/.RC/.RS. Implicit expression commands use the active environment and lasting
+connections after once-only expression conversion. For example, `COMMAND`
+dispatches its value and produces an owned `RXC-LC-IMPLICIT_ADDRESS` source
+warning; a string-headed command such as `'literal :SCALAR'` suppresses that
+warning and retains its lexical binding plan. CLI warnings go once to stderr;
+frontend/service `warnings()` returns owned records. [The ADDRESS contract](doc/architecture.md#address-c-command-contract)
+keeps configured conditions/resumption, TRACE and host/platform closure open.
 
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing

@@ -4,6 +4,7 @@ namespace llccompiler expose request
 import rxfnsb
 import llcfrontend
 import llcbindings
+import llcdiagnostics
 import llcrxas
 import llir
 import llirservices
@@ -102,5 +103,12 @@ request: class
     graph = _frontend.graph()
     if _frontend.status() then do; _error = _frontend.error(); _offset = _frontend.offset(); end
     return graph
+  /** Prepare only the frontend; completed records remain owned on failure. */
+  warnings: method = .llcdiagnostics..warning[]
+    call prepare()
+    if initialized(_frontend) = 0 then do
+      empty = .llcdiagnostics..warning[]; return empty
+    end
+    return _frontend.warnings()
   emissiongraph: method = .llir..module
     call run(); return _emission

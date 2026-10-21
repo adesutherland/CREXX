@@ -1,0 +1,269 @@
+/* Independent warning ownership/coordinates and the small C16 IR delta. */
+options levelb
+import rxfnsb
+import llcdiagnostics
+import llcfrontend
+import llccompiler
+import llcparse
+import llast
+import llcir
+import llir
+import llirservices
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call warnings(argv[1]); call limits(argv[1]); call raw(argv[1])
+  say 'COMMAND_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+warnings: procedure = .void
+  arg artifacts = .string
+  nl = '0D0A'x as .string
+  text = 'NAME' || nl || "('literal')" || nl || "'left' || NAME" || nl || 'MAKE()' || nl
+  text = text || '-1' || nl || "'a' + 1" || nl || 'if 0 then DEAD' || nl
+  text = text || "if 'é' = 'é' then if 0 then SAME; if 0 then NEXT" || nl
+  text = text || 'N = 1' || nl || 'address CREXX' || nl || 'return 0'
+  source = text as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'warning corpus cleanly parses: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk(); node = .llast..node; commands = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() == 'CCommand' then do
+        if commands = 0 then call check(node.start() = 0,'zero-width marker does not displace authored command start')
+        commands = commands + 1
+      end
+    end
+    call check(commands = 9,'clean AST retains all nine authored commands including suppressed/dead heads')
+  end
+  first = ownedwarnings(source,artifacts,0); second = ownedwarnings(source,artifacts,1)
+  third = ownedfrontend(source,artifacts)
+  call check(first[0] = 7 & second[0] = 7 & third[0] = 7,'String/group/concat suppression, dead source and source-order count')
+  if first[0] = 7 & second[0] = 7 & third[0] = 7 then do
+    call warningat(first[1],source,'NAME',1,1)
+    call warningat(first[2],source,'MAKE',4,1)
+    call warningat(first[3],source,'-',5,1)
+    call warningat(first[4],source,"'a'",6,1)
+    call warningat(first[5],source,'DEAD',7,11)
+    call warningat(first[6],source,'SAME',8,29)
+    call warningat(first[7],source,'NEXT',8,45)
+    i = .int; before = -1
+    do i = 1 to first[0]
+      item = first[i]; retained = second[i]; front_item = third[i]
+      call check(item.first() > before & item.text() == retained.text() & item.last() = retained.last() & item.text() == front_item.text(),'owned frontend/service arrays survive request lifetimes/orderings ' || i)
+      before = item.last()
+    end
+  end
+  quiet = .llcfrontend..request("('literal'); 'left' || NAME; N=1; address CREXX; nop" as .binary,artifacts)
+  empty = quiet.warnings()
+  call check(quiet.status() = 0 & empty[0] = 0,'no-warning request has a fresh empty array')
+  equality = .llcfrontend..request("(1=1); 'a'='b'" as .binary,artifacts)
+  equality_warnings = equality.warnings()
+  call check(equality.status() = 0 & equality_warnings[0] = 2,'grouped equality and quoted nonconcat comparison remain commands: ' || equality.error())
+  later = .llcfrontend..request('NAME; say 1d' as .binary,artifacts,'later.crexx')
+  status = later.status(); kept = later.warnings(); failedgraph = later.graph()
+  call check(status <> 0 & pos('LL_COMPILER_PROFILE:',later.error()) = 1 & kept[0] = 1 & failedgraph.error() <> '', 'completed warnings survive later frontend failure: ' || later.error())
+  call check(first[0] = 7,'separate failed request cannot alter retained warning array')
+  backend = .llccompiler..request('NAME' as .binary,artifacts || '/missing-command-artifacts','backend.crexx')
+  status = backend.status(); afterstatus = backend.warnings(); output = backend.output()
+  call check(status <> 0 & pos('LL_COMPILER_IMPORT:',backend.error()) = 1 & output.bytes() = 0 & afterstatus[0] = 1,'service warnings remain available after backend status failure: ' || backend.error())
+  if afterstatus[0] = 1 then call check(afterstatus[1].text() == 'backend.crexx:1:1: warning RXC-LC-IMPLICIT_ADDRESS: Implicit ADDRESS command','backend failure keeps exact warning text')
+  malformed = .llcfrontend..request('NAME; say (' as .binary,artifacts)
+  unpublished = malformed.warnings()
+  call check(malformed.status() <> 0 & unpublished[0] = 0,'unclean parse publishes no source warnings')
+  return
+
+/* No source, request, graph or AST owner escapes these helper scopes. */
+ownedwarnings: procedure = .llcdiagnostics..warning[]
+  arg source = .binary, artifacts = .string, graph_first = .int
+  request = .llccompiler..request(source,artifacts,'warnings-雪.crexx')
+  graph = .llir..module
+  if graph_first then do
+    graph = request.graph()
+    call check(graph.error() == '', 'graph-first warning request: ' || graph.error())
+  end
+  result = request.warnings()
+  if graph_first = 0 then do
+    graph = request.graph()
+    call check(graph.error() == '', 'warning-first graph request: ' || graph.error())
+  end
+  call check(result[0] = 7,'completed warning array before request expiry')
+  return result
+
+ownedfrontend: procedure = .llcdiagnostics..warning[]
+  arg source = .binary, artifacts = .string
+  request = .llcfrontend..request(source,artifacts,'warnings-雪.crexx')
+  result = request.warnings()
+  call check(request.status() = 0,'direct frontend warnings prepare a valid graph: ' || request.error())
+  return result
+
+warningat: procedure = .void
+  arg item = .llcdiagnostics..warning, source = .binary, token = .string, line = .int, column = .int
+  first = binpos(token as .binary,source) - 1
+  call check(item.severity() == 'warning' & item.code() == 'RXC-LC-IMPLICIT_ADDRESS' & item.message() == 'Implicit ADDRESS command','warning fixed semantic fields ' || token)
+  call check(item.filename() == 'warnings-雪.crexx' & item.first() = first & item.last() = first + <blen>(token as .binary),'original UTF8 token bounds (not marker/full call) ' || token)
+  call check(item.line() = line & item.column() = column,'original CRLF/scalar coordinates ' || token)
+  expected = 'warnings-雪.crexx:' || line || ':' || column || ': warning RXC-LC-IMPLICIT_ADDRESS: Implicit ADDRESS command'
+  call check(item.text() == expected,'owned rendered warning text ' || token)
+  return
+
+limits: procedure = .void
+  arg artifacts = .string
+  byte_request = .llcfrontend..request('N' as .binary,artifacts,copies('f',20000),512)
+  byte_warnings = byte_request.warnings(); byte_graph = byte_request.graph()
+  call check(byte_request.status() <> 0 & byte_request.error() == 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget' & byte_warnings[0] = 0 & byte_graph.error() <> '', 'warning byte exhaustion is atomic: ' || byte_request.error())
+  work_source = 'N;N;N;N;N;N;N;N' as .binary
+  work_request = .llcfrontend..request(work_source,artifacts,copies('w',64),1024)
+  work_warnings = work_request.warnings(); work_graph = work_request.graph()
+  call check(work_request.status() <> 0 & work_request.error() == 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget' & work_warnings[0] = 0 & work_graph.error() <> '', 'pending warning work exhaustion publishes no partial list: ' || work_request.error())
+  return
+
+raw: procedure = .void
+  arg artifacts = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  data = dereference contract.data()
+  call check(data.ops() = 73 & data.opname(73) == 'crexx.c.command.active','append-only C16 command.active descriptor')
+  family = .int; version = 0; types = 0; i = .int
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 16 & types = 5,'C16/five type family identity')
+  call check(data.arity(73,1) = 2 & data.fieldname(73,1,1) == 'command' & data.fieldname(73,1,2) == 'context' & data.arity(73,2) = 0,'active constructor canonical context input2 and void output')
+  call check(data.arity(73,3) = 1 & data.fieldname(73,3,1) == 'key' & data.typename(data.fieldtype(73,3,1)) == 'crexx.g.text','only key text attribute')
+  call check(data.effectvalue(73,1) == 'context' & data.effectvalue(73,2) == 'condition.resource' & data.effectvalue(73,3) == 'returns','complete constructor effects')
+  callback = data.callback(73,1)
+  call check((callback is .llir..evaluator) = 0,'active command has no evaluator')
+  mode = .int; graph = .llir..module; loaded = .llir..module
+  do mode = 1 to 5
+    graph = fixture(contract,mode)
+    call check(graph.error() == '', 'generic-valid active control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    reason = 'command '
+    if mode = 2 then reason = 'slot'
+    call admission(artifacts,graph,mode = 1 | mode = 5,'fresh active ' || mode,reason)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(loaded.binary(),graph.binary()) = 0,'binary roundtrip ' || mode)
+    if loaded.error() == '' then call admission(artifacts,loaded,mode = 1 | mode = 5,'loaded active ' || mode,reason)
+    if mode = 5 then do
+      change = llirservices..optimise(reference graph)
+      call check(change.status() == 'changed','same-block typed active spill actually transforms')
+      if change.status() == 'changed' then do
+        rewritten = change.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'different transformed active graph bytes')
+        call admission(artifacts,rewritten,1,'transformed active spill','')
+      end
+    end
+  end
+  old = stalecontract(contract); graph = fixture(old,1)
+  call check(graph.error() == '', 'generic-valid immediate prior C15 graph')
+  if graph.error() == '' then do
+    call admission(artifacts,graph,0,'stale C15','unsupported family version crexx.c')
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded immediate prior C15 remains generic-valid')
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded stale C15','unsupported family version crexx.c')
+  end
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string
+  saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
+    previous = output.text(); limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' output limit')
+    call check(output.text() == previous,label || ' previous output remains owned')
+  end
+  else do
+    call check(selected.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING:',selected.error()) = 1 & pos(reason,selected.error()) > 0,label || ' cause-specific refusal: ' || selected.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' input remains immutable')
+  return
+
+/* 1 accepted, 2 wrong canonical slot, 3 generated dead active,
+ * 4 active+fixed constructor collide on one key, 5 actual typed forwarding. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract)
+  file = builder.source('active-ir.crexx',"'command'" as .binary); at = file.origin(0,9)
+  generated = builder.synthetic('independent active command dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  other = fn.slot('other context',contract.type('crexx.c.context')); spill = fn.slot('value spill',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); body = fn.block('main'); invalid = fn.block('invalid')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode = 2 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',dispatch.load(context,generated)); call draft.input('entry',dispatch.load(entry,generated))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  if mode = 3 then do; call absent(body,contract,generated); body = fn.block('dead active'); end
+  draft = body.operation(contract.operation('crexx.c.procedure.consume'),at)
+  call draft.input('context',body.load(context,at)); finished = draft.finish()
+  value = body.constantbytes(contract.type('crexx.c.value'),'command' as .binary,at)
+  if mode = 5 then do; call body.store(spill,value,at); value = body.load(spill,at); end
+  origin = at; if mode = 3 then origin = generated
+  slot = context; if mode = 2 then slot = other
+  draft = body.operation(contract.operation('crexx.c.command.active'),origin)
+  call draft.input('command',value); call draft.input('context',body.load(slot,at)); call draft.attribute('key','k' as .binary); finished = draft.finish()
+  if mode = 4 then do
+    draft = body.operation(contract.operation('crexx.c.command.new'),at)
+    call draft.input('command',value); call draft.input('context',body.load(context,at))
+    call draft.attribute('key','k' as .binary); call draft.attribute('environment','ENV' as .binary); finished = draft.finish()
+  end
+  draft = body.operation(contract.operation('crexx.c.command.run'),at)
+  call draft.input('context',body.load(context,at)); call draft.attribute('key','k' as .binary); finished = draft.finish()
+  call absent(body,contract,at)
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+stalecontract: procedure = .llir..contract
+  arg canonical = .llir..contract
+  source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; ignored = .int
+  do i = 2 to source.familycount()
+    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 15
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    declared = .llir..operation(reference data,data.addop(source.opname(i)))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field); type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); return .llir..contract(data)

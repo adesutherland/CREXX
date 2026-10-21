@@ -701,7 +701,7 @@ compilation: class
     ownerclass = 'rexxclassicaddress.rexxclassicaddresscommand'
     receiver = reg(_workbase + 1); activation = reg(_workbase + 4); pool = reg(_workbase + 2); text = reg(_workbase + 9)
     storage = .string; context = input(op)
-    if name = 'command.new' | name = 'address.select' then context = input(op,2)
+    if name = 'command.new' | name = 'command.active' | name = 'address.select' then context = input(op,2)
     if left(name,8) = 'command.' then do
       opid = op.id(); owner = _commandprotocol.owner(opid)
       ownerregister = _commandowners[owner]; storage = reg(ownerregister)
@@ -719,11 +719,24 @@ compilation: class
         call invoke('',symbol,count,receiver); call emit('unlink',receiver); call emit('null',activation)
         if name = 'address.select' then call emit('null',text)
       end
-      when name = 'command.new' then do
+      when name = 'command.new' | name = 'command.active' then do
         call addresstext(input(op)); call binding(context,'pool',pool); call binding(context,'activation',activation)
+        if name = 'command.active' then do
+          call emit('linkref',receiver || ',' || activation)
+          symbol = member('rexxactivation.rexxactivationarguments','addressenvironment','.string')
+          call invoke(reg(_workbase + 8),symbol,1,receiver); call emit('unlink',receiver)
+        end
         symbol = member(ownerclass,'§factory','.rexxclassicaddress..rexxclassicaddresscommand','reference@.rexxpool..rexxvariablepool reference@.rexxactivation..rexxactivationarguments .string .string')
-        call argcopy(1,pool); call argcopy(2,activation); call argtext(3,op.attribute('environment') as .string); call argcopy(4,text)
-        call invoke(storage,symbol,4); call emit('null',pool); call emit('null',activation); call emit('null',text)
+        call argcopy(1,pool); call argcopy(2,activation)
+        if name = 'command.active' then call argcopy(3,reg(_workbase + 8))
+        else call argtext(3,op.attribute('environment') as .string)
+        call argcopy(4,text); call invoke(storage,symbol,4)
+        if name = 'command.active' then do
+          call emit('link',receiver || ',' || storage)
+          symbol = member(ownerclass,'useactiveconnections','.void')
+          call invoke('',symbol,1,receiver); call emit('unlink',receiver); call emit('null',reg(_workbase + 8))
+        end
+        call emit('null',pool); call emit('null',activation); call emit('null',text)
       end
       when name = 'address.connection' | name = 'command.connection' then do
         call addressresource(op)

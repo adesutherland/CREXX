@@ -528,7 +528,7 @@ checked: class
         end
         if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
           contextinput = 1
-          if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' then contextinput = 2
+          if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then contextinput = 2
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end
         if name = 'crexx.c.procedure.enter' then group = opid

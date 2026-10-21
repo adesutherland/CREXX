@@ -53,6 +53,16 @@ request's retained result:
 | `diagnostic()` | Filename, category, line/Unicode column, byte offset, source excerpt and caret. Empty on success. |
 | `ast()` | Owned Level L source tree if parsing succeeded. Semantic failure may retain that tree; parse failure returns a failed tree. |
 | `graph()` | Verified immutable module on success. On failure returns a failed module with nonempty `error()`, never a partly built successful graph. |
+| `warnings()` (C only) | Owned `llcdiagnostics.warning[]`; an empty array when no warnings were collected. |
+
+C frontend and compiler requests collect implicit-command warnings after a clean
+parse, before lowering. Each immutable record exposes `severity`, `code`,
+`message`, `filename`, `first`, `last`, `line`, `column` and `text`. Byte bounds
+cover the original head token; line/column count Unicode scalars. String-headed
+commands, including grouped and left-string concatenations, do not warn.
+Records outlive their request and completed warnings survive later compilation
+failure. Collection-limit failure returns no partial list. A compiler request's
+`warnings()` prepares only its frontend, preserving graph-first behavior.
 
 The AST and IR own their storage; borrowed node/value handles follow Level L's
 owner/revision rules. Keep their owning result alive while using borrowed views.

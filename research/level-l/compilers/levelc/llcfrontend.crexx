@@ -15,6 +15,7 @@ import llcompilercontracts
 import llcdoprotocol
 import llcprocedureprotocol
 import llccommandprotocol
+import llcdiagnostics
 import rexxclassicunicodeproperties
 
 /** First source-unit entry identity and its result contract. */
@@ -128,6 +129,7 @@ request: class
   _anchornames = .string[]
   _anchorfirst = .int[]
   _anchorlast = .int[]
+  _warnings = .llcdiagnostics..warning[]
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -173,13 +175,16 @@ request: class
       if _tree.isrecovered() then do
         _error = 'LL_COMPILER_RECOVERED: executable IR requires clean input'; return
       end
-      walk = _tree.walk('parents first')
+      walk = _tree.walk('parents first'); hascommands = 0
       do while walk.next()
         if walk.depth() > _nesting then do
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
+        if walk.node().kind() = 'CCommand' then hascommands = 1
       end
       _entrybytes = 0
+      if hascommands then call sourcewarnings(reference parsed)
+      if _error <> '' then return
       call addressplans(reference parsed)
       if _error <> '' then return
       _registry = .llir..schema(); call llcir..registerfamilies(reference _registry)
@@ -227,6 +232,10 @@ request: class
   status: method = .int
     call run()
     return _error <> ''
+  /** Owned completed source warnings survive later lowering failure. */
+  warnings: method = .llcdiagnostics..warning[]
+    call run()
+    return _warnings
   offset: method = .int
     call run()
     return _offset
@@ -428,6 +437,105 @@ request: class
       end
       else return kind = 'String' | kind = 'Number' | kind = 'Constant'
     end
+  /** Classify suppression before choosing the original head token span. */
+  warninghead: method = .llast..node
+    arg node = .llast..node
+    do forever
+      if warningwork(1) = 0 then return node
+      kind = node.kind()
+      if kind = 'Group' then node = node.child('value')
+      else if kind = 'Chain' then do
+        if node.count('operators') = 0 then node = node.child('operands',1)
+        else do
+          operator = node.child('operators',1).kind()
+          if wordpos(operator,'concat blank abut') = 0 then return node
+          node = node.child('operands',1)
+        end
+      end
+      else return node
+    end
+  warningwork: method = .int
+    arg count = .int
+    if count < 0 | count > _budget - _work then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget'; return 0
+    end
+    _work = _work + count; return 1
+  warningspace: method = .int
+    arg count = .int, width = 1
+    if count < 0 | width < 1 then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return 0
+    end
+    if count > (_bytebudget - _entrybytes) <idiv> width then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return 0
+    end
+    _entrybytes = _entrybytes + count * width; return 1
+  /** Publish once after complete collection. Token and coordinate gaps advance
+   * monotonically; the index owns one source copy, never one per warning. */
+  sourcewarnings: method = .void
+    arg parsed_ref = reference .llcparse..parsed
+    parsed = dereference parsed_ref
+    pending = .llcdiagnostics..warning[]; cursor = 0; ready = 0
+    previous = 0; lineend = -1; line = 0; column = 0; searchcost = 2
+    node = .llast..node; head = .llast..node; first = .int; last = .int
+    gap = .int; extent = .int; remaining = .int; point = .llsource..position
+    filenamebytes = <blen>(_filename as .binary)
+    walk = _tree.walk('parents first')
+    do while walk.next()
+      if warningwork(1) = 0 then return
+      node = walk.node()
+      if node.kind() <> 'CCommand' then iterate
+      head = warninghead(node.child('value'))
+      if _error <> '' then return
+      if head.kind() = 'String' then iterate
+      first = head.start(); _offset = first
+      if ready = 0 then do
+        extent = <blen>(_source)
+        /* Conservative retained index cells, plus its one owned source. */
+        if warningspace(extent,17) = 0 | warningspace(16) = 0 then return
+        if warningwork(extent) = 0 then return
+        remaining = extent
+        do while remaining > 0
+          if warningwork(1) = 0 then return
+          searchcost = searchcost + 1; remaining = remaining <idiv> 2
+        end
+        _parsepositions = .llsource..index(_source,_budget,_bytebudget,_bytebudget)
+        if _parsepositions.error() <> '' then do
+          _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return
+        end
+        _parsepositionsready = 1; ready = 1
+      end
+      do
+        tokens_ref = parsed.sourcetokens(); tokens = dereference tokens_ref
+        do while cursor < tokens.size()
+          if warningwork(1) = 0 then return
+          if tokens.start(cursor) >= first then leave
+          cursor = cursor + 1
+        end
+        if cursor >= tokens.size() then do; _error = 'LL_COMPILER_INVALID: warning head has no original token'; return; end
+        if tokens.start(cursor) <> first then do; _error = 'LL_COMPILER_INVALID: warning head is not a token boundary'; return; end
+        last = tokens.finish(cursor + 1)
+      end
+      gap = first - previous
+      if warningwork(gap) = 0 then return
+      if first > lineend then do
+        if warningwork(searchcost) = 0 then return
+        point = _parsepositions.position(first)
+        if point.error() <> '' then do; _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget'; return; end
+        line = point.line(); column = point.column(); lineend = point.last()
+      end
+      else do
+        if warningspace(gap,2) = 0 then return
+        column = column + length(binsubstr(_source,previous + 1,gap) as .string)
+      end
+      /* Account both pending and published owned record/filename payload. */
+      if warningspace(144) = 0 | warningspace(filenamebytes,2) = 0 then return
+      if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 then return
+      if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 | warningwork(32) = 0 then return
+      pending[pending[0] + 1] = .llcdiagnostics..warning(_filename,first,last,line,column)
+      previous = first
+    end
+    _warnings = pending; _offset = 0
+    return
   statement: method = .void
     arg node = .llast..node
     if tick(node) = 0 then return
@@ -503,6 +611,7 @@ request: class
         call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
       when kind = 'CAddress' then call addressstatement(node)
+      when kind = 'CCommand' then call commandstatement(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
@@ -597,16 +706,21 @@ request: class
     node = .llast..node; target = .llast..node; command = .llast..node
     do while walk.next()
       node = walk.node()
-      if node.kind() <> 'CAddress' | node.count('target') = 0 then iterate
-      target = node.child('target')
-      if target.kind() = 'AddressValue' then iterate
-      if target.count('command') = 0 then iterate
+      if node.kind() = 'CCommand' then command = node.child('value')
+      else if node.kind() = 'CAddress' then do
+        if node.count('target') = 0 then iterate
+        target = node.child('target')
+        if target.kind() = 'AddressValue' then iterate
+        if target.count('command') = 0 then iterate
+        command = target.child('command')
+      end
+      else iterate
       if ready = 0 then do
         _commandfirst = .stem(); _commandcount = .stem(); _anchorseen = .stem(); ready = 1
       end
       do
         tokens_ref = parsed.sourcetokens(); tokens = dereference tokens_ref
-        command = target.child('command'); key = node.start() as .string
+        key = node.start() as .string
         if entryspace(96 + length(key),1,'command binding') = 0 then return
         call _commandfirst.set(key,(_anchorkinds[0] + 1) as .string)
         before = _anchorkinds[0]
@@ -798,17 +912,31 @@ request: class
       call op.attribute('option',option as .binary); call op.attribute('position',position as .binary)
       call op.attribute('kind',kind as .binary); call op.attribute('resource',name as .binary); built = op.finish()
     end
-    if transient then do
-      key = node.start() as .string; first = _commandfirst.get(key) as .int; count = _commandcount.get(key) as .int
-      do i = first to first + count - 1
-        bindingorigin = _file.origin(_anchorfirst[i],_anchorlast[i],'exact')
-        op = _block.operation(_contract.operation('crexx.c.command.binding'),bindingorigin)
-        call op.input('context',_block.load(_contextslot,bindingorigin)); call op.attribute('key',commandkey as .binary)
-        call op.attribute('kind',_anchorkinds[i] as .binary); call op.attribute('name',_anchornames[i] as .binary); built = op.finish()
-      end
-      op = _block.operation(_contract.operation('crexx.c.command.run'),origin)
-      call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key',commandkey as .binary); built = op.finish()
+    if transient then call commandfinish(node,commandkey)
+    return
+  commandstatement: method = .void
+    arg node = .llast..node
+    value = expression(node.child('value'))
+    if _error <> '' then return
+    origin = at(node); _commandnumber = _commandnumber + 1; key = 'command.' || _commandnumber
+    op = _block.operation(_contract.operation('crexx.c.command.active'),origin)
+    call op.input('command',value); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('key',key as .binary); built = op.finish()
+    call commandfinish(node,key)
+    return
+  commandfinish: method = .void
+    arg node = .llast..node, commandkey = .string
+    i = .int; origin = at(node)
+    op = .llir..opdraft; built = .llir..opview
+    key = node.start() as .string; first = _commandfirst.get(key) as .int; count = _commandcount.get(key) as .int
+    do i = first to first + count - 1
+      bindingorigin = _file.origin(_anchorfirst[i],_anchorlast[i],'exact')
+      op = _block.operation(_contract.operation('crexx.c.command.binding'),bindingorigin)
+      call op.input('context',_block.load(_contextslot,bindingorigin)); call op.attribute('key',commandkey as .binary)
+      call op.attribute('kind',_anchorkinds[i] as .binary); call op.attribute('name',_anchornames[i] as .binary); built = op.finish()
     end
+    op = _block.operation(_contract.operation('crexx.c.command.run'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key',commandkey as .binary); built = op.finish()
     return
   parsestatement: method = .void
     arg node = .llast..node

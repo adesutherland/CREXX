@@ -167,7 +167,7 @@ checked: class
       end
       else owner = known as .int
       _owners[id] = owner
-      if name = 'crexx.c.command.new' then do
+      if name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then do
         if _constructors[owner] <> 0 then do; call fail('LOWERING: command key has duplicate constructors',id); return; end
         _constructors[owner] = id
       end
@@ -211,15 +211,15 @@ checked: class
         if _owners[id] > 0 then do
           if _owners[id] <> owner then do; call fail('LOWERING: command keys interleave',id); return; end
           if origin(op,constructor) = 0 then return
-          select name
-            when 'crexx.c.command.new' then do
+          select
+            when name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then do
               if id <> constructor then do; call fail('LOWERING: command constructor appears inside another segment',id); return; end
             end
-            when 'crexx.c.command.connection' then do
+            when name = 'crexx.c.command.connection' then do
               if phase > 0 then do; call fail('LOWERING: command connection follows binding',id); return; end
             end
-            when 'crexx.c.command.binding' then phase = 1
-            when 'crexx.c.command.run' then done = 1
+            when name = 'crexx.c.command.binding' then phase = 1
+            when name = 'crexx.c.command.run' then done = 1
             otherwise do; call fail('LOWERING: command has an unsupported operation',id); return; end
           end
         end

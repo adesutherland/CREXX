@@ -88,7 +88,7 @@ parsed: class
     end
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; after = ''
-    addressmode = ''; addressseen = 0; addressdirection = ''
+    addressmode = ''; addressseen = 0; commandseen = 0; addressdirection = ''
     arm = 0; operandmode = ''
     doheader = 0; dofirst = 0; docondition = 0
     parsemode = ''; proceduretail = 0; procedureallowed = 0
@@ -240,6 +240,16 @@ parsed: class
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
+      end
+      /* The marker leaves the original expression token/gaps untouched.
+       * Recognized instructions, labels and malformed symbol assignments keep
+       * their prior ownership before a clause can become an implicit command. */
+      if clause & word = '' & parsemode = '' & addressmode = '' & proceduretail = 0 & doheader = 0 then do
+        symbolhead = kind = id | kind = language.tokenid('number') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot')
+        expressionhead = symbolhead | kind = language.tokenid('string') | kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not')
+        if expressionhead & (symbolhead & next = equals) = 0 then do
+          ok = classified.synthetic(language.tokenid('commandword'),first); commandseen = 1
+        end
       end
       if word = 'CALL' then do
         if next = id then do
@@ -407,7 +417,7 @@ parsed: class
       return
     end
     _tree = request.ast(); _status = _tree.status(); _error = _tree.error()
-    if _status = 0 & addressseen then do
+    if _status = 0 & (addressseen | commandseen) then do
       /* One optional owned lexer stream supports every lexical binding plan.
        * Charge its source and conservative scalar cells before retaining it;
        * the frontend borrows only while this parsed owner stays live. */
@@ -548,6 +558,7 @@ syntaxmessage: procedure = .string
   text = changestr('addressposition',text,'APPEND/REPLACE')
   text = changestr('addresskind',text,'NORMAL/STREAM/STEM')
   text = changestr('addressresource',text,'resource variable')
+  text = changestr('commandword',text,'expression')
   marker = pos('; expected ',text)
   if marker > 0 then do
     prefix = left(text,marker + 10); rest = substr(text,marker + 11); text = prefix; first = 1; item = .string
