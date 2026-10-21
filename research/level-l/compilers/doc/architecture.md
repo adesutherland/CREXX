@@ -4116,6 +4116,40 @@ contexts (do not inherently share pools/handlers). Exact assembler/VM APIs and
 continuation ABI need approval before coding. Their absence remains an open
 criterion, not a reason to silently weaken INTERPRET.
 
+<a id="retained-c-operation-views"></a>
+
+## Retained C admission operation views
+
+L-VIEW-01 replaces only the six post-admission `llccommandprotocol` lookups
+with existing `opview(_store,id)`, reusing its one retained arena reference.
+Preserve live graph/completed CPROC/error/belongs admission, verified bounds and
+all opview identity/lifetime/require checks. Keep cold `fail(opid)` on
+`module.operation`: it can run before `_store` exists. No cache, generic L,
+native/VM/API change, source matrix or performance/replacement claim.
+
+1. **L-VIEW-AC01 — locally complete:** exact source review confirms unchanged traversal,
+   owner/segment decisions, diagnostics and resource charges at all six sites.
+2. **L-VIEW-AC02 — locally complete:** the existing command probe's focused `views` group
+   passes in compiler opt/noopt modes: public/retained view equivalence and exact
+   consumer facts/refusal on tiny fresh, loaded and actually transformed graphs;
+   immutable input. Reuse unchanged generic lifetime/foreign/bounds controls.
+3. **L-VIEW-AC03 — locally complete:** early owning B RXAS review shows scalar reference
+   forwarding without per-lookup arena MKREF or aggregate COPY; qualification
+   uses the frozen patch, scratch is removed and unrelated work preserved.
+
+- **L-VIEW-STEP01 — complete:** review the bounded contract before product edits;
+  AC01–03.
+- **L-VIEW-STEP02 — complete:** six lookups and focused existing probe; early
+  code/RXAS review, batch material fixes then freeze; AC01–03.
+- **L-VIEW-STEP03 — complete:** focused opt/noopt qualification, cleanup and exact
+  local commit; AC02–03. CLAUSE1 remains a separate later contract.
+
+The maintained `command-contracts-linked.rxbin -a <runtime> views` group is the
+focused consumer gate: compiler/assembler opt on rxbvm and noopt on rxtvm each
+pass the same fresh/loaded/transformed admission and refusal expectations.
+Generic L/native inputs are unchanged; their existing owner/lifetime contracts
+are reused. No full source, platform or sanitizer qualification is claimed.
+
 ## Product and platform delivery
 
 Retain the existing directories. C stays opt-in until promotion is approved.

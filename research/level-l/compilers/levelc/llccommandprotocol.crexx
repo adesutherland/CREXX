@@ -80,14 +80,14 @@ checked: class
     return bytes as .string
   origin: method = .int
     arg op = .llir..opview, constructor = 0
-    graph = dereference _graph; store = dereference _store
+    store = dereference _store
     at = op.origin(); id = at.id()
     if charge(8) = 0 then return 0
     if at.kind() <> 'exact' | at.first() >= at.last() | store.get(9,id,1) = 0 then do
       call fail('LOWERING: command operation requires an owned exact authored origin',op.id()); return 0
     end
     if constructor > 0 then do
-      parent = graph.operation(constructor).origin()
+      parent = .llir..opview(_store,constructor).origin()
       if store.get(9,parent.id(),1) <> store.get(9,id,1) | at.first() < parent.first() | at.last() > parent.last() then do
         call fail('LOWERING: command origin is outside its constructor statement',op.id()); return 0
       end
@@ -138,7 +138,7 @@ checked: class
     found = 0; op = .llir..opview; key = .string; id = .int; owner = .int; name = .string
     do id = 1 to store.count(3)
       if charge() = 0 then return
-      name = graph.operation(id).name()
+      name = .llir..opview(_store,id).name()
       if left(name,16) = 'crexx.c.command.' | left(name,16) = 'crexx.c.address.' then found = 1
     end
     if found = 0 then return
@@ -148,7 +148,7 @@ checked: class
      * encoded, so embedded punctuation/NUL cannot alias a different key. */
     do id = 1 to store.count(3)
       if charge() = 0 then return
-      op = graph.operation(id); name = op.name()
+      op = .llir..opview(_store,id); name = op.name()
       if left(name,16) <> 'crexx.c.command.' & left(name,16) <> 'crexx.c.address.' then iterate
       if origin(op) = 0 then return
       if name = 'crexx.c.address.connection' | name = 'crexx.c.command.connection' then call connection(op)
@@ -181,13 +181,13 @@ checked: class
       candidate = 0; id = store.get(2,b,2)
       do while id > 0
         if charge() = 0 then return
-        op = graph.operation(id); name = op.name()
+        op = .llir..opview(_store,id); name = op.name()
         select name
           when 'crexx.c.address.select' then candidate = id
           when 'core.load' then nop
           when 'crexx.c.address.connection' then do
             if candidate > 0 then do
-              parent = graph.operation(candidate).origin(); child = op.origin()
+              parent = .llir..opview(_store,candidate).origin(); child = op.origin()
               if store.get(9,parent.id(),1) = store.get(9,child.id(),1) & child.first() >= parent.first() & child.last() <= parent.last() then _anchors[id] = candidate
               else candidate = 0
             end
@@ -207,7 +207,7 @@ checked: class
         if id = 0 then do; call fail('LOWERING: command segment ends before run',constructor); return; end
         if charge() = 0 then return
         if _segments[id] <> 0 then do; call fail('LOWERING: command segments overlap or cycle',id); return; end
-        _segments[id] = owner; op = graph.operation(id); name = op.name()
+        _segments[id] = owner; op = .llir..opview(_store,id); name = op.name()
         if _owners[id] > 0 then do
           if _owners[id] <> owner then do; call fail('LOWERING: command keys interleave',id); return; end
           if origin(op,constructor) = 0 then return

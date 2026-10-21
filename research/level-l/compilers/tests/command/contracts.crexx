@@ -10,12 +10,18 @@ import llcir
 import llir
 import llirservices
 import llcrxas
+import llcprocedureprotocol
+import llccommandprotocol
 
 main: procedure = .int expose checks failures
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  if argv[0] = 2 then if argv[2] \== 'views' then return 2
   checks = 0; failures = 0
-  call warnings(argv[1]); call limits(argv[1]); call raw(argv[1])
+  if argv[0] = 1 then do
+    call warnings(argv[1]); call limits(argv[1]); call raw(argv[1])
+  end
+  call views()
   say 'COMMAND_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
@@ -24,6 +30,47 @@ check: procedure = .void expose checks failures
   checks = checks + 1
   if passed then return
   failures = failures + 1; say 'FAIL|' || label
+  return
+
+/* Consumer equivalence uses the same existing opview contract; generic view
+ * expiry/replacement/bounds tests remain in langtools/tests/library/ts_llir. */
+views: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  graph = fixture(contract,1)
+  call viewconsumer(graph,1,'fresh command')
+  loaded = loadgraph(reference graph)
+  call viewconsumer(loaded,1,'loaded command')
+  graph = fixture(contract,5); change = llirservices..optimise(reference graph)
+  call check(change.status() == 'changed','view consumer has actual typed-forwarded input')
+  if change.status() == 'changed' then call viewconsumer(change.result(),1,'transformed command')
+  graph = fixture(contract,4)
+  call viewconsumer(graph,0,'duplicate constructor')
+  return
+
+viewconsumer: procedure = .void
+  arg graph = .llir..module, accepted = .int, label = .string
+  call check(graph.error() == '',label || ' generic validity')
+  if graph.error() <> '' then return
+  saved = graph.binary(); arena_ref = graph.storage(); store = dereference arena_ref
+  entries = .llcprocedureprotocol..checked(reference graph)
+  call check(entries.status() = 0 & entries.belongs(reference graph),label || ' prior entry admission: ' || entries.error())
+  if entries.status() <> 0 then return
+  commands = .llccommandprotocol..checked(reference graph,reference entries)
+  status = commands.status(); constructor = 0; id = .int
+  public_view = .llir..opview; retained_view = .llir..opview
+  do id = 1 to store.count(3)
+    public_view = graph.operation(id); retained_view = .llir..opview(arena_ref,id)
+    call check(retained_view.belongs(arena_ref) & public_view.name() == retained_view.name() & public_view.blockid() = retained_view.blockid() & public_view.inputs() = retained_view.inputs() & public_view.results() = retained_view.results() & public_view.origin().id() = retained_view.origin().id(),label || ' equivalent bounded view ' || id)
+    if public_view.name() == 'crexx.c.command.active' then constructor = id
+    if accepted then do
+      owner = 0
+      if left(public_view.name(),16) == 'crexx.c.command.' then owner = 1
+      call check(commands.owner(id) = owner & commands.sourceanchor(id) = 0,label || ' exact consumer owner/anchor ' || id)
+    end
+  end
+  if accepted then call check(status = 0 & commands.owners() = 1 & commands.constructor(1) = constructor & commands.function(1) = 1,label || ' command facts: ' || commands.error())
+  else call check(status <> 0 & commands.error() == 'LL_COMPILER_LOWERING: command key has duplicate constructors' & commands.offset() = 0,label || ' unchanged cause and source offset: ' || commands.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' input immutable')
   return
 
 warnings: procedure = .void

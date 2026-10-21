@@ -125,14 +125,18 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | <a id="step07a-validation"></a>**CLC-STEP10** | Not started: complete static ledger and CLI/service/install/cold/incremental/relocated/platform delivery, independent walkthrough/review. Static acceptance is not complete C. |
 | **CLC-STEP11** | Last: same-compiler INTERPRET after static acceptance and approval of exact continuation/code-owner contracts; close every CFC criterion. |
 
-**L-VIEW-01 — open, CLC-STEP09:** C admission consumers can construct an existing
-`opview(reference arena,id)` from their retained arena token at verified bounded
-IDs, avoiding repeated `module.operation` reference creation. Preserve initial
-graph/error/belongs admission and view.require/lifetime checks. Closure requires
-focused equivalence, stale/out-of-range refusal, no-copy inspection and unchanged
-representative C RXAS before implementation. Generic accessor internals remain
-with CLC-STEP02; any VM change retains its native decision gate. This is separate
-from static SIGNAL delivery and does not establish replacement readiness.
+**L-VIEW-01 — locally qualified, CLC-STEP09:** the
+[retained operation-view contract](doc/architecture.md#retained-c-operation-views)
+limits this increment to the six post-admission lookups in
+`llccommandprotocol`. Reuse its existing arena reference and the existing checked
+`opview(reference arena,id)` constructor; preserve initial graph/error/belongs
+admission, bounded IDs and view identity/lifetime checks. Cold failure-offset
+lookups retain `module.operation`. L-VIEW-STEP01–03 are complete: the focused
+consumer probe passes with compiler/assembler opt on rxbvm and noopt on rxtvm;
+owning RXAS forwards the retained reference with no arena MKREF at the six sites.
+Unchanged generic view controls are reused. Generic accessor
+internals remain with CLC-STEP02; no generic L/native/API/cache change or full
+source matrix is commissioned. This does not establish replacement readiness.
 
 **CLC-STEP11a–d:** 11a: nested execution, SYNTAX, CALL resumption/SIGNAL, live
 continuations and cleanup/limits. 11b: ephemeral ownership, pins/reclamation,
