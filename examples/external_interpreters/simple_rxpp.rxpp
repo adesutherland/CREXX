@@ -1,0 +1,307 @@
+options levelb
+##cflag nosrcmap maclog 3buf blockmacros
+
+/*
+ * RXPP multi-language source demonstration.
+ *
+ * RXPP hosts four different source languages in one cREXX program.
+ * Each source block is collected into a cREXX string array and passed
+ * to a callback which writes and executes the corresponding source file.
+ */
+##DALIAS REGINA, PYTHON, JAVASCRIPT, POWERSHELL
+
+
+/*
+ * Simple language-specific definition macros.
+ *
+ * These macros are expanded while RXPP collects the surrounding
+ * external-language block. The external interpreter therefore receives
+ * the generated source code, not the macro invocation.
+ */
+##define REGINA_GREETING() {say 'Hello from Regina (RXPP macro)'}
+##define PYTHON_GREETING() {print("Hello from Python (RXPP macro)")}
+##define JAVASCRIPT_GREETING() {process.stdout.write("Hello from JavaScript (RXPP macro)\n");}
+##define POWERSHELL_GREETING() {Write-Output "Hello from PowerShell (RXPP macro)"}
+
+
+/*
+ * Parameterised multi-language macro.
+ *
+ * The first argument identifies the target language. The remaining two
+ * arguments are expressions which are inserted into the generated
+ * source code.
+ *
+ * For example:
+ *
+ *   CALCULATE(PYTHON, 21, 21)
+ *
+ * generates:
+ *
+ *   print('Sum:', 21 + 21)
+ */
+##define CALCULATE(language,a,b) {##MACRO_CALCULATE language,a,b}
+
+
+/*
+ * Scripted implementation of CALCULATE.
+ *
+ * Unlike the simple definition macros above, this macro contains
+ * procedural logic. It selects a different source-code template for
+ * each target language and emits the resulting line with .gen.
+ */
+##macro MACRO_CALCULATE language,a,b
+  language=unquote(language)
+  a=unquote(a)
+  b=unquote(b)
+
+  if upper(language) = "REGINA" then do
+    generated="say 'Sum:' (" || a || " + " || b || ")"
+    .gen &generated
+  end
+
+  if upper(language) = "PYTHON" then do
+    generated="print('Sum:', " || a || " + " || b || ")"
+    .gen &generated
+  end
+
+  if upper(language) = "JAVASCRIPT" then do
+    generated="process.stdout.write('Sum: ' + (" || a || " + " || b || ") + '\n');"
+    .gen &generated
+  end
+
+  if upper(language) = "POWERSHELL" then do
+    generated="Write-Output ('Sum: ' + (" || a || " + " || b || "))"
+    .gen &generated
+  end
+##mend
+
+
+/*
+ * Regina source block.
+ *
+ * REGINA_GREETING() and CALCULATE() are expanded by RXPP before
+ * the source is passed to Regina.
+ */
+REGINA regina_source run_regina
+  REGINA_GREETING()
+  CALCULATE(REGINA, 21, 21)
+  say '2 + 3 =' 2 + 3
+  say 'Cubic(45)' 45 * 45 * 45
+END REGINA
+
+
+/*
+ * Python source block.
+ */
+PYTHON python_source run_python
+  PYTHON_GREETING()
+  CALCULATE(PYTHON, 21, 21)
+  print("2 + 3 =", 2 + 3)
+  print("Cubic(45)", 45 * 45 * 45)
+END PYTHON
+
+
+/*
+ * JavaScript source block.
+ */
+JAVASCRIPT javascript_source run_javascript
+  JAVASCRIPT_GREETING()
+  CALCULATE(JAVASCRIPT, 21, 21)
+  process.stdout.write("2 + 3 = " + (2 + 3) + "\n");
+  process.stdout.write("Cubic(45) = " + (45 * 45 * 45) + "\n");
+END JAVASCRIPT
+
+
+/*
+ * PowerShell source block.
+ */
+POWERSHELL powershell_source run_powershell
+  POWERSHELL_GREETING()
+  CALCULATE(POWERSHELL, 21, 21)
+  Write-Output ("2 + 3 = " + (2 + 3))
+  Write-Output ("Cubic(45) = " + (45 * 45 * 45))
+END POWERSHELL
+
+
+/*
+ * The four callbacks have already been invoked while RXPP processed
+ * the source blocks. The main program has no further work to perform.
+ */
+exit 0
+
+
+/*
+ * Regina callback.
+ */
+run_regina: procedure = .int
+  arg source=.string[]
+
+  executable = getenv('REGINA_EXE')
+  if executable = '' then
+    executable = 'C:/Program Files/rexx.org/Regina/regina.exe'
+
+  status = run_external('REGINA', executable, source)
+
+  if status <> 0 then
+    exit status
+
+return status
+
+
+/*
+ * Python callback.
+ */
+run_python: procedure = .int
+  arg source=.string[]
+
+  status = run_external('PYTHON', 'python', source)
+
+  if status <> 0 then
+    exit status
+
+return status
+
+
+/*
+ * JavaScript callback.
+ */
+run_javascript: procedure = .int
+  arg source=.string[]
+
+  status = run_external('JAVASCRIPT', 'node', source)
+
+  if status <> 0 then
+    exit status
+
+return status
+
+
+/*
+ * PowerShell callback.
+ */
+run_powershell: procedure = .int
+  arg source=.string[]
+
+  status = run_external('POWERSHELL', 'powershell.exe', source)
+
+  if status <> 0 then
+    exit status
+
+return status
+
+
+/*
+ * Generic external-language runner.
+ *
+ * This procedure:
+ *
+ *   - selects a temporary source-file name;
+ *   - writes the collected source array;
+ *   - removes host indentation;
+ *   - starts the appropriate interpreter;
+ *   - captures standard output and error output;
+ *   - removes the temporary source file.
+ *
+ * The external interpreter receives ordinary native source code.
+ * It does not see RXPP directives, cREXX macros, or callback names.
+ */
+run_external: procedure = .int
+  arg label=.string, executable=.string, source=.string[]
+
+  i = .int
+
+
+  /*
+   * Select the temporary source-file extension for the language.
+   */
+  if label = 'REGINA' then
+    source_path = '.rxpp_regina_source.rex'
+  else if label = 'PYTHON' then
+    source_path = '.rxpp_python_source.py'
+  else if label = 'JAVASCRIPT' then
+    source_path = '.rxpp_javascript_source.js'
+  else
+    source_path = '.rxpp_powershell_source.ps1'
+
+
+  /*
+   * Remove the indentation introduced for readability in the host
+   * cREXX source.
+   *
+   * These examples contain only top-level statements in the external
+   * languages, so removing leading whitespace is safe here. A later
+   * version should remove only the common block indentation in order
+   * to preserve significant indentation inside Python blocks.
+   */
+  call erasefile source_path
+
+  do i = 1 to source[0]
+
+    if label = 'PYTHON' | ,
+       label = 'JAVASCRIPT' | ,
+       label = 'POWERSHELL' then do
+      source[i] = strip(source[i], 'L')
+    end
+
+    call lineout source_path, source[i]
+  end
+
+  call lineout source_path
+
+
+  /*
+   * Construct the command line for the selected interpreter.
+   */
+  argv = .string[]
+  argv[1] = executable
+
+  if label = 'POWERSHELL' then do
+    argv[2] = '-NoProfile'
+    argv[3] = '-ExecutionPolicy'
+    argv[4] = 'Bypass'
+    argv[5] = '-File'
+    argv[6] = source_path
+  end
+  else do
+    argv[2] = source_path
+  end
+
+
+  /*
+   * Execute the external program and capture both output streams.
+   */
+  captured = .string[]
+  errors = .string[]
+
+  say 'EXECUTE' label ':' executable source_path
+
+  address crexx 'run :argv[]' output captured error errors
+
+  status = rc
+
+
+  /*
+   * Display normal output and diagnostic messages.
+   */
+  do i = 1 to captured[0]
+    say '  ' || captured[i]
+  end
+
+  do i = 1 to errors[0]
+    say '  ERROR: ' || errors[i]
+  end
+
+
+  /*
+   * Report failures while preserving the external return code.
+   */
+  if status <> 0 then
+    say label 'failed with return code' status
+
+
+  /*
+   * Remove the temporary source file after execution.
+   */
+  address crexx 'rm :source_path'
+
+return status
