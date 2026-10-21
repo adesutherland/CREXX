@@ -200,6 +200,13 @@ The Level B helpers in `common/` are separately installed libraries:
 admission stays in the research compiler. `tests/services.crexx` is their
 independent consumer, including failed-output preservation.
 
+The locally qualified [selected-callable classification contract](doc/user-guide.md#selected-callable-classification)
+owns **LMC-AC01–06** and **LMC-STEP01–03**. It adds pool-local procedure/method/
+factory facts and an opt-in bounded owning catalogue with monotonic usage
+queries. Existing metadata APIs remain compatible; language ABI policy stays
+with the consumer. The independent `tests/metadata-classify` consumer and its
+RXAS producers cover ownership, selected errors, lifetime and aggregate limits.
+
 Run a clean B-only bootstrap with an existing native seed:
 
 ```sh

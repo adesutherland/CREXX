@@ -20,18 +20,103 @@ catalog: class
   _budget = .int
   _image = .binary
   _ready = .int
+  _bounded = .int
+  _bytecap = .int
+  _workcap = .int
+  _consumed = .int
+  _work = .int
+  _indexed = .int
+  _indexkeys = .string[]
+  _indexrows = .int[]
+  _indexsizes = .int[]
+  _order = .int[]
+  _scratch = .int[]
+  _cacheat = .int[]
+  _cache = .object[]
+  _cachesizes = .int[]
+  _cacherows = .int[]
+  _cachepools = .int[]
+  _peekerror = .string
+  _selectionerror = .string
+  _candidate = .int
   *: factory
     arg image = .binary, budget = 16777216
     _error = ''; _constantcount = 0; _pools = 0; _budget = budget
+    _image = image; _ready = 0; _bounded = 0
+    return
+  /** Own a checked input snapshot under monotonic logical allowances.
+   * @param image live synchronous input borrow, not retained
+   * @param bytes nonnegative logical payload allowance
+   * @param work nonnegative byte/structural work allowance
+   * @return owning catalogue; error() reports refusal without a partial index
+   */
+  bounded: factory
+    arg image_ref = reference .binary, bytes = .int, work = .int
+    _error = ''; _constantcount = 0; _pools = 0; _budget = bytes
+    _bounded = 1; _bytecap = bytes; _workcap = work; _ready = 1
+    if bytes < 0 then do; _error = 'LL_RESOURCE_LIMIT: metadata.bytes invalid budget'; return; end
+    if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: metadata.work invalid budget'; return; end
+    if <refvalid>(image_ref) = 0 then do; _error = 'LL_RXBIN_IMPORT: image owner is not live'; return; end
+    image = dereference image_ref
+    /* A factory has no live method receiver until construction completes. */
+    extent = <blen>(image)
+    if extent > bytes then do; _error = 'LL_RESOURCE_LIMIT: metadata.bytes budget ' || bytes; return; end
+    _consumed = extent
+    if extent > work then do; _error = 'LL_RESOURCE_LIMIT: metadata.work budget ' || work; return; end
+    _work = extent
     _image = image; _ready = 0
+    return
+  /** Reserved logical payload, excluding fixed control state and VM temporaries. */
+  consumed: method = .int
+    if _bounded then return _consumed
+    return 0
+  /** Reserved logical work. Neither usage query triggers preparation. */
+  work: method = .int
+    if _bounded then return _work
+    return 0
+  reservebytes: method = .int
+    arg amount = .int
+    if _bounded = 0 then return 1
+    if _error <> '' then return 0
+    if amount < 0 | amount > _bytecap - _consumed then do
+      _error = 'LL_RESOURCE_LIMIT: metadata.bytes budget ' || _bytecap; return 0
+    end
+    _consumed = _consumed + amount
+    return 1
+  reservework: method = .int
+    arg amount = .int
+    if _bounded = 0 then return 1
+    if _error <> '' then return 0
+    if amount < 0 | amount > _workcap - _work then do
+      _error = 'LL_RESOURCE_LIMIT: metadata.work budget ' || _workcap; return 0
+    end
+    _work = _work + amount
+    return 1
+  /** Reserve a repeated range without overflowing its product. */
+  workranges: method = .int
+    arg amount = .int, count = .int
+    if _bounded = 0 then return 1
+    if _error <> '' then return 0
+    if amount < 0 | count < 0 then return reservework(-1)
+    if amount = 0 | count = 0 then return 1
+    if count > (_workcap - _work) <idiv> amount then return reservework(-1)
+    return reservework(amount * count)
+  invalidate: method = .void
+    _indexed = 0
+    emptyints = .int[]
+    call arraydrop _indexkeys
+    _indexrows = emptyints; _indexsizes = emptyints
+    _order = emptyints; _scratch = emptyints; _cacheat = emptyints
+    call objectarraydrop _cache
+    _cachesizes = emptyints; _cacherows = emptyints; _cachepools = emptyints
     return
   run: method = .void
     if _ready then return
     _ready = 1
     do
-      call read_image(_image)
+      call readref(reference _image)
     on signal
-      _error = 'LL_RXBIN_IMPORT: malformed RXBIN metadata envelope'
+      if _bounded = 0 | _error = '' then _error = 'LL_RXBIN_IMPORT: malformed RXBIN metadata envelope'
     end
     return
   fail: method = .void
@@ -43,7 +128,14 @@ catalog: class
     return _error
   read_image: method = .void
     arg image = .binary
+    call invalidate()
+    call readref(reference image)
+    return
+  readref: method = .void
+    arg image_ref = reference .binary
+    image = dereference image_ref
     size = <blen>(image)
+    if reservework(304) = 0 then return
     if size < 304 | size > _budget | binsubstr(image,1,8) <> 'cReXx007' as .binary then do
       call fail('expected bounded RXBIN007 image'); return
     end
@@ -55,12 +147,14 @@ catalog: class
     end
     previous = 304; expandedtotal = 0
     do section = 1 to 6
+      if reservework(1) = 0 then return
       row = 64 + (section - 1) * 40
       flags = <at..u32>(row + 4) image
       offset = <at..i64>(row + 16) image; stored = <at..i64>(row + 24) image; expanded = <at..i64>(row + 32) image
       if <at..u32>(row) image <> section | flags > 1 | <at..u32>(row + 8) image <> 8 | <at..u32>(row + 12) image <> 0 | offset < previous | offset <mod> 8 <> 0 | stored < 0 | offset > size | stored > size - offset | expanded < 0 | expanded > _budget - expandedtotal then do
         call fail('invalid section range or expansion budget'); return
       end
+      if workranges(offset - previous,3) = 0 then return
       if bin2x(binsubstr(image,previous + 1,offset - previous)) <> copies('00',offset - previous) then do
         call fail('nonzero section padding'); return
       end
@@ -69,9 +163,12 @@ catalog: class
         call fail('uncompressed section length mismatch'); return
       end
       if section = 3 | section = 4 then do
+        if reservebytes(expanded) = 0 then return
+        if reservework(stored) = 0 then return
         bytes = binsubstr(image,offset + 1,stored)
-        if flags = 1 then bytes = expand(bytes,expanded)
+        if flags = 1 then bytes = expandref(reference bytes,expanded)
         if _error <> '' then return
+        if reservework(expanded) = 0 then return
         if section = 3 then _constants = bytes
         else _metadata = bytes
       end
@@ -79,12 +176,13 @@ catalog: class
     if previous <> size then do
       call fail('trailing envelope bytes'); return
     end
-    call records(_constants,0)
+    call recordref(reference _constants,0)
     _constantcount = _keys[0]
-    call records(_metadata,1)
+    call recordref(reference _metadata,1)
     if _error <> '' then return
     /* IDs shared by constants and metadata must remain unique within a pool. */
     do i = _constantcount + 1 to _keys[0]
+      if reservework(1) = 0 then return
       if search(_keys[i],1,_constantcount) > 0 then do
         call fail('duplicate pool ID across record sections'); return
       end
@@ -92,10 +190,18 @@ catalog: class
     return
   expand: method = .binary
     arg input = .binary, size = .int
+    if reservebytes(max(0,size)) = 0 then return ''x
+    return expandref(reference input,size)
+  expandref: method = .binary
+    arg input_ref = reference .binary, size = .int
+    input = dereference input_ref
     result = .binary; extent = <blen>(input)
     if size < 1 | size > _budget | extent >= size | size > extent * 18 then do
       call fail('invalid compressed section size'); return result
     end
+    /* Every encoded byte/control visit and output write is reserved once. */
+    if workranges(extent,2) = 0 then return result
+    if reservework(size) = 0 then return result
     call binresize result,size
     at = 0; written = 0
     do while written < size & _error = ''
@@ -132,6 +238,12 @@ catalog: class
     return result
   records: method = .void
     arg data = .binary, metadata = .int
+    call invalidate()
+    call recordref(reference data,metadata)
+    return
+  recordref: method = .void
+    arg data_ref = reference .binary, metadata = .int
+    data = dereference data_ref
     if _error <> '' then return
     extent = <blen>(data)
     magic = 'RXC7'
@@ -147,6 +259,11 @@ catalog: class
       call fail('pool count mismatch'); return
     end
     _pools = pools; at = 16; previous = -1
+    if _bounded then do
+      if count > (_bytecap - _consumed) <idiv> 40 then do; call reservebytes(-1); return; end
+      if reservebytes(count * 40) = 0 then return
+    end
+    if workranges(count,56) = 0 then return
     do i = 1 to count
       if at > extent - 24 then do
         call fail('truncated record'); return
@@ -168,6 +285,13 @@ catalog: class
     return
   search: method = .int
     arg key = .int, first = .int, last = .int
+    if _bounded then do
+      count = max(0,last - first + 1); steps = 0
+      do while count > 0
+        steps = steps + 1; count = count <idiv> 2
+      end
+      if reservework(steps) = 0 then return 0
+    end
     do while first <= last
       mid = first + (last - first) <idiv> 2
       if _keys[mid] = key then return mid
@@ -177,30 +301,99 @@ catalog: class
     return 0
   text: method = .string
     arg pool = .int, id = .int
+    result = peek(pool,id)
+    if _peekerror <> '' then call fail(_peekerror)
+    if reservebytes(<blen>(result as .binary)) = 0 then return ''
+    if reservework(<blen>(result as .binary)) = 0 then return ''
+    return result
+  /** Nonpoisoning string projection for deferred selected-record errors. */
+  peek: method = .string
+    arg pool = .int, id = .int
+    _peekerror = ''
+    if reservework(1) = 0 then return ''
     if pool < 0 | pool >= _pools | id < 0 | id > 1000000 then do
-      call fail('metadata reference is outside its pool'); return ''
+      _peekerror = 'metadata reference is outside its pool'; return ''
     end
     found = search(pool * 1000001 + id,1,_constantcount)
     if found = 0 then do
-      call fail('missing string reference'); return ''
+      _peekerror = 'missing string reference'; return ''
     end
     start = _start[found]; size = _length[found]
     if _kind[found] <> 0 | size < 16 then do
-      call fail('reference does not name a string'); return ''
+      _peekerror = 'reference does not name a string'; return ''
     end
     length = <at..i64>(start) _constants
     if length < 0 | length <> size - 16 then do
-      call fail('invalid string payload length'); return ''
+      _peekerror = 'invalid string payload length'; return ''
     end
+    if workranges(length,3) = 0 then return ''
     result = binsubstr(_constants,start + 17,length) as .string
-    if pos('00'x as .string,result) > 0 then call fail('NUL in metadata text')
+    if pos('00'x as .string,result) > 0 then _peekerror = 'NUL in metadata text'
     return result
+  selectedtext: method = .string
+    arg pool = .int, id = .int, local = .int
+    result = .string
+    if local then do
+      result = peek(pool,id); _selectionerror = _peekerror
+    end
+    else do
+      result = peek(pool,id)
+      if _peekerror <> '' then call fail(_peekerror)
+      _selectionerror = _error
+    end
+    return result
+  /** Shared real-definition check; callers own name matching and ambiguity. */
+  selectrow: method = .llbinmeta..callable
+    arg row = .int, symbol = .string, local = 0
+    _candidate = -1; at = _start[row]; pool = _pool[row]
+    if reservework(48) = 0 then return .callable.failed(_error)
+    procedureid = <at..u32>(at + 28) _metadata
+    if procedureid > 1000000 then return .callable.failed('callable procedure reference is outside its pool: ' || symbol)
+    procindex = search(pool * 1000001 + procedureid,1,_constantcount)
+    if procindex = 0 then return .callable.failed('callable procedure is missing: ' || symbol)
+    if _kind[procindex] <> 4 | _length[procindex] < 24 then return .callable.failed('invalid callable procedure: ' || symbol)
+    procstart = _start[procindex]
+    if <at..u32>(procstart + 20) _constants <> _length[procindex] - 24 then return .callable.failed('invalid procedure payload length: ' || symbol)
+    exposeid = <at..u32>(procstart + 16) _constants
+    if exposeid = 4294967295 then do; _candidate = 0; return .callable.failed(''); end
+    if exposeid > 1000000 then return .callable.failed('callable export reference is outside its pool: ' || symbol)
+    exportindex = search(pool * 1000001 + exposeid,1,_constantcount)
+    if exportindex = 0 then return .callable.failed('callable export is missing: ' || symbol)
+    if _kind[exportindex] <> 6 | _length[exportindex] < 16 then return .callable.failed('invalid callable export: ' || symbol)
+    expstart = _start[exportindex]; extent = <at..u32>(expstart + 12) _constants
+    imported = <at..u32>(expstart + 8) _constants
+    if extent <> _length[exportindex] - 16 | imported > 1 then return .callable.failed('invalid callable export payload: ' || symbol)
+    if <at..u32>(expstart + 4) _constants <> procedureid then return .callable.failed('callable export targets another procedure: ' || symbol)
+    if workranges(extent,2) = 0 then return .callable.failed(_error)
+    exportname = binsubstr(_constants,expstart + 17,extent) as .string
+    if local then do
+      if validname(exportname) = 0 then return .callable.failed('invalid callable export identity: ' || symbol)
+      if fold(exportname) \== fold(symbol) then return .callable.failed('callable export identity mismatch: ' || symbol)
+    end
+    else if upper(exportname) <> upper(symbol) then return .callable.failed('callable export identity mismatch: ' || symbol)
+    if imported then do; _candidate = 0; return .callable.failed(''); end
+    flags_text = selectedtext(pool,<at..u32>(at + 20) _metadata,local)
+    if _selectionerror <> '' then return .callable.failed(_selectionerror)
+    type = selectedtext(pool,<at..u32>(at + 24) _metadata,local)
+    if _selectionerror <> '' then return .callable.failed(_selectionerror)
+    arguments = selectedtext(pool,<at..u32>(at + 32) _metadata,local)
+    if _selectionerror <> '' then return .callable.failed(_selectionerror)
+    if _error <> '' then return .callable.failed(_error)
+    _candidate = 1
+    return .callable(symbol,type,arguments,flags_text)
   /** Owned selected callable. Unused executable/inline records are opaque. */
   lookup: method = .llbinmeta..callable
+    arg name = .string
+    result = rawlookup(name)
+    return owneditem(reference result)
+  rawlookup: method = .llbinmeta..callable
     arg name = .string
     call run()
     result = .llbinmeta..callable.failed('imported callable not found: ' || name)
     if _error <> '' then return .llbinmeta..callable.failed(_error)
+    if _bounded then do
+      if workranges(_keys[0] - _constantcount,1 + <blen>(name as .binary)) = 0 then return .callable.failed(_error)
+    end
     matches = 0; named = 0
     do i = _constantcount + 1 to _keys[0]
       if _kind[i] <> 7 then iterate
@@ -210,41 +403,333 @@ catalog: class
       if _error <> '' then return .llbinmeta..callable.failed(_error)
       if upper(symbol) <> upper(name) then iterate
       named = 1
-      /* In a shared pool, a prototype can have the same symbol as a real
-       * definition. Eligibility belongs to this META_FUNC's own procedure
-       * and its reciprocal export, not another export with the same name. */
-      procedureid = <at..u32>(at + 28) _metadata
-      if procedureid > 1000000 then return .llbinmeta..callable.failed('callable procedure reference is outside its pool: ' || symbol)
-      procindex = search(_pool[i] * 1000001 + procedureid,1,_constantcount)
-      if procindex = 0 then return .llbinmeta..callable.failed('callable procedure is missing: ' || symbol)
-      if _kind[procindex] <> 4 | _length[procindex] < 24 then return .llbinmeta..callable.failed('invalid callable procedure: ' || symbol)
-      procstart = _start[procindex]
-      if <at..u32>(procstart + 20) _constants <> _length[procindex] - 24 then return .llbinmeta..callable.failed('invalid procedure payload length: ' || symbol)
-      exposeid = <at..u32>(procstart + 16) _constants
-      if exposeid = 4294967295 then iterate
-      if exposeid > 1000000 then return .llbinmeta..callable.failed('callable export reference is outside its pool: ' || symbol)
-      exportindex = search(_pool[i] * 1000001 + exposeid,1,_constantcount)
-      if exportindex = 0 then return .llbinmeta..callable.failed('callable export is missing: ' || symbol)
-      if _kind[exportindex] <> 6 | _length[exportindex] < 16 then return .llbinmeta..callable.failed('invalid callable export: ' || symbol)
-      expstart = _start[exportindex]; extent = <at..u32>(expstart + 12) _constants
-      imported = <at..u32>(expstart + 8) _constants
-      if extent <> _length[exportindex] - 16 | imported > 1 then return .llbinmeta..callable.failed('invalid callable export payload: ' || symbol)
-      if <at..u32>(expstart + 4) _constants <> procedureid then return .llbinmeta..callable.failed('callable export targets another procedure: ' || symbol)
-      exportname = binsubstr(_constants,expstart + 17,extent) as .string
-      if upper(exportname) <> upper(symbol) then return .llbinmeta..callable.failed('callable export identity mismatch: ' || symbol)
-      if imported then iterate
-      flags_text = text(_pool[i],<at..u32>(at + 20) _metadata)
-      type = text(_pool[i],<at..u32>(at + 24) _metadata)
-      arguments = text(_pool[i],<at..u32>(at + 32) _metadata)
-      if _error <> '' then return .llbinmeta..callable.failed(_error)
+      selected = selectrow(i,symbol)
+      if _candidate < 0 then return selected
+      if _candidate = 0 then iterate
       matches = matches + 1
       if matches > 1 then return .llbinmeta..callable.failed('ambiguous callable: ' || name)
-      result = .llbinmeta..callable(symbol,type,arguments,flags_text)
+      result = selected
     end
     if matches = 0 & named then return .llbinmeta..callable.failed('callable is not exported: ' || name)
     return result
+  /** Existing metadata identifier bytes; no language-specific name folding. */
+  validname: method = .int
+    arg name = .string
+    bytes = name as .binary; extent = <blen>(bytes)
+    if reservework(extent) = 0 then return 0
+    if extent = 0 then return 0
+    first = <at..u8>(0) bytes
+    if first >= 48 & first <= 57 then return 0
+    do at = 0 to extent - 1
+      ch = <at..u8>(at) bytes
+      if ch >= 128 | (ch >= 65 & ch <= 90) | (ch >= 97 & ch <= 122) | (ch >= 48 & ch <= 57) then iterate
+      if ch = 46 | ch = 95 | ch = 33 | ch = 63 | ch = 36 | ch = 64 | ch = 35 then iterate
+      return 0
+    end
+    return 1
+  fold: method = .string
+    arg name = .string
+    if reservework(<blen>(name as .binary)) = 0 then return ''
+    return upper(name)
+  /** Keys are retained once; sorting moves only integer locator identities. */
+  locator: method = .void
+    arg key = .string, row = .int
+    extent = <blen>(key as .binary)
+    if reservebytes(48) = 0 then return
+    if reservebytes(extent) = 0 then return
+    if reservework(6) = 0 then return
+    if reservework(extent) = 0 then return
+    n = _indexkeys[0] + 1
+    _indexkeys[n] = key; _indexrows[n] = row; _indexsizes[n] = extent
+    _order[n] = n; _scratch[n] = 0; _cacheat[n] = 0
+    return
+  keycompare: method = .int
+    arg left = .int, right = .int
+    if reservework(1) = 0 then return 0
+    if reservework(_indexsizes[left]) = 0 then return 0
+    if reservework(_indexsizes[right]) = 0 then return 0
+    return _indexkeys[left] <= _indexkeys[right]
+  sortindex: method = .void
+    count = _order[0]; width = 1
+    first = .int; middle = .int; last = .int; left = .int; right = .int; out = .int; pick = .int
+    do while width < count & _error = ''
+      if workranges(count,3) = 0 then return
+      first = 1
+      do while first <= count
+        middle = first + min(width,count - first + 1)
+        last = middle + min(width,count - middle + 1)
+        left = first; right = middle; out = first
+        do while left < middle & right < last
+          pick = keycompare(_order[left],_order[right])
+          if _error <> '' then return
+          if pick then do; _scratch[out] = _order[left]; left = left + 1; end
+          else do; _scratch[out] = _order[right]; right = right + 1; end
+          out = out + 1
+        end
+        do while left < middle
+          _scratch[out] = _order[left]; left = left + 1; out = out + 1
+        end
+        do while right < last
+          _scratch[out] = _order[right]; right = right + 1; out = out + 1
+        end
+        first = last
+      end
+      do out = 1 to count
+        _order[out] = _scratch[out]
+      end
+      if width > count <idiv> 2 then leave
+      width = width * 2
+    end
+    return
+  /** A partial ownership key is retained even when its other fields are bad. */
+  prepareindex: method = .void
+    if _indexed | _error <> '' then return
+    row = .int; at = .int; pool = .int
+    name = .string; owner = .string; member = .string; kind = .string; prefix = .string
+    do row = _constantcount + 1 to _keys[0] while _error = ''
+      if reservework(1) = 0 then return
+      if _kind[row] <> 7 & _kind[row] <> 11 & _kind[row] <> 13 & _kind[row] <> 15 then iterate
+      if _length[row] < 20 then iterate
+      at = _start[row]; pool = _pool[row]
+      name = peek(pool,<at..u32>(at + 16) _metadata)
+      if _peekerror <> '' then iterate
+      if validname(name) = 0 then iterate
+      name = fold(name)
+      if _kind[row] = 7 then do; call locator('F:' || name,row); iterate; end
+      prefix = pool || ':'
+      if _kind[row] = 11 | _kind[row] = 13 then do; call locator('H:' || prefix || name,row); iterate; end
+      owner = name
+      if _length[row] < 28 then do; call locator('B:' || prefix || owner,row); iterate; end
+      member = peek(pool,<at..u32>(at + 24) _metadata)
+      if _peekerror <> '' then do; call locator('B:' || prefix || owner,row); iterate; end
+      if member \== '*' then do
+        if validname(member) = 0 then do; call locator('B:' || prefix || owner,row); iterate; end
+      end
+      member = fold(member)
+      kind = peek(pool,<at..u32>(at + 20) _metadata)
+      if _peekerror <> '' then kind = ''
+      if kind == 'method' | kind == 'method final' then call locator('M:' || prefix || owner || '.' || member,row)
+      else if kind == 'factory' then do
+        if member == '*' then call locator('M:' || prefix || owner || '.§FACTORY',row)
+        else call locator('M:' || prefix || owner || '.§FACTORY.' || member,row)
+      end
+      else do
+        call locator('M:' || prefix || owner || '.' || member,row)
+        if member == '*' then call locator('M:' || prefix || owner || '.§FACTORY',row)
+        else call locator('M:' || prefix || owner || '.§FACTORY.' || member,row)
+      end
+    end
+    if _error <> '' then return
+    call sortindex()
+    if _error = '' then _indexed = 1
+    return
+  findkey: method = .int
+    arg key = .string
+    first = 1; last = _order[0]; answer = 0; extent = <blen>(key as .binary)
+    do while first <= last
+      mid = first + (last - first) <idiv> 2; keyid = _order[mid]
+      if reservework(1) = 0 then return 0
+      if reservework(extent) = 0 then return 0
+      if reservework(_indexsizes[keyid]) = 0 then return 0
+      if _indexkeys[keyid] >= key then do; answer = mid; last = mid - 1; end
+      else first = mid + 1
+    end
+    if samekey(answer,key) then return answer
+    return 0
+  samekey: method = .int
+    arg position = .int, key = .string
+    if position < 1 | position > _order[0] then return 0
+    keyid = _order[position]
+    if reservework(1) = 0 then return 0
+    if reservework(_indexsizes[keyid]) = 0 then return 0
+    if reservework(<blen>(key as .binary)) = 0 then return 0
+    return _indexkeys[keyid] == key
+  headererror: method = .string
+    arg row = .int
+    if _length[row] <> 28 then return 'invalid owning header size'
+    at = _start[row]; pool = _pool[row]
+    do ordinal = 0 to 2
+      value = peek(pool,<at..u32>(at + 16 + ordinal * 4) _metadata)
+      if _peekerror <> '' then return _peekerror
+    end
+    return ''
+  membererror: method = .string
+    arg row = .int, expectedowner = .string, expectedmember = .string, factory_kind = .int, is_interface = .int
+    if _length[row] <> 36 then return 'invalid owning member size'
+    at = _start[row]; pool = _pool[row]
+    owner = peek(pool,<at..u32>(at + 16) _metadata)
+    if _peekerror <> '' then return _peekerror
+    if fold(owner) \== expectedowner then return 'conflicting member owner'
+    kind = peek(pool,<at..u32>(at + 20) _metadata)
+    if _peekerror <> '' then return _peekerror
+    if factory_kind then do
+      if kind \== 'factory' then return 'invalid factory member kind'
+    end
+    else if is_interface then do
+      if kind \== 'method final' then return 'interface implementation is not a final method'
+    end
+    else if kind \== 'method' & kind \== 'method final' then return 'invalid method member kind'
+    member = peek(pool,<at..u32>(at + 24) _metadata)
+    if _peekerror <> '' then return _peekerror
+    if fold(member) \== expectedmember then return 'conflicting member identity'
+    do ordinal = 3 to 4
+      value = peek(pool,<at..u32>(at + 16 + ordinal * 4) _metadata)
+      if _peekerror <> '' then return _peekerror
+    end
+    return ''
+  /** Associate only selected-pool ownership, never namespace dot counts. */
+  ownership: method = .llbinmeta..callable
+    arg row = .int, raw_ref = reference .llbinmeta..callable, canonical = .string
+    raw = dereference raw_ref
+    pool = _pool[row]; prefix = pool || ':'; names = canonical as .binary
+    ownerrow = 0; owner = .string; ownerkey = .string; expectedmember = .string
+    at = .int; position = .int; headers = 0; members = 0; factory_kind = 0
+    key = .string; reason = .string; suffix = .string; marker = '.§FACTORY' as .binary
+    if reservework(<blen>(names)) = 0 then return .callable.failed(_error)
+    do at = 1 to <blen>(names) - 1
+      if <at..u8>(at) names <> 46 then iterate
+      if <blen>(marker) <= <blen>(names) - at then do
+        if workranges(<blen>(marker),8) = 0 then return .callable.failed(_error)
+        if bin2x(binsubstr(names,at + 1,<blen>(marker))) == bin2x(marker) then do
+          if at + <blen>(marker) = <blen>(names) then factory_kind = 1
+          else if <at..u8>(at + <blen>(marker)) names = 46 then factory_kind = 1
+        end
+      end
+      if reservework(at) = 0 then return .callable.failed(_error)
+      suffix = binsubstr(names,1,at) as .string
+      if findkey('B:' || prefix || suffix) > 0 then return .callable.failed('malformed selected ownership: ' || raw.name())
+      key = 'H:' || prefix || suffix; position = findkey(key)
+      do while samekey(position,key)
+        headers = headers + 1; ownerrow = _indexrows[_order[position]]; ownerkey = suffix
+        if headers > 1 then return .callable.failed('ambiguous callable owner: ' || raw.name())
+        position = position + 1
+      end
+      if _error <> '' then return .callable.failed(_error)
+    end
+    key = 'M:' || prefix || canonical; position = findkey(key)
+    if headers = 0 then do
+      if factory_kind then return .callable.failed('factory owner is missing: ' || raw.name())
+      if position > 0 then return .callable.failed('member owner is missing: ' || raw.name())
+      return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'procedure','')
+    end
+    reason = headererror(ownerrow)
+    if reason <> '' then return .callable.failed(reason || ': ' || raw.name())
+    owner = peek(pool,<at..u32>(_start[ownerrow] + 16) _metadata)
+    if _peekerror <> '' then return .callable.failed(_peekerror)
+    expectedmember = substr(canonical,length(ownerkey) + 2)
+    if factory_kind then do
+      if left(expectedmember,length('§FACTORY')) \== '§FACTORY' then return .callable.failed('conflicting factory owner: ' || raw.name())
+      suffix = substr(expectedmember,length('§FACTORY') + 1)
+      if suffix = '' then expectedmember = '*'
+      else do
+        if left(suffix,1) \== '.' | length(suffix) < 2 then return .callable.failed('invalid factory identity: ' || raw.name())
+        expectedmember = substr(suffix,2)
+      end
+    end
+    if expectedmember == '' then return .callable.failed('empty member identity: ' || raw.name())
+    do while samekey(position,key)
+      members = members + 1
+      if members > 1 then return .callable.failed('ambiguous callable member: ' || raw.name())
+      reason = membererror(_indexrows[_order[position]],ownerkey,expectedmember,factory_kind,_kind[ownerrow] = 13)
+      if reason <> '' then return .callable.failed(reason || ': ' || raw.name())
+      position = position + 1
+    end
+    if _error <> '' then return .callable.failed(_error)
+    if _kind[ownerrow] = 13 & members <> 1 then return .callable.failed('interface implementation member is missing: ' || raw.name())
+    if factory_kind then return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'factory',owner)
+    return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'method',owner)
+  /** Reserve one owned projection. Fixed resource diagnostics remain available. */
+  reserveitem: method = .int
+    arg item_ref = reference .llbinmeta..callable
+    if _bounded = 0 then return 0
+    item = dereference item_ref
+    amount = 56; text = .string
+    if reservebytes(amount) = 0 then return -1
+    do ordinal = 1 to 7
+      select ordinal
+        when 1 then text = item.name()
+        when 2 then text = item.result()
+        when 3 then text = item.arguments()
+        when 4 then text = item.flags()
+        when 5 then text = item.error()
+        when 6 then text = item.kind()
+        otherwise text = item.owner()
+      end
+      extent = <blen>(text as .binary)
+      if reservebytes(extent) = 0 then return -1
+      if reservework(extent) = 0 then return -1
+      amount = amount + extent
+    end
+    return amount
+  owneditem: method = .llbinmeta..callable
+    arg item_ref = reference .llbinmeta..callable
+    item = dereference item_ref
+    if _error <> '' then return .callable.failed(_error)
+    if reserveitem(item_ref) < 0 then return .callable.failed(_error)
+    return item
+  /** Strict selected callable facts, with a cache tied to the real row/pool.
+   * @param name complete decoded metadata identity
+   * @return owned raw fields and procedure/method/factory ownership, or failure
+   */
+  classify: method = .llbinmeta..callable
+    arg name = .string
+    call run()
+    if _error <> '' then return .callable.failed(_error)
+    result = .llbinmeta..callable; cached = .int
+    if validname(name) = 0 then do
+      result = .callable.failed('invalid callable identity'); return owneditem(reference result)
+    end
+    canonical = fold(name); call prepareindex()
+    if _error <> '' then return .callable.failed(_error)
+    key = 'F:' || canonical; first = findkey(key); position = first; matches = 0; selectedrow = 0
+    if first > 0 then do
+      cached = _cacheat[first]
+      if cached > 0 then do
+        if reservework(1) = 0 then return .callable.failed(_error)
+        if _pool[_cacherows[cached]] <> _cachepools[cached] then return .callable.failed('cached callable pool mismatch')
+        if reservebytes(_cachesizes[cached]) = 0 then return .callable.failed(_error)
+        if reservework(_cachesizes[cached]) = 0 then return .callable.failed(_error)
+        return _cache[cached] as .llbinmeta..callable
+      end
+    end
+    raw = .llbinmeta..callable; candidate = .llbinmeta..callable
+    row = .int; at = .int; symbol = .string
+    do while samekey(position,key)
+      row = _indexrows[_order[position]]; at = _start[row]
+      if _length[row] <> 36 then do
+        result = .callable.failed('invalid callable record size'); return owneditem(reference result)
+      end
+      symbol = peek(_pool[row],<at..u32>(at + 16) _metadata)
+      if _peekerror <> '' then do; result = .callable.failed(_peekerror); return owneditem(reference result); end
+      candidate = selectrow(row,symbol,1)
+      if _candidate < 0 then return owneditem(reference candidate)
+      if _candidate = 1 then do
+        matches = matches + 1; selectedrow = row; raw = candidate
+        if matches > 1 then do
+          result = .callable.failed('ambiguous callable: ' || name); return owneditem(reference result)
+        end
+      end
+      position = position + 1
+    end
+    if _error <> '' then return .callable.failed(_error)
+    if matches = 0 then do
+      result = .callable.failed('imported callable not found: ' || name); return owneditem(reference result)
+    end
+    result = ownership(selectedrow,reference raw,canonical)
+    if _error <> '' then return .callable.failed(_error)
+    size = reserveitem(reference result)
+    if size < 0 then return .callable.failed(_error)
+    if reservebytes(32) = 0 then return .callable.failed(_error)
+    if reservework(5) = 0 then return .callable.failed(_error)
+    cached = _cache[0] + 1
+    _cache[cached] = result as .object; _cachesizes[cached] = size
+    _cacherows[cached] = selectedrow; _cachepools[cached] = _pool[selectedrow]; _cacheat[first] = cached
+    return owneditem(reference result)
   exported: method = .int
     arg symbol = .string, pool = .int
+    if _bounded then do
+      if workranges(_constantcount,1 + <blen>(symbol as .binary)) = 0 then return 0
+    end
     if pool < 0 | pool >= _pools then do; call fail('export pool is outside the image'); return 0; end
     do i = 1 to _constantcount
       if _kind[i] <> 6 | _pool[i] <> pool then iterate
@@ -256,6 +741,7 @@ catalog: class
       if length <> _length[i] - 16 | <at..u32>(at + 8) _constants > 1 then do
         call fail('invalid export record'); return 0
       end
+      if workranges(length,2) = 0 then return 0
       name = binsubstr(_constants,at + 17,length) as .string
       if upper(name) <> upper(symbol) then iterate
       if <at..u32>(at + 8) _constants then return 0
@@ -276,6 +762,11 @@ catalog: class
     arg kind = .int, owner = .string, member = '', ordinal = 1
     call run()
     if _error <> '' then return ''
+    if _bounded then do
+      if reservework(_keys[0] - _constantcount) = 0 then return ''
+      if workranges(_keys[0] - _constantcount,<blen>(owner as .binary)) = 0 then return ''
+      if workranges(_keys[0] - _constantcount,<blen>(member as .binary)) = 0 then return ''
+    end
     fields = 0; size = 0
     if kind = 11 | kind = 13 then do; fields = 3; size = 28; end
     if kind = 12 then do; fields = 4; size = 36; end
@@ -298,7 +789,10 @@ catalog: class
         if index < -1 | index > 2147483647 then do
           call fail('attribute register index outside -1..INT_MAX'); return ''
         end
-        return index as .string
+        result = index as .string
+        if reservebytes(<blen>(result as .binary)) = 0 then return ''
+        if reservework(<blen>(result as .binary)) = 0 then return ''
+        return result
       end
       return text(_pool[i],<at..u32>(at + 12 + ordinal * 4) _metadata)
     end
@@ -311,9 +805,25 @@ callable: class
   _arguments = .string
   _flags = .string
   _error = .string
+  _kind = .string
+  _owner = .string
   *: factory
     arg name = .string, result = .string, arguments = .string, flags = .string
     _name = name; _result = result; _arguments = arguments; _flags = flags; _error = ''
+    _kind = ''; _owner = ''
+    return
+  /** Construct owned classification fields; this is not an admission proof.
+   * @param name selected raw identity
+   * @param result raw result type
+   * @param arguments raw ordered arguments
+   * @param flags raw provider flags
+   * @param kind procedure, method or factory
+   * @param owner qualified owner, empty for a procedure
+   */
+  classified: factory
+    arg name = .string, result = .string, arguments = .string, flags = .string, kind = .string, owner = .string
+    _name = name; _result = result; _arguments = arguments; _flags = flags
+    _error = ''; _kind = kind; _owner = owner
     return
   failed: factory
     arg reason = .string
@@ -329,3 +839,7 @@ callable: class
     return _arguments
   flags: method = .string
     return _flags
+  kind: method = .string
+    return _kind
+  owner: method = .string
+    return _owner

@@ -4005,6 +4005,117 @@ views derive from the complete type; no separate view field is inferred.
 The independent [metadata attribute fixture](../tests/metadata-attributes.crexx)
 covers these contracts in complementary owning build/VM modes (**CMETA-AC03**).
 
+### Selected callable classification
+
+The locally qualified `llbinmeta` classification increment lets independent
+consumers distinguish an exported procedure from a callable with a hidden
+class/interface owner, using existing RXBIN007 facts. It does not parse source,
+execute provider code or decide a consumer language's allowed ABI.
+
+`catalog.classify(name:.string)->.llbinmeta..callable` selects one real definition
+through the same pool-local procedure and reciprocal public-export checks as
+`lookup`. Imported prototypes are not definitions. New classification matches
+the whole name strictly under the existing metadata identity casing; it does
+not trim or pad names. Identifier bytes follow
+[metadata conformance](../../compiler/docs/metadata_conformance.md#record-envelope-and-responsibilities),
+including non-ASCII bytes and qualified names. Consumer language casing remains
+the consumer's responsibility.
+
+The owned result adds `kind()->.string` and `owner()->.string`: `procedure` has
+an empty owner; `method` and `factory` name their qualified class/interface.
+An ordinary class method needs no `META_MEMBER`. A real interface default method
+needs the matching `method final` member. Exact `owner.§factory` and
+`owner.§factory.member` identify default and named factories; a factory marker
+without an owning header refuses. A similarly spelled `§factoryish` is not a
+marker. `META_IMPLEMENTS` does not own a callable. Conflicting or multiple
+matching owners refuse rather than choosing a prefix or record order.
+Header/member flag, type and argument fields are checked as valid string
+references without NUL; their language-specific grammar and ABI remain the
+consumer's responsibility. The callable signature comes from its selected
+`META_FUNC`, not a guessed string equivalence with a member declaration.
+The existing four-argument `callable` factory, `lookup` and `field` retain their
+contracts; their kind/owner values are empty. An additional
+`callable.classified(name,result,arguments,flags,kind,owner)` factory constructs
+owned fields, but arbitrary factory fields do not prove catalogue admission.
+
+Classification builds one immutable request-owned locator index. Every locator
+retains its pool and row identity. It associates headers and members only in the
+selected definition's pool, without inferring ownership from a dot count.
+A recoverable matching owner with malformed payload refuses the selected
+classification. A readable owner with unreadable member identity defers an
+owner-scoped error; readable owner/member with unreadable kind defers errors for
+both possible method/factory identities. Wholly unkeyable unrelated ownership
+records remain opaque. Selected errors return a failed callable without poisoning
+unrelated selections. Completed classification outcomes are cached by selected
+real row and pool: either success or a deterministic selected-data failure.
+Arbitrary missing names are not retained.
+The existing `read_image`/`records` helper wrappers invalidate this new index and
+cache before mutating storage; a subsequent rebuild is charged again. Normal
+lazy preparation uses the reference workers directly.
+
+`catalog.bounded(image:reference .binary, bytes:.int, work:.int)` supplies required
+nonnegative allowances. The synchronous input borrow is checked before the one
+owned image copy, and is not retained. Zero is valid and exhausts at the first
+required reservation. `consumed()->.int` and `work()->.int` query counters without
+preparing the catalogue. `consumed` counts reserved logical payload bytes:
+owned image/expanded sections, integer vectors at eight bytes per cell, locator
+and cache payloads, retained text and returned owned fields. It never refunds
+space after failure or release. It is not a resident-memory or VM temporary
+accounting promise. Fixed catalogue control state and its bounded fixed failure
+diagnostic are exempt, so an exhausted allowance can still report failure;
+input-derived text and owned metadata results are charged. The existing
+`catalog(image,budget=16777216)` remains an
+unmetered legacy route; both counters return zero there.
+
+One work unit is a byte scanned, copied, expanded or passed through text
+validation/casing, plus a structural header/record/candidate/link/cache visit or
+index/search comparison. Bulk operations reserve their whole byte extent before
+execution; this does not add a method call per byte. Compressed input and expanded
+output are both charged. Reserved work is not refunded after an early malformed
+input. Checked subtraction precedes every reservation. Preparation/indexing runs
+once; indexed selections and cached results still charge query and owned-copy
+work. No operation rearms the allowance.
+
+Exhaustion is sticky on that bounded catalogue and reports
+`LL_RESOURCE_LIMIT: metadata.bytes` or `metadata.work`; no partial index or
+selection is published. A dead input reference reports
+`LL_RXBIN_IMPORT: image owner is not live`. Envelope failures retain import
+diagnostics. Owned callable results survive source/catalogue expiry. A caller
+can group all selections for one artifact, debit the counters and owned snapshot
+copies from its aggregate allowance, release that catalogue, and pass the
+remaining allowances to the next; no shared mutable quota service is needed.
+
+**LMC-AC01–06 are locally qualified.** The independent
+[metadata classification fixture](../tests/metadata-classify.crexx) and its tiny
+RXAS producers own the behavioral, lifecycle and logical-budget checks;
+actual reader/sort/cache RXAS is part of code review. This establishes the stated
+metadata boundary, not arbitrary provider-code validity or a resident-memory cap.
+
+1. **LMC-AC01:** plain, class, exact factory and interface-default callables
+   classify from the selected real row and pool; prototype/duplicate/owner
+   conflicts refuse; legacy lookup/field/factory results remain unchanged.
+2. **LMC-AC02:** selected malformed/partial ownership refuses, unrelated opaque
+   rows do not poison it, and foreign-pool ownership is never joined. Tiny RXAS
+   producers and scalar record mutations exercise these boundaries.
+3. **LMC-AC03:** strict full names preserve supported identifier bytes and
+   metadata casing; no language-specific Unicode or resolution algorithm is added.
+4. **LMC-AC04:** returned fields own their lifetime, while preparation/indexing
+   and selected-row caching remain bounded and misses do not grow retained state.
+5. **LMC-AC05:** pre-copy input, preparation, index, selection and output-copy
+   reservations exhaust atomically; counters are monotonic/non-triggering;
+   sequential groups passed remaining budgets cannot exceed the aggregate.
+6. **LMC-AC06:** independent B consumers pass in complementary compiler/VM modes;
+   readable RXAS confirms scoped image aliases, no repeated image copies and
+   no new native/VM service or compiler-policy dependency.
+
+Implementation steps: **LMC-STEP01 — complete:** contract and independent
+criteria (AC01–06); **LMC-STEP02 — complete:** factored reader, bounded route,
+classifier and fixtures (AC01–05); **LMC-STEP03 — complete:** complementary
+consumer qualification, actual RXAS review and local dependency delivery
+(AC01–06).
+
+### Callable generation service
+
 ```rexx
 import llgenerate
 import llir

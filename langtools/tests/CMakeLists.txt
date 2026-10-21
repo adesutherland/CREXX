@@ -420,6 +420,52 @@ foreach(_attribute_mode opt noopt)
   crexx_register_test_prep_targets(TESTS levell_metadata_attributes_${_attribute_mode}
     TARGETS levell_metadata_attributes_${_attribute_mode} ${_attribute_vm})
 endforeach()
+foreach(_classify_part metadata-classify metadata-classify-import)
+  add_custom_command(OUTPUT "${_services}/${_classify_part}.rxbin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_services}"
+    COMMAND $<TARGET_FILE:rxas> -n -o "${_services}/${_classify_part}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_classify_part}.rxas"
+    DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/${_classify_part}.rxas" VERBATIM)
+endforeach()
+add_custom_command(OUTPUT "${_services}/metadata-classify-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/metadata-classify-linked"
+    "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-import.rxbin"
+  DEPENDS rxlink "${_services}/metadata-classify.rxbin"
+    "${_services}/metadata-classify-import.rxbin" VERBATIM)
+crexx_add_import_root(levell_metadata_classify_imports
+  DIRECTORY "${_services}/classify-imports" OUTPUT_VARIABLE _classify_imports
+  FILES ${_attribute_files} DEPENDS library llbinmeta)
+foreach(_classify_mode opt noopt)
+  set(_classify_flags)
+  if(_classify_mode STREQUAL "noopt")
+    set(_classify_flags -n)
+  endif()
+  set(_classify_output "${_services}/classify-${_classify_mode}")
+  add_custom_command(OUTPUT "${_classify_output}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_classify_flags} -x --no-exe-import
+      -i "${_services}/classify-imports" -o "${_classify_output}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-classify.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_classify_flags} "${_classify_output}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_classify_output}-linked"
+      "${_classify_output}" ${_attribute_files}
+    DEPENDS rxc rxas rxlink levell_metadata_classify_imports ${_classify_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-classify.crexx" VERBATIM)
+  add_custom_target(levell_metadata_classify_${_classify_mode}
+    DEPENDS "${_classify_output}-linked.rxbin"
+      "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-linked.rxbin")
+  set(_classify_vm rxbvm)
+  if(_classify_mode STREQUAL "noopt" AND TARGET rxtvm)
+    set(_classify_vm rxtvm)
+  endif()
+  add_test(NAME levell_metadata_classify_${_classify_mode}
+    COMMAND $<TARGET_FILE:${_classify_vm}> "${_classify_output}-linked.rxbin"
+      -a "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-linked.rxbin")
+  set_tests_properties(levell_metadata_classify_${_classify_mode} PROPERTIES
+    PASS_REGULAR_EXPRESSION "META_CLASSIFY[|]checks=[0-9]+[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 300 LABELS "level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_metadata_classify_${_classify_mode}
+    TARGETS levell_metadata_classify_${_classify_mode} ${_classify_vm})
+endforeach()
 set(_service_files "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin"
   "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")

@@ -1,0 +1,313 @@
+/* cREXX License (MIT). Independent ownership and logical-budget contracts.
+ * Arguments are the standalone RXBIN image and its linked two-pool RXBIN image.
+ * Metadata is inspected, never executed. Counters are reservations, not heap use. */
+options levelb
+import rxfnsb
+import llbinmeta
+
+main: procedure = .int expose failed checks
+  arg argv = .string[]
+  failed = 0; checks = 0
+  image = uncompressed(readbinary(argv[1]))
+  linked = uncompressed(readbinary(argv[2]))
+  call classifications(reference image,reference linked)
+  call cacheappend(reference image)
+  call malformed(reference image)
+  call budgets(reference image,reference linked)
+  call expired(reference image)
+  retained = owned(reference image)
+  retainedreader = owningreader(reference image)
+  image = ''x
+  call expect(reference retainedreader,'classify.deep.run','procedure','','.void','packet=.binary')
+  call check(retainedreader.error() == '','catalog owns its image after input owner expiry')
+  call check(retained.error() == '' & retained.kind() == 'factory' & retained.owner() == 'classify.box','classified result outlives source and reader')
+  call check(retained.name() == 'classify.box.§factory.from_text' & retained.result() == '.classify..box' & retained.arguments() == 'text=.string','owned result keeps all fields')
+  say 'META_CLASSIFY|checks=' || checks || '|failures=' || failed
+  return failed
+
+classifications: procedure = .void
+  arg image_ref = reference .binary, linked_ref = reference .binary
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,1000000)
+  beforebytes = reader.consumed(); beforework = reader.work()
+  call check(reader.consumed() = beforebytes & reader.work() = beforework,'counter reads do not trigger preparation')
+  call expect(reference reader,'classify.deep.run','procedure','','.void','packet=.binary')
+  firstbytes = reader.consumed(); firstwork = reader.work()
+  call expect(reference reader,'classify.é_#','procedure','','.void','')
+  call expect(reference reader,'classify.§factoryish','procedure','','.void','')
+  call expect(reference reader,'classify.box.run','method','classify.box','.void','')
+  call expect(reference reader,'classify.box.§factory','factory','classify.box','.classify..box','')
+  call expect(reference reader,'classify.box.§factory.from_text','factory','classify.box','.classify..box','text=.string')
+  call expect(reference reader,'classify.box.§factory.run','factory','classify.box','.classify..box','text=.string')
+  call expect(reference reader,'classify.face.ready','method','classify.face','.void','')
+  beforebytes = reader.consumed(); beforework = reader.work()
+  call expect(reference reader,'classify.deep.run','procedure','','.void','packet=.binary')
+  call check(reader.work() - beforework < firstwork & reader.consumed() - beforebytes < firstbytes,'repeat query does not prepare another index')
+  call expect(reference reader,'CLASSIFY.DEEP.RUN','procedure','','.void','packet=.binary')
+  item = reader.classify('classify.face.pending')
+  call check(item.error() <> '' & reader.error() == '','interface prototype is not a definition')
+  item = reader.classify('classify.ambiguous')
+  call check(pos('ambiguous',item.error()) > 0 & reader.error() == '','genuine definitions stay ambiguous')
+  item = reader.classify('classify.orphan.§factory')
+  call check(item.error() <> '' & reader.error() == '','exact orphan factory marker is not an ordinary procedure')
+  item = reader.classify('classify.box.nest.run')
+  call check(item.error() <> '' & reader.error() == '','nested matching owners do not choose a longest prefix')
+  item = reader.classify('classify.absent')
+  call check(item.error() <> '' & reader.error() == '','indexed miss is not a catalog failure')
+  beforework = reader.work()
+  item = reader.classify('classify.absent')
+  call check(item.error() <> '' & reader.work() > beforework & reader.work() - beforework < firstwork,'repeated miss has bounded query work')
+  item = reader.classify('classify.deep.run ')
+  call check(item.error() <> '' & reader.error() == '','trailing space is not identifier equality')
+  item = reader.classify(' classify.deep.run')
+  call check(item.error() <> '' & reader.error() == '','leading space is not identifier equality')
+  item = reader.classify('1classify.deep.run')
+  call check(item.error() <> '' & reader.error() == '','invalid first identifier byte refuses')
+  item = reader.classify('classify.deep.run' || ('00'x as .string))
+  call check(item.error() <> '' & reader.error() == '','NUL does not terminate a metadata query')
+  old = reader.lookup('classify.box.run')
+  call check(old.error() == '' & old.name() == 'classify.box.run' & old.flags() == 'b','old lookup still owns raw fields')
+  call check(old.kind() == '' & old.owner() == '','lookup does not acquire classification')
+  call check(reader.field(12,'classify.box.values','',4) == '7','old scalar field contract unchanged')
+  legacyimage = dereference image_ref
+  legacy = .llbinmeta..catalog(legacyimage)
+  old = legacy.lookup('classify.deep.run')
+  call check(old.error() == '' & legacy.consumed() = 0 & legacy.work() = 0,'legacy factory remains unmetered')
+  foreign = .llbinmeta..catalog.bounded(linked_ref,16777216,1000000)
+  call expect(reference foreign,'classify.deep.run','procedure','','.void','packet=.binary')
+  call check(foreign.error() == '','foreign class header and prototype do not claim the definition')
+  return
+
+cacheappend: procedure = .void
+  arg image_ref = reference .binary
+  image = dereference image_ref
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,1000000)
+  item = reader.classify('classify.deep.run')
+  call check(item.error() == '' & item.kind() == 'procedure','prepare cached classification before metadata append')
+  offset = <at..i64>(200) image; extent = <at..i64>(216) image
+  metadata = binsubstr(image,offset + 1,extent)
+  beforework = reader.work()
+  /* Exact valid rows duplicate the real definitions, not the envelope. */
+  call reader.records(metadata,1)
+  call check(reader.error() == '','legacy records accepts the existing metadata section')
+  item = reader.classify('classify.deep.run')
+  old = reader.lookup('classify.deep.run')
+  call check(pos('ambiguous',item.error()) > 0 & pos('ambiguous',old.error()) > 0 & reader.error() == '','metadata append invalidates selected-row cache')
+  call check(reader.work() > beforework,'metadata append and index rebuild remain charged')
+  return
+
+expect: procedure = .void
+  arg reader_ref = reference .llbinmeta..catalog, name = .string, kind = .string, owner = .string, result = .string, arguments = .string
+  reader = dereference reader_ref
+  item = reader.classify(name)
+  call check(item.error() == '' & item.kind() == kind & item.owner() == owner,'kind/owner ' || name || ': ' || item.error())
+  call check(item.result() == result & item.arguments() == arguments & item.flags() == 'b','raw signature ' || name)
+  return
+
+malformed: procedure = .void
+  arg image_ref = reference .binary
+  image = dereference image_ref
+  box = record(reference image,11,'classify.box')
+  other = record(reference image,11,'classify.other')
+  face = record(reference image,13,'classify.face')
+  ready = record(reference image,15,'classify.face','ready')
+  pending = record(reference image,15,'classify.face','pending')
+  named = record(reference image,15,'classify.box','from_text')
+  unrelated = record(reference image,15,'classify.other','unrelated')
+  function = record(reference image,7,'classify.box.run')
+  call check(box > 0 & other > 0 & face > 0 & ready > 0 & pending > 0 & named > 0 & unrelated > 0 & function > 0,'ownership mutation records located')
+  if box = 0 | other = 0 | face = 0 | ready = 0 | pending = 0 | named = 0 | unrelated = 0 | function = 0 then return
+  broken = .binary
+  /* 28 -> 32 keeps the record's padded envelope extent unchanged. */
+  broken = image; <at..i64>(box + 16) broken = 32
+  call refused(reference broken,'classify.box.run','selected malformed class size')
+  call ordinary(reference broken,'unrelated malformed class size stays opaque')
+  /* A known owner with an unreadable member must not fall back to ordinary. */
+  broken = image; <at..u32>(ready + 24 + 24) broken = 1000000
+  call refused(reference broken,'classify.face.ready','owner-scoped unreadable member')
+  call ordinary(reference broken,'other owner survives unreadable member')
+  /* Unknown kind can denote this exact method or this exact named factory. */
+  broken = image; <at..u32>(named + 24 + 20) broken = 1000000
+  call refused(reference broken,'classify.box.§factory.from_text','selected unreadable member kind')
+  reader = .llbinmeta..catalog.bounded(reference broken,16777216,1000000)
+  call expect(reference reader,'classify.box.run','method','classify.box','.void','')
+  /* A readable different owner isolates an otherwise malformed row. */
+  broken = image; <at..u32>(unrelated + 24 + 24) broken = 1000000
+  call ordinary(reference broken,'unrelated partial-key row stays opaque')
+  /* Fully unkeyable ownership metadata cannot identify a selected owner. */
+  broken = image
+  <at..u32>(unrelated + 24 + 16) broken = 1000000
+  <at..u32>(unrelated + 24 + 24) broken = 1000000
+  call ordinary(reference broken,'fully unkeyable unrelated row stays opaque')
+  /* This creates same-pool class/interface ownership for one exact owner. */
+  broken = image
+  <at..u32>(face + 24 + 16) broken = <at..u32>(box + 24 + 16) image
+  call refused(reference broken,'classify.box.run','conflicting selected class/interface owner')
+  call ordinary(reference broken,'ownership conflict does not poison another name')
+  broken = image
+  <at..u32>(other + 24 + 16) broken = <at..u32>(box + 24 + 16) image
+  call refused(reference broken,'classify.box.run','duplicate same-kind owner headers refuse')
+  /* An exported procedure cannot manufacture an interface default member. */
+  broken = image
+  <at..u32>(ready + 24 + 20) broken = <at..u32>(pending + 24 + 20) image
+  call refused(reference broken,'classify.face.ready','real interface method requires final member')
+  broken = image
+  <at..u32>(ready + 24 + 20) broken = <at..u32>(named + 24 + 20) image
+  call refused(reference broken,'classify.face.ready','wrong member kind cannot provide interface method')
+  /* 36 -> 40 also retains the record's padded envelope extent. */
+  broken = image; <at..i64>(function + 16) broken = 40
+  call refused(reference broken,'classify.box.run','selected malformed callable size')
+  broken = image; <at..u32>(function + 24 + 28) broken = 1000000
+  call refused(reference broken,'classify.box.run','selected malformed procedure reference')
+  return
+
+refused: procedure = .void
+  arg image_ref = reference .binary, name = .string, label = .string
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,1000000)
+  before = reader.work()
+  item = reader.classify(name)
+  call check(item.error() <> '' & reader.error() == '',label || ': ' || item.error())
+  call check(item.kind() == '' & item.owner() == '' & reader.work() > before,'failed selected projection remains atomic and charged')
+  /* A selected data error is not the sticky resource state. */
+  call ordinaryfrom(reference reader,'selected failure leaves unrelated query usable')
+  return
+
+ordinary: procedure = .void
+  arg image_ref = reference .binary, label = .string
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,1000000)
+  call ordinaryfrom(reference reader,label)
+  return
+
+ordinaryfrom: procedure = .void
+  arg reader_ref = reference .llbinmeta..catalog, label = .string
+  reader = dereference reader_ref
+  item = reader.classify('classify.deep.run')
+  call check(item.error() == '' & item.kind() == 'procedure' & item.owner() == '' & reader.error() == '',label || ': ' || item.error())
+  return
+
+budgets: procedure = .void
+  arg image_ref = reference .binary, linked_ref = reference .binary
+  image = dereference image_ref
+  bytes = .int; work = .int; otherbytes = .int; otherwork = .int
+  item = selected(image_ref,16777216,1000000,reference bytes,reference work)
+  other = selected(linked_ref,16777216,1000000,reference otherbytes,reference otherwork)
+  call check(item.error() == '' & other.error() == '' & bytes > 0 & work > 0 & otherbytes > 0 & otherwork > 0,'fresh groups have nonzero reservations')
+  reader = .llbinmeta..catalog.bounded(image_ref,<blen>(image) - 1,1000000)
+  call check(pos('LL_RESOURCE_LIMIT: metadata.bytes',reader.error()) = 1,'oversize source refuses under byte allowance')
+  call check(reader.consumed() <= <blen>(image) - 1 & reader.work() <= 1000000,'failed reservation never exceeds allowance')
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,0)
+  call check(pos('LL_RESOURCE_LIMIT: metadata.work',reader.error()) = 1 & reader.work() = 0,'zero work is valid but cannot prepare')
+  reader = .llbinmeta..catalog.bounded(image_ref,0,1000000)
+  call check(pos('LL_RESOURCE_LIMIT: metadata.bytes',reader.error()) = 1 & reader.consumed() = 0,'zero bytes is valid but cannot own the image')
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,1000000)
+  detail = reader.error(); prepared = reader.work()
+  call check(detail == '' & prepared > 0 & prepared < work,'selection has separately accounted work')
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,prepared)
+  call check(reader.error() == '' & reader.work() = prepared,'exact preparation allowance is usable')
+  item = reader.classify('classify.deep.run')
+  call check(pos('LL_RESOURCE_LIMIT: metadata.work',item.error()) = 1 & reader.work() = prepared,'query cannot borrow work from a completed preparation')
+  reader = .llbinmeta..catalog.bounded(image_ref,16777216,work - 1)
+  item = reader.classify('classify.deep.run')
+  call check(pos('LL_RESOURCE_LIMIT: metadata.work',item.error()) = 1,'selection exhaustion returns a failed projection')
+  call check(item.kind() == '' & item.owner() == '','resource failure publishes no partial classification')
+  call check(pos('LL_RESOURCE_LIMIT: metadata.work',reader.error()) = 1 & reader.work() <= work - 1 & reader.work() >= prepared,'resource failure keeps prior reservations')
+  savedbytes = reader.consumed(); savedwork = reader.work()
+  item = reader.classify('classify.box.run')
+  call check(item.error() <> '' & reader.consumed() = savedbytes & reader.work() = savedwork,'exhausted reader does not rearm or refund')
+  call check(reader.consumed() = savedbytes & reader.work() = savedwork,'counter reads remain non-triggering after failure')
+  usedbytes = .int; usedwork = .int; failedbytes = .int; failedwork = .int
+  totalbytes = bytes + otherbytes - 1
+  kept = selected(image_ref,totalbytes,1000000,reference usedbytes,reference usedwork)
+  item = selected(linked_ref,totalbytes - usedbytes,1000000,reference failedbytes,reference failedwork)
+  call check(kept.error() == '' & pos('LL_RESOURCE_LIMIT: metadata.bytes',item.error()) = 1,'sequential groups cannot exceed aggregate bytes')
+  call check(usedbytes + failedbytes <= totalbytes & kept.name() == 'classify.deep.run','byte exhaustion preserves earlier owned result')
+  totalwork = work + otherwork - 1
+  kept = selected(image_ref,16777216,totalwork,reference usedbytes,reference usedwork)
+  item = selected(linked_ref,16777216,totalwork - usedwork,reference failedbytes,reference failedwork)
+  call check(kept.error() == '' & pos('LL_RESOURCE_LIMIT: metadata.work',item.error()) = 1,'sequential groups cannot exceed aggregate work')
+  call check(usedwork + failedwork <= totalwork & kept.kind() == 'procedure' & kept.owner() == '','work exhaustion preserves earlier owned result')
+  return
+
+selected: procedure = .llbinmeta..callable
+  arg image_ref = reference .binary, bytes = .int, work = .int, bytes_ref = reference .int, work_ref = reference .int
+  usedbytes = dereference bytes_ref; usedwork = dereference work_ref
+  reader = .llbinmeta..catalog.bounded(image_ref,bytes,work)
+  item = reader.classify('classify.deep.run')
+  usedbytes = reader.consumed(); usedwork = reader.work()
+  return item
+
+owned: procedure = .llbinmeta..callable
+  arg image_ref = reference .binary
+  source = dereference image_ref
+  local = source
+  reader = .llbinmeta..catalog.bounded(reference local,16777216,1000000)
+  return reader.classify('classify.box.§factory.from_text')
+
+owningreader: procedure = .llbinmeta..catalog
+  arg image_ref = reference .binary
+  source = dereference image_ref
+  local = source
+  /* Do not prepare here: the input borrow must already have ended. */
+  return .llbinmeta..catalog.bounded(reference local,16777216,1000000)
+
+expired: procedure = .void
+  arg image_ref = reference .binary
+  stale = expiredinput(image_ref)
+  reader = .llbinmeta..catalog.bounded(stale,16777216,1000000)
+  detail = reader.error()
+  call check(detail == 'LL_RXBIN_IMPORT: image owner is not live','expired input reports exact checked-owner diagnostic')
+  item = reader.classify('classify.deep.run')
+  call check(item.error() == detail & item.kind() == '' & item.owner() == '','expired input publishes no partial classification')
+  return
+
+expiredinput: procedure = reference .binary
+  arg image_ref = reference .binary
+  source = dereference image_ref
+  local = source
+  return reference local
+
+/** Locate by decoded pool-local keys, never by a presumed record ordinal. */
+record: procedure = .int
+  arg image_ref = reference .binary, kind = .int, owner = .string, member = ''
+  image = dereference image_ref; decoder = .llbinmeta..catalog(image)
+  if decoder.error() <> '' then return 0
+  at = <at..i64>(200) image; limit = at + <at..i64>(216) image; at = at + 16
+  do while at < limit
+    if <at..u32>(at + 8) image = kind then do
+      pool = <at..u32>(at) image
+      name = decoder.text(pool,<at..u32>(at + 24 + 16) image)
+      if name == owner then do
+        if kind <> 15 then return at
+        if decoder.text(pool,<at..u32>(at + 24 + 24) image) == member then return at
+      end
+    end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  return 0
+
+uncompressed: procedure = .binary
+  arg image = .binary
+  decoder = .llbinmeta..catalog(image); output = binsubstr(image,1,304)
+  do section = 1 to 6
+    row = 64 + (section - 1) * 40
+    offset = <at..i64>(row + 16) image; extent = <at..i64>(row + 24) image
+    bits = binsubstr(image,offset + 1,extent)
+    if (section = 3 | section = 4) & <at..u32>(row + 4) image = 1 then do
+      bits = decoder.expand(bits,<at..i64>(row + 32) image)
+      <at..u32>(row + 4) output = 0
+    end
+    padding = (8 - <blen>(output) <mod> 8) <mod> 8
+    output = output || x2bin(copies('00',padding))
+    <at..i64>(row + 16) output = <blen>(output)
+    <at..i64>(row + 24) output = <blen>(bits)
+    output = output || bits
+  end
+  <at..i64>(16) output = <blen>(output)
+  return output
+
+check: procedure = .void expose failed checks
+  arg condition = .int, label = .string
+  checks = checks + 1
+  if condition then return
+  failed = failed + 1; say 'FAIL|' || label
+  return
