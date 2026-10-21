@@ -74,6 +74,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 | **ADDR-B-STEP01–03** | [Shared B binding bridge](doc/architecture.md#address-b-binding-bridge) locally qualified for AC01–05 as a separate prerequisite. AC06 keeps C/host/condition scope open. |
 | **CADDR-STEP01–02** | [Keyed explicit ADDRESS profile](doc/architecture.md#address-c-command-contract) locally qualified for AC01–05/07 explicit scope, with the separate B prerequisite. AC08 stays open. |
 | **CADDR-STEP03** | Locally qualified implicit C16 commands and owned source warnings through the same command owner; AC01–07 local profile. AC08 stays shared scope. |
+| **NUM-B-STEP01–03** | Locally complete: [shared FORM diagnostic prerequisite](doc/architecture.md#numeric-form-diagnostic-prerequisite) corrects the sole validator's `33.3` identity before C source extension; no numeric algorithm change. |
 
 No native C implementation, second runtime algorithm, push or hosted campaign
 is commissioned. INTERPRET remains excluded from the standing authority.

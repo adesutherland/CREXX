@@ -370,7 +370,7 @@ numericframes: procedure = .void
   call settingerror(reference context,'digits','1.5','RXC-LC-26.5')
   call settingerror(reference context,'fuzz','-1','RXC-LC-26.6')
   call settingerror(reference context,'fuzz','3','RXC-LC-33.1')
-  call settingerror(reference context,'form','invalid','RXC-LC-33.6')
+  call settingerror(reference context,'form','invalid','RXC-LC-33.3')
   call settingerror(reference context,'unknown','7','unknown numeric setting')
   call check(activation.numericDigits() = 3 & activation.numericFuzz() = 1 & activation.numericForm() = 1,'all failed settings preserve stored activation')
   call framecheck(12,4,'engineering','failed setters preserve caller VM frame')

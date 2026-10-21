@@ -130,6 +130,14 @@ worker owns `tests/command` source/host/warning/raw controls; the same integrato
 owns production and preparation. CADDR-AC08 and whole LC-I-20/21 retain their
 shared condition/host/platform owners.
 
+The [NUMERIC FORM diagnostic prerequisite](architecture.md#numeric-form-diagnostic-prerequisite)
+is a separate shared-runtime correction. Its worker owns only
+`RexxActivationArguments.crexx`, the existing activation test and the
+target-context error expectation. The integrator owns contract/status,
+preparation, tests, cleanup and commit; no concurrent builds or native compiler
+changes. Independent review checks the error identity, unchanged mutation
+semantics and exact local scope before C NUMERIC integration.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet

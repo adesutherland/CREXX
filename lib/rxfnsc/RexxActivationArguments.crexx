@@ -330,14 +330,16 @@ RexxActivationArguments: class
     if negative then return 0 - result
     return result
 
-  /** FORM VALUE uses only the first translated character of its value. */
+  /** FORM VALUE uses only the first translated character of its value.
+   * @param value proposed form text
+   * @return Empty on success, or RXC-LC-33.3 without changing numeric state. */
   setNumericForm: method = .string
     arg value = .RexxValue
     text = value.asString()
     first = upper(left(text, 1))
     if first = "S" then numeric_form = 1
     else if first = "E" then numeric_form = 2
-    else return "RXC-LC-33.6: NUMERIC FORM must start with E or S; found " || text
+    else return "RXC-LC-33.3: NUMERIC FORM must start with E or S; found " || text
     return ""
 
   /** Keep command status shared across signed external Classic calls. */

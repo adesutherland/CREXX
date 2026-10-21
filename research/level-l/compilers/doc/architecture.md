@@ -3374,6 +3374,39 @@ output behavior; no warning suppression, recovery or warn-as-error API is added.
   host, warning-lifetime/limit and tiny raw controls; AC01–07 local profile,
   retaining AC08 and INTERPRET-last.
 
+<a id="numeric-form-diagnostic-prerequisite"></a>
+
+### Shared NUMERIC FORM diagnostic prerequisite
+
+Keep one FORM validator in `RexxActivationArguments.setNumericForm`. Its
+invalid-value result must begin `RXC-LC-33.3:`, as specified by
+[X3J18 section 8.3.15.2](https://www.rexxla.org/rexxlang/standards/j18pub.pdf#page=99).
+Correct the shared diagnostic identity before extending the C source route;
+there is no C-only remapping or second validator. Accepted first-character S/E
+handling, method signatures, mutation timing and numeric algorithms stay the
+same. This prerequisite does not change native compiler source, FUZZ rounding,
+configured conditions, TRACE, host/platform scope or full NUMERIC acceptance.
+
+1. **NUM-B-AC01:** invalid FORM returns `33.3` through the sole shared setter;
+   independent direct B success/failure controls check first-character handling
+   and unchanged DIGITS/FUZZ/FORM after rejection.
+2. **NUM-B-AC02:** the existing C target adapter relays that message unchanged
+   as CLASSIC_SYNTAX, preserving stored activation and the caller VM frame;
+   existing target-context numeric-frame controls cover the compatibility path.
+3. **NUM-B-AC03:** existing native B compile/assemble/link/VM producers and
+   complementary fixture modes remain warning-free; inspect the small setter
+   output and keep the normal shared runtime build boundary explicit.
+
+- **NUM-B-STEP01 — complete:** source/specification review and minimal direct
+  reproduction; AC01–03. Exact scope is the shared setter, its existing
+  activation test, the target-context expectation and owning contract/status.
+- **NUM-B-STEP02 — complete:** correct only the diagnostic identity and add
+  direct atomicity coverage; AC01/02.
+- **NUM-B-STEP03 — locally complete:** focused existing producer/tests and
+  emitted-code review cover AC01–03. No broad compiler matrix or new runtime/API
+  is required. C NUMERIC integration and shared condition/platform scope remain
+  separate.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

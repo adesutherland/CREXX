@@ -3,7 +3,7 @@ import rexxactivation
 import rexxvalue
 
 main: procedure = .int
-  errors = 0
+  errors = numeric_form_validation()
   args = .RexxActivationArguments()
   call args.append(.RexxValue("first"), 1)
   call args.append(.RexxValue("ignored"), 0)
@@ -121,6 +121,19 @@ main: procedure = .int
     call args.setSignalPolicy(condition_id, 0)
   end
   if errors = 0 then say "ok"
+  return errors
+
+/* A fresh owner isolates FORM validation from argument/trap state above. */
+numeric_form_validation: procedure = .int
+  errors = 0
+  activation = .RexxActivationArguments()
+  message = activation.setNumericForm(.RexxValue("engineering suffix"))
+  errors = errors + check(message == "" & activation.numericForm() = 2, "FORM accepts lower-case E prefix, not only the full keyword")
+  message = activation.setNumericForm(.RexxValue("invalid"))
+  errors = errors + check(message == "RXC-LC-33.3: NUMERIC FORM must start with E or S; found invalid", "invalid FORM has exact standard 33.3 identity")
+  errors = errors + check(activation.numericDigits() = 9 & activation.numericFuzz() = 0 & activation.numericForm() = 2, "rejected FORM preserves DIGITS FUZZ and prior ENGINEERING form")
+  message = activation.setNumericForm(.RexxValue("scientific suffix"))
+  errors = errors + check(message == "" & activation.numericForm() = 1, "FORM accepts lower-case S prefix after rejection")
   return errors
 
 check: procedure = .int
