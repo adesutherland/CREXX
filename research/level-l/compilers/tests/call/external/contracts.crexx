@@ -256,7 +256,7 @@ schema: procedure = .void
   do family = 1 to data.familycount()
     if data.familyname(family) == 'crexx.c' then version = data.version(family)
   end
-  call check(version = 12 & data.ops() = 63 & data.opname(63) == 'crexx.c.call.external','append-only C12/63 schema')
+  call check(version = 13 & data.ops() = 64 & data.opname(63) == 'crexx.c.call.external','append-only C13/64 schema')
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'arguments' & data.typename(data.fieldtype(id,1,1)) == 'crexx.c.arguments' & data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','exact external operands')
   call check(data.arity(id,2) = 1 & data.typename(data.fieldtype(id,2,1)) == 'crexx.c.result' & data.arity(id,3) = 1 & data.fieldname(id,3,1) == 'target' & data.typename(data.fieldtype(id,3,1)) == 'crexx.g.text','exact external result/target')
   call check(data.effectvalue(id,1) == 'context.input.output.observation' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','exact external effects')

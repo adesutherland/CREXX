@@ -85,7 +85,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 12 & data.ops() = 63 & count = 5,'exact current C12/63-operation/five-type contract')
+  call check(version = 13 & data.ops() = 64 & count = 5,'exact current C13/64-operation/five-type contract')
   names = 'entry.test entry.invalid procedure.consume procedure.enter procedure.expose'
   do i = 1 to 5
     call check(data.opname(53 + i) = 'crexx.c.' || word(names,i),'append-only operation order ' || i)

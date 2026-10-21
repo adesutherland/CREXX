@@ -102,7 +102,11 @@ source/lowering and independent fixture profile through the existing PARSE
 source/executor. Bare acquisition and shared host/observation/platform owners
 remain explicit. PUSH and QUEUE follow as separate insertion increments: one
 serial production integrator, independent fixtures, and read-only review; record
-each exact contract before implementation.
+each exact contract before implementation. The [PUSH contract](architecture.md#push-contract)
+delivers the local AC01–04 profile: the serial integrator owns production/schema/
+parser/selector/docs/CMake; the independent reviewer owns `tests/push` source/
+host/raw controls; existing B code owns queue/configuration algorithms. AC05
+remains shared work. QUEUE follows with its exact contract and separate commit.
 
 <a id="procedure-assignment-packet"></a>
 

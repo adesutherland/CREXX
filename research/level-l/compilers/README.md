@@ -54,7 +54,8 @@ semantics and wider activation/condition work remain open.
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary
-templates for the shared B executor and mandatory VM cursor. Its finite C
+templates for the shared B executor, which uses the existing VM cursor for
+nonempty templates. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
 executor with implicit UPPER, replacing its scalar shortcut. Standalone PULL
 also uses this executor: bare/empty-first forms acquire selected queue or fallback
@@ -65,6 +66,12 @@ open. The [current C contract](doc/architecture.md#current-c-family-contract)
 uses the 36-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
+
+PUSH evaluates its optional expression once and inserts exact Classic text at
+the front of the execution-selected queue; bare PUSH inserts empty text. It
+reuses existing conversion/config methods and skips insertion when the operand
+exits the program. Shared host/condition/TRACE/platform work remains open under
+the [PUSH contract](doc/architecture.md#push-contract).
 
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing

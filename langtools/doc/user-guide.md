@@ -3316,6 +3316,12 @@ writes remain in the existing executor. Configured NOTREADY, broader host
 behavior, conditions/TRACE and declared-platform closure remain open under the
 [PULL contract](../../research/level-l/compilers/doc/architecture.md#pull-contract).
 
+Classic `PUSH expression` converts its operand once and inserts it at the front
+of the selected queue; bare `PUSH` inserts empty text. Text retains its case,
+Unicode and NUL bytes. `PARSE PULL` can observe insertion without UPPER; standalone
+`PULL` applies UPPER. The selected queue is shared by nested/private program
+roots; wider host/condition/TRACE/platform closure remains open.
+
 A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
 `rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
 import/link `llccompiler` and call its own request with the same arguments:

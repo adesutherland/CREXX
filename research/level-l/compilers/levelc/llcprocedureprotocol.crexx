@@ -515,7 +515,7 @@ checked: class
         if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
           ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
         end
-        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' then do
+        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' | name = 'crexx.c.push' then do
           contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end

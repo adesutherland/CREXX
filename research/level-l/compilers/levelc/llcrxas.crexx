@@ -349,6 +349,10 @@ compilation: class
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
     if name = 'crexx.c.select.missing' then call checkselectorigin(op)
+    if name = 'crexx.c.push' then do
+      call checkselectorigin(op,'PUSH')
+      _parseclauses[op.id()] = op.origin().first() + 1
+    end
     if name = 'crexx.c.exit' then do
       call checkselectorigin(op,'EXIT')
       _parseclauses[op.id()] = op.origin().first() + 1
@@ -628,6 +632,21 @@ compilation: class
       call emit('null',text); call emit('null',config)
     end
     call emit('unlink',receiver); call emit('null',pool)
+    return
+  /** Convert one owned operand through the existing Classic value method,
+   * then write through the current checked config. The disposable window owns
+   * the conversion receiver; only the config uses a scoped borrowed receiver. */
+  pushoperation: method = .void
+    arg op = .llir..opview
+    text = reg(_workbase + 9); config = reg(_workbase + 3); receiver = reg(_workbase + 1)
+    symbol = member('rexxvalue.rexxvalue','asstring','.string','.int','1')
+    call argcopy(1,input(op)); call emit('load',reg(_callbase + 2) || ',1')
+    call invoke(text,symbol,2)
+    call binding(input(op,2),'config',config)
+    call emit('linkref',receiver || ',' || config)
+    symbol = member('rexxclassicconfig.rexxclassicconfig','pushtext','.void','.string')
+    call argcopy(2,text); call invoke('',symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',config); call emit('null',text)
     return
   /** Values are validated integers, never reparsed text. Keep every install
    * in the executing C frame, after normal return from a successful setter. */
@@ -1313,6 +1332,7 @@ compilation: class
         call invoke('',symbol,2)
       end
       when name = 'drop' then call dropoperation(op)
+      when name = 'push' then call pushoperation(op)
       when name = 'say' then call adapter(op,'sayvalue','.void',v)
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')
       when name = 'arguments.append' then call adapter(op,'append',a,a || ' ' || v || ' .int')

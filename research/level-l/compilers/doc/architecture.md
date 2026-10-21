@@ -471,9 +471,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v12/63 with
+C to the two-argument source-unit ABI. The current family is v13/64 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
-static signed statement providers. Local instruction qualification is tracked in the plan.** Use the following contract with one current
+static signed statement providers and selected-queue PUSH. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -481,9 +481,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 12. The neutral scalar names do not load the G
+types and `crexx.c` version 13. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–11 are never reinterpreted as version 12. Within version 12, the complete C
+versions 1–12 are never reinterpreted as version 13. Within version 13, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -2905,6 +2905,72 @@ Later comma templates receive empty text without another queue/input read.
 `tests/pull` source, queue/host, error and RXAS controls own independent
 qualification. The schema and target exports are unchanged. Whole LC-I-16
 remains open for AC05; shared runtime evidence does not close those obligations.
+
+<a id="push-contract"></a>
+
+## PUSH selected-queue contract
+
+LC-I-17 evaluates its optional expression once and inserts its Classic text at
+the front of the execution-selected queue. Bare PUSH supplies an owned empty
+value. Reached forms consume PROCEDURE eligibility, including bare insertion;
+untaken source does not insert. CPush(value?:Expression) and contextual PUSH
+preserve assignment/label/call ownership, existing expression precedence,
+physical continuation and original byte/scalar origins. Invalid live or dead
+operand tails report contextual35.1 after existing lexer/comment/PARSE priority.
+An operand's internal-call EXIT guard runs before conversion or insertion, so a
+program exit cannot insert or execute later source.
+
+The C family becomes **v13, five types and 64 operations** by appending
+`push(value:V,context:C)->void`, with no attributes/evaluator, state
+`context.output`, failure `condition.resource`, and termination `returns`.
+The target remains 36 exports. Generic schema verification and current C
+admission inspect every record, including dead/loaded/transformed records.
+The context must load the existing once-bound canonical context slot, through
+`llcprocedureprotocol.slot`; a substituted load reports the existing
+`LL_COMPILER_LOWERING: entry dispatch uses a different bound slot` diagnostic.
+PUSH requires an owned exact, nonempty source-backed origin at Unicode
+boundaries through the indexed selector checks. Refusals retain the existing
+`LL_COMPILER_LOWERING: PUSH requires ...` / `LL_COMPILER_SOURCE: PUSH ...`
+classes and preserve prior output; no source reparse or new CFG proof is added.
+
+A private selector routine copies the V operand into its existing disposable
+call window and invokes metadata-checked `RexxValue.asString(1)` once. The text
+survives that window's cleanup. Borrow the current config from canonical C,
+invoke its checked `RexxClassicConfig.pushText(string)` once, then detach and
+clear the text/config temporaries. Normal/fatal cleanup retains the existing
+window/work/receiver discipline and original signal/source. No target helper,
+B/L/VM API, queue algorithm, config clone or name dispatcher is introduced.
+The selected queue belongs to execution/module state and is shared across
+nested/shared/private/external program roots; wider host selection/isolation,
+configured failures, conditions/TRACE and declared platforms remain STEP07/08.
+
+1. **PUSH-AC01:** contextual optional/bare expressions, continuation, Unicode/NUL,
+   once-only effects and malformed/dead35.1 retain exact source/atomic output.
+2. **PUSH-AC02:** independent source and B-host controls prove front insertion,
+   empty text, order/count/nonconsumption, selected-queue sharing, live/private
+   pool restoration and operand EXIT with no insertion or later effects.
+3. **PUSH-AC03:** a small independent raw fixture admits the exact descriptor and
+   canonical positive, refuses substituted context/dead provenance and stale
+   v12, and repeats fresh/loaded admission without the general raw matrix.
+4. **PUSH-AC04:** readable opt/noopt RXAS proves one conversion/selected config
+   method, scoped borrows, finite normal/fatal cleanup, truthful source and no
+   new queue dispatcher/target export. Complementary compiler/assembler/VM and
+   IR cells reuse unchanged runtime/schema algorithms and affected consumers.
+5. **PUSH-AC05 — open shared scope:** configured host failures, full conditions/
+   TRACE, host selection/isolation and declared platforms retain STEP07/08 gates.
+
+- **PUSH-STEP01:** record and internally review this exact contract and independent
+  fixture/shape expectations before implementation; AC01–05.
+- **PUSH-STEP02:** contextual CPush/source35.1, append-only C descriptor,
+  canonical-context/source admission and direct existing config selection;
+  AC01–04. Reuse the unchanged lexer capsule only after generator/key checks.
+- **PUSH-STEP03:** focused independent source/host/raw/refusal and RXAS proof,
+  measured serial complementary registration, final scope review and local
+  feature commit; AC01–04. Keep AC05 and complete C open; QUEUE follows separately.
+
+**PUSH-STEP01–03 are complete for the local AC01–04 profile.** Maintained
+`tests/push` source/host/raw/refusal controls and representative RXAS checks own
+independent qualification. AC05 and whole LC-I-17 remain open.
 
 ## Optimisation ownership
 
