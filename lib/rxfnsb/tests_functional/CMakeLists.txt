@@ -206,11 +206,15 @@ set_tests_properties(ts_linein_stdin_prompt PROPERTIES
 set(_linein_stdin_driver_workdir
         "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_driver")
 file(MAKE_DIRECTORY "${_linein_stdin_driver_workdir}")
+# The driver deliberately publishes adjacent outputs and a persistent lock.
+# Give each test its own source copy so the immutable checkout stays untouched.
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx"
+        "${_linein_stdin_driver_workdir}/ts_linein_stdin.crexx" COPYONLY)
 add_test(
         NAME ts_linein_stdin_crexx_driver
         COMMAND $<TARGET_FILE:linein_stdin_harness>
                 $<TARGET_FILE:crexx>
-                ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                "${_linein_stdin_driver_workdir}/ts_linein_stdin.crexx"
                 30000
         WORKING_DIRECTORY "${_linein_stdin_driver_workdir}"
 )
@@ -225,11 +229,13 @@ if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(_linein_tty_driver_workdir
             "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_tty")
     file(MAKE_DIRECTORY "${_linein_tty_driver_workdir}")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx"
+            "${_linein_tty_driver_workdir}/ts_linein_stdin.crexx" COPYONLY)
     add_test(
             NAME ts_linein_stdin_crexx_tty
             COMMAND $<TARGET_FILE:linein_tty_harness>
                     $<TARGET_FILE:crexx>
-                    ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                    "${_linein_tty_driver_workdir}/ts_linein_stdin.crexx"
                     30000
             WORKING_DIRECTORY "${_linein_tty_driver_workdir}"
     )
@@ -557,5 +563,17 @@ set_tests_properties(ts_parse_noopt ts_parse_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: legacy parse helpers")
 set_tests_properties(ts_getenv_noopt ts_getenv_opt
         PROPERTIES ENVIRONMENT "CREXX_GETENV_SELECTOR_TEST_VALUE=alpha beta")
+
+
+crexx_register_test_prep_targets(
+    TESTS ts_fileio_binary_rxbvm_noopt ts_fileio_binary_rxbvm_opt ts_fileio_binary_rxtvm_noopt ts_fileio_binary_rxtvm_opt ts_rxjson_document_rxbvm_noopt ts_rxjson_document_rxbvm_opt ts_rxjson_document_rxtvm_noopt ts_rxjson_document_rxtvm_opt ts_rxjson_noisy_contract_rxbvm_noopt ts_rxjson_noisy_contract_rxbvm_opt ts_rxjson_noisy_contract_rxtvm_noopt ts_rxjson_noisy_contract_rxtvm_opt ts_rxjson_numeric_projection_rxbvm_noopt ts_rxjson_numeric_projection_rxbvm_opt ts_rxjson_numeric_projection_rxtvm_noopt ts_rxjson_numeric_projection_rxtvm_opt ts_address_capture_rxbvm_noopt ts_address_capture_rxbvm_opt ts_address_capture_rxtvm_noopt ts_address_capture_rxtvm_opt ts_address_argv_rxbvm_noopt ts_address_argv_rxbvm_opt ts_address_argv_rxtvm_noopt ts_address_argv_rxtvm_opt ts_address_array_lifecycle_rxbvm_noopt ts_address_array_lifecycle_rxbvm_opt ts_address_array_lifecycle_rxtvm_noopt ts_address_array_lifecycle_rxtvm_opt ts_address_spawn_transfer_rxbvm_noopt ts_address_spawn_transfer_rxbvm_opt ts_address_spawn_transfer_rxtvm_noopt ts_address_spawn_transfer_rxtvm_opt
+    TARGETS testbifs rxvm rxbvm library rxlink address_argv_fixture address_spawn_transfer_fixture)
+
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(
+    TESTS ts_linein_stdin_prompt ts_linein_stdin_crexx_driver
+    TARGETS ts_linein_stdin_fixtures linein_stdin_harness)
+crexx_register_test_prep_targets(TESTS ts_linein_stdin_crexx_tty
+    TARGETS ts_linein_stdin_fixtures linein_tty_harness)
 
 crexx_finalize_directory_qa_tiers()

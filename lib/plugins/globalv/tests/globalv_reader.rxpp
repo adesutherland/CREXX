@@ -1,6 +1,6 @@
 /* GLOBALV persistence test: read a value written by another program. */
 options levelg
-
+##cflags maclog 3buf
 ##EXTERNAL &syslib/rxglobalv_address.rxbin
 
 namespace globalv_reader

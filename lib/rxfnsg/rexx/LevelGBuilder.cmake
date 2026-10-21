@@ -49,7 +49,7 @@ crexx_add_import_root(stage_g_builder_imports
   DEPENDS library classlib compiler_exit_bin _hash
   COMMENT "Staging exact imports for the Level B Level G builder ...")
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${_stage_g_linked_builder}"
   BYPRODUCTS
     "${_stage_g_controller_copy}"
@@ -117,7 +117,7 @@ foreach(_stage_g_module IN LISTS RXFNSG_REXX_MODULES)
     "${_stage_g_members_root}/${_stage_g_module}/${_stage_g_module}.rxbin")
 endforeach()
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
   BYPRODUCTS ${_stage_g_byproducts}
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_stage_g_work_root}"

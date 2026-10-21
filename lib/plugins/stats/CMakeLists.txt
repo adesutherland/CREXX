@@ -51,6 +51,11 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+
+crexx_register_test_prep_targets(
+    TESTS rxstats_packedint_rejected
+    TARGETS rxc library rxfnsg stats)
+
 crexx_finalize_directory_qa_tiers()
 
 crexx_install_targets(stats stats_static)

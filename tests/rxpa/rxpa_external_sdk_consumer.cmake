@@ -7,6 +7,13 @@ set(mismatch_build "${WORK_ROOT}/mismatch-build")
 set(plugin_dir "${consumer_build}/plugin")
 set(command_log "${WORK_ROOT}/commands-and-results.txt")
 set(manifest "${WORK_ROOT}/artifact-manifest.txt")
+set(parent_configuration)
+if(DEFINED PARENT_SANITIZER_CACHE AND NOT PARENT_SANITIZER_CACHE STREQUAL "")
+    if(NOT EXISTS "${PARENT_SANITIZER_CACHE}")
+        message(FATAL_ERROR "Missing owning sanitizer SDK configuration")
+    endif()
+    set(parent_configuration -C "${PARENT_SANITIZER_CACHE}")
+endif()
 
 file(MAKE_DIRECTORY "${consumer_source}")
 file(WRITE "${WORK_ROOT}/rx-hash-installed-fixture.bin" "abc")
@@ -119,7 +126,7 @@ foreach(package_file IN ITEMS
 endforeach()
 
 execute_process(
-        COMMAND "${CMAKE_COMMAND}" -S "${consumer_source}" -B "${mismatch_build}"
+        COMMAND "${CMAKE_COMMAND}" ${parent_configuration} -S "${consumer_source}" -B "${mismatch_build}"
                 -G "${CMAKE_GENERATOR_NAME}"
                 "-DCMAKE_PREFIX_PATH=${prefix}"
                 "-DEXPECTED_CREXX_CORE_VERSION=${CREXX_VERSION_CORE}"
@@ -136,7 +143,7 @@ if(mismatch_res EQUAL 0 OR NOT "${mismatch_out}${mismatch_err}" MATCHES "CREXX S
 endif()
 
 run_checked("configure external plugin from installed CREXX package"
-        COMMAND "${CMAKE_COMMAND}" -S "${consumer_source}" -B "${consumer_build}"
+        COMMAND "${CMAKE_COMMAND}" ${parent_configuration} -S "${consumer_source}" -B "${consumer_build}"
                 -G "${CMAKE_GENERATOR_NAME}"
                 "-DCMAKE_PREFIX_PATH=${prefix}"
                 "-DEXPECTED_CREXX_CORE_VERSION=${CREXX_VERSION_CORE}"

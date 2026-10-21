@@ -110,6 +110,14 @@ Do not download and retain a second copy of the logs. Required release and
 sanitizer proof still applies. Keep this publication policy here, not in
 component worklists.
 
+The approved sanitizer profile/preparation strategy is owned by
+`docs/SANITIZER-WORKLIST.md` and operated through
+`docs/ai-context/CREXX_ASAN_TESTING.md`. Full, weekly, release and SAN-closure
+proof retains the complete non-measurement scope and original instrumented
+producers. Daily proof is a distinct profile and cannot certify broad assurance.
+Scheduled daily activation remains disabled pending clean qualification and
+Adrian's separate master-workflow decision.
+
 ## Emitted-code quality
 
 Compiler acceptance includes the quality of emitted code as well as correct

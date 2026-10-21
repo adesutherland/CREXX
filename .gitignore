@@ -86,3 +86,6 @@ docs/books/.DS_Store
 # Temp Items
 /.tmp*
 /tests/repro.rexx
+
+# Operational sanitizer assurance cache summaries, never source/evidence.
+.ci-assurance/

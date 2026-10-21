@@ -208,6 +208,7 @@ MAX
 MIN
 OVERLAY
 POS
+QPOS
 RIGHT
 SIGN
 SPACE
@@ -218,7 +219,9 @@ TRANSLATE
 UPPER
 VERIFY
 WORD
+QWORD
 WORDS
+QWORDS
 WORDPOS
 VALUE
 LINEIN
@@ -228,8 +231,9 @@ ERASEFILE
 ```
 
 Function names are matched case-insensitively. RexxScript owns the sandbox-safe
-name controller, which routes each allowed intrinsic to its specific shared
-`rxfnsc` `RexxClassicBifs` implementation.
+name controller. Classic-compatible intrinsics use the shared `rxfnsc`
+`RexxClassicBifs` implementation; the quote-aware `QPOS`, `QWORD`, and
+`QWORDS` intrinsics use the imported `rxfnsb` implementations.
 
 `VALUE(name)` is a RexxScript-specific, read-only intrinsic. It evaluates its
 argument to a variable name and returns that variable's value from the current
@@ -284,6 +288,11 @@ Nested intrinsic calls are supported:
 ```rexx
 x = length(substr("abcdef", 2, 3))
 ```
+
+The quote-aware word and position functions treat quoted text as part of the
+surrounding token. `QWORD` preserves quote delimiters, `QWORDS` counts quoted
+words, and `QPOS` finds a delimiter only outside matching single or double
+quotes. Doubled quote characters are accepted as escaped quote characters.
 
 ## Errors
 

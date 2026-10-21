@@ -12,7 +12,7 @@
 #endif
 int main(int argc, char **argv) {
     const char *output = NULL;
-    char path[4096], directory[4096], *slash;
+    char directory[4096], path[sizeof(directory) + sizeof("/action.sha256.tmp")], *slash;
     FILE *fp;
     int i;
     for (i = 1; i < argc; i++) {
@@ -21,15 +21,18 @@ int main(int argc, char **argv) {
     }
     if (!output) return 2;
     if (strstr(output, "missing_output")) return 0;
-    snprintf(path, sizeof(path), "%s.rxbin", output);
+    i = snprintf(path, sizeof(path), "%s.rxbin", output);
+    if (i < 0 || (size_t)i >= sizeof(path)) return 2;
     fp = fopen(path, "wb");
     if (!fp) return 3;
     fputs("fixture", fp); fclose(fp);
-    snprintf(directory, sizeof(directory), "%s", output);
+    i = snprintf(directory, sizeof(directory), "%s", output);
+    if (i < 0 || (size_t)i >= sizeof(directory)) return 2;
     slash = strrchr(directory, '/');
     if (!slash) return 4;
     *slash = '\0';
-    snprintf(path, sizeof(path), "%s/action.sha256%s", directory,
-             strstr(output, "stamp_write") ? ".tmp" : "");
+    i = snprintf(path, sizeof(path), "%s/action.sha256%s", directory,
+                 strstr(output, "stamp_write") ? ".tmp" : "");
+    if (i < 0 || (size_t)i >= sizeof(path)) return 2;
     return make_dir(path) == 0 ? 0 : 5;
 }

@@ -211,6 +211,20 @@ in the generated source:
 name = unquote(name)
 ```
 
+When placing an interpolated value inside a generated string literal, prefer
+double quotes around the substitution:
+
+```rexx
+value = unquote(value)
+.gen say "value=&value"
+```
+
+Avoid using single quotes as the interpolation wrapper, such as
+`.gen say 'value=&value'`. RXPP assembles the `.gen` expression from internal
+single-quoted RexxScript fragments, so that form is ambiguous when the value
+itself contains a single quote. Single quotes are still valid for ordinary
+RexxScript literals without an interpolated macro value.
+
 Predefined context values can also be inserted into generated output:
 
 | Context value | Meaning |

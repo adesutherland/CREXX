@@ -153,6 +153,7 @@ RXPP_MACLIB_MISSING = Macro library was not found or is not accessible: {file}.
 RXPP_MACRO_EMPTY_BODY = Macro body is empty or missing braces: {name}.
 RXPP_MACRO_MISSING_RPAREN = Macro definition is missing a closing parenthesis: {definition}.
 RXPP_MACRO_UNCLOSED = Macro definition is not closed: {name}.
+RXPP_MACRO_FORWARDING_POSITION = Named variadic forwarding parameter must be terminal in {macro}({arguments}).
 RXPP_MISSING_ENDIF = No matching ##ENDIF found after line {line}.
 RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL requires a module name.
 RXPP_NO_SOURCE_FILE = No source file was specified.

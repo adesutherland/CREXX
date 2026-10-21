@@ -7,6 +7,7 @@ set(CREXX_HOST_BIN "" CACHE PATH "Existing native rxc/rxas/rxlink/VM and library
 option(CREXX_LEVEL_L_NOOPT "Build Level L with compiler and assembler optimization disabled" OFF)
 get_filename_component(CREXX_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 include("${CREXX_ROOT}/cmake/CrexxImportRoots.cmake")
+include("${CREXX_ROOT}/cmake/CrexxQaFixtures.cmake")
 set(_host_tools rxc rxas rxlink rxbvm)
 if(EXISTS "${CREXX_HOST_BIN}/rxtvm${CMAKE_EXECUTABLE_SUFFIX}")
   list(APPEND _host_tools rxtvm)

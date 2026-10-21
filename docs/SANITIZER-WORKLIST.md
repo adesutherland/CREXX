@@ -5,6 +5,2059 @@ sanitizer configurations.  Repository policy and closure requirements are in
 [`AGENTS.md`](../AGENTS.md) and
 [`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md).
 
+## Sanitizer scope review and proposal — 20 October 2026
+
+**Status: VM-priority implementation and clean daily Linux/Apple qualification
+are complete. Scheduled activation remains disabled pending Adrian's separate
+master-workflow decision.**
+The original approved order was unchanged isolated Linux timeout diagnosis first, then the
+exact ten-cell daily reduction, separated fixture/native preparation and shared
+Classic preparation, qualified before activation. The existing scheduled policy
+remains effective until qualification and the separate master-workflow decision.
+See [measured results](#bounded-measurement-results) and the
+[current exact membership](#exact-existing-membership-approved).
+Implementation uses the existing synchronized hotfix checkout. Focused hosted
+qualification is authorized; no master activation or release promotion is
+authorized. The local Linux ARM64 VM has no configured usable SSH identity, so a
+dispatch-only Linux x64 replay route preserves the existing default/full route
+and checks out the original failed source commit for the first replay.
+
+**20 October follow-up:** Adrian requested a wider test-strategy review for
+the direction in which tools/libraries are implemented in cREXX, native C
+supplies the bootstrap, and the VM/plugins remain native. The revised proposal
+below replaces the initial emphasis on selecting a smaller daily subset of
+the same whole-toolchain job. The initial daily/weekly suggestion was not
+approved. Architecture, coverage and test purpose must determine the new
+profiles before cadence or test-count reductions are implemented.
+
+### Vision and intended outcomes
+
+Qualify the native execution foundation deeply and test cREXX tools for their
+own semantic contracts without making every language case a repeated native
+memory-safety campaign. A healthy result means correct compiler/tool output,
+correct and memory-safe VM/plugin execution for the tested boundaries, bounded
+long-lived resource use, and trustworthy platform/packaging integration.
+These are separate observable obligations.
+
+Preserve independent language oracles, emitted-code quality and full ordinary
+correctness testing. Concentrate sanitizer effort on both concrete VMs, loader
+and native support, first-party plugins, bootstrap/native tools while they
+remain in use, and selected cREXX workloads exercising those components.
+Preserve all applicable permanent SAN regressions and existing broad closure
+gates pending explicit approval of any replacement. No native tool is retired
+by this review. Resolve the current failure rather than excluding it.
+
+### Revised VM-priority daily scope — qualified, activation pending
+
+**Explicit approval, 20 October:** Adrian approved this VM-priority revision:
+1,288 existing Apple daily names plus six bounded sustained-state cells; 2,010
+existing names weekly/affected; full ordinary, weekly, release and SAN closure
+preserved. This amends the existing SCOPE-AC IDs as stated below. The prior
+U-minus-ten implementation is superseded; its incomplete platform outcomes
+remain historical diagnostics. Clean revised daily Linux/Apple qualification is
+complete; the separate master-activation decision remains open.
+
+Adrian clarified that long-running VM/plugin memory ownership matters most, while the
+compiler and assembler are the least important daily leak targets. This proposal
+supersedes the exploratory 1,526-cell draft and replaces the original
+U-minus-ten daily membership and the requirement to establish equal measured
+native coverage before every reduction. It does **not** claim equal native
+branch/path/history coverage. The prior 87-cell measurement remains valid for
+its narrow measured comparison; it cannot justify this larger reduction.
+The ten-cell implementation is replaced only by the reviewed named policy;
+its unresolved QA findings are not closed by this scope decision. No new full
+suite is dispatched; revised clean daily qualification follows the repair and
+focused implementation proof.
+
+The intended result is efficient sustained-state VM/provider assurance: direct
+runtime boundaries, real native integrations and a fixed workload panel daily;
+complete language/tool semantics in ordinary QA; and all current non-measurement
+cells with original instrumented producers weekly, for release and for SAN
+closure. Omitted semantic/optimizer/backend and producer-native histories may
+first be detected by weekly sanitizer execution. This is an explicit cadence
+risk decision, rather than proof that those histories are redundant.
+
+#### Exact existing membership approved
+
+Snapshot: hotfix `e7894ebd64788d0e79f259eff6e7a0927825e6c9`, generated Apple arm64
+Debug U=3,298 after the existing performance-measurement exclusion. The proposal
+retains **1,288 existing daily cells** and moves **2,010 to weekly/affected**
+(60.9% of current registrations). The six lifecycle cells below would make the
+new universe 3,304 and daily 1,294 if all six are needed. These are registration
+counts, not forecast times or minimum sufficient counts. Platform-specific
+registrations are reviewed in their own generated inventory; an Apple count
+must not silently become the Linux expected-count oracle.
+
+The following groups partition this snapshot. Owner directories identify the
+reviewed existing registrations, not a live directory/label predicate: an
+implementation must freeze the exact known weekly names in a maintained policy
+asset, compare generated discovery against it, and default-keep new or
+unclassified names pending review. Ordinary full selection is unchanged.
+
+| Reviewed current group | Current U | Proposed existing daily |
+| --- | ---: | ---: |
+| Runtime/native integrations outside the groups below | 1,191 | 1,191 |
+| Native producer tool registrations in assembler/parsingtests, compiler root (excluding compiler/tests), debugger, disassembler, linker, preprocessor/tests and tools/rxbuild | 58 | 0 |
+| compiler/tests; exact runtime/embedding shortlist below | 1,746 | 63 |
+| Exact source/package inspection list below | 9 | 0 |
+| Four additional proven producer/inspection cases below | 4 | 0 |
+| Unicode source-shape inspections below | 7 | 0 |
+| Five Unicode runtime families, optimizer/engine variants | 20 | 10 |
+| langtools/tests Level L workloads | 109 | 20 |
+| tests/rxas_optimizer producer/shape checks | 87 | 0 |
+| Benchmark registrations; Richards/Towers panel retained | 50 | 4 |
+| Exact producer CLI/build list below | 17 | 0 |
+| **Total** | **3,298** | **1,288** |
+
+The unchanged remainder retains all 285 rxfnsb, 202 interpreter, 128 rxfnsc,
+91 RXPA and 59 rxfnsg runtime registrations in this snapshot. Classlib functional
+tests retain 76 of 77 after moving `classlib_rexx_method_test_coverage`; the
+separate inline disassembly inspection belongs to parent lib/classlib and does
+not subtract another functional runtime cell. These large groups remain an initial conservative
+runtime panel: no further blanket duplicate cut is proposed and no claim of
+minimality or coverage equivalence is made. All loader/malformed-bytecode,
+VM/provider ownership, allocator, worker, plugin and native-host contracts in
+this remainder remain daily even when their fixture is assembled first.
+
+The exact **63 compiler-directory runtime/embedding names** are:
+
+```text
+BridgeConnectivity
+address_callback_host
+address_crexx_flush_visible_run_noopt
+address_crexx_flush_visible_run_opt
+address_llm_provider
+address_native_kv_demo
+arg_semantics_array_run_noopt
+arg_semantics_array_run_opt
+arg_semantics_object_run_noopt
+arg_semantics_object_run_opt
+arg_semantics_scalar_run_noopt
+arg_semantics_scalar_run_opt
+attr_array_call_result_lifetime_run_noopt
+attr_array_call_result_lifetime_run_opt
+classic_stream_lifecycle
+classic_unicode_contract_opt
+crexxsaa_arg_lengths
+crexxsaa_status
+crexxsaa_variables
+deferred_register_outer_if_lifetime_run_noopt
+deferred_register_outer_if_lifetime_run_opt
+dynamic_load
+e2_active_context_isolation
+gate_f_levelg_rxbvm_noopt
+gate_f_levelg_rxbvm_opt
+gate_f_levelg_rxtvm_noopt
+gate_f_levelg_rxtvm_opt
+gate_f_task_method_import_rxbvm_noopt
+gate_f_task_method_import_rxbvm_opt
+gate_f_task_method_import_rxtvm_noopt
+gate_f_task_method_import_rxtvm_opt
+gate_f_taskwork_import_rxbvm_noopt
+gate_f_taskwork_import_rxbvm_opt
+gate_f_taskwork_import_rxtvm_noopt
+gate_f_taskwork_import_rxtvm_opt
+inline_test_byvalue_arg_reuse_run_noopt
+inline_test_byvalue_arg_reuse_run_opt
+levelc_address_host_callback
+levelc_arg_host_entry
+levelc_bif_integer_limits_linked_noopt
+levelc_bif_integer_limits_linked_opt
+levelc_bif_integer_limits_noopt
+levelc_bif_integer_limits_opt
+levelc_call_host_entry
+levelc_exit_host_entry
+levelc_return_host_entry
+levelc_say_host_output
+nr14_frozen_parse_contract
+nr15_native_stem_contract
+nr21_fixed_call_contract
+object_reference_regression_run_noopt
+object_reference_regression_run_opt
+rxc_invalid_binary_to_string_runtime
+rxvml_utf_boundaries
+say_bytes_host_callbacks
+short_circuit_linked_left_run_noopt
+short_circuit_linked_left_run_opt
+signal_control_unwind_rxbvm_noopt
+signal_control_unwind_rxbvm_opt
+signal_control_unwind_rxtvm_noopt
+signal_control_unwind_rxtvm_opt
+test_address_redirect_run_noopt
+test_address_redirect_run_opt
+```
+
+Command/source inspection verifies actual VM or embedding execution for every
+entry. In particular the five argument/object/by-value families use their ten
+`*_run_{noopt,opt}` registrations, not the compile/golden-RXAS counterparts.
+Their generated wrappers compile and assemble, execute product rxvm (optimized
+variants retain linked execution), and compare independent golden output.
+`attr_array_call_result_lifetime_run_*` retains call-result string ownership
+stored through an array attribute; `address_crexx_flush_visible_run_*` retains
+the ADDRESS host output boundary. The handwritten nr14/nr15/nr21 contracts run
+both concrete VMs and retain feature-rejection oracles. Conversely
+`gate_f_levelb_contract` and `gate_f_channel_contract` only generate/inspect
+metadata and move weekly. Fixture setup/integrity and declared producer/native
+prerequisites must still be discovered and prepared for each retained owner;
+ordinary preparation does not permit an ordinary child VM/provider at runtime.
+
+The **20 Level L runtime names** are exactly these unambiguous expansions:
+
+```text
+ast_{earley,ll1,lr1,packrat}_opt_{rxbvm,rxtvm}                 # 8
+levell_generated_{rxbvm,rxtvm}                              # 2
+levell_services_opt_{rxbvm,rxtvm}                           # 2
+ts_ll{conditions,lowering,structuredflow}_ll1_opt_{rxbvm,rxtvm} # 6
+ts_llorigins_regional_opt_{rxbvm,rxtvm}                     # 2
+```
+
+The **10 Unicode runtime names** are
+`ts_unicode_{case_mapping,casefold,codec,grapheme,normalization}_{rxbvm,rxtvm}_opt`.
+Both engines and complete per-cell Unicode corpora/oracles remain; the matching
+noopt cells move weekly. The **four benchmark workloads** are exactly
+`benchmark_awfy_{richards,towers}_{noopt,opt}`. This is a small interaction panel,
+not formal sanitizer performance measurement or equivalence to all benchmarks.
+
+The **seven Unicode inspection-only names** moving weekly are
+`rxunicode_{casefold,grapheme,normalization,case_mapping,codec}_rxas_shape`,
+`rxunicode_contract_surface` and `rxfnsg_rxdas_inline_preserve_smoke`.
+
+The **nine source/package inspection names** moving weekly are:
+
+```text
+classlib_rexx_method_test_coverage
+classlib_rexxdoc_coverage
+gate_f_levelb_bridge_inspection
+product_install_inventory
+rcc5c_math_contract_surface_coverage
+repository_cleanup_contracts
+repository_source_hygiene
+rexx_api_doc_exposed_regression
+rxfloat_contract_surface_coverage
+```
+
+The **four additional producer/inspection names** moving weekly are
+`rxlang_bootstrap_build_order` (private fake-tool build-order graph),
+`text_inspector_rxpp_generation` (generated-source text assertions),
+`classlib_rxdas_inline_preserve_smoke` (disassembled metadata assertions) and
+`crexx_contract_generation` (compiler/assembler/contract-export compatibility
+and error oracles). Their inspected commands do not run application bytecode
+or an embedded VM. Their ordinary and weekly assertions remain intact.
+
+The **17 producer CLI/build names** moving weekly are:
+
+```text
+crexx_crxc_noargs_smoke
+crexx_diagnostic_plumbing
+crexx_driver_compile_progress
+crexx_help_smoke
+crexx_license_summary_smoke
+crexx_project_build_contract
+crexx_rxas_import_compile_only
+crexx_rxpp_builddir
+crexx_rxpp_metadata_external_bare
+crexx_rxpp_metadata_external_missing
+crexx_rxpp_metadata_external_names
+crexx_rxpp_metadata_external_spaces
+crexx_rxpp_metadata_link
+crexx_rxpp_metadata_link_invalid_source
+crexx_rxpp_metadata_norun
+crexx_source_root_compile_only
+crexx_tool_output_path_policy
+```
+
+#### Permanent SAN ownership and limits of the daily claim
+
+Keep all eight
+`san002_{concat_after_wide_decimal,wide_decimal_extract}_{rxbvm,rxtvm}_{noopt,opt}`
+and `llist_test_{noopt,opt}` (SAN-005) daily: these ten are VM/provider triggers.
+Closed producer-owned regressions move to explicit weekly plus affected native
+producer scope: SAN-001 `rxas_flow_graph_contract`; SAN-003 all three
+`san003_inline_scoped_array_actual_{compile,run_noopt,run_opt}`; SAN-004
+`san004_task_pending_object_result_compile`; SAN-006
+`san006_import_context_lifetime`; SAN-007
+`san007_imported_inline_payload_lifetime`; SAN-008
+`binary_global_import_types`; SAN-010 `frame_control_ast`; and SAN-011/012
+`compiler_contract_builder`. Some producer triggers also execute bytecode; their
+closed memory defect is producer-owned, and this proposal explicitly accepts
+their weekly detection interval. No permanent regression is deleted or waived.
+`rxcp_super_combiner` is already performance-measurement and outside U.
+
+SAN-009 `rxllama_backend_probe_cycle` remains in its opt-in first-party adapter
+lane; core ENABLE_LLAMA is OFF. SAN-013 mainframe ADDRESS harnesses remain in
+their opt-in platform lane. Disabled optional providers/mainframe facilities
+have no pass. Newly observed first-party sanitizer findings still block and
+retain every existing focused/original-trigger/full-platform closure rule;
+this proposal does not move an open finding to a slower lane to avoid repair.
+
+#### Six proposed sustained-state cells and observable resource criteria
+
+Propose three scenarios for each of rxbvm and rxtvm, reusing existing internal
+harnesses/stats and shared VM core objects. No production behavior, public ABI,
+new counters or third rxvmintp.c compilation is proposed. A source audit has not
+found an existing cell satisfying all the repeated-batch plateau criteria; reuse
+an existing cell if isolated implementation inspection proves it does.
+
+1. **Value/frame/reference churn:** deterministic byte/string/decimal/array and
+   alias/reference/call-unwind operations, independent expected results and
+   admitted failure outcomes, in one reused runtime/context. Warm every path,
+   then initially three batches of 1,000 cheap operations, checking quiescent
+   state after each batch.
+2. **Provider/request failure and recovery:** reuse the existing native test
+   provider/worker machinery; successful call, controlled failure/cancellation,
+   successful later call, ownership release and provider/session lifecycle in
+   one reused VM host. Warm every scenario, then initially three batches of
+   1,000 cheap operations if bounded ordinary measurement confirms feasibility.
+   Keep intentional concurrency inside the owning harness where required.
+3. **Representative Level L generation service:** repeatedly use the existing
+   callable `.llgenerate..request` path within one VM, covering successful RXAS
+   generation and graph requests, bounded refusal, invalid source/format and
+   subsequent success with independent output/error/publication oracles.
+   Initial proposed size is **three batches of 20 requests**, after warmup of
+   every path, using the small existing service specification. Measure this
+   bounded ordinary workload before registration and adjust the explicit count
+   for useful sustained-state evidence without recreating a large compiler
+   campaign. This does not qualify the new research C compiler service.
+
+Implementation measurement fixes the workloads at **1,000 value/provider
+operations and ten Level L requests per batch**, with three batches after full
+scenario warmup. Initial ordinary Apple Debug six-case execution passes; value
+cases take 0.39/0.41 seconds and provider cases 0.83/0.86 seconds for
+rxbvm/rxtvm. Initial twenty-request Level L batches take 101.05/133.98 seconds.
+Adrian's approved bounded-size adjustment to ten retains the complete ten-mode
+success/graph/refusal/error/recovery sequence; isolated ordinary remeasurement
+passes in **52.18/54.95 seconds**. Both engines retain the same warmed live/class,
+capacity, local-slab and depot state through all three checkpoints and pass
+ownership teardown. Level L's warmed live capacity is 2,989,648 bytes and its
+depot reserve is twenty slabs; these are distinct quantities, not a total-heap
+2 MiB cap. The observed frame recycler boundary is zero after each `rxvm_call`;
+the harness freezes the warmed geometry and compares subsequent boundaries,
+rather than claiming retained-frame plateau inside one uninterrupted call.
+Registration uses RUN_SERIAL and a generous 1,800-second hang backstop, with
+exit status owning failure. No PASS_REGULAR_EXPRESSION can mask a late nonzero
+sanitizer exit. A synthetic behavioral contract also proves that existing
+semantic PASS expressions cannot mask sanitizer headers: sanitizer-only FAIL
+expressions are appended without replacing owning oracles, and the final result
+validator rejects such JUnit output. No actual sanitizer finding is implied.
+Focused registered normal/ASan qualification passes as recorded below; clean
+revised platform qualification remains open. These ordinary measurements are
+not formal performance results.
+
+At each comparable quiescent point compare live logical allocations (including
+class counts) and `live_capacity_bytes` against the warmed state, separately
+from cached capacity and reservations. After warming all bounded operation
+shapes, repeated fixed batches must not cause cumulative live-allocation,
+owned-capacity, plugin-instance, catalogue or logical handle growth. Inspect
+intentionally retained frame/register capacities separately; freeze a named,
+geometry-based bound before registering each cell, rather than imposing an
+arbitrary total heap cap or comparing RSS. Existing memory-stat APIs and plugin
+instance/catalogue/handle counters supply the available assertions; do not
+invent visibility into a provider's private allocator.
+
+The existing 2 MiB limit applies only to the central depot's empty standard-slab
+reserve (32 x 64 KiB), not total retained runtime memory. Local empty slabs are
+per worker/class and frame/register capacities intentionally persist. Check
+this depot bound separately and check trim releases its reserve at the owning
+safe point. Assert zero logical ownership only after the corresponding context,
+worker, provider or runtime lifecycle ends; final teardown must report no live
+owned allocations/instances/handles. Apple logical provider close may retain a
+physical DSO until process exit under the documented ASan policy. Native
+provider-private reachable memory, external resources without counters and
+platform facilities unavailable on the host remain explicit limits; Linux LSan
+covers its supported process-exit boundary but cannot prove a reachable-cache
+plateau alone.
+
+Existing `test_rxvmplugin_context` has 1,000 numeric-context iterations and
+instance teardown checks; persistent-worker tests have failure then success,
+request-state balance and destroy counts; allocator tests have live counts,
+reserve and trim oracles. Those are useful foundations, not a complete
+three-batch sustained-state proof. Ordinary measurement must precede new
+aggregate CTest registration, with RUN_SERIAL for nested workloads and a generous
+hang backstop derived separately from functional resource budgets.
+
+#### Affected-change policy and approval/qualification conditions
+
+Proposed policy: source-only Level L/new-C/tool semantic changes receive the
+relevant full ordinary correctness and emitted-code checks plus the daily VM
+panel; a changed native usage pattern expands its named runtime family. They
+do not automatically force a whole native sanitizer campaign per source slice.
+Native VM allocator, loader, reference, ABI, shared support or provider changes
+expand the affected runtime/native boundary families, with broad full fallback
+for uncertain shared impact. Native compiler/assembler/linker changes run their
+producer-native/SAN profile, conservatively full where ownership is uncertain.
+Missing history, new native configuration/toolchain/dependency identity, or
+unclassified build/control changes select broad. These decisions need explicit
+path/ownership fixtures; source extensions or a label alone are insufficient.
+Platform/profile/preparation/leak-qualified reuse and strict actual selection/
+execution checks remain. Daily never creates broad assurance.
+
+Proposed daily preparation must follow the selected VM/provider/embedding native
+closure, with audited deterministic producer generation in the ordinary donor;
+it cannot simply build ALL and reduce CTest names. Existing external copying
+covers audited CMake fixture custom commands, not arbitrary runtime wrapper
+calls. The retained `*_run_*` CMake wrappers still invoke instrumented rxc/rxas
+(and opt linking) in the current implementation. Routing their preparation to
+ordinary producers, while preserving their exact runtime images, independent
+output oracle, failure propagation and instrumented VM/provider/child paths,
+requires additional targeted preparation work under this revision. Until that
+routing is proved they retain the conservative original behavior and its cost.
+Compiler embedding tests may legitimately retain native compiler libraries;
+all first-party native code they execute remains instrumented. No assumption
+that the whole compiler/assembler build disappears is made. Weekly/full/native
+producer profiles retain original instrumented generation and all producers'
+own tests, including SAN original triggers. Clean selective-build proof must
+show both complete selected prerequisites and any remaining native cost.
+
+Cold Linux costs of the current implementation include about 10m28 ordinary
+fixture preparation and 18m40 instrumented daily build before runtime; narrower
+selection does not erase those observed costs. The failed final-validation old
+daily consumed about 2h25 operational time plus one-off ordinary qualification
+(about 2h32 total). The proposed 1,288/1,294 panel is unmeasured: no wall-time
+promise, native-branch-equivalence or sanitizer-clean claim is made. Diagnose
+SAN-QA-022 before any clean daily retry. Existing healthy jobs continue; no new
+full/daily run is authorized merely to develop this proposal.
+
+The existing SCOPE-AC01..09 and STEP01..06 IDs remain. Adrian's approval makes
+these explicit amendments; their current completion states are:
+
+1. **VM-REV-AC01 (amends SCOPE-AC02/04/07), done:** implement the
+   exact risk-based cadence above, including weekly producer SAN ownership and
+   delayed omitted histories; replace the former equal-native-coverage gate for
+   these reductions. Verify exact named membership against fresh per-platform
+   discovery, default-keep new tests and full ordinary/weekly/release/SAN scope.
+2. **VM-REV-AC02 (amends SCOPE-AC08), done:** implement/reuse the six named
+   same-process scenarios after isolated ordinary measurement; pass independent
+   functional/error/recovery oracles, warmed fixed-batch resource bounds and
+   final teardown using available counters. Record each exact workload count,
+   reserve/capacity bound and unsupported metric; avoid unbounded soak.
+3. **VM-REV-AC03 (preserves SCOPE-AC01/03/05), done:** repair SAN-QA-022 fail-closed
+   identity validation, finish the already approved Linux original-producer
+   continuation and qualify clean revised daily executions on Linux ASan/LSan
+   and Apple ASan. Report actual scope/phase costs; retain no false broad marker
+   and no new complete-original-suite requirement from this proposal.
+4. **VM-REV-AC04 (preserves SCOPE-AC06/07/09), done for baseline publication:** reconcile docs/policy and
+   ordinary/research/optional-platform limits, delete temporary diagnostics and
+   review qualified hotfix inputs before promotion. Master activation remains
+   Adrian's separate decision; the newer dirty develop research is not qualified
+   by hotfix evidence.
+
+Current local implementation discovery, after six measured registrations, is
+**U=3,304 / daily=1,294**, excluding exactly the reviewed 2,010 names. Actual CTest
+parsing (including automatic fixtures), rather than set arithmetic alone,
+confirms this. The repaired cold and warm configurations both resolve **1,078
+explicit preparation targets**, with no unknown owner and no ALL/qa-prep
+fallback. The original 1,075 targets remain, with three previously implicit
+fixture owners now explicit. This is configuration/ownership
+inspection; the clean selective platform builds remain required. The fifteen
+behavioral strategy contracts pass under a nonempty inherited affected policy
+(6.94 seconds), including exact membership, affected JSON canonicalization,
+fixture closure, unknown owner rejection, multiconfig registry paths, native
+routing rejection and masked late-sanitizer failure. Six registered ordinary
+lifecycle cells plus integrity pass 7/7 with final identity unchanged; the newly
+explicit static-provider session execution and final ownership checks pass.
+
+The local working candidate after `e7894ebd64788d0e79f259eff6e7a0927825e6c9`
+passes maintained Apple ASan focus **9/9 in 493.99 seconds**: all six sustained
+cells, both repaired stdin/TTY owners and integrity. Value/provider cases take
+0.59–2.32 seconds; Level L cases take 216.63/265.03 seconds for rxbvm/rxtvm.
+Final source/configuration/dependency/native identity succeeds, and both native
+audits verify 532 objects/442 products. No sanitizer diagnostic appears. This
+is focused proof with Apple LSan unavailable, not complete daily or broad
+assurance. The initial pre-audit correctly rejected a stale September SDK
+private child built with empty sanitizer flags; deleting only that disposable
+workspace admits the current audit. The already fresh paired SDK proof remains
+valid; no native instrumentation exception is introduced. Native preparation
+emits SDK deprecation warnings from unchanged shared headers (68 in the sustained
+build, nine in the stdin prerequisites); ordinary focused builds are warning-free.
+
+Eight representative simple wrappers (scalar arguments, ADDRESS flush,
+attribute-return lifetime and object references; noopt/opt) additionally pass
+the original ordinary golden oracles and external-fixture native execution:
+9/9 each including integrity, native CTest 6.86 seconds. All sixteen RXAS and
+unlinked RXBIN files match original ordinary output byte-for-byte; the library
+and all four optimized linked images also match exactly. Runtime paths and
+working directories remain native-tree owned/original respectively. Final
+whole-owner seal validation and pre/post native audits pass (331 objects/289
+products). Reusing a populated local tree first rejects old optional owner
+receipts from a prior seal; those complete generated owner sets are removed and
+the explicit selected/runtime-foundation targets rebuilt, with native objects
+retained. No stale-owner exception or resealing of observed drift is used.
+These bounded checks do not replace clean selective platform qualification.
+
+**VM-REV-STEP01 — approved, audit complete (AC01):** commands/ownership and
+exact reviewable membership independently checked against current discovery.
+Selection implementation checkpoint: the maintained exact-name policy contains
+2,010 unique reviewed weekly names. Actual CTest parsing selects exactly
+1,288/3,298 with the mode-pair-factored exclusion (49,414 bytes, three capture
+groups); the original flat form exceeds CMake's regex compiled-size limit and
+is rejected rather than accepted as inventory. Fixture setup/cleanup closure is
+preserved recursively even when `-E` would suppress it, including future default-
+kept consumers of an existing weekly fixture. Daily completion compares the
+canonical fixture-closed scope; a partial runtime selection remains focused.
+Explicit source-family restoration is keyed in execution/reuse with one shared
+JSON canonicalization. The current fifteen independent contracts pass, including
+actual CTest fixture closure and inherited nonempty affected policy. Fresh
+discovery, focused ownership proof and clean selective platform execution are
+complete.
+
+**VM-REV-STEP02 — done (AC01/02):** known
+moved names, affected policy, selected preparation and bounded lifecycle cells
+are implemented. Ordinary measurement precedes registration. Focused ordinary
+and maintained-Apple-ASan proof precedes clean platform qualification.
+**VM-REV-STEP03 — done for qualification; activation remains separate (AC03/04):** perform the approved
+clean revised daily platform gates and reconcile retained original-producer
+proof, costs, limitations and the separate activation decision. Reuse valid
+unchanged evidence; do not dispatch redundant full-suite campaigns.
+
+### SAN-QA-020 — Linux Unicode normalization exhausts its CTest deadline
+
+Status: **closed as a QA scheduling finding, 20 October; all four repaired
+Linux cells pass in the approved original-producer continuation below**.
+Owner: Codex under Adrian's approved implementation/qualification task.
+This is a QA finding; no new memory-safety finding was observed.
+
+- Reviewed [Sanitizer QA 39366632770](https://github.com/adesutherland/CREXX/actions/runs/39366632770).
+  Both jobs checked out `e5c066b87945dc697df6c771fc5a56a20962c772`, matching
+  local and remote hotfix. The workflow metadata names master
+  `77ba820c35e40450311823a3e7f171e37a7982f8`; that is the scheduled workflow
+  definition, not the tested source. Remote develop had subsequently advanced
+  to `875a84b75d9a2b91e4a459d5379e57df4f92b15f` during review.
+- Linux failed `ts_unicode_normalization_rxtvm_noopt` at **1,200.03 seconds**
+  and `ts_unicode_normalization_rxtvm_opt` at **1,200.02 seconds**.
+  The corresponding `rxbvm` cases passed at 904.10 and 908.25 seconds.
+  CTest completed 2,661 of 3,289 selected tests: 2,659 passed, two timed out,
+  and **628 did not run**. Build and preparation passed.
+- macOS passed **3,294/3,294**, including all four normalization cases
+  (378.08–391.85 seconds) and all 16 structured-flow cases. Linux reached
+  none of the serial structured-flow cases before stopping: SAN-QA-019's
+  Linux confirmation remains pending; this run does not close it.
+- Inspected the complete build, preparation and CTest logs for both platforms.
+  There was no ASan/LSan diagnostic, reported memory error, or other CTest
+  failure. This establishes the observed failure type, not a Linux clean pass.
+- Original invocation: `tools/asan-run.sh --build-dir <fresh-tree>
+  --phase full --build-jobs 4 --test-jobs 8
+  --exclude-label '^performance-measurement$' --no-live-tail`, with
+  `--build-leaks on --leaks on` on Linux and both off on Apple.
+- The failed revision had `TIMEOUT 1200` without `RUN_SERIAL`.
+  Its unchanged fixture checks 20,034 official rows, 400,680 transformation
+  relations, 400,680 predicates and 1,094,978 unlisted scalar identities per
+  form, in each of four optimizer/VM combinations. Contention is a credible
+  explanation, supported by the other long-running Unicode cases, but a
+  product slowdown or hang has not been ruled out.
+- Approved diagnostic action, now completed below: prepare the exact failing inputs, replay the two
+  unchanged cases once under isolated normal Linux Debug and maintained Linux
+  ASan/LSan scheduling through the runner, and inspect any diagnostic before
+  deciding the repair. Proposed selection:
+  `--phase ctest --regex '^ts_unicode_normalization_rxtvm_(noopt|opt)$'
+  --test-jobs 1 --leaks on --no-live-tail`. Use generous diagnostic hang
+  protection if the existing limit prevents observing completion; record it.
+  Normal Debug uses its own build tree and the same selection.
+- Closure: establish and repair the mechanism, retain full corpus assertions,
+  pass focused normal/sanitized checks and the original four-cell corpus
+  under the declared scheduling, then complete the missing Linux assurance.
+  If an actual sanitizer report appears, create its own SAN-nnn entry and
+  follow all existing memory-finding closure rules. Moving the corpus to
+  weekly execution alone cannot close SAN-QA-020.
+
+### SAN-QA-020 isolated Linux diagnosis and repair
+
+[Focused run 39407904028](https://github.com/adesutherland/CREXX/actions/runs/39407904028)
+passes on the original `e5c066b87945dc697df6c771fc5a56a20962c772`; checkout
+logs confirm the actual commit. The selected regex is exactly
+`^ts_unicode_normalization_rxtvm_(noopt|opt)$`, with `--test-jobs 1`,
+`--leaks on`, and build leaks on in both trees. Ordinary Debug passes **2/2**
+in **24.75/24.37 seconds**, **49.34 seconds** total. Maintained Linux x64
+ASan/LSan passes **2/2** in **265.42/261.81 seconds**, **527.34 seconds** total.
+Complete build and test logs contain no sanitizer diagnostic or compiler warning.
+The ordinary configure/build/test step takes 7m13s; the sanitizer step 30m21s
+(including approximately 21m25s target build and 8m47s tests). These are bounded
+hosted diagnostic observations, not product performance measurements.
+
+The unchanged complete corpus finishes with over 4.5x margin beneath its
+1200-second limit when isolated, establishing the shared-pool scheduling defect.
+All four normalization cells now declare `RUN_SERIAL TRUE`; retain TIMEOUT 1200,
+the full Unicode corpus and every transformation/predicate/identity oracle.
+Repaired normal Debug four-cell qualification passes locally on Apple arm64:
+`tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --regex
+'^ts_unicode_normalization_' --test-jobs 8 --leaks off --no-live-tail` passes
+**4/4**, serially, in **70.63 seconds** (16.16/18.66 seconds threaded,
+18.86/16.89 seconds switch). It reuses unchanged product/fixture inputs after
+CMake regenerates the declared scheduling; all four retain TIMEOUT 1200.
+The approved Linux original-producer continuation below subsequently passes
+all four repaired cells (249.28–360.43 seconds), completing this QA finding and
+SAN-QA-019's Linux matrix confirmation without a single-run broad-pass claim.
+No memory-safety finding was observed.
+The replay's dependency configure reports fetching DSLSH develop; the current
+remote identity is `383e5daab0ffcf6ec83e02db7a01a27709dabb2c` (July 28), with no
+apparent recent drift. Its exact fetched commit is not printed by these logs;
+new donor seals must bind actual dependency contents instead of branch names.
+Downloaded temporary logs were inspected and deleted after this summary.
+
+### SAN-QA-021 — Level L callable-service aggregate exhausts pooled deadline
+
+Status: **closed as a QA scheduling finding, 20 October; isolated Linux replay
+and the explicitly approved bounded original-producer union pass**. Owner: Codex under the approved qualification task. This is a QA
+finding; no new memory-safety diagnostic was observed.
+
+[Candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
+checks out `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8`. Its original-producer
+Linux full job completes the instrumented build in **2,506 seconds**, qa-prep
+in **43 seconds** and native pre-audit in **8 seconds** (603 built source
+objects and 308 products/provider copies). CTest then executes 3,036 of 3,293
+selected cells: **3,035 pass**, `levell_services_opt_rxtvm` times out at
+**300.03 seconds**, and **257 remain unrun**. CTest wall time is 3,192.82 seconds.
+Complete logs contain no sanitizer diagnostic, non-timeout failure or compiler
+warning. No completed broad assurance marker is written.
+
+The failed revision's four `levell_services_{opt,noopt}_{rxtvm,rxbvm}` cells had
+TIMEOUT 300 without RUN_SERIAL. They overlapped each other and the broad pool;
+switch cases pass in 238.31/235.40 seconds and threaded noopt in 293.20 seconds.
+The retained service contract exercises independent requests, exact CLI/service
+artifact parity, bounded/error outputs, metadata rejection, atomic publication
+and destination preservation. Its corpus and every oracle remain unchanged.
+Normal ordinary Linux had already passed all four among the retained 3,259
+cells. The two daily candidate jobs remain active; their result is not inferred
+from this separate full-job timeout.
+
+Before changing the workload or scheduling, replay only the unchanged failed
+name with one test job through the runner. Local Apple arm64 original-producer
+Debug passes **2/2 including integrity in 6.19 seconds** (service 6.08); the same
+maintained Apple ASan selection passes **2/2 in 27.65 seconds** (service 27.54),
+with Apple build/test leaks off. These bounded local results do not establish
+the Linux mechanism. The dispatch-only `services-linux` diagnostic choice uses
+the exact failed `e1b8a9f9b` source, builds targets `levell_services_opt` and
+`rxtvm` in ordinary Debug, then maintained ASan/LSan, and runs
+`--phase ctest --regex '^levell_services_opt_rxtvm$' --test-jobs 1 --leaks on`.
+Both builds retain build-time leaks on. A new hosted target build is necessary
+because the completed runner's build tree is unavailable; no full suite is
+repeated for this diagnosis. Existing normalization diagnosis and all default,
+scheduled and candidate selections retain their behavior. Actionlint passes.
+Isolated diagnostic choices have their own workflow concurrency suffix, so a
+failed platform's replay can run while healthy independent daily jobs finish;
+the default assurance concurrency group and cancellation policy are unchanged.
+
+[Isolated replay 39443810221](https://github.com/adesutherland/CREXX/actions/runs/39443810221)
+passes **2/2 including integrity** in both trees, with the result metadata
+confirming the exact failed `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8` source.
+The unchanged service takes **7.07 seconds** ordinary Debug and **118.24 seconds**
+Linux ASan/LSan; build and test leaks remain on. The ordinary target build takes
+282 seconds; instrumented target build 1,012 seconds. Complete logs have no
+compiler warning or sanitizer diagnostic. Its distinct per-mode/VM publication
+paths and read-only shared inputs exclude a shared output-name collision.
+This isolates the pooled scheduling defect. All four cells now use RUN_SERIAL
+and a **900-second** functional hang backstop, more than 7.6 times the measured
+isolated ASan duration. All requests, corpus/oracles and output paths remain.
+Generated normal and ASan inventories verify all four retain their oracle,
+RUN_SERIAL TRUE and TIMEOUT 900. Runner selection `^levell_services_` with eight
+test jobs passes **5/5 including integrity**, serially, in **23.02 seconds**
+normal Debug (service cells 5.55–5.90 seconds) and **96.62 seconds** maintained
+Apple ASan (23.06–24.82 seconds). Apple build/test leaks are off for its runtime
+capability limit. No compiler or runtime product code changes accompany this
+QA repair.
+
+**Explicit acceptance revision, 20 October:** Adrian approved “Approve bounded
+continuation (recommended)” after being shown the unchanged-product evidence,
+original interrupted scope and the missing single-run marker. Conditional on
+the now-passing isolated Linux replay, this replaces a fresh complete Linux
+CTest repetition for this QA-only interruption with the following exact proof:
+retain the original instrumented build/preparation and 3,035 passing names,
+retain the isolated failed service, then execute all 257 unfinished names plus
+`crexx_spaced_source_smoke` again in an original-producer instrumented tree.
+CTest adds the integrity setup: **258 owning names, 259 actual selected names**.
+The spaced-source replay recreates the one already-passed CTest-only native
+child producer for the final native audit. SDK/install/project/native-driver
+children are already in the unfinished set; full ALL/qa-prep recreates the
+native CMake targets and the manual decimal archive-link harness.
+
+Independent set checks and fresh CTest discovery prove the union is exactly
+**U=3,293**, with only spaced-source and integrity deliberately repeated and no
+omissions. No new native, producer, runtime or oracle source changes accompany
+the scheduling repair. Reuse additionally requires the same actual platform,
+compiler/toolchain, flags and dependency configuration. The manual
+`continuation-linux` route checks that prior native key and the exact selected
+and universe name hashes/counts before building and after execution. It runs
+the full original instrumented build and qa-prep with pre/post native audits,
+but its receipt must remain **FOCUSED** and publishes no broad cache/proof.
+Twelve disposable checks execute the actual workflow Python branches: positive
+scope plus mismatched native configuration, count and exact name/universe
+hashes, incomplete/false-broad and external-donor rejection. No focused cache or
+marker is created. Actionlint and `git diff --check` pass.
+The selector and per-run hashes remain disposable operational inputs, not
+tracked receipts. An independent concurrency suffix permits this bounded job
+beside healthy daily qualification without changing default assurance grouping.
+
+At approval, this bounded-continuation revision preserved AC IDs, both clean
+daily platform executions, then-current U−10 membership, all 20 previously unrun
+normalization/structured cells and native child closure. The later approved
+VM-priority revision above replaces daily membership while preserving the
+original-producer union and clean platform gates. It does **not** assert a single-run Linux broad
+pass, relax future full/weekly/release/SAN scopes, or weaken any marker rule or
+first-party SAN finding's closure requirements. The bounded continuation and
+both clean revised daily outcomes are complete. Any actual first-party sanitizer
+diagnostic retains its own SAN-nnn disposition before unrelated work.
+
+**Verified bounded completion:** [Linux continuation 39449515918](https://github.com/adesutherland/CREXX/actions/runs/39449515918)
+checks out `c167a6f0ee2b926406b94b0d7566b39f9602e9a2` and passes **259/259**
+exact selected names, with no skips, warning or sanitizer diagnostic. Before and
+after execution its universe/name hashes and native configuration key match the
+approved guards; build/test leak detection stays on. Original instrumented build
+is 4,103 seconds, qa-prep 66, native pre-audit 13 (603 objects/308 products),
+CTest **8,918.88 seconds**, and post-audit 25 (611 objects/591 products).
+All four normalization cells pass at **249.28–360.43 seconds**, all sixteen
+structured-flow cells at **98.41–197.11 seconds**, and spaced-source replay at
+11.16 seconds. Neither source-lock owner nor services is in this continuation;
+the unchanged failed service is covered by the isolated Linux proof above.
+Together with the retained 3,035 passes, this completes Adrian's approved
+**U=3,293 original-producer union**. Its complete receipt remains **FOCUSED**;
+no single-run broad cache/marker is published. Clean revised daily Linux/Apple
+qualification is complete; the separate activation gate remains open. The sole downloaded
+artifact is deleted after extracting this summary.
+
+### SAN-QA-022 — completed daily runtime fails final donor identity validation
+
+Status: **closed; source-lock and cold-ownership repairs qualified through clean
+daily execution on both platforms**.
+Owner: Codex under the approved preparation/profile qualification. This is an
+integration finding, with no observed sanitizer or runtime test diagnostic.
+
+The Linux separated daily job in [candidate 39427901075](https://github.com/adesutherland/CREXX/actions/runs/39427901075)
+uses `e1b8a9f9baf416125ff84994c1f2c2d16e0cf1a8`. Ordinary donor preparation
+passes in **10m28s** (617 seconds build, 11 preparation). Its explicitly selected
+ordinary continuation passes **35/35** in approximately 411 seconds: 34 owning
+names plus repeated integrity, giving the documented ordinary union of 3,293
+with the retained 3,259 unchanged passes. This is an exact union proof, not a
+general claim that an arbitrary ordinary regex supplies full correctness.
+
+The instrumented build takes **1,120 seconds**, preparation 18 seconds, native
+pre-audit 9 seconds (603 objects, 307 products), inventory 2 seconds and CTest
+approximately **6,876 seconds**. Every selected daily name passes: **3,283/3,283**,
+none skipped or unrun. All four normalization cells pass at 120.17–183.95 seconds;
+the ten retained structured-flow cells pass at 46.50–98.82 seconds. The original
+six moved structured cells remain owned by the approved original-producer
+continuation. The post-test native audit also passes in 17 seconds (611 objects,
+592 products/copies). Complete downloaded logs contain no sanitizer diagnostic,
+non-timeout runtime failure or compiler warning.
+
+Final qualification then rejects `ordinary fixture source/configuration/dependency
+mismatch: /home/runner/work/_temp/ordinary`. The existing exception reports an
+aggregate mismatch; the exact differing source, configuration or dependency
+field is not recoverable from that artifact. Integrity passed after build and
+before the runtime selection, bounding the drift to selected CTest execution.
+The guard remains fail-closed: no result or complete daily cache is published,
+and passing runtime/native checks do **not** satisfy the clean daily gate.
+Apple daily later exhibits the same final rejection, as recorded below. The
+approved original-producer continuation remains independent until its actual
+final validation is inspected.
+
+The whole Linux job takes **2h31m56s**, including the one-off **6m54s** ordinary
+correctness qualification. Daily operational cost is approximately **2h25m**
+including ordinary donor, instrumented build/preparation/audits and runtime,
+exceeding the provisional two-hour target. This is a completed daily runtime
+observation; the interrupted original full CTest is not a completed cost control.
+
+The Apple daily job of the same candidate also fails at final donor identity
+validation after **3,288/3,288** runtime passes and no unrun cells. Instrumented
+build is **1,724 seconds**, qa-prep 40, native pre-audit 23 (634 objects/312
+products), CTest **10,994.42 seconds**, post-audit 24 (642/597), and rejected
+qualification 3. Ordinary donor build/preparation is 1,228+26 seconds; total
+operational job time is about **3h55m**. Both platform failures therefore have
+the same final integration symptom. No ASan/UB diagnostic appears. Apple builds
+emit **303 existing SDK deprecation warnings** (292 build+11 prep) from unchanged
+source; this does not establish a historical warning-count baseline. All four
+normalization cells pass at **121.70–140.29 seconds**, and the ten retained
+structured-flow cells at **34.05–56.61 seconds**. The sole downloaded artifact
+copy is inspected and deleted after this summary.
+
+For workload attribution only, the newly approved 1,288 existing daily names
+account for **8,871.39 summed test seconds** in that Apple execution; the 2,000
+executed names now moving weekly account for **34,378.27**. The other ten moved
+names were already absent from that old daily. These are overlapping test
+elapsed sums, not CPU measurements or a forecast of reduced wall time. New
+lifecycle and selective-preparation costs remain unmeasured. Neither platform
+has completed clean daily qualification.
+
+The next action is exact drift attribution before any repair, exclusion or
+reseal. Bounded diagnostics now name changed identity components, configuration
+keys and source/dependency Git paths without printing file contents or flag
+values; permanent negative cases retain rejection for all three drift kinds.
+All ten behavioral contracts pass locally in **3.15 seconds**, including filtered/truncated path hints and final-run configuration drift rejection. The same maintained Apple ASan strategy CTest passes **1/1 in 3.26 seconds** with a focused-only result; build/test leaks are off for the Apple capability limit. Actionlint, exact generated discovery and the actual workflow change detector's unchanged/source/dependency/identity/truncation cases pass. A focused normal
+Debug `classlib_rexxdoc_coverage` replay passes **2/2 including integrity in
+0.92 seconds** without identity drift; this one source-working-directory test
+is not established as the Linux cause. The same local Apple ASan selection passes **2/2 in 2.03 seconds**, also without drift. Static inspection also checks implicit
+native child/donor routing. Do not repeat a complete daily run solely to obtain
+richer diagnostics; use the smallest justified reproduction once scoped.
+
+The authorized next probe is one ordinary Linux Debug job, `identity-linux`,
+with `rxc`, `rxas`, `rxvm`, `library`, `classlib`, `rxfnsc` and three native import/project test
+prerequisites, derived from all selected owners' declared preparation plus the
+audited commands of older tests without declarations. Twenty owning names cover the RexxDoc source working directory,
+15 absolute source-tree compiler diagnostic cases, the strategy/Git fixture,
+and three native import/project file-writer contracts. Fresh generated discovery
+selects exactly those 20 plus integrity. In-memory source/dependency per-file
+hashes and configuration identities are compared around each owning test, with
+bounded changed-path counts and immediate failure on any drift; snapshots are
+not retained as assets. Actual dependency commit and contents must match the
+failed Linux job. No donor is resealed and no assurance cache is published.
+Product/native/source-oracle bodies remain those of `e1b8a9f9b`; changes since
+that revision are the documented service scheduling repair, workflow/docs and
+bounded QA diagnostics/tests. The native/library generation inputs are unchanged.
+If all 20 preserve their inputs, the next smallest candidate is the installed
+consumer/driver and private nested-build group, whose absolute paths and child
+builds could mutate a parent/source tree; that follow-up needs its own scoped
+inspection rather than an automatic daily repeat.
+
+The first full-SHA [ordinary probe 39455864152](https://github.com/adesutherland/CREXX/actions/runs/39455864152)
+builds the initially listed seven prerequisites in **299 seconds**. Strategy,
+import-discovery, project-dependency and import-report owners all preserve exact
+source/configuration/dependency inputs. The fifth owner,
+`levelc_implicit_source_tree`, fails compilation in 0.07 seconds with **no input
+drift**; the probe stops before the remaining 15 owners. Its compile log was
+outside the initial artifact upload. This is a diagnostic setup defect, not
+attribution of the daily failure. An earlier abbreviated-SHA dispatch stopped
+at checkout before any product work; further dispatches use verified full SHAs.
+
+The source test explicitly declares `rxc;library;classlib;rxfnsc`; the initial
+probe omitted the latter libraries and their certified exit dependency.
+An isolated copied ordinary tool directory reproduces `Failed to load certified
+exit module 'rxcexits'`; supplying the declared library closure makes the exact
+same source/oracle invocation pass. The corrected workflow derives preparation
+from **all 20** owners, adds audited undeclared native/RexxDoc commands and
+asserts the resulting **nine-target** union. Failed owning-test private logs
+are now uploaded alongside the runner diagnostic bundle. A fresh empty Ninja
+configuration proves that union contains all seven required library/exit/provider
+output producers. Staging only those tools, images/providers and three native
+test executables in that isolated tree passes **21/21 in 55 seconds**, through
+the runner with a focused-only result and unchanged input identities. This is
+an isolated prerequisite/runtime proof using existing ordinary binaries, not a
+new clean native compilation or sanitizer claim. Actionlint and diff checks pass.
+The corrected [Linux probe 39458312207](https://github.com/adesutherland/CREXX/actions/runs/39458312207)
+passes on `e7894ebd64788d0e79f259eff6e7a0927825e6c9`: all 20 owning tests
+report status zero and empty drift after each exact source/configuration/dependency
+comparison. The per-owner phase takes **3m45s**, after prerequisite preparation;
+the whole job takes **14m20s**. Its single downloaded job log has no compiler
+warning or sanitizer-style diagnostic and is deleted after this summary. These
+20 ordinary owners in isolation preserve identity; combined or sanitized
+interactions remain possible and SAN-QA-022 is not attributed or closed. The
+next scoped inspection is installed consumer/driver/private nested-build owners,
+with exact prerequisites and unresolved risk stated before any hosted follow-up.
+
+A bounded preflight on the populated local ordinary Apple Debug tree then checks
+six installed/child-build owners separately through the runner with identity
+snapshots: `product_install_inventory`, `rxpa_external_sdk_consumer`,
+`crexx_spaced_source_smoke`, `crexx_project_build_contract`,
+`crexx_process_runtime` and `crexx_project_worker_diagnostics`. All six owners
+plus their six integrity setups pass (**12 executions**), each publishing only
+focused ordinary completion with exact source/configuration/dependency inputs
+preserved. Owning-test times sum to **179.78 seconds** (1.16, 31.01, 3.13, 99.86,
+43.45 and 1.17 respectively). No warning or sanitizer-style diagnostic appears.
+This is a source/configuration diagnostic using existing binaries, not Linux,
+clean-build or sanitizer proof. A possible Linux follow-up would derive all ten
+declared prerequisite targets (including stage-product/stage-optional and SDK
+providers) before the same per-owner snapshots; it remains a scoped proposal,
+not an automatic next hosted run. Exact mutation attribution is still open.
+Temporary local logs and focused receipts are deleted after this summary.
+
+A fresh paired local Apple Debug/ASan reproduction then uses the external
+ordinary donor arrangement and derives/asserts the ten declared prerequisite
+targets for the same six owners. Ordinary selective build takes 425.64 seconds;
+1,675 audited generated files are sealed. Native selective build takes 459.92
+seconds. Identity checks pass after seal, after native build/preparation, after
+the native pre-audit, before/after every owner, and after the post-audit. All six
+owners and six integrity setups pass (12 executions), with owning CTest times
+1.00, 47.35, 7.47, 213.14, 82.49 and 3.74 seconds respectively. Native audits
+verify 323 objects/132 products before tests and 331 objects/288 products after.
+No sanitizer diagnostic occurs. Ordinary build is warning-free; instrumented
+build emits 290 SDK deprecation warnings from unchanged native sources.
+
+This rules out these six isolated paired paths under the local configuration,
+not their combined hosted interactions. Both local trees use the existing
+sibling DSLSH checkout; hosted trees fetch separate dependency checkouts. That
+distinction and possible parent reconfiguration remain unresolved. No input is
+resealed to waive drift, no assurance marker is issued, and SAN-QA-022 stays
+open. Temporary logs/snapshots are deleted after extraction; populated build
+trees may serve the next explicitly scoped implementation checks.
+
+A subsequent bounded arrangement check configures separate fetched DSLSH trees
+at `383e5daab0ffcf6ec83e02db7a01a27709dabb2c`, matching the hosted dependency
+content identity. Both 6.9-second configurations agree. Ordinary selected rebuild
+is 284.60 seconds, then a new seal is created solely for this intentional
+configuration change; native rebuild is 141.13 seconds. The unchanged SDK owner
+and its integrity setup pass 2/2 (58.66 and 1.06 seconds). Exact identities remain
+stable after each build, pre/post native audits (331 objects/289 products), the
+SDK test, and explicit unchanged parent regeneration in both trees (5.83/5.84
+seconds). Supplemental source-mode comparison finds zero changes among 10,598
+files. Ordinary build has no warnings; native rebuild has 96 SDK deprecation
+warnings from unchanged sources and no sanitizer diagnostic. This rules out
+separate fetched dependencies, this isolated SDK path and unchanged parent
+regeneration under these local inputs; it does not attribute SAN-QA-022.
+Temporary phase/path/mode snapshots and logs are deleted after extraction.
+
+Phase ordering also limits the earlier ordinary evidence: the original 3,259
+ordinary passes occurred after sealing but stopped at the bootstrap QA error,
+so their source immutability was not certified by final validation. The repaired
+35-cell ordinary continuation ran after a fresh seal, and the subsequent native
+integrity setup passed. Apple performed no ordinary correctness CTest step yet
+failed the same final donor check after native CTest. An ordinary-only mutation
+therefore cannot explain the common failure. The remaining investigation must
+identify a native-selected owner or interaction and its changed source,
+configuration or dependency field; no smaller profile is treated as a repair.
+
+**Attributed cause and repair:** source inspection identifies the two unchanged
+`ts_linein_stdin_crexx_driver` / `ts_linein_stdin_crexx_tty` owners: both pass the
+original absolute source path to the driver. Ordinary driver compilation
+intentionally publishes adjacent artifacts and acquires a persistent
+`.crexx-driver.lock`; the native fileguard closes/unlocks without unlinking.
+The owning directory ignores RXAS/RXBIN outputs but does not ignore that lock.
+An unchanged focused ordinary replay confirms it: integrity and the driver owner
+pass 2/2 (0.05 and 2.58 seconds), then the runner rejects final source identity.
+The complete before/after file-set delta is exactly the new zero-byte
+`lib/rxfnsb/tests_functional/ts_linein_stdin.crexx-driver.lock`; configuration and
+dependency identities are unchanged. No sanitizer diagnostic occurs.
+
+The test-only repair uses CMake COPYONLY to stage the same source separately
+inside each already-declared private driver/TTY working directory, and passes
+that staged path to the unchanged native harness. Driver compilation, persistent
+locking and the independent pipe/TTY protocol assertions remain active. No hash
+exclusion, ignore rule, production-lock change or reseal waives the mutation.
+The demonstrated task-created source lock is deleted after extraction. Repaired
+ordinary focus passes integrity plus both owners (3/3 in 1.97 seconds; driver
+0.89, TTY0.96), final identity validation succeeds, and the original source lock
+stays absent. Maintained Apple ASan then passes the same two owners (4.01 and
+2.42 seconds) within the nine-case focus below, including final identity and
+native post-audit. Revised clean platform execution remains open. The final
+identity guard stays fail-closed.
+
+**Cold preparation follow-up:** [Revised daily 39481125540](https://github.com/adesutherland/CREXX/actions/runs/39481125540)
+at `22665126453f012859d91b911809ac2945ac9a63` fails ordinary preparation before
+any product build or CTest: Linux after 11 seconds, Apple after 14 seconds.
+Both report the same **49 undeclared native owners**. Cold CTest JSON omits
+`command[]` for executables not yet built, while the prior populated local tree
+allowed executable-path inference to hide those missing declarations. This is
+our preparation-planner defect, not a product or sanitizer diagnostic.
+
+The repair declares native/fixture ownership at configure time and removes
+command-path inference entirely. Missing declarations fail in cold and warm
+trees alike. Fresh Apple discovery gives U=3,304, daily=1,294, **zero missing
+owners and 1,078 targets**, identical to the populated tree. All 1,075 prior
+targets remain; `address_llm_fixture_bin`, `odbc_mock_prepared_runtime` and
+`ts_linein_stdin_fixtures` explicitly restore their generated inputs. Direct
+harness executables remain declared alongside supplemental prerequisites.
+The same shared declarations cover the identical Linux 49-owner failure list;
+actual clean Linux construction remains the hosted gate. A miniature real
+CMake/CTest cold-to-warm executable fixture and strict missing-owner negative
+contract pass **2/2 in 0.57 seconds**. No product, runtime or oracle body changes;
+the focused native nine-case proof above remains valid. The next required run
+is revised daily on both platforms, with no repeated original-full campaign.
+
+Separate local runner limitation: an inventory configured through `/var` while
+the runner resolves its build root to `/private/var` is rejected before test
+selection. The isolated proof uses the same canonical root spelling throughout.
+That conservative path-alias rejection cannot explain the Linux post-test
+identity drift; its exact native-product path handling remains a local limitation.
+
+### SAN-QA-023 — sustained VM providers follow their ELF support archives
+
+Status: **closed; clean daily Linux/Apple qualification complete**.
+Owner: Codex, under Adrian's request to finish the sanitizer hotfix on `hotfix`.
+
+Linux [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
+at `0f4cfe914ea1cdf0d7b3055280e2872fd88c9956` fails in ordinary selective
+preparation while linking `sustained_vm_rxbvm` and `sustained_vm_rxtvm`.
+Their force-loaded `_sustainedvm_static` and `fs_static` archives follow
+`librxpa.a`; ELF archive scanning therefore leaves provider `rxpa_*` references
+unresolved. This is a test-harness link-order defect, before sanitizer runtime
+execution, with no observed memory-safety diagnostic.
+Both harnesses are normal build targets, so this defect also blocks an ordinary
+Linux ALL build containing them; its reach is not limited to sanitizer execution.
+
+Intended outcome: both existing sustained harnesses link on Linux and Apple,
+and both approved daily platform jobs complete with their independent runtime,
+ownership and final identity checks. Preserve the exact VM-focused selection,
+ordinary/full and original-producer proof, Linux leak checks and fail-closed
+identity validation. Scheduled daily activation remains disabled; no master
+activation is authorized.
+
+- **QA023-AC01 — done:** force-loaded providers precede their support archives;
+  inspect the generated link commands and build both existing harness targets.
+- **QA023-AC02 — done:** the six permanent sustained lifecycle regressions pass
+  normal Debug and maintained Apple ASan, with their existing oracles and bounds.
+- **QA023-AC03 — done:** clean Linux ASan/LSan and Apple ASan daily jobs complete
+  through final validation; reuse compatible passing proof and do not repeat
+  the original full suite. Report exact inputs and hosted outcomes in conversation.
+- **QA023-AC04 — done:** publish the repair on `hotfix`, remove task diagnostics,
+  and verify schedule activation remains false.
+
+1. **QA023-STEP01 — done (AC01):** diagnose both failed link commands and move
+   provider registration before support libraries in the owning test harness.
+2. **QA023-STEP02 — done (AC01/02):** rebuild only the affected harness targets
+   and run the six existing lifecycle regressions, Debug then Apple ASan.
+3. **QA023-STEP03 — done (AC03/04), depends on STEP02:** commit/push the repair,
+   qualify the approved daily profile, inspect failures if any, and monitor
+   lightly until both platform jobs pass. No language/API/architecture change.
+
+### SAN-QA-024 — split runtime preparation omits certified exits
+
+Status: **closed; cold-build regression and clean daily platform qualification complete**.
+Owner: Codex, under the same hotfix request as SAN-QA-023.
+
+Apple ordinary preparation in [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
+at `0f4cfe914ea1cdf0d7b3055280e2872fd88c9956` invokes both scalar argument
+fixture producers before `rxcexits.rxbin` is ready. `rxc` reports `INTERNAL EXIT
+ERROR: Failed to load certified exit module 'rxcexits'`. The split runtime
+helper omitted the `compiler_exit_bin` target and its output dependency.
+The existing general compile matrix already declares that prerequisite.
+This is a distinct preparation dependency defect, with no sanitizer report.
+It affects selective split fixture preparation. Ordinary compiler CTest scripts
+retain their existing producer execution unless an external donor is configured.
+
+Intended outcome: a selected runtime fixture builds from cold inputs with its
+certified exits ready, preserving producer diagnostics, ordinary golden oracles,
+native runtime routing and whole-owner sealing. Selection and activation policy
+remain unchanged.
+
+- **QA024-AC01 — done:** a permanent miniature cold CMake build exercises the
+  actual split runtime helper and fails without its certified-exit dependency.
+- **QA024-AC02 — done:** the repaired selected fixtures build in normal Debug
+  and maintained Apple ASan; paired scalar runtime oracles pass unchanged.
+- **QA024-AC03 — done:** both clean daily platform jobs pass preparation and
+  final validation, sharing QA023-AC03 qualification without a full-suite rerun.
+
+1. **QA024-STEP01 — done (AC01/02):** add target and output prerequisites in
+   `CrexxQaRuntimeCase.cmake`; leave compiler behavior untouched.
+2. **QA024-STEP02 — done (AC01/02):** add and run a cold helper regression,
+   rebuild the two scalar preparation targets and run their paired oracles.
+3. **QA024-STEP03 — done (AC03), depends on STEP02:** publish separately from
+   the ELF link repair but qualify both compatible commits together.
+
+### SAN-QA-025 — Bash 3.2 rejects empty workflow argument arrays
+
+Status: **closed; shell compatibility and clean daily platform qualification complete**.
+Owner: Codex under the current hotfix request.
+
+Apple [daily qualification 39486953165](https://github.com/adesutherland/CREXX/actions/runs/39486953165)
+at `b5697694c0786146d698c310d1fb0aa779c67860` completes ordinary selective
+preparation and sealing, then fails before starting the instrumented runner:
+`selection[@]: unbound variable`. Bash 3.2 treats an empty array as unset under
+`set -u`. The configure step's optional fixture array has the same defect for
+full profiles; the optional ordinary selector shares the pattern. This is a
+workflow portability defect, not a sanitizer or runtime finding.
+
+Intended outcome: preserve identical argument boundaries, profile and leak
+policy on the maintained Apple and Linux shells, with and without optional
+selectors. Keep fail-fast shell settings and preserve ordinary, daily, full and
+focused semantics. Replace empty optional arrays with always-nonempty command
+arrays. A manual daily-only platform selector defaults to both, rejects narrowing
+full/scheduled scopes, and allows the failed Apple job to retry without repeating
+healthy Linux execution. No schedule activation or broad rerun is authorized by
+this repair.
+
+- **QA025-AC01 — done:** execute the actual configure and runner workflow blocks
+  with recording tools under available Bash implementations, including Apple's
+  `/bin/bash` 3.2; verify full/daily setup, empty and nonempty selectors, space-
+  containing paths and Linux/Apple leak arguments. A negative control must
+  reproduce the original empty-array failure under Bash 3.2. Execute the actual
+  matrix decision block to prove default-both and daily-only narrowing guards.
+- **QA025-AC02 — done:** compatibility contracts, actionlint and focused normal
+  Debug / maintained Apple ASan strategy CTests pass; reuse unchanged runtime
+  and preparation proof.
+- **QA025-AC03 — done:** publish the shell repair and complete clean daily
+  platform proof, retaining valid independently passing Linux execution.
+
+1. **QA025-STEP01 — done (AC01):** remove all three optional empty-array
+   expansions in the sanitizer workflow using populated command arrays.
+2. **QA025-STEP02 — done (AC01/02):** add actual workflow-block execution tests,
+   reproduce the Bash 3.2 failure and validate both selector forms and profiles.
+3. **QA025-STEP03 — done (AC03), depends on STEP02:** publish the compatible
+   workflow repair and qualify only the outstanding platform work.
+
+### Where the time goes
+
+Times below come from hosted job/step timestamps and CTest's final wall time.
+They are diagnostic observations on hosted runners, not Release performance
+measurements or estimates of future savings.
+
+| Platform | Instrumented build | Additional qa-prep | CTest wall time | Whole job |
+| --- | ---: | ---: | ---: | ---: |
+| Linux x64 ASan/LSan, stopped early | 70m 14s | 1m 09s | 81m 55s | 2h 33m 43s |
+| macOS arm64 ASan, complete | 52m 42s | 49s | 183m 57s | 3h 58m 06s |
+
+The workflow took 3h 58m 25s elapsed; the two main jobs consumed approximately
+6h 32m combined runner time. These are different quantities.
+
+Joining the macOS completion records to the unchanged hotfix CTest inventory
+matched all 3,294 names. Its 220 `RUN_SERIAL` tests account for **99m 54s**
+of elapsed test execution, including about 75 minutes of compiler-labelled
+tests. They cannot overlap other tests within that CTest invocation. The four
+`classic_expression_contract_*` cells alone total 15m 03s; the four
+`levelc_bif_reference_audit_*` cells total 10m 28s. The 16 structured-flow
+cells total 10m 52s. Blanket removal of serial protection is not justified:
+many tests have nested toolchains or shared workspaces.
+
+The four normalization cells total 25m 39s of individual macOS test time,
+but run concurrently: that sum is **not** removable wall time. Likewise,
+overlapping label totals must not be added as a savings forecast. The
+`qualification` and `stress` tiers total only 70 and 29 seconds respectively
+on this run; simply excluding those labels will not solve the runtime problem.
+
+The build currently invokes the default ALL target, followed by broad
+`qa-prep`, independently of test selection. Filtering CTest alone leaves
+53–70 minutes of build work. Existing `CREXX_PREP_TARGETS` and stage targets
+provide an owning dependency model to reuse for a narrower daily preparation
+target. The available logs do not attribute the build time to individual
+actions, so no claim is made about how much of that time is avoidable.
+
+This is not literally every project test: timing-measurement tests are already
+excluded, llama is disabled, and the experimental compiler option defaults
+off. The core Level L libraries, tools and their tests are included.
+
+### Architecture review: present implementation and intended direction
+
+The current developer checkout's `research/level-l/compilers/PLAN.md` and
+`doc/architecture.md` explicitly put the new Classic compiler in B/Level L,
+with native B as its build seed and no native source compiler/backend in new
+compilation requests. RXAS, RXLINK, VM and native transport remain legitimate
+dependencies. Default replacement, native-C retirement and B self-hosting
+remain separate decisions. The hotfix snapshot predates some of that plan's
+19–20 October implementation; no code or scope was copied between checkouts.
+
+Consequences:
+
+- Language/compiler correctness remains essential. A compiler written in
+  cREXX can produce wrong code without causing an ASan report. Its full
+  semantic, diagnostic, source/TRACE, emitted-code, atomic-publication and
+  resource-limit contracts belong in ordinary QA with independent expectations.
+- Its native memory risk primarily lives in the VM, native libraries/plugins
+  and host calls that execute it. A large compiler run is useful VM input,
+  but thousands of language cases may revisit the same native paths.
+- Long-lived tool/service use raises the importance of repeated requests,
+  failed-request recovery, memory retention, aliasing and teardown. Hundreds
+  of separate successful CLI processes do not establish those properties.
+- Native bootstrap, assembler, linker, readers and shipped native compiler
+  services still require native correctness and sanitizer tests. Their
+  current presence cannot be discounted on the basis of eventual replacement.
+- `.rxbin` does not require ASan instrumentation: the native engine and
+  first-party native code executing it do. Therefore preparing fixtures with
+  ordinary tools and executing them on an instrumented VM is a valid distinct
+  runtime test scope. It does not qualify the fixture producers' memory safety.
+
+### What the source and test inventory already provide
+
+CTest discovery in hotfix reports 3,480 registrations, of which 1,760 originate
+in `compiler/tests`, 226 in `interpreter`, and 91 in `tests/rxpa`. These are
+registration counts, not native coverage measurements: compiler tests also
+exercise the VM, while some runtime tests are registered elsewhere.
+Only 17 tests carry the literal `sanitizer` label. Selecting that label would
+miss substantial native coverage; current labels are not a strategy.
+
+Useful existing foundations, inspected rather than rerun in this review:
+
+- `interpreter/tests/test_rxvmmemory.c`: allocator classes, slab/extent
+  boundaries, resize, overflow, wrong-thread ownership, live-allocation counts
+  and teardown. `ts_regvalue_tester.c` adds value/reference/binary operations
+  and controlled allocation-failure paths.
+- Handwritten RXAS suites such as `tests_binary_memory.rxas`,
+  `tests_references.rxas`, `tests_signal_call_unwind.rxas`,
+  `tests_instruction_gaps.rxas` and `tests_nr09_superinstructions.rxas`.
+  These can exercise operations without relying on the new source compiler
+  to emit them. `rxops.h` and `rxopeffects.h` supply an opcode/effects inventory,
+  but an inventory entry is not proof that the instruction was tested.
+- Initializer, sealed-program-generation and persistent-worker C harnesses;
+  `test_rxvmplugin_context.c`; RXPA concurrency/host/UTF tests; and
+  `tests/rxpa/native_payload_funcs.crexx` with copy/finalizer observations.
+- The runtime has real distinctions between switch and computed-goto engines,
+  standalone and embedded use, static/dynamic providers, and provider
+  concurrency policies. `rxvm` itself is the selected concrete-engine
+  symlink/copy, not a third dispatch implementation.
+- The custom allocator explicitly poisons freed slots for ASan. Its own
+  teardown test also deliberately leaves a logical allocation live, verifies
+  that teardown reports it, then releases the arena. This demonstrates why
+  allocator/resource assertions must accompany process-exit leak detection.
+
+A targeted search of maintained workflow, CMake, tools, scripts, test, VM,
+RXPA and binutils paths found no per-workload native branch-coverage selection
+report or maintained `LLVMFuzzerTestOneInput` harness. This is an identified
+measurement/harness gap, not proof that any particular test is redundant.
+The recent hosted timings remain the baseline above; no native coverage was
+measured during this review.
+
+### Proposed test structure
+
+| Layer | Purpose and retained evidence | Sanitizer treatment |
+| --- | --- | --- |
+| Language/tool correctness | Complete B/C/G/L and library contracts; independent expected results/errors; IR/RXAS structure; CLI/service parity; deterministic failure/publication; ordinary resource limits | Full ordinary Debug/Release QA. Selected cases also enter runtime sanitizer profiles when they add a native scenario |
+| Native VM primitives | Direct value, allocator, reference, opcode, loader, numeric and text/binary boundary contracts, including negative paths | Core ASan/LSan on Linux and ASan on Apple; both concrete dispatch engines where available |
+| Native plugins and embedding | API/ABI, lifetime, callbacks, concurrency policy, resource ownership, loading and partial-failure cleanup | Instrument first-party provider/bridge code and embedding harnesses as well as VM code; explicit platform/provider inventory |
+| Runtime state sequences | Reuse, aliasing, repeated requests, load/link/initialize/run/unwind/destroy, workers and native resource lifetimes | Short deterministic sequences daily; longer bounded soak/generated sequences separately |
+| Real cREXX workloads | Complex interactions from actual Level L, new C compiler, libraries and applications, with independent output assertions | Small fixed representative panel plus affected/rotating workloads; selected tools themselves execute on the instrumented VM |
+| Native bootstrap/toolchain | Memory safety and correctness of the C seed and remaining C assembler/linker/readers/editor services | Separate native-tool profile; focused permanent regressions and affected-change checks, with broader bootstrap qualification retained |
+| Installation/platform/performance | Installed resolution, ABI/package layout, cross-platform behavior and ordinary-product performance | Dedicated existing QA. No ASan timing ratios; retain native loading/cleanup cases in the runtime profile |
+
+#### Directly test the VM and plugin contracts
+
+Build a source-to-test coverage map around these obligations, reusing existing
+tests before adding new ones:
+
+1. **Values and allocation:** zero/one and allocation-class boundaries;
+   grow/shrink/reuse; strings, binaries, decimals, attributes and references;
+   source/destination aliases; local/argument/global returns; allocation
+   failure preserving valid state; cross-owner rejection; logical leaks.
+2. **Instruction and call state:** admitted operand forms and edge values,
+   frame/register reuse, copied/moved/borrowed values, callbacks, exceptions,
+   cancellation and unwind. Every supported instruction family has a mapped
+   normal and applicable error/boundary test. Check effects and resource state,
+   not just a successful process exit.
+3. **Loading and embedding:** valid and malformed RXBIN/metadata boundaries,
+   partial failure, initialization cycles, late loading/relinking, repeated
+   contexts and calls, failed initialization without corrupting an already
+   published module set, and complete teardown.
+4. **Providers:** a per-provider table of registration/load, argument/return
+   boundaries, create/copy/move/overwrite/finalize, failure halfway through,
+   callbacks/reentrancy and declared concurrency. Distinguish the shared RXPA
+   machinery from each provider's own native resource/algorithm code.
+   Include real provider implementations as well as controlled mock failures.
+5. **Worker/process/resource state:** deterministic handshakes, ownership
+   transfer, cancellation during useful lifecycle phases, repeated startup/
+   teardown, native handle/descriptor balance, and recovery after errors.
+   Retain genuine concurrency within these tests even when CTest isolates them.
+
+Use independent expected values/state for direct RXAS tests. Agreement between
+the two VM engines is useful additional evidence, but they share substantial
+handler code and can agree on the same defect. A compiler-generated workload
+also cannot establish coverage of instructions that compiler never emits.
+
+For long-lived compiler/services, assert logical live objects/allocations and
+native handles at explicit quiescent points, plus bounded retained capacity
+after warm-up. Respect documented slab reserves; do not demand zero RSS after
+every request. Check failure followed by another successful request and final
+context destruction. ASan/LSan complements those assertions; it does not
+establish language ownership semantics or bounded reachable caches.
+
+#### Use real workloads for interactions, not as the only VM test mechanism
+
+Start the representative panel with:
+
+- Level L recognition/generation and IR transformation/emission, retaining
+  distinct backend allocation patterns;
+- the new C compiler in repeated service and CLI use: successful compilation,
+  invalid input, output refusal, reuse and teardown, then execution of emitted
+  code against independent expectations;
+- Unicode/text/binary transformations at boundary and expansion sizes;
+- a native-object/provider workload and a worker/stream workload.
+
+Include dynamic compilation/INTERPRET lifetime cases when that capability is
+implemented and approved; do not claim current coverage of future features.
+The current sanitizer workflow defaults the research compilers off, so
+representative new-C execution requires an explicit prepared workload.
+Do not add the whole research compiler matrix to the native suite by default.
+
+Proposed extension after the initial map: bounded, reproducible generated
+operation sequences for values/containers and controlled malformed-container
+inputs. Use a model/expected-state oracle and retain minimized regression
+sources for failures. Start any coverage-guided fuzzing with small resettable
+native reader/value boundaries. Stateful worker or DSO load/unload scenarios
+need process isolation and explicit cleanup; they are not automatically valid
+in-process libFuzzer targets. Provider fixtures must avoid unintended external
+network, command or filesystem effects. An error report remains a blocker,
+not an acceptable fuzz outcome to suppress.
+
+#### Earlier coverage-based reduction method (retained history)
+
+The following method governed the original ten-cell approval. The approved
+VM-priority revision above now uses risk-based cadence instead of equal native
+coverage as its acceptance gate. It does not retroactively claim
+coverage equivalence or erase the earlier measurements.
+
+Before moving a costly family out of routine sanitizer execution:
+
+1. Record what it promises: native code paths, value/size boundaries, lifetime
+   sequence, failure mode, provider, engine, platform and independent oracle.
+2. Measure **native** function/region/branch coverage for a bounded comparison
+   of the direct panel, representative workloads and costly candidate family.
+   Include first-party plugins and embedding code, and retain per-family
+   attribution. Record which source/ABI/compiler configuration was measured.
+3. Identify the candidate's additional native branches and distinct scenarios.
+   Equal coverage is necessary evidence for some reductions, not a proof of
+   equivalence: the same branches can behave differently at a size boundary,
+   after a different lifetime sequence, or under concurrency.
+4. Retain the smallest understandable set covering required scenarios, every
+   permanent SAN trigger and all unique high-risk paths. Replace uncovered
+   failure paths with focused tests before removing broad coverage.
+5. Put each moved family in the ordinary suite and, initially, the weekly
+   broad sanitizer safety net. Record its retained runtime counterpart,
+   residual risk, owner and change trigger. Unknown cases stay included.
+
+Do not conflate native C optimization, B seed optimization, Level L IR passes,
+RXAS optimization, dispatch engine and linked/static/dynamic packaging.
+These are separate axes. Full Cartesian multiplication is not automatically
+necessary; neither is blanket deletion of all unoptimized or second-engine
+cases acceptable. Preserve combinations that change ownership, allocation,
+loader, ABI or error behavior. Keep the product-entry smoke even where `rxvm`
+aliases a concrete engine; audit build/link boundaries before deduplicating
+apparently similar embedding harnesses. For example,
+`cmake/CrexxTestModes.cmake` routes `_opt` tests through its linked-runtime
+helper: a name that appears to vary only optimization may also vary linking.
+
+Do not set a universal coverage-percentage target. Require no lost measured
+high-risk coverage and explicit disposition of uncovered applicable branches,
+with the scenario map as the acceptance contract. Retain compact summaries
+and maintained test-selection sources; discard raw profiles/logs afterwards.
+
+### Build separation, cadence and residual risk
+
+**Proposed build separation:** prepare deterministic RXAS/RXBIN fixtures once
+with the qualified ordinary toolchain; build the sanitizer VM/native dependency
+closure and first-party providers/harnesses; run those fixtures on explicit
+sanitized engines. Bind artifacts to source, generator, flags, ABI/format and
+dependencies. Test discovery must establish that the executing VM/plugins are
+the instrumented products, including subprocesses or embedded service hosts.
+Use the existing CMake preparation ownership rather than a parallel build graph.
+This removes a requirement to sanitize every fixture producer on every runtime
+run; it does not remove instrumented build-time execution from the native-tool
+profile or the maintained full gate.
+
+The new compiler is both a tested tool and a runtime workload. Normal preparation
+of its bytecode is distinct from executing its compilation service under ASan.
+A small end-to-end test must exercise both that service and its generated
+application on the intended engine. Do not let a wrapper silently substitute an
+ordinary installed VM or a native source compiler.
+
+After the coverage review, the recommended operating policy is:
+
+- **Routine native foundation:** VM/plugin primitive, lifecycle and fixed
+  representative-workload panels on Linux ASan/LSan and Apple ASan; all
+  applicable historical SAN regressions run in their owning profiles.
+  Maintain ordinary Windows/other supported-platform correctness; the two
+  sanitizer hosts do not prove those platform paths.
+- **Affected changes:** expand the relevant profile for VM primitives,
+  allocator/reference/lifetime changes, native providers, seed/assembler/linker
+  changes or changed generated-code shapes. Compare against the appropriate
+  last qualified inputs, not merely the previous commit. Uncertain shared
+  impact selects broader coverage.
+- **Source-only cREXX changes:** full relevant ordinary functional and
+  code-quality tests plus appropriate runtime workload updates. A new native
+  usage pattern still merits targeted sanitizer checks; unchanged native inputs
+  do not require a fresh whole-toolchain campaign for each source increment.
+- **Weekly during migration:** existing broad non-measurement sanitizer
+  coverage, with full ordinary conformance preserved. This is an initial
+  safety net while measuring the focused strategy, not a permanent assumption
+  that every functional test must always run under ASan.
+- **Release and SAN closure:** existing full gates stay required until an
+  explicit later decision accepts a coverage-backed replacement. Current
+  SAN-QA-019/020 obligations are unchanged.
+
+Main residual risks are missed size/history interactions, rare concurrency
+interleavings, and optional/platform code absent from the tested configuration.
+Mitigate with boundary/state oracles, bounded generated/stress sequences,
+weekly broad checks and an explicit provider/platform inventory. A disabled
+provider has no pass. Instrument first-party optional adapters in their owning
+lane while preserving the approved upstream llama.cpp/CUDA boundary.
+
+ASan is not a race detector. Consider a separate, initially exploratory
+ThreadSanitizer pilot for worker/provider concurrency and maintain the existing
+exploratory UBSan boundary. Do not multiply the whole suite by every sanitizer
+or introduce a new mandatory matrix before feasibility and value are reviewed.
+Any actual first-party finding still follows the worklist rules.
+
+The initial two-hour daily target remains a **provisional engineering target**,
+pending separate measurement of fixture preparation, instrumented native build,
+runtime panel and native-tool profile. It is neither a forecast nor a kill
+timer. Native `-O1 -g` ASan with assertions retained is a possible separate
+configuration pilot; LLVM recommends optimization for reasonable ASan speed,
+and this repository already uses an ASan `-O1` override for `rxvmintp.c` in
+Release/RelWithDebInfo. Do not silently replace the maintained Debug sanitizer
+configuration or drop its diagnostic/closure coverage.
+
+Retain locks, measured isolation and generous hang protection. Report cold and
+reused build costs separately, plus total runner consumption. Keep platform/
+profile/configuration-qualified success records; daily success cannot mark
+broad coverage complete, and a successful unchanged Apple scope need not be
+repeated solely because Linux failed.
+
+Scheduled workflows still load from **master**, whose 240-minute guard is
+nearly exhausted. Any later rollout before a release needs separate approval
+for the narrowly scoped workflow-only master update previously proposed.
+This review grants no exception to release-branch discipline.
+
+### Approved bounded measurement scope
+
+Adrian authorised the coverage map and bounded measurements in hotfix, with
+no change to test selection. STEP03 is complete for the bounded scope below. Use a disposable Clang native
+Debug source-coverage build, assertions enabled, on this Apple arm64 host;
+this is a diagnostic coverage/timing exercise, not ASan qualification or a
+product performance verdict. Existing normal fixtures are prepared with the
+same source inputs. No CMake registrations, workflow or runner policy changes.
+
+The panel covers direct allocator/value/ownership and provider contracts,
+handwritten RXAS, and selected Unicode, Level L structured-flow and Classic
+compiler aggregates. Measure each retained oracle serially, once per cell,
+with the existing generous hang limit. Stop expansion at 30 minutes of actual
+panel execution; report any unmeasured family rather than extrapolating a
+coverage claim. Build time is recorded separately. Keep branch/function
+attribution for VM and first-party providers; producer-tool instrumentation
+is a distinct scope. Use marginal coverage plus scenario obligations, never
+branch equality alone, to propose membership. Delete temporary raw profiles,
+logs and harnesses after recording concise results here.
+
+### Coverage map: native risks and existing ownership
+
+This is a **scenario map**, not a claim that every branch or scenario has been
+executed in this review. CTest discovery at `e5c066b87945` gives 3,480 Apple
+registrations; the existing `performance-measurement` exclusion removes 186,
+leaving exactly **3,294**, matching the hosted Apple selection. The Linux
+selection is 3,289 because platform registrations differ. Counts are scoped
+to the configured options; the research compiler and optional live providers
+are not silently included.
+
+In this map, `*` means all existing names in that family, not a new CTest
+selection expression. Unmeasured families remain included. Source ownership,
+commands, preparation targets and assertions were inspected through CMake and
+CTest JSON; actual measured cells are identified separately below.
+
+| Native owner / risk | Existing test counterpart | Decision / remaining gap |
+| --- | --- | --- |
+| `rxvmmemory.c`, `rxvalue.h`, `rxvmref.c`: allocator class/extent edges, overflow, grow/shrink, aliases, OOM, wrong owner, logical live allocations | `rxvmmemory_allocator`, `value_factory_allocation_failure`, `ts_regvalue_tester`, `rxvmstem_storage`, `rxvmstem_allocator_family` | Keep all. Direct measured panel. Process-exit LSan cannot replace the logical-live-count assertions. |
+| `rxvmintp.c`, `rxvmhandlers_*.inc`, `rxops.h`: register/value forms, numeric/text/binary operations, source state and dispatch | `rxas*` runtime instruction tests, especially `rxasinstructiongaptests`, `rxasnr09superinstructiontests`, register/UTF flags, references, string, binary-memory, decimal, conversion, object/interface suites | Keep all. Twelve source-independent RXAS fixtures measured on both concrete engines. There is still no complete opcode × operand × failure-path matrix; do not call the panel ISA-complete. |
+| `rxvmload.c`, `rxvmlinkindex.c`, `rxvmprogram.c`, `rxbin` readers: malformed image, bounds, autoload, link/initialization failure, publication | `rxasjtablecorrupt*`, `rxasjumptable*`, `rxbin_autoload_contract`, `module_initializers-{rxvml,rxbvml,rxtvml}`, `program_generation_control-{rxvml,rxbvml,rxtvml}` | Keep every variant. Source-inspected, not measured in the bounded panel. General malformed-container fuzzing remains a gap; jump-table corruption is not complete loader validation. |
+| Calls, signals, frame/return ownership and unwinding | `rxassignal*`, `rxasreference*`, object/interface tests; eight `san002_*` engine/mode cells | Keep all; retain independent expected output, signal and alias semantics. Signal-call unwind and reference paths included in the measured RXAS panel. |
+| `rxvmworker.c`, `rxvmexecutor.c`, `rxvmactive.c`: reuse, ownership, wakeups, cancellation and teardown | `rxvmworker_lifecycle`, `rxvmactive_isolation`, all non-measurement `persistent_worker_executor-*`, worker-startup and native-return tests | Keep all. Deliberate concurrency and stress states are not duplicates of isolated CLI runs. No claim of race-freedom from ASan; TSan remains a separate proposal. |
+| `rxvmchannel*.c`, byte endpoints and process protocol | `rxvmchannel_provider_registry`, `rxvmbyteendpoint_substrate`, `rxvmchannel_byte_provider`, `rxvmchannel_request_lifetime`, `rxvmchannel_process_crash_replacement`, `gate_f_channel_*` | Keep all; source-inspected, not measured here. Retain crash recovery and descriptor/request lifetime assertions. |
+| `rxspawn.c`, file/socket/TLS/platform code | `rxspawn_resource_inheritance`, POSIX termination/launch-diagnostic tests, `rxvmfile_private_open`, `rxassockettests`, `ts_rxsocket_*`, `ts_socket_tls_live_*`, `ts_http_streaming_*`; platform's 17 tests on this host | Keep all available variants. Linux/OpenSSL, Apple/Network and Windows/Schannel are distinct; this Apple measurement cannot qualify the other implementations. |
+| `rxvmplugin`, RXPA manifests/bindings and host ABI | `rxvmplugin_context_ownership`, `rxpa_host_text_services`, `rxpa_utf_validation`, static catalogue/session, factory rollback, manifest failure, legacy serialization/reentry, quiescence/startup, dynamic ownership tests | Keep all. Thirty-five native C cells measured, including eleven bundled-provider concurrency cells. Shared host infrastructure coverage does not establish all provider algorithms. |
+| Native payload/object ABI, finalize/copy and callbacks | all 91 `tests/rxpa` registrations and two multplugin registrations; specifically `rxpa_native_payload_funcs_{dynamic,static}_{noopt,opt}` and native object/callback/unwind tests | Keep every variant. These distinct ABI/lifetime paths are not substituted by the concurrency panel. Payload fixtures remain essential even where source coverage overlaps. |
+| Decimal provider/context and numeric edge behavior | `rxasdecimaltests`, `rxasdecimaltests-mc`, `rxasdecimaltests-db`; seven mc-decimal and one db-decimal registrations; `rxvmplugin_context_ownership` | Keep all. Measured default-decimal RXAS plus independent context teardown; no claim that the alternate provider was covered. |
+| Native C seed/frontends, AST/import ownership, metadata and emitters | compiler's native unit/fault-injection tests and permanent SAN tests; source/diagnostic/import/TRACE/emission matrices | Keep unmeasured families. Measure costly Classic aggregates with producer instrumentation as well as runtime instrumentation. Migration to cREXX does not retire the shipped C tools. |
+| Native RXAS/RXLINK/readers, SSA and metadata | assembler parsing, linker, binutils/contract, RXAS optimizer/flow-graph tests; compiler contract builder | Keep all. SAN-001 SSA-growth, SAN-011/012 contract ownership and native-format error paths remain pinned. Ordinary fixture generation alone does not qualify these producers. |
+| cREXX library/tool algorithms running on the C VM | complete ordinary B/C/G/library suites; Unicode, four Level L parsing backends, RexxScript and compiler workloads | Keep ordinary conformance complete. The bounded candidate panel measures native marginal coverage; any proposed cadence reduction names exact cells below. |
+| New research Level C compiler | owning `research/level-l/compilers/PLAN.md`, independent semantics/diagnostics, code-shape and service/resource tests | Absent from the current overnight default. Add a deliberately bounded representative success/error/recovery/teardown workload when prepared and approved; this hotfix snapshot cannot qualify newer develop research work. Do not claim current coverage of future INTERPRET. |
+| Install, driver, packaging, SAA and native launch boundaries | driver, `crexxsaa_*`, project-build/import/installed-provider and native packaging contracts | Keep all unmeasured tests. Do not drop `crexx_project_build_contract` or `binary_global_import_types` just because they are expensive; the latter is the permanent SAN-008 trigger. |
+
+#### Provider inventory and explicit limits
+
+All currently enabled first-party provider tests stay in the proposed daily
+scope unless a later explicit item says otherwise. On this Apple configuration:
+
+- Eleven **measured** concurrency providers: cipher, hash, stack, strings,
+  getpi, id, float, stats, vector, fs and platform. Static provider registration
+  and dynamic loading are both exercised by the owning concurrency harness;
+  each cell's executed profile includes its native DSO where applicable.
+- **Retain functional/API tests too:** `arrays_test_*`, `cipher_test_*`,
+  `getpi_test_*`, `stack_test_*`, `strings_test_*`, `rxfloat_*`, `rxstats_*`,
+  `rxvector_*`, `rx_hash_*`, `rxid_*`, `rxfs_*`, `rxplatform_*`. Concurrency
+  probes are small behavioural probes, not replacements for these surfaces.
+- Other enabled providers retain `keyaccess_test_*` and
+  `keyaccess_compact_failure`, `llist_test_*` (SAN-005), `treemap_test_*`,
+  `map_test_*`, `recv390_test_*`, `tcp_test_*`, all thirteen `rxsqlite_*`
+  registrations, and the four `rxconsole_*` registrations. Their algorithm,
+  resource and error-path coverage was not measured in this panel.
+- `rxcstream` is loaded by the Classic runtime; the compiler-aggregate panel
+  instruments it. Keep `classic_stream_lifecycle` for stream ownership and
+  reuse. It is not replaced by arithmetic-expression execution.
+- ODBC is disabled for live use, but both mock-driver VM tests and both host/
+  prepared-session qualification tests remain. They do not qualify a live
+  driver/database. Mainframe ADDRESS harnesses are opt-in: retain their
+  separate native-boundary/allocator policy and SAN-013 obligations.
+- llama, GTK, the deprecated socket plugin and Windows-only rxml/fileio/matrix
+  have no coverage from this configuration. They need their existing owning
+  platform/provider lane when enabled. The llama first-party adapter boundary
+  does not extend sanitizer responsibility to the approved excluded upstream
+  engine/CUDA closure. A disabled provider is recorded as **not tested**.
+
+Preserve focused reproducer obligations for **SAN-001 through SAN-013**,
+including those without a `sanitizer` label: RXAS flow-graph growth,
+`compiler_contract_builder`, `frame_control_ast`,
+`binary_global_import_types`, `llist_test_*`, the `san00[23467]*` cases,
+SAN-009's optional first-party adapter probe and SAN-013's opt-in mainframe
+boundary cases. Existing source-library generation triggers also remain in
+the broad native-tool/release closure. SAN-QA-019/020 remain open for Linux
+proof; a smaller proposed profile must not bypass that outstanding work.
+
+### Bounded measurement results
+
+**Outcome:** 87/87 cells passed their original value/error/output assertions:
+35 native C cells, twelve handwritten RXAS cases on each engine (24), and
+28 complete aggregate cells. Successful executions consumed **694.23 seconds
+(11m34s)**; setup failures added about 110 seconds, still within the approved
+30-minute execution bound. These are **Debug source-coverage runs, not ASan/
+LSan qualification**, and do not close SAN-QA-019/020 or establish Linux passes.
+
+Inputs were hotfix **`e5c066b87945dc697df6c771fc5a56a20962c772`**, with only
+this documentation changed and unrelated `scripts/__pycache__/` preserved.
+Host: Darwin 25.6.0 arm64, 10 logical CPUs; Apple Clang 21.0.0
+(`clang-2100.1.1.101`), CMake 4.3.2, Ninja, Debug assertions retained,
+`-fprofile-instr-generate -fcoverage-mapping` for C/C++. Native optimisation,
+VM handler policy, bytecode optimisations and data/oracles were unchanged.
+`ENABLE_LLAMA=OFF`, live GTK/ODBC off, Network TLS, research compilers off.
+
+| Measured group | Cells | Local elapsed total | Native functions hit | Native source regions hit | Native branch outcomes hit |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Direct C plus handwritten RXAS | 59 | 7.70s | 1,424 | 22,909 | 6,881 |
+| Classic expression contract | 4 | 264.80s | 3,033 | 58,017 | 38,571 |
+| Classic BIF reference audit | 4 | 232.60s | 2,594 | 45,003 | 28,507 |
+| Level L structured flow | 16 | 115.44s | 593 | 16,253 | 4,253 |
+| Full Unicode normalization | 4 | 73.70s | 496 | 14,697 | 3,691 |
+
+Counts are unions **within each row**, not additive coverage percentages.
+They cover mappable first-party native source/headers and generated native
+compiler code, excluding third-party sources and test C files. Branch and
+region identities preserve the function and macro-expansion file ID; function
+branch records supply the actual source filename. This avoids confusing VM
+handler macro expansion with one shared source location. Both concrete engine
+results are retained separately for engine-specific comparisons.
+
+Important observations:
+
+1. The direct panel is useful but insufficient on its own. Structured flow
+   adds **626** native branch outcomes beyond it, and normalization adds
+   **530**. These include VM handlers, loader/image reading and value paths.
+   The two figures overlap; neither is an independent additional percentage.
+   Large real cREXX workloads still have a place in VM assurance.
+2. For **each** four-cell Classic family, keeping direct `noopt` and
+   `linked_opt` retains **every measured function, region and branch outcome
+   of that family's four cells**, even without borrowing coverage from other
+   tests. Native compiler, assembler and linker coverage was included. Both
+   source-compiler modes and both direct/linked runtime paths remain present.
+   The assembler stays at its existing default optimisation in all four;
+   the `noopt` flag here controls `rxc`, not native C compilation or RXAS.
+3. Dropping all unoptimised cells is unjustified. For example, the Classic
+   expression optimized-only pair loses 530 observed branch outcomes compared
+   with its complete family. Structured-flow optimized-only execution still
+   misses two outcomes even after the direct panel: an `INC_REG` handler
+   outcome and the string-concatenation destination-alias path. Keep LL1 in
+   both modes on **each** engine; the other backends' optimized cells then
+   retain the full measured structured-flow coverage separately on each engine.
+4. All four normalization cells passed here, with the complete Unicode input
+   and assertions. This does **not** resolve the hosted Linux timeout. A
+   two-cell cross-combination adds no missing coverage in the measured panel,
+   but changing this family's frequency now would obscure the still-open
+   failure investigation. Keep all four in the approval proposal below.
+5. Preparation has substantial, separable duplication. Each Classic expression
+   cell launches 52 compilers, 44 assemblers and 44 VMs; linked cells also
+   launch 44 linkers. Across four cells that is **648 processes: 208 rxc,
+   176 rxas, 88 rxlink and 176 rxvm**. The eight invalid-source compiles per
+   cell use identical options even under `--noopt`. A later shared preparation
+   fixture could keep all 176 VM executions with 96 rxc calls (88 valid mode/
+   case combinations plus eight diagnostics), 88 rxas and 88 rxlink calls.
+   Prove artifact identity and every assertion before taking that reduction.
+   The BIF family can similarly prepare once per compiler mode while retaining
+   four runtime cells. Its optimized cells took 108.97s/107.59s versus
+   7.72s/8.31s unoptimized; this is a diagnostic observation, not a compiler
+   performance verdict or an ASan speed ratio.
+
+**Method and reproducibility.** Discover the same inventory with
+`ctest --test-dir cmake-build-debug --show-only=json-v1`. The eight direct
+native cells are the five allocator/value/stem names in the map plus
+`rxvmplugin_context_ownership`, `rxpa_utf_validation` and
+`rxpa_host_text_services`. Add all 27 registrations whose executable is
+`interpreter/test_rxpa_concurrency`. The twelve RXAS names are
+`rxasutfflagtests`, `rxasreferencetests`, `rxassignalcallunwindtests`,
+`rxasnr09superinstructiontests`, `rxasstringtests`, `rxasbinaryslicetests`,
+`rxasbinarymemorytests`, `rxasdecimaltests`, `rxasconversiontests`,
+`rxasobjecttests`, `rxasinterfacetests`, `rxasinstructiongaptests`; execute
+unchanged fixtures with both instrumented concrete VMs. Add all four named
+Classic expression cells, all four BIF audit cells, all sixteen structured-flow
+cells and all four normalization cells.
+
+Configure a disposable build with:
+
+```sh
+cmake -S <hotfix> -B <temporary-build> -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  '-DCMAKE_C_FLAGS=-fprofile-instr-generate -fcoverage-mapping' \
+  '-DCMAKE_CXX_FLAGS=-fprofile-instr-generate -fcoverage-mapping' \
+  -DENABLE_LLAMA=OFF -DCREXX_ALLOW_NETWORK_DOWNLOADS=OFF
+```
+
+Build with `--parallel 4`, initially targeting `rxbvm`, `rxtvm`,
+`test_rxvmmemory`, `test_value_factory_allocation`, `ts_regvalue_tester`,
+`test_rxvmstem`, `test_rxvmstem_allocator_family`, `test_rxvmplugin_context`,
+`test_rxpa_utf_validation`, `test_rxpa_host_services`, `test_rxpa_concurrency`.
+Add `_rxpa_dynlink`, `_rxpa_invalid_manifest` and `cstream` for the measured
+closure. The first native build reported 2.72s after 6.98s configuration;
+adding the dynamic fixtures pulled in native tools and library generation and
+cost 186.17s, with cstream another 0.36s. Ordinary selected-fixture preparation
+in the existing build took 134.09s. These are different scopes with local
+cache/filesystem conditions, **not forecasts of hosted ASan build times**.
+
+Ordinary preparation used the selected tests' `CREXX_PREP_TARGETS`: library,
+classlib, rxfnsc; rxc/rxas/rxlink/rxvm/rxbvm/rxtvm; the shared
+`run_tests_{basic,decimal,interfaces,references,register_flags,signals,string,utf_flags}`
+closure and `test_compact_format`, `test_db_decimal_archive_link_bin`,
+`test_reentrancy`; all eight `ts_llstructuredflow_{ll1,lr1,packrat,earley}_{noopt,opt}`
+artifact targets and all four normalization `*_artifact` targets. No `ALL`
+or full sanitizer build was launched for this measurement.
+
+A disposable CTest harness preserved each original command's working directory,
+environment, timeout, expected exit handling and required/forbidden output
+expressions. Runtime fixtures used ordinary bytecode and instrumented VMs.
+Classic aggregates additionally used instrumented rxc/rxas/rxlink. An executable
+view combined the instrumented binaries/providers with the ordinary fixture
+libraries, including autoloaded dependencies; bytecode was not instrumented.
+Use `LLVM_PROFILE_FILE=<cell>/%m-%p.profraw`, merge per cell with
+`llvm-profdata merge -sparse`, then `llvm-cov export` over the executed native
+closure. Export runtime/providers and producer objects separately with
+`--skip-expansions --num-threads=1`; function-level region/branch data still
+retains the expansion identities needed for comparison.
+
+Each cell ran once successfully, serially; the first native cells overlapped
+ordinary fixture preparation, so their tiny elapsed totals are not isolated
+benchmarks. The costly workload cells had no concurrent task build or reporting
+job. No warm-up/sampling campaign or native performance claim is implied.
+Missing disposable-closure dependencies caused three setup failures: the
+manifest fixture DSO, rxcstream, and autoloaded rxfnsg. The respective affected
+cells were replayed after preparation was corrected; passing cells were reused.
+These are preparation findings, not product or sanitizer findings.
+
+The initial all-object expanded LLVM report exceeded local resources; splitting
+reports and omitting the redundant expanded tree fixed extraction without
+rerunning tests. LLVM also reports an absent profile for the **unexecuted
+rxlink `main`** when its object is included for direct compiler cells, and a
+constant/compatibility variant of the test-header helper
+`rxpa_host_service_fixture.c:rxpa_host_has_string_view`. These have no covered
+outcomes in those cells; the linker is covered in retained linked cells and
+all host-compatibility tests remain retained. The comparison concerns observed,
+mappable coverage, not proof that every compiled function was covered. Raw
+profiles, exported data, scratch harnesses, logs and diagnostic build are
+discarded after this summary; permanent fixtures and original assertions remain.
+
+### Historical ten-cell membership approval — superseded
+
+**Recommended first tranche: move ten existing cells from daily sanitizer
+execution to weekly broad/affected-family execution. Delete no test or oracle.**
+Let **U** be the current platform's CTest inventory after its existing
+`^performance-measurement$` exclusion. The proposed daily set is exactly
+**U minus the ten names below**; every other test, including future unclassified
+tests, stays included. On the measured Apple configuration this is **3,284 of
+3,294**. Weekly, release and SAN closure retain **U**. Ordinary correctness
+selection and performance governance stay unchanged. This is intentionally a
+small, demonstrated change; it is not yet the final compact VM profile.
+
+| Family / owner | Keep daily | Move to weekly and affected-family checks | Risk and guard |
+| --- | --- | --- | --- |
+| Classic expression / compiler tests | `classic_expression_contract_noopt`, `classic_expression_contract_linked_opt` | `classic_expression_contract_opt`, `classic_expression_contract_linked_noopt` | Medium: mode × linking interaction can differ despite equal coverage. Full ordinary four-cell oracle remains; native frontend/optimizer/emitter/RXAS/linker/loader or contract changes restore all four in affected assurance. |
+| BIF reference audit / Classic compiler/library tests | `levelc_bif_reference_audit_noopt`, `levelc_bif_reference_audit_linked_opt` | `levelc_bif_reference_audit_opt`, `levelc_bif_reference_audit_linked_noopt` | Medium: same interaction risk, especially numeric size/context. Full expected-value audit remains in both daily cells; complete ordinary/weekly matrix retained. Restore all four for relevant native, ABI or generated-code contract changes. |
+| Structured flow / Level L tests plus VM | All four LL1 cells; `ts_llstructuredflow_{lr1,packrat,earley}_opt_{rxbvm,rxtvm}` (six cells) | `ts_llstructuredflow_lr1_noopt_rxbvm`, `ts_llstructuredflow_lr1_noopt_rxtvm`, `ts_llstructuredflow_packrat_noopt_rxbvm`, `ts_llstructuredflow_packrat_noopt_rxtvm`, `ts_llstructuredflow_earley_noopt_rxbvm`, `ts_llstructuredflow_earley_noopt_rxtvm` | Medium: backend-specific unoptimized lifetime/history interactions remain possible. All four parser backends and both engines stay daily; LL1 retains both modes on each engine. Ordinary/weekly keep all sixteen; relevant VM/value/loader/bytecode or backend-contract changes restore all sixteen in consolidated affected assurance. |
+
+All ten names exist exactly once in the measured U. Their removal from the
+87-cell measurement leaves **77 cells with zero lost measured native functions,
+regions or branch outcomes**. Structured-flow preservation also holds separately
+on each engine, without borrowing coverage from the other engine. The selected
+77 cells consumed **402.30s** versus 694.23s for 87, a counterfactual subtraction
+of this single diagnostic run (**291.93s less, 42% of this panel's time**), not
+a rerun or a whole-job/ASan savings prediction.
+
+**Keep without reduction:** all four `ts_unicode_normalization_*` cells, all
+native/direct VM, provider, concurrency, lifecycle, malformed-image and SAN
+regressions in the map, and every unmeasured family. In particular, keep
+`binary_global_import_types`, `crexx_project_build_contract`, RexxScript,
+native compiler unit/import/editor/TRACE cases and the other library/Unicode
+matrices. Cost or a `compiler` label alone does not establish redundancy.
+Do not drop the second engine, static providers, noopt globally, live resource
+or error-path tests. Do not shorten the normalization corpus or its assertions.
+
+**Approved implementation order:**
+
+1. Finish the unchanged isolated Linux timeout investigation, repair its
+   scheduling/deadline cause if confirmed, and complete the outstanding
+   SAN-QA-019/020 Linux proof. Do not activate these cadence changes as a way
+   to turn the incomplete failing run green.
+2. Implement the ten-name daily/weekly distinction with explicit per-profile
+   results and a default-keep policy. Check the same named families on Linux;
+   qualify the proposed profile with maintained sanitizer configurations before
+   rollout. Linux leaks remain on; Apple leak detection remains unsupported.
+   A daily pass never stands for a broad pass. Changes with uncertain shared
+   native impact select the broader affected scope.
+3. Separate ordinary fixture preparation from the sanitizer runtime/provider
+   closure and instrument native producers in their own owning profile.
+   Preserve instrumented original-trigger library generation in broad native
+   tool/SAN/release qualification. Prove every plugin, autoload dependency and
+   child executable; the failed disposable setups show why this is a real
+   acceptance requirement. Reuse results by exact relevant inputs and platform/
+   configuration/profile, without introducing a whole-suite per-slice gate for
+   B/Level L source-only increments.
+4. Then factor the repeated Classic preparation described above, retaining
+   all normal/weekly assertions and proving isolated `ctest -R` preparation,
+   failure propagation, concurrent access safety and artifact identity. Keep
+   generous hang limits and existing serial/lock obligations. Measure the
+   actual saved build/prep/test time in the final proposed profile.
+
+The three moved families together currently occupy **36m23s of serial Apple
+ASan test time** in the reviewed hosted run; only part of that time is removed
+by this proposal. The existing Apple job is almost four hours, including a
+52m42s build and 183m57s test phase. Ten moves alone do **not** establish the
+provisional two-hour target. The larger opportunities are preparation reuse
+and a separately qualified native runtime/tool split. Moving the remaining
+compiler/library bulk to weekly requires further family evidence; it is not
+silently authorised here.
+
+The weekly/full safety net, affected-family expansion and independent ordinary
+oracles are what make these frequency reductions a **medium, controlled risk**,
+not zero risk. Coverage does not prove size/history/concurrency equivalence.
+The new research compiler still needs its bounded real workload and service
+lifecycle acceptance; the current overnight default does not include it.
+Scheduled deployment still requires the separate narrow master-workflow decision.
+At the end of bounded measurement no selection, workflow, runner, product
+source or permanent test had changed. The subsequent approved implementation
+and qualification status is recorded below.
+
+Review verification: all ten proposed names were checked against the generated
+U inventory (exactly one match each); no SAN/normalization name is moved; all
+87 retained execution results are successful; the proposed coverage-set
+difference is empty for functions, regions and branch outcomes. `git diff
+--check` passes. Only this worklist is changed. Measurement builds, profiles,
+exports, logs, helper scripts and five expression scratch directories have
+been removed; the unrelated untracked cache remains untouched.
+
+### Approved implementation design and current qualification
+
+The dispatch-only replay route is published as `2fa4dad72a3b9db27251ddbcbcf94f4b51eaa029`.
+[Linux replay 39407904028](https://github.com/adesutherland/CREXX/actions/runs/39407904028)
+checks out the unchanged failing `e5c066b87945dc697df6c771fc5a56a20962c772`
+and runs the two threaded normalization cells in normal Debug, then maintained
+ASan/LSan, both with one CTest worker and Linux leaks enabled. This is diagnosis;
+it cannot record broad assurance. YAML parsing, actionlint and `git diff --check`
+pass. The unchanged replay has passed as recorded above; normalization scheduling is
+repaired and locally verified before profile/preparation implementation. No selection change
+has been activated.
+
+The preparation implementation will use the existing CMake custom-command
+owners. An explicit external ordinary fixture option will replace only audited
+bytecode-generation commands with checked copies of their output/byproduct sets;
+ordinary defaults and unknown generators retain their original commands. The
+ordinary donor is sealed after its build/preparation, binding maintained source
+contents, platform, relevant generator/configuration/tool identity and output
+hashes. Reject missing, partial or stale donors; validate all source artifacts
+before publishing output and remove stale destinations on failure. Retain native
+prerequisites and native output paths. Build every native executable, library,
+provider and harness in the sanitizer tree, including embedded generated-C
+compilation. The installed `crexx` driver already records effective native C and
+link flags for child builds; the first-party external SDK fixture needs explicit
+parent sanitizer-flag forwarding. This is a preparation gap, not a sanitizer
+finding.
+
+Full/weekly/native-tool profiles must use original instrumented generation and
+must reject trees used for external fixtures, including a tree subsequently
+reconfigured with the donor option cleared. Daily selection remains exactly
+U minus the ten approved names. Unknown tests stay; no command/label ownership
+classification removes further tests. Affected native/shared/unknown changes or
+missing comparison history select broad U. Manual/tag defaults stay full. A
+tested weekly/daily policy can be implemented with activation disabled until
+platform qualification and the separate master decision. Success identities
+include platform, effective configuration, profile, preparation mode and selected
+inputs; an empty selection fails and a daily/focused pass cannot write broad
+assurance.
+
+Shared Classic preparation is limited to the expression contract and BIF audit.
+Keep every runtime oracle, expected exit (including 28), diagnostic identity and
+CRLF normalization. Use CTest setup fixtures so isolated `-R` runs prepare their
+inputs and setup failures prevent consumers. Serialize/lock preparation, bind it
+to producer/source/library hashes, publish atomically and clean scratch output.
+The generic BIF linked helper's other consumers retain their current behavior.
+
+Normal Debug shared Classic qualification passes **11/11** (eight runtime
+cells, two setup fixtures and integrity) in **268.20 seconds**, using
+`tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --regex
+'^(classic_expression_contract|levelc_bif_reference_audit)_' --test-jobs 1
+--leaks off --no-live-tail`. BIF preparation is 97.22 seconds and its runtime
+cells 0.25–1.31 seconds; expression preparation is 83.40 seconds, direct runtime
+7.05–7.10 and linked consumers 34.62–35.01 seconds including their first link.
+These are bounded normal Debug observations, not an ASan or speedup claim.
+Independent recording-stub comparison against the original harness verifies
+all 44 runtime sources, language modes, expected values/exits and diagnostic
+fragments, plus all eight source-error bodies/codes, unchanged. Generated
+CTest discovery confirms isolated `-R` includes integrity, owning preparation
+and exactly the requested runtime cell. Shared preparation compiles/assembles
+both modes; linking occurs only for consumers that need it, under the same lock.
+A source/product identity change invalidates preparation. A linked image must
+have a matching published owner hash before execution; unowned interrupted
+outputs are rebuilt. Disposable focused logs were inspected then deleted.
+
+Further source-audit constraints: validate source/configuration/dependency identity
+once per mandatory build validation, not once per copied file, then check each
+owner's artifact hashes. Include actual configured external dependency contents
+and identities (DSLSH can be fetched from a moving branch), and reject changed
+inputs at final qualification. Local source mutation during a run invalidates
+proof. Keep mixed native-adapter generation original: its BYPRODUCTS include
+provider DSOs, which cannot be taken from an ordinary donor. The audited fixture
+helper accepts only explicit source/RXAS/RXBIN/generated-C outputs; native binaries
+remain owned by instrumented targets. Copy the full Stage G generated source,
+RXAS and RXBIN set; retain Level L's original L1/L2 compare-files verification.
+A disposable CMake argument-boundary experiment passed for literal and escaped
+semicolons; the permanent independent fixture must also cover spaces, generator
+expressions, multiple commands/byproducts, ordering and failure blocking consumers.
+
+### Local implementation qualification and candidate gate
+
+The implementation retains the original ordinary/full test behavior, adds four
+preparation/integrity CTests and implements daily as **U minus exactly ten**.
+Current Apple discovery is **U=3,298**, daily **3,288**; the original coverage
+measurement used U=3,294 before these infrastructure additions. All four
+normalization cells retain RUN_SERIAL and TIMEOUT 1200; native/SAN and unknown
+new names remain included. No product C, Rexx library or research compiler
+source changed in this tranche.
+
+- Core/SDK/stage preparation passes through `tools/asan-run.sh --build-dir
+  cmake-build-debug --phase build --build-target cri07_rxpa_sdk_consumer_prereqs
+  --build-target stage-optional --build-jobs 6 --build-leaks off --no-live-tail`,
+  with no compiler warnings or sanitizer diagnostics.
+- Focused normal Debug passes **12/12 in 131.51 seconds** using runner phase
+  ctest, one test job, leaks off and regex
+  `^(sanitizer_strategy_contract|rxpa_external_sdk_consumer|crexx_project_build_contract|crexx_native_.*)$`.
+  SDK takes 27.19 seconds, project/incremental/provider contract 88.61 seconds,
+  and eight native driver/packaging cases 0.97–5.18 seconds. This validates
+  ordinary routing/package correctness; candidate ASan execution remains open.
+- Ten independent behavioral contracts pass in **2.90 seconds**. They execute
+  actual CMake custom commands to compare ordinary forwarding, semicolons,
+  spaces, generator expressions and multiple commands/byproducts; verify
+  multi-config ordinary generation; reject stale/missing owner members and
+  changed source/configuration/actual dependency content; block consumers after
+  failure; exercise interprocess locking and interrupted/unowned linked-image
+  publication; audit provider-own compile flags and the product VM entrypoint;
+  check cadence/default-keep/platform/profile reuse and false-broad cases.
+  The actual runner also executes a controlled CTest then fails its post-test
+  native audit, proving no success completion or result is published.
+- Fresh real CREXX ordinary/Ninja and ASan/Ninja configurations agree on 95
+  relevant settings and actual DSLSH commit/content identity
+  `383e5daab0ffcf6ec83e02db7a01a27709dabb2c`. Temporary configure trees/logs
+  were removed. Canonical reuse is tested across relocation/history metadata,
+  with semantic/configuration/tool/dependency/host/preparation differences
+  still separated. Equivalent broad profile labels share one broad cache scope.
+- Native closure verifies effective flags for built source objects, nested SDK
+  provider sources, product VM routing, driver child flag files and linked
+  native products/copies throughout the build tree. CMake private compiler
+  probes and relocatable objects are distinguished from executable/provider
+  outputs; objects retain their separate flag audit. Newly built CTest targets
+  are audited after execution and included in final observed identity; changing
+  an already-present native product invalidates the run.
+
+Existing logical-state oracles are retained: allocator bounded reserve then
+zero trim/live allocations, exact wrong-owner/overflow counts; stem ownership
+and zero teardown counts; worker missing/signal failure followed by successful
+request, zero running requests and exact failure/cancellation/destruction
+counts. Linux full and both daily candidate jobs execute these existing tests.
+The future new-C compiler-service lifecycle/resource criterion remains an
+explicit programme gap, owned by its research plan; this snapshot does not
+qualify the newer compiler or claim retirement/self-hosting. Independent
+Level L/new-C source/oracles and the default research option OFF are unchanged.
+
+**Initial qualification plan, before the candidate findings:** the timeout and
+compatible preparation/policy commits were published together, then dispatched
+with three isolated fresh jobs: Linux original full U (including all four
+normalization and all 16 structured-flow cases), Linux separated daily and
+Apple separated daily. Linux's ordinary donor also runs full ordinary
+correctness. Measure ordinary preparation, native build and CTest separately
+against the provisional two-hour target, without turning that target into a
+kill timer. Reuse the unchanged prior full Apple product evidence; neither a
+daily pass nor this local qualification is a new broad/platform pass. Expected
+publication status is hotfix implementation with candidate qualification
+pending, scheduled activation disabled, and no master/develop promotion. Hosted
+run links own later observed outcomes; do not add a CI-status-only commit.
+The current remaining gate is the explicitly approved bounded Linux completion
+under SAN-QA-021 plus both clean daily platform executions; that later decision
+supersedes a new complete Linux CTest repetition for this QA-only interruption.
+
+### Candidate correction: standalone bootstrap declaration fixture
+
+At `2d167496c6d67b96adc89f57bc705328de017b7c`, candidate run
+[39419769451](https://github.com/adesutherland/CREXX/actions/runs/39419769451)
+prepares/seals Linux ordinary fixtures in 11m01s and Apple ordinary fixtures in
+20m52s. Linux's extra ordinary correctness step then executes 3,260 of 3,293
+selected cells: 3,259 pass, `rxlang_bootstrap_build_order` fails immediately
+(0.04s), and 33 remain unrun. CTest takes 1,826.00 seconds. No timeout or
+sanitizer report is involved. Its private CMake root copies the real Level L
+build declarations but includes only the import-root helper; those declarations
+now also require `CrexxQaFixtures.cmake`. The correction includes that real
+module, preserving the existing instrumented stand-ins and all clean/no-op,
+missing-L2, source-change and final-no-op freshness assertions. Native product,
+producer commands, fixture outputs and every other runtime oracle are unchanged.
+The public standalone bootstrap root needs the same include, and its lifecycle
+and older comment snapshot copy both required modules. The latter receives only
+that compatibility copy correction; its pre-existing snapshot/path limitations
+are outside this repair. This is a test harness integration defect within
+SCOPE-AC03/04, not a memory-safety finding.
+
+The Linux ordinary build also reports one `-Wformat-truncation` warning in
+`driver/tests/project_failure_helper.c`. Its checked path construction now
+reserves the complete maximum suffix and rejects truncated `snprintf` results.
+Only `crexx_project_worker_diagnostics` owns that fake producer; it was among
+the 33 unrun cells. Native product code and the other 3,259 passing cells'
+owning sources/oracles are unchanged. Apple ordinary preparation emits no
+compiler warnings. The canceled Apple instrumented build/preparation emits
+303 macOS SDK `sprintf` deprecation warnings across unchanged first-party and
+DSLSH source sites; that observed warning limitation is retained, without a
+blanket suppression or a claim about the historical baseline warning count.
+
+Both remaining sanitizer jobs select the deterministically broken bootstrap
+fixture. They were canceled at 13:02 UTC rather than consuming the remaining
+hours on known-invalid candidates. Linux was still building; Apple had entered
+CTest after its pre-test native audit verified **634 built native source
+objects and 312 products/provider copies**. One downloaded diagnostic copy per
+job was inspected: no sanitizer diagnostic was emitted. These are partial
+observations, not completed profile proof. Downloaded/task-created diagnostics
+are deleted after this summary.
+
+Focused repair proof on Apple arm64, original producers and one test job:
+
+- Runner phase ctest with regex
+  `^(rxlang_bootstrap_build_order|sanitizer_strategy_contract)$` passes **3/3**
+  (including integrity) in **20.14 seconds** normal Debug and **19.44 seconds**
+  maintained ASan. All ten independent policy/preparation behaviors pass; all
+  original bootstrap clean/missing-L2/source-change/no-op assertions remain.
+- Public `langtools/bootstrap` configures independently with ordinary host
+  tools, then runner phase build target `rexx/lllimits.rxbin` executes original
+  compile/assemble commands and produces the 18,783-byte image. No external
+  fixture marker is created; the temporary tree is removed. This bounded
+  forwarding proof does not rerun the separately owned full lifecycle campaign.
+- Runner builds target `project_failure_helper` warning-clean in both trees;
+  regex `^crexx_project_worker_diagnostics$` passes **2/2** including integrity
+  in **1.49 seconds** ordinary Debug and **3.82 seconds** Apple ASan. Apple
+  build/test leak detection is off because its runtime lacks LSan support.
+- Actionlint, runner shell syntax and `git diff --check` pass for the correction;
+  all ten behavioral contracts pass again in **3.02 seconds** after phase timing
+  output is added.
+
+The bootstrap-repaired exact-head candidate was dispatched with **three fresh,
+complete sanitizer jobs**: Linux original full U, Linux separated daily U−10 and
+Apple separated daily U−10. This repeat was required by AC05's clean candidate execution, not
+additional unchanged assurance. Strict completion/profile markers are unchanged.
+The runner reports elapsed wall seconds for each logged phase, so native build,
+qa-preparation and CTest costs can be extracted from one diagnostic artifact copy.
+Only ordinary correctness continues from valid retained evidence: optional
+manual candidate input `ordinary_regex` selects precisely the failed cell plus
+all 33 unrun cells (34), with the integrity setup added automatically (35).
+The empty input still runs full ordinary correctness; an arbitrary regex
+receipt never establishes full ordinary coverage. The approved continuation is:
+
+```text
+^(INT|QUIT|TERM|crexx_(driver_output_lock|process_runtime|project_build_contract|project_worker_diagnostics)|product_install_inventory|rexxscript1_rxbvm|rexxscript_ast_(noopt|opt)_(rxbvm|rxtvm)|rxas_label_cycles|rxbuild_demo_build_order|rxlang_bootstrap_build_order|rxpa_(external_sdk_consumer|signature_diagnostics)|ts_llstructuredflow_(earley|ll1|lr1|packrat)_(noopt|opt)_(rxbvm|rxtvm))$
+```
+
+Generated discovery verifies exactly 34 owning names match. The prior 3,259
+ordinary passes plus these 34 owning cells cover U=3,293, provided the latter
+all pass; integrity deliberately overlaps. This explicit ordinary union does
+not manufacture a single-run broad sanitizer marker. Product/producer/library
+and all remaining ordinary test inputs are identical to `2d167496c`; only the
+bootstrap helper inclusion/snapshots, this unrun worker helper and manual
+continuation wiring change. The subsequent services timeout and approved Linux
+bounded completion are owned by SAN-QA-021 above. Both clean daily outcomes are
+complete; scheduled activation stays disabled.
+
+### Numbered acceptance criteria
+
+1. **SCOPE-AC01 — timeout repairs and Linux verification complete:** account for
+   tested inputs, failures, selection and phase costs above. SAN-QA-019/020/021
+   pass their focused checks and the approved Linux original-producer union;
+   SAN-QA-022 preparation integration has clean revised platform proof.
+2. **SCOPE-AC02 — done:** map native modules,
+   instruction families, value/lifetime/failure scenarios, providers and
+   platforms to existing tests and explicit gaps. The approved VM-REV-AC01
+   replaces equal measured coverage as this reduction's gate with explicit
+   risk-based cadence. Preserve the narrow prior measurement without claiming
+   branch/history equivalence. Every moved family has its owner, weekly/affected
+   trigger and residual risk; preserve the approved VM/provider SAN ownership.
+3. **SCOPE-AC03 — done:** from clean inputs,
+   ordinary fixture preparation and the instrumented VM/provider closure
+   produce compatible, traceable artifacts without stale/missing dependencies.
+   Prove which native binaries execute in all selected host/subprocess paths.
+   The native-tool profile retains instrumented producer tests, Linux leaks
+   stay on, and full-profile selection retains the existing broad set.
+4. **SCOPE-AC04 — done:** policy fixtures prove daily/weekly/affected-change/
+   manual/tag decisions, missing-history fallback, platform/profile-qualified
+   reuse, failure propagation and no false broad-success marker. No workflow
+   is `continue-on-error`; incomplete execution is reported as incomplete.
+5. **SCOPE-AC05 — done (measurement); the provisional two-hour target remains unmet on Linux:** after profile approval, measure one clean execution
+   on Linux and Apple, separating ordinary preparation, sanitizer build and
+   runtime/native-tool scope, against the provisional two-hour target. Reuse
+   unchanged valid full Apple evidence and the now-verified SAN-QA-021 bounded
+   Linux original-producer union, with no single-run broad marker. The approved qualification includes these clean candidate executions and the
+   approved Linux original-producer coverage; it does not authorize another coverage or benchmark campaign.
+6. **SCOPE-AC06 — done:** update `AGENTS.md`, the sanitizer guide, this worklist
+   (including its stale CI-enforcement footer) and affected owning test docs
+   coherently. Record exact qualified inputs, commands, results and limitations;
+   delete task-created diagnostics. Keep existing SAN closure requirements.
+7. **SCOPE-AC07 — VM-priority revision approved; activation gate open:** Adrian approved
+   the reviewed replacement membership, risk-based cadence and bounded lifecycle
+   scope on 20 October. Qualify before activation; Adrian separately decides the master exception.
+   Publication follows the authority in the implementation request. Verify
+   the effective scheduled definition before claiming rollout complete.
+8. **SCOPE-AC08 — done:** retained direct and real-workload tests check expected
+   values, errors, aliasing and resource state, including repeated requests,
+   failure/recovery and teardown. Compiler/engine parity is not the sole oracle.
+   Verify logical allocation/handle balance and bounded documented reserves;
+   ASan/LSan alone does not satisfy the lifecycle requirement.
+9. **SCOPE-AC09 — ordinary/research ownership preserved; exact ordinary union verified:** full ordinary language/tool acceptance, independent
+   Level L/new-C coverage, emitted-code quality and existing platform/packaging
+   requirements remain intact. Record current native dependencies and optional
+   untested configurations; do not infer retirement or self-hosting completion.
+
+### Numbered implementation steps
+
+1. **SCOPE-STEP01 — done, review only (AC01):** inspect hosted metadata and one
+   temporary artifact copy, source fixture/registration, runner, existing
+   policy and generated local CTest inventory. Record findings here. No
+   qualification runs were launched for this review.
+2. **SCOPE-STEP02 — verified, including approved Linux continuation (AC01/07):** prepare and replay the
+   unchanged Linux normalization failures in isolation; diagnose before
+   editing scheduling or product code. Present a separate implementation plan
+   and retain applicable decision gates if product changes prove necessary.
+3. **SCOPE-STEP03 — done, bounded review/measurement (AC02/03/08/09):**
+   extend this source review into the native module/provider/scenario crosswalk,
+   measure marginal coverage of a bounded representative/candidate panel,
+   identify genuine gaps and propose exact profile membership and dependencies.
+   The map, 87-cell results and exact ten-name proposal above are complete.
+   Unmeasured families stayed included in that original panel decision; no
+   full-profile or Linux qualification was claimed. The approved VM-priority
+   cadence above supersedes that reduction gate; qualification precedes activation.
+4. **SCOPE-STEP04 — implemented and locally verified; platform proof in STEP05 (AC02/03/04/08):**
+   add justified focused boundary/state tests, implement separate fixture and
+   native-instrumentation preparation, then explicit runner profiles and
+   cadence/qualification records. Check selection, dependency and policy
+   fixtures. Fuzzing, TSan and optimization pilots are separately bounded
+   proposals, not an automatic expansion of this delivery.
+5. **SCOPE-STEP05 — done (AC01/05/08/09):** qualify affected
+   normal Debug tests and independent oracles, focused maintained sanitizers,
+   one measured clean daily profile per platform and the explicitly approved
+   bounded Linux original-producer completion under SAN-QA-021.
+   Compare coverage/scenario obligations with the baseline and report gaps;
+   reuse valid unchanged results.
+6. **SCOPE-STEP06 — publication authorized; scheduled activation remains todo (AC06/07):** reconcile
+   documentation and current remote changes; prepare separate reviewable
+   timeout-repair and scope-policy commits in hotfix for normal promotion to
+   develop if publication is authorised. Apply the master workflow-only
+   change only if explicitly approved. Report observed hosted results without
+   status-only commits.
+
+Review method: `gh run view 39366632770 --json jobs`, relevant per-job step
+logs, `gh run download ... --pattern 'sanitizer-logs-*'` into a disposable
+temporary directory, and `ctest --test-dir cmake-build-debug
+--show-only=json-v1` (discovery only). Runtime assertions and source claims were
+checked against the actual fixture, CMake declarations and Unicode guide.
+Raw downloaded diagnostics are disposable and are removed after this summary;
+the hosted run is the durable evidence link. Existing unrelated hotfix
+`scripts/__pycache__/` and develop work remain untouched.
+
+Follow-up review sources: the current compiler programme plan/architecture in
+the develop checkout (read only), `docs/ai-context/RXVM_INTERPRETER.md`,
+`CREXX_LIBS.md`, `interpreter/CMakeLists.txt`, VM tests/allocator sources,
+`tests/rxpa`, plugin registration and generated CTest discovery in hotfix.
+The initial source review did not execute tests. The subsequently approved
+bounded measurement phase and its limits are recorded above; full profile
+implementation and daily platform qualification are complete; scheduled
+activation remains a separate open decision.
+
+Tooling references for the proposal:
+[LLVM AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
+describes native instrumentation and its supported memory-error checks;
+[Clang source coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html)
+provides function/region/branch measurements;
+[libFuzzer](https://llvm.org/docs/LibFuzzer.html) describes coverage-guided
+input testing and limitations for global state, persistent threads and
+`dlclose` targets; and
+[ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html) targets
+data races in a separate instrumentation configuration. These tool capabilities
+inform the proposed methods; they do not establish cREXX test coverage.
+
+## Historical assurance summaries
+
 Status at 2026-08-23: every finding in this register is repaired and the
 supported Linux ASan/LSan closure gate passes 2,363/2,363 on exact commit
 `e3de72939df0dacf22c0793371233ed439227437` at
@@ -81,8 +2134,8 @@ artifact.
 
 ### SAN-QA-019 — structured-flow matrix exceeds its shared-pool deadline
 
-Status: **repair locally qualified for hotfix/develop publication; overnight
-Linux confirmation pending**. Owner: Codex, under Adrian's request to diagnose,
+Status: **closed as a QA scheduling finding, 20 October; all sixteen Linux
+cells pass in the approved SAN-QA-021 original-producer continuation above**. Owner: Codex, under Adrian's request to diagnose,
 repair and publish from the existing hotfix checkout. Affected revision:
 `016e6a65466c65a5c722b96452d95025acb463b2`.
 
@@ -1858,11 +3911,18 @@ repair commit or worktree identity, exact final commands, and broad result.
 
 ## CI enforcement
 
-`.github/workflows/sanitizers.yml` adds automatic fresh Linux x64 ASan/LSan and
-macOS arm64 ASan jobs for pushes and pull requests to `develop` or `master`.
-Both use `tools/asan-run.sh --phase full`, so sanitizer-instrumented build-time
-execution of `rxc`, `rxas`, and `rxlink` precedes complete CTest.  The workflow
-is present locally but cannot supply the required Linux closure result until it
-runs from a committed revision on an available runner.  Its stable job names
-must also be configured as required checks in GitHub branch protection or a
-repository ruleset before merge blocking is enforced.
+`.github/workflows/sanitizers.yml` currently runs full Linux x64 ASan/LSan
+and macOS arm64 ASan for version tags and default manual dispatch. Scheduled
+invocations resolve current `develop` and skip an exact SHA already qualified by
+both full platform jobs. Ordinary pushes and pull requests do not invoke this
+workflow; full sanitizer jobs are not universal develop publication gates.
+The explicit `normalization-linux` dispatch is an isolated diagnosis route and
+cannot write a broad-assurance marker. Linux build/test leaks stay enabled;
+Apple LeakSanitizer is unsupported.
+
+The effective scheduled definition is still on `master`, with its existing
+240-minute job guard. Hotfix has the 360-minute guard and focused dispatch route;
+this is not scheduled activation. The approved daily/preparation changes remain
+subject to clean platform qualification and the separate narrow master-workflow
+decision. Hosted run links establish observed results; local policy or a stable
+job name alone does not establish successful execution or branch protection.

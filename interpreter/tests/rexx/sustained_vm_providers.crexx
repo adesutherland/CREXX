@@ -1,0 +1,36 @@
+/* Real RXPA session/factory/method/payload boundaries in one persistent VM. */
+options levelb
+namespace sustainedproviders expose cycle live
+import rxfnsb
+import rxpa_objects
+
+cycle: procedure = .int
+  before = counts('live')
+  first = .box(17)
+  alias = first
+  if first.read() <> 17 | alias.read() <> 17 then return 1
+  first = .box(23)
+  if first.read() <> 23 | alias.read() <> 17 then return 2
+  caught = 0
+  do
+    first = .box(-1)
+  on signal invalid_arguments as problem
+    if problem.name() = 'INVALID_ARGUMENTS' then caught = caught + 1
+  end
+  if first.read() <> 23 then return 3
+  afterfailure = .box(31)
+  if afterfailure.add(2) <> 33 then return 4
+  do
+    ignored = afterfailure.nested_fail()
+  on signal division_by_zero as problem
+    if problem.name() = 'DIVISION_BY_ZERO' then caught = caught + 1
+  end
+  if afterfailure.read() <> 33 then return 5
+  recovered = .counter(41)
+  if recovered.doubled() <> 82 then return 6
+  first = .box; alias = .box; afterfailure = .box; recovered = .counter
+  if caught <> 2 | counts('live') <> before then return 7
+  return 0
+
+live: procedure = .int
+  return counts('live')

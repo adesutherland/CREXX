@@ -149,6 +149,10 @@ if(BUILD_TESTING)
     endif()
 endif()
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS odbc_mock_prepared_rxbvm TARGETS rxbvm odbc_mock_prepared_runtime _odbc_mock library)
+crexx_register_test_prep_targets(TESTS odbc_mock_prepared_rxtvm TARGETS rxtvm odbc_mock_prepared_runtime _odbc_mock library)
+
 crexx_finalize_directory_qa_tiers()
 
 if(ENABLE_ODBC)

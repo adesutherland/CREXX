@@ -59,4 +59,7 @@ set_tests_properties(${_native_signal_tests} PROPERTIES
 
 crexx_label_smoke_tests(QUIT INT PREP_TARGETS intr_test)
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS QUIT TERM INT TARGETS intr_test signal_tester)
+
 crexx_finalize_directory_qa_tiers()

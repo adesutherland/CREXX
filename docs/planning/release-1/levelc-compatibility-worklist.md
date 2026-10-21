@@ -1635,6 +1635,19 @@ Preserve unrelated compiler-split/architecture drafts in this checkout.
    criterion. Existing language-design/architecture approval gates apply
    only if investigation requires a new decision beyond the scope above.
 
+**20 October sanitizer preparation change:** the expression and BIF reference
+audits now share hash-bound two-mode compile/assemble preparation through CTest
+setup fixtures. Every original direct/linked runtime cell and independent
+expectation remains, including 44 expression cases, eight source-error identities,
+exit 28 and source diagnostic fragments. Linked images are created only for
+consumers that need them, under the same lock and published hash ownership.
+Isolated `-R` automatically prepares inputs; setup failure blocks consumers.
+Normal Debug passes all eight runtime cells plus setup/integrity, 11/11 in
+268.20 seconds. Sanitizer candidate qualification and exact ten-name daily
+cadence are owned by [the sanitizer worklist](../../SANITIZER-WORKLIST.md);
+full ordinary/weekly assertions remain unchanged. Other generic linked-test
+consumers are unchanged, and these timings do not establish product speedup.
+
 **LC-CLOSE reference-to-regression crosswalk.** These cases run in direct
 opt/no-opt and linked opt/no-opt through the maintained expression driver;
 values/identities follow the existing compliance reference and retained

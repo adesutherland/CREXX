@@ -513,6 +513,31 @@ These options allow for clean, modular macro organization and reuse across multi
 
 This will repeat the macro body as many times as there are variadic arguments.
 
+#### One-shot argument forwarding
+
+Use a named terminal marker such as `...args` when the macro should receive
+and forward the complete argument sequence once.  This is different from the
+bare `...` form above, which repeats the body once for each variadic argument.
+
+```rexx
+##define cmd globalv(...args) {##MACRO_GLOBALV ...args}
+
+##macro MACRO_GLOBALV ...args
+  .gen address globalv "&args"
+##mend
+```
+
+`...args` may be the only parameter or may follow fixed positional parameters,
+but it must be the final parameter.  The C-style macro receives the original
+argument text in source order.  A scripted macro receives the same sequence as
+the named `args` value, including zero arguments; this makes it suitable for
+facades that pass arbitrary operands to an ADDRESS environment.  Quoted
+operands remain quoted, and a `.gen` string such as `"&args"` preserves those
+quotes in the generated command.
+
+The named marker is intentionally not interchangeable with the existing bare
+`...` repeat-body syntax.
+
 ### 5. **Emission**
 
 * Final expanded code lines are stored in `outbuf.` and written to the output file

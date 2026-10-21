@@ -190,6 +190,8 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
                             -DEXPECT_FILE_REGEX=${TRACE_CAPTURE_EXPECT_FILE_REGEX}
                             -P ${TRACE_CAPTURE_SCRIPT}
             )
+            crexx_register_test_prep_targets(TESTS ${_test_name}
+                    TARGETS ${TARGET_NAME}_bin ${_vm_target})
         endforeach()
     endforeach()
 
@@ -311,6 +313,8 @@ function(crexx_add_trace_compile_fail_test TARGET_NAME SOURCE_FILE EXPECTED_REGE
                     -DEXPECTED_REGEX=${EXPECTED_REGEX}
                     -P ${TRACE_COMPILE_FAIL_SCRIPT}
     )
+    crexx_register_test_prep_targets(TESTS ${TARGET_NAME}
+            TARGETS rxc compiler_exit_bin library)
 endfunction()
 
 crexx_add_trace_compile_fail_test(

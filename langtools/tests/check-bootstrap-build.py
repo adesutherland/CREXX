@@ -98,6 +98,7 @@ def check():
 project(level_l_build_order NONE)
 set(CREXX_LEVEL_L_STANDALONE ON)
 include("'''+source.as_posix()+'''/cmake/CrexxImportRoots.cmake")
+include("'''+source.as_posix()+'''/cmake/CrexxQaFixtures.cmake")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/bin/library.rxbin")
   file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "base library")
