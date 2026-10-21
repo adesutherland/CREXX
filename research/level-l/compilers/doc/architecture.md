@@ -40,6 +40,7 @@ and feature work are outside this delivery.
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
 | `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/constant-symbol labels, ordered PROCEDURE EXPOSE and ordinary CALL/direct shared BIF bindings. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
+| `levelc/llccallemit.crexx` | Private finite delayed CALL adapter over admitted immutable handler rows. | Shared B owns pending delivery, suppression, activation and CONDITION state; no target compiler dependency. |
 | `levelc/llctraceemit.crexx` | Private emitted frame-local TRACE observer, checked existing B service signatures and retained scalar event metadata. | Reuse B option/controller/output owners; keep raw parent-register reads in the direct handler and compiler code outside the target closure. |
 | `common/llcompilercontracts.crexx` | Retains existing B exposed/optional formal qualifiers independently of bare names; C/G emitters preserve them. | Metadata recognition does not expand either source-call profile; owning admissions retain required by-value contracts. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
@@ -473,10 +474,10 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v21/86 with
+C to the two-argument source-unit ABI. The current family is v22/88 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
-commands, the complete SIGNAL descriptors and the practical TRACE operation.
+commands, complete SIGNAL, practical TRACE and delayed CALL/clause completion.
 Local instruction qualification is tracked in
 the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
@@ -486,9 +487,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 whole-C observations and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 21. The neutral scalar names do not load the G
+types and `crexx.c` version 22. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–20 are never reinterpreted as version 21. Within version 21, the complete C
+versions 1–21 are never reinterpreted as version 22. Within version 22, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -525,7 +526,10 @@ descriptors and entry/procedure protocol are owned by the
 CALL descriptors belong to the [CALL contract](#call-contract). The
 [EXIT contract](#exit-contract) revises `exit` and appends `program.exiting`.
 The retired
-scalar `arguments.read` operation remains absent. In canonical registration order DROP is 5,
+scalar `arguments.read` operation remains absent. Delayed CALL appends
+`call.policy`/`clause.complete` at 87/88 under the
+[Group 1 contract](#conditions-observations-complete-contract), including its
+strict conditional EXIT carrier. In canonical registration order DROP is 5,
 SELECT is 41/42, DO is 43–50, transfer.invalid is 51 and PARSE is 52/53. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
 `I` and `T` mean `value`, `context`, `arguments`, `result`, `core.boolean`,
@@ -4565,6 +4569,180 @@ delivery; metadata is not an executable instrumentation cost.
   review coherent source/first RXAS early, batch material fixes, then freeze.
 - **CTRACE-STEP03 — complete:** focused component qualification, lasting docs/status,
   cleanup and one local commit; keep complete-C acceptance open.
+
+<a id="conditions-observations-complete-contract"></a>
+
+## Complete Group 1: conditions and observations
+
+Deliver the complete Group 1 implementation from PLAN in one increment:
+delayed CALL policy/delivery, clause completion, configured producer integration,
+condition/source state, and actual PARSE/ARG/PULL field/drop observations.
+Existing SIGNAL and practical TRACE remain delivered foundations. Reuse native
+`rxcp_levelc_lower.c` contracts and checked native fixture sources/expectations;
+new C requests still use only the B/L pipeline. Shared B remains the algorithm
+owner. Native source/compiler services, INTERPRET, new host APIs and real
+asynchronous host HALT are outside this increment; host producers/platform
+acceptance retain Group 2 and formal QA owners.
+
+### Source, policy and handler lifecycle
+
+Admit contextual `CALL ON condition [NAME target]` and `CALL OFF condition`
+for ERROR2, FAILURE3, HALT4 and NOTREADY5. NAME is a bare identifier symbol or decoded
+quoted name; the default is the condition name. Retain source-first local label
+precedence, simple Unicode uppercase and existing ordinary ON/OFF names.
+Malformed/missing conditions own 25.1/25.2; bad NAME/ON tails own 19.3; surplus
+OFF operands own 21.1. Validate dead forms without replacing lexical/enclosing
+errors. Handler resolution is local, then direct BIF, then the existing signed
+static provider; reached missing/trace-only local targets own 16.1/16.2, with no
+search past the first local label and no eager missing-handler error at ON.
+
+Use existing `setCallPolicy`, `setSignalPolicy`, `queueCallCondition`,
+`takeCallCondition`, dispatched fields, `beginCallTrap`, pending-dispatch-error
+services and external-scope normalization. SIGNAL/CALL/OFF replace only their
+condition's policy. A false queue result includes suppression or an occupied
+slot and is never an unhandled-event test. ERROR/FAILURE/NOTREADY suppress their
+own delayed event; reuse the one-extra-HALT ancestor buffer and drain pending
+events after a handler returns. No second policy, queue or condition engine.
+
+A handler gets a fresh zero-argument activation, inherited policy and
+numeric/ADDRESS/TRACE state, and `beginCallTrap` before entry. Internal handlers
+borrow the interrupted current pool until PROCEDURE; signed external handlers
+retain their existing fresh program scope. Handler RETURN values are discarded;
+the interrupted RESULT/.RESULT and CONDITION data survive. Ordinary SIGL gets
+the causing line via existing `setCallTrapSigl`; reserved .SIGL retains its
+existing value, as the native CALL contract specifies. Handler private-pool,
+receiver, argument and provider owners end before ordinary execution resumes.
+Internal-handler EXIT propagates the interrupted program root and exact optional
+value; signed external-handler EXIT completes its existing distinct external
+program root before caller resumption.
+SIGNAL keeps its existing same-frame transfer and cleanup rules.
+
+A source-less direct BIF handler retains a fresh child for its CALL/DELAY state.
+Its stream completion belongs to the interrupted source dispatcher, matching
+native lowering. Same delivered-condition events use the existing child queue
+for DELAY suppression and HALT buffering; other conditions queue or SIGNAL on
+the source parent, then drain through the same finite dispatcher. Do not leave a
+pending event on a discarded BIF child or invent a separate child SIGNAL entry.
+BIF argument errors remain deferred to the authored source checkpoint.
+
+### Authored clause completion and C22 admission
+
+Preserve native semantic checkpoint placement. Ordinary statements, NOP,
+OPTIONS, ARG and policy changes checkpoint after effects; PROCEDURE checkpoints
+after ordered EXPOSE. IF/WHEN capture truth before a checkpoint and then execute
+the selected arm. Completed IF/SELECT/simple DO wrappers checkpoint after their
+children. Counted/controlled DO captures/start-control precede its initial
+checkpoint; each reached WHILE/UNTIL decision and an empty repetitive iteration
+has its required checkpoint. Labels, OTHERWISE and END bookkeeping are not new
+independent clauses. LEAVE/ITERATE checkpoint before transfer; RETURN captures
+its packet before checkpoint/return; EXIT captures its value before checkpoint
+and program-exit request. Handler mutation cannot change an already-captured
+decision, loop header, transfer target or completion value.
+
+C22 has 88 operations, the existing five C types and 36 target exports. Append
+`call.policy(table:T,context:C){condition:I,handler:I,label:I,name:T}->void`
+with context/condition.resource/returns, then
+`clause.complete(table:T,context:C){id:I}->R` with
+context.input.output.observation/condition.resource/returns. Neither has an
+evaluator. CSIG3 adds immutable SIGNAL/CALL mode to the existing shared source
+label/handler inventory; do not infer mode from surviving/pruned setters or
+decode a second label table. One module-local finite dispatcher per source
+function handles delayed calls; no per-clause handler expansion, runtime name
+search, compiler dependency in targets or global private-helper callable name.
+
+Completion returns an initialized owned R exactly when the parent program root
+requests EXIT. Use existing present/absent packet construction only on that
+cold path; otherwise return null without allocating a packet. A private borrowed Boolean
+records actual handler delivery so the caller skips TRACE resynchronization
+when idle. Numeric state already belongs to the VM frame; completion does not
+reinstall it. Its only ordinary transport is the canonical carrier store and `program.exiting` branch. CPROC
+must forbid every carrier load/semantic use on the false continuation; the true
+path returns the owned packet. Retain or bind the canonical parent activation
+for the query. No-CALL source omits this complete/guard bundle. SIGNAL proof,
+after its sole CSIG3 decode, rejects cross-function internal calls from a
+function with immutable CALL declarations: those ordinals belong to that source
+function. Existing multi-function graphs without CALL declarations retain their
+ABI; direct raw/body callers must provide the compatible source-owned policy
+domain. Preserve CPROC -> SIGNAL -> DO -> CLAUSE proof order and existing
+command/argument/DO ownership; checkpoint only after a command owner completes.
+
+Validate all records, including dead, fresh, loaded and rewritten graphs, with
+bounded indexed passes, retained same-identity facts and atomic output failure.
+Existing literal/clock-free specializations remain; semantic clause markers
+must not make DATE/TIME sample eagerly. The interrupted clause sample survives
+handler execution; child samples are independent and elapsed/reset remains
+program-root owned. Existing producers queue ADDRESS/stream/NOTREADY events;
+configured SYNTAX/NOVALUE/LOSTDIGITS keep their shared actual producers and typed
+recording/origin paths. Arbitrary raw provider events cannot resume through a
+BRV exceptional entry; preserve original outward events and the existing
+nonresumable raw-provider/real asynchronous HALT qualification rather than
+inventing SIGCALLA behavior or copying native unmatched-event defects.
+
+### Shared PARSE observations
+
+Add a default-off, late-sorting `zz_parse_observations` boolean to the existing
+borrowed RexxClassicContext, with `enableParseObservations(boolean)` and
+`parseObservations()`. C enables it only for an observer-enabled context;
+save/restore the incoming borrowed bundle flag on normal, EXIT and fatal cleanup.
+Existing direct B/native/RexxScript callers stay off. After packet admission,
+the single shared ParseExecution snapshots opt-in plus active R/I text mode;
+disabled contexts make no trace-state calls. LLM retains its existing partial
+metadata contract. The executor already owns LCP1 logical source, clause and
+raw input/target/drop spans: extend those existing checkpoints without replaying
+templates, adding a callback object or duplicating parsing/word/Unicode code.
+
+After a successful store or consumed dot, emit its exact retained field text
+before acknowledgement/next input; use `>>>` for a PARSE store and `>.>` for a
+dot. Retain raw target/drop identity in the existing packet/action state. Earlier
+writes/records survive a later failure; absent/later effects emit nothing. Keep
+the all-dot fast path when unobserved; observed dots use the existing single
+section scan and no RexxValue allocation. Add shared
+`rxfnsb._trace_write_value(prefix:string,value:string)->void`, delegating to
+existing quoting/output services, and reuse it in the generated C scalar
+observer too. This keeps formatting single-owned; caller opt-in deliberately
+permits these authored observations through library namespace filtering.
+Do not add per-field source/clause/clock resets or disabled value conversions.
+
+### Whole-increment acceptance and steps
+
+1. **CCOND-AC01:** all CALL source forms, contextual/dead cases, policy modes,
+   diagnostics and delivery-time target precedence have independent maintained
+   fixture expectations; failed compilation preserves prior output.
+2. **CCOND-AC02:** local/BIF/signed handlers have zero arguments, exact CALL/DELAY
+   state/description/SIGL, ignored RETURN, parent isolation and complete normal,
+   private, EXIT and selected SIGNAL cleanup, using existing B owners.
+3. **CCOND-AC03:** real admitted ADDRESS/PARSE producers, four queued conditions,
+   same-event suppression, last-wins policies and one-slot buffered HALT deliver
+   at the correct completed clause and preserve captured values/control.
+4. **CCOND-AC04:** all authored clause classes and transfers have admitted
+   completion/guard structure, lazy stable clocks and truthful source/TRACE;
+   configured errors/NOVALUE/LOSTDIGITS retain actual state and typed origins.
+5. **CCOND-AC05:** PARSE/ARG/PULL target/drop records show exact Unicode/NUL/blank
+   fields in effect order, including partial failure, and disabled execution
+   retains lazy all-dot/no-value-allocation behavior.
+6. **CCOND-AC06:** C22/CSIG3, canonical context, policy domain, conditional carrier,
+   fresh/dead/loaded/rewritten admission and limits/ownership fail atomically.
+   Early coherent source and representative caller/dispatcher/parse RXAS review
+   checks idle cost, live captures, return/transfer and cleanup before freeze.
+7. **CCOND-AC07:** one selected normal Debug opt/IR-on/rxbvm component batch passes.
+   Reuse native source/goldens and prepared products first; adapt only their
+   compiler/harness/injection boundary. For native multi-error fixtures, isolate checked rows without changing their
+   text or original line/column so the fail-first compiler can exercise each.
+   Preserve the existing ADDRESS raw-resource diagnostic spelling, adapting only
+   that checked parameter against a native uppercase transcript. Its real `cat`
+   fixture gets a command-only runtime PATH; the compiler closure stays isolated.
+   Add cases for genuine new-C contract gaps.
+   Broader compiler/platform/delivery and maintained-sanitizer QA remain later.
+8. **CCOND-AC08:** all necessary dependencies land together, enduring documents
+   and simple plan status are current, scratch is removed and one reviewed local
+   commit completes Group 1 without pushing or starting INTERPRET/other groups.
+
+- **CCOND-STEP01 — complete:** record the whole contract and native fixture
+  crosswalk; get internal coordinator review before product edits, AC01–08.
+- **CCOND-STEP02 — complete:** implement the whole reviewed C/L/shared-B batch;
+  independently review coherent source/first RXAS, batch material fixes and freeze.
+- **CCOND-STEP03 — complete:** focused component qualification, lasting docs/status,
+  cleanup and one local commit; retain all full-C/formal QA criteria.
 
 <a id="retained-c-operation-views"></a>
 

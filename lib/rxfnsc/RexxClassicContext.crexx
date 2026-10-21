@@ -46,6 +46,8 @@ RexxClassicContext: class
   activation_ref = reference .rexxactivation..RexxActivationArguments
   pool_ref = reference .rexxpool..RexxVariablePool
   config_ref = reference .rexxclassicconfig..RexxClassicConfig
+  /* Class fields sort by name; keep existing borrowed-owner ordinals. */
+  zz_parse_observations = .boolean
 
   /**
    * Borrow existing caller-owned objects without copying or extending lifetime.
@@ -72,7 +74,24 @@ RexxClassicContext: class
     activation_ref = activation
     pool_ref = pool
     config_ref = config
+    zz_parse_observations = 0
     return
+
+  /**
+   * Opt this borrowed bundle into authored PARSE field/drop observations.
+   * The compiled observer saves and restores this flag with its own scope;
+   * direct library callers remain disabled unless they explicitly opt in.
+   * No observer object, source state or owner is retained here.
+   * @param enabled true while the caller owns the compiled TRACE observer
+   */
+  enableParseObservations: method = .void
+    arg enabled = .boolean
+    zz_parse_observations = enabled
+    return
+
+  /** @return whether the caller permits authored PARSE observations */
+  parseObservations: method = .boolean
+    return zz_parse_observations
 
   /**
    * @return the borrowed activation reference, without copying its state

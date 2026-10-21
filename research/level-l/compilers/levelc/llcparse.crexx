@@ -89,7 +89,7 @@ parsed: class
     classified = .llcore..stream.tokens(source)
     clause = 1; depth = 0; condition = 0; after = ''
     addressmode = ''; addressseen = 0; commandseen = 0; addressdirection = ''
-    arm = 0; operandmode = ''; signalmode = ''; tracemode = ''; ownedelse = .int
+    arm = 0; operandmode = ''; signalmode = ''; callmode = ''; tracemode = ''; ownedelse = .int
     doheader = 0; dofirst = 0; docondition = 0
     parsemode = ''; proceduretail = 0; procedureallowed = 0
     owners = .string[]; ownercontrols = .string[]; ownercount = 0; endcontrol = ''
@@ -117,7 +117,7 @@ parsed: class
       if kind = sep & depth = 0 then doheader = 0
       if kind = sep & depth = 0 then do; parsemode = ''; proceduretail = 0; end
       if kind = sep & depth = 0 then addressmode = ''
-      if kind = sep & depth = 0 then signalmode = ''
+      if kind = sep & depth = 0 then do; signalmode = ''; callmode = ''; end
       if kind = sep & depth = 0 then tracemode = ''
       endname = 0
       /* A matching ELSE at the END-name boundary wins before a delimiter or
@@ -197,6 +197,37 @@ parsed: class
         end
         else if labeltoken then do; kind = language.tokenid('signalname'); signalmode = 'tail'; end
         else if kind = language.tokenid('string') then signalmode = 'tail'
+      end
+      /* CALL policy words are contextual; ordinary names outside this prefix
+       * retain the established call/assignment/label classification. */
+      if wordpos(callmode,'on.condition off.condition') > 0 & kind = id then do
+        if wordpos(spelling,'ERROR FAILURE HALT NOTREADY') > 0 then do
+          kind = language.tokenid('callcondition')
+          if callmode = 'on.condition' then callmode = 'on.name'
+          else callmode = 'off.tail'
+        end
+      end
+      else if callmode = 'on.name' & kind = id & spelling = 'NAME' then do
+        kind = language.tokenid('callhandlername'); callmode = 'on.target'
+      end
+      else if callmode = 'on.target' then do
+        ownedelse = 0
+        if kind = id & spelling = 'ELSE' & condition = 0 & term & ownercount > 0 then ownedelse = owners[ownercount] = 'if'
+        if ownedelse = 0 then do
+          /* CALL NAME uses a variable symbol or string. Ordinary CALL and
+           * SIGNAL retain their broader constant-label target contracts. */
+          if kind = id then do; kind = language.tokenid('callname'); callmode = 'on.tail'; end
+          else if kind = language.tokenid('string') then callmode = 'on.tail'
+        end
+      end
+      if callmode = 'head' & kind <> sep then do
+        if kind = id & spelling = 'ON' then do
+          kind = language.tokenid('callon'); callmode = 'on.condition'
+        end
+        else if kind = id & spelling = 'OFF' then do
+          kind = language.tokenid('calloff'); callmode = 'off.condition'
+        end
+        else callmode = ''
       end
       /* Static TRACE options are spelling, never a variable lookup or an
        * expression. VALUE alone enters the ordinary expression grammar. */
@@ -315,15 +346,14 @@ parsed: class
         end
       end
       if word = 'CALL' then do
-        if next = id then do
-          policyhead = upper(binsubstr(source,layout.start(i + 1) + 1,layout.finish(i + 2) - layout.start(i + 1)) as .string)
-          if policyhead = 'ON' | policyhead = 'OFF' then do
-            _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: delayed CALL policy is owned by CALL4'; return
-          end
-        end
         callable = next = id | next = language.tokenid('number') | next = language.tokenid('string') | next = language.tokenid('typename') | next = language.tokenid('constantname') | next = language.tokenid('parsedot')
         if callable = 0 then do
-          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-19.2: CALL requires a symbol or string target'; return
+          _status = 1; _offset = first
+          detail = 'CALL requires a symbol or string target; found end-of-clause'
+          if next <> sep & next <> -1 then do
+            _offset = layout.start(i + 1); detail = 'CALL requires a symbol or string target'
+          end
+          _error = 'LL_COMPILER_SYNTAX: RXC-LC-19.2: ' || detail; return
         end
       end
       /* Source placement is independent of the activation's executed window.
@@ -351,6 +381,7 @@ parsed: class
       if word = 'ARG' | word = 'PULL' then parsemode = 'template'
       if word = 'ADDRESS' then do; addressmode = 'head'; addressseen = 1; end
       if word = 'SIGNAL' then signalmode = 'head'
+      if word = 'CALL' then callmode = 'head'
       if word = 'TRACE' then tracemode = 'head'
       if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; ownercontrols[ownercount] = ''; end
       if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
@@ -386,12 +417,13 @@ parsed: class
         emptyrhs = 1; operandmode = 'assignment'
       end
       if kind <> sep & kind <> colon & kind <> language.tokenid('labelname') then arm = word = 'THEN' | word = 'ELSE'
-      if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then do; operandmode = ''; addressmode = ''; signalmode = ''; tracemode = ''; end
+      if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then do; operandmode = ''; addressmode = ''; signalmode = ''; callmode = ''; tracemode = ''; end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
         term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
         if emptyrhs | wordpos(word,'SAY PUSH QUEUE ADDRESS RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
         if kind = language.tokenid('numericvalue') | kind = language.tokenid('signalvalue') | kind = language.tokenid('signalname') | word = 'SIGNAL' then term = 1
+        if kind = language.tokenid('callon') | kind = language.tokenid('calloff') | kind = language.tokenid('callcondition') | kind = language.tokenid('callhandlername') | kind = language.tokenid('callname') then term = 1
         if kind = language.tokenid('signalon') | kind = language.tokenid('signaloff') | kind = language.tokenid('signalcondition') | kind = language.tokenid('signalhandlername') then term = 1
         if word = 'TRACE' | kind = language.tokenid('tracevalue') | kind = language.tokenid('traceoption') then term = 1
         if kind = language.tokenid('addressenv') | kind = language.tokenid('addressquoted') | kind = language.tokenid('addressresource') then term = 1
@@ -436,11 +468,13 @@ parsed: class
     joined = .llcore..stream.tokens(source)
     previous = -1; previousend = 0; previousstart = 0; beforeprevious = -1
     number = language.tokenid('number'); string = language.tokenid('string')
-    callword = language.tokenid('callword'); signalword = language.tokenid('signalword'); dropword = language.tokenid('dropword'); dropping = 0
+    callword = language.tokenid('callword'); signalword = language.tokenid('signalword'); dropword = language.tokenid('dropword'); dropping = 0; callpolicy = 0
     parsing = 0; parsetemplate = 0; parsevarname = 0; dot = language.tokenid('parsedot')
     do i = 0 to normalized.size() - 1
       kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
       if kind = sep | kind = thenword | kind = elseword then dropping = 0
+      if kind = sep | kind = thenword | kind = elseword | kind = language.tokenid('otherwiseword') then callpolicy = 0
+      if kind = language.tokenid('callon') | kind = language.tokenid('calloff') then callpolicy = 1
       if kind = sep | kind = thenword | kind = elseword then do; parsing = 0; parsetemplate = 0; parsevarname = 0; end
       if kind = language.tokenid('parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
       if kind = language.tokenid('argword') | kind = language.tokenid('pullword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
@@ -461,7 +495,7 @@ parsed: class
       rightterm = kind = id | kind = number | kind = string | kind = opening | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot') | ('c' = 'g' & kind = language.tokenid('presence'))
       target = previous = id | previous = number | previous = string | previous = language.tokenid('typename') | previous = language.tokenid('constantname') | previous = language.tokenid('parsedot')
       function = target & kind = opening & previousend = first
-      if dropping = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword & beforeprevious <> signalword then do
+      if dropping = 0 & callpolicy = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword & beforeprevious <> signalword then do
         token = language.tokenid('abut')
         if first > previousend then token = language.tokenid('blank')
         ok = joined.synthetic(token,previousend)
@@ -479,6 +513,7 @@ parsed: class
       if decorated == _error then do
         decorated = addressmessage(language_ref,reference joined,reference source,_offset,_error)
         if decorated == _error then decorated = numericmessage(language_ref,reference joined,reference _offset,_error)
+        if decorated == _error then decorated = callmessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then decorated = signalmessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then decorated = tracemessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then decorated = completionmessage(language_ref,reference joined,reference _offset,_error)
@@ -659,6 +694,9 @@ syntaxmessage: procedure = .string
   text = changestr('signalhandlername',text,'NAME')
   text = changestr('signalcondition',text,'condition name')
   text = changestr('signalon',text,'ON'); text = changestr('signaloff',text,'OFF')
+  text = changestr('callon',text,'ON'); text = changestr('calloff',text,'OFF')
+  text = changestr('callcondition',text,'condition name'); text = changestr('callhandlername',text,'NAME')
+  text = changestr('callname',text,'handler name')
   text = changestr('tracevalue',text,'VALUE'); text = changestr('traceoption',text,'TRACE option')
   marker = pos('; expected ',text)
   if marker > 0 then do
@@ -918,6 +956,63 @@ tracemessage: procedure = .string
   end
   prefix_text = 'LL_COMPILER_SYNTAX: '
   return prefix_text || 'RXC-LC-35.1: invalid TRACE VALUE expression; ' || substr(fallback,length(prefix_text) + 1)
+
+/** Only the classified CALL policy prefix owns these exact diagnostics. */
+callmessage: procedure = .string
+  arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
+  language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
+  mode = ''; prefix = 0; i = .int; code = .string
+  do i = 0 to tokens.size() - 1
+    first = tokens.start(i); if first > offset then leave
+    kind = tokens.symbol(i)
+    boundary = kind = language.tokenid('separator') | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword')
+    if kind = language.tokenid('callword') then mode = 'head'
+    else if boundary then do
+      if first < offset then mode = ''
+    end
+    else select
+      when mode = 'head' then do
+        if kind = language.tokenid('callon') then do; mode = 'on.condition'; prefix = first; end
+        else if kind = language.tokenid('calloff') then do; mode = 'off.condition'; prefix = first; end
+        else mode = ''
+      end
+      when mode = 'on.condition' | mode = 'off.condition' then do
+        if kind = language.tokenid('callcondition') then do
+          if mode = 'on.condition' then mode = 'on.name'
+          else mode = 'off.tail'
+        end
+        else do
+          code = '25.1'; if mode = 'off.condition' then code = '25.2'
+          offset = first; return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': invalid CALL condition'
+        end
+      end
+      when mode = 'on.name' then do
+        if kind = language.tokenid('callhandlername') then do; mode = 'on.target'; prefix = first; end
+        else do; offset = first; return 'LL_COMPILER_SYNTAX: RXC-LC-19.3: CALL ON requires NAME before its handler'; end
+      end
+      when mode = 'on.target' then do
+        if kind = language.tokenid('callname') | kind = language.tokenid('string') then mode = 'on.tail'
+        else do; offset = first; return 'LL_COMPILER_SYNTAX: RXC-LC-19.3: invalid CALL handler name'; end
+      end
+      when mode = 'on.tail' then do
+        offset = first; return 'LL_COMPILER_SYNTAX: RXC-LC-19.3: unexpected CALL ON operand'
+      end
+      when mode = 'off.tail' then do
+        offset = first; return 'LL_COMPILER_SYNTAX: RXC-LC-21.1: unexpected CALL OFF operand'
+      end
+      otherwise nop
+    end
+  end
+  if mode = 'on.condition' | mode = 'off.condition' then do
+    code = '25.1'; if mode = 'off.condition' then code = '25.2'
+    /* A missing condition belongs to the actual clause/EOF boundary, as in
+     * the native expected-keywords rule; NAME below retains its keyword. */
+    return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': CALL requires a condition name'
+  end
+  if mode = 'on.target' then do
+    offset = prefix; return 'LL_COMPILER_SYNTAX: RXC-LC-19.3: CALL NAME requires a label'
+  end
+  return fallback
 
 /** One classified SIGNAL prefix scan owns target/expression diagnostics. */
 signalmessage: procedure = .string

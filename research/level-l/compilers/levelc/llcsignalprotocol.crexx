@@ -63,6 +63,12 @@ checked: class
   _selectedstores = .int[]
   _handlerfirst = .int[]
   _handlercount = .int[]
+  _signalcount = .int[]
+  _callcount = .int[]
+  _callfirst = .int[]
+  _callrows = .int[]
+  _handlermodes = .string[]
+  _completes = .int[]
   _handlerrows = .int[]
   _handlernames = .string[]
   _handlerconditions = .int[]
@@ -176,6 +182,50 @@ checked: class
     if _error <> '' then return missing
     row = _handlerrows[opid]; if row = 0 then return missing
     return reference _handlernames[row]
+  /** CALL declarations retain combined immutable source ordinals. The
+   * selector resolves BIF/provider bindings once from these borrowed names. */
+  hascalls: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _callcount[fn] > 0
+  callhandlers: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _callcount[fn]
+  callhandler: method = .int
+    arg fn = .int, index = .int
+    call run(); if _error <> '' | index < 1 | index > _callcount[fn] then return 0
+    return _callrows[_callfirst[fn] + index - 1]
+  callrow: method = .int
+    arg fn = .int, ordinal = .int
+    if fn < 1 | ordinal < 1 | ordinal > _handlercount[fn] then return 0
+    row = _handlerfirst[fn] + ordinal - 1
+    if _handlermodes[row] <> 'C' then return 0
+    return row
+  callcondition: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' then return 0
+    row = callrow(fn,ordinal); if row = 0 then return 0
+    return _handlerconditions[row]
+  /** Positive local entry, -1 trace-only first label, or zero nonlocal name. */
+  callentry: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' then return 0
+    row = callrow(fn,ordinal); if row = 0 then return 0
+    label = _handlerlabels[row]; if label = 0 then return 0
+    entry = _rowentries[_firstrow[fn] + label - 1]
+    if entry = 0 then return -1
+    return entry
+  callname: method = reference .string
+    arg fn = .int, ordinal = .int
+    call run(); missing = reference .string
+    if _error <> '' then return missing
+    row = callrow(fn,ordinal); if row = 0 then return missing
+    return reference _handlernames[row]
+  iscomplete: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _completes[opid] <> 0
   /** Preserve the owning authored clause/diagnostic while emitting truthful
    * generated records. Claiming already proved this disjoint mark ownership;
    * setup, operand work and operations outside a segment have no anchor. */
@@ -336,7 +386,7 @@ checked: class
     assembler null bits
     _cursor = 6; _end = extent
     if extent < 6 then do; call fail('LOWERING: SIGNAL table header is truncated',constantop); return; end
-    if bin2x(binsubstr(_payload,1,6)) \== '43534947320A' then do; call fail('LOWERING: SIGNAL table has an unknown header',constantop); return; end
+    if bin2x(binsubstr(_payload,1,6)) \== '43534947330A' then do; call fail('LOWERING: SIGNAL table has an unknown header',constantop); return; end
     count = uint(); if _error <> '' then return
     /* Every row has at least its five unsigned fields and a nonempty name. */
     if count > (_end - _cursor) <idiv> 11 then do; call fail('LOWERING: SIGNAL table row count exceeds its framing',constantop); return; end
@@ -397,19 +447,21 @@ checked: class
   decodehandlers: method = .void
     arg fn = .int, constantop = .int
     count = uint(); if _error <> '' then return
-    if count > (_end - _cursor) <idiv> 14 then do; call fail('LOWERING: SIGNAL handler count exceeds its framing',constantop); return; end
-    if reserve(count,80) = 0 then return
+    if count > (_end - _cursor) <idiv> 17 then do; call fail('LOWERING: SIGNAL handler count exceeds its framing',constantop); return; end
+    if reserve(count,112) = 0 then return
     _handlerfirst[fn] = _handlernames[0] + 1; _handlercount[fn] = count
+    _callfirst[fn] = _callrows[0] + 1
     i = .int; row = .int; ordinal = .int; condition = .int; label = .int
     first = .int; last = .int; sourceid = .int; labelrow = .int
     name = .string; filename = .string; key = .string; prior = .string; found = .string
     do i = 1 to count
       if charge() = 0 then return
-      ordinal = uint(); condition = uint(); label = uint(); name = frame(); filename = frame(); first = uint(); last = uint()
+      ordinal = uint(); mode = frame(); condition = uint(); label = uint(); name = frame(); filename = frame(); first = uint(); last = uint()
       if _error <> '' then return
-      if ordinal <> i | condition < 1 | condition > 7 | label > _rowcount[fn] then do
+      if (mode <> 'S' & mode <> 'C') | ordinal <> i | condition < 1 | condition > 7 | label > _rowcount[fn] then do
         call fail('LOWERING: SIGNAL handler declaration has an invalid ordinal, condition or row',constantop); return
       end
+      if mode = 'C' & (condition < 2 | condition > 5) then do; call fail('LOWERING: CALL declaration has an invalid condition',constantop); return; end
       size = <blen>(name as .binary)
       if reserve(size,4) = 0 | bulkwork(size,3) = 0 | charge() = 0 then return
       if name \== rexxclassic_unicode_upper(name) then do; call fail('LOWERING: SIGNAL handler name is not canonical',constantop); return; end
@@ -437,7 +489,12 @@ checked: class
         if first <= prior as .int then do; call fail('LOWERING: SIGNAL handler declarations are not source ordered',constantop); return; end
       end
       call _sourcekeys.set(key,first as .string)
-      row = _handlernames[0] + 1; _handlernames[row] = name
+      row = _handlernames[0] + 1; _handlernames[row] = name; _handlermodes[row] = mode
+      if mode = 'S' then _signalcount[fn] = _signalcount[fn] + 1
+      else do
+        _callcount[fn] = _callcount[fn] + 1
+        _callrows[_callrows[0] + 1] = ordinal
+      end
       _handlerconditions[row] = condition; _handlerlabels[row] = label
       _handlersources[row] = sourceid; _handlerstarts[row] = first; _handlerends[row] = last
       if label = 0 then _handlercodes[row] = 161
@@ -615,11 +672,13 @@ checked: class
     fn = store.get(2,op.blockid(),1)
     if authored(opid) = 0 then return
     if _tablevalues[store.operand(opid,1)] <> fn then do; call fail('LOWERING: SIGNAL policy uses a foreign or missing table',opid); return; end
+    mode = 'S'; if op.name() = 'crexx.c.call.policy' then mode = 'C'
     condition = integer(op,'condition'); ordinal = integer(op,'handler'); label = integer(op,'label'); name = text(op,'name')
     if _error <> '' then return
     if condition < 1 | condition > 7 | ordinal < 0 | ordinal > _handlercount[fn] then do
       call fail('LOWERING: SIGNAL policy has an invalid condition or handler',opid); return
     end
+    if mode = 'C' & (condition < 2 | condition > 5) then do; call fail('LOWERING: CALL policy has an invalid condition',opid); return; end
     if ordinal = 0 then do
       if label <> 0 | name \== '' then do; call fail('LOWERING: SIGNAL OFF has a target or handler',opid); return; end
     end
@@ -627,7 +686,7 @@ checked: class
       row = _handlerfirst[fn] + ordinal - 1; expected = _handlerlabels[row]
       if expected = 0 then expected = -1
       at = store.get(3,opid,11)
-      if condition <> _handlerconditions[row] | label <> expected | name \== _handlernames[row] then do
+      if mode <> _handlermodes[row] | condition <> _handlerconditions[row] | label <> expected | name \== _handlernames[row] then do
         call fail('LOWERING: SIGNAL ON disagrees with its immutable declaration',opid); return
       end
       if store.get(9,at,1) <> _handlersources[row] | store.get(9,at,2) <> _handlerstarts[row] | store.get(9,at,3) <> _handlerends[row] then do
@@ -637,6 +696,20 @@ checked: class
       _handlerpolicies[row] = opid; _handlerrows[opid] = row
     end
     ignored = claim(opid,opid)
+    return
+  complete: method = .void
+    arg opid = .int
+    store = dereference _store; program = dereference _program; op = .llir..opview(_store,opid)
+    fn = store.get(2,op.blockid(),1)
+    if authored(opid) = 0 then return
+    if _tablevalues[store.operand(opid,1)] <> fn | _callcount[fn] = 0 then do
+      call fail('LOWERING: clause completion lacks its source-owned CALL inventory',opid); return
+    end
+    identity = integer(op,'id'); at = store.get(3,opid,11)
+    if identity <> store.get(9,at,2) + 1 then do; call fail('LOWERING: clause completion id differs from its authored head',opid); return; end
+    if program.programquery(opid) = 0 then do; call fail('LOWERING: clause completion lacks its conditional EXIT guard',opid); return; end
+    if claim(opid,opid) = 0 then return
+    _completes[opid] = 1
     return
   /** Every cold record belongs to one generated capture, with one visit.
    * No cold record pretends to be the runtime fault or the ON instruction. */
@@ -765,6 +838,8 @@ checked: class
     _selectedstores[captureid] = writer; _selectedslots[slotid] = captureid
     id = store.get(3,writer,3); i = .int; row = .int; branch = .int; yes = .int; no = .int
     do i = 1 to _handlercount[fn]
+      row = _handlerfirst[fn] + i - 1
+      if _handlermodes[row] <> 'S' then iterate
       id = coldloads(id,captureid,1); if _error <> '' then return
       if id = 0 then do; call fail('LOWERING: SIGNAL dispatcher omits a declared handler',captureid); return; end
       op = .llir..opview(_store,id); row = _handlerfirst[fn] + i - 1
@@ -815,13 +890,13 @@ checked: class
     do id = 1 to store.count(3)
       if charge() = 0 then return
       name = graph.operation(id).name()
-      if left(name,15) = 'crexx.c.signal.' | name = 'core.protect' then found = 1
+      if left(name,15) = 'crexx.c.signal.' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'core.protect' then found = 1
     end
     if found = 0 then return
     /* Fixed-width graph facts are reserved once before any indexed write. */
-    if reserve(store.count(3) + 1,128) = 0 | reserve(store.count(4) + 1,56) = 0 then return
+    if reserve(store.count(3) + 1,136) = 0 | reserve(store.count(4) + 1,56) = 0 then return
     if reserve(store.count(5) + 1,40) = 0 | reserve(store.count(2) + 1,24) = 0 then return
-    if reserve(store.count(1) + 1,48) = 0 | reserve(store.count(10) + 1,32) = 0 then return
+    if reserve(store.count(1) + 1,72) = 0 | reserve(store.count(10) + 1,32) = 0 then return
     _symbols = .llcsymbols..checked(_limit,_budget)
     do id = 1 to store.count(3)
       if charge() = 0 then return
@@ -908,13 +983,23 @@ checked: class
     end
     do id = 1 to store.count(3)
       if charge() = 0 then return
-      if store.opname(store.get(3,id,1)) = 'crexx.c.signal.policy' then do
+      opname = store.opname(store.get(3,id,1))
+      if opname = 'crexx.c.signal.policy' | opname = 'crexx.c.call.policy' then do
         call policy(id); if _error <> '' then return
+      end
+      if opname = 'crexx.c.clause.complete' then do
+        call complete(id); if _error <> '' then return
+      end
+      if opname = 'crexx.c.call' then do
+        fn = store.get(2,store.get(3,id,2),1)
+        if _callcount[fn] > 0 & program.callfunction(id) <> fn then do
+          call fail('LOWERING: internal call crosses its source-owned CALL policy domain',id); return
+        end
       end
     end
     do fn = 1 to store.count(1)
       if charge() = 0 then return
-      if _handlercount[fn] > 0 & _protections[fn] = 0 then do; call fail('LOWERING: SIGNAL handler declarations lack protected entry'); return; end
+      if _signalcount[fn] > 0 & _protections[fn] = 0 then do; call fail('LOWERING: SIGNAL handler declarations lack protected entry'); return; end
       if _protections[fn] > 0 | _captures[fn] > 0 then do
         call dispatcher(fn); if _error <> '' then return
       end
@@ -945,7 +1030,7 @@ checked: class
     do id = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(id); name = op.name(); fn = store.get(2,op.blockid(),1)
-      if left(name,15) = 'crexx.c.signal.' & _segments[id] = 0 then do; call fail('LOWERING: SIGNAL operation is outside its owning segment',id); return; end
+      if (left(name,15) = 'crexx.c.signal.' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete') & _segments[id] = 0 then do; call fail('LOWERING: SIGNAL operation is outside its owning segment',id); return; end
       if _nametransport[id] then do
         owner = _namevalues[id]; mark = _namemarks[owner]
         if mark = 0 then do; call fail('LOWERING: SIGNAL name transport has no owning mark',id); return; end
@@ -969,9 +1054,9 @@ checked: class
         value = op.input(i).id(); table = _tablevalues[value]; owner = _nameowners[value]
         if table > 0 then do
           allowed = table = fn & i = 1
-          allowed = allowed & (name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.signal.capture' | (_erased[id] & name = 'core.store'))
+          allowed = allowed & (name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'crexx.c.signal.capture' | (_erased[id] & name = 'core.store'))
           if allowed = 0 then do; call fail('LOWERING: SIGNAL table escapes its full-use closure',id); return; end
-          if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.signal.capture' then do
+          if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'crexx.c.signal.capture' then do
             producer = store.get(4,value,1)
             if producer <> program.tableconstant(fn) then do
               /* Includes the pre-mark load, which is outside the forward

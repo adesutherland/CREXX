@@ -57,7 +57,7 @@ checkSchema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 21 & types = 5 & data.ops() = 86,'C21/five C types/86 extensions')
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/five C types/88 extensions')
   do i = 1 to 7
     operation = contract.operation('crexx.c.signal.' || word('policy capture select selected deliver handler.invalid relay',i))
     id = operation.id(); callback = data.callback(id,1)
@@ -80,7 +80,7 @@ admission: procedure = .void
   if accepted then do
     call check(entries.status() = 0 & signals.status() = 0,label || ' owns complete protected proof: ' || entries.error() || signals.error())
     call check(selected.status() = 0 & output.bytes() > 0,label || ' selects: ' || selected.error())
-    call check(pos('CSIG2',output.text()) = 0 & pos('43534947320A',output.text()) = 0,label || ' immutable table fully erased')
+    call check(pos('CSIG3',output.text()) = 0 & pos('43534947330A',output.text()) = 0,label || ' immutable table fully erased')
     call check(pos('sigbrv ',output.text()) > 0 & pos('signalorigin ',output.text()) > 0,label || ' actual typed cold entry and outward relay emitted')
   end
   else do
@@ -122,8 +122,8 @@ fixture: procedure = .llir..module
   finish = binpos('0A'x,source) - 1; at = file.origin(0,finish)
   generated = file.origin(0,<blen>(source)).derive('synthetic'); derived = at.derive('synthetic')
   first = binpos('P:' as .binary,source) - 1; returned_at = file.origin(first + 3,<blen>(source))
-  payload = 'CSIG2' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('conditions-ir.crexx') || first || ':' || (first + 2) || ':'
-  payload = payload || '1:1:2:1:' || framed('P') || framed('conditions-ir.crexx') || '0:' || finish || ':'
+  payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('conditions-ir.crexx') || first || ':' || (first + 2) || ':'
+  payload = payload || '1:1:1:S2:1:' || framed('P') || framed('conditions-ir.crexx') || '0:' || finish || ':'
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   ordinal = fn.argument(contract.type('crexx.c.context')); ordinal = fn.argument(contract.type('crexx.g.int64'))
   context = fn.slot('canonical C',contract.type('crexx.c.context')); other = fn.slot('alternate C',contract.type('crexx.c.context'))

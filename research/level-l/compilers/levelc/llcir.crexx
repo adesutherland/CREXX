@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',21)
+  c = schema.family('crexx.c',22)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -105,4 +105,6 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'signal.handler.invalid',types,'context:7',10,'key:2 condition:1 handler:1 code:2','context','condition.resource')
   call llscalar..declare(c,'signal.relay',types,'context:7',10,'key:2','context','condition.resource')
   call llscalar..declare(c,'trace',types,'value:6 context:7',0,'','context.observation','condition.resource')
+  call llscalar..declare(c,'call.policy',types,'table:2 context:7',0,'condition:1 handler:1 label:1 name:2','context','condition.resource')
+  call llscalar..declare(c,'clause.complete',types,'table:2 context:7',10,'id:1','context.input.output.observation','condition.resource')
   return

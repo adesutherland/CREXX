@@ -96,7 +96,8 @@ The [FORM correction](architecture.md#numeric-form-diagnostic-prerequisite)
 owns the completed activation-validator diagnostic change. The
 [NUMERIC contract](architecture.md#numeric-c-contract) assigns C source/schema/
 selector to the integrator and `tests/numeric` to its independent writer;
-NUM-C-AC01–06 are delivered, AC07 remains shared observation/platform scope.
+NUM-C-AC01–06 are delivered; CCOND integrates admitted observations, while
+AC07 retains wider numeric/expression, host and platform scope.
 These packets do not commission another numeric or host algorithm.
 
 ### Labels, clauses and external condition scope
@@ -107,8 +108,9 @@ live in `tests/labels` and the named CALL grouped-label controls. Preserve
 required-arm ownership, DO/SELECT depth, first-label resolution and natural
 node landings. [Clause clocks](architecture.md#clause-clock-contract) and the
 [external B condition scope](architecture.md#external-condition-b-prerequisite)
-are delivered foundations. Delayed CALL and broader host/platform acceptance
-retain their own owners; former prerequisite source leases are closed.
+are delivered foundations. CCOND below owns delivered delayed CALL and authored
+completion; broader host/platform acceptance retains its owner. Former
+prerequisite source leases are closed.
 
 <a id="signal-assignment-packet"></a>
 
@@ -118,7 +120,7 @@ retain their own owners; former prerequisite source leases are closed.
 STEP01–03 are complete: direct/quoted/VALUE, seven-condition ON/OFF, real
 producers, visible exceptional flow, same-frame cleanup and typed payload/origin.
 SIGNAL introduced C20 with 85 operations, five C types and 36 target exports;
-the current family is C21 after TRACE. Its generic, B runtime and SIGNALORIGIN
+the current family is C22 after delayed CALL/clause completion. Its generic, B runtime and SIGNALORIGIN
 dependencies belong to the same instruction.
 
 The integrator owns shared production/runtime/CMake/docs and preparation;
@@ -128,7 +130,7 @@ protocol paths. Independent writers own assigned `tests/signal` and
 remain regressions; their existence does not require running both for each edit.
 Practical TRACE is assigned below. Controlled HALT is not asynchronous host HALT;
 nonresumable original-event C failure, broader host/platform acceptance, helper
-raw-location presentation, delayed CALL and INTERPRET retain the explicit
+raw-location presentation and INTERPRET retain the explicit
 [conformance qualifications](levelc-conformance.md). They do not split SIGNAL
 into unfinished micro-deliveries.
 
@@ -145,6 +147,26 @@ fixes and freeze. Shared B remains the option/command/controller owner; no nativ
 C frontend change, target export, VM/ISA extension or INTERPRET is included.
 One selected normal configuration/VM qualifies this development feature;
 complete-C/platform/delivery QA remains a later milestone.
+
+### Conditions and observations
+
+The [whole Group 1 contract](architecture.md#conditions-observations-complete-contract)
+owns CCOND-AC01–08 and STEP01–03. Sol 6.1 Extra High workers have disjoint
+frontend/schema/protocol, shared-runtime/selector, and independent fixture
+assignments; the integrator owns cross-boundary review, CMake, enduring docs,
+shared preparation and the local commit. Native C is read-only. Start from its
+maintained fixture sources and checked outputs, compiling those sources unchanged
+through B/L; adapt only compiler/harness and controlled injection boundaries.
+Add fixtures for genuine C22/observation gaps, not a parallel copy of native goldens.
+
+One finite private `llccallemit` adapter consumes the existing admitted CSIG3
+inventory. Shared B retains policy, pending delivery, suppression, activation,
+CONDITION and pool ownership. PARSE observations extend its existing executor;
+the TRACE output formatter stays shared. Preserve CPROC → SIGNAL → DO → CLAUSE
+admission and conditional EXIT ownership. Review coherent source and first RXAS
+early, batch material fixes, then qualify one normal Debug opt/IR-on/rxbvm lane.
+No automatic mode matrix, unchanged-native sanitizer campaign, push or INTERPRET.
+Formal whole-compiler/platform/delivery QA follows feature completion.
 
 <a id="procedure-assignment-packet"></a>
 

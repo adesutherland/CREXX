@@ -64,6 +64,8 @@ checked: class
   _ownerfirsts = .int[]
   _ownerlasts = .int[]
   _needed = .int[]
+  _decisionwrites = .int[]
+  _decisionslots = .int[]
   _sourcebytes = .binary[]
   _sourceready = .int[]
   *: factory
@@ -366,9 +368,11 @@ checked: class
     _store = graph.storage(); store = dereference _store
     if reserve(store.count(3) + 1,160) = 0 | reserve(store.count(2) + 1,120) = 0 then return
     if reserve(store.count(4) + 1,16) = 0 | reserve(store.count(7) + 1,24) = 0 then return
+    if reserve(store.count(5) + 1,16) = 0 then return
     if reserve(store.count(9) + 1,8) = 0 | reserve(store.count(10) + 1,16) = 0 | reserve(loops.owners() + 1,8) = 0 then return
     op = .llir..opview; name = .string; id = .int; origin = .int; classid = .int; ordinal = .int
     b = .int; value = .int; target = .int; edgeid = 0; markerowner = .int; producer = .int; head = .int; loopowner = .int
+    slotid = .int; writer = .int; decision = .int
     do id = 1 to store.count(3)
       if charge() = 0 then return
       op = .llir..opview(_store,id); name = op.name(); classid = 0
@@ -408,6 +412,9 @@ checked: class
       _sources[id] = store.get(9,origin,1); _firsts[id] = store.get(9,origin,2); _lasts[id] = store.get(9,origin,3)
       _kinds[id] = store.get(9,origin,4); _parents[id] = store.get(9,origin,5)
       if classid = 14 then _signalorigins[origin] = 1
+      if classid = 6 then do
+        slotid = store.get(3,id,12); _decisionwrites[slotid] = _decisionwrites[slotid] + 1
+      end
       if classid = 8 then do
         loopowner = loops.owner(id)
         if loopowner > 0 then _constructors[loopowner] = id
@@ -447,6 +454,18 @@ checked: class
       end
       _blockmarkers[b] = markerowner
     end
+    /* A CALL checkpoint can split an evaluated WHILE decision from its
+     * branch. Recognize only its once-stored Boolean snapshot; generic SSA,
+     * slot ownership and the CPROC guard still validate all normal paths. */
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if _classes[id] <> 13 then iterate
+      value = store.result(id,1); writer = store.get(3,id,3)
+      if writer < 1 then iterate
+      if _classes[writer] <> 6 | store.operand(writer,1) <> value | _uses[value] <> 1 then iterate
+      slotid = store.get(3,writer,12)
+      if _decisionwrites[slotid] = 1 then _decisionslots[slotid] = id
+    end
     /* A shared WHILE predicate has one checked truth/terminal-branch pair.
      * Calls in its expression can add only proved private continuations. */
     do id = 1 to store.count(3)
@@ -461,6 +480,23 @@ checked: class
       head = callhead(b); if _error <> '' then return
       if _predicates[head] > 0 then do; call fail('LOWERING: clause-clock predicate heads overlap',id); return; end
       _predicates[head] = id
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if _classes[id] <> 4 then iterate
+      value = store.operand(id,1); producer = store.get(4,value,1)
+      if producer < 1 then iterate
+      if _classes[producer] <> 5 | _uses[value] <> 1 then iterate
+      slotid = store.get(3,producer,12); decision = _decisionslots[slotid]
+      if decision = 0 then iterate
+      head = callhead(store.get(3,id,2)); if _error <> '' then return
+      if callhead(store.get(3,decision,2)) <> head then do
+        call fail('LOWERING: clause-clock decision escapes its private checkpoint continuation',id); return
+      end
+      if _predicates[head] > 0 & _predicates[head] <> decision then do
+        call fail('LOWERING: clause-clock predicate heads overlap',id); return
+      end
+      _predicates[head] = decision
     end
     do b = 1 to store.count(2)
       if charge() = 0 then return

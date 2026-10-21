@@ -1,0 +1,87 @@
+/* cREXX License (MIT). Compile maintained native C fixtures in one warm worker.
+ * The ordered manifest is a test transport, not a source/compiler fallback.
+ * Its only child program is the explicitly supplied owning RXAS assembler.
+ */
+options levelb
+import rxfnsb
+import _rxsysb
+import llccompiler
+import llcbindings
+import llcdiagnostics
+import llfileoutput
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 3 then return 2
+  artifacts = argv[1]; manifest = argv[2]; assembler_path = argv[3]
+  requests = 0; index = .int
+  rows = readlines(manifest)
+  do row_index = 1 to rows[0]
+    row = rows[row_index]
+    if row == '' then iterate
+    fields = splitrow(row)
+    if fields[0] <> 7 then return 2
+    sourcefile = fields[1]; output = fields[2]; logical = fields[3]
+    providerstem = fields[4]; callable = fields[5]; routine = fields[6]; expected = fields[7]
+    if sourcefile == '' | output == '' | logical == '' then return 2
+    bindings = .llcbindings..binding[]
+    if providerstem <> '' then bindings[1] = .llcbindings..binding(providerstem,callable)
+    do
+      source = readbinary(sourcefile)
+      request = .llccompiler..request(source,artifacts,logical,1000000,512,67108864,65536,1,bindings,routine)
+      status = request.status(); warnings = request.warnings(); warning = .llcdiagnostics..warning
+      do index = 1 to warnings[0]
+        warning = warnings[index]; call lineout 'stderr',warning.text()
+      end
+      requests = requests + 1
+      if expected <> '' then do
+        if status = 0 | pos(expected,request.error()) = 0 then do
+          say 'FAIL|refusal|' || logical || '|' || request.diagnostic(); return 1
+        end
+        output_value = request.output()
+        if output_value.bytes() <> 0 then do; say 'FAIL|partial output|' || logical; return 1; end
+        say 'REFUSAL|' || logical || '|' || request.offset() || '|' || request.diagnostic()
+        iterate
+      end
+      if status <> 0 then do; say 'FAIL|compile|' || logical || '|' || request.diagnostic(); return 1; end
+      message = llfileoutput..publish(request.output(),output)
+      if message <> '' then do; say 'FAIL|publish|' || logical || '|' || message; return 1; end
+    on signal as problem
+      say 'FAIL|fixture|' || logical || '|' || problem.name() || '|' || problem.message()
+      return 1
+    end
+    /* Spawn outside the compiler catch: POSIX_CHLD uses normal VM handling. */
+    if right(output,5) <> '.rxas' then return 2
+    assembler_args = .string[]
+    assembler_args[1] = assembler_path; assembler_args[2] = '-o'
+    assembler_args[3] = left(output,length(output) - 5) || '.rxbin'; assembler_args[4] = output
+    captured = .string[]; errors = .string[]
+    output_endpoint = .addressredirect.output_array(reference captured)
+    error_endpoint = .addressredirect.output_array(reference errors)
+    command = .addressrequest('CREXX','run :assembler_args[]',_noredir(),output_endpoint,error_endpoint)
+    argv_stem = .standardaddressstem()
+    call command.add_stem_binding_plan('assembler_args','assembler_args',argv_stem)
+    call command.set_binding_stem_value(1,'0',assembler_args[0] || '')
+    do index = 1 to assembler_args[0]
+      call command.set_binding_stem_value(1,index || '',assembler_args[index])
+    end
+    response = _address_dispatch_request(command)
+    if response.get_rc() <> 0 | captured[0] <> 0 | errors[0] <> 0 then do
+      say 'FAIL|assemble|' || logical || '|' || response.get_rc()
+      do index = 1 to captured[0]; say captured[index]; end
+      do index = 1 to errors[0]; say errors[index]; end
+      return 1
+    end
+  end
+  say 'CONDITIONS_FIXTURES|requests=' || requests || '|PASS'
+  return 0
+
+splitrow: procedure = .string[]
+  arg row = .string
+  fields = .string[]
+  do forever
+    delimiter = pos('|',row)
+    if delimiter = 0 then do; fields[fields[0] + 1] = row; return fields; end
+    fields[fields[0] + 1] = left(row,delimiter - 1)
+    row = substr(row,delimiter + 1)
+  end

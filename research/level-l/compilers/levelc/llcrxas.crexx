@@ -19,6 +19,7 @@ import llcparseprogram
 import llscalar
 import llcsymbols
 import llctraceemit
+import llccallemit
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -70,6 +71,7 @@ compilation: class
   _traceactive = .int
   _traceoutermode = .int
   _traceouterformat = .int
+  _traceparse = .int
   _traceevent = .int
   _tracescratch = .int
   _captureowner = .int
@@ -119,6 +121,13 @@ compilation: class
   _recordbytes = .int
   _writer = .llir..writer
   _output = .llir..output
+  _callstarts = .int[]
+  _callspans = .int[]
+  _callconditions = .int[]
+  _callkinds = .int[]
+  _callentries = .int[]
+  _callnames = .string[]
+  _callsymbols = .string[]
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
@@ -441,7 +450,12 @@ compilation: class
       opid = op.id(); clausefirst = op.origin().first() + 1
       _parseclauses[opid] = clausefirst
     end
-    if name = 'crexx.c.signal.policy' then call checkselectorigin(op,'SIGNAL policy')
+    if name = 'crexx.c.signal.policy' | name = 'crexx.c.call.policy' then call checkselectorigin(op,'condition policy')
+    if name = 'crexx.c.clause.complete' then do
+      call checkselectorigin(op,'clause completion')
+      if _error <> '' then return
+      _parseclauses[op.id()] = op.origin().first() + 1
+    end
     if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
       call checkselectorigin(op,'command ADDRESS')
       opid = op.id(); clausefirst = op.origin().first() + 1
@@ -568,6 +582,128 @@ compilation: class
     _externalindices[op.id()] = index
     store = dereference _store
     _hasexternal[store.get(2,op.blockid(),1)] = 1
+    return
+  /** Resolve immutable CALL rows once, through the admitted source inventory
+   * and the existing explicit provider selection. No target lookup survives
+   * into the emitted dispatcher, and no CSIG packet is decoded here. */
+  preparecalls: method = .void
+    arg signal_ref = reference .llcsignalprotocol..checked
+    facts = dereference signal_ref; store = dereference _store
+    fn = .int; index = .int; row = .int; ordinal = .int; maximum = .int
+    count = .int; base = .int; entry = .int; kind = .int; extent = .int
+    name = .string; symbol = .string; types = .string; selected = .int
+    name_ref = reference .string
+    signature = .llcompilercontracts..signature
+    count = 0
+    do fn = 1 to store.count(1)
+      count = count + facts.callhandlers(fn)
+    end
+    if count = 0 then return
+    if store.count(1) > (_limit - _sourceworkspace) <idiv> 16 then do
+      call fail('LIMIT: CALL function index exceeds output.bytes workspace'); return
+    end
+    _sourceworkspace = _sourceworkspace + store.count(1) * 16
+    do fn = 1 to store.count(1)
+      count = facts.callhandlers(fn)
+      if count = 0 then iterate
+      if _reglimit < 40 then do; call fail('LIMIT: delayed CALL helper exceeds register budget'); return; end
+      maximum = 0
+      do index = 1 to count
+        row = facts.callhandler(fn,index); maximum = max(maximum,row)
+      end
+      /* Six retained projections plus one temporary per-function projection.
+       * Sparse SIGNAL ordinals remain zero and cannot turn into CALL cases. */
+      if maximum > (_limit - _sourceworkspace) <idiv> 176 then do
+        call fail('LIMIT: CALL target index exceeds output.bytes workspace'); return
+      end
+      _sourceworkspace = _sourceworkspace + maximum * 176
+      base = _callconditions[0]; _callstarts[fn] = base; _callspans[fn] = maximum
+      do row = 1 to maximum
+        ordinal = base + row
+        _callconditions[ordinal] = 0; _callkinds[ordinal] = 0; _callentries[ordinal] = 0
+        _callnames[ordinal] = ''; _callsymbols[ordinal] = ''
+      end
+      do index = 1 to count
+        row = facts.callhandler(fn,index); ordinal = base + row
+        entry = facts.callentry(fn,row)
+        name_ref = facts.callname(fn,row)
+        borrowed_name = dereference name_ref
+        name = borrowed_name
+        kind = 4; symbol = ''
+        if entry > 0 then do; kind = 1; symbol = 'llf' || fn; end
+        else if entry < 0 then kind = 5
+        else do
+          symbol = llcbifs..entry(name)
+          if symbol <> '' then do
+            kind = 2; types = 'reference@.rexxclassicbifs..rexxbifcallcontext'
+            if llcbifs..activation(name) then types = types || ' reference@.rexxactivation..rexxactivationarguments'
+            symbol = imported('rxfnsc',symbol,'.rexxvalue..rexxvalue',types)
+            if name = 'TRACE' then _hastrace = 1
+          end
+          else if _bound then do
+            providers = dereference _providers
+            selected = providers.find(name)
+            if providers.status() then do; _error = providers.error(); return; end
+            if selected < 0 then do; call fail('IMPORT: ambiguous provider alias ' || name); return; end
+            if selected > 0 then do
+              kind = 3; symbol = providers.callable(selected)
+              if providers.status() then do; _error = providers.error(); return; end
+              signature = providers.signature(selected)
+              if signature.error() <> '' then do; _error = signature.error(); return; end
+              found = 0
+              do binding_index = 1 to _names[0]
+                if _names[binding_index] == symbol then found = binding_index
+              end
+              if found = 0 then do
+                found = _names[0] + 1; _names[found] = symbol; _signatures[found] = signature
+              end
+              _hasexternal[fn] = 1; _hastrace = 1
+            end
+          end
+        end
+        if _error <> '' then return
+        extent = <blen>(name as .binary) + <blen>(symbol as .binary)
+        if extent > (_limit - _sourceworkspace) <idiv> 2 then do
+          call fail('LIMIT: CALL target text exceeds output.bytes workspace'); return
+        end
+        _sourceworkspace = _sourceworkspace + extent * 2
+        _callconditions[ordinal] = facts.callcondition(fn,row)
+        _callkinds[ordinal] = kind; _callentries[ordinal] = entry
+        _callnames[ordinal] = name; _callsymbols[ordinal] = symbol
+      end
+    end
+    if _callconditions[0] = 0 then return
+    requirements = llccallemit..imports()
+    do index = 1 to words(requirements)
+      name = word(requirements,index); specification = llccallemit..contract(name)
+      separator = pos('|',specification); expected_result = left(specification,separator - 1)
+      remainder = substr(specification,separator + 1); separator = pos('|',remainder)
+      arguments = left(remainder,separator - 1)
+      package = 'rxfnsc'
+      if left(name,10) = 'llctarget.' then package = 'llctarget'
+      symbol = imported(package,name,expected_result,arguments)
+      if _error <> '' then return
+    end
+    return
+  /** Temporary bounded projections borrow one function's retained selection;
+   * the helper takes references and performs no inventory or binding lookup. */
+  emitcalls: method = .void
+    arg fn = .int
+    if fn > _callspans[0] then return
+    count = _callspans[fn]
+    if count = 0 then return
+    base = _callstarts[fn]
+    conditions = .int[]; kinds = .int[]; entries = .int[]
+    names = .string[]; symbols = .string[]
+    do row = 1 to count
+      ordinal = base + row
+      conditions[row] = _callconditions[ordinal]; kinds[row] = _callkinds[ordinal]
+      entries[row] = _callentries[ordinal]; names[row] = _callnames[ordinal]; symbols[row] = _callsymbols[ordinal]
+    end
+    helper = llccallemit..handler(fn,reference conditions,reference kinds,reference entries,reference names,reference symbols,_limit)
+    if helper.error() <> '' then do; _error = helper.error(); return; end
+    call _writer.append(reference helper)
+    if _writer.error() <> '' then _error = _writer.error()
     return
   /** One immutable catalogue validates raw transport once per selector request.
    * Each operation still checks its exact BIF export, origin and live context. */
@@ -914,6 +1050,12 @@ compilation: class
     symbol = member('rexxclassiccontext.rexxclassiccontext','§factory','.rexxclassiccontext..rexxclassiccontext','reference@.rexxactivation..rexxactivationarguments reference@.rexxpool..rexxvariablepool reference@.rexxclassicconfig..rexxclassicconfig')
     call argcopy(1,activation,1); call argcopy(2,pool,1); call argcopy(3,config)
     call invoke(destination,symbol,3)
+    if _hastrace then do
+      call emit('link',reg(_workbase) || ',' || destination)
+      symbol = member('rexxclassiccontext.rexxclassiccontext','enableparseobservations','.void','.boolean')
+      call emit('load',reg(_callbase + 2) || ',1'); call invoke('',symbol,2,reg(_workbase))
+      call emit('unlink',reg(_workbase))
+    end
     return
   rootentry: method = .void
     activation = reg(_workbase + 8); pool = reg(_workbase + 9); bundle = reg(_workbase + 10)
@@ -1068,7 +1210,7 @@ compilation: class
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
-    i = .int; op = .llir..opview; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
+    i = .int; f = .int; op = .llir..opview; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
     signature = .llcompilercontracts..signature; j = .int
     key = .string; known = .string; extent = .int
     do
@@ -1161,6 +1303,9 @@ compilation: class
         call checkoperation(op,entry_ref)
         if _error <> '' then return
       end
+      _phase = 'delayed CALL target admission'
+      call preparecalls(signal_ref)
+      if _error <> '' then return
       /* Setup with the same origin or exact source boundary belongs to its
        * admitted clause. Argument wrappers may have distinct origin IDs from
        * the call they contain; keep both precise spans and one grouping key. */
@@ -1224,6 +1369,11 @@ compilation: class
       end
       do f = 1 to store.count(1)
         _phase = 'function ' || f; _fn = f; call procedurebody()
+        if _error <> '' then return
+      end
+      do f = 1 to store.count(1)
+        _phase = 'delayed CALL helper ' || f
+        call emitcalls(f)
         if _error <> '' then return
       end
       if _hastrace then do
@@ -1362,11 +1512,12 @@ compilation: class
       _commandcleanup[_commandcleanup[0] + 1] = i
     end
     _handlersactive = next; next = next + 1
-    _traceactive = -1; _traceoutermode = -1; _traceouterformat = -1
+    _traceactive = -1; _traceoutermode = -1; _traceouterformat = -1; _traceparse = -1
     if _hastrace then do
       _traceactive = next; _traceoutermode = next + 1; _traceouterformat = next + 2
       _traceevent = next + 3; _tracescratch = next + 4
-      next = next + 5
+      _traceparse = next + 5
+      next = next + 6
     end
     _captureowner = -1; _capturepayload = -1; _capturetag = -1
     _captureline = -1; _capturebusy = -1; _faultline = -1
@@ -1376,7 +1527,7 @@ compilation: class
       next = next + 6
       _signals = _signals || ' CLASSIC_CONDITION'
     end
-    else if _hasexternal[_fn] then _signals = _signals || ' CLASSIC_CONDITION'
+    else if _hasexternal[_fn] | signalfacts.hascalls(_fn) then _signals = _signals || ' CLASSIC_CONDITION'
     /* Use the same selector for planning and emission. Hidden helper calls
      * therefore participate without a second arity table to maintain. */
     _phase = 'frame planning'; _workbase = next; next = next + 11
@@ -1765,7 +1916,8 @@ compilation: class
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
     if wordpos(name,'entry.test entry.invalid procedure.consume procedure.enter procedure.expose') > 0 then do; call procedureoperation(op,name); return; end
-    if wordpos(name,'signal.policy signal.capture signal.select signal.selected signal.deliver signal.handler.invalid signal.relay') > 0 then do; call conditionoperation(op,name,signal_ref); return; end
+    if wordpos(name,'signal.policy call.policy signal.capture signal.select signal.selected signal.deliver signal.handler.invalid signal.relay') > 0 then do; call conditionoperation(op,name,signal_ref); return; end
+    if name = 'clause.complete' then do; call clausecomplete(op); return; end
     if name = 'parse.source' then do; call parsesource(op); return; end
     if left(name,8) = 'address.' | left(name,8) = 'command.' then do; call addressoperation(op,name); return; end
     if name = 'parse.execute' then do
@@ -1905,6 +2057,12 @@ compilation: class
     symbol = imported('library','rxfnsb._trace_current_format','.string','')
     call invoke(reg(_traceouterformat),symbol,0)
     call emit('sigpush','"BREAKPOINT"'); call emit('load',reg(_traceactive) || ',1')
+    call emit('linkref',reg(_workbase + 1) || ',a1')
+    symbol = member('rexxclassiccontext.rexxclassiccontext','parseobservations','.boolean')
+    call invoke(reg(_traceparse),symbol,1,reg(_workbase + 1))
+    symbol = member('rexxclassiccontext.rexxclassiccontext','enableparseobservations','.void','.boolean')
+    call emit('load',reg(_callbase + 2) || ',1'); call invoke('',symbol,2,reg(_workbase + 1))
+    call emit('unlink',reg(_workbase + 1))
     return
   /** VM delivery is disabled while reconfiguring the existing controller.
    * The breakpoint handler is the direct parent-register observer. */
@@ -1931,6 +2089,10 @@ compilation: class
     call emit('brf',prefix || '_done,' || reg(_traceactive))
     call emit('copy',reg(_traceevent) || ',r0'); call emit('copy',reg(_tracescratch) || ',' || reg(_scratch))
     call emit('bpoff')
+    call emit('linkref',reg(_workbase + 1) || ',a1')
+    symbol = member('rexxclassiccontext.rexxclassiccontext','enableparseobservations','.void','.boolean')
+    call argcopy(2,reg(_traceparse)); call invoke('',symbol,2,reg(_workbase + 1))
+    call emit('unlink',reg(_workbase + 1)); call emit('null',reg(_traceparse))
     symbol = imported('library','rxfnsb._trace_set','.void','.string')
     call argcopy(1,reg(_traceoutermode)); call invoke('',symbol,1)
     symbol = imported('library','rxfnsb._trace_set_format','.void','.string')
@@ -1953,6 +2115,28 @@ compilation: class
     symbol = member('rexxactivation.rexxactivationarguments','beginclausetime','.void')
     call invoke('',symbol,1,receiver)
     call emit('unlink',receiver); call emit('null',activation)
+    return
+  /** The finite helper returns an initialized R only for an owned root EXIT.
+   * A private flag avoids observer/error work on idle clauses. VM calls retain
+   * their own numeric frames, so no numeric reinstall belongs on this path. */
+  clausecomplete: method = .void
+    arg op = .llir..opview
+    context = input(op,2); activation = reg(_workbase + 4); receiver = reg(_workbase + 1)
+    detail = reg(_workbase + 8); flag = reg(_workbase + 7); delivered = reg(_workbase + 10)
+    prefix = 'llcomplete' || _fn || '_' || op.id()
+    call emit('load',delivered || ',0')
+    call argcopy(1,context); call argcopy(2,delivered,1)
+    call invoke(result(op),'__rxcalltrap_' || _fn,2)
+    call emit('brf',prefix || '_ready,' || delivered)
+    if _hastrace then call tracesync(context)
+    call binding(context,'activation',activation)
+    call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','takecalldispatcherror','.string')
+    call invoke(detail,symbol,1,receiver); call emit('unlink',receiver)
+    call emit('strlen',flag || ',' || detail)
+    call emit('beq',prefix || '_ready,' || flag || ',0')
+    call emit('signal','"CLASSIC_SYNTAX",' || detail); call emit('ret')
+    call emit(prefix || '_ready:'); call emit('null',detail)
     return
   /** Only declared internal-helper operations override handler SIGL. External
    * providers and child invocations preserve their original bound event source. */
@@ -2026,11 +2210,13 @@ compilation: class
     symbol = .string; condition = .int; handler = .int; bits = .binary
     prefix = 'llcondition' || _fn || '_' || op.id()
     receiver = reg(_workbase + 1); activation = reg(_workbase + 4); pool = reg(_workbase + 2)
-    if name = 'signal.policy' then do
+    if name = 'signal.policy' | name = 'call.policy' then do
       bits = op.attribute('condition'); condition = <at..i64>(0) bits
       bits = op.attribute('handler'); handler = <at..i64>(0) bits
       call binding(input(op,2),'activation',activation); call emit('linkref',receiver || ',' || activation)
-      symbol = member('rexxactivation.rexxactivationarguments','setsignalpolicy','.void','.int .int')
+      setter = 'setsignalpolicy'
+      if name = 'call.policy' & handler > 0 then setter = 'setcallpolicy'
+      symbol = member('rexxactivation.rexxactivationarguments',setter,'.void','.int .int')
       call emit('load',reg(_callbase + 2) || ',' || condition); call emit('load',reg(_callbase + 3) || ',' || handler)
       call invoke('',symbol,3,receiver); call emit('unlink',receiver); call emit('null',activation)
       return
@@ -2155,6 +2341,8 @@ compilation: class
       if entryfacts.programcall(op.id()) = 0 then do
         call fail('LOWERING: program-exit query has no retained parent activation'); return
       end
+      callid = entryfacts.programcall(op.id())
+      if _graph.operation(callid).name() = 'crexx.c.clause.complete' then call binding(input(op),'activation',activation)
       call emit('linkref',receiver || ',' || activation)
       symbol = member('rexxactivation.rexxactivationarguments','programexitrequested','.boolean')
       call invoke(result(op),symbol,1,receiver)

@@ -130,10 +130,12 @@ ParseExecution: class
   _active_item = .int
   _active_origin = .int
   _active_action = .string
+  _observe = .boolean
 
   *: factory
     _live = 0; _valid = 0; _active_item = 0; _active_origin = 1
     _active_action = 'source'
+    _observe = 0
     return
 
   close: method = .void
@@ -437,6 +439,16 @@ ParseExecution: class
     config = dereference config_ref
     if config.isByteProfile() then do; call bad('UTF8 configuration required'); return; end
     call validate(program,config)
+    /* One decision per immutable template execution. PARSE has no callback
+     * that can change TRACE while fields are being distributed. The opt-in
+     * guard keeps existing direct consumers free of TRACE runtime calls. */
+    _observe = 0
+    if bundle.parseObservations() then do
+      mode = _trace_current_mode()
+      if mode = 'R' | mode = 'I' then do
+        if _trace_current_format() <> 'LLM' then _observe = 1
+      end
+    end
     captured = source.asString(1)
     if _upper then do
       upper_context = .rexxclassicbifs..RexxBifCallContext.expression('UPPER')
@@ -477,7 +489,7 @@ ParseExecution: class
     numeric fuzz inherited
     numeric form inherited
     arg context = reference .rexxclassiccontext..RexxClassicContext, section = .int
-    if _section_store[section] = 0 then return
+    if _section_store[section] = 0 & \_observe then return
     text_value = _cursor.text()
     text_length = .int
     assembler strlen text_length,text_value
@@ -485,6 +497,7 @@ ParseExecution: class
     current_config = dereference bundle.config()
     blanks = current_config.textOtherBlanks()
     scan = 0
+    field = .string
     first = _section_first[section]; last = _section_last[section]
     do target = first to last
       _active_origin = _target_origin[target]; _active_action = 'target#' || target
@@ -502,12 +515,19 @@ ParseExecution: class
           if scan < text_length then scan = scan + 1
         end
       end
-      if _target_kind[target] = 1 then do
-        field = .string
+      if _target_kind[target] = 1 | _observe then do
         assembler substring field,text_value,field_start,field_length
+      end
+      if _target_kind[target] = 1 then do
         value = .rexxvalue..RexxValue(field)
         current_pool = dereference bundle.pool()
         call current_pool.setSymbolValue(_target_name[target],value)
+      end
+      /* A completed store/drop is observed before the next cursor
+       * acknowledgement or live input read. Dots never need RexxValue. */
+      if _observe then do
+        if _target_kind[target] = 1 then call _trace_write_value('>>>',field)
+        else call _trace_write_value('>.>',field)
       end
     end
     return

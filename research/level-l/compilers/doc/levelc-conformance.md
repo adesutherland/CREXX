@@ -20,8 +20,8 @@ retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
 cleanup and typed payload/origin transport as one complete instruction.
 The [whole practical TRACE contract](architecture.md#trace-complete-contract)
 adds source forms, shared activation options/query state, command inhibition
-and a private observer over existing B services. The current C21 family has
-86 operations, five C types and 36 target exports. These instructions include
+and a private observer over existing B services. The current C22 family has
+88 operations, five C types and 36 target exports. These instructions include
 their required helpers and dependencies; complete C remains open.
 
 Controlled typed HALT exercises condition delivery, not real host/asynchronous
@@ -49,6 +49,9 @@ into separate prerequisite or partial-profile deliveries.
   integration remain deferred; native integration scope is not expanded.
 - PARSE EXTERNAL and PARSE NUMERIC remain outside the current agreed source
   scope; their final Release 1 disposition remains explicit in LC-GAP-05.
+- ADDRESS retains authored raw resource symbols. The shared 54.1 message prints
+  that resource spelling, such as `missing.0`; native C can print `MISSING.0`.
+  The condition identity and causing clause are unchanged.
 - The approved SIGNAL profile canonicalizes direct, quoted and VALUE names
   through shared simple Unicode uppercase, then compares exact canonical text.
   This intentionally differs from reference literal/evaluated-name spelling;
@@ -87,18 +90,50 @@ The new compiler omits the native text `>  >` file-transition marker; LLM
 records retain logical filenames. A multiline composite clause can produce
 additional truthful source records. These presentation differences and the
 partial event coverage above are accepted within this practical scope.
+Retained records can also include exact BIF results or static TRACE operands
+omitted by native transcripts; CCOND adds the authored PARSE/ARG/PULL fields.
 Incorrect displayed values, changed ordinary behavior, wrong targets/results,
 or broken state, ownership, error and resource semantics remain material defects.
 
 Focused development qualification uses the Debug optimized compiler with IR
 transformation and assembler optimization on rxbvm. It covers instruction/BIF
 state, internal/provider restoration, owned EXIT and fatal cleanup, actual
-Unicode/NUL values, command statuses/inhibition, source/errors and raw C21
+Unicode/NUL values, command statuses/inhibition, source/errors and raw C22
 contracts. It does not establish full compiler, platform or delivery acceptance;
 formal QA follows feature completion.
 
-Begin-only activation clause clocks are locally qualified under
-[CLAUSE1](architecture.md#clause-clock-contract); complete observations remain open.
+The [conditions and observations contract](architecture.md#conditions-observations-complete-contract)
+extends those foundations with CALL ON/OFF for ERROR, FAILURE, HALT and
+NOTREADY, policy replacement, delayed delivery/resumption, suppression and
+buffered HALT. The shared B activation remains the single policy/event owner.
+CALL handlers receive zero arguments and a fresh CALL/DELAY state; normal
+RETURN results are ignored. Internal EXIT propagates the interrupted program
+root; signed external handlers keep their distinct external root. CALL updates
+ordinary SIGL while reserved .SIGL is preserved. SIGNAL retains its existing
+same-frame transfer and causing-event state.
+
+Authored clause completion preserves captured decisions, loop headers and
+RETURN/EXIT values. Clock-free clauses remain clock-free; interrupted clause
+samples survive handlers. Opted-in C PARSE/ARG/PULL executions emit exact retained
+field and dot text in R/I text mode after each effect, including Unicode/NUL and
+partial earlier writes. Direct library consumers default to no observations;
+LLM retains its existing partial event scope. A source-less BIF handler's stream
+completion belongs to the interrupted source dispatcher, with shared child
+DELAY suppression for its same event. No isolated BIF child SIGNAL landing or
+arbitrary raw-provider resumption is implied.
+
+Qualification starts with maintained native fixture sources and checked expected
+outputs, running the sources unchanged through B/L. Only harness/compiler and
+controlled queue-injection boundaries adapt. Multi-error diagnostic fixtures
+isolate each unchanged checked row at its original line/column for fail-first
+parsing. C22 admission and new PARSE
+observations have independent supplements. One normal Debug opt/IR-on/rxbvm
+component lane establishes this local increment. Full compiler, delivery,
+platform and formal QA criteria remain open.
+The ADDRESS fixture's one raw-stem diagnostic parameter follows the existing
+contract above; its other checked output is unchanged. Its actual `cat` command
+uses a runtime-only PATH containing that command, while the compiler and other
+targets retain an empty PATH without native source compilers.
 
 ## Material work remaining
 
@@ -107,7 +142,8 @@ with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
-retain complete clause/clock observations, delayed CALL4 handlers, remaining
-expression/BIF/host/lifecycle contracts, delivery and declared platforms.
+retain remaining expression/BIF/host/lifecycle contracts, exact diagnostic
+completion, delivery and declared platforms. Real asynchronous HALT and outward
+raw-provider event resumption remain host integration work.
 INTERPRET remains required and last. Accepted profile choices do not close these
 obligations or establish full conformance.

@@ -1,0 +1,103 @@
+/* cREXX License (MIT). Real configured stream failure during a BIF trap.
+ * Existing ADDRESS and stream owners produce both conditions; no event hook.
+ */
+options levelb
+import _rxsysb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxclassicstream
+import bifstreamfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 2 then return 2
+  checks = 0; failures = 0; calls = 0
+  call _reset_address_environments()
+  environment = .StreamConditionEnvironment('CONDITION-TEST')
+  call environment.observe(reference calls)
+  call _register_address_environment('CONDITION-TEST',environment)
+  call exercise('call',argv[1])
+  call exercise('signal',argv[1])
+  call exercise('bif-error',argv[2])
+  call check(calls = 3,'one actual ADDRESS command per source execution')
+  call _reset_address_environments()
+  say 'BIF_STREAM_CONDITIONS|checks=' || checks || '|failures=' || failures
+  return failures
+
+exercise: procedure = .void
+  arg mode = .string, line = .string
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode)
+  call activation.recordCondition(6,'outer description','outer extra','SIGNAL')
+  pool = .rexxpool..RexxVariablePool()
+  call pool.setString('RESULT','old result'); call pool.setString('.RESULT','old reserved result')
+  call pool.setString('.SIGL','31337')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  broken = .rexxclassicstream..RexxClassicStream('.','READ')
+  call config.storeStream('',1,broken)
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call context.enableParseObservations(1)
+  returned = bifstreamfixture..run(reference context,0)
+  call check(returned.hasReturnValue(),'secondary condition retains owned completion')
+  call check(pool.symbolValue('HITS').asString() == '1','BIF NOTREADY reaches exactly one source handler')
+  call check(pool.symbolValue('RESULT').asString() == 'old result' & pool.symbolValue('.RESULT').asString() == 'old reserved result','both delayed handler results are ignored')
+  call check(activation.hasPendingCallCondition() = 0,'secondary pending event is drained instead of abandoned on the BIF child')
+  call check(context.parseObservations(),'incoming borrowed observation opt-in is preserved')
+  if mode == 'call' then do
+    call check(returned.returnValue().asString() == 'resumed' & pool.symbolValue('AFTER').asString() == '1','secondary CALL resumes the interrupted source once')
+    call check(pool.symbolValue('SEEN').asString() == ('NOTREADY||CALL|DELAY|' || line),'secondary CALL retains the original causing dispatch line')
+    call check(activation.currentConditionId() = 6 & activation.currentConditionDescription() == 'outer description' & activation.currentConditionExtra() == 'outer extra','interrupted parent CONDITION survives both handlers')
+    call check(pool.symbolValue('.SIGL').asString() == '31337' & pool.symbolValue('SIGL').asString() == line,'CALL preserves reserved .SIGL while updating ordinary SIGL')
+  end
+  else if mode == 'signal' then do
+    call check(returned.returnValue().asString() == 'signalled' & pool.symbolValue('AFTER').asString() == '0','positive SIGNAL transfers before the source resumes')
+    call check(pool.symbolValue('SEEN').asString() == ('NOTREADY||SIGNAL|OFF|' || line),'secondary SIGNAL retains typed condition and causing source')
+    call check(activation.currentConditionId() = 5 & activation.signalPolicy(5) = 0,'SIGNAL owns current event and disables its one-shot policy')
+    call check(pool.symbolValue('.SIGL').asString() == line & pool.symbolValue('SIGL').asString() == line,'SIGNAL uses the shared both-name source recorder')
+  end
+  else do
+    call check(returned.returnValue().asString() == 'bif-error-caught' & pool.symbolValue('AFTER').asString() == '0','invalid zero-argument BIF handler reaches the armed source SYNTAX handler')
+    call check(pool.symbolValue('SEEN').asString() == ('SYNTAX|40.3|' || line),'deferred BIF argument error has the causing ADDRESS source')
+    call check(activation.currentConditionId() = 1 & activation.currentConditionExtra() == '40.3' & activation.signalPolicy(1) = 0,'shared recorder preserves exact BIF Classic identity and one-shot state')
+    call check(pool.symbolValue('RC').asString() == '40' & pool.symbolValue('.MN').asString() == '40.3','SYNTAX records RC and reserved message identity')
+    call check(pool.symbolValue('.SIGL').asString() == line & pool.symbolValue('SIGL').asString() == line,'deferred SYNTAX uses shared source state')
+  end
+  expected_pool = reference pool; actual_pool = context.pool()
+  expected_activation = reference activation; actual_activation = context.activation()
+  expected_config = reference config; actual_config = context.config()
+  call check(<refvalid>(actual_pool) & (expected_pool <refsame> actual_pool),'source pool restored after BIF and local handler owners expire')
+  call check((expected_activation <refsame> actual_activation) & (expected_config <refsame> actual_config),'source activation/config borrows restored')
+  return
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+StreamConditionEnvironment: class implements .addressenvironment
+  _calls = reference .int
+  *: match
+    arg name = .string
+    if _address_normalize_environment_name(name) == 'CONDITION-TEST' then return 100
+    return 0
+  *: factory
+    arg name = .string
+    return
+  environment_name: method = .string
+    return 'CONDITION-TEST'
+  environment_id: method = .string
+    return 'CONDITION-TEST'
+  observe: method = .void
+    arg calls = reference .int
+    _calls = calls
+    return
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls; calls = calls + 1
+    call check(request.get_command() == 'error','existing environment receives the one authored producer command')
+    response = .addressresponse(7); call response.set_condition_name('ERROR')
+    return response

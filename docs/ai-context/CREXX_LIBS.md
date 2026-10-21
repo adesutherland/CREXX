@@ -64,9 +64,14 @@ distribution using the existing Classic CharacterScan blank policy. The C host
 constructs/adopts packets independently and never imports this target executor.
 The research `llctarget.parsesource` adapter returns one raw acquired value and
 retains errors/NOTREADY in caller-owned BIF-context storage; generated C performs
-the typed condition checkpoint before executing the template. Complete
-conditions/TRACE, ARG-instruction acceptance and real platform proof retain their
-[integration gates](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+the typed condition checkpoint before executing the template. Opted-in C bundles
+also permit exact post-effect PARSE field/drop observations in R/I text mode.
+The same executor owns distribution and observation order; shared
+`rxfnsb._trace_write_value(prefix,value)` owns quoting/output for these records
+and generated scalar TRACE. Disabled bundles make no trace-state calls and retain
+the all-dot fast path; observed dots allocate no RexxValue. LLM retains its
+existing partial event scope. Complete instruction/delivery and real platform
+proof retain their [integration gates](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
 
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
@@ -98,6 +103,10 @@ bundle by reference when rebinding must remain visible. Empty/expired references
 raise `REFERENCE_INVALID` before mutation. Explicit signal-skip recovery returns
 an unbound factory result or empty getter result and leaves a rejected rebind
 unchanged. Keep all owners initialized and in stable storage while borrowed.
+`enableParseObservations(enabled)` and `parseObservations()` control a default-off
+bundle-local observation flag. A compiled C observer saves/restores the incoming
+flag on normal, EXIT and fatal cleanup; direct B/native/RexxScript callers remain
+disabled unless explicitly opted in. The bundle owns no observer or source state.
 
 The research C target has one namespace, `llctarget`, in `llctarget.rxbin`.
 Its borrowed-context/result/loop/PARSE adapters call the existing shared B

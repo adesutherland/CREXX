@@ -92,7 +92,7 @@ sourcecase: procedure = .void
     if request.status() = 0 then do
       graph = request.graph(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
       call check(selected.status() = 0 & output.bytes() > 0,label || ' selects: ' || selected.error())
-      call check(pos('CSIG2',output.text()) = 0,label || ' has no executable table data')
+      call check(pos('CSIG3',output.text()) = 0,label || ' has no executable table data')
     end
   end
   else call check(request.status() <> 0 & pos('16.2',request.error()) > 0,label || ': ' || request.error())
@@ -108,7 +108,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 21 & types = 5 & data.ops() = 86,'C21/five types/86 operations')
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/five types/88 operations')
   do i = 1 to 4
     id = contract.operation('crexx.c.signal.' || word('mark name test invalid',i)).id()
     call check(id = 73 + i & data.arity(id,1) = 2 & data.arity(id,2) = (i = 2 | i = 3),'exact appended SIGNAL descriptor ' || i)
@@ -160,7 +160,7 @@ admission: procedure = .void
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
   if accepted then do
     call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
-    call check(pos('CSIG2',output.text()) = 0,label || ' erases compile-time table')
+    call check(pos('CSIG3',output.text()) = 0,label || ' erases compile-time table')
   end
   else do
     category = pos('LL_COMPILER_LOWERING:',selected.error()) = 1
@@ -232,11 +232,11 @@ fixture: procedure = .llir..module
   return_origin = .llir..origin
   generated = builder.synthetic('independent SIGNAL setup'); derived = at.derive('synthetic')
   label_first = binpos('P:' as .binary,source) - 1
-  payload = 'CSIG2' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
-  if mode = 4 then payload = 'CSIG2' || ('0A'x as .string) || '01:' || substr(payload,9)
-  if mode = 5 then payload = 'CSIG2' || ('0A'x as .string) || '1:' || framed('P') || '99:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
-  if mode = 16 then payload = 'CSIG2' || ('0A'x as .string) || '0:'
-  if mode = 19 then payload = 'CSIG2' || ('0A'x as .string) || '1:0:1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  if mode = 4 then payload = 'CSIG3' || ('0A'x as .string) || '01:' || substr(payload,9)
+  if mode = 5 then payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '99:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  if mode = 16 then payload = 'CSIG3' || ('0A'x as .string) || '0:'
+  if mode = 19 then payload = 'CSIG3' || ('0A'x as .string) || '1:0:1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
   payload = payload || '0:' /* Mandatory empty handler section, including malformed label controls. */
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))

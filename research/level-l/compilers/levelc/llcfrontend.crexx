@@ -151,6 +151,9 @@ request: class
   _handlerconditions = .int[]
   _handlerordinals = .int[]
   _handlerrows = .int[]
+  _handlermodes = .string[]
+  _signalhandlers = .int
+  _callhandlers = .int
   _handlercapacity = .int
   _conditionblock = .llir..block
   *: factory
@@ -204,7 +207,7 @@ request: class
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
         if walk.node().kind() = 'CCommand' then hascommands = 1
-        if wordpos(walk.node().kind(),'CSignal CSignalValue CSignalOn CSignalOff') > 0 then _hassignal = 1
+        if wordpos(walk.node().kind(),'CSignal CSignalValue CSignalOn CSignalOff CCallOn CCallOff') > 0 then _hassignal = 1
       end
       _entrybytes = 0
       if hascommands then call sourcewarnings(reference parsed)
@@ -392,7 +395,7 @@ request: class
           else leader = 0
         end
       end
-      if node.kind() = 'CSignalOn' then call inventoryhandler(node)
+      if node.kind() = 'CSignalOn' | node.kind() = 'CCallOn' then call inventoryhandler(node)
       if node.kind() <> 'CLabel' then iterate
       id = labelindex(node); if id = 0 then return
       raw = node.text('name'); if namework(raw) = 0 then return
@@ -445,6 +448,8 @@ request: class
     end
     _handlernodes[ordinal] = node; _handlernames[ordinal] = name
     _handlerconditions[ordinal] = condition; _handlerordinals[id] = ordinal
+    if node.kind() = 'CCallOn' then do; _handlermodes[ordinal] = 'C'; _callhandlers = _callhandlers + 1; end
+    else do; _handlermodes[ordinal] = 'S'; _signalhandlers = _signalhandlers + 1; end
     return
   conditionid: method = .int
     arg node = .llast..node
@@ -484,7 +489,7 @@ request: class
       call _block.store(_signalslot,_block.constantbytes(type('text'),tablebytes,origin),origin)
     end
     dispatch = newblock('entry.dispatch')
-    if _handlernodes[0] > 0 then do
+    if _signalhandlers > 0 then do
       _conditionblock = newblock('signal.exception')
       call _block.protect(dispatch,_conditionblock,origin)
     end
@@ -536,7 +541,7 @@ request: class
       op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
       call _block.returnvalue(built.result(),origin)
     end
-    if _handlernodes[0] > 0 & _error = '' then call conditiondispatch(origin)
+    if _signalhandlers > 0 & _error = '' then call conditiondispatch(origin)
     return
   /** Length framing writes bytes once into the owned table; no source/table
    * is copied per semantic SIGNAL or per label lookup. */
@@ -551,7 +556,7 @@ request: class
     return
   signaltable: method = .binary
     bytes = .binary; i = .int; row = .int; found = .string; name = .string; node = .llast..node
-    call signalfield(reference bytes,'43534947320A'x as .binary)
+    call signalfield(reference bytes,'43534947330A'x as .binary)
     call signalfield(reference bytes,((_signalnames[0] as .string) || ':') as .binary)
     do i = 1 to _signalnames[0] while _error = ''
       node = _signalnodes[i]; name = _signalnames[i]
@@ -570,6 +575,7 @@ request: class
       if found <> '' then row = found as .int
       _handlerrows[i] = row
       call signalfield(reference bytes,((i as .string) || ':') as .binary)
+      call signalfield(reference bytes,('1:' || _handlermodes[i]) as .binary)
       call signalfield(reference bytes,((_handlerconditions[i] as .string) || ':') as .binary)
       call signalfield(reference bytes,((row as .string) || ':') as .binary)
       call signalfield(reference bytes,((<blen>(name as .binary) as .string) || ':') as .binary)
@@ -585,13 +591,15 @@ request: class
     arg node = .llast..node
     origin = at(node); integer = .llir..intcodec()
     ordinal = 0; row = 0; name = ''
-    if node.kind() = 'CSignalOn' then do
+    if node.kind() = 'CSignalOn' | node.kind() = 'CCallOn' then do
       id = node.id(); ordinal = _handlerordinals[id]
       row = _handlerrows[ordinal]; name = _handlernames[ordinal]
       if row = 0 then row = -1
     end
     if signalwork(node,16) = 0 then return
-    op = _block.operation(_contract.operation('crexx.c.signal.policy'),origin)
+    operation = 'signal.policy'
+    if node.kind() = 'CCallOn' | node.kind() = 'CCallOff' then operation = 'call.policy'
+    op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
     call op.input('table',_block.load(_signalslot,origin.derive()))
     call op.input('context',_block.load(_contextslot,origin))
     call op.attribute('condition',integer.parse(conditionid(node) as .string))
@@ -617,6 +625,7 @@ request: class
     call op.attribute('key','SIGNAL' as .binary); built = op.finish()
     selected = temporary(type('int64')); call _block.store(selected,built.result(),origin)
     do i = 1 to _handlernodes[0] while _error = ''
+      if _handlermodes[i] <> 'S' then iterate
       if signalwork(_handlernodes[i],64) = 0 then return
       op = _block.operation(_contract.operation('crexx.c.signal.selected'),origin)
       call op.input('selected',_block.load(selected,origin)); call op.attribute('key','SIGNAL' as .binary)
@@ -907,6 +916,37 @@ request: class
     call op.attribute('id',codec.parse((node.start() + 1) as .string)); built = op.finish()
     if _builder.error() <> '' then _error = _builder.error()
     return
+  /** One authored checkpoint, with a conditional EXIT carrier. A normal
+   * continuation never reads that carrier or allocates an absent packet. */
+  clausecomplete: method = .void
+    arg node = .llast..node, first = -1, last = -1
+    if _callhandlers = 0 | _error <> '' then return
+    if first < 0 then first = node.start()
+    if last < 0 then last = node.finish()
+    if signalwork(node,32) = 0 then return
+    origin = _file.origin(first,last,node.origin()); generated = origin.derive('synthetic')
+    integer = .llir..intcodec()
+    op = _block.operation(_contract.operation('crexx.c.clause.complete'),origin)
+    call op.input('table',_block.load(_signalslot,generated))
+    call op.input('context',_block.load(_contextslot,generated))
+    call op.attribute('id',integer.parse((node.start() + 1) as .string)); built = op.finish()
+    carrier = temporary(type('result')); call _block.store(carrier,built.result(),generated)
+    op = _block.operation(_contract.operation('crexx.c.program.exiting'),generated)
+    call op.input('context',_block.load(_contextslot,generated)); built = op.finish()
+    unwind = newblock('clause.unwind'); continuation = newblock('clause.continue')
+    call _block.branch(built.result(),unwind,continuation,generated)
+    _block = unwind; call _block.returnvalue(_block.load(carrier,generated),generated)
+    _block = continuation
+    return
+  /** Retain an already evaluated decision or completion across a handler.
+   * This temporary carries the original value, never the conditional carrier. */
+  checkpointvalue: method = .llir..valuehandle
+    arg node = .llast..node, value = .llir..valuehandle, first = -1, last = -1
+    if _callhandlers = 0 then return value
+    origin = at(node).derive('synthetic'); saved = temporary(value.type())
+    call _block.store(saved,value,origin)
+    call clausecomplete(node,first,last)
+    return _block.load(saved,origin)
   statement: method = .void
     arg node = .llast..node
     if tick(node) = 0 then return
@@ -929,10 +969,12 @@ request: class
         if templates.child('items',i).count('items') > 0 then nonemitting = 0
       end
     end
+    if _callhandlers > 0 & wordpos(kind,'Nop COptions CArg') > 0 then nonemitting = 0
     if _terminated & nonemitting = 0 then do
       _block = newblock('unreachable'); _terminated = 0; _alive = 0
     end
-    if nonemitting = 0 & kind <> 'CProcedure' & kind <> 'CSelect' & kind <> 'CDo' then do
+    observes = nonemitting = 0 | wordpos(kind,'Nop COptions CArg CSelect') > 0
+    if _terminated = 0 & observes & kind <> 'CProcedure' & kind <> 'CDo' then do
       finish = node.finish()
       if kind = 'IfThen' | kind = 'IfElse' then finish = node.child('condition').finish()
       call clausebegin(node,node.start(),finish)
@@ -963,7 +1005,10 @@ request: class
         end
         if _error = '' then call statement(node.child('value'))
       end
-      when kind = 'CProcedure' then call procedurestatement(node)
+      when kind = 'CProcedure' then do
+        call procedurestatement(node)
+        if _error = '' then call clausebegin(node,node.start(),node.finish())
+      end
       when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
         item = node.child('items',i); itemorigin = at(item)
         if item.kind() <> 'DropDirect' & item.kind() <> 'DropIndirect' then do
@@ -1006,13 +1051,14 @@ request: class
       when kind = 'CAddress' then call addressstatement(node)
       when kind = 'CCommand' then call commandstatement(node)
       when kind = 'CSignal' | kind = 'CSignalValue' then call signalstatement(node)
-      when kind = 'CSignalOn' | kind = 'CSignalOff' then call conditionpolicy(node)
+      when kind = 'CSignalOn' | kind = 'CSignalOff' | kind = 'CCallOn' | kind = 'CCallOff' then call conditionpolicy(node)
       when kind = 'CTrace' | kind = 'CTraceValue' then call tracestatement(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
         value = expression(node.child('condition')); if _error <> '' then return
         value = truth(value,origin)
+        value = checkpointvalue(node,value,node.start(),node.child('condition').finish())
         yes = newblock('if.yes'); no = newblock('if.no')
         join = .llir..block; hasjoin = .int; hasjoin = 0
         call _block.branch(value,yes,no,origin)
@@ -1047,6 +1093,7 @@ request: class
             call op.input('context',_block.load(_contextslot,origin))
           end
           built = op.finish(); value = built.result()
+          value = checkpointvalue(node,value)
           call closeactive(origin)
           call _block.returnvalue(value,origin)
         end
@@ -1061,6 +1108,7 @@ request: class
         end
         else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
         built = op.finish(); value = built.result()
+        value = checkpointvalue(node,value)
         if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.exit'),origin)
         call op.input('result',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
@@ -1094,6 +1142,7 @@ request: class
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
+    if _terminated = 0 & wordpos(kind,'Sequence Block CLabel CLabelled') = 0 then call clausecomplete(node)
     return
   /** Static admission recognizes syntax only. The activation's shared
    * RexxTraceState remains the sole owner of option updates and toggles. */
@@ -1560,6 +1609,8 @@ request: class
         if _loopnames[level] = identity then do; selected = level; leave; end
       end
     end
+    call clausecomplete(node)
+    if _error <> '' then return
     if selected = 0 then do
       code = '28.1'; if _loops > 0 then code = '28.3'
       if continuing then do; code = '28.2'; if _loops > 0 then code = '28.4'; end
@@ -1627,7 +1678,10 @@ request: class
         call fail(named,'SYNTAX: RXC-LC-10.2: END name does not match DO control symbol'); return
       end
     end
-    if kind = '' & conditionkind = '' then do; call statement(node.child('body')); return; end
+    if kind = '' & conditionkind = '' then do
+      if _terminated = 0 then call clausebegin(node,node.start(),header.finish())
+      call statement(node.child('body')); return
+    end
     stateful = kind = 'DoCount' | kind = 'DoControl'; incoming = _alive
     initialfinish = header.finish()
     if conditionkind = 'DoUntil' then initialfinish = condition.start()
@@ -1652,6 +1706,8 @@ request: class
         end
       end
       built = dostate('start',key,headerorigin)
+      call clausecomplete(node,node.start(),initialfinish)
+      if _error <> '' then return
     end
     _loops = _loops + 1; level = _loops
     _loopkeys[level] = key; _hasbreaks[level] = 0; _hascontinues[level] = 0
@@ -1668,14 +1724,17 @@ request: class
       chosen = body
       if conditionkind = 'DoWhile' then chosen = test
       call _block.branch(built.result(),chosen,exhausted,headerorigin)
-      _block = exhausted; built = dostate('close',key,endorigin.derive())
+      _block = exhausted
+      if conditionkind = 'DoWhile' then call clausecomplete(node,node.start(),header.finish())
+      built = dostate('close',key,endorigin.derive())
       call _block.jump(after,endorigin); _breakalive[level] = incoming
     end
     if conditionkind = 'DoWhile' then do
       _block = test; _terminated = 0; _alive = incoming
       value = expression(condition.child('value')); if _error <> '' then return
       testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
-      value = truth(value,testorigin,'crexx.c.while.truth'); after = loopafter(level)
+      value = truth(value,testorigin,'crexx.c.while.truth')
+      value = checkpointvalue(node,value,node.start(),header.finish()); after = loopafter(level)
       if stateful then do
         exhausted = newblock('do.while.exit')
         call _block.branch(value,body,exhausted,testorigin)
@@ -1692,6 +1751,7 @@ request: class
     _block = body; _terminated = 0; _alive = incoming
     call statement(node.child('body')); if _error <> '' then return
     if _terminated = 0 then do
+      if node.child('body').count('items') = 0 then call clausecomplete(node,node.start(),header.finish())
       continuing = loopcontinue(level); _continuealive[level] = _continuealive[level] | _alive
       call _block.jump(continuing,endorigin)
     end
@@ -1702,7 +1762,8 @@ request: class
         if _error <> '' then return
         value = expression(condition.child('value')); if _error <> '' then return
         testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
-        value = truth(value,testorigin,'crexx.c.until.truth'); after = loopafter(level)
+        value = truth(value,testorigin,'crexx.c.until.truth')
+        value = checkpointvalue(node,value,node.start(),header.finish()); after = loopafter(level)
         advance = entry
         if stateful then advance = newblock('do.advance')
         if stateful then do
@@ -1765,6 +1826,7 @@ request: class
           value = expression(clause.child('condition')); if _error <> '' then return
           origin = _file.origin(clause.start(),clause.start() + 4,clause.origin())
           value = truth(value,origin,'crexx.c.when.truth')
+          value = checkpointvalue(clause,value,clause.start(),clause.child('condition').finish())
           chosen = newblock('select.when'); following = newblock('select.next')
           call _block.branch(value,chosen,following,origin)
           _block = chosen; _terminated = 0; _alive = incoming

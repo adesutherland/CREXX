@@ -1,0 +1,25 @@
+/* The native TRACE golden omits extracted PARSE fields/dots. This supplement
+ * owns only those new observations and partial-write/record ordering.
+ */
+options levelc
+parse arg MODE
+PAYLOAD = 'é雪' || '00'x || ':drop  tail '
+if MODE == 'partial' then do
+  FIRST = 'old first'; MID = 'old mid'; LAST = 'old last'
+  signal on novalue name CAUGHT
+  trace intermediates
+  parse value 'left:drop=tail' with FIRST ':' . '=' MID (MISSING_PATTERN) LAST
+  say 'UNREACHED partial parse'
+  exit 91
+end
+trace intermediates
+parse value PAYLOAD with HEAD ':' . TAIL
+arg ., FIRSTARG . LASTARG
+pull PULLFIRST . PULLLAST
+trace off
+say 'FIELDS|' || HEAD || '|' || c2x(TAIL) || '|' || FIRSTARG || '|' || LASTARG || '|' || PULLFIRST || '|' || PULLLAST
+return 'fields-pass'
+CAUGHT:
+trace off
+say 'PARTIAL|' || FIRST || '|' || MID || '|' || LAST || '|' || condition('C') || '|' || condition('D')
+return 'partial-pass'

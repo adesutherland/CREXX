@@ -5,7 +5,7 @@ import llir
 
 /** Existing owner names used by the emitted frame-local observer. */
 imports: procedure = .string
-  return 'rexxvalue.rexxvalue.asstring rxfnsb._trace_capture_result_target rxfnsb._trace_context_from_raw rxfnsb._trace_current_format rxfnsb._trace_current_mode rxfnsb._trace_escape_text rxfnsb._trace_needs_breakpoints rxfnsb._trace_next_pending_result rxfnsb._trace_pending_parent_register rxfnsb._trace_pending_prefix rxfnsb._trace_pending_result rxfnsb._trace_should_trace_context rxfnsb._trace_should_trace_module rxfnsb._trace_supply_parent_value rxfnsb._trace_write_line rxfnsb.tracecontext.asm_line rxfnsb.tracecontext.column rxfnsb.tracecontext.has_source rxfnsb.tracecontext.line rxfnsb.tracecontext.procedure rxfnsb.tracecontext.source rxfnsb.tracecontext.source_file'
+  return 'rexxvalue.rexxvalue.asstring rxfnsb._trace_capture_result_target rxfnsb._trace_context_from_raw rxfnsb._trace_current_format rxfnsb._trace_current_mode rxfnsb._trace_escape_text rxfnsb._trace_needs_breakpoints rxfnsb._trace_next_pending_result rxfnsb._trace_pending_parent_register rxfnsb._trace_pending_prefix rxfnsb._trace_pending_result rxfnsb._trace_should_trace_context rxfnsb._trace_should_trace_module rxfnsb._trace_supply_parent_value rxfnsb._trace_write_line rxfnsb._trace_write_value rxfnsb.tracecontext.asm_line rxfnsb.tracecontext.column rxfnsb.tracecontext.has_source rxfnsb.tracecontext.line rxfnsb.tracecontext.procedure rxfnsb.tracecontext.source rxfnsb.tracecontext.source_file'
 
 /** Exact existing runtime ABI, including optional and EXPOSE formals.
  * Receiver-bearing methods omit their implicit receiver from this metadata. */
@@ -23,6 +23,7 @@ contract: procedure = .string
     when name = 'rxfnsb._trace_supply_parent_value' then return '.void|.string||'
     when name = 'rxfnsb._trace_escape_text' then return '.string|.string||'
     when name = 'rxfnsb._trace_write_line' then return '.void|.string||'
+    when name = 'rxfnsb._trace_write_value' then return '.void|.string .string||'
     when name = 'rxfnsb._trace_pending_result' then return '.int|||'
     when name = 'rxfnsb._trace_current_mode' | name = 'rxfnsb._trace_current_format' | name = 'rxfnsb._trace_pending_prefix' then return '.string|||'
     when name = 'rxfnsb.tracecontext.column' | name = 'rxfnsb.tracecontext.has_source' | name = 'rxfnsb.tracecontext.line' then return '.int|||'
@@ -158,20 +159,14 @@ handler: procedure = .llir..output
   call writer.line('null r41')
   call writer.line('load r40,0')
   call writer.line('call r12,rxfnsb._trace_pending_prefix(),r40')
-  call writer.line('copy r41,r10')
+  call writer.line('copy r41,r12')
   call writer.line('settp r41,768')
-  call writer.line('load r40,1')
-  call writer.line('call r13,rxfnsb._trace_escape_text(),r40')
+  call writer.line('copy r42,r10')
+  call writer.line('settp r42,768')
+  call writer.line('load r40,2')
+  call writer.line('call r0,rxfnsb._trace_write_value(),r40')
   call writer.line('null r41')
-  call writer.line('concat r14,"       ",r12')
-  call writer.line('concat r14,r14,"   \""')
-  call writer.line('concat r14,r14,r13')
-  call writer.line('concat r14,r14,"\""')
-  call writer.line('copy r41,r14')
-  call writer.line('settp r41,768')
-  call writer.line('load r40,1')
-  call writer.line('call r0,rxfnsb._trace_write_line(),r40')
-  call writer.line('null r41')
+  call writer.line('null r42')
   call writer.line('__rxt_value_advance:')
   call writer.line('copy r41,r3')
   call writer.line('settp r41,768')

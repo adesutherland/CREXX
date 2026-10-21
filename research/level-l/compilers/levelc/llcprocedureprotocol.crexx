@@ -36,6 +36,8 @@ checked: class
   _predops = .int[]
   _carriercalls = .int[]
   _carrierfalse = .int[]
+  _conditionalcarriers = .int[]
+  _callfunctions = .int[]
   _unwindblocks = .int[]
   _falseblocks = .int[]
   _programneutral = .int[]
@@ -143,6 +145,11 @@ checked: class
     arg queryid = .int
     call run(); if _error <> '' then return 0
     return _querycalls[queryid]
+  /** Admitted target source-function identity for internal calls. */
+  callfunction: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _callfunctions[opid]
   /** Private normal continuation fact, owned by the same proved CALL guard. */
   falsepredecessor: method = .int
     arg blockid = .int
@@ -213,7 +220,22 @@ checked: class
         if programorigin(terminal,op.origin().id()) = 0 then return
         _programneutral[opid] = opid; _programneutral[terminal] = opid; _programterminals[terminal] = opid
       end
-      if name <> 'crexx.c.call' then iterate
+      if name <> 'crexx.c.call' & name <> 'crexx.c.clause.complete' then iterate
+      checkpoint = name = 'crexx.c.clause.complete'
+      if checkpoint then do
+        if op.origin().kind() <> 'exact' then do; call fail('LOWERING: clause completion requires an authored origin',opid); return; end
+        _programneutral[opid] = opid
+        do ordinal = 1 to 2
+          producer = store.get(4,op.input(ordinal).id(),1)
+          if store.get(3,producer,1) <> 3 then do; call fail('LOWERING: clause completion requires canonical input loads',opid); return; end
+          binding = _tableslots[fn]; if ordinal = 2 then binding = _contextslots[fn]
+          if binding = 0 | store.get(3,producer,12) <> binding | _uses[op.input(ordinal).id()] <> 1 then do
+            call fail('LOWERING: clause completion substitutes or shares its canonical input',opid); return
+          end
+          if programorigin(producer,op.origin().id()) = 0 then return
+          _programneutral[producer] = opid
+        end
+      end
       if programcontext(op.input(2),fn,opid) = 0 then return
       id = op.result().id(); anchor = op.origin().id(); next = store.get(3,opid,3)
       if _uses[id] <> 1 | next = 0 then do
@@ -230,7 +252,7 @@ checked: class
       if store.get(5,slotid,1) <> fn | store.get(5,slotid,2) <> store.get(4,id,3) then do
         call fail('LOWERING: program-exit carrier has the wrong owner or type',next); return
       end
-      _carriercalls[slotid] = opid
+      _carriercalls[slotid] = opid; _conditionalcarriers[slotid] = checkpoint
       if programorigin(next,anchor) = 0 then return
       _programneutral[next] = opid; next = store.get(3,next,3)
       if next > 0 then do
@@ -311,6 +333,9 @@ checked: class
       slotid = store.get(3,opid,12); id = _carriercalls[slotid]
       if id = 0 then iterate
       b = op.blockid()
+      if _conditionalcarriers[slotid] & _unwindblocks[b] <> id then do
+        call fail('LOWERING: conditional clause carrier is read outside its true EXIT unwind',opid); return
+      end
       if b <> _carrierfalse[slotid] & _unwindblocks[b] <> id then do
         call fail('LOWERING: program-exit carrier escapes its protected continuation',opid); return
       end
@@ -506,7 +531,7 @@ checked: class
     /* Arrays and the at-most-three-changes-per-block queue are checked before
      * allocation. All record/name/edge traversal spends the existing budget. */
     if reserve(store.count(1),40) = 0 | reserve(store.count(2),80) = 0 then return
-    if reserve(store.count(3),64) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),40) = 0 then return
+    if reserve(store.count(3),72) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),48) = 0 then return
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       name = store.text(store.get(1,fn,1)); if reserve(<blen>(name as .binary) + 64,1) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
@@ -563,7 +588,7 @@ checked: class
         if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
           ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
         end
-        if wordpos(name,'crexx.c.signal.policy crexx.c.signal.capture crexx.c.signal.select') > 0 then do
+        if wordpos(name,'crexx.c.signal.policy crexx.c.call.policy crexx.c.clause.complete crexx.c.signal.capture crexx.c.signal.select') > 0 then do
           ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
         end
         if wordpos(name,'crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
@@ -713,6 +738,7 @@ checked: class
         found = _functions.get(targetname); id = integer(op,'entry')
         if found = '' then do; call fail('LOWERING: unknown source-unit call target',opid); return; end
         if id <= 0 | id >= _entries[found as .int] then do; call fail('LOWERING: call entry is not a positive declared ID',opid); return; end
+        _callfunctions[opid] = found as .int
       end
     end
     /* SIGNAL relay/handler.invalid have their own proved same-R returns.

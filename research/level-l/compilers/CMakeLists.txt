@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit rxas)
+      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -161,6 +161,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsignalprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccommandprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llctraceemit.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccallemit.rxbin"
       ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
@@ -338,6 +339,30 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_trace_contracts_${_mode}
       DEPENDS "${_dir}/trace-contracts-linked.rxbin")
+    # One warm fixture compiler and focused C22 admission contracts. Native C
+    # sources/oracles remain owned by compiler/tests; only harnesses adapt.
+    foreach(_conditions_part fixtures contracts)
+      set(_conditions_source "compile-fixtures")
+      set(_conditions_name "conditions-fixtures")
+      if(_conditions_part STREQUAL "contracts")
+        set(_conditions_source "contracts")
+        set(_conditions_name "conditions-observations-contracts")
+      endif()
+      set(_conditions_inputs ${_c_drop_inputs} "${_io}")
+      if(_conditions_part STREQUAL "fixtures")
+        list(APPEND _conditions_inputs "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccompiler.rxbin")
+      endif()
+      ll_compile(${_conditions_name}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/conditions-observations/${_conditions_source}.crexx"
+        "${_dir}" ${_conditions_inputs})
+      add_custom_command(OUTPUT "${_dir}/${_conditions_name}-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/${_conditions_name}-linked"
+          "${_dir}/${_conditions_name}.rxbin" ${_conditions_inputs}
+        DEPENDS rxlink "${_dir}/${_conditions_name}.rxbin" ${_conditions_inputs} VERBATIM)
+    endforeach()
+    add_custom_target(llcompiler_conditions_observations_${_mode}
+      DEPENDS "${_dir}/conditions-fixtures-linked.rxbin"
+        "${_dir}/conditions-observations-contracts-linked.rxbin")
     ll_compile(label-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/labels/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/label-contracts-linked.rxbin"
@@ -939,6 +964,20 @@ if("c" IN_LIST _languages)
       run_tests_signal_origin
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_signal_vm})
   endforeach()
+  # Conditions/observations is one complete development increment. Reuse one
+  # prepared compiler, native fixtures and immutable expected outputs, on one VM.
+  set(_test "llcompiler_c_conditions_observations_opt_on_rxbvm")
+  add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/conditions-observations/check-conditions.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}")
+  set_tests_properties(${_test} PROPERTIES
+    PASS_REGULAR_EXPRESSION "CONDITIONS_OBSERVATIONS[|].*PASS"
+    TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;conditions")
+  crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+    llcompiler_conditions_observations_opt llcompiler_llrxc-c_opt llcompiler_target_opt
+    library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink rxbvm)
   # NUMERIC reuses one source image for settings, frame and operand-EXIT checks.
   # Complementary nested lanes are serialized with a generous hang guard.
   foreach(_mode opt noopt)
