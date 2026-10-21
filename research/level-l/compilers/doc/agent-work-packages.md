@@ -97,10 +97,12 @@ CEXIT-AC01–05 guard/terminal and forced-cleanup profile; AC06 stays open. The 
 profiles are delivered. Independent fixtures
 and read-only review retain their separately assigned owners.
 
-The [next PULL contract](architecture.md#pull-contract) assigns the next serial
-C source/lowering and independent fixture increment through the existing PARSE
-source/executor. Start after the RETURN/EXIT/CALL3 local commits; preserve
-bare acquisition and the named shared host/observation/platform owners.
+The [PULL contract](architecture.md#pull-contract) delivers the local AC01–04
+source/lowering and independent fixture profile through the existing PARSE
+source/executor. Bare acquisition and shared host/observation/platform owners
+remain explicit. PUSH and QUEUE follow as separate insertion increments: one
+serial production integrator, independent fixtures, and read-only review; record
+each exact contract before implementation.
 
 <a id="procedure-assignment-packet"></a>
 

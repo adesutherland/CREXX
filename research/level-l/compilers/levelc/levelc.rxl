@@ -73,6 +73,7 @@ parsewith: token = 68
 parsedot: token = 69
 exposeword: token = 70
 constantname: token = 71
+pullword: token = 72
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -190,7 +191,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?
@@ -223,6 +224,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   procedure.direct: rule = name.value as name then tree ProcedureExposeDirect(name = name)
   procedure.indirect: rule = open name.value as name close then tree ProcedureExposeIndirect(name = name)
   arg.statement: rule = argword parse.templates as templates then tree CArg(templates = templates)
+  pull.statement: rule = pullword parse.templates as templates then tree CPull(templates = templates)
   numeric.statement: rule = numeric.value | numeric.form
   numeric.value: rule = numericword (digitsword | fuzzword) as setting (expression as value)? then tree CNumeric(setting = text(setting), value = value?)
   numeric.form: rule = numericword formword numeric.form.value

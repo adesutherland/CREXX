@@ -166,7 +166,7 @@ installs its validated settings; child return restores the parent frame.
 | `truth` | Validate the Classic logical value through the live context; invalid values can fail. Exact literal `0`/`1` also proves a derived core Boolean for control selection, while retaining runtime truth effects. |
 | `numeric.digits/fuzz/form`, `digits` | Validate/update the borrowed activation or inspect the executing frame, including defaults/reset and caller inheritance. |
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
-| `parse.source/execute` | PARSE and standalone ARG share raw source acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty comma templates skip acquisition/execution and preserve ordinal gaps. Live names/presence/original arguments retain the shared runtime contract. |
+| `parse.source/execute` | PARSE, standalone ARG and PULL share acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty ARG templates skip acquisition/execution and preserve ordinal gaps. PULL implies UPPER, acquires once even when bare/empty-first, and supplies empty text to later comma templates. Live names/presence/original arguments retain the shared runtime contract. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
 | `call` | Resolved local entry, argument packet, borrowed context and function/subroutine attribute; fresh child activation/bundle initially share the current pool. |
 | `bif`, `call.missing` | Exact named shared BIF binding or reached missing43.1 after actual evaluation; preserve raw presence. |

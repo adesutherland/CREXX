@@ -3309,6 +3309,13 @@ FUNCTION_NOT_FOUND. Routine output has no command main/status bridge and leading
 PROCEDURE remains17.1. See the
 [static-provider contract](../../research/level-l/compilers/doc/architecture.md#call3-static-provider-contract).
 
+Standalone Classic `PULL` uses the same templates as `PARSE UPPER PULL`. It
+acquires selected queue or fallback input once, including bare/empty-first forms;
+later comma templates receive empty text. Shared UPPER and live variable-pool
+writes remain in the existing executor. Configured NOTREADY, broader host
+behavior, conditions/TRACE and declared-platform closure remain open under the
+[PULL contract](../../research/level-l/compilers/doc/architecture.md#pull-contract).
+
 A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
 `rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
 import/link `llccompiler` and call its own request with the same arguments:

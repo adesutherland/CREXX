@@ -191,7 +191,7 @@ parsed: class
           else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY CALL NOP OPTIONS IMPORT PROCEDURE ARG PULL NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
@@ -230,7 +230,7 @@ parsed: class
       end
       if word = 'IF' then do; ownercount = ownercount + 1; owners[ownercount] = 'if'; end
       if word = 'PARSE' then parsemode = 'header'
-      if word = 'ARG' then parsemode = 'template'
+      if word = 'ARG' | word = 'PULL' then parsemode = 'template'
       if word = 'DO' then do; ownercount = ownercount + 1; owners[ownercount] = 'group'; ownercontrols[ownercount] = ''; end
       if word = 'SELECT' then do; ownercount = ownercount + 1; owners[ownercount] = 'select'; end
       if word = 'END' then do
@@ -257,7 +257,7 @@ parsed: class
       /* Empty operands complete only their admitted prefix positions. The
        * first assignment '=' consumes its head; later equals are operators. */
       if clause & depth = 0 & kind = id & next = equals then operandmode = 'assignment-head'
-      if word = 'ARG' then operandmode = 'arg'
+      if word = 'ARG' | word = 'PULL' then operandmode = 'arg'
       if word = 'CALL' then operandmode = 'call-head'
       if operandmode = 'call-head' & depth = 0 & word <> 'CALL' then operandmode = 'call'
       emptyrhs = 0
@@ -269,7 +269,7 @@ parsed: class
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
         term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
-        if emptyrhs | wordpos(word,'SAY RETURN EXIT OPTIONS ARG DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
+        if emptyrhs | wordpos(word,'SAY RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
         if depth = 0 & kind = comma & wordpos(operandmode,'arg call') > 0 then term = 1
       end
       if kind = colon & next <> sep then do
@@ -317,7 +317,7 @@ parsed: class
       if kind = sep | kind = thenword | kind = elseword then dropping = 0
       if kind = sep | kind = thenword | kind = elseword then do; parsing = 0; parsetemplate = 0; parsevarname = 0; end
       if kind = language.tokenid('parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
-      if kind = language.tokenid('argword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
+      if kind = language.tokenid('argword') | kind = language.tokenid('pullword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
       if kind = language.tokenid('parsevalue') then do; parsing = 2; parsetemplate = 0; end
       if kind = language.tokenid('parsevar') then parsevarname = 1
       if kind = language.tokenid('parsekind') | kind = language.tokenid('parsewith') then do; parsing = 1; parsetemplate = 1; end
@@ -463,7 +463,7 @@ headerpolicy: procedure = .llcomments..rules
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for parse'
+  keywords = 'if then else do end while leave iterate return exit say call nop options import procedure arg pull numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for parse'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))
@@ -499,7 +499,7 @@ parsemessage: procedure = .string
     if mode = 'value' & kind = language.tokenid('parsewith') & tokens.start(i) = offset then return fallback
     select
       when kind = language.tokenid('parseword') then do; mode = 'header'; upperflag = 0; prefix = 0; end
-      when kind = language.tokenid('argword') then do; mode = 'template'; upperflag = 1; prefix = 0; end
+      when kind = language.tokenid('argword') | kind = language.tokenid('pullword') then do; mode = 'template'; upperflag = 1; prefix = 0; end
       when mode = '' then nop
       when kind = language.tokenid('parseupper') then do; mode = 'header'; upperflag = 1; end
       when kind = language.tokenid('parsevalue') then mode = 'value'

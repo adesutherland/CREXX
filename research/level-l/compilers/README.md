@@ -56,8 +56,12 @@ VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
-executor with implicit UPPER, replacing its scalar shortcut. The
-[current C contract](doc/architecture.md#current-c-family-contract)
+executor with implicit UPPER, replacing its scalar shortcut. Standalone PULL
+also uses this executor: bare/empty-first forms acquire selected queue or fallback
+input once, and later comma templates receive empty text. It consumes PROCEDURE
+eligibility even with no targets. Its local source/queue/EOF/private-pool profile
+is delivered; configured NOTREADY, host, conditions/TRACE and platforms remain
+open. The [current C contract](doc/architecture.md#current-c-family-contract)
 uses the 36-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.

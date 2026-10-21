@@ -540,7 +540,7 @@ request: class
         _terminated = 1; _alive = 0
       end
       when kind = 'Invoke' | kind = 'InvokeQuoted' then value = invocation(node,0)
-      when kind = 'Parse' | kind = 'CArg' then call parsestatement(node)
+      when kind = 'Parse' | kind = 'CArg' | kind = 'CPull' then call parsestatement(node)
       when kind = 'CNumeric' then do
         setting = lower(node.text('setting'))
         if node.count('value') then value = expression(node.child('value'))
@@ -560,8 +560,8 @@ request: class
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
     return
-  /** PARSE and ARG share immutable, source-owned template packets. ARG keeps
-   * its authored instruction identity and privately implies source ARG/UPPER.
+  /** PARSE, ARG and PULL share immutable, source-owned template packets. The
+   * standalone instructions retain identity and privately imply source/UPPER.
    * The shared executor owns all live name reads and target writes. */
   parsestatement: method = .void
     arg node = .llast..node
@@ -570,7 +570,8 @@ request: class
     op = .llir..opdraft; built = .llir..opview
     mode = .string; decoded = .string; movement = .int; code = .string; indexwork = .int
     source = .llast..node; templates = node.child('templates'); origin = at(node)
-    kind = 'ARG'; upperflag = 1; value = .llir..valuehandle
+    kind = 'ARG'; if node.kind() = 'CPull' then kind = 'PULL'
+    upperflag = 1; value = .llir..valuehandle
     if node.kind() = 'Parse' then do
       source = node.child('source'); spelling = source.text('kind'); kind = ''
       if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then kind = upper(spelling)

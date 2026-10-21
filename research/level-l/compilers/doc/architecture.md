@@ -2901,9 +2901,10 @@ Later comma templates receive empty text without another queue/input read.
 5. **PULL-AC05 — open shared scope:** configured NOTREADY/host behavior, conditions,
    TRACE and declared platforms remain CPARSE/STEP07–08 obligations.
 
-**PULL-STEP01** is reviewed; **STEP02/03** are next: source/lowering, focused
-fixtures, qualification and a local profile commit after the delivered
-RETURN/EXIT/CALL3 profiles. Whole LC-I-16 remains open for AC05.
+**PULL-STEP01–03 are complete for the local AC01–04 profile.** The maintained
+`tests/pull` source, queue/host, error and RXAS controls own independent
+qualification. The schema and target exports are unchanged. Whole LC-I-16
+remains open for AC05; shared runtime evidence does not close those obligations.
 
 ## Optimisation ownership
 
