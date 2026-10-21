@@ -47,6 +47,9 @@ RexxClassicAddressCommand: class
   last_syntax_error = .string
   last_condition_description = .string
   stream_read_error = .string
+  binding_count = .int
+  binding_kinds = .string[]
+  binding_names = .string[]
 
   *: factory
     arg pool_ref = reference .RexxVariablePool, frame_ref = reference .RexxActivationArguments, environment = .string, command = .string
@@ -59,6 +62,7 @@ RexxClassicAddressCommand: class
     last_syntax_error = ""
     last_condition_description = command
     stream_read_error = ""
+    binding_count = 0
     return
 
   conditionId: method = .int
@@ -78,6 +82,23 @@ RexxClassicAddressCommand: class
     state = .RexxAddressState
     assembler link state,selected_state
     call state.setConnection(option, position, type, resource)
+    return
+
+  /** Record one checked lexical binding; pool values are read only by run().
+   * @param kind VAR or STEM under the existing ADDRESS normalization
+   * @param name scalar name or stem basename under the existing binding convention
+   * @signal INVALID_ARGUMENTS unsupported kind, without changing the plan
+   */
+  withBinding: method = .void
+    arg kind = .string, name = .string
+    kind = _address_normalize_environment_name(kind)
+    if kind <> "VAR" & kind <> "STEM" then do
+      assembler signal "INVALID_ARGUMENTS","ADDRESS binding kind must be VAR or STEM"
+      return
+    end
+    binding_count = binding_count + 1
+    binding_kinds[binding_count] = kind
+    binding_names[binding_count] = name
     return
 
   /** Capture the active invocation's connections for an implicit command. */
@@ -110,6 +131,14 @@ RexxClassicAddressCommand: class
     output_path = .string
     error_path = .string
     io_error = .string
+    request = .addressrequest
+    response = .addressresponse
+    binding_stems = .addressstem[]
+    binding_index = .int
+    binding_name = .string
+    binding_text = .string
+    binding_count_value = .int
+    binding_tail = .int
     output_start = 0
     error_start = 0
     last_condition_id = 0
@@ -127,11 +156,7 @@ RexxClassicAddressCommand: class
     if state.type("I") = "STEM" then do
       stem = state.resource("I")
       count_text = pool.symbolValue(stem || "0").asString()
-      if \datatype(count_text, "W") then do
-        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS input stem count " || stem || "0"
-        return .addressresponse(0)
-      end
-      count = count_text as .int
+      count = address_binding_count(count_text)
       if count < 0 then do
         last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS input stem count " || stem || "0"
         return .addressresponse(0)
@@ -161,11 +186,7 @@ RexxClassicAddressCommand: class
     if state.type("O") = "STEM" & state.position("O") = "APPEND" then do
       stem = state.resource("O")
       count_text = pool.symbolValue(stem || "0").asString()
-      if \datatype(count_text, "W") then do
-        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS output stem count " || stem || "0"
-        return .addressresponse(0)
-      end
-      output_start = count_text as .int
+      output_start = address_binding_count(count_text)
       if output_start < 0 then do
         last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS output stem count " || stem || "0"
         return .addressresponse(0)
@@ -174,11 +195,7 @@ RexxClassicAddressCommand: class
     if state.type("E") = "STEM" & state.position("E") = "APPEND" then do
       stem = state.resource("E")
       count_text = pool.symbolValue(stem || "0").asString()
-      if \datatype(count_text, "W") then do
-        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS error stem count " || stem || "0"
-        return .addressresponse(0)
-      end
-      error_start = count_text as .int
+      error_start = address_binding_count(count_text)
       if error_start < 0 then do
         last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS error stem count " || stem || "0"
         return .addressresponse(0)
@@ -194,10 +211,31 @@ RexxClassicAddressCommand: class
     else if state.type("E") = "STREAM" then
       error_endpoint = .addressredirect.output_string(reference error_text)
 
+    request = .addressrequest(target_environment, command_text, input_endpoint, output_endpoint, error_endpoint)
+    do binding_index = 1 to binding_count
+      binding_name = binding_names[binding_index]
+      if binding_kinds[binding_index] = "VAR" then do
+        binding_text = pool.symbolValue(binding_name).asString()
+        call request.add_binding("var", binding_name, binding_name, binding_text, "")
+      end
+      else do
+        count_text = pool.stemSymbolValue(binding_name,"0").asString()
+        binding_count_value = address_binding_count(count_text)
+        if binding_count_value < 0 then do
+          last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS binding stem count " || binding_name || ".0"
+          return .addressresponse(0)
+        end
+        binding_stems[binding_index] = .standardaddressstem()
+        call request.add_stem_binding_plan(binding_name, binding_name, binding_stems[binding_index])
+        do binding_tail = 0 to binding_count_value
+          binding_text = pool.stemSymbolValue(binding_name,binding_tail || "").asString()
+          call request.set_binding_stem_value(binding_index,binding_tail || "",binding_text)
+        end
+      end
+    end
     if builtin_process & words(command_text) = 0 then
       response = .addressresponse(0)
     else do
-      request = .addressrequest(target_environment, command_text, input_endpoint, output_endpoint, error_endpoint)
       response = _address_dispatch_request(request)
     end
     if response.get_rc() = -3 & response.get_condition_name() = "FAILURE" &,
@@ -218,6 +256,28 @@ RexxClassicAddressCommand: class
     else if state.type("E") = "STREAM" then do
       if address_write_stream(error_path, state.position("E"), error_text) <> 0 then
         if io_error = "" then io_error = error_path
+    end
+
+    do binding_index = 1 to binding_count
+      binding_name = binding_names[binding_index]
+      if binding_kinds[binding_index] = "VAR" then do
+        binding_text = ""
+        if _address_apply_response_var_ref(reference response,binding_name,reference binding_text) then
+          call pool.setSymbolValue(binding_name,.RexxValue(binding_text))
+      end
+      else do
+        call _address_apply_response_request_stem_ref(reference response,reference request,binding_index,binding_name)
+        count_text = request.get_binding_stem_value(binding_index,"0")
+        binding_count_value = address_binding_count(count_text)
+        if binding_count_value < 0 then do
+          last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS binding stem count " || binding_name || ".0"
+          return response
+        end
+        do binding_tail = 0 to binding_count_value
+          binding_text = request.get_binding_stem_value(binding_index,binding_tail || "")
+          call pool.setStemValue(binding_name,binding_tail || "",.RexxValue(binding_text))
+        end
+      end
     end
 
     result_code = response.get_rc()
@@ -285,6 +345,21 @@ RexxClassicAddressCommand: class
     assembler fclose close_status,fileid
     if close_status <> 0 then stream_read_error = path
     return result
+
+/** Apply the existing whole/nonnegative count policy before counted projection.
+ * Conversion overflow is a count failure, rather than a partial pool write.
+ */
+address_binding_count: procedure = .int
+  arg text = .string
+  if \datatype(text,"W") then return -1
+  count = .int
+  do
+    count = text as .int
+  on signal conversion_error
+    return -1
+  end
+  if count < 0 then return -1
+  return count
 
 /** Apply captured command lines after the environment returns. */
 address_apply_stem: procedure = .void

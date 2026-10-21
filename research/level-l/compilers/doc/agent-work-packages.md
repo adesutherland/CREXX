@@ -112,6 +112,13 @@ schema/docs/CMake and the independent reviewer for neutral `tests/queue-insertio
 plus thin PUSH/QUEUE fixture entries. No parallel shared builds; AC05 remains
 shared scope. ADDRESS/implicit commands follow exact shared-B/C contract review.
 
+The [ADDRESS B bridge](architecture.md#address-b-binding-bridge) is a separate
+prerequisite. Its worker owns only `_address.crexx`, `RexxClassicAddress.crexx`,
+old/new B protocol/command tests and their owning B API docs. The integrator owns
+CMake/architecture/PLAN and disjoint C design. Transfer one exclusive B build/
+test lease explicitly; no C preparation while it is active. Independent review
+checks actual worker/caller RXAS, compatibility, exact paths and preservation.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet

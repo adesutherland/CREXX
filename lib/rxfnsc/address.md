@@ -75,6 +75,42 @@ causing ADDRESS clause. Invalid STEM counts signal SYNTAX 54.1 there. A native
 callback's condition and diagnostic are copied by the approved `rxvml`
 response bridge without changing its callback ABI.
 
+### Direct command binding plan
+
+`RexxClassicAddressCommand.withBinding(kind:string,name:string)->void` appends
+one ordered `VAR` or `STEM` descriptor. Names use the existing binding
+convention: a scalar name or a stem basename. The compiler supplies checked
+lexical names. Adding a descriptor reads no pool values and does not scan the
+command text or dispatch it.
+An unsupported normalized kind signals `INVALID_ARGUMENTS` without adding a
+descriptor or dispatching the command.
+
+`run()` honors trace inhibition before binding reads and preserves WITH
+validation precedence. It then snapshots descriptors once, in order, into a
+run-local request. VAR reads the raw symbol value. STEM reads literal `0..count`
+through `stemSymbolValue`; count must be whole, nonnegative and representable,
+otherwise `syntaxError()` reports 54.1. Strong run-local stem owners remain live
+through dispatch, including its existing by-value request wrappers. The request
+is initialized even when a built-in empty command skips dispatch. A repeated
+run takes fresh snapshots.
+
+After dispatch and WITH output/error application, descriptors copy back in
+their original order, before RC/.RC/.RS finalization. VAR writes only when a
+VAR response update matched, so a previously unset scalar stays unset without
+an update; an explicit empty update remains a write. STEM merges response
+updates, validates final literal `0` before writing that stem, then always
+copies the final counted range `0..count` through `setStemValue`. This includes
+direct provider mutations without response records and may materialize numeric
+cells in the bound range. Stem defaults, nonnumeric and out-of-count tails,
+and EXPOSE aliases survive. No arbitrary-tail enumeration or mutation tracking
+is performed. Bindings and borrowed workers retain the shared protocol's
+existing per-binding response scan and alias/last-update rules.
+
+`testRexxClassicAddressCommand.crexx` uses an in-process B environment to check
+these owners, projection order, no-response growth/shrink, count failures,
+repeat snapshots and completion state. This shared B bridge does not close the
+research C frontend's command-anchor, warning, handler or host/platform work.
+
 An expression-only Classic clause captures the command text once, then copies
 the frame's active environment and lasting connections into the same command
 adapter. It uses the same request, RC/.RC/.RS update, SYNTAX and condition

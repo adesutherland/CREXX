@@ -3040,6 +3040,98 @@ retain their existing owners.
 representative RXAS checks own independent qualification. QUEUE-AC05 and whole
 LC-I-18 remain open; no queue runtime algorithm or target export was added.
 
+<a id="address-b-binding-bridge"></a>
+
+## ADDRESS shared B binding bridge prerequisite
+
+Before C ADDRESS/implicit-command integration, extend the existing B command
+adapter so it can project a checked lexical binding plan into the current
+`_rxsysb` environment object/request/response protocol. This prerequisite adds
+no C syntax/IR/target export, native callback protocol or new queue/environment
+algorithm. Keyed C command ownership, source-token anchor collection and C
+warning records have their separate exact contract and qualification.
+
+The additive public interfaces are:
+
+- `RexxClassicAddressCommand.withBinding(kind:string,name:string)->void` records
+  ordered VAR/STEM kind/name descriptors only. The supported names follow the
+  existing binding convention (scalar name or stem basename); the C frontend
+  supplies checked lexical names. Reuse existing protocol normalization and
+  matching. No pool read, command-string scan, snapshot or dispatch occurs here.
+  An invalid normalized kind signals `INVALID_ARGUMENTS` before changing the
+  retained descriptor plan.
+- `_address_apply_response_var_ref(response:reference addressresponse, name:string,
+  target:reference string)->int` applies the existing VAR matching/last-update
+  loop to a scoped linked target and returns 1 only when an update matched.
+- `_address_apply_response_request_stem_ref(response:reference addressresponse,
+  request:reference addressrequest,index:int,name:string)->void` applies the
+  existing STEM matching loop to the selected request binding.
+
+Keep the old by-value/expose helper signatures as compatibility delegates to
+these workers. Preserve their existing matching/alias/order semantics and all
+source doc tags. Workers first-bind scoped dereference aliases; no whole
+request/response copy is made per binding, no new matched result is added to the
+STEM worker, and no borrow escapes the run. Matching remains the existing
+O((VAR+STEM descriptors) × response updates) scan; no new generic index/cache.
+
+Each `run()` builds strong local request/response and counted-stem owners. Keep
+the existing trace-inhibit early return before binding reads/count validation/
+dispatch. Existing WITH endpoint validation retains precedence; after it,
+snapshot each descriptor once, in descriptor order, before dispatch. VAR uses
+the existing raw variable-pool value. STEM uses `stemSymbolValue` on literal
+`0..count`, the existing whole/nonnegative count54.1 policy and a standard
+address stem. Construct the request and attach its snapshots before the built-in
+empty-command branch, so the skipped dispatch still has initialized owners.
+Repeat runs take fresh snapshots; the command retains only its descriptor plan.
+
+After dispatch, retain the existing WITH output/error application, then apply
+bindings in descriptor order before the existing RC/.RC/.RS finalization. VAR
+writes to the live pool only when the new worker returns 1, preserving an unset
+variable when there is no update; an explicit empty update remains a real write.
+For every STEM, merge response updates into its request stem, validate final
+literal0 before any writes for that stem, and **always copy final literal0..count**
+back through `setStemValue`. This includes direct request-stem mutations without
+response binding records, as used by existing providers. The counted projection
+can materialize those numeric cells; it preserves stem default/nonnumeric/out-of-
+count cells and EXPOSE aliases. Do not gate STEM copyback on a response-match
+flag, add mutation hashes/counters, resnapshot the initial stem or enumerate
+arbitrary tails. Status, condition, redirect and original failure ownership
+remain with the existing shared B adapter; full C handlers/host scope remain open.
+
+1. **ADDR-B-AC01:** old helper ABI/behavior and new borrowed workers have
+   independent no-match/empty/Unicode/NUL/alias/last-match controls. Response
+   ownership is unchanged; request mutation is limited to the selected stem.
+2. **ADDR-B-AC02:** one in-process B provider checks real dispatcher snapshots,
+   matched-only VAR writes/unset preservation, ordered EXPOSE effects and multiple
+   counted stems. No native/OS provider implementation is introduced.
+3. **ADDR-B-AC03:** response updates and no-response direct stem growth/shrink
+   reach final literal0..count; default/other tails and aliases survive. Invalid
+   snapshot/final counts report54.1 before that stem's copyback.
+4. **ADDR-B-AC04:** trace inhibition skips binding work/dispatch, built-in empty
+   commands have valid owners, repeated runs snapshot afresh, and existing
+   RC/.RC/.RS/condition/redirect behavior remains checked.
+5. **ADDR-B-AC05:** representative readable RXAS proves scoped reference workers
+   and callers avoid per-binding full-container copies, retain local stem owners
+   through dispatch and end borrows before release. Normal Debug compiler/asm/VM
+   cells and directly affected old protocol controls qualify the additive API.
+6. **ADDR-B-AC06 — open C/shared scope:** C source anchors/keyed command admission,
+   warnings, handler/resumption/TRACE, native relay and declared host/platform
+   closure retain their separate STEP07/08 contracts and gates.
+
+- **ADDR-B-STEP01 — complete:** record/internal review of exact interfaces,
+  ordering and independent expectations; AC01–06. QUEUE qualification/commit
+  precedes B writes.
+- **ADDR-B-STEP02 — complete:** worker owns only the two shared B sources,
+  old/new independent library tests and owning B API docs. Integrator owns CMake/architecture/PLAN;
+  one explicitly leased worker owns all builds/tests while this prerequisite is
+  prepared. No simultaneous C preparation or native compiler/VM edits; AC01–05.
+- **ADDR-B-STEP03 — locally qualified for AC01–05:** inspect the actual producer
+  closure before preparation, report genuine lexer/generator identity invalidation
+  before a long C run, and qualify focused B/toolchain/RXAS and compatible old
+  helpers before the reviewed local
+  prerequisite commit; AC01–05. Preserve source hashes/freshness and the temporary
+  build-metadata pin; no broad old C matrix or per-slice sanitizer campaign.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

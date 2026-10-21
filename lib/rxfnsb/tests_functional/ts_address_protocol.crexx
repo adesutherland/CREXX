@@ -95,6 +95,50 @@ errors = errors + check(stem.get("1") = "changed", "response stem writeback")
 call _address_apply_response_request_stem(response, request, 2, "items")
 errors = errors + check(request.get_binding_stem_value(2, "1") = "changed", "request stem writeback")
 
+/* Borrowed workers preserve the old matching loop and never own the inputs. */
+payload = "é雪" || ('00'x as .string) || "tail "
+updates = .addressresponse(11, "FAILURE")
+call updates.add_updated_binding("var", "first", "alias", "earlier", "")
+call updates.add_updated_binding("VAR", "second", "ALIAS", payload, "")
+call updates.add_updated_binding("var", "empty", "empty", "", "")
+call updates.add_updated_binding("stem", "items.1", "items", "earlier", "")
+call updates.add_updated_binding("stem", "1", "ITEMS", payload, "")
+call updates.add_updated_binding("stem", "items.2", "items", "", "")
+target = "unchanged"
+matched = _address_apply_response_var_ref(reference updates, "absent", reference target)
+errors = errors + check(matched = 0 & target == "unchanged", "borrowed VAR no match leaves target")
+matched = _address_apply_response_var_ref(reference updates, " alias ", reference target)
+errors = errors + check(matched = 1 & target == payload, "borrowed VAR alias last match exact Unicode NUL")
+target = "old"
+matched = _address_apply_response_var_ref(reference updates, "empty", reference target)
+errors = errors + check(matched = 1 & target == "", "borrowed VAR matched empty is a write")
+target = "old"
+call _address_apply_response_var(updates, "alias", target)
+errors = errors + check(target == payload, "old VAR delegate exact Unicode NUL")
+call _address_apply_response_var(updates, "absent", target)
+errors = errors + check(target == payload, "old VAR delegate no match")
+call _address_apply_response_var(updates, "empty", target)
+errors = errors + check(target == "", "old VAR delegate matched empty")
+
+first_stem = .standardaddressstem()
+second_stem = .standardaddressstem()
+borrowed_request = .addressrequest("cms", "pure", _noredir(), _noredir(), _noredir())
+call borrowed_request.add_stem_binding_plan("items", "items", first_stem)
+call borrowed_request.add_stem_binding_plan("other", "other", second_stem)
+call borrowed_request.set_binding_stem_value(1, "0", "2")
+call borrowed_request.set_binding_stem_value(1, "1", "old first")
+call borrowed_request.set_binding_stem_value(1, "2", "old second")
+call borrowed_request.set_binding_stem_value(2, "1", "keep other")
+call _address_apply_response_request_stem_ref(reference updates, reference borrowed_request, 1, " items ")
+errors = errors + check(borrowed_request.get_binding_stem_value(1, "1") == payload, "borrowed STEM alias last match exact Unicode NUL")
+errors = errors + check(borrowed_request.get_binding_stem_value(1, "2") == "", "borrowed STEM explicit empty")
+errors = errors + check(borrowed_request.get_binding_stem_value(1, "0") == "2", "borrowed STEM untouched count")
+errors = errors + check(borrowed_request.get_binding_stem_value(2, "1") == "keep other", "borrowed STEM selects only one binding")
+call _address_apply_response_request_stem(updates, borrowed_request, 1, "items")
+errors = errors + check(borrowed_request.get_binding_stem_value(1, "1") == payload, "old STEM delegate exact Unicode NUL")
+errors = errors + check(updates.get_updated_binding_count() = 6 & updates.get_rc() = 11, "workers leave response container unchanged")
+errors = errors + check(updates.get_updated_binding(2).get_value() == payload, "workers retain original response payload")
+
 arguments = .string[]
 arguments[1] = "one"
 arguments[2] = "two"

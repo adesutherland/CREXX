@@ -71,6 +71,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 | **PULL-STEP01–03** | Locally qualified shared-parser profile, PULL-AC01–04; AC05 remains shared host/condition/platform work. |
 | **PUSH-STEP01–03** | [Selected-queue profile](doc/architecture.md#push-contract) locally qualified for AC01–04; AC05 stays shared scope. |
 | **QUEUE-STEP01–03** | [Tail-insertion profile](doc/architecture.md#queue-contract) locally qualified for AC01–04; neutral insertion controls are shared with PUSH. AC05 stays shared scope. |
+| **ADDR-B-STEP01–03** | [Shared B binding bridge](doc/architecture.md#address-b-binding-bridge) locally qualified for AC01–05 as a separate prerequisite. AC06 keeps C/host/condition scope open. |
 | **ADDRESS / implicit commands** | Record exact C/shared-B/warning contracts and review required prerequisites before their separate implementation commits; existing runtime algorithms remain owners. |
 
 No native C implementation, second runtime algorithm, push or hosted campaign

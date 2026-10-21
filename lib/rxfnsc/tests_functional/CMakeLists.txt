@@ -12,6 +12,7 @@ set(REXXBINS
   testRexxActivationArguments
   testRexxClassicContext
   testRexxClassicParse
+  testRexxClassicAddressCommand
   testRexxClassicConditionEvent
   testRexxRuntimePools
   testRexxDoState
