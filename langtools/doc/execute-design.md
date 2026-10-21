@@ -8,6 +8,8 @@ remain independent of this package.
 
 Build target `rxfnsl_execute`. A consumer imports `llirexecute` and links the
 execute image with `rxfnsl-analysis.rxbin`, `rxfnsl.rxbin` and `library.rxbin`.
+Normal SDK installation supplies the separately named image; `stage-l-libraries`
+prepares all four SDK images without adding them to core/bootstrap imports.
 The [independent fixture](../tests/library/ts_llirexecute.crexx) shows an entire
 non-cREXX family, graph, registry and execution. Compiler-specific adapters and
 the Classic runtime feasibility fixture live under research, outside this
@@ -25,9 +27,9 @@ handlers are separate from `llir.evaluator` constant-fold callbacks, and saved
 IR cannot load host code.
 
 `plan(reference graph,registry,work,bytes)` preflights the entire frozen module,
-including unreachable operations, before execution. It owns a module snapshot;
-the registry's exact schema/family-version manifest must match that module.
-replacing or releasing the original graph does not invalidate that snapshot.
+including unreachable operations, before execution. The registry's exact
+schema/family-version manifest must match that module. The plan owns a module
+snapshot; replacing or releasing the original graph does not invalidate it.
 The prototype admits core constants, arguments, optional arguments, argument
 presence, slots, jumps, branches and returns. `core.protect`, unsupported
 control, unregistered services, opaque effects and borrowing/escaping operand

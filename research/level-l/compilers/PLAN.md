@@ -149,7 +149,7 @@ remains read-only, no push is authorized, and INTERPRET stays last.
 | **Conditions and observations** | **Complete local increment:** CALL ON/OFF, delayed delivery/resumption and buffered HALT; configured conditions, SIGL/CONDITION/origins, authored clause/clocks and field/drop observations, including handler pool/resource restoration. Wider host producers/platforms and dynamic execution retain the groups below. | CCOND-AC01–08 / STEP01–03; CALL4; C-OBS; condition portions of STEP03/07 and instruction criteria. |
 | **Calls and host integration** | Remaining internal/external call and activation semantics: arguments/omissions, RESULT and RETURN/EXIT completion, PROCEDURE/private/shared pools and EXPOSE aliases, inherited/restored numeric/ADDRESS/TRACE state, provider/callback entry and teardown. Preserve already-qualified ordinary recursion and call behavior. Complete COMMAND/FUNCTION/SUBROUTINE host invocation with exact-length/empty/NUL arguments/results, live pool access windows, initial ADDRESS/stream/queue selection, I/O adapters and NUL transport, real clock/HALT producers, resource failures, concurrent-context isolation and declared platform adapters. CALL ON/OFF and event delivery remain with conditions. | C-ACT/C-HOST; call portions of C-POOL; STEP03/06/08; CPROC/CCALL/CEXT/RRET/CEXIT and host portions of queue/stream/ADDRESS criteria; BF05/06/08/09 integration dependencies. |
 | **Language functionality: source, expressions and BIFs** | Remaining syntax/header controls, Unicode names/source inventory, operators/numeric semantics, exact diagnostics and dead-source validation; outstanding variable/stem and instruction semantics outside the condition/call/host groups; complete C context and behavior contracts for the 95 already-bound BIF names, reusing the shared B bodies. INTERPRET is the last feature in this group, with call/lifecycle integration and compiler support supplied by their owners. | C-SRC/C-EXPR/C-NUM/C-POOL/C-UNI; STEP04–06; BF01–09 language contracts; STEP11 last. |
-| **Compiler and emitter** | **Group 4 STEP01–06 locally complete:** optional neutral L analyses/proofs and RXAS records/allocation, C context coalescing and indexed construction, with preserved typed consumers. The [architecture](doc/architecture.md#group4-infrastructure-proposal) owns conservative lifetime/control limits. STEP07 IR-execution feasibility and STEP08 wider closure remain open. Further C-OPT opportunities retain their owners; B-SEED-ALIAS remains a separate native repair. | G4-AC01–10 / STEP01–08; STEP01/02/09; C-ABI; C-OPT-01–06; CFC-AC07/10–12; B-SEED-ALIAS. |
+| **Compiler and emitter** | **Group 4 STEP01–08 locally delivered for their recorded profiles:** optional neutral L analyses/proofs, RXAS records/allocation and bounded IR execution, with C integration and four-image package closure. The [architecture](doc/architecture.md#group4-infrastructure-proposal) owns conservative lifetime/control limits. Full G4/CFC acceptance remains open; further C-OPT opportunities and both native B seed defects retain their owners. | G4-AC01–10 / STEP01–08; STEP01/02/09; C-ABI; C-OPT-01–06; CFC-AC07/10–12; B-SEED-ALIAS; B-SEED-INLINE-RECEIVER. |
 
 Calls and host integration owns activation/pool/alias entry, inheritance,
 arguments/results, completion and teardown, including later INTERPRET integration.
@@ -167,7 +167,7 @@ acceptance work across these groups; they are not additional language features.
 
 ### Group 4: enabling architecture and delivery
 
-**Approved implementation: G4-STEP01–07.** Adrian selected Group 4 next and clarified that Level L may supply
+**Approved implementation: G4-STEP01–08.** Adrian selected Group 4 next and clarified that Level L may supply
 specific RXAS/instruction and cREXX IR support alongside generally reusable
 infrastructure. Keep a neutral core plus optional target/semantic packages,
 with one algorithm/data owner and no reverse dependency on a source frontend.
@@ -176,7 +176,15 @@ the contracts usable by later B/G, Classic/O, assembler and RexxScript work.
 Those future product migrations are not silently added to C-first delivery.
 Use Sol 6.1 Extra High workers, proportionate component checks and a local
 commit without pushing. STEP07 is a separate bounded execution feasibility
-increment; formal compiler QA and INTERPRET remain later.
+increment; STEP08 completes package/C integration under the
+[recorded closure contract](doc/architecture.md#group4-package-closure-contract).
+Formal compiler QA and INTERPRET remain later.
+
+STEP01–08 are locally delivered for their recorded profiles. Open G4 criterion
+labels retain wider capability/optimization outcomes and later assurance, not
+another pending package/C migration. Accepted conservative profiles, named
+C-OPT/native owners and full CFC criteria are not closed by this development
+qualification.
 
 The outcome is an explicit semantic-IR and target-IR pipeline: shared flow and
 variable/lifetime facts support checked transformations; target liveness and
@@ -208,18 +216,19 @@ gates. This does not approve new opcodes, wire formats or INTERPRET implementati
 | **G4-STEP05 — complete** | Deterministic whole-cell assignment and an independent constraint/interference validator support same-block plain scalar reuse and proved C context-slot coalescing across blocks. References, owned values, protected/cross-label/loop storage, presence, windows and release points retain conservative identities. C and the existing typed consumer use one target service; no packing/spilling; AC02–05/09. |
 | **G4-STEP06 — complete** | C context transport removes redundant cells/copies without an optimization flag; function/owner indices remove repeated membership filtering. Structural checks retain real caller arguments and helper/cleanup costs. C-OPT-01–06 retain the architecture's ownership/closure checks for further setup, numeric, binding, call and machine opportunities; no fully optimized or speed claim. B-SEED-ALIAS stays separate; AC06/09. |
 | **G4-STEP07 — complete; bounded feasibility increment** | Optional `llirexecute` implements the [recorded execution contract](doc/architecture.md#group4-execution-contract). Independent control/presence/bytes and owned Classic VALUE/LENGTH/numeric fixtures cover calls, failure, suspension/resume/discard, cleanup and limits; one frozen graph also emits RXAS against independent expectations. The [suitability decision](doc/architecture.md#group4-execution-assessment) retains current RexxScript and Classic routes pending full integration proof; AC07/08. No INTERPRET source feature or language migration. |
-| **G4-STEP08 — todo** | Complete shared-package/C migration, documentation and focused closure checks; AC01/09/10. Deliver STEP02–06 as the C enabling sequence before dependent Group 2/3 mechanisms. STEP07 can follow without blocking unrelated static language work, but its decision precedes final STEP11. Formal QA still follows feature completion. |
+| **G4-STEP08 — locally qualified** | Four-image SDK stage/inventory, actual package/import/source controls and independent public core/RXAS clients establish the [package closure contract](doc/architecture.md#group4-package-closure-contract); AC01/09/10. Focused C contracts and maintained condition/SAY/numeric/private-recursion/TRACE sources plus an affected typed consumer preserve the delivered pipeline. STEP02–07 conservative profiles remain explicit. Formal QA follows feature completion; INTERPRET stays last. |
 
 STEP01–06 are one locally qualified enabling increment. Generic graph/effect and
 RXAS fixtures, C protocol/limit cases, maintained native C fixtures and an
 affected typed control own the component expectations. Public package guides
-describe independent use and static runtime separation. Full G4 criterion
-closure remains open with STEP08. STEP07 has a separate focused Debug/rxbvm
-prototype qualification and public package contract; its admitted profile does
-not execute complete C22 or establish live compiled-caller ownership. All CFC
-criteria and formal compiler QA remain open. Retained optimization opportunities
-do not create a new language feature or change the order of Groups 2/3 and final
-INTERPRET.
+describe independent use and static runtime separation. STEP07 has a separate
+focused Debug/rxbvm prototype qualification and public package contract; its
+admitted profile does not execute complete C22 or establish live compiled-caller
+ownership. STEP08 locally qualifies package/C integration with exact public
+selection boundaries and representative caller/helper RXAS, reusing unchanged
+earlier proof. Full G4 criterion closure, the named capability/optimization
+outcomes, all CFC criteria and formal compiler QA remain open. These do not
+change the order of Groups 2/3 and final INTERPRET.
 
 Each implementation increment uses early coherent source/first-target review,
 batched material fixes and the smallest meaningful normal configuration/VM.

@@ -25,7 +25,9 @@ imports `llrxas`, and imports `llrxascatalog` when it needs instruction queries.
 Its runtime link includes `rxfnsl-rxas.rxbin` and `library.rxbin`. The package
 does not require a source compiler or the general analysis package at runtime.
 It is separate from the core `rxfnsl.rxbin` image and grammar bootstrap. Normal
-bytecode installation installs the separately named image.
+bytecode installation installs the separately named image; `stage-l-libraries`
+prepares it alongside core, analysis and execution packages. This distribution
+selection does not introduce those other packages into an RXAS consumer.
 
 The build-time native extractor links the existing `opdata.c` and
 `rxopmeta.c`. Its generated B module is a checked view of `rxops.h`,

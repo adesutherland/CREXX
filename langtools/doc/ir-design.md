@@ -15,6 +15,11 @@ execution through trusted handlers; constant evaluators below do not execute
 effectful programs. Execution support does not imply that an arbitrary family
 or every structurally valid IR control is executable.
 
+`stage-l-libraries` prepares all four SDK images for normal bytecode installation.
+Their import/link closures stay separate: build the individual `rxfnsl` target
+for the core alone. Grammar bootstrap imports only core/library, and a static
+program needs only the runtime services selected by its emitted code.
+
 ## Optional analysis and proof services
 
 Build `rxfnsl_analysis` and link `rxfnsl-analysis.rxbin` with `rxfnsl.rxbin` and

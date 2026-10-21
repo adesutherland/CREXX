@@ -1213,4 +1213,22 @@ endforeach()
 if("c" IN_LIST _languages)
   list(APPEND _selected llctarget)
 endif()
-crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS ${_selected} rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS ${_selected}
+  rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute rxlang rxlanglib
+  llrxastext llfileoutput llbinmeta)
+
+# The generic test directory is configured before these selected host products.
+# Check their actual member/import controls here without rebuilding in the test.
+set(_package_closure_args)
+foreach(_language IN LISTS _languages)
+  list(APPEND _package_closure_args --language "${_language}")
+endforeach()
+add_test(NAME llcompiler_package_closures COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_SOURCE_DIR}/langtools/tests/check-package-closures.py"
+  --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" ${_package_closure_args})
+set_tests_properties(llcompiler_package_closures PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEVEL_L_PACKAGE_CLOSURES[|]PASS" TIMEOUT 60
+  LABELS "level-l;compiler;component")
+crexx_register_test_prep_targets(TESTS llcompiler_package_closures TARGETS ${_selected}
+  rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute rxlang
+  llrxastext llfileoutput llbinmeta)

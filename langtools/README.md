@@ -181,7 +181,7 @@ RexxScript CTests execute prebuilt programs, with no nested build/test matrix.
 
 ## Products and public services
 
-`stage-l-libraries` builds the independent `rxfnsl.rxbin` SDK.
+`stage-l-libraries` builds the core SDK and its three separately named packages.
 `stage-l-tools` builds `rxlang`, `rxlanglib.rxbin` and the generic tool helpers.
 Both belong to normal `stage-product`. Research compilers have their own opt-in
 stage and install component; neither SDK nor Level L imports them.
@@ -190,7 +190,22 @@ Optional IR packages have separate targets and images:
 `rxfnsl_analysis` supplies [graphs and proofs](doc/ir-design.md),
 `rxfnsl_rxas` supplies [RXAS records and register assignment](doc/rxas-design.md),
 and `rxfnsl_execute` supplies the [bounded execution prototype](doc/execute-design.md).
-Select them explicitly; they do not enter grammar bootstrap or static targets.
+Select them through imports and linking; normal SDK installation delivers all
+four images. Building the individual `rxfnsl` target prepares only the core and
+its base dependency. Optional packages do not enter grammar bootstrap or static
+targets merely because they ship with the SDK.
+
+| Image / target | Public modules | Runtime image dependencies |
+|---|---|---|
+| `rxfnsl.rxbin` / `rxfnsl` | Core source, AST, IR and transformations | `library.rxbin` |
+| `rxfnsl-analysis.rxbin` / `rxfnsl_analysis` | `llirgraph`, `llireffects` | Core and `library.rxbin` |
+| `rxfnsl-rxas.rxbin` / `rxfnsl_rxas` | `llrxascatalog`, `llrxas` | `library.rxbin` |
+| `rxfnsl-execute.rxbin` / `rxfnsl_execute` | `llirexecute` | Core, analysis and `library.rxbin` |
+
+The [RXAS guide](doc/rxas-design.md#construct-one-function) supplies a complete
+independent producer. Its emitted program runs without these SDK images. The
+[execution guide](doc/execute-design.md) describes the admitted prototype and
+continuation ownership; it does not promise a full Classic or RexxScript backend.
 
 `llgenerate..request(source, format, filename, limits, rxl, bytes)` accepts exact
 binary source and returns `status()`, `error()` and owned `output()`. Defaults are

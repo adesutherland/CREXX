@@ -3993,7 +3993,7 @@ partial-delivery or complementary-rerun tasks; qualify the whole instruction.
 
 ## Group 4: reusable IR, proofs, RXAS and execution
 
-**STEP01–06 are locally implemented; STEP07 execution feasibility is approved.** Adrian selected
+**STEP01–08 are locally delivered for their recorded profiles; full G4/C acceptance remains open.** Adrian selected
 Group 4 as the next enabling work and clarified that Level L can offer specific
 RXAS/instruction and cREXX IR facilities while remaining useful to unrelated
 infrastructure. The [existing plan](../PLAN.md#group4-infrastructure-plan) owns
@@ -4084,7 +4084,59 @@ or conservative. Required costs and later opportunities stay explicit rather
 than being called fully optimized. B-SEED-ALIAS remains a separate native repair.
 Independent graph/effect/constraint cases and selected native flow/instruction
 and C condition fixtures establish this increment in one Debug/rxbvm lane.
-IR execution, INTERPRET, full compiler QA and production speed claims are absent.
+These static services do not require the optional IR runner. INTERPRET, full
+compiler QA and production speed claims remain outside this local integration.
+
+<a id="group4-package-closure-contract"></a>
+
+### STEP08 package and C integration contract
+
+Preserve the existing normal SDK distribution: `rxfnsl`, `rxfnsl-analysis`,
+`rxfnsl-rxas` and `rxfnsl-execute` are separately named images installed by
+their existing owners. Optional means explicit import/link/runtime selection,
+not a new default-install feature switch. `stage-l-libraries` must prepare all
+four delivered images, and public/research product inventories must name their
+actual producers. The individual `rxfnsl` target, grammar bootstrap and generic
+tool import roots remain core-only. No duplicate image producer, SDK source
+move, wire/schema change or native frontend edit is required.
+
+The focused closure checker reads actual prepared import/link manifests and
+owning source imports. Core and bootstrap admit only their existing base/core
+closure; analysis admits core/library; RXAS admits library and the generated
+canonical ISA view; execution admits core/analysis/library. C/G hosts select
+analysis/RXAS by actual module selectors and exclude execution and the other
+source frontend. The static C adapter/runtime excludes every L/compiler image.
+Catalogue freshness continues to use the canonical native owner inputs.
+
+Reuse the delivered C migration: `llccompiler` transforms through existing
+`llirservices`, refreshes owner-bound protocol proofs after graph change, and
+`llcrxas` consumes the indexed graph, checked C22 context/effects and typed RXAS
+records/allocation. Root, body, provider, delayed CALL and TRACE helper
+instructions share that target service; metadata/declarations keep their
+existing writer. No new C optimizer or semantic migration is commissioned
+without an actual integration defect. The STEP07 runner stays outside static C.
+
+An independent public witness compiles the maintained RXAS guide's complete
+producer using only `library` and `rxfnsl-rxas`, then assembles/links/runs its
+four-cell target without SDK/compiler images and checks hand-derived output.
+A core-only client and missing-package admission refusals establish the public
+selection boundary. Use isolated import/runtime roots and explicit tools;
+neither native source-compiler fallback nor executable-directory imports are
+allowed for the new C or public closure requests.
+
+Review coherent manifests/source and first representative C body/helper RXAS
+early, including simple SAY. Reuse unchanged STEP02–07 component proof and
+prepared images; qualify the existing C infrastructure contracts and maintained
+condition/SAY/numeric/private-recursion/TRACE sources, one affected typed
+calls/scalars control, and the new package/public witness in one normal Debug
+opt/IR-on/rxbvm lane. Preparation consists of small consumer builds and selected
+fixture compilation, not another bootstrap or compiler-wide QA cycle.
+
+STEP08 closes this development integration increment under the recorded
+conservative control/lifetime/allocation profiles. C-OPT opportunities and both
+native B seed defects retain named owners/closure checks. Full G4/CFC assurance,
+actual installed/relocated/platform delivery and formal compiler QA remain at
+their existing milestones; INTERPRET is still last.
 
 ### What exists and what does not
 
@@ -4164,7 +4216,7 @@ conversion is not a prerequisite for this work.
 
 ### Flow, effects and variable proofs
 
-Extend the existing IR services with an indexed graph owner: per-function
+The optional analysis package supplies an indexed graph owner: per-function
 blocks/operations, predecessors/successors and def/use lists, then reachability,
 reverse-postorder/dominance, requested SCC/loop structure and backward liveness.
 Build shared indices once per immutable revision. Demand optional analyses
@@ -4174,7 +4226,7 @@ mechanical scheduling/index code where appropriate, while retaining their
 different graph and lattice meanings. Do not introduce a competing solver for
 each compiler or target.
 
-The effect contract must become structured: reads/writes to named state domains,
+The structured effect contract separates reads/writes to named state domains,
 observable uses, allocations/releases, possible failure/transfer, operand
 borrowing/escape and result availability. A string such as `context` is not
 enough to prove that a pool binding or receiver remains unchanged. Trusted
@@ -4453,7 +4505,8 @@ The fixture handler has explicit input/call/write/event caps. Public execution
 calls are synchronous and reject same-session handler reentry; cancellation
 acts at owned boundaries and never preempts callback code.
 
-STEP08 retains package/C integration closure. Any RexxScript migration needs
+STEP08 completes package/C integration under the recorded conservative profiles.
+Any RexxScript migration needs
 its own parity proof; final STEP11 retains the complete LC-87/CFC-AC05 bridge,
 resource, source and platform obligations before choosing an alternative.
 There is no formal research benchmark gate and no performance/replacement claim.
@@ -4493,6 +4546,17 @@ and whole-C acceptance stay at their named later gates.
 | C-OPT-04: pool/name access | C binding/alias proof, runtime lookup | EXPOSE, DROP, compound-tail mutation, VALUE and callbacks invalidate cached binding/value facts |
 | C-OPT-05: calls/BIFs | C ABI selector and existing short-call forms | Omitted/empty/RESULT, failure cleanup and hidden helper work; stateful helpers are not assumed pure |
 | C-OPT-06: machine operations | RXAS peephole/procedure proof | Signal/TRACE/reference/cleanup equivalence independent of compiler-only annotations |
+
+The simple constant-SAY path still conservatively constructs the root
+activation, pool, configuration and borrowed context, installs numeric state,
+checks entry eligibility and retains cold error relays. Literal construction,
+owned SAY transport and EXIT presence/completion remain visible helper work.
+Requirement-based setup specialization belongs to C-OPT-01, numeric/context
+specialization to C-OPT-03, and shorter call/completion paths to C-OPT-05; each
+must preserve its table's negatives and ownership obligations. The current
+bounded allocation/context/index work does not close those optimization
+opportunities or promise minimal frames. STEP08 package closure does not add
+another optimizer increment.
 
 L core supplies algorithms; C supplies language premises; RXAS proves machine
 rewrites; VM executes documented operations. The optional L packages own neutral

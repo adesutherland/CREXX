@@ -169,6 +169,16 @@ executor, and the existing compiled-image INTERPRET design remains authoritative
 The [execution assessment](architecture.md#group4-execution-assessment) owns the
 remaining route decision and required bridges; INTERPRET is still last.
 
+STEP08 integrates the four-image SDK delivery stage and explicit product
+inventories. Actual package/import controls keep core/bootstrap, optional
+analysis/RXAS/execution, C/G hosts and static C runtime separated. Independent
+public clients select exact image roots; the RXAS guide's producer emits a
+checked four-cell program that runs with the VM alone. C integration retains
+the indexed graph/effects/target pipeline and its C22 ABI; no source-language
+feature or native frontend changes follow from package closure. The owning
+[contract](architecture.md#group4-package-closure-contract) distinguishes this
+focused development closure from installed/platform and formal acceptance.
+
 ## Material work remaining
 
 Full expression coverage, including binary strict inequality `\==`, remains

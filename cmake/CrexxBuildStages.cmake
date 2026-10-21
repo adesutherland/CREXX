@@ -74,7 +74,9 @@ crexx_add_build_stage(stage-g-library
 
 crexx_add_build_stage(stage-l-libraries
         DESCRIPTION "Level L SDK libraries"
-        REQUIRED_TARGETS rxfnsl)
+        # Normal delivery includes the separately selected import/link images.
+        # The individual rxfnsl target remains the minimal core/bootstrap root.
+        REQUIRED_TARGETS rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute)
 crexx_add_build_stage(stage-l-tools
         DESCRIPTION "Level L generator and callable tooling"
         REQUIRED_TARGETS rxlanglib rxlang llrxastext llfileoutput llbinmeta)

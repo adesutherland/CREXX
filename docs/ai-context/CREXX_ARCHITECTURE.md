@@ -95,6 +95,9 @@ not enter grammar bootstrap or static application targets. Source-language
 policy and runtime algorithms stay in their existing owners; see the public
 [IR guide](../../langtools/doc/ir-design.md) and
 [execution prototype](../../langtools/doc/execute-design.md).
+`stage-l-libraries` prepares all four SDK images for normal installation;
+optional refers to import/link/runtime selection. The individual `rxfnsl`
+target and grammar bootstrap retain their core/library closure.
 
 The new compilers live in `research/level-l/compilers/`. Classic owns an
 independent frontend, semantic family, RXAS selector, service and main. G uses

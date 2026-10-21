@@ -518,7 +518,31 @@ add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}
   -DBUILD=${CMAKE_BINARY_DIR} -DSUFFIX=${CMAKE_EXECUTABLE_SUFFIX}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/check-products.cmake")
 set_tests_properties(levell_product_inventory PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_PRODUCTS[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
-crexx_register_test_prep_targets(TESTS levell_product_inventory TARGETS rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+crexx_register_test_prep_targets(TESTS levell_product_inventory
+  TARGETS rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute
+    rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+
+# Inspect real prepared package/import manifests; this check never rebuilds.
+add_test(NAME levell_package_closures COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-package-closures.py"
+  --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>")
+set_tests_properties(levell_package_closures PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEVEL_L_PACKAGE_CLOSURES[|]PASS" TIMEOUT 60
+  LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS levell_package_closures
+  TARGETS rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute
+    rxlang llrxastext llfileoutput llbinmeta)
+
+if(TARGET rxbvm)
+  # One guide-derived producer and its independent static target, on one VM.
+  add_test(NAME levell_public_packages_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/check-public-packages.py" --build "${CMAKE_BINARY_DIR}")
+  set_tests_properties(levell_public_packages_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "LEVEL_L_PUBLIC_PACKAGES[|]PASS" TIMEOUT 300 RUN_SERIAL TRUE
+    LABELS "level-l;component")
+  crexx_register_test_prep_targets(TESTS levell_public_packages_opt_rxbvm
+    TARGETS library rxfnsl rxfnsl_rxas rxc rxas rxlink rxbvm)
+endif()
 
 # Independent lexical reuse: one ordinary prepared service and one intentionally
 # unprepared manual service. Each image has one producer and a private import root.

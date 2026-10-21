@@ -60,8 +60,9 @@ checks during development does not remove later milestone obligations.
 
 The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and
 [architecture](architecture.md#group4-infrastructure-proposal) own approved
-STEP01–07, including the
-[bounded execution contract](architecture.md#group4-execution-contract).
+STEP01–08, including the
+[bounded execution contract](architecture.md#group4-execution-contract) and
+[package/C closure contract](architecture.md#group4-package-closure-contract).
 The reviewed contract does not commission new ISA work, language migrations
 or INTERPRET.
 WP-02 owns shared graph/analysis/proof and optional execution coordination;
