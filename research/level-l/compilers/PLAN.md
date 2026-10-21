@@ -7,8 +7,8 @@ host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
 seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 
-**Complete C remains open. Last locally delivered profile: LC-I-15 EXIT.
-Next: selected-callable metadata prerequisite, then CALL3 static statement providers.** PARSE was delivered ahead of its queue position as the shared
+**Complete C remains open. Last locally delivered profile: CALL3 static statement
+providers. Next: LC-I-16 PULL after its reviewed shared-parser contract.** PARSE was delivered ahead of its queue position as the shared
 executor prerequisite for ARG; this does not skip PROCEDURE or close PARSE.
 
 [Requirements](doc/levelc-requirements.md) owns the full item crosswalk;
@@ -38,9 +38,9 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | <a id="current-action-iterate"></a><a id="current-iterate-proof"></a>**LC-I-10 ITERATE / CLC-STEP05** | Nearest/named targets and selected UNTIL/advance/entry continuation locally delivered. | Same observation/dynamic owners as LEAVE; preserve final FOR advance and selected owner. |
 | <a id="current-action-arg"></a>**LC-I-11 ARG / CLC-STEP06** | Complete-template `PARSE UPPER ARG` with raw presence and live shared/private pool composition locally qualified. | ARG-AC05: configured errors, resumption/clause/TRACE and delivery/platform: STEP03/07/10. |
 | <a id="current-action-procedure"></a>**LC-I-12 PROCEDURE / CLC-STEP06** | Static shared entries, executed eligibility, ordered EXPOSE and normal/fatal restoration locally qualified; CPROC-AC01–06. | CPROC-AC07: complete source forms/observations, callbacks/dynamic eligibility, host/delivery/platforms; whole LC-I-12 remains open. |
-| <a id="current-action-call"></a>**LC-I-13 CALL / CLC-STEP06** | Ordinary local/direct-BIF/missing calls, symbol/quoted/constant targets, omissions/results and SIGL locally qualified; CCALL-AC01–04/07. | CALL3 static signed statement providers after EXIT/provider review; CALL4 delayed traps after STEP07; whole CALL remains open. |
+| <a id="current-action-call"></a>**LC-I-13 CALL / CLC-STEP06** | Ordinary local/direct-BIF/missing and static signed statement calls, omissions/results and SIGL locally qualified; CCALL-AC01–05/07 local profile. | CALL4 delayed traps after STEP07; complete host/platform and whole CALL remain open. |
 | <a id="current-action-return"></a>**LC-I-14 RETURN / CLC-STEP06** | Linear continuation, contextual35.1, owned result presence and existing cleanup/status locally qualified; RRET-AC01–05. | Exact traceback, configured conditions, broader host completion and platforms: STEP07/08; whole LC-I-14 remains open. |
-| <a id="current-action-exit"></a>**LC-I-15 EXIT / CLC-STEP06 — last delivered profile** | Owned optional result, visible program-root propagation and forced cleanup locally qualified; CEXIT-AC01–05. | CEXIT-AC06: signed-provider lifecycle, delayed handlers, broader host completion and platforms; whole LC-I-15 remains open. |
+| <a id="current-action-exit"></a>**LC-I-15 EXIT / CLC-STEP06** | Owned optional result, visible program-root propagation and forced cleanup locally qualified; CEXIT-AC01–05. | CEXIT-AC06: complete provider/handler lifecycle, broader host completion and platforms; whole LC-I-15 remains open. |
 | **LC-I-16 PULL / CLC-STEP06** | Not integrated as a standalone instruction. PARSE source adapter is reusable. | Acquire queue or configured input once, then shared UPPER executor; EOF/NOTREADY and nested isolation; STEP06/07/08. |
 | **LC-I-17 PUSH / CLC-STEP06** | Not implemented. | Once-only optional expression and selected-queue front insertion; shared queue/host adapter, errors/ownership: STEP06/08. |
 | **LC-I-18 QUEUE / CLC-STEP06** | Not implemented. | Selected-queue tail insertion, FIFO/count/nonconsumption and nested host isolation: STEP06/08. |
@@ -52,7 +52,7 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | **LC-I-24 TRACE / CLC-STEP07** | Not implemented in new C. | Agreed practical VM observations/options/query/command inhibition and disabled-cost proof; STEP07/08. |
 | **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
 
-## Next feature: CALL3 metadata and static statement providers
+## Next feature: standalone PULL
 
 Adrian authorized the remaining agreed C instructions/features stepwise, with
 internal contract review and a local commit after each, stopping before
@@ -64,8 +64,9 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 |---|---|
 | **CLC-STEP06.CALL1** | Complete contract review. |
 | **CLC-STEP06.CALL2** | Locally qualified ordinary profile, CCALL-AC01–04/07; whole CALL stays open. |
-| **CLC-STEP06.CALL3** | Open AC05: static signed statement providers after EXIT and exact provider review; fresh pool/config, inherited activation state. External expressions/late loading/native callbacks remain deferred. |
+| **CLC-STEP06.CALL3** | Locally qualified [CEXT-AC01–05 / STEP01–03](doc/architecture.md#call3-static-provider-contract), with the generic classifier prerequisite. Fresh pool/config, inherited activation state; external expressions/late loading/native callbacks remain deferred. |
 | **CLC-STEP06.CALL4** | Open AC06/07: existing B policy/checkpoints/handler lifecycle after STEP07 clause/condition support. |
+| **PULL-STEP01–03** | Contract reviewed; next source/lowering and independent qualification through the existing PARSE acquisition/executor, PULL-AC01–04. AC05 remains shared host/condition/platform work. |
 
 No native C implementation, second runtime algorithm, push or hosted campaign
 is commissioned. INTERPRET remains excluded from the standing authority.
@@ -73,9 +74,9 @@ is commissioned. INTERPRET remains excluded from the standing authority.
 The [RETURN contract](doc/architecture.md#return-contract) owns RRET-AC01–05;
 **CLC-STEP06.RETURN1–3** are complete for the local source/completion profile.
 [EXIT](doc/architecture.md#exit-contract): **CEXIT-STEP01–03** complete for
-local AC01–05. AC06 retains provider/handler/host/platform owners. Next, deliver
-the independent generic selected-callable metadata prerequisite, then implement
-CALL3 under its exact C binding/wrapper contract; CALL4 follows STEP07.
+local AC01–05. AC06 retains provider/handler/host/platform owners. CALL3 static
+statement integration is locally delivered. Standalone PULL is next; CALL4
+follows STEP07.
 
 **BCONCAT-STEP01–03 complete:** intrinsic concatenation followed by target conversion;
 [permanent regression](../../../compiler/tests/rexx_src/binary_concat_target.crexx).
@@ -97,7 +98,7 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | <a id="active-first-implementation-increment"></a><a id="shared-b-unicode-interface-and-c-adapter-migration"></a><a id="active-c-contract-baseline-increment"></a><a id="active-borrowed-classic-context-increment"></a>**CLC-STEP03** | Partial: borrowed context/shared B Unicode foundations delivered. Complete activation/pool/alias ownership, recursion, restoration, abrupt paths and needed direct/BIF APIs; preserve existing B/G/public metadata contracts and one algorithm/data owner. |
 | **CLC-STEP04** | Partial: complete contextual source/Unicode names, exact byte/scalar origins, dead-source validation, expressions/numeric semantics and BF01–05 bindings. No native frontend dependency. |
 | **CLC-STEP05** | Partial: finish shared dependencies of the delivered LC-I-01–10 profiles in the instruction table. |
-| **CLC-STEP06** | Current: CALL3 after its generic metadata prerequisite and delivered RETURN/EXIT, with CALL4 dependencies and remaining LC-I-11–19 explicit. Retain ARG/PARSE/PULL and broader completion obligations. |
+| **CLC-STEP06** | Current: PULL after delivered CALL3/RETURN/EXIT local profiles, with CALL4 dependencies and remaining LC-I-11–19 explicit. Retain ARG/PARSE/PULL and broader completion obligations. |
 | **CLC-STEP07** | Partial: LC-I-20–24, conditions/resumption, clause clocks, diagnostics/source/TRACE and BF07/09. |
 | **CLC-STEP08** | Not started as a full stage: remaining BIF/host adapters, exact-length invocation/completion, callback pools, queues/streams/clocks/HALT, concurrency and declared platforms. New host APIs/exclusions require approval. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. Needed ISA/storage contracts receive internal review under standing authority; production performance edits retain their qualification gate. |

@@ -248,9 +248,9 @@ activation and entry ID; SIGNAL changes position within the current invocation.
 Do not clone the source tail for every label or require PROCEDURE after labels.
 Preserve first-label precedence, fall-through and control-stack clearing.
 
-Existing BIF bodies and valid library qualification are reused; extending the
-new compiler's current three-name subset is binding/context work, not a second
-BIF implementation. Reuse expected-result fixtures through the new compiler;
+Existing BIF bodies and valid library qualification are reused. All 95 names
+have direct binding routes; representative C calls are locally qualified, while
+each whole BIF/context/host/platform obligation remains open. Reuse expected-result fixtures through the new compiler;
 change library algorithms only for a demonstrated defect or named missing
 contract. BIF calls share one runtime context/presence contract. Pure text entries need
 not copy the entire activation; stateful entries borrow their declared context
@@ -361,9 +361,10 @@ modify the parent's activation or VM frame.
 
 Keep existing fresh return-presence packets for now. They contain returned
 value/presence, not a copied live child activation or references to child local
-storage. Their current representation cost remains explicit. Reference targets
-cannot escape into program results, cross a VM-context boundary or outlive
-their invocation. Stale-reference controls must fail through checked references,
+storage. Their current representation cost remains explicit. Provider-local
+references cannot escape into program values/results or cross a VM-context
+boundary. CALL3's opaque completion carrier below may retain caller-owned weak
+references, which result consumers never dereference. Stale-reference controls fail through checked references,
 not extend owner lifetimes. Repeated executions own separate roots/configs.
 
 #### Numeric frame and error contract
@@ -470,9 +471,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v11/62 with
-36 target exports, including ordinary CALL and the reviewed EXIT program-root
-contract. Local instruction qualification is tracked in the plan.** Use the following contract with one current
+C to the two-argument source-unit ABI. The current family is v12/63 with
+36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
+static signed statement providers. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -480,16 +481,18 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 11. The neutral scalar names do not load the G
+types and `crexx.c` version 12. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–10 are never reinterpreted as version 11. Within version 11, the complete C
+versions 1–11 are never reinterpreted as version 12. Within version 12, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
 
 The C types are `value`, `arguments`, `result`, `context` and `parseprogram`. The first
 three retain their current runtime representations: `RexxValue`, a not-yet-
-borrowed argument/activation packet and a fresh return-presence packet. They
+borrowed argument/activation packet and an opaque completion packet. Result
+consumers expose only value/presence; static external calls may return the recovered
+caller-owned invocation under the closed transport contract below. They
 retain the existing byte codec in the semantic registry. `context` uses that
 same nominal codec registration but denotes only a live reference to an
 authoritative `RexxClassicContext`; its runtime payload is never serialized in
@@ -2539,6 +2542,147 @@ four declared entries, then reuses rexxclassicbif_checked. No legacy name-based
 shared dispatcher is used. End helper borrows before normal/fatal owner cleanup;
 all helper calls participate in ordinary frame/call-window sizing.
 
+<a id="call3-static-provider-contract"></a>
+
+### CALL3 static statement providers
+
+Implement after the independently qualified [generic classifier](../../../../langtools/doc/user-guide.md#selected-callable-classification).
+Statement CALL considers explicit providers after local labels and exact direct
+BIFs; expressions retain their existing missing-call route. Source providers are
+prebuilt by their owning B/G/C pipeline. No bare source-file import, runtime
+search, native source delegation, callback resolver or new loader is introduced.
+
+| C-owned interface | Exact boundary |
+|---|---|
+| `llcbindings.binding(artifact:string, callable:string)` | Own explicit artifact stem/export identity; read-only `artifact()`/`callable()`. Reject empty/NUL stems, colon, either path separator and exact `.`/`..`; never infer export from filename. |
+| `llcbindings.prepared(root:string, bindings:binding[], bytes:int, work:int)` | Own checked selections/aliases. `status()/error()/root()`, `find(name)->int` (0 missing, -1 ambiguous, positive index), indexed `artifact(index)`, `callable(index)`, `signature(index)->llcompilercontracts.signature`. |
+| `llccompiler.request(... existing eight arguments ..., ?providers:binding[], routine_export:string='')` | Preserve positional callers. The empty default performs no provider acquisition/classification. |
+| `llcfrontend.request.bound(source:binary, providers:reference prepared, filename:string='<source>', budget:int=1000000, nesting:int=512)` | Borrow an anchored prepared snapshot; get artifact root from it. |
+| `llcrxas.compilation.bound(graph:llir.module, providers:reference prepared, bytes:int=67108864, registers:int=65536, routine_export:string='')` | Same selection for source/raw/loaded/transformed input; optional routine wrapper. |
+
+CLI: repeat `--provider <artifact-stem> <qualified-callable>` under existing `-i`;
+`--routine <qualified-export>` selects routine output after existing strict
+metadata-name validation; no whitespace/NUL/padded identity is admitted. Duplicate
+full selections use generic metadata identity, while C full/basename lookup uses
+the existing Classic whole-name fold and retains real export bytes. Duplicate
+canonical selections refuse even identical repeats; A.run/B.run coexist, while a colliding
+short RUN is ambiguous, never first-wins. An authored ambiguous CALL refuses
+in dead source too unless local/BIF priority selected another route. Quoted
+lookup skips locals, keeps decoded diagnostic bytes and uses the existing caseless
+external-import convention; empty/NUL quoted names remain valid missing calls.
+
+Group selections once per artifact. C-private bounded `freadb` acquisition checks
+remaining allowance before growing a buffer. One
+`llbinmeta.catalog.bounded(reference image, remaining_bytes, remaining_work)`
+classifies all requested exports in the group. Require ordinary `procedure`,
+flags `b`, `.void` and one required by-value RexxActivationArguments, retaining
+existing short/qualified type aliases. Reject hidden-owner methods/factories,
+reference/optional/extra arguments and wrong results. Own checked signature
+records, then release reader/input; retain no image/catalog for later revisits.
+Acquisition, reader counters, owned records/aliases and query/copy work debit
+one monotonic aggregate including reserved/failed work, with no per-image reset
+or refund. These are logical payload/work limits, not RSS/temporary-allocation
+claims. Default metadata work is the service byte ceiling, not parser1M. Later
+requests reread artifacts; no global/path cache is added.
+
+The additive pure namespace utility `llbinmeta..validname(name:string)->int`
+owns the existing exact byte-name rule without a catalogue allocation. Its
+existing catalogue method retains work reservation then delegates; snapshots,
+routine-export validation and the common signature reader use the scalar utility.
+It changes neither name casing nor the rule.
+
+The signature reader's formal names follow existing metadata byte spelling:
+letters/digits/non-ASCII, `_ ! ? $ @ #` and dots; nonempty, no leading digit,
+NUL or whitespace. Remove only the existing optional `?` marker first; duplicate
+identity uses strict folded bytes. No component-first-letter rule, type/default
+syntax expansion or source-language change is introduced. Required/nonreference
+provider admission remains exact. Existing runtime/member/factory imports keep
+their qualified lookup/field admission; provider selection alone uses classify.
+
+The service anchors its strong snapshot before creating borrowed children,
+lazily during execution, never referencing a factory-local/movable self field.
+A shared private frontend-preparation path serves both `run()` and `graph()`:
+`graph()` prepares the anchored snapshot/frontend but does not run optimisation
+or selection; `status()`/output still use the complete run. No accessor reads an
+uninitialised frontend or borrows a factory-local owner. The owner remains live
+and unreplaced through synchronous frontend/selector work; expired/uninitialized
+owners refuse `LL_COMPILER_IMPORT:` with empty output. Completed graph/output
+own their data. Snapshot payload is immutable; accounting/failure state is local.
+
+C v12 retains five types and adds operation63:
+`call.external(arguments:A,context:C){target:T}->value:R`,
+`context.input.output.observation / condition.resource / returns`, no evaluator.
+Target is the canonical selected export. Validate every record, including dead,
+loaded and transformed records, for current schema, authored CALL origin,
+canonical context and matching snapshot. Preserve/prove closed A creation through
+arguments.empty/append and typed spills: no A constants/unit parameters/foreign
+producers or R-to-A reinterpretation. Unseeded raw input cannot justify skipping
+activation resets. A slot load resolves its nearest earlier same-block store,
+never a future/final store. Only already-proved private internal-call false
+continuations may transport unresolved entry loads across their unique predecessor;
+general joins or arbitrary jumps are outside this raw-IR profile. Bounded indexed
+empty/append/load closure and versioned boundary/value memoization reject unseeded
+paths and cycles, including dead records. Current local forwarding/pruning/ID
+normalization remains admitted; later condition continuations need their own proof.
+Failed admission/limits preserve input and earlier output.
+
+The caller privately owns the packet, inherits policy, captures caller pool and
+begins a distinct external program root. Constructor invariants give absent
+completion, function0 and PROCEDURE-ineligible state; avoid redundant resets.
+The C snapshot transports each already-charged classified result into a precharged
+typed vector with existing payload MOVE, then ends scoped borrows before releasing
+that group. It constructs checked C copies only after debiting and releasing the
+reader/image; no competing allowance is spent while the reader is live.
+
+A dedicated counted call SWAPs invocation into argument1, marks it768, calls the
+selected void export, then inverse-SWAPs before any helper/window NULL and moves
+the recovered invocation to R. Include sizing; ordinary invoke clears too early.
+Fatal cold unwind never inverse-SWAPs twice: detach borrows and clear surviving
+window/owner storage. R consumers read completion value/presence only; core
+transport/return exposes no activation references. Recovered caller-owned weak
+refs may expire, but no provider-local pool/config reference may enter that R.
+
+Routine output has one ordinary `b/.void/required by-value frame` export, no
+`.main`, root status bridge or competing public body export. Mirror native named-
+COPY/disposable-SWAP binding. Each private callable's metadata identity is
+`export.$BODY.N` with its function index; executable local `llfN` and authored
+debug routine names stay unchanged. This prevents linked provider/caller bodies
+from sharing the command-mode `llprogram.$MAIN` identity. Own
+fresh private pool/UTF8 config and reserved
+command-status aliases, with inherited numeric/ADDRESS/TRACE/condition policy.
+Consume eligibility once before body0; leading PROCEDURE stays17.1, positive
+internal entries unchanged. Do not reset caller-prepared root/source mode:
+Classic parent gives SUBROUTINE; unparented B frame keeps COMMAND. Transfer only
+unit value/presence into incoming frame before releasing owners and returning
+void. Child EXIT completes this distinct root; no parent-program EXIT guard follows.
+
+Absent inventory retains reached43.1 after actual effects. Selected but unlinked
+provider retains core FUNCTION_NOT_FOUND. Only units with actual external
+operations add its cleanup/relay, preserving original event/name and authored
+CALL location without mapping it to43.1. Shared host/platform and CALL4 checkpoint
+obligations remain open.
+
+1. **CEXT-AC01:** independent selection/precedence/quoted/dead/duplicate/ambiguity
+   controls and exact kind/signature refusals; generic formal byte-name tests.
+2. **CEXT-AC02:** once-only omissions/empty/Unicode/NUL and bare/EOF/child EXIT
+   survive private wrapper cleanup and inherited settings. Reuse unchanged
+   BG-RESULT provider built separately B/G and namespace-alias source, plus
+   qualified EXIT/numeric foundations; no duplicate BIF/numeric matrix.
+3. **CEXT-AC03:** absent43.1 versus selected-unlinked FUNCTION_NOT_FOUND, including
+   a private caller, retain event/completion/source ownership; routine PROC17.1.
+4. **CEXT-AC04:** grouped aggregate limits, expired owners, A/R provenance and
+   fresh/dead/loaded/transformed admission fail atomically; default requests
+   avoid provider work and completed output outlives request/provider owners.
+5. **CEXT-AC05:** focused complementary CLI/service/product checks and actual RXAS
+   prove768 recovery before clear, sole void export, normal/fatal cleanup and
+   no status/VM EXIT/heavy image copies. Close only local CCALL-AC05/07; broader
+   host/platforms, CALL4, external expressions and whole CALL/C stay open.
+
+**CEXT-STEP01–03 are complete for local CEXT-AC01–05.** The independent
+`tests/call/external` source/provider/host, metadata/raw-IR and readable RXAS
+controls own this profile. Local CCALL-AC05/07 statement integration is delivered;
+complete host/platforms, delayed handlers and whole CALL remain open.
+
 ### Acceptance and feature boundaries
 
 1. **CCALL-AC01:** symbol/quoted/constant targets, exact AST spelling/spans,
@@ -2626,8 +2770,9 @@ separate owners.
 ## EXIT program-root contract
 
 The internally reviewed LC-I-15 increment uses the existing activation program
-root and exit-request/result APIs. C v11 retains five types, revises `exit` and
-adds one operation for 62 total; the 36 target exports and B/VM APIs are unchanged.
+root and exit-request/result APIs. Its `exit`/`program.exiting` descriptors use
+the [current C family](#current-c-family-contract), retaining five types and the
+36 target exports without B/VM API changes.
 
 | Operation | Ordered inputs | Output | State / failure / termination |
 |---|---|---|---|
@@ -2712,8 +2857,8 @@ private cleanup storage and survive all of these clears. The DO phase checker
 consults proved neutral-path/terminal facts before Ready/FalseExit restrictions;
 only proved unwind terminals may discard Collect/Ready owners. Ordinary
 RETURN/do.close admission is unchanged. External
-provider-root isolation follows CALL3; delayed-handler checkpoint-before-exit
-ordering follows STEP07. Neither is silently delivered by local propagation.
+provider-root isolation uses the CALL3 local statement profile; delayed-handler
+checkpoint-before-exit ordering remains STEP07 work.
 
 1. **CEXIT-AC01:** optional presence, once-only full scalar results, root status
    and contextual source35.1 have independent positive/error controls.
@@ -2725,18 +2870,18 @@ ordering follows STEP07. Neither is silently delivered by local propagation.
    preserve context, ownership, limits and atomic output.
 5. **CEXIT-AC05:** readable RXAS proves no unit VM EXIT/status narrowing, unchanged
    exports and bounded caller/helper/window/source cleanup.
-6. **CEXIT-AC06 — open shared scope:** CALL3 provider lifecycle, STEP07 handlers,
+6. **CEXIT-AC06 — open shared scope:** complete provider lifecycle, STEP07 handlers,
    STEP08 host completion and declared platforms retain their separate gates.
 
 **CEXIT-STEP01–03 are complete for the local AC01–05 profile.** The maintained
 `tests/exit` source/host/raw-IR controls and caller/helper RXAS checks own its
 independent qualification. AC06 and whole-instruction/full-C acceptance remain
-open; signed-provider integration and delayed-handler checkpoints have their
-separate CALL3/STEP07 owners.
+open; the CALL3 local provider profile does not close broader lifecycle or
+STEP07 delayed-handler obligations.
 
 <a id="pull-contract"></a>
 
-## PULL shared-parser contract — queued
+## PULL shared-parser contract
 
 The reviewed LC-I-16 route adds `CPull(templates:ParseTemplates)` and contextual
 PULL classification/template joining. Lower through the existing PULL source
@@ -2756,9 +2901,9 @@ Later comma templates receive empty text without another queue/input read.
 5. **PULL-AC05 — open shared scope:** configured NOTREADY/host behavior, conditions,
    TRACE and declared platforms remain CPARSE/STEP07–08 obligations.
 
-**PULL-STEP01** is reviewed; **STEP02/03** queue source/lowering, focused fixtures,
-qualification and a local profile commit after RETURN/EXIT and the deferred
-CALL3 provider review. Whole LC-I-16 remains open for AC05.
+**PULL-STEP01** is reviewed; **STEP02/03** are next: source/lowering, focused
+fixtures, qualification and a local profile commit after the delivered
+RETURN/EXIT/CALL3 profiles. Whole LC-I-16 remains open for AC05.
 
 ## Optimisation ownership
 

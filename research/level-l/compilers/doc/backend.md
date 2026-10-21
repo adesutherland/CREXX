@@ -29,6 +29,14 @@ budgets, not a combined memory/CPU cap. These are protection limits,
 not throughput promises. Exhaustion fails the request and exposes no partial
 successful output. Register budgets below 16 are invalid.
 
+C additionally appends optional `providers:llcbindings.binding[]` and
+`routine_export:string` after those eight arguments. Bindings select prebuilt
+ordinary void/frame exports; routine output supplies one such wrapper. Empty
+defaults avoid provider work. The request anchors checked selections before
+borrowed frontend/backend work, including a `graph()`-first request. See the
+[static-provider contract](architecture.md#call3-static-provider-contract) and
+[CLI guide](../../../../langtools/doc/user-guide.md#compiling-cg-source-to-rxas).
+
 `status`, `error`, `offset`, `diagnostic` and `output` evaluate the request once.
 `graph` retains frontend inspection; `emissiongraph` evaluates the request and
 returns the graph selected for emission. Query successful status before using

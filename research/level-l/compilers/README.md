@@ -65,8 +65,12 @@ acceptance remain open.
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing
 routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain
-their separate source locations. Static signed providers and delayed handlers
-remain named CALL features; external function expressions remain deferred.
+their separate source locations. Static signed statement providers use explicit
+prebuilt metadata bindings and a void/frame routine wrapper. `--provider <artifact-stem> <qualified-callable>`
+is repeatable under `-i`; `--routine <qualified-export>` produces a provider.
+Selected images must be linked into the application; source providers are built
+first by their owning compiler. Delayed handlers and external function
+expressions retain their named open boundaries.
 
 RETURN preserves present empty text separately from an absent result and uses
 the existing full signed64 main-status boundary. Physical comma continuations

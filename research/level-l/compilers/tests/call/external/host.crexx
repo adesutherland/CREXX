@@ -1,0 +1,84 @@
+/* Test-only externalfixture.run exposes the existing C unit entry0.
+ * extfixture is the ordinary one-frame void provider, not a host callback. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import externalfixture
+import extfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  visible = .rexxpool..RexxVariablePool()
+  if argv[0] > 0 then do
+    if argv[1] <> 'private-missing' & argv[1] <> 'absent' then return 2
+    say 'EXTERNAL_FATAL|before'
+    returned = runCase(argv[1],'payload',reference visible)
+    say 'UNREACHED fatal host'
+    return 1
+  end
+  payload = 'é雪🙂' || ('00'x as .string) || 'tail '
+  call exercise('raw',payload,'3|0|0|1|0|0|' || payload,1,'[' || payload || ']')
+  call exercise('actuals',payload,'3|1|0|1|0|0|' || payload,2,'[raw][' || payload || ']')
+  call exercise('present-empty',payload,'3|1|0|1|0|0|' || payload,1,'[' || payload || ']')
+  call exercise('empty',payload,'',0,'')
+  call exercise('bare',payload,'LIT|LIT',0,'')
+  call exercise('eof',payload,'LIT|LIT',0,'')
+  call exercise('exit',payload,payload,1,'[' || payload || ']')
+  call exercise('repeat',payload,'LIT|' || payload || '/LIT|' || payload,0,'')
+  call exercise('numeric',payload,'4|1|ENGINEERING>6|2|SCIENTIFIC|4|1|ENGINEERING',0,'')
+  call exercise('source',payload,'SUBROUTINE',0,'')
+  call exercise('providers',payload,'BG-LOCAL|BG-RESULT|ALIAS-RESULT',0,'')
+  /* A normal named B by-value argument must remain isolated. The C caller
+   * separately proves that the disposable768 path recovers completion. */
+  named = .rexxactivation..RexxActivationArguments()
+  call named.appendText('direct')
+  call named.setReturnValue(.rexxvalue..RexxValue('prior named result'))
+  call extfixture..length(named)
+  call check(named.hasReturnValue() & named.returnValue().asString() == 'prior named result','ordinary named by-value activation is unchanged')
+  call check(named.argument(1).asString() == 'direct' & \named.programExitRequested(),'named activation retains arguments and its root')
+  say 'EXTERNAL_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+exercise: procedure = .void
+  arg mode = .string, payload = .string, expected = .string, count = .int, order = .string
+  visible = .rexxpool..RexxVariablePool()
+  call visible.setString('RESULT','old result'); call visible.setString('.RESULT','old result')
+  returned = runCase(mode,payload,reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == expected,mode || ': exact owned result including empty/Unicode/NUL')
+  call check(visible.symbolValue('SECRET').asString() == 'caller',mode || ': provider private pool does not leak')
+  call check(visible.symbolValue('COUNT').asString() == (count as .string) & visible.symbolValue('ORDER').asString() == order,mode || ': source-order once-only actual effects')
+  call check(visible.symbolValue('RC').asString() == '77',mode || ': ordinary completion does not assign RC')
+  if mode = 'empty' then call check(visible.symbolHasValue('RESULT') & visible.symbolValue('RESULT').asString() == '' & visible.symbolValue('.RESULT').asString() == '','explicit empty result remains present')
+  if mode = 'bare' | mode = 'eof' then call check(\visible.symbolHasValue('RESULT') & \visible.symbolHasValue('.RESULT'),mode || ': absent provider completion drops old result bindings')
+  if mode = 'exit' then call check(visible.symbolValue('AFTER').asString() == 'continued','child EXIT returns normally to caller program')
+  return
+
+runCase: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string, payload = .string, visible_ref = reference .rexxpool..RexxVariablePool
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  call check(activation.setNumericDigits(.rexxvalue..RexxValue('4'),reference config) == '','seed parent digits')
+  call check(activation.setNumericFuzz(.rexxvalue..RexxValue('1'),reference config) == '','seed parent fuzz')
+  call check(activation.setNumericForm(.rexxvalue..RexxValue('engineering')) == '','seed parent form')
+  pool = dereference visible_ref; call pool.setString('PAYLOAD',payload)
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,visible_ref,reference config)
+  returned = externalfixture..run(reference context,0)
+  rebound = context.pool(); reboundactivation = context.activation(); reboundconfig = context.config()
+  originalactivation = reference activation; originalconfig = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> visible_ref),mode || ': original pool is live and restored')
+  call check((reboundactivation <refsame> originalactivation) & (reboundconfig <refsame> originalconfig),mode || ': original activation/config retained')
+  call check(\activation.programExitRequested(),mode || ': child completion has a separate program root')
+  call check(activation.numericDigits() = 4 & activation.numericFuzz() = 1 & activation.numericForm() = 2,mode || ': inherited numeric changes do not escape')
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

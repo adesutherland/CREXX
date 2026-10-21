@@ -87,7 +87,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 11 & data.ops() = 62 & count = 5,'exact C11/62/five-type schema')
+  call check(version = 12 & data.ops() = 63 & count = 5,'exact C12/63/five-type schema')
   call shape(contract,'exit','result:crexx.c.result context:crexx.c.context','','context','condition.resource','diverges')
   call shape(contract,'program.exiting','context:crexx.c.context','value:core.boolean','context','condition','returns')
   call check(data.opname(62) = 'crexx.c.program.exiting','append-only program query operation')
@@ -119,7 +119,7 @@ forgedschema: procedure = .void
   ignored = .int; i = .int; kind = .int; field = .int
   do i = 2 to source.familycount()
     version = source.version(i)
-    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 10
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 11
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()

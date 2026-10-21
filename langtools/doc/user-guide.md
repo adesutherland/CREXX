@@ -3288,6 +3288,27 @@ use `llrxc-g -n` or `llrxc-c -n` for the cleaned unoptimised control. The native
 B seed's `rxc -n`, the new compiler's `-n` and `rxas -n` control three separate
 stages. Use assembler `-n` when inspecting the new compiler's own effects.
 
+Classic statement CALL can use explicit prebuilt providers. The `-i` directory
+must contain each selected `<artifact-stem>.rxbin` and the runtime images.
+For a C source provider, produce one ordinary void/frame export with `--routine`:
+
+```sh
+llrxc-c -i /path/to/artifacts --routine sample.run -o /path/to/artifacts/provider.rxas provider.crexx
+rxas /path/to/artifacts/provider.rxas
+llrxc-c -i /path/to/artifacts --provider provider sample.run -o main.rxas main.crexx
+```
+
+Repeat `--provider <artifact-stem> <fully-qualified-callable>` for more bindings;
+link the selected provider images into the application. Local labels and exact
+BIF names retain priority. Qualified A.run/B.run may coexist; an ambiguous short
+RUN refuses compilation. B/G providers are first built by their owning compiler.
+The C request reads checked binary metadata; it never compiles a provider source,
+searches at runtime or supplies external function expressions. Missing inventory
+fails43.1 when reached; a selected provider omitted from the linked image retains
+FUNCTION_NOT_FOUND. Routine output has no command main/status bridge and leading
+PROCEDURE remains17.1. See the
+[static-provider contract](../../research/level-l/compilers/doc/architecture.md#call3-static-provider-contract).
+
 A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
 `rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
 import/link `llccompiler` and call its own request with the same arguments:
@@ -3314,6 +3335,13 @@ to select the unoptimised path without changing earlier argument positions:
 ```rexx
 request = .llgcompiler..request(source, artifacts, 'demo.crexx', 1000000, 512, 67108864, 65536, 0)
 ```
+
+C requests additionally accept optional `providers:llcbindings.binding[]` and
+`routine_export:string` after these eight arguments. Import `llcbindings` to
+construct each explicit `(artifact, callable)` binding. The request owns its
+prepared selections; `graph()` lazily prepares the frontend too. The empty
+default performs no provider acquisition. The same byte/work ceilings bound
+aggregate provider acquisition and metadata selection.
 
 The work/byte budgets also protect the shared optimisation phase. Defaults and the complete API are in
 the [backend reference](../../research/level-l/compilers/doc/backend.md).
@@ -4020,6 +4048,16 @@ not trim or pad names. Identifier bytes follow
 [metadata conformance](../../compiler/docs/metadata_conformance.md#record-envelope-and-responsibilities),
 including non-ASCII bytes and qualified names. Consumer language casing remains
 the consumer's responsibility.
+
+`llbinmeta..validname(name:.string)->.int` is the pure metadata identifier check,
+available without constructing or preparing a catalogue. It returns `1` for a
+nonempty byte spelling whose first byte is not a digit and whose bytes are ASCII
+letters/digits, non-ASCII bytes, `_!?$@#` or dots; otherwise it returns `0`.
+It neither folds nor trims names and does not impose per-component dot rules.
+`catalog.validname` reserves the same name extent against a bounded catalogue's
+work allowance before delegating to this one check. LMC-AC03 covers utility and
+catalogue name checks through the independent name/formal-name controls;
+consumer type and signature rules remain separate.
 
 The owned result adds `kind()->.string` and `owner()->.string`: `procedure` has
 an empty owner; `method` and `factory` name their qualified class/interface.

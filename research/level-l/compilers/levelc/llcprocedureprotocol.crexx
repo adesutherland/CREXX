@@ -47,6 +47,13 @@ checked: class
   _before = .int[]
   _queue = .int[]
   _symbols = .llcsymbols..checked
+  _hasexternal = .int
+  _argumenttype = .int
+  _argumentprior = .int[]
+  _argumentstate = .int[]
+  _argumentdependency = .int[]
+  _argumentends = .stem
+  _argumentboundaries = .stem
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
@@ -283,6 +290,126 @@ checked: class
       _programneutral[opid] = id
     end
     return
+  /** Resolve only entry transport through already-proved private false edges.
+   * The current block's final store can never seed an earlier load. */
+  argumentwriter: method = .int
+    arg opid = .int
+    graph = dereference _graph; store = dereference _store
+    writer = _argumentprior[opid]
+    if writer > 0 then return store.operand(writer,1)
+    op = graph.operation(opid); b = op.blockid(); slotid = store.get(3,opid,12)
+    path = .string[]; key = .string; known = .string; final = .string; value = .int
+    do forever
+      key = b || ':' || slotid
+      if charge(<blen>(key as .binary) + 2) = 0 then return 0
+      known = _argumentboundaries.get(key)
+      if known == '?' then do; call fail('LOWERING: external arguments contain a cyclic slot boundary',opid); return 0; end
+      if known <> '' then do; value = known as .int; leave; end
+      if reserve(128 + 2 * <blen>(key as .binary),1) = 0 then return 0
+      call _argumentboundaries.set(key,'?'); path[path[0] + 1] = key
+      if _falseblocks[b] = 0 | _predecessors[b] <> 1 then do
+        call fail('LOWERING: external arguments require a definite empty/append seed across private continuations',opid); return 0
+      end
+      previous = _predops[b]
+      b = store.get(3,previous,2)
+      key = b || ':' || slotid
+      if charge(<blen>(key as .binary) + 2) = 0 then return 0
+      if _argumentboundaries.get(key) == '?' then do
+        call fail('LOWERING: external arguments contain a cyclic slot boundary',opid); return 0
+      end
+      final = _argumentends.get(key)
+      if final <> '' then do; value = store.operand(final as .int,1); leave; end
+    end
+    do i = 1 to path[0]
+      if charge() = 0 | reserve(20,1) = 0 then return 0
+      call _argumentboundaries.set(path[i],value as .string)
+    end
+    return value
+  /** Iterative closure with one memoized visit per A value. Slot versions
+   * come from the forward index, not the graph's last-writer summary. */
+  argumentseed: method = .void
+    arg value = .int, owner = .int
+    graph = dereference _graph; store = dereference _store
+    stack = .int[]; stack[1] = value; top = 1
+    op = .llir..opview; dependency = .int; producer = .int; name = .string
+    do while top > 0
+      value = stack[top]
+      if _argumentstate[value] = 2 then do; top = top - 1; iterate; end
+      if charge() = 0 then return
+      if _argumentstate[value] = 0 then do
+        if store.get(4,value,3) <> _argumenttype then do
+          call fail('LOWERING: external arguments have a foreign producer type',owner); return
+        end
+        _argumentstate[value] = 1
+        producer = store.get(4,value,1); op = graph.operation(producer); name = op.name()
+        select name
+          when 'crexx.c.arguments.empty' then dependency = 0
+          when 'crexx.c.arguments.append' then dependency = op.input(1).id()
+          when 'core.load' then do
+            dependency = argumentwriter(producer)
+            if _error <> '' then return
+          end
+          otherwise do; call fail('LOWERING: external arguments require an empty/append producer',owner); return; end
+        end
+        _argumentdependency[value] = dependency
+      end
+      dependency = _argumentdependency[value]
+      if dependency = 0 then do
+        _argumentstate[value] = 2; top = top - 1
+      end
+      else if _argumentstate[dependency] = 2 then do
+        _argumentstate[value] = 2; top = top - 1
+      end
+      else if _argumentstate[dependency] = 1 then do
+        call fail('LOWERING: external arguments contain a cyclic value dependency',owner); return
+      end
+      else do
+        top = top + 1; stack[top] = dependency
+      end
+    end
+    return
+  /** One ordered index includes unreachable records. The sparse boundary memo
+   * charges every distinct (block,slot), avoiding per-call whole-CFG walks. */
+  argumentproof: method = .void
+    if _hasexternal = 0 then return
+    graph = dereference _graph; store = dereference _store
+    contract = dereference store.contract(); _argumenttype = contract.type('crexx.c.arguments').id()
+    if reserve(store.count(3),8) = 0 | reserve(store.count(4),24) = 0 then return
+    _argumentends = .stem(); _argumentboundaries = .stem()
+    b = .int; opid = .int; slotid = .int; key = .string; known = .string
+    op = .llir..opview; name = .string
+    do b = 1 to store.count(2)
+      opid = store.get(2,b,2)
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        if name = 'core.store' | name = 'core.load' then do
+          slotid = store.get(3,opid,12)
+          if store.get(5,slotid,2) = _argumenttype then do
+            key = b || ':' || slotid
+            if charge(<blen>(key as .binary) + 1) = 0 then return
+            known = _argumentends.get(key)
+            if name = 'core.load' then do
+              if known <> '' then _argumentprior[opid] = known as .int
+            end
+            else do
+              if known = '' then if reserve(64 + <blen>(key as .binary),1) = 0 then return
+              if reserve(20,1) = 0 then return
+              call _argumentends.set(key,opid as .string)
+            end
+          end
+        end
+        opid = store.get(3,opid,3)
+      end
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid)
+      if op.name() <> 'crexx.c.call.external' then iterate
+      call argumentseed(op.input(1).id(),opid)
+      if _error <> '' then return
+    end
+    return
   text: method = .string
     arg op = .llir..opview, name = .string
     bytes = op.attribute(name); size = <blen>(bytes)
@@ -355,6 +482,7 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      if name = 'crexx.c.call.external' then _hasexternal = 1
       do i = 1 to op.inputs()
         if charge() = 0 then return
         value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumers[value] = opid
@@ -387,7 +515,7 @@ checked: class
         if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
           ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
         end
-        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' then do
+        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' then do
           contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end
@@ -512,6 +640,7 @@ checked: class
       end
     end
     call programproof(); if _error <> '' then return
+    call argumentproof(); if _error <> '' then return
     /* At most three new state bits can schedule each block. */
     head = 1; tail = 0
     do b = 1 to store.count(2)

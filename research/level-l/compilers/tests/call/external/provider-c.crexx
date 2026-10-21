@@ -1,0 +1,37 @@
+/* Exported only as extfixture.LENGTH by the reviewed routine wrapper. */
+options levelc
+parse arg MODE, PAYLOAD
+if MODE = 'bare' then return
+if MODE = 'empty' then return ''
+if MODE = 'exit' then call PRIVATEEXIT PAYLOAD
+if MODE = 'isolation' then do
+  BEFORE = symbol('SECRET')
+  SECRET = 'provider local'
+  return BEFORE || '|' || PAYLOAD
+end
+if MODE = 'numeric' then do
+  BEFORE = digits() || '|' || fuzz() || '|' || form()
+  numeric digits 6
+  numeric fuzz 2
+  numeric form scientific
+  return BEFORE || '>' || digits() || '|' || fuzz() || '|' || form()
+end
+if MODE = 'source' then do
+  parse source SYSTEM KIND FILE
+  return KIND
+end
+if MODE = 'direct' then do
+  parse source SYSTEM KIND FILE
+  say 'direct=' || KIND
+  return 'changed private copy'
+end
+return arg() || '|' || arg(1,'E') || '|' || arg(2,'E') || '|' || arg(3,'E') || '|' || arg(4,'E') || '|' || arg(5,'E') || '|' || arg(3)
+
+PRIVATEEXIT:
+procedure
+parse arg VALUE
+LOCAL = 'private provider'
+do I = 1 to 2
+  exit VALUE
+end
+return

@@ -7,6 +7,7 @@ import llir
 import llsource
 import llcir
 import llcbifs
+import llcbindings
 import llcparse
 import llcparseprogram
 import llcompilercontracts
@@ -49,6 +50,8 @@ routine: class
  * Imports are read from an explicit artifact directory; no tool is spawned. */
 request: class
   _source = .binary
+  _providers = reference .llcbindings..prepared
+  _bound = .int
   _filename = .string
   _rootpath = .string
   _nesting = .int
@@ -127,10 +130,30 @@ request: class
     end
     _bytebudget = budget * 64
     return
+  /** Borrow only an external anchored snapshot; no self-reference is retained. */
+  bound: factory
+    arg source = .binary, providers = reference .llcbindings..prepared, filename = '<source>', budget = 1000000, nesting = 512
+    _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = ''; _providers = providers; _bound = 1
+    _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
+    _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
+    _parsepositionsready = 0
+    _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+    if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
+      _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
+    end
+    _bytebudget = budget * 64
+    return
   run: method = .void
     if _ready then return
     _ready = 1
     do
+      if _bound then do
+        if <refvalid>(_providers) = 0 then do; _error = 'LL_COMPILER_IMPORT: provider owner is not live'; return; end
+        providers = dereference _providers
+        if initialized(providers) = 0 then do; _error = 'LL_COMPILER_IMPORT: provider owner is not initialized'; return; end
+        if providers.status() then do; _error = providers.error(); return; end
+        _rootpath = providers.root()
+      end
       parsed = .llcparse..parsed(_source,_budget)
       if parsed.status() <> 0 then do
         _error = parsed.error(); _offset = parsed.offset(); return
@@ -1102,6 +1125,17 @@ request: class
     if quoted = 0 then target = findroutine(name)
     if _error <> '' then return invalid
     bif = ''; if target = 0 then bif = llcbifs..entry(name)
+    provider = 0; externalname = .string
+    if target = 0 & bif = '' & expressioncall = 0 & _bound then do
+      if <refvalid>(_providers) = 0 then do; call fail(node,'IMPORT: provider owner is not live'); return invalid; end
+      providers = dereference _providers
+      if initialized(providers) = 0 then do; call fail(node,'IMPORT: provider owner is not initialized'); return invalid; end
+      provider = providers.find(name)
+      if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
+      if provider < 0 then do; call fail(node,'IMPORT: ambiguous provider alias ' || name); return invalid; end
+      if provider > 0 then externalname = providers.callable(provider)
+      if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
+    end
     argument = .llast..node; value = .llir..valuehandle
     op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
     result = .llir..valuehandle; specialized = 0
@@ -1162,6 +1196,7 @@ request: class
       if target = 0 then do
         operation = 'call.missing'
         if bif <> '' then operation = 'bif'
+        else if provider > 0 then operation = 'call.external'
       end
       op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
@@ -1170,6 +1205,7 @@ request: class
         integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
         boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
       end
+      else if provider > 0 then call op.attribute('target',externalname as .binary)
       else call op.attribute('name',name as .binary)
       built = op.finish()
       if bif <> '' then value = built.result()

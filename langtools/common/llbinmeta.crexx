@@ -1,7 +1,25 @@
 /* cREXX License (MIT). Bounded portable RXBIN metadata reader. */
 options levelb
-namespace llbinmeta expose catalog callable
+namespace llbinmeta expose catalog callable validname
 import rxfnsb
+
+/** Check existing metadata identifier bytes without catalogue state or casing.
+ * @param name complete metadata name, without trimming or component rules
+ * @return 1 for an accepted byte spelling, otherwise 0
+ */
+validname: procedure = .int
+  arg name = .string
+  bytes = name as .binary; extent = <blen>(bytes)
+  if extent = 0 then return 0
+  first = <at..u8>(0) bytes
+  if first >= 48 & first <= 57 then return 0
+  do at = 0 to extent - 1
+    ch = <at..u8>(at) bytes
+    if ch >= 128 | (ch >= 65 & ch <= 90) | (ch >= 97 & ch <= 122) | (ch >= 48 & ch <= 57) then iterate
+    if ch = 46 | ch = 95 | ch = 33 | ch = 63 | ch = 36 | ch = 64 | ch = 35 then iterate
+    return 0
+  end
+  return 1
 
 /** Bounded RXBIN007 metadata view. It reads the portable envelope, expands its
  * constant/metadata sections and resolves their pool-local IDs. Instructions
@@ -415,18 +433,8 @@ catalog: class
   /** Existing metadata identifier bytes; no language-specific name folding. */
   validname: method = .int
     arg name = .string
-    bytes = name as .binary; extent = <blen>(bytes)
-    if reservework(extent) = 0 then return 0
-    if extent = 0 then return 0
-    first = <at..u8>(0) bytes
-    if first >= 48 & first <= 57 then return 0
-    do at = 0 to extent - 1
-      ch = <at..u8>(at) bytes
-      if ch >= 128 | (ch >= 65 & ch <= 90) | (ch >= 97 & ch <= 122) | (ch >= 48 & ch <= 57) then iterate
-      if ch = 46 | ch = 95 | ch = 33 | ch = 63 | ch = 36 | ch = 64 | ch = 35 then iterate
-      return 0
-    end
-    return 1
+    if reservework(<blen>(name as .binary)) = 0 then return 0
+    return llbinmeta..validname(name)
   fold: method = .string
     arg name = .string
     if reservework(<blen>(name as .binary)) = 0 then return ''

@@ -10,6 +10,7 @@ main: procedure = .int expose failed checks
   failed = 0; checks = 0
   image = uncompressed(readbinary(argv[1]))
   linked = uncompressed(readbinary(argv[2]))
+  call names()
   call classifications(reference image,reference linked)
   call cacheappend(reference image)
   call malformed(reference image)
@@ -24,6 +25,15 @@ main: procedure = .int expose failed checks
   call check(retained.name() == 'classify.box.§factory.from_text' & retained.result() == '.classify..box' & retained.arguments() == 'text=.string','owned result keeps all fields')
   say 'META_CLASSIFY|checks=' || checks || '|failures=' || failed
   return failed
+
+names: procedure = .void
+  call check(llbinmeta..validname('é!?$@#.part') = 1,'pure name preserves Unicode and punctuation bytes')
+  call check(llbinmeta..validname('.a.') = 1,'pure name has no component-edge restrictions')
+  call check(llbinmeta..validname('') = 0,'pure name refuses empty')
+  call check(llbinmeta..validname('1name') = 0,'pure name refuses leading digit')
+  call check(llbinmeta..validname('a b') = 0,'pure name refuses whitespace')
+  call check(llbinmeta..validname('a' || ('00'x as .string)) = 0,'pure name refuses embedded NUL')
+  return
 
 classifications: procedure = .void
   arg image_ref = reference .binary, linked_ref = reference .binary

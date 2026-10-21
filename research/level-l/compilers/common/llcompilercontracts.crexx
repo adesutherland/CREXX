@@ -74,10 +74,10 @@ signature: class
           type = literaltype(type)
           if type <> '' then optional = 1
         end
-        if validtype(type) = 0 | type = '.void' | name = '' | verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') <> 0 then do
+        if validtype(type) = 0 | type = '.void' then do
           _error = 'unsupported or invalid argument contract'; return
         end
-        if verify(left(name,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') <> 0 then do
+        if llbinmeta..validname(name) = 0 then do
           _error = 'invalid formal name'; return
         end
         do j = 1 to _names[0]

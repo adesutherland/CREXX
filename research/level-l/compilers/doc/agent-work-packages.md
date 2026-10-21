@@ -73,8 +73,9 @@ Standing user authority permits stepwise reviewed local commits before INTERPRET
 
 - **CALL-WP01:** serial Sol 6.1 Extra High C integrator owns grammar/parser,
   frontend/IR/admission/catalogue/selector/target, all docs/AGENTS/CMake and shared
-  build/test execution. CALL2 and local RETURN/EXIT profiles are qualified;
-  CALL3 follows EXIT and provider review, CALL4 follows STEP07. Preserve
+  build/test execution. CALL2/3 and local RETURN/EXIT profiles are qualified under
+  the [CEXT contract](architecture.md#call3-static-provider-contract) and
+  independent generic classifier; CALL4 follows STEP07. Preserve
   prepared-language reuse and existing B runtime algorithms.
 - **CALL-WP02:** independently assigned runtime worker owns only `tests/call/**`;
   audit B signatures/condition/result ownership read-only, write focused source,
@@ -92,14 +93,13 @@ writer owns only new `tests/return/{source-c.crexx,source-c.expected,contracts.c
 host.crexx,check-return.py}`; the reviewer remains read-only. Reuse current packets,
 cleanup/status and CALL2/PROCEDURE proof; no grammar/schema/B/L/VM API changes.
 The [EXIT contract](architecture.md#exit-contract) owns the locally qualified
-CEXIT-AC01–05 guard/terminal and forced-cleanup profile; AC06 stays open. Next,
-the separate generic selected-callable classification feature supplies CALL3
-binding admission before the C provider/wrapper increment. Independent fixtures
+CEXIT-AC01–05 guard/terminal and forced-cleanup profile; AC06 stays open. The generic selected-callable classification and CALL3 local provider/wrapper
+profiles are delivered. Independent fixtures
 and read-only review retain their separately assigned owners.
 
-The [queued PULL contract](architecture.md#pull-contract) assigns a later serial
+The [next PULL contract](architecture.md#pull-contract) assigns the next serial
 C source/lowering and independent fixture increment through the existing PARSE
-source/executor. Start after RETURN/EXIT and the CALL3 provider review; preserve
+source/executor. Start after the RETURN/EXIT/CALL3 local commits; preserve
 bare acquisition and the named shared host/observation/platform owners.
 
 <a id="procedure-assignment-packet"></a>

@@ -85,7 +85,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 11 & data.ops() = 62 & count = 5,'exact current C11/62-operation/five-type contract')
+  call check(version = 12 & data.ops() = 63 & count = 5,'exact current C12/63-operation/five-type contract')
   names = 'entry.test entry.invalid procedure.consume procedure.enter procedure.expose'
   do i = 1 to 5
     call check(data.opname(53 + i) = 'crexx.c.' || word(names,i),'append-only operation order ' || i)
@@ -123,7 +123,7 @@ forgedschema: procedure = .void
   ignored = .int; i = .int; kind = .int; field = .int
   do i = 2 to source.familycount()
     version = source.version(i)
-    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 10
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 11
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()

@@ -170,12 +170,11 @@ The current compatibility worklist records the admitted library baseline and
 its existing qualification. This plan does not commission 95 new BIF bodies,
 repeat their semantic design, or reopen unchanged library qualification.
 
-The new compiler currently admits only LENGTH, ARG and DIGITS, with restricted
-forms. Its work is to bind the other 92 names and finish admitted call forms;
-evaluate arguments in order with omitted/empty presence; pass the existing
-runtime ABI and live activation context; and preserve return/error/condition
-and source behavior. Reuse one checked call mechanism and existing B entrypoints
-rather than add a separate compiler implementation of each BIF.
+The new compiler binds all 95 names through the existing direct B entries.
+Representative C calls qualify ordered operands, raw omissions, live context and
+result/error transport; each whole BIF-CHECK obligation remains open. Complete
+admitted source forms and configured condition/host/platform behavior through
+the named owners, reusing one checked call mechanism and existing B entrypoints.
 
 BF01–09 below are integration/verification groups. Reuse existing independent
 expected results and fixtures through the new compiler, extending tests only
@@ -301,14 +300,13 @@ Fixture abbreviations name maintained inputs with authored expected results:
   and [`classic_stream_package.rexx`](../../../../tests/rxpa/classic_stream_package.rexx).
   These provide reusable semantics/lifecycle/byte expectations, not coverage of every stream case.
 
-**Partial** in the table means only an admitted route exists:
-LENGTH takes one actual, DIGITS none, ARG none or two present actuals. Their
-existing new-C controls are `tests/backend/arguments-c.crexx`, `argv-c.crexx`,
-`numeric-c.crexx` and `tests/frontend-tests.crexx`; emission uses current
-`llctarget` adapters, not a completed generic direct-BIF binding. **Unbound** means the
-name is not bound by the new frontend. Local-routine shadowing remains distinct.
-All 95 whole BIF integration obligations remain open. The cited B/native/G
-fixtures may be reused as oracles; their existing passes are never new-C passes.
+**Bound** in the table means the name has a direct C binding route through
+`llcbifs` and the shared B argument validator. Representative new-C controls in
+`tests/call` qualify transport, selected value/error/context cases and readable
+RXAS; they do not establish every row's BIF-CHECK obligations. Local-routine
+shadowing remains distinct. All 95 whole BIF integration obligations remain open.
+The cited B/native/G fixtures may be reused as oracles; their existing passes
+are never new-C passes.
 
 Some direct harnesses exercise a different retained entry: `B/Address` and
 `B/Trace` test pool-oriented clients, while the catalogue selects activation
@@ -332,101 +330,101 @@ own new-C value/error/context cases, without repeating the whole matrix 95 times
 
 | Name | Existing B runtime symbol | Context | Reusable fixture | New C status | Owner / next closure check |
 |---|---|---|---|---|---|
-| `ABBREV` | `rexxclassicbifabbrev.rexxclassicbif_abbrev` | T | `B/Abbrev` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `ABS` | `rexxclassicbifabs.rexxclassicbif_abs` | N | `B/Abs` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `ADDRESS` | `rexxclassicbifaddress.rexxclassicbif_address_frame` | A | `B/Address` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `ARG` | `rexxclassicbifarg.rexxclassicbif_arg` | A | `B/Arg` | Partial: borrowed-context route | BF05 / STEP04/06/07; BIF-CHECK |
-| `B2X` | `rexxclassicbifb2x.rexxclassicbif_b2x` | — | `B/B2x` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `BITAND` | `rexxclassicbifs.rexxclassicbif_bitand` | O | `B/Bitwise` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `BITOR` | `rexxclassicbifs.rexxclassicbif_bitor` | O | `B/Bitwise` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `BITXOR` | `rexxclassicbifs.rexxclassicbif_bitxor` | O | `B/Bitwise` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `C2D` | `rexxclassicbifc2d.rexxclassicbif_c2d` | O, N | `B/C2d` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `C2X` | `rexxclassicbifc2x.rexxclassicbif_c2x` | O | `B/C2x` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `CENTER` | `rexxclassicbifcenter.rexxclassicbif_center` | T | `B/Center` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `CENTRE` | `rexxclassicbifcenter.rexxclassicbif_centre` | T | `B/Centre` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `CHANGESTR` | `rexxclassicbifchangestr.rexxclassicbif_changestr` | T | `B/Changestr` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `COMPARE` | `rexxclassicbifcompare.rexxclassicbif_compare` | T | `B/Compare` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `CONDITION` | `rexxclassicbifcondition.rexxclassicbif_condition` | A | `B/Condition` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `COPIES` | `rexxclassicbifcopies.rexxclassicbif_copies` | T | `B/Copies` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `COUNTSTR` | `rexxclassicbifcountstr.rexxclassicbif_countstr` | T | `B/Countstr` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `D2C` | `rexxclassicbifd2c.rexxclassicbif_d2c` | O, N | `B/D2c` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `D2X` | `rexxclassicbifd2x.rexxclassicbif_d2x` | O, N | `B/D2x` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `DATATYPE` | `rexxclassicbifdatatype.rexxclassicbif_datatype` | T | `B/Datatype` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `DATE` | `rexxclassicbifdate.rexxclassicbif_date` | K | `B/Date` | Unbound | BF09 / STEP07/08; BIF-CHECK |
-| `DELSTR` | `rexxclassicbifdelstr.rexxclassicbif_delstr` | T | `B/Delstr` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `DELWORD` | `rexxclassicbifdelword.rexxclassicbif_delword` | W | `B/Delword` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `DIGITS` | `rexxclassicbifnumeric.rexxclassicbif_digits` | N | `B/Numeric` | Partial: borrowed-context route | BF05 / STEP04/06/07; BIF-CHECK |
-| `ERRORTEXT` | `rexxclassicbiferrortext.rexxclassicbif_errortext` | — | `B/Errortext` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `FORM` | `rexxclassicbifnumeric.rexxclassicbif_form` | N | `B/Numeric` | Unbound | BF05 / STEP04/06/07; BIF-CHECK |
-| `FORMAT` | `rexxclassicbifformat.rexxclassicbif_format` | N | `B/Format` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `FUZZ` | `rexxclassicbifnumeric.rexxclassicbif_fuzz` | N | `B/Numeric` | Unbound | BF05 / STEP04/06/07; BIF-CHECK |
-| `INSERT` | `rexxclassicbifinsert.rexxclassicbif_insert` | T | `B/Insert` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `LASTPOS` | `rexxclassicbiflastpos.rexxclassicbif_lastpos` | T | `B/Lastpos` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `LEFT` | `rexxclassicbifleft.rexxclassicbif_left` | T | `B/Left` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `LENGTH` | `rexxclassicbiflength.rexxclassicbif_length` | T | `B/Length` | Partial: borrowed-context route | BF01 / STEP04; BIF-CHECK |
-| `LOWER` | `rexxclassicbifs.rexxclassicbif_lower` | T | `B/Bifs` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `MAX` | `rexxclassicbifmax.rexxclassicbif_max` | N | `B/Max` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `MIN` | `rexxclassicbifmin.rexxclassicbif_min` | N | `B/Min` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `OVERLAY` | `rexxclassicbifoverlay.rexxclassicbif_overlay` | T | `B/Overlay` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `POS` | `rexxclassicbifpos.rexxclassicbif_pos` | T | `B/Pos` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `QUEUED` | `rexxclassicbifqueued.rexxclassicbif_queued` | Q | `B/Queued` | Unbound | BF06 / STEP06; BIF-CHECK |
-| `RANDOM` | `rexxclassicbifrandom.rexxclassicbif_random` | R | `B/Random` | Unbound | BF09 / STEP07/08; BIF-CHECK |
-| `REVERSE` | `rexxclassicbifreverse.rexxclassicbif_reverse` | T | `B/Reverse` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `RIGHT` | `rexxclassicbifright.rexxclassicbif_right` | T | `B/Right` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `SIGN` | `rexxclassicbifsign.rexxclassicbif_sign` | N | `B/Sign` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `SOURCELINE` | `rexxclassicbifsourceline.rexxclassicbif_sourceline` | S | `B/Sourceline` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `SPACE` | `rexxclassicbifspace.rexxclassicbif_space` | W | `B/Space` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `STRIP` | `rexxclassicbifstrip.rexxclassicbif_strip` | T | `B/Strip` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `SUBSTR` | `rexxclassicbifsubstr.rexxclassicbif_substr` | T | `B/Substr` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `SUBWORD` | `rexxclassicbifsubword.rexxclassicbif_subword` | W | `B/Subword` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `SYMBOL` | `rexxclassicbifsymbol.rexxclassicbif_symbol` | P | `B/Symbol` | Unbound | BF05 / STEP04/06/07; BIF-CHECK |
-| `TIME` | `rexxclassicbiftime.rexxclassicbif_time` | K | `B/Time` | Unbound | BF09 / STEP07/08; BIF-CHECK |
-| `TRACE` | `rexxclassicbiftrace.rexxclassicbif_trace_frame` | A | `B/Trace` | Unbound | BF07 / STEP07; BIF-CHECK |
-| `TRANSLATE` | `rexxclassicbiftranslate.rexxclassicbif_translate` | T | `B/Translate` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `TRUNC` | `rexxclassicbiftrunc.rexxclassicbif_trunc` | N | `B/Trunc` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `UPPER` | `rexxclassicbifs.rexxclassicbif_upper` | T | `B/Bifs` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `VALUE` | `rexxclassicbifvalue.rexxclassicbif_value` | P | `B/Value` | Unbound | BF05 / STEP04/06/07; BIF-CHECK |
-| `VERIFY` | `rexxclassicbifverify.rexxclassicbif_verify` | T | `B/Verify` | Unbound | BF01 / STEP04; BIF-CHECK |
-| `WORD` | `rexxclassicbifword.rexxclassicbif_word` | W | `B/Word` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `WORDINDEX` | `rexxclassicbifwordindex.rexxclassicbif_wordindex` | W | `B/Wordindex` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `WORDLENGTH` | `rexxclassicbifwordlength.rexxclassicbif_wordlength` | W | `B/Wordlength` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `WORDPOS` | `rexxclassicbifwordpos.rexxclassicbif_wordpos` | W | `B/Wordpos` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `WORDS` | `rexxclassicbifwords.rexxclassicbif_words` | W | `B/Words` | Unbound | BF02 / STEP04; BIF-CHECK |
-| `X2B` | `rexxclassicbifx2b.rexxclassicbif_x2b` | — | `B/X2b` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `X2C` | `rexxclassicbifx2c.rexxclassicbif_x2c` | O | `B/X2c` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `X2D` | `rexxclassicbifx2d.rexxclassicbif_x2d` | O, N | `B/X2d` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `XRANGE` | `rexxclassicbifxrange.rexxclassicbif_xrange` | O | `B/Xrange` | Unbound | BF03 / STEP04; BIF-CHECK |
-| `CHARIN` | `rexxclassicbifstream.rexxclassicbif_charin` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `CHAROUT` | `rexxclassicbifstream.rexxclassicbif_charout` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `CHARS` | `rexxclassicbifstream.rexxclassicbif_chars` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `LINEIN` | `rexxclassicbifstream.rexxclassicbif_linein` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `LINEOUT` | `rexxclassicbifstream.rexxclassicbif_lineout` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `LINES` | `rexxclassicbifstream.rexxclassicbif_lines` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `QUALIFY` | `rexxclassicbifstream.rexxclassicbif_qualify` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `STREAM` | `rexxclassicbifstream.rexxclassicbif_stream` | H | `CS` | Unbound | BF08 / STEP06/08; BIF-CHECK |
-| `UNICODEVERSION` | `rexxclassicbifunicode.rexxclassicbif_unicodeversion` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TONFD` | `rexxclassicbifunicode.rexxclassicbif_tonfd` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TONFC` | `rexxclassicbifunicode.rexxclassicbif_tonfc` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TONFKD` | `rexxclassicbifunicode.rexxclassicbif_tonfkd` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TONFKC` | `rexxclassicbifunicode.rexxclassicbif_tonfkc` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISNFD` | `rexxclassicbifunicode.rexxclassicbif_isnfd` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISNFC` | `rexxclassicbifunicode.rexxclassicbif_isnfc` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISNFKD` | `rexxclassicbifunicode.rexxclassicbif_isnfkd` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISNFKC` | `rexxclassicbifunicode.rexxclassicbif_isnfkc` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOUPPERCASE` | `rexxclassicbifunicode.rexxclassicbif_touppercase` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOLOWERCASE` | `rexxclassicbifunicode.rexxclassicbif_tolowercase` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tocasefold` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tosimplecasefold` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOTURKICCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkiccasefold` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `TOTURKICSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkicsimplecasefold` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `GRAPHEMECOUNT` | `rexxclassicbifunicode.rexxclassicbif_graphemecount` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `GRAPHEMEREVERSE` | `rexxclassicbifunicode.rexxclassicbif_graphemereverse` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `GRAPHEMESUBSTR` | `rexxclassicbifunicode.rexxclassicbif_graphemesubstr` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `GRAPHEMEPOS` | `rexxclassicbifunicode.rexxclassicbif_graphemepos` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ENCODE` | `rexxclassicbifunicode.rexxclassicbif_encode` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `DECODE` | `rexxclassicbifunicode.rexxclassicbif_decode` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISDECODABLE` | `rexxclassicbifunicode.rexxclassicbif_isdecodable` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
-| `ISENCODINGSUPPORTED` | `rexxclassicbifunicode.rexxclassicbif_isencodingsupported` | U | `CU` | Unbound | BF04 / STEP03/04; BIF-CHECK |
+| `ABBREV` | `rexxclassicbifabbrev.rexxclassicbif_abbrev` | T | `B/Abbrev` | Bound | BF01 / STEP04; BIF-CHECK |
+| `ABS` | `rexxclassicbifabs.rexxclassicbif_abs` | N | `B/Abs` | Bound | BF03 / STEP04; BIF-CHECK |
+| `ADDRESS` | `rexxclassicbifaddress.rexxclassicbif_address_frame` | A | `B/Address` | Bound | BF07 / STEP07; BIF-CHECK |
+| `ARG` | `rexxclassicbifarg.rexxclassicbif_arg` | A | `B/Arg` | Bound; specialized common forms | BF05 / STEP04/06/07; BIF-CHECK |
+| `B2X` | `rexxclassicbifb2x.rexxclassicbif_b2x` | — | `B/B2x` | Bound | BF03 / STEP04; BIF-CHECK |
+| `BITAND` | `rexxclassicbifs.rexxclassicbif_bitand` | O | `B/Bitwise` | Bound | BF03 / STEP04; BIF-CHECK |
+| `BITOR` | `rexxclassicbifs.rexxclassicbif_bitor` | O | `B/Bitwise` | Bound | BF03 / STEP04; BIF-CHECK |
+| `BITXOR` | `rexxclassicbifs.rexxclassicbif_bitxor` | O | `B/Bitwise` | Bound | BF03 / STEP04; BIF-CHECK |
+| `C2D` | `rexxclassicbifc2d.rexxclassicbif_c2d` | O, N | `B/C2d` | Bound | BF03 / STEP04; BIF-CHECK |
+| `C2X` | `rexxclassicbifc2x.rexxclassicbif_c2x` | O | `B/C2x` | Bound | BF03 / STEP04; BIF-CHECK |
+| `CENTER` | `rexxclassicbifcenter.rexxclassicbif_center` | T | `B/Center` | Bound | BF01 / STEP04; BIF-CHECK |
+| `CENTRE` | `rexxclassicbifcenter.rexxclassicbif_centre` | T | `B/Centre` | Bound | BF01 / STEP04; BIF-CHECK |
+| `CHANGESTR` | `rexxclassicbifchangestr.rexxclassicbif_changestr` | T | `B/Changestr` | Bound | BF01 / STEP04; BIF-CHECK |
+| `COMPARE` | `rexxclassicbifcompare.rexxclassicbif_compare` | T | `B/Compare` | Bound | BF01 / STEP04; BIF-CHECK |
+| `CONDITION` | `rexxclassicbifcondition.rexxclassicbif_condition` | A | `B/Condition` | Bound | BF07 / STEP07; BIF-CHECK |
+| `COPIES` | `rexxclassicbifcopies.rexxclassicbif_copies` | T | `B/Copies` | Bound | BF01 / STEP04; BIF-CHECK |
+| `COUNTSTR` | `rexxclassicbifcountstr.rexxclassicbif_countstr` | T | `B/Countstr` | Bound | BF01 / STEP04; BIF-CHECK |
+| `D2C` | `rexxclassicbifd2c.rexxclassicbif_d2c` | O, N | `B/D2c` | Bound | BF03 / STEP04; BIF-CHECK |
+| `D2X` | `rexxclassicbifd2x.rexxclassicbif_d2x` | O, N | `B/D2x` | Bound | BF03 / STEP04; BIF-CHECK |
+| `DATATYPE` | `rexxclassicbifdatatype.rexxclassicbif_datatype` | T | `B/Datatype` | Bound | BF03 / STEP04; BIF-CHECK |
+| `DATE` | `rexxclassicbifdate.rexxclassicbif_date` | K | `B/Date` | Bound | BF09 / STEP07/08; BIF-CHECK |
+| `DELSTR` | `rexxclassicbifdelstr.rexxclassicbif_delstr` | T | `B/Delstr` | Bound | BF01 / STEP04; BIF-CHECK |
+| `DELWORD` | `rexxclassicbifdelword.rexxclassicbif_delword` | W | `B/Delword` | Bound | BF02 / STEP04; BIF-CHECK |
+| `DIGITS` | `rexxclassicbifnumeric.rexxclassicbif_digits` | N | `B/Numeric` | Bound; specialized common forms | BF05 / STEP04/06/07; BIF-CHECK |
+| `ERRORTEXT` | `rexxclassicbiferrortext.rexxclassicbif_errortext` | — | `B/Errortext` | Bound | BF07 / STEP07; BIF-CHECK |
+| `FORM` | `rexxclassicbifnumeric.rexxclassicbif_form` | N | `B/Numeric` | Bound | BF05 / STEP04/06/07; BIF-CHECK |
+| `FORMAT` | `rexxclassicbifformat.rexxclassicbif_format` | N | `B/Format` | Bound | BF03 / STEP04; BIF-CHECK |
+| `FUZZ` | `rexxclassicbifnumeric.rexxclassicbif_fuzz` | N | `B/Numeric` | Bound | BF05 / STEP04/06/07; BIF-CHECK |
+| `INSERT` | `rexxclassicbifinsert.rexxclassicbif_insert` | T | `B/Insert` | Bound | BF01 / STEP04; BIF-CHECK |
+| `LASTPOS` | `rexxclassicbiflastpos.rexxclassicbif_lastpos` | T | `B/Lastpos` | Bound | BF01 / STEP04; BIF-CHECK |
+| `LEFT` | `rexxclassicbifleft.rexxclassicbif_left` | T | `B/Left` | Bound | BF01 / STEP04; BIF-CHECK |
+| `LENGTH` | `rexxclassicbiflength.rexxclassicbif_length` | T | `B/Length` | Bound; specialized common forms | BF01 / STEP04; BIF-CHECK |
+| `LOWER` | `rexxclassicbifs.rexxclassicbif_lower` | T | `B/Bifs` | Bound | BF01 / STEP04; BIF-CHECK |
+| `MAX` | `rexxclassicbifmax.rexxclassicbif_max` | N | `B/Max` | Bound | BF03 / STEP04; BIF-CHECK |
+| `MIN` | `rexxclassicbifmin.rexxclassicbif_min` | N | `B/Min` | Bound | BF03 / STEP04; BIF-CHECK |
+| `OVERLAY` | `rexxclassicbifoverlay.rexxclassicbif_overlay` | T | `B/Overlay` | Bound | BF01 / STEP04; BIF-CHECK |
+| `POS` | `rexxclassicbifpos.rexxclassicbif_pos` | T | `B/Pos` | Bound | BF01 / STEP04; BIF-CHECK |
+| `QUEUED` | `rexxclassicbifqueued.rexxclassicbif_queued` | Q | `B/Queued` | Bound | BF06 / STEP06; BIF-CHECK |
+| `RANDOM` | `rexxclassicbifrandom.rexxclassicbif_random` | R | `B/Random` | Bound | BF09 / STEP07/08; BIF-CHECK |
+| `REVERSE` | `rexxclassicbifreverse.rexxclassicbif_reverse` | T | `B/Reverse` | Bound | BF01 / STEP04; BIF-CHECK |
+| `RIGHT` | `rexxclassicbifright.rexxclassicbif_right` | T | `B/Right` | Bound | BF01 / STEP04; BIF-CHECK |
+| `SIGN` | `rexxclassicbifsign.rexxclassicbif_sign` | N | `B/Sign` | Bound | BF03 / STEP04; BIF-CHECK |
+| `SOURCELINE` | `rexxclassicbifsourceline.rexxclassicbif_sourceline` | S | `B/Sourceline` | Bound | BF07 / STEP07; BIF-CHECK |
+| `SPACE` | `rexxclassicbifspace.rexxclassicbif_space` | W | `B/Space` | Bound | BF02 / STEP04; BIF-CHECK |
+| `STRIP` | `rexxclassicbifstrip.rexxclassicbif_strip` | T | `B/Strip` | Bound | BF01 / STEP04; BIF-CHECK |
+| `SUBSTR` | `rexxclassicbifsubstr.rexxclassicbif_substr` | T | `B/Substr` | Bound | BF01 / STEP04; BIF-CHECK |
+| `SUBWORD` | `rexxclassicbifsubword.rexxclassicbif_subword` | W | `B/Subword` | Bound | BF02 / STEP04; BIF-CHECK |
+| `SYMBOL` | `rexxclassicbifsymbol.rexxclassicbif_symbol` | P | `B/Symbol` | Bound | BF05 / STEP04/06/07; BIF-CHECK |
+| `TIME` | `rexxclassicbiftime.rexxclassicbif_time` | K | `B/Time` | Bound | BF09 / STEP07/08; BIF-CHECK |
+| `TRACE` | `rexxclassicbiftrace.rexxclassicbif_trace_frame` | A | `B/Trace` | Bound | BF07 / STEP07; BIF-CHECK |
+| `TRANSLATE` | `rexxclassicbiftranslate.rexxclassicbif_translate` | T | `B/Translate` | Bound | BF01 / STEP04; BIF-CHECK |
+| `TRUNC` | `rexxclassicbiftrunc.rexxclassicbif_trunc` | N | `B/Trunc` | Bound | BF03 / STEP04; BIF-CHECK |
+| `UPPER` | `rexxclassicbifs.rexxclassicbif_upper` | T | `B/Bifs` | Bound | BF01 / STEP04; BIF-CHECK |
+| `VALUE` | `rexxclassicbifvalue.rexxclassicbif_value` | P | `B/Value` | Bound | BF05 / STEP04/06/07; BIF-CHECK |
+| `VERIFY` | `rexxclassicbifverify.rexxclassicbif_verify` | T | `B/Verify` | Bound | BF01 / STEP04; BIF-CHECK |
+| `WORD` | `rexxclassicbifword.rexxclassicbif_word` | W | `B/Word` | Bound | BF02 / STEP04; BIF-CHECK |
+| `WORDINDEX` | `rexxclassicbifwordindex.rexxclassicbif_wordindex` | W | `B/Wordindex` | Bound | BF02 / STEP04; BIF-CHECK |
+| `WORDLENGTH` | `rexxclassicbifwordlength.rexxclassicbif_wordlength` | W | `B/Wordlength` | Bound | BF02 / STEP04; BIF-CHECK |
+| `WORDPOS` | `rexxclassicbifwordpos.rexxclassicbif_wordpos` | W | `B/Wordpos` | Bound | BF02 / STEP04; BIF-CHECK |
+| `WORDS` | `rexxclassicbifwords.rexxclassicbif_words` | W | `B/Words` | Bound | BF02 / STEP04; BIF-CHECK |
+| `X2B` | `rexxclassicbifx2b.rexxclassicbif_x2b` | — | `B/X2b` | Bound | BF03 / STEP04; BIF-CHECK |
+| `X2C` | `rexxclassicbifx2c.rexxclassicbif_x2c` | O | `B/X2c` | Bound | BF03 / STEP04; BIF-CHECK |
+| `X2D` | `rexxclassicbifx2d.rexxclassicbif_x2d` | O, N | `B/X2d` | Bound | BF03 / STEP04; BIF-CHECK |
+| `XRANGE` | `rexxclassicbifxrange.rexxclassicbif_xrange` | O | `B/Xrange` | Bound | BF03 / STEP04; BIF-CHECK |
+| `CHARIN` | `rexxclassicbifstream.rexxclassicbif_charin` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `CHAROUT` | `rexxclassicbifstream.rexxclassicbif_charout` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `CHARS` | `rexxclassicbifstream.rexxclassicbif_chars` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `LINEIN` | `rexxclassicbifstream.rexxclassicbif_linein` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `LINEOUT` | `rexxclassicbifstream.rexxclassicbif_lineout` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `LINES` | `rexxclassicbifstream.rexxclassicbif_lines` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `QUALIFY` | `rexxclassicbifstream.rexxclassicbif_qualify` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `STREAM` | `rexxclassicbifstream.rexxclassicbif_stream` | H | `CS` | Bound | BF08 / STEP06/08; BIF-CHECK |
+| `UNICODEVERSION` | `rexxclassicbifunicode.rexxclassicbif_unicodeversion` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TONFD` | `rexxclassicbifunicode.rexxclassicbif_tonfd` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TONFC` | `rexxclassicbifunicode.rexxclassicbif_tonfc` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TONFKD` | `rexxclassicbifunicode.rexxclassicbif_tonfkd` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TONFKC` | `rexxclassicbifunicode.rexxclassicbif_tonfkc` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISNFD` | `rexxclassicbifunicode.rexxclassicbif_isnfd` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISNFC` | `rexxclassicbifunicode.rexxclassicbif_isnfc` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISNFKD` | `rexxclassicbifunicode.rexxclassicbif_isnfkd` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISNFKC` | `rexxclassicbifunicode.rexxclassicbif_isnfkc` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOUPPERCASE` | `rexxclassicbifunicode.rexxclassicbif_touppercase` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOLOWERCASE` | `rexxclassicbifunicode.rexxclassicbif_tolowercase` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tocasefold` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_tosimplecasefold` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOTURKICCASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkiccasefold` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `TOTURKICSIMPLECASEFOLD` | `rexxclassicbifunicode.rexxclassicbif_toturkicsimplecasefold` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `GRAPHEMECOUNT` | `rexxclassicbifunicode.rexxclassicbif_graphemecount` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `GRAPHEMEREVERSE` | `rexxclassicbifunicode.rexxclassicbif_graphemereverse` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `GRAPHEMESUBSTR` | `rexxclassicbifunicode.rexxclassicbif_graphemesubstr` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `GRAPHEMEPOS` | `rexxclassicbifunicode.rexxclassicbif_graphemepos` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ENCODE` | `rexxclassicbifunicode.rexxclassicbif_encode` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `DECODE` | `rexxclassicbifunicode.rexxclassicbif_decode` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISDECODABLE` | `rexxclassicbifunicode.rexxclassicbif_isdecodable` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
+| `ISENCODINGSUPPORTED` | `rexxclassicbifunicode.rexxclassicbif_isencodingsupported` | U | `CU` | Bound | BF04 / STEP03/04; BIF-CHECK |
 
 The native `levelc_bif_inventory.rexx` contains unreachable calls and therefore
 checks admission only; it is not a semantic oracle. The broader
@@ -573,7 +571,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-SIGNAL` | Not implemented | LC-I-23 / STEP07 | Full LC-I-23 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-TRACE` | Not implemented | LC-I-24 / STEP07 | Full LC-I-24 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-EXPRESSIONS` | Partial: operator subset | C-EXPR/C-NUM; STEP04/07 | Close LC-REF-043–046/053/054, including power, integer division/remainder and full comparisons. |
-| `SYN-CLASSIC-BIF-CALL` | Partial: 3 names; 92 unbound | BF01–09; STEP04/06/07/08 | Close every one of the 95 binding rows with BIF-CHECK, including LC-REF-055. |
+| `SYN-CLASSIC-BIF-CALL` | All 95 names bound; whole BIF-CHECK open | BF01–09; STEP04/06/07/08 | Close every one of the 95 binding rows with BIF-CHECK, including LC-REF-055. |
 | `SYN-CLASSIC-LOCAL-CALL` | Partial: shared-entry local calls | C-ACT/C-ABI; STEP03/06/07 | Close LC-I-11–15 and LC-REF-055/056/061/067; complete resolution, dynamic entries and outcomes. |
 | `SYN-CLASSIC-DSLSH` | Partial: new source/diagnostics; native editor retained | C-SRC; STEP04; existing editor owner | Qualify new-C trees/located diagnostics. Preserve existing native rxc/editor projection; no new B/L editor protocol or editor replacement is implied. |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Partial: C AST/IR pipeline | CFC-AC07/10/11; STEP01/02/04 | Verify ownership, structure, types/effects, provenance and refusal at C AST→L IR→RXAS boundaries; native canonical AST/lowerer reuse is not required or allowed as fallback. |

@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs parseprogram procedureprotocol doprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs bindings parseprogram procedureprotocol doprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -152,6 +152,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llclanguage.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsymbols.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbifs.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbindings.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
@@ -258,6 +259,16 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/call-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_call_contracts_${_mode}
       DEPENDS "${_dir}/call-contracts-linked.rxbin")
+    set(_c_external_inputs ${_c_drop_inputs}
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccompiler.rxbin")
+    ll_compile(call-external-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/call/external/contracts.crexx"
+      "${_dir}" ${_c_external_inputs})
+    add_custom_command(OUTPUT "${_dir}/call-external-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/call-external-contracts-linked"
+        "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs}
+      DEPENDS rxlink "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs} VERBATIM)
+    add_custom_target(llcompiler_call_external_contracts_${_mode}
+      DEPENDS "${_dir}/call-external-contracts-linked.rxbin")
     ll_compile(return-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/return/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/return-contracts-linked.rxbin"
@@ -588,6 +599,21 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_call_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_call_vm})
+    # Explicit owning B/G preparation stays outside the staged C request host.
+    set(_external_test "llcompiler_c_call_external_${_mode}_${_call_ir}_${_call_vm}")
+    add_test(NAME ${_external_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/call/external/check-external.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_external_test}"
+      --mode ${_mode} --vm ${_call_vm} --ir ${_call_ir})
+    set_tests_properties(${_external_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "EXTERNAL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_external_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_call_external_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_call_vm})
   endforeach()
   # RETURN shares one source compilation across source, cleanup and B-host
   # controls in each complementary lane. Keep nested tools serialized.

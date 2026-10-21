@@ -5,6 +5,8 @@ import rxfnsb
 import llir
 import llcir
 import llcbifs
+import llcbindings
+import llbinmeta
 import llcompilercontracts
 import llsource
 import llrxastext
@@ -22,6 +24,12 @@ compilation: class
   _schema = .llir..contract
   _canonical = .llir..contract
   _path = .string
+  _providers = reference .llcbindings..prepared
+  _bound = .int
+  _export = .string
+  _externalindices = .int[]
+  _hasexternal = .int[]
+  _signals = .string
   _limit = .int
   _reglimit = .int
   _phase = .string
@@ -51,7 +59,7 @@ compilation: class
   _routine = .string
   _locals = .int
   _names = .string[]
-  _signatures = .object[]
+  _signatures = .llcompilercontracts..signature[]
   _packages = .string[]
   _catalogs = .object[]
   _classiccatalog = .llcompilercontracts..catalog
@@ -78,6 +86,11 @@ compilation: class
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
+    return
+  bound: factory
+    arg graph = .llir..module, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = ''
+    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _limit = bytes; _reglimit = registers
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   fail: method = .void
@@ -152,7 +165,7 @@ compilation: class
     arg package = .string, name = .string
     i = .int
     do i = 1 to _names[0]
-      if _names[i] = name then return _signatures[i] as .llcompilercontracts..signature
+      if _names[i] = name then return _signatures[i]
     end
     image = .binary; signature = .llcompilercontracts..signature
     if package = 'rxfnsc' then do
@@ -191,7 +204,7 @@ compilation: class
     end
     if signature.error() <> '' then call fail('IMPORT: ' || signature.error())
     if _error = '' then do
-      n = _names[0] + 1; _names[n] = name; _signatures[n] = signature as .object
+      n = _names[0] + 1; _names[n] = name; _signatures[n] = signature
     end
     return signature
   imported: method = .string
@@ -340,10 +353,12 @@ compilation: class
       call checkselectorigin(op,'EXIT')
       _parseclauses[op.id()] = op.origin().first() + 1
     end
-    if wordpos(name,'crexx.c.return.empty crexx.c.bif crexx.c.call.missing crexx.c.requirevalue') > 0 then do
+    if wordpos(name,'crexx.c.return.empty crexx.c.bif crexx.c.call.missing crexx.c.requirevalue crexx.c.call.external') > 0 then do
       call checkselectorigin(op,'CALL/RETURN')
       if _error <> '' then return
       _parseclauses[op.id()] = op.origin().first() + 1
+      if name = 'crexx.c.call.external' then call checkexternal(op)
+      if _error <> '' then return
       if name = 'crexx.c.bif' then do
         bifname = op.attribute('name') as .string; symbol = llcbifs..entry(bifname)
         if symbol = '' then do; call fail('LOWERING: unknown direct Classic BIF'); return; end
@@ -404,6 +419,37 @@ compilation: class
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
       symbol = localname(op.attribute('target') as .string)
     end
+    return
+  /** Bind only to an explicit immutable selection. No artifact reader or
+   * signature parser is revisited by the source/raw operation path. */
+  checkexternal: method = .void
+    arg op = .llir..opview
+    if _bound = 0 then do; call fail('IMPORT: external CALL requires explicit providers'); return; end
+    if <refvalid>(_providers) = 0 then do; call fail('IMPORT: provider owner is not live'); return; end
+    providers = dereference _providers
+    if initialized(providers) = 0 then do; call fail('IMPORT: provider owner is not initialized'); return; end
+    target = op.attribute('target') as .string; selected = providers.find(target)
+    if providers.status() then do; _error = providers.error(); return; end
+    if selected <= 0 then do; call fail('IMPORT: external CALL has no unambiguous selected binding'); return; end
+    symbol = providers.callable(selected)
+    if providers.status() then do; _error = providers.error(); return; end
+    if target \== symbol then do; call fail('IMPORT: external CALL requires the canonical selected identity'); return; end
+    index = 0
+    do i = 1 to _names[0]
+      if _names[i] == symbol then index = i
+    end
+    if index = 0 then do
+      signature = providers.signature(selected)
+      if signature.error() <> '' then do; _error = signature.error(); return; end
+      index = _names[0] + 1
+      assembler move _names[index],symbol
+      assembler null symbol
+      assembler move _signatures[index],signature
+      assembler null signature
+    end
+    _externalindices[op.id()] = index
+    store = dereference _store
+    _hasexternal[store.get(2,op.blockid(),1)] = 1
     return
   /** One immutable catalogue validates raw transport once per selector request.
    * Each operation still checks its exact BIF export, origin and live context. */
@@ -624,6 +670,61 @@ compilation: class
     call emit('null',activation); call emit('null',pool); call emit('null',config)
     call emit('ret','r0')
     return
+  /** Ordinary typed void(frame) entry. Named by-value inputs isolate; a
+   * disposable incoming frame remains anchored by the caller's call window.
+   * Native ARG pointer restoration owns its lifetime on return/unwind. */
+  providerentry: method = .void
+    activation = reg(_workbase + 8); pool = reg(_workbase + 9); bundle = reg(_workbase + 10)
+    config = reg(_workbase + 7); configref = reg(_workbase + 3)
+    receiver = reg(_workbase); poolref = reg(_workbase + 2)
+    value = reg(_workbase + 6); present = reg(_workbase + 5)
+    call emit('null',activation)
+    call emit('brtpandt','llprovider_disposable,a1,512')
+    call emit('copy',activation || ',a1')
+    call emit('br','llprovider_bound')
+    call emit('llprovider_disposable:')
+    call emit('swap',activation || ',a1')
+    call emit('llprovider_bound:')
+    call emit('link',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','consumefirstinstruction','.void')
+    call invoke('',symbol,1,receiver)
+    call emit('unlink',receiver)
+    symbol = imported('llctarget','llctarget.poolnew','.rexxpool..rexxvariablepool','')
+    call invoke(pool,symbol,0)
+    call emit('mkref',poolref || ',' || pool)
+    call emit('link',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','applycommandstatustopool','.void','reference@.rexxpool..rexxvariablepool')
+    call argcopy(2,poolref); call invoke('',symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',poolref)
+    symbol = member('rexxclassicconfig.rexxclassicconfig','§factory','.rexxclassicconfig..rexxclassicconfig','.string','1')
+    call argtext(1,'UTF8'); call invoke(config,symbol,1)
+    call emit('mkref',configref || ',' || config)
+    call newbundle(bundle,activation,pool,configref)
+    call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke('r0','llf1',2)
+    /* Read both completion fields before any void helper may overwrite r0. */
+    call emit('link',receiver || ',r0')
+    symbol = member('rexxactivation.rexxactivationarguments','returnvalue','.rexxvalue..rexxvalue')
+    call invoke(value,symbol,1,receiver)
+    symbol = member('rexxactivation.rexxactivationarguments','hasreturnvalue','.boolean')
+    call invoke(present,symbol,1,receiver)
+    call emit('unlink',receiver); call emit('null','r0')
+    call emit('link',receiver || ',' || activation)
+    call emit('brf','llprovider_absent,' || present)
+    symbol = member('rexxactivation.rexxactivationarguments','setreturnvalue','.void','.rexxvalue..rexxvalue')
+    call argcopy(2,value); call invoke('',symbol,2,receiver)
+    call emit('br','llprovider_complete')
+    call emit('llprovider_absent:')
+    symbol = member('rexxactivation.rexxactivationarguments','clearreturnvalue','.void')
+    call invoke('',symbol,1,receiver)
+    call emit('llprovider_complete:')
+    call emit('unlink',receiver)
+    call emit('null',value); call emit('null',present)
+    call emit('null',bundle); call emit('null',configref)
+    call emit('null',pool); call emit('null',config)
+    /* Do not NULL the writable disposable frame: its value is caller-owned.
+     * The existing ARG permutation restores it through normal VM return. */
+    call emit('ret')
+    return
   /** The caller owns the fresh activation and separate bundle throughout the
    * synchronous invocation; both borrow the live parent pool/configuration. */
   internalcall: method = .void
@@ -667,12 +768,55 @@ compilation: class
     call emit('null',parentpool); call emit('null',config)
     call emit('null',activation)
     return
+  /** A writable by-value provider receives the owned invocation through the
+   * ordinary disposable window. Recover its anchor before any window clear. */
+  externalcall: method = .void
+    arg op = .llir..opview
+    activation = reg(_workbase + 8); parent = reg(_workbase + 4)
+    pool = reg(_workbase + 2); receiver = reg(_workbase + 1)
+    call emit('copy',activation || ',' || input(op))
+    call binding(input(op,2),'activation',parent)
+    call binding(input(op,2),'pool',pool)
+    call emit('link',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','inheritsignalpolicy','.void','reference@.rexxactivation..rexxactivationarguments')
+    call argcopy(2,parent); call invoke('',symbol,2,receiver)
+    symbol = member('rexxactivation.rexxactivationarguments','capturecallerpool','.void','reference@.rexxpool..rexxvariablepool')
+    call argcopy(2,pool); call invoke('',symbol,2,receiver)
+    symbol = member('rexxactivation.rexxactivationarguments','beginexternalprogram','.void')
+    call invoke('',symbol,1,receiver)
+    call emit('unlink',receiver)
+    symbol = _names[_externalindices[op.id()]]
+    if _sizing then _maxargs = max(_maxargs,1)
+    else do
+      call emit('swap',activation || ',' || reg(_callbase + 1))
+      call emit('load',reg(_callbase) || ',1')
+      call emit('settp',reg(_callbase + 1) || ',768')
+      call emit('call',reg(_scratch) || ',' || symbol || '(),' || reg(_callbase))
+      call emit('swap',activation || ',' || reg(_callbase + 1))
+      call emit('null',reg(_callbase + 1))
+      call emit('move',result(op) || ',' || activation)
+    end
+    call emit('null',activation); call emit('null',parent); call emit('null',pool)
+    return
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
     i = .int; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
     key = .string; known = .string; extent = .int
     do
+      if _bound then do
+        if <refvalid>(_providers) = 0 then do; call fail('IMPORT: provider owner is not live'); return; end
+        providers = dereference _providers
+        if initialized(providers) = 0 then do; call fail('IMPORT: provider owner is not initialized'); return; end
+        if providers.status() then do; _error = providers.error(); return; end
+        _path = providers.root()
+        if providers.status() then do; _error = providers.error(); return; end
+      end
+      if _export <> '' then do
+        if llbinmeta..validname(_export) = 0 | pos('.',_export) = 0 then do
+          call fail('IMPORT: routine export requires a qualified metadata identity'); return
+        end
+      end
       if _graph.error() <> '' then do; _error = _graph.error(); return; end
 
       if _limit < 1 | _reglimit < 16 | _reglimit > 2147483647 then do; call fail('LIMIT: invalid output or register budget'); return; end
@@ -755,17 +899,26 @@ compilation: class
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 16; _workbase = 1; _callbase = 12; _scratch = 0
       if store.text(store.get(1,1,1)) = '$MAIN' then do
-      call emit('main()','.locals=' || _locals)
-      call clearsource()
-      call rootentry()
-      _phase = 'entry flush'; call flush()
+        if _export = '' then do
+          call emit('main()','.locals=' || _locals)
+          call clearsource(); call rootentry()
+        end
+        else do
+          do i = 1 to store.count(1)
+            if store.get(1,i,6) > 0 then do; call fail('LOWERING: routine output requires a private unit body'); return; end
+          end
+          call emit('llprovider()','.locals=' || _locals || ' .expose=' || _export)
+          call emit('.meta',llrxastext..quote(_export as .binary) || '="b" ".void" llprovider() "frame=.rexxactivation..rexxactivationarguments"')
+          call clearsource(); call providerentry()
+        end
+        _phase = 'entry flush'; call flush()
       end
       do f = 1 to store.count(1)
         _phase = 'function ' || f; _fn = f; call procedurebody()
         if _error <> '' then return
       end
       do i = 1 to _names[0]
-        signature = _signatures[i] as .llcompilercontracts..signature
+        signature = _signatures[i]
         call _writer.line(_names[i] || '() .expose=' || _names[i])
         args = ''
         do j = 1 to signature.arguments()
@@ -795,6 +948,8 @@ compilation: class
     i = .int; b = .int; id = .int; op = .llir..opview
     anchor = .int; clause = .int
     store = dereference _store; blocks = .int[]
+    _signals = 'CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE'
+    if _hasexternal[_fn] then _signals = _signals || ' FUNCTION_NOT_FOUND'
     _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
     do i = 1 to store.count(5)
       if store.get(5,i,1) = _fn then do
@@ -867,6 +1022,7 @@ compilation: class
     _phase = 'signature'; first = store.get(1,_fn,4)
     args = 'context=' || targettype(store.get(12,first,2)) || ',entry=.int'
     _phase = 'metadata'; name = 'llprogram.' || store.text(store.get(1,_fn,1))
+    if _export <> '' then name = _export || '.$BODY.' || _fn
     if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',llrxastext..quote(name as .binary) || '="b" ' || llrxastext..quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || llrxastext..quote(args as .binary))
     /* Recycled frames may retain old values. Clear owners before installing
@@ -883,8 +1039,8 @@ compilation: class
       firstop = store.get(2,store.get(1,_fn,3),2)
       if firstop > 0 then filename = llcompilercontracts..sourcename(_graph.operation(firstop).origin().filename()) || ': '
       call emit('load',reg(_location) || ',' || llrxastext..quote((filename || 'entering ' || _routine) as .binary))
-      do i = 1 to 9
-        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary))
+      do i = 1 to words(_signals)
+        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
       end
     end
     call emit('numsci','18,1,2')
@@ -913,15 +1069,15 @@ compilation: class
   fatalbody: method = .void
       i = .int
       _origin = 0
-      do i = 1 to 9
+      do i = 1 to words(_signals)
         call emit('llerror' || _fn || '_' || i || ':')
         if i = 1 then call clearsource()
         call emit('load',reg(_scratch) || ',' || i)
-        if i < 9 then call emit('br','llerror' || _fn)
+        if i < words(_signals) then call emit('br','llerror' || _fn)
       end
       call emit('llerror' || _fn || ':')
-      do i = 1 to 9
-        call emit('sighalt',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary))
+      do i = 1 to words(_signals)
+        call emit('sighalt',llrxastext..quote(word(_signals,i) as .binary))
       end
       if _savedpool >= 0 then do
         call emit('copy',reg(_savedevent) || ',r0')
@@ -937,12 +1093,12 @@ compilation: class
       end
       symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
       call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
-      do i = 1 to 8
+      do i = 1 to words(_signals) - 1
         call emit('beq','llraise' || _fn || '_' || i || ',' || reg(_scratch) || ',' || i)
       end
-      do i = 9 to 1 by -1
+      do i = words(_signals) to 1 by -1
         call emit('llraise' || _fn || '_' || i || ':')
-        call emit('signalorigin',llrxastext..quote(word('CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE',i) as .binary) || ',' || reg(_location) || ',r0')
+        call emit('signalorigin',llrxastext..quote(word(_signals,i) as .binary) || ',' || reg(_location) || ',r0')
         call emit('ret')
       end
     return
@@ -1209,6 +1365,7 @@ compilation: class
         call installnumeric(context)
       end
       when name = 'call' then call internalcall(op)
+      when name = 'call.external' then call externalcall(op)
       when name = 'program.exiting' then call programoperation(op,name)
       when name = 'exit' then do
         call programoperation(op,name)

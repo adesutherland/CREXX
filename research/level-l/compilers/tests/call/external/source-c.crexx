@@ -1,0 +1,88 @@
+/* One C caller serves prepared-provider, completion and fatal controls. */
+options levelc
+parse arg MODE
+COUNT = 0
+ORDER = ''
+SECRET = 'caller'
+rc = 77
+if 0 then call ABSENT
+if MODE = 'raw' then do
+  call extfixture.LENGTH ,, MARK(PAYLOAD),,;
+  return RESULT
+end
+if MODE = 'actuals' then do
+  call extfixture.LENGTH MARK('raw'),, MARK(PAYLOAD),,;
+  return RESULT
+end
+if MODE = 'present-empty' then do
+  call extfixture.LENGTH '',, MARK(PAYLOAD),,;
+  return RESULT
+end
+if MODE = 'empty' then do
+  call extfixture.LENGTH 'empty'
+  return RESULT
+end
+if MODE = 'bare' then do
+  call extfixture.LENGTH 'bare'
+  return symbol('RESULT') || '|' || symbol('.RESULT')
+end
+if MODE = 'eof' then do
+  call eoffixture.run
+  return symbol('RESULT') || '|' || symbol('.RESULT')
+end
+if MODE = 'exit' then do
+  call extfixture.LENGTH 'exit', MARK(PAYLOAD)
+  AFTER = 'continued'
+  return RESULT
+end
+if MODE = 'repeat' then do
+  call extfixture.LENGTH 'isolation', PAYLOAD
+  FIRST = RESULT
+  call extfixture.LENGTH 'isolation', PAYLOAD
+  return FIRST || '/' || RESULT
+end
+if MODE = 'numeric' then do
+  call extfixture.LENGTH 'numeric'
+  return RESULT || '|' || digits() || '|' || fuzz() || '|' || form()
+end
+if MODE = 'source' then do
+  call extfixture.LENGTH 'source'
+  return RESULT
+end
+if MODE = 'providers' then do
+  call levelc_call_external_bg.typedentry
+  FIRST = RESULT
+  call 'levelc_call_external_bg.typedentry'
+  SECOND = RESULT
+  call levelc_call_alias.typedentry
+  return FIRST || '|' || SECOND || '|' || RESULT
+end
+if MODE = 'private-missing' then call PRIVATECALL
+if MODE = 'absent' then call ABSENT FATALMARK()
+call LENGTH 'abc'
+say 'bif=' || RESULT
+call levelc_call_external_bg.typedentry
+say 'local=' || RESULT
+call 'levelc_call_external_bg.typedentry'
+say 'bg=' || RESULT
+call levelc_call_alias.typedentry
+say 'alias=' || RESULT
+return 0
+
+MARK:
+parse arg VALUE
+COUNT = COUNT + 1
+ORDER = ORDER || '[' || VALUE || ']'
+return VALUE
+levelc_call_external_bg.typedentry:
+return 'BG-LOCAL'
+PRIVATECALL:
+procedure expose COUNT
+do I = 1 to 2
+  call extfixture.LENGTH FATALMARK()
+  say 'UNREACHED private external'
+end
+return
+FATALMARK:
+say 'actual before missing'
+return 'raw'
