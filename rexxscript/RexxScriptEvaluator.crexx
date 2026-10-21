@@ -1699,6 +1699,7 @@ rexxscriptcoreevaluator: class
       when name = "MIN" then return 1
       when name = "OVERLAY" then return 1
       when name = "POS" then return 1
+      when name = "QPOS" then return 1
       when name = "RANDOM" then return 1
       when name = "RIGHT" then return 1
       when name = "SIGN" then return 1
@@ -1711,6 +1712,8 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then return 1
       when name = "WORD" then return 1
       when name = "WORDS" then return 1
+      when name = "QWORD" then return 1
+      when name = "QWORDS" then return 1
       when name = "WORDPOS" then return 1
       when name = "SUBWORD" then return 1
       when name = "LINEIN" then return 1
@@ -1725,7 +1728,7 @@ rexxscriptcoreevaluator: class
     return 0
 
   _dispatch_builtin: method = .int
-    arg name = .string, bif_args = .RexxValue[], bif_exists = .int[], stmtno = .int
+    arg name = .string, bif_args = .RexxValue[], bif_exists = .int[], stmtno = .int, argc = .int
     if name = "LINEIN" then return _dispatch_linein(bif_args, bif_exists, stmtno)
     if name = "LINEOUT" then return _dispatch_lineout(bif_args, bif_exists, stmtno)
     if name = "LINES" then return _dispatch_lines(bif_args, bif_exists, stmtno)
@@ -1770,6 +1773,15 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then bif_result = rexxclassicbif_verify(reference context)
       when name = "WORD" then bif_result = rexxclassicbif_word(reference context)
       when name = "WORDS" then bif_result = rexxclassicbif_words(reference context)
+      when name = "QPOS" then do
+        return _dispatch_qpos(bif_args, bif_exists, argc, stmtno)
+      end
+      when name = "QWORD" then do
+        return _dispatch_qword(bif_args, bif_exists, argc, stmtno)
+      end
+      when name = "QWORDS" then do
+        return _dispatch_qwords(bif_args, bif_exists, argc, stmtno)
+      end
       when name = "WORDPOS" then bif_result = rexxclassicbif_wordpos(reference context)
       when name = "SUBWORD" then bif_result = rexxclassicbif_subword(reference context)
       when name = "TRANSLATE" then bif_result = rexxclassicbif_translate(reference context)
@@ -1825,7 +1837,7 @@ rexxscriptcoreevaluator: class
         if upper_name = "UNQUOTE" then return _intrinsic_unquote(bif_args, bif_exists, parsed_arg_count, stmtno)
         if upper_name = "VALUE" then return _intrinsic_value(bif_args, bif_exists, parsed_arg_count, stmtno)
 
-    return _dispatch_builtin(upper_name, bif_args, bif_exists, stmtno)
+    return _dispatch_builtin(upper_name, bif_args, bif_exists, stmtno, parsed_arg_count)
 
   _intrinsic_value: method = .int
     arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
@@ -1855,6 +1867,52 @@ rexxscriptcoreevaluator: class
     eval_value = _quote_String(value)
     eval_type = "string"
    return 1
+
+  _dispatch_qpos: method = .int
+    arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
+    if argc < 2 | argc > 3 then return _set_error("invalid_arguments", "QPOS requires two or three arguments", stmtno, 1)
+    if exists[1] = 0 | exists[2] = 0 then return _set_error("invalid_arguments", "QPOS arguments must not be omitted", stmtno, 1)
+
+    start = 1
+    if argc = 3 then do
+      if exists[3] = 0 then return _set_error("invalid_arguments", "QPOS start argument must not be omitted", stmtno, 1)
+      start = args[3].asString() as .int
+    end
+
+    do
+      eval_value = qpos(args[1].asString(), args[2].asString(), start) || ""
+    on signal invalid_arguments as problem
+      return _set_error("invalid_arguments", problem.message(), stmtno, 1)
+    end
+    eval_type = "int"
+    return 1
+
+  _dispatch_qword: method = .int
+    arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
+    if argc <> 2 then return _set_error("invalid_arguments", "QWORD requires exactly two arguments", stmtno, 1)
+    if exists[1] = 0 | exists[2] = 0 then return _set_error("invalid_arguments", "QWORD arguments must not be omitted", stmtno, 1)
+
+    word_number = args[2].asString() as .int
+    do
+      eval_value = qword(args[1].asString(), word_number)
+    on signal invalid_arguments as problem
+      return _set_error("invalid_arguments", problem.message(), stmtno, 1)
+    end
+    eval_type = "string"
+    return 1
+
+  _dispatch_qwords: method = .int
+    arg args = .RexxValue[], exists = .int[], argc = .int, stmtno = .int
+    if argc <> 1 then return _set_error("invalid_arguments", "QWORDS requires exactly one argument", stmtno, 1)
+    if exists[1] = 0 then return _set_error("invalid_arguments", "QWORDS argument must not be omitted", stmtno, 1)
+
+    do
+      eval_value = qwords(args[1].asString()) || ""
+    on signal invalid_arguments as problem
+      return _set_error("invalid_arguments", problem.message(), stmtno, 1)
+    end
+    eval_type = "int"
+    return 1
 
    /* Allows intrinsic functions to return a string value */
 

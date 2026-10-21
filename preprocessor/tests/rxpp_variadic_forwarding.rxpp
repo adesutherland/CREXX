@@ -1,0 +1,26 @@
+options levelb
+##CFLAG nosrcmap, maclog
+
+/* One-shot forwarding is distinct from the legacy repeated-body `...` form. */
+##define cmd emit(...args) {##MACRO_EMIT ...args}
+##define cmd emitprefixed(prefix ...args) {##MACRO_EMIT_PREFIX prefix ...args}
+
+##macro MACRO_EMIT ...args
+  display=changestr('"',args,'""')
+  .gen say "FORWARDED &display"
+  wrds=qwords(args)
+  do i=1 to wrds
+     wrd=qword(args,i)
+     wrd=unquote(wrd)
+     .gen say &i "&wrd"
+  end
+##mend
+
+##macro MACRO_EMIT_PREFIX prefix ...args
+  .gen say "&prefix: &args"
+##mend
+
+EMIT alpha beta gamma
+EMIT alpha "beta gamma"
+EMIT alpha "beta,gamma"
+EMITPREFIXED demo one two three

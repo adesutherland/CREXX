@@ -153,6 +153,7 @@ RXPP_MACLIB_MISSING = Macrobibliotheek is niet gevonden of is niet toegankelijk:
 RXPP_MACRO_EMPTY_BODY = Macro-body is leeg of accolades ontbreken: {name}.
 RXPP_MACRO_MISSING_RPAREN = Macrodefinitie mist een sluitend haakje: {definition}.
 RXPP_MACRO_UNCLOSED = Macrodefinitie is niet gesloten: {name}.
+RXPP_MACRO_FORWARDING_POSITION = Benoemde variadische doorstuurparameter moet aan het einde van {macro}({arguments}) staan.
 RXPP_MISSING_ENDIF = Geen bijpassende ##ENDIF gevonden na regel {line}.
 RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL vereist een modulenaam.
 RXPP_NO_SOURCE_FILE = Geen source-bestand opgegeven.
