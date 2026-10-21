@@ -50,10 +50,10 @@ on:
         type: string
         default: ''
 
-# Qualification does not activate the scheduled daily policy. Master rollout
-# requires Adrian's separate decision after the clean candidate measurements.
+# Qualified VM-priority cadence, activated by Adrian on 21 October 2026.
+# Scheduled definitions live on master; product inputs come from develop.
 env:
-  SANITIZER_DAILY_ACTIVATED: 'false'
+  SANITIZER_DAILY_ACTIVATED: 'true'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux' || inputs.qualification == 'continuation-linux' || inputs.qualification == 'identity-linux') && format('-{0}', inputs.qualification) || '' }}
@@ -83,7 +83,12 @@ jobs:
         run: |
           set -euo pipefail
           target_sha="${REQUESTED_SOURCE:-$GITHUB_SHA}"
-          if [ "$GITHUB_EVENT_NAME" = schedule ]; then
+          # master receives only this workflow; its released product sources
+          # do not yet contain the new policy tools. Default manual assurance
+          # from master therefore qualifies develop, just like the schedule.
+          if [ "$GITHUB_EVENT_NAME" = schedule ] ||
+             { [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] &&
+               [ "$GITHUB_REF" = refs/heads/master ] && [ -z "$REQUESTED_SOURCE" ]; }; then
             target_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" --jq '.object.sha')
           fi
           echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"

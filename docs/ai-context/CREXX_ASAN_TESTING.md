@@ -281,7 +281,7 @@ platform discovery. The Apple reference snapshot keeps 1,288 existing cases and
 moves 2,010 to weekly/affected; six bounded sustained-state VM cells bring daily
 to 1,294. These are reference counts, not another platform's count oracle or a
 wall-time promise. Unknown/new names stay daily. See [the owning scope and
-risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--qualified-activation-pending).
+risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--qualified-scheduled-cadence-enabled).
 Full ordinary correctness is unchanged. Omitted producer/semantic/optimizer
 histories may first be detected weekly; no native branch/history equivalence is
 claimed. Closed producer SAN triggers remain weekly/affected, with original
@@ -291,9 +291,17 @@ Native/shared/build/unknown changes and missing compatible native baseline selec
 full coverage. Source-only Level L/new-C edits use ordinary full semantics plus
 the fixed runtime panel unless an explicit affected ownership mapping restores
 named histories; Unicode/shared graph/service changes have such mappings.
-Weekly full runs on Sunday after activation. **Scheduled daily activation is
-still disabled.** Scheduled definitions load from master and require Adrian's
-separate decision after clean platform qualification.
+The scheduled policy is enabled following Adrian's approval and clean daily
+platform qualification. At **03:47 UTC daily**, the definition on `master`
+checks out current `develop`; Sunday selects weekly full original-producer
+assurance. Other days select the VM-priority profile only when history and
+affected inputs permit it. Missing compatible history, changed native/build
+inputs or unavailable comparison select full coverage. Initial activation may
+therefore run full before subsequent daily reuse becomes eligible. Default
+manual dispatch from `master` also qualifies current `develop`, because this
+narrow rollout leaves master's released product sources unchanged. Explicit
+`source_ref`, branch-selected manual runs and version-tag source identity remain
+unchanged; focused historical diagnostics should provide their owning source ref.
 
 Daily runtime preparation may use `-DCREXX_QA_FIXTURE_TREE=<ordinary-tree>`.
 Configure both fresh single-config Ninja trees with the same source, compiler,

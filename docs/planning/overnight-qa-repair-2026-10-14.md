@@ -28,8 +28,9 @@ Adrian. Preserve private research and Python-removal drafts.
    notarization/stapling gates and bounded retries remain mandatory.
 4. **B21-AC04 — todo:** publish compatible repairs, inspect actual Windows and
    Intel Mac results and confirm dev-snapshot publication. Reuse unchanged
-   sanitizer proof; do not dispatch a new full sanitizer or deep matrix. Keep
-   the new daily schedule disabled and remove task diagnostics.
+   sanitizer proof; do not dispatch a new full sanitizer or deep matrix. Adrian's
+   subsequent schedule-activation request is owned by SCOPE-AC07 in the sanitizer
+   worklist; preserve that explicit workflow-only scope and remove task diagnostics.
 
 ### Implementation steps
 

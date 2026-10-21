@@ -115,8 +115,10 @@ The approved sanitizer profile/preparation strategy is owned by
 `docs/ai-context/CREXX_ASAN_TESTING.md`. Full, weekly, release and SAN-closure
 proof retains the complete non-measurement scope and original instrumented
 producers. Daily proof is a distinct profile and cannot certify broad assurance.
-Scheduled daily activation remains disabled pending clean qualification and
-Adrian's separate master-workflow decision.
+Adrian approved scheduled activation after clean platform qualification.
+The master workflow runs at 03:47 UTC daily, selecting the VM-priority profile
+on ordinary days and full original-producer assurance on Sundays. Native/build
+changes and missing compatible history retain conservative full fallback.
 
 ## Emitted-code quality
 

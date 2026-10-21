@@ -8,8 +8,15 @@ sanitizer configurations.  Repository policy and closure requirements are in
 ## Sanitizer scope review and proposal — 20 October 2026
 
 **Status: VM-priority implementation and clean daily Linux/Apple qualification
-are complete. Scheduled activation remains disabled pending Adrian's separate
-master-workflow decision.**
+are complete. Adrian approved scheduled activation on 21 October 2026.**
+
+The current rollout supersedes the earlier activation holds below. The narrow
+`master` exception changes only `.github/workflows/sanitizers.yml`; it does not
+promote product code or cut a release. At 03:47 UTC daily the workflow tests
+current `develop`, using the VM-priority profile when compatible proof permits,
+weekly full original-producer scope on Sunday, and conservative full fallback
+for native/build changes or missing comparison/history. Keep Linux leak checks,
+both platforms, scope-qualified reuse and all SAN closure rules intact.
 The original approved order was unchanged isolated Linux timeout diagnosis first, then the
 exact ten-cell daily reduction, separated fixture/native preparation and shared
 Classic preparation, qualified before activation. The existing scheduled policy
@@ -47,7 +54,7 @@ Preserve all applicable permanent SAN regressions and existing broad closure
 gates pending explicit approval of any replacement. No native tool is retired
 by this review. Resolve the current failure rather than excluding it.
 
-### Revised VM-priority daily scope — qualified, activation pending
+### Revised VM-priority daily scope — qualified, scheduled cadence enabled
 
 **Explicit approval, 20 October:** Adrian approved this VM-priority revision:
 1,288 existing Apple daily names plus six bounded sustained-state cells; 2,010
@@ -55,7 +62,7 @@ existing names weekly/affected; full ordinary, weekly, release and SAN closure
 preserved. This amends the existing SCOPE-AC IDs as stated below. The prior
 U-minus-ten implementation is superseded; its incomplete platform outcomes
 remain historical diagnostics. Clean revised daily Linux/Apple qualification is
-complete; the separate master-activation decision remains open.
+complete; the separate master-activation decision is approved.
 
 Adrian clarified that long-running VM/plugin memory ownership matters most, while the
 compiler and assembler are the least important daily leak targets. This proposal
@@ -1974,9 +1981,9 @@ complete; scheduled activation stays disabled.
    (including its stale CI-enforcement footer) and affected owning test docs
    coherently. Record exact qualified inputs, commands, results and limitations;
    delete task-created diagnostics. Keep existing SAN closure requirements.
-7. **SCOPE-AC07 — VM-priority revision approved; activation gate open:** Adrian approved
+7. **SCOPE-AC07 — done:** Adrian approved
    the reviewed replacement membership, risk-based cadence and bounded lifecycle
-   scope on 20 October. Qualify before activation; Adrian separately decides the master exception.
+   scope on 20 October and the workflow-only master exception on 21 October.
    Publication follows the authority in the implementation request. Verify
    the effective scheduled definition before claiming rollout complete.
 8. **SCOPE-AC08 — done:** retained direct and real-workload tests check expected
@@ -2019,7 +2026,7 @@ complete; scheduled activation stays disabled.
    bounded Linux original-producer completion under SAN-QA-021.
    Compare coverage/scenario obligations with the baseline and report gaps;
    reuse valid unchanged results.
-6. **SCOPE-STEP06 — publication authorized; scheduled activation remains todo (AC06/07):** reconcile
+6. **SCOPE-STEP06 — done (AC06/07):** reconcile
    documentation and current remote changes; prepare separate reviewable
    timeout-repair and scope-policy commits in hotfix for normal promotion to
    develop if publication is authorised. Apply the master workflow-only
@@ -3913,16 +3920,15 @@ repair commit or worktree identity, exact final commands, and broad result.
 
 `.github/workflows/sanitizers.yml` currently runs full Linux x64 ASan/LSan
 and macOS arm64 ASan for version tags and default manual dispatch. Scheduled
-invocations resolve current `develop` and skip an exact SHA already qualified by
-both full platform jobs. Ordinary pushes and pull requests do not invoke this
+invocations resolve current `develop`, select daily/weekly/full from the qualified
+policy, and reuse only compatible platform/profile proof. Ordinary pushes and pull requests do not invoke this
 workflow; full sanitizer jobs are not universal develop publication gates.
 The explicit `normalization-linux` dispatch is an isolated diagnosis route and
 cannot write a broad-assurance marker. Linux build/test leaks stay enabled;
 Apple LeakSanitizer is unsupported.
 
-The effective scheduled definition is still on `master`, with its existing
-240-minute job guard. Hotfix has the 360-minute guard and focused dispatch route;
-this is not scheduled activation. The approved daily/preparation changes remain
-subject to clean platform qualification and the separate narrow master-workflow
-decision. Hosted run links establish observed results; local policy or a stable
+The effective scheduled definition belongs on `master`, with a 360-minute
+platform guard and the qualified daily/preparation policy enabled. Full weekly,
+release and SAN closure scopes retain original instrumented producers. Hosted
+run links establish observed results; local policy or a stable
 job name alone does not establish successful execution or branch protection.
