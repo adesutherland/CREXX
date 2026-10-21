@@ -167,7 +167,7 @@ installs its validated settings; child return restores the parent frame.
 | `numeric.digits/fuzz/form`, `digits` | Validate/update the borrowed activation or inspect the executing frame, including defaults/reset and caller inheritance. |
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
 | `parse.source/execute` | PARSE, standalone ARG and PULL share acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty ARG templates skip acquisition/execution and preserve ordinal gaps. PULL implies UPPER, acquires once even when bare/empty-first, and supplies empty text to later comma templates. Live names/presence/original arguments retain the shared runtime contract. |
-| `push` | Convert one optional/bare operand with existing Classic asString(1), then insert through the borrowed current config. Operand EXIT completes before insertion; normal/fatal paths end scoped borrows. |
+| `push/queue` | Convert one optional/bare operand with existing Classic asString(1), then insert at the front/tail through the borrowed current config. Operand EXIT completes before insertion; normal/fatal paths end scoped borrows. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
 | `call` | Resolved local entry, argument packet, borrowed context and function/subroutine attribute; fresh child activation/bundle initially share the current pool. |
 | `bif`, `call.missing` | Exact named shared BIF binding or reached missing43.1 after actual evaluation; preserve raw presence. |

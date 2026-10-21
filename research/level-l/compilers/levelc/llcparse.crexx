@@ -191,7 +191,7 @@ parsed: class
           else if clause & next <> equals & wordpos(spelling,'INTERPRET ADDRESS SIGNAL TRACE EXPOSE') > 0 then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY PUSH CALL NOP OPTIONS IMPORT PROCEDURE ARG PULL NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY PUSH QUEUE CALL NOP OPTIONS IMPORT PROCEDURE ARG PULL NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
@@ -269,7 +269,7 @@ parsed: class
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
         term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
-        if emptyrhs | wordpos(word,'SAY PUSH RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
+        if emptyrhs | wordpos(word,'SAY PUSH QUEUE RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
         if depth = 0 & kind = comma & wordpos(operandmode,'arg call') > 0 then term = 1
       end
       if kind = colon & next <> sep then do
@@ -463,7 +463,7 @@ headerpolicy: procedure = .llcomments..rules
 /** Translate internal token labels without losing the LR expected-token set. */
 syntaxmessage: procedure = .string
   arg text = .string
-  keywords = 'if then else do end while leave iterate return exit say push call nop options import procedure arg pull numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for parse'
+  keywords = 'if then else do end while leave iterate return exit say push queue call nop options import procedure arg pull numeric digits fuzz form scientific engineering as namespace expose drop select when otherwise forever until to by for parse'
   do i = 1 to words(keywords)
     keyword = word(keywords,i)
     text = changestr(keyword || 'word',text,upper(keyword))
@@ -548,7 +548,7 @@ completionmessage: procedure = .string
   language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
   i = .int
   active = ''; previouskind = -1; previousstart = 0; failedkind = -1
-  separator = language.tokenid('separator'); returnword = language.tokenid('returnword'); exitword = language.tokenid('exitword'); pushword = language.tokenid('pushword')
+  separator = language.tokenid('separator'); returnword = language.tokenid('returnword'); exitword = language.tokenid('exitword'); pushword = language.tokenid('pushword'); queueword = language.tokenid('queueword')
   do i = 0 to tokens.size() - 1
     first = tokens.start(i)
     if first > offset then leave
@@ -557,6 +557,7 @@ completionmessage: procedure = .string
     if kind = returnword then active = 'RETURN'
     else if kind = exitword then active = 'EXIT'
     else if kind = pushword then active = 'PUSH'
+    else if kind = queueword then active = 'QUEUE'
     else if kind = separator | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword') then do
       if first < offset then active = ''
     end

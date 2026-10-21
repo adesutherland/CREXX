@@ -67,11 +67,13 @@ uses the 36-export target. The plan tracks instruction status and remaining work
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
 
-PUSH evaluates its optional expression once and inserts exact Classic text at
-the front of the execution-selected queue; bare PUSH inserts empty text. It
-reuses existing conversion/config methods and skips insertion when the operand
-exits the program. Shared host/condition/TRACE/platform work remains open under
-the [PUSH contract](doc/architecture.md#push-contract).
+PUSH and QUEUE evaluate their optional expression once and insert exact Classic
+text at the front or tail of the execution-selected queue. Bare forms insert
+empty text. They reuse existing conversion/config methods and skip insertion
+when the operand exits the program. FIFO/consumed-slot and mixed front/tail
+composition retain one shared queue owner. Shared host/condition/TRACE/platform
+work remains open under the [PUSH](doc/architecture.md#push-contract) and
+[QUEUE](doc/architecture.md#queue-contract) contracts.
 
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing

@@ -46,7 +46,7 @@ def shapes(instruction, text, source):
     critical = {i for i, row in enumerate(rows, 1)
                 if row.strip() in (name, name + ' NEXT()')}
     writes = Counter(); current = None; operand_rows = []
-    operand_line = rows.index('  push EXITVALUE()') + 1 if instruction == 'PUSH' else None
+    operand_line = rows.index('  ' + name + ' EXITVALUE()') + 1
     # A call's generated carrier/query records retain its proved clause, while
     # truthfully carrying no authored filename/line of their own.
     operand_clauses = set()
@@ -57,7 +57,7 @@ def shapes(instruction, text, source):
                 if fields[4] == 'source-c.crexx' and int(fields[5]) == operand_line:
                     if int(fields[2]):
                         operand_clauses.add(int(fields[2]))
-        assert operand_clauses, 'operand call and PUSH retain clause ownership'
+        assert operand_clauses, 'operand call and insertion retain clause ownership'
     operand_active = False
     for row in body.splitlines():
         if row.lstrip().startswith('.srcstep '):
@@ -227,11 +227,12 @@ def main(instruction, fixtures):
                     assert b'17.1' in result.stderr and b'CLASSIC_SYNTAX' in result.stderr and f'source-c.crexx:{line}:'.encode() in result.stderr, (line, result.stderr)
                     assert b'UNREACHED' not in result.stdout and b'Assertion' not in result.stderr
 
-        if instruction == 'PUSH' and args.phase in ('all', 'contracts'):
-            probe = backend / 'llc-push-contracts-linked.rxbin'
-            result = run('PUSH schema and fresh/loaded admission',
-                         [host_vm, '--no-autoload', probe, '-a', runtime], cwd=host)
-            assert re.fullmatch(rb'PUSH_CONTRACTS\|checks=\d+\|failures=0\r?\n', result.stdout) and not result.stderr, (result.stdout, result.stderr)
+        if args.phase in ('all', 'contracts'):
+            probe = backend / 'llc-queue-insertion-contracts-linked.rxbin'
+            result = run(instruction + ' schema and fresh/loaded admission',
+                         [host_vm, '--no-autoload', probe, '-a', runtime, instruction], cwd=host)
+            expected = instruction.encode() + rb'_CONTRACTS\|checks=\d+\|failures=0\r?\n'
+            assert re.fullmatch(expected, result.stdout) and not result.stderr, (result.stdout, result.stderr)
 
         if args.phase in ('all', 'refusals'):
             output = application / 'prior.rxas'; prior = b'unchanged prior output\n'; output.write_bytes(prior)

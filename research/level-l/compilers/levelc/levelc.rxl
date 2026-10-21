@@ -75,6 +75,7 @@ exposeword: token = 70
 constantname: token = 71
 pullword: token = 72
 pushword: token = 73
+queueword: token = 74
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -144,6 +145,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
     then tree Sequence(items = item*)
   say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
   push.statement: rule = pushword (expression as value)? then tree CPush(value = value?)
+  queue.statement: rule = queueword (expression as value)? then tree CQueue(value = value?)
   call.statement: rule = callword (identifier | number | typename | constantname | parsedot) as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
   call.quoted: rule = callword string as name arguments as arguments then tree InvokeQuoted(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
@@ -193,7 +195,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | push.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | push.statement | queue.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?

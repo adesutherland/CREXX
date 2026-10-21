@@ -1,4 +1,4 @@
-/* cREXX License (MIT). Independent selected-queue PUSH admission oracles. */
+/* cREXX License (MIT). Independent selected-queue insertion admission oracles. */
 options levelb
 import rxfnsb
 import llir
@@ -7,35 +7,37 @@ import llcrxas
 
 main: procedure = .int expose checks failures
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  if argv[0] <> 2 then return 2
+  instruction = argv[2]
+  if instruction \== 'PUSH' & instruction \== 'QUEUE' then return 2
   checks = 0; failures = 0
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish()
-  call schema(contract)
+  call schema(contract,instruction)
   mode = .int; graph = .llir..module; loaded = .llir..module
   diagnostic = .string
   do mode = 1 to 3
-    graph = fixture(contract,mode)
-    call check(graph.error() == '', 'generic PUSH fixture ' || mode || ': ' || graph.error())
+    graph = fixture(contract,mode,instruction)
+    call check(graph.error() == '', 'generic ' || instruction || ' fixture ' || mode || ': ' || graph.error())
     if graph.error() <> '' then iterate
     diagnostic = ''
     if mode = 2 then diagnostic = 'LL_COMPILER_LOWERING: entry dispatch uses a different bound slot'
-    if mode = 3 then diagnostic = 'LL_COMPILER_LOWERING: PUSH requires an owned exact source origin'
-    call admission(argv[1],graph,mode = 1,'fresh ' || mode,diagnostic,mode = 1)
+    if mode = 3 then diagnostic = 'LL_COMPILER_LOWERING: ' || instruction || ' requires an owned exact source origin'
+    call admission(argv[1],graph,mode = 1,instruction || ' fresh ' || mode,diagnostic,mode = 1)
     loaded = loadgraph(reference graph)
-    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'loaded PUSH fixture ' || mode || ': ' || loaded.error())
-    if loaded.error() == '' then call admission(argv[1],loaded,mode = 1,'loaded ' || mode,diagnostic)
+    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'loaded ' || instruction || ' fixture ' || mode || ': ' || loaded.error())
+    if loaded.error() == '' then call admission(argv[1],loaded,mode = 1,instruction || ' loaded ' || mode,diagnostic)
   end
-  stale = stalecontract(contract); graph = fixture(stale,1)
-  call check(graph.error() == '', 'generic stale C12 graph: ' || graph.error())
+  stale = stalecontract(contract); graph = fixture(stale,1,instruction)
+  call check(graph.error() == '', 'generic stale C13 graph: ' || graph.error())
   if graph.error() == '' then do
     diagnostic = 'unsupported family version crexx.c'
-    call admission(argv[1],graph,0,'fresh C12',diagnostic)
+    call admission(argv[1],graph,0,'fresh C13',diagnostic)
     loaded = loadgraph(reference graph)
-    call check(loaded.error() == '', 'loaded stale C12 graph: ' || loaded.error())
-    if loaded.error() == '' then call admission(argv[1],loaded,0,'loaded C12',diagnostic)
+    call check(loaded.error() == '', 'loaded stale C13 graph: ' || loaded.error())
+    if loaded.error() == '' then call admission(argv[1],loaded,0,'loaded C13',diagnostic)
   end
-  say 'PUSH_CONTRACTS|checks=' || checks || '|failures=' || failures
+  say instruction || '_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -46,7 +48,7 @@ check: procedure = .void expose checks failures
   return
 
 schema: procedure = .void
-  arg contract = .llir..contract
+  arg contract = .llir..contract, instruction = .string
   data = dereference contract.data()
   version = 0; count = 0; i = .int
   do i = 1 to data.familycount()
@@ -55,19 +57,20 @@ schema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 13 & count = 5 & data.ops() = 64,'exact C13/five-type/64-operation contract')
-  descriptor = contract.operation('crexx.c.push'); id = descriptor.id()
-  call check(descriptor.valid() & data.opname(64) == 'crexx.c.push','PUSH is the append-only operation')
-  call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'value' & data.typename(data.fieldtype(id,1,1)) == 'crexx.c.value','PUSH first input is value:V')
-  call check(data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','PUSH second input is context:C')
-  call check(data.arity(id,2) = 0 & data.arity(id,3) = 0,'PUSH has no result or attributes')
-  call check(data.effectvalue(id,1) == 'context.output' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','PUSH declares its complete contextual effects')
+  call check(version = 14 & count = 5 & data.ops() = 65,'exact C14/five-type/65-operation contract')
+  call check(data.opname(64) == 'crexx.c.push' & data.opname(65) == 'crexx.c.queue','append-only PUSH and QUEUE operation order')
+  descriptor = contract.operation('crexx.c.' || lower(instruction)); id = descriptor.id()
+  call check(descriptor.valid(),instruction || ' descriptor exists')
+  call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'value' & data.typename(data.fieldtype(id,1,1)) == 'crexx.c.value',instruction || ' first input is value:V')
+  call check(data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context',instruction || ' second input is context:C')
+  call check(data.arity(id,2) = 0 & data.arity(id,3) = 0,instruction || ' has no result or attributes')
+  call check(data.effectvalue(id,1) == 'context.output' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns',instruction || ' declares its complete contextual effects')
   service = data.callback(id,1)
-  call check((service is .llir..evaluator) = 0,'PUSH has no pure evaluator')
+  call check((service is .llir..evaluator) = 0,instruction || ' has no pure evaluator')
   return
 
 /* Preserve every current declaration, changing only the semantic family
- * version. This refuses C12 independently of unused descriptor/body shape. */
+ * version. This refuses C13 independently of unused descriptor/body shape. */
 stalecontract: procedure = .llir..contract
   arg canonical = .llir..contract
   source = dereference canonical.data(); data = .llir..schema_data()
@@ -75,7 +78,7 @@ stalecontract: procedure = .llir..contract
   i = .int; kind = .int; field = .int; ignored = .int
   do i = 2 to source.familycount()
     version = source.version(i)
-    if source.familyname(i) == 'crexx.c' then version = 12
+    if source.familyname(i) == 'crexx.c' then version = 13
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()
@@ -107,26 +110,27 @@ loadgraph: procedure = .llir..module
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, diagnostic = '', limitcontrol = 0
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
-  if accepted then call check(selected.status() = 0 & output.bytes() > 0,label || ' admits canonical PUSH: ' || selected.error())
+  if accepted then call check(selected.status() = 0 & output.bytes() > 0,label || ' admits canonical insertion: ' || selected.error())
   else call check(selected.status() <> 0 & output.bytes() = 0,label || ' refuses atomically: ' || selected.error())
   if diagnostic <> '' then call check(pos(diagnostic,selected.error()) > 0,label || ' retains its specific cause: ' || selected.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves the input graph')
   if limitcontrol & accepted & selected.status() = 0 then do
     previous = output.text()
     limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
-    call check(limited.status() <> 0 & pos('LL_COMPILER_LIMIT:',limited.error()) > 0 & empty.bytes() = 0,'bounded refusal publishes no partial PUSH output')
+    call check(limited.status() <> 0 & pos('LL_COMPILER_LIMIT:',limited.error()) > 0 & empty.bytes() = 0,'bounded refusal publishes no partial insertion output')
     call check(output.text() == previous & bincompare(saved,graph.binary()) = 0,'bounded refusal preserves prior owned output and graph')
   end
   return
 
 /* Only three variants are needed here. The second slot is once-bound and
  * typed correctly, but is not the canonical context selected by entry setup.
- * The third PUSH is detached so exact-origin admission cannot rely on reach. */
+ * The third insertion is detached so exact-origin admission cannot rely on reach. */
 fixture: procedure = .llir..module
-  arg contract = .llir..contract, mode = .int
+  arg contract = .llir..contract, mode = .int, instruction = .string
   builder = .llir..builder(contract)
-  file = builder.source('push-ir.crexx',"push 'x'" as .binary)
-  authored = file.origin(0,8); generated = builder.synthetic('independent PUSH dispatch')
+  name = lower(instruction); source = (name || " 'x'") as .binary
+  file = builder.source(name || '-ir.crexx',source)
+  authored = file.origin(0,<blen>(source)); generated = builder.synthetic('independent insertion dispatch')
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   ignored = fn.argument(contract.type('crexx.c.context'))
   ignored = fn.argument(contract.type('crexx.g.int64'))
@@ -150,13 +154,13 @@ fixture: procedure = .llir..module
   call draft.input('context',context); finished = draft.finish()
   if mode = 3 then do
     call absent(body,contract,authored)
-    body = fn.block('dead PUSH')
+    body = fn.block('dead insertion')
   end
   context = body.load(context_slot,authored)
   if mode = 2 then context = body.load(alternate,authored)
   value = body.constantbytes(contract.type('crexx.c.value'),'x' as .binary,authored)
   origin = authored; if mode = 3 then origin = generated
-  draft = body.operation(contract.operation('crexx.c.push'),origin)
+  draft = body.operation(contract.operation('crexx.c.' || name),origin)
   call draft.input('value',value); call draft.input('context',context); finished = draft.finish()
   call absent(body,contract,authored)
   return builder.finish()

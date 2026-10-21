@@ -100,13 +100,17 @@ and read-only review retain their separately assigned owners.
 The [PULL contract](architecture.md#pull-contract) delivers the local AC01–04
 source/lowering and independent fixture profile through the existing PARSE
 source/executor. Bare acquisition and shared host/observation/platform owners
-remain explicit. PUSH and QUEUE follow as separate insertion increments: one
-serial production integrator, independent fixtures, and read-only review; record
-each exact contract before implementation. The [PUSH contract](architecture.md#push-contract)
+remain explicit. PUSH and QUEUE have separate local insertion profiles: one
+serial production integrator, independent fixtures, and read-only review; each
+exact contract precedes its implementation. The [PUSH contract](architecture.md#push-contract)
 delivers the local AC01–04 profile: the serial integrator owns production/schema/
 parser/selector/docs/CMake; the independent reviewer owns `tests/push` source/
-host/raw controls; existing B code owns queue/configuration algorithms. AC05
-remains shared work. QUEUE follows with its exact contract and separate commit.
+host/refusal controls; existing B code owns queue/configuration algorithms. AC05
+remains shared work. The [QUEUE contract](architecture.md#queue-contract) assigns
+the locally delivered AC01–04 profile to the serial integrator for production/
+schema/docs/CMake and the independent reviewer for neutral `tests/queue-insertion`
+plus thin PUSH/QUEUE fixture entries. No parallel shared builds; AC05 remains
+shared scope. ADDRESS/implicit commands follow exact shared-B/C contract review.
 
 <a id="procedure-assignment-packet"></a>
 

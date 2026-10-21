@@ -471,9 +471,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v13/64 with
+C to the two-argument source-unit ABI. The current family is v14/65 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
-static signed statement providers and selected-queue PUSH. Local instruction qualification is tracked in the plan.** Use the following contract with one current
+static signed statement providers and selected-queue PUSH/QUEUE. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -481,9 +481,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 13. The neutral scalar names do not load the G
+types and `crexx.c` version 14. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–12 are never reinterpreted as version 13. Within version 13, the complete C
+versions 1–13 are never reinterpreted as version 14. Within version 14, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -2920,8 +2920,8 @@ operand tails report contextual35.1 after existing lexer/comment/PARSE priority.
 An operand's internal-call EXIT guard runs before conversion or insertion, so a
 program exit cannot insert or execute later source.
 
-The C family becomes **v13, five types and 64 operations** by appending
-`push(value:V,context:C)->void`, with no attributes/evaluator, state
+PUSH appends operation64, `push(value:V,context:C)->void`, under the
+[current C family](#current-c-family-contract), with no attributes/evaluator, state
 `context.output`, failure `condition.resource`, and termination `returns`.
 The target remains 36 exports. Generic schema verification and current C
 admission inspect every record, including dead/loaded/transformed records.
@@ -2951,7 +2951,7 @@ configured failures, conditions/TRACE and declared platforms remain STEP07/08.
    pool restoration and operand EXIT with no insertion or later effects.
 3. **PUSH-AC03:** a small independent raw fixture admits the exact descriptor and
    canonical positive, refuses substituted context/dead provenance and stale
-   v12, and repeats fresh/loaded admission without the general raw matrix.
+   family revisions, and repeats fresh/loaded admission without the general raw matrix.
 4. **PUSH-AC04:** readable opt/noopt RXAS proves one conversion/selected config
    method, scoped borrows, finite normal/fatal cleanup, truthful source and no
    new queue dispatcher/target export. Complementary compiler/assembler/VM and
@@ -2969,8 +2969,76 @@ configured failures, conditions/TRACE and declared platforms remain STEP07/08.
   feature commit; AC01–04. Keep AC05 and complete C open; QUEUE follows separately.
 
 **PUSH-STEP01–03 are complete for the local AC01–04 profile.** Maintained
-`tests/push` source/host/raw/refusal controls and representative RXAS checks own
-independent qualification. AC05 and whole LC-I-17 remain open.
+`tests/push` source/host/refusal controls, neutral `tests/queue-insertion` raw
+admission and representative RXAS checks own independent qualification. AC05 and
+whole LC-I-17 remain open.
+
+<a id="queue-contract"></a>
+
+## QUEUE selected-queue contract
+
+LC-I-18 has PUSH's optional-expression, empty-text, once-only conversion,
+PROCEDURE consumption, continuation, contextual35.1 and operand-EXIT contract,
+but appends at the tail of the execution-selected queue. CQueue(value?:Expression)
+and contextual QUEUE preserve ordinary variable/assignment/label/call ownership.
+Use the same B queue owner: consumed physical slots must not change active
+count/order, and older entries, PUSH front insertions and QUEUE tail insertions
+remain ordered without consuming values during QUEUED/peek observations.
+
+The C family becomes **v14, five types and 65 operations** by appending
+`queue(value:V,context:C)->void` as operation65; PUSH stays operation64.
+Its empty attributes/results, no evaluator, `context.output` state,
+`condition.resource` failure and `returns` termination match PUSH. The current
+canonical-family check refuses stale v13, even when QUEUE is unused. All-record
+canonical context loads and owned exact/nonempty/Unicode-boundary source spans
+use the existing PUSH admission pattern, labeled QUEUE. Substitution keeps
+`LL_COMPILER_LOWERING: entry dispatch uses a different bound slot`; provenance
+uses `LL_COMPILER_LOWERING: QUEUE requires ...` / `LL_COMPILER_SOURCE: QUEUE ...`.
+Fresh, loaded, transformed and dead records receive the same checked boundary;
+no new CFG/source parser or generic analysis is added.
+
+One private selector queue-write routine serves both operations. Its compile-time
+operation name chooses the checked config member (`pushText` or `queueText`);
+no runtime name dispatcher is emitted. Retain PUSH's disposable V conversion
+window and one `RexxValue.asString(1)`, stable text, checked current-config borrow,
+one chosen insertion call and normal/fatal receiver/work cleanup. Reuse existing
+expression spills and program-exit guards before insertion. No target export,
+shared B/L/VM API, queue algorithm or activation-owned queue is introduced.
+The target remains 36 exports. The selected execution/module queue stays shared
+across nested/private/external roots; wider host isolation and observations
+retain their existing owners.
+
+1. **QUEUE-AC01:** optional/bare/contextual expressions, continuation and exact
+   Unicode/NUL/empty text execute once; malformed live/dead35.1 and prior-output
+   atomic refusal preserve original source bytes and scalar locations.
+2. **QUEUE-AC02:** independent source/B-host expectations prove tail/FIFO order,
+   consumed-slot reuse, old/head/tail interaction, nonconsuming count/peek,
+   selected-queue sharing/private restoration and operand EXIT without insertion
+   or later effects, including an owned result after helper expiry.
+3. **QUEUE-AC03:** one neutral insertion probe checks exact current schema and
+   each selected operation, canonical positive/wrong-context/dead-origin/stale13
+   fresh+loaded refusals and bounded atomic output. Reuse generic admission and
+   unchanged PUSH controls; do not clone their broad matrices.
+4. **QUEUE-AC04:** complementary compiler/assembler/VM/IR source/host/refusal and
+   readable RXAS prove one conversion/chosen member, no copied config/dispatcher,
+   operand-EXIT dominance, truthful source and finite normal/fatal lifetime.
+   Compare a tiny appropriate native B/G/C insertion control independently.
+5. **QUEUE-AC05 — open shared scope:** configured failures, full conditions/TRACE,
+   wider host queue selection/isolation and declared platforms remain STEP07/08.
+
+- **QUEUE-STEP01:** record/internal review of this exact delta, ownership and
+  independent expectations before implementation; AC01–05.
+- **QUEUE-STEP02:** contextual CQueue/source diagnostics, append-only descriptor,
+  canonical/source admission and shared direct selector; AC01–04. Reuse only a
+  matching lexer capsule. Neutral test helpers/probe have thin PUSH/QUEUE entries.
+- **QUEUE-STEP03:** focused source/host/raw/refusal/RXAS qualification, measured
+  serial registration, current-schema consumers, scope review and local feature
+  commit; AC01–04. Preserve AC05/whole C and stop-before-INTERPRET authority.
+
+**QUEUE-STEP01–03 are complete for the local AC01–04 profile.** Maintained
+`tests/queue` source/host/refusal controls, neutral insertion admission and
+representative RXAS checks own independent qualification. QUEUE-AC05 and whole
+LC-I-18 remain open; no queue runtime algorithm or target export was added.
 
 ## Optimisation ownership
 

@@ -285,14 +285,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_exit_contracts_${_mode}
       DEPENDS "${_dir}/exit-contracts-linked.rxbin")
-    ll_compile(llc-push-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/push/contracts.crexx"
+    ll_compile(llc-queue-insertion-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/queue-insertion/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
-    add_custom_command(OUTPUT "${_dir}/llc-push-contracts-linked.rxbin"
-      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/llc-push-contracts-linked"
-        "${_dir}/llc-push-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/llc-push-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
-    add_custom_target(llcompiler_push_contracts_${_mode}
-      DEPENDS "${_dir}/llc-push-contracts-linked.rxbin")
+    add_custom_command(OUTPUT "${_dir}/llc-queue-insertion-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/llc-queue-insertion-contracts-linked"
+        "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_queue_insertion_contracts_${_mode}
+      DEPENDS "${_dir}/llc-queue-insertion-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -699,30 +699,33 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_pull_vm})
   endforeach()
-  # One PUSH source image serves queue/EXIT/host checks; the raw probe is small.
-  foreach(_mode opt noopt)
-    set(_push_vm rxbvm)
-    set(_push_ir on)
-    if(_mode STREQUAL "noopt")
-      set(_push_ir off)
-      if(TARGET rxtvm)
-        set(_push_vm rxtvm)
+  # Each insertion source image serves queue/EXIT/host checks; share one raw probe.
+  foreach(_instruction push queue)
+    string(TOUPPER "${_instruction}" _insertion_marker)
+    foreach(_mode opt noopt)
+      set(_insertion_vm rxbvm)
+      set(_insertion_ir on)
+      if(_mode STREQUAL "noopt")
+        set(_insertion_ir off)
+        if(TARGET rxtvm)
+          set(_insertion_vm rxtvm)
+        endif()
       endif()
-    endif()
-    set(_test "llcompiler_c_push_${_mode}_${_push_ir}_${_push_vm}")
-    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
-      "${CMAKE_CURRENT_SOURCE_DIR}/tests/push/check-push.py"
-      --build "${CMAKE_BINARY_DIR}"
-      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
-      --mode ${_mode} --vm ${_push_vm} --ir ${_push_ir})
-    set_tests_properties(${_test} PROPERTIES
-      PASS_REGULAR_EXPRESSION "PUSH_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
-      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
-      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
-    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
-      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-      llcompiler_push_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_push_vm})
+      set(_test "llcompiler_c_${_instruction}_${_mode}_${_insertion_ir}_${_insertion_vm}")
+      add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/${_instruction}/check-${_instruction}.py"
+        --build "${CMAKE_BINARY_DIR}"
+        --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+        --mode ${_mode} --vm ${_insertion_vm} --ir ${_insertion_ir})
+      set_tests_properties(${_test} PROPERTIES
+        PASS_REGULAR_EXPRESSION "${_insertion_marker}_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+        TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+        llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+        llcompiler_queue_insertion_contracts_${_mode}
+        library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_insertion_vm})
+    endforeach()
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
