@@ -133,14 +133,21 @@ parse: parser semantics contextfree input tokens start program backend lr1
   program: rule = statements as body then tree Program(body = body)
   statements: rule = separator* (statement as item (separator (statement as item)?)*)?
     then tree Sequence(items = item*)
-  statement: rule = closed.statement | open.statement
+  statement: rule = label.statement | closed.statement | open.statement
+  arm: rule = closed.arm | open.arm
+  closed.arm: rule = closed.statement | labelled.closed
+  open.arm: rule = open.statement | labelled.open
+  labelled.closed: rule = (label.statement as label separator+)+ closed.statement as value
+    then tree CLabelled(labels = label+, value = value)
+  labelled.open: rule = (label.statement as label separator+)+ open.statement as value
+    then tree CLabelled(labels = label+, value = value)
   closed.statement: rule = simple | block | select.statement | if.closed
   open.statement: rule = if.open | if.continued
-  if.closed: rule = ifword expression as condition thenword closed.statement as yes elseword closed.statement as no
+  if.closed: rule = ifword expression as condition thenword closed.arm as yes elseword closed.arm as no
     then tree IfElse(condition = condition, yes = yes, no = no)
-  if.open: rule = ifword expression as condition thenword statement as yes
+  if.open: rule = ifword expression as condition thenword arm as yes
     then tree IfThen(condition = condition, yes = yes)
-  if.continued: rule = ifword expression as condition thenword closed.statement as yes elseword open.statement as no
+  if.continued: rule = ifword expression as condition thenword closed.arm as yes elseword open.arm as no
     then tree IfElse(condition = condition, yes = yes, no = no)
   select.statement: rule = selectword separator
     (separator | (label.statement as clause separator))*
@@ -148,7 +155,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
     (separator | ((select.when | label.statement) as clause separator))*
     (select.otherwise as clause)? endword
     then tree CSelect(clauses = clause+)
-  select.when: rule = whenword expression as condition thenword statement as body
+  select.when: rule = whenword expression as condition thenword arm as body
     then tree CWhen(condition = condition, body = body)
   select.otherwise: rule = otherwiseword otherwise.body as body
     then tree COtherwise(body = body)
@@ -224,7 +231,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | command.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | label.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | command.statement | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
   parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
     then tree Parse(source = source, templates = templates, upper = text(upper))
   parse.upper: rule = parseupper?

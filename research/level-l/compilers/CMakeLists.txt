@@ -319,6 +319,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_numeric_contracts_${_mode}
       DEPENDS "${_dir}/numeric-contracts-linked.rxbin")
+    ll_compile(label-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/labels/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/label-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/label-contracts-linked"
+        "${_dir}/label-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/label-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_label_contracts_${_mode}
+      DEPENDS "${_dir}/label-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -777,6 +785,31 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_address_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_address_vm})
+  endforeach()
+  # Required label arms share one source image for entry/host/error checks.
+  foreach(_mode opt noopt)
+    set(_label_vm rxbvm)
+    set(_label_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_label_ir off)
+      if(TARGET rxtvm)
+        set(_label_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_labels_${_mode}_${_label_ir}_${_label_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/labels/check-labels.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_label_vm} --ir ${_label_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "LABEL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_label_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_label_vm})
   endforeach()
   # Implicit commands and owned warnings share the explicit command lifecycle.
   foreach(_mode opt noopt)

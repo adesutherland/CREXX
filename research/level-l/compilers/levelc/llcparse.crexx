@@ -328,7 +328,7 @@ parsed: class
       if operandmode = 'assignment-head' & depth = 0 & kind = equals then do
         emptyrhs = 1; operandmode = 'assignment'
       end
-      if kind <> sep then arm = word = 'THEN' | word = 'ELSE'
+      if kind <> sep & kind <> colon & kind <> language.tokenid('labelname') then arm = word = 'THEN' | word = 'ELSE'
       if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then do; operandmode = ''; addressmode = ''; end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
@@ -420,7 +420,8 @@ parsed: class
       if decorated == _error then do
         decorated = addressmessage(language_ref,reference joined,reference source,_offset,_error)
         if decorated == _error then decorated = numericmessage(language_ref,reference joined,reference _offset,_error)
-        if decorated == _error then _error = completionmessage(language_ref,reference joined,reference _offset,_error)
+        if decorated == _error then decorated = completionmessage(language_ref,reference joined,reference _offset,_error)
+        if decorated == _error then _error = armmessage(language_ref,reference joined,reference _offset,_error)
         else _error = decorated
       end
       else _error = decorated
@@ -457,6 +458,28 @@ parsed: class
    * owner and never retains the reference after collecting owned plans. */
   sourcetokens: method = reference .llcore..stream
     return reference _sourcetokens
+
+/** Labels and separators cannot satisfy a required arm. Only decorate an LR
+ * failure whose arm prefix reaches that failure without a real instruction;
+ * existing lexical and instruction-specific error owners have already won. */
+armmessage: procedure = .string
+  arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, original = .string
+  language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
+  thenword = language.tokenid('thenword'); elseword = language.tokenid('elseword')
+  label = language.tokenid('labelname'); colon = language.tokenid('colon'); sep = language.tokenid('separator')
+  pending = 0; cause = 0; code = ''
+  do i = 0 to tokens.size() - 1
+    kind = tokens.symbol(i)
+    if tokens.start(i) >= offset then leave
+    if kind = thenword | kind = elseword then do
+      pending = 1; cause = tokens.start(i); code = '14.3'
+      if kind = elseword then code = '14.4'
+    end
+    else if kind <> label & kind <> colon & kind <> sep then pending = 0
+  end
+  if pending = 0 then return original
+  offset = cause
+  return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': expected instruction after ' || word('THEN ELSE',1 + (code = '14.4'))
 
 /** Discover only the complete first clause. The shared coordinator owns
  * quotes/comments; raw separators merely frame a candidate for exact lexing.

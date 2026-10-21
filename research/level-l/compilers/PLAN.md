@@ -7,9 +7,10 @@ host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
 seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 
-**Complete C remains open. Last locally delivered profile: NUMERIC source
-completion. Next: clause/condition prerequisites for SIGNAL and CALL4, following
-exact contract review.** PARSE was
+**Complete C remains open. Last locally delivered prerequisite: CLABEL
+label/arm ownership and shared local entries, following NUMERIC source completion
+and shared external-condition B scope. Next: static SIGNAL after exact contract
+review.** PARSE was
 delivered ahead of its queue position as the shared executor prerequisite for
 ARG; this does not skip PROCEDURE or close PARSE.
 
@@ -33,7 +34,7 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | <a id="current-action-assignment"></a><a id="current-assignment-proof"></a>**LC-I-03 assignment / CLC-STEP05** | Once-only RHS then one raw-name write; stems, aliases and exact text locally qualified. | Errors/NOVALUE/TRACE: STEP03/07; dynamic entry composition: STEP11. |
 | <a id="current-action-nop"></a><a id="current-nop-proof"></a>**LC-I-04 NOP / CLC-STEP05** | Childless forms and dead-code construction repair locally delivered. | Exact diagnostics/clause/TRACE: STEP04/07. |
 | <a id="current-action-options"></a><a id="current-options-proof"></a>**LC-I-05 OPTIONS / CLC-STEP05** | COptions, request-local header policy and no-word specialization locally delivered. | Full header/source/diagnostics/TRACE: STEP04/07. |
-| <a id="current-action-if"></a><a id="current-if-proof"></a>**LC-I-06 IF / CLC-STEP05** | Optional-arm/contextual ELSE and minimal open joins locally delivered. | Complete expressions/recovery/conditions/TRACE: STEP03/04/07. |
+| <a id="current-action-if"></a><a id="current-if-proof"></a>**LC-I-06 IF / CLC-STEP05** | Required label-prefixed arms, contextual ELSE and minimal open joins locally delivered. | Complete expressions/recovery/conditions/TRACE: STEP03/04/07. |
 | <a id="current-action-select"></a><a id="current-select-proof"></a>**LC-I-07 SELECT / CLC-STEP05** | Ordered lazy WHEN/OTHERWISE, shared truth and source-indexed errors locally delivered. | Complete expression/error/condition/TRACE owners: STEP03/04/07. |
 | <a id="current-action-do"></a><a id="current-do-proof"></a>**LC-I-08 DO / CLC-STEP05** | Static counted/controlled/FOREVER/WHILE/UNTIL, once-only ordered headers and owned state locally delivered. | Complete expressions/recovery/conditions/TRACE: STEP03/04/07; dynamic invalidation: STEP11. |
 | <a id="current-action-leave"></a><a id="current-leave-proof"></a>**LC-I-09 LEAVE / CLC-STEP05** | Nearest/named static targets, cleanup and default/STRICTC errors locally delivered. | Exact recovery/conditions/TRACE: STEP07; SIGNAL/INTERPRET invalidation: STEP07/11. |
@@ -54,7 +55,7 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | **LC-I-24 TRACE / CLC-STEP07** | Not implemented in new C. | Agreed practical VM observations/options/query/command inhibition and disabled-cost proof; STEP07/08. |
 | **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
 
-## Next feature: SIGNAL prerequisites
+## Next feature: static SIGNAL
 
 Adrian authorized the remaining agreed C instructions/features stepwise, with
 internal contract review and a local commit after each, stopping before
@@ -77,6 +78,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 | **NUM-B-STEP01–03** | Locally complete: [shared FORM diagnostic prerequisite](doc/architecture.md#numeric-form-diagnostic-prerequisite) corrects the sole validator's `33.3` identity before C source extension; no numeric algorithm change. |
 | **NUM-C-STEP01–03** | [NUMERIC source-completion profile](doc/architecture.md#numeric-c-contract) locally qualified for AC01–06. AC07 shared closure remains open. |
 | **COND-B-STEP01–03** | [Shared external condition scope prerequisite](doc/architecture.md#external-condition-b-prerequisite) locally qualified for AC01–05. C provider/checkpoint/dispatch integration remains separate under AC06. |
+| **CLABEL-STEP01–03** | [Label/arm and local-entry prerequisite](doc/architecture.md#label-arm-prerequisite) locally qualified for AC01–05; C17 schema/runtime unchanged. Static SIGNAL is the next separate exact contract. |
 
 No native C implementation, second runtime algorithm, push or hosted campaign
 is commissioned. INTERPRET remains excluded from the standing authority.
@@ -87,8 +89,10 @@ The [RETURN contract](doc/architecture.md#return-contract) owns RRET-AC01–05;
 local AC01–05. AC06 retains provider/handler/host/platform owners. CALL3 static
 statement integration, standalone PULL, PUSH and QUEUE are locally delivered.
 Explicit ADDRESS and implicit commands/warnings are locally delivered.
-NUMERIC's source profile is locally delivered. SIGNAL and CALL4 follow STEP07
-clause/condition support with exact contracts reviewed before implementation.
+NUMERIC's source profile and the shared B condition prerequisite are locally
+delivered. CLABEL's required label-prefixed arms and shared local entries are locally delivered.
+Static SIGNAL follows next; typed handlers/CALL4 retain their STEP07 clause/condition
+dependencies. Each exact contract is reviewed before implementation.
 
 **BCONCAT-STEP01–03 complete:** intrinsic concatenation followed by target conversion;
 [permanent regression](../../../compiler/tests/rexx_src/binary_concat_target.crexx).

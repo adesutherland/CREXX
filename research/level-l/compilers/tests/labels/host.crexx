@@ -1,0 +1,51 @@
+/* A labelled IF arm may be a fresh private entry, not a new activation API. */
+options levelb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import labelfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  returned = .rexxactivation..RexxActivationArguments
+  if argv[0] > 0 then do
+    if argv[1] <> 'late' then return 2
+    say 'LABEL_FATAL|before'
+    returned = invokeFixture('late')
+    say 'UNREACHED label host'
+    return 1
+  end
+  returned = invokeFixture('host')
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  expected = payload || '|1|private'
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == expected,'owned exact result survives callee owners and private pool expiry')
+  say 'LABEL_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string
+  activation = .rexxactivation..RexxActivationArguments(); call activation.appendText(mode)
+  visible = .rexxpool..RexxVariablePool(1)
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call visible.setString('COUNT','0'); call visible.setString('PAYLOAD',payload)
+  call visible.setString('HIDDEN','caller hidden')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  returned = labelfixture..run(reference context,0)
+  original = reference visible; rebound = context.pool()
+  original_activation = reference activation; rebound_activation = context.activation()
+  original_config = reference config; rebound_config = context.config()
+  call check(<refvalid>(rebound) & (rebound <refsame> original),'original visible pool binding restored')
+  call check((rebound_activation <refsame> original_activation) & (rebound_config <refsame> original_config),'activation and configuration identity retained')
+  call check(visible.symbolValue('COUNT').asString() == '1' & visible.symbolValue('HIDDEN').asString() == 'caller hidden','one private entry executes and EXPOSE preserves hidden caller value')
+  call check(activation.programExitRequested() = 0,'ordinary labelled RETURN does not request program EXIT')
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

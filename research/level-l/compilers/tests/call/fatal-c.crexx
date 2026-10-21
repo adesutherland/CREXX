@@ -12,7 +12,7 @@ select
   when MODE = 'quoted-policy' then call 'ON' MARK('O')
   when MODE = 'quoted-empty' then call '' MARK('E')
   when MODE = 'quoted-nul' then call '410042'x MARK('Z')
-  when MODE = 'group' then call INNER MARK('G')
+  /* Grouped INNER calls are admission refusals in check-call.py. */
   when MODE = 'unicode-missing' then say μ(MARK('U'))
   when MODE = 'dotted-missing' then say p.q(MARK('D'))
   when MODE = 'too-few' then call SUBSTR

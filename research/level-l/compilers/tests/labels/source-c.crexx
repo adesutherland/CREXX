@@ -1,0 +1,99 @@
+/* Required labelled arms and node-owned shared/private entry continuations. */
+options levelc
+parse arg MODE
+if MODE = 'host' then do
+  call PRIVATE
+  return RESULT
+end
+if MODE = 'late' then call NATURAL
+FALSE_CONTROL = 0; if FALSE_CONTROL then FALSE_ARM: say 'UNREACHED false arm'
+say 'after-false'
+if 1 then TRUE_ONE: ; /* transparent prefix */ TRUE_TWO: ; say 'then'
+if 0 then FALSE_TWO: say 'UNREACHED then'; else ELSE_ONE: ; ELSE_TWO: say 'else'
+if 1 then OUTER_ARM: if 0 then INNER_ARM: say 'UNREACHED nearest'; else NEAREST_ARM: say 'nearest'
+select
+  when 0 then LENGTH: say 'UNREACHED first WHEN'
+  when 1 then WHEN_ONE: ; WHEN_TWO: say 'when'
+  otherwise say 'UNREACHED otherwise'
+end
+X = 'root'
+call SHARED
+say 'shared=' || X || '|' || RESULT
+COUNT = 0
+HIDDEN = 'root hidden'
+PAYLOAD = 'éµμ雪' || '00'x || 'tail '
+call PRIVATE
+say 'private=' || HIDDEN || '|' || COUNT || '|' || (RESULT == PAYLOAD || '|1|private')
+call ALIAS
+say 'alias=' || COUNT || '|' || (RESULT == PAYLOAD || '|2|private')
+call FIRST
+say 'first=' || RESULT
+call DUP_ARM
+say 'arm-order=' || RESULT
+call 'LENGTH' 'abc'
+say 'quoted=' || RESULT
+call BLOCK_PREFIX
+say 'block=' || RESULT
+call 1.20
+CONSTANTS = RESULT
+call 1.2
+CONSTANTS = CONSTANTS || '|' || RESULT
+call 7E2
+CONSTANTS = CONSTANTS || '|' || RESULT
+call 700
+CONSTANTS = CONSTANTS || '|' || RESULT
+call .RC
+say 'constants=' || CONSTANTS || '|' || RESULT
+call é
+say 'unicode=' || RESULT
+say 'after'
+exit 0
+
+if 0 then SHARED: X = 'changed'; else say 'UNREACHED shared ELSE'
+return X
+
+if 0 then PRIVATE: ; ALIAS: procedure expose COUNT PAYLOAD
+else say 'UNREACHED private ELSE'
+COUNT = COUNT + 1
+HIDDEN = 'private'
+return PAYLOAD || '|' || COUNT || '|' || HIDDEN
+
+FIRST:
+return 'first'
+do
+FIRST:
+nop
+end
+
+if 0 then DUP_ARM: return 'then'; else DUP_ARM: return 'else'
+
+LENGTH:
+return 'UNREACHED local LENGTH'
+
+if 0 then BLOCK_PREFIX: do
+  BLOCK_COUNT = 0
+  do 2
+    BLOCK_COUNT = BLOCK_COUNT + 1
+  end
+end
+return BLOCK_COUNT
+
+1.20:
+return '1.20'
+1.2:
+return '1.2'
+7E2:
+return '7E2'
+700:
+return '700'
+.RC:
+return '.RC'
+é:
+return 'first unicode'
+É:
+return 'UNREACHED duplicate unicode'
+
+NATURAL:
+if 1 then LATE: procedure
+say 'UNREACHED late PROCEDURE'
+return

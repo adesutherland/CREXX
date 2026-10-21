@@ -184,7 +184,6 @@ def main():
                 ('quoted-policy', b'mark O\n', b'43.1', "when MODE = 'quoted-policy'", b'ON'),
                 ('quoted-empty', b'mark E\n', b'43.1', "when MODE = 'quoted-empty'", None),
                 ('quoted-nul', b'mark Z\n', b'43.1', "when MODE = 'quoted-nul'", b'A\\x00B'),
-                ('group', b'mark G\n', b'43.1', "when MODE = 'group'", b'INNER'),
                 ('unicode-missing', b'mark U\n', b'43.1', "when MODE = 'unicode-missing'", 'Μ'.encode()),
                 ('dotted-missing', b'mark D\n', b'43.1', "when MODE = 'dotted-missing'", b'P.Q'),
                 ('too-few', b'', b'40.3', "when MODE = 'too-few'", None),
@@ -211,6 +210,7 @@ def main():
                 ('dead-malformed', 'if 0 then call +', b'19.2'),
                 ('policy-on', 'call on error', b'PROFILE'),
                 ('policy-off', 'call off error', b'PROFILE'),
+                ('grouped-target', 'do\nINNER:\nnop\nend\ncall INNER', b'16.3'),
             )
             output = application / 'prior.rxas'; prior = b'unchanged prior output\n'; output.write_bytes(prior)
             for name, text, code in cases:

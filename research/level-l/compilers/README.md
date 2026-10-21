@@ -51,6 +51,14 @@ C adapters use that core directly, while G retains its API and two wrapper
 classes. Ordinary CALL binds all 95 direct shared BIF names; complete BIF/host
 semantics and wider activation/condition work remain open.
 
+Labels before THEN, ELSE and WHEN THEN prefix one required instruction, retaining
+nearest-ELSE ownership. Local CALL/function entries can reach an eligible IF-arm
+label without evaluating its enclosing condition. The first source label wins:
+DO/SELECT labels are trace-only and block unquoted invocation with 16.3; quoted
+invocation keeps its local bypass. Labels do not rearm executed PROCEDURE
+eligibility. The [label/entry contract](doc/architecture.md#label-arm-prerequisite)
+retains the current C17 schema and runtime interfaces.
+
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary

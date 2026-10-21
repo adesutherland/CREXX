@@ -814,8 +814,7 @@ selecttests: procedure = .void expose artifacts
   text = good('c',source,'crexx.c.when.truth')
   call check(pos('name="BEFORE"',text) = 0 & pos('name="BETWEEN"',text) = 0,'SELECT observation labels never enter the callable map')
   text = good('c','exit 0; select; before:; when 1 then nop; end','crexx.c.when.truth')
-  text = good('c','call before; exit 0; select; before:; when 1 then nop; end','crexx.c.call.missing','crexx.c.call ')
-  call check(pos('name="BEFORE"',text) > 0 & pos('crexx.c.entry.test ',text,pos('crexx.c.entry.test ',text) + 1) = 0,'group-only label remains unresolved with no positive entry')
+  call bad('c','call before; exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-16.3',0)
   do sample = 1 to 14
     select sample
       when 1 then source = 'select 1; when 1 then nop; end'
@@ -946,11 +945,11 @@ iftests: procedure = .void
 iferrors: procedure = .void
   call bad('c','if then nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
   call bad('c','if 1 nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
-  call bad('c','if 1 then' as .binary,'LL_COMPILER_SYNTAX:','unexpected end of input')
-  call bad('c','if 1 then nop else' as .binary,'LL_COMPILER_SYNTAX:','unexpected end of input')
+  call bad('c','if 1 then' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.3',5)
+  call bad('c','if 1 then nop else' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.4',14)
   call bad('c','else nop' as .binary,'LL_COMPILER_SYNTAX:',"unexpected 'else'",0)
-  call bad('c','if 1 then call' as .binary,'LL_COMPILER_SYNTAX:','expected name')
-  call bad('c','if 1 then numeric else nop' as .binary,'LL_COMPILER_SYNTAX:','expected DIGITS, FUZZ, FORM')
+  call bad('c','if 1 then call' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-19.2')
+  call bad('c','if 1 then numeric else nop' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-25.15')
   call bad('c','if 1 then exit 0 else exit 1; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
   call bad('c','exit 0; p: procedure; if 1 then return else return 2; nop; options; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
   return

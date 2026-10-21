@@ -161,6 +161,17 @@ relay are excluded from that source lease.
 COND-B-STEP01–03 are locally complete for the shared B prerequisite; its AC06
 keeps C/provider and wider condition integration separate.
 
+The [CLABEL prerequisite](architecture.md#label-arm-prerequisite) assigns the
+C17 grammar/classifier/frontend and owning CMake/docs to the serial integrator,
+who retains exclusive preparation/test/cleanup/commit ownership. After exact
+record review, the fixture worker may own only new `tests/labels` source/golden/
+host/contracts/checker files and the two named `tests/call/fatal-c.crexx` and
+`tests/call/check-call.py` grouped-label expectation edits. The independent
+reviewer checks open/closed arm ownership, lexical group depth, first-label
+resolution, node-based landings and actual RXAS read-only. CLABEL-AC01–05 and STEP01–03 are locally complete; no schema/runtime API or
+C18 SIGNAL implementation belongs in this slice. Static SIGNAL receives its
+separate exact contract next.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet

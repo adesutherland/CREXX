@@ -962,7 +962,9 @@ variables and ordinary statement dispatch for every admitted arm. Missing,
 stray, duplicate or out-of-order clauses, missing operands/arms/END and named
 END receive located refusal, including dead source. Retained CLabel nodes at
 legal clause boundaries are observation-only, and never callable entries that
-bypass their SELECT owner; full TRACE remains open.
+bypass their SELECT owner; full TRACE remains open. Label-prefixed WHEN arms
+use the required real payload in [CLABEL](#label-arm-prerequisite), retaining
+SELECT trace-only eligibility.
 
 Lower to ordered test edges: evaluate each WHEN once until the first exact
 logical 1, execute only its body, then skip remaining tests and arms. Last false
@@ -2174,7 +2176,8 @@ uncalled source: `p: nop; procedure` and `if 0 then procedure` are invalid.
 after p's NOP raises runtime 17.1. Main fall-through and a second reached
 PROCEDURE likewise fail at the authored clause before allocation or exposure.
 A group label may reopen the lexical window, but cannot become an entry that
-bypasses its executed DO/IF/SELECT. Wider label/THEN grammar remains C-SRC work.
+bypasses its executed DO/SELECT. The [CLABEL prerequisite](#label-arm-prerequisite)
+owns required label-prefixed arms and eligible IF-arm entry landings.
 
 ### One body, names and entry ABI
 
@@ -2194,19 +2197,21 @@ uses this same signature; no per-label callable wrappers or cloned source tails.
 
 Entry 0 is the main-position sentinel with `name=''`, entered by the root
 wrapper or deliberate direct unit callers with an ineligible activation.
-Positive IDs are dense 1..N, assigned to first occurrences of distinct
-canonical top-level labels in source order. Adjacent distinct labels can share
-a body position. Later duplicates keep their fall-through/source positions and
-never replace the first target. Trailing labels are callable and fall through
-to the ordinary absent-result epilogue. Labels inside active groups are
-observation-only and never enter the callable map or bypass loop construction.
+Positive IDs are dense 1..N, assigned to eligible first occurrences of distinct
+canonical labels in source order. Lexical DO/SELECT labels are trace-only; IF
+nesting alone does not exclude a label. Select the first name before eligibility:
+a trace-only first match blocks later duplicates and unquoted invocation with
+16.3. Adjacent labels with one payload/continuation can share a body position.
+Later duplicates retain natural fallthrough; trailing eligible labels reach the
+ordinary absent-result epilogue. No group label bypasses loop construction.
 
 Admit the existing generated C identifier-token label/local-call surface,
 including its Unicode, punctuation, dotted and reserved-dot identifier forms;
 remove the old ASCII-undotted guard. Canonicalize the literal whole label with
 existing `rexxclassic_unicode_upper`; do not substitute tails, normalize text,
-use ASCII-only uppercasing or add a Unicode algorithm. Numeric/quoted labels
-and expanded CALL forms retain C-SRC/LC-I-13 ownership. Source `$MAIN:` is an
+use ASCII-only uppercasing or add a Unicode algorithm. Numeric and constant
+symbol labels retain their exact spelling; quoted label declarations are not
+admitted. Wider CALL forms retain C-SRC/LC-I-13 ownership. Source `$MAIN:` is an
 ordinary positive label: its namespace is distinct from the unit function and
 empty-name entry-0 sentinel. Reserved-dot label names never access pool state.
 
@@ -3613,6 +3618,93 @@ integration, not by silently changing all existing providers in this prerequisit
   The integrator retains the exclusive build/test/commit lease. Check the real
   producer closure; an activation/rxfnsc-only change does not by itself change
   generic rxlang inputs or justify cold lexer generation.
+
+<a id="label-arm-prerequisite"></a>
+
+## Label prefixes and shared local entries — CLABEL prerequisite
+
+Correct label ownership before adding SIGNAL. A label preceding an IF THEN,
+ELSE or SELECT WHEN THEN arm is a transparent prefix to one required real
+instruction. A false arm must skip its payload; an entered local routine must
+reach that payload without evaluating the enclosing IF condition. Preserve
+existing CALL, PROCEDURE and natural fallthrough behavior through one shared
+source-order label inventory. This is a source/CFG correction within C17:
+73 operations, five types and 36 target exports; no L, runtime, native frontend
+or public provider API change. SIGNAL operations and metadata are separate.
+
+**Source and AST.** Retain ordinary standalone `CLabel(name)` statements.
+Only a nonempty arm prefix produces
+`CLabelled(labels:list<CLabel>, value:required statement)`; unlabelled AST nodes
+stay unchanged. Separate open/closed arm productions wrap the real payload so
+nearest-ELSE ownership is preserved. Label colons, separators and comments do
+not complete an arm or discard its pending IF owner. Use the same required-arm
+production for WHEN THEN; OTHERWISE keeps its existing sequence form. Labels
+alone after THEN/ELSE refuse with 14.3/14.4 at the owning keyword, including
+unreachable source; missing WHEN THEN payload uses 14.3. Preserve prior lexical
+and instruction-specific diagnostic precedence. Identifier, numeric,
+constant-name, type-name and dot-label spellings retain existing symbol-label
+recognition and raw spelling; quoted declarations are not added.
+
+**Inventory and resolution.** Traverse the AST once in authored source order,
+tracking lexical DO/SELECT depth. Retain every label with its source node,
+canonical shared-Classic Unicode name and eligibility. IF nesting alone does
+not make a label trace-only; DO/SELECT ancestry does. Select the first matching
+name before testing eligibility. A first trace-only match refuses unquoted
+CALL/function admission with 16.3, including dead source, and cannot fall through
+to a later duplicate, BIF or provider. Quoted invocation keeps its existing local
+bypass. Later duplicates retain natural fallthrough positions, but do not create
+another invocation entry. Canonicalize each label once; charge the traversal,
+name payload and node/name maps before retained growth, and reuse them across
+lookups rather than rescanning source or copying the table per invocation.
+
+**Landings and eligibility.** Preallocate natural source landings by label-node
+identity and its real continuation, rather than root-body item offsets. An
+eligible IF-prefix local entry skips the enclosing condition and earlier prefix,
+executes the payload and follows that arm's ordinary join/continuation. A normal
+false IF edge bypasses the whole labelled arm. Adjacent labels may share a
+landing only when their following payload and continuation are identical.
+Trace-only labels keep natural source positions without executable invocation
+entries; no inactive DO/SELECT entry is introduced. Invocation uses the existing
+fresh-entry route, anchoring any consume trampoline at the first real payload.
+Labels/wrappers neither consume nor rearm PROCEDURE eligibility, and no consume
+is inserted before a first PROCEDURE. A trailing label has an explicit same-label
+EOF continuation sentinel and reaches the generated absent-result epilogue
+without a consume; it never depends on an untyped default object cell. Natural execution retains the existing
+executed-eligibility and runtime 17.1 rules. Existing canonical dispatch,
+source provenance, private-pool restoration and result carriers remain owners
+of their current contracts.
+
+1. **CLABEL-AC01 — locally qualified:** independent false/true THEN and ELSE prefix controls,
+   multiple labels/separators/comments, nearest dangling ELSE and one WHEN THEN
+   prefix prove required payload ownership; labels-only arms report 14.3/14.4
+   with exact owning source offsets and failed compilation preserves prior output.
+2. **CLABEL-AC02 — locally qualified:** paired first trace-only/eligible duplicates prove
+   source-order resolution, 16.3 admission, quoted bypass and retained constant/
+   Unicode label identity. Migrate only the obsolete grouped-INNER 43.1 CALL
+   fixture into an independent 16.3 source refusal.
+3. **CLABEL-AC03 — locally qualified:** local calls into IF-prefix labels bypass conditions,
+   follow correct arm continuations and preserve shared/private RETURN state;
+   first PROCEDURE, natural late PROCEDURE and adjacent labels retain their
+   existing fresh/executed eligibility behavior. No group-entry expansion occurs.
+4. **CLABEL-AC04 — locally qualified:** focused AST/current-IR roundtrip and representative
+   transformed graphs retain node landings and the C17 contract. Actual opt and
+   noopt RXAS show honest core edges, truthful prefix/payload source mappings,
+   existing invocation cleanup and no runtime label-wrapper/table copies.
+5. **CLABEL-AC05 — locally qualified:** complementary focused source/host/error and affected
+   IF/SELECT/CALL/PROCEDURE consumers pass with normal producer freshness. Reuse
+   unchanged runtime/schema proof; inspect a small appropriate native control,
+   measure new serial aggregate registrations and delete diagnostic scratch.
+   Whole instruction, condition/TRACE, host/platform and complete-C gates remain
+   open; this prerequisite does not implement SIGNAL.
+
+- **CLABEL-STEP01 — complete:** record the exact AST/ownership/entry contract and
+  independent controls before production edits; AC01–05.
+- **CLABEL-STEP02 — complete:** implement grammar/classifier, one shared label
+  inventory and node-based natural/invocation landings; independent source/host/
+  contract fixtures and the narrow grouped-CALL expectation migration; AC01–04.
+- **CLABEL-STEP03 — locally complete:** sole focused preparation, complementary execution,
+  affected consumers and actual RXAS review, simple status/cleanup and separate
+  local commit; AC01–05. C18 SIGNAL depends on this qualified inventory.
 
 ## Optimisation ownership
 

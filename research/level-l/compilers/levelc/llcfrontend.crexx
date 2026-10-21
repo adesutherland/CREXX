@@ -93,7 +93,10 @@ request: class
   _routineids = .stem
   _entrybytes = .int
   _sourceentries = .int[]
-  _nextinstructions = .int[]
+  _nextinstructions = .object[]
+  _labelleaders = .int[]
+  _labelnodes = .object[]
+  _labelcapacity = .int
   _functions = .object[]
   _current = .routine
   _scope = .int
@@ -285,25 +288,80 @@ request: class
     end
     _entrybytes = _entrybytes + count * width
     return 1
+  /** Reserve the four sparse node-indexed label maps before any cell growth. */
+  labelindex: method = .int
+    arg node = .llast..node
+    id = node.id()
+    if id > _labelcapacity then do
+      if entryspace(id - _labelcapacity,32,'label index') = 0 then return 0
+      _labelcapacity = id
+    end
+    return id
   inventory: method = .void
+    id = .int; i = .int
     root = _tree.root(); body = root.child('body')
-    if entryspace(body.count('items'),24) = 0 then return
     _routines[1] = .routine('$MAIN','result',body,1,body.count('items')) as .object
-    _namespace = ''; _routineids = .stem()
-    do i = 1 to body.count('items') while _error = ''
-      node = body.child('items',i)
+    _namespace = ''; _routineids = .stem(); _labelcapacity = 0
+    groups = .int[]; walk = _tree.walk('parents first')
+    node = .llast..node; item = .llast..node; following = .llast..node
+    do while walk.next() & _error = ''
+      node = walk.node()
       if tick(node) = 0 then return
+      level = walk.depth() + 1; grouped = 0
+      if level > 1 then grouped = groups[level - 1]
+      if node.kind() = 'CDo' | node.kind() = 'CSelect' then grouped = grouped + 1
+      if entryspace(1,8,'label traversal') = 0 then return
+      groups[level] = grouped
+      /* Each source list is indexed once. Consecutive labels share only the
+       * continuation of this list; a different IF arm has another list. */
+      if node.kind() = 'Sequence' | node.kind() = 'CLabelled' then do
+        field = 'items'; hasfollowing = 0; leader = 0
+        if node.kind() = 'CLabelled' then do
+          field = 'labels'; following = node.child('value'); hasfollowing = 1
+        end
+        do i = node.count(field) to 1 by -1 while _error = ''
+          item = node.child(field,i)
+          if tick(item) = 0 then return
+          if item.kind() = 'CLabel' then do
+            id = labelindex(item); if id = 0 then return
+            if entryspace(1,32,'label continuation') = 0 then return
+            if hasfollowing then _nextinstructions[id] = following as .object
+            else _nextinstructions[id] = item as .object
+          end
+          else do; following = item; hasfollowing = 1; end
+        end
+        do i = 1 to node.count(field) while _error = ''
+          item = node.child(field,i)
+          if tick(item) = 0 then return
+          if item.kind() = 'CLabel' then do
+            id = labelindex(item); if id = 0 then return
+            if leader = 0 then leader = id
+            _labelleaders[id] = leader
+          end
+          else leader = 0
+        end
+      end
       if node.kind() <> 'CLabel' then iterate
+      id = labelindex(node); if id = 0 then return
       raw = node.text('name'); if namework(raw) = 0 then return
       name = rexxclassic_unicode_upper(raw)
       if namework(name) = 0 then return
-      _sourceentries[i] = 0
+      if entryspace(1,64,'label record') = 0 then return
+      ordinal = _labelnodes[0] + 1; _labelnodes[ordinal] = node as .object
+      _sourceentries[id] = 0
+      if grouped > 0 then _labelleaders[id] = 0
+      else if _labelleaders[id] = 0 then _labelleaders[id] = id
       if _routineids.get(name) <> '' then iterate
-      if entryspace(96,1) = 0 then return
-      if entryspace(<blen>(name as .binary),2) = 0 then return
-      entry = _routines[0] + 1
-      _routines[entry] = .routine(name,'result',body,i,body.count('items')) as .object
-      _sourceentries[i] = entry
+      if entryspace(96,1,'label identity') = 0 then return
+      if entryspace(<blen>(name as .binary),2,'label identity') = 0 then return
+      if grouped > 0 then do
+        call _routineids.set(name,'-1'); iterate
+      end
+      /* Every eligible label belongs to a Sequence or labelled-arm list.
+       * Its explicit same-label sentinel denotes EOF, never an object default. */
+      entry = _routines[0] + 1; following = _nextinstructions[id] as .llast..node
+      _routines[entry] = .routine(name,'result',following,id,0) as .object
+      _sourceentries[id] = entry
       call _routineids.set(name,entry as .string)
     end
     return
@@ -336,32 +394,24 @@ request: class
     call _block.store(_contextslot,_block.readarg(1,origin),origin)
     call _block.store(_entryslot,_block.readarg(2,origin),origin)
     dispatch = newblock('entry.dispatch'); call _block.jump(dispatch,origin)
-    mainbody = newblock('source.main'); previouslabel = 0
-    do i = 1 to body.count('items') while _error = ''
-      node = body.child('items',i)
+    mainbody = newblock('source.main')
+    do i = 1 to _labelnodes[0] while _error = ''
+      node = _labelnodes[i] as .llast..node
       if tick(node) = 0 then return
-      if node.kind() = 'CLabel' then do
-        if previouslabel = 0 then labelblock = newblock('source.label')
-        _sourceblocks[i] = labelblock as .object
-        previouslabel = 1
-      end
-      else previouslabel = 0
-    end
-    following = body.count('items') + 1
-    do i = body.count('items') to 1 by -1
-      if tick(body) = 0 then return
-      if body.child('items',i).kind() = 'CLabel' then _nextinstructions[i] = following
-      else following = i
+      id = node.id(); leader = _labelleaders[id]
+      if leader = 0 then iterate
+      if id = leader then labelblock = newblock('source.label')
+      else labelblock = _sourceblocks[leader] as .llir..block
+      _sourceblocks[id] = labelblock as .object
     end
     integer = .llir..intcodec(); landing = .llir..block; landingposition = 0
     do i = 1 to _routines[0] while _error = ''
       if tick(body) = 0 then return
       item = _routines[i] as .routine; target = mainbody; name = ''
       if i > 1 then do
-        name = item.name(); target = _sourceblocks[item.first()] as .llir..block
-        j = _nextinstructions[item.first()]
-        if j <= body.count('items') then do
-          first = body.child('items',j)
+        name = item.name(); labelid = item.first(); target = _sourceblocks[labelid] as .llir..block
+        first = item.body(); j = first.id()
+        if first.kind() <> 'CLabel' then do
           if first.kind() <> 'CProcedure' then do
             if j <> landingposition then do
               landing = newblock('entry.consume'); _block = landing; consumeorigin = at(first)
@@ -385,18 +435,7 @@ request: class
     op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
     call _block.returnvalue(built.result(),origin)
     _block = mainbody
-    do i = 1 to body.count('items') while _error = ''
-      node = body.child('items',i)
-      if node.kind() = 'CLabel' then do
-        target = _sourceblocks[i] as .llir..block
-        if _block.id() <> target.id() then do
-          if _terminated = 0 then call _block.jump(target,at(node).derive())
-          _block = target; _terminated = 0
-        end
-        if _sourceentries[i] > 0 then _alive = 1
-      end
-      else call statement(node)
-    end
+    call statement(body)
     if _error <> '' then return
     if _terminated = 0 then do
       op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
@@ -543,7 +582,7 @@ request: class
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
     /* Visit structural/non-emitting statements without reopening a terminated
      * block. Later emitting statements still lower in checked dead code. */
-    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop' | kind = 'CLabel'
+    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop' | kind = 'CLabel' | kind = 'CLabelled'
     if kind = 'CDo' then do
       header = node.child('header')
       nonemitting = header.count('repetition') = 0 & header.count('condition') = 0
@@ -569,7 +608,23 @@ request: class
       when kind = 'COptions' then do
         if node.count('value') then value = expression(node.child('value'),'',nonemitting)
       end
-      when kind = 'Nop' | kind = 'CLabel' then nop
+      when kind = 'Nop' then nop
+      when kind = 'CLabel' then do
+        id = node.id()
+        if _labelleaders[id] = 0 then return
+        target = _sourceblocks[id] as .llir..block
+        if _block.id() <> target.id() then do
+          if _terminated = 0 then call _block.jump(target,origin.derive())
+          _block = target; _terminated = 0
+        end
+        if _sourceentries[id] > 0 then _alive = 1
+      end
+      when kind = 'CLabelled' then do
+        do i = 1 to node.count('labels') while _error = ''
+          call statement(node.child('labels',i))
+        end
+        if _error = '' then call statement(node.child('value'))
+      end
       when kind = 'CProcedure' then call procedurestatement(node)
       when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
         item = node.child('items',i); itemorigin = at(item)
@@ -1505,6 +1560,9 @@ request: class
     target = 0
     if quoted = 0 then target = findroutine(name)
     if _error <> '' then return invalid
+    if target < 0 then do
+      call fail(node,'SYNTAX: RXC-LC-16.3: local target is a trace-only group label ' || name); return invalid
+    end
     bif = ''; if target = 0 then bif = llcbifs..entry(name)
     provider = 0; externalname = .string
     if target = 0 & bif = '' & expressioncall = 0 & _bound then do
