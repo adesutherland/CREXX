@@ -14,8 +14,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 
-- `lib/rxfnsl/` (Level L language-engineering examples and generated-output
-  proving slices)
+- `lib/rxfnsl/` (Level L SDK implementation, with separately linked neutral
+  analysis/execution and RXAS target packages; public guides, examples and
+  independent consumers live in `langtools/`)
 
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, housing the
   Rexx value, stem, and variable-pool classes plus directly callable Classic

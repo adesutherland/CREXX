@@ -102,16 +102,20 @@ set_tests_properties(levell_borrowed_rxas PROPERTIES
   LABELS "library;level-l;optimizer-parity")
 crexx_register_test_prep_targets(TESTS levell_borrowed_rxas TARGETS rxfnsl)
 
-# Optional IR analyses and RXAS constraints use one focused normal lane. These
+# Optional IR analyses, execution and RXAS constraints use one focused normal lane. These
 # packages are deliberately absent from the generic AST/bootstrap import root.
-foreach(_test llirgraph llrxas)
+foreach(_test llirgraph llrxas llirexecute)
   set(_name "ts_${_test}_opt")
   set(_images "${CMAKE_BINARY_DIR}/bin/library.rxbin")
   set(_producers library)
-  if(_test STREQUAL "llirgraph")
+  if(_test STREQUAL "llirgraph" OR _test STREQUAL "llirexecute")
     list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
       "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
     list(APPEND _producers rxfnsl rxfnsl_analysis)
+    if(_test STREQUAL "llirexecute")
+      list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
+      list(APPEND _producers rxfnsl_execute)
+    endif()
   else()
     list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
     list(APPEND _producers rxfnsl_rxas)

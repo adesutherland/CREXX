@@ -3993,7 +3993,7 @@ partial-delivery or complementary-rerun tasks; qualify the whole instruction.
 
 ## Group 4: reusable IR, proofs, RXAS and execution
 
-**STEP01–06 implementation approved; STEP07 execution remains a proposal.** Adrian selected
+**STEP01–06 are locally implemented; STEP07 execution feasibility is approved.** Adrian selected
 Group 4 as the next enabling work and clarified that Level L can offer specific
 RXAS/instruction and cREXX IR facilities while remaining useful to unrelated
 infrastructure. The [existing plan](../PLAN.md#group4-infrastructure-plan) owns
@@ -4093,7 +4093,8 @@ IR execution, INTERPRET, full compiler QA and production speed claims are absent
 | `llflow` and generated source-flow mappings | Source/AST reachability, definite assignment, condition facts, loop/exit roles and diagnostic witnesses | Not the lowered IR graph, general alias proof or target register allocation. Source evaluation policy must remain explicit; Classic eager logical operators cannot inherit another language's short-circuit flow. |
 | `llir` | Frozen functions/blocks, block-local immutable values, mutable typed slots, exact codecs/origins, structural verification and explicit `protect` | No general resumable execution interface or full storage/alias/effect model. Structural validity is not definite assignment or semantic equivalence. |
 | `llirservices` | Revision-bound facts; bounded IR reachability/definite assignment; same-block propagation, constant callbacks, branch pruning and atomic reconstruction | Arbitrary fact insertion states a premise without proving it. Existing APIs remain compatible. |
-| Optional `llirgraph` / `llireffects` | Indexed entities/def-use/dominance, demanded SCC/loops/liveness, structured effects and checked owner-bound conclusions | Protection/incomplete lifetime profiles conservatively pin storage; cross-block preserved-state and conditional-completion proofs retain their declared limits. No IR runner. |
+| Optional `llirgraph` / `llireffects` | Indexed entities/def-use/dominance, demanded SCC/loops/liveness, structured effects and checked owner-bound conclusions | Protection/incomplete lifetime profiles conservatively pin storage; cross-block preserved-state and conditional-completion proofs retain their declared limits. |
+| Optional `llirexecute` prototype | Whole-module capability preflight, exact values/presence, owned frames/local calls, trusted handlers and linear suspension | Admitted core/control only; `protect`, conditional results and borrowed/escaping values are rejected. It does not execute the complete C22 profile or resume a live compiled caller. |
 | C/typed selectors, `llrxas` and `llrxastext` | Typed virtual target records, checked whole-cell assignment, exact quoting, distinct call windows and owned helper/cleanup observations | Initial reuse is proved plain scalar storage within one block. Object/reference storage and uncertain control remain distinct; no speculative slot reuse or spilling. |
 | Native `rxas_flow_*`, `rxops.h`, `rxopeffects.h`, `rxopsignals.h` | Canonical instruction/effect/signal owners and maintained fixtures; build-time SDK catalogue uses native metadata APIs | The optional catalogue adds no native source-compiler dependency. Opcode formats alone remain insufficient for uses/defs, components, failures or identity. |
 | Modern RexxScript | Level L parsing/AST/folding followed by `RexxScriptExecution` tree execution over existing value/BIF services | It does not execute `llir`. Legacy RexxScript has a separate evaluator/API and cannot be silently migrated with the modern path. |
@@ -4113,15 +4114,17 @@ Being part of L does not require putting every target/language rule in its core.
 |---|---|---|
 | General L core | Source/AST/IR storage, checked views, facts, transformations and semantic-service coordination | No cREXX frontend, BIF catalogue, pool algorithm or RXAS opcode switch. Independent non-Rexx consumers remain supported. |
 | Optional neutral analysis | Indexed graph/def-use/dominance, demanded loops/liveness, structured effect premises and checked proofs | Depends on core IR, without cREXX or RXAS knowledge. |
+| Optional neutral execution | Bounded coordinator, owned frames, checked runtime capability registry and suspension | Depends on core IR/analysis. Language-owned handlers retain numeric/value/pool/BIF and capability policy. No frontend or RXAS dependency. |
 | Optional cREXX semantic package — future | Reusable typed/Classic contracts where meaning is genuinely shared | Not introduced by STEP01–06. Current C22 premises remain in the compiler-owned `llceffects` adapter; future B/G/C/O sharing needs versioned profiles. |
 | Optional RXAS target package | Canonical instruction view, typed target records, ABI/register constraints, allocation validation and exact rendering | Depends on prepared ISA metadata and base B services, without requiring semantic IR, a source frontend or a Classic runtime. |
 | Source compilers | Syntax, binding, dialect checks, language facts, semantic lowering and diagnostics | Use the optional packages; remain independently selected. Existing C source/handler/DO proofs retain policy ownership. |
 | Runtime/VM/native tools | Existing values, pools, numeric/BIF/host algorithms; execution and ISA/encoding | Semantic handlers call existing owners. Compiler host, IR execution and static runtime remain distinct products. |
 
 Implementation homes are core modules in `lib/rxfnsl/rexx`, neutral optional
-services in `lib/rxfnsl/analysis`, RXAS services in `lib/rxfnsl/rxas`, and public
+services in `lib/rxfnsl/analysis`, execution in `lib/rxfnsl/execute`, RXAS
+services in `lib/rxfnsl/rxas`, and public
 guides/independent consumers in `langtools`. Their images are `rxfnsl`,
-`rxfnsl-analysis` and `rxfnsl-rxas`. A future semantic package has no current
+`rxfnsl-analysis`, `rxfnsl-execute` and `rxfnsl-rxas`. A future semantic package has no current
 product/image claim.
 Optional packages must not enter the grammar bootstrap merely because they
 share the SDK repository. Move existing reusable utilities after consumers
@@ -4147,7 +4150,7 @@ flowchart TD
   Allocate --> Physical[Checked physical RXAS records]
   Physical --> Text[RXAS text and metadata]
   Text --> Tools[Existing assembler / linker / VM]
-  Analyse -.-> Execute[Proposed IR execution coordinator]
+  Analyse --> Execute[Optional bounded IR execution prototype]
   Execute --> Handlers[Registered semantic handlers / existing runtime]
   Asm[Future RXAS frontend] --> Physical
 ```
@@ -4299,7 +4302,7 @@ The useful question is whether complete effect, error, suspension and ownership
 contracts make it a suitable product route. Do not reuse the constant evaluator
 API: it has literal operands and folding eligibility, not live effects or calls.
 
-Propose an optional generic coordinator with a checked frame/PC stack, per-run
+Use an optional generic coordinator with a checked frame/PC stack, per-run
 state, budgets and trusted runtime operation/type handlers. Scalars retain exact
 encodings; objects/references use live owned values or opaque checked handles,
 not serialized pointers or a second RexxValue implementation. Handlers call the
@@ -4336,13 +4339,124 @@ pins, live caller/label/pool integration, CALL resumption, SIGNAL discard and
 RETURN/EXIT ownership across compiled/interpreted frames. It is not a shortcut
 around those contracts and is not a RexxScript evaluator fallback.
 
-STEP07 records semantic/resource feasibility and scoped cold/warm execution and
-ownership costs; there is no formal research benchmark gate. Recommend retaining
-compiled RXAS for static applications and considering IR execution for dynamic
-groups only if that proof supports it. The compiled-image design below remains
-authoritative until the alternative is approved. Do not implement the INTERPRET
-source instruction before the final stage or create two permanent partial
-Classic runtime algorithms.
+<a id="group4-execution-contract"></a>
+
+#### STEP07 bounded execution contract
+
+The optional `rxfnsl-execute` package owns `llirexecute`; the core/bootstrap,
+static C targets, RXAS target package and source frontends do not import it.
+It depends on the existing neutral IR and analysis packages. This prototype
+admits core constants, arguments, presence, slots, jumps, branches and returns.
+`protect` and unregistered control capabilities fail whole-module preflight,
+including unreachable functions/blocks, before a runtime operation can act.
+This does not assign Classic condition semantics to neutral `core.protect`.
+No core opcode, wire version or native ABI changes are commissioned.
+
+A trusted registry explicitly admits runtime types, named operation handlers
+and direct local-call bindings. `registry.handler(name,service)` retains one
+authoritative service; `operation(opname,handlerName,effects,bytes)` binds by
+name. Sessions copy the handler table once, dispatch a service and explicitly
+write its mutated value back to the same entry. Multiple operation names thus
+share one owned pool/resource service. Type handlers are pure and immutable.
+The registry constructor requires its trusted frozen `llir.contract` and
+retains that exact manifest. Preflight rejects a graph with different schema,
+family versions, signatures or schema effects before any runtime effect.
+The registry is distinct from the constant evaluator API;
+saved IR cannot install code. Sealed structured effect summaries must agree
+with operation signatures and declared failure/resume capabilities. Unknown
+control, borrowed/escaping operands and unsupported conditional results are
+refused. Calls are coordinator-owned transfers with checked signatures and
+explicit argument presence; callbacks cannot choose arbitrary PCs. Top-level
+arguments support arbitrary presence. Local calls supply a present input
+prefix and omit the remaining formal tail; this profile has no middle-omission
+call mapping.
+
+Values carry exact typed binary encodings and may strongly own a trusted
+immutable payload. Type handlers check, materialize and charge their values;
+they do not supply a second numeric, Unicode or RexxValue algorithm. The
+Classic fixture uses immutable boxes containing existing RexxValue objects
+and an owned pool/configuration. Borrowed BIF/context references
+exist only during synchronous handler dispatch and never enter continuations.
+The execution plan retains an immutable module snapshot. Per-session frames
+own arguments, slots, values and pending call results, conservatively retaining
+their cells rather than claiming liveness-based reclamation.
+
+Normal, failure and explicit suspension outcomes carry checked result types,
+presence, condition payload and operation origin. Suspension keeps nested call
+frames and live state. A continuation is bound to the original live session
+storage and generation: foreign, stale, consumed or copied-session use is
+refused before state changes. Valid resume consumes it once; discard/cancel
+terminalizes before cleanup. Every retained named runtime handler receives one
+terminal cleanup notification per session, including failure and limits. Each
+cleanup error is caught so remaining notifications still run; all frame cells
+and pending payloads are released, and cleanup failure cannot publish success.
+Immutable materialized constants follow the plan's lifetime.
+Malformed resume input leaves a valid suspension available for correction;
+malformed handler results or raised handler errors terminalize the run.
+
+Bound preflight work/resident plan bytes and coordinator fuel, frame depth,
+value cells and logical value bytes. Cells include arguments, slots, SSA values
+and pending results. Frame admission and advertised handler output reservations
+precede effects; resume completion and local returns must also fit their
+reservation before advancing a continuation. Exceeding an advertised bound is a
+trusted-handler protocol failure. These are logical resource limits, not RSS
+or a bound on uncooperative callback work or external handler-owned resources.
+Cancellation is cooperative between dispatches and is also effective while
+suspended. No partial public result is published after terminal failure.
+
+The independent non-cREXX graph establishes control, presence and exact bytes.
+A small runtime adapter reuses existing Classic numeric/pool/BIF bodies and
+establishes calls, state, failure, suspension, resume and cleanup. One admitted
+semantic graph also emits RXAS through a fixture-only selector; both routes
+must satisfy hand-derived values and observation order. The synchronous RXAS
+host immediately services the fixture's yield, while the runner returns an
+owned continuation. This is a transport/control comparison, not full C22
+execution coverage. One normal Debug/rxbvm component lane, early coherent
+source/representative RXAS inspection and batched material fixes qualify this
+increment. Whole-compiler, platform and formal acceptance QA stay open.
+
+<a id="group4-execution-assessment"></a>
+
+#### STEP07 suitability decision
+
+Retain compiled RXAS for static applications and retain the modern RexxScript
+tree executor. The bounded runner is a feasible optional execution substrate;
+adoption as either product backend needs a further scoped integration decision.
+This prototype does not justify replacing either current route.
+
+| Consumer | Decision and remaining proof |
+|---|---|
+| Independent Level L clients | The admitted profile can execute without a Rexx frontend/runtime or RXAS package. Trusted schema/type/operation services, own frames and explicit suspension form a reusable boundary. Unsupported capabilities fail preflight rather than falling back to another interpreter. |
+| Modern RexxScript | Keep `RexxScriptExecution`. A selected AST-to-IR lowering and runtime profile must preserve its short-circuit/control behavior, NUMERIC_COMMON precedence, diagnostic/source origins, BIF omission/context and explicit capability allowlist, plus output/value/fuel/cancellation limits. Merely registering a Classic BIF must not grant an RS_CAPABILITY facility. Legacy RexxScript remains separate. |
+| Classic INTERPRET | Keep the compiled-image design below authoritative. The IR route is plausible for owning dynamic plans/frames without generated-code unloading, but currently cannot execute unchanged C22 graphs. It needs complete runtime/control handling, conditional-result and `protect` semantics, same-C-frontend group lowering and the real mixed compiled/interpreted continuation bridge. |
+
+The Classic bridge must preserve live activation/pool rebinding and label/routine
+owners, delayed CALL resumption versus SIGNAL discard, RETURN/EXIT ownership,
+numeric/condition state, retained source/TRACE and resident-plan/code-owner pins.
+Keeping a runner frame alive proves none of those compiled-VM-frame obligations.
+The present VM also lacks the image-group reclamation API needed by the compiled
+alternative. Both routes retain the final-stage ownership/ABI decision gates;
+this assessment neither adds an alternate runtime algorithm nor implements the
+INTERPRET source instruction.
+
+Cold preparation copies and checks a complete module, admits required services,
+materializes exact constants and constructs graph/effect/initialization facts.
+Reusing a prepared plan avoids those analyses. Each session still deep-copies
+its plan/handler state, copies owned runtime payloads and conservatively retains
+all function value/slot cells until return/unwind. Suspension pins the nested
+frame stack and reserved completion bytes; terminal cleanup drops that storage
+while immutable constants follow the plan's lifetime. These are observable
+implementation costs and bounded logical resources, not a throughput or RSS
+claim. Prototype work allowances are per preparation stage, with admitted peak
+analysis storage; arbitrary handler work and external state remain separate.
+The fixture handler has explicit input/call/write/event caps. Public execution
+calls are synchronous and reject same-session handler reentry; cancellation
+acts at owned boundaries and never preempts callback code.
+
+STEP08 retains package/C integration closure. Any RexxScript migration needs
+its own parity proof; final STEP11 retains the complete LC-87/CFC-AC05 bridge,
+resource, source and platform obligations before choosing an alternative.
+There is no formal research benchmark gate and no performance/replacement claim.
 
 ### Delivery order and verification boundary
 

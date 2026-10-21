@@ -1,0 +1,398 @@
+/* cREXX License (MIT). Bounded trusted runtime bridge for the IR-runner proof.
+ * This fixture reuses shared Classic bodies; it is not the C22 runtime registry.
+ * Existing maintained testRexxClassicBifValue.crexx and
+ * testRexxClassicBifLength.crexx own the shared VALUE/empty/omission/UTF8 cases;
+ * this consumer adds IR transport, exact NUL bytes and owned continuation proof.
+ */
+options levelb numeric_classic
+namespace classicbridge expose boxedvalue valuetype service registerfamilies registry graph emit targetnew targetconstant targetoperation targetfinish
+import rxfnsb
+import llir
+import llireffects
+import llirexecute
+import rexxvalue
+import rexxpool
+import rexxclassicconfig
+import rexxclassicbifs
+import rexxclassicbifvalue
+import rexxclassicbiflength
+
+/** Immutable value owner. Typed assignment retains the RexxValue payload and
+ * cache views. No reference to this storage is published to a continuation. */
+boxedvalue: class
+  _value = .rexxvalue..RexxValue
+  _type = .string
+  _bits = .binary
+  *: factory
+    arg type = .string, bits = .binary, value = .rexxvalue..RexxValue
+    _value = value; _type = type; _bits = bits
+    return
+  value: method = .rexxvalue..RexxValue
+    return _value
+  type: method = .string
+    return _type
+  bits: method = .binary
+    return _bits
+
+/** Constants are exact UTF8 or binary bytes; runtime numeric results retain
+ * their typed RexxValue as an owned payload, rather than a serialized pointer. */
+valuetype: class implements .llirexecute..typehandler
+  *: factory
+    return
+  materialize: method = .llirexecute..value
+    arg type = .string, bits = .binary
+    if <blen>(bits) > 1024 then return .llirexecute..value(type,bits)
+    item = .rexxvalue..RexxValue
+    if type = 'fixture.classic.value' then item = .rexxvalue..RexxValue.fromBinaryText(bits)
+    else if type = 'fixture.classic.binary' then item = .rexxvalue..RexxValue.fromBinary(bits)
+    else assembler signal 'INVALID_ARGUMENTS','unregistered fixture runtime type'
+    box = .boxedvalue(type,bits,item)
+    return .llirexecute..value(type,bits,box as .object)
+  check: method = .string
+    arg item = .llirexecute..value
+    if <blen>(item.bits()) > 1024 then return 'fixture value exceeds 1024 bytes'
+    if item.type() <> 'fixture.classic.value' & item.type() <> 'fixture.classic.binary' then return 'unknown fixture value type'
+    if item.haspayload() = 0 then return 'fixture value has no owned payload'
+    payload = item.payload()
+    if \(payload is .boxedvalue) then return 'fixture value payload has the wrong owner type'
+    box = payload as .boxedvalue
+    if box.type() <> item.type() | bin2x(box.bits()) <> bin2x(item.bits()) then return 'fixture value encoding and owner disagree'
+    actual = box.value()
+    if item.type() = 'fixture.classic.value' & actual.hasText() = 0 then return 'fixture text owner is not text'
+    if item.type() = 'fixture.classic.binary' & (actual.hasBinary() = 0 | actual.hasText()) then return 'fixture binary owner is not binary'
+    if bin2x(actual.asBinary()) <> bin2x(item.bits()) then return 'fixture value payload and encoding disagree'
+    return ''
+  bytes: method = .int
+    arg item = .llirexecute..value
+    return 64 + <blen>(item.bits())
+
+owned: procedure = .llirexecute..value
+  arg item = .rexxvalue..RexxValue, type = 'fixture.classic.value'
+  bits = item.asBinary()
+  box = .boxedvalue(type,bits,item)
+  return .llirexecute..value(type,bits,box as .object)
+
+/** One run owns its actual pool and character config. All borrowed contexts
+ * below are created and consumed synchronously within dispatch(). The trusted
+ * external-state contract permits 64 calls, eight pool writes, 16 events and
+ * one held value, each at most 1024 bytes before shared-library processing.
+ * These logical admission bounds are separate from the shared owners' internal
+ * representations, temporary allocation and VM overhead; they are not RSS. */
+service: class implements .llirexecute..handler
+  _pool = .rexxpool..RexxVariablePool
+  _config = .rexxclassicconfig..RexxClassicConfig
+  _events = .string[]
+  _held = .object[]
+  _calls = .int
+  _writes = .int
+  _cleanups = .int
+  _reason = .string
+  _live = .int
+  _final = .string
+  *: factory
+    _pool = .rexxpool..RexxVariablePool(1)
+    _config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+    _calls = 0; _writes = 0; _cleanups = 0; _reason = ''; _live = 1; _final = ''
+    return
+  execute: method = .llirexecute..outcome
+    arg request = .llirexecute..request
+    values = .object[]; presence = .int[]
+    do i = 1 to request.size()
+      values[i] = request.at(i) as .object; presence[i] = request.present(i)
+    end
+    operation = request.operation()
+    return dispatch(operation.name(),values,presence)
+  dispatch: method = .llirexecute..outcome
+    numeric digits 18
+    numeric fuzz 0
+    numeric form scientific
+    arg name = .string, supplied = .object[], presence = .int[]
+    values = .rexxvalue..RexxValue[]; i = .int
+    if _calls >= 64 then return .llirexecute..outcome('failure','FIXTURE_LIMIT','fixture dispatch budget exhausted')
+    _calls = _calls + 1
+    do i = 1 to supplied[0]
+      carrier = supplied[i] as .llirexecute..value
+      if <blen>(carrier.bits()) > 1024 then return .llirexecute..outcome('failure','FIXTURE_LIMIT','fixture value budget exhausted')
+      if carrier.type() = 'core.boolean' then values[i] = .rexxvalue..RexxValue.fromInt(<at..u8>(0) carrier.bits())
+      else do
+        payload = carrier.payload(); box = payload as .boxedvalue
+        values[i] = box.value()
+      end
+    end
+    result = .llirexecute..outcome()
+    if name = 'fixture.classic.observe' | name = 'fixture.classic.observe.binary' then do
+      if _events[0] >= 16 then return .llirexecute..outcome('failure','FIXTURE_LIMIT','fixture event budget exhausted')
+      call arrayappend _events,'OBS|' || bin2x(values[1].asBinary())
+      return result
+    end
+    if name = 'fixture.classic.pause' then do
+      if _events[0] >= 16 then return .llirexecute..outcome('failure','FIXTURE_LIMIT','fixture event budget exhausted')
+      _held[1] = supplied[1]
+      call arrayappend _events,'PAUSE|' || bin2x(values[1].asBinary())
+      return .llirexecute..outcome('suspend','WAIT','owned fixture continuation',values[1].asBinary())
+    end
+    bifname = 'VALUE'
+    if name = 'fixture.classic.length' | name = 'fixture.classic.length.optional' then bifname = 'LENGTH'
+    if name = 'fixture.classic.add' then bifname = 'ADD'
+    context = .rexxclassicbifs..RexxBifCallContext.expression(bifname)
+    call context.setConfig(reference _config)
+    call context.setCallerPool(reference _pool)
+    call context.setArguments(values,presence)
+    if name = 'fixture.classic.length.optional' then do
+      actuals = .rexxvalue..RexxValue[]; exists = .int[]
+      actuals[1] = values[1]; exists[1] = values[2].asInt()
+      call context.setArguments(actuals,exists)
+    end
+    computed = .rexxvalue..RexxValue
+    select name
+      when 'fixture.classic.add' then computed = rexxclassicbifs..rexxclassic_expression_binary(reference context,values[1],values[2])
+      when 'fixture.classic.length' then computed = rexxclassicbiflength..rexxclassicbif_length(reference context)
+      when 'fixture.classic.length.optional' then computed = rexxclassicbiflength..rexxclassicbif_length(reference context)
+      when 'fixture.classic.value.get' then computed = rexxclassicbifvalue..rexxclassicbif_value(reference context)
+      when 'fixture.classic.value.set' then do
+        if _writes >= 8 | _events[0] >= 16 then return .llirexecute..outcome('failure','FIXTURE_LIMIT','fixture write budget exhausted')
+        computed = rexxclassicbifvalue..rexxclassicbif_value(reference context)
+        if context.hasError() = 0 then do
+          _writes = _writes + 1
+          call arrayappend _events,'SET|' || bin2x(values[2].asBinary())
+        end
+      end
+      otherwise return .llirexecute..outcome('failure','FIXTURE_OPERATION','unregistered fixture dispatch')
+    end
+    if context.hasError() then return .llirexecute..outcome('failure',context.errorCode(),context.errorMessage())
+    call result.add(owned(computed))
+    return result
+  pending: method = .llirexecute..value
+    return _held[1] as .llirexecute..value
+  cleanup: method = .void
+    arg reason = .string
+    _cleanups = _cleanups + 1; _reason = reason
+    _final = bin2x(_pool.symbolValue('ITEM').asBinary())
+    call objectarraydrop _held
+    _pool = .rexxpool..RexxVariablePool(1)
+    _live = 0
+    return
+  eventcount: method = .int
+    return _events[0]
+  event: method = .string
+    arg i = .int
+    return _events[i]
+  writes: method = .int
+    return _writes
+  calls: method = .int
+    return _calls
+  cleanups: method = .int
+    return _cleanups
+  reason: method = .string
+    return _reason
+  live: method = .int
+    return _live
+  held: method = .int
+    return _held[0]
+  final: method = .string
+    return _final
+  poolvalue: method = .string
+    return bin2x(_pool.symbolValue('ITEM').asBinary())
+
+registerfamilies: procedure = .void
+  arg registry = reference .llir..schema
+  schema = dereference registry
+  family = schema.family('fixture.classic',1)
+  value = family.type('value',.llir..bytescodec() as .object)
+  binary = family.type('binary',.llir..bytescodec() as .object)
+  do i = 1 to 9
+    name = word('add length value.get value.set observe observe.binary pause call length.optional',i)
+    operation = family.operation(name)
+    inputtype = value
+    if name = 'observe.binary' then inputtype = binary
+    call operation.input('first',inputtype)
+    if name = 'add' | name = 'value.set' then call operation.input('second',value)
+    if name = 'length.optional' then call operation.input('second',schema.boolean())
+    if name <> 'observe' & name <> 'observe.binary' then call operation.output('value',value)
+    call operation.state('context.output.observation')
+    call operation.failure('condition.resource')
+    call operation.termination('returns')
+  end
+  return
+
+registry: procedure = .llirexecute..registry
+  arg unknown = 0
+  n = .int; ignored = .int
+  schema = .llir..schema(); call registerfamilies(reference schema)
+  contract = schema.finish()
+  result = .llirexecute..registry(contract)
+  call result.type('fixture.classic.value',.valuetype() as .object)
+  call result.type('fixture.classic.binary',.valuetype() as .object)
+  call result.type('core.boolean',.llirexecute..encodedtype(.llir..boolcodec() as .llir..typecodec) as .object)
+  call result.handler('classic',.service() as .object)
+  do i = 1 to 9
+    name = word('add length value.get value.set observe observe.binary pause call length.optional',i)
+    if unknown & name = 'value.get' then iterate
+    inputs = 1; outputs = 1
+    if name = 'add' | name = 'value.set' | name = 'length.optional' then inputs = 2
+    if name = 'observe' | name = 'observe.binary' then outputs = 0
+    summary = .llireffects..summary(inputs,outputs)
+    do n = 1 to inputs; call summary.operand(n,'value'); end
+    do n = 1 to outputs; call summary.result(n,'normal'); end
+    call summary.read('fixture.pool')
+    if name = 'value.set' then call summary.write('fixture.pool')
+    call summary.observe('fixture.events')
+    resume = 'none'; if name = 'pause' | name = 'call' then resume = 'possible'
+    call summary.control('possible','none',resume)
+    ignored = summary.seal()
+    if name = 'call' then call result.call('fixture.classic.' || name,2,summary)
+    else call result.operation('fixture.classic.' || name,'classic',summary,4096)
+  end
+  ignored = result.seal()
+  return result
+
+/** The same frozen graph feeds the coordinator and the small fixture emitter.
+ * The nested callee suspends with a live caller and exact pool/value state. */
+graph: procedure = .llir..module
+  schema = .llir..schema(); call registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('IR runtime bridge independent fixture')
+  type = contract.type('fixture.classic.value')
+  binary = contract.type('fixture.classic.binary')
+  fn = builder.function('main',type)
+  block = fn.block('entry')
+  name = block.constantbytes(type,'ITEM' as .binary,at)
+  text = block.constantbytes(type,'4100C3A9'x as .binary,at)
+  nineteen = block.constantbytes(type,'19' as .binary,at)
+  twenty3 = block.constantbytes(type,'23' as .binary,at)
+  previous = block.binary(contract.operation('fixture.classic.value.set'),name,text,at)
+  call observe(block,contract,previous,at)
+  sum = block.binary(contract.operation('fixture.classic.add'),nineteen,twenty3,at)
+  call observe(block,contract,sum,at)
+  draft = block.operation(contract.operation('fixture.classic.value.get'),at)
+  call draft.input('first',name); operation = draft.finish(); read = operation.result()
+  draft = block.operation(contract.operation('fixture.classic.length'),at)
+  call draft.input('first',read); operation = draft.finish(); length = operation.result()
+  call observe(block,contract,length,at)
+  bytes = block.constantbytes(binary,'00FF'x as .binary,at)
+  draft = block.operation(contract.operation('fixture.classic.observe.binary'),at)
+  call draft.input('first',bytes); operation = draft.finish()
+  draft = block.operation(contract.operation('fixture.classic.call'),at)
+  call draft.input('first',read); operation = draft.finish(); returned = operation.result()
+  call observe(block,contract,returned,at)
+  call block.returnvalue(length,at)
+  fn = builder.function('nested',type)
+  ignored = fn.argument(type)
+  block = fn.block('entry'); argument = block.readarg(1,at)
+  draft = block.operation(contract.operation('fixture.classic.pause'),at)
+  call draft.input('first',argument); operation = draft.finish(); resumed = operation.result()
+  call block.returnvalue(resumed,at)
+  return builder.finish()
+
+observe: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, value = .llir..valuehandle, at = .llir..origin
+  draft = block.operation(contract.operation('fixture.classic.observe'),at)
+  call draft.input('first',value); operation = draft.finish()
+  return
+
+targetnew: procedure = .classicbridge..service
+  return .classicbridge..service()
+targetconstant: procedure = .llirexecute..value
+  arg type = .string, bits = .binary
+  codec = .valuetype()
+  return codec.materialize(type,bits)
+targetoperation: procedure = .llirexecute..value
+  arg owner = reference .classicbridge..service, name = .string, ?first = .llirexecute..value, ?second = .llirexecute..value
+  current = dereference owner
+  values = .object[]; presence = .int[]
+  if ?first then do; values[1] = first as .object; presence[1] = 1; end
+  if ?second then do; values[2] = second as .object; presence[2] = 1; end
+  result = current.dispatch(name,values,presence)
+  if result.status() = 'suspend' then return current.pending()
+  if result.status() <> 'normal' then do
+    code = result.code()
+    assembler signal 'ERROR',code
+  end
+  if result.size() > 0 then return result.at(1)
+  return .llirexecute..value('core.boolean','00'x as .binary)
+targetfinish: procedure = .int
+  arg owner = reference .classicbridge..service, value = .llirexecute..value
+  current = dereference owner
+  call current.cleanup('done')
+  do i = 1 to current.eventcount(); say current.event(i); end
+  say 'RETURN|' || bin2x(value.bits())
+  say 'STATE|' || current.writes() || '|' || current.cleanups() || '|' || current.live() || '|' || current.held() || '|' || current.final()
+  return 0
+
+/** Deliberately bounded target consumer: constants, arguments, one static call,
+ * admitted operations and returns only. It does not implement another runtime.
+ * Each emitted operation calls the same trusted dispatch as the IR runner. */
+emit: procedure = .void
+  arg graph = .llir..module, path = .string
+  store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+  input = .llir..valuehandle
+  base = store.count(4) + 8; locals = base + 6
+  text = '.globals=0' || '0a'x
+  do f = 1 to graph.functions()
+    proc = 'fixture' || f || '()'; if f = 1 then proc = 'main()'
+    text = text || proc || ' .locals=' || locals || '0a'x
+    if f = 1 then do
+      text = text || 'load r' || base || ',0' || '0a'x
+      text = text || 'call r0,classicbridge.targetnew(),r' || base || '0a'x || 'mkref r1,r0' || '0a'x
+    end
+    else text = text || 'copy r1,a1' || '0a'x
+    do op = 1 to graph.operations()
+      operation = graph.operation(op); b = operation.blockid()
+      if store.get(2,b,1) <> f then iterate
+      name = operation.name(); opcode = store.get(3,op,1); destination = base + 5
+      if operation.results() > 0 then destination = operation.result().id() + 2
+      if name = 'core.constant' then do
+        item = operation.result(); typename = schema.typename(item.type().id())
+        text = text || 'load r' || (base + 1) || ',"' || typename || '"' || '0a'x
+        text = text || 'load r' || (base + 2) || ',0x' || bin2x(item.bytes()) || '0a'x
+        text = text || targetcall('classicbridge.targetconstant()',base,2,destination)
+      end
+      else if name = 'core.argument' then text = text || 'copy r' || destination || ',a' || (store.get(3,op,12) + 1) || '0a'x
+      else if name = 'core.return' then do
+        input = operation.input(1); source = input.id() + 2
+        if f = 1 then do
+          text = text || 'copy r' || (base + 1) || ',r1' || '0a'x
+          text = text || 'copy r' || (base + 2) || ',r' || source || '0a'x
+          text = text || targetcall('classicbridge.targetfinish()',base,2,0) || 'ret r0' || '0a'x
+        end
+        else text = text || 'ret r' || source || '0a'x
+      end
+      else do
+        text = text || 'copy r' || (base + 1) || ',r1' || '0a'x
+        if name = 'fixture.classic.call' then do
+          input = operation.input(1)
+          text = text || 'copy r' || (base + 2) || ',r' || (input.id() + 2) || '0a'x
+          text = text || targetcall('fixture2()',base,2,destination)
+        end
+        else do
+          text = text || 'load r' || (base + 2) || ',"' || name || '"' || '0a'x
+          do n = 1 to operation.inputs()
+            input = operation.input(n)
+            text = text || 'copy r' || (base + 2 + n) || ',r' || (input.id() + 2) || '0a'x
+          end
+          text = text || targetcall('classicbridge.targetoperation()',base,2 + operation.inputs(),destination)
+        end
+      end
+    end
+  end
+  /* RXAS imported-procedure declarations retain the target helper ABI; they
+   * contain no bodies and are resolved by the static link to this fixture. */
+  text = text || 'classicbridge.targetnew() .expose=classicbridge.targetnew' || '0a'x
+  text = text || '.meta "classicbridge.targetnew"="b" ".classicbridge..service" classicbridge.targetnew() ""' || '0a'x
+  text = text || 'classicbridge.targetconstant() .expose=classicbridge.targetconstant' || '0a'x
+  text = text || '.meta "classicbridge.targetconstant"="b" ".llirexecute..value" classicbridge.targetconstant() "type=.string,bits=.binary"' || '0a'x
+  text = text || 'classicbridge.targetoperation() .expose=classicbridge.targetoperation' || '0a'x
+  text = text || '.meta "classicbridge.targetoperation"="b" ".llirexecute..value" classicbridge.targetoperation() "owner=reference .classicbridge..service,name=.string,?first=.llirexecute..value,?second=.llirexecute..value"' || '0a'x
+  text = text || 'classicbridge.targetfinish() .expose=classicbridge.targetfinish' || '0a'x
+  text = text || '.meta "classicbridge.targetfinish"="b" ".int" classicbridge.targetfinish() "owner=reference .classicbridge..service,value=.llirexecute..value"' || '0a'x
+  ignored = charout(path,text); ignored = charout(path)
+  return
+
+targetcall: procedure = .string
+  arg name = .string, base = .int, count = .int, destination = .int
+  i = .int
+  text = 'load r' || base || ',' || count || '0a'x
+  do i = 1 to count; text = text || 'settp r' || (base + i) || ',768' || '0a'x; end
+  text = text || 'call r' || destination || ',' || name || ',r' || base || '0a'x
+  do i = 1 to count; text = text || 'null r' || (base + i) || '0a'x; end
+  return text

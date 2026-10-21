@@ -60,8 +60,10 @@ checks during development does not remove later milestone obligations.
 
 The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and
 [architecture](architecture.md#group4-infrastructure-proposal) own approved
-STEP01–06. STEP07 execution feasibility remains later work. The reviewed contract
-does not commission new ISA work, language migrations or INTERPRET.
+STEP01–07, including the
+[bounded execution contract](architecture.md#group4-execution-contract).
+The reviewed contract does not commission new ISA work, language migrations
+or INTERPRET.
 WP-02 owns shared graph/analysis/proof and optional execution coordination;
 WP-08 owns C selection migration and optional RXAS target/allocation integration;
 WP-03 owns existing semantic runtime interfaces; WP-09 retains canonical native

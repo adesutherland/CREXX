@@ -186,6 +186,12 @@ RexxScript CTests execute prebuilt programs, with no nested build/test matrix.
 Both belong to normal `stage-product`. Research compilers have their own opt-in
 stage and install component; neither SDK nor Level L imports them.
 
+Optional IR packages have separate targets and images:
+`rxfnsl_analysis` supplies [graphs and proofs](doc/ir-design.md),
+`rxfnsl_rxas` supplies [RXAS records and register assignment](doc/rxas-design.md),
+and `rxfnsl_execute` supplies the [bounded execution prototype](doc/execute-design.md).
+Select them explicitly; they do not enter grammar bootstrap or static targets.
+
 `llgenerate..request(source, format, filename, limits, rxl, bytes)` accepts exact
 binary source and returns `status()`, `error()` and owned `output()`. Defaults are
 `rxas`, `<source>`, a default Level L policy, `0` and 67108864. The service uses

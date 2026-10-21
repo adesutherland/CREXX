@@ -29,6 +29,8 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers rxfnsl_analysis)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
       list(APPEND _producers rxfnsl_rxas)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
+      list(APPEND _producers rxfnsl_execute)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
       list(APPEND _producers rxfnsc)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
@@ -1168,6 +1170,36 @@ if("g" IN_LIST _languages AND TARGET rxbvm)
     TIMEOUT 900 RUN_SERIAL TRUE LABELS "level-l;compiler;component")
   crexx_register_test_prep_targets(TESTS llcompiler_g_infrastructure_opt_rxbvm
     TARGETS llcompiler_llrxc-g_opt rxbvm)
+endif()
+
+if("c" IN_LIST _languages AND TARGET rxbvm)
+  # STEP07 is a standalone execution feasibility component, not a compiler
+  # rebuild or mode/VM matrix. The generated target consumes only its adapter.
+  set(_execution_dir "${CMAKE_CURRENT_BINARY_DIR}/ir-execution")
+  set(_execution_source "${CMAKE_CURRENT_SOURCE_DIR}/tests/ir-execution")
+  set(_flags)
+  set(_execution_inputs ${_base} "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+  ll_compile(classicbridge "${_execution_source}/classicbridge.crexx"
+    "${_execution_dir}" ${_execution_inputs})
+  ll_compile(runtime-contracts "${_execution_source}/runtime-contracts.crexx"
+    "${_execution_dir}" ${_execution_inputs} "${_execution_dir}/classicbridge.rxbin")
+  set(_execution_runtime ${_execution_inputs} "${_execution_dir}/classicbridge.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+  add_custom_command(OUTPUT "${_execution_dir}/runtime-contracts-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_execution_dir}/runtime-contracts-linked"
+      "${_execution_dir}/runtime-contracts.rxbin" ${_execution_runtime}
+    DEPENDS rxlink classlib rxunicode_core "${_execution_dir}/runtime-contracts.rxbin"
+      ${_execution_runtime} VERBATIM)
+  add_custom_target(llcompiler_ir_execution
+    DEPENDS "${_execution_dir}/runtime-contracts-linked.rxbin")
+  add_test(NAME llcompiler_ir_execution_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${_execution_source}/check-runtime.py" --build "${CMAKE_BINARY_DIR}")
+  set_tests_properties(llcompiler_ir_execution_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "IR_EXECUTION_RUNTIME[|]PASS" TIMEOUT 300 RUN_SERIAL TRUE
+    LABELS "level-l;compiler;component")
+  crexx_register_test_prep_targets(TESTS llcompiler_ir_execution_opt_rxbvm
+    TARGETS llcompiler_ir_execution rxbvm)
 endif()
 
 add_test(NAME llcompiler_product_inventory COMMAND ${CMAKE_COMMAND}

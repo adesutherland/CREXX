@@ -9,9 +9,11 @@ The optional `rxfnsl-analysis` package adds `llirgraph` and `llireffects`, with
 no cREXX frontend, runtime or instruction dependency. The separately selected
 [`rxfnsl-rxas` package](rxas-design.md) supplies instruction records and register
 assignment. Neither enters the core image or grammar bootstrap. Source-language
-policy stays in its frontend/adapters. An IR runner remains later feasibility
-work in the [Group 4 architecture](../../research/level-l/compilers/doc/architecture.md#group4-infrastructure-proposal);
-constant evaluators below do not execute effectful programs.
+policy stays in its frontend/adapters. The optional
+[`rxfnsl-execute` prototype](execute-design.md) coordinates bounded runtime
+execution through trusted handlers; constant evaluators below do not execute
+effectful programs. Execution support does not imply that an arbitrary family
+or every structurally valid IR control is executable.
 
 ## Optional analysis and proof services
 

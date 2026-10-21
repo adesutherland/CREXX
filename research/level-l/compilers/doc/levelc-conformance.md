@@ -153,7 +153,21 @@ signals stay authoritative; an unknown signal contract does not become a pure
 operation to obtain a smaller frame. Existing practical TRACE and clause state,
 argument presence, recursion and numeric failure semantics remain binding.
 This is a compiler infrastructure increment, with no new source feature, native
-C frontend change, IR execution backend or performance/replacement claim.
+C frontend change or performance/replacement claim.
+
+Group 4 STEP07 adds the separate neutral
+[`rxfnsl-execute` prototype](../../../../langtools/doc/execute-design.md),
+with trusted schema/version admission, owned frames and local calls,
+argument presence, bounded handler results and linear suspended continuations.
+Its small Classic fixture reuses the actual shared VALUE, LENGTH and numeric
+bodies; it does not execute the complete C22 family. In particular, neutral
+`protect`, borrowed/escaping values and conditional extension results are
+rejected before effects. An owned standalone fixture pool does not establish
+live compiled-caller activation, labels, condition handling or source lifetime.
+The C compiler continues to emit RXAS, modern RexxScript keeps its current tree
+executor, and the existing compiled-image INTERPRET design remains authoritative.
+The [execution assessment](architecture.md#group4-execution-assessment) owns the
+remaining route decision and required bridges; INTERPRET is still last.
 
 ## Material work remaining
 

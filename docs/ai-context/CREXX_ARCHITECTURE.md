@@ -82,10 +82,19 @@ outside this phase.
 
 `langtools/` owns Level L itself: the `rxlang` command, callable `llgenerate` service,
 specification frontend, bootstrap and generic RXAS/metadata/file-output helpers.
-`lib/rxfnsl/` owns only generic SDK source and its required Unicode build inputs.
+`lib/rxfnsl/` owns SDK implementation, optional analysis/execution/RXAS packages
+and required Unicode build inputs.
 All Level L guides/examples and independent library tests live in `langtools/`.
 The SDK has no dependency on a source-language compiler or the Level L command.
 `rxfnsl.rxbin` is the SDK; `rxlanglib.rxbin` is the tool service package.
+Optional `rxfnsl-analysis`, `rxfnsl-rxas` and `rxfnsl-execute` images have
+separate build/link selections. The first supplies neutral graph/effect/proof
+services, the second canonical instruction records and checked allocation,
+and the third bounded IR execution through trusted runtime handlers. They do
+not enter grammar bootstrap or static application targets. Source-language
+policy and runtime algorithms stay in their existing owners; see the public
+[IR guide](../../langtools/doc/ir-design.md) and
+[execution prototype](../../langtools/doc/execute-design.md).
 
 The new compilers live in `research/level-l/compilers/`. Classic owns an
 independent frontend, semantic family, RXAS selector, service and main. G uses

@@ -167,7 +167,7 @@ acceptance work across these groups; they are not additional language features.
 
 ### Group 4: enabling architecture and delivery
 
-**Approved implementation: G4-STEP01–06.** Adrian selected Group 4 next and clarified that Level L may supply
+**Approved implementation: G4-STEP01–07.** Adrian selected Group 4 next and clarified that Level L may supply
 specific RXAS/instruction and cREXX IR support alongside generally reusable
 infrastructure. Keep a neutral core plus optional target/semantic packages,
 with one algorithm/data owner and no reverse dependency on a source frontend.
@@ -175,7 +175,8 @@ Serve the current C compiler first, preserve existing typed consumers, and make
 the contracts usable by later B/G, Classic/O, assembler and RexxScript work.
 Those future product migrations are not silently added to C-first delivery.
 Use Sol 6.1 Extra High workers, proportionate component checks and a local
-commit without pushing. STEP07, formal compiler QA and INTERPRET remain later.
+commit without pushing. STEP07 is a separate bounded execution feasibility
+increment; formal compiler QA and INTERPRET remain later.
 
 The outcome is an explicit semantic-IR and target-IR pipeline: shared flow and
 variable/lifetime facts support checked transformations; target liveness and
@@ -193,8 +194,8 @@ gates. This does not approve new opcodes, wire formats or INTERPRET implementati
 | **G4-AC04 — open** | Typed RXAS records carry all explicit/implicit uses, conditional definitions, register components, calls/windows, reference/cleanup and debug/TRACE observations before allocation. Opcode/effect/signal data has one canonical binutils owner, with checked SDK views and maintained native instruction/flow fixture crosswalks. |
 | **G4-AC05 — open** | Deterministic allocation reuses dead temporary and eligible slot storage while preserving aliases, storage-cell lifetime, argument presence, numeric state, conditional results and cleanup. Independent interference/assignment checks and representative RXAS show frame demand follows live constraints; budget failure preserves prior output. |
 | **G4-AC06 — open** | C-OPT-01–06 have explicit ownership and closure checks. Remove direct construction defects with optimisation off; use proved effects/availability for optional rewrites. C retains language premises; optional RXAS owns machine legality; unchanged runtime algorithms remain single-owned. |
-| **G4-AC07 — open** | A bounded optional IR runner executes admitted core/registered operations through trusted runtime handlers, with exact values/presence, calls, failures, observations, cancellation and owned suspended continuations. Unsupported capabilities fail before effects. An independent non-cREXX case and a small effectful/resumable case establish feasibility; constant-fold callbacks are not used as a runtime evaluator. |
-| **G4-AC08 — open** | The execution feasibility decision explicitly chooses, retains or rejects IR execution for modern RexxScript and final Classic INTERPRET, considering semantic coverage, live compiled callers, resource ownership and observed implementation cost. All LC-87/CFC-AC05 outcomes remain binding; existing compiled-image design stays authoritative until an alternative is approved. |
+| **G4-AC07 — complete for the bounded prototype** | A bounded optional IR runner executes admitted core/registered operations through trusted runtime handlers, with exact values/presence, calls, failures, observations, cancellation and owned suspended continuations. Unsupported capabilities fail before effects. An independent non-cREXX case and a small effectful/resumable case establish feasibility; constant-fold callbacks are not used as a runtime evaluator. |
+| **G4-AC08 — complete; current product routes retained** | The execution feasibility decision explicitly chooses, retains or rejects IR execution for modern RexxScript and final Classic INTERPRET, considering semantic coverage, live compiled callers, resource ownership and observed implementation cost. All LC-87/CFC-AC05 outcomes remain binding; existing compiled-image design stays authoritative until an alternative is approved. |
 | **G4-AC09 — open** | C consumes the shared pipeline with early source/representative target review and proportionate component checks. Reuse native source/fixtures and independent L expectations; preserve Group 1 conditions/observations and an affected existing typed consumer. No new B/G/O coverage, assembler replacement or native C frontend edit is claimed. |
 | **G4-AC10 — open** | Enduring API/architecture/build guidance, simple status and capability boundaries match delivered products. Static targets contain no compiler, allocator or IR runner unless selected. Full compiler/platform/delivery QA and all CFC criteria stay open for their agreed milestones. |
 
@@ -206,16 +207,19 @@ gates. This does not approve new opcodes, wire formats or INTERPRET implementati
 | **G4-STEP04 — complete** | Optional `llrxas`/`llrxascatalog` admit typed records before allocation, including C/G body, helper, call/window, cleanup and TRACE work. A build-time view reuses canonical native effects/components/signals; quoting/metadata and ISA remain single-owned; AC01/04/09. |
 | **G4-STEP05 — complete** | Deterministic whole-cell assignment and an independent constraint/interference validator support same-block plain scalar reuse and proved C context-slot coalescing across blocks. References, owned values, protected/cross-label/loop storage, presence, windows and release points retain conservative identities. C and the existing typed consumer use one target service; no packing/spilling; AC02–05/09. |
 | **G4-STEP06 — complete** | C context transport removes redundant cells/copies without an optimization flag; function/owner indices remove repeated membership filtering. Structural checks retain real caller arguments and helper/cleanup costs. C-OPT-01–06 retain the architecture's ownership/closure checks for further setup, numeric, binding, call and machine opportunities; no fully optimized or speed claim. B-SEED-ALIAS stays separate; AC06/09. |
-| **G4-STEP07 — todo; separate feasibility increment** | Prototype the optional core IR runner and trusted operation execution interfaces, then a bounded effectful/resumable consumer using existing runtime bodies. Record the explicit RexxScript/Classic backend decision; AC07/08. This is infrastructure proof, not the INTERPRET source feature or wholesale RexxScript migration. |
+| **G4-STEP07 — complete; bounded feasibility increment** | Optional `llirexecute` implements the [recorded execution contract](doc/architecture.md#group4-execution-contract). Independent control/presence/bytes and owned Classic VALUE/LENGTH/numeric fixtures cover calls, failure, suspension/resume/discard, cleanup and limits; one frozen graph also emits RXAS against independent expectations. The [suitability decision](doc/architecture.md#group4-execution-assessment) retains current RexxScript and Classic routes pending full integration proof; AC07/08. No INTERPRET source feature or language migration. |
 | **G4-STEP08 — todo** | Complete shared-package/C migration, documentation and focused closure checks; AC01/09/10. Deliver STEP02–06 as the C enabling sequence before dependent Group 2/3 mechanisms. STEP07 can follow without blocking unrelated static language work, but its decision precedes final STEP11. Formal QA still follows feature completion. |
 
 STEP01–06 are one locally qualified enabling increment. Generic graph/effect and
 RXAS fixtures, C protocol/limit cases, maintained native C fixtures and an
 affected typed control own the component expectations. Public package guides
 describe independent use and static runtime separation. Full G4 criterion
-closure remains open with STEP07/08; all CFC criteria and formal compiler QA
-remain open. Retained optimization opportunities do not create a new language
-feature or change the order of Groups 2/3 and final INTERPRET.
+closure remains open with STEP08. STEP07 has a separate focused Debug/rxbvm
+prototype qualification and public package contract; its admitted profile does
+not execute complete C22 or establish live compiled-caller ownership. All CFC
+criteria and formal compiler QA remain open. Retained optimization opportunities
+do not create a new language feature or change the order of Groups 2/3 and final
+INTERPRET.
 
 Each implementation increment uses early coherent source/first-target review,
 batched material fixes and the smallest meaningful normal configuration/VM.
@@ -306,5 +310,13 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
   sequential scalar indices. Native seed register allocation owns a later
   focused repair and a class-array/method-index regression in both compiler
   modes; keep the C owner/clause shape controls.
+- **B-SEED-INLINE-RECEIVER — open:** native B optimized inlining can resolve an
+  enclosing session field through a different callee receiver while evaluating
+  `current.advance(_plan.next(op))`. The L runner evaluates its next PC before
+  invoking the frame method. Native B inline binding/rewrite owns the repair;
+  closure needs an isolated nested caller-field/foreign-receiver reproducer,
+  affected optimizer-mode checks and the retained neutral runner slot/control
+  consumer. This is distinct from the indexed-receiver issue above and does
+  not authorize native frontend edits in this increment.
 - **Scope:** language/API/ISA/platform exceptions, default switching, native-C
   retirement and release/publication remain explicit maintainer decisions.
