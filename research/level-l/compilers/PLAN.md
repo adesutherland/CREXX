@@ -7,9 +7,9 @@ host/lifecycle/platform contracts and, last, INTERPRET. Native B is the build
 seed; new C requests never delegate to a native source compiler/backend.
 Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 
-**Complete C remains open. Last locally delivered profile: implicit commands
-and owned source warnings. Next: LC-I-22 NUMERIC, following its exact contract
-review.** PARSE was
+**Complete C remains open. Last locally delivered profile: NUMERIC source
+completion. Next: clause/condition prerequisites for SIGNAL and CALL4, following
+exact contract review.** PARSE was
 delivered ahead of its queue position as the shared executor prerequisite for
 ARG; this does not skip PROCEDURE or close PARSE.
 
@@ -49,12 +49,12 @@ passes. Shared dependencies retain their named owners while the queue advances.
 | <a id="current-action-parse"></a><a id="parse-cursor-local-qualification"></a>**LC-I-19 PARSE / CLC-STEP06 — prerequisite delivered ahead** | Seven sources/complete templates, one shared cursor/executor and C integration locally delivered. | CPARSE-AC07/08, engine real-platform proof and whole ARG/PULL acceptance remain open; STEP03/07/08/10. |
 | **LC-I-20 ADDRESS / CLC-STEP07** | Explicit selection/swap, transient commands/WITH, lexical anchors and owned command lifecycle locally qualified; CADDR-AC01–05/07 explicit profile. | CADDR-AC08: configured conditions/resumption, TRACE, native host/NUL transport and declared platforms; whole LC-I-20 remains open. |
 | **LC-I-21 implicit command / CLC-STEP07** | Active-ADDRESS commands, lasting connections and owned source warnings locally qualified; CADDR-AC01–07 local profile. | Configured conditions/resumption, TRACE, host/NUL transport and declared platforms: CADDR-AC08 / STEP07/08. |
-| **LC-I-22 NUMERIC / CLC-STEP07** | Bounded DIGITS/FUZZ/FORM and inherited/restored settings implemented. | Full defaults/validation, arithmetic/display/BIF effects and numeric fact invalidation; STEP03/04/07. |
+| **LC-I-22 NUMERIC / CLC-STEP07** | Default/fixed/dynamic forms, once-only shared validation, frame installation and call restoration locally qualified; NUM-C-AC01–06. | NUM-C-AC07: configured conditions/LOSTDIGITS, TRACE, broader diagnostics/host/platform scope and numeric fact invalidation; STEP02/03/04/07/08. |
 | **LC-I-23 SIGNAL / CLC-STEP07** | Not implemented in new C. | Direct/quoted/VALUE targets, seven-condition ON/OFF, SIGL, loop clearing and source/error/handler lifetimes; STEP07/08. |
 | **LC-I-24 TRACE / CLC-STEP07** | Not implemented in new C. | Agreed practical VM observations/options/query/command inhibition and disabled-cost proof; STEP07/08. |
 | **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
 
-## Next feature: NUMERIC
+## Next feature: SIGNAL prerequisites
 
 Adrian authorized the remaining agreed C instructions/features stepwise, with
 internal contract review and a local commit after each, stopping before
@@ -75,6 +75,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 | **CADDR-STEP01–02** | [Keyed explicit ADDRESS profile](doc/architecture.md#address-c-command-contract) locally qualified for AC01–05/07 explicit scope, with the separate B prerequisite. AC08 stays open. |
 | **CADDR-STEP03** | Locally qualified implicit C16 commands and owned source warnings through the same command owner; AC01–07 local profile. AC08 stays shared scope. |
 | **NUM-B-STEP01–03** | Locally complete: [shared FORM diagnostic prerequisite](doc/architecture.md#numeric-form-diagnostic-prerequisite) corrects the sole validator's `33.3` identity before C source extension; no numeric algorithm change. |
+| **NUM-C-STEP01–03** | [NUMERIC source-completion profile](doc/architecture.md#numeric-c-contract) locally qualified for AC01–06. AC07 shared closure remains open. |
 
 No native C implementation, second runtime algorithm, push or hosted campaign
 is commissioned. INTERPRET remains excluded from the standing authority.
@@ -85,7 +86,8 @@ The [RETURN contract](doc/architecture.md#return-contract) owns RRET-AC01–05;
 local AC01–05. AC06 retains provider/handler/host/platform owners. CALL3 static
 statement integration, standalone PULL, PUSH and QUEUE are locally delivered.
 Explicit ADDRESS and implicit commands/warnings are locally delivered.
-NUMERIC follows exact contract review; CALL4 follows STEP07 clause/condition support.
+NUMERIC's source profile is locally delivered. SIGNAL and CALL4 follow STEP07
+clause/condition support with exact contracts reviewed before implementation.
 
 **BCONCAT-STEP01–03 complete:** intrinsic concatenation followed by target conversion;
 [permanent regression](../../../compiler/tests/rexx_src/binary_concat_target.crexx).
@@ -107,7 +109,7 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | <a id="active-first-implementation-increment"></a><a id="shared-b-unicode-interface-and-c-adapter-migration"></a><a id="active-c-contract-baseline-increment"></a><a id="active-borrowed-classic-context-increment"></a>**CLC-STEP03** | Partial: borrowed context/shared B Unicode foundations delivered. Complete activation/pool/alias ownership, recursion, restoration, abrupt paths and needed direct/BIF APIs; preserve existing B/G/public metadata contracts and one algorithm/data owner. |
 | **CLC-STEP04** | Partial: complete contextual source/Unicode names, exact byte/scalar origins, dead-source validation, expressions/numeric semantics and BF01–05 bindings. No native frontend dependency. |
 | **CLC-STEP05** | Partial: finish shared dependencies of the delivered LC-I-01–10 profiles in the instruction table. |
-| **CLC-STEP06** | Local LC-I-11–19 profiles delivered; remaining full scope stays explicit. ADDRESS/implicit commands delivered; NUMERIC next, with CALL4 dependencies and remaining LC-I-11–19 explicit. Retain ARG/PARSE/PULL and broader completion obligations. |
+| **CLC-STEP06** | Local LC-I-11–19 profiles delivered; remaining full scope stays explicit. ADDRESS/implicit commands and NUMERIC source profiles delivered; CALL4 follows clause/condition dependencies. Retain ARG/PARSE/PULL and broader completion obligations. |
 | **CLC-STEP07** | Partial: LC-I-20–24, conditions/resumption, clause clocks, diagnostics/source/TRACE and BF07/09. |
 | **CLC-STEP08** | Not started as a full stage: remaining BIF/host adapters, exact-length invocation/completion, callback pools, queues/streams/clocks/HALT, concurrency and declared platforms. New host APIs/exclusions require approval. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. Needed ISA/storage contracts receive internal review under standing authority; production performance edits retain their qualification gate. |

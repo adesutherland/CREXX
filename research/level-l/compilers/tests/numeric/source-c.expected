@@ -1,0 +1,10 @@
+initial=9|0|SCIENTIFIC
+effect=1|0.3333|100.0E+6
+value=ENGINEERING
+once=1|4|1|SCIENTIFIC
+group=ENGINEERING
+reset=9|0|SCIENTIFIC
+private=5:1:ENGINEERING>3:0:SCIENTIFIC|caller local|5|1|ENGINEERING
+recursive=5>4>3/3/4|5|1|ENGINEERING
+names=7|8|9|left|right|12|13|contextual
+continued=SCIENTIFIC

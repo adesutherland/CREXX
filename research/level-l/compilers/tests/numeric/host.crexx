@@ -1,0 +1,79 @@
+/* Existing borrowed context plus full result/state after C frame teardown. */
+options levelb numeric_classic
+import rxfnsb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import numericfixture
+
+main: procedure = .int expose checks failures
+  numeric digits 12
+  numeric fuzz 4
+  numeric form engineering
+  arg argv = .string[]
+  checks = 0; failures = 0
+  if argv[0] > 0 then do
+    if argv[1] <> 'invalid-form' & argv[1] <> 'reset-digits' then return 2
+    say 'NUMERIC_FATAL|before'
+    call unhandled(argv[1])
+    say 'UNREACHED numeric host'
+    return 1
+  end
+  returned = invokeFixture('state')
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == '7|2|ENGINEERING','state packet retained after context/activation expiry')
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  returned = invokeFixture('exit')
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == payload,'EXIT packet owns exact Unicode NUL trailing blank')
+  call framecheck()
+  say 'NUMERIC_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg mode = .string
+  activation = .rexxactivation..RexxActivationArguments(); call activation.appendText(mode)
+  visible = .rexxpool..RexxVariablePool(); call visible.setString('COUNT','0')
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call visible.setString('PAYLOAD',payload); call visible.setString('LOCAL','caller local'); call visible.setString('UNREACHED','untouched')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  returned = numericfixture..run(reference context,0)
+  original = reference visible; rebound = context.pool()
+  original_activation = reference activation; rebound_activation = context.activation()
+  original_config = reference config; rebound_config = context.config()
+  call check(<refvalid>(rebound) & (rebound <refsame> original),'live original pool binding restored')
+  call check((original_activation <refsame> rebound_activation) & (original_config <refsame> rebound_config),'activation/config identity retained')
+  if mode = 'state' then call check(activation.numericDigits() = 7 & activation.numericFuzz() = 2 & activation.numericForm() = 2 & activation.programExitRequested() = 0,'successful settings remain authoritative activation state')
+  if mode = 'exit' then do
+    call check(activation.numericDigits() = 6 & activation.numericFuzz() = 1 & activation.numericForm() = 2,'EXIT operand bypasses FORM setter/install')
+    call check(activation.programExitRequested() & activation.hasReturnValue() & activation.returnValue().asString() == payload,'shared root retains same owned EXIT value')
+    call check(visible.symbolValue('COUNT').asString() == '1' & visible.symbolValue('LOCAL').asString() == 'caller local' & visible.symbolValue('UNREACHED').asString() == 'untouched','once-only operand and private restoration before return')
+  end
+  call framecheck()
+  return returned
+
+unhandled: procedure = .void
+  arg mode = .string
+  activation = .rexxactivation..RexxActivationArguments(); call activation.appendText(mode)
+  visible = .rexxpool..RexxVariablePool(); call visible.setString('COUNT','0')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  returned = numericfixture..run(reference context,0)
+  return
+
+framecheck: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  call check(rxfnsb..digits() = 12 & rxfnsb..fuzz() = 4 & rxfnsb..form() == 'engineering','B caller frame remains12/4/engineering')
+  return
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

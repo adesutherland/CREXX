@@ -149,6 +149,14 @@ parsed: class
       if addressmode = 'head' & (kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not')) then do
         ok = classified.synthetic(language.tokenid('addressvalue'),first); addressmode = 'value'
       end
+      /* Only a contextual FORM suffix can introduce dynamic numeric input.
+       * Keep its token separate from PARSE VALUE's joined-stream state. */
+      if after = 'FORM' & depth = 0 then do
+        if kind = id & spelling = 'VALUE' then kind = language.tokenid('numericvalue')
+        else if kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not') then do
+          ok = classified.synthetic(language.tokenid('numericvalue'),first)
+        end
+      end
       if kind = id then do
         if next = colon & parsemode = '' then kind = language.tokenid('labelname')
         else if proceduretail > 0 then do
@@ -326,6 +334,7 @@ parsed: class
       if kind <> sep | condition = 0 then do
         term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
         if emptyrhs | wordpos(word,'SAY PUSH QUEUE ADDRESS RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
+        if kind = language.tokenid('numericvalue') then term = 1
         if kind = language.tokenid('addressenv') | kind = language.tokenid('addressquoted') | kind = language.tokenid('addressresource') then term = 1
         if kind = language.tokenid('addresskind') & spelling = 'NORMAL' then term = 1
         if depth = 0 & kind = comma & wordpos(operandmode,'arg call') > 0 then term = 1
@@ -410,6 +419,7 @@ parsed: class
       decorated = parsemessage(language_ref,joined,_offset,_error)
       if decorated == _error then do
         decorated = addressmessage(language_ref,reference joined,reference source,_offset,_error)
+        if decorated == _error then decorated = numericmessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then _error = completionmessage(language_ref,reference joined,reference _offset,_error)
         else _error = decorated
       end
@@ -559,6 +569,7 @@ syntaxmessage: procedure = .string
   text = changestr('addresskind',text,'NORMAL/STREAM/STEM')
   text = changestr('addressresource',text,'resource variable')
   text = changestr('commandword',text,'expression')
+  text = changestr('numericvalue',text,'VALUE')
   marker = pos('; expected ',text)
   if marker > 0 then do
     prefix = left(text,marker + 10); rest = substr(text,marker + 11); text = prefix; first = 1; item = .string
@@ -685,6 +696,88 @@ addressmessage: procedure = .string
     otherwise return fallback
   end
   return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': ' || reason
+
+/** Decorate only a classified NUMERIC prefix after LR has rejected it. A
+ * complete optional/default expression cannot claim an enclosing missing END.
+ * Every token is visited at most once; lexical/comment/PARSE errors win. */
+numericmessage: procedure = .string
+  arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
+  language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
+  i = .int; kind = .int; first = .int
+  mode = ''; keyword = 0; prefix = 0; optional = 0; seen = 0; depth = 0
+  previouskind = -1; previousstart = 0; failedkind = -1
+  separator = language.tokenid('separator'); numericword = language.tokenid('numericword')
+  do i = 0 to tokens.size() - 1
+    first = tokens.start(i)
+    if first > offset then leave
+    kind = tokens.symbol(i)
+    if first = offset then failedkind = kind
+    boundary = kind = separator | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword')
+    if kind = numericword then do
+      mode = 'head'; keyword = first; prefix = first
+    end
+    else if boundary then do
+      if first < offset then mode = ''
+    end
+    else select mode
+      when 'head' then do
+        if kind = language.tokenid('digitsword') | kind = language.tokenid('fuzzword') then do
+          mode = 'expression'; prefix = first; optional = 1; seen = 0; depth = 0; previouskind = -1
+        end
+        else if kind = language.tokenid('formword') then mode = 'form'
+        else do
+          offset = first
+          return 'LL_COMPILER_SYNTAX: RXC-LC-25.15: NUMERIC expects DIGITS, FUZZ or FORM'
+        end
+      end
+      when 'form' then do
+        if kind = language.tokenid('scientificword') | kind = language.tokenid('engineeringword') then mode = 'fixed'
+        else if kind = language.tokenid('numericvalue') then do
+          mode = 'expression'; prefix = first; optional = 0; seen = 0; depth = 0; previouskind = -1
+        end
+        else do
+          offset = first
+          return 'LL_COMPILER_SYNTAX: RXC-LC-25.11: NUMERIC FORM expects SCIENTIFIC, ENGINEERING or VALUE'
+        end
+      end
+      when 'fixed' then do
+        offset = first
+        return 'LL_COMPILER_SYNTAX: RXC-LC-25.11: unexpected operand after fixed NUMERIC FORM'
+      end
+      when 'expression' then do
+        if first < offset then do
+          seen = 1; previouskind = kind; previousstart = first
+          if kind = language.tokenid('open') then depth = depth + 1
+          if kind = language.tokenid('close') then depth = depth - 1
+        end
+      end
+      otherwise nop
+    end
+  end
+  if mode = 'head' then do
+    offset = keyword
+    return 'LL_COMPILER_SYNTAX: RXC-LC-25.15: NUMERIC expects DIGITS, FUZZ or FORM'
+  end
+  if mode <> 'expression' then return fallback
+  at_end = failedkind = separator | failedkind = language.tokenid('elseword') | offset >= tokens.bytes()
+  if at_end then do
+    if seen = 0 then do
+      if optional then return fallback
+      offset = prefix
+    end
+    else do
+      operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+      trailing = 0
+      do i = 1 to words(operators)
+        if previouskind = language.tokenid(word(operators,i)) then do
+          offset = previousstart; trailing = 1; leave
+        end
+      end
+      if trailing = 0 & depth = 0 then return fallback
+    end
+  end
+  prefix_text = 'LL_COMPILER_SYNTAX: '
+  return prefix_text || 'RXC-LC-35.1: invalid NUMERIC expression; ' || substr(fallback,length(prefix_text) + 1)
 
 /** Only classified completion/insertion/ADDRESS instructions own 35.1. Variables,
  * labels and quoted/function names cannot activate it; lexical and PARSE

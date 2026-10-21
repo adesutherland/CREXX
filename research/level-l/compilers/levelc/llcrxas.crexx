@@ -435,10 +435,7 @@ compilation: class
       _parseclauses[op.id()] = packet.clause()
     end
     if name = 'crexx.c.load' | name = 'crexx.c.store' | name = 'crexx.c.drop' then call checksymbol(op.attribute('name') as .string)
-    if name = 'crexx.c.numeric.form' then do
-      form = op.attribute('form') as .string
-      if form <> 'scientific' & form <> 'engineering' then call fail('LOWERING: invalid NUMERIC FORM')
-    end
+    if name = 'crexx.c.numeric.digits' | name = 'crexx.c.numeric.fuzz' | name = 'crexx.c.numeric.form' then call checkselectorigin(op,'NUMERIC')
     if name = 'crexx.c.call' then do
       bytes = op.attribute('function'); boolean = .llir..boolcodec()
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
@@ -1552,17 +1549,11 @@ compilation: class
       end
       when name = 'numeric.digits' | name = 'numeric.fuzz' | name = 'numeric.form' then do
         setting = substr(name,9)
-        if setting = 'form' then do
-          symbol = imported('llctarget','llctarget.literal',v,'.string')
-          call argtext(1,op.attribute('form') as .string); call invoke(reg(_scratch),symbol,1)
-          call argcopy(2,input(op)); call argcopy(3,reg(_scratch))
-        end
-        else do; call argcopy(2,input(op,2)); call argcopy(3,input(op)); end
+        call argcopy(2,input(op,2)); call argcopy(3,input(op))
         call argtext(1,setting)
         symbol = imported('llctarget','llctarget.setting','.void','.string ' || contexttype || ' ' || v)
         call invoke('',symbol,3)
-        context = input(op); if setting <> 'form' then context = input(op,2)
-        call installnumeric(context)
+        call installnumeric(input(op,2))
       end
       when name = 'call' then call internalcall(op)
       when name = 'call.external' then call externalcall(op)

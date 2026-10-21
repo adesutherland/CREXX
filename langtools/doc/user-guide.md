@@ -3753,8 +3753,14 @@ child inheritance and parent restoration. The direct fixture
 `research/level-l/compilers/tests/target-context.crexx` demonstrates the same
 boundary independently. Generated C uses one required context reference and one
 fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. C-family v6/52 operations and the 33-export target are the approved current
-research contract: rebuild earlier C images/IR; no legacy bridge is provided.
+configuration. The [current C-family contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
+owns the research schema and target surface: rebuild earlier C images/IR;
+no legacy bridge is provided.
+NUMERIC FORM accepts fixed SCIENTIFIC/ENGINEERING, VALUE expression and bare
+scientific reset. VALUE may be omitted before a parenthesized or unary
+expression. DIGITS/FUZZ retain defaults 9/0. All three evaluate an operand once,
+validate through the shared setter and install only after success; configured
+conditions/LOSTDIGITS, TRACE and wider platform acceptance remain separate.
 SELECT adds contextual WHEN truth and a shared no-match error bridge; the
 borrowed-context procedure ABI is unchanged. The
 [DO contract](../../research/level-l/compilers/doc/architecture.md#approved-do-contract)

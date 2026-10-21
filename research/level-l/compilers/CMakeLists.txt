@@ -311,6 +311,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/address-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_address_contracts_${_mode}
       DEPENDS "${_dir}/address-contracts-linked.rxbin")
+    ll_compile(numeric-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/numeric/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/numeric-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/numeric-contracts-linked"
+        "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_numeric_contracts_${_mode}
+      DEPENDS "${_dir}/numeric-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -794,6 +802,32 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_command_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_command_vm})
+  endforeach()
+  # NUMERIC reuses one source image for settings, frame and operand-EXIT checks.
+  # Complementary nested lanes are serialized with a generous hang guard.
+  foreach(_mode opt noopt)
+    set(_numeric_vm rxbvm)
+    set(_numeric_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_numeric_ir off)
+      if(TARGET rxtvm)
+        set(_numeric_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_numeric_${_mode}_${_numeric_ir}_${_numeric_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/numeric/check-numeric.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_numeric_vm} --ir ${_numeric_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "NUMERIC_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_numeric_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_numeric_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

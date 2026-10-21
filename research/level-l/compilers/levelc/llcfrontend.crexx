@@ -686,10 +686,15 @@ request: class
         op = _block.operation(_contract.operation('crexx.c.numeric.' || setting),origin)
         call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
-      when kind = 'CForm' then do
-        form = lower(node.text('form')); if form = '' then form = 'scientific'
+      when kind = 'CForm' | kind = 'CFormValue' then do
+        if kind = 'CForm' then do
+          form = lower(node.text('form')); if form = '' then form = 'scientific'
+          value = _block.constantbytes(type('value'),form as .binary,origin)
+        end
+        else value = expression(node.child('value'))
+        if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.numeric.form'),origin)
-        call op.input('context',_block.load(_contextslot,origin)); call op.attribute('form',form as .binary); built = op.finish()
+        call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end

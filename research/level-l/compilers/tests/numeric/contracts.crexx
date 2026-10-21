@@ -1,0 +1,225 @@
+/* Independent C17 source admission and in-place NUMERIC descriptor checks. */
+options levelb
+import rxfnsb
+import llcparse
+import llast
+import llcir
+import llir
+import llirservices
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call sourcecontracts(); call raw(argv[1])
+  say 'NUMERIC_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+sourcecontracts: procedure = .void
+  gap = '0D0A'x as .string
+  text = 'numeric form; numeric form engineering' || gap || 'numeric form value CHOOSE()' || gap
+  text = text || "if 'é' = 'é' then numeric form ('scientific')" || gap
+  text = text || 'numeric form +0; numeric form -0; numeric form \0' || gap
+  text = text || "parse value 'a b' with FORM VALUE"
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'fixed/default/dynamic/special-start and PARSE contexts: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk(); node = .llast..node; fixed = 0; dynamic = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() == 'CForm' | node.kind() == 'CFormValue' then do
+        call check((binsubstr(source,node.start() + 1,7) as .string) == 'numeric' & node.finish() > node.start() + 7,'NUMERIC node includes complete authored instruction, not zero-width marker')
+        if node.kind() == 'CForm' then fixed = fixed + 1
+        else do
+          dynamic = dynamic + 1
+          call check(node.child('value').valid(),'dynamic FORM retains authored operand')
+        end
+      end
+    end
+    call check(fixed = 2 & dynamic = 5,'two fixed/default and five dynamic FORM nodes')
+  end
+  ordinary = .llcparse..parsed('numeric form value ELSE' as .binary)
+  call check(ordinary.status() = 0,'unowned ELSE remains an operand name: ' || ordinary.error())
+  if ordinary.status() = 0 then do
+    ordinary_tree = ordinary.ast(); ordinary_walk = ordinary_tree.walk(); ordinary_node = .llast..node; else_names = 0
+    do while ordinary_walk.next()
+      ordinary_node = ordinary_walk.node()
+      if ordinary_node.kind() == 'Name' then if ordinary_node.text('spelling') == 'ELSE' then else_names = else_names + 1
+    end
+    call check(else_names = 1,'unowned ELSE is retained as exactly one ordinary Name')
+  end
+  owned = .llcparse..parsed('if 1 then numeric form engineering else numeric form scientific' as .binary)
+  call check(owned.status() = 0,'fixed FORM stops at its owned ELSE arm: ' || owned.error())
+  missing_end = .llcparse..parsed(('do' || gap || 'numeric form engineering') as .binary)
+  call check(missing_end.status() <> 0 & pos('35.1',missing_end.error()) = 0 & pos('END',upper(missing_end.error())) > 0,'valid NUMERIC leaves missing END with outer LR cause: ' || missing_end.error())
+  call bad('numeric','25.15','numeric')
+  call bad('numeric bogus','25.15','bogus')
+  call bad('numeric form bogus','25.11','bogus')
+  call bad("numeric form 'engineering'",'25.11',"'engineering'")
+  call bad('numeric form scientific extra','25.11','extra')
+  call bad('numeric form value','35.1','value')
+  call bad('numeric form value 1 +','35.1','+')
+  call bad('numeric digits 1 +','35.1','+')
+  call bad('numeric fuzz +','35.1','+')
+  call bad('if 0 then numeric form bogus','25.11','bogus')
+  call bad('if 1 then numeric form value else nop','35.1','value')
+  call bad("if 'é' = 'é' then numeric form value +",'35.1','+')
+  comment = .llcparse..parsed('numeric form value /* open' as .binary)
+  call check(comment.status() <> 0 & pos('LL_COMMENT:',comment.error()) = 1 & pos('unclosed',comment.error()) > 0 & pos('35.1',comment.error()) = 0,'shared comment cause keeps precedence: ' || comment.error())
+  literal = .llcparse..parsed("numeric form value 'open" as .binary)
+  call check(literal.status() <> 0 & pos('35.1',literal.error()) = 0,'shared unterminated literal cause keeps precedence: ' || literal.error())
+  return
+
+bad: procedure = .void
+  arg text = .string, code = .string, token = .string
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  expected = binpos(token as .binary,source) - 1
+  call check(parsed.status() <> 0 & pos(code,parsed.error()) > 0 & parsed.offset() = expected,code || ' original byte offset for ' || text || ': ' || parsed.error() || ' at ' || parsed.offset())
+  return
+
+raw: procedure = .void
+  arg artifacts = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  data = dereference contract.data()
+  i = .int; family = .int; version = 0; types = 0
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 17 & types = 5 & data.ops() = 73,'in-place C17/five types/73 operations')
+  do i = 1 to 3
+    id = contract.operation('crexx.c.numeric.' || word('digits fuzz form',i)).id()
+    call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'value' & data.fieldname(id,1,2) == 'context','uniform NUMERIC inputs ' || i)
+    call check(data.typename(data.fieldtype(id,1,1)) == 'crexx.c.value' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','uniform NUMERIC value/context types ' || i)
+    call check(data.arity(id,2) = 0 & data.arity(id,3) = 0,'void numeric setting has no static FORM attribute ' || i)
+    call check(data.effectvalue(id,1) == 'context' & data.effectvalue(id,2) == 'condition' & data.effectvalue(id,3) == 'returns','unchanged numeric effects ' || i)
+    callback = data.callback(id,1)
+    call check((callback is .llir..evaluator) = 0,'numeric setting has no evaluator ' || i)
+  end
+  graph = .llir..module; loaded = .llir..module; mode = .int
+  do mode = 1 to 8
+    graph = fixture(contract,mode)
+    call check(graph.error() == '', 'generic-valid numeric control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    reason = 'NUMERIC'; if mode >= 2 & mode <= 4 then reason = 'slot'
+    call admission(artifacts,graph,mode = 1 | mode = 8,'fresh numeric ' || mode,reason)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'owned loaded numeric ' || mode)
+    if loaded.error() == '' then call admission(artifacts,loaded,mode = 1 | mode = 8,'loaded numeric ' || mode,reason)
+    if mode = 8 then do
+      change = llirservices..optimise(reference graph)
+      call check(change.status() == 'changed','typed numeric spill really transforms')
+      if change.status() == 'changed' then do
+        rewritten = change.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'numeric transformed input bytes differ')
+        call admission(artifacts,rewritten,1,'transformed numeric spill','')
+      end
+    end
+  end
+  old = stalecontract(contract); graph = fixture(old,1)
+  call check(graph.error() == '', 'prior C16 remains generic-valid')
+  if graph.error() == '' then do
+    call admission(artifacts,graph,0,'prior C16','unsupported family version crexx.c')
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded prior C16 remains generic-valid')
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded prior C16','unsupported family version crexx.c')
+  end
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string
+  saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
+    previous = output.text(); limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' bounded atomic output failure')
+    call check(previous == output.text(),label || ' prior output stays owned')
+  end
+  else call check(selected.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING:',selected.error()) = 1 & pos(reason,selected.error()) > 0,label || ' cause-specific refusal: ' || selected.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' input unchanged')
+  return
+
+/* 1 FORM accepted; 2/3/4 alternate context for FORM/DIGITS/FUZZ;
+ * 5 generated dead FORM; 6 empty authored origin; 7 derived FORM;
+ * 8 accepted typed store/load with a real forwarding rewrite. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract)
+  source = "numeric form value 'engineering'" as .binary
+  file = builder.source('numeric-ir.crexx',source); at = file.origin(0,<blen>(source))
+  generated = builder.synthetic('independent numeric dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  other = fn.slot('other context',contract.type('crexx.c.context')); spill = fn.slot('value spill',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); body = fn.block('main'); invalid = fn.block('invalid')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode >= 2 & mode <= 4 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',dispatch.load(context,generated)); call draft.input('entry',dispatch.load(entry,generated))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  if mode = 5 then do; call absent(body,contract,generated); body = fn.block('dead numeric'); end
+  draft = body.operation(contract.operation('crexx.c.procedure.consume'),at)
+  call draft.input('context',body.load(context,at)); finished = draft.finish()
+  spelling = 'engineering'; if mode = 3 | mode = 4 then spelling = '1'
+  value = body.constantbytes(contract.type('crexx.c.value'),spelling as .binary,at)
+  if mode = 8 then do; call body.store(spill,value,at); value = body.load(spill,at); end
+  origin = at
+  if mode = 5 then origin = generated
+  if mode = 6 then origin = file.origin(0,0)
+  if mode = 7 then origin = at.derive('synthetic')
+  slot = context; if mode >= 2 & mode <= 4 then slot = other
+  setting = 'form'; if mode = 3 then setting = 'digits'; if mode = 4 then setting = 'fuzz'
+  draft = body.operation(contract.operation('crexx.c.numeric.' || setting),origin)
+  call draft.input('value',value); call draft.input('context',body.load(slot,at)); finished = draft.finish()
+  call absent(body,contract,at)
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+stalecontract: procedure = .llir..contract
+  arg canonical = .llir..contract
+  source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; ignored = .int
+  do i = 2 to source.familycount()
+    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 16
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    declared = .llir..operation(reference data,data.addop(source.opname(i)))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field); type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); return .llir..contract(data)

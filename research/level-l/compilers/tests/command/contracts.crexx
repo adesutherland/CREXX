@@ -141,7 +141,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 16 & types = 5,'C16/five type family identity')
+  call check(version = 17 & types = 5,'C17/five type family identity')
   call check(data.arity(73,1) = 2 & data.fieldname(73,1,1) == 'command' & data.fieldname(73,1,2) == 'context' & data.arity(73,2) = 0,'active constructor canonical context input2 and void output')
   call check(data.arity(73,3) = 1 & data.fieldname(73,3,1) == 'key' & data.typename(data.fieldtype(73,3,1)) == 'crexx.g.text','only key text attribute')
   call check(data.effectvalue(73,1) == 'context' & data.effectvalue(73,2) == 'condition.resource' & data.effectvalue(73,3) == 'returns','complete constructor effects')
@@ -169,12 +169,12 @@ raw: procedure = .void
     end
   end
   old = stalecontract(contract); graph = fixture(old,1)
-  call check(graph.error() == '', 'generic-valid immediate prior C15 graph')
+  call check(graph.error() == '', 'generic-valid immediate prior C16 graph')
   if graph.error() == '' then do
-    call admission(artifacts,graph,0,'stale C15','unsupported family version crexx.c')
+    call admission(artifacts,graph,0,'stale C16','unsupported family version crexx.c')
     loaded = loadgraph(reference graph)
-    call check(loaded.error() == '', 'loaded immediate prior C15 remains generic-valid')
-    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded stale C15','unsupported family version crexx.c')
+    call check(loaded.error() == '', 'loaded immediate prior C16 remains generic-valid')
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded stale C16','unsupported family version crexx.c')
   end
   return
 
@@ -248,7 +248,7 @@ stalecontract: procedure = .llir..contract
   source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
   i = .int; kind = .int; field = .int; ignored = .int
   do i = 2 to source.familycount()
-    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 15
+    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 16
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()

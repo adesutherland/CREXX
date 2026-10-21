@@ -471,7 +471,7 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v16/73 with
+C to the two-argument source-unit ABI. The current family is v17/73 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE and keyed explicit/active command interfaces. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
@@ -481,9 +481,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 16. The neutral scalar names do not load the G
+types and `crexx.c` version 17. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–15 are never reinterpreted as version 16. Within version 16, the complete C
+versions 1–16 are never reinterpreted as version 17. Within version 17, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -548,8 +548,7 @@ state/failure/observation proof.
 | `load` | `context:C` | `name:T` | V | `context` | `condition` |
 | `store` | `context:C value:V` | `name:T` | — | `context` | `condition` |
 | `truth` | `value:V context:C` | — | B | `context` | `condition` |
-| `numeric.digits numeric.fuzz` | `value:V context:C` | — | — | `context` | `condition` |
-| `numeric.form` | `context:C` | `form:T` | — | `context` | `condition` |
+| `numeric.digits numeric.fuzz numeric.form` | `value:V context:C` | — | — | `context` | `condition` |
 | `digits` | `context:C` | — | V | `context` | `condition` |
 | `arguments.empty` | — | — | A | `none` | `resource` |
 | `arguments.append` | `arguments:A value:V present:B` | — | A | `none` | `resource` |
@@ -3406,6 +3405,107 @@ configured conditions, TRACE, host/platform scope or full NUMERIC acceptance.
   emitted-code review cover AC01–03. No broad compiler matrix or new runtime/API
   is required. C NUMERIC integration and shared condition/platform scope remain
   separate.
+
+<a id="numeric-c-contract"></a>
+
+### NUMERIC source completion
+
+Complete the bounded static C NUMERIC route through the existing shared B
+activation setters and executing-frame install. Dynamic FORM must evaluate
+once, inherit/restore with ordinary calls and preserve the same error/ownership
+behavior as DIGITS/FUZZ. This is the C17 source-integration profile, following
+the separate NUM-B diagnostic prerequisite; complete conditions, TRACE and
+platform acceptance remain open.
+
+`NUMERIC DIGITS [expression]` and `NUMERIC FUZZ [expression]` retain defaults 9/0.
+FORM accepts SCIENTIFIC, ENGINEERING, VALUE expression or an omitted suffix
+defaulting to SCIENTIFIC. The
+[approved X3J18 errata, section 6.3.2.68](https://www.rexxla.org/document.rsp?base=rexxlang/standards&doc=stan_err&title=The+Rexx+Language+-+ANSI+Rexx+Standard+Errata)
+explicitly permits that default; native refusals of bare FORM and omitted VALUE
+are not acceptance oracles. VALUE may be omitted only when an existing expression
+starts with an admitted special-character token: parenthesis, plus, minus or
+logical not. Symbol/string starts require VALUE. Reuse the existing expression
+grammar, original spans/gaps, continuation and contextual IF/ELSE ownership.
+NUMERIC, DIGITS, FUZZ, FORM, VALUE, SCIENTIFIC and ENGINEERING retain ordinary
+name/assignment/label/call/template ownership outside their contextual positions.
+
+Append private token85 `numericvalue`, used only at the classified FORM suffix;
+it must not change PARSE's expression/template state. A zero-width numericvalue
+before an admitted special-character start implements omitted VALUE. Keep
+`CForm(form)` for fixed/default forms and add `CFormValue(value)` for the dynamic
+expression. Both instruction nodes cover the complete authored NUMERIC clause.
+Fixed/default forms produce one owned V constant; dynamic FORM uses its existing
+expression/EXIT-guard lowering before the setting operation.
+
+Only after successful shared lex/comment processing and an LR failure, decorate
+the classified NUMERIC prefix in one bounded pass. Preserve PARSE-specific
+diagnostic precedence. Invalid/missing NUMERIC subkeywords use25.15; a present
+invalid FORM fixed suffix or extra fixed-form operand uses25.11; missing or
+malformed FORM VALUE expressions and malformed admitted DIGITS/FUZZ expressions
+use35.1. A present bad FORM suffix/fixed trailing operand points to its first
+bad token. An invalid NUMERIC subkeyword points to that token; a missing one
+points to the owning NUMERIC keyword. Missing FORM VALUE operands point to
+VALUE. At EOF/EOC a malformed expression points to its last operator; otherwise
+retain the actual LR bad-token offset. A classified, owned IF ELSE is a clause
+boundary; an unowned ELSE remains an ordinary operand name. Bare DIGITS/FUZZ/FORM are valid.
+Never classify by a raw NUMERIC spelling inside another instruction or a name.
+
+The C17 family keeps five types, 73 operations and 36 target exports.
+Revise the existing `numeric.form` descriptor in place to
+`numeric.form(value:V,context:C)->void`, with no attributes and unchanged
+`context`/`condition`/`returns` effects. DIGITS/FUZZ already have those inputs.
+All three require canonical context slot input2 and owned exact nonempty
+authored source origins on every record, including dead, loaded and transformed
+graphs. Reuse the existing C procedure/source proofs and borrowed source index;
+no optional generic analysis, old-family upgrade or new evaluator is added.
+Earlier C-family versions refuse before output publication.
+
+Select all three uniformly through `llctarget.setting(setting,context,value)`.
+The shared setter alone validates/commits. After normal success, install the
+stored integer settings in the executing C frame in the existing order:
+FUZZ0, DIGITS, FUZZ, FORM. A failed helper cannot reach that install or a later
+statement. Do not rebuild configuration per operator or add C rounding/form
+validation. DIGITS must be positive, exceed current FUZZ and respect the shared
+999 ceiling; FUZZ must be nonnegative and below DIGITS. Bare DIGITS still
+validates against current FUZZ. FORM uses the shared first translated E/S
+character rule and invalid33.3 identity; other existing failures retain26.5,
+26.6,33.1 and33.2. No trimming or full-keyword comparison replaces that rule.
+The configured whole-number validators and bounded conversion remain shared;
+no fractional-rounding acceptance or second numeric algorithm is introduced.
+
+1. **NUM-C-AC01:** independent source/AST and atomic-refusal controls cover
+   fixed/default/dynamic/omitted-VALUE forms, contextual names, dead source,
+   LF/CRLF/comments/continuations and exact25.11/25.15/35.1/lexer precedence.
+2. **NUM-C-AC02:** operands evaluate once before validation; default and dynamic
+   success use the shared setters, invalid FORM reports33.3, and existing
+   NUM-B/target-context controls retain stored/VM-state atomicity. Operand EXIT
+   bypasses the setter/install and preserves its owned result/private cleanup.
+3. **NUM-C-AC03:** source/B-host controls verify current settings, internal,
+   private and recursive inheritance/restoration and caller frame isolation.
+   Reuse the unchanged CALL3 signed numeric-state proof without another matrix.
+4. **NUM-C-AC04:** representative arithmetic, comparison, notation and numeric
+   BIF observations use the current settings; reuse the existing numeric
+   backend and shared Numeric/BIF controls rather than retest all95 bindings.
+5. **NUM-C-AC05:** tiny fresh/loaded/dead raw controls check the revised FORM
+   descriptor, all three canonical contexts, source/provenance and priorC16
+   refusal; a genuine typed-spill rewrite changes bytes, and bounded output
+   failure leaves earlier output owned. No full old raw-matrix replay.
+6. **NUM-C-AC06:** actual compiler/assembler controls show one setting call,
+   success-only frame install, no dynamic FORM literal reconstruction, truthful
+   logical source and normal/fatal cleanup. Native comparisons distinguish the
+   bare-FORM gap from the agreed language behavior; static counts are not speed.
+7. **NUM-C-AC07 — open shared closure:** configured LOSTDIGITS/SYNTAX and
+   resumption, practical TRACE, broader diagnostics/host/platform and full
+   LC-I-22/CFC criteria retain STEP03/04/07/08 owners.
+
+- **NUM-C-STEP01 — complete:** exact source/IR/runtime/diagnostic contract
+  review and the delivered NUM-B dependency; AC01–07, before C source edits.
+- **NUM-C-STEP02 — complete:** parser/frontend/schema/selector integration and
+  independent source/host/tiny raw fixtures; AC01–06.
+- **NUM-C-STEP03 — locally complete:** focused complementary execution, directly affected
+  consumers and emitted-code review, measured serial registration, enduring
+  documentation and reviewed feature delivery cover AC01–06. Preserve AC07,
+  all complete-C criteria and INTERPRET-last.
 
 ## Optimisation ownership
 

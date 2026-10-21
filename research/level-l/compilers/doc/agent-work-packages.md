@@ -138,6 +138,17 @@ preparation, tests, cleanup and commit; no concurrent builds or native compiler
 changes. Independent review checks the error identity, unchanged mutation
 semantics and exact local scope before C NUMERIC integration.
 
+The [NUMERIC C packet](architecture.md#numeric-c-contract) assigns parser,
+frontend/schema/selector, CMake and owning documentation to the serial
+integrator. The independent fixture worker owns only `tests/numeric`
+source/golden/host/tiny raw/checker inputs after exact contract review.
+Independent review checks source diagnostics, current-frame install, operand
+EXIT, no duplicate numeric algorithm and actual caller/helper RXAS. The
+integrator retains the exclusive build/test/cleanup/commit lease; NUM-C-AC07
+keeps shared observations and declared platforms open. NUM-C-STEP01–03 are
+locally complete for the source-integration profile. Clause/condition
+prerequisites for SIGNAL and CALL4 follow their exact contract reviews.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet

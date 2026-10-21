@@ -38,12 +38,12 @@ main: procedure = .int expose checks failures inspection
     end
   end
   stale = stalecontract(contract); graph = fixture(stale,1)
-  call check(graph.error() == '', 'generic-valid immediate prior C15 graph: ' || graph.error())
+  call check(graph.error() == '', 'generic-valid immediate prior C16 graph: ' || graph.error())
   if graph.error() == '' then do
-    call admission(argv[1],graph,0,'fresh stale C15','unsupported family version crexx.c')
+    call admission(argv[1],graph,0,'fresh stale C16','unsupported family version crexx.c')
     loaded = loadgraph(reference graph)
-    call check(loaded.error() == '', 'loaded stale C15 graph: ' || loaded.error())
-    if loaded.error() == '' then call admission(argv[1],loaded,0,'loaded stale C15','unsupported family version crexx.c')
+    call check(loaded.error() == '', 'loaded stale C16 graph: ' || loaded.error())
+    if loaded.error() == '' then call admission(argv[1],loaded,0,'loaded stale C16','unsupported family version crexx.c')
   end
   graph = protectedfixture(contract)
   call check(graph.error() == '', 'generic-valid pending command across protected CALL: ' || graph.error())
@@ -73,7 +73,7 @@ schema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then count = count + 1
   end
-  call check(version = 16 & count = 5 & data.ops() = 73,'exact C16/five types/73 operations')
+  call check(version = 17 & count = 5 & data.ops() = 73,'exact C17/five types/73 operations')
   names = 'address.swap address.select address.connection command.new command.connection command.binding command.run'
   do i = 1 to 7
     id = 65 + i
@@ -115,7 +115,7 @@ stalecontract: procedure = .llir..contract
   i = .int; kind = .int; field = .int; ignored = .int
   do i = 2 to source.familycount()
     version = source.version(i)
-    if source.familyname(i) == 'crexx.c' then version = 15
+    if source.familyname(i) == 'crexx.c' then version = 16
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()

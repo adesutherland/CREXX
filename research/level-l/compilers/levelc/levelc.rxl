@@ -86,6 +86,7 @@ addressposition: token = 81
 addresskind: token = 82
 addressresource: token = 83
 commandword: token = 84
+numericvalue: token = 85
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -259,5 +260,7 @@ parse: parser semantics contextfree input tokens start program backend lr1
   pull.statement: rule = pullword parse.templates as templates then tree CPull(templates = templates)
   numeric.statement: rule = numeric.value | numeric.form
   numeric.value: rule = numericword (digitsword | fuzzword) as setting (expression as value)? then tree CNumeric(setting = text(setting), value = value?)
-  numeric.form: rule = numericword formword numeric.form.value
-  numeric.form.value: rule = (scientificword | engineeringword)? then tree CForm(form = text)
+  numeric.form: rule = numeric.form.literal | numeric.form.dynamic
+  numeric.form.literal: rule = numericword formword numeric.form.keyword as form then tree CForm(form = text(form))
+  numeric.form.keyword: rule = (scientificword | engineeringword)?
+  numeric.form.dynamic: rule = numericword formword numericvalue expression as value then tree CFormValue(value = value)

@@ -89,6 +89,14 @@ warning and retains its lexical binding plan. CLI warnings go once to stderr;
 frontend/service `warnings()` returns owned records. [The ADDRESS contract](doc/architecture.md#address-c-command-contract)
 keeps configured conditions/resumption, TRACE and host/platform closure open.
 
+NUMERIC DIGITS/FUZZ retain their optional expressions and defaults 9/0. FORM
+accepts SCIENTIFIC, ENGINEERING, VALUE expression and bare scientific reset;
+VALUE may be omitted before a parenthesized or unary expression. Each operand
+evaluates once through the shared activation setter, then installs validated
+settings in the executing frame. Internal/private calls inherit settings and
+restore the caller frame. The [NUMERIC contract](doc/architecture.md#numeric-c-contract)
+keeps configured conditions/LOSTDIGITS, TRACE and wider host/platform scope open.
+
 Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
 packets and local-before-BIF resolution; quoted targets skip locals. Missing
 routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain
