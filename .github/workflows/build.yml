@@ -474,7 +474,9 @@ jobs:
       - name: Check macOS installer stapling recovery
         if: matrix.platform == 'macos'
         shell: bash
-        run: python scripts/test-macos-stapling.py
+        run: |
+          python scripts/test-macos-stapling.py
+          bash scripts/test-macos-stapling-network.sh
 
       - name: Package and smoke the actual core ZIP
         shell: bash
@@ -704,6 +706,11 @@ jobs:
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+      - name: Use TCP for Intel Apple ticket requests
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.core_platform == 'macos-x86_64' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        run: bash scripts/prepare-macos-stapling-network.sh
 
       - name: Notarize and staple macOS installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
@@ -1310,6 +1317,11 @@ jobs:
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+      - name: Use TCP for Intel Apple ticket requests
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.os == 'macos-15-intel' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        run: bash scripts/prepare-macos-stapling-network.sh
 
       - name: Package, notarize and staple optional macOS plugin installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'

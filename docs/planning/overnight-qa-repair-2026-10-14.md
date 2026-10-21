@@ -1,5 +1,52 @@
 # Overnight QA repair — 14 October 2026
 
+## Current baseline recovery — Windows fixture paths and Apple ticket transport
+
+### Vision and intended outcomes
+
+Restore a publishable baseline on the existing hotfix/develop branches without
+changing product semantics, the approved sanitizer selection or schedule policy.
+Windows fixture ownership must accept a build rooted in a valid DOS short path
+and reject outputs outside that tree. Miniature diagnostic tests must select
+their generator explicitly. Apple installers retain notarization, stapling,
+ticket validation and Gatekeeper checks; address the Intel hosted-runner
+HTTP/3 transport failure with GitHub's documented TCP fallback, accepted by
+Adrian. Preserve private research and Python-removal drafts.
+
+### Acceptance criteria
+
+1. **B21-AC01 — local controls done; Windows execution todo:** normalize both fixture containment operands consistently;
+   forwarding, whole-owner failure and configuration registries pass on Windows
+   and in focused ordinary Debug / maintained Apple ASan controls. Retain
+   outside-tree rejection and original producer argument boundaries.
+2. **B21-AC02 — done:** the late-diagnostic fixture runs with an explicit Ninja
+   generator even when the host defaults to a multiconfig generator. Its
+   semantic-pass negative control still rejects late sanitizer diagnostics.
+3. **B21-AC03 — accepted; local controls done; hosted proof todo:** restrict the Apple transport workaround to disposable
+   GitHub-hosted Intel Mac packaging jobs. A controlled shell fixture verifies
+   the UDP/443 rule, enablement, platform restrictions and error propagation;
+   notarization/stapling gates and bounded retries remain mandatory.
+4. **B21-AC04 — todo:** publish compatible repairs, inspect actual Windows and
+   Intel Mac results and confirm dev-snapshot publication. Reuse unchanged
+   sanitizer proof; do not dispatch a new full sanitizer or deep matrix. Keep
+   the new daily schedule disabled and remove task diagnostics.
+
+### Implementation steps
+
+1. **B21-STEP01 — done (AC01/02/03):** inspect the failed jobs and retained Windows
+   CTest diagnostics; compare fixture paths/generator handling and GitHub's
+   confirmed Intel HTTP/3 failure in actions/runner-images#14924.
+2. **B21-STEP02 — done locally (AC01/02):** repair containment normalization and pin the
+   miniature generator; run existing policy/ownership and late-failure controls
+   in ordinary Debug then maintained Apple ASan. Preserve native Windows proof
+   as a separate outstanding check.
+3. **B21-STEP03 — done locally; accepted by Adrian (AC03):** prepare a
+   runner-restricted Bash helper and controlled shell test; include the approved
+   network change at the Intel core/plugin packaging boundaries.
+4. **B21-STEP04 — todo (AC04), depends on STEP02 and the STEP03 decision:** push
+   the compatible repair set to hotfix/develop, monitor the normal publication
+   jobs lightly and reconcile occupied checkouts without publishing private work.
+
 ## 18 October continuation — binary-import registration and Windows service oracle
 
 ### Vision and intended outcomes

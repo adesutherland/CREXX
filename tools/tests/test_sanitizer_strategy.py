@@ -38,6 +38,8 @@ class Strategy(unittest.TestCase):
         environment.start()
         self.addCleanup(environment.stop)
         self.temporary = tempfile.TemporaryDirectory(prefix='crexx-strategy-')
+        # Keep the native temporary spelling: Windows may supply DOS short
+        # names, which fixture containment must handle without a test workaround.
         self.root = Path(self.temporary.name)
         self.addCleanup(self.temporary.cleanup)
 
@@ -379,6 +381,28 @@ crexx_finalize_qa_fixtures()
         with self.assertRaisesRegex(ValueError, 'mismatch'):
             F.validate(native)
 
+    def test_fixture_outputs_reject_outside_build_tree(self):
+        source = self.root / 'containment-source'; source.mkdir()
+        build = self.root / 'containment-build'
+        (source / 'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(Containment NONE)
+include("@HELPER@")
+crexx_add_fixture_command(OUTPUT "${TEST_OUTPUT}"
+  COMMAND "${CMAKE_COMMAND}" -E touch "${TEST_OUTPUT}" VERBATIM)
+'''.replace('@HELPER@', (ROOT / 'cmake/CrexxQaFixtures.cmake').as_posix()))
+        command('cmake', '-S', source, '-B', build, '-G', 'Ninja',
+                f'-DTEST_OUTPUT={build / "owned.rxbin"}')
+        outside = [self.root / 'outside.rxbin',
+                   self.root / 'containment-build-sibling' / 'outside.rxbin']
+        if os.name == 'nt':
+            other_drive = 'Y:' if self.root.drive.upper() == 'Z:' else 'Z:'
+            outside.append(Path(other_drive + '/outside.rxbin'))
+        for output in outside:
+            with self.subTest(output=output):
+                result = command('cmake', '-S', source, '-B', build,
+                                 f'-DTEST_OUTPUT={output}', success=False)
+                self.assertIn('QA fixture must belong to the build tree', result.stdout)
+
     def test_runtime_paths_reject_ordinary_vm_and_provider_routes(self):
         native=self.root/'native'; donor=self.root/'ordinary'
         for tree in (native,donor):
@@ -694,7 +718,7 @@ set_tests_properties(late PROPERTIES FAIL_REGULAR_EXPRESSION "OWNING_FAILURE_ORA
 include("@HELPER@")
 crexx_apply_sanitizer_failure_guards()
 '''.replace('@PYTHON@',Path(sys.executable).as_posix()).replace('@HELPER@',(ROOT/'cmake/CrexxQaFixtures.cmake').as_posix()))
-        command('cmake','-S',source,'-B',build,'-DSEMANTIC_REGEX=OFF')
+        command('cmake','-S',source,'-B',build,'-G','Ninja','-DSEMANTIC_REGEX=OFF')
         junit=build/'ctest.xml'
         command('ctest','--test-dir',build,'--output-junit',junit,success=False)
         # Existing semantic PASS expressions intentionally remain; the central
