@@ -173,6 +173,11 @@ Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
 conditions/TRACE and INTERPRET. Design the complete architecture before
 implementation; implement INTERPRET last. Review instructions one at
 a time with individual semantics, errors, RXAS quality and shared dependencies.
+Use native C's implemented feature coverage and practical TRACE scope as this
+increment's ceiling. Keep independent correct semantics and record native
+defects. Document minor TRACE, presentation and conformance deviations for later
+judgment instead of expanding scope or blocking an otherwise complete slice.
+Material wrong control, state, values, ownership or required errors remain blockers.
 Maintain independent Level L tests. Keep compiler policy, generic L services,
 shared B runtime/Unicode libraries and RXAS/VM infrastructure separately owned.
 Adrian approved the C-only plan and shared B Unicode extraction on 19 October
@@ -182,7 +187,12 @@ API and ISA contracts retain their decision gates outside the authority below.
 Adrian authorized stepwise implementation of the remaining agreed Level C
 instructions and shared features, with a reviewed local commit after each,
 stopping before INTERPRET without further user approval. Record exact contracts
-and obtain internal coordinator review before implementation. This authority
+and obtain internal coordinator review before implementation. Review coherent
+code and first representative RXAS at an early stable checkpoint, batch material
+fixes, then freeze source and fixtures for focused complementary qualification.
+Later changes receive review and tests only for affected obligations; reuse
+unaffected results without restarting the whole review/qualification cycle.
+This authority
 covers necessary C/L/shared-runtime interfaces within the agreed architecture;
 it does not authorize INTERPRET, native C compiler changes, publication, new
 platform or host scope, a second runtime algorithm, or unrelated native changes.
@@ -206,7 +216,10 @@ production RXAS/VM performance edits retain their own verdict gate.
   pre-INTERPRET Level C authority above supersedes repeated approval pauses
   within that scope; the user remains the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
-- Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
+- Run focused tests during compiler work. For Level L increments, review early,
+  batch fixes before freezing qualification and avoid repeated full cycles for
+  minor findings. If a change causes regressions, stop, report them clearly, and
+  distinguish expected from unintended fallout; retest the affected obligations.
 - Once the required full testing has passed, do not repeat it if no code or
   test/build input has changed. Verify that with the relevant diff or tree
   hashes and reuse the completed testing. A history-only merge or

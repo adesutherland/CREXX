@@ -51,13 +51,23 @@ C adapters use that core directly, while G retains its API and two wrapper
 classes. Ordinary CALL binds all 95 direct shared BIF names; complete BIF/host
 semantics and wider activation/condition work remain open.
 
-Labels before THEN, ELSE and WHEN THEN prefix one required instruction, retaining
-nearest-ELSE ownership. Local CALL/function entries can reach an eligible IF-arm
+Labels after THEN/ELSE (including WHEN THEN) prefix one required instruction,
+retaining nearest-ELSE ownership. Local CALL/function entries can reach an eligible IF-arm
 label without evaluating its enclosing condition. The first source label wins:
 DO/SELECT labels are trace-only and block unquoted invocation with 16.3; quoted
 invocation keeps its local bypass. Labels do not rearm executed PROCEDURE
 eligibility. The [label/entry contract](doc/architecture.md#label-arm-prerequisite)
-retains the current C17 schema and runtime interfaces.
+was introduced with C17 without changing runtime interfaces.
+
+Static SIGNAL accepts direct symbols, decoded quoted names and once-evaluated
+VALUE expressions, including an implied VALUE before a parenthesized or unary
+expression. Targets use the selected case-insensitive Unicode profile and
+strict text equality: `1.20` and `1.2` remain distinct labels. Transfer sets
+SIGL/.SIGL, closes active loop control and reaches the selected source
+label in the current invocation, retaining its pool and numeric settings.
+Known static DO/SELECT targets refuse with 16.2; VALUE resolves eligibility when
+reached. The [SIGNAL contract](doc/architecture.md#signal-static-contract)
+keeps ON/OFF, handlers, clause/TRACE and wider host/platform scope open.
 
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable

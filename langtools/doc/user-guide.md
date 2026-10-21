@@ -3761,6 +3761,14 @@ scientific reset. VALUE may be omitted before a parenthesized or unary
 expression. DIGITS/FUZZ retain defaults 9/0. All three evaluate an operand once,
 validate through the shared setter and install only after success; configured
 conditions/LOSTDIGITS, TRACE and wider platform acceptance remain separate.
+Static SIGNAL accepts direct, decoded quoted and VALUE targets, with an implied
+VALUE before a parenthesized or unary expression. The selected Level C profile
+folds all target forms through shared Unicode casing and compares exact text;
+numeric-looking names, trailing blanks and embedded NUL remain distinct.
+Successful transfer updates SIGL/.SIGL and leaves active loop control while
+retaining the current invocation, arguments, pool and numeric settings. It
+cannot rearm PROCEDURE eligibility. The [static SIGNAL contract](../../research/level-l/compilers/doc/architecture.md#signal-static-contract)
+keeps ON/OFF, typed handlers, clause/TRACE and wider host/platform work separate.
 SELECT adds contextual WHEN truth and a shared no-match error bridge; the
 borrowed-context procedure ABI is unchanged. The
 [DO contract](../../research/level-l/compilers/doc/architecture.md#approved-do-contract)

@@ -471,9 +471,12 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v17/73 with
+C to the two-argument source-unit ABI. The current family is v18/77 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
-static signed statement providers, selected-queue PUSH/QUEUE and keyed explicit/active command interfaces. Local instruction qualification is tracked in the plan.** Use the following contract with one current
+static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
+commands and the reviewed static SIGNAL descriptors. SIGNAL implementation and
+qualification are in progress. Local instruction qualification is tracked in
+the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -481,9 +484,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 17. The neutral scalar names do not load the G
+types and `crexx.c` version 18. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–16 are never reinterpreted as version 17. Within version 17, the complete C
+versions 1–17 are never reinterpreted as version 18. Within version 18, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -3705,6 +3708,323 @@ of their current contracts.
 - **CLABEL-STEP03 — locally complete:** sole focused preparation, complementary execution,
   affected consumers and actual RXAS review, simple status/cleanup and separate
   local commit; AC01–05. C18 SIGNAL depends on this qualified inventory.
+
+<a id="signal-static-contract"></a>
+
+## Static SIGNAL transfer — C18 contract
+
+**Implemented and locally committed; complementary qualification remains partial.** Deliver
+direct, decoded quoted and once-evaluated VALUE transfers within the current
+invocation, using the qualified [CLABEL inventory](#label-arm-prerequisite).
+Successful transfer sets SIGL/.SIGL, leaves active DO/SELECT control and reaches
+the natural source label without a call, new activation or PROCEDURE rearm.
+This profile does not implement SIGNAL ON/OFF, typed handler entry/resumption,
+clause clocks, TRACE or INTERPRET. Those obligations and whole LC-I-23 remain
+open. Existing shared condition transport is reused; no native frontend, L
+extension-edge rule, RXAS/VM operation, target export or host API changes.
+
+### Source, names and observations
+
+Add `CSignal(target:Name|String)` and `CSignalValue(value:Expression)` statements.
+The direct Name retains the existing identifier, type-name, number,
+constant-name and dot-symbol token spellings, including `1.20` and `7E2`, without
+numeric evaluation or spelling normalization. Quoted targets use the existing
+literal/radix decoder; quoted label declarations remain excluded. Explicit
+VALUE takes the complete existing expression. Omitted VALUE is admitted only
+at an existing special-character expression start: unary plus/minus, logical
+not or opening parenthesis. Contextual classification must preserve assignments,
+labels, pending IF/ELSE arms and existing instruction/profile ownership. ON/OFF
+retain an explicit unsupported-profile refusal, rather than becoming label names
+or implicit commands.
+
+Bare SIGNAL refuses with 19.4 at SIGNAL; VALUE without an operand reports 19.4
+at VALUE. A malformed admitted expression reports 35.1 at the actual bad token,
+or its last operator when an operand is missing at clause/EOF boundary. A bad
+direct target or extra direct operand reports 19.4 at the first offending token.
+Existing lexical errors and an enclosing required-arm error keep their prior
+ownership. The same rules apply to dead source. Owned ELSE ends the statement;
+an unowned contextual name remains an ordinary operand where the existing
+expression grammar admits it.
+
+Canonicalize each declared label once through the existing shared Classic
+simple Unicode uppercase owner. Use that same owner once for a direct/decoded
+quoted target at compilation, or once for a dynamic target at execution. This
+retains the selected Level C case-insensitive profile documented in
+`docs/books/crexx_language_reference/statements.md`; the Classic reference's
+case-preserving literal/evaluated-name rule is a deliberate profile difference.
+Compare canonical text with length-aware strict `seq`: no numeric conversion,
+blank padding or NUL truncation. `1.20` and `1.2` remain distinct. Native dynamic
+loose comparison remains a native C compiler follow-up, outside this slice;
+its closure control must declare `1.2` before `1.20` and select exactly `1.20`.
+It is not an acceptance target for the new compiler.
+
+Reuse the one source-order inventory of all labels, selecting the first name
+before eligibility. A known static first trace-only match refuses compilation
+with 16.2, including dead source. A missing direct/quoted name remains a reached
+16.1 error; it does not prevent compilation. VALUE remains dynamic even when
+its expression is a literal: evaluate once, finish existing CALL/EXIT guards,
+convert/fold once, then resolve missing 16.1 or trace-only 16.2 at execution.
+Later eligible duplicates cannot bypass the first trace-only declaration.
+Existing CALL/function 16.3 and quoted invocation bypass are unchanged.
+
+`signal.mark` runs after the VALUE expression/conversion has completed and
+before lookup or a reached missing-target error. It calls the existing live
+pool `setSignalLine` once with the causing SIGNAL line, updating SIGL and .SIGL.
+Operand EXIT bypasses conversion, mark, lookup and transfer. A helper CALL may
+already have changed ordinary SIGL; the absence of the outer SIGNAL write is
+checked through the reserved .SIGL sentinel. Failed lookup performs no successful
+DO close/transfer. No post-fatal resumed-state claim is made by this profile.
+
+### IR and immutable inventory encoding
+
+Advance only the C family to **18**, append operations **74–77**, and retain
+the existing five C types and 36 target exports. `T` is existing `crexx.g.text`,
+`I` is `crexx.g.int64`, `V`/`C` retain current value/context types. No Q/table
+runtime type or evaluator is added. All extensions have zero successor operands;
+control remains visible as ordinary core branches/jumps.
+
+| Ordinal / operation | Inputs → result | Attributes | State / failure / termination |
+|---|---|---|---|
+| 74 `signal.mark` | `table:T context:C` → void | `label:I` | `context` / `condition.resource` / returns |
+| 75 `signal.name` | `value:V context:C` → T | none | `context` / `condition.resource` / returns |
+| 76 `signal.test` | `table:T name:T` → core.boolean | `label:I` | `none` / `none` / returns |
+| 77 `signal.invalid` | `name:T context:C` → void | `code:T` | `none` / `condition` / diverges |
+
+Every C input is the function's existing once-bound canonical context load;
+type compatibility alone is insufficient. Mark/name/invalid retain an exact
+owned nonempty authored SIGNAL span with UTF8-aligned endpoints. Generated
+search/close/branch records derive from that same statement. `signal.test` is
+pure and has no fake effect to keep metadata alive. Its result must control its
+proved core branch. Invalid codes are exactly `16.1` or `16.2`; its context input
+binds the checked invocation, without inventing a new context mutation.
+
+One immutable table per source-unit function contains the first occurrence of
+each distinct canonical name in source order, including trace-only records.
+No SIGNAL in authored source emits no table; SIGNAL with no labels has an empty
+table. Entry IDs are existing stable positive invocation identities, never
+block/op IDs. Row ordinal is one-based; entry 0 means trace-only. Later duplicate
+natural labels remain in the CFG and do not add rows or invocation identities.
+
+The T payload is valid UTF8 with this exact byte framing, independent of locale:
+
+```text
+table := "CSIG1\n" uint(rowCount) row{rowCount}
+row   := frame(canonicalName) uint(entryID) frame(logicalSourceName)
+         uint(firstByte) uint(lastByte)
+uint(n) := canonical unsigned ASCII decimal n followed by ":"
+frame(s) := uint(UTF8 byte length of s) followed by exactly those UTF8 bytes
+```
+
+Only zero is spelled `0`; leading zeros, signs, missing delimiters, integer
+overflow, invalid UTF8, truncated/extra bytes, empty names and duplicate names
+refuse. Length framing admits exact text without delimiter escaping or NUL
+truncation. Source names identify existing owned sources uniquely. Each row has
+an exact nonempty UTF8-aligned label range within that source. Eligible rows
+match canonical entry names/IDs already admitted by CPROC; every positive local
+entry is represented once. Trace-only-only names receive the same canonical
+label-text check once during table admission. This declares checked IR label
+metadata; it does not reparse source to reconstruct syntax. Serialized names,
+entry IDs and source byte anchors survive generic block/op renumbering; current
+landing block IDs are derived facts only.
+
+### Setup, full-use proof and owner lifetime
+
+The frontend emits one generated T constant and one store into a dedicated
+once-written T slot in the canonical all-entry function setup, before dispatch.
+It must dominate main and every invocation entry; source.main is too late.
+Semantic sites load that slot. The setup constant/store pair remains mandatory
+in every admitted graph, including raw graphs. Existing generic typed forwarding
+may replace a use's load with the exact same block-local constant; it does not
+remove stores. A constant-only prefix is not admitted. There is no standalone
+unused `labels` extension: real
+mark/test input dependencies preserve the table through pure DCE.
+
+Admission has this one-way order, including raw/loaded/transformed rendering:
+
+1. Generic L verifies the frozen graph. CPROC checks its existing function,
+   entry, canonical name/context, invocation/EXIT and eligibility contracts. Its
+   sole added setup allowance is the finite generated pure T-constant/unique
+   T-slot-store prefix before canonical dispatch; it records the exact prefix
+   IDs/writer without interpreting or semantically approving arbitrary T data.
+   CPROC success alone is not complete C18 admission.
+2. New C-private `llcsignalprotocol.checked` imports and borrows completed CPROC
+   facts; CPROC does not import it. Signal admission validates/decodes the table,
+   transport, all uses, source landings and private segments. Every complete C
+   frontend/selector path invokes this stage, including no-use/orphan metadata;
+   there is no path that renders a permissively admitted setup prefix alone.
+3. DO and command admission borrow those completed facts as needed. Existing
+   core-edge stack propagation and pending-owner constraints remain authoritative.
+   Only after all stages succeed may selection allocate registers or publish
+   output. There is no CPROC↔signal or signal↔DO dependency cycle.
+
+The table closure is exactly one constant, its mandatory unique slot/store and
+loads, and checked same-function mark/test uses. Reject another writer, a mixed
+table, foreign function use, escaping argument/return/ordinary consumer, stray
+prefix transport or unproved slot/value alias, including dead records. A
+forwarded constant has the same complete-use obligation. A fully validated
+canonical orphan prefix with zero mark/test uses is admitted and erased whether
+fresh/raw or produced by pruning. Its exact payload/setup/once-writer/full-use
+shape must pass independently of construction history; no historical marker or
+trust is required. This is not blanket acceptance of arbitrary unused T setup.
+
+Facts belong to one frozen `module.identity()`. The frontend retains its CPROC
+and signal objects as strong request fields, constructed only after its graph
+field is stable; private reference accessors lend completed facts. The compile
+service retains that frontend while a selector borrows facts for the same
+identity. Internal prechecked selector construction takes explicit references
+to both proof owners; existing ordinary/raw constructors build and retain their
+own proof fields against their owned graph. A copied immutable module may reuse
+facts only with live retained graph/proof owners, matching frozen identity,
+unchanged sealed data and clear graph/proof errors. A semantically failed proof
+is never reused. Loaded or transformed graphs have
+their own identity and construct fresh facts. Identity mismatch never reuses
+old operation indices. Narrow C proof ownership checks use this existing frozen
+identity contract; no generic L generation API or process-global cache is added.
+Each proof retains scalar actual logical byte/work charges. Prechecked borrow
+construction checks those charges once against the selecting request's limits
+and refuses with a selecting-request-local LIMIT diagnostic if either exceeds
+its limit, without poisoning a successful retained proof;
+it does not decode again or charge each later query a second time. Narrower
+selection limits therefore cannot bypass admission or expose partial output.
+
+There is one decoded/interned inventory owner per admitted graph identity within
+the request. Selector sizing and output passes borrow it; queries return scalar
+IDs or scoped cell references, never a copied aggregate/table fallback. The
+graph and all borrowed proof owners remain strong until the last query returns.
+Eligible canonical-name facts are inherited from CPROC rather than uppercased
+again. Dynamic operand folding is one execution operation, not per-target work.
+
+Reserve table bytes, decoded names/source projections and graph/slot/use/edge/
+segment indices before retaining/growing them; parse lengths with remaining-
+budget division/subtraction checks before multiplication or slicing. Charge
+each decoding byte and indexed graph/use/edge visit, canonical validation and
+each emitted test/close once under existing compiler workspace/work budgets.
+Use indexed name/entry/use/predecessor maps, not pairwise table scans or repeated
+whole-CFG searches. Propagate sticky LIMIT/SOURCE diagnostics without rewriting
+them as lowering errors. Table/proof failure publishes no partial executable
+and preserves input graph and earlier owned output. No new public quota API.
+
+### Real edges, successful transfer and selection
+
+Mark label >0 names an eligible table row. Its structural continuation consists
+only of matching generated deepest-first `do.close` operations then a core.jump
+to that row's natural source block. Label -1 is a static absent target, followed
+by the exact canonical missing-name constant and invalid 16.1; admission proves
+that constant has no strict name match in the admitted table. Label 0 starts a
+dynamic segment after one `signal.name` result. That segment tests every table
+row in first-source order, once each, using the same immutable table/name.
+Because L values are block-local, a dynamic name crosses search blocks through
+one private once-written T slot and its segment-local loads. The conversion,
+slot and loads belong to one unique mark/search segment; conversion sharing
+between distinct SIGNAL sites is not admitted. Direct generic
+forwarding within a block is also admitted. Full-use proof permits only this
+segment's test/invalid consumers; reject another writer, foreign load or escape.
+This owned runtime name slot is distinct from the erased compile-time table
+slot. Its owner clears on the successful transfer edge after its final test,
+or through existing fatal scalar cleanup after a failed lookup.
+The selector maps this proved private slot and all its loads to one stable owned
+runtime name register: tests/invalid read it directly, rather than selecting a
+generic whole-text COPY for every load/candidate. This specialization depends on
+the complete once-writer/segment-use proof and adds no generic L alias rule.
+Each test uniquely controls a core.branch: an eligible true arm closes DOs and
+jumps to the natural landing; a trace-only true arm diverges with 16.2; false
+continues to the next row, with final false invalid 16.1. Empty tables go directly
+to invalid 16.1. Unknown/trace errors preserve the actual canonical dynamic name.
+
+Derive eligible landings from the matching same-function canonical entry.test
+name/ID and its admitted true edge. Unwrap only an existing proved canonical
+context-load/procedure.consume/core.jump entry trampoline; a first PROCEDURE
+entry is already natural. NOP, adjacent and EOF labels keep their exact admitted
+landing. Do not infer the landing from origin equality alone or serialize a
+block ID. SIGNAL success bypasses invocation consume/dispatch, so it cannot
+restore Fresh eligibility or reopen PROCEDURE. Natural continuation follows the
+target's existing CFG, including IF-arm joins.
+
+Each generated search/unwind/error block belongs to one private SIGNAL segment.
+Validate indexed predecessors: no ordinary entry into the middle, no foreign
+segment edge or shared search block. The only shared successful destination is
+the final natural source landing. Branch result uses, row sequence, error code,
+same statement provenance and mark dominance follow the closed finite shape;
+no general dominator analysis or hidden selector-only predecessor is introduced.
+VALUE operand calls and their existing false continuations finish before this
+segment starts; their true EXIT path bypasses it entirely.
+
+Reuse existing explicit `do.close` proof: it pops only the actual top Body/
+FalseExit owner and core edges propagate the exact remaining stack. Add only a
+signal-completion fact requiring the successful transfer edge to have empty
+DO state and the exact proved natural destination. No arbitrary jump resets a
+stack. Pending Collect/Ready DO construction, argument collection and open
+command keys cannot cross an unproved transfer; reject them rather than using
+RETURN/program-unwind cleanup to discard them. Failure uses existing fatal
+owner cleanup. `signal.invalid` joins the finite recognized diverging terminal
+set without weakening other terminal/merge checks.
+
+After closure proof, erase only the validated table constant/store/load transport
+from runtime register/slot allocation and emission, including a proved orphan.
+Preserve semantic authored source mappings on mark/test/error/real target edges;
+generated search/close/transfer records retain their generated flags and
+provenance while sharing the proved owning SIGNAL clause and authored diagnostic
+anchor. Their block entries do not replace that diagnostic with a generic-code
+location or toggle an unchanged clause. Generated pure setup has no authored
+statement to discard. Dynamic name selects
+one existing RexxValue.asString(1), one shared uppercase and owned scalar T.
+Each test selects `seq` against the admitted canonical literal, with no V factory,
+runtime table parser/copy or repeated fold. Mark uses the live current pool;
+success uses existing DO-close owner cleanup and core edges only. It retains
+activation, arguments, current private/shared pool and numeric settings: no
+beginInternalCall, result packet, pool restoration, frame numeric setup or VM
+EXIT on successful transfer. Temporary text/receiver borrows end on normal and
+fatal paths without clearing an owned return/failure carrier.
+
+1. **CSIGNAL-AC01 — open:** independent AST/source controls cover every direct
+   token form, decoded quoted and explicit/implied VALUE, nearest ELSE, exact
+   19.4/35.1 offsets and dead static trace-only 16.2. Failed requests preserve
+   prior output. No ON/OFF/profile fence is weakened.
+2. **CSIGNAL-AC02 — open:** one maintained source image proves once-only VALUE,
+   selected Unicode folding, first duplicates/IF-prefix landing, strict
+   numeric-looking names and exact blank/NUL unknown names, reached missing
+   16.1/trace-only 16.2 and causing SIGL/.SIGL. Operand EXIT bypasses SIGNAL work.
+3. **CSIGNAL-AC03 — open:** nested DO/SELECT transfer closes current control,
+   skips advance/UNTIL/remaining arms and permits a fresh later loop. Private
+   PROCEDURE retains activation/ARG/EXPOSE/local state through transfer, returns
+   the full owned Unicode/NUL value and restores the caller only on completion;
+   SIGNAL into PROCEDURE reports 17.1 without rearming eligibility.
+4. **CSIGNAL-AC04 — open:** tiny generic-valid fresh/loaded/transformed controls
+   verify exact schema, table framing/setup/use closure, canonical context,
+   source endpoints, entry-derived landings and private segment edges. Include
+   genuine typed forwarding and generic-pruned dead-SIGNAL orphan elimination,
+   direct-only/no-label/no-SIGNAL cases, malformed/escaping/stray table transport,
+   mid-search entry, wrong closes and bounded atomic refusal. Include a smaller-
+   limit prechecked-reuse refusal without another decode. Reuse unchanged
+   generic matrices rather than cloning them.
+5. **CSIGNAL-AC05 — open:** actual opt/noopt caller/helper RXAS and maintained
+   structural checks show real source edges, one conversion/fold, strict seq,
+   one stable dynamic-name owner with no per-candidate text COPY and edge/fatal
+   release, reverse DO cleanup and no runtime table/register/slot footprint,
+   invocation wrapper or private pool/numeric reinstall on successful transfer. Inspect
+   borrowed proof/source paths for heavy copies and scalarize method-call array
+   indices before borrowing. Use one small appropriate native comparison,
+   distinguishing compiler/assembler modes and classifying native discrepancies.
+6. **CSIGNAL-AC06 — open:** focused complementary source/host/error/admission
+   lanes and affected entry/DO/command consumers pass with valid producer reuse;
+   measure serial aggregate scheduling, review exact scope and remove scratch
+   before a separate local commit. No hosted/platform/sanitizer claim follows.
+7. **CSIGNAL-AC07 — open whole-instruction/shared scope:** SIGNAL ON/OFF and seven
+   conditions, typed handler entry/relay/resumption, clause/TRACE/host/platform
+   observations and INTERPRET remain with CLC-STEP07/08/11 and their exact gates.
+   This static profile does not close LC-I-23 or any CFC criterion.
+
+- **CSIGNAL-STEP01 — complete:** record/review source/IR/table/proof ownership
+  and independent expectations before production edits; AC01–07. Depends on
+  qualified CLABEL; native relay/clause-clock work is not a dependency here.
+- **CSIGNAL-STEP02 — complete:** implement contextual grammar/AST,
+  shared inventory serialization, finite CPROC setup allowance, C-private signal
+  proof, narrow DO/owner integration and selector; AC01–05. Add independent
+  source/host/admission fixtures through the assigned fixture writer.
+- **CSIGNAL-STEP03 — pending final complementary qualification:** sole focused preparation and
+  complementary lanes, actual RXAS/affected-consumer review, measured serial
+  registration, enduring status/cleanup and separate local commit; AC01–06.
+  AC07 remains open and no INTERPRET/native implementation is authorized here.
 
 ## Optimisation ownership
 

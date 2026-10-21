@@ -57,7 +57,7 @@ schema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 17 & count = 5 & data.ops() = 73,'exact C17/five-type/73-operation contract')
+  call check(version = 18 & count = 5 & data.ops() = 77,'exact C18/five-type/77-operation contract')
   call check(data.opname(64) == 'crexx.c.push' & data.opname(65) == 'crexx.c.queue','append-only PUSH and QUEUE operation order')
   descriptor = contract.operation('crexx.c.' || lower(instruction)); id = descriptor.id()
   call check(descriptor.valid(),instruction || ' descriptor exists')

@@ -62,6 +62,7 @@ request: class
       _error = _frontend.error(); _offset = _frontend.offset(); return
     end
     _emission = _frontend.graph()
+    sourceidentity = _emission.identity()
     if _optimise then do
       change = llirservices..optimise(reference _emission,_budget,1000000,_bytes)
       if change.status() = 'invalid' | change.status() = 'limit' then do
@@ -69,8 +70,15 @@ request: class
       end
       _emission = change.result()
     end
-    if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine)
-    else _backend = .llcrxas..compilation(_emission,_path,_bytes,_registers)
+    if _emission.identity() = sourceidentity then do
+      entries = _frontend.entryproof(); signals = _frontend.signalproof()
+      if _bound then _backend = .llcrxas..compilation.boundprechecked(_emission,entries,signals,reference _snapshot,_bytes,_registers,_routine)
+      else _backend = .llcrxas..compilation.prechecked(_emission,entries,signals,_path,_bytes,_registers)
+    end
+    else do
+      if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine)
+      else _backend = .llcrxas..compilation(_emission,_path,_bytes,_registers)
+    end
     if _backend.status() <> 0 then do
       _error = _backend.error(); _offset = _backend.offset()
     end

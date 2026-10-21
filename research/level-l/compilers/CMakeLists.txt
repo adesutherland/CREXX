@@ -62,9 +62,9 @@ foreach(_language IN LISTS _languages)
   if(_language STREQUAL "g")
     set(_spec "${CMAKE_CURRENT_SOURCE_DIR}/typed/typed.rxl")
   else()
-    # The Unicode variable lexer exceeds the generic 4096-state build default.
-    # Keep this compiler's allowance separate from global Level L policy.
-    list(APPEND _grammar_limits -DGENERATOR_LIMITS=dfa.states=16384 -DREUSE_LEXER=ON)
+    # This declared Unicode/Classic grammar exceeds generic build defaults.
+    # Keep its finite DFA/clause allowances separate from Level L policy.
+    list(APPEND _grammar_limits "-DGENERATOR_LIMITS=dfa.states=16384\;grammar.clauses=1024" -DREUSE_LEXER=ON)
     set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
       "${_front}/llcgrammar.rxas.lexer" "${_front}/llcgrammar.rxas.lexer.manifest"
       "${_front}/llcgrammar.rxas.lexer.lock")
@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol doprotocol commandprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol commandprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -157,6 +157,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcprocedureprotocol.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsignalprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccommandprotocol.rxbin"
       ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
@@ -327,6 +328,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/label-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_label_contracts_${_mode}
       DEPENDS "${_dir}/label-contracts-linked.rxbin")
+    ll_compile(signal-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/signal/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/signal-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/signal-contracts-linked"
+        "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_signal_contracts_${_mode}
+      DEPENDS "${_dir}/signal-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"

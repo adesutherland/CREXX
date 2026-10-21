@@ -20,6 +20,7 @@ checked: class
   _ready = .int
   _error = .string
   _offset = .int
+  _identity = .int
   _names = .stem
   _functions = .stem
   _entries = .int[]
@@ -54,11 +55,14 @@ checked: class
   _argumentdependency = .int[]
   _argumentends = .stem
   _argumentboundaries = .stem
+  _tableslots = .int[]
+  _tableconstants = .int[]
+  _entrytestids = .stem
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
     _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0
-    _names = .stem(); _functions = .stem()
+    _names = .stem(); _functions = .stem(); _entrytestids = .stem()
     return
   fail: method = .void
     arg reason = .string, opid = 0
@@ -92,6 +96,24 @@ checked: class
   entries: method = .int
     arg fn = .int
     call run(); return _entries[fn]
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
+  tableslot: method = .int
+    arg fn = .int
+    call run(); return _tableslots[fn]
+  tableconstant: method = .int
+    arg fn = .int
+    call run(); return _tableconstants[fn]
+  contextslot: method = .int
+    arg fn = .int
+    call run(); return _contextslots[fn]
+  entrytest: method = .int
+    arg fn = .int, id = .int
+    call run(); found = _entrytestids.get(fn || ':' || id)
+    if found = '' then return 0
+    return found as .int
   hasentry: method = .int
     arg fn = .int, id = .int
     call run(); return id > 0 & id < _entries[fn]
@@ -130,9 +152,9 @@ checked: class
   belongs: method = .int
     arg graph_ref = reference .llir..module
     call run()
-    if _error <> '' | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
-    graph = dereference graph_ref; owner = graph.storage()
-    return _store <refsame> owner
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph
+    return graph.error() = '' & held.error() = '' & held.identity() = _identity & graph.identity() = _identity
   /** Generated transport is anchored to this exact invoking origin, including
    * an owned generated invocation. Inspect arena identities, never source data. */
   programorigin: method = .int
@@ -466,20 +488,22 @@ checked: class
     end
     return total
   run: method = .void
-    contextinput = .int
+    contextinput = .int; producer = .int
     if _ready then return
     _ready = 1
     graph = dereference _graph
     if graph.error() <> '' then do; _error = graph.error(); return; end
+    _identity = graph.identity()
     if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid entry admission budget'); return; end
     _store = graph.storage(); store = dereference _store
+    contract = dereference store.contract(); texttype = contract.type('crexx.g.text').id()
     _symbols = .llcsymbols..checked(_limit,_budget)
     op = .llir..opview; name = .string; key = .string; targetname = .string
     fn = .int; b = .int; opid = .int; ordinal = .int; id = .int; value = .int; i = .int
     target = .int; state = .int; ignored = .int; terminal = .int; allowed = .int; selectedslot = .int
     /* Arrays and the at-most-three-changes-per-block queue are checked before
      * allocation. All record/name/edge traversal spends the existing budget. */
-    if reserve(store.count(1),24) = 0 | reserve(store.count(2),80) = 0 then return
+    if reserve(store.count(1),40) = 0 | reserve(store.count(2),80) = 0 then return
     if reserve(store.count(3),64) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),40) = 0 then return
     do fn = 1 to store.count(1)
       if charge() = 0 then return
@@ -531,6 +555,9 @@ checked: class
           if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then contextinput = 2
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end
+        if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
+          ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
+        end
         if name = 'crexx.c.procedure.enter' then group = opid
         else if name = 'crexx.c.procedure.expose' then do
           if group = 0 then do; call fail('LOWERING: EXPOSE requires its contiguous PROCEDURE group',opid); return; end
@@ -561,6 +588,13 @@ checked: class
         if name = 'core.jump' then leave
         allowed = 0
         if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
+        /* Structural allowance only. Mandatory signal admission later owns
+         * the exact payload, unique setup/store and complete all-record uses. */
+        if name = 'core.constant' then do
+          if op.result().type().id() = texttype & _tableconstants[fn] = 0 then do
+            _tableconstants[fn] = opid; allowed = 1
+          end
+        end
         if name = 'core.load' | name = 'core.store' then do
           selectedslot = store.get(3,opid,12)
           allowed = selectedslot = _entryslots[fn]
@@ -569,11 +603,18 @@ checked: class
             if name = 'core.store' then entrybound = 1
           end
           if store.get(5,selectedslot,2) = store.get(5,_contextslots[fn],2) then allowed = 1
+          if name = 'core.store' & store.get(5,selectedslot,2) = texttype then do
+            producer = store.get(4,op.input(1).id(),1)
+            if _tableconstants[fn] = producer & _tableslots[fn] = 0 & _writes[selectedslot] = 1 then do
+              if store.get(3,producer,3) = opid then do; _tableslots[fn] = selectedslot; allowed = 1; end
+            end
+          end
         end
         if allowed = 0 then do; call fail('LOWERING: noncanonical source-unit entry setup',opid); return; end
         opid = store.get(3,opid,3)
       end
       if opid = 0 then do; call fail('LOWERING: source-unit setup requires dispatch jump'); return; end
+      if (_tableconstants[fn] > 0) <> (_tableslots[fn] > 0) then do; call fail('LOWERING: SIGNAL table setup requires its unique slot store',opid); return; end
       if opid <> store.get(2,b,3) then do; call fail('LOWERING: source-unit dispatch jump must terminate setup',opid); return; end
       b = store.successor(opid,1); ordinal = 0
       do forever
@@ -622,6 +663,9 @@ checked: class
         if store.get(2,target,1) <> fn then do; call fail('LOWERING: foreign entry target',test); return; end
         state = 1; if id = 0 then state = 2
         _before[target] = union(_before[target],state); _tests[test] = 1
+        key = fn || ':' || id
+        if reserve(length(key) + 64,1) = 0 | charge(length(key) + 1) = 0 then return
+        call _entrytestids.set(key,test as .string)
         ordinal = ordinal + 1; next = store.successor(branch,2)
         if store.get(2,next,1) <> fn then do; call fail('LOWERING: foreign entry continuation',test); return; end
         first = store.get(2,next,2)
@@ -678,7 +722,7 @@ checked: class
           when name = 'crexx.c.procedure.expose' then do
             if state <> 4 then do; call fail('LOWERING: EXPOSE requires successful private entry',opid); return; end
           end
-          when name = 'crexx.c.entry.invalid' | name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' then do
+          when name = 'crexx.c.entry.invalid' | name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.signal.invalid' then do
             if state % 2 then do; call fail('LOWERING: fresh entry requires consume before divergent semantic work',opid); return; end
             divergent = 1; leave
           end

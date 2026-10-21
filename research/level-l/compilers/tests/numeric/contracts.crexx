@@ -1,4 +1,4 @@
-/* Independent C17 source admission and in-place NUMERIC descriptor checks. */
+/* Independent C18 source admission and in-place NUMERIC descriptor checks. */
 options levelb
 import rxfnsb
 import llcparse
@@ -96,7 +96,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 17 & types = 5 & data.ops() = 73,'in-place C17/five types/73 operations')
+  call check(version = 18 & types = 5 & data.ops() = 77,'in-place C18/five types/77 operations')
   do i = 1 to 3
     id = contract.operation('crexx.c.numeric.' || word('digits fuzz form',i)).id()
     call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'value' & data.fieldname(id,1,2) == 'context','uniform NUMERIC inputs ' || i)

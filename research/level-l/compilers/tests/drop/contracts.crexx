@@ -58,7 +58,7 @@ sourcecontracts: procedure = .void expose artifacts
   contract = registry.finish(); data = dereference contract.data()
   descriptor = contract.operation('crexx.c.drop')
   id = descriptor.id()
-  call check(descriptor.valid() & data.ops() = 73,'current v16 retains DROP in the 73-operation contextual family')
+  call check(descriptor.valid() & data.ops() = 77,'current v18 retains DROP in the 77-operation contextual family')
   call check(data.arity(id,1) = 1 & data.fieldname(id,1,1) = 'context' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.context' & data.arity(id,2) = 0,'DROP consumes context and returns no value')
   call check(data.arity(id,3) = 2 & data.fieldname(id,3,1) = 'name' & data.fieldname(id,3,2) = 'indirect' & data.typename(data.fieldtype(id,3,1)) = 'crexx.g.text' & data.typename(data.fieldtype(id,3,2)) = 'core.boolean','DROP attributes are ordered name:text then indirect:boolean')
   call check(data.effectvalue(id,1) = 'context' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'returns','DROP retains state and condition effects')

@@ -8,6 +8,10 @@ closed yet.** “Partial” means an admitted bounded route, “Not implemented�
 the new compiler lacks the route, and “Runtime only” means an existing B asset
 still needs new-C integration. Source inspection is not execution qualification.
 
+The [conformance profile](levelc-conformance.md) summarizes the actual baseline,
+accepted reference differences and disposition of minor deviations. This ledger
+retains the detailed requirements; the profile does not replace its open rows.
+
 The current design includes the shared PARSE cursor and executor. The plan
 tracks instruction status, remaining work and real-platform obligations. Existing native,
 direct B and G fixtures are reusable controls; their passes never become new-C
@@ -32,9 +36,14 @@ passes without exercising the new compiler.
   documented missing-provider timing/error differences. No general late dynamic
   provider search or new foreign-language interface is inferred.
 - PARSE EXTERNAL/NUMERIC remain excluded from Adrian's current C scope;
-  their final Release 1 disposition is still an explicit decision (LC-GAP-05). TRACE retains Adrian's practical scope and documented interactive,
-  skip/suppress, SCAN and event-coverage divergences; verify their exact current
-  behavior rather than claiming complete reference TRACE.
+  their final Release 1 disposition is still an explicit decision (LC-GAP-05).
+  TRACE targets only the native Level C practical scope approved 2026-10-06 in
+  [TRACE requirements](../../../../docs/ai-context/CREXX_TRACE_REQUIREMENTS.md)
+  and LC-I-24 of the compatibility worklist. The [conformance profile](levelc-conformance.md#practical-trace-target)
+  records its interactive, skip/suppress, SCAN and event-coverage limitations;
+  it does not claim new-C TRACE is implemented. Minor formatting/event-coverage
+  differences within that scope are recorded for later judgment, not expanded
+  delivery gates. Correct displayed values and ordinary behavior remain material.
 - Host ADDRESS NUL transport, full host/source/configuration APIs and real HALT
   are separate tracked obligations. Their prior deferral is not full-C closure.
   The selected NUL rejection/transport policy must be explicit at the adapter.
@@ -125,7 +134,7 @@ their full instruction review; e.g. ARG reuses PARSE infrastructure.
 | LC-I-20 ADDRESS / STEP07 | Partial: explicit keyed profile locally qualified, CADDR-AC01–05/07 | Selection/swap, transient command, WITH resources and configured environment object protocol. One command evaluation, RC/.RC/.RS, error/failure/notready and resource lifetime. Compiler owns anchors; adapter owns command meaning. Test NUL transport policy explicitly. | [LC-82-01–06](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-21 implicit command / STEP07 | Partial: active commands and owned warnings locally qualified, CADDR-AC01–07 local profile | Expression becomes one command through active ADDRESS state and lasting connections. No duplicate host route. Preserve expression errors, warning/source observations, return status and traps. CADDR-AC08 keeps configured conditions/resumption, TRACE, host/NUL transport and platforms open. | [LC-83-01–04](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-22 NUMERIC / STEP07 | Partial: source-integration profile locally qualified, NUM-C-AC01–06 | DIGITS/FORM/FUZZ default/value forms, once-only shared validation, local inheritance/restoration and representative BIF/display/arithmetic effects use the [NUMERIC contract](architecture.md#numeric-c-contract). No per-operator rebuilding of unchanged configuration. NUM-C-AC07 retains configured conditions/LOSTDIGITS, TRACE, broader host/platform scope and numeric fact invalidation. | [LC-84-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
-| LC-I-23 SIGNAL / STEP07 | Not implemented | Direct/quoted/VALUE targets, first-label order, ON/OFF seven conditions, immediate handler transfer, SIGL/.SIGL and loop-state clearing. Compiler owns labels/edges; runtime owns policy/delivery. Missing labels and errors use causing clause; preserve existing signalorigin/CLASSIC_CONDITION contracts. | [LC-AC-76](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-85-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
+| LC-I-23 SIGNAL / STEP07 | Static C18 profile locally committed with partial qualification; whole instruction open | [Direct/quoted/VALUE transfer](architecture.md#signal-static-contract) uses first-label order, strict canonical text, SIGL/.SIGL and loop cleanup. Its intentional name profile is recorded in [conformance](levelc-conformance.md#accepted-profile-choices). ON/OFF seven conditions, immediate handler delivery, clause/TRACE and wider lifecycle remain open. Compiler owns labels/edges; runtime owns policy/delivery. Preserve causing-clause errors and typed condition/source contracts. | [LC-AC-76](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-85-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-24 TRACE / STEP07 | Not implemented | Compile clause/result events with current VM metadata/exit protocol, share activation option/query state and command inhibition. Verify actual displayed values/origins and approved practical divergences. Disabled tracing must not require avoidable formatting/allocation. | [LC-AC-77](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-86-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-25 INTERPRET / STEP11 | Not implemented | Same compiler in group mode, live caller state, source-once semantics, complete/no-label groups, nested compile/execute, CALL-handler resumption versus SIGNAL discard, caller routines, RETURN/EXIT and bounded resident ownership. Include all LC-87 proof cases and installed/platform lifecycle; no second evaluator. | [LC-87-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 

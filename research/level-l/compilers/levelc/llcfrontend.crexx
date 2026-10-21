@@ -14,6 +14,7 @@ import llcparseprogram
 import llcompilercontracts
 import llcdoprotocol
 import llcprocedureprotocol
+import llcsignalprotocol
 import llccommandprotocol
 import llcdiagnostics
 import rexxclassicunicodeproperties
@@ -70,6 +71,8 @@ request: class
   _offset = .int
   _tree = .llast..tree
   _graph = .llir..module
+  _entryproof = .llcprocedureprotocol..checked
+  _signalproof = .llcsignalprotocol..checked
   _registry = .llir..schema
   _contract = .llir..contract
   _builder = .llir..builder
@@ -133,6 +136,13 @@ request: class
   _anchorfirst = .int[]
   _anchorlast = .int[]
   _warnings = .llcdiagnostics..warning[]
+  _hassignal = .int
+  _signalnames = .string[]
+  _signalids = .int[]
+  _signalnodes = .llast..node[]
+  _signalrows = .stem
+  _signalslot = .llir..slot
+  _signalbuilding = .int
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -184,6 +194,7 @@ request: class
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
         if walk.node().kind() = 'CCommand' then hascommands = 1
+        if walk.node().kind() = 'CSignal' | walk.node().kind() = 'CSignalValue' then _hassignal = 1
       end
       _entrybytes = 0
       if hascommands then call sourcewarnings(reference parsed)
@@ -206,19 +217,24 @@ request: class
       _graph = _builder.finish()
       if _graph.error() <> '' then _error = _graph.error()
       if _error = '' then do
-        entries = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
-        if entries.status() then do; _error = entries.error(); _offset = entries.offset(); end
+        _entryproof = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
+        if _entryproof.status() then do; _error = _entryproof.error(); _offset = _entryproof.offset(); end
         if _error = '' then do
-          commands = .llccommandprotocol..checked(reference _graph,reference entries,_bytebudget,_budget)
+          _signalproof = .llcsignalprotocol..checked(reference _graph,reference _entryproof,_bytebudget,_budget)
+          if _signalproof.status() then do; _error = _signalproof.error(); _offset = _signalproof.offset(); end
+        end
+        if _error = '' then do
+          commands = .llccommandprotocol..checked(reference _graph,reference _entryproof,_bytebudget,_budget)
           if commands.status() then do; _error = commands.error(); _offset = commands.offset(); end
         end
         if _error = '' then do
-          protocol = .llcdoprotocol..checked.withprogram(reference _graph,reference entries,_bytebudget,_budget)
+          protocol = .llcdoprotocol..checked.withsignals(reference _graph,reference _entryproof,reference _signalproof,_bytebudget,_budget)
           if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
         end
       end
     on signal as problem
       if _building then _error = _builder.error()
+      if _signalbuilding & left(_error,18) = 'LL_RESOURCE_LIMIT:' then _error = 'LL_COMPILER_LIMIT: frontend SIGNAL construction IR budget exceeded'
       if _error = '' then _error = 'LL_COMPILER_INVALID: ' || problem.message()
     end
     return
@@ -239,6 +255,17 @@ request: class
   warnings: method = .llcdiagnostics..warning[]
     call run()
     return _warnings
+  /** Private synchronous borrows; the request remains the strong owner. */
+  entryproof: method = reference .llcprocedureprotocol..checked
+    call run()
+    missing = reference .llcprocedureprotocol..checked
+    if _error <> '' then return missing
+    return reference _entryproof
+  signalproof: method = reference .llcsignalprotocol..checked
+    call run()
+    missing = reference .llcsignalprotocol..checked
+    if _error <> '' then return missing
+    return reference _signalproof
   offset: method = .int
     call run()
     return _offset
@@ -301,7 +328,7 @@ request: class
     id = .int; i = .int
     root = _tree.root(); body = root.child('body')
     _routines[1] = .routine('$MAIN','result',body,1,body.count('items')) as .object
-    _namespace = ''; _routineids = .stem(); _labelcapacity = 0
+    _namespace = ''; _routineids = .stem(); _labelcapacity = 0; _signalrows = .stem()
     groups = .int[]; walk = _tree.walk('parents first')
     node = .llast..node; item = .llast..node; following = .llast..node
     do while walk.next() & _error = ''
@@ -352,6 +379,13 @@ request: class
       if grouped > 0 then _labelleaders[id] = 0
       else if _labelleaders[id] = 0 then _labelleaders[id] = id
       if _routineids.get(name) <> '' then iterate
+      if _hassignal then do
+        if entryspace(128,1,'SIGNAL label') = 0 | entryspace(<blen>(name as .binary),2,'SIGNAL label') = 0 then return
+        row = _signalnames[0] + 1
+        _signalnames[row] = name; _signalnodes[row] = node; _signalids[row] = 0
+        if grouped = 0 then _signalids[row] = _routines[0]
+        call _signalrows.set(name,row as .string)
+      end
       if entryspace(96,1,'label identity') = 0 then return
       if entryspace(<blen>(name as .binary),2,'label identity') = 0 then return
       if grouped > 0 then do
@@ -393,6 +427,12 @@ request: class
     _entryslot = _fn.slot('$entry',type('int64'))
     call _block.store(_contextslot,_block.readarg(1,origin),origin)
     call _block.store(_entryslot,_block.readarg(2,origin),origin)
+    if _hassignal then do
+      _signalslot = _fn.slot('$signal.table',type('text'))
+      tablebytes = signaltable()
+      if _error <> '' then return
+      call _block.store(_signalslot,_block.constantbytes(type('text'),tablebytes,origin),origin)
+    end
     dispatch = newblock('entry.dispatch'); call _block.jump(dispatch,origin)
     mainbody = newblock('source.main')
     do i = 1 to _labelnodes[0] while _error = ''
@@ -441,6 +481,145 @@ request: class
       op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
       call _block.returnvalue(built.result(),origin)
     end
+    return
+  /** Length framing writes bytes once into the owned table; no source/table
+   * is copied per semantic SIGNAL or per label lookup. */
+  signalfield: method = .void
+    arg target_ref = reference .binary, bytes = .binary
+    target = dereference target_ref
+    size = <blen>(bytes)
+    if entryspace(size,2,'SIGNAL table') = 0 then return
+    if size > _budget - _work then do; call fail(_tree.root(),'LIMIT: frontend SIGNAL table work budget exceeded'); return; end
+    _work = _work + size
+    assembler bappend target,bytes
+    return
+  signaltable: method = .binary
+    bytes = .binary
+    call signalfield(reference bytes,'43534947310A'x as .binary)
+    call signalfield(reference bytes,((_signalnames[0] as .string) || ':') as .binary)
+    do i = 1 to _signalnames[0] while _error = ''
+      node = _signalnodes[i]; name = _signalnames[i]
+      call signalfield(reference bytes,((<blen>(name as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,name as .binary)
+      call signalfield(reference bytes,((_signalids[i] as .string) || ':') as .binary)
+      call signalfield(reference bytes,((<blen>(_filename as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,_filename as .binary)
+      call signalfield(reference bytes,((node.start() as .string) || ':') as .binary)
+      call signalfield(reference bytes,((node.finish() as .string) || ':') as .binary)
+    end
+    return bytes
+  signalwork: method = .int
+    arg node = .llast..node, count = 1
+    if _error <> '' then return 0
+    message = _builder.error()
+    if message <> '' then do
+      if left(message,18) = 'LL_RESOURCE_LIMIT:' then call fail(node,'LIMIT: frontend SIGNAL construction IR budget exceeded')
+      else _error = message
+      return 0
+    end
+    if count < 0 | count > _budget - _work then do
+      call fail(node,'LIMIT: frontend SIGNAL construction work budget exceeded'); return 0
+    end
+    _work = _work + count; return 1
+  signalclose: method = .void
+    arg node = .llast..node, origin = .llir..origin
+    do level = _loops to 1 by -1
+      if _loopkeys[level] <> '' then do
+        if signalwork(node,16) = 0 then return
+        built = dostate('close',_loopkeys[level],origin.derive())
+        if signalwork(node,0) = 0 then return
+      end
+    end
+    return
+  signalmark: method = .void
+    arg label = .int, origin = .llir..origin, node = .llast..node
+    if signalwork(node,8) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.mark'),origin)
+    call op.input('table',_block.load(_signalslot,origin.derive()))
+    call op.input('context',_block.load(_contextslot,origin))
+    integer = .llir..intcodec(); call op.attribute('label',integer.parse(label as .string))
+    built = op.finish(); ignored = signalwork(node,0)
+    return
+  signalinvalid: method = .void
+    arg name = .llir..valuehandle, code = .string, origin = .llir..origin, node = .llast..node
+    if signalwork(node,8) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.invalid'),origin)
+    call op.input('name',name); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('code',code as .binary); built = op.finish()
+    if signalwork(node,0) = 0 then return
+    generated = origin.derive('synthetic')
+    op = _block.operation(_contract.operation('crexx.c.return.absent'),generated); built = op.finish()
+    if signalwork(node,0) = 0 then return
+    call _block.returnvalue(built.result(),generated)
+    return
+  signalstatement: method = .void
+    arg node = .llast..node
+    _signalbuilding = 1
+    origin = at(node); name = .string; found = .string; row = .int; labelid = .int
+    labelnode = .llast..node; destination = .llir..block; yes = .llir..block; no = .llir..block
+    target = .llast..node; value = .llir..valuehandle; named = .llir..valuehandle
+    op = .llir..opdraft; built = .llir..opview; nameslot = .llir..slot
+    if node.kind() = 'CSignal' then do
+      target = node.child('target')
+      if target.kind() = 'String' then name = stringliteral(target)
+      else name = target.text('spelling')
+      if _error <> '' | namework(name) = 0 then return
+      name = rexxclassic_unicode_upper(name)
+      if namework(name) = 0 then return
+      found = _signalrows.get(name); row = -1
+      if found <> '' then do
+        row = found as .int
+        if _signalids[row] = 0 then do
+          call fail(target,'SYNTAX: RXC-LC-16.2: SIGNAL target is trace-only ' || name); return
+        end
+      end
+      call signalmark(row,origin,node)
+      if _error <> '' then return
+      if row > 0 then do
+        labelnode = _signalnodes[row]; labelid = labelnode.id()
+        destination = _sourceblocks[labelid] as .llir..block
+        call signalclose(node,origin)
+        if signalwork(node) = 0 then return
+        call _block.jump(destination,origin.derive())
+      end
+      else call signalinvalid(_block.constantbytes(type('text'),name as .binary,origin.derive()),'16.1',origin,node)
+    end
+    else do
+      value = expression(node.child('value')); if _error <> '' then return
+      if signalwork(node,8) = 0 then return
+      op = _block.operation(_contract.operation('crexx.c.signal.name'),origin)
+      call op.input('value',value); call op.input('context',_block.load(_contextslot,origin))
+      built = op.finish(); if signalwork(node,0) = 0 then return
+      named = built.result(); nameslot = temporary(type('text'))
+      call _block.store(nameslot,named,origin.derive())
+      call signalmark(0,origin,node); integer = .llir..intcodec()
+      if _error <> '' then return
+      do row = 1 to _signalnames[0] while _error = ''
+        if signalwork(node,64) = 0 then return
+        op = _block.operation(_contract.operation('crexx.c.signal.test'),origin.derive())
+        call op.input('table',_block.load(_signalslot,origin.derive()))
+        call op.input('name',_block.load(nameslot,origin.derive()))
+        call op.attribute('label',integer.parse(row as .string)); built = op.finish()
+        if signalwork(node,0) = 0 then return
+        yes = newblock('signal.match'); no = newblock('signal.next')
+        if signalwork(node,0) = 0 then return
+        call _block.branch(built.result(),yes,no,origin.derive())
+        if signalwork(node,0) = 0 then return
+        _block = yes
+        if _signalids[row] = 0 then call signalinvalid(_block.load(nameslot,origin.derive()),'16.2',origin,node)
+        else do
+          labelnode = _signalnodes[row]; labelid = labelnode.id()
+          destination = _sourceblocks[labelid] as .llir..block
+          call signalclose(node,origin)
+          if signalwork(node) = 0 then return
+          call _block.jump(destination,origin.derive())
+        end
+        _block = no
+      end
+      call signalinvalid(_block.load(nameslot,origin.derive()),'16.1',origin,node)
+    end
+    ignored = signalwork(node,0); _signalbuilding = 0
+    _terminated = 1; _alive = 0
     return
   procedurestatement: method = .void
     arg node = .llast..node
@@ -667,6 +846,7 @@ request: class
       end
       when kind = 'CAddress' then call addressstatement(node)
       when kind = 'CCommand' then call commandstatement(node)
+      when kind = 'CSignal' | kind = 'CSignalValue' then call signalstatement(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do

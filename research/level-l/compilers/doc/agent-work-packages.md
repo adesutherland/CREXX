@@ -35,11 +35,15 @@ or build/test activity in the same output tree. Share prepared prerequisites
 and schedule focused checks centrally; isolation is by build/test location,
 not by extra source checkouts.
 
-For each instruction, use a bounded implementation assignment followed by a
-separate review assignment with independent expectations. The reviewer can
-prepare test cases first without editing the implementation's paths. Read-only
-review may overlap implementation only against a named stable checkpoint;
-review the final diff again when changed. Agents do not approve their own
+For each instruction, establish independent expectations and review the exact
+contract before implementation. Review coherent code and the first representative
+RXAS at an early named stable checkpoint, batch material fixes, then freeze source
+and fixtures for one focused complementary qualification. Later changes require
+review and tests only for affected obligations, without restarting the whole
+cycle. Final inspection checks scope, preservation and changed material deltas.
+Document minor practical TRACE or presentation deviations in the
+[conformance statement](levelc-conformance.md); wrong control, state, values,
+ownership or required errors remain blockers. Agents do not approve their own
 semantic exceptions or silently relax tests.
 
 ## Work package catalogue
@@ -61,7 +65,7 @@ start; CLC stage closure also requires the complete plan criteria.
 | **WP-09 RXAS/VM primitive** | Precisely assigned assembler/binutils/interpreter/disassembler/linker paths and direct tests | One reproduced cost or missing execution capability; compare existing sequence, library/selector fix and primitive. Propose exact operands/effects/alias/errors/source/encoding/platform contract before code. | CFC-AC10/11; STEP09 or final STEP11b. Explicit native/ABI gate; mandatory first Release verdict for production optimisation. No language parser/BIF dispatch in VM. |
 | **WP-10 Delivery and independent QA** | Assigned CLI/build/test/packaging files; assigned worker owns shared root integration | Retain delivery/closure duties. Approved LRUSE-STEP03/04 owns CLI transport, output-derived REUSE_LEXER persistence/lock/checksum/publication, stamp build injection/dependencies/cleanup and initial research-C-only opt-in. Independently qualify non-C/G first, then focused C cold/warm and unchanged G controls; coordinate stamp manifest with WP-02. | CFC-AC08/11/12; STEP10/11d and [LRUSE](../../PLAN.md#current-action-lexer-reuse). Reuse valid proof, measure necessary aggregate additions under AGENTS; no automatic broad/sanitizer campaign or free shared cache path. |
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
-| **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Check contract-to-code-to-test traceability, inspect RXAS/helpers, challenge effect/lifetime assumptions, compare final diff to approved scope and verify preservation. Findings name mechanism, affected criterion and reproducer. | Every increment; full review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. |
+| **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Start at the early stable code/first-RXAS checkpoint: check contract/test traceability and effect/lifetime assumptions. Final inspection covers scope, preservation and changed material deltas. Findings name mechanism, affected criterion and reproducer. | Early in every increment; complete delivery review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. No automatic whole-cycle restart. |
 
 <a id="call-assignment-packet"></a>
 
@@ -171,6 +175,22 @@ reviewer checks open/closed arm ownership, lexical group depth, first-label
 resolution, node-based landings and actual RXAS read-only. CLABEL-AC01–05 and STEP01–03 are locally complete; no schema/runtime API or
 C18 SIGNAL implementation belongs in this slice. Static SIGNAL receives its
 separate exact contract next.
+
+The [static SIGNAL C18 contract](architecture.md#signal-static-contract) assigns
+grammar/classifier/frontend, schema, finite entry-setup allowance and narrow
+DO/command/selector integration to the serial integrator. A disjoint worker
+owns only new `levelc/llcsignalprotocol.crexx` under the frozen internal API;
+the coordinator independently reviews that module. The integrator owns all
+existing shared product files, CMake/docs and exclusive preparation,
+execution, cleanup and local commit. After STEP01 internal review, the fixture
+writer may own only `tests/signal/{source-c.crexx,source-c.expected,host.crexx,
+contracts.crexx,check-signal.py}`; source expectations remain independent of
+emission. The proof worker also reviews the integrator's frontend/selector and
+actual RXAS without competing builds; it does not independently approve its own
+proof module. CSIGNAL-STEP01–02 are complete and the static profile is locally
+committed; STEP03 qualification remains partial, and AC01–07 are open.
+No B runtime, generic L, native frontend/VM/relay, ON/OFF or
+INTERPRET work belongs to this source lease.
 
 <a id="procedure-assignment-packet"></a>
 

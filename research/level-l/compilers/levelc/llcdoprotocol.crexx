@@ -6,6 +6,7 @@ import llir
 import llscalar
 import llcsymbols
 import llcprocedureprotocol
+import llcsignalprotocol
 
 /** Read-only, once-only facts over a caller-owned checked graph. The caller
  * keeps the graph alive; this internal service never publishes or mutates IR.
@@ -43,6 +44,8 @@ checked: class
   _textbytes = .int
   _program = reference .llcprocedureprotocol..checked
   _programbound = .int
+  _signal = reference .llcsignalprotocol..checked
+  _signalbound = .int
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
@@ -55,6 +58,14 @@ checked: class
     arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work; _program = proof
     _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1
+    _keymap = .stem(); _intern = .stem()
+    return
+  /** Signal facts constrain only proved successful jumps; ordinary exact
+   * stack propagation and close legality retain the existing DO owner. */
+  withsignals: factory
+    arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work; _program = proof; _signal = signals
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1; _signalbound = 1
     _keymap = .stem(); _intern = .stem()
     return
   fail: method = .void
@@ -171,6 +182,12 @@ checked: class
       if prepared.belongs(_graph) = 0 then do
         call fail('LOWERING: program-exit proof belongs to another graph'); return
       end
+    end
+    if _signalbound then do
+      if <refvalid>(_signal) = 0 then do; call fail('LOWERING: SIGNAL proof owner is not live'); return; end
+      signalproof = dereference _signal
+      if signalproof.status() then do; _error = signalproof.error(); _offset = signalproof.offset(); return; end
+      if signalproof.belongs(_graph) = 0 then do; call fail('LOWERING: SIGNAL proof belongs to another graph'); return; end
     end
     op = .llir..opview; name = .string; key = .string; qualified = .string
     opid = .int; fn = .int; i = .int; b = .int; n = .int; owner = .int; last = .int
@@ -333,8 +350,16 @@ checked: class
               divergent = 1; leave
             end
           end
-          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' then do
+          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' | name = 'crexx.c.signal.invalid' then do
             divergent = 1; leave
+          end
+          when name = 'core.jump' then do
+            if _signalbound then do
+              signals = dereference _signal
+              if signals.transfer(opid) & state <> 0 then do
+                call fail('LOWERING: SIGNAL transfer requires empty DO state',opid); return
+              end
+            end
           end
           otherwise nop
         end

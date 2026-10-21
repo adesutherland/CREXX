@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',17)
+  c = schema.family('crexx.c',18)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -92,4 +92,8 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'command.binding',types,'context:7',0,'key:2 kind:2 name:2','context','condition.resource')
   call llscalar..declare(c,'command.run',types,'context:7',0,'key:2','context.input.output.observation','condition.resource')
   call llscalar..declare(c,'command.active',types,'command:6 context:7',0,'key:2','context','condition.resource')
+  call llscalar..declare(c,'signal.mark',types,'table:2 context:7',0,'label:1','context','condition.resource')
+  call llscalar..declare(c,'signal.name',types,'value:6 context:7',2,'','context','condition.resource')
+  call llscalar..declare(c,'signal.test',types,'table:2 name:2',11,'label:1','none','none')
+  call llscalar..declare(c,'signal.invalid',types,'name:2 context:7',0,'code:2','none','condition','diverges')
   return
