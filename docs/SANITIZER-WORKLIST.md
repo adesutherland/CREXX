@@ -7,8 +7,9 @@ sanitizer configurations.  Repository policy and closure requirements are in
 
 ## Sanitizer scope review and proposal — 20 October 2026
 
-**Status: Adrian approved the VM-priority replacement on 20 October 2026;
-implementation/qualification remain open and no rollout is active.**
+**Status: VM-priority implementation and clean daily Linux/Apple qualification
+are complete. Scheduled activation remains disabled pending Adrian's separate
+master-workflow decision.**
 The original approved order was unchanged isolated Linux timeout diagnosis first, then the
 exact ten-cell daily reduction, separated fixture/native preparation and shared
 Classic preparation, qualified before activation. The existing scheduled policy
@@ -46,15 +47,15 @@ Preserve all applicable permanent SAN regressions and existing broad closure
 gates pending explicit approval of any replacement. No native tool is retired
 by this review. Resolve the current failure rather than excluding it.
 
-### Revised VM-priority daily scope — approved implementation, qualification open
+### Revised VM-priority daily scope — qualified, activation pending
 
 **Explicit approval, 20 October:** Adrian approved this VM-priority revision:
 1,288 existing Apple daily names plus six bounded sustained-state cells; 2,010
 existing names weekly/affected; full ordinary, weekly, release and SAN closure
 preserved. This amends the existing SCOPE-AC IDs as stated below. The prior
 U-minus-ten implementation is superseded; its incomplete platform outcomes
-remain recorded evidence, not completed qualification. Clean revised daily
-Linux/Apple execution and the separate master-activation decision remain open.
+remain historical diagnostics. Clean revised daily Linux/Apple qualification is
+complete; the separate master-activation decision remains open.
 
 Adrian clarified that long-running VM/plugin memory ownership matters most, while the
 compiler and assembler are the least important daily leak targets. This proposal
@@ -417,25 +418,24 @@ SAN-QA-022 before any clean daily retry. Existing healthy jobs continue; no new
 full/daily run is authorized merely to develop this proposal.
 
 The existing SCOPE-AC01..09 and STEP01..06 IDs remain. Adrian's approval makes
-these explicit amendments without marking any implementation/qualification gate
-complete:
+these explicit amendments; their current completion states are:
 
-1. **VM-REV-AC01 (amends SCOPE-AC02/04/07), approval recorded, implementation open:** implement the
+1. **VM-REV-AC01 (amends SCOPE-AC02/04/07), done:** implement the
    exact risk-based cadence above, including weekly producer SAN ownership and
    delayed omitted histories; replace the former equal-native-coverage gate for
    these reductions. Verify exact named membership against fresh per-platform
    discovery, default-keep new tests and full ordinary/weekly/release/SAN scope.
-2. **VM-REV-AC02 (amends SCOPE-AC08), open:** implement/reuse the six named
+2. **VM-REV-AC02 (amends SCOPE-AC08), done:** implement/reuse the six named
    same-process scenarios after isolated ordinary measurement; pass independent
    functional/error/recovery oracles, warmed fixed-batch resource bounds and
    final teardown using available counters. Record each exact workload count,
    reserve/capacity bound and unsupported metric; avoid unbounded soak.
-3. **VM-REV-AC03 (preserves SCOPE-AC01/03/05), open:** repair SAN-QA-022 fail-closed
+3. **VM-REV-AC03 (preserves SCOPE-AC01/03/05), done:** repair SAN-QA-022 fail-closed
    identity validation, finish the already approved Linux original-producer
    continuation and qualify clean revised daily executions on Linux ASan/LSan
    and Apple ASan. Report actual scope/phase costs; retain no false broad marker
    and no new complete-original-suite requirement from this proposal.
-4. **VM-REV-AC04 (preserves SCOPE-AC06/07/09), open:** reconcile docs/policy and
+4. **VM-REV-AC04 (preserves SCOPE-AC06/07/09), done for baseline publication:** reconcile docs/policy and
    ordinary/research/optional-platform limits, delete temporary diagnostics and
    review qualified hotfix inputs before promotion. Master activation remains
    Adrian's separate decision; the newer dirty develop research is not qualified
@@ -496,16 +496,15 @@ kept consumers of an existing weekly fixture. Daily completion compares the
 canonical fixture-closed scope; a partial runtime selection remains focused.
 Explicit source-family restoration is keyed in execution/reuse with one shared
 JSON canonicalization. The current fifteen independent contracts pass, including
-actual CTest fixture closure and inherited nonempty affected policy. The fresh
-six-cell discovery and focused ownership proof are recorded above; clean
-selective platform builds/execution remain open.
+actual CTest fixture closure and inherited nonempty affected policy. Fresh
+discovery, focused ownership proof and clean selective platform execution are
+complete.
 
-**VM-REV-STEP02 — implemented, focused local proof verified (AC01/02):** known
+**VM-REV-STEP02 — done (AC01/02):** known
 moved names, affected policy, selected preparation and bounded lifecycle cells
 are implemented. Ordinary measurement precedes registration. Focused ordinary
-and maintained-Apple-ASan proof passes as below; no clean platform completion
-is inferred.
-**VM-REV-STEP03 — depends on repair and STEP02 (AC03/04):** perform the approved
+and maintained-Apple-ASan proof precedes clean platform qualification.
+**VM-REV-STEP03 — done for qualification; activation remains separate (AC03/04):** perform the approved
 clean revised daily platform gates and reconcile retained original-producer
 proof, costs, limitations and the separate activation decision. Reuse valid
 unchanged evidence; do not dispatch redundant full-suite campaigns.
@@ -693,8 +692,8 @@ normalization/structured cells and native child closure. The later approved
 VM-priority revision above replaces daily membership while preserving the
 original-producer union and clean platform gates. It does **not** assert a single-run Linux broad
 pass, relax future full/weekly/release/SAN scopes, or weaken any marker rule or
-first-party SAN finding's closure requirements. The bounded continuation passes as recorded below; both clean revised daily
-outcomes remain pending. Any actual first-party sanitizer
+first-party SAN finding's closure requirements. The bounded continuation and
+both clean revised daily outcomes are complete. Any actual first-party sanitizer
 diagnostic retains its own SAN-nnn disposition before unrelated work.
 
 **Verified bounded completion:** [Linux continuation 39449515918](https://github.com/adesutherland/CREXX/actions/runs/39449515918)
@@ -711,12 +710,13 @@ the unchanged failed service is covered by the isolated Linux proof above.
 Together with the retained 3,035 passes, this completes Adrian's approved
 **U=3,293 original-producer union**. Its complete receipt remains **FOCUSED**;
 no single-run broad cache/marker is published. Clean revised daily Linux/Apple
-qualification and the separate activation gate remain open. The sole downloaded
+qualification is complete; the separate activation gate remains open. The sole downloaded
 artifact is deleted after extracting this summary.
 
 ### SAN-QA-022 — completed daily runtime fails final donor identity validation
 
-Status: **source-lock cause reproduced; repair passes ordinary and maintained-ASan focus; clean revised daily qualification remains open**.
+Status: **closed; source-lock and cold-ownership repairs qualified through clean
+daily execution on both platforms**.
 Owner: Codex under the approved preparation/profile qualification. This is an
 integration finding, with no observed sanitizer or runtime test diagnostic.
 
@@ -957,7 +957,7 @@ identity drift; its exact native-product path handling remains a local limitatio
 
 ### SAN-QA-023 — sustained VM providers follow their ELF support archives
 
-Status: **repair locally qualified; clean daily platform gate open**.
+Status: **closed; clean daily Linux/Apple qualification complete**.
 Owner: Codex, under Adrian's request to finish the sanitizer hotfix on `hotfix`.
 
 Linux [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
@@ -981,23 +981,23 @@ activation is authorized.
   inspect the generated link commands and build both existing harness targets.
 - **QA023-AC02 — done:** the six permanent sustained lifecycle regressions pass
   normal Debug and maintained Apple ASan, with their existing oracles and bounds.
-- **QA023-AC03 — todo:** clean Linux ASan/LSan and Apple ASan daily jobs complete
+- **QA023-AC03 — done:** clean Linux ASan/LSan and Apple ASan daily jobs complete
   through final validation; reuse compatible passing proof and do not repeat
   the original full suite. Report exact inputs and hosted outcomes in conversation.
-- **QA023-AC04 — todo:** publish the repair on `hotfix`, remove task diagnostics,
+- **QA023-AC04 — done:** publish the repair on `hotfix`, remove task diagnostics,
   and verify schedule activation remains false.
 
 1. **QA023-STEP01 — done (AC01):** diagnose both failed link commands and move
    provider registration before support libraries in the owning test harness.
 2. **QA023-STEP02 — done (AC01/02):** rebuild only the affected harness targets
    and run the six existing lifecycle regressions, Debug then Apple ASan.
-3. **QA023-STEP03 — todo (AC03/04), depends on STEP02:** commit/push the repair,
+3. **QA023-STEP03 — done (AC03/04), depends on STEP02:** commit/push the repair,
    qualify the approved daily profile, inspect failures if any, and monitor
    lightly until both platform jobs pass. No language/API/architecture change.
 
 ### SAN-QA-024 — split runtime preparation omits certified exits
 
-Status: **cold-build regression and local focus qualified; platform gate open**.
+Status: **closed; cold-build regression and clean daily platform qualification complete**.
 Owner: Codex, under the same hotfix request as SAN-QA-023.
 
 Apple ordinary preparation in [daily qualification 39483322177](https://github.com/adesutherland/CREXX/actions/runs/39483322177)
@@ -1019,19 +1019,19 @@ remain unchanged.
   actual split runtime helper and fails without its certified-exit dependency.
 - **QA024-AC02 — done:** the repaired selected fixtures build in normal Debug
   and maintained Apple ASan; paired scalar runtime oracles pass unchanged.
-- **QA024-AC03 — todo:** both clean daily platform jobs pass preparation and
+- **QA024-AC03 — done:** both clean daily platform jobs pass preparation and
   final validation, sharing QA023-AC03 qualification without a full-suite rerun.
 
 1. **QA024-STEP01 — done (AC01/02):** add target and output prerequisites in
    `CrexxQaRuntimeCase.cmake`; leave compiler behavior untouched.
 2. **QA024-STEP02 — done (AC01/02):** add and run a cold helper regression,
    rebuild the two scalar preparation targets and run their paired oracles.
-3. **QA024-STEP03 — todo (AC03), depends on STEP02:** publish separately from
+3. **QA024-STEP03 — done (AC03), depends on STEP02:** publish separately from
    the ELF link repair but qualify both compatible commits together.
 
 ### SAN-QA-025 — Bash 3.2 rejects empty workflow argument arrays
 
-Status: **shell repair and focused compatibility proof verified; Apple daily gate open**.
+Status: **closed; shell compatibility and clean daily platform qualification complete**.
 Owner: Codex under the current hotfix request.
 
 Apple [daily qualification 39486953165](https://github.com/adesutherland/CREXX/actions/runs/39486953165)
@@ -1060,14 +1060,14 @@ this repair.
 - **QA025-AC02 — done:** compatibility contracts, actionlint and focused normal
   Debug / maintained Apple ASan strategy CTests pass; reuse unchanged runtime
   and preparation proof.
-- **QA025-AC03 — todo:** publish the shell repair and complete clean daily
+- **QA025-AC03 — done:** publish the shell repair and complete clean daily
   platform proof, retaining valid independently passing Linux execution.
 
 1. **QA025-STEP01 — done (AC01):** remove all three optional empty-array
    expansions in the sanitizer workflow using populated command arrays.
 2. **QA025-STEP02 — done (AC01/02):** add actual workflow-block execution tests,
    reproduce the Bash 3.2 failure and validate both selector forms and profiles.
-3. **QA025-STEP03 — todo (AC03), depends on STEP02:** publish the compatible
+3. **QA025-STEP03 — done (AC03), depends on STEP02:** publish the compatible
    workflow repair and qualify only the outstanding platform work.
 
 ### Where the time goes
@@ -1938,39 +1938,39 @@ not manufacture a single-run broad sanitizer marker. Product/producer/library
 and all remaining ordinary test inputs are identical to `2d167496c`; only the
 bootstrap helper inclusion/snapshots, this unrun worker helper and manual
 continuation wiring change. The subsequent services timeout and approved Linux
-bounded completion are owned by SAN-QA-021 above; both clean daily outcomes
-remain pending and scheduled activation stays disabled.
+bounded completion are owned by SAN-QA-021 above. Both clean daily outcomes are
+complete; scheduled activation stays disabled.
 
 ### Numbered acceptance criteria
 
 1. **SCOPE-AC01 — timeout repairs and Linux verification complete:** account for
    tested inputs, failures, selection and phase costs above. SAN-QA-019/020/021
    pass their focused checks and the approved Linux original-producer union;
-   SAN-QA-022 preparation integration still needs clean revised platform proof.
-2. **SCOPE-AC02 — VM-priority amendment approved; implementation/platform execution open:** map native modules,
+   SAN-QA-022 preparation integration has clean revised platform proof.
+2. **SCOPE-AC02 — done:** map native modules,
    instruction families, value/lifetime/failure scenarios, providers and
    platforms to existing tests and explicit gaps. The approved VM-REV-AC01
    replaces equal measured coverage as this reduction's gate with explicit
    risk-based cadence. Preserve the narrow prior measurement without claiming
    branch/history equivalence. Every moved family has its owner, weekly/affected
    trigger and residual risk; preserve the approved VM/provider SAN ownership.
-3. **SCOPE-AC03 — local ownership/compatibility verified; clean platform proof pending:** from clean inputs,
+3. **SCOPE-AC03 — done:** from clean inputs,
    ordinary fixture preparation and the instrumented VM/provider closure
    produce compatible, traceable artifacts without stale/missing dependencies.
    Prove which native binaries execute in all selected host/subprocess paths.
    The native-tool profile retains instrumented producer tests, Linux leaks
    stay on, and full-profile selection retains the existing broad set.
-4. **SCOPE-AC04 — behavioral policy and failure fixtures verified; hosted integration pending:** policy fixtures prove daily/weekly/affected-change/
+4. **SCOPE-AC04 — done:** policy fixtures prove daily/weekly/affected-change/
    manual/tag decisions, missing-history fallback, platform/profile-qualified
    reuse, failure propagation and no false broad-success marker. No workflow
    is `continue-on-error`; incomplete execution is reported as incomplete.
-5. **SCOPE-AC05 — open:** after profile approval, measure one clean execution
+5. **SCOPE-AC05 — done (measurement); the provisional two-hour target remains unmet on Linux:** after profile approval, measure one clean execution
    on Linux and Apple, separating ordinary preparation, sanitizer build and
    runtime/native-tool scope, against the provisional two-hour target. Reuse
    unchanged valid full Apple evidence and the now-verified SAN-QA-021 bounded
    Linux original-producer union, with no single-run broad marker. The approved qualification includes these clean candidate executions and the
    approved Linux original-producer coverage; it does not authorize another coverage or benchmark campaign.
-6. **SCOPE-AC06 — current implementation docs reconciled; final qualification report pending:** update `AGENTS.md`, the sanitizer guide, this worklist
+6. **SCOPE-AC06 — done:** update `AGENTS.md`, the sanitizer guide, this worklist
    (including its stale CI-enforcement footer) and affected owning test docs
    coherently. Record exact qualified inputs, commands, results and limitations;
    delete task-created diagnostics. Keep existing SAN closure requirements.
@@ -1979,7 +1979,7 @@ remain pending and scheduled activation stays disabled.
    scope on 20 October. Qualify before activation; Adrian separately decides the master exception.
    Publication follows the authority in the implementation request. Verify
    the effective scheduled definition before claiming rollout complete.
-8. **SCOPE-AC08 — existing state oracles retained/inspected; candidate execution pending:** retained direct and real-workload tests check expected
+8. **SCOPE-AC08 — done:** retained direct and real-workload tests check expected
    values, errors, aliasing and resource state, including repeated requests,
    failure/recovery and teardown. Compiler/engine parity is not the sole oracle.
    Verify logical allocation/handle balance and bounded documented reserves;
@@ -2013,13 +2013,13 @@ remain pending and scheduled activation stays disabled.
    cadence/qualification records. Check selection, dependency and policy
    fixtures. Fuzzing, TSan and optimization pilots are separately bounded
    proposals, not an automatic expansion of this delivery.
-5. **SCOPE-STEP05 — normal focused proof verified; hosted candidate pending (AC01/05/08/09):** qualify affected
+5. **SCOPE-STEP05 — done (AC01/05/08/09):** qualify affected
    normal Debug tests and independent oracles, focused maintained sanitizers,
    one measured clean daily profile per platform and the explicitly approved
    bounded Linux original-producer completion under SAN-QA-021.
    Compare coverage/scenario obligations with the baseline and report gaps;
    reuse valid unchanged results.
-6. **SCOPE-STEP06 — depends on STEP05 and approval (AC06/07):** reconcile
+6. **SCOPE-STEP06 — publication authorized; scheduled activation remains todo (AC06/07):** reconcile
    documentation and current remote changes; prepare separate reviewable
    timeout-repair and scope-policy commits in hotfix for normal promotion to
    develop if publication is authorised. Apply the master workflow-only
@@ -2041,7 +2041,8 @@ the develop checkout (read only), `docs/ai-context/RXVM_INTERPRETER.md`,
 `tests/rxpa`, plugin registration and generated CTest discovery in hotfix.
 The initial source review did not execute tests. The subsequently approved
 bounded measurement phase and its limits are recorded above; full profile
-implementation and platform qualification remain open.
+implementation and daily platform qualification are complete; scheduled
+activation remains a separate open decision.
 
 Tooling references for the proposal:
 [LLVM AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)

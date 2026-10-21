@@ -37,6 +37,7 @@ add_subdirectory(platform)
 add_subdirectory(recv390)
 add_subdirectory(map)
 add_subdirectory(rxtcp)
+add_subdirectory(globalv)
 
 option(CREXX_BUILD_LEGACY_SOCKET_PLUGIN
        "Build the deprecated OpenSSL-backed dynamic socket plugin"

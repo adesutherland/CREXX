@@ -1,0 +1,66 @@
+/* Focused upstream-compatible direct GLOBALV API contract. */
+options levelb
+
+import rxglobalv
+
+namespace globalv_direct_test
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: GLOBALV DIRECT " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+  names = .string[]
+  groups = .string[]
+  rc = .int
+
+  rc = gvinit()
+  errors = errors + check(rc = 0, "INIT")
+
+  rc = gvset("DIRECT", "COLOR", "Blue sky", "LASTING")
+  errors = errors + check(rc = 0, "SET")
+  errors = errors + check(gvget("DIRECT", "COLOR", "missing") = "Blue sky", "GET")
+  errors = errors + check(gvexists("DIRECT", "COLOR") = 1, "EXISTS")
+  errors = errors + check(gvget("DIRECT", "MISSING", "default") = "default", "GET default")
+
+  names = gvnames("DIRECT")
+  errors = errors + check(names.0 = 1 & names[1] = "COLOR", "NAMES")
+  groups = gvgroups()
+  errors = errors + check(groups.0 = 1 & groups[1] = "DIRECT", "GROUPS")
+
+  rc = gvcmd("SELECT DIRECT LIST")
+  errors = errors + check(rc = 0, "CMD")
+
+  errors = errors + check(gvdrop("DIRECT", "COLOR") = 1, "DROP existing")
+  errors = errors + check(gvdrop("DIRECT", "COLOR") = 0, "DROP missing")
+  errors = errors + check(gvexists("DIRECT", "COLOR") = 0, "EXISTS after DROP")
+
+  rc = gvset("DIRECT", "TEMP", "value", "")
+  errors = errors + check(rc = 0 & gvexists("DIRECT", "TEMP") = 1, "CALL lifetime")
+  rc = gvpurge("DIRECT")
+  errors = errors + check(rc = 0 & gvexists("DIRECT", "TEMP") = 0, "PURGE")
+
+  errors = errors + check(try_bad_set() = "GLOBALV: invalid name, group or value (24)", "error signal")
+
+  if errors <> 0 then do
+    say "FAIL: GLOBALV DIRECT errors=" || errors
+    return 1
+  end
+  say "PASS: GLOBALV DIRECT contract"
+  return 0
+
+exit main()
+
+try_bad_set: procedure = .string
+  msg = "no signal"
+  do
+    call gvset "TOOLONGGROUP", "NAME", "value", ""
+  on signal failure as condition
+    msg = condition.message()
+  end
+  return msg

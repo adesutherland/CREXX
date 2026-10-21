@@ -281,7 +281,7 @@ platform discovery. The Apple reference snapshot keeps 1,288 existing cases and
 moves 2,010 to weekly/affected; six bounded sustained-state VM cells bring daily
 to 1,294. These are reference counts, not another platform's count oracle or a
 wall-time promise. Unknown/new names stay daily. See [the owning scope and
-risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--approved-implementation-qualification-open).
+risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--qualified-activation-pending).
 Full ordinary correctness is unchanged. Omitted producer/semantic/optimizer
 histories may first be detected weekly; no native branch/history equivalence is
 claimed. Closed producer SAN triggers remain weekly/affected, with original

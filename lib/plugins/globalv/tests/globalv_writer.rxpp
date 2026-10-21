@@ -1,0 +1,45 @@
+/* GLOBALV persistence test: write a value for another program to read. */
+options levelg
+
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+
+namespace globalv_writer
+
+import _rxsysb
+import rxfnsb
+
+main: procedure = .int
+  store_file = globalv_store_file()
+  say "GLOBALV LOG"
+  say "  SOURCE = globalv_writer.rxpp"
+  say "  TARGET = " store_file
+
+  address globalv "INIT"
+  if rc <> 0 then do
+    say "GLOBALV INIT failed, rc=" rc
+    return 1
+  end
+
+  address globalv "SELECT SHARED SETL MESSAGE Written by globalv_writer on "date()" at "time('l')
+  if rc <> 0 then do
+    say "GLOBALV SETL failed, rc=" rc
+    return 1
+  end
+
+  say "globalv_writer stored SHARED.MESSAGE"
+  return 0
+
+exit main()
+
+globalv_store_file: procedure = .string
+  directory = getenv("GLOBALV_HOME")
+  if directory = "" then do
+    directory = getenv("APPDATA")
+    if directory <> "" then directory = directory || "/globalv"
+    else do
+      directory = getenv("HOME")
+      if directory = "" then directory = "."
+      else directory = directory || "/.globalv"
+    end
+  end
+  return directory || "/lasting.globalv"
