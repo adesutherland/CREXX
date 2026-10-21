@@ -126,7 +126,34 @@ The whole exact contract is internally reviewed before implementation.
 
 <a id="remaining-actions"></a>
 
-## Shared delivery stages
+## Remaining work by area
+
+Use these four groups to organize the remaining implementation and integration
+work. The existing instruction, step and acceptance IDs retain their contracts;
+the groups do not introduce new acceptance criteria or alter decision gates.
+
+| Group | Remaining work | Existing owners |
+|---|---|---|
+| **Conditions and observations** | CALL ON/OFF delayed handlers, policy replacement, checkpoints, suppression/buffered HALT and resumption; configured error/NOVALUE/LOSTDIGITS integration; SIGL/CONDITION/error-origin state; complete clause/clock/field/drop observations and remaining instruction integration under the delivered practical TRACE scope. Include activation, pool and resource restoration when conditions transfer or resume execution. | CALL4; C-OBS; STEP03/07; ARG-AC05, CPARSE-AC07 and the condition portions of other instruction criteria. |
+| **Calls and host integration** | Remaining internal/external call and activation semantics: arguments/omissions, RESULT and RETURN/EXIT completion, PROCEDURE/private/shared pools and EXPOSE aliases, inherited/restored numeric/ADDRESS/TRACE state, provider/callback entry and teardown. Preserve already-qualified ordinary recursion and call behavior. Complete COMMAND/FUNCTION/SUBROUTINE host invocation with exact-length/empty/NUL arguments/results, live pool access windows, initial ADDRESS/stream/queue selection, I/O adapters and NUL transport, real clock/HALT producers, resource failures, concurrent-context isolation and declared platform adapters. CALL ON/OFF and event delivery remain with conditions. | C-ACT/C-HOST; call portions of C-POOL; STEP03/06/08; CPROC/CCALL/CEXT/RRET/CEXIT and host portions of queue/stream/ADDRESS criteria; BF05/06/08/09 integration dependencies. |
+| **Language functionality: source, expressions and BIFs** | Remaining syntax/header controls, Unicode names/source inventory, operators/numeric semantics, exact diagnostics and dead-source validation; outstanding variable/stem and instruction semantics outside the condition/call/host groups; complete C context and behavior contracts for the 95 already-bound BIF names, reusing the shared B bodies. INTERPRET is the last feature in this group, with call/lifecycle integration and compiler support supplied by their owners. | C-SRC/C-EXPR/C-NUM/C-POOL/C-UNI; STEP04–06; BF01–09 language contracts; STEP11 last. |
+| **Compiler and emitter** | Generic L exceptional/resumable control-flow representation, effects/facts/invalidation, liveness and checked rewrites; register assignment/reuse, call windows, copies/context/helper costs and cleanup; truthful source/TRACE metadata, import/ABI ownership, bounded compilation and atomic failure; compiler/runtime build separation. Keep the native B seed alias defect as a named supporting dependency with its existing owner and repair authority. | STEP01/02/09; C-ABI; C-OPT-01–06; CFC-AC07/10–12; B-SEED-ALIAS. |
+
+Calls and host integration owns activation/pool/alias entry, inheritance,
+arguments/results, completion and teardown, including later INTERPRET integration.
+Conditions owns when handlers transfer or resume execution; compiler work owns
+the supporting emitted ownership/cleanup mechanisms. Each mechanism retains one
+owner, and locally qualified recursion/PROCEDURE/EXPOSE is not reopened.
+
+INTERPRET retains its final position and existing contract/approval gates.
+Formal whole-compiler QA follows feature completion. STEP10 delivery checks
+(CLI/service, installation, cold/incremental/relocated builds and declared
+platform proof), the complete ledger crosswalk and CFC-AC01–12 remain explicit
+acceptance work across these groups; they are not additional language features.
+
+<a id="shared-delivery-stages"></a>
+
+### Stable delivery steps
 
 Deliver the minimum shared dependency required by each instruction. These
 stages retain full shared acceptance; they do not replace the ordered queue.
