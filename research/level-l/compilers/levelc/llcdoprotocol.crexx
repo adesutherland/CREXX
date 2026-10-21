@@ -5,6 +5,7 @@ import rxfnsb
 import llir
 import llscalar
 import llcsymbols
+import llcprocedureprotocol
 
 /** Read-only, once-only facts over a caller-owned checked graph. The caller
  * keeps the graph alive; this internal service never publishes or mutates IR.
@@ -40,10 +41,20 @@ checked: class
   _symbols = .llcsymbols..checked
   _symbolready = .int
   _textbytes = .int
+  _program = reference .llcprocedureprotocol..checked
+  _programbound = .int
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
-    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 0
+    _keymap = .stem(); _intern = .stem()
+    return
+  /** Synchronous borrow of completed C entry/program-unwind facts. The caller
+   * retains the strong proof owner through status and every later fact query. */
+  withprogram: factory
+    arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work; _program = proof
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1
     _keymap = .stem(); _intern = .stem()
     return
   fail: method = .void
@@ -151,6 +162,16 @@ checked: class
     if graph.error() <> '' then do; _error = graph.error(); return; end
     if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid DO admission budget'); return; end
     _store = graph.storage(); store = dereference _store
+    if _programbound then do
+      if <refvalid>(_program) = 0 then do
+        call fail('LOWERING: program-exit proof owner is not live'); return
+      end
+      prepared = dereference _program
+      if prepared.status() then do; _error = prepared.error(); _offset = prepared.offset(); return; end
+      if prepared.belongs(_graph) = 0 then do
+        call fail('LOWERING: program-exit proof belongs to another graph'); return
+      end
+    end
     op = .llir..opview; name = .string; key = .string; qualified = .string
     opid = .int; fn = .int; i = .int; b = .int; n = .int; owner = .int; last = .int
     part = .int; bit = .int; state = .int; phase = .int; mask = .int; parent = .int
@@ -238,10 +259,15 @@ checked: class
         if state > 0 then do
           phase = _phases[state]; mask = _masks[state]; parent = _parents[state]; topowner = _nodeowners[state]
         end
-        if phase = 2 & name <> 'core.jump' & name <> 'crexx.c.do.entry' & (name <> 'core.branch' | pending = 0) then do
+        neutral = 0; unwind = 0
+        if _programbound then do
+          program = dereference _program
+          neutral = program.programneutral(opid); unwind = program.programterminal(opid)
+        end
+        if neutral = 0 & phase = 2 & name <> 'core.jump' & name <> 'crexx.c.do.entry' & (name <> 'core.branch' | pending = 0) then do
           call fail('LOWERING: DO Ready state requires entry',opid); return
         end
-        if phase = 4 & name <> 'core.jump' & name <> 'crexx.c.do.close' then do
+        if neutral = 0 & phase = 4 & name <> 'core.jump' & name <> 'crexx.c.do.close' then do
           call fail('LOWERING: DO false entry requires close',opid); return
         end
         select
@@ -295,9 +321,17 @@ checked: class
             if topowner <> owner | (phase <> 3 & phase <> 4) then do; call fail('LOWERING: DO close requires top Body or FalseExit state',opid); return; end
             state = parent
           end
-          when name = 'core.return' | name = 'crexx.c.exit' then do
-            if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
+          when name = 'core.return' then do
+            if state <> 0 & unwind = 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
             divergent = 1; leave
+          end
+          when name = 'crexx.c.exit' then do
+            /* The paired return is the sole program-unwind terminal. The
+             * standalone checker retains its ordinary zero-stack rule. */
+            if _programbound = 0 then do
+              if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
+              divergent = 1; leave
+            end
           end
           when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' then do
             divergent = 1; leave

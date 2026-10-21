@@ -239,9 +239,23 @@ def main():
             inspect(assembly, 'private-exit')
             text = assembly.read_text(encoding='utf-8')
             body = unit_body(text)
-            terminal = re.search(r'^\s*exit\s', body, re.M)
-            assert terminal, 'private direct EXIT remains explicit'
-            assert len(calls(body[:terminal.start()], 'rexxclassiccontext.rexxclassiccontext.bindpool')) >= 2, 'private EXIT restores binding before VM termination'
+            assert not re.search(r'^\s*exit\s', body, re.M), 'private EXIT returns through its source-unit frame'
+            requests = calls(body, 'rexxactivation.rexxactivationarguments.requestprogramexit')
+            assert len(requests) == 1, 'private EXIT records one shared program-root request'
+            request = requests[0]
+            links = re.findall(r'^\s*link\s+[^,\n]+,([^\n]+)$', body[:request.start()], re.M)
+            assert links, 'EXIT reads its owned result packet before recording the root'
+            packet = links[-1].strip()
+            tail = body[request.end():]
+            terminal = re.search(r'^\s*ret\s+([^\s]+)\s*$', tail, re.M)
+            assert terminal and terminal.group(1) == packet, 'private EXIT returns the same owned result packet'
+            cleanup = tail[:terminal.start()]
+            restores = calls(cleanup, 'rexxclassiccontext.rexxclassiccontext.bindpool')
+            owners = calls(body[:request.start()], 'llctarget.poolnew')
+            assert len(restores) == len(owners) == 1, 'private EXIT restores its installed pool before returning'
+            owner = owners[0].group(1).strip()
+            assert re.search(r'^\s*null\s+' + re.escape(owner) + r'\s*$', cleanup[restores[0].end():], re.M), 'restore precedes private pool owner release'
+            assert not re.search(r'^\s*null\s+' + re.escape(packet) + r'\s*$', cleanup, re.M), 'cleanup preserves the returned packet'
             check_fatal_cleanup(text)
             execute(assembly, 'private-exit', b'before\n')
 

@@ -1,0 +1,509 @@
+/* MIT. Independent EXIT schema, guard, ownership and bounded-output controls. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcrxas
+import llcprocedureprotocol
+import llcdoprotocol
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  mode = .int; graph = .llir..module; accepted = .int
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call schemacontract()
+  do mode = 1 to 5
+    call forgedschema(argv[1],mode)
+  end
+  do mode = 1 to 25
+    graph = guardfixture(mode)
+    accepted = mode <= 4
+    call rawcase(argv[1],graph,accepted,'guard ' || mode,'program-exit ')
+    if mode = 4 & graph.error() = '' then call transformpositive(argv[1],graph)
+  end
+  graph = guardfixture(1)
+  do mode = 1 to 3
+    forged = changedorigin(graph,mode)
+    call rawcase(argv[1],forged,0,'guard source-record field ' || mode,'program-exit ')
+  end
+  do mode = 1 to 10
+    graph = dofixture(mode)
+    accepted = mode <= 4
+    reason = 'program-exit '
+    if mode >= 5 & mode <= 6 then reason = 'DO '
+    call rawcase(argv[1],graph,accepted,'DO unwind ' || mode,reason,mode = 2)
+  end
+  call proofowners()
+  graph = guardfixture(1)
+  if graph.error() = '' then do
+    tinywork = .llcprocedureprotocol..checked(reference graph,67108864,1)
+    tinybytes = .llcprocedureprotocol..checked(reference graph,1,1000000)
+    recovered = .llcprocedureprotocol..checked(reference graph)
+    call check(tinywork.status() <> 0 & left(tinywork.error(),18) == 'LL_COMPILER_LIMIT:','bounded program proof work')
+    call check(tinybytes.status() <> 0 & left(tinybytes.error(),18) == 'LL_COMPILER_LIMIT:','bounded program proof workspace')
+    call check(recovered.status() = 0,'fresh proof recovers after independent limit failures: ' || recovered.error())
+  end
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); graph = emptyunit(contract)
+  call check(graph.error() = '', 'generic-valid empty source-unit control: ' || graph.error())
+  if graph.error() = '' then do
+    call admission(argv[1],graph,1,'fresh empty unit')
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '', 'empty unit binary roundtrip')
+    if restored.error() = '' then call admission(argv[1],restored,1,'loaded empty unit')
+    transformed = llirservices..optimise(reference graph)
+    call check(transformed.status() = 'keep' | transformed.status() = 'changed','generic empty-unit transform')
+    if transformed.status() = 'keep' | transformed.status() = 'changed' then call admission(argv[1],transformed.result(),1,'transformed empty unit')
+    saved = graph.binary(); backend = .llcrxas..compilation(graph,argv[1])
+    previous = backend.output(); previous_text = previous.text()
+    limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+    call check(backend.status() = 0 & previous.bytes() > 0,'independent prior owned output')
+    call check(limited.status() <> 0 & output.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded atomic output refusal')
+    call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'failed output leaves graph and earlier output unchanged')
+    malformed = guardfixture(5); rejected = .llcrxas..compilation(malformed,argv[1]); refused = rejected.output()
+    call check(rejected.status() <> 0 & refused.bytes() = 0 & pos('program-exit ',rejected.error()) > 0,'guard refusal publishes no partial output')
+    call check(previous.text() == previous_text,'guard refusal preserves earlier owned output')
+  end
+  say 'EXIT_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+schemacontract: procedure = .void
+  i = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0; count = 0
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
+  end
+  call check(version = 11 & data.ops() = 62 & count = 5,'exact C11/62/five-type schema')
+  call shape(contract,'exit','result:crexx.c.result context:crexx.c.context','','context','condition.resource','diverges')
+  call shape(contract,'program.exiting','context:crexx.c.context','value:core.boolean','context','condition','returns')
+  call check(data.opname(62) = 'crexx.c.program.exiting','append-only program query operation')
+  return
+
+shape: procedure = .void
+  arg contract = .llir..contract, name = .string, inputs = .string, outputs = .string, state = .string, failure = .string, termination = .string
+  data = dereference contract.data(); op = contract.operation('crexx.c.' || name); id = op.id()
+  do kind = 1 to 3
+    fields = ''
+    if kind = 1 then fields = inputs
+    if kind = 2 then fields = outputs
+    call check(data.arity(id,kind) = words(fields),name || ' ordered arity ' || kind)
+    do field = 1 to words(fields)
+      actual = data.fieldname(id,kind,field) || ':' || data.typename(data.fieldtype(id,kind,field))
+      call check(actual == word(fields,field),name || ' ordered field ' || kind || '/' || field)
+    end
+  end
+  call check(data.effectvalue(id,1) == state & data.effectvalue(id,2) == failure & data.effectvalue(id,3) == termination,name || ' exact effects and termination')
+  return
+
+/* Mutate unused declarations so generic validity cannot hide a stale C ABI.
+ * These variants do not depend on the later guard/carrier implementation. */
+forgedschema: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  canonical = registry.finish(); source = dereference canonical.data()
+  data = .llir..schema_data(); call data.bootstrap()
+  ignored = .int; i = .int; kind = .int; field = .int
+  do i = 2 to source.familycount()
+    version = source.version(i)
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 10
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    name = source.opname(i); declared = .llir..operation(reference data,data.addop(name))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field)
+        if mode = 2 & name = 'crexx.c.exit' & kind = 1 & field = 2 then spelling = 'foreign'
+        type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    state = source.effectvalue(i,1); failure = source.effectvalue(i,2); termination = source.effectvalue(i,3)
+    if mode = 3 & name = 'crexx.c.program.exiting' then state = 'none'
+    if mode = 4 & name = 'crexx.c.exit' then termination = 'returns'
+    if mode = 5 & name = 'crexx.c.program.exiting' then failure = 'none'
+    call declared.state(state); call declared.failure(failure); call declared.termination(termination)
+  end
+  ignored = data.freeze(); contract = .llir..contract(data); graph = emptyunit(contract)
+  call check(graph.error() = '', 'generic-valid unused EXIT schema mutation ' || mode || ': ' || graph.error())
+  if graph.error() <> '' then return
+  call admission(artifacts,graph,0,'fresh unused descriptor ' || mode)
+  restored = llir..loadbinary(contract,graph.binary())
+  call check(restored.error() = '', 'mutated schema binary roundtrip ' || mode)
+  if restored.error() = '' then call admission(artifacts,restored,0,'loaded unused descriptor ' || mode)
+  return
+
+/* Declare both formals before the first block. Setup owns the canonical slots;
+ * the separate dispatch survives ordinary same-block forwarding. */
+emptyunit: procedure = .llir..module
+  arg contract = .llir..contract
+  builder = .llir..builder(contract); generated = builder.synthetic('EXIT admission control entry')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); body = fn.block('empty.body'); invalid = fn.block('entry.invalid')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',dispatch.load(context,generated)); call draft.input('entry',dispatch.load(entry,generated))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish()
+  call absent(invalid,contract,generated); call absent(body,contract,generated)
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
+  else call check(backend.status() <> 0 & output.bytes() = 0 & (pos('unsupported family version crexx.c',backend.error()) > 0 | pos('incompatible operation',backend.error()) > 0),label || ' precise schema refusal: ' || backend.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
+  return
+
+rawcase: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string, cleanup = 0
+  call check(graph.error() = '',label || ' is generic-valid: ' || graph.error())
+  if graph.error() <> '' then return
+  call rawadmission(artifacts,graph,accepted,'fresh ' || label,reason,cleanup)
+  store = dereference graph.storage(); contract = dereference store.contract()
+  loaded = llir..loadbinary(contract,graph.binary())
+  call check(loaded.error() = '' & bincompare(loaded.binary(),graph.binary()) = 0,label || ' binary roundtrip')
+  if loaded.error() = '' then call rawadmission(artifacts,loaded,accepted,'loaded ' || label,reason,cleanup)
+  return
+
+rawadmission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string, cleanup = 0
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
+  else call check(backend.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING: ' || reason,backend.error()) > 0,label || ' precise refusal: ' || backend.error())
+  if accepted & cleanup & backend.status() = 0 then call nopoolshape(output.text())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves graph')
+  return
+
+/* This unit has a pending Ready owner and no PROCEDURE anywhere. Its normal
+ * program unwind must bypass the no-private-pool shortcut, without narrowing
+ * status or clearing the completed semantic result. No extra compilation. */
+nopoolshape: procedure = .void
+  arg text = .string
+  lf = '0A'x as .string; start = pos('llf1() .locals=',text)
+  call check(start > 0,'raw no-private unit has a source-unit header')
+  if start = 0 then return
+  finish = pos('llerror1_1:',text,start)
+  call check(start > 0 & finish > start,'raw no-private unit has a readable body')
+  if start = 0 | finish <= start then return
+  body = substr(text,start,finish - start)
+  created = pos(',llctarget.donew(),',body)
+  packet = pos(',llctarget.absent(),',body)
+  requested = pos(',rexxactivation.rexxactivationarguments.requestprogramexit(),',body)
+  terminal = 0
+  if requested > 0 then terminal = pos(lf || 'ret ',body,requested)
+  call check(created > 0 & packet > 0 & requested > created & terminal > requested,'raw no-private EXIT retains ordered creation/request/return')
+  if created = 0 | packet = 0 | requested <= created | terminal <= requested then return
+  prefix = left(body,created - 1); owner = word(substr(prefix,lastpos(lf,prefix) + 1),2)
+  prefix = left(body,packet - 1); result = word(substr(prefix,lastpos(lf,prefix) + 1),2)
+  returned = word(substr(body,terminal + 5),1)
+  cleanup = substr(body,requested,terminal - requested + 1)
+  call check(pos(lf || 'null ' || owner || lf,cleanup) > 0,'normal program unwind closes Ready owner without PROCEDURE')
+  call check(returned == result & pos(lf || 'null ' || returned || lf,cleanup) = 0,'same owned packet survives forced cleanup')
+  call check(pos('bindpool()',body) = 0 & pos(',llctarget.status(),',body) = 0 & pos(lf || 'exit ',body) = 0,'no phantom private restore, status bridge or VM EXIT in raw unit')
+  return
+
+/* 1 canonical, 2 a mechanical unwind chain, 3 a generated owning call,
+ * 4 observable generic forwarding/pruning/renumbering. Every remaining graph
+ * is generic-valid and breaks one C proof premise, including dead records.
+ * 5 missing query; 6 late query; 7 wrong context; 8 rewritten carrier;
+ * 9 foreign carrier; 10 reversed edges; 11 wrong Boolean; 12/13 outside edge;
+ * 14 shared Boolean; 15 unwind cycle; 16 semantic work on unwind;
+ * 17 authored guard; 18 parentless guard; 19 wrong parent;
+ * 20 dead missing guard; 21 detached query; 22 repeated result use;
+ * 23 outside carrier read; 24 shared unwind; 25 bad query kind.
+ */
+guardfixture: procedure = .llir..module
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  source = 'call probe' as .binary; file = builder.source('exit-ir.crexx',source)
+  otherfile = builder.source('exit-ir.crexx',source)
+  authored = file.origin(0,10); alternate = file.origin(0,10)
+  callat = authored
+  if mode = 3 then callat = file.origin(0,10,'synthetic')
+  guard = callat.derive(); generated = builder.synthetic('EXIT unit dispatch')
+  if mode = 17 then guard = authored
+  if mode = 18 then guard = file.origin(0,10,'derived')
+  if mode = 19 then guard = alternate.derive()
+  if mode = 25 then guard = callat.derive('composite')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  carrier = fn.slot('call result',contract.type('crexx.c.result'))
+  foreign = fn.slot('unrelated result',contract.type('crexx.c.result'))
+  spill = fn.slot('ordinary result spill',contract.type('crexx.c.result'))
+  boolean_slot = fn.slot('extra Boolean use',contract.type('core.boolean'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch0'); second = fn.block('dispatch1')
+  main = fn.block('main'); dead = fn.block('detached'); body = fn.block('call body')
+  normal = fn.block('normal continuation'); unwind = fn.block('unwind'); tail = .llir..block
+  if mode = 2 then tail = fn.block('unwind tail')
+  callee = fn.block('callee'); invalid = fn.block('entry invalid')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  call dispatchcase(dispatch,contract,context,entry,0,'',main,second,generated)
+  call dispatchcase(second,contract,context,entry,1,'PROBE',callee,invalid,generated)
+  call consume(main,contract,context,authored)
+  if mode = 4 then do
+    yes = main.constant(contract.type('core.boolean'),'true',generated)
+    call main.branch(yes,body,dead,generated)
+  end
+  else if mode = 20 then call absent(main,contract,generated)
+  else call main.jump(body,generated)
+  if mode = 12 then call dead.jump(normal,generated)
+  else if mode = 13 then call dead.jump(unwind,generated)
+  else if mode = 21 then do
+    orphan = dead.operation(contract.operation('crexx.c.program.exiting'),guard)
+    call orphan.input('context',dead.load(context,guard)); finished = orphan.finish()
+    call absent(dead,contract,generated)
+  end
+  else if mode = 23 then call dead.returnvalue(dead.load(carrier,guard),guard)
+  else call absent(dead,contract,generated)
+  prepared = body.operation(contract.operation('crexx.c.return.absent'),authored); old = prepared.finish()
+  call body.store(foreign,old.result(),authored)
+  condition = body.constant(contract.type('core.boolean'),'true',authored)
+  operands = body.operation(contract.operation('crexx.c.arguments.empty'),callat); packet = operands.finish()
+  draft = body.operation(contract.operation('crexx.c.call'),callat)
+  call draft.input('arguments',packet.result()); call draft.input('context',body.load(context,callat))
+  integer = .llir..intcodec(); boolean = .llir..boolcodec()
+  call draft.attribute('target','$MAIN' as .binary); call draft.attribute('entry',integer.parse('1'))
+  call draft.attribute('function',boolean.parse('false')); called = draft.finish()
+  call body.store(carrier,called.result(),guard)
+  if mode = 8 then call body.store(carrier,old.result(),guard)
+  if mode = 22 then call body.store(spill,called.result(),guard)
+  if mode = 6 then do
+    draft = body.operation(contract.operation('crexx.c.return.absent'),authored); unwanted = draft.finish()
+  end
+  if mode = 5 | mode = 20 then call body.jump(normal,guard)
+  else do
+    querycontext = body.load(context,guard)
+    if mode = 7 then querycontext = body.readarg(1,guard)
+    draft = body.operation(contract.operation('crexx.c.program.exiting'),guard)
+    call draft.input('context',querycontext); queried = draft.finish()
+    if mode = 14 then call body.store(boolean_slot,queried.result(),guard)
+    truth = queried.result(); if mode = 11 then truth = condition
+    if mode = 10 then call body.branch(truth,normal,unwind,guard)
+    else if mode = 24 then call body.branch(truth,unwind,unwind,guard)
+    else call body.branch(truth,unwind,normal,guard)
+  end
+  result = normal.load(carrier,guard)
+  if mode = 4 then do
+    call normal.store(spill,result,authored); result = normal.load(spill,authored)
+  end
+  draft = normal.operation(contract.operation('crexx.c.setresult'),authored)
+  call draft.input('context',normal.load(context,authored)); call draft.input('result',result); changed = draft.finish()
+  call normal.returnvalue(result,authored)
+  if mode = 15 then call unwind.jump(unwind,guard)
+  else if mode = 2 then do
+    call unwind.jump(tail,guard); call tail.returnvalue(tail.load(carrier,guard),guard)
+  end
+  else if mode = 16 then call absent(unwind,contract,guard)
+  else if mode = 9 then call unwind.returnvalue(unwind.load(foreign,guard),guard)
+  else call unwind.returnvalue(unwind.load(carrier,guard),guard)
+  call consume(callee,contract,context,authored); call absent(callee,contract,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); failed = draft.finish()
+  call absent(invalid,contract,generated)
+  graph = builder.finish()
+  return graph
+
+dispatchcase: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, entry = .llir..slot, id = .int, name = .string, yes = .llir..block, no = .llir..block, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',block.load(context,at)); call draft.input('entry',block.load(entry,at))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse(id as .string)); call draft.attribute('name',name as .binary)
+  tested = draft.finish(); call block.branch(tested.result(),yes,no,at)
+  return
+
+consume: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.procedure.consume'),at)
+  call draft.input('context',block.load(context,at)); finished = draft.finish()
+  return
+
+/* Mutate only one scalar origin field in the portable LLIR-2 image. The
+ * parent and operations stay identical; duplicate filename/bytes cannot
+ * substitute for arena source-record identity. Generic load must accept it. */
+changedorigin: procedure = .llir..module
+  arg graph = .llir..module, mode = .int
+  store = dereference graph.storage(); contract = dereference store.contract()
+  origin = 0
+  do i = 1 to graph.operations()
+    if graph.operation(i).name() = 'crexx.c.program.exiting' then do
+      origin = graph.operation(i).origin().id(); leave
+    end
+  end
+  call check(origin > 0,'origin-field control has a real query')
+  if origin = 0 then return graph
+  bytes = graph.binary(); at = 12 + <at..u32>(8) bytes
+  do table = 1 to 8
+    count = <at..u32>(at) bytes; width = <at..u32>(at + 4) bytes
+    at = at + 8 + count * width * 4
+  end
+  at = at + 8 + (origin - 1) * 24
+  if mode = 1 then <at..u32>(at) bytes = 2
+  if mode = 2 then <at..u32>(at + 4) bytes = 1
+  if mode = 3 then <at..u32>(at + 8) bytes = 9
+  return llir..loadbinary(contract,bytes)
+
+transformpositive: procedure = .void
+  arg artifacts = .string, graph = .llir..module
+  i = .int
+  saved = graph.binary(); changed = llirservices..optimise(reference graph)
+  call check(changed.status() = 'changed','positive transformation changes the graph: ' || changed.message())
+  if changed.status() <> 'changed' then return
+  result = changed.result(); loads_before = 0; loads_after = 0; remapped = 0
+  do i = 1 to graph.operations()
+    if graph.operation(i).name() = 'core.load' then loads_before = loads_before + 1
+    if changed.operation(i) > 0 & changed.operation(i) <> i then remapped = 1
+  end
+  do i = 1 to result.operations()
+    if result.operation(i).name() = 'core.load' then loads_after = loads_after + 1
+  end
+  call check(result.blocks() < graph.blocks() & loads_after < loads_before & remapped,'positive really prunes, forwards and renumbers')
+  call rawcase(artifacts,result,1,'transformed guard','program-exit ')
+  call check(bincompare(saved,graph.binary()) = 0,'transformation preserves source graph')
+  return
+
+/* R and C are prepared before Ready. Its only new legal terminal is the
+ * proved EXIT pair; a future EXIT cannot excuse arbitrary Ready operations.
+ * 1 Collect; 2 Ready; 3 a call guard during Collect; 4 captured Collect;
+ * 5/6 ordinary RETURN in Collect/Ready; 7 wrong EXIT context;
+ * 8 an EXIT paired with a different result; 9 an authored structural tail;
+ * 10 an intervening operation before that tail. */
+dofixture: procedure = .llir..module
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  source = ('exit' || ('0A'x as .string) || 'call probe') as .binary
+  file = builder.source('exit-do-ir.crexx',source)
+  authored = file.origin(0,4); callat = file.origin(5,15)
+  tailat = authored.derive(); guard = callat.derive(); generated = builder.synthetic('EXIT DO unit dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  carrier = fn.slot('header call result',contract.type('crexx.c.result'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch0'); main = fn.block('main')
+  invalid = fn.block('entry invalid')
+  second = .llir..block; callee = .llir..block; normal = .llir..block; unwind = .llir..block
+  if mode = 3 then do
+    second = fn.block('dispatch1'); callee = fn.block('callee')
+    normal = fn.block('normal continuation'); unwind = fn.block('unwind')
+  end
+  call setup.store(context,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  if mode = 3 then do
+    call dispatchcase(dispatch,contract,context,entry,0,'',main,second,generated)
+    call dispatchcase(second,contract,context,entry,1,'PROBE',callee,invalid,generated)
+  end
+  else call dispatchcase(dispatch,contract,context,entry,0,'',main,invalid,generated)
+  call consume(main,contract,context,authored)
+  result_op = main.operation(contract.operation('crexx.c.return.absent'),authored); packet = result_op.finish()
+  result = packet.result(); heldcontext = main.load(context,authored)
+  other = result
+  if mode = 8 then do
+    result_op = main.operation(contract.operation('crexx.c.return.absent'),authored)
+    unrelated = result_op.finish(); other = unrelated.result()
+  end
+  if mode = 7 then heldcontext = main.readarg(1,authored)
+  bound = main.constantbytes(contract.type('crexx.c.value'),'1' as .binary,authored)
+  draft = main.operation(contract.operation('crexx.c.do.new'),authored)
+  call draft.input('context',heldcontext); call draft.attribute('key','loop' as .binary); call draft.attribute('name',''x as .binary)
+  built = draft.finish()
+  if mode = 2 | mode = 4 | mode = 6 | mode = 7 | mode = 8 then do
+    draft = main.operation(contract.operation('crexx.c.do.capture'),authored)
+    call draft.input('value',bound); call draft.attribute('key','loop' as .binary); call draft.attribute('part','repeat' as .binary)
+    built = draft.finish()
+  end
+  if mode = 2 | mode = 6 | mode = 7 | mode = 8 then do
+    draft = main.operation(contract.operation('crexx.c.do.start'),authored)
+    call draft.attribute('key','loop' as .binary); built = draft.finish()
+  end
+  if mode = 3 then do
+    draft = main.operation(contract.operation('crexx.c.arguments.empty'),callat); arguments = draft.finish()
+    draft = main.operation(contract.operation('crexx.c.call'),callat)
+    call draft.input('arguments',arguments.result()); call draft.input('context',main.load(context,callat))
+    integer = .llir..intcodec(); boolean = .llir..boolcodec()
+    call draft.attribute('target','$MAIN' as .binary); call draft.attribute('entry',integer.parse('1'))
+    call draft.attribute('function',boolean.parse('false')); called = draft.finish()
+    call main.store(carrier,called.result(),guard)
+    draft = main.operation(contract.operation('crexx.c.program.exiting'),guard)
+    call draft.input('context',main.load(context,guard)); queried = draft.finish()
+    call main.branch(queried.result(),unwind,normal,guard)
+    call unwind.returnvalue(unwind.load(carrier,guard),guard)
+    result = normal.load(carrier,guard)
+    call exitpair(normal,contract,result,normal.load(context,authored),authored,tailat,result)
+    call consume(callee,contract,context,authored); call absent(callee,contract,generated)
+  end
+  else if mode = 5 | mode = 6 then call main.returnvalue(result,authored)
+  else if mode = 9 then call exitpair(main,contract,result,heldcontext,authored,authored,other)
+  else if mode = 10 then do
+    draft = main.operation(contract.operation('crexx.c.exit'),authored)
+    call draft.input('result',result); call draft.input('context',heldcontext); finished = draft.finish()
+    extra = main.load(context,tailat); call main.returnvalue(result,tailat)
+  end
+  else call exitpair(main,contract,result,heldcontext,authored,tailat,other)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); failed = draft.finish()
+  call absent(invalid,contract,generated)
+  return builder.finish()
+
+exitpair: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, result = .llir..valuehandle, context = .llir..valuehandle, at = .llir..origin, tail = .llir..origin, returned = .llir..valuehandle
+  draft = block.operation(contract.operation('crexx.c.exit'),at)
+  call draft.input('result',result); call draft.input('context',context); finished = draft.finish()
+  call block.returnvalue(returned,tail)
+  return
+
+/* Identical records in a new arena must not reuse another graph's proof.
+ * These controls exercise private C proof ownership, not generic L policy. */
+proofowners: procedure = .void
+  graph = dofixture(2)
+  if graph.error() <> '' then return
+  proof = .llcprocedureprotocol..checked(reference graph)
+  call check(proof.status() = 0,'owning program proof before lifetime controls: ' || proof.error())
+  store = dereference graph.storage(); contract = dereference store.contract()
+  other = llir..loadbinary(contract,graph.binary())
+  call check(other.error() = '' & other.identity() <> graph.identity(),'different arena with colliding record IDs')
+  if other.error() <> '' then return
+  foreign = .llcdoprotocol..checked.withprogram(reference other,reference proof,67108864,1000000)
+  call check(foreign.status() <> 0 & pos('LL_COMPILER_LOWERING: program-exit ',foreign.error()) > 0,'foreign proof owner refuses: ' || foreign.error())
+  expired = expiredproof(reference graph)
+  call check(<refvalid>(expired) = 0,'local proof owner actually expired')
+  stale = .llcdoprotocol..checked.withprogram(reference graph,expired,67108864,1000000)
+  call check(stale.status() <> 0 & pos('LL_COMPILER_LOWERING: program-exit ',stale.error()) > 0,'expired proof owner refuses: ' || stale.error())
+  return
+
+expiredproof: procedure = reference .llcprocedureprotocol..checked
+  arg graph_ref = reference .llir..module
+  local = .llcprocedureprotocol..checked(graph_ref)
+  call check(local.status() = 0,'local proof before its owner expires')
+  return reference local

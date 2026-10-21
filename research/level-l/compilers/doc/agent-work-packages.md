@@ -73,7 +73,7 @@ Standing user authority permits stepwise reviewed local commits before INTERPRET
 
 - **CALL-WP01:** serial Sol 6.1 Extra High C integrator owns grammar/parser,
   frontend/IR/admission/catalogue/selector/target, all docs/AGENTS/CMake and shared
-  build/test execution. CALL2 is locally qualified; continue RETURN/EXIT prerequisites;
+  build/test execution. CALL2 and local RETURN/EXIT profiles are qualified;
   CALL3 follows EXIT and provider review, CALL4 follows STEP07. Preserve
   prepared-language reuse and existing B runtime algorithms.
 - **CALL-WP02:** independently assigned runtime worker owns only `tests/call/**`;
@@ -83,7 +83,7 @@ Standing user authority permits stepwise reviewed local commits before INTERPRET
   C/raw-IR/caller/helper RXAS. Coordinator validates scoped qualification and
   commit paths; continue the next named feature/instruction after each commit.
 
-### RETURN local profile and next EXIT assignment
+### RETURN/EXIT local profiles and next dependency
 
 The [RETURN contract](architecture.md#return-contract) owns RRET-AC01–05;
 RETURN1–3 are complete for the local source/completion profile. The serial
@@ -91,9 +91,11 @@ C integrator owns `llcparse`, docs/CMake and builds. The independent fixture
 writer owns only new `tests/return/{source-c.crexx,source-c.expected,contracts.crexx,
 host.crexx,check-return.py}`; the reviewer remains read-only. Reuse current packets,
 cleanup/status and CALL2/PROCEDURE proof; no grammar/schema/B/L/VM API changes.
-The [EXIT contract](architecture.md#exit-contract) is the next serial increment;
-freeze its call guards, proved terminals and forced cleanup before production
-edits. Independent EXIT fixtures retain their separately assigned owners.
+The [EXIT contract](architecture.md#exit-contract) owns the locally qualified
+CEXIT-AC01–05 guard/terminal and forced-cleanup profile; AC06 stays open. Next,
+the separate generic selected-callable classification feature supplies CALL3
+binding admission before the C provider/wrapper increment. Independent fixtures
+and read-only review retain their separately assigned owners.
 
 The [queued PULL contract](architecture.md#pull-contract) assigns a later serial
 C source/lowering and independent fixture increment through the existing PARSE
@@ -107,8 +109,8 @@ bare acquisition and the named shared host/observation/platform owners.
 **Approved static/fatal profile locally qualified; CPROC-AC07 and whole LC-I-12 remain open.**
 The [approved contract](architecture.md#proposed-procedure-contract) owns the
 AST, PROCEDURE entry/IR baseline, existing B method use, cleanup and CPROC-AC01–07.
-The [current CALL contract](architecture.md#call-contract) supersedes its family
-version/count with C10/61/36; old C schemas are not admitted.
+The [current C contract](architecture.md#current-c-family-contract) supersedes its
+original family inventory; old C schemas are not admitted.
 The [plan](../PLAN.md#current-action-procedure) owns PROCEDURE1–4; CALL follows.
 
 - **PROCEDURE-WP01 — design complete:** one documentation integrator owns this
@@ -176,7 +178,8 @@ plan, raw run bundle, duplicated matcher or ARG-specific runtime is commissioned
 **Implementation approved and delivered in the finite fatal-error profile.**
 The ARG increment introduced v8/53 operations and 33 target exports; the
 [approved PROCEDURE protocol](architecture.md#proposed-procedure-contract) advances
-the shared source-unit ABI; the CALL contract owns current C v10/61/36. ARG leaves PARSE's packet,
+the shared source-unit ABI; the [current C contract](architecture.md#current-c-family-contract)
+owns the complete family inventory. ARG leaves PARSE's packet,
 executor and acquisition signatures unchanged.
 The [approved integration contract](architecture.md#proposed-c-parse-integration)
 owns the v3 cursor-only descriptor, v7/54-op C schema, LCP1 packet,

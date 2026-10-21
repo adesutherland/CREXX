@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',10)
+  c = schema.family('crexx.c',11)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -58,7 +58,7 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'setresult',types,'context:7 result:10',0,'','context','condition')
   call llscalar..declare(c,'call',types,'arguments:9 context:7',10,'target:2 entry:1 function:11','context.output','condition')
   call llscalar..declare(c,'length',types,'value:6 context:7',6,'','context','condition')
-  call llscalar..declare(c,'exit',types,'value:6',0,'','process','exit','diverges')
+  call llscalar..declare(c,'exit',types,'result:10 context:7',0,'','context','condition.resource','diverges')
   call llscalar..declare(c,'when.truth',types,'value:6 context:7',11,'','context','condition')
   call llscalar..declare(c,'select.missing',types,'',0,'','none','condition','diverges')
   call llscalar..declare(c,'do.new',types,'context:7',0,'key:2 name:2','loop.context','condition.resource')
@@ -80,4 +80,5 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'return.empty',types,'context:7',10,'','context','condition.resource')
   call llscalar..declare(c,'bif',types,'arguments:9 context:7',6,'name:2','context.input.output.observation','condition.resource')
   call llscalar..declare(c,'call.missing',types,'arguments:9 context:7',10,'name:2','context','condition')
+  call llscalar..declare(c,'program.exiting',types,'context:7',11,'','context','condition')
   return

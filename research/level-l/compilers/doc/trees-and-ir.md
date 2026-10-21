@@ -112,8 +112,10 @@ Ordinary CALL retains `Invoke(name,arguments)` and `Call(name,arguments)`;
 `InvokeQuoted`/`CallQuoted` preserve raw literal spelling and distinguish local
 bypass. Constant-symbol expression nodes retain spelling and lower to shared
 whole-name-cased literal text. Names never become G locals or typed defaults.
-The [CALL contract](architecture.md#call-contract) owns C v10/61, required-result
-identity and the 36-export target; dynamic/provider/handler scope stays explicit.
+The [CALL contract](architecture.md#call-contract) owns required-result identity
+and direct BIF binding within the [current C family](architecture.md#current-c-family-contract);
+dynamic/provider/handler scope stays explicit. EXIT uses an owned presence packet
+and visible program-root guard branches before caller result observations.
 
 ### Where IF's fields come from
 

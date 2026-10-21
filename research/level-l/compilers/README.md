@@ -57,7 +57,7 @@ patterns and absolute/relative positions. It constructs immutable binary
 templates for the shared B executor and mandatory VM cursor. Its finite C
 profile is locally qualified. Standalone ARG now reuses those templates and
 executor with implicit UPPER, replacing its scalar shortcut. The
-[current C v10/61-operation contract](doc/architecture.md#current-c-family-contract)
+[current C contract](doc/architecture.md#current-c-family-contract)
 uses the 36-export target. The plan tracks instruction status and remaining work;
 complete conditions/TRACE, declared platforms and whole ARG/PULL instruction
 acceptance remain open.
@@ -73,6 +73,12 @@ the existing full signed64 main-status boundary. Physical comma continuations
 retain original source spans; malformed RETURN expressions, including dead
 source, report contextual35.1. Exact traceback, conditions and broader host/
 platform completion remain open under the [RETURN contract](doc/architecture.md#return-contract).
+
+EXIT preserves owned optional scalar results on the existing program root and
+propagates them through internal calls before ordinary result use or later
+evaluation. Forced unwind releases pending DO/PARSE state and restores private
+pools; only the root bridge narrows a status. The [EXIT contract](doc/architecture.md#exit-contract)
+keeps signed-provider, delayed-handler, wider host and platform work explicit.
 
 C compiler workers retain one private prepared language definition. Source
 parsing and name admission borrow its validated DFA/LR data and CFG metadata;

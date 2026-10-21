@@ -453,7 +453,7 @@ The existing operator-name branch and conservative root setup remain named
 C-OPT-01/03 work; this contract does not add direct-operation B exports or claim
 that literal-only programs have no unused setup.
 
-New generated C source-unit procedures receive one `C` reference; invocation
+New generated C source-unit procedures receive a `C` reference and integer entry ID; invocation
 kind and argument presence reside in its existing activation. Their existing
 fresh result-packet result type remains. This internal ABI is distinct from
 the unchanged VM main entry and from later signed external-call contracts.
@@ -470,9 +470,9 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The CALL contract advances the
-current family to v10/61 and the target to 36 exports; its local qualification
-is tracked in the plan. The approved PROCEDURE static/fatal profile is qualified.** Use the following contract with one current
+C to the two-argument source-unit ABI. The current family is v11/62 with
+36 target exports, including ordinary CALL and the reviewed EXIT program-root
+contract. Local instruction qualification is tracked in the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
@@ -480,9 +480,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 10. The neutral scalar names do not load the G
+types and `crexx.c` version 11. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–9 are never reinterpreted as version 10. Within version 10, the complete C
+versions 1–10 are never reinterpreted as version 11. Within version 11, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -514,7 +514,9 @@ The following table owns the 53 base descriptors, with the requirevalue name
 attribute updated by the [CALL contract](#call-contract). The five appended v9
 descriptors and entry/procedure protocol are owned by the
 [approved PROCEDURE contract](#proposed-procedure-contract); the three appended
-v10 descriptors belong to the [CALL contract](#call-contract). The retired
+CALL descriptors belong to the [CALL contract](#call-contract). The
+[EXIT contract](#exit-contract) revises `exit` and appends `program.exiting`.
+The retired
 scalar `arguments.read` operation remains absent. In canonical registration order DROP is 5,
 SELECT is 41/42, DO is 43–50, transfer.invalid is 51 and PARSE is 52/53. Names have
 the `crexx.c.` prefix; field order is significant. `V`, `C`, `A`, `R`, `B`,
@@ -525,8 +527,9 @@ the bundle, including existing BIF pool-policy setters; it does not assert
 read-only access. `condition` includes the existing reference, initialization,
 conversion, numeric, argument and resource conditions without changing their
 names or diagnostic policy. All rows terminate as `returns` except `exit`,
-`select.missing` and `transfer.invalid`, which terminate as `diverges` under
-the current nonresumable C profile.
+`select.missing` and `transfer.invalid`, which terminate as `diverges`. EXIT
+uses its proved program-unwind terminal; the error operations retain the
+current nonresumable C profile.
 No evaluator is registered for context-dependent operations, including truth.
 For exact literal bytes `0`/`1`, C construction may supply a separate derived
 core Boolean to the branch while retaining the effectful runtime truth call.
@@ -555,7 +558,7 @@ state/failure/observation proof.
 | `setresult` | `context:C result:R` | — | — | `context` | `condition` |
 | `call` | `arguments:A context:C` | `target:T entry:I function:B` | R | `context.output` | `condition` |
 | `length` | `value:V context:C` | — | V | `context` | `condition` |
-| `exit` | `value:V` | — | — | `process` | `exit` |
+| `exit` | `result:R context:C` | — | — | `context` | `condition.resource` |
 | `drop` | `context:C` | `name:T indirect:B` | — | `context` | `condition` |
 | `when.truth` | `value:V context:C` | — | B | `context` | `condition` |
 | `select.missing` | — | — | — | `none` | `condition` |
@@ -645,8 +648,8 @@ results actually differ, including a non-multiple-of-three exponent.
 
 | Compiler/input/target combination | Disposition |
 |---|---|
-| Current compiler + canonical C v10 IR + current bundle/adapters | Two-argument shared source-unit ABI and ordinary CALL bindings; complete condition/TRACE, PARSE/ARG and delivery obligations remain open. |
-| Current selector + C v1–v8/unknown IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
+| Current compiler + canonical C IR + current bundle/adapters | Two-argument shared source-unit ABI, ordinary CALL and proved program-root propagation; complete condition/TRACE, PARSE/ARG and delivery obligations remain open. |
+| Current selector + earlier/unknown C IR | Refuse unsupported C-family version; no old schema/emission path or implicit upgrade. |
 | Earlier emitted C programs + changed target | No compatibility guarantee or bridge; rebuild through the current compiler. |
 | Current compiler + incompatible target or `rxfnsc` missing bundle | Precise import refusal identifying the missing/incompatible selected callable before publishing output. |
 | Current compiler + mixed, forged, private, ambiguous, optionality/type/effect-incompatible records | Refuse before publication; never fall back to old adapters or native compilation. |
@@ -912,7 +915,7 @@ has no work.
    literals/expressions. Bare/literal dead OPTIONS must not reopen a terminated
    block merely to construct an unused result. No new operation, target export,
    B/L API or family-version change was required for OPTIONS; its C v3 baseline
-   had 41 operations. The current C v10/61 descriptors are owned by the
+   had 41 operations. The current descriptors are owned by the
    [C-family table](#current-c-family-contract).
 4. **Checkable closure and future gate.** Independent AST/header positives and
    located refusals cover complete-clause classification, raw words/spans,
@@ -938,7 +941,7 @@ has no work.
 is the reference contract. The SELECT increment retained four types and the
 required-context procedure ABI, introduced `crexx.c` **version 4 / 43 operations**,
 and extended `llctarget` from 23 to **25 exports** without changing its earlier
-41 operations. Current [C v10/61/36](#current-c-family-contract) supersedes that
+41 operations. The [current C contract](#current-c-family-contract) supersedes that
 version boundary; earlier versions are rejected rather than reinterpreted.
 Generic LLIR format/core/scalar families and B/L/VM APIs stay unchanged.
 
@@ -1010,7 +1013,7 @@ tracks remaining LC-I-08 work against
 [LC-AC-65](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria).
 The qualified DO increment introduced **version 5 / 51 operations** and
 **32 exports**, retaining the four existing C types and context procedure ABI.
-The [current v10/61/36 contract](#current-c-family-contract) supersedes that
+The [current C contract](#current-c-family-contract) supersedes that
 version boundary without changing the DO descriptors. No generic L, B runtime,
 native compiler or VM API/algorithm changes are commissioned.
 
@@ -2339,7 +2342,7 @@ current binding, so PARSE/ARG and BIF helpers observe replacement immediately.
 
 The VM cold unwind restores call-window swaps and preserves receiver links;
 the selector must unlink both receiver locals before clearing their storage.
-Every explicit/default/EOF RETURN, current direct VM EXIT and all nine finite
+Every explicit/default/EOF RETURN, proved program-root EXIT unwind and all nine finite
 fatal paths must end transient call/parse/BIF/DO borrows, restore the bundle to
 its saved entry pool if committed, clear the flag, then release references and
 the private owner. RETURN forms its owned presence packet, and EXIT preserves
@@ -2369,7 +2372,7 @@ CLC-STEP06.PROCEDURE1–4 and CFC-AC02/03/06/09/11 without closing complete C.
 | **CPROC-AC02** | One body, deterministic checked entries, Unicode/dotted/$MAIN/reserved-dot names, adjacent/duplicate/trailing labels, fall-through, recursion and fresh/shared activations. Group labels cannot be called or bypass owner construction; direct IR multi-unit/exported-zero and wrong-activation controls cover the declared ABI. |
 | **CPROC-AC03** | Independent pool expectations cover private isolation and direct/indirect scalar/stem/exact-compound aliases, source-order tail dependencies, captured lists/configured blanks/invalid-word continuation, duplicates, Unicode/NUL, nested aliases and stem assignment/DROP propagation. Reuse existing pool algorithms and keep originals/argument presence intact across ARG/PARSE. |
 | **CPROC-AC04** | Stable owners and flag-zero/committed paths survive recursion, normal/absent return, EXIT and all finite fatal relays; ordinary bundle rereads remain valid. Checked-reference controls exercise precommit and committed exposure failures; constructor/allocation cleanup is inspected structurally, without allocation-fault injection or resumption claims. Inspect restore-before-release and preserved raw event/tag/location; fatal tests assert identity/origin and no later effects without claiming resumption. |
-| **CPROC-AC05** | Exact PROCEDURE v9/58/five-type/33-export baseline (superseded by [current C10/61/36](#call-contract)) and two-argument metadata; v8/forged/dead schema, bad maps/slots/IDs/names/context/kind, detached exposures and missing consume before semantic work refuse. Bounded all-record/reachable checks preserve DO ownership, input graphs, previous output and resource-limit atomicity on fresh/loaded/transformed IR. |
+| **CPROC-AC05** | Exact entry/PROCEDURE descriptors and two-argument metadata within the [current C contract](#current-c-family-contract); earlier/forged/dead schema, bad maps/slots/IDs/names/context/kind, detached exposures and missing consume before semantic work refuse. Bounded all-record/reachable checks preserve DO ownership, input graphs, previous output and resource-limit atomicity on fresh/loaded/transformed IR. |
 | **CPROC-AC06** | Full caller/helper RXAS in representative compiler/IR/assembler modes and both VMs: one source body, direct integer dispatch, no runtime name search, no pool allocation on shared calls, pool/expose work only when reached, necessary once-only consume, truthful logical source and ordered cleanup. Include label-free/shared-only/simple private cases. Linear checked dispatch and existing context/numeric/window/register costs are explicit bounded baselines, not speed claims. |
 | **CPROC-AC07** | Keep whole LC-I-12 open for configured errors/NOVALUE, complete conditions/resumption/SIGL/clause/TRACE, callback/host and declared service/install/platform proof, and later INTERPRET eligibility/transfers. Preserve ARG-AC05, CPARSE-AC07/08 and every CFC criterion; native or direct-B results never substitute for new-C acceptance. |
 
@@ -2490,11 +2493,12 @@ Lookup/IR name bytes remain exact. Generic SIGNALORIGIN currently has a
 terminated-message boundary; full length-bearing condition/message transport
 remains shared STEP07 error work, not a source-name restriction.
 
-### C v10 ordinary-call interfaces
+### Ordinary-call interface additions
 
-C v10 has five types and 61 operations: retain the 58 v9 descriptors, append the
-three below and add required `name:crexx.g.text` to requirevalue. Older schemas
-are refused, including malformed or unused declarations. No generic L/VM or
+The CALL increment appends the three descriptors below and adds required
+`name:crexx.g.text` to requirevalue. The [current C contract](#current-c-family-contract)
+owns the complete family inventory, including malformed or unused declarations.
+Older schemas are refused. No generic L/VM or
 shared B API changes are required. Every row returns normally unless its existing
 condition transport diverts; no evaluator is registered.
 
@@ -2619,7 +2623,7 @@ separate owners.
 
 <a id="exit-contract"></a>
 
-## EXIT program-root contract — queued after RETURN
+## EXIT program-root contract
 
 The internally reviewed LC-I-15 increment uses the existing activation program
 root and exit-request/result APIs. C v11 retains five types, revises `exit` and
@@ -2645,10 +2649,69 @@ the call/carrier/query/branch and return ownership using bounded indexed facts,
 accepting the existing L forwarding, pruning and renumbering normal forms.
 Keep generated guard provenance distinct from the authored invoking operation.
 
+The admitted normal forms are precise:
+
+- A call result has one use: a store into a fresh result-typed slot with one
+  static writer in its function. Repeated loop execution of that writer is
+  valid. Only this store and a canonical context load may separate the call
+  from its `program.exiting` query; the query directly controls its block's
+  terminal branch and its Boolean has exactly one use.
+- The false successor is a private continuation with one incoming edge, from
+  that branch. Carrier loads occur only there or on the paired unwind path.
+  The true successor starts a private, acyclic chain with one predecessor per
+  block, containing only carrier loads and jumps, ending in a return of the
+  same carrier. Paths cannot be shared between guards, admit outside incoming
+  edges or perform semantic work. The frontend emits one load/return block;
+  current L forwarding, dead pruning and record renumbering retain admission.
+- Explicit `exit(R,C)` is immediately followed in the same block by
+  `core.return(R)`, with exactly the same value identity and canonical context.
+  This pair is one logical terminal: EXIT records the existing root request;
+  the structural return performs forced cleanup and emits one RET. There is no
+  extra unreachable packet or return sequence.
+- Guard transport/query/branch and unwind operations have owned derived or
+  synthetic origins with exactly one parent, the invoking call's origin, and
+  the same source-record identity and first/last boundaries. The explicit
+  EXIT tail is similarly derived from its authored EXIT. Compare arena fields,
+  never recopy or rescan the full source per guard. Existing indexed source
+  admission and generic L origin validation remain authoritative. Owned
+  generated calls are permitted; their guards retain the same parent rule.
+
+The existing private `llcprocedureprotocol.checked` proof owns immutable query,
+neutral-transport and terminal facts. It indexes uses, slot writers/consumers
+and predecessors once, reusing its canonical-context facts. Each unwind block
+is claimed and walked once across all guards. Reserve arrays before allocation
+and charge every record, edge, origin-parent and name comparison against its
+existing byte/work limits; no call may rescan the whole CFG. Validate every
+record, including dead declarations and detached misuse. Refusals use
+`LL_COMPILER_LOWERING: program-exit ...`; budget refusals use
+`LL_COMPILER_LIMIT:` and publish no partial output.
+
+The C-private `llcdoprotocol.checked.withprogram(graph_ref, proof_ref, bytes,
+work)` factory borrows that stable proof through synchronous admission. Its
+ordinary constructor and standalone DO rules stay unchanged. Both integrated
+frontend and selector keep the proof owner live and unreplaced. The selector
+retains the parent activation reference already acquired by an internal call
+only through the proved mechanical store/context-load suffix to its query;
+no helper can clobber that work register. It calls the existing
+`programExitRequested`, unlinks the receiver and drops the retained reference
+immediately. Fatal cleanup still detaches receivers before clearing all work
+references. No-call units gain no eager root/config setup.
+Proved mechanical guard/unwind operations retain their generated source records
+while sharing the invoking call/EXIT diagnostic location and clause. Read that
+anchor from the existing proof map; reuse the source index and avoid a diagnostic
+location toggle within the same mechanical suffix.
+
 Only proved program-unwind terminals may discard DO owners in any phase,
 including a partly evaluated Collect/Ready header. Reuse deepest-first fatal
 DO teardown, then pool restoration and private-owner release, even in units
-without PROCEDURE. Ordinary RETURN/do.close admission is unchanged. External
+without PROCEDURE. A separate normal program-unwind cleanup mode bypasses only
+the initial no-private-pool shortcut, clears windows/work/PARSE/DO first, then
+retains the existing no-saved-pool return. Fatal-only receiver detachment remains
+separate. Result carriers are semantic slots allocated before scratch/window/
+private cleanup storage and survive all of these clears. The DO phase checker
+consults proved neutral-path/terminal facts before Ready/FalseExit restrictions;
+only proved unwind terminals may discard Collect/Ready owners. Ordinary
+RETURN/do.close admission is unchanged. External
 provider-root isolation follows CALL3; delayed-handler checkpoint-before-exit
 ordering follows STEP07. Neither is silently delivered by local propagation.
 
@@ -2665,10 +2728,11 @@ ordering follows STEP07. Neither is silently delivered by local propagation.
 6. **CEXIT-AC06 — open shared scope:** CALL3 provider lifecycle, STEP07 handlers,
    STEP08 host completion and declared platforms retain their separate gates.
 
-**CEXIT-STEP01** records this reviewed contract; **STEP02** starts C IR/frontend/
-protocol/selector implementation after RETURN commits; **STEP03** assigns focused
-independent fixtures, complementary qualification, RXAS review and a local commit
-for AC01–05. AC06 and whole-instruction/full-C acceptance remain open.
+**CEXIT-STEP01–03 are complete for the local AC01–05 profile.** The maintained
+`tests/exit` source/host/raw-IR controls and caller/helper RXAS checks own its
+independent qualification. AC06 and whole-instruction/full-C acceptance remain
+open; signed-provider integration and delayed-handler checkpoints have their
+separate CALL3/STEP07 owners.
 
 <a id="pull-contract"></a>
 

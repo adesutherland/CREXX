@@ -100,7 +100,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs doprotocol parseprogram procedureprotocol parse frontend rxas)
+      set(_parts ir language symbols bifs parseprogram procedureprotocol doprotocol parse frontend rxas)
     endif()
     foreach(_part IN LISTS _parts)
       set(_module "${_prefix}${_part}")
@@ -266,6 +266,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/return-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_return_contracts_${_mode}
       DEPENDS "${_dir}/return-contracts-linked.rxbin")
+    ll_compile(exit-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/exit/contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/exit-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/exit-contracts-linked"
+        "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_exit_contracts_${_mode}
+      DEPENDS "${_dir}/exit-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -606,6 +614,32 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_return_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_return_vm})
+  endforeach()
+  # EXIT shares one source image across full-result/lifetime host controls.
+  # Complementary lanes include independent raw admission; serialize nested tools.
+  foreach(_mode opt noopt)
+    set(_exit_vm rxbvm)
+    set(_exit_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_exit_ir off)
+      if(TARGET rxtvm)
+        set(_exit_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_exit_${_mode}_${_exit_ir}_${_exit_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/exit/check-exit.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_exit_vm} --ir ${_exit_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "EXIT_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_exit_contracts_${_mode}
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_exit_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"

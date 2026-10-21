@@ -1,0 +1,140 @@
+/* Direct B calls observe full EXIT packets after C cleanup, without VM EXIT. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import exitfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  activation = .rexxactivation..RexxActivationArguments
+  visible = .rexxpool..RexxVariablePool
+  context = .rexxclassiccontext..RexxClassicContext
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  returned = .rexxactivation..RexxActivationArguments
+  parent = .rexxactivation..RexxActivationArguments
+  payload = 'é🙂' || ('00'x as .string) || '雪'
+  if argv[0] > 0 then do
+    if argv[1] <> 'expired-root' & argv[1] <> 'expired-query' then return 2
+    mode = 'expired-root'; if argv[1] = 'expired-query' then mode = 'normal-call'
+    activation = expiredRoot(mode)
+    visible = .rexxpool..RexxVariablePool()
+    context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+    returned = exitfixture..run(reference context,0)
+    say 'UNREACHED expired-root'
+    return 1
+  end
+
+  call runCase('status','7','7',1,'7',0,'',0,'99','root')
+  call runCase('status','-9','-9',1,'-9',0,'',0,'99','root')
+  call runCase('status','9223372036854775807','9223372036854775807',1,'9223372036854775807',0,'',0,'99','root')
+  call runCase('status','-9223372036854775808','-9223372036854775808',1,'-9223372036854775808',0,'',0,'99','root')
+  call runCase('status','9223372036854775808','9223372036854775808',1,'0',0,'',0,'99','root')
+  call runCase('status','1.5','1.5',1,'0',0,'',0,'99','root')
+  call runCase('empty','','',1,'0',0,'',0,'99','root')
+  call runCase('absent','','',0,'0',0,'',0,'99','root')
+  call runCase('unicode','',payload,1,'0',0,'',0,'99','root')
+  call runCase('once','','1',1,'1',1,'',0,'99','root')
+  call runCase('private','','secret:1',1,'0',1,'',0,'99','root:private')
+  call runCase('statement','done','done',1,'0',0,'',0,'99','root')
+  call runCase('bare-function','','',0,'0',0,'',0,'99','root')
+  call runCase('actuals','done','done',1,'0',1,'a',0,'99','root')
+  call runCase('binary','done','done',1,'0',1,'l',0,'99','root')
+  call runCase('chain','done','done',1,'0',1,'l',0,'99','root')
+  call runCase('prefix','not numeric','not numeric',1,'0',0,'',0,'99','root')
+  call runCase('if','not boolean','not boolean',1,'0',0,'',0,'99','root')
+  call runCase('select','not boolean','not boolean',1,'0',0,'',0,'99','root')
+  call runCase('parse',payload,payload,1,'0',1,'p',0,'99','root')
+  call runCase('header','not a bound','not a bound',1,'0',1,'i',0,'99','root')
+  call runCase('count-header','not a count','not a count',1,'0',0,'',0,'99','root')
+  call runCase('while','not boolean','not boolean',1,'0',0,'',0,'1','root')
+  call runCase('until','not boolean','not boolean',1,'0',0,'',1,'1','root')
+  call runCase('private-header','done','done',1,'0',1,'i',0,'99','root:header')
+  call runCase('return-operand','done','done',1,'0',1,'r',0,'99','root')
+  call runCase('exit-operand','done','done',1,'0',1,'x',0,'99','root')
+  call runCase('normal-call','','normal',1,'0',0,'',1,'99','root')
+
+  parent = .rexxactivation..RexxActivationArguments()
+  call parent.setReturnValue(.rexxvalue..RexxValue('parent held'))
+  returned = separateRoot(reference parent,'private','')
+  call check(\parent.programExitRequested(),'separate root does not exit its B parent')
+  call check(parent.hasReturnValue() & parent.returnValue().asString() == 'parent held','separate root preserves parent result')
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == 'secret:1','owned packet survives separate root owner expiry')
+  call parent.requestProgramExit(.rexxvalue..RexxValue('parent pending'),1)
+  returned = separateRoot(reference parent,'unicode','')
+  call check(parent.programExitRequested() & parent.returnValue().asString() == 'parent pending','child EXIT preserves an already pending parent result')
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == payload,'fresh external root does not observe parent exit state')
+  say 'EXIT_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+runCase: procedure = .void
+  arg mode = .string, value = .string, expected = .string, present = .int, status = .string, count = .int, seen = .string, after = .int, index = .string, shared = .string
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode); call activation.appendText(value)
+  visible = .rexxpool..RexxVariablePool()
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  original = reference visible
+  returned = exitfixture..run(reference context,0)
+  rebound = context.pool()
+  call check(<refvalid>(rebound) & (rebound <refsame> original),mode || ': original pool remains live after EXIT')
+  call check(activation.programExitRequested(),mode || ': EXIT reaches the original program root')
+  call check(returned.hasReturnValue() = present & activation.hasReturnValue() = present,mode || ': packet and root preserve presence')
+  call check(returned.returnValue().asString() == expected,mode || ': owned full result after cleanup')
+  call check(activation.returnValue().asString() == expected,mode || ': root records the same full result')
+  call check((returned.programReturnCode() as .string) == status & (activation.programReturnCode() as .string) == status,mode || ': full signed64 status')
+  call check(visible.symbolValue('COUNT').asString() == (count as .string),mode || ': expression effects occur once')
+  call check(visible.symbolValue('SEEN').asString() == seen,mode || ': later operands and actuals are skipped')
+  call check(visible.symbolValue('AFTER').asString() == (after as .string),mode || ': only effects before EXIT survive')
+  call check(visible.symbolValue('INDEX').asString() == index,mode || ': control capture and entry order')
+  call check(visible.symbolValue('OUTER').asString() == '88',mode || ': private outer control never leaks')
+  call check(visible.symbolValue('TARGET').asString() == 'untouched',mode || ': no PARSE write follows EXIT')
+  call check(visible.symbolValue('SHARED').asString() == shared,mode || ': intended EXPOSE effects survive')
+  call check(visible.symbolValue('LOCAL').asString() == 'LOCAL',mode || ': private local does not escape')
+  result = 'prior'
+  if mode = 'normal-call' then result = 'normal'
+  call check(visible.symbolValue('RESULT').asString() == result & visible.symbolValue('.RESULT').asString() == result,mode || ': EXIT precedes RESULT observation')
+  call check(visible.symbolValue('RC').asString() == 'keep',mode || ': ordinary RC is preserved')
+  current_activation = context.activation(); original_activation = reference activation
+  current_config = context.config(); original_config = reference config
+  call check((current_activation <refsame> original_activation) & (current_config <refsame> original_config),mode || ': authoritative borrows remain unchanged')
+  return
+
+/* This is an existing-B root boundary, not a signed-provider CALL test. */
+separateRoot: procedure = .rexxactivation..RexxActivationArguments
+  arg parent_ref = reference .rexxactivation..RexxActivationArguments, mode = .string, value = .string
+  child = .rexxactivation..RexxActivationArguments()
+  call child.inheritSignalPolicy(parent_ref)
+  call child.beginExternalProgram()
+  root = child.programRoot(); original_root = reference child
+  call check(root <refsame> original_root,'beginExternalProgram selects the child root')
+  call check(\child.programExitRequested(),'beginExternalProgram clears inherited exit state')
+  call child.appendText(mode); call child.appendText(value)
+  visible = .rexxpool..RexxVariablePool()
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference child,reference visible,reference config)
+  original = reference visible
+  returned = exitfixture..run(reference context,0)
+  rebound = context.pool()
+  call check(child.programExitRequested(),'separate root receives its own exit request')
+  call check(<refvalid>(rebound) & (rebound <refsame> original),'separate root restores its own pool')
+  return returned
+
+/* Only the inherited root expires; the supplied activation remains live. */
+expiredRoot: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string
+  parent = .rexxactivation..RexxActivationArguments()
+  child = .rexxactivation..RexxActivationArguments()
+  call child.inheritSignalPolicy(reference parent)
+  call child.appendText(mode); call child.appendText('')
+  return child
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

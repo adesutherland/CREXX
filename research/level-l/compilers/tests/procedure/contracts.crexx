@@ -22,11 +22,13 @@ main: procedure = .int expose checks failures
     call check(graph.error() = '', 'generic fixture ' || mode || ': ' || graph.error())
     if graph.error() <> '' then iterate
     accepted = mode = 1 | mode = 2 | mode = 11 | mode = 17 | mode = 29
-    call admission(argv[1],graph,accepted,'fresh ' || mode)
+    diagnostic = ''
+    if mode = 13 | mode = 14 then diagnostic = 'call entry is not a positive declared ID'
+    call admission(argv[1],graph,accepted,'fresh ' || mode,diagnostic)
     store = dereference graph.storage(); contract = dereference store.contract()
     restored = llir..loadbinary(contract,graph.binary())
     call check(restored.error() = '' & bincompare(graph.binary(),restored.binary()) = 0,'loaded fixture ' || mode)
-    if restored.error() = '' then call admission(argv[1],restored,accepted,'loaded ' || mode)
+    if restored.error() = '' then call admission(argv[1],restored,accepted,'loaded ' || mode,diagnostic)
     if mode <= 2 | mode = 17 then do
       changed = llirservices..optimise(reference graph)
       call check(changed.status() = 'keep' | changed.status() = 'changed','generic optimisation ' || mode)
@@ -83,7 +85,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 10 & data.ops() = 61 & count = 5,'exact current C10/61-operation/five-type contract')
+  call check(version = 11 & data.ops() = 62 & count = 5,'exact current C11/62-operation/five-type contract')
   names = 'entry.test entry.invalid procedure.consume procedure.enter procedure.expose'
   do i = 1 to 5
     call check(data.opname(53 + i) = 'crexx.c.' || word(names,i),'append-only operation order ' || i)
@@ -121,7 +123,7 @@ forgedschema: procedure = .void
   ignored = .int; i = .int; kind = .int; field = .int
   do i = 2 to source.familycount()
     version = source.version(i)
-    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 8
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 10
     ignored = data.addfamily(source.familyname(i),version)
   end
   do i = 3 to source.types()
@@ -162,10 +164,11 @@ forgedschema: procedure = .void
   return
 
 admission: procedure = .void
-  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, diagnostic = ''
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
   else call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses malformed protocol: ' || backend.error())
+  if diagnostic <> '' then call check(pos(diagnostic,backend.error()) > 0,label || ' retains its specific refusal: ' || backend.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
   return
 
@@ -228,6 +231,7 @@ fixture: procedure = .llir..module
   end
   else call test.branch(checked.result(),body,invalid,generated)
   if mode = 13 | mode = 14 then do
+    /* Invalid entry identities must refuse before program-exit guard proof. */
     arguments = main.operation(contract.operation('crexx.c.arguments.empty'),generated); packet = arguments.finish()
     context = main.load(context_slot,generated)
     draft = main.operation(contract.operation('crexx.c.call'),generated)

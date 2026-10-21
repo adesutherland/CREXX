@@ -1,0 +1,125 @@
+/* Independent EXIT propagation, pending-owner and exact-result controls. */
+options levelc
+parse arg MODE, VALUE
+SHARED = 'root'
+COUNT = 0
+SEEN = ''
+AFTER = 0
+INDEX = 99
+OUTER = 88
+TARGET = 'untouched'
+RESULT = 'prior'
+.RESULT = 'prior'
+RC = 'keep'
+if 0 then exit 'UNREACHED dead'
+if MODE = 'status' then exit VALUE
+if MODE = 'empty' then exit ''
+if MODE = 'absent' then exit
+if MODE = 'unicode' then exit 'é🙂' || '00'x || '雪'
+if MODE = 'once' then exit BUMP()
+if MODE = 'private' then call PRIVATE
+if MODE = 'expired-root' then call PRIVATEFAIL
+if MODE = 'statement' then do
+  call DEEP
+  AFTER = 99
+end
+if MODE = 'bare-function' then say BARE()
+if MODE = 'actuals' then do
+  call SINK MARK('a'), DEEP(), MARK('b')
+  AFTER = 99
+end
+if MODE = 'binary' then RESULT = MARK('l') || DEEP() || MARK('r')
+if MODE = 'chain' then if MARK('l') < DEEP() < MARK('r') then AFTER = 99
+if MODE = 'prefix' then RESULT = -DEEP()
+if MODE = 'if' then if DEEP() then AFTER = 99
+if MODE = 'select' then do
+  select
+    when DEEP() then AFTER = 99
+    otherwise AFTER = 98
+  end
+end
+if MODE = 'parse' then do
+  parse value MARK('p') || DEEP() || MARK('q') with TARGET
+  AFTER = 99
+end
+if MODE = 'header' then do INDEX = MARKNUM('i') to DEEP() by MARKNUM('b') for MARKNUM('f')
+  AFTER = 99
+end
+if MODE = 'count-header' then do DEEP()
+  AFTER = 99
+end
+if MODE = 'while' then do INDEX = 1 to 3 while DEEP()
+  AFTER = 99
+end
+if MODE = 'until' then do INDEX = 1 to 3 until DEEP()
+  AFTER = AFTER + 1
+end
+if MODE = 'private-header' then call PRIVATEHEADER
+if MODE = 'return-operand' then return MARK('r') || DEEP() || MARK('s')
+if MODE = 'exit-operand' then exit MARK('x') || DEEP() || MARK('y')
+if MODE = 'normal-call' then do
+  call NORMAL
+  AFTER = 1
+  exit RESULT
+end
+say 'before'
+call OUTER
+say 'UNREACHED main'
+exit 9
+
+OUTER:
+call PRIVATE
+say 'UNREACHED outer'
+return 'UNREACHED outer result'
+PRIVATE:
+procedure expose SHARED COUNT SEEN AFTER
+LOCAL = 'secret'
+SHARED = SHARED || ':private'
+do INDEX = 1 to 3
+  select
+    when INDEX = 2 then exit LOCAL || ':' || BUMP()
+    otherwise nop
+  end
+end
+return 'UNREACHED private'
+PRIVATEHEADER:
+procedure expose SHARED COUNT SEEN AFTER VALUE
+LOCAL = 'header secret'
+SHARED = SHARED || ':header'
+do OUTER = 1 to 2
+  do INDEX = MARKNUM('i') to DEEP() by MARKNUM('b')
+    AFTER = 99
+  end
+end
+return 'UNREACHED private header'
+PRIVATEFAIL:
+procedure expose SHARED
+LOCAL = 'failure secret'
+SHARED = SHARED || ':failure'
+exit 'failure value'
+DEEP:
+return MIDDLE()
+MIDDLE:
+return STOP()
+STOP:
+exit VALUE
+BARE:
+exit
+MARK:
+parse arg TEXT
+COUNT = COUNT + 1
+SEEN = SEEN || TEXT
+return TEXT
+MARKNUM:
+parse arg TEXT
+COUNT = COUNT + 1
+SEEN = SEEN || TEXT
+return 1
+BUMP:
+COUNT = COUNT + 1
+return COUNT
+SINK:
+AFTER = 99
+return 'UNREACHED sink'
+NORMAL:
+return 'normal'

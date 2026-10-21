@@ -29,6 +29,18 @@ checked: class
   _tests = .int[]
   _invalid = .int[]
   _uses = .int[]
+  _consumers = .int[]
+  _writers = .int[]
+  _predecessors = .int[]
+  _predops = .int[]
+  _carriercalls = .int[]
+  _carrierfalse = .int[]
+  _unwindblocks = .int[]
+  _falseblocks = .int[]
+  _programneutral = .int[]
+  _programterminals = .int[]
+  _programqueries = .int[]
+  _querycalls = .int[]
   _entryslots = .int[]
   _contextslots = .int[]
   _writes = .int[]
@@ -82,6 +94,195 @@ checked: class
   group: method = .int
     arg opid = .int
     call run(); return _groups[opid]
+  programneutral: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programneutral[opid] <> 0
+  programanchor: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programneutral[opid]
+  programterminal: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programterminals[opid] <> 0
+  programquery: method = .int
+    arg callid = .int
+    call run(); if _error <> '' then return 0
+    return _programqueries[callid]
+  programcall: method = .int
+    arg queryid = .int
+    call run(); if _error <> '' then return 0
+    return _querycalls[queryid]
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; owner = graph.storage()
+    return _store <refsame> owner
+  /** Generated transport is anchored to this exact invoking origin, including
+   * an owned generated invocation. Inspect arena identities, never source data. */
+  programorigin: method = .int
+    arg opid = .int, anchor = .int
+    if charge(8) = 0 then return 0
+    store = dereference _store
+    id = store.get(3,opid,11); kind = store.get(9,id,4)
+    if (kind <> 3 & kind <> 4) | store.get(9,id,6) <> 1 then do
+      call fail('LOWERING: program-exit transport requires generated paired provenance',opid); return 0
+    end
+    if store.get(13,store.get(9,id,5),1) <> anchor then do
+      call fail('LOWERING: program-exit transport belongs to another invoking origin',opid); return 0
+    end
+    do field = 1 to 3
+      if store.get(9,id,field) <> store.get(9,anchor,field) then do
+        call fail('LOWERING: program-exit transport source boundary differs from its invocation',opid); return 0
+      end
+    end
+    return 1
+  programcontext: method = .int
+    arg value = .llir..valuehandle, fn = .int, opid = .int
+    if charge(6) = 0 then return 0
+    store = dereference _store; producer = store.get(4,value.id(),1)
+    binding = store.get(3,producer,12)
+    if store.get(3,producer,1) <> 3 | binding <> _contextslots[fn] then do
+      call fail('LOWERING: program-exit operation requires the canonical context load',opid); return 0
+    end
+    if store.get(5,binding,1) <> fn | _writes[binding] <> 1 then do
+      call fail('LOWERING: program-exit context must retain its once-bound owner',opid); return 0
+    end
+    return 1
+  /** Every claimed path is disjoint and walked once, so multiple calls cannot
+   * multiply a whole-CFG search. The shared slot/pred/use indices cover dead IR. */
+  programproof: method = .void
+    graph = dereference _graph; store = dereference _store
+    opid = .int; next = .int; id = .int; slotid = .int; b = .int; previous = .int
+    anchor = .int; fn = .int; target = .int; terminal = .int
+    op = .llir..opview; following = .llir..opview; name = .string; finished = .int
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      if name = 'crexx.c.exit' then do
+        if op.origin().kind() <> 'exact' then do
+          call fail('LOWERING: program-exit EXIT requires an authored exact origin',opid); return
+        end
+        if programcontext(op.input(2),fn,opid) = 0 then return
+        terminal = store.get(3,opid,3)
+        if terminal = 0 then do; call fail('LOWERING: program-exit EXIT requires its same-result return',opid); return; end
+        following = graph.operation(terminal)
+        if following.name() <> 'core.return' | following.inputs() <> 1 then do
+          call fail('LOWERING: program-exit EXIT requires its adjacent structural return',opid); return
+        end
+        if following.input(1).id() <> op.input(1).id() then do
+          call fail('LOWERING: program-exit EXIT tail substitutes the result',terminal); return
+        end
+        if programorigin(terminal,op.origin().id()) = 0 then return
+        _programneutral[opid] = opid; _programneutral[terminal] = opid; _programterminals[terminal] = opid
+      end
+      if name <> 'crexx.c.call' then iterate
+      if programcontext(op.input(2),fn,opid) = 0 then return
+      id = op.result().id(); anchor = op.origin().id(); next = store.get(3,opid,3)
+      if _uses[id] <> 1 | next = 0 then do
+        call fail('LOWERING: program-exit call result requires one immediate carrier store',opid); return
+      end
+      following = graph.operation(next)
+      if following.name() <> 'core.store' | _consumers[id] <> next then do
+        call fail('LOWERING: program-exit result is observed before its guard',opid); return
+      end
+      slotid = store.get(3,next,12)
+      if _writes[slotid] <> 1 | _writers[slotid] <> next | _carriercalls[slotid] <> 0 then do
+        call fail('LOWERING: program-exit carrier requires one static writer per call',next); return
+      end
+      if store.get(5,slotid,1) <> fn | store.get(5,slotid,2) <> store.get(4,id,3) then do
+        call fail('LOWERING: program-exit carrier has the wrong owner or type',next); return
+      end
+      _carriercalls[slotid] = opid
+      if programorigin(next,anchor) = 0 then return
+      _programneutral[next] = opid; next = store.get(3,next,3)
+      if next > 0 then do
+        following = graph.operation(next)
+        if following.name() = 'core.load' then do
+          if store.get(3,next,12) <> _contextslots[fn] then do
+            call fail('LOWERING: program-exit guard permits only the canonical context load',next); return
+          end
+          if programorigin(next,anchor) = 0 then return
+          _programneutral[next] = opid; next = store.get(3,next,3)
+        end
+      end
+      if next = 0 then do; call fail('LOWERING: program-exit call lacks its immediate query',opid); return; end
+      following = graph.operation(next)
+      if following.name() <> 'crexx.c.program.exiting' then do
+        call fail('LOWERING: program-exit call lacks its immediate query',next); return
+      end
+      if programcontext(following.input(1),fn,next) = 0 then return
+      if programorigin(next,anchor) = 0 then return
+      _programqueries[opid] = next; _querycalls[next] = opid; _programneutral[next] = opid
+      id = following.result().id(); next = store.get(3,next,3)
+      if next = 0 then do; call fail('LOWERING: program-exit query requires its branch',opid); return; end
+      following = graph.operation(next)
+      if following.name() <> 'core.branch' then do
+        call fail('LOWERING: program-exit query requires its immediate branch',next); return
+      end
+      if following.input(1).id() <> id | _uses[id] <> 1 then do
+        call fail('LOWERING: program-exit query must exclusively control its branch',next); return
+      end
+      if programorigin(next,anchor) = 0 then return
+      _programneutral[next] = opid
+      target = store.successor(next,2)
+      if _predecessors[target] <> 1 | _predops[target] <> next | _falseblocks[target] <> 0 | _unwindblocks[target] <> 0 then do
+        call fail('LOWERING: program-exit continuation is not private to its false edge',next); return
+      end
+      _falseblocks[target] = opid; _carrierfalse[slotid] = target
+      previous = next; b = store.successor(next,1); finished = 0
+      do while finished = 0
+        if charge() = 0 then return
+        if _predecessors[b] <> 1 | _predops[b] <> previous | _unwindblocks[b] <> 0 | _falseblocks[b] <> 0 | store.get(2,b,1) <> fn then do
+          call fail('LOWERING: program-exit unwind path is shared, cyclic or has an outside incoming edge',previous); return
+        end
+        _unwindblocks[b] = opid; next = store.get(2,b,2)
+        do while next > 0
+          if charge() = 0 then return
+          following = graph.operation(next); name = following.name()
+          if programorigin(next,anchor) = 0 then return
+          _programneutral[next] = opid
+          select name
+            when 'core.load' then do
+              if store.get(3,next,12) <> slotid then do
+                call fail('LOWERING: program-exit unwind load substitutes its carrier',next); return
+              end
+            end
+            when 'core.jump' then nop
+            when 'core.return' then do
+              if following.inputs() <> 1 then do; call fail('LOWERING: program-exit unwind requires its owned result',next); return; end
+              id = store.get(4,following.input(1).id(),1)
+              if graph.operation(id).name() <> 'core.load' | store.get(3,id,12) <> slotid then do
+                call fail('LOWERING: program-exit unwind returns another result',next); return
+              end
+              _programterminals[next] = opid; finished = 1
+            end
+            otherwise do; call fail('LOWERING: program-exit unwind path contains semantic work',next); return; end
+          end
+          previous = next; next = store.get(3,next,3)
+        end
+        if finished = 0 then b = store.successor(previous,1)
+      end
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if name = 'crexx.c.program.exiting' & _querycalls[opid] = 0 then do
+        call fail('LOWERING: program-exit query has no paired internal call',opid); return
+      end
+      if name <> 'core.load' then iterate
+      slotid = store.get(3,opid,12); id = _carriercalls[slotid]
+      if id = 0 then iterate
+      b = op.blockid()
+      if b <> _carrierfalse[slotid] & _unwindblocks[b] <> id then do
+        call fail('LOWERING: program-exit carrier escapes its protected continuation',opid); return
+      end
+      if programorigin(opid,graph.operation(id).origin().id()) = 0 then return
+      _programneutral[opid] = id
+    end
+    return
   text: method = .string
     arg op = .llir..opview, name = .string
     bytes = op.attribute(name); size = <blen>(bytes)
@@ -140,12 +341,12 @@ checked: class
     _store = graph.storage(); store = dereference _store
     _symbols = .llcsymbols..checked(_limit,_budget)
     op = .llir..opview; name = .string; key = .string; targetname = .string
-    fn = .int; b = .int; opid = .int; ordinal = .int; id = .int; value = .int
+    fn = .int; b = .int; opid = .int; ordinal = .int; id = .int; value = .int; i = .int
     target = .int; state = .int; ignored = .int; terminal = .int; allowed = .int; selectedslot = .int
     /* Arrays and the at-most-three-changes-per-block queue are checked before
      * allocation. All record/name/edge traversal spends the existing budget. */
-    if reserve(store.count(1),24) = 0 | reserve(store.count(2),48) = 0 then return
-    if reserve(store.count(3),24) = 0 | reserve(store.count(4),8) = 0 | reserve(store.count(5),8) = 0 then return
+    if reserve(store.count(1),24) = 0 | reserve(store.count(2),80) = 0 then return
+    if reserve(store.count(3),64) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),40) = 0 then return
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       name = store.text(store.get(1,fn,1)); if reserve(<blen>(name as .binary) + 64,1) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
@@ -156,10 +357,14 @@ checked: class
       op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
       do i = 1 to op.inputs()
         if charge() = 0 then return
-        value = op.input(i).id(); _uses[value] = _uses[value] + 1
+        value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumers[value] = opid
+      end
+      do i = 1 to store.get(3,opid,9)
+        if charge() = 0 then return
+        target = store.successor(opid,i); _predecessors[target] = _predecessors[target] + 1; _predops[target] = opid
       end
       if name = 'core.store' then do
-        slot = store.get(3,opid,12); _writes[slot] = _writes[slot] + 1
+        slot = store.get(3,opid,12); _writes[slot] = _writes[slot] + 1; _writers[slot] = opid
         producer = store.get(4,op.input(1).id(),1)
         if b = store.get(1,fn,3) & store.get(3,producer,1) = 2 then do
           ordinal = store.get(3,producer,12)
@@ -306,6 +511,7 @@ checked: class
         if id <= 0 | id >= _entries[found as .int] then do; call fail('LOWERING: call entry is not a positive declared ID',opid); return; end
       end
     end
+    call programproof(); if _error <> '' then return
     /* At most three new state bits can schedule each block. */
     head = 1; tail = 0
     do b = 1 to store.count(2)

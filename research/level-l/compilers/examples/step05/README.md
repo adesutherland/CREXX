@@ -1,7 +1,8 @@
 # STEP05: cleaned IR and RXAS before and after optimisation
 
-These are actual Level B/Level L compiler outputs. The C views use the current
-borrowed-context ABI; G views retain the existing STEP05 output. The before
+These retained walkthrough outputs illustrate the earlier STEP05 construction
+and transformation shapes. Their C schema predates the [current contract](../../doc/architecture.md#current-c-family-contract);
+G views retain the STEP05 output. The before
 side disables shared passes and the after side enables them. The
 [current plan](../../PLAN.md) tracks remaining compiler work.
 

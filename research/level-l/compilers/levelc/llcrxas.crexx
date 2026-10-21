@@ -336,6 +336,10 @@ compilation: class
     end
     if name = 'core.optionalargument' then call fail('LOWERING: optional Classic parameter ABI')
     if name = 'crexx.c.select.missing' then call checkselectorigin(op)
+    if name = 'crexx.c.exit' then do
+      call checkselectorigin(op,'EXIT')
+      _parseclauses[op.id()] = op.origin().first() + 1
+    end
     if wordpos(name,'crexx.c.return.empty crexx.c.bif crexx.c.call.missing crexx.c.requirevalue') > 0 then do
       call checkselectorigin(op,'CALL/RETURN')
       if _error <> '' then return
@@ -657,7 +661,10 @@ compilation: class
     bytes = op.attribute('entry'); entry = <at..i64>(0) bytes
     call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',' || entry); call invoke(result(op),symbol,2)
     call emit('null',bundle)
-    call emit('null',parentactivation); call emit('null',parentpool); call emit('null',config)
+    /* Its paired query follows only mechanical carrier/context copies. Keep
+     * this immutable parent borrow rather than reacquiring it through a1. */
+    if _procedureprotocol.programquery(op.id()) = 0 then call emit('null',parentactivation)
+    call emit('null',parentpool); call emit('null',config)
     call emit('null',activation)
     return
   run: method = .void
@@ -690,7 +697,7 @@ compilation: class
         _error = _procedureprotocol.error(); _offset = _procedureprotocol.offset(); return
       end
       _phase = 'DO admission'
-      _doprotocol = .llcdoprotocol..checked(reference _graph,_limit,_limit)
+      _doprotocol = .llcdoprotocol..checked.withprogram(reference _graph,reference _procedureprotocol,_limit,_limit)
       if _doprotocol.status() then do
         _error = _doprotocol.error(); _offset = _doprotocol.offset(); return
       end
@@ -786,6 +793,7 @@ compilation: class
     return
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
+    anchor = .int; clause = .int
     store = dereference _store; blocks = .int[]
     _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
     do i = 1 to store.count(5)
@@ -892,7 +900,9 @@ compilation: class
       id = store.get(2,b,2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
-        call source(op.origin(),_parseclauses[op.id()])
+        anchor = _procedureprotocol.programanchor(op.id()); clause = _parseclauses[op.id()]
+        if anchor > 0 then clause = _parseclauses[anchor]
+        call source(op.origin(),clause,anchor)
         call selectop(op)
         id = store.get(3,id,3)
       end
@@ -939,9 +949,9 @@ compilation: class
   /** Release transient borrowers before restoring the live bundle, then drop
    * the replacement owner. The flag-zero edge never reads the saved pool. */
   exitcleanup: method = .void
-    arg fatal = 0
+    arg fatal = 0, program = 0
     i = .int
-    if _savedpool < 0 & fatal = 0 then return
+    if _savedpool < 0 & fatal = 0 & program = 0 then return
     /* Cold VM unwind restores call-window swaps but preserves links. Detach
      * both possible method receivers before clearing their borrowed storage. */
     if fatal then do
@@ -994,12 +1004,13 @@ compilation: class
     _phase = phase
     return positions
   source: method = .void
-    arg origin = .llir..origin, clause = 0
+    arg origin = .llir..origin, clause = 0, diagnostic = 0
     key = .string; location = .string
     if origin.id() = 0 then do; call clearsource(); return; end
     kind = origin.kind()
     if kind = 'synthetic' then do
       key = '6 "" 0 0 0 ""'; location = 'generated code in ' || _routine
+      if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
       call sourcerecord(key,location,clause)
       return
     end
@@ -1023,9 +1034,21 @@ compilation: class
     filename = llcompilercontracts..sourcename(origin.filename())
     location = filename || ':' || line || ':' || column
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
+    if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
     key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(binsubstr(bytes,first + 1,last - first))
     call sourcerecord(key,location,clause)
     return
+  /** Proved mechanical unwind transport keeps its generated source record and
+   * uses its call/EXIT anchor for diagnostics. Reuse the existing source index. */
+  diagnosticlocation: method = .string
+    arg origin = .llir..origin
+    filename = llcompilercontracts..sourcename(origin.filename())
+    if origin.kind() <> 'exact' then return filename || ': generated code in ' || _routine
+    positions = sourceindex(origin)
+    if _error <> '' then return ''
+    at = positions.position(origin.first())
+    if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return ''; end
+    return filename || ':' || at.line() || ':' || at.column()
   /** A source anchor and diagnostic context are independent state. Equal line
    * numbers alone are insufficient: range, flags and text also identify it. */
   sourcerecord: method = .void
@@ -1084,7 +1107,7 @@ compilation: class
         if op.successor(2) <> _fallthrough then call emit('br','llb' || op.successor(2))
       end
       when name = 'core.return' then do
-        call exitcleanup()
+        call exitcleanup(0,_procedureprotocol.programterminal(op.id()))
         if op.inputs() then call emit('ret',input(op))
         else call emit('ret')
       end
@@ -1186,20 +1209,42 @@ compilation: class
         call installnumeric(context)
       end
       when name = 'call' then call internalcall(op)
+      when name = 'program.exiting' then call programoperation(op,name)
       when name = 'exit' then do
-        symbol = imported('llctarget','llctarget.present',a,v)
-        call argcopy(1,input(op)); call invoke(reg(_scratch),symbol,1)
-        symbol = imported('llctarget','llctarget.status','.int',a)
-        call argcopy(1,reg(_scratch)); call invoke(reg(_scratch),symbol,1)
-        if _savedpool >= 0 then do
-          call emit('copy',reg(_savedtag) || ',' || reg(_scratch))
-          call exitcleanup(); call emit('copy',reg(_scratch) || ',' || reg(_savedtag))
-        end
-        else call exitcleanup()
-        call emit('exit',reg(_scratch))
+        call programoperation(op,name)
       end
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
+    return
+  /** Existing B owns root state and result presence. This selector transports
+   * the owned packet and retains no new owner or public runtime adapter. */
+  programoperation: method = .void
+    arg op = .llir..opview, name = .string
+    activation = reg(_workbase + 4); receiver = reg(_workbase)
+    symbol = .string
+    if name = 'program.exiting' then do
+      if _procedureprotocol.programcall(op.id()) = 0 then do
+        call fail('LOWERING: program-exit query has no retained parent activation'); return
+      end
+      call emit('linkref',receiver || ',' || activation)
+      symbol = member('rexxactivation.rexxactivationarguments','programexitrequested','.boolean')
+      call invoke(result(op),symbol,1,receiver)
+      call emit('unlink',receiver); call emit('null',activation)
+      return
+    end
+    packet = reg(_workbase + 1); value = reg(_workbase + 6); present = reg(_workbase + 7)
+    call emit('link',packet || ',' || input(op))
+    symbol = member('rexxactivation.rexxactivationarguments','returnvalue','.rexxvalue..rexxvalue')
+    call invoke(value,symbol,1,packet)
+    symbol = member('rexxactivation.rexxactivationarguments','hasreturnvalue','.boolean')
+    call invoke(present,symbol,1,packet)
+    call emit('unlink',packet)
+    call binding(input(op,2),'activation',activation)
+    call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','requestprogramexit','.void','.rexxvalue..rexxvalue .boolean')
+    call argcopy(2,value); call argcopy(3,present); call invoke('',symbol,3,receiver)
+    call emit('unlink',receiver)
+    call emit('null',value); call emit('null',present); call emit('null',activation)
     return
   /** Only binding and transport live in C; the selected B entry validates
    * its own arguments and owns every Classic BIF algorithm. */

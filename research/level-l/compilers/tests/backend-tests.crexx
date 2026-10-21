@@ -151,7 +151,7 @@ ifchecks: procedure = .void expose artifacts
       graph = request.graph(); text = graph.dump()
       if sample = 5 | sample = 6 then call check(pos('if.join.',text) > 0,'open or missing ELSE retains convergence ' || sample || '/' || optimise)
       else call check(pos('if.join.',text) = 0,'closed arms add no predecessorless join ' || sample || '/' || optimise)
-      call check(sourcepackets(graph) = expected,'only necessary absent result packets ' || sample || '/' || optimise)
+      call check(sourcepackets(graph) = expected,'only necessary EXIT/absent result packets ' || sample || '/' || optimise)
       output = request.output()
       call check(pos('.srcstep',output.text()) > 0 & pos('if-shape.crexx',output.text()) > 0,'IF source/fatal records retained ' || sample || '/' || optimise)
       if inspect <> '' & (sample = 1 | sample = 2 | sample = 4) then written = writebinary(inspect || '-closed-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
@@ -339,6 +339,7 @@ dochecks: procedure = .void expose artifacts
   states = .int; captures = .int; starts = .int; written = .int
   request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
   operation = .llir..opview; entryvalue = .int; whileblock = .int; guarded = .int; i = .int
+  whilefirst = .int; whilelast = .int; whilecalls = .int; incoming = .int; edge = .int
   do sample = 1 to 10
     if repaironly & sample <> 9 then iterate
     select sample
@@ -379,18 +380,24 @@ dochecks: procedure = .void expose artifacts
       text = graph.dump()
       call check(occurrences(text,'crexx.c.call ') = 5 & occurrences(text,'crexx.c.requirevalue ') = 5,'one evaluation/result check per authored term ' || optimise || '/' || selected)
       call check(occurrences(text,'crexx.c.do.capture ') = 4 & occurrences(text,'crexx.c.do.start ') = 1 & occurrences(text,'crexx.c.while.truth ') = 1,'captures/start/contextual WHILE are retained ' || optimise || '/' || selected)
-      entryvalue = 0; whileblock = 0; guarded = 0
+      entryvalue = 0; whileblock = 0; guarded = 0; incoming = 0; whilecalls = 0
+      whilefirst = pos("mark('W',1)",source) - 1; whilelast = whilefirst + length("mark('W',1)")
       do i = 1 to graph.operations()
         operation = graph.operation(i)
         if operation.name() = 'crexx.c.do.entry' then entryvalue = operation.result().id()
-        if operation.name() = 'crexx.c.while.truth' then whileblock = operation.blockid()
+        if operation.name() = 'crexx.c.call' & operation.origin().first() = whilefirst & operation.origin().last() = whilelast then do
+          whileblock = operation.blockid(); whilecalls = whilecalls + 1
+        end
       end
       do i = 1 to graph.operations()
         operation = graph.operation(i)
+        do edge = 1 to operation.successors()
+          if operation.successor(edge) = whileblock then incoming = incoming + 1
+        end
         if operation.name() <> 'core.branch' then iterate
         if operation.input(1).id() = entryvalue then guarded = operation.successor(1) = whileblock
       end
-      call check(entryvalue > 0 & whileblock > 0 & guarded,'count/TO true edge alone reaches WHILE work ' || optimise || '/' || selected)
+      call check(entryvalue > 0 & whileblock > 0 & whilecalls = 1 & incoming = 1 & guarded,'count/TO true edge alone reaches authored WHILE work ' || optimise || '/' || selected)
     end
     output = request.output()
     if inspect <> '' then written = writebinary(inspect || '-do-once-' || optimise || '.rxas',output.text() as .binary)
@@ -466,18 +473,26 @@ sourcebranches: procedure = .int
     op = graph.operation(i)
     if op.name() <> 'core.branch' then iterate
     producer = store.get(4,op.input(1).id(),1)
-    if graph.operation(producer).name() <> 'crexx.c.entry.test' then count = count + 1
+    if graph.operation(producer).name() <> 'crexx.c.entry.test' & graph.operation(producer).name() <> 'crexx.c.program.exiting' then count = count + 1
   end
   return count
 
-/** entry.invalid has one mandated cold closure; it is separate from source
- * EXIT/missing/normal packets whose minimal construction is tested here. */
+/** entry.invalid has one mandated cold closure. EXIT owns its real packet,
+ * while missing/normal closures remain absent; guards reuse existing packets. */
 sourcepackets: procedure = .int
   arg graph = .llir..module
-  store = dereference graph.storage(); count = 0; closures = 0
+  i = .int; op = .llir..opview
+  store = dereference graph.storage(); count = 0; closures = 0; exitpackets = .int[]
   do i = 1 to graph.operations()
     op = graph.operation(i)
-    if op.name() <> 'crexx.c.return.absent' then iterate
+    if op.name() = 'crexx.c.exit' then exitpackets[store.get(4,op.input(1).id(),1)] = 1
+  end
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'crexx.c.return.absent' then do
+      if op.name() = 'crexx.c.return.present' & exitpackets[op.id()] then count = count + 1
+      iterate
+    end
     first = store.get(2,op.blockid(),2)
     if graph.operation(first).name() = 'crexx.c.entry.invalid' then closures = closures + 1
     else count = count + 1

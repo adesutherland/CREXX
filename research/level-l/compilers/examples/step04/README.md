@@ -6,11 +6,15 @@ with `rxas -n` to disable assembler optimisation separately. The
 [backend](../../doc/backend.md) owns register/call selection and the
 [current plan](../../PLAN.md) lists remaining compiler work.
 
-Classic uses the C v10 context/entry ABI and one shared source body. Its local
+The Classic pipeline uses the [current C contract](../../doc/architecture.md#current-c-family-contract) and one shared source body. Its local
 call constructs a fresh activation borrowing the caller pool; PROCEDURE creates
 a private pool only when reached. ARG uses the shared PARSE executor, and
 finite fatal relays preserve the original event and authored location. The
 pipeline's LENGTH input has three codepoints in nine UTF-8 payload bytes.
+EXIT records an owned optional result on the program root; visible post-call
+guards return it before ordinary result use, with pool/DO cleanup. The retained
+C literal/error views illustrate an earlier schema; regenerate from their source
+when following the current compile/link commands.
 
 | Source | IR | RXAS | Expected output |
 |---|---|---|---|
@@ -102,6 +106,7 @@ value. Their `.srcstep` expression range is columns 5–10, end-exclusive.
 
 The C handler uses existing `signalorigin` after formatting the context. Its
 location register remains necessary because the VM has unwound deeper frames.
-Generated entries have an explicit no-source record; clause IDs are zero until
-real clause associations are implemented. This is a bounded fatal-error profile,
+Generated entries have an explicit no-source record. The retained error view has
+zero clause IDs; current admitted instructions retain their grouping keys. This
+is a bounded fatal-error profile,
 not complete TRACE, condition trapping or INTERPRET provenance.

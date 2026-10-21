@@ -271,7 +271,8 @@ instructions and preserves the shared helper's raw event through the bridge.
 C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
 [C family contract](architecture.md#current-c-family-contract) retains PARSE and the
 removal of the scalar ARG shortcut and PROCEDURE's shared entries. The
-[current CALL contract](architecture.md#call-contract) advances it to C v10/61/36.
+[current C contract](architecture.md#current-c-family-contract) owns the complete
+family inventory and later CALL/EXIT integration.
 This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
 the separately qualified increment below. Dynamic loop invalidation,
@@ -325,3 +326,13 @@ native C remains a comparison control. Complete
 configured NOVALUE/errors, dynamic activation, conditions/resumption,
 clause/TRACE and declared delivery/platform obligations remain ARG-AC05 work;
 bounded qualification does not close the whole instruction or complete C.
+
+## EXIT: owned completion at the program root
+
+The [EXIT contract](architecture.md#exit-contract) defines the local optional-result
+and internal-call propagation profile. Visible query/branch/return paths carry
+the same packet before result observations or later operands. Proved unwind
+terminals release partially collected DO owners, PARSE/work windows and private
+pools; ordinary RETURN/DO admission stays unchanged. Generated guard records
+retain their invoking diagnostic/clause anchor. Signed-provider roots, delayed
+handler checkpoints and wider host/platform completion remain separate owners.

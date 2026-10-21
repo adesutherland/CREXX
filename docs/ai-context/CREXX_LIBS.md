@@ -101,8 +101,8 @@ unchanged. Keep all owners initialized and in stable storage while borrowed.
 
 The research C target has one namespace, `llctarget`, in `llctarget.rxbin`.
 Its borrowed-context/result/loop/PARSE adapters call the existing shared B
-implementations. The current PROCEDURE baseline has 33 exports; the ordinary
-CALL contract adds three transport helpers for 36 exports. Compiler policy
+implementations. Its current 36 exports include ordinary CALL transport;
+EXIT uses the existing activation program-root methods directly. Compiler policy
 remains in `research/level-l/compilers`; shared B classes own no compiler or
 VM policy. Generated C source units take `(context, entry)` and share one body.
 Callers own fresh child activations and bundles, borrowing current pool/config;

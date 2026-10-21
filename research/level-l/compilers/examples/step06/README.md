@@ -1,7 +1,8 @@
 # A complete C/G compilation, with failures
 
-These are actual outputs from the Level B/Level L compiler. The C views use
-the current borrowed-context ABI; G views retain the existing STEP06 output. The
+These retained walkthrough outputs illustrate the earlier STEP06 construction
+and error paths. Their C schema predates the [current contract](../../doc/architecture.md#current-c-family-contract);
+G views retain the STEP06 output. The
 [current plan](../../PLAN.md) tracks instruction status and remaining work. [Coverage](../../doc/poc-coverage.md) maps the whole
 agreed PoC, rather than treating this one example as complete language coverage.
 

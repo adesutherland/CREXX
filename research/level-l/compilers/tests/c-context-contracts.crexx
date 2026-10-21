@@ -23,6 +23,7 @@ main: procedure = .int expose checks failures
   call versionrefusal(argv[1],7)
   call versionrefusal(argv[1],8)
   call versionrefusal(argv[1],10)
+  call versionrefusal(argv[1],12)
   if selector = 'parse' then do
     call selectschema(); call parseschema(); call forgedschema(argv[1],4)
     say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
@@ -79,7 +80,7 @@ selectschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 10 & data.ops() = 61,'current C v10 has exactly 61 operations')
+  call check(version = 11 & data.ops() = 62,'current C v11 has exactly 62 operations')
   call check(data.opname(40) = 'crexx.c.exit' & data.opname(41) = 'crexx.c.when.truth' & data.opname(42) = 'crexx.c.select.missing','SELECT descriptor order after scalar ARG retirement')
   descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
@@ -372,7 +373,7 @@ doschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 10 & count = 5 & data.ops() = 61,'C10 has five types and exactly 61 operations')
+  call check(version = 11 & count = 5 & data.ops() = 62,'C11 has five types and exactly 62 operations')
   names = 'do.new do.capture do.start do.entry do.advance do.close while.truth until.truth'
   do i = 1 to 8
     call check(data.opname(42 + i) = 'crexx.c.' || word(names,i),'DO descriptor order after scalar ARG retirement ' || i)
@@ -419,7 +420,7 @@ transfercontracts: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 10 & count = 5 & data.ops() = 61,'transfer foundation retains C10/five types/61 operations')
+  call check(version = 11 & count = 5 & data.ops() = 62,'transfer foundation retains C11/five types/62 operations')
   call check(data.opname(51) = 'crexx.c.transfer.invalid','transfer is descriptor 51 after scalar ARG retirement')
   call doshape(contract,'transfer.invalid','','','code:crexx.g.text name:crexx.g.text','none','condition','diverges')
   call forgedschema(artifacts,8)
@@ -665,6 +666,7 @@ dograph: procedure = .llir..module
   value = .llir..valuehandle; block = .llir..block
   left = .llir..block; right = .llir..block; joined = .llir..block
   child = .llir..function; childcontext = .llir..slot
+  source = .llir..sourcefile; exact = .llir..origin
 
   if mode >= 15 & mode <= 17 | mode = 19 | mode = 46 | mode = 49 then do
     call doreturn(entry,contract,at); dead = fn.block('dead')
@@ -762,14 +764,20 @@ dograph: procedure = .llir..module
     when mode = 44 | mode = 45 then do
       if mode = 44 then do
         operation = doemit(body,contract,at,context,'close',key)
-        draft = body.operation(contract.operation('crexx.c.exit'),at)
-        call draft.input('value',body.constantbytes(contract.type('crexx.c.value'),'0' as .binary,at))
+        source = builder.source('<source>','exit 0' as .binary); exact = source.origin(0,6)
+        value = body.constantbytes(contract.type('crexx.c.value'),'0' as .binary,exact)
+        draft = body.operation(contract.operation('crexx.c.return.present'),exact)
+        call draft.input('value',value); packet = draft.finish()
+        draft = body.operation(contract.operation('crexx.c.exit'),exact)
+        call draft.input('result',packet.result()); call draft.input('context',body.load(context,exact))
+        operation = draft.finish(); call body.returnvalue(packet.result(),exact.derive('synthetic'))
+        body = fn.block('dead.after.exit')
       end
       else do
         source = builder.source('<source>','select' as .binary); exact = source.origin(0,6)
         draft = body.operation(contract.operation('crexx.c.select.missing'),exact)
       end
-      operation = draft.finish()
+      if mode = 45 then operation = draft.finish()
       /* Cold suffixes retain declaration checks, with no live phase claim. */
       operation = doemit(body,contract,at,context,'advance',key)
       call doreturn(body,contract,at)

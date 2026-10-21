@@ -350,7 +350,7 @@ parsed: class
     if _status <> 0 then do
       _error = syntaxmessage(request.error()); _offset = request.offset()
       decorated = parsemessage(language_ref,joined,_offset,_error)
-      if decorated == _error then _error = returnmessage(language_ref,reference joined,reference _offset,_error)
+      if decorated == _error then _error = completionmessage(language_ref,reference joined,reference _offset,_error)
       else _error = decorated
       return
     end
@@ -540,28 +540,29 @@ parsemessage: procedure = .string
   end
   return fallback
 
-/** Only a classified RETURN owns 35.1. Variables, labels and quoted/function
+/** Only classified RETURN/EXIT own 35.1. Variables, labels and quoted/function
  * names cannot activate this decoration; lexical and PARSE failures win. */
-returnmessage: procedure = .string
+completionmessage: procedure = .string
   arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
   language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
   i = .int
-  active = 0; previouskind = -1; previousstart = 0; failedkind = -1
-  separator = language.tokenid('separator'); returnword = language.tokenid('returnword')
+  active = ''; previouskind = -1; previousstart = 0; failedkind = -1
+  separator = language.tokenid('separator'); returnword = language.tokenid('returnword'); exitword = language.tokenid('exitword')
   do i = 0 to tokens.size() - 1
     first = tokens.start(i)
     if first > offset then leave
     kind = tokens.symbol(i)
     if first = offset then failedkind = kind
-    if kind = returnword then active = 1
+    if kind = returnword then active = 'RETURN'
+    else if kind = exitword then active = 'EXIT'
     else if kind = separator | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword') then do
-      if first < offset then active = 0
+      if first < offset then active = ''
     end
     if first < offset & kind <> separator then do
       previouskind = kind; previousstart = first
     end
   end
-  if active = 0 then return fallback
+  if active = '' then return fallback
   if failedkind = separator | offset >= tokens.bytes() then do
     operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
     do i = 1 to words(operators)
@@ -569,7 +570,7 @@ returnmessage: procedure = .string
     end
   end
   prefix = 'LL_COMPILER_SYNTAX: '
-  return prefix || 'RXC-LC-35.1: invalid RETURN expression; ' || substr(fallback,length(prefix) + 1)
+  return prefix || 'RXC-LC-35.1: invalid ' || active || ' expression; ' || substr(fallback,length(prefix) + 1)
 
 tokenname: procedure = .string
   arg name = .string

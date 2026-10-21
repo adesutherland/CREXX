@@ -164,10 +164,10 @@ request: class
       if _error = '' then do
         entries = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
         if entries.status() then do; _error = entries.error(); _offset = entries.offset(); end
-      end
-      if _error = '' then do
-        protocol = .llcdoprotocol..checked(reference _graph,_bytebudget,_budget)
-        if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
+        if _error = '' then do
+          protocol = .llcdoprotocol..checked.withprogram(reference _graph,reference entries,_bytebudget,_budget)
+          if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
+        end
       end
     on signal as problem
       if _building then _error = _builder.error()
@@ -500,18 +500,20 @@ request: class
         _terminated = 1; _alive = 0
       end
       when kind = 'Exit' then do
-        if node.count('value') then value = expression(node.child('value'),'int64')
-        else value = _block.constantbytes(type('value'),'0' as .binary,origin)
-        if _error <> '' then return
-
-        call closeactive(origin)
-        op = _block.operation(_contract.operation('crexx.' || 'c' || '.exit'),origin); call op.input('value',value); built = op.finish()
-        /* EXIT never returns. The final core terminator closes the structural
-         * block; it is unreachable after this explicitly diverging operation. */
-        do
-          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
-          call _block.returnvalue(built.result(),origin)
+        if node.count('value') then do
+          value = expression(node.child('value'))
+          if _error <> '' then return
+          op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
+          call op.input('value',value)
         end
+        else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+        built = op.finish(); value = built.result()
+        if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.exit'),origin)
+        call op.input('result',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+        /* The proved pair is one program-unwind terminal. Its selector clears
+         * every DO phase, including a header not yet on the source loop stack. */
+        call _block.returnvalue(value,origin.derive('synthetic'))
         _terminated = 1; _alive = 0
       end
       when kind = 'Invoke' | kind = 'InvokeQuoted' then value = invocation(node,0)
@@ -1171,7 +1173,10 @@ request: class
       else call op.attribute('name',name as .binary)
       built = op.finish()
       if bif <> '' then value = built.result()
-      else result = built.result()
+      else do
+        result = built.result()
+        if target > 0 then result = programguard(result,origin)
+      end
     end
     if bif <> '' then do
       if expressioncall then return value
@@ -1186,6 +1191,20 @@ request: class
     op = _block.operation(_contract.operation('crexx.c.setresult'),origin)
     call op.input('context',_block.load(_contextslot,origin)); call op.input('result',result); built = op.finish()
     return invalid
+  /** Preserve the owned packet across visible program-root control flow before
+   * any ordinary result observation or later authored operand can execute. */
+  programguard: method = .llir..valuehandle
+    arg result = .llir..valuehandle, origin = .llir..origin
+    generated = origin.derive('synthetic'); carrier = temporary(type('result'))
+    call _block.store(carrier,result,generated)
+    op = _block.operation(_contract.operation('crexx.c.program.exiting'),generated)
+    call op.input('context',_block.load(_contextslot,generated)); built = op.finish()
+    unwind = newblock('program.unwind'); continuation = newblock('program.continue')
+    call _block.branch(built.result(),unwind,continuation,generated)
+    _block = unwind
+    call _block.returnvalue(_block.load(carrier,generated),generated)
+    _block = continuation
+    return _block.load(carrier,generated)
   classiccontract: method = .void
     arg node = .llast..node, name = .string
     if _rootpath = '' then do
