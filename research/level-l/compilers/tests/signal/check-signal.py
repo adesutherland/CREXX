@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Independent static SIGNAL C18 controls over prepared products; never builds.
+"""Retained SIGNAL transfer controls within the combined whole-SIGNAL suite.
 
 One source image/lane serves normal/private/EXIT/fatal execution and readable
-RXAS. ON/OFF, typed conditions, clause clocks, TRACE, host/platform and
-INTERPRET remain CSIGNAL-AC07 work. Compiler and assembler modes are separate.
+RXAS. The combined runner adds ON/OFF, typed conditions and native payload
+controls. This script never builds products; compiler and assembler modes are separate.
 """
 import argparse
 import os
@@ -135,7 +135,11 @@ def generated_signal_mapping(body, source, search_owner, loop_owners):
 
 def shapes(text, source, target):
     data = source.read_bytes(); body = unit(text)
-    assert 'CSIG1' not in text and 'llcsignalprotocol' not in text, 'compiler-only table/proof has no runtime payload or import'
+    pushes = list(re.finditer(r'^\s*sigpush\s+"([^"\n]+)"\s*$', body, re.M))
+    installs = list(re.finditer(r'^\s*sigbrv\s+[^,\n]+,[^,\n]+,"([^"\n]+)"\s*$', body, re.M))
+    assert pushes and installs and {item[1] for item in pushes} == {item[1] for item in installs}, 'save and branch-install the same source-frame signal tags'
+    assert max(item.start() for item in pushes) < min(item.start() for item in installs), 'save every outer policy before any branch handler snapshots the stack'
+    assert 'CSIG2' not in text and 'llcsignalprotocol' not in text, 'compiler-only table/proof has no runtime payload or import'
     assert not called(body, 'llctarget.status') and not re.search(r'^\s*exit\s', body, re.M), 'same unit keeps owned completion'
     assert not called(body, 'rexxclassicconfig.rexxclassicconfig.§factory'), 'SIGNAL does not construct configuration or activation'
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
@@ -292,15 +296,18 @@ def main():
                     assert re.fullmatch(rb'SIGNAL_HOST\|checks=\d+\|failures=0\r?\n', completed.stdout) and not completed.stderr, (completed.stdout, completed.stderr)
                 if args.phase in ('all', 'fatal'):
                     rows = source.read_text().splitlines()
+                    activation_source = (fixtures.parents[4] / 'lib/rxfnsc/RexxActivationArguments.crexx').read_bytes()
+                    procedure_line = source_position(activation_source, b'assembler signal "CLASSIC_SYNTAX", "RXC-LC-17.1: PROCEDURE')[1]
                     cases = (('missing', b'16.1', rows.index("  when MODE = 'missing' then signal value MISSING_HELPER()") + 1, b'SIGNAL_ACTUAL|1\n'),
                              ('grouped', b'16.2', rows.index("  when MODE = 'grouped' then signal value 'dyn_group'") + 1, b''),
                              ('blank', b'16.1', rows.index("  when MODE = 'blank' then signal value 'EXACT '") + 1, b''),
                              ('nul', b'16.1', rows.index("  when MODE = 'nul' then signal value 'A' || '00'x || 'B'") + 1, b''),
-                             ('procedure', b'17.1', rows.index('procedure') + 1, b''))
+                             ('procedure', b'17.1', procedure_line, b''))
                     for mode, code, line, actual in cases:
                         completed = run('unhandled ' + mode, [target_vm, '--no-autoload', linked.with_suffix('.rxbin'), '-a', mode], failure=True, cwd=application)
                         assert completed.stdout.replace(b'\r\n', b'\n') == b'SIGNAL_FATAL|before\n' + actual, (mode, completed.stdout)
-                        assert b'CLASSIC_SYNTAX' in completed.stderr and code in completed.stderr and f'source-c.crexx:{line}:'.encode() in completed.stderr, (mode, completed.stderr)
+                        filename = 'RexxActivationArguments.crexx' if mode == 'procedure' else 'source-c.crexx'
+                        assert b'CLASSIC_SYNTAX' in completed.stderr and code in completed.stderr and f'{filename}:{line}:'.encode() in completed.stderr, (mode, completed.stderr)
                         assert b'UNREACHED' not in completed.stdout
                         if mode == 'nul':
                             assert b'A\\x00B' in completed.stderr, completed.stderr
@@ -310,16 +317,14 @@ def main():
                      ('missing-value', 'if 0 then signal value', 'value', b'19.4'),
                      ('extra-direct', 'signal P extra', 'extra', b'19.4'),
                      ('unicode-unary', "if '雪' = '雪' then signal +", '+', b'35.1'),
-                     ('static-grouped', 'if 0 then signal P; do; P: nop; end; P: return', 'P', b'16.2'),
-                     ('policy-fence', 'signal on syntax', 'on', b'PROFILE'))
+                     ('static-grouped', 'if 0 then signal P; do; P: nop; end; P: return', 'P', b'16.2'))
             output = application / 'prior.rxas'; prior = b'unchanged prior output\n'; output.write_bytes(prior)
             for name, content, token, code in cases:
                 source = work / (name + '.crexx'); data = ('options levelc\n' + content + '\n').encode(); source.write_bytes(data)
                 completed = compile_c(source, output, failure=True)
                 offset, line, column = source_position(data, token.encode())
                 assert code in completed.stdout and not completed.stderr, (name, completed.stdout, completed.stderr)
-                if code != b'PROFILE':
-                    assert f'at line {line}, column {column} (byte {offset})'.encode() in completed.stdout, (name, completed.stdout)
+                assert f'at line {line}, column {column} (byte {offset})'.encode() in completed.stdout, (name, completed.stdout)
                 assert output.read_bytes() == prior and not Path(str(output) + '.llrxc-stage').exists(), 'failed SIGNAL publication remains atomic'
 
         if args.phase in ('all', 'contracts'):

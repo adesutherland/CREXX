@@ -198,7 +198,11 @@ checked: class
       end
     end
     /* Each normal path operation belongs to one segment at most. Only an
-     * already-proved private CALL false edge can continue an open owner. */
+     * already-proved private CALL false edge can continue an open owner.
+     * Protection is installed before dispatch, outside every command segment.
+     * Its exceptional successor never transports this owner: mandatory SIGNAL
+     * admission/selection discards it there. No cold operation or handler edge
+     * is a normal continuation of an unfinished command. */
     do owner = 1 to _constructors[0]
       constructor = _constructors[owner]
       if constructor = 0 | _runs[owner] <> 1 then do; call fail('LOWERING: command key requires one constructor and one run',constructor); return; end

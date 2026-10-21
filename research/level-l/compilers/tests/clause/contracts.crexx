@@ -78,7 +78,7 @@ checkSchema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 19 & types = 5 & data.ops() = 78,'C19/78/five-type schema')
+  call check(version = 20 & types = 5 & data.ops() = 85,'C20/85/five-type schema')
   opcode = contract.operation('crexx.c.clause.begin').id()
   call check(data.arity(opcode,1) = 1 & data.fieldname(opcode,1,1) == 'context' & data.typename(data.fieldtype(opcode,1,1)) == 'crexx.c.context','begin has one C input')
   call check(data.arity(opcode,2) = 0 & data.arity(opcode,3) = 1 & data.fieldname(opcode,3,1) == 'id' & data.typename(data.fieldtype(opcode,3,1)) == 'crexx.g.int64','void begin has one integer authored identity')

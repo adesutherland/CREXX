@@ -61,8 +61,8 @@ checked: class
     _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1
     _keymap = .stem(); _intern = .stem()
     return
-  /** Signal facts constrain only proved successful jumps; ordinary exact
-   * stack propagation and close legality retain the existing DO owner. */
+  /** Signal facts constrain successful jumps and the unique protected
+   * dispatcher. Ordinary stack propagation and close legality stay exact. */
   withsignals: factory
     arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work; _program = proof; _signal = signals
@@ -115,6 +115,13 @@ checked: class
   owner: method = .int
     arg opid = .int
     call run(); return _owners[opid]
+  /** A handler transfer is already indexed by the completed SIGNAL proof.
+   * Clock admission borrows this scalar fact without a second owner table. */
+  handlertransfer: method = .int
+    arg opid = .int
+    call run(); if _error <> '' | _signalbound = 0 then return 0
+    signals = dereference _signal
+    return signals.owner(opid) > 0 & signals.transfer(opid)
   function: method = .int
     arg owner = .int
     call run(); return _functions[owner]
@@ -159,6 +166,16 @@ checked: class
   keyed: method = .int
     arg name = .string
     return wordpos(name,'crexx.c.do.new crexx.c.do.capture crexx.c.do.start crexx.c.do.entry crexx.c.do.advance crexx.c.do.close') > 0
+  /** Only the completed private SIGNAL closure can discard transient DO
+   * state. Structural core edges or similarly named raw operations cannot. */
+  conditionoperation: method = .int
+    arg op = .llir..opview
+    if _signalbound = 0 then return 0
+    signals = dereference _signal
+    if op.name() <> 'core.protect' then return signals.owner(op.id()) > 0
+    store = dereference _store
+    fn = store.get(2,op.blockid(),1)
+    return signals.protection(fn) = op.id()
   /** Canonical stack nodes make merges/backedges identity comparisons. Each
    * transfer interns at most two new nodes; map/table growth is charged first.
    */
@@ -212,6 +229,11 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name()
+      if name = 'core.protect' | wordpos(name,'crexx.c.signal.capture crexx.c.signal.select crexx.c.signal.selected crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
+        if conditionoperation(op) = 0 then do
+          call fail('LOWERING: protected condition control requires its completed SIGNAL proof',opid); return
+        end
+      end
       if name = 'crexx.c.transfer.invalid' then do
         code = text(op,'code'); if _error <> '' then return
         if code \== '28.1' & code \== '28.2' & code \== '28.3' & code \== '28.4' then do
@@ -302,6 +324,26 @@ checked: class
           call fail('LOWERING: DO false entry requires close',opid); return
         end
         select
+          when name = 'core.protect' then do
+            /* Both successors start with setup-only state. The exceptional
+             * successor is consumed, and SIGNAL owns its private closure. */
+            if state <> 0 | pending <> 0 then do
+              call fail('LOWERING: protected entry requires empty DO state',opid); return
+            end
+          end
+          when name = 'crexx.c.signal.deliver' then do
+            /* Delivery abandons transient control, never the current private
+             * pool. Its natural jump is separately constrained below. */
+            state = 0; pending = 0
+          end
+          when name = 'crexx.c.signal.handler.invalid' | name = 'crexx.c.signal.relay' then do
+            /* The exceptional entry and any prior delivery are logically
+             * empty. Their possible resumed same-R returns are SIGNAL-owned,
+             * not program-root EXIT terminals or arbitrary stack resets. */
+            if state <> 0 | pending <> 0 then do
+              call fail('LOWERING: condition completion requires empty DO state',opid); return
+            end
+          end
           when name = 'crexx.c.do.new' then do
             if state > 0 & phase <> 3 then do; call fail('LOWERING: nested DO construction requires Body',opid); return; end
             /* A key has one constructor and its block is transferred once.

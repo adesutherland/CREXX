@@ -27,6 +27,8 @@ namespace rexxclassiccontext expose RexxClassicContext
 import rexxactivation
 import rexxpool
 import rexxclassicconfig
+import rexxvalue
+import rexxclassicconditionevent
 
 /**
  * Borrowed Classic activation, visible-pool binding and execution configuration.
@@ -107,6 +109,28 @@ RexxClassicContext: class
       return empty_config
     end
     return config_ref
+
+  /**
+   * Read a final Classic symbol against the live pool and condition policy.
+   * Compound tails are resolved once through the pool's shared non-signalling
+   * substitution. A stem default counts as an assigned final value.
+   * @param name validated Classic variable-symbol spelling
+   * @return the current resolved value, or its implicit name when unassigned
+   * @signal CLASSIC_CONDITION configured NOVALUE, with the resolved name
+   * @signal REFERENCE_INVALID if a borrowed activation or pool has expired
+   */
+  readSymbol: method = .rexxvalue..RexxValue
+    arg name = .string
+    current_pool = dereference pool_ref
+    current_activation = dereference activation_ref
+    resolved = current_pool.resolveSymbolName(name)
+    if current_activation.signalPolicy(6) > 0 then do
+      if \current_pool.resolvedHasValue(resolved) then do
+        event = .rexxclassicconditionevent..RexxClassicConditionEvent(6,resolved)
+        assembler signal "CLASSIC_CONDITION",event
+      end
+    end
+    return current_pool.resolvedValue(resolved)
 
   /**
    * Replace only this bundle's pool binding; leave the old binding on failure.

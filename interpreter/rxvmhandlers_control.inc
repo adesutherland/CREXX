@@ -390,9 +390,7 @@ RXVM_HANDLER(SIGNALORIGIN_STRING_REG_REG, VM_ADVANCE(3);
                                                     &source_address)) {
                     SET_SIGNAL(RXSIGNAL_INVALID_ARGUMENTS);
                 } else {
-                    REQUIRE_VALID_UTF8_REGISTER(op2R);
-                    null_terminate_string_buffer(op2R);
-                    SET_SIGNAL_MSG(signal_name, op2R->string_value);
+                    SET_SIGNAL_PAYLOAD(signal_name, op2R);
                     last_interrupted_module[signal_name] = source_module;
                     last_interrupted_address[signal_name] = source_address;
                     origin_override[signal_name] = 1;

@@ -44,8 +44,74 @@ main: procedure = .int
   if restored.error() <> '' then say restored.error()
   failures = failures + check(restored.error() = '' & restored.text() = saved,'text round trip')
   failures = failures + check(pos('demo.add',graph.dump()) > 0,'named dump')
-  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments()
+  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c)
   say 'failures=' || failures
+  return failures
+
+/** Independent protected-invocation structure and setup-only slot facts. */
+protection: procedure = .int
+  arg contract = .llir..contract
+  draft = .llir..builder(contract); at = draft.synthetic('protected invocation')
+  fn = draft.function('protected',contract.voidtype())
+  entry = fn.block('setup'); body = fn.block('body'); exceptional = fn.block('exceptional')
+  integer = contract.type('demo.integer'); setupslot = fn.slot('setup',integer); bodyslot = fn.slot('body',integer)
+  before = entry.constant(integer,'2',at); call entry.store(setupslot,before,at)
+  call entry.protect(body,exceptional,at)
+  later = body.constant(integer,'3',at); call body.store(bodyslot,later,at); call body.returnvoid(at)
+  ready = exceptional.load(setupslot,at); missing = exceptional.load(bodyslot,at); call exceptional.returnvoid(at)
+  other = draft.function('other',contract.voidtype()); foreign = other.block('foreign'); call foreign.returnvoid(at)
+  graph = draft.finish(); failures = check(graph.error() = '','protect construction: ' || graph.error())
+  if graph.error() <> '' then return failures
+  op = graph.operation(3)
+  failures = failures + check(op.name() = 'core.protect' & op.inputs() = 0 & op.results() = 0 & op.successors() = 2,'protect exact core signature')
+  failures = failures + check(op.successor(1) = body.id() & op.successor(2) = exceptional.id(),'protect ordered edges')
+  text = graph.text(); image = graph.binary()
+  restored = llir..loadtext(contract,text)
+  failures = failures + check(restored.error() = '' & restored.text() = text,'protect text round trip')
+  restored = llir..loadbinary(contract,image)
+  failures = failures + check(restored.error() = '' & bin2x(restored.binary()) = bin2x(image),'protect binary round trip')
+  restored = llir..loadtext(contract,legacytext(text))
+  failures = failures + check(pos('LL_IR_OPCODE: version 1 core opcode',restored.error()) > 0 & restored.operations() = 0,'v1 text rejects protect')
+  restored = llir..loadbinary(contract,legacybinary(image))
+  failures = failures + check(pos('LL_IR_OPCODE: version 1 core opcode',restored.error()) > 0 & restored.operations() = 0,'v1 binary rejects protect')
+  report = .llirservices..analysis
+  report = llirservices..analyse(reference graph)
+  failures = failures + check(report.status() = 'ok' & report.issues() = 1,'protect setup-only definite assignment')
+  if report.status() = 'ok' then do
+    facts = report.facts()
+    failures = failures + check(bin2x(facts.get('block',body.id(),'reachable')) = '01' & bin2x(facts.get('block',exceptional.id(),'reachable')) = '01','both protect edges reachable')
+    failures = failures + check(bin2x(facts.get('operation',7,'definitely.assigned')) = '01' & bin2x(facts.get('operation',8,'definitely.assigned')) = '00','exceptional input excludes later body store')
+  end
+  foldfacts = .llirservices..facts(reference graph); answer = llirservices..evaluate(reference graph,3,foldfacts)
+  failures = failures + check(answer.status() = 'keep' & answer.size() = 0,'protect is not constant evaluation')
+  rebuilt = llirservices..lower(reference graph,contract); restored = rebuilt.result()
+  failures = failures + check(rebuilt.status() = 'changed' & restored.text() = text,'reconstruction retains protect and both edges')
+  cases = .string[]
+  cases[1] = 'operations 3 9 1 LL_IR_TERMINATOR'
+  cases[2] = 'operations 3 10 1 LL_IR_ATTRIBUTE'
+  cases[3] = 'operations 3 12 1 LL_IR_RESERVED'
+  cases[4] = 'edges 1 1 4 LL_IR_OWNER'
+  cases[5] = 'operations 3 3 4 LL_IR_TERMINATOR'
+  cases[6] = 'operations 3 5 1 LL_IR_'
+  cases[7] = 'operations 3 7 1 LL_IR_'
+  i = .int
+  do i = 1 to cases[0]
+    item = cases[i]
+    restored = llir..loadtext(contract,corrupt(text,word(item,1),word(item,2) as .int,word(item,3) as .int,word(item,4)))
+    failures = failures + check(pos(word(item,5),restored.error()) > 0 & restored.operations() = 0,'protect malformed ' || item)
+  end
+  draft = .llir..builder(contract); at = draft.synthetic('after protect')
+  fn = draft.function('f',contract.voidtype()); entry = fn.block('entry'); body = fn.block('body'); exceptional = fn.block('exceptional')
+  call entry.protect(body,exceptional,at); call entry.returnvoid(at)
+  call body.returnvoid(at); call exceptional.returnvoid(at); restored = draft.finish()
+  failures = failures + check(pos('operation follows a terminator',restored.error()) > 0,'builder refuses work after protect')
+  draft = .llir..builder(contract); at = draft.synthetic('foreign protect')
+  fn = draft.function('f',contract.voidtype()); entry = fn.block('entry'); body = fn.block('body')
+  foreign_draft = .llir..builder(contract); foreign_at = foreign_draft.synthetic('other owner')
+  foreign_fn = foreign_draft.function('g',contract.voidtype()); foreign = foreign_fn.block('entry'); call foreign.returnvoid(foreign_at)
+  call entry.protect(body,foreign,at); call body.returnvoid(at); restored = draft.finish()
+  failures = failures + check(pos('protect successors or origin belong to another module',restored.error()) > 0,'builder refuses foreign protect owner')
+  failures = failures + check(graph.text() = text & bin2x(graph.binary()) = bin2x(image),'protect refusals preserve original graph')
   return failures
 
 check: procedure = .int

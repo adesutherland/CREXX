@@ -46,18 +46,19 @@ Document minor practical TRACE or presentation deviations in the
 ownership or required errors remain blockers. Agents do not approve their own
 semantic exceptions or silently relax tests.
 
-CLAUSE1 follows the [begin-only clock contract](architecture.md#clause-clock-contract).
-The integrator owns existing production/docs/CMake files and sole preparation,
-qualification, cleanup and local commit. The proof worker owns only new
-`levelc/llcclauseprotocol.crexx`; the runtime worker owns only the five
-`tests/clause` files. The coordinator independently reviews the proof and early
-integration/RXAS before frozen focused qualification. No concurrent builds.
+The [begin-only clause clocks](architecture.md#clause-clock-contract) and
+existing shared condition policies are foundations for the current
+[whole SIGNAL work package](#signal-assignment-packet). Its necessary helpers
+and dependencies are implemented and qualified together; no concurrent builds
+or separate prerequisite qualification/commit cycle.
 
 ## Work package catalogue
 
-Each package is split into reviewable slices. A package name is not authority
-to implement every item at once. Dependencies below identify the earliest safe
-start; CLC stage closure also requires the complete plan criteria.
+Packages bound assignments, not partial-instruction completion. A package name
+is not authority to implement every item at once. Review the complete named
+instruction and its necessary dependencies, batch material fixes, then qualify
+and commit it together. Dependencies below identify the earliest safe start;
+CLC stage closure also requires the complete plan criteria.
 
 | Package / owner | Allowed implementation area | Inputs and deliverables | Decisive acceptance / dependencies |
 |---|---|---|---|
@@ -157,20 +158,14 @@ Independent review checks source diagnostics, current-frame install, operand
 EXIT, no duplicate numeric algorithm and actual caller/helper RXAS. The
 integrator retains the exclusive build/test/cleanup/commit lease; NUM-C-AC07
 keeps shared observations and declared platforms open. NUM-C-STEP01–03 are
-locally complete for the source-integration profile. Clause/condition
-prerequisites for SIGNAL and CALL4 follow their exact contract reviews.
+locally complete for the source-integration profile. Whole SIGNAL reuses the
+clause/condition foundations; delayed CALL4 retains its later exact contract.
 
-The [external condition B prerequisite](architecture.md#external-condition-b-prerequisite)
-assigns only `lib/rxfnsc/RexxActivationArguments.crexx`,
-`lib/rxfnsc/RexxClassicAddress.crexx`, the existing
-`testRexxActivationArguments.crexx`, `testRexxClassicBifCondition.crexx` and
-`testRexxClassicAddressCommand.crexx` fixtures, and `lib/rxfnsc/address.md` to the
-runtime worker after exact record review. The integrator owns planning, serial
-preparation/testing, cleanup and the separate commit; no new executable or
-CMake target is needed. C wrapper integration, SIGNAL/CALL source and native
-relay are excluded from that source lease.
-COND-B-STEP01–03 are locally complete for the shared B prerequisite; its AC06
-keeps C/provider and wider condition integration separate.
+The [external condition B contract](architecture.md#external-condition-b-prerequisite)
+provides the shared policy, external-scope and DELAY-suppression foundation.
+Its original prerequisite source lease is closed. The whole SIGNAL package
+owns its required C/provider integration and shared helper changes; delayed
+CALL delivery and wider host/platform qualification remain separate.
 
 The [CLABEL prerequisite](architecture.md#label-arm-prerequisite) assigns the
 C17 grammar/classifier/frontend and owning CMake/docs to the serial integrator,
@@ -179,25 +174,45 @@ record review, the fixture worker may own only new `tests/labels` source/golden/
 host/contracts/checker files and the two named `tests/call/fatal-c.crexx` and
 `tests/call/check-call.py` grouped-label expectation edits. The independent
 reviewer checks open/closed arm ownership, lexical group depth, first-label
-resolution, node-based landings and actual RXAS read-only. CLABEL-AC01–05 and STEP01–03 are locally complete; no schema/runtime API or
-C18 SIGNAL implementation belongs in this slice. Static SIGNAL receives its
-separate exact contract next.
+resolution, node-based landings and actual RXAS read-only. CLABEL-AC01–05 and
+STEP01–03 are locally complete; the label/arm implementation is a foundation
+for whole SIGNAL, not another pending SIGNAL delivery.
 
-The [static SIGNAL C18 contract](architecture.md#signal-static-contract) assigns
-grammar/classifier/frontend, schema, finite entry-setup allowance and narrow
-DO/command/selector integration to the serial integrator. A disjoint worker
-owns only new `levelc/llcsignalprotocol.crexx` under the frozen internal API;
-the coordinator independently reviews that module. The integrator owns all
-existing shared product files, CMake/docs and exclusive preparation,
-execution, cleanup and local commit. After STEP01 internal review, the fixture
-writer may own only `tests/signal/{source-c.crexx,source-c.expected,host.crexx,
-contracts.crexx,check-signal.py}`; source expectations remain independent of
-emission. The proof worker also reviews the integrator's frontend/selector and
-actual RXAS without competing builds; it does not independently approve its own
-proof module. CSIGNAL-STEP01–02 are complete and the static profile is locally
-committed; STEP03 qualification remains partial, and AC01–07 are open.
-No B runtime, generic L, native frontend/VM/relay, ON/OFF or
-INTERPRET work belongs to this source lease.
+<a id="signal-assignment-packet"></a>
+
+## Whole SIGNAL work package
+
+The [complete contract](architecture.md#signal-complete-contract) owns
+CSIGNAL-AC01–07 and STEP01–03: retained direct/quoted/VALUE transfers,
+seven-condition ON/OFF, real producers, same-frame cleanup, visible exception
+flow and typed payload/origin preservation. C20 has 85 operations, five C types
+and 36 target exports. Necessary generic, shared B and SIGNALORIGIN changes
+belong to this one instruction and consolidated qualification/local commit.
+
+- The serial integrator owns assigned production/runtime integration, shared
+  CMake/docs, all preparation/tests, cleanup and the local commit. The native
+  C frontend stays read-only. No separate prerequisite build/test campaign.
+- The disjoint proof worker owns `levelc/llcsignalprotocol.crexx` and explicitly
+  assigned generic/DO/command/clause protocol changes. The coordinator reviews
+  these independently; a worker does not approve its own proof.
+- The independent fixture worker owns the assigned `tests/signal` source,
+  golden, B-host, small IR and checker files, plus
+  `interpreter/tests/tests_signal_origin.rxas`. Retained static controls and
+  new condition/native controls run through one wrapper in two complementary
+  cells. Existing consumer-schema migrations require explicit path ownership.
+
+Whole SIGNAL is complete for CSIGNAL-AC01–07 and STEP01–03, including its
+required helpers/dependencies. Practical TRACE is the next instruction. Review
+coherent source and first representative RXAS early, batch material fixes, then
+freeze one focused batch; later corrections repeat only affected obligations.
+
+Controlled HALT does not prove real host/asynchronous HALT. Default unhandled
+C events halt nonresumably with their original tag/payload/origin; broader
+outward host resumption remains open. Internal helper raw-location presentation
+may differ. Practical TRACE remains separate under the native ceiling in the
+[conformance profile](levelc-conformance.md); delayed CALL4, declared platforms
+and INTERPRET retain their own qualifications. These limits do not create
+unfinished SIGNAL micro-slices or claim full C conformance.
 
 <a id="procedure-assignment-packet"></a>
 

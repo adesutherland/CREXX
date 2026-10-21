@@ -1,0 +1,119 @@
+/* Whole SIGNAL owner and pure-B ADDRESS host; no native callback or resolver. */
+options levelb
+import rxfnsb
+import _rxsysb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import conditionfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 10 then return 2
+  checks = 0; failures = 0
+  expected_payload = 'é雪' || ('00'x as .string) || ' tail '
+  calls = 0; mode = argv[1]
+  call _reset_address_environments()
+  environment = .ConditionEnvironment('CONDITION-TEST')
+  call environment.observe(reference calls)
+  call _register_address_environment('CONDITION-TEST',environment)
+  visible = .rexxpool..RexxVariablePool()
+  call visible.setString('PRIVATE','caller private'); call visible.setString('SHARED','before')
+  call visible.setString('RELAY_AFTER','untouched'); call visible.setString('AFTER_RELAY_RETURN','untouched')
+  if mode == 'outer-relay' | mode == 'outer-untyped' then do
+    assembler sigpush "CLASSIC_CONDITION"
+    assembler sigcalla outer_event(),"CLASSIC_CONDITION"
+    say 'SIGNAL_FATAL|before'
+  end
+  returned = invokeFixture(reference argv,reference visible)
+  if mode == 'outer-relay' | mode == 'outer-untyped' then do
+    say 'UNREACHED fatal host'
+    return 1
+  end
+  else if mode == 'normal' | mode == 'exit-handler' then do
+    call check(returned.hasReturnValue() & returned.returnValue().asString() == expected_payload,'full Unicode NUL trailing-space result survives fixture owner expiry')
+    call check(visible.symbolValue('PRIVATE').asString() == 'caller private','handler retains private pool until actual frame completion then restores caller')
+    if mode == 'normal' then do
+      call check(calls = 1,'only FAILURE provider dispatches; missing stream short-circuits before command')
+      call check(visible.symbolValue('PRIVATE_HIT').asString() == '1' & visible.symbolValue('SHARED').asString() == 'child exposed','natural handler keeps ARG and exposed pool')
+      call check(visible.symbolValue('LATER_COUNT').asString() == '1','NOVALUE skips later actual while LOSTDIGITS captures each operand once')
+    end
+    else call check(calls = 0 & visible.symbolValue('EXIT_COUNT').asString() == '1','pending DO header handler executes one EXIT without external dispatch')
+  end
+  else do
+    say 'UNREACHED fatal host'; return 1
+  end
+  call _reset_address_environments()
+  say 'SIGNAL_CONDITIONS_HOST|mode=' || mode || '|checks=' || checks || '|failures=' || failures
+  return failures
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg argv_ref = reference .string[], pool_ref = reference .rexxpool..RexxVariablePool
+  values = dereference argv_ref; visible = dereference pool_ref
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.setAddressEnvironment('SYSTEM')
+  call activation.appendText(values[1]); call activation.appendText(values[2]); call activation.appendText(values[3])
+  fields = .string[]
+  fields[1] = 'EXPECTED_SYNTAX'; fields[2] = 'EXPECTED_NOVALUE'; fields[3] = 'EXPECTED_PATTERN'
+  fields[4] = 'EXPECTED_POSITION'; fields[5] = 'EXPECTED_DO'; fields[6] = 'EXPECTED_LOSTDIGITS'; fields[7] = 'EXPECTED_CHILD'
+  do index = 1 to 7
+    call visible.setString(fields[index],values[index + 3])
+  end
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,pool_ref,reference config)
+  returned = conditionfixture..run(reference context,0)
+  original_activation = reference activation; original_config = reference config
+  current_pool = context.pool(); current_activation = context.activation(); current_config = context.config()
+  call check(<refvalid>(current_pool) & (current_pool <refsame> pool_ref),'live original pool restored on ordinary/handler EXIT/unhandled frame completion')
+  call check((current_activation <refsame> original_activation) & (current_config <refsame> original_config),'context activation/config aliases remain live and unchanged')
+  call check(activation.programExitRequested() = (values[1] == 'exit-handler'),'only handler EXIT requests program-root completion')
+  if values[1] == 'exit-handler' then call check(activation.hasReturnValue() & activation.returnValue().asString() == returned.returnValue().asString(),'root and owned EXIT packet retain exact presence/value')
+  return returned
+
+/* Default unhandled C failure cannot resume through an outer SKIP policy.
+ * Native SIGNALORIGIN separately tests resumable IGNORE/SKIP semantics. */
+outer_event: procedure = .string
+  arg raw = .runtime_signal_raw
+  bound = .runtime_signal(''); call bound.set_raw(raw)
+  say 'UNREACHED outer handler ' || bound.name()
+  return '__rxsignal_skip'
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+ConditionEnvironment: class implements .addressenvironment
+  _name = .string
+  _calls = reference .int
+  *: match
+    arg env_name = .string
+    if _address_normalize_environment_name(env_name) == 'CONDITION-TEST' then return 100
+    return 0
+  *: factory
+    arg env_name = .string
+    _name = env_name
+    return
+  environment_name: method = .string
+    return _name
+  environment_id: method = .string
+    return _name
+  observe: method = .void
+    arg calls = reference .int
+    _calls = calls
+    return
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls; calls = calls + 1
+    if request.get_command() == 'untyped' then do
+      say 'SIGNAL_UNHANDLED|provider=1'
+      assembler signal "CLASSIC_CONDITION","untyped payload"
+      return .addressresponse(0)
+    end
+    call check(request.get_command() == 'failure','existing environment protocol receives exactly authored command')
+    response = .addressresponse(19); call response.set_condition_name('FAILURE')
+    return response

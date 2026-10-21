@@ -237,6 +237,7 @@ checked: class
     store = dereference _store; entries = dereference _entries
     opid = _edgeops[edgeid]; ordinal = _edgeordinals[edgeid]
     if _dispatch[blockid] then do; call fail('LOWERING: clause-clock cannot carry through invocation dispatch',opid); return 0; end
+    if _classes[opid] = 16 then do; call fail('LOWERING: clause-clock cannot carry through a protected condition transition',opid); return 0; end
     if _classes[opid] = 4 then do
       if entries.falsepredecessor(blockid) = opid & ordinal = 2 then return 1
       value = store.operand(opid,1); producer = store.get(4,value,1)
@@ -295,6 +296,7 @@ checked: class
           _needed[owner] = 1
         end
         when classid = 3 | classid = 4 | classid = 5 | classid = 6 | classid = 7 then nop
+        when classid = 16 then owner = 0
         when classid >= 8 & classid <= 12 then do
           loopowner = loops.owner(opid)
           if owner > 0 then if header(owner,loopowner) = 0 then owner = 0
@@ -392,8 +394,16 @@ checked: class
         when 'crexx.c.signal.mark' then classid = 14
         when 'crexx.c.entry.test' then classid = 15
         when 'crexx.c.entry.invalid' then classid = 15
+        when 'core.protect' then classid = 16
+        when 'crexx.c.signal.capture' then classid = 16
+        when 'crexx.c.signal.select' then classid = 16
+        when 'crexx.c.signal.selected' then classid = 16
+        when 'crexx.c.signal.deliver' then classid = 16
+        when 'crexx.c.signal.handler.invalid' then classid = 16
+        when 'crexx.c.signal.relay' then classid = 16
         otherwise nop
       end
+      if classid = 3 then if loops.handlertransfer(id) then classid = 16
       _classes[id] = classid; origin = store.get(3,id,11)
       _sources[id] = store.get(9,origin,1); _firsts[id] = store.get(9,origin,2); _lasts[id] = store.get(9,origin,3)
       _kinds[id] = store.get(9,origin,4); _parents[id] = store.get(9,origin,5)
@@ -429,6 +439,7 @@ checked: class
         if charge() = 0 then return
         classid = _classes[id]
         if classid = 1 then markerowner = _markers[id]
+        if classid = 16 then markerowner = 0
         if classid = 2 & markerowner = 0 then _prefixclocks[b] = id
         if classid = 11 then _entryblocks[b] = loops.owner(id)
         if classid = 15 then _dispatch[b] = 1

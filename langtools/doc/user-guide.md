@@ -3146,7 +3146,7 @@ rxvm build/ir/demo
 
 ### Blocks, slots and analysis
 
-A block is a sequence of operations ending in a branch, jump or return.
+A block is a sequence of operations ending in a branch, jump, protect or return.
 Branches join blocks into a graph; a loop is a cycle in that graph. A temporary
 value is local to its block. To carry a value across a branch, store it in a typed
 slot and load it in the destination block. A slot represents mutable local
@@ -3159,6 +3159,13 @@ edges are considered. The result explains a possible read before assignment
 with its operation ID. This supplements the AST flow mappings: AST mappings
 analyse the source-shaped tree, while IR analysis follows the explicitly lowered
 operations and graph.
+
+`block.protect(normal,exceptional,origin)` declares the normal continuation and
+an exceptional entry for the remainder of one invocation. Both edges stay
+visible to analysis, pruning and renumbering. The host owns runtime exception
+binding and cleanup; a backend without that support must reject the declaration.
+The exceptional entry can rely on setup slots assigned before `protect`, not
+later stores in the normal body. See the [core contract](ir-design.md#invocation-protection).
 
 ### Contracts make transformations checkable
 

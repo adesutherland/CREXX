@@ -380,6 +380,13 @@ discards their saved table values without forcing a private copy, which gives
 block-scoped handling a safety net for frame exit and frame recycling without
 allocating during cleanup.
 
+Branch handlers retain the current interrupt-stack marker. Delivery unwinds
+entries pushed after that marker. To protect several tags in one scope, emit
+all `sigpush` instructions before installing any `sigbr`/`sigbrv` handlers;
+each handler then retains the same complete saved stack. Pair normal exits
+with reverse-order `sigpop` instructions. Interleaving push and installation
+can restore later tags prematurely when an earlier handler is delivered.
+
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
 `IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
 and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`,
@@ -453,14 +460,20 @@ handlers installed with `sigbrv` perform the same wrapping in the VM before
 branching to the handler label, so compiler-generated block handlers can bind an
 `as name` local directly as a user-facing `.signal` value.
 
-`signalorigin "NAME",rMessage,rSignal` raises a new signal using the source
-module and address carried by that VM-bound runtime event. It validates the
-bound-event representation before reading its raw slots, and an invalid input
-raises `INVALID_ARGUMENTS` at the current instruction. The source override is
-per raised condition within one VM run; the normal `signal` forms keep their
-ordinary current-instruction source. Level C uses this form when a delivered
-SYNTAX handler finds its named target missing, so the resulting 16.1 points
-to the faulting clause rather than the generated handler entry.
+`signalorigin "NAME",rPayload,rSignal` raises a signal with the complete value
+in `rPayload` and the source module/address carried by a VM-bound runtime event.
+Payload copying is identical to register-payload `signal`: preserve type,
+attributes and explicit text/binary length, including embedded NUL, without
+message conversion or UTF8 validation. Validate the literal name first, then
+the bound-event representation before reading its raw slots. Unknown names
+raise `INVALID_SIGNAL_CODE`; invalid origins raise `INVALID_ARGUMENTS`, both at
+the current instruction. The requested name may deliberately differ from the
+origin event's name. Capture the source before copying the payload, so the two
+register operands may alias. The override is per raised condition and consumed
+once by dispatch; ordinary `signal` retains its current-instruction source.
+Opcode 660, operand encoding, flow and handler policy are unchanged. Level C
+uses this form for typed outward relay and a missing delivered handler's 16.1,
+retaining the causing event rather than the generated handler-entry location.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or

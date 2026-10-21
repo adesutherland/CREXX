@@ -931,7 +931,7 @@ arena: class
     last = get(2,blockid,3)
     if last > 0 then do
       previous = get(3,last,1)
-      if previous >= 5 & previous <= 7 then do
+      if (previous >= 5 & previous <= 7) | previous = 10 then do
         call fail('LL_IR_TERMINATOR: operation follows a terminator',last); return 0
       end
     end
@@ -976,7 +976,7 @@ arena: class
     return get(7,get(3,op,8) + index - 1,1)
   opname: method = .string
     arg opcode = .int
-    if opcode >= 1 & opcode <= 9 then return 'core.' || word('constant argument load store jump branch return hasarg optionalargument',opcode)
+    if opcode >= 1 & opcode <= 10 then return 'core.' || word('constant argument load store jump branch return hasarg optionalargument protect',opcode)
     schema = dereference _contract.data()
     if opcode > 16 & opcode <= schema.ops() + 16 then return schema.opname(opcode - 16)
     return '<unknown>'
@@ -1089,7 +1089,7 @@ arena: class
         end
         opcode = get(3,op,1); originid = get(3,op,11)
         if originid < 1 | originid > count(9) then call fail('LL_IR_ORIGIN: operation has no valid origin',op)
-        if (opcode < 1 | opcode > 9) & (opcode <= 16 | opcode > schema.ops() + 16) then call fail('LL_IR_OPCODE: unknown operation',op)
+        if (opcode < 1 | opcode > 10) & (opcode <= 16 | opcode > schema.ops() + 16) then call fail('LL_IR_OPCODE: unknown operation',op)
         do k = 1 to 3
           tableid = word('6 4 7',k) as .int; column = 2 + 2 * k
           start = get(3,op,column); total = get(3,op,column + 1)
@@ -1129,8 +1129,8 @@ arena: class
         end
         if _error <> '' then leave
         aux = get(3,op,12)
-        if ((opcode >= 5 & opcode <= 7) | opcode > 16) & aux <> 0 then call fail('LL_IR_RESERVED: nonzero operation auxiliary field',op)
-        if opcode <= 9 & get(3,op,10) <> 0 then call fail('LL_IR_ATTRIBUTE: core operation cannot have attributes',op)
+        if ((opcode >= 5 & opcode <= 7) | opcode = 10 | opcode > 16) & aux <> 0 then call fail('LL_IR_RESERVED: nonzero operation auxiliary field',op)
+        if opcode <= 10 & get(3,op,10) <> 0 then call fail('LL_IR_ATTRIBUTE: core operation cannot have attributes',op)
         select opcode
           when 1 then do
             if nin <> 0 | nout <> 1 | nedge <> 0 | aux < 1 | aux > count(8) then call fail('LL_IR_CONSTANT: invalid constant operation',op)
@@ -1175,6 +1175,9 @@ arena: class
               if get(4,result(op),3) <> type | get(4,operand(op,1),3) <> type then call fail('LL_IR_TYPE: fallback and argument types must agree',op)
             end
           end
+          when 10 then do
+            if nin <> 0 | nout <> 0 | nedge <> 2 then call fail('LL_IR_TERMINATOR: protect needs normal and exceptional successors',op)
+          end
           otherwise do
             descriptor = opcode - 16
             if nin <> schema.arity(descriptor,1) | nout <> schema.arity(descriptor,2) | nedge <> 0 then call fail('LL_IR_ARITY: extension signature mismatch',op)
@@ -1197,7 +1200,7 @@ arena: class
             attributes = attributes + nattr
           end
         end
-        if opcode >= 5 & opcode <= 7 then do
+        if (opcode >= 5 & opcode <= 7) | opcode = 10 then do
           if get(3,op,3) <> 0 | op <> last then call fail('LL_IR_TERMINATOR: terminator must end its block',op)
         end
         else if op = last | get(3,op,3) = 0 then call fail('LL_IR_TERMINATOR: block requires a terminator',op)
@@ -1431,6 +1434,20 @@ block: class
     if store.error() = '' then do
       inputs = .int[]; types = .int[]; edges = .int[]; inputs[1] = condition.id(); edges[1] = yes.id(); edges[2] = no.id()
       id = store.append(_id,6,inputs,types,edges,at.id())
+    end
+    return
+  /** Declare protected invocation control without an evaluated condition.
+   * @param normal Ordinary continuation after setup.
+   * @param exceptional Exceptional entry for the protected invocation.
+   * @param at Owned source/provenance of this declaration.
+   * Runtime binding, event transport and cleanup belong to the host. */
+  protect: method = .void
+    arg normal = .llir..block, exceptional = .llir..block, at = .llir..origin
+    call require(); store = dereference _owner
+    if normal.belongs(_owner) = 0 | exceptional.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: protect successors or origin belong to another module')
+    if store.error() = '' then do
+      inputs = .int[]; types = .int[]; edges = .int[]; edges[1] = normal.id(); edges[2] = exceptional.id()
+      id = store.append(_id,10,inputs,types,edges,at.id())
     end
     return
   returnvoid: method = .void
@@ -2083,7 +2100,7 @@ loadbinary: procedure = .llir..module
         do c = 1 to width
           number = reader.u32()
           if version = 1 & t = 1 & c = 6 & number <> 0 then call store.fail('LL_IR_RESERVED: nonzero version 1 reserved field')
-          if version = 1 & t = 3 & c = 1 & (number = 8 | number = 9) then call store.fail('LL_IR_OPCODE: version 1 core opcode')
+          if version = 1 & t = 3 & c = 1 & number >= 8 & number <= 10 then call store.fail('LL_IR_OPCODE: version 1 core opcode')
           call store.put(t,id,c,number)
         end
       end
@@ -2209,7 +2226,7 @@ loadtext: procedure = .llir..module
           do c = 1 to width
             number = natural(word(line,c))
             if version = 1 & t = 1 & c = 6 & number <> 0 then call store.fail('LL_IR_RESERVED: nonzero version 1 reserved field')
-            if version = 1 & t = 3 & c = 1 & (number = 8 | number = 9) then call store.fail('LL_IR_OPCODE: version 1 core opcode')
+            if version = 1 & t = 3 & c = 1 & number >= 8 & number <= 10 then call store.fail('LL_IR_OPCODE: version 1 core opcode')
             call store.put(t,id,c,number)
           end
         end

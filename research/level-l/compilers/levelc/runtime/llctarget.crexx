@@ -13,6 +13,7 @@ import rexxclassicbifnumeric
 import rexxclassicbifstream
 import rexxclassicconfig
 import rexxdostate
+import rexxclassicconditionevent
 
 /** Acquire one PARSE source without consuming its caller's condition transport.
  * @param context Borrowed authoritative activation, current pool and config.
@@ -170,6 +171,9 @@ binaryop: procedure = .RexxValue
   if operation = 'strict' then return left.strictCompareEqual(right)
   if operation = 'concat' | operation = 'abut' then return left.concat(right)
   if operation = 'blank' then return left.spaceConcat(right)
+  if wordpos(operation,'add sub mul div eq ne lt le gt ge') > 0 then do
+    call lostdigitscheck(left,context); call lostdigitscheck(right,context)
+  end
   index = wordpos(operation,'add sub mul div eq ne lt le gt ge and or xor')
   name = word('ADD SUBTRACT MULTIPLY DIVIDE COMPAREEQUAL COMPARENOTEQUAL COMPARELESSTHAN COMPARELESSOREQUAL COMPAREGREATERTHAN COMPAREGREATEROREQUAL LOGICALAND LOGICALOR LOGICALXOR',index)
   callcontext = bifcontext(name,context)
@@ -184,6 +188,7 @@ unaryop: procedure = .RexxValue
   numeric fuzz inherited
   numeric form inherited
   arg operation = .string, value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  if operation = 'positive' | operation = 'negative' then call lostdigitscheck(value,context)
   name = word('POSITIVE NEGATE LOGICALNOT',wordpos(operation,'positive negative not'))
   callcontext = bifcontext(name,context)
   result = rexxclassic_expression_unary(reference callcontext,value)
@@ -270,6 +275,7 @@ donew: procedure = .rexxdostate..RexxDoState
     message = problem.message()
     assembler signalorigin "CLASSIC_SYNTAX",message,problem
   end
+  call result.bindContext(context)
   return result
 
 /** Capture one already evaluated header term through the shared validator.
@@ -470,3 +476,20 @@ bifcontext: procedure = .RexxBifCallContext
   activation_ref = bundle.activation()
   call result.setCallerActivation(activation_ref)
   return result
+
+/** Both binary actuals are already captured before this runtime-sensitive check.
+ * The shared value owns numeric parsing/precision; this adapter only produces
+ * the existing typed event while the current activation requests LOSTDIGITS. */
+lostdigitscheck: procedure = .void
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  if activation.signalPolicy(7) <= 0 then return
+  detail = value.lostDigitsDescription()
+  if detail == '' then return
+  event = .rexxclassicconditionevent..RexxClassicConditionEvent(7,detail)
+  assembler signal "CLASSIC_CONDITION",event
+  return

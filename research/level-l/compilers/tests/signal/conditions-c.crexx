@@ -1,0 +1,255 @@
+/* One image for complete SIGNAL policy, live producers and fatal controls. */
+options levelc
+parse arg MODE, PROVIDER_LINE, MISSING_STREAM
+PAYLOAD = 'é雪' || '00'x || ' tail '
+RC = 77
+LATER_COUNT = 0
+PRIVATE_HIT = 0
+EXIT_COUNT = 0
+
+if MODE == 'off-syntax' then do
+  signal on syntax name UNEXPECTED
+  signal off syntax
+  say 'SIGNAL_FATAL|before'
+  say substr('abc',0) /* OFF_CAUSE */
+  say 'UNREACHED off'
+  exit 91
+end
+if MODE == 'once-syntax' then do
+  signal on syntax name ONCE_HANDLER
+  say 'SIGNAL_FATAL|before'
+  say substr('abc',0) /* ONCE_FIRST */
+  say 'UNREACHED first'
+  exit 92
+end
+if MODE == 'missing-syntax' then do
+  signal on syntax name NO_SUCH_HANDLER
+  say 'SIGNAL_FATAL|before'
+  say substr('abc',0) /* MISSING_SYNTAX_CAUSE */
+  say 'UNREACHED missing syntax'
+  exit 93
+end
+if MODE == 'missing-typed' then do
+  signal on error name NO_SUCH_HANDLER
+  say 'SIGNAL_FATAL|before'
+  call raiseevent 2,PAYLOAD /* MISSING_TYPED_CAUSE */
+  say 'UNREACHED missing typed'
+  exit 94
+end
+if MODE == 'missing-default' then do
+  signal on error
+  say 'SIGNAL_FATAL|before'
+  call raiseevent 2,PAYLOAD
+  say 'UNREACHED missing default'
+  exit 94
+end
+if MODE == 'outer-relay' then do
+  call RELAY_PRIVATE
+  AFTER_RELAY_RETURN = 1
+  return 'outer-pass'
+end
+if MODE == 'outer-untyped' then do
+  signal on error name UNEXPECTED
+  address 'CONDITION-TEST' 'untyped'
+  say 'UNREACHED untyped event'
+  return 'UNREACHED untyped completion'
+end
+if MODE == 'exit-handler' then do
+  call EXIT_PRIVATE
+  say 'UNREACHED private EXIT'
+  exit 95
+end
+
+say 'COND|fresh=' || ((condition() == '') & (condition('C') == '') & (condition('D') == '') & (condition('E') == '') & (condition('S') == ''))
+signal on syntax name UNEXPECTED
+signal on error name UNEXPECTED
+signal on failure name UNEXPECTED
+signal on halt name UNEXPECTED
+signal on notready name UNEXPECTED
+signal on novalue name UNEXPECTED
+signal on lostdigits name UNEXPECTED
+signal off syntax
+signal off error
+signal off failure
+signal off halt
+signal off notready
+signal off novalue
+signal off lostdigits
+say 'COND|all-off=' || (OFF_UNSET == 'OFF_UNSET')
+
+signal on error name UNEXPECTED
+signal on error name 'typed_error'
+call raiseevent 2,PAYLOAD
+say 'UNREACHED error'
+exit 96
+TYPED_ERROR:
+say 'COND|error=' || ((condition('C') == 'ERROR') & (condition('D') == PAYLOAD) & (condition('E') == '') & (condition() == 'SIGNAL') & (condition('S') == 'OFF') & (RC = 77) & (SIGL = PROVIDER_LINE) & (.SIGL = PROVIDER_LINE))
+signal on failure
+call raiseevent 3,PAYLOAD
+say 'UNREACHED failure'
+exit 97
+FAILURE:
+say 'COND|failure=' || ((condition('C') == 'FAILURE') & (condition('D') == PAYLOAD) & (condition('S') == 'OFF') & (RC = 77) & (SIGL = PROVIDER_LINE))
+signal on halt
+call raiseevent 4,PAYLOAD
+say 'UNREACHED halt'
+exit 98
+HALT:
+say 'COND|halt=' || ((condition('C') == 'HALT') & (condition('D') == PAYLOAD) & (condition('I') == 'SIGNAL') & (condition('S') == 'OFF') & (RC = 77))
+signal on notready name TYPED_NOTREADY
+call raiseevent 5,PAYLOAD
+say 'UNREACHED notready'
+exit 99
+TYPED_NOTREADY:
+say 'COND|notready=' || ((condition('C') == 'NOTREADY') & (condition('D') == PAYLOAD) & (condition('S') == 'OFF') & (SIGL = PROVIDER_LINE))
+signal on novalue name TYPED_NOVALUE
+call raiseevent 6,PAYLOAD
+say 'UNREACHED typed novalue'
+exit 100
+TYPED_NOVALUE:
+say 'COND|typed-novalue=' || ((condition('C') == 'NOVALUE') & (condition('D') == PAYLOAD) & (condition('S') == 'OFF'))
+signal on lostdigits name TYPED_LOSTDIGITS
+call raiseevent 7,PAYLOAD
+say 'UNREACHED typed lostdigits'
+exit 101
+TYPED_LOSTDIGITS:
+say 'COND|typed-lostdigits=' || ((condition('C') == 'LOSTDIGITS') & (condition('D') == PAYLOAD) & (condition('S') == 'OFF'))
+
+signal on syntax
+say substr('abc',0) /* LIVE_SYNTAX_CAUSE */
+say 'UNREACHED syntax'
+exit 102
+SYNTAX:
+say 'COND|syntax=' || ((condition('C') == 'SYNTAX') & (condition('E') == '40.14') & (condition('S') == 'OFF') & (condition() == 'SIGNAL') & (RC = 40) & (.MN == '40.14') & (SIGL = EXPECTED_SYNTAX) & (.SIGL = EXPECTED_SYNTAX))
+
+signal on novalue name PARENT_NOVALUE
+call PRIVATE_WORKER 'raw'
+say 'COND|private=' || ((PRIVATE == 'caller private') & (SHARED == 'child exposed') & (PRIVATE_HIT = 1) & (RESULT == 'child-result') & (condition('C') == 'SYNTAX'))
+say PARENT_UNSET /* PARENT_NOVALUE_CAUSE */
+say 'UNREACHED parent novalue'
+exit 103
+PARENT_NOVALUE:
+say 'COND|parent-policy=' || ((condition('C') == 'NOVALUE') & (condition('D') == 'PARENT_UNSET') & (condition('S') == 'OFF'))
+say 'COND|one-shot-off=' || (AFTER_FIRST_UNSET == 'AFTER_FIRST_UNSET')
+
+SAFE. = 'stem default'
+signal on novalue name LIVE_NOVALUE
+SAFE_VALUE = SAFE.anything
+NV_WRITE = 'old value'
+NV_WRITE = LIVE_UNSET || LATER_EFFECT() /* LIVE_NOVALUE_CAUSE */
+say 'UNREACHED live novalue'
+exit 104
+LIVE_NOVALUE:
+say 'COND|novalue=' || ((condition('D') == 'LIVE_UNSET') & (NV_WRITE == 'old value') & (LATER_COUNT = 0) & (SAFE_VALUE == 'stem default') & (RC = 40) & (SIGL = EXPECTED_NOVALUE))
+
+PARSE_FIRST = 'old first'
+PARSE_MID = 'old mid'
+PARSE_LAST = 'old last'
+signal on novalue name PARSE_PATTERN_CAUGHT
+parse value 'left:right=tail' with PARSE_FIRST ':' PARSE_MID (MISSING_PATTERN) PARSE_LAST /* PARSE_PATTERN_CAUSE */
+say 'UNREACHED parse pattern'
+exit 105
+PARSE_PATTERN_CAUGHT:
+say 'COND|parse-pattern=' || ((PARSE_FIRST == 'left') & (PARSE_MID == 'old mid') & (PARSE_LAST == 'old last') & (condition('D') == 'MISSING_PATTERN') & (SIGL = EXPECTED_PATTERN))
+POS_FIRST = 'old first'
+POS_MID = 'old mid'
+POS_LAST = 'old last'
+signal on novalue name PARSE_POSITION_CAUGHT
+parse value 'abc' with POS_FIRST 2 POS_MID =(MISSING_POSITION) POS_LAST /* PARSE_POSITION_CAUSE */
+say 'UNREACHED parse position'
+exit 106
+PARSE_POSITION_CAUGHT:
+say 'COND|parse-position=' || ((POS_FIRST == 'a') & (POS_MID == 'old mid') & (POS_LAST == 'old last') & (condition('D') == 'MISSING_POSITION') & (SIGL = EXPECTED_POSITION))
+
+DO_HITS = 0
+signal on novalue name DO_CONTROL_CAUGHT
+do CONTROL = 1 for 2
+  DO_HITS = DO_HITS + 1
+  drop CONTROL
+end /* DO_ADVANCE_CAUSE */
+say 'UNREACHED dropped control'
+exit 107
+DO_CONTROL_CAUGHT:
+say 'COND|do-read=' || ((DO_HITS = 1) & (condition('D') == 'CONTROL') & (condition('S') == 'OFF') & (SIGL = EXPECTED_DO))
+FRESH_LOOPS = 0
+do FRESH = 1 to 2
+  FRESH_LOOPS = FRESH_LOOPS + 1
+end
+say 'COND|discard=' || (FRESH_LOOPS = 2)
+
+numeric digits 3
+signal on lostdigits name LIVE_LOSTDIGITS
+SAFE_DIVISION = 1 / 3
+SAFE_MULTIPLY = 99 * 99
+SAFE_ZEROES = 1200 + 0
+LD_WRITE = 'old value'
+LD_WRITE = 1234 + LATER_EFFECT() /* LIVE_LOSTDIGITS_CAUSE */
+say 'UNREACHED lostdigits'
+exit 108
+LIVE_LOSTDIGITS:
+say 'COND|lostdigits=' || ((condition('D') == '1234') & (condition('E') == '') & (condition('S') == 'OFF') & (LD_WRITE == 'old value') & (LATER_COUNT = 1) & (SAFE_DIVISION = 0.333) & (SAFE_MULTIPLY = 9800) & (SAFE_ZEROES = 1200) & (SIGL = EXPECTED_LOSTDIGITS))
+numeric digits 9
+
+signal on error name ADDRESS_ERROR
+address 'MISSING-SIGNAL-ENV' 'missing'
+say 'UNREACHED address error'
+exit 109
+ADDRESS_ERROR:
+say 'COND|address-error=' || ((condition('C') == 'ERROR') & (condition('D') == 'missing') & (RC = 30) & (.RC = 30) & (.RS = 1) & (address() == 'SYSTEM'))
+signal on failure name ADDRESS_FAILURE
+address 'CONDITION-TEST' 'failure'
+say 'UNREACHED address failure'
+exit 110
+ADDRESS_FAILURE:
+say 'COND|address-failure=' || ((condition('C') == 'FAILURE') & (condition('D') == 'failure') & (RC = 19) & (.RC = 19) & (.RS = -1))
+signal on notready name ADDRESS_NOTREADY
+address 'CONDITION-TEST' 'no dispatch' with input stream MISSING_STREAM
+say 'UNREACHED stream notready'
+exit 111
+ADDRESS_NOTREADY:
+say 'COND|address-notready=' || ((condition('C') == 'NOTREADY') & (condition('D') == MISSING_STREAM) & (condition('S') == 'OFF'))
+return PAYLOAD
+
+PRIVATE_WORKER:
+procedure expose SHARED PRIVATE_HIT EXPECTED_CHILD
+PRIVATE = 'child private'
+signal on novalue name CHILD_NOVALUE
+say CHILD_UNSET /* CHILD_NOVALUE_CAUSE */
+return 'UNREACHED child'
+CHILD_NOVALUE:
+SHARED = 'child exposed'
+PRIVATE_HIT = (PRIVATE == 'child private') & (ARG(1) == 'raw') & (ARG() = 1) & (SIGL = EXPECTED_CHILD) & (condition('S') == 'OFF')
+return 'child-result'
+
+LATER_EFFECT:
+LATER_COUNT = LATER_COUNT + 1
+return 0
+
+RELAY_PRIVATE:
+procedure expose PAYLOAD RELAY_AFTER
+PRIVATE = 'relay private'
+do RELAY_ACTIVE = 1 for 2
+  call raiseevent 6,PAYLOAD
+  RELAY_AFTER = 1
+end
+return 'UNREACHED relay'
+
+EXIT_PRIVATE:
+procedure expose EXIT_COUNT PAYLOAD
+signal on syntax name EXIT_CAUGHT
+do EXIT_LOOP = 1 to 1 / 0
+  say 'UNREACHED incomplete header'
+end
+return 'UNREACHED EXIT'
+EXIT_CAUGHT:
+EXIT_COUNT = EXIT_COUNT + 1
+exit PAYLOAD
+
+ONCE_HANDLER:
+say 'SIGNAL_ONCE|caught'
+say substr('abc',0) /* ONCE_SECOND_CAUSE */
+say 'UNREACHED one-shot'
+exit 112
+UNEXPECTED:
+say 'UNREACHED stale handler'
+exit 113

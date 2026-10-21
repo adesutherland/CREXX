@@ -319,7 +319,9 @@ checked: class
     end
     return
   /** Resolve only entry transport through already-proved private false edges.
-   * The current block's final store can never seed an earlier load. */
+   * The current block's final store can never seed an earlier load. Protected
+   * exceptional/handler edges are not false continuations and cannot carry an
+   * unfinished external argument packet into another invocation path. */
   argumentwriter: method = .int
     arg opid = .int
     graph = dereference _graph; store = dereference _store
@@ -561,6 +563,12 @@ checked: class
         if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
           ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
         end
+        if wordpos(name,'crexx.c.signal.policy crexx.c.signal.capture crexx.c.signal.select') > 0 then do
+          ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if wordpos(name,'crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
         if name = 'crexx.c.procedure.enter' then group = opid
         else if name = 'crexx.c.procedure.expose' then do
           if group = 0 then do; call fail('LOWERING: EXPOSE requires its contiguous PROCEDURE group',opid); return; end
@@ -588,7 +596,7 @@ checked: class
         if charge() = 0 then return
         op = graph.operation(opid); name = op.name()
         call generated(op); if _error <> '' then return
-        if name = 'core.jump' then leave
+        if name = 'core.jump' | name = 'core.protect' then leave
         allowed = 0
         if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
         /* Structural allowance only. Mandatory signal admission later owns
@@ -619,6 +627,15 @@ checked: class
       if opid = 0 then do; call fail('LOWERING: source-unit setup requires dispatch jump'); return; end
       if (_tableconstants[fn] > 0) <> (_tableslots[fn] > 0) then do; call fail('LOWERING: SIGNAL table setup requires its unique slot store',opid); return; end
       if opid <> store.get(2,b,3) then do; call fail('LOWERING: source-unit dispatch jump must terminate setup',opid); return; end
+      if name = 'core.protect' then do
+        exceptional = store.successor(opid,2)
+        if exceptional = store.get(1,fn,3) | exceptional = store.successor(opid,1) then do
+          call fail('LOWERING: protected entry substitutes its exceptional successor',opid); return
+        end
+        /* Exceptional delivery belongs to this consumed activation, never a
+         * source invocation landing. Mandatory SIGNAL proof owns its closure. */
+        _before[exceptional] = union(_before[exceptional],2)
+      end
       b = store.successor(opid,1); ordinal = 0
       do forever
         if charge() = 0 then return
@@ -698,6 +715,10 @@ checked: class
         if id <= 0 | id >= _entries[found as .int] then do; call fail('LOWERING: call entry is not a positive declared ID',opid); return; end
       end
     end
+    /* SIGNAL relay/handler.invalid have their own proved same-R returns.
+     * They are not program-root EXIT terminals: their exceptional activation
+     * was seeded consumed above, and mandatory SIGNAL admission owns the cold
+     * closure without introducing a reverse dependency into this proof. */
     call programproof(); if _error <> '' then return
     call argumentproof(); if _error <> '' then return
     /* At most three new state bits can schedule each block. */

@@ -471,22 +471,22 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v19/78 with
+C to the two-argument source-unit ABI. The current family is v20/85 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
-commands and the reviewed static SIGNAL descriptors. SIGNAL implementation and
+commands and the complete SIGNAL descriptors. SIGNAL implementation and
 qualification are in progress. Local instruction qualification is tracked in
 the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
 above are retained. DROP adds its approved source form and C-owned IR operation
 below; no extra B callable, generic L API/transport format, RXBIN metadata
 record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follows the approved contract below; complete
-conditions and INTERPRET retain their later gates.
+whole-C observations and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 19. The neutral scalar names do not load the G
+types and `crexx.c` version 20. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–17 are never reinterpreted as version 18. Within version 18, the complete C
+versions 1–19 are never reinterpreted as version 20. Within version 20, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -639,10 +639,11 @@ Each executing C frame selects Classic numeric standard with existing
 the borrowed activation and installs `FUZZ=0`, DIGITS, FUZZ, FORM in that frame.
 After a successful void `llctarget.setting` call it performs the same integer
 getter/install sequence, with no text conversion between commit and install.
-Install the current nine named fatal `sigbrv` handlers before entry setup/body
-(the four-name foundation is extended by the PARSE contract below).
-A failed setting diverts to that C frame's fatal branch and cannot reach any
-numeric install or ordinary next statement. The existing relay installs
+Ordinary frames save all named fatal policies before installing their `sigbrv`
+handlers. Protected SIGNAL frames use the canonical `core.protect` setup
+defined below, with the same complete saved-stack marker for every tag.
+A failed setting diverts to that C frame's checked condition/fatal path and
+cannot reach numeric install or the ordinary next statement. Outward relay installs
 `sighalt` before `signalorigin`: this profile is nonresumable even with an
 outer B skip handler. Do not claim outer-handler recovery or alter that policy
 in this migration. The unchanged direct B adapter tests prove stored-state
@@ -2499,9 +2500,9 @@ reached; missing delayed handlers raise 16.1. A bare RETURN in a function raises
 at the invoking expression. Explicit empty strings remain present.
 Diagnostic target text uses existing `_trace_escape_text`: Unicode is retained,
 controls such as NUL are displayed as escapes and literal backslashes doubled.
-Lookup/IR name bytes remain exact. Generic SIGNALORIGIN currently has a
-terminated-message boundary; full length-bearing condition/message transport
-remains shared STEP07 error work, not a source-name restriction.
+Lookup/IR name bytes remain exact. The [complete SIGNAL contract](#signal-complete-contract) includes preserving
+length-bearing typed payloads through SIGNALORIGIN; this shared transport
+correction is not a source-name restriction.
 
 ### Ordinary-call interface additions
 
@@ -3711,17 +3712,17 @@ of their current contracts.
 
 <a id="signal-static-contract"></a>
 
-## Static SIGNAL transfer — C18 contract
+## Retained direct and VALUE SIGNAL transfer mechanics
 
-**Implemented and locally committed; complementary qualification remains partial.** Deliver
-direct, decoded quoted and once-evaluated VALUE transfers within the current
+Direct, decoded quoted and once-evaluated VALUE transfers stay within the current
 invocation, using the qualified [CLABEL inventory](#label-arm-prerequisite).
 Successful transfer sets SIGL/.SIGL, leaves active DO/SELECT control and reaches
 the natural source label without a call, new activation or PROCEDURE rearm.
-This profile does not implement SIGNAL ON/OFF, typed handler entry/resumption,
-clause clocks, TRACE or INTERPRET. Those obligations and whole LC-I-23 remain
-open. Existing shared condition transport is reused; no native frontend, L
-extension-edge rule, RXAS/VM operation, target export or host API changes.
+The mechanisms in this section are retained within the complete SIGNAL
+instruction. Its condition/handler integration is specified below; complete
+TRACE and INTERPRET remain
+open. These transfer forms use existing shared condition transport and target
+exports; the whole-instruction exception contract below owns their dependencies.
 
 ### Source, names and observations
 
@@ -3733,9 +3734,8 @@ literal/radix decoder; quoted label declarations remain excluded. Explicit
 VALUE takes the complete existing expression. Omitted VALUE is admitted only
 at an existing special-character expression start: unary plus/minus, logical
 not or opening parenthesis. Contextual classification must preserve assignments,
-labels, pending IF/ELSE arms and existing instruction/profile ownership. ON/OFF
-retain an explicit unsupported-profile refusal, rather than becoming label names
-or implicit commands.
+labels, pending IF/ELSE arms and existing instruction/profile ownership. ON/OFF are extended by the complete instruction contract below and must
+never become label names or implicit commands.
 
 Bare SIGNAL refuses with 19.4 at SIGNAL; VALUE without an operand reports 19.4
 at VALUE. A malformed admitted expression reports 35.1 at the actual bad token,
@@ -3808,12 +3808,15 @@ natural labels remain in the CFG and do not add rows or invocation identities.
 The T payload is valid UTF8 with this exact byte framing, independent of locale:
 
 ```text
-table := "CSIG1\n" uint(rowCount) row{rowCount}
+table := "CSIG2\n" uint(rowCount) row{rowCount} uint(handlerCount) handler{handlerCount}
 row   := frame(canonicalName) uint(entryID) frame(logicalSourceName)
          uint(firstByte) uint(lastByte)
 uint(n) := canonical unsigned ASCII decimal n followed by ":"
 frame(s) := uint(UTF8 byte length of s) followed by exactly those UTF8 bytes
 ```
+
+The handler framing is defined in the [whole SIGNAL contract](#signal-complete-contract).
+Transfer-only units use handlerCount0; they retain the same checked label rows.
 
 Only zero is spelled `0`; leading zeros, signs, missing delimiters, integer
 overflow, invalid UTF8, truncated/extra bytes, empty names and duplicate names
@@ -3846,7 +3849,7 @@ Admission has this one-way order, including raw/loaded/transformed rendering:
    sole added setup allowance is the finite generated pure T-constant/unique
    T-slot-store prefix before canonical dispatch; it records the exact prefix
    IDs/writer without interpreting or semantically approving arbitrary T data.
-   CPROC success alone is not complete C18 admission.
+   CPROC success alone is not complete SIGNAL admission.
 2. New C-private `llcsignalprotocol.checked` imports and borrows completed CPROC
    facts; CPROC does not import it. Signal admission validates/decodes the table,
    transport, all uses, source landings and private segments. Every complete C
@@ -3976,55 +3979,9 @@ beginInternalCall, result packet, pool restoration, frame numeric setup or VM
 EXIT on successful transfer. Temporary text/receiver borrows end on normal and
 fatal paths without clearing an owned return/failure carrier.
 
-1. **CSIGNAL-AC01 — open:** independent AST/source controls cover every direct
-   token form, decoded quoted and explicit/implied VALUE, nearest ELSE, exact
-   19.4/35.1 offsets and dead static trace-only 16.2. Failed requests preserve
-   prior output. No ON/OFF/profile fence is weakened.
-2. **CSIGNAL-AC02 — open:** one maintained source image proves once-only VALUE,
-   selected Unicode folding, first duplicates/IF-prefix landing, strict
-   numeric-looking names and exact blank/NUL unknown names, reached missing
-   16.1/trace-only 16.2 and causing SIGL/.SIGL. Operand EXIT bypasses SIGNAL work.
-3. **CSIGNAL-AC03 — open:** nested DO/SELECT transfer closes current control,
-   skips advance/UNTIL/remaining arms and permits a fresh later loop. Private
-   PROCEDURE retains activation/ARG/EXPOSE/local state through transfer, returns
-   the full owned Unicode/NUL value and restores the caller only on completion;
-   SIGNAL into PROCEDURE reports 17.1 without rearming eligibility.
-4. **CSIGNAL-AC04 — open:** tiny generic-valid fresh/loaded/transformed controls
-   verify exact schema, table framing/setup/use closure, canonical context,
-   source endpoints, entry-derived landings and private segment edges. Include
-   genuine typed forwarding and generic-pruned dead-SIGNAL orphan elimination,
-   direct-only/no-label/no-SIGNAL cases, malformed/escaping/stray table transport,
-   mid-search entry, wrong closes and bounded atomic refusal. Include a smaller-
-   limit prechecked-reuse refusal without another decode. Reuse unchanged
-   generic matrices rather than cloning them.
-5. **CSIGNAL-AC05 — open:** actual opt/noopt caller/helper RXAS and maintained
-   structural checks show real source edges, one conversion/fold, strict seq,
-   one stable dynamic-name owner with no per-candidate text COPY and edge/fatal
-   release, reverse DO cleanup and no runtime table/register/slot footprint,
-   invocation wrapper or private pool/numeric reinstall on successful transfer. Inspect
-   borrowed proof/source paths for heavy copies and scalarize method-call array
-   indices before borrowing. Use one small appropriate native comparison,
-   distinguishing compiler/assembler modes and classifying native discrepancies.
-6. **CSIGNAL-AC06 — open:** focused complementary source/host/error/admission
-   lanes and affected entry/DO/command consumers pass with valid producer reuse;
-   measure serial aggregate scheduling, review exact scope and remove scratch
-   before a separate local commit. No hosted/platform/sanitizer claim follows.
-7. **CSIGNAL-AC07 — open whole-instruction/shared scope:** SIGNAL ON/OFF and seven
-   conditions, typed handler entry/relay/resumption, clause/TRACE/host/platform
-   observations and INTERPRET remain with CLC-STEP07/08/11 and their exact gates.
-   This static profile does not close LC-I-23 or any CFC criterion.
-
-- **CSIGNAL-STEP01 — complete:** record/review source/IR/table/proof ownership
-  and independent expectations before production edits; AC01–07. Depends on
-  qualified CLABEL; native relay/clause-clock work is not a dependency here.
-- **CSIGNAL-STEP02 — complete:** implement contextual grammar/AST,
-  shared inventory serialization, finite CPROC setup allowance, C-private signal
-  proof, narrow DO/owner integration and selector; AC01–05. Add independent
-  source/host/admission fixtures through the assigned fixture writer.
-- **CSIGNAL-STEP03 — pending final complementary qualification:** sole focused preparation and
-  complementary lanes, actual RXAS/affected-consumer review, measured serial
-  registration, enduring status/cleanup and separate local commit; AC01–06.
-  AC07 remains open and no INTERPRET/native implementation is authorized here.
+The [complete SIGNAL contract](#signal-complete-contract) owns the unified
+CSIGNAL-AC01–07 and STEP01–03. Retain the mechanisms above without separate
+partial-delivery or complementary-rerun tasks; qualify the whole instruction.
 
 ## Optimisation ownership
 
@@ -4238,14 +4195,265 @@ per-K graph scan or second label/binding inventory is introduced.
   focused two lanes with current producer reuse; AC01–05. No native change,
   push, hosted/SAN campaign or INTERPRET is commissioned.
 
-The maintained `check-clause.py` source/host/shapes and admission controls pass
-with compiler/assembler opt and IR optimization on rxbvm, and noopt/IR-off on
-rxtvm. Optimized raw outcomes are reused except the affected four loop cases;
-complementary raw admission validates the current full probe. The two aggregate
-registrations use current producers, serial/backend-lock scheduling and a
-1800-second hang guard. Shared deterministic DATE/TIME conversion and unchanged
-native/B/L contracts remain reused; this is no full-runtime noopt, host/platform,
-sanitizer or whole-C qualification claim.
+<a id="signal-complete-contract"></a>
+
+## Complete SIGNAL: source, policy, conditions and transfer
+
+Deliver SIGNAL as one instruction, including its necessary helpers, generic
+control-flow representation and existing VM payload correction, then qualify
+and commit the whole batch. The retained [static transfer mechanics](#signal-static-contract)
+remain the foundation; they are not a separate partial delivery or pending
+qualification task. Full C, delayed CALL, practical TRACE/platform acceptance
+and INTERPRET keep their own enduring criteria.
+
+### Source and activation semantics
+
+Retain every direct/decoded quoted/explicit or special-character-implied VALUE
+form, once-only operands, strict canonical text equality and source-first label
+inventory. Add `SIGNAL ON condition [NAME target]` and `SIGNAL OFF condition`
+for SYNTAX1, ERROR2, FAILURE3, HALT4, NOTREADY5, NOVALUE6 and LOSTDIGITS7.
+NAME is a static symbol or decoded quoted target, with the same shared simple
+Unicode uppercase and first-match-before-eligibility rule as direct SIGNAL;
+no new casing or label inventory. Default target is the condition's name.
+ON/OFF are contextual keywords, preserving assignments, labels and owned arms.
+Validate dead forms too. Missing/invalid ON or OFF condition owns25.3 or25.4;
+missing/bad NAME target owns19.3. Earlier lexical/enclosing-arm errors retain
+ownership; the offending token owns a present error, and the requiring keyword
+owns a missing operand. Existing direct19.4/VALUE35.1 rules stay unchanged.
+
+Execution updates the current activation's existing seven-slot policy using
+shared setters: last executed ON/OFF wins, a delivered SIGNAL turns only its
+own condition off before handler execution, and explicit rearming is allowed.
+Internal calls inherit policy and condition state in their child activation;
+child changes do not mutate the caller. Policy identities are compiler-owned
+within the one source function. A C provider starts its own condition scope by
+calling existing `beginExternalConditionScope()` once before source entry0;
+never interpret another program's inherited handler ordinals. Preserve the
+existing explicit external CALL-entry/DELAY suppression contract.
+
+A reached selected handler resolves through the same source label inventory
+and natural same-frame landing, never invocation dispatch/consume. It retains
+activation, arguments, numeric state and the current shared/private pool. Clear
+transient call windows, linked receivers, pending command/PARSE/dynamic-name
+owners and crossed DO/SELECT state before the real target edge. Do not restore
+or release the private pool until actual frame completion or outward failure.
+A handler entering PROCEDURE has consumed eligibility and gets17.1. Missing
+handlers raise16.1 at delivery, anchored to the causing event rather than the
+ON statement; a first trace-only handler target is16.2 on delivery, never a later duplicate
+or provider fallback. Unlike a direct transfer, ON does not eagerly reject a
+missing or trace-only target: its condition must actually be delivered.
+
+Reuse `rexxclassic_signal_record` and `rexxclassic_signal_event_id` for typed
+condition validation, SIGL/.SIGL, SYNTAX RC/.MN/catalog text and CONDITION C/D/E/I/S.
+Do not recreate their algorithms. Non-SYNTAX descriptions retain full Unicode
+and embedded NUL. Invalid/untyped or unselected events remain their original
+VM tag, payload and origin when relayed outward, not INVALID_ARGUMENTS or a
+formatted string substitute. Preserve saved VM handler ownership through balanced
+push/pop operations. Push every protected tag before installing any BRV handler,
+so all handlers capture the same complete saved-stack marker; delivery must not
+unwind another protected tag's save. Restore owned entries in reverse order.
+Default unhandled Classic failure is nonresumable: after restoring saved outer
+policy, install current-frame HALT for the relayed tag before SIGNALORIGIN.
+This prevents a disabled child SYNTAX or consumed one-shot from reactivating
+its parent's C trap. Preserve tag/payload/origin for diagnostics; wider outward
+host resumption remains an enduring qualification. Normal and handled exits
+restore/retain their owned policies correctly; avoid recapture loops. Queued or
+suppressed delayed events must not be mistaken for unhandled events merely
+because `queueCallCondition()` returned false. Delayed CALL delivery itself
+remains CALL4; this work preserves its existing shared policy semantics.
+
+### Actual producers and source attribution
+
+Route existing shared BIF/NUMERIC/PARSE/ADDRESS SYNTAX and typed conditions
+through this dispatcher. Retain ordinary unconfigured ADDRESS/PARSE completion.
+Use the existing pure-B ADDRESS environment protocol for ERROR/FAILURE and
+stream NOTREADY; reuse the signed event provider for controlled typed IDs2..7.
+Controlled HALT proves SIGNAL delivery, not the separately unimplemented real
+host/asynchronous HALT producer.
+
+Final variable reads resolve once with shared `resolveSymbolName`, then use
+`resolvedHasValue`/`resolvedValue` on that captured name under current policy6.
+Compound-tail substitution stays non-signalling, assigned stem defaults count
+as values, and disabled NOVALUE retains normal implicit-value behavior. Include
+the existing hidden PARSE pattern/position reads and DO-control rereads: supply
+the live activation/context to their shared helpers without changing default
+B/RexxScript semantics or duplicating name resolution. Binary numeric operands are both captured once, left then right, before
+LOSTDIGITS checks of the captured left/right values. Unary plus/minus checks its
+one captured operand. Under current positive policy7 use existing
+`lostDigitsDescription()` before arithmetic or non-strict numeric comparison
+and raise the existing typed event for a nonempty detail. Strict comparison,
+concatenation and logical NOT do not gain numeric-loss checks.
+No second precision/rounding/pool algorithm and no result-digit false positive.
+
+The shared additive methods are `RexxClassicContext.readSymbol(name:string)
+->RexxValue` and `RexxDoState.bindContext(context:reference RexxClassicContext)
+->void`. The latter retains the authoritative caller-owned context token;
+the existing two-argument DO factory and its unbound behavior keep their ABI.
+PARSE already holds that context and closes its active cursor before relaying
+an unchanged typed condition.
+
+Provider/library-raised events retain their actual original raw module/address
+through cleanup and relay. C-generated guarded faults use the owning authored
+operation, without adding per-instruction source records. Prefer caller-side raising when existing B contexts return error details.
+For unavoidable declared internal-helper faults, hold one authored-site line
+scalar and call additive shared `rexxclassic_signal_record_at_line(pool_ref,
+activation_ref,event,line)->void`; only that declared path supplies nonzero.
+The existing three-argument recorder keeps its compiled ABI and delegates with0
+into the single algorithm; no duplicate recorder.
+Provider and internal-child events use0 and their original raw source. Update
+the scalar only at a meaningful operation/source transition, never for each
+RXAS helper instruction. Preserve the raw event for outward relay; no new
+wrapper or origin-forgery mechanism. Minor underlying helper raw-location
+presentation remains a stated conformance limitation; SIGL/RC and handler
+selection must be correct.
+
+### Visible control flow and admission
+
+Generic `core.protect` is reserved core opcode10, no inputs/results/attributes
+or auxiliary payload; `block.protect(normal,exceptional)` terminates its block
+with two ordered same-function successors: normal execution and exceptional
+entry. Keep the existing IR wire layout/version: old opcodes1–9 retain their
+meaning, current readers explicitly validate10, old readers fail closed on the
+unknown reserved opcode. No new layout merely for the unchanged record shape.
+Place one after canonical function/context/table setup and before invocation
+dispatch. Existing generic successor traversal, liveness, pruning and renumbering
+must retain both edges. An evaluator without exception support refuses this
+operation explicitly; no invented constant condition or selector-only root.
+The exceptional entry reads only setup-defined slots/context and initialized
+compiler-private owner cells, never body-local SSA or arbitrary later slot writes.
+It is not a fresh invocation and does not rearm PROCEDURE.
+
+C-private immutable admission owns exact policy declarations, typed dispatcher,
+selected-handler branches and natural landing closure. Reject ordinary incoming
+edges into the exceptional segment or a private cleanup/search suffix. DO facts
+allow an empty handler target state only after proved transient/DO cleanup;
+ordinary exact-stack and command/argument protocols remain strict. Use bounded
+indexed passes, held arena/opview and once-borrowed CPROC/SIGNAL/DO facts; no
+per-op reference-owner discovery, table decode/copy or general CFG fixed point.
+Validate all declarations/records including dead, fresh, loaded and transformed
+graphs; preserve graph identity, prechecked-limit locality and atomic output.
+C20 has85 operations, the existing five C types and36 target exports. Append
+these seven descriptors in order; `T=crexx.g.text`, `I=crexx.g.int64`, `C` is the
+canonical bound context and `R` the owned existing result carrier. No event
+value type is added. All terminate `returns`; state/failure shown explicitly.
+
+| Operation | Ordered inputs → result | Required attributes | State / failure |
+|---|---|---|---|
+| `signal.policy` | `table:T context:C → void` | `condition:I handler:I label:I name:T` | `context / condition.resource` |
+| `signal.capture` | `table:T context:C → I` | `key:T` | `context / condition.resource` |
+| `signal.select` | `condition:I context:C → I` | `key:T` | `context / condition.resource` |
+| `signal.selected` | `selected:I → bool` | `key:T handler:I` | `none / none` |
+| `signal.deliver` | `context:C → void` | `key:T condition:I handler:I` | `context / condition.resource` |
+| `signal.handler.invalid` | `context:C → R` | `key:T condition:I handler:I code:T` | `context / condition.resource` |
+| `signal.relay` | `context:C → R` | `key:T` | `context / condition.resource` |
+
+The one inventory uses canonical text framing `CSIG2\n` (hex43534947320A):
+existing label count/rows, then unsigned handler count; each handler row is
+unsigned ordinal, condition, target label row (0missing), framed canonical name,
+framed logical filename, unsigned ON first/last offsets. Unsigned integers are
+canonical decimal followed by colon; frames are unsigned byte length followed
+by exact bytes, no trailing data. Dense ordinals1..N and owned ON spans are
+validated once, including declarations whose setters disappear after pruning.
+Capture's explicit table input keeps this dependency alive even if every setter
+prunes. Surviving policy operations may be sparse and must match the immutable
+declarations; handler facts never require a surviving setter.
+
+`signal.policy` owns a source-order ON ordinal, exact condition1..7 and
+canonical name. Positive label is its first inventory row, including trace-only;
+-1 proves strict absence. OFF uses handler0/label0/nameempty. Table input is the
+explicit immutable dependency, admitted/erased with the existing closed table
+transport; no runtime policy table or per-test decode. At most one protect and
+one unique capture key exist per protected function. Capture is first semantic
+work at exceptional entry, binds the owned VM event and returns1..7 or0 for an
+unclassified event. Select consumes that exact scalar and reads the live policy.
+Pure selected tests compare against declared positive handler ordinals and feed
+ordinary two-edge core branches in the finite private dispatcher. Nonmatches
+end in relay; there is no hidden target successor.
+
+Deliver matches the selected policy/condition, disables it, invokes the shared
+recorder and clears transient owners. A valid handler releases the event then
+immediately jumps to its proved natural landing. For missing/trace-only
+handlers retain the event and immediately execute handler.invalid with exact
+code `16.1`/`16.2`, then core.return of its same owned R on outward resumption.
+This error is raised at the captured origin while the current SYNTAX dispatcher
+and private pool remain active, allowing another armed SYNTAX handler to catch
+it. It must not prematurely perform fatal cleanup or restore outer VM policies.
+Relay alone preserves event/payload through reverse policy restoration and
+fatal cleanup, masks the relayed tag for the nonresumable C failure boundary,
+and emits typed SIGNALORIGIN. A defensive cold owned absent R is followed
+immediately by core.return of that same R; this is not outward C resumption.
+The VM operation independently retains its existing IGNORE/SKIP contract.
+Cold-path failures must not recapture themselves indefinitely.
+
+Construction is one-way: CPROC validates finite protect setup and seeds the
+exceptional successor consumed; SIGNAL borrows CPROC and proves table/policy/
+owner/dispatcher/cleanup/landing closure; DO/command and clause proofs borrow
+completed prior facts without cycles. Preserve existing checked factory and
+accessors. New scalar facts are `protection(fn)`, `capture(fn)`, `owner(opid)`,
+`handlerpolicy(opid)`, `handlerlanding(opid)` and `handlercode(opid)`:
+respectively protect operationID, capture operationID, owning captureID, ON policy operationID (0when its setter was pruned), valid natural blockID
+and0/161/162. `handlername(opid)` returns a scoped reference to its immutable
+canonical name cell, independent of a surviving setter. Absent facts are0.
+Existing transfer facts include proved handler natural jumps. Borrow proof refs
+once per compilation/function, forwarding scalar references to selection.
+No hidden owner lookup or aggregate copy per selected operation.
+
+Existing `signalorigin "NAME",rPayload,rOrigin` keeps opcode660/FMT_S_R_R,
+FLOW_NEXT, barrier/effects and handler-policy classification. Validate tag then
+VM-bound origin exactly as today. Unknown tag remains INVALID_SIGNAL_CODE;
+invalid origin remains INVALID_ARGUMENTS, both at the current instruction.
+On success use existing `SET_SIGNAL_PAYLOAD(signal_name,op2R)`, retaining the
+per-condition module/address assignments and one-shot override. Ordinary SIGNAL
+copy semantics preserve type, nested attributes and complete length-bearing
+text/binary, with no message conversion, UTF8 check or null termination. Capture
+origin before copying; payload/origin aliasing is legal. Tag remapping remains
+intentional. No RXPA relay, hook, new VM opcode or native frontend change.
+
+### Whole-instruction acceptance and implementation
+
+**Status: Complete for CSIGNAL-AC01–07 and STEP01–03**, subject to the named
+practical TRACE, real host HALT, host/platform, delayed CALL and INTERPRET
+qualifications. These are shared delivery boundaries, not partial SIGNAL tasks.
+
+1. **CSIGNAL-AC01 — complete:** all legal source forms, seven conditions, default/
+   quoted NAME, dead validation and exact malformed/missing-target errors pass
+   independent source/AST controls; failed requests preserve prior output.
+2. **CSIGNAL-AC02 — complete:** direct/VALUE and condition transfers prove first
+   labels/strict Unicode text, once evaluation/EXIT bypass, SIGL, loop discard,
+   private/ARG/EXPOSE state, no PROCEDURE rearm and owned RETURN/EXIT completion.
+3. **CSIGNAL-AC03 — complete:** seven-condition ON/OFF/last-wins/one-shot/rearm,
+   internal inheritance/override/restoration, provider scope and CONDITION/RC
+   state pass; actual SYNTAX/NOVALUE/LOSTDIGITS/ADDRESS producers are exercised.
+4. **CSIGNAL-AC04 — complete:** tiny fresh/loaded/real-transformed admission controls
+   prove visible exceptional edges, canonical contexts, source/dispatcher/use/
+   landing/cleanup closure, dead records and atomic byte/work limits, reusing
+   unchanged generic lifetime/optimizer controls rather than cloning matrices.
+5. **CSIGNAL-AC05 — complete:** early representative caller/helper RXAS shows
+   same-frame real edges, minimal needed handler setup, borrowed immutable
+   facts, one dynamic-name owner, transient-only handler cleanup and balanced
+   outer-policy restoration. K-free/handler-free paths gain no blanket runtime
+   setup or metadata; retain meaningful source/control-entry mappings only.
+6. **CSIGNAL-AC06 — complete:** one frozen focused whole-SIGNAL qualification covers
+   complementary compiler/assembler/IR modes and both concrete VMs, typed
+   payload/origin relay and affected shared/generic contracts. Include focused
+   normal Debug and maintained-sanitizer checks for the changed native handler
+   via `tools/asan-run.sh`; no separate prerequisite tests/commits or broad SAN
+   campaign. Classify native discrepancies against independent expectations.
+7. **CSIGNAL-AC07 — complete:** every SIGNAL helper/dependency above is implemented
+   and accepted before SIGNAL is marked complete and committed once locally.
+   Reuse unchanged B condition/catalog/numeric/provider tests. Clean scratch and
+   preserve unrelated work; record minor practical TRACE/presentation deviations
+   without extending the native practical scope. Overall C, real host HALT,
+   declared platform qualification, delayed CALL and INTERPRET remain explicit
+   enduring qualifications rather than unfinished SIGNAL subdeliveries.
+
+- **CSIGNAL-STEP01 — complete:** freeze/review this whole contract, exact
+  representation and independent expectations before production edits.
+- **CSIGNAL-STEP02 — complete:** implement source/policy/producers, visible CFG,
+  cleanup and native payload preservation together; early coherent code/RXAS
+  review, batch material fixes, then freeze the complete source and fixtures.
+- **CSIGNAL-STEP03 — complete:** one consolidated focused qualification, enduring
+  status/cleanup and one local complete-SIGNAL commit; AC01–07. No push.
 
 <a id="retained-c-operation-views"></a>
 

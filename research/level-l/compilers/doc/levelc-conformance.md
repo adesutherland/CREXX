@@ -15,10 +15,22 @@ and PROCEDURE/EXPOSE, RETURN/EXIT, ARG/PARSE, selected queues, explicit and
 implicit ADDRESS, NUMERIC and binding routes for all 95 shared BIF names.
 A binding route does not establish complete BIF, host or platform conformance.
 
-Static SIGNAL C18 is locally committed with partial qualification. Its [direct/quoted/VALUE contract](architecture.md#signal-static-contract)
-is separate from SIGNAL ON/OFF and condition handlers. New-C TRACE is **not
-implemented**; existing source/debug records and shared runtime state do not
+The [whole SIGNAL contract](architecture.md#signal-complete-contract) combines
+retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
+cleanup and typed payload/origin transport as one complete C20 instruction:
+85 operations, five C types and 36 target exports. Its required helpers and
+dependencies are included. Practical TRACE is next; new-C TRACE is
+**not implemented**; source/debug records and shared runtime state do not
 establish TRACE instruction or event support.
+
+Controlled typed HALT exercises condition delivery, not real host/asynchronous
+HALT. Default unhandled C events are nonresumable HALT with their original tag,
+payload and origin; broader outward host resumption remains open. Internal
+helper raw-location presentation may differ while required SIGL, condition
+state and error behavior remain material. A dropped DO control read on advance
+is attributed to END in this compiler; the native helper uses the DO header.
+These boundaries do not split SIGNAL
+into separate prerequisite or partial-profile deliveries.
 
 ## Accepted profile choices
 
@@ -41,7 +53,7 @@ establish TRACE instruction or event support.
   This intentionally differs from reference literal/evaluated-name spelling;
   `1.20`, `1.2` and names with trailing blanks remain distinct. See the
   [language guide](../../../../docs/books/crexx_language_reference/statements.md#level-c-classic-signal)
-  and [C18 contract](architecture.md#signal-static-contract).
+  and [whole SIGNAL contract](architecture.md#signal-complete-contract).
 
 ## Practical TRACE target
 
@@ -80,7 +92,8 @@ with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
-retain complete clause/clock observations, configured conditions and SIGNAL ON/OFF, delayed CALL
-handlers, practical TRACE, remaining expression/BIF/host/lifecycle contracts,
-delivery and declared platforms. INTERPRET remains required and last. Accepted
-profile choices do not close these obligations or establish full conformance.
+retain complete clause/clock observations, delayed CALL4 handlers, practical
+TRACE, remaining
+expression/BIF/host/lifecycle contracts, delivery and declared platforms.
+INTERPRET remains required and last. Accepted profile choices do not close these
+obligations or establish full conformance.

@@ -20,7 +20,8 @@ import rexxclassiccharacterscan
  * @param program LCP1 version 1 packet, validated before cursor or pool effects.
  * @signal INVALID_ARGUMENTS The envelope, map, name or character profile is invalid.
  * @signal CLASSIC_SYNTAX A reached dynamic position is not a nonnegative whole number.
- * @return No value. A caller that skips a relayed text error returns immediately.
+ * @signal CLASSIC_CONDITION configured NOVALUE on a dynamic pattern or position read.
+ * @return No value. A caller that skips a relayed error returns immediately.
  */
 execute: procedure = .void
   numeric digits inherited
@@ -30,10 +31,16 @@ execute: procedure = .void
   worker = .ParseExecution
   ready = 0
   message = .string
+  payload = .object
   do
     worker = .ParseExecution()
     ready = 1
     call worker.run(context,source,program)
+  on signal classic_condition as problem
+    payload = problem.payload()
+    if ready then call worker.failed()
+    assembler signalorigin "CLASSIC_CONDITION",payload,problem
+    return
   on signal classic_syntax as problem
     message = problem.message()
     if ready then do; call worker.failed(); message = worker.annotate(message); end
@@ -455,8 +462,8 @@ ParseExecution: class
         occurrence = _input_for_item[item]
         _active_origin = _input_origin[occurrence]
         _active_action = 'input#' || occurrence
-        current_pool = dereference bundle.pool()
-        operand = current_pool.symbolValue(_input_name[occurrence])
+        input_name = _input_name[occurrence]
+        operand = bundle.readSymbol(input_name)
         text_value = operand.asString(1)
         call _cursor.supply(text_value)
       end

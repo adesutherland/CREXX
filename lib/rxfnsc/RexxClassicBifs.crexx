@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassic_expression_binary rexxclassic_expression_unary rexxclassicbif_checked rexxclassic_signal_record rexxclassic_signal_event_id rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassic_expression_binary rexxclassic_expression_unary rexxclassicbif_checked rexxclassic_signal_record rexxclassic_signal_record_at_line rexxclassic_signal_event_id rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxclassicunicodeproperties
 import rexxvalue
 import rexxpool
@@ -516,9 +516,26 @@ rexxclassicbif_checked: procedure = .RexxValue
  */
 rexxclassic_signal_record: procedure = .void
   arg pool_ref = reference .RexxVariablePool, activation_ref = reference .RexxActivationArguments, condition = .runtime_signal
+  call rexxclassic_signal_record_at_line(pool_ref,activation_ref,condition,0)
+  return
+
+/**
+ * Record one condition using an admitted C helper-site line when supplied.
+ * The original bound event is neither rewritten nor wrapped; zero retains its
+ * actual provider/child source. The original three-argument API stays intact.
+ * @param pool_ref the installing activation's visible variable pool
+ * @param activation_ref current Classic invocation
+ * @param condition original bound VM event
+ * @param authored_line checked internal C helper line, or zero for raw origin
+ * @return no value; shared condition/SIGL/RC recording is unchanged
+ */
+rexxclassic_signal_record_at_line: procedure = .void
+  arg pool_ref = reference .RexxVariablePool, activation_ref = reference .RexxActivationArguments, condition = .runtime_signal, authored_line = .int
   pool = dereference pool_ref
   activation = dereference activation_ref
-  call pool.setSignalLine(condition.line())
+  line = condition.line()
+  if authored_line > 0 then line = authored_line
+  call pool.setSignalLine(line)
   if condition.name() = "CLASSIC_SYNTAX" then do
     detail = condition.message()
     number = "0"
@@ -657,7 +674,9 @@ rexxclassic_signal_event_id: procedure = .int
   payload = condition.payload()
   if \(payload is .RexxClassicConditionEvent) then return 0
   event = payload as .RexxClassicConditionEvent
-  return event.conditionId()
+  condition_id = event.conditionId()
+  if condition_id < 2 | condition_id > 7 then return 0
+  return condition_id
 
 /**
  * Dispatch one Classic-compatible BIF call for legacy compatibility clients.

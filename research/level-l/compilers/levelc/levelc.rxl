@@ -90,6 +90,10 @@ numericvalue: token = 85
 signalword: token = 86
 signalvalue: token = 87
 signalname: token = 88
+signalon: token = 89
+signaloff: token = 90
+signalcondition: token = 91
+signalhandlername: token = 92
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
@@ -168,7 +172,11 @@ parse: parser semantics contextfree input tokens start program backend lr1
   push.statement: rule = pushword (expression as value)? then tree CPush(value = value?)
   queue.statement: rule = queueword (expression as value)? then tree CQueue(value = value?)
   command.statement: rule = commandword expression as value then tree CCommand(value = value)
-  signal.statement: rule = signal.direct | signal.value
+  signal.statement: rule = signal.direct | signal.value | signal.on | signal.off
+  signal.condition: rule = signalcondition then tree CCondition(spelling = text)
+  signal.on: rule = signalword signalon signal.condition as condition (signalhandlername signal.target as target)?
+    then tree CSignalOn(condition = condition, target = target?)
+  signal.off: rule = signalword signaloff signal.condition as condition then tree CSignalOff(condition = condition)
   signal.direct: rule = signalword signal.target as target then tree CSignal(target = target)
   signal.target: rule = signal.symbol | signal.string
   signal.symbol: rule = signalname then tree Name(spelling = text)

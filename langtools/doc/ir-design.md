@@ -186,7 +186,7 @@ supports `functions`, `function(id)`, `blocks`, `operations`, `operation(id)`, `
 | Function | `argument(type,optional=0)` before creating blocks; `exportas(name)`; `block(name)`; `slot(name,type)`. The first block is the entry. |
 | Block | `constant`, `constantbytes`, `readarg(ordinal,origin,fallback)`, `hasarg(ordinal,origin)`, `load(slot,origin)`, `store(slot,value,origin)`. |
 | Block | `binary(descriptor,left,right,origin)` for two inputs, one result and no attributes; `operation(descriptor,origin)` for a named draft. |
-| Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
+| Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `protect(normal,exceptional,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
 | Operation draft | `input(name,value)`, `attribute(name,bits)`, `finish()`. Every declared field must be supplied once. |
 | Operation view | `name`, `inputs`, `input`, `results`, `result`, `namedresult`, `attribute`, `origin`, `next`, `blockid`, `successors`, `successor`, `schema`. |
 | Value handle | `type`, `isconstant`, `bytes` for literal constants. |
@@ -196,11 +196,52 @@ by its declared name. Read operations in a block with `block.first()` and
 `op.next()` until `op.valid()` is false. Function results currently have one
 value or `core.void`; extension operations may have multiple results.
 
-The nine core operations are constant, argument, load, store, jump, branch,
-return, hasarg and optionalargument. A branch consumes exactly `core.boolean`, with true then false
+The ten core operations are constant, argument, load, store, jump, branch,
+return, hasarg, optionalargument and protect. A branch consumes exactly `core.boolean`, with true then false
 successors. A return matches its owning function's result. Edges stay within one
-function. A block has one final jump, branch or return. Extension operations in
+function. A block has one final jump, branch, protect or return. Extension operations in
 this profile are straight-line operations; graph control uses the core forms.
+
+### Invocation protection
+
+`protect(normal,exceptional,origin)` declares normal continuation and an
+exceptional entry for the protected remainder of the current invocation. It has
+no inputs, results, attributes or auxiliary ID. Its two successors, in that
+order, belong to the same function. It ends its block and is retained control,
+not an evaluated Boolean branch. The host supplies runtime exception binding,
+payload transport and cleanup; Level L supplies no condition names or policies.
+An interpreter or backend without exceptional execution support must reject
+`core.protect` explicitly rather than silently follow only its normal edge.
+Constant evaluation retains it with `keep` and does not execute either edge.
+
+Reachability and transformations preserve both edges. Definite assignment at
+the exceptional entry starts from the setup preceding the declaration; later
+stores on the normal path do not establish handler input values. A host using
+the declaration must keep exceptional consumers within that setup contract.
+No general resumable-edge or exception-matching algorithm is implied.
+
+The intended outcome is explicit exceptional reachability that survives saved
+forms and generic transformations without a false runtime condition or a
+consumer-only hidden root. The implementation and focused regression ownership
+is `llir`, `llirservices`, `ts_llir` and `ts_lloptimise`.
+
+1. **LPROTECT-AC01:** construction and raw loading enforce opcode 10, zero
+   inputs/results/attributes/auxiliary ID, two same-function edges and final
+   block position, including malformed and foreign-owner controls.
+2. **LPROTECT-AC02:** text/binary round trips retain both edges in version 2;
+   version 1 rejects opcode 10 without publishing a graph.
+3. **LPROTECT-AC03:** generic analysis reaches both continuations and distinguishes
+   setup assignment from a store confined to the normal body. Optimisation and
+   reconstruction retain the exceptional continuation while pruning unrelated
+   blocks and remapping its IDs.
+4. **LPROTECT-AC04:** constant evaluation retains the declaration; the independent
+   execution oracle reports unsupported exceptional execution explicitly.
+
+1. **LPROTECT-STEP01:** record the core/API/wire contract above (AC01–04).
+2. **LPROTECT-STEP02:** implement structural admission and preserve generic
+   edge processing; add the existing independent fixture controls (AC01–04).
+3. **LPROTECT-STEP03:** qualify these controls within the owning combined
+   consumer feature batch; no separate feature qualification or commit.
 
 Optionality is exactly 0 or 1 per formal, including optional positions before
 required ones. `readarg(ordinal,origin)` reads a required formal. An optional
@@ -244,7 +285,7 @@ unassigned slot. A compiler must inspect those issues before emitting code that
 requires definite assignment. Structural verification alone does not establish
 that every load is initialised.
 
-Reachability follows both branch edges. Definite assignment intersects the
+Reachability follows both branch and protect edges. Definite assignment intersects the
 incoming sets at a join and iterates loops until no set changes. Function entry
 starts with no assigned slots. The analysis checks each reachable load against
 the stores preceding it. An unreachable block is still structurally checked.
@@ -274,7 +315,8 @@ any stage returns `limit` without usable partial facts; a later request starts a
 fresh analysis.
 
 These are analysis scheduling and storage bounds, not executable-value liveness
-or a register allocator. Exceptional/resumable edge contracts remain unsupported.
+or a register allocator. The finite `core.protect` declaration exposes setup to
+its exceptional entry; other exceptional/resumable edge contracts remain unsupported.
 The independent `ts_llirflow` regression checks a two-entry cycle, unreachable
 predecessors, independent function roots, slot-free cycles, effect refusals,
 resource recovery and owner/revision invalidation using hand-checked facts.
@@ -369,7 +411,7 @@ Core slots belong to one invocation and have no address/escape operation.
 A load may reuse the most recent same-block stored value; an extension whose
 state contract is not `none` invalidates those facts. Unknown/control-transfer
 continuations keep the original graph. All function entries remain roots,
-including uncalled functions. Unknown branches keep both edges; a known branch
+including uncalled functions. Protect declarations retain both edges. Unknown branches keep both edges; a known branch
 does not grant permission to remove observable condition evaluation.
 
 Only constants, arguments and extensions with state `none`, failure `none` and
@@ -440,13 +482,15 @@ data before publishing a graph.
 | Arguments (3) | function, type, optional flag (0 or 1) |
 | Contributors (1) | earlier origin ID |
 
-Core opcode IDs are 1–9 in the order listed above. Extension IDs are 16 plus
+Core opcode IDs are 1–10 in the order listed above. Extension IDs are 16 plus
 registration ordinal. Numeric IDs are not pointers, persisted callbacks or VM
 registers. Zero represents absence only in the fields that permit it.
 
 Writers emit version 2. Readers also accept version 1 with argument rows of
 width 2, all required, and private functions. They validate v1's reserved zero
-export field and reject opcodes 8/9 in a v1 image. Neither old reserved fields
+export field and reject opcodes 8–10 in a v1 image. Version 2 retains the
+existing record layout; older readers without opcode 10 reject it as unknown.
+Neither old reserved fields
 nor unknown future versions silently acquire new semantics. Clone/rewrite and
 optimisation retain signature flags and exports, subject to normal budgets.
 

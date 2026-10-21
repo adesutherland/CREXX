@@ -345,6 +345,14 @@ foreach(_mode opt noopt)
       DEPENDS rxlink "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_signal_contracts_${_mode}
       DEPENDS "${_dir}/signal-contracts-linked.rxbin")
+    ll_compile(conditions-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/signal/conditions-contracts.crexx"
+      "${_dir}" ${_c_drop_inputs})
+    add_custom_command(OUTPUT "${_dir}/conditions-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/conditions-contracts-linked"
+        "${_dir}/conditions-contracts.rxbin" ${_c_drop_inputs}
+      DEPENDS rxlink "${_dir}/conditions-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+    add_custom_target(llcompiler_signal_conditions_contracts_${_mode}
+      DEPENDS "${_dir}/conditions-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
       "${_dir}" ${_c_drop_inputs})
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
@@ -878,6 +886,34 @@ if("c" IN_LIST _languages)
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_clause_contracts_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_clause_vm})
+  endforeach()
+  # One whole-SIGNAL runner owns retained static, condition and native controls.
+  # Two complementary nested cells serialize all toolchain work; the generous
+  # timeout is hang protection, not a performance acceptance threshold.
+  foreach(_mode opt noopt)
+    set(_signal_vm rxbvm)
+    set(_signal_ir on)
+    if(_mode STREQUAL "noopt")
+      set(_signal_ir off)
+      if(TARGET rxtvm)
+        set(_signal_vm rxtvm)
+      endif()
+    endif()
+    set(_test "llcompiler_c_signal_${_mode}_${_signal_ir}_${_signal_vm}")
+    add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/signal/check-conditions.py"
+      --build "${CMAKE_BINARY_DIR}"
+      --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+      --mode ${_mode} --vm ${_signal_vm} --ir ${_signal_ir})
+    set_tests_properties(${_test} PROPERTIES
+      PASS_REGULAR_EXPRESSION "SIGNAL_CONDITIONS_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
+      TIMEOUT 7200 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+      LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity;signal")
+    crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+      llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
+      llcompiler_signal_contracts_${_mode} llcompiler_signal_conditions_contracts_${_mode}
+      run_tests_signal_origin
+      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_signal_vm})
   endforeach()
   # NUMERIC reuses one source image for settings, frame and operand-EXIT checks.
   # Complementary nested lanes are serialized with a generous hang guard.

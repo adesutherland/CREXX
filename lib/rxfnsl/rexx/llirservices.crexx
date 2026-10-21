@@ -128,7 +128,9 @@ analysis: class
     arg i = .int
     return _ops[i]
 
-/** Reachability follows both Boolean edges. Definite assignment intersects
+/** Reachability follows both Boolean and protected-invocation edges.
+ * Exceptional entry sees setup before protect, not later normal-body stores.
+ * Definite assignment intersects
  * incoming sets, starting from the finite lattice top except at function entry.
  * Predecessor links are indexed once. Only changed block exits wake successors;
  * the ring queue retains at most one pending entry per block. No inference about

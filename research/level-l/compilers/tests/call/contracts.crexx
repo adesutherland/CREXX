@@ -163,7 +163,7 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 19 & data.ops() = 78 & count = 5,'exact C19/78/five-type schema')
+  call check(version = 20 & data.ops() = 85 & count = 5,'exact C20/85/five-type schema')
   call shape(contract,'return.empty','context:crexx.c.context','value:crexx.c.result','','context','condition.resource')
   call shape(contract,'bif','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.value','name:crexx.g.text','context.input.output.observation','condition.resource')
   call shape(contract,'call.missing','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.result','name:crexx.g.text','context','condition')

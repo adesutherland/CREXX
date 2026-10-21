@@ -146,6 +146,13 @@ request: class
   _signalrows = .stem
   _signalslot = .llir..slot
   _signalbuilding = .int
+  _handlernodes = .llast..node[]
+  _handlernames = .string[]
+  _handlerconditions = .int[]
+  _handlerordinals = .int[]
+  _handlerrows = .int[]
+  _handlercapacity = .int
+  _conditionblock = .llir..block
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
@@ -197,7 +204,7 @@ request: class
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
         if walk.node().kind() = 'CCommand' then hascommands = 1
-        if walk.node().kind() = 'CSignal' | walk.node().kind() = 'CSignalValue' then _hassignal = 1
+        if wordpos(walk.node().kind(),'CSignal CSignalValue CSignalOn CSignalOff') > 0 then _hassignal = 1
       end
       _entrybytes = 0
       if hascommands then call sourcewarnings(reference parsed)
@@ -385,6 +392,7 @@ request: class
           else leader = 0
         end
       end
+      if node.kind() = 'CSignalOn' then call inventoryhandler(node)
       if node.kind() <> 'CLabel' then iterate
       id = labelindex(node); if id = 0 then return
       raw = node.text('name'); if namework(raw) = 0 then return
@@ -416,6 +424,31 @@ request: class
       call _routineids.set(name,entry as .string)
     end
     return
+  /** One source-order declaration, retained independently of a pruned setter. */
+  inventoryhandler: method = .void
+    arg node = .llast..node
+    target = .llast..node; name = .string
+    condition = conditionid(node); ordinal = _handlernodes[0] + 1; id = node.id()
+    name = word('SYNTAX ERROR FAILURE HALT NOTREADY NOVALUE LOSTDIGITS',condition)
+    if node.count('target') then do
+      target = node.child('target')
+      if target.kind() = 'String' then name = stringliteral(target)
+      else name = target.text('spelling')
+    end
+    if _error <> '' | namework(name) = 0 then return
+    name = rexxclassic_unicode_upper(name)
+    if namework(name) = 0 | entryspace(128,1,'SIGNAL handler') = 0 then return
+    if entryspace(<blen>(name as .binary),2,'SIGNAL handler') = 0 then return
+    if id > _handlercapacity then do
+      if entryspace(id - _handlercapacity,8,'SIGNAL handler index') = 0 then return
+      _handlercapacity = id
+    end
+    _handlernodes[ordinal] = node; _handlernames[ordinal] = name
+    _handlerconditions[ordinal] = condition; _handlerordinals[id] = ordinal
+    return
+  conditionid: method = .int
+    arg node = .llast..node
+    return wordpos(upper(node.child('condition').text('spelling')),'SYNTAX ERROR FAILURE HALT NOTREADY NOVALUE LOSTDIGITS')
   type: method = .llir..typeid
     arg name = .string
     if name = 'void' then return _contract.voidtype()
@@ -450,7 +483,12 @@ request: class
       if _error <> '' then return
       call _block.store(_signalslot,_block.constantbytes(type('text'),tablebytes,origin),origin)
     end
-    dispatch = newblock('entry.dispatch'); call _block.jump(dispatch,origin)
+    dispatch = newblock('entry.dispatch')
+    if _handlernodes[0] > 0 then do
+      _conditionblock = newblock('signal.exception')
+      call _block.protect(dispatch,_conditionblock,origin)
+    end
+    else call _block.jump(dispatch,origin)
     mainbody = newblock('source.main')
     do i = 1 to _labelnodes[0] while _error = ''
       node = _labelnodes[i] as .llast..node
@@ -498,6 +536,7 @@ request: class
       op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
       call _block.returnvalue(built.result(),origin)
     end
+    if _handlernodes[0] > 0 & _error = '' then call conditiondispatch(origin)
     return
   /** Length framing writes bytes once into the owned table; no source/table
    * is copied per semantic SIGNAL or per label lookup. */
@@ -511,8 +550,8 @@ request: class
     assembler bappend target,bytes
     return
   signaltable: method = .binary
-    bytes = .binary
-    call signalfield(reference bytes,'43534947310A'x as .binary)
+    bytes = .binary; i = .int; row = .int; found = .string; name = .string; node = .llast..node
+    call signalfield(reference bytes,'43534947320A'x as .binary)
     call signalfield(reference bytes,((_signalnames[0] as .string) || ':') as .binary)
     do i = 1 to _signalnames[0] while _error = ''
       node = _signalnodes[i]; name = _signalnames[i]
@@ -524,7 +563,92 @@ request: class
       call signalfield(reference bytes,((node.start() as .string) || ':') as .binary)
       call signalfield(reference bytes,((node.finish() as .string) || ':') as .binary)
     end
+    call signalfield(reference bytes,((_handlernodes[0] as .string) || ':') as .binary)
+    do i = 1 to _handlernodes[0] while _error = ''
+      node = _handlernodes[i]; name = _handlernames[i]
+      found = _signalrows.get(name); row = 0
+      if found <> '' then row = found as .int
+      _handlerrows[i] = row
+      call signalfield(reference bytes,((i as .string) || ':') as .binary)
+      call signalfield(reference bytes,((_handlerconditions[i] as .string) || ':') as .binary)
+      call signalfield(reference bytes,((row as .string) || ':') as .binary)
+      call signalfield(reference bytes,((<blen>(name as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,name as .binary)
+      call signalfield(reference bytes,((<blen>(_filename as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,_filename as .binary)
+      call signalfield(reference bytes,((node.start() as .string) || ':') as .binary)
+      call signalfield(reference bytes,((node.finish() as .string) || ':') as .binary)
+    end
     return bytes
+  /** Mutable policy names an immutable table declaration; OFF has no target. */
+  conditionpolicy: method = .void
+    arg node = .llast..node
+    origin = at(node); integer = .llir..intcodec()
+    ordinal = 0; row = 0; name = ''
+    if node.kind() = 'CSignalOn' then do
+      id = node.id(); ordinal = _handlerordinals[id]
+      row = _handlerrows[ordinal]; name = _handlernames[ordinal]
+      if row = 0 then row = -1
+    end
+    if signalwork(node,16) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.policy'),origin)
+    call op.input('table',_block.load(_signalslot,origin.derive()))
+    call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('condition',integer.parse(conditionid(node) as .string))
+    call op.attribute('handler',integer.parse(ordinal as .string))
+    call op.attribute('label',integer.parse(row as .string)); call op.attribute('name',name as .binary)
+    built = op.finish()
+    return
+  /** Only a real protected successor reaches this once-owned event segment.
+   * The setup origin is generated once; all cold operations reuse it rather
+   * than claiming an authored ON clause or a runtime causing location. */
+  conditiondispatch: method = .void
+    arg origin = .llir..origin
+    integer = .llir..intcodec(); _block = _conditionblock
+    op = .llir..opdraft; built = .llir..opview; target = .llir..block
+    labelnode = .llast..node; code = .string
+    if signalwork(_tree.root(),32) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.capture'),origin)
+    call op.input('table',_block.load(_signalslot,origin))
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+    built = op.finish(); captured = built.result()
+    op = _block.operation(_contract.operation('crexx.c.signal.select'),origin)
+    call op.input('condition',captured); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('key','SIGNAL' as .binary); built = op.finish()
+    selected = temporary(type('int64')); call _block.store(selected,built.result(),origin)
+    do i = 1 to _handlernodes[0] while _error = ''
+      if signalwork(_handlernodes[i],64) = 0 then return
+      op = _block.operation(_contract.operation('crexx.c.signal.selected'),origin)
+      call op.input('selected',_block.load(selected,origin)); call op.attribute('key','SIGNAL' as .binary)
+      call op.attribute('handler',integer.parse(i as .string)); built = op.finish()
+      yes = newblock('signal.handler'); no = newblock('signal.handler.next')
+      call _block.branch(built.result(),yes,no,origin); _block = yes
+      op = _block.operation(_contract.operation('crexx.c.signal.deliver'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+      call op.attribute('condition',integer.parse(_handlerconditions[i] as .string))
+      call op.attribute('handler',integer.parse(i as .string)); built = op.finish()
+      row = _handlerrows[i]; code = '16.1'
+      if row > 0 then do
+        code = '16.2'
+        if _signalids[row] > 0 then code = ''
+      end
+      if code = '' then do
+        labelnode = _signalnodes[row]; id = labelnode.id(); target = _sourceblocks[id] as .llir..block
+        call _block.jump(target,origin)
+      end
+      else do
+        op = _block.operation(_contract.operation('crexx.c.signal.handler.invalid'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+        call op.attribute('condition',integer.parse(_handlerconditions[i] as .string))
+        call op.attribute('handler',integer.parse(i as .string)); call op.attribute('code',code as .binary)
+        built = op.finish(); call _block.returnvalue(built.result(),origin)
+      end
+      _block = no
+    end
+    op = _block.operation(_contract.operation('crexx.c.signal.relay'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+    built = op.finish(); call _block.returnvalue(built.result(),origin)
+    return
   signalwork: method = .int
     arg node = .llast..node, count = 1
     if _error <> '' then return 0
@@ -882,6 +1006,7 @@ request: class
       when kind = 'CAddress' then call addressstatement(node)
       when kind = 'CCommand' then call commandstatement(node)
       when kind = 'CSignal' | kind = 'CSignalValue' then call signalstatement(node)
+      when kind = 'CSignalOn' | kind = 'CSignalOff' then call conditionpolicy(node)
       when kind = 'CSelect' then call selection(node)
       when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do

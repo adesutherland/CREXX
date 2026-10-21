@@ -59,20 +59,25 @@ invocation keeps its local bypass. Labels do not rearm executed PROCEDURE
 eligibility. The [label/entry contract](doc/architecture.md#label-arm-prerequisite)
 was introduced with C17 without changing runtime interfaces.
 
-Static SIGNAL accepts direct symbols, decoded quoted names and once-evaluated
+**SIGNAL is complete for the agreed instruction contract.** It accepts direct
+symbols, decoded quoted names and once-evaluated
 VALUE expressions, including an implied VALUE before a parenthesized or unary
 expression. Targets use the selected case-insensitive Unicode profile and
 strict text equality: `1.20` and `1.2` remain distinct labels. Transfer sets
 SIGL/.SIGL, closes active loop control and reaches the selected source
 label in the current invocation, retaining its pool and numeric settings.
 Known static DO/SELECT targets refuse with 16.2; VALUE resolves eligibility when
-reached. The [SIGNAL contract](doc/architecture.md#signal-static-contract)
-keeps ON/OFF, handlers, clause/TRACE and wider host/platform scope open.
+reached. Seven-condition ON/OFF uses shared activation policy and condition
+recording, same-frame handlers and typed payload/origin transport. Actual
+NOVALUE reads, LOSTDIGITS checks and shared BIF/PARSE/ADDRESS producers use
+the [whole SIGNAL contract](doc/architecture.md#signal-complete-contract).
+Practical TRACE, real host HALT, broader host/platform acceptance and INTERPRET
+retain their explicit [conformance qualifications](doc/levelc-conformance.md).
 
 The begin-only [CLAUSE1 profile](doc/architecture.md#clause-clock-contract)
 locally qualifies lazy DATE/TIME samples in the current activation, including
 ordered DO captures, repeated WHILE and first/repeated UNTIL. Clock-free owners
-emit no reset, context transport or marker metadata. Completion/handler/TRACE
+emit no reset, context transport or marker metadata. Completion/checkpoint/TRACE
 and wider clock host/platform behavior remain separate.
 
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,

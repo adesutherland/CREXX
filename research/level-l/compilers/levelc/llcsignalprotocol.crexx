@@ -53,6 +53,26 @@ checked: class
   _sourcekeys = .stem
   _sourcebytes = .binary[]
   _sourceready = .int[]
+  _protections = .int[]
+  _captures = .int[]
+  _eventowners = .int[]
+  _eventkeys = .string[]
+  _selections = .int[]
+  _selectedvalues = .int[]
+  _selectedslots = .int[]
+  _selectedstores = .int[]
+  _handlerfirst = .int[]
+  _handlercount = .int[]
+  _handlerrows = .int[]
+  _handlernames = .string[]
+  _handlerconditions = .int[]
+  _handlerlabels = .int[]
+  _handlerlandings = .int[]
+  _handlercodes = .int[]
+  _handlerpolicies = .int[]
+  _handlersources = .int[]
+  _handlerstarts = .int[]
+  _handlerends = .int[]
   _payload = .binary
   _cursor = .int
   _end = .int
@@ -122,6 +142,40 @@ checked: class
     arg opid = .int
     call run(); if _error <> '' then return 0
     return _transfers[opid] <> 0
+  protection: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _protections[fn]
+  capture: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _captures[fn]
+  owner: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _eventowners[opid]
+  handlerpolicy: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlerpolicies[row]
+  handlerlanding: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlerlandings[row]
+  handlercode: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlercodes[row]
+  /** The immutable declaration survives pruning of its executable ON setter. */
+  handlername: method = reference .string
+    arg opid = .int
+    call run(); missing = reference .string
+    if _error <> '' then return missing
+    row = _handlerrows[opid]; if row = 0 then return missing
+    return reference _handlernames[row]
   /** Preserve the owning authored clause/diagnostic while emitting truthful
    * generated records. Claiming already proved this disjoint mark ownership;
    * setup, operand work and operations outside a segment have no anchor. */
@@ -282,7 +336,7 @@ checked: class
     assembler null bits
     _cursor = 6; _end = extent
     if extent < 6 then do; call fail('LOWERING: SIGNAL table header is truncated',constantop); return; end
-    if bin2x(binsubstr(_payload,1,6)) \== '43534947310A' then do; call fail('LOWERING: SIGNAL table has an unknown header',constantop); return; end
+    if bin2x(binsubstr(_payload,1,6)) \== '43534947320A' then do; call fail('LOWERING: SIGNAL table has an unknown header',constantop); return; end
     count = uint(); if _error <> '' then return
     /* Every row has at least its five unsigned fields and a nonempty name. */
     if count > (_end - _cursor) <idiv> 11 then do; call fail('LOWERING: SIGNAL table row count exceeds its framing',constantop); return; end
@@ -333,8 +387,65 @@ checked: class
       call _rowkeys.set(key,row as .string)
     end
     if nextentry <> program.entries(fn) then do; call fail('LOWERING: SIGNAL table omits a positive local entry',constantop); return; end
+    call decodehandlers(fn,constantop)
+    if _error <> '' then return
     if _cursor <> _end then do; call fail('LOWERING: SIGNAL table has trailing bytes',constantop); return; end
     assembler null _payload
+    return
+  /** Dense immutable ON declarations keep cold targets truthful after an
+   * unreachable executing policy setter has been pruned. Decode once. */
+  decodehandlers: method = .void
+    arg fn = .int, constantop = .int
+    count = uint(); if _error <> '' then return
+    if count > (_end - _cursor) <idiv> 14 then do; call fail('LOWERING: SIGNAL handler count exceeds its framing',constantop); return; end
+    if reserve(count,80) = 0 then return
+    _handlerfirst[fn] = _handlernames[0] + 1; _handlercount[fn] = count
+    i = .int; row = .int; ordinal = .int; condition = .int; label = .int
+    first = .int; last = .int; sourceid = .int; labelrow = .int
+    name = .string; filename = .string; key = .string; prior = .string; found = .string
+    do i = 1 to count
+      if charge() = 0 then return
+      ordinal = uint(); condition = uint(); label = uint(); name = frame(); filename = frame(); first = uint(); last = uint()
+      if _error <> '' then return
+      if ordinal <> i | condition < 1 | condition > 7 | label > _rowcount[fn] then do
+        call fail('LOWERING: SIGNAL handler declaration has an invalid ordinal, condition or row',constantop); return
+      end
+      size = <blen>(name as .binary)
+      if reserve(size,4) = 0 | bulkwork(size,3) = 0 | charge() = 0 then return
+      if name \== rexxclassic_unicode_upper(name) then do; call fail('LOWERING: SIGNAL handler name is not canonical',constantop); return; end
+      key = fn || ':' || bin2x(name as .binary)
+      if reserve(<blen>(key as .binary) + 32,1) = 0 | charge(<blen>(key as .binary) + 1) = 0 then return
+      found = _rowkeys.get(key)
+      if label = 0 then do
+        if found <> '' then do; call fail('LOWERING: SIGNAL missing handler actually names the first label',constantop); return; end
+      end
+      else do
+        labelrow = _firstrow[fn] + label - 1
+        if found \== labelrow as .string | name \== _rownames[labelrow] then do
+          call fail('LOWERING: SIGNAL handler substitutes its first label row',constantop); return
+        end
+      end
+      if charge(<blen>(filename as .binary) + 1) = 0 then return
+      found = _sourcekeys.get(bin2x(filename as .binary))
+      if found == '' | found == '0' then do; call fail('LOWERING: SIGNAL handler source is absent or ambiguous',constantop); return; end
+      sourceid = found as .int
+      if range(sourceid,first,last,constantop) = 0 then return
+      key = 'handler:' || fn || ':' || sourceid
+      if reserve(length(key) + 64,1) = 0 | charge(length(key) + 1) = 0 then return
+      prior = _sourcekeys.get(key)
+      if prior <> '' then do
+        if first <= prior as .int then do; call fail('LOWERING: SIGNAL handler declarations are not source ordered',constantop); return; end
+      end
+      call _sourcekeys.set(key,first as .string)
+      row = _handlernames[0] + 1; _handlernames[row] = name
+      _handlerconditions[row] = condition; _handlerlabels[row] = label
+      _handlersources[row] = sourceid; _handlerstarts[row] = first; _handlerends[row] = last
+      if label = 0 then _handlercodes[row] = 161
+      else do
+        if _rowentries[labelrow] = 0 then _handlercodes[row] = 162
+        else _handlerlandings[row] = _landings[labelrow]
+      end
+    end
     return
   /** Only canonical context loads and this segment's two proved transports can
    * occur between its semantic operations. Exact context mappings are retained. */
@@ -496,6 +607,193 @@ checked: class
       id = store.get(3,id,3)
     end
     return
+  /** Policy execution is separate from the immutable ON declarations. A
+   * generic prune may remove setters without removing their declared targets. */
+  policy: method = .void
+    arg opid = .int
+    store = dereference _store; op = .llir..opview(_store,opid)
+    fn = store.get(2,op.blockid(),1)
+    if authored(opid) = 0 then return
+    if _tablevalues[store.operand(opid,1)] <> fn then do; call fail('LOWERING: SIGNAL policy uses a foreign or missing table',opid); return; end
+    condition = integer(op,'condition'); ordinal = integer(op,'handler'); label = integer(op,'label'); name = text(op,'name')
+    if _error <> '' then return
+    if condition < 1 | condition > 7 | ordinal < 0 | ordinal > _handlercount[fn] then do
+      call fail('LOWERING: SIGNAL policy has an invalid condition or handler',opid); return
+    end
+    if ordinal = 0 then do
+      if label <> 0 | name \== '' then do; call fail('LOWERING: SIGNAL OFF has a target or handler',opid); return; end
+    end
+    else do
+      row = _handlerfirst[fn] + ordinal - 1; expected = _handlerlabels[row]
+      if expected = 0 then expected = -1
+      at = store.get(3,opid,11)
+      if condition <> _handlerconditions[row] | label <> expected | name \== _handlernames[row] then do
+        call fail('LOWERING: SIGNAL ON disagrees with its immutable declaration',opid); return
+      end
+      if store.get(9,at,1) <> _handlersources[row] | store.get(9,at,2) <> _handlerstarts[row] | store.get(9,at,3) <> _handlerends[row] then do
+        call fail('LOWERING: SIGNAL ON substitutes its declared authored origin',opid); return
+      end
+      if _handlerpolicies[row] <> 0 then do; call fail('LOWERING: SIGNAL ON ordinal has more than one setter',opid); return; end
+      _handlerpolicies[row] = opid; _handlerrows[opid] = row
+    end
+    ignored = claim(opid,opid)
+    return
+  /** Every cold record belongs to one generated capture, with one visit.
+   * No cold record pretends to be the runtime fault or the ON instruction. */
+  coldclaim: method = .int
+    arg opid = .int, captureid = .int
+    if opid < 1 then do; call fail('LOWERING: SIGNAL dispatcher ends before its terminal',captureid); return 0; end
+    store = dereference _store
+    if store.get(3,opid,11) <> store.get(3,captureid,11) then do
+      call fail('LOWERING: SIGNAL dispatcher substitutes its generated origin',opid); return 0
+    end
+    if claim(opid,captureid) = 0 then return 0
+    _eventowners[opid] = captureid
+    return 1
+  eventkey: method = .int
+    arg opid = .int, captureid = .int
+    op = .llir..opview(_store,opid); key = text(op,'key')
+    if _error <> '' then return 0
+    if key \== _eventkeys[captureid] then do; call fail('LOWERING: SIGNAL dispatcher uses a foreign event key',opid); return 0; end
+    return 1
+  /** Only canonical context and the unique selected-I transport are admitted
+   * between cold semantic operations. The table is read only by capture. */
+  coldloads: method = .int
+    arg first = .int, captureid = .int, selection = 0, table = 0
+    store = dereference _store; program = dereference _program
+    fn = store.get(2,store.get(3,captureid,2),1); id = first
+    do while id > 0
+      if store.get(3,id,1) <> 3 then leave
+      slotid = store.get(3,id,12); value = store.result(id,1)
+      allowed = slotid = program.contextslot(fn)
+      if table & _tablevalues[value] = fn then allowed = 1
+      if selection & _selectedslots[slotid] = captureid then do
+        allowed = 1; _selectedvalues[value] = captureid
+      end
+      if allowed = 0 then do; call fail('LOWERING: SIGNAL dispatcher reads an unproved slot',id); return 0; end
+      if coldclaim(id,captureid) = 0 then return 0
+      id = store.get(3,id,3)
+    end
+    return id
+  coldreturn: method = .int
+    arg producer = .int, captureid = .int
+    store = dereference _store; terminal = store.get(3,producer,3)
+    if terminal = 0 then do; call fail('LOWERING: SIGNAL resumed path lacks its owned result return',producer); return 0; end
+    op = .llir..opview(_store,terminal); value = store.result(producer,1)
+    if op.name() <> 'core.return' | op.inputs() <> 1 then do
+      call fail('LOWERING: SIGNAL resumed path lacks its result return',terminal); return 0
+    end
+    if store.operand(terminal,1) <> value | _uses[value] <> 1 then do
+      call fail('LOWERING: SIGNAL resumed path substitutes or shares its result',terminal); return 0
+    end
+    return coldclaim(terminal,captureid)
+  coldhandler: method = .void
+    arg first = .int, captureid = .int, row = .int, ordinal = .int
+    store = dereference _store
+    id = coldloads(first,captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL selected branch lacks delivery',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.deliver' then do; call fail('LOWERING: SIGNAL selected branch lacks delivery',id); return; end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    if integer(op,'condition') <> _handlerconditions[row] | integer(op,'handler') <> ordinal then do
+      call fail('LOWERING: SIGNAL delivery substitutes its selected declaration',id); return
+    end
+    _handlerrows[id] = row; next = store.get(3,id,3)
+    if _handlercodes[row] = 0 then do
+      if next = 0 then do; call fail('LOWERING: SIGNAL delivery lacks its natural jump',id); return; end
+      op = .llir..opview(_store,next)
+      if op.name() <> 'core.jump' then do; call fail('LOWERING: SIGNAL delivery is not followed by its natural jump',next); return; end
+      if op.successor(1) <> _handlerlandings[row] then do; call fail('LOWERING: SIGNAL handler jumps outside its natural landing',next); return; end
+      if coldclaim(next,captureid) = 0 then return
+      _handlerrows[next] = row; _transfers[next] = 1
+    end
+    else do
+      id = coldloads(next,captureid); if _error <> '' then return
+      if id = 0 then do; call fail('LOWERING: SIGNAL invalid handler lacks its error',captureid); return; end
+      op = .llir..opview(_store,id)
+      if op.name() <> 'crexx.c.signal.handler.invalid' then do; call fail('LOWERING: SIGNAL invalid handler substitutes its error',id); return; end
+      if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+      code = '16.1'; if _handlercodes[row] = 162 then code = '16.2'
+      if integer(op,'condition') <> _handlerconditions[row] | integer(op,'handler') <> ordinal | text(op,'code') \== code then do
+        call fail('LOWERING: SIGNAL handler error disagrees with its selected declaration',id); return
+      end
+      _handlerrows[id] = row; ignored = coldreturn(id,captureid)
+    end
+    return
+  /** One finite private dispatcher covers the immutable declaration order,
+   * including cases whose executing setter disappeared under generic prune. */
+  dispatcher: method = .void
+    arg fn = .int
+    store = dereference _store; program = dereference _program
+    protectid = _protections[fn]; captureid = _captures[fn]
+    if protectid = 0 | captureid = 0 then do; call fail('LOWERING: SIGNAL protection and capture must be paired'); return; end
+    if store.get(3,protectid,2) <> store.get(1,fn,3) then do; call fail('LOWERING: SIGNAL protection is outside canonical setup',protectid); return; end
+    root = store.successor(protectid,2)
+    if root = store.get(1,fn,3) | store.successor(protectid,1) = root | store.get(3,captureid,2) <> root then do
+      call fail('LOWERING: SIGNAL capture is outside its unique exceptional entry',captureid); return
+    end
+    if setupgenerated(protectid) = 0 | setupgenerated(captureid) = 0 then return
+    at = store.get(3,captureid,11)
+    if range(store.get(9,at,1),store.get(9,at,2),store.get(9,at,3),captureid) = 0 then return
+    if privateblock(root,protectid,captureid) = 0 then return
+    id = coldloads(store.get(2,root,2),captureid,0,1)
+    if _error <> '' then return
+    if id <> captureid then do; call fail('LOWERING: SIGNAL capture is not first exceptional semantic work',captureid); return; end
+    if _tablevalues[store.operand(captureid,1)] <> fn then do; call fail('LOWERING: SIGNAL capture uses a foreign or missing table',captureid); return; end
+    op = .llir..opview(_store,captureid); key = text(op,'key')
+    if _error <> '' then return
+    if key == '' then do; call fail('LOWERING: SIGNAL capture key is empty',captureid); return; end
+    _eventkeys[captureid] = key
+    if coldclaim(captureid,captureid) = 0 then return
+    id = coldloads(store.get(3,captureid,3),captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL capture lacks policy selection',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.select' then do; call fail('LOWERING: SIGNAL capture lacks policy selection',id); return; end
+    if store.operand(id,1) <> store.result(captureid,1) | _uses[store.result(captureid,1)] <> 1 then do
+      call fail('LOWERING: SIGNAL select substitutes or shares its captured condition',id); return
+    end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    _selections[captureid] = id; value = store.result(id,1); _selectedvalues[value] = captureid
+    writer = store.get(3,id,3)
+    if writer = 0 then do; call fail('LOWERING: SIGNAL selected policy lacks its unique slot',id); return; end
+    if store.get(3,writer,1) <> 4 then do; call fail('LOWERING: SIGNAL selected policy lacks its immediate store',writer); return; end
+    slotid = store.get(3,writer,12)
+    if _writes[slotid] <> 1 | store.operand(writer,1) <> value | _tableslots[slotid] <> 0 | slotid = program.contextslot(fn) then do
+      call fail('LOWERING: SIGNAL selected policy substitutes or shares its slot',writer); return
+    end
+    if coldclaim(writer,captureid) = 0 then return
+    _selectedstores[captureid] = writer; _selectedslots[slotid] = captureid
+    id = store.get(3,writer,3); i = .int; row = .int; branch = .int; yes = .int; no = .int
+    do i = 1 to _handlercount[fn]
+      id = coldloads(id,captureid,1); if _error <> '' then return
+      if id = 0 then do; call fail('LOWERING: SIGNAL dispatcher omits a declared handler',captureid); return; end
+      op = .llir..opview(_store,id); row = _handlerfirst[fn] + i - 1
+      if op.name() <> 'crexx.c.signal.selected' then do; call fail('LOWERING: SIGNAL dispatcher omits a declared handler test',id); return; end
+      if _selectedvalues[store.operand(id,1)] <> captureid then do
+        call fail('LOWERING: SIGNAL dispatcher substitutes its selected policy',id); return
+      end
+      if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+      if integer(op,'handler') <> i then do; call fail('LOWERING: SIGNAL handler tests are not in declaration order',id); return; end
+      _handlerrows[id] = row; branch = store.get(3,id,3)
+      if branch = 0 then do; call fail('LOWERING: SIGNAL selected test lacks its branch',id); return; end
+      if store.get(3,branch,1) <> 6 then do; call fail('LOWERING: SIGNAL selected test lacks its direct branch',branch); return; end
+      if store.operand(branch,1) <> store.result(id,1) | _uses[store.result(id,1)] <> 1 then do
+        call fail('LOWERING: SIGNAL selected test does not exclusively control its branch',branch); return
+      end
+      if coldclaim(branch,captureid) = 0 then return
+      yes = store.successor(branch,1); no = store.successor(branch,2)
+      if privateblock(yes,branch,captureid) = 0 | privateblock(no,branch,captureid) = 0 then return
+      call coldhandler(store.get(2,yes,2),captureid,row,i)
+      if _error <> '' then return
+      id = store.get(2,no,2)
+    end
+    id = coldloads(id,captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL dispatcher lacks its outward relay',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.relay' then do; call fail('LOWERING: SIGNAL dispatcher fallback is not its relay',id); return; end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    ignored = coldreturn(id,captureid)
+    return
   run: method = .void
     if _ready then return
     _ready = 1
@@ -509,7 +807,7 @@ checked: class
     _store = graph.storage(); store = dereference _store
     op = .llir..opview; name = .string; key = .string; id = .int; fn = .int; b = .int
     i = .int; value = .int; target = .int; slotid = .int; producer = .int; writer = .int
-    constantop = .int; table = .int; owner = .int; mark = .int; row = .int; first = .int; found = 0; allowed = .int
+    constantop = .int; table = .int; owner = .int; mark = .int; row = .int; first = .int; found = 0; allowed = .int; captureid = .int
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       if program.tableconstant(fn) > 0 then found = 1
@@ -517,17 +815,17 @@ checked: class
     do id = 1 to store.count(3)
       if charge() = 0 then return
       name = graph.operation(id).name()
-      if left(name,15) = 'crexx.c.signal.' then found = 1
+      if left(name,15) = 'crexx.c.signal.' | name = 'core.protect' then found = 1
     end
     if found = 0 then return
     /* Fixed-width graph facts are reserved once before any indexed write. */
-    if reserve(store.count(3) + 1,80) = 0 | reserve(store.count(4) + 1,48) = 0 then return
-    if reserve(store.count(5) + 1,32) = 0 | reserve(store.count(2) + 1,24) = 0 then return
-    if reserve(store.count(1) + 1,16) = 0 | reserve(store.count(10) + 1,32) = 0 then return
+    if reserve(store.count(3) + 1,128) = 0 | reserve(store.count(4) + 1,56) = 0 then return
+    if reserve(store.count(5) + 1,40) = 0 | reserve(store.count(2) + 1,24) = 0 then return
+    if reserve(store.count(1) + 1,48) = 0 | reserve(store.count(10) + 1,32) = 0 then return
     _symbols = .llcsymbols..checked(_limit,_budget)
     do id = 1 to store.count(3)
       if charge() = 0 then return
-      op = graph.operation(id); name = op.name()
+      op = .llir..opview(_store,id); name = op.name()
       do i = 1 to op.inputs()
         if charge() = 0 then return
         value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumer[value] = id
@@ -541,6 +839,15 @@ checked: class
       end
       if name = 'crexx.c.signal.name' then do
         value = op.result().id(); _nameowners[value] = value; _namevalues[id] = value
+      end
+      fn = store.get(2,op.blockid(),1)
+      if name = 'core.protect' then do
+        if _protections[fn] <> 0 then do; call fail('LOWERING: SIGNAL function has more than one protection declaration',id); return; end
+        _protections[fn] = id
+      end
+      if name = 'crexx.c.signal.capture' then do
+        if _captures[fn] <> 0 then do; call fail('LOWERING: SIGNAL function has more than one event capture',id); return; end
+        _captures[fn] = id
       end
       if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
         if authored(id) = 0 then return
@@ -599,6 +906,19 @@ checked: class
       owner = _nameslots[slotid]
       if owner > 0 then do; _nameowners[value] = owner; _nametransport[id] = 1; _namevalues[id] = owner; end
     end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if store.opname(store.get(3,id,1)) = 'crexx.c.signal.policy' then do
+        call policy(id); if _error <> '' then return
+      end
+    end
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      if _handlercount[fn] > 0 & _protections[fn] = 0 then do; call fail('LOWERING: SIGNAL handler declarations lack protected entry'); return; end
+      if _protections[fn] > 0 | _captures[fn] > 0 then do
+        call dispatcher(fn); if _error <> '' then return
+      end
+    end
     do mark = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(mark)
@@ -634,14 +954,24 @@ checked: class
       if _erased[id] & name = 'core.load' then do
         if _uses[op.result().id()] = 0 then do; call fail('LOWERING: SIGNAL table has stray unused load transport',id); return; end
       end
+      if name = 'core.load' then do
+        slotid = store.get(3,id,12); captureid = _selectedslots[slotid]
+        if captureid > 0 then do
+          value = store.result(id,1)
+          if _eventowners[id] <> captureid | _uses[value] = 0 then do
+            call fail('LOWERING: SIGNAL selected-policy transport escapes its dispatcher',id); return
+          end
+          _selectedvalues[value] = captureid
+        end
+      end
       do i = 1 to op.inputs()
         if charge() = 0 then return
         value = op.input(i).id(); table = _tablevalues[value]; owner = _nameowners[value]
         if table > 0 then do
           allowed = table = fn & i = 1
-          allowed = allowed & (name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | (_erased[id] & name = 'core.store'))
+          allowed = allowed & (name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.signal.capture' | (_erased[id] & name = 'core.store'))
           if allowed = 0 then do; call fail('LOWERING: SIGNAL table escapes its full-use closure',id); return; end
-          if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' then do
+          if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.signal.capture' then do
             producer = store.get(4,value,1)
             if producer <> program.tableconstant(fn) then do
               /* Includes the pre-mark load, which is outside the forward
@@ -649,7 +979,10 @@ checked: class
                * merely because its value has the right immutable slot. */
               mark = _segments[id]; anchor = store.get(3,mark,11)
               if graph.operation(producer).name() <> 'core.load' then do; call fail('LOWERING: SIGNAL table has an unproved alias',producer); return; end
-              if paired(producer,anchor) = 0 then return
+              if name = 'crexx.c.signal.capture' then do
+                if _eventowners[producer] <> id then do; call fail('LOWERING: SIGNAL capture table load escapes its generated entry',producer); return; end
+              end
+              else if paired(producer,anchor) = 0 then return
             end
           end
         end
@@ -657,6 +990,13 @@ checked: class
           allowed = (name = 'core.store' & _namestores[owner] = id & i = 1) | (name = 'crexx.c.signal.test' & i = 2) | (name = 'crexx.c.signal.invalid' & i = 1)
           mark = _namemarks[owner]
           if allowed = 0 | mark = 0 | _segments[id] <> mark then do; call fail('LOWERING: SIGNAL dynamic name escapes its segment',id); return; end
+        end
+        captureid = _selectedvalues[value]
+        if captureid > 0 then do
+          allowed = (name = 'core.store' & _selectedstores[captureid] = id & i = 1) | (name = 'crexx.c.signal.selected' & i = 1)
+          if allowed = 0 | _eventowners[id] <> captureid then do
+            call fail('LOWERING: SIGNAL selected policy escapes its private use closure',id); return
+          end
         end
       end
     end

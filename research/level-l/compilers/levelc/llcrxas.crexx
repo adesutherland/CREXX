@@ -62,6 +62,15 @@ compilation: class
   _parsestate = .int
   _lastsource = .string
   _lastlocation = .string
+  _sourceline = .int
+  _lastfaultline = .int
+  _handlersactive = .int
+  _captureowner = .int
+  _capturepayload = .int
+  _capturetag = .int
+  _captureline = .int
+  _capturebusy = .int
+  _faultline = .int
   _routine = .string
   _locals = .int
   _names = .string[]
@@ -292,6 +301,7 @@ compilation: class
       when type = '.rexxclassiccontext' then type = '.rexxclassiccontext..rexxclassiccontext'
       when type = '.rexxbifcallcontext' then type = '.rexxclassicbifs..rexxbifcallcontext'
       when type = '.rexxclassicconditionevent' then type = '.rexxclassicconditionevent..rexxclassicconditionevent'
+      when type = '.runtime_signal' then type = '.rxfnsb..runtime_signal'
       otherwise nop
     end
     return prefix || type
@@ -409,12 +419,13 @@ compilation: class
       call checkselectorigin(op,'clause begin')
       if _error <> '' then return
     end
-    if left(name,15) = 'crexx.c.signal.' then do
-      if name <> 'crexx.c.signal.test' then call checkselectorigin(op,'SIGNAL')
+    if wordpos(name,'crexx.c.signal.mark crexx.c.signal.name crexx.c.signal.invalid') > 0 then do
+      call checkselectorigin(op,'SIGNAL')
       if _error <> '' then return
       opid = op.id(); clausefirst = op.origin().first() + 1
       _parseclauses[opid] = clausefirst
     end
+    if name = 'crexx.c.signal.policy' then call checkselectorigin(op,'SIGNAL policy')
     if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
       call checkselectorigin(op,'command ADDRESS')
       opid = op.id(); clausefirst = op.origin().first() + 1
@@ -752,11 +763,12 @@ compilation: class
     if kind <> 'STREAM' then do
       call emit('load',text || ',' || llrxastext..quote(op.attribute('resource'))); return
     end
-    pool = reg(_workbase + 2); value = reg(_workbase + 8)
-    call binding(input(op),'pool',pool)
-    symbol = imported('llctarget','llctarget.poolread','.rexxvalue..rexxvalue','reference@.rexxpool..rexxvariablepool .string')
-    call argcopy(1,pool); call argtext(2,op.attribute('resource') as .string); call invoke(value,symbol,2)
-    call emit('null',pool); call addresstext(value); call emit('null',value)
+    value = reg(_workbase + 8)
+    call emit('linkref',reg(_workbase + 1) || ',' || input(op))
+    symbol = member('rexxclassiccontext.rexxclassiccontext','readsymbol','.rexxvalue..rexxvalue','.string')
+    call argtext(2,op.attribute('resource') as .string); call invoke(value,symbol,2,reg(_workbase + 1))
+    call emit('unlink',reg(_workbase + 1))
+    call addresstext(value); call emit('null',value)
     return
   addressoperation: method = .void
     arg op = .llir..opview, name = .string
@@ -917,6 +929,8 @@ compilation: class
     call emit('swap',activation || ',a1')
     call emit('llprovider_bound:')
     call emit('link',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','beginexternalconditionscope','.void')
+    call invoke('',symbol,1,receiver)
     symbol = member('rexxactivation.rexxactivationarguments','consumefirstinstruction','.void')
     call invoke('',symbol,1,receiver)
     call emit('unlink',receiver)
@@ -1290,6 +1304,16 @@ compilation: class
       _commandowners[i] = next; next = next + 1
       _commandcleanup[_commandcleanup[0] + 1] = i
     end
+    _handlersactive = next; next = next + 1
+    _captureowner = -1; _capturepayload = -1; _capturetag = -1
+    _captureline = -1; _capturebusy = -1; _faultline = -1
+    if signalfacts.protection(_fn) > 0 then do
+      _captureowner = next; _capturepayload = next + 1; _capturetag = next + 2
+      _captureline = next + 3; _capturebusy = next + 4; _faultline = next + 5
+      next = next + 6
+      _signals = _signals || ' CLASSIC_CONDITION'
+    end
+    else if _hasexternal[_fn] then _signals = _signals || ' CLASSIC_CONDITION'
     /* Use the same selector for planning and emission. Hidden helper calls
      * therefore participate without a second arity table to maintain. */
     _phase = 'frame planning'; _workbase = next; next = next + 11
@@ -1328,6 +1352,12 @@ compilation: class
     if _export <> '' then name = _export || '.$BODY.' || _fn
     if store.get(1,_fn,6) > 0 then name = store.text(store.get(1,_fn,6))
     call emit('.meta',llrxastext..quote(name as .binary) || '="b" ' || llrxastext..quote(targettype(store.get(1,_fn,2)) as .binary) || ' llf' || _fn || '() ' || llrxastext..quote(args as .binary))
+    call emit('load',reg(_handlersactive) || ',0')
+    if _captureowner >= 0 then do
+      call emit('null',reg(_captureowner)); call emit('null',reg(_capturepayload)); call emit('null',reg(_capturetag))
+      call emit('load',reg(_captureline) || ',0'); call emit('load',reg(_capturebusy) || ',0')
+      call emit('load',reg(_faultline) || ',0')
+    end
     /* Recycled frames may retain old values. Clear owners before installing
      * handlers or executing any fallible numeric/context setup. */
     do i = 1 to _dofatal[0]
@@ -1349,21 +1379,37 @@ compilation: class
       firstop = store.get(2,store.get(1,_fn,3),2)
       if firstop > 0 then filename = llcompilercontracts..sourcename(_graph.operation(firstop).origin().filename()) || ': '
       call emit('load',reg(_location) || ',' || llrxastext..quote((filename || 'entering ' || _routine) as .binary))
-      do i = 1 to words(_signals)
-        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
+      if _captureowner < 0 then do
+        do i = 1 to words(_signals)
+          call emit('sigpush',llrxastext..quote(word(_signals,i) as .binary))
+        end
+        /* BRV delivery unwinds to its saved stack marker. All handlers must
+         * capture the same complete set of saved outer policies. */
+        do i = 1 to words(_signals)
+          call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
+        end
+        call emit('load',reg(_handlersactive) || ',1')
       end
     end
     call emit('numsci','18,1,2')
-    call installnumeric('a1')
-    if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+    if _captureowner < 0 then do
+      call installnumeric('a1')
+      if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+    end
     if store.get(1,_fn,3) <> blocks[1] then call emit('br','llb' || store.get(1,_fn,3))
+    previouscold = 0
     do blockindex = 1 to blocks[0]
       b = blocks[blockindex]; _fallthrough = 0
       if blockindex < blocks[0] then _fallthrough = blocks[blockindex + 1]
       _origin = 0; call emit('llb' || b || ':')
-      /* Predecessors can carry different dynamic location state. */
-      _lastsource = ''; _lastlocation = ''
-      id = store.get(2,b,2)
+      id = store.get(2,b,2); cold = signalfacts.owner(id)
+      /* A proved private cold segment has one generated mapping and no
+       * authored diagnostic state to restore between its own branches. Real
+       * source/control entries still restore their independent mapping. */
+      if cold = 0 | cold <> previouscold then do
+        _lastsource = ''; _lastlocation = ''; _lastfaultline = -1
+      end
+      previouscold = cold
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
         if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
@@ -1371,6 +1417,7 @@ compilation: class
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
           call source(op.origin(),clause,anchor)
+          if _captureowner >= 0 & signalfacts.owner(id) = 0 then call faultsite(op)
           call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
         end
         id = store.get(3,id,3)
@@ -1381,6 +1428,7 @@ compilation: class
     return
   fatalbody: method = .void
       i = .int
+      if _captureowner >= 0 then return
       _origin = 0
       do i = 1 to words(_signals)
         call emit('llerror' || _fn || '_' || i || ':')
@@ -1404,23 +1452,24 @@ compilation: class
         call emit('copy',reg(_location) || ',' || reg(_savedlocation))
         call emit('null',reg(_savedevent)); call emit('null',reg(_savedlocation))
       end
-      symbol = imported('llctarget','llctarget.failuremessage','.string','.object .string')
-      call argcopy(1,'r0'); call argcopy(2,reg(_location)); call invoke(reg(_location),symbol,2)
+      call rawcondition('r0',reg(_location),5)
+      call restorepolicies()
       do i = 1 to words(_signals) - 1
         call emit('beq','llraise' || _fn || '_' || i || ',' || reg(_scratch) || ',' || i)
       end
       do i = words(_signals) to 1 by -1
         call emit('llraise' || _fn || '_' || i || ':')
+        call emit('sighalt',llrxastext..quote(word(_signals,i) as .binary))
         call emit('signalorigin',llrxastext..quote(word(_signals,i) as .binary) || ',' || reg(_location) || ',r0')
         call emit('ret')
       end
     return
   /** Release transient borrowers before restoring the live bundle, then drop
    * the replacement owner. The flag-zero edge never reads the saved pool. */
-  exitcleanup: method = .void
-    arg fatal = 0, program = 0
+  /** Handler transfer discards transient owners without leaving its activation. */
+  transientcleanup: method = .void
+    arg fatal = 0
     i = .int; commandowner = .int; ownerregister = .int; nameid = .int
-    if _savedpool < 0 & fatal = 0 & program = 0 then return
     /* Cold VM unwind restores call-window swaps but preserves links. Detach
      * both possible method receivers before clearing their borrowed storage. */
     if fatal then do
@@ -1437,6 +1486,12 @@ compilation: class
     do i = 1 to _signalcleanup[0]
       nameid = _signalcleanup[i]; call emit('null',reg(_registers[nameid]))
     end
+    return
+  exitcleanup: method = .void
+    arg fatal = 0, program = 0
+    i = .int; commandowner = .int; ownerregister = .int; nameid = .int
+    if _savedpool < 0 & fatal = 0 & program = 0 then return
+    call transientcleanup(fatal)
     if _savedpool < 0 then return
     /* Each terminal site needs a distinct local label. */
     prefix = 'llrestore' || _fn || '_' || _cleanupnumber
@@ -1518,6 +1573,7 @@ compilation: class
       else if flags = 34 then flags = 98
     end
     filename = llcompilercontracts..sourcename(origin.filename())
+    _sourceline = line
     location = filename || ':' || line || ':' || column
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
     if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
@@ -1552,6 +1608,7 @@ compilation: class
     return
   selectop: method = .void
     arg op = .llir..opview, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked, clause_ref = reference .llcclauseprotocol..checked, loop_ref = reference .llcdoprotocol..checked
+    i = .int
     entryfacts = dereference entry_ref
     signalfacts = dereference signal_ref
     clausefacts = dereference clause_ref
@@ -1592,6 +1649,18 @@ compilation: class
         slot = store.get(3,id,12); dest = reg(_slots[slot])
         call emit('copy',dest || ',' || input(op))
       end
+      when name = 'core.protect' then do
+        do i = 1 to words(_signals)
+          call emit('sigpush',llrxastext..quote(word(_signals,i) as .binary))
+        end
+        do i = 1 to words(_signals)
+          call emit('sigbrv','llb' || op.successor(2) || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
+        end
+        call emit('load',reg(_handlersactive) || ',1')
+        if _savedpool >= 0 then call binding('a1','pool',reg(_savedpool))
+        call installnumeric('a1')
+        if op.successor(1) <> _fallthrough then call emit('br','llb' || op.successor(1))
+      end
       when name = 'core.jump' then do
         canonicalname = signalfacts.namevalue(id)
         if canonicalname > 0 then call emit('null',reg(_registers[canonicalname]))
@@ -1603,6 +1672,7 @@ compilation: class
       end
       when name = 'core.return' then do
         call exitcleanup(0,entryfacts.programterminal(op.id()))
+        call restorepolicies()
         if op.inputs() then call emit('ret',input(op))
         else call emit('ret')
       end
@@ -1618,6 +1688,7 @@ compilation: class
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
     if wordpos(name,'entry.test entry.invalid procedure.consume procedure.enter procedure.expose') > 0 then do; call procedureoperation(op,name); return; end
+    if wordpos(name,'signal.policy signal.capture signal.select signal.selected signal.deliver signal.handler.invalid signal.relay') > 0 then do; call conditionoperation(op,name,signal_ref); return; end
     if name = 'parse.source' then do; call parsesource(op); return; end
     if left(name,8) = 'address.' | left(name,8) = 'command.' then do; call addressoperation(op,name); return; end
     if name = 'parse.execute' then do
@@ -1681,16 +1752,17 @@ compilation: class
         call emit('null',poolref)
       end
       when name = 'length' then call adapter(op,'lengthvalue',v,v || ' ' || contexttype)
-      when name = 'load' | name = 'store' then do
-        symbol = 'poolread'; resulttype = v; types = 'reference@' || p || ' .string'; ordinal = 2
-        if name = 'store' then do; symbol = 'poolwrite'; resulttype = '.void'; types = 'reference@' || p || ' ' || v || ' .string'; ordinal = 3; end
-        symbol = imported('llctarget','llctarget.' || symbol,resulttype,types)
+      when name = 'load' then do
+        receiver = reg(_workbase + 1); call emit('linkref',receiver || ',' || input(op))
+        symbol = member('rexxclassiccontext.rexxclassiccontext','readsymbol',v,'.string')
+        call argtext(2,op.attribute('name') as .string); call invoke(result(op),symbol,2,receiver)
+        call emit('unlink',receiver)
+      end
+      when name = 'store' then do
+        symbol = imported('llctarget','llctarget.poolwrite','.void','reference@' || p || ' ' || v || ' .string')
         poolref = reg(_workbase + 2); call binding(input(op),'pool',poolref)
-        call argcopy(1,poolref)
-        if name = 'store' then call argcopy(2,input(op,2))
-        call argtext(ordinal,op.attribute('name') as .string)
-        call invoke(result(op),symbol,ordinal)
-        call emit('null',poolref)
+        call argcopy(1,poolref); call argcopy(2,input(op,2)); call argtext(3,op.attribute('name') as .string)
+        call invoke('',symbol,3); call emit('null',poolref)
       end
       when name = 'numeric.digits' | name = 'numeric.fuzz' | name = 'numeric.form' then do
         setting = substr(name,9)
@@ -1720,6 +1792,152 @@ compilation: class
     symbol = member('rexxactivation.rexxactivationarguments','beginclausetime','.void')
     call invoke('',symbol,1,receiver)
     call emit('unlink',receiver); call emit('null',activation)
+    return
+  /** Only declared internal-helper operations override handler SIGL. External
+   * providers and child invocations preserve their original bound event source. */
+  faultsite: method = .void
+    arg op = .llir..opview
+    if left(op.name(),8) <> 'crexx.c.' then return
+    line = _sourceline
+    if op.name() = 'crexx.c.call' | op.name() = 'crexx.c.call.external' then line = 0
+    if line <> _lastfaultline then do
+      call emit('load',reg(_faultline) || ',' || line); _lastfaultline = line
+    end
+    return
+  /** Release exactly this frame's handler entries, once on each exit path. */
+  restorepolicies: method = .void
+    i = .int
+    prefix = 'llpolicies' || _fn || '_' || _cleanupnumber; _cleanupnumber = _cleanupnumber + 1
+    call emit('brf',prefix || '_done,' || reg(_handlersactive))
+    do i = words(_signals) to 1 by -1
+      call emit('sigpop',llrxastext..quote(word(_signals,i) as .binary))
+    end
+    call emit('load',reg(_handlersactive) || ',0'); call emit(prefix || '_done:')
+    return
+  /** Capture reads only a VM-bound runtime_signal produced by sigbrv. Links
+   * expose raw fields synchronously; the destination is a separate owned cell. */
+  rawcondition: method = .void
+    arg event = .string, destination = .string, ordinal = .int
+    raw = reg(_workbase + 5); field = reg(_workbase + 6)
+    call emit('linkattr1',raw || ',' || event || ',5')
+    call emit('linkattr1',field || ',' || raw || ',' || ordinal)
+    call emit('copy',destination || ',' || field)
+    call emit('unlink',field); call emit('unlink',raw)
+    call emit('null',field); call emit('null',raw)
+    return
+  /** Outward C failure is deliberately nonresumable. Restore owned policy
+   * stacks then HALT the actual tag, preventing an OFF child rearming its parent.
+   * Keep a defensive owned R only if a VM host nevertheless resumes. */
+  conditionrelay: method = .void
+    arg destination = .string, prefix = .string
+    i = .int
+    /* No protected cold failure may re-enter this cleanup. Restore owned
+     * stacks, then mask the current frame before copies or fallible rebinds. */
+    call restorepolicies()
+    do i = 1 to words(_signals)
+      call emit('sighalt',llrxastext..quote(word(_signals,i) as .binary))
+    end
+    call rawcondition(reg(_captureowner),reg(_capturepayload),5)
+    call exitcleanup(1)
+    do i = 1 to words(_signals)
+      call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',' || llrxastext..quote(word(_signals,i) as .binary))
+      call emit('brt',prefix || '_raise' || i || ',' || reg(_workbase + 7))
+    end
+    call emit('sighalt','"INVALID_SIGNAL_CODE"')
+    call emit('signal','"INVALID_SIGNAL_CODE","Invalid captured C event tag"')
+    call emit('br',prefix || '_resumed')
+    do i = 1 to words(_signals)
+      call emit(prefix || '_raise' || i || ':')
+      call emit('sighalt',llrxastext..quote(word(_signals,i) as .binary))
+      call emit('signalorigin',llrxastext..quote(word(_signals,i) as .binary) || ',' || reg(_capturepayload) || ',' || reg(_captureowner))
+      call emit('br',prefix || '_resumed')
+    end
+    call emit(prefix || '_resumed:')
+    call emit('null',reg(_captureowner)); call emit('null',reg(_capturepayload)); call emit('null',reg(_capturetag))
+    call emit('load',reg(_capturebusy) || ',0')
+    symbol = imported('llctarget','llctarget.absent','.rexxactivation..rexxactivationarguments','')
+    call invoke(destination,symbol,0)
+    return
+  conditionoperation: method = .void
+    arg op = .llir..opview, name = .string, signal_ref = reference .llcsignalprotocol..checked
+    facts = dereference signal_ref
+    symbol = .string; condition = .int; handler = .int; bits = .binary
+    prefix = 'llcondition' || _fn || '_' || op.id()
+    receiver = reg(_workbase + 1); activation = reg(_workbase + 4); pool = reg(_workbase + 2)
+    if name = 'signal.policy' then do
+      bits = op.attribute('condition'); condition = <at..i64>(0) bits
+      bits = op.attribute('handler'); handler = <at..i64>(0) bits
+      call binding(input(op,2),'activation',activation); call emit('linkref',receiver || ',' || activation)
+      symbol = member('rexxactivation.rexxactivationarguments','setsignalpolicy','.void','.int .int')
+      call emit('load',reg(_callbase + 2) || ',' || condition); call emit('load',reg(_callbase + 3) || ',' || handler)
+      call invoke('',symbol,3,receiver); call emit('unlink',receiver); call emit('null',activation)
+      return
+    end
+    if name = 'signal.capture' then do
+      call emit('copy',reg(_captureowner) || ',r0')
+      call rawcondition(reg(_captureowner),reg(_capturetag),4)
+      call emit('beq',prefix || '_fresh,' || reg(_capturebusy) || ',0')
+      call conditionrelay(result(op),prefix || '_cold'); call emit('ret',result(op))
+      call emit(prefix || '_fresh:')
+      call emit('copy',reg(_captureline) || ',' || reg(_faultline)); call emit('load',reg(_faultline) || ',0')
+      call emit('load',reg(_capturebusy) || ',1'); call emit('load',result(op) || ',0')
+      call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',"CLASSIC_SYNTAX"')
+      call emit('brt',prefix || '_syntax,' || reg(_workbase + 7))
+      call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',"CLASSIC_CONDITION"')
+      call emit('brf',prefix || '_done,' || reg(_workbase + 7))
+      symbol = imported('rxfnsc','rexxclassicbifs.rexxclassic_signal_event_id','.int','.rxfnsb..runtime_signal')
+      call argcopy(1,reg(_captureowner)); call invoke(result(op),symbol,1)
+      call emit('br',prefix || '_done'); call emit(prefix || '_syntax:')
+      call emit('load',result(op) || ',1'); call emit(prefix || '_done:')
+      return
+    end
+    if name = 'signal.select' then do
+      call binding(input(op,2),'activation',activation); call emit('linkref',receiver || ',' || activation)
+      symbol = member('rexxactivation.rexxactivationarguments','signalpolicy','.int','.int')
+      call argcopy(2,input(op)); call invoke(result(op),symbol,2,receiver)
+      call emit('unlink',receiver); call emit('null',activation)
+      return
+    end
+    if name = 'signal.selected' then do
+      bits = op.attribute('handler'); handler = <at..i64>(0) bits
+      call emit('ieq',result(op) || ',' || input(op) || ',' || handler); return
+    end
+    if name = 'signal.deliver' then do
+      bits = op.attribute('condition'); condition = <at..i64>(0) bits
+      call binding(input(op),'activation',activation); call emit('linkref',receiver || ',' || activation)
+      symbol = member('rexxactivation.rexxactivationarguments','setsignalpolicy','.void','.int .int')
+      call emit('load',reg(_callbase + 2) || ',' || condition); call emit('load',reg(_callbase + 3) || ',0')
+      call invoke('',symbol,3,receiver); call emit('unlink',receiver)
+      call binding(input(op),'pool',pool)
+      symbol = imported('rxfnsc','rexxclassicbifs.rexxclassic_signal_record_at_line','.void','reference@.rexxpool..rexxvariablepool reference@.rexxactivation..rexxactivationarguments .rxfnsb..runtime_signal .int')
+      call argcopy(1,pool); call argcopy(2,activation); call argcopy(3,reg(_captureowner)); call argcopy(4,reg(_captureline))
+      call invoke('',symbol,4)
+      call transientcleanup(1)
+      if facts.handlercode(op.id()) = 0 then do
+        call emit('null',reg(_captureowner)); call emit('null',reg(_capturepayload)); call emit('null',reg(_capturetag))
+        call emit('load',reg(_capturebusy) || ',0'); call emit('load',reg(_captureline) || ',0')
+      end
+      return
+    end
+    if name = 'signal.handler.invalid' then do
+      detail = reg(_workbase + 9); code = op.attribute('code') as .string
+      symbol = imported('library','rxfnsb._trace_escape_text','.string','.string')
+      do
+        name_ref = facts.handlername(op.id()); targetname = dereference name_ref
+        call argtext(1,targetname)
+      end
+      call invoke(detail,symbol,1)
+      if code == '16.1' then call emit('concat',detail || ',"RXC-LC-16.1: Label not found: ",' || detail)
+      else call emit('concat',detail || ',"RXC-LC-16.2: SIGNAL handler is inside a DO or SELECT group: ",' || detail)
+      /* A second armed SYNTAX handler sees this delivery failure in the same
+       * activation. Preserve the original helper-site override as well. */
+      call emit('copy',reg(_faultline) || ',' || reg(_captureline)); call emit('load',reg(_capturebusy) || ',0')
+      call emit('signalorigin','"CLASSIC_SYNTAX",' || detail || ',' || reg(_captureowner))
+      symbol = imported('llctarget','llctarget.absent','.rexxactivation..rexxactivationarguments','')
+      call invoke(result(op),symbol,0); return
+    end
+    if name = 'signal.relay' then do; call conditionrelay(result(op),prefix); return; end
+    call fail('LOWERING: unknown condition operation ' || name)
     return
   signaloperation: method = .void
     arg op = .llir..opview, name = .string, signal_ref = reference .llcsignalprotocol..checked
@@ -1799,7 +2017,7 @@ compilation: class
   bifoperation: method = .void
     arg op = .llir..opview
     name = op.attribute('name') as .string
-    owner = reg(_workbase + 6); activation = reg(_workbase + 4)
+    owner = reg(_workbase + 10); activation = reg(_workbase + 4)
     receiver = reg(_workbase); valuesref = reg(_workbase + 2); presenceref = reg(_workbase + 3)
     /* Metadata proves these are distinct array attributes of the stable
      * packet. Detach the temporary field links before any fallible call. */
@@ -1820,9 +2038,22 @@ compilation: class
     call argcopy(1,owner,1)
     if count = 2 then call argcopy(2,activation)
     call invoke(result(op),symbol,count)
-    symbol = imported('rxfnsc','rexxclassicbifs.rexxclassicbif_checked','.rexxvalue..rexxvalue','reference@.rexxclassicbifs..rexxbifcallcontext .rexxvalue..rexxvalue')
-    call argcopy(1,owner,1); call argcopy(2,result(op)); call invoke(result(op),symbol,2)
+    prefix = 'llbifcheck' || _fn || '_' || op.id()
+    flag = reg(_workbase + 7); detail = reg(_workbase + 8)
+    call emit('link',receiver || ',' || owner)
+    symbol = member('rexxclassicbifs.rexxbifcallcontext','haserror','.boolean')
+    call invoke(flag,symbol,1,receiver); call emit('brf',prefix || '_ready,' || flag)
+    symbol = member('rexxclassicbifs.rexxbifcallcontext','errordetail','.string')
+    call invoke(detail,symbol,1,receiver); call emit('unlink',receiver)
+    call emit('null',owner); call emit('null',activation)
+    call emit('signal','"CLASSIC_SYNTAX",' || detail); call emit('ret')
+    call emit(prefix || '_ready:')
+    symbol = member('rexxclassicbifs.rexxbifcallcontext','conditionid','.int')
+    call invoke(reg(_workbase + 5),symbol,1,receiver)
+    symbol = member('rexxclassicbifs.rexxbifcallcontext','conditiondescription','.string')
+    call invoke(reg(_workbase + 6),symbol,1,receiver); call emit('unlink',receiver)
     call emit('null',activation); call emit('null',owner)
+    call conditiontransition(input(op,2),prefix,_sourceline)
     return
   /** C-owned dispatch and transitions select existing B methods. Integer
    * mismatch does not touch the context, and enter validates eligibility once. */
