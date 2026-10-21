@@ -72,8 +72,9 @@ request: class
     end
     if _emission.identity() = sourceidentity then do
       entries = _frontend.entryproof(); signals = _frontend.signalproof()
-      if _bound then _backend = .llcrxas..compilation.boundprechecked(_emission,entries,signals,reference _snapshot,_bytes,_registers,_routine)
-      else _backend = .llcrxas..compilation.prechecked(_emission,entries,signals,_path,_bytes,_registers)
+      loops = _frontend.loopproof(); clauses = _frontend.clauseproof()
+      if _bound then _backend = .llcrxas..compilation.boundprecheckedclauses(_emission,entries,signals,loops,clauses,reference _snapshot,_bytes,_registers,_routine)
+      else _backend = .llcrxas..compilation.precheckedclauses(_emission,entries,signals,loops,clauses,_path,_bytes,_registers)
     end
     else do
       if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine)

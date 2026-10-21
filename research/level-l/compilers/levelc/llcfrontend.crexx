@@ -13,6 +13,7 @@ import llcore
 import llcparseprogram
 import llcompilercontracts
 import llcdoprotocol
+import llcclauseprotocol
 import llcprocedureprotocol
 import llcsignalprotocol
 import llccommandprotocol
@@ -73,6 +74,8 @@ request: class
   _graph = .llir..module
   _entryproof = .llcprocedureprotocol..checked
   _signalproof = .llcsignalprotocol..checked
+  _loopproof = .llcdoprotocol..checked
+  _clauseproof = .llcclauseprotocol..checked
   _registry = .llir..schema
   _contract = .llir..contract
   _builder = .llir..builder
@@ -228,8 +231,12 @@ request: class
           if commands.status() then do; _error = commands.error(); _offset = commands.offset(); end
         end
         if _error = '' then do
-          protocol = .llcdoprotocol..checked.withsignals(reference _graph,reference _entryproof,reference _signalproof,_bytebudget,_budget)
-          if protocol.status() then do; _error = protocol.error(); _offset = protocol.offset(); end
+          _loopproof = .llcdoprotocol..checked.withsignals(reference _graph,reference _entryproof,reference _signalproof,_bytebudget,_budget)
+          if _loopproof.status() then do; _error = _loopproof.error(); _offset = _loopproof.offset(); end
+        end
+        if _error = '' then do
+          _clauseproof = .llcclauseprotocol..checked(reference _graph,reference _entryproof,reference _loopproof,_bytebudget,_budget)
+          if _clauseproof.status() then do; _error = _clauseproof.error(); _offset = _clauseproof.offset(); end
         end
       end
     on signal as problem
@@ -266,6 +273,16 @@ request: class
     missing = reference .llcsignalprotocol..checked
     if _error <> '' then return missing
     return reference _signalproof
+  loopproof: method = reference .llcdoprotocol..checked
+    call run()
+    missing = reference .llcdoprotocol..checked
+    if _error <> '' then return missing
+    return reference _loopproof
+  clauseproof: method = reference .llcclauseprotocol..checked
+    call run()
+    missing = reference .llcclauseprotocol..checked
+    if _error <> '' then return missing
+    return reference _clauseproof
   offset: method = .int
     call run()
     return _offset
@@ -754,6 +771,18 @@ request: class
     end
     _warnings = pending; _offset = 0
     return
+  /** Begin ownership is explicit IR; the admitted K-use proof erases an
+   * unneeded marker and its exclusively used canonical context transport. */
+  clausebegin: method = .void
+    arg node = .llast..node, first = .int, last = .int
+    if 3 > _budget - _work then do; call fail(node,'LIMIT: frontend clause construction work budget exceeded'); return; end
+    _work = _work + 3
+    origin = _file.origin(first,last,node.origin()); codec = .llir..intcodec()
+    op = _block.operation(_contract.operation('crexx.c.clause.begin'),origin)
+    call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('id',codec.parse((node.start() + 1) as .string)); built = op.finish()
+    if _builder.error() <> '' then _error = _builder.error()
+    return
   statement: method = .void
     arg node = .llast..node
     if tick(node) = 0 then return
@@ -778,6 +807,12 @@ request: class
     end
     if _terminated & nonemitting = 0 then do
       _block = newblock('unreachable'); _terminated = 0; _alive = 0
+    end
+    if nonemitting = 0 & kind <> 'CProcedure' & kind <> 'CSelect' & kind <> 'CDo' then do
+      finish = node.finish()
+      if kind = 'IfThen' | kind = 'IfElse' then finish = node.child('condition').finish()
+      call clausebegin(node,node.start(),finish)
+      if _error <> '' then return
     end
     select
       when kind = 'Sequence' then do i = 1 to node.count('items') while _error = ''
@@ -1420,6 +1455,10 @@ request: class
     end
     if kind = '' & conditionkind = '' then do; call statement(node.child('body')); return; end
     stateful = kind = 'DoCount' | kind = 'DoControl'; incoming = _alive
+    initialfinish = header.finish()
+    if conditionkind = 'DoUntil' then initialfinish = condition.start()
+    call clausebegin(node,node.start(),initialfinish)
+    if _error <> '' then return
     if stateful then do
       _donumber = _donumber + 1; key = 'do.' || _donumber
       op = _block.operation(_contract.operation('crexx.c.do.new'),headerorigin)
@@ -1472,7 +1511,9 @@ request: class
       _breakalive[level] = incoming
     end
     if stateful = 0 & conditionkind <> 'DoUntil' then do
-      _continues[level] = entry as .object; _hascontinues[level] = 1
+      repeating = entry
+      if conditionkind = 'DoWhile' then repeating = newblock('do.repeat')
+      _continues[level] = repeating as .object; _hascontinues[level] = 1
     end
     _block = body; _terminated = 0; _alive = incoming
     call statement(node.child('body')); if _error <> '' then return
@@ -1480,9 +1521,11 @@ request: class
       continuing = loopcontinue(level); _continuealive[level] = _continuealive[level] | _alive
       call _block.jump(continuing,endorigin)
     end
-    if (stateful | conditionkind = 'DoUntil') & _hascontinues[level] then do
+    if (stateful | conditionkind = 'DoUntil' | conditionkind = 'DoWhile') & _hascontinues[level] then do
       _block = _continues[level] as .llir..block; _terminated = 0; _alive = _continuealive[level]
       if conditionkind = 'DoUntil' then do
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
         value = expression(condition.child('value')); if _error <> '' then return
         testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
         value = truth(value,testorigin,'crexx.c.until.truth'); after = loopafter(level)
@@ -1497,9 +1540,14 @@ request: class
         _breakalive[level] = _breakalive[level] | _continuealive[level]
         _block = advance
       end
+      if conditionkind <> 'DoUntil' then do
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
+      end
       if stateful then do
         built = dostate('advance',key,endorigin); call _block.jump(entry,endorigin)
       end
+      else if conditionkind = 'DoWhile' then call _block.jump(entry,endorigin)
     end
     else if conditionkind = 'DoUntil' then do
       /* A closed body still owns static validation of its unreachable UNTIL
@@ -1507,6 +1555,8 @@ request: class
       if simpleliteral(condition.child('value')) then value = expression(condition.child('value'),'',1)
       else do
         _block = newblock('unreachable.until'); _terminated = 0; _alive = 0
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
         value = expression(condition.child('value')); if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.return.absent'),endorigin.derive()); built = op.finish()
         call _block.returnvalue(built.result(),endorigin.derive())
@@ -1536,6 +1586,8 @@ request: class
         when kind = 'CWhen' then do
           if tick(clause) = 0 then return
           whens = whens + 1
+          call clausebegin(clause,clause.start(),clause.child('condition').finish())
+          if _error <> '' then return
           value = expression(clause.child('condition')); if _error <> '' then return
           origin = _file.origin(clause.start(),clause.start() + 4,clause.origin())
           value = truth(value,origin,'crexx.c.when.truth')

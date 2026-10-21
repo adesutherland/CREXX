@@ -471,7 +471,7 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v18/77 with
+C to the two-argument source-unit ABI. The current family is v19/78 with
 36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
 commands and the reviewed static SIGNAL descriptors. SIGNAL implementation and
@@ -484,7 +484,7 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 conditions and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 18. The neutral scalar names do not load the G
+types and `crexx.c` version 19. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
 versions 1–17 are never reinterpreted as version 18. Within version 18, the complete C
 type/operation declarations, including unused declarations and all ordered
@@ -4115,6 +4115,137 @@ context-lifetime retention (insufficient for bounded long-lived use) and child
 contexts (do not inherently share pools/handlers). Exact assembler/VM APIs and
 continuation ABI need approval before coding. Their absence remains an open
 criterion, not a reason to silently weaken INTERPRET.
+
+<a id="clause-clock-contract"></a>
+
+## CLAUSE1: begin-only activation clock sampling
+
+Deliver the existing shared DATE/TIME clause sample to new C: observations in
+one activation's authored clause share a lazy sample, later evaluated clauses
+refresh it, and nested activations retain independent samples and the existing
+program-root elapsed/reset lifetime. Reuse `RexxActivationArguments.beginClauseTime`
+and the DATE/TIME BIF context; no clock algorithm, grammar/AST, B runtime, generic
+L, VM or target export is added. Completion/checkpoints, handlers/HALT and TRACE
+implementation remain separate; the practical native TRACE ceiling still applies.
+
+Append only `crexx.c.clause.begin(context:C){id:I}->void`: C19, 78 operations,
+five C types and 36 target exports. Effects are `context.observation`,
+`condition.resource`, `returns`, with no evaluator. `id` is the authored DO or
+statement head's zero-based byte offset plus one; occurrence identity is the
+IR operation ID. Origin is exact, nonempty, UTF8-boundary aligned and owned by
+that same source. Context is the canonical current-function C slot. No role
+attribute or runtime table is needed.
+
+Ordinary owner range is its statement; IF/WHEN range ends at the condition's
+finish and excludes arms. DO initial and repeated WHILE markers use
+`[DO.start,header.finish)`. For UNTIL, the initial marker instead ends at
+`UNTIL.start`; each bottom marker uses the full header range and the same DO id.
+Thus initial capture cannot license a missing first UNTIL marker. Initial begin
+and the checked DO constructor retain their exact head/operand-header origins: same
+function/source, owner.first <= constructor.first < owner.last <= constructor.last.
+Keep the existing DO diagnostic span; exact IR origins declare this relation,
+without another source parser or keyword scan. Initial begin
+precedes ordered once-only captures and first WHILE; the initial path goes to
+the shared predicate without a second reset. Repeated/ITERATE WHILE begin is
+before `do.advance`, while Body, then reaches that same predicate. Each UNTIL
+begin precedes its evaluated test, including first/ITERATE/empty-body tests.
+No predicate duplication, post-test reset or clock-only value capture is added.
+Labels, null/wrapper/empty-DO/END bookkeeping create no new observed clause.
+Markers are in real payload blocks after existing consume/PROCEDURE enter,
+never inside a canonical entry trampoline. Natural SIGNAL landing executes its
+own payload marker without invocation/rearming.
+
+Intern owner `(function,source,id,range,canonical-C-slot)`. Only actual resolved
+DATE/TIME K bindings make an owner needed: reuse existing local/quoted binding
+resolution, so a local TIME/DATE routine does not count as its BIF. One final
+pass selects all markers of a needed owner. Marker-only/pruned K-free owners
+are validated then emit no getter/reset/copy. Owner-wide conservative repeat
+invalidation for capture-only K is accepted; no role analysis is required.
+Caller actuals keep their sample through proved internal-CALL false continuation;
+the callee samples its own activation. Selection borrows current activation and
+calls existing lazy `beginClauseTime`; it never reads the host clock eagerly.
+
+Admission order is CPROC → SIGNAL → DO → CLAUSE, without reverse imports.
+New C-private `llcclauseprotocol.checked(graph_ref,entries_ref,loops_ref,
+bytes=67108864,work=1000000)` exposes `status/error/offset`, `belongs(graph_ref)`,
+`emits(opid)`, `erased(opid)`, `bytesused/workused`. Queries are scalars; emits is false outside
+admitted begin records. DO gains private scalar charge getters and a `belongs` check with captured
+admission identity, live refs and clear graph/proof errors, matching CPROC.
+Capture identity after graph validity in run, in every existing DO factory mode.
+Strong graph/proof owners survive all scoped borrows. Same-identity prechecked
+selection checks actual charges once against its own limits; a narrow refusal
+is local and cannot poison a successful proof. Replaced/loaded/transformed graphs
+rebuild facts. Borrow proof references once and scalar-forward them through
+selection, never rediscover owners per operation or copy graph/proof aggregates.
+Private selector `precheckedclauses(graph,entries,signals,loops,clauses,artifacts,
+bytes,registers)` and its provider-bound counterpart retain these references;
+existing prechecked factories remain compatible. Frontend loop/clause accessors
+lend their strong request fields.
+
+Skip unneeded begin records before register allocation, source directives and
+diagnostic updates. An indexed complete-use check may also erase a canonical
+context load used only by checked begins; shared ordinary uses preserve it.
+Selected begin borrows the existing canonical context register directly. Thus a
+K-free marker causes no reset/getter/COPY or metadata side effect. Meaningful
+source/clause/provenance changes and required control-entry restorations remain;
+do not surround each generated instruction with repeated records or copy the
+native compiler's excess boundaries. Broader existing metadata costs are not a
+new TRACE implementation or a reason to expand this slice.
+
+One indexed, bounded scalar operation/edge pass and finite memoized predecessor
+summaries establish each K's current owner. Carry is allowed only through local
+mechanical prefix, generated single-jump plumbing, CPROC-proved CALL false
+continuations, and finite DO entry/test plumbing already admitted by the DO
+proof. Shared predicate incoming seeds must agree. No ordinary join, invocation
+dispatch, SIGNAL edge or foreign source carries a sample. Check early K before
+publishing a later final marker; a visiting predecessor refuses, so an unseeded
+cycle or missing repeat begin cannot borrow an initial or later seed. Do not
+relax Fresh/Collect/Ready or generic CFG rules. Check every raw/dead/loaded record
+without AST trust. Reserve indices before growth; charge op/edge work once,
+propagate LIMIT/SOURCE, and preserve input/earlier output on atomic refusal.
+Use one retained arena and existing guarded opview constructor, not per-op
+module.operation reference-owner discovery. No general merge fixed point,
+per-K graph scan or second label/binding inventory is introduced.
+
+1. **CLAUSE-AC01 — locally complete:** exact C19 schema/source/context and resolved-K ownership
+   pass tiny fresh/loaded/transformed admission controls; wrong source/range/id,
+   context, bypass/join and later-seed-cycle cases refuse atomically.
+2. **CLAUSE-AC02 — locally complete:** one maintained source/host image per complementary
+   mode proves caller/child/later-clause samples, header/first/repeated WHILE,
+   UNTIL/ITERATE, local shadows and quoted BIFs. Reuse shared deterministic
+   DATE/TIME conversion tests; four portable ordinary-command pauses execute
+   once per lane, testing equality/change without short timing thresholds.
+3. **CLAUSE-AC03 — locally complete:** simple and loop RXAS show lazy borrowed activation
+   invalidation at exact payload/test points, no eager sample/duplicate predicate/
+   runtime table or proof copies. K-free raw/marker-only unit emits no observers,
+   context transport or source/diagnostic metadata side effects;
+   source flags and semantic predicate spans remain truthful.
+4. **CLAUSE-AC04 — locally complete:** borrowed proof lifetime/identity and narrow local-limit
+   reuse controls pass; source construction/admission remain bounded and preserve
+   earlier output. Reuse existing CPROC/DO/clock algorithms and guards.
+5. **CLAUSE-AC05 — locally complete:** early coherent code/first RXAS review, batched material
+   fixes and one frozen focused complementary pass support an exact local commit;
+   scratch is removed and unrelated work preserved. Full clause/TRACE/condition,
+   host/platform and all CFC closure remain open; no independent SIGNAL rerun.
+
+- **CLAUSE-STEP01 — complete:** record/review this bounded contract, independent
+  expectations and minimal private interfaces before edits; AC01–05.
+- **CLAUSE-STEP02 — locally complete:** integrator owns existing schema/frontend/protocol/
+  selector/service/CMake/docs; proof worker owns only new `llcclauseprotocol`;
+  fixture worker owns only five `tests/clause` files. Coordinator independently
+  reviews the new proof; early integration/RXAS review precedes freeze; AC01–04.
+- **CLAUSE-STEP03 — locally complete:** integrator alone prepares/tests/cleans/commits the
+  focused two lanes with current producer reuse; AC01–05. No native change,
+  push, hosted/SAN campaign or INTERPRET is commissioned.
+
+The maintained `check-clause.py` source/host/shapes and admission controls pass
+with compiler/assembler opt and IR optimization on rxbvm, and noopt/IR-off on
+rxtvm. Optimized raw outcomes are reused except the affected four loop cases;
+complementary raw admission validates the current full probe. The two aggregate
+registrations use current producers, serial/backend-lock scheduling and a
+1800-second hang guard. Shared deterministic DATE/TIME conversion and unchanged
+native/B/L contracts remain reused; this is no full-runtime noopt, host/platform,
+sanitizer or whole-C qualification claim.
 
 <a id="retained-c-operation-views"></a>
 

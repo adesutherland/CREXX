@@ -69,6 +69,12 @@ Known static DO/SELECT targets refuse with 16.2; VALUE resolves eligibility when
 reached. The [SIGNAL contract](doc/architecture.md#signal-static-contract)
 keeps ON/OFF, handlers, clause/TRACE and wider host/platform scope open.
 
+The begin-only [CLAUSE1 profile](doc/architecture.md#clause-clock-contract)
+locally qualifies lazy DATE/TIME samples in the current activation, including
+ordered DO captures, repeated WHILE and first/repeated UNTIL. Clock-free owners
+emit no reset, context transport or marker metadata. Completion/handler/TRACE
+and wider clock host/platform behavior remain separate.
+
 The approved C PARSE implementation admits ARG, PULL, SOURCE, LINEIN, VERSION,
 VALUE and VAR, optional UPPER, comma templates, targets/drops, string/variable
 patterns and absolute/relative positions. It constructs immutable binary

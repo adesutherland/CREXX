@@ -15,6 +15,7 @@ import llcsignalprotocol
 checked: class
   _graph = reference .llir..module
   _store = reference .llir..arena
+  _identity = .int
   _limit = .int
   _budget = .int
   _bytes = .int
@@ -98,6 +99,17 @@ checked: class
     call run(); return _error
   offset: method = .int
     call run(); return _offset
+  /** A completed borrow belongs only to its original live frozen graph. */
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph
+    return graph.error() = '' & held.error() = '' & held.identity() = _identity & graph.identity() = _identity
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
   owners: method = .int
     call run(); return _constructors[0]
   owner: method = .int
@@ -169,8 +181,10 @@ checked: class
   run: method = .void
     if _ready then return
     _ready = 1
+    if <refvalid>(_graph) = 0 then do; call fail('LOWERING: DO graph owner is not live'); return; end
     graph = dereference _graph
     if graph.error() <> '' then do; _error = graph.error(); return; end
+    _identity = graph.identity()
     if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid DO admission budget'); return; end
     _store = graph.storage(); store = dereference _store
     if _programbound then do

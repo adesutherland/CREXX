@@ -11,11 +11,13 @@ import llcompilercontracts
 import llsource
 import llrxastext
 import llcdoprotocol
+import llcclauseprotocol
 import llcprocedureprotocol
 import llcsignalprotocol
 import llccommandprotocol
 import llcparseprogram
 import llscalar
+import llcsymbols
 
 /** A compile owns its source graph and emits only a fully checked output.
  * Registers are stable per function; the disjoint call window is never shared
@@ -90,6 +92,11 @@ compilation: class
   _savedlocation = .int
   _cleanupnumber = .int
   _doprotocol = .llcdoprotocol..checked
+  _clauseprotocol = .llcclauseprotocol..checked
+  _loopborrow = reference .llcdoprotocol..checked
+  _clauseborrow = reference .llcclauseprotocol..checked
+  _clauseprechecked = .int
+  _selectorsymbols = .llcsymbols..checked
   _doowners = .int[]
   _dofatal = .int[]
   _records = .object[]
@@ -120,6 +127,26 @@ compilation: class
     _programborrow = entries; _signalborrow = signals; _prechecked = 1
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
+  precheckedclauses: factory
+    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, loops = reference .llcdoprotocol..checked, clauses = reference .llcclauseprotocol..checked, artifacts = .string, bytes = 67108864, registers = 65536
+    _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
+    _programborrow = entries; _signalborrow = signals; _loopborrow = loops; _clauseborrow = clauses
+    _prechecked = 1; _clauseprechecked = 1
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
+    return
+  boundprecheckedclauses: factory
+    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, loops = reference .llcdoprotocol..checked, clauses = reference .llcclauseprotocol..checked, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = ''
+    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _limit = bytes; _reglimit = registers
+    _programborrow = entries; _signalborrow = signals; _loopborrow = loops; _clauseborrow = clauses
+    _prechecked = 1; _clauseprechecked = 1
+    _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
+    return
+  loopproof: method = reference .llcdoprotocol..checked
+    if _clauseprechecked then return _loopborrow
+    return reference _doprotocol
+  clauseproof: method = reference .llcclauseprotocol..checked
+    if _clauseprechecked then return _clauseborrow
+    return reference _clauseprotocol
   programproof: method = reference .llcprocedureprotocol..checked
     if _prechecked then return _programborrow
     return reference _procedureprotocol
@@ -378,6 +405,10 @@ compilation: class
     entryfacts = dereference entry_ref
     name = op.name(); bytes = .binary; packet = .llcparseprogram..checked; symbol = .string
     opid = .int; clausefirst = .int; constructor = .int
+    if name = 'crexx.c.clause.begin' then do
+      call checkselectorigin(op,'clause begin')
+      if _error <> '' then return
+    end
     if left(name,15) = 'crexx.c.signal.' then do
       if name <> 'crexx.c.signal.test' then call checkselectorigin(op,'SIGNAL')
       if _error <> '' then return
@@ -564,8 +595,8 @@ compilation: class
   /** All raw variable attributes share the compiler-internal C authority. */
   checksymbol: method = .void
     arg name = .string
-    call _doprotocol.symbol(name)
-    if _doprotocol.error() <> '' then _error = _doprotocol.error()
+    call _selectorsymbols.symbol(name)
+    if _selectorsymbols.error() <> '' then _error = _selectorsymbols.error()
     return
   /** Direct graphs can carry host codecs not identified by their manifest.
    * Recheck every payload with the selected canonical codec, including unused
@@ -1066,16 +1097,27 @@ compilation: class
         end
       end
       _phase = 'DO admission'
-      _doprotocol = .llcdoprotocol..checked.withsignals(reference _graph,entry_ref,signal_ref,_limit,_limit)
-      if _doprotocol.status() then do
-        _error = _doprotocol.error(); _offset = _doprotocol.offset(); return
+      if _clauseprechecked then do
+        if <refvalid>(_loopborrow) = 0 | <refvalid>(_clauseborrow) = 0 then do; call fail('LOWERING: prechecked clause proof owner is not live'); return; end
       end
+      else _doprotocol = .llcdoprotocol..checked.withsignals(reference _graph,entry_ref,signal_ref,_limit,_limit)
+      loop_ref = loopproof(); loopfacts = dereference loop_ref
+      if loopfacts.status() then do; _error = loopfacts.error(); _offset = loopfacts.offset(); return; end
+      if loopfacts.belongs(reference _graph) = 0 then do; call fail('LOWERING: DO proof belongs to another graph'); return; end
+      if loopfacts.bytesused() > _limit | loopfacts.workused() > _limit then do; call fail('LIMIT: prechecked DO admission exceeds selection budget'); return; end
+      _phase = 'clause admission'
+      if _clauseprechecked = 0 then _clauseprotocol = .llcclauseprotocol..checked(reference _graph,entry_ref,loop_ref,_limit,_limit)
+      clause_ref = clauseproof(); clausefacts = dereference clause_ref
+      if clausefacts.status() then do; _error = clausefacts.error(); _offset = clausefacts.offset(); return; end
+      if clausefacts.belongs(reference _graph) = 0 then do; call fail('LOWERING: clause proof belongs to another graph'); return; end
+      if clausefacts.bytesused() > _limit | clausefacts.workused() > _limit then do; call fail('LIMIT: prechecked clause admission exceeds selection budget'); return; end
       _phase = 'command admission'
       _commandprotocol = .llccommandprotocol..checked(reference _graph,entry_ref,_limit,_limit)
       if _commandprotocol.status() then do
         _error = _commandprotocol.error(); _offset = _commandprotocol.offset(); return
       end
       _phase = 'operation admission'
+      _selectorsymbols = .llcsymbols..checked(_limit,_limit)
       do i = 1 to store.count(3)
         op = _graph.operation(i); _origin = op.origin().id(); _offset = op.origin().first()
         _parseclauses[i] = 0
@@ -1179,6 +1221,8 @@ compilation: class
      * a new reference per operation repeats VM owner discovery over the graph. */
     entry_ref = programproof(); entryfacts = dereference entry_ref
     signal_ref = signalproof(); signalfacts = dereference signal_ref
+    loop_ref = loopproof(); loopfacts = dereference loop_ref
+    clause_ref = clauseproof(); clausefacts = dereference clause_ref
     i = .int; b = .int; id = .int; blockindex = .int; op = .llir..opview
     anchor = .int; clause = .int; commandowner = .int; ownerregister = .int; canonicalname = .int; nameid = .int
     store = dereference _store; blocks = .int[]
@@ -1199,7 +1243,7 @@ compilation: class
       do while id > 0
         op = _graph.operation(id)
         if op.name() = 'crexx.c.parse.source' then hasparse = 1
-        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 then do
+        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
           do r = 1 to op.results()
             nameid = op.result(r).id(); _registers[nameid] = next; next = next + 1
             if op.name() = 'crexx.c.signal.name' then _signalcleanup[_signalcleanup[0] + 1] = nameid
@@ -1234,9 +1278,9 @@ compilation: class
     /* Strong loop storage is not an IR value or a transient call argument.
      * Its address is stable through every helper call and every iteration. */
     _phase = 'DO owner allocation'; cleanuporder = .int[]; _dofatal = cleanuporder
-    do i = 1 to _doprotocol.owners()
-      owner = _doprotocol.cleanup(i)
-      if _doprotocol.function(owner) <> _fn then iterate
+    do i = 1 to loopfacts.owners()
+      owner = loopfacts.cleanup(i)
+      if loopfacts.function(owner) <> _fn then iterate
       _doowners[owner] = next; next = next + 1
       _dofatal[_dofatal[0] + 1] = owner
     end
@@ -1260,7 +1304,7 @@ compilation: class
       id = store.get(2,blocks[i],2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
-        call selectop(op,entry_ref,signal_ref)
+        call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
         id = store.get(3,id,3)
       end
     end
@@ -1322,12 +1366,12 @@ compilation: class
       id = store.get(2,b,2)
       do while id > 0 & _error = ''
         op = _graph.operation(id); _origin = op.origin().id(); _offset = op.origin().first()
-        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 then do
+        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
           anchor = entryfacts.programanchor(id); clause = _parseclauses[id]
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
           call source(op.origin(),clause,anchor)
-          call selectop(op,entry_ref,signal_ref)
+          call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
         end
         id = store.get(3,id,3)
       end
@@ -1507,11 +1551,13 @@ compilation: class
     end
     return
   selectop: method = .void
-    arg op = .llir..opview, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
+    arg op = .llir..opview, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked, clause_ref = reference .llcclauseprotocol..checked, loop_ref = reference .llcdoprotocol..checked
     entryfacts = dereference entry_ref
     signalfacts = dereference signal_ref
+    clausefacts = dereference clause_ref
     store = dereference _store; name = op.name(); id = op.id()
-    if signalfacts.erased(id) | signalfacts.nametransport(id) then return
+    if signalfacts.erased(id) | signalfacts.nametransport(id) | clausefacts.erased(id) then return
+    if name = 'crexx.c.clause.begin' then do; call clauseoperation(); return; end
     dest = result(op)
     select
       when name = 'core.constant' then do
@@ -1561,13 +1607,13 @@ compilation: class
         else call emit('ret')
       end
       otherwise do
-        if left(name,8) = 'crexx.c.' then call classic(op,substr(name,9),entry_ref,signal_ref)
+        if left(name,8) = 'crexx.c.' then call classic(op,substr(name,9),entry_ref,signal_ref,loop_ref)
         else call fail('LOWERING: unsupported operation ' || name)
       end
     end
     return
   classic: method = .void
-    arg op = .llir..opview, name = .string, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
+    arg op = .llir..opview, name = .string, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked, loop_ref = reference .llcdoprotocol..checked
     symbol = .string
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
@@ -1582,7 +1628,7 @@ compilation: class
       return
     end
     if wordpos(name,'do.new do.capture do.start do.entry do.advance do.close') > 0 then do
-      call dooperation(op,name); return
+      call dooperation(op,name,loop_ref); return
     end
     if wordpos(name,'add sub mul div eq ne lt le gt ge strict concat blank abut and or xor') then do
       call adapter(op,'binaryop',v,'.string ' || v || ' ' || v || ' ' || contexttype,name); return
@@ -1665,6 +1711,16 @@ compilation: class
     return
   /** Select admitted same-frame SIGNAL work. Table payload/transport has no
    * runtime representation; name transport aliases one owned scalar register. */
+  /** Canonical context is argument1; the proof erases marker-only loads.
+   * Begin only invalidates the existing activation's lazy sample. */
+  clauseoperation: method = .void
+    activation = reg(_workbase + 4); receiver = reg(_workbase + 1)
+    call binding('a1','activation',activation)
+    call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','beginclausetime','.void')
+    call invoke('',symbol,1,receiver)
+    call emit('unlink',receiver); call emit('null',activation)
+    return
   signaloperation: method = .void
     arg op = .llir..opview, name = .string, signal_ref = reference .llcsignalprotocol..checked
     signalfacts = dereference signal_ref
@@ -1870,13 +1926,14 @@ compilation: class
   /** Keys select one stable strong owner; only the synchronous call window
    * contains a borrowed reference. Count start is a protocol-only marker. */
   dooperation: method = .void
-    arg op = .llir..opview, name = .string
+    arg op = .llir..opview, name = .string, loop_ref = reference .llcdoprotocol..checked
+    loopfacts = dereference loop_ref
     symbol = .string
-    owner = _doprotocol.owner(op.id())
+    owner = loopfacts.owner(op.id())
     if owner = 0 then do; call fail('LOWERING: unadmitted DO state key'); return; end
     storage = reg(_doowners[owner]); state = '.rexxdostate..rexxdostate'
     if name = 'do.close' then do; call emit('null',storage); return; end
-    if name = 'do.start' & _doprotocol.controlled(owner) = 0 then return
+    if name = 'do.start' & loopfacts.controlled(owner) = 0 then return
     if name = 'do.new' then do
       symbol = imported('llctarget','llctarget.donew',state,'reference@.rexxclassiccontext..rexxclassiccontext .string')
       call argcopy(1,input(op)); call argtext(2,op.attribute('name') as .string)

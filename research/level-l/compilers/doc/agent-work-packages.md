@@ -46,6 +46,13 @@ Document minor practical TRACE or presentation deviations in the
 ownership or required errors remain blockers. Agents do not approve their own
 semantic exceptions or silently relax tests.
 
+CLAUSE1 follows the [begin-only clock contract](architecture.md#clause-clock-contract).
+The integrator owns existing production/docs/CMake files and sole preparation,
+qualification, cleanup and local commit. The proof worker owns only new
+`levelc/llcclauseprotocol.crexx`; the runtime worker owns only the five
+`tests/clause` files. The coordinator independently reviews the proof and early
+integration/RXAS before frozen focused qualification. No concurrent builds.
+
 ## Work package catalogue
 
 Each package is split into reviewable slices. A package name is not authority

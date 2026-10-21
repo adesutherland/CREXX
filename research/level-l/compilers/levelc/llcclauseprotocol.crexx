@@ -1,0 +1,479 @@
+/* cREXX License (MIT). C-private begin-only clause clock admission. */
+options levelb
+namespace llcclauseprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcprocedureprotocol
+import llcdoprotocol
+
+/** Bounded facts over one immutable graph. The caller retains the graph and
+ * completed entry/DO proofs through every borrow. Only selected DATE/TIME BIF
+ * operations observe a sample; this layer neither samples nor owns a clock.
+ * @param graph frozen, generically checked input
+ * @param entries completed same-identity entry/program facts
+ * @param loops completed same-identity DO facts
+ * @param bytes logical retained workspace ceiling
+ * @param work bounded graph, source and predecessor work allowance */
+checked: class
+  _graph = reference .llir..module
+  _entries = reference .llcprocedureprotocol..checked
+  _loops = reference .llcdoprotocol..checked
+  _store = reference .llir..arena
+  _identity = .int
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _keys = .stem
+  _classes = .int[]
+  _sources = .int[]
+  _firsts = .int[]
+  _lasts = .int[]
+  _kinds = .int[]
+  _parents = .int[]
+  _markers = .int[]
+  _erased = .int[]
+  _uses = .int[]
+  _beginuses = .int[]
+  _signalorigins = .int[]
+  _predheads = .int[]
+  _predcounts = .int[]
+  _edgeops = .int[]
+  _edgeordinals = .int[]
+  _edgenext = .int[]
+  _blockmarkers = .int[]
+  _prefixclocks = .int[]
+  _entryblocks = .int[]
+  _predicates = .int[]
+  _dispatch = .int[]
+  _callheads = .int[]
+  _states = .int[]
+  _incoming = .int[]
+  _outgoing = .int[]
+  _cursors = .int[]
+  _accumulators = .int[]
+  _stack = .int[]
+  _headstack = .int[]
+  _constructors = .int[]
+  _ownerfunctions = .int[]
+  _ownersources = .int[]
+  _ownerfirsts = .int[]
+  _ownerlasts = .int[]
+  _needed = .int[]
+  _sourcebytes = .binary[]
+  _sourceready = .int[]
+  *: factory
+    arg graph = reference .llir..module, entries = reference .llcprocedureprotocol..checked, loops = reference .llcdoprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _entries = entries; _loops = loops
+    _limit = bytes; _budget = work; _identity = 0
+    _bytes = 0; _work = 0; _ready = 0; _error = ''; _offset = 0
+    _keys = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 & <refvalid>(_store) then do
+      store = dereference _store
+      if opid <= store.count(3) then _offset = store.get(9,store.get(3,opid,11),2)
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: clause-clock dimensions are invalid'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do; call fail('LIMIT: clause-clock workspace exceeded'); return 0; end
+    _bytes = _bytes + count * width; return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do; call fail('LIMIT: clause-clock work budget exceeded'); return 0; end
+    _work = _work + count; return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_entries) = 0 | <refvalid>(_loops) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph
+    entries = dereference _entries; loops = dereference _loops
+    return graph.error() = '' & held.error() = '' & graph.identity() = _identity & held.identity() = _identity & entries.belongs(_graph) & loops.belongs(_graph)
+  /** A needed owner selects all its marker occurrences, including conservative
+   * repeat invalidation. No clock work or source record survives an erased begin. */
+  emits: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    if opid < 1 | opid > _markers[0] then return 0
+    owner = _markers[opid]
+    if owner = 0 then return 0
+    return _needed[owner] <> 0
+  /** Only a complete begin-only use list licenses erasing a canonical C load.
+   * A load with any ordinary user retains its normal allocation and emission. */
+  erased: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    if opid < 1 | opid > _classes[0] then return 0
+    return _erased[opid] <> 0
+  integer: method = .int
+    arg op = .llir..opview
+    if charge(9) = 0 then return 0
+    bits = op.attribute('id'); codec = .llir..intcodec()
+    if codec.check(bits) <> '' then do; call fail('LOWERING: clause-clock id is not an integer',op.id()); return 0; end
+    return <at..i64>(0) bits
+  /** Source bytes are owned once per arena source ID. Endpoint tests borrow
+   * that cell; no marker/K projection repeats a whole source copy or scan. */
+  range: method = .int
+    arg sourceid = .int, first = .int, last = .int, opid = 0
+    store = dereference _store; extent = .int; byte = .int
+    if sourceid < 1 | sourceid > store.count(10) | first < 0 | first >= last then do
+      call fail('LOWERING: clause-clock requires an owned nonempty source range',opid); return 0
+    end
+    if _sourceready[sourceid] = 0 then do
+      bytes = store.bits(store.get(10,sourceid,2)); extent = <blen>(bytes)
+      if reserve(extent,4) = 0 | charge(extent) = 0 | charge(extent) = 0 | charge(extent + 1) = 0 then return 0
+      codec = .llscalar..textcodec()
+      if codec.check(bytes) <> '' then do; call fail('SOURCE: clause-clock source is not valid UTF8',opid); return 0; end
+      assembler move _sourcebytes[sourceid],bytes
+      assembler null bytes
+      _sourceready[sourceid] = 1
+    end
+    source_ref = reference _sourcebytes[sourceid]; source = dereference source_ref
+    extent = <blen>(source)
+    if last > extent then do; call fail('LOWERING: clause-clock range exceeds its source',opid); return 0; end
+    if charge(2) = 0 then return 0
+    assembler bgetu8 byte,source,first
+    if byte >= 128 & byte < 192 then do; call fail('SOURCE: clause-clock start splits a UTF8 scalar',opid); return 0; end
+    if last < extent then do
+      assembler bgetu8 byte,source,last
+      if byte >= 128 & byte < 192 then do; call fail('SOURCE: clause-clock end splits a UTF8 scalar',opid); return 0; end
+    end
+    return 1
+  context: method = .int
+    arg op = .llir..opview, ordinal = .int
+    store = dereference _store; entries = dereference _entries
+    fn = store.get(2,op.blockid(),1); value = op.input(ordinal).id()
+    producer = store.get(4,value,1); binding = entries.contextslot(fn)
+    if producer < 1 | binding < 1 then do; call fail('LOWERING: clause-clock context is not canonical',op.id()); return 0; end
+    if store.get(3,producer,1) <> 3 | store.get(3,producer,12) <> binding then do
+      call fail('LOWERING: clause-clock context uses a different bound slot',op.id()); return 0
+    end
+    return binding
+  marker: method = .void
+    arg op = .llir..opview
+    store = dereference _store; opid = op.id(); owner = .int
+    sourceid = _sources[opid]; first = _firsts[opid]; last = _lasts[opid]
+    if _kinds[opid] <> 1 then do; call fail('LOWERING: clause-clock begin requires an exact source origin',opid); return; end
+    if range(sourceid,first,last,opid) = 0 then return
+    identity = integer(op); if _error <> '' then return
+    if first = 9223372036854775807 | identity <> first + 1 then do; call fail('LOWERING: clause-clock id differs from its source head',opid); return; end
+    binding = context(op,1); if _error <> '' then return
+    fn = store.get(2,op.blockid(),1)
+    key = fn || ':' || sourceid || ':' || identity || ':' || first || ':' || last || ':' || binding
+    extent = <blen>(key as .binary)
+    if reserve(extent + 64,2) = 0 | charge(extent + 1) = 0 then return
+    found = _keys.get(key)
+    if found = '' then do
+      owner = _ownerfunctions[0] + 1
+      _ownerfunctions[owner] = fn; _ownersources[owner] = sourceid
+      _ownerfirsts[owner] = first; _ownerlasts[owner] = last
+      if charge(extent + 1) = 0 then return
+      call _keys.set(key,owner as .string)
+    end
+    else owner = found as .int
+    _markers[opid] = owner
+    value = op.input(1).id(); _beginuses[value] = _beginuses[value] + 1
+    return
+  /** Range identity is arena-local, never a filename equality. Generated CALL
+   * transport may borrow only its immediate authored parent's contained span. */
+  contained: method = .int
+    arg opid = .int, owner = .int
+    if owner < 1 then return 0
+    if _sources[opid] = _ownersources[owner] & _firsts[opid] >= _ownerfirsts[owner] & _lasts[opid] <= _ownerlasts[owner] & _firsts[opid] < _lasts[opid] then return 1
+    parent = _parents[opid]
+    if parent = 0 | (_kinds[opid] <> 3 & _kinds[opid] <> 4) then return 0
+    store = dereference _store
+    return store.get(9,parent,1) = _ownersources[owner] & store.get(9,parent,2) >= _ownerfirsts[owner] & store.get(9,parent,3) <= _ownerlasts[owner] & store.get(9,parent,2) < store.get(9,parent,3)
+  header: method = .int
+    arg owner = .int, loopowner = .int
+    if owner < 1 | loopowner < 1 then return 0
+    constructor = _constructors[loopowner]
+    if constructor = 0 then return 0
+    loops = dereference _loops
+    return loops.function(loopowner) = _ownerfunctions[owner] & _sources[constructor] = _ownersources[owner] & _firsts[constructor] >= _ownerfirsts[owner] & _firsts[constructor] < _ownerlasts[owner] & _ownerlasts[owner] <= _lasts[constructor]
+  /** Collapse only already-proved CALL false continuations. Every block gets
+   * one memoized head; no condition/loop/ordinary predecessor is traversed. */
+  callhead: method = .int
+    arg blockid = .int
+    store = dereference _store; entries = dereference _entries
+    current = blockid; top = 0; predecessor = .int; result = .int
+    do while _callheads[current] = 0
+      if charge() = 0 then return 0
+      _callheads[current] = -1; top = top + 1; _headstack[top] = current
+      predecessor = entries.falsepredecessor(current)
+      if predecessor = 0 then leave
+      current = store.get(3,predecessor,2)
+      if _callheads[current] = -1 then do; call fail('LOWERING: clause-clock CALL continuation is cyclic',predecessor); return 0; end
+    end
+    result = current
+    if _callheads[current] > 0 then result = _callheads[current]
+    do while top > 0
+      current = _headstack[top]; top = top - 1; _callheads[current] = result
+    end
+    return result
+  /** Structural edge permission is independent of a seed. DO itself already
+   * proves phase/owner legality; this layer checks only its finite transport. */
+  edge: method = .int
+    arg blockid = .int, edgeid = .int
+    store = dereference _store; entries = dereference _entries
+    opid = _edgeops[edgeid]; ordinal = _edgeordinals[edgeid]
+    if _dispatch[blockid] then do; call fail('LOWERING: clause-clock cannot carry through invocation dispatch',opid); return 0; end
+    if _classes[opid] = 4 then do
+      if entries.falsepredecessor(blockid) = opid & ordinal = 2 then return 1
+      value = store.operand(opid,1); producer = store.get(4,value,1)
+      if ordinal = 1 & producer > 0 then do
+        if _classes[producer] = 11 & _uses[value] = 1 & store.get(3,producer,3) = opid then return 1
+      end
+      call fail('LOWERING: clause-clock cannot carry through an ordinary conditional edge',opid); return 0
+    end
+    if _classes[opid] <> 3 then do; call fail('LOWERING: clause-clock predecessor is not finite plumbing',opid); return 0; end
+    parent = _parents[opid]
+    if parent > 0 then if _signalorigins[parent] then do; call fail('LOWERING: clause-clock cannot carry through SIGNAL',opid); return 0; end
+    if _predcounts[blockid] > 1 & _entryblocks[blockid] = 0 & _predicates[blockid] = 0 then do
+      call fail('LOWERING: clause-clock cannot carry through an ordinary join',opid); return 0
+    end
+    return 1
+  edgeowner: method = .int
+    arg blockid = .int, edgeid = .int, owner = .int
+    store = dereference _store; loops = dereference _loops
+    opid = _edgeops[edgeid]
+    if owner < 1 then do; call fail('LOWERING: clause-clock predecessor has no current begin',opid); return 0; end
+    if _ownerfunctions[owner] <> store.get(2,blockid,1) then do; call fail('LOWERING: clause-clock predecessor belongs to another function',opid); return 0; end
+    if _classes[opid] = 4 then do
+      producer = store.get(4,store.operand(opid,1),1)
+      if producer > 0 then if _classes[producer] = 11 then do
+        if header(owner,loops.owner(producer)) = 0 then do; call fail('LOWERING: clause-clock DO entry uses a different header owner',opid); return 0; end
+      end
+      return 1
+    end
+    if contained(opid,owner) then return 1
+    /* Exact END/whole-DO source spans are real frontend plumbing. Only an
+     * admitted DO entry/predicate destination permits this range exception. */
+    if _sources[opid] <> _ownersources[owner] then do; call fail('LOWERING: clause-clock edge belongs to another source',opid); return 0; end
+    if _entryblocks[blockid] > 0 then do
+      if header(owner,_entryblocks[blockid]) then return 1
+    end
+    if _predicates[blockid] > 0 then do
+      if contained(_predicates[blockid],owner) then return 1
+    end
+    call fail('LOWERING: clause-clock edge escapes its authored owner',opid); return 0
+  /** One local pass per resolved block. A foreign semantic clause kills carry;
+   * pure temporaries and admitted DO step plumbing do not invent a new seed. */
+  finishblock: method = .void
+    arg blockid = .int
+    store = dereference _store; loops = dereference _loops
+    owner = _incoming[blockid]; opid = store.get(2,blockid,2); classid = .int; loopowner = .int
+    do while opid > 0
+      if charge() = 0 then return
+      classid = _classes[opid]
+      select
+        when classid = 1 then owner = _markers[opid]
+        when classid = 2 then do
+          if owner = 0 then do; call fail('LOWERING: clause-clock observation has no current begin',opid); return; end
+          if _sources[opid] <> _ownersources[owner] | _firsts[opid] < _ownerfirsts[owner] | _lasts[opid] > _ownerlasts[owner] then do
+            call fail('LOWERING: clause-clock observation is outside its current owner',opid); return
+          end
+          _needed[owner] = 1
+        end
+        when classid = 3 | classid = 4 | classid = 5 | classid = 6 | classid = 7 then nop
+        when classid >= 8 & classid <= 12 then do
+          loopowner = loops.owner(opid)
+          if owner > 0 then if header(owner,loopowner) = 0 then owner = 0
+        end
+        otherwise do
+          if owner > 0 then if contained(opid,owner) = 0 then owner = 0
+        end
+      end
+      opid = store.get(3,opid,3)
+    end
+    _outgoing[blockid] = owner; _states[blockid] = 2
+    return
+  /** Iterative predecessor closure, with early obligations resolved before a
+   * later marker can publish the block's final seed. A cycle is never a seed. */
+  resolve: method = .void
+    arg root = .int
+    if _states[root] = 2 then return
+    store = dereference _store
+    top = 1; _stack[top] = root
+    blockid = .int; edgeid = .int; predecessor = .int; owner = .int
+    do while top > 0 & _error = ''
+      if charge() = 0 then return
+      blockid = _stack[top]
+      if _states[blockid] = 0 then do
+        _states[blockid] = 1
+        if _prefixclocks[blockid] = 0 & _blockmarkers[blockid] > 0 then do
+          _incoming[blockid] = 0; call finishblock(blockid); top = top - 1; iterate
+        end
+        if _predheads[blockid] = 0 then do
+          _incoming[blockid] = 0; call finishblock(blockid); top = top - 1; iterate
+        end
+        _cursors[blockid] = _predheads[blockid]; _accumulators[blockid] = 0
+      end
+      edgeid = _cursors[blockid]
+      if edgeid = 0 then do
+        _incoming[blockid] = _accumulators[blockid]
+        call finishblock(blockid); top = top - 1; iterate
+      end
+      if edge(blockid,edgeid) = 0 then return
+      predecessor = store.get(3,_edgeops[edgeid],2)
+      if _states[predecessor] = 1 then do
+        call fail('LOWERING: clause-clock predecessor is cyclic or uses a later begin',_edgeops[edgeid]); return
+      end
+      if _states[predecessor] = 0 then do
+        top = top + 1; _stack[top] = predecessor; iterate
+      end
+      owner = _outgoing[predecessor]
+      if edgeowner(blockid,edgeid,owner) = 0 then return
+      if _accumulators[blockid] = 0 then _accumulators[blockid] = owner
+      else if _accumulators[blockid] <> owner then do
+        call fail('LOWERING: clause-clock incoming owners disagree',_edgeops[edgeid]); return
+      end
+      _cursors[blockid] = _edgenext[edgeid]
+    end
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if <refvalid>(_graph) = 0 | <refvalid>(_entries) = 0 | <refvalid>(_loops) = 0 then do; call fail('LOWERING: clause-clock proof owner is not live'); return; end
+    graph = dereference _graph; entries = dereference _entries; loops = dereference _loops
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    if entries.status() <> 0 then do; _error = entries.error(); _offset = entries.offset(); return; end
+    if loops.status() <> 0 then do; _error = loops.error(); _offset = loops.offset(); return; end
+    if entries.belongs(_graph) = 0 | loops.belongs(_graph) = 0 then do; call fail('LOWERING: clause-clock proof belongs to another graph'); return; end
+    _identity = graph.identity()
+    if _limit < 1 | _budget < 1 then do; call fail('LIMIT: clause-clock allowance is invalid'); return; end
+    _store = graph.storage(); store = dereference _store
+    if reserve(store.count(3) + 1,160) = 0 | reserve(store.count(2) + 1,120) = 0 then return
+    if reserve(store.count(4) + 1,16) = 0 | reserve(store.count(7) + 1,24) = 0 then return
+    if reserve(store.count(9) + 1,8) = 0 | reserve(store.count(10) + 1,16) = 0 | reserve(loops.owners() + 1,8) = 0 then return
+    op = .llir..opview; name = .string; id = .int; origin = .int; classid = .int; ordinal = .int
+    b = .int; value = .int; target = .int; edgeid = 0; markerowner = .int; producer = .int; head = .int; loopowner = .int
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = .llir..opview(_store,id); name = op.name(); classid = 0
+      if charge(length(name) + 1) = 0 then return
+      select name
+        when 'crexx.c.clause.begin' then classid = 1
+        when 'crexx.c.bif' then do
+          bits = op.attribute('name'); extent = <blen>(bits)
+          if charge(extent + 1) = 0 then return
+          if bincompare(bits,'DATE' as .binary) = 0 | bincompare(bits,'TIME' as .binary) = 0 then classid = 2
+        end
+        when 'core.jump' then classid = 3
+        when 'core.branch' then classid = 4
+        when 'core.load' then classid = 5
+        when 'core.store' then classid = 6
+        when 'core.constant' then classid = 7
+        when 'crexx.c.do.new' then classid = 8
+        when 'crexx.c.do.capture' then classid = 9
+        when 'crexx.c.do.start' then classid = 10
+        when 'crexx.c.do.entry' then classid = 11
+        when 'crexx.c.do.advance' then classid = 12
+        when 'crexx.c.while.truth' then classid = 13
+        when 'crexx.c.signal.mark' then classid = 14
+        when 'crexx.c.entry.test' then classid = 15
+        when 'crexx.c.entry.invalid' then classid = 15
+        otherwise nop
+      end
+      _classes[id] = classid; origin = store.get(3,id,11)
+      _sources[id] = store.get(9,origin,1); _firsts[id] = store.get(9,origin,2); _lasts[id] = store.get(9,origin,3)
+      _kinds[id] = store.get(9,origin,4); _parents[id] = store.get(9,origin,5)
+      if classid = 14 then _signalorigins[origin] = 1
+      if classid = 8 then do
+        loopowner = loops.owner(id)
+        if loopowner > 0 then _constructors[loopowner] = id
+      end
+      do ordinal = 1 to op.inputs()
+        if charge() = 0 then return
+        value = store.operand(id,ordinal); _uses[value] = _uses[value] + 1
+      end
+      do ordinal = 1 to op.successors()
+        if charge() = 0 then return
+        target = store.successor(id,ordinal); edgeid = edgeid + 1
+        _edgeops[edgeid] = id; _edgeordinals[edgeid] = ordinal; _edgenext[edgeid] = _predheads[target]
+        _predheads[target] = edgeid; _predcounts[target] = _predcounts[target] + 1
+      end
+      if classid = 1 then call marker(op)
+      if classid = 2 then do
+        if _kinds[id] <> 1 then do; call fail('LOWERING: clause-clock observation requires an exact source origin',id); return; end
+        if range(_sources[id],_firsts[id],_lasts[id],id) = 0 then return
+        binding = context(op,2)
+        if binding = 0 then return
+      end
+      if _error <> '' then return
+    end
+    /* Linked order, not numeric op IDs, defines each block's prefix. */
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      markerowner = 0; id = store.get(2,b,2)
+      do while id > 0
+        if charge() = 0 then return
+        classid = _classes[id]
+        if classid = 1 then markerowner = _markers[id]
+        if classid = 2 & markerowner = 0 then _prefixclocks[b] = id
+        if classid = 11 then _entryblocks[b] = loops.owner(id)
+        if classid = 15 then _dispatch[b] = 1
+        id = store.get(3,id,3)
+      end
+      _blockmarkers[b] = markerowner
+    end
+    /* A shared WHILE predicate has one checked truth/terminal-branch pair.
+     * Calls in its expression can add only proved private continuations. */
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if _classes[id] <> 13 then iterate
+      value = store.result(id,1); producer = store.get(3,id,3); b = store.get(3,id,2)
+      if producer < 1 then iterate
+      if _classes[producer] <> 4 | producer <> store.get(2,b,3) | store.operand(producer,1) <> value | _uses[value] <> 1 then do
+        /* Unrelated scalar truth uses do not acquire a transport privilege. */
+        iterate
+      end
+      head = callhead(b); if _error <> '' then return
+      if _predicates[head] > 0 then do; call fail('LOWERING: clause-clock predicate heads overlap',id); return; end
+      _predicates[head] = id
+    end
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      if _prefixclocks[b] > 0 then call resolve(b)
+      else do
+        /* Local seeds still validate each K; marker-only blocks do not need
+         * an incoming-owner query or a graph traversal. */
+        id = store.get(2,b,2); found = 0
+        do while id > 0
+          if charge() = 0 then return
+          if _classes[id] = 2 then found = 1
+          id = store.get(3,id,3)
+        end
+        if found & _states[b] = 0 then call resolve(b)
+      end
+      if _error <> '' then return
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      markerowner = _markers[id]
+      if markerowner > 0 then if _needed[markerowner] = 0 then _erased[id] = 1
+      if _classes[id] = 5 then do
+        value = store.result(id,1)
+        if _uses[value] > 0 & _uses[value] = _beginuses[value] then _erased[id] = 1
+      end
+    end
+    return

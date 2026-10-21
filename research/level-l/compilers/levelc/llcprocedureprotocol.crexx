@@ -555,6 +555,9 @@ checked: class
           if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then contextinput = 2
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
         end
+        if name = 'crexx.c.clause.begin' then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
         if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
           ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
         end

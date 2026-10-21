@@ -70,11 +70,17 @@ for later judgment rather than repeatedly reopening delivery qualification.
 Incorrect displayed values, changed ordinary behavior, wrong targets/results,
 or broken state, ownership, error and resource semantics remain material defects.
 
+Begin-only activation clause clocks are locally qualified under
+[CLAUSE1](architecture.md#clause-clock-contract); complete observations remain open.
+
 ## Material work remaining
+
+Full expression coverage, including binary strict inequality `\==`, remains
+with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
-retain clause clocks, configured conditions and SIGNAL ON/OFF, delayed CALL
+retain complete clause/clock observations, configured conditions and SIGNAL ON/OFF, delayed CALL
 handlers, practical TRACE, remaining expression/BIF/host/lifecycle contracts,
 delivery and declared platforms. INTERPRET remains required and last. Accepted
 profile choices do not close these obligations or establish full conformance.
