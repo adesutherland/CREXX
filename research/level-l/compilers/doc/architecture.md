@@ -3507,6 +3507,113 @@ no fractional-rounding acceptance or second numeric algorithm is introduced.
   documentation and reviewed feature delivery cover AC01–06. Preserve AC07,
   all complete-C criteria and INTERPRET-last.
 
+<a id="external-condition-b-prerequisite"></a>
+
+### Shared external condition scope prerequisite
+
+Give a C provider its own condition-policy scope without losing an explicitly
+delivered CALL condition. Ordinary external entry must start with all seven
+policies off and no current/delayed event. An explicit external CALL handler
+must retain its delivered CONDITION C/D/E/I and DELAY while holding no foreign
+handler ordinal. Internal children may inherit suppression of that delayed
+event. The activation remains the sole owner of policies, pending delivery and
+HALT buffering. This separate B prerequisite adds the state/API needed by the
+later C wrapper integration; it does not yet change C provider emission or add
+SIGNAL/CALL ON source, checkpoints, typed-event dispatch, native relay or VM/L
+exceptional edges.
+
+Append two private integer fields, zz_entry_condition and zz_suppression_condition,
+after existing activation fields and initialize both to zero. Their late-sorting
+private names preserve physical ordinals under the native B class layout; source
+append order alone does not. Existing field ordinals, signatures and valid/invalid
+argument behavior remain unchanged. Add
+only these public methods to RexxActivationArguments:
+
+| Method | Contract |
+|---|---|
+| `beginExternalConditionScope()->void` | Consume the one-shot entry marker, normalize foreign policy/delivery state and retain only a validated explicit CALL delivery. |
+| `delayedSuppressionConditionId()->int` | Return an ID in 2..5 only when zz_suppression_condition equals delayed_condition; otherwise zero. Current CONDITION may subsequently describe another trap. |
+
+The lifecycle is exact:
+
+1. A valid `beginCallTrap(condition,description)` for 2..5 clears prior
+   suppression, arms zz_entry_condition and retains its existing current/delayed
+   CALL recording. Invalid inputs remain no-ops. The marker describes an
+   explicit entry only; it is never inherited.
+2. `inheritSignalPolicy(parent)` resets the child's marker, copies the parent's
+   validated suppression and retains existing policy/current/delayed and other
+   activation inheritance. `beginExternalProgram()` clears the new suppression
+   field while preserving the marker; its existing root behavior remains.
+   Thus an ordinary external call from inside a handler is fresh, while the
+   explicitly prepared handler packet can still enter its own C wrapper.
+3. `beginExternalConditionScope()` first decides whether zz_entry_condition is
+   2..5 and equals both current_condition and delayed_condition, with exact
+   instruction `CALL`. It always consumes the marker and zeros all seven
+   policies, pending fields, dispatch fields and call-dispatch error. A valid
+   explicit delivery keeps its C/D/E/I and delayed ID and installs suppression;
+   otherwise clear current condition data, delayed ID and suppression. Repeated
+   normalization cannot reuse an old marker. No foreign negative policy slot
+   is retained as an executable handler identity.
+4. Existing valid policy setters clear entry/suppression and delay when their
+   condition matches the corresponding stored ID; changes for another condition
+   preserve them. Existing invalid setter calls remain no-ops. `recordCondition`
+   does not cancel an unrelated active delayed suppression.
+5. `queueCallCondition()` admits an exact nonzero validated suppression before
+   its existing CALL-policy check, reading the shared getter through a scoped
+   self reference rather than copying the activation. Suppressed ERROR/FAILURE/NOTREADY returns
+   false without queuing. Suppressed HALT uses the existing parent
+   `bufferHaltOutsideDelay` path and one-slot rules. All other events use the
+   existing policy/delay/pending algorithm. ID zero must never match a zero
+   suppression result. The Boolean reports whether an event was queued, not
+   whether its condition was handled: false can mean suppression or an occupied
+   pending slot. No policy or false queue result alone establishes unhandled HALT.
+6. Both shared ADDRESS NOTREADY gates accept an existing policy or exact
+   suppression ID5. Preserve ordinary unconfigured fallback/completion. Existing
+   C ADDRESS/PARSE conditiontransition queues then tests positive SIGNAL policy;
+   this prerequisite does not reinterpret its no-policy normal completion. A
+   later general dispatcher must distinguish queued/suppressed events from
+   unhandled events explicitly.
+
+Existing CONDITION S remains delay-first; explicit handlers can report DELAY
+while public callPolicy/signalPolicy are zero. Numeric, ADDRESS/TRACE state,
+clocks, arguments, completion, parent/caller-pool/program-root relationships and
+B/G/native entry conventions otherwise retain their existing behavior. Only
+the later reviewed C wrapper will invoke normalization once on its owned packet
+before source entry0. Update the CEXT inherited-condition prose with that
+integration, not by silently changing all existing providers in this prerequisite.
+
+1. **COND-B-AC01:** independent activation controls verify ordinary/explicit
+   entry, all seven zero policies, C/D/E/I/DELAY preservation, cleared pending/
+   dispatch/error state and unaffected arguments/results/root/numeric state.
+2. **COND-B-AC02:** one-shot, invalid/stale marker, matching versus other policy
+   changes, valid/invalid beginCallTrap, ordinary external-inside-handler and
+   internal inheritance controls exercise the full lifecycle. Getter validity
+   depends on delayed ID rather than a later current-condition change.
+3. **COND-B-AC03:** existing suppression/HALT/pending tests retain their old
+   expectations; normalized scopes add same-event suppression, one-extra-HALT,
+   occupied-slot and nested-parent cases without another event algorithm.
+4. **COND-B-AC04:** existing CONDITION BIF and pure B ADDRESS environment tests
+   verify DELAY with zero policies and both NOTREADY gates; contrast ordinary
+   disabled fallback, a local policy and normalized suppression. Reuse existing
+   stream failures and provider protocol, with no new host hook.
+5. **COND-B-AC05:** existing complementary B fixtures pass through owning
+   compiler/assembler/linker/VM producers. Actual RXAS and metadata show appended
+   fields/additive methods, scoped parent borrows and unchanged existing handler
+   algorithm; retained consumers and RexxDoc/API contracts stay compatible.
+6. **COND-B-AC06 — open C/shared closure:** C provider normalization, source
+   ON/OFF/handler dispatch, clause checkpoints/clock, exact event relay, TRACE,
+   host/platform and whole SIGNAL/CALL/full-C acceptance remain separate.
+
+- **COND-B-STEP01 — complete:** exact lifecycle/API and
+  independent acceptance before edits; AC01–06.
+- **COND-B-STEP02 — complete:** the activation and ADDRESS gates plus existing
+  activation/CONDITION/ADDRESS tests and API documentation; AC01–05.
+- **COND-B-STEP03 — locally complete:** focused complementary producer/runtime
+  and actual RXAS review, cleanup and separate feature delivery cover AC01–05.
+  The integrator retains the exclusive build/test/commit lease. Check the real
+  producer closure; an activation/rxfnsc-only change does not by itself change
+  generic rxlang inputs or justify cold lexer generation.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |

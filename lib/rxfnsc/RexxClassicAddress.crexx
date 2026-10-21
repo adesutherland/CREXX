@@ -171,7 +171,7 @@ RexxClassicAddressCommand: class
       path = state.resource("I")
       bytes = readInputStream(path)
       if stream_read_error <> "" then do
-        if activation.signalPolicy(5) <> 0 then do
+        if activation.signalPolicy(5) <> 0 | activation.delayedSuppressionConditionId() = 5 then do
           last_condition_id = 5
           last_condition_description = path
           return .addressresponse(0)
@@ -295,7 +295,7 @@ RexxClassicAddressCommand: class
     last_condition_id = 0
     if condition = "ERROR" then last_condition_id = 2
     if condition = "FAILURE" then last_condition_id = 3
-    if io_error <> "" & activation.signalPolicy(5) <> 0 then do
+    if io_error <> "" & (activation.signalPolicy(5) <> 0 | activation.delayedSuppressionConditionId() = 5) then do
       last_condition_id = 5
       last_condition_description = io_error
     end

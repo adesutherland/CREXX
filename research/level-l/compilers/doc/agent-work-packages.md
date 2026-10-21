@@ -149,6 +149,18 @@ keeps shared observations and declared platforms open. NUM-C-STEP01–03 are
 locally complete for the source-integration profile. Clause/condition
 prerequisites for SIGNAL and CALL4 follow their exact contract reviews.
 
+The [external condition B prerequisite](architecture.md#external-condition-b-prerequisite)
+assigns only `lib/rxfnsc/RexxActivationArguments.crexx`,
+`lib/rxfnsc/RexxClassicAddress.crexx`, the existing
+`testRexxActivationArguments.crexx`, `testRexxClassicBifCondition.crexx` and
+`testRexxClassicAddressCommand.crexx` fixtures, and `lib/rxfnsc/address.md` to the
+runtime worker after exact record review. The integrator owns planning, serial
+preparation/testing, cleanup and the separate commit; no new executable or
+CMake target is needed. C wrapper integration, SIGNAL/CALL source and native
+relay are excluded from that source lease.
+COND-B-STEP01–03 are locally complete for the shared B prerequisite; its AC06
+keeps C/provider and wider condition integration separate.
+
 <a id="procedure-assignment-packet"></a>
 
 ## Approved PROCEDURE assignment packet

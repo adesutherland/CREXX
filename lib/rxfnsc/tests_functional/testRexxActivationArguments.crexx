@@ -1,9 +1,14 @@
 options levelb comments_dash numeric_classic
 import rexxactivation
 import rexxvalue
+import rexxclassicconfig
+import rexxpool
 
 main: procedure = .int
   errors = numeric_form_validation()
+  errors = errors + external_condition_scope()
+  errors = errors + external_condition_lifecycle()
+  errors = errors + external_halt_suppression()
   args = .RexxActivationArguments()
   call args.append(.RexxValue("first"), 1)
   call args.append(.RexxValue("ignored"), 0)
@@ -121,6 +126,179 @@ main: procedure = .int
     call args.setSignalPolicy(condition_id, 0)
   end
   if errors = 0 then say "ok"
+  return errors
+
+/* Normalization clears condition transport, not the activation's other owners. */
+external_condition_scope: procedure = .int
+  errors = 0
+  id = .int
+  parent = .RexxActivationArguments()
+  config = .RexxClassicConfig("UTF8")
+  pool = .RexxVariablePool(1)
+  destination = .RexxVariablePool(1)
+  payload = "éµμ雪" || ('00'x as .string) || "tail "
+  call parent.setNumericDigits(.RexxValue("7"),reference config)
+  call parent.setNumericFuzz(.RexxValue("1"),reference config)
+  call parent.setNumericForm(.RexxValue("engineering"))
+  call parent.setAddressEnvironment("SCOPE-TEST")
+  call parent.setAddressConnection("O","APPEND","STEM","OUT.")
+  call parent.setTraceOption("I")
+  call parent.requestProgramExit(.RexxValue(payload),1)
+  do id = 1 to 7
+    call parent.setSignalPolicy(id,id + 10)
+  end
+  call parent.setCallPolicy(2,17)
+  child = .RexxActivationArguments()
+  call child.inheritSignalPolicy(reference parent)
+  call child.append(.RexxValue(payload),1)
+  call child.append(.RexxValue("ignored"),0)
+  call child.appendText("")
+  call child.setReturnValue(.RexxValue(payload))
+  call pool.setString(".RC","caller rc")
+  call child.captureCallerPool(reference pool)
+  errors = errors + check(child.queueCallCondition(2,"old dispatch",15),"prepare dispatch before normalization")
+  errors = errors + check(child.takeCallCondition() = 17,"prepare selected dispatch before normalization")
+  call child.setCallPolicy(3,18)
+  errors = errors + check(child.queueCallCondition(3,"old pending",16),"prepare pending before normalization")
+  call child.recordCallDispatchError("old missing handler")
+  call child.recordCondition(6,"old current","old extra","SIGNAL")
+  original_root = child.programRoot()
+  call child.beginExternalConditionScope()
+  do id = 1 to 7
+    errors = errors + check(child.signalPolicy(id) = 0,"ordinary external policies off")
+    errors = errors + check(parent.signalPolicy(id) <> 0,"normalization leaves parent policy intact")
+  end
+  errors = errors + check(\child.hasPendingCallCondition() & child.takeCallCondition() = 0,"pending event cleared")
+  errors = errors + check(child.dispatchedConditionId() = 0 & child.dispatchedConditionDescription() == "" & child.dispatchedConditionLine() = 0,"dispatch fields cleared")
+  errors = errors + check(child.takeCallDispatchError() == "","missing handler detail cleared")
+  errors = errors + check(child.currentConditionId() = 0 & child.currentConditionDescription() == "" & child.currentConditionExtra() == "" & child.currentConditionInstruction() == "","ordinary current fields cleared")
+  errors = errors + check(child.delayedConditionId() = 0 & child.delayedSuppressionConditionId() = 0,"ordinary delay and suppression cleared")
+  errors = errors + check(child.argumentCount() = 3 & child.argument(1).asString() == payload & \child.argumentExists(2) & child.argumentExists(3),"raw arguments and present empty unchanged")
+  errors = errors + check(child.hasReturnValue() & child.returnValue().asString() == payload,"owned completion unchanged")
+  errors = errors + check(child.numericDigits() = 7 & child.numericFuzz() = 1 & child.numericForm() = 2,"numeric state unchanged")
+  errors = errors + check(child.addressEnvironment() == "SCOPE-TEST" & child.addressConnection("O") == "APPEND STEM OUT." & child.traceSetting() == "I","ADDRESS and TRACE unchanged")
+  retained_root = child.programRoot()
+  errors = errors + check(retained_root <refsame> original_root,"program root reference unchanged")
+  errors = errors + check(child.programExitRequested() & parent.returnValue().asString() == payload,"program EXIT state unchanged")
+  call child.applyCommandStatusToPool(reference destination)
+  errors = errors + check(destination.symbolValue(".RC").asString() == "caller rc","caller pool reference unchanged")
+  errors = errors + check(\child.queueCallCondition(0,"invalid zero",1) & \child.queueCallCondition(6,"invalid CALL id",1) & \child.hasPendingCallCondition(),"zero suppression never accepts invalid event IDs")
+  return errors
+
+/* Explicit delivery is one-shot; internal inheritance is not handler entry. */
+external_condition_lifecycle: procedure = .int
+  errors = 0
+  payload = "delivered é雪" || ('00'x as .string) || " "
+  parent = .RexxActivationArguments()
+  delivered = .RexxActivationArguments
+  internal = .RexxActivationArguments
+  ordinary = .RexxActivationArguments
+  do id = 2 to 5
+    call parent.setCallPolicy(id,id + 20)
+    delivered = .RexxActivationArguments()
+    call delivered.inheritSignalPolicy(reference parent)
+    call delivered.beginCallTrap(id,payload)
+    call delivered.recordCondition(id,payload,"delivered extra","CALL")
+    call delivered.beginExternalProgram()
+    call delivered.beginExternalConditionScope()
+    errors = errors + check(delivered.delayedSuppressionConditionId() = id & delivered.delayedConditionId() = id,"external begin preserves explicit delivery marker")
+    errors = errors + check(delivered.currentConditionId() = id & delivered.currentConditionDescription() == payload & delivered.currentConditionExtra() == "delivered extra" & delivered.currentConditionInstruction() == "CALL","explicit C D E I preserved exactly")
+    do policy = 1 to 7
+      errors = errors + check(delivered.signalPolicy(policy) = 0 & delivered.callPolicy(policy) = 0,"explicit handler retains no foreign ordinal")
+    end
+    if id <> 4 then errors = errors + check(\delivered.queueCallCondition(id,"same event",20) & \delivered.hasPendingCallCondition(),"zero-policy ERROR FAILURE NOTREADY suppressed")
+    call delivered.recordCondition(1,"later syntax","later extra","SIGNAL")
+    errors = errors + check(delivered.delayedSuppressionConditionId() = id,"suppression follows delayed ID, not later current condition")
+    internal = .RexxActivationArguments()
+    call internal.inheritSignalPolicy(reference delivered)
+    errors = errors + check(internal.delayedSuppressionConditionId() = id,"internal child inherits validated suppression")
+    call internal.beginExternalConditionScope()
+    errors = errors + check(internal.currentConditionId() = 0 & internal.delayedSuppressionConditionId() = 0,"internal inheritance never arms explicit entry")
+    ordinary = .RexxActivationArguments()
+    call ordinary.inheritSignalPolicy(reference delivered)
+    call ordinary.beginExternalProgram()
+    errors = errors + check(ordinary.delayedSuppressionConditionId() = 0,"ordinary external boundary clears inherited suppression before normalization")
+    call ordinary.beginExternalConditionScope()
+    errors = errors + check(ordinary.currentConditionId() = 0 & ordinary.delayedConditionId() = 0,"ordinary external inside handler starts fresh")
+    call delivered.beginExternalConditionScope()
+    errors = errors + check(delivered.currentConditionId() = 0 & delivered.delayedSuppressionConditionId() = 0,"normalization consumes explicit marker once")
+  end
+
+  marked = .RexxActivationArguments()
+  call marked.beginCallTrap(2,"explicit")
+  inherited = .RexxActivationArguments()
+  call inherited.inheritSignalPolicy(reference marked)
+  call inherited.beginExternalProgram()
+  call inherited.beginExternalConditionScope()
+  errors = errors + check(inherited.currentConditionId() = 0 & inherited.delayedSuppressionConditionId() = 0,"unconsumed entry marker is never inherited")
+  call marked.setSignalPolicy(3,11)
+  call marked.setCallPolicy(5,12)
+  call marked.setSignalPolicy(0,99)
+  call marked.setCallPolicy(1,99)
+  call marked.setCallPolicy(2,0)
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.delayedSuppressionConditionId() = 2,"other and invalid policy setters preserve marker")
+  call marked.setSignalPolicy(3,21)
+  call marked.setCallPolicy(5,22)
+  errors = errors + check(marked.delayedSuppressionConditionId() = 2,"other policies preserve active suppression")
+  call marked.setSignalPolicy(2,0)
+  errors = errors + check(marked.delayedConditionId() = 0 & marked.delayedSuppressionConditionId() = 0,"matching OFF cancels delay and suppression")
+  call marked.beginCallTrap(2,"new explicit")
+  call marked.setCallPolicy(2,23)
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.currentConditionId() = 0 & marked.delayedSuppressionConditionId() = 0,"matching CALL setter cancels marker")
+  call marked.beginCallTrap(2,"new explicit")
+  call marked.setSignalPolicy(2,24)
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.currentConditionId() = 0,"matching SIGNAL setter cancels marker")
+
+  call marked.beginCallTrap(2,"old explicit")
+  call marked.beginExternalConditionScope()
+  call marked.beginCallTrap(3,"new delivery")
+  errors = errors + check(marked.delayedSuppressionConditionId() = 0,"new valid trap clears prior suppression")
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.delayedSuppressionConditionId() = 3,"new delivery can normalize independently")
+  call marked.beginExternalProgram()
+  errors = errors + check(marked.delayedSuppressionConditionId() = 0,"external begin cancels active suppression")
+  call marked.beginCallTrap(2,"stale")
+  call marked.recordCondition(3,"different","extra","CALL")
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.currentConditionId() = 0 & marked.delayedConditionId() = 0,"mismatched current identity rejects stale marker")
+  call marked.beginCallTrap(2,"stale")
+  call marked.recordCondition(2,"padded instruction","extra","CALL ")
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.currentConditionId() = 0,"padded CALL is not an explicit delivery")
+  call marked.beginCallTrap(0,"invalid")
+  call marked.beginCallTrap(1,"invalid")
+  call marked.beginCallTrap(6,"invalid")
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.currentConditionId() = 0 & marked.delayedSuppressionConditionId() = 0,"invalid trap IDs never arm fresh entry")
+  call marked.beginCallTrap(2,"still valid")
+  call marked.beginCallTrap(7,"invalid no-op")
+  call marked.beginExternalConditionScope()
+  errors = errors + check(marked.delayedSuppressionConditionId() = 2 & marked.currentConditionDescription() == "still valid","invalid trap leaves an existing valid delivery unchanged")
+  return errors
+
+external_halt_suppression: procedure = .int
+  errors = 0
+  caller = .RexxActivationArguments()
+  handler = .RexxActivationArguments()
+  nested = .RexxActivationArguments()
+  call caller.setCallPolicy(4,31)
+  call handler.inheritSignalPolicy(reference caller)
+  call handler.beginCallTrap(4,"first HALT")
+  call handler.beginExternalProgram()
+  call handler.beginExternalConditionScope()
+  call nested.inheritSignalPolicy(reference handler)
+  errors = errors + check(nested.callPolicy(4) = 0 & nested.delayedSuppressionConditionId() = 4,"nested HALT delay has no foreign policy")
+  errors = errors + check(nested.queueCallCondition(4,"buffered 雪",71),"zero-policy HALT uses existing parent buffer")
+  errors = errors + check(\nested.queueCallCondition(4,"occupied",72),"occupied interrupted slot rejects extra HALT")
+  errors = errors + check(\nested.hasPendingCallCondition() & \handler.hasPendingCallCondition() & caller.hasPendingCallCondition(),"only interrupted caller owns buffered HALT")
+  errors = errors + check(caller.takeCallCondition() = 31 & caller.dispatchedConditionDescription() == "buffered 雪" & caller.dispatchedConditionLine() = 71,"buffered HALT retains caller ordinal description and source")
+  errors = errors + check(nested.queueCallCondition(4,"next",73) & caller.takeCallCondition() = 31,"consumed HALT slot can be reused")
+  call handler.setCallPolicy(4,32)
+  errors = errors + check(handler.delayedSuppressionConditionId() = 0 & handler.delayedConditionId() = 0,"matching CALL ON cancels HALT suppression")
+  errors = errors + check(handler.queueCallCondition(4,"local",74) & handler.takeCallCondition() = 32,"local policy replaces foreign suppression")
   return errors
 
 /* A fresh owner isolates FORM validation from argument/trap state above. */

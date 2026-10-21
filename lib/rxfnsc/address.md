@@ -69,7 +69,8 @@ uses its counted lines; INPUT STREAM reads exact bytes through
 and ERROR STEM or STREAM receive captured output, with REPLACE or APPEND as
 selected. INPUT STREAM uses the shared RXCV channel's 16 MiB input limit;
 an unreadable or larger input is a resource failure, reported through NOTREADY
-when that policy is enabled. Command completion sets `RC`, `.RC` and `.RS`; eligible ERROR,
+when that policy is enabled or that NOTREADY is delayed in a normalized
+external CALL handler. Command completion sets `RC`, `.RC` and `.RS`; eligible ERROR,
 FAILURE and NOTREADY events reach the active SIGNAL or CALL policy at the
 causing ADDRESS clause. Invalid STEM counts signal SYNTAX 54.1 there. A native
 callback's condition and diagnostic are copied by the approved `rxvml`
@@ -124,6 +125,35 @@ string. The host-command boundary is tracked as `LC-HOST-ADDRESS-NUL` in the
 Level C worklist. Adrian approved closing the ADDRESS instruction with this
 host-interface obligation still open; no length-aware native callback ABI or
 VM change was made for that gap.
+
+## External condition scope API
+
+`RexxActivationArguments.beginExternalConditionScope()` starts a provider-owned
+condition scope. It clears all seven foreign handler identities, pending and
+dispatch records, and delayed-dispatch errors. Only a valid one-shot explicit
+`beginCallTrap(2..5,description)` entry retains its delivered CONDITION C/D/E/I
+and DELAY state. An ordinary or stale entry starts with empty condition data;
+normalizing twice cannot deliver the same marker again.
+
+`delayedSuppressionConditionId()` returns a suppression ID only when it is in
+2..5 and still equals the delayed condition. It can remain active after another
+trap changes the current CONDITION data. Internal children inherit validated
+suppression but never the explicit-entry marker. `beginExternalProgram()`
+clears inherited suppression while preserving an explicitly prepared marker;
+matching ON/OFF replacement cancels both. Numeric, ADDRESS/TRACE, arguments,
+results and program-root behavior otherwise retain their existing contracts.
+
+The command adapter preserves NOTREADY at both input and output/error stream
+gates for a local policy or delayed suppression ID5. Without either, existing
+input fallback and normal completion remain. `queueCallCondition()` still
+returns whether an event was queued or buffered, not whether it was handled:
+ERROR/FAILURE/NOTREADY can be suppressed without a queued event. Delayed HALT
+reuses the existing parent buffer and one-pending-event rules.
+
+These shared B methods are a prerequisite for later research C provider and
+handler integration. They do not add C ON/OFF syntax, checkpoints, event relay,
+resumption or a new host interface; existing B/G/native entry points are not
+automatically normalized.
 
 ## Errors
 
