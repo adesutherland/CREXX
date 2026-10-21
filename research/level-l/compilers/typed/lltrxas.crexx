@@ -7,12 +7,15 @@ import lltir
 import llcompilercontracts
 import llsource
 import llrxastext
+import llrxas
+import llirgraph
 
 /** A compile owns its source graph and emits only a fully checked output.
- * Registers are stable per function; the disjoint call window is never shared
- * with live IR values. Source graph storage is read-only throughout. */
+ * Fixed owners and the disjoint call window retain their identities; explicit
+ * plain scalar candidates use checked target allocation. The graph is read-only. */
 compilation: class
   _graph = .llir..module
+  _index = .llirgraph..index
   _store = reference .llir..arena
   _schema = .llir..contract
   _canonical = .llir..contract
@@ -44,7 +47,8 @@ compilation: class
   _signatures = .object[]
   _packages = .string[]
   _catalogs = .object[]
-  _records = .object[]
+  _target = .llrxas..program
+  _candidates = .int[]
   _recordbytes = .int
   _writer = .llir..writer
   _output = .llir..output
@@ -78,8 +82,7 @@ compilation: class
     if _recordbytes > _limit then do
       call fail('LIMIT: selected output exceeds output.bytes budget'); return
     end
-    n = _records[0] + 1
-    _records[n] = .llrxastext..instruction(mnemonic,operands,_origin) as .object
+    call _target.record(mnemonic,operands,_origin)
     return
   reg: method = .string
     arg index = .int
@@ -251,6 +254,13 @@ compilation: class
 
       if _limit < 1 | _reglimit < 16 | _reglimit > 2147483647 then do; call fail('LIMIT: invalid output or register budget'); return; end
       _store = _graph.storage(); store = dereference _store; contract = dereference store.contract(); _schema = contract
+      _phase = 'graph index'
+      _index = .llirgraph..index(reference _graph,1000000,_limit)
+      if _index.valid() = 0 then do
+        if _index.status() = 'limit' then call fail('LIMIT: ' || _index.message())
+        else call fail('GRAPH: ' || _index.message())
+        return
+      end
       call checkfunctions()
       if _error <> '' then return
       canonical = .llir..schema(); call lltir..registerfamilies(reference canonical); expected = canonical.finish()
@@ -269,6 +279,8 @@ compilation: class
       call _writer.line('.globals=0')
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 2; _callbase = 1
+      _target = .llrxas..program(_locals,_reglimit,1000000)
+      call _target.window(_callbase,_locals - _callbase)
 
       if store.text(store.get(1,1,1)) = '$MAIN' then do
       call emit('main()','.locals=' || _locals)
@@ -277,6 +289,7 @@ compilation: class
         call invoke('r0','llf1',0); call emit('ret','r0')
       end
       _phase = 'entry flush'; call flush()
+      if _error <> '' then return
       end
       do f = 1 to store.count(1)
         _phase = 'function ' || f; _fn = f; call procedurebody()
@@ -301,46 +314,52 @@ compilation: class
     end
     return
   flush: method = .void
+    selected = _target.finish()
+    if selected.valid() = 0 then do
+      if pos('LL_RXAS_LIMIT:',selected.error()) = 1 then call fail('LIMIT: ' || selected.error())
+      else call fail('TARGET: ' || selected.error())
+      return
+    end
     section = _writer.section()
-    do i = 1 to _records[0]
-      record = _records[i] as .llrxastext..instruction
-      call section.line(record.text(),record.origin())
+    do i = 1 to selected.records()
+      call section.line(selected.text(i),selected.origin(i))
     end
     part = section.finish(); call _writer.append(reference part)
-    empty = .object[]; _records = empty; _recordbytes = 0
+    _recordbytes = 0
     if _writer.error() <> '' then _error = _writer.error()
     return
   procedurebody: method = .void
     i = .int; b = .int; id = .int; op = .llir..opview
+    blockindex = .int; slotindex = .int; operationindex = .int; valuetype = .string
     store = dereference _store; blocks = .int[]
     _phase = 'default planning'
-    uses = .int[]; valueid = .int; name = .string
-    do i = 1 to store.count(4); uses[i] = 0; end
-    do i = 1 to store.count(3); _deferred[i] = 0; end
-    do i = 1 to store.count(6)
-      valueid = store.get(6,i,1); uses[valueid] = uses[valueid] + 1
+    valueid = .int; name = .string
+    do operationindex = 1 to _index.functionoperations(_fn)
+      i = _index.functionoperation(_fn,operationindex); _deferred[i] = 0
     end
-    do i = 1 to store.count(3)
-      if store.get(3,i,1) <> 9 then iterate
-      valueid = store.operand(i,1); producer = store.get(4,valueid,1)
+    do operationindex = 1 to _index.functionoperations(_fn)
+      i = _index.functionoperation(_fn,operationindex)
+      if _index.opcode(i) <> 9 then iterate
+      valueid = store.operand(i,1); producer = _index.definition(valueid)
       name = store.opname(store.get(3,producer,1))
-      if uses[valueid] = 1 & (name = 'core.constant' | name = 'crexx.g.decimal.default') then _deferred[producer] = i
+      if _index.uses(valueid) = 1 & (name = 'core.constant' | name = 'crexx.g.decimal.default') then _deferred[producer] = i
     end
     _phase = 'slot allocation'; next = 1
-    do i = 1 to store.count(5)
-      if store.get(5,i,1) = _fn then do
-        _slots[i] = next; next = next + 1
-      end
+    do slotindex = 1 to _index.functionslots(_fn)
+      i = _index.functionslot(_fn,slotindex)
+      _slots[i] = next; next = next + 1
     end
-    _phase = 'value allocation'
-    do b = 1 to store.count(2)
-      if store.get(2,b,1) <> _fn then iterate
-      blocks[blocks[0] + 1] = b
+    _phase = 'value allocation'; emptycandidates = .int[]; _candidates = emptycandidates
+    do blockindex = 1 to _index.functionblocks(_fn)
+      b = _index.functionblock(_fn,blockindex)
+      blocks[blockindex] = b
       id = store.get(2,b,2)
       do while id > 0
         op = _graph.operation(id)
         do r = 1 to op.results()
           _registers[op.result(r).id()] = next; next = next + 1
+          valuetype = typename(op.result(r).type().id())
+          if valuetype = 'core.boolean' | valuetype = 'crexx.g.boolean' | valuetype = 'crexx.g.int64' then _candidates[_candidates[0] + 1] = _registers[op.result(r).id()]
         end
         id = store.get(3,id,3)
       end
@@ -365,7 +384,12 @@ compilation: class
 
     if _maxargs >= 0 then do; _callbase = next; next = next + _maxargs + 1; end
     _locals = next
-    if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
+    _target = .llrxas..program(_locals,_reglimit,1000000)
+    if _callbase >= 0 then call _target.window(_callbase,_locals - _callbase)
+    do i = 1 to _candidates[0]
+      call _target.candidate(_candidates[i],'integer')
+      if _index.pinnedfunction(_fn) then call _target.pin(_candidates[i])
+    end
     _origin = 0
     declaration = '.locals=' || _locals
     if store.get(1,_fn,6) > 0 then declaration = declaration || ' .expose=' || store.text(store.get(1,_fn,6))

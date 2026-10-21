@@ -1,0 +1,465 @@
+/* cREXX License (MIT). Optional typed RXAS records and whole-cell assignment. */
+options levelb
+namespace llrxas expose program allocation
+import rxfnsb
+import llrxascatalog
+
+fail: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Selected operands are classified before allocation. Original token spans
+ * preserve quoted bytes and metadata; rendering substitutes location tokens only. */
+instruction: class
+  _mnemonic = .string
+  _raw = .string
+  _origin = .int
+  _opcode = .int
+  _parts = .string[]
+  _starts = .int[]
+  _lengths = .int[]
+  _locals = .int[]
+  _kinds = .string[]
+  _error = .string
+  _kind = .string
+  *: factory
+    arg mnemonic = .string, operands = .string, origin = .int
+    _mnemonic = mnemonic; _raw = operands; _origin = origin; _opcode = -1
+    _kind = 'instruction'
+    return
+  parse: method = .void
+    arg catalog_ref = reference .llrxascatalog..catalog
+    catalog = dereference catalog_ref; mnemonic = _mnemonic; operands = _raw
+    if mnemonic = '' then do; _kind = 'metadata'; return; end
+    if right(mnemonic,2) = '()' then do; _kind = 'header'; return; end
+    if right(mnemonic,1) = ':' then do; _kind = 'label'; return; end
+    if left(mnemonic,1) = '.' then do
+      _kind = 'metadata'
+      if mnemonic = '.traceevent' then _kind = 'trace'
+      else if wordpos(mnemonic,'.meta .srcstep .srcfile .srcline .const') = 0 then _kind = 'opaque'
+    end
+    if _kind = 'metadata' | _kind = 'opaque' then return
+    quoted = ''; escaped = 0; start = 1; i = .int; c = .string
+    do i = 1 to length(operands) + 1
+      c = substr(operands,i,1)
+      if quoted <> '' then do
+        if escaped then escaped = 0
+        else if c = '\' then escaped = 1
+        else if c = quoted then quoted = ''
+        iterate
+      end
+      if c = '"' | c = "'" then do; quoted = c; iterate; end
+      delimiter = c = ','
+      if _kind = 'trace' then delimiter = c = ' ' | c = '09'x
+      if delimiter | i > length(operands) then do
+        if i > start then call token(start,i - start)
+        else if _kind = 'instruction' & operands <> '' then _error = 'LL_RXAS_RECORD: empty operand'
+        start = i + 1
+      end
+    end
+    if quoted <> '' then _error = 'LL_RXAS_RECORD: unterminated quoted operand'
+    if _kind = 'trace' then do
+      if _parts[0] <> 11 then do; _error = 'LL_RXAS_RECORD: TRACE record arity'; return; end
+      if _parts[3] = '"R"' & _parts[5] = '"o"' then do
+        raw = _parts[6]
+        if datatype(raw,'W') = 0 then do; _error = 'LL_RXAS_RECORD: TRACE local location'; return; end
+        _kinds[6] = 'local'; _locals[6] = raw as .int
+      end
+      return
+    end
+    signature = ''
+    do i = 1 to _parts[0]
+      signature = signature || _kinds[i]
+    end
+    _opcode = catalog.find(mnemonic,signature)
+    if _opcode < 0 then _error = 'LL_RXAS_RECORD: unknown instruction/operand signature ' || mnemonic || '/' || signature
+    return
+  token: method = .void
+    arg start = .int, size = .int
+    do while size > 0 & substr(_raw,start,1) = ' '
+      start = start + 1; size = size - 1
+    end
+    do while size > 0 & substr(_raw,start + size - 1,1) = ' '
+      size = size - 1
+    end
+    if size = 0 then return
+    text = substr(_raw,start,size); n = _parts[0] + 1
+    _parts[n] = text; _starts[n] = start; _lengths[n] = size
+    _locals[n] = -1; _kinds[n] = 'L'
+    if _kind = 'trace' then return
+    first = left(text,1); suffix = substr(text,2)
+    select
+      when (first = 'r' | first = 'a' | first = 'g') & datatype(suffix,'W') then do
+        if suffix as .int < 0 then _error = 'LL_RXAS_RECORD: negative register'
+        _kinds[n] = 'R'
+        if first = 'r' then _locals[n] = suffix as .int
+      end
+      when first = '"' then _kinds[n] = 'S'
+      when first = "'" then _kinds[n] = 'C'
+      when right(text,2) = '()' then _kinds[n] = 'P'
+      when left(text,2) = '0x' then _kinds[n] = 'B'
+      when right(lower(text),1) = 'd' & datatype(left(text,length(text) - 1),'N') then _kinds[n] = 'D'
+      when datatype(text,'N') & (pos('.',text) > 0 | pos('E',upper(text)) > 0) then _kinds[n] = 'F'
+      when datatype(text,'W') then _kinds[n] = 'I'
+      when datatype(text,'N') then _kinds[n] = 'F'
+      otherwise nop
+    end
+    return
+  error: method = .string
+    return _error
+  kind: method = .string
+    return _kind
+  mnemonic: method = .string
+    return _mnemonic
+  opcode: method = .int
+    return _opcode
+  origin: method = .int
+    return _origin
+  operands: method = .int
+    return _parts[0]
+  operand: method = .string
+    arg index = .int
+    return _parts[index]
+  local: method = .int
+    arg index = .int
+    return _locals[index]
+  render: method = .string
+    arg mapping_ref = reference .int[], locals = .int
+    mapping = dereference mapping_ref; text = .string; at = .int
+    if _kind = 'header' then do
+      at = pos('.locals=',_raw)
+      if at = 0 then do; call fail('LL_RXAS_RECORD: function header has no locals'); return ''; end
+      tail = at + 8
+      do while tail <= length(_raw) & datatype(substr(_raw,tail,1),'W')
+        tail = tail + 1
+      end
+      text = left(_raw,at + 7) || locals || substr(_raw,tail)
+    end
+    else do
+      text = ''; at = 1
+      do i = 1 to _parts[0]
+        v = _locals[i]
+        if v < 0 then iterate
+        begin = _starts[i]; size = _lengths[i]
+        text = text || substr(_raw,at,begin - at)
+        if _kind <> 'trace' then text = text || 'r'
+        text = text || mapping[v + 1]; at = begin + size
+      end
+      text = text || substr(_raw,at)
+    end
+    if text = '' then return _mnemonic
+    return _mnemonic || ' ' || text
+
+/** Immutable published result. Failed allocation has neither text nor mapping. */
+allocation: class
+  _texts = .string[]
+  _origins = .int[]
+  _mapping = .int[]
+  _locals = .int
+  _error = .string
+  *: factory
+    arg texts = .string[], origins = .int[], mapping = .int[], locals = .int, error = .string
+    _error = error
+    if error = '' then do
+      _texts = texts; _origins = origins; _mapping = mapping; _locals = locals
+    end
+    return
+  valid: method = .int
+    return _error = ''
+  error: method = .string
+    return _error
+  locals: method = .int
+    return _locals
+  records: method = .int
+    return _texts[0]
+  text: method = .string
+    arg index = .int
+    if _error <> '' then do; call fail(_error); return ''; end
+    return _texts[index]
+  origin: method = .int
+    arg index = .int
+    if _error <> '' then do; call fail(_error); return 0; end
+    return _origins[index]
+  assigned: method = .int
+    arg virtual = .int
+    if _error <> '' then do; call fail(_error); return -1; end
+    return _mapping[virtual + 1]
+
+/** Per-function bounded target. Pinned cells preserve unique storage identity;
+ * fixed cells additionally preserve their authored physical index. Calls use a
+ * contiguous pinned suffix. Unknown indirect/exceptional control uses the
+ * conservative identity profile. No object release is moved by scalar reuse. */
+program: class
+  _virtual = .int
+  _budget = .int
+  _work = .int
+  _error = .string
+  _catalog = .llrxascatalog..catalog
+  _records = .object[]
+  _candidates = .int[]
+  _pinned = .int[]
+  _fixed = .int[]
+  _suffix = .int
+  _identity = .int
+  _sealed = .int
+  *: factory
+    arg virtualLocals = .int, registerBudget = .int, workBudget = 1000000
+    _virtual = virtualLocals; _budget = registerBudget; _work = workBudget
+    _suffix = virtualLocals; _catalog = .llrxascatalog..catalog()
+    if virtualLocals < 1 | registerBudget < 1 | workBudget < 1 then _error = 'LL_RXAS_LIMIT: positive target budgets required'
+    if virtualLocals > workBudget then _error = 'LL_RXAS_LIMIT: target cells exceed work budget'
+    _fixed[1] = 1
+    return
+  charge: method = .int
+    arg cost = .int
+    if _error <> '' then return 0
+    if cost > _work then do; _error = 'LL_RXAS_LIMIT: target.work budget'; return 0; end
+    _work = _work - cost; return 1
+  error: method = .string
+    return _error
+  candidate: method = .void
+    arg virtual = .int, kind = 'integer'
+    if _sealed then do; _error = 'LL_RXAS_STATE: target already sealed'; return; end
+    if virtual < 0 | virtual >= _virtual | (kind <> 'integer' & kind <> 'boolean') then do
+      _error = 'LL_RXAS_RECORD: candidate requires a plain integer/boolean local'; return
+    end
+    _candidates[virtual + 1] = 1
+    return
+  pin: method = .void
+    arg virtual = .int
+    if _sealed then do; _error = 'LL_RXAS_STATE: target already sealed'; return; end
+    if virtual < 0 | virtual >= _virtual then do; _error = 'LL_RXAS_RECORD: pin outside frame'; return; end
+    _pinned[virtual + 1] = 1
+    return
+  fixed: method = .void
+    arg virtual = .int
+    call pin(virtual)
+    if _error <> '' then return
+    _fixed[virtual + 1] = 1
+    return
+  window: method = .void
+    arg base = .int, count = .int
+    if _sealed then do; _error = 'LL_RXAS_STATE: target already sealed'; return; end
+    if base < 0 | count < 1 | base > _virtual - count then do
+      _error = 'LL_RXAS_RECORD: call window outside frame'; return
+    end
+    /* Reserve the suffix, including intervening work cells, as one group. */
+    _suffix = min(_suffix,base)
+    return
+  recordline: method = .void
+    arg text = .string, origin = 0
+    text = strip(text)
+    at = pos(' ',text)
+    if at = 0 then call record(text,'',origin)
+    else call record(left(text,at - 1),substr(text,at + 1),origin)
+    return
+  record: method = .void
+    arg mnemonic = .string, operands = '', origin = 0
+    if _sealed then do; _error = 'LL_RXAS_STATE: target already sealed'; return; end
+    if charge(length(mnemonic) + length(operands) + 1) = 0 then return
+    item = .instruction(mnemonic,operands,origin)
+    call item.parse(reference _catalog)
+    if item.error() <> '' then do; _error = item.error(); return; end
+    n = _records[0] + 1; _records[n] = item as .object
+    if item.kind() = 'opaque' then _identity = 1
+    opcode = item.opcode()
+    if opcode >= 0 then do
+      implicit = _catalog.field(opcode,5) as .int
+      /* Numeric addressing and policy changes may observe any frame cell. */
+      if implicit = 1 | implicit = 2 | _catalog.field(opcode,26) <> '0' | _catalog.unbounded(opcode) then _identity = 1
+      if implicit >= 3 & implicit <= 5 then call fixed(implicit - 3)
+      if implicit = 6 then _identity = 1
+      if implicit = 7 then do
+        base = item.local(3)
+        if base < 0 then _identity = 1
+        else call window(base,_virtual - base)
+      end
+    end
+    do i = 1 to item.operands()
+      v = item.local(i)
+      if v < 0 then iterate
+      if v >= _virtual then do; _error = 'LL_RXAS_RECORD: local outside virtual frame'; return; end
+      if item.kind() = 'trace' then call pin(v)
+      if opcode >= 0 then do
+        /* Cell identity, flags and failure-visible writes are never scalar kills. */
+        if _catalog.field(opcode,4) <> '0' | _catalog.field(opcode,15) <> '0' then call pin(v)
+        sem = _catalog.field(opcode,6) as .int
+        if sem <> 0 & sem <> 8 then call pin(v)
+        if _catalog.reads(opcode,i) then do
+          if _catalog.readcomponents(opcode,i) <> 1 then call pin(v)
+        end
+        if _catalog.writes(opcode,i) then do
+          component = _catalog.writecomponents(opcode,i)
+          if component <> 1 & item.mnemonic() <> 'null' then call pin(v)
+        end
+      end
+    end
+    return
+  /** Independent assignment checker: reconstruct intervals from source records,
+   * then check pairwise overlap, stable identities and window/fixed constraints.
+   * It does not trust the allocator's colour order or cached endpoints. */
+  validate: method = .string
+    arg mapping_ref = reference .int[], locals = .int
+    mapping = dereference mapping_ref
+    if locals > _budget then return 'LL_RXAS_LIMIT: register budget'
+    if locals < 1 | mapping[0] <> _virtual then return 'LL_RXAS_ASSIGNMENT: frame or map bound'
+    first = .int[]; last = .int[]; members = .int[]; chain = .int[]
+    i = .int; j = .int; v = .int; w = .int
+    item = .instruction
+    do i = 1 to _records[0]
+      item = _records[i] as .instruction
+      do j = 1 to item.operands()
+        v = item.local(j) + 1
+        if v < 1 then iterate
+        if charge(1) = 0 then return _error
+        if first[v] = 0 then first[v] = i
+        last[v] = i
+      end
+    end
+    do v = 1 to _virtual
+      if charge(1) = 0 then return _error
+      assigned = mapping[v]
+      if assigned < 0 | assigned >= locals then return 'LL_RXAS_ASSIGNMENT: physical cell outside frame'
+      if _fixed[v] | _identity then do
+        if assigned <> v - 1 then return 'LL_RXAS_ASSIGNMENT: fixed physical cell moved'
+      end
+      if v - 1 >= _suffix then do
+        if assigned <> mapping[_suffix + 1] + v - _suffix - 1 then return 'LL_RXAS_ASSIGNMENT: call window is not contiguous'
+      end
+      w = members[assigned + 1]
+      do while w > 0
+        if charge(1) = 0 then return _error
+        if _candidates[v] = 0 | _candidates[w] = 0 | _pinned[v] | _pinned[w] | _fixed[v] | _fixed[w] | v - 1 >= _suffix | w - 1 >= _suffix then return 'LL_RXAS_ASSIGNMENT: distinct storage cells aliased'
+        if first[v] > 0 & first[w] > 0 then do
+          if first[v] <= last[w] & first[w] <= last[v] then return 'LL_RXAS_ASSIGNMENT: interfering scalar cells aliased'
+        end
+        w = chain[w]
+      end
+      chain[v] = members[assigned + 1]; members[assigned + 1] = v
+    end
+    return ''
+  finish: method = .llrxas..allocation
+    arg reuse = 1
+    texts = .string[]; origins = .int[]; mapping = .int[]
+    if _sealed then return .llrxas..allocation(texts,origins,mapping,0,'LL_RXAS_STATE: target already sealed')
+    _sealed = 1
+    first = .int[]; last = .int[]; initial = .int[]; order = .int[]
+    arrivals = .int[]; following = .int[]; labels = .string[]; locations = .int[]
+    loopstarts = .int[]; loopends = .int[]; members = .int[]; chain = .int[]; fixedat = .int[]
+    item = .instruction; other = .instruction; i = .int; j = .int; k = .int; v = .int; w = .int
+    n = .int; physical = .int; locals = .int
+    do i = 1 to _records[0]
+      item = _records[i] as .instruction
+      if item.kind() <> 'label' then iterate
+      n = labels[0] + 1; labels[n] = item.mnemonic(); locations[n] = i
+    end
+    do i = 1 to _records[0]
+      item = _records[i] as .instruction
+      opcode = item.opcode()
+      do j = 1 to item.operands()
+        v = item.local(j) + 1
+        if v < 1 then iterate
+        if charge(1) = 0 then leave
+        if first[v] = 0 then do
+          first[v] = i
+          n = order[0] + 1; order[n] = v
+          following[v] = arrivals[i]; arrivals[i] = v
+          if opcode >= 0 then initial[v] = _catalog.kills(opcode,j) & (_catalog.reads(opcode,j) = 0)
+        end
+        last[v] = i
+      end
+      /* Any backward target closes a conservative protected interval. */
+      if opcode < 0 then iterate
+      do j = 1 to item.operands()
+        if _catalog.branch(opcode,j) = 0 then iterate
+        label = item.operand(j) || ':'; target = 0
+        do k = 1 to labels[0]
+          if charge(1) = 0 then leave
+          if labels[k] = label then do; target = locations[k]; leave; end
+        end
+        if target = 0 then do; _error = 'LL_RXAS_RECORD: unresolved branch target'; leave; end
+        if target <= i & _identity = 0 & reuse then do
+          n = loopstarts[0] + 1; loopstarts[n] = target; loopends[n] = i
+        end
+      end
+    end
+    do v = 1 to _virtual
+      mapping[v] = v - 1
+      if initial[v] = 0 then _pinned[v] = 1
+      if _fixed[v] & v - 1 >= _suffix then _identity = 1
+      if _candidates[v] & _pinned[v] = 0 then do
+        /* A first textual definition need not dominate an entry after it.
+         * Keep cross-block cells unique until a checked CFG proof is supplied. */
+        do k = 1 to locations[0]
+          if charge(1) = 0 then leave
+          if first[v] < locations[k] & locations[k] <= last[v] then _pinned[v] = 1
+        end
+        do k = 1 to loopstarts[0]
+          if charge(1) = 0 then leave
+          if first[v] <= loopends[k] & last[v] >= loopstarts[k] then _pinned[v] = 1
+        end
+      end
+    end
+    if reuse = 0 | _identity then do
+      _identity = 1; locals = _virtual
+    end
+    else do
+      /* Greedy deterministic first-fit over inclusive intervals. Reserving r0
+       * and all exact fixed cells also preserves implicit short-form registers. */
+      do v = 1 to _virtual
+        mapping[v] = -1
+        if _fixed[v] then do; mapping[v] = v - 1; fixedat[v] = 1; end
+      end
+      do k = 1 to order[0]
+        if charge(1) = 0 then leave
+        v = order[k]
+        if v > _suffix | _candidates[v] = 0 | _pinned[v] | _fixed[v] then iterate
+        physical = 0; found = 0
+        do until found
+          found = fixedat[physical + 1] = 0
+          w = members[physical + 1]
+          do while w > 0 & found
+            if charge(1) = 0 then leave
+            if first[w] <= last[v] & first[v] <= last[w] then found = 0
+            w = chain[w]
+          end
+          if found = 0 then physical = physical + 1
+          if _error <> '' then leave
+        end
+        mapping[v] = physical
+        chain[v] = members[physical + 1]; members[physical + 1] = v
+      end
+      highest = 0
+      do v = 1 to _virtual
+        highest = max(highest,mapping[v])
+      end
+      do v = 1 to _suffix
+        if mapping[v] >= 0 then iterate
+        highest = highest + 1; mapping[v] = highest
+      end
+      do v = _suffix + 1 to _virtual
+        highest = highest + 1; mapping[v] = highest
+      end
+      locals = highest + 1
+    end
+    if _error = '' then _error = validate(reference mapping,locals)
+    if _error <> '' then return .llrxas..allocation(texts,origins,mapping,0,_error)
+    occupied = .int[]
+    do i = 1 to _records[0]
+      item = _records[i] as .instruction
+      v = arrivals[i]
+      do while v > 0
+        physical = mapping[v] + 1
+        if _candidates[v] & _pinned[v] = 0 & _fixed[v] = 0 & v - 1 < _suffix then do
+          if occupied[physical] > 0 then do
+            n = texts[0] + 1; texts[n] = 'null r' || (physical - 1); origins[n] = item.origin()
+          end
+          occupied[physical] = v
+        end
+        v = following[v]
+      end
+      n = texts[0] + 1
+      texts[n] = item.render(reference mapping,locals); origins[n] = item.origin()
+    end
+    return .llrxas..allocation(texts,origins,mapping,locals,'')

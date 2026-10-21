@@ -3,6 +3,7 @@ options levelb
 namespace llccallemit expose imports contract handler
 import llir
 import llrxastext
+import llrxas
 import llcbifs
 import rxfnsb
 
@@ -81,17 +82,20 @@ handler: procedure = .llir..output
  */
 CallEmitter: class
   _writer = .llir..writer
+  _target = .llrxas..program
   _prefix = .string
 
   *: factory
     arg fn = .int, limit = .int
     _writer = .llir..writer(limit)
+    _target = .llrxas..program(40,40,1000000)
+    call _target.window(32,8)
     _prefix = '__rxcalltrap_' || fn
     return
 
   line: method = .void
     arg text = .string
-    call _writer.line(text)
+    call _target.recordline(text)
     return
 
   argument: method = .void
@@ -298,4 +302,12 @@ CallEmitter: class
     call line(_prefix || '_idle:')
     call clearowners()
     call line('null r1'); call line('null r0'); call line('ret r0')
+    selected = _target.finish(0)
+    if selected.valid() = 0 then do
+      chunks = .binary[]; origins = .int[]
+      return .llir..output(chunks,origins,0,selected.error())
+    end
+    do i = 1 to selected.records()
+      call _writer.line(selected.text(i),selected.origin(i))
+    end
     return _writer.finish()

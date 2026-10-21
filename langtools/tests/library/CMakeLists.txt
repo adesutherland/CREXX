@@ -102,4 +102,41 @@ set_tests_properties(levell_borrowed_rxas PROPERTIES
   LABELS "library;level-l;optimizer-parity")
 crexx_register_test_prep_targets(TESTS levell_borrowed_rxas TARGETS rxfnsl)
 
+# Optional IR analyses and RXAS constraints use one focused normal lane. These
+# packages are deliberately absent from the generic AST/bootstrap import root.
+foreach(_test llirgraph llrxas)
+  set(_name "ts_${_test}_opt")
+  set(_images "${CMAKE_BINARY_DIR}/bin/library.rxbin")
+  set(_producers library)
+  if(_test STREQUAL "llirgraph")
+    list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
+    list(APPEND _producers rxfnsl rxfnsl_analysis)
+  else()
+    list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
+    list(APPEND _producers rxfnsl_rxas)
+  endif()
+  crexx_add_import_root(${_name}_imports
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_name}-imports"
+    OUTPUT_VARIABLE _infrastructure_imports FILES ${_images} DEPENDS ${_producers})
+  add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+      -i "${CMAKE_CURRENT_BINARY_DIR}/${_name}-imports"
+      -o "${_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_${_test}.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${_name}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_name}-linked" "${_name}"
+      ${_images}
+    DEPENDS rxc rxas rxlink ${_name}_imports ${_infrastructure_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_${_test}.crexx"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(${_name} DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME ${_name}_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin")
+    set_tests_properties(${_name}_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l")
+    crexx_register_test_prep_targets(TESTS ${_name}_rxbvm TARGETS ${_name} rxbvm)
+  endif()
+endforeach()
+
 crexx_finalize_directory_qa_tiers()

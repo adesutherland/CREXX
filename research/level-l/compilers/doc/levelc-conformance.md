@@ -135,6 +135,26 @@ contract above; its other checked output is unchanged. Its actual `cat` command
 uses a runtime-only PATH containing that command, while the compiler and other
 targets retain an empty PATH without native source compilers.
 
+## Reusable Level L backend boundary
+
+Group 4 STEP01–06 uses the public, optional Level L
+[`rxfnsl-analysis`](../../../../langtools/doc/ir-design.md#optional-analysis-and-proof-services)
+and [`rxfnsl-rxas`](../../../../langtools/doc/rxas-design.md) packages. They supply
+generic graph/effect/proof services and canonical instruction records with
+checked whole-cell assignment. They can be used without a Classic frontend or
+runtime. The C22 adapter owns context identity, pool/handler/callback premises
+and conditional results; shared B remains the runtime algorithm owner.
+
+The backend coalesces proved immutable context aliases, reuses eligible plain
+scalar temporaries within one target block, and indexes per-function work.
+Protected, cross-label, unknown-effect, reference and owned-object storage retain
+conservative identities and cleanup points. Canonical native opcode effects and
+signals stay authoritative; an unknown signal contract does not become a pure
+operation to obtain a smaller frame. Existing practical TRACE and clause state,
+argument presence, recursion and numeric failure semantics remain binding.
+This is a compiler infrastructure increment, with no new source feature, native
+C frontend change, IR execution backend or performance/replacement claim.
+
 ## Material work remaining
 
 Full expression coverage, including binary strict inequality `\==`, remains

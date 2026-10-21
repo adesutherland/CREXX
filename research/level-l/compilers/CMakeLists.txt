@@ -25,6 +25,10 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers library)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
       list(APPEND _producers rxfnsl)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
+      list(APPEND _producers rxfnsl_analysis)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
+      list(APPEND _producers rxfnsl_rxas)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
       list(APPEND _producers rxfnsc)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
@@ -51,6 +55,8 @@ function(ll_compile NAME SOURCE DIRECTORY)
     DEPENDS rxc rxas ${_key}_imports ${_imports} "${SOURCE}" VERBATIM)
 endfunction()
 set(_base "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+set(_infrastructure "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
+  "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
 set(_text "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
 set(_io "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
 set(_classic_names "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
@@ -100,9 +106,14 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit rxas)
+      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit effects rxas)
     endif()
     foreach(_part IN LISTS _parts)
+      # Parsing/frontend modules keep their core-only closure. Target/proof
+      # support enters only at its first actual consumer and stays downstream.
+      if(_part STREQUAL "traceemit" OR (_language STREQUAL "g" AND _part STREQUAL "rxas"))
+        list(APPEND _host ${_infrastructure})
+      endif()
       set(_module "${_prefix}${_part}")
       ll_compile(${_module} "${CMAKE_CURRENT_SOURCE_DIR}/${_owner}/${_module}.crexx" "${_langdir}" ${_base} ${_host})
       list(APPEND _host "${_langdir}/${_module}.rxbin")
@@ -121,7 +132,16 @@ foreach(_mode opt noopt)
       set(_control "")
       foreach(_file IN LISTS _host)
         get_filename_component(_name "${_file}" NAME_WE)
-        string(APPEND _control "INPUT ${_file}\nINCLUDE ${_name}\n")
+        string(APPEND _control "INPUT ${_file}\n")
+        set(_selectors "${_name}")
+        if(_name STREQUAL "rxfnsl-analysis")
+          get_property(_selectors GLOBAL PROPERTY RXFNSL_ANALYSIS_SELECTORS)
+        elseif(_name STREQUAL "rxfnsl-rxas")
+          get_property(_selectors GLOBAL PROPERTY RXFNSL_RXAS_SELECTORS)
+        endif()
+        foreach(_selector IN LISTS _selectors)
+          string(APPEND _control "INCLUDE ${_selector}\n")
+        endforeach()
       endforeach()
       string(APPEND _control "PRESERVE INLINE\nOUTPUT ${_products}/${_service}\n")
       file(GENERATE OUTPUT "${_langdir}/service.ctl" CONTENT "${_control}")
@@ -146,7 +166,7 @@ foreach(_mode opt noopt)
       "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
 
-    set(_c_contract_inputs ${_base} ${_shared}
+    set(_c_contract_inputs ${_base} ${_infrastructure} ${_shared}
       "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llclanguage.rxbin"
@@ -162,9 +182,22 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccommandprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llctraceemit.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llccallemit.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llceffects.rxbin"
       ${_classic_names}
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcrxas.rxbin")
     list(REMOVE_DUPLICATES _c_contract_inputs)
+    set(_infrastructure_inputs ${_base} "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
+      "${_common}/llscalar.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llceffects.rxbin")
+    ll_compile(infrastructure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/infrastructure/contracts.crexx"
+      "${_dir}" ${_infrastructure_inputs})
+    add_custom_command(OUTPUT "${_dir}/infrastructure-contracts-linked.rxbin"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/infrastructure-contracts-linked"
+        "${_dir}/infrastructure-contracts.rxbin" ${_infrastructure_inputs}
+      DEPENDS rxlink "${_dir}/infrastructure-contracts.rxbin" ${_infrastructure_inputs} VERBATIM)
+    add_custom_target(llcompiler_infrastructure_contracts_${_mode}
+      DEPENDS "${_dir}/infrastructure-contracts-linked.rxbin")
     ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
       "${_dir}" ${_c_contract_inputs})
     add_custom_command(OUTPUT "${_dir}/c-context-contracts-linked.rxbin"
@@ -1108,6 +1141,33 @@ if("c" IN_LIST _languages)
 endif()
 if("c" IN_LIST _languages AND "g" IN_LIST _languages)
   include("${CMAKE_CURRENT_SOURCE_DIR}/tests/BackendTests.cmake")
+endif()
+
+if("c" IN_LIST _languages AND TARGET rxbvm)
+  add_test(NAME llcompiler_c_infrastructure_contracts_opt_rxbvm
+    COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/infrastructure-contracts-linked.rxbin")
+  set_tests_properties(llcompiler_c_infrastructure_contracts_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "level-l;compiler;component")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_infrastructure_contracts_opt_rxbvm
+    TARGETS llcompiler_infrastructure_contracts_opt rxbvm)
+  add_test(NAME llcompiler_c_infrastructure_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/infrastructure/check-infrastructure.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/infrastructure-check")
+  set_tests_properties(llcompiler_c_infrastructure_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "INFRASTRUCTURE_CONSUMERS[|].*[|]PASS"
+    TIMEOUT 1800 RUN_SERIAL TRUE LABELS "level-l;compiler;component")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_infrastructure_opt_rxbvm
+    TARGETS llcompiler_conditions_observations_opt llcompiler_target_opt rxbvm)
+endif()
+if("g" IN_LIST _languages AND TARGET rxbvm)
+  add_test(NAME llcompiler_g_infrastructure_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-backend.py"
+    --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/infrastructure-check"
+    --mode opt --vm rxbvm --ir on --case calls-g --case scalars-g)
+  set_tests_properties(llcompiler_g_infrastructure_opt_rxbvm PROPERTIES
+    TIMEOUT 900 RUN_SERIAL TRUE LABELS "level-l;compiler;component")
+  crexx_register_test_prep_targets(TESTS llcompiler_g_infrastructure_opt_rxbvm
+    TARGETS llcompiler_llrxc-g_opt rxbvm)
 endif()
 
 add_test(NAME llcompiler_product_inventory COMMAND ${CMAKE_COMMAND}

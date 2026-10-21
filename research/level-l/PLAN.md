@@ -1189,6 +1189,15 @@ must not depend on cREXX compiler AST classes, globals or runtime semantics.
 cREXX is the implementation and authoring environment; languages being
 processed need not resemble Rexx.
 
+Adrian clarified on 21 October that optional Level L packages may supply
+cREXX semantic IR and RXAS/instruction/register tooling alongside this neutral
+core. The [compiler Group 4 plan](compilers/PLAN.md#group4-infrastructure-plan)
+and its [architecture](compilers/doc/architecture.md#group4-infrastructure-proposal)
+own the approved STEP01–06 enabling sequence; IR-execution feasibility remains
+separate later work. This
+clarifies package boundaries; it does not commission new B/G/O language coverage,
+assembler replacement or RexxScript migration, or close this programme's criteria.
+
 **Adrian's long-term direction:** cREXX internals, including its AST and the
 proofs/invariants around it, should eventually migrate onto the new Level L
 infrastructure. Build general source, token/tree, visitor/transformation and

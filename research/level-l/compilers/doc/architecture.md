@@ -3989,19 +3989,401 @@ The [complete SIGNAL contract](#signal-complete-contract) owns the unified
 CSIGNAL-AC01–07 and STEP01–03. Retain the mechanisms above without separate
 partial-delivery or complementary-rerun tasks; qualify the whole instruction.
 
+<a id="group4-infrastructure-proposal"></a>
+
+## Group 4: reusable IR, proofs, RXAS and execution
+
+**STEP01–06 implementation approved; STEP07 execution remains a proposal.** Adrian selected
+Group 4 as the next enabling work and clarified that Level L can offer specific
+RXAS/instruction and cREXX IR facilities while remaining useful to unrelated
+infrastructure. The [existing plan](../PLAN.md#group4-infrastructure-plan) owns
+G4-AC01–10 and STEP01–08; this section owns the architecture. Existing
+contracts remain authoritative until their precise replacements are reviewed.
+No new language feature, opcode, assembler replacement or INTERPRET source
+implementation follows from recording this proposal.
+
+### STEP01–06 implementation contract
+
+The neutral analysis modules are `llirgraph` and `llireffects`, separately
+packaged as `rxfnsl-analysis`. They depend on the existing core `llir` image;
+neither optional analysis nor RXAS support enters grammar bootstrap or static
+application runtime closures. Existing `llirservices` APIs and IR wire version 2
+remain unchanged. The optional `rxfnsl-rxas` image owns `llrxascatalog` and
+`llrxas`; compiler hosts explicitly select these packages. There is no new ISA,
+language-family or source-compiler service dependency.
+
+`llirgraph.index(reference module,work=1000000,bytes=67108864)` binds the exact
+owner/revision and atomically indexes function entities, block predecessors and
+successors, operation positions, value definitions/uses and slot reads/writes.
+Queries include reachability, RPO, immediate dominators and dominance. Demanded
+`loops(work,bytes)` returns SCCs, irreducible entry classification and natural
+backedge/header membership; `liveness(work,bytes)` returns value and slot
+before/after and block entry/exit facts. Results expose status/message and
+owner matches; failed work publishes no usable facts and a later request may
+retry. Logical retained-byte budgets do not claim a bound on VM heap/RSS.
+Functions containing `protect`, unknown continuation or undeclared resumable
+effects conservatively pin storage and report all relevant function storage as
+live, rather than exposing ordinary two-edge liveness as an executable proof.
+This is an executable conservative profile,
+not proof of reuse across invocation-wide exception protection. `llflow` keeps
+its separate source-role semantics.
+
+`llireffects.summary(inputs,results,version=1)` explicitly describes opaque
+domain reads/writes/observations/allocation/release, value/borrow/escape operand
+modes, normal/conditional/unknown result availability and failure/transfer/resume.
+`model(reference module,profile,version=1,entries,bytes)` snapshots sealed
+summaries, exact arity and the schema/owner/revision into a fresh model identity.
+Core slots and external domains never alias by name alone. Missing extension
+summaries remain unknown. `proof(reference index,reference model,rule,from,to,
+domain,result,work)` has no caller setter for a proved conclusion: `preserves`
+checks ordered invalidators only within one acyclic block and refuses foreign
+blocks or cyclic paths, `available` checks dominance and normal result
+availability, and `cells` distinguishes actual core slot identities. Unknown,
+conditional, failure/resumption, alias/borrow/escape and cleanup premises refuse
+the relevant rewrite. C adapters retain CPROC/SIGNAL/DO/CLAUSE proof owners and
+their ordering, including C22's conditional result checks; effect declarations
+are trusted premises, never inferred from arbitrary `facts.put` entries.
+
+`llrxas.program(virtualLocals,registerBudget,workBudget=1000000)` records a
+single function. `record(mnemonic,operands='',origin=0)` immediately admits
+typed operand fields against the canonical catalogue before allocation. This
+is the selector migration adapter, not a parser of final rendered RXAS.
+Quoted literals, symbols, local/argument/global cells, labels, source directives
+and numeric TRACE register observations remain distinct. All expanded helper,
+call/window, receiver restoration and cleanup instructions pass through this
+record boundary. Existing quoting and RXBIN metadata owners remain unchanged.
+The build-time `generate-rxas-catalog.c` reads the owning native metadata APIs;
+freshness includes `rxops.h`, `rxopeffects.h`, `rxopsignals.h`, `rxdefs.h` and
+`rxopmeta.c`. It emits the checked B view, without duplicating component or
+signal algorithms or adding a native service to compile requests.
+
+The default allocation retains unique cell identity. `candidate(virtualRegister,kind='integer')`
+admits only proved plain integer/Boolean cells; `pin(virtualRegister)` wins.
+Whole-cell identity, object/text ownership, borrowed/addressed/reference storage,
+call windows, reserved/scratch registers and unknown observations keep distinct
+cells. A pinned cell may be renamed as a whole before execution; `fixed(v)`
+instead retains an exact ABI physical index (`r0` by default). Pinned cells keep
+their original relative order, and call windows retain contiguous cells and
+count/argument separation. Numeric indirect local addressing selects the exact
+identity fallback. The independent checker verifies uniqueness, fixed indices
+and window contiguity as well as interference.
+Conservative inclusive target intervals overlap at the same instruction,
+including input/result and read-modify-write operands. Backedges and exceptional
+or indirect control pin uncertain intervals; no speculative cross-loop reuse,
+component packing or memory spills are introduced. Reuse initialization must
+preserve ignored-failure values, payload/status and existing finalization points.
+`finish(reuse=1)` returns an atomic `allocation` with error/valid, locals,
+record text/origins and assigned virtual-cell queries. An independent constraint
+and interference check precedes rendering and register-budget admission.
+
+C and the existing typed selector consume the same target service and indexed
+function entities. C-OPT-01–06 retain the ownership table below: direct alias,
+setup/copy and per-function construction defects are repaired at their producer;
+language/context mutation, calls, cleanup and numeric obligations remain proved
+or conservative. Required costs and later opportunities stay explicit rather
+than being called fully optimized. B-SEED-ALIAS remains a separate native repair.
+Independent graph/effect/constraint cases and selected native flow/instruction
+and C condition fixtures establish this increment in one Debug/rxbvm lane.
+IR execution, INTERPRET, full compiler QA and production speed claims are absent.
+
+### What exists and what does not
+
+| Inspected owner | Present capability | Gap relevant to Group 4 |
+|---|---|---|
+| `llflow` and generated source-flow mappings | Source/AST reachability, definite assignment, condition facts, loop/exit roles and diagnostic witnesses | Not the lowered IR graph, general alias proof or target register allocation. Source evaluation policy must remain explicit; Classic eager logical operators cannot inherit another language's short-circuit flow. |
+| `llir` | Frozen functions/blocks, block-local immutable values, mutable typed slots, exact codecs/origins, structural verification and explicit `protect` | No general resumable execution interface or full storage/alias/effect model. Structural validity is not definite assignment or semantic equivalence. |
+| `llirservices` | Revision-bound facts; bounded IR reachability/definite assignment; same-block propagation, constant callbacks, branch pruning and atomic reconstruction | Arbitrary fact insertion states a premise without proving it. Existing APIs remain compatible. |
+| Optional `llirgraph` / `llireffects` | Indexed entities/def-use/dominance, demanded SCC/loops/liveness, structured effects and checked owner-bound conclusions | Protection/incomplete lifetime profiles conservatively pin storage; cross-block preserved-state and conditional-completion proofs retain their declared limits. No IR runner. |
+| C/typed selectors, `llrxas` and `llrxastext` | Typed virtual target records, checked whole-cell assignment, exact quoting, distinct call windows and owned helper/cleanup observations | Initial reuse is proved plain scalar storage within one block. Object/reference storage and uncertain control remain distinct; no speculative slot reuse or spilling. |
+| Native `rxas_flow_*`, `rxops.h`, `rxopeffects.h`, `rxopsignals.h` | Canonical instruction/effect/signal owners and maintained fixtures; build-time SDK catalogue uses native metadata APIs | The optional catalogue adds no native source-compiler dependency. Opcode formats alone remain insufficient for uses/defs, components, failures or identity. |
+| Modern RexxScript | Level L parsing/AST/folding followed by `RexxScriptExecution` tree execution over existing value/BIF services | It does not execute `llir`. Legacy RexxScript has a separate evaluator/API and cannot be silently migrated with the modern path. |
+
+The [IR reference](../../../../langtools/doc/ir-design.md) owns the present SDK
+surface. `llir.evaluator.evaluate` is a constant-evaluation callback, not a
+runtime interpreter. The small independent execution oracle in `ts_lloptimise`
+demonstrates that execution is possible for its fixture family; it deliberately
+rejects exceptional execution and is not a production execution engine.
+
+### Layers and ownership
+
+Keep a general core and optional specialisations within the Level L ecosystem.
+Being part of L does not require putting every target/language rule in its core.
+
+| Layer | Responsibility | Import boundary |
+|---|---|---|
+| General L core | Source/AST/IR storage, checked views, facts, transformations and semantic-service coordination | No cREXX frontend, BIF catalogue, pool algorithm or RXAS opcode switch. Independent non-Rexx consumers remain supported. |
+| Optional neutral analysis | Indexed graph/def-use/dominance, demanded loops/liveness, structured effect premises and checked proofs | Depends on core IR, without cREXX or RXAS knowledge. |
+| Optional cREXX semantic package — future | Reusable typed/Classic contracts where meaning is genuinely shared | Not introduced by STEP01–06. Current C22 premises remain in the compiler-owned `llceffects` adapter; future B/G/C/O sharing needs versioned profiles. |
+| Optional RXAS target package | Canonical instruction view, typed target records, ABI/register constraints, allocation validation and exact rendering | Depends on prepared ISA metadata and base B services, without requiring semantic IR, a source frontend or a Classic runtime. |
+| Source compilers | Syntax, binding, dialect checks, language facts, semantic lowering and diagnostics | Use the optional packages; remain independently selected. Existing C source/handler/DO proofs retain policy ownership. |
+| Runtime/VM/native tools | Existing values, pools, numeric/BIF/host algorithms; execution and ISA/encoding | Semantic handlers call existing owners. Compiler host, IR execution and static runtime remain distinct products. |
+
+Implementation homes are core modules in `lib/rxfnsl/rexx`, neutral optional
+services in `lib/rxfnsl/analysis`, RXAS services in `lib/rxfnsl/rxas`, and public
+guides/independent consumers in `langtools`. Their images are `rxfnsl`,
+`rxfnsl-analysis` and `rxfnsl-rxas`. A future semantic package has no current
+product/image claim.
+Optional packages must not enter the grammar bootstrap merely because they
+share the SDK repository. Move existing reusable utilities after consumers
+switch; do not retain a second quotation, catalogue or allocation implementation.
+
+Typed B/G and dynamic Classic C/O should not be forced into identical source
+semantics. Useful common contracts include exact scalar values, calls/presence,
+borrowing, object/reference operations, pool access, explicit completion and
+observations. Different numeric, dispatch, condition and object policies remain
+versioned domain profiles and runtime owners. O support here is an extension
+route for a future ooRexx-oriented consumer, not a claim that an O frontend or
+runtime already exists. Current `crexx.g`/`crexx.c` identities remain readable
+only under their existing contracts; neutral-type cleanup needs an explicit
+versioned migration, not a spelling substitution in saved IR.
+
+```mermaid
+flowchart TD
+  Front[Language frontend] --> Semantic[Semantic L IR]
+  Semantic --> Analyse[Shared analyses and checked rewrites]
+  Analyse --> Select[Language to RXAS selection]
+  Select --> Virtual[Typed RXAS records with virtual locations]
+  Virtual --> Allocate[Liveness and constrained allocation]
+  Allocate --> Physical[Checked physical RXAS records]
+  Physical --> Text[RXAS text and metadata]
+  Text --> Tools[Existing assembler / linker / VM]
+  Analyse -.-> Execute[Proposed IR execution coordinator]
+  Execute --> Handlers[Registered semantic handlers / existing runtime]
+  Asm[Future RXAS frontend] --> Physical
+```
+
+The future assembler input preserves authored physical registers by default.
+It may use the same target graph/analysis and approved rewrites, but must not
+silently apply a source compiler's virtual-register renaming. Semantic IR and
+machine records answer different questions; source ASTs remain a third, separate
+representation. Retain block-local values and explicit cross-block slots; SSA
+conversion is not a prerequisite for this work.
+
+### Flow, effects and variable proofs
+
+Extend the existing IR services with an indexed graph owner: per-function
+blocks/operations, predecessors/successors and def/use lists, then reachability,
+reverse-postorder/dominance, requested SCC/loop structure and backward liveness.
+Build shared indices once per immutable revision. Demand optional analyses
+only when a consumer needs them; do not make every compile compute a loop forest
+or a dense interference matrix. Existing source-flow and IR frontends may share
+mechanical scheduling/index code where appropriate, while retaining their
+different graph and lattice meanings. Do not introduce a competing solver for
+each compiler or target.
+
+The effect contract must become structured: reads/writes to named state domains,
+observable uses, allocations/releases, possible failure/transfer, operand
+borrowing/escape and result availability. A string such as `context` is not
+enough to prove that a pool binding or receiver remains unchanged. Trusted
+domain providers describe these premises; core algorithms operate on their
+checked representation without knowing Classic names. Missing or opaque effects
+invalidate affected facts conservatively. Independent semantic tests remain
+necessary: interface validation cannot prove arbitrary provider code correct.
+
+Distinguish these proofs:
+
+- A block-local result is defined before use; a core slot is assigned on every
+  relevant incoming path. These are IR storage facts.
+- A source pool variable has a binding/value under a particular live pool,
+  name configuration and alias state. Unassigned Classic names can have defined
+  runtime/default/NOVALUE behavior; an IR definite-assignment issue is not a
+  universal source-language error.
+- A value or slot is live at a point, including observation and exceptional uses.
+  This supports interference and reuse, not automatic permission to move effects.
+- A storage cell/owner may be borrowed, addressed, escaped, released or observed.
+  Value death alone does not end its identity or required lifetime.
+- A result exists only on a particular completion edge. C22's conditional R
+  carrier must remain unread on the false path; do not turn its null transport
+  into an initialized value by assumption.
+
+Generic alias/escape services should support proven identical, disjoint and
+unknown storage, plus checked owner/borrow lifetimes. C supplies pool/EXPOSE,
+DROP, compound-tail, VALUE, PROCEDURE, call/handler, callback and eventual
+INTERPRET invalidators. Handler inventories and possible mutations cannot be
+inferred only from setters surviving optimisation. Typed compilers supply their
+own reference/object/array rules. A generic proof must not invent those rules.
+
+The same framework can carry constant, type, argument-presence, nullness and
+domain-approved range/nonzero facts. Their transfer functions must match the
+language's overflow/numeric policy. A finite domain or an explicitly sound
+widening strategy plus checked budgets is required for loop convergence; a
+general symbolic theorem prover is not a prerequisite for useful variable proofs.
+
+Facts/proof results bind to graph owner/revision, schema/profile and effect-model
+identity. Checked transformations declare consumed proofs, ID mappings and
+invalidation; reconstruct and verify before publication. A fact-map `put`, a
+byte-identical foreign graph or a deserialized claim is not a trusted proof.
+Keep unknown distinct from false. Resource exhaustion exposes no partial usable
+analysis or executable; retrying cannot poison a previously valid result.
+Document each algorithm's convergence, retained storage and work bounds.
+
+### Exceptional and resumable control are prerequisites
+
+`core.protect` is invocation protection, not an ordinary runtime Boolean branch.
+Its current setup contract safely exposes handler reachability/assignment; its
+two stored edges alone do not describe every later fault point for register
+liveness. A handler's setup values may need to remain available throughout the
+protected extent, even when ordinary control no longer reads them.
+
+Specify protected extent/exit and potential failure points in a versioned
+control contract. Derive the complete exceptional graph from that declaration,
+including cleanup and whether writes committed before failure. Until that
+contract is available, pin required protected storage or refuse the particular
+reuse; never treat the exceptional entry as a one-time alternative to the normal
+entry. Region declarations and their derived edges belong to shared analysis,
+not an emitter-only hidden root.
+
+Likewise model call completion, nonlocal unwind and suspension/resumption through
+declared control ports and owned continuations. Runtime outcomes select admitted
+destinations; a callback cannot invent arbitrary graph targets. Record values
+live across a resumable boundary and owners that must survive it. C retains
+SIGNAL versus CALL/DELAY, RETURN/EXIT program ownership and clause semantics.
+General L supplies control/lifetime machinery, not condition-name dispatch.
+Exact core/schema/wire additions require STEP01 review. Keep existing protect
+and C protocol semantics intact until migration is verified.
+
+### RXAS instruction support and register allocation
+
+Use the canonical binutils opcode, effect and signal definitions, including
+`rxopeffects.h` and `rxopsignals.h`, as the instruction-description owner.
+Generate or expose a checked B-readable data view, with explicit version and
+freshness checks. Do not copy opcode integers or infer all writes from operand
+position/mnemonic. The native assembler's structural/use/SSA/proof contracts and
+maintained fixtures supply a substantial reuse baseline, with independent L
+cases and explicit classification of disagreements. A pure L compile request
+does not call the native source compiler or use native assembly as hidden
+instruction selection.
+
+The target graph carries typed literals/symbols/labels and virtual or fixed
+locations; each instruction also has explicit/implicit use/def, conditional
+writes, affected register components, failure/control and observation records.
+Pseudo instructions may represent a whole call or owner operation until expanded
+into this same representation. All expanded helper instructions, receiver swaps,
+call windows, scratch and cleanup must participate before allocation. Retain
+maps from semantic operations and source/clause origins to their target ranges.
+Render strings only after physical assignment and validation, reusing the
+existing exact RXAS quoting and metadata services.
+
+Allocate whole VM register cells first. A register has multiple payloads/status
+components; scalar loads, ignored failures and read-modify-write instructions
+are not unconditional whole-cell definitions. Typed content/initialization and
+required clears must prevent stale payload/status reuse. Address-taken cells,
+live references, receiver aliases and outstanding owners need stable identities.
+`null`, `unref`, `unlink`, value overwrite and storage expiration have different
+meanings; equal scalar values do not make those operations interchangeable.
+Preserve required release/finalization points before attempting earlier cleanup.
+
+Use deterministic bounded live ranges/interference and a simple linear-scan
+assignment, with pinned/fixed ranges and separately checked constraints. Start
+with ordinary temporary reuse; then eligible cross-block slots and copies.
+Admit disjoint-path sharing only with the full CFG/lifetime proof. Calls retain
+contiguous count/argument windows, exact omission flags, receiver restoration,
+result separation and parallel-copy cycle handling. Treat TRACE/debug register
+observations and cleanup as uses at their actual execution points. Validate the
+assigned program independently of the allocator's heuristic.
+
+No initial component packing, speculative alias coalescing or invented memory
+spilling is required. VM frame registers are not a fixed hardware register file;
+exceeding a request's register budget may fail atomically. Saving live state in
+an owned suspended continuation is a separate mechanism from spilling under
+register pressure. Preserve a conservative executable allocation profile for
+mechanisms not yet eligible for reuse, with an explicit scope/closure test.
+Native B's indexed-receiver alias defect remains B-SEED-ALIAS, not a reason to
+change its allocator incidentally during this SDK work.
+
+### Optional IR execution and the INTERPRET decision
+
+An IR runner is feasible in principle: it follows explicit control, keeps frame
+slots/values/argument presence, and dispatches registered operation semantics.
+The useful question is whether complete effect, error, suspension and ownership
+contracts make it a suitable product route. Do not reuse the constant evaluator
+API: it has literal operands and folding eligibility, not live effects or calls.
+
+Propose an optional generic coordinator with a checked frame/PC stack, per-run
+state, budgets and trusted runtime operation/type handlers. Scalars retain exact
+encodings; objects/references use live owned values or opaque checked handles,
+not serialized pointers or a second RexxValue implementation. Handlers call the
+existing arithmetic, pool, BIF and host services. A module is executable only
+after preflight establishes every required type, operation and control capability;
+unknown services fail before target effects. Saved IR never loads callback code.
+
+Execution outcomes need explicit normal/results, invocation, failure, suspension,
+return and unwind forms, with owned result presence, condition payload/origin,
+cleanup and validated continuation identity. A suspension retains only required
+live values and pins, cannot borrow an expired VM frame, and can be resumed or
+discarded exactly as its contract allows. Fuel bounds coordinator steps, not an
+arbitrary uncooperative handler; host work/capabilities require separate contracts.
+Bound call depth, values, suspended frames and resident IR/source, and exercise
+cancellation and cleanup on normal/error/limit paths.
+
+First prove ordinary execution with an independent non-cREXX family, then an
+effectful call/failure/resume case. Compare the same admitted semantic graph via
+the RXAS route and IR runner against independent expected behavior. Preserve a
+small independent execution oracle; sharing semantic runtime bodies is useful
+but does not make the two routes independent correctness oracles.
+
+Modern RexxScript could lower its selected AST into semantic IR and replace its
+control walker with the runner, retaining its operators/BIF/capability contracts.
+That migration needs its own scope/parity decision; it does not migrate legacy
+RexxScript or equate RexxScript, G and Classic language semantics.
+
+For Classic INTERPRET, the same C frontend must compile interpreted-group source
+to the same C semantic IR and retain every LC-87 obligation. Two implementation
+routes then deserve comparison: IR execution with the C runtime handlers, or
+RXAS compilation/assembly with owned ephemeral image groups. IR execution could
+avoid native generated-code unloading, but still needs bounded resident plans,
+pins, live caller/label/pool integration, CALL resumption, SIGNAL discard and
+RETURN/EXIT ownership across compiled/interpreted frames. It is not a shortcut
+around those contracts and is not a RexxScript evaluator fallback.
+
+STEP07 records semantic/resource feasibility and scoped cold/warm execution and
+ownership costs; there is no formal research benchmark gate. Recommend retaining
+compiled RXAS for static applications and considering IR execution for dynamic
+groups only if that proof supports it. The compiled-image design below remains
+authoritative until the alternative is approved. Do not implement the INTERPRET
+source instruction before the final stage or create two permanent partial
+Classic runtime algorithms.
+
+### Delivery order and verification boundary
+
+Review the exact contracts first, extend analyses/proof interfaces, then expose
+target records and allocation. Only then apply facts to context/setup/copy/call
+costs. This is the C enabling path before the dependent Group 2/3 mechanisms.
+The execution prototype is a separately bounded infrastructure increment whose
+backend decision is needed before final INTERPRET, not a reason to defer useful
+static compiler improvements or to broaden language scope.
+
+Keep general SDK, optional cREXX semantics, RXAS support, compiler-host and
+execution-runtime images separate, with one producer and explicit import roots.
+Static applications keep runtime bodies alone; generic tools can omit target,
+Rexx and execution packages. Preserve CLI/service atomic failure, logical source
+identity, exact bytes and existing metadata/ABI consumers. Installation,
+relocation, concrete VM/platform and full-C acceptance remain named later gates.
+
+Each increment starts from maintained native/compiler/runtime fixtures and
+hand-derived analysis/constraint cases, reviews coherent source and first
+representative target records/RXAS early, batches material fixes and qualifies
+one relevant normal configuration/VM. Run an affected typed control when shared
+interfaces change. Do not automatically add compiler-wide, mode-matrix or
+unchanged-native sanitizer campaigns. Contract review is distinct from component
+qualification. Component checks qualify implementation increments; formal QA
+and whole-C acceptance stay at their named later gates.
+
 ## Optimisation ownership
 
 | Candidate | Owner/mechanism | Required negatives and shape proof |
 |---|---|---|
 | C-OPT-01: unnecessary setup | C requirement analysis | Constant SAY versus VALUE/host pool/TRACE/dynamic execution; safe constant-only case has no unused pool construction |
-| C-OPT-02: registers and temporaries | Generic L liveness; C target allocation | Loops, handlers, calls, aliases and cleanup; frame demand follows simultaneously live values, not all source temporaries. Per-function global owner/slot/block filtering remains conservative compile-time allocation work; later per-function indices must preserve identical RXAS, frames and cleanup for functions with sparse loop owners. No whole-selector linearity or runtime-copying claim follows. |
+| C-OPT-02: registers and temporaries | Generic L graph/liveness; optional RXAS assignment; C context identity proof | Same-block scalar frame demand follows inclusive live constraints; context aliases coalesce across blocks under the once-bound proof. Indexed function membership and owner lists replace repeated global filtering. Protect, references, object ownership, loops, sparse owners and cleanup retain distinct storage/order. Broader cross-block reuse needs a complete lifetime/control proof; no whole-selector linearity claim. |
 | C-OPT-03: arithmetic/context | C facts, direct runtime entries, existing primitives first | Mutation, recursion, conversions, overflow, LOSTDIGITS and spelling; no avoidable config construction/name dispatch per known operation |
 | C-OPT-04: pool/name access | C binding/alias proof, runtime lookup | EXPOSE, DROP, compound-tail mutation, VALUE and callbacks invalidate cached binding/value facts |
 | C-OPT-05: calls/BIFs | C ABI selector and existing short-call forms | Omitted/empty/RESULT, failure cleanup and hidden helper work; stateful helpers are not assumed pure |
 | C-OPT-06: machine operations | RXAS peephole/procedure proof | Signal/TRACE/reference/cleanup equivalence independent of compiler-only annotations |
 
-L supplies algorithms; C supplies premises; RXAS proves machine rewrites; VM
-executes documented operations. Never teach L Classic rules or RXAS BIF names.
+L core supplies algorithms; C supplies language premises; RXAS proves machine
+rewrites; VM executes documented operations. The optional L packages own neutral
+analyses and RXAS machinery; reusable cREXX semantic packaging remains future work;
+the neutral core must not hard-code Classic rules or BIF names.
 Keep bounded peephole before procedure analysis. Fix direct construction/emitter
 defects at their owner even with optimisation off.
 

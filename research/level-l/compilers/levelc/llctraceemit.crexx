@@ -2,6 +2,7 @@
 options levelb
 namespace llctraceemit expose imports contract handler
 import llir
+import llrxas
 
 /** Existing owner names used by the emitted frame-local observer. */
 imports: procedure = .string
@@ -38,7 +39,7 @@ contract: procedure = .string
  * no callable metadata identity: independently compiled images may coexist. */
 handler: procedure = .llir..output
   arg limit = 67108864
-  writer = .llir..writer(limit)
+  writer = .TraceEmitter(limit)
   call writer.line('__rxtrace_handler() .locals=48')
   call writer.line('.srcstep 0 0 6 "" 0 0 0 ""')
   call writer.line('load r40,0')
@@ -398,3 +399,29 @@ handler: procedure = .llir..output
   call writer.line('__rxt_done:')
   call writer.line('ret 0')
   return writer.finish()
+
+/** The fixed observer enters the same typed admission boundary as callers.
+ * Its register plan is preserved; allocation does not rename parent registers. */
+TraceEmitter: class
+  _target = .llrxas..program
+  _limit = .int
+  *: factory
+    arg limit = .int
+    _limit = limit; _target = .llrxas..program(48,48,1000000)
+    call _target.window(40,8)
+    return
+  line: method = .void
+    arg text = .string
+    call _target.recordline(text)
+    return
+  finish: method = .llir..output
+    selected = _target.finish(0)
+    if selected.valid() = 0 then do
+      chunks = .binary[]; origins = .int[]
+      return .llir..output(chunks,origins,0,selected.error())
+    end
+    output = .llir..writer(_limit)
+    do i = 1 to selected.records()
+      call output.line(selected.text(i),selected.origin(i))
+    end
+    return output.finish()

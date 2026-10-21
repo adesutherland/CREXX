@@ -3395,7 +3395,11 @@ printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
 values and short-circuiting. A declared G decimal starts absent and displays
 `nan`, while integer/float/Boolean defaults are zero and text is empty.
 
-The current output uses stable registers and runtime adapters. Shared Level L
+The current output retains distinct owned cells and runtime adapters, coalesces
+proved C context aliases, and reuses eligible plain scalar cells within one
+target block. The optional [IR analysis/proof](ir-design.md#optional-analysis-and-proof-services)
+and [RXAS target](rxas-design.md) packages can be used independently of these
+frontends. Shared Level L
 passes propagate proved private values, evaluate admitted constants, simplify
 Boolean branches and remove safe unused operations. G admits checked int64
 arithmetic/comparisons and canonical conversions. C retains the effectful runtime

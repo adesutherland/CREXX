@@ -50,11 +50,34 @@ checks during development does not remove later milestone obligations.
 | **WP-05 C source/expressions** | Assigned `levelc` grammar/parser/frontend/IR modules and compiler tests | Complete C-SRC/C-EXPR, source/AST schemas, static validation, Unicode names, operators, numeric contracts and BF01–04 binding. Use L and runtime APIs, no duplicate algorithms. | CFC-AC01–03/06/07; STEP04 after needed WP-02/03/04 contracts. Native comparisons are controls. |
 | **WP-06 One C instruction** | Named grammar/frontend/IR/selector paths and a named instruction fixture directory | One LC-I row, all forms/errors/edges, worked AST/IR/RXAS, runtime interface use and independent expectations. Required shared improvements are explicit linked dependencies. | CFC-AC01–04/06; STEP05–07. Serial instruction writer; early independent review. Full closure waits for listed acceptance, distinct from local increment checks. |
 | **WP-07 BIF/host family** | Assigned runtime family/adapter and tests; frontend binding edits coordinated | One BF integration group or C-HOST contract at a time. Reuse existing BIF bodies, fixtures and valid qualification; bind names/presence/context/errors through the new compiler. Complete only named missing host contracts. Library edits require a reproduced defect, identified open contract or approved Unicode extraction. | CFC-AC01/04/09/11; STEP06–08. New public host APIs require review; no alternate ADDRESS protocol or dynamic external-call policy. |
-| **WP-08 C target quality** | Assigned C selector and `compilers/common` target utility paths | Target records, liveness-driven register reuse, call windows, ABI cleanup and C-OPT01–05. Explain legality and compare actual caller plus helper RXAS. | CFC-AC06/07/11; STEP09 incrementally. WP-02 generic facts; no target policy in SDK. No broad performance work for research. |
+| **WP-08 C target quality** | Assigned C selector and `compilers/common` target utility paths; optional `lib/rxfnsl/rxas` package | Target records, liveness-driven register reuse, call windows, ABI cleanup and C-OPT01–05. Explain legality and compare actual caller plus helper RXAS. | CFC-AC06/07/11; STEP09 incrementally. WP-02 generic facts; no target policy in SDK core. The optional target package has explicit ownership. No broad performance work for research. |
 | **WP-09 RXAS/VM primitive** | Precisely assigned assembler/binutils/interpreter/disassembler/linker paths and direct tests | One reproduced cost or missing execution capability; compare existing sequence, library/selector fix and primitive. Propose exact operands/effects/alias/errors/source/encoding/platform contract before code. | CFC-AC10/11; STEP09 or final STEP11b. Explicit native/ABI gate; mandatory first Release verdict for production optimisation. No language parser/BIF dispatch in VM. |
 | **WP-10 Delivery and independent QA** | Assigned CLI/build/test/packaging files; assigned worker owns shared root integration | Retain delivery/closure duties. Approved LRUSE-STEP03/04 owns CLI transport, output-derived REUSE_LEXER persistence/lock/checksum/publication, stamp build injection/dependencies/cleanup and initial research-C-only opt-in. Independently qualify non-C/G first, then focused C cold/warm and unchanged G controls; coordinate stamp manifest with WP-02. | CFC-AC08/11/12; STEP10/11d and [LRUSE](../../PLAN.md#current-action-lexer-reuse). Select development versus milestone checks under AGENTS; retain reuse/closure boundaries and no free shared cache path. |
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Start at the early stable code/first-RXAS checkpoint: check contract/test traceability and effect/lifetime assumptions. Final inspection covers scope, preservation and changed material deltas. Findings name mechanism, affected criterion and reproducer. | Early in every increment; complete delivery review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. No automatic whole-cycle restart. |
+
+## Group 4 ownership
+
+The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and
+[architecture](architecture.md#group4-infrastructure-proposal) own approved
+STEP01–06. STEP07 execution feasibility remains later work. The reviewed contract
+does not commission new ISA work, language migrations or INTERPRET.
+WP-02 owns shared graph/analysis/proof and optional execution coordination;
+WP-08 owns C selection migration and optional RXAS target/allocation integration;
+WP-03 owns existing semantic runtime interfaces; WP-09 retains canonical native
+opcode/effect/signal and any exact native interface gate. WP-10 owns separated
+package/build/CLI closure. WP-12 independently checks the hand-derived proof/
+allocation cases and early coherent source/first target records/RXAS.
+
+One integrator coordinates schema/profile/version changes and shared CMake/docs.
+Reuse existing SDK/assembler/runtime services and fixtures before introducing a
+new owner. Optional cREXX/RXAS packages can own their domain knowledge; general
+L core still cannot import a source frontend or hard-code its language policy.
+Keep source-flow mappings separate from executable IR analyses, and runtime
+execution handlers separate from compile-time constant callbacks. Exact paths
+receive disjoint leases when an implementation increment is authorized; only one
+owner schedules shared preparation. Component checks follow AGENTS, with formal
+whole-compiler/platform QA later.
 
 ## Instruction contracts and ownership
 

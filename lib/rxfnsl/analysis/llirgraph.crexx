@@ -1,0 +1,868 @@
+/* cREXX License (MIT). Indexed, bounded analysis of frozen executable IR. */
+options levelb
+namespace llirgraph expose index cycles live
+import rxfnsb
+import llir
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_IR_GRAPH: identities exhausted"
+  serial = serial + 1
+  return serial
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** One index borrows one exact frozen module variable. Structural queries
+ * describe its declared CFG, including both protect setup edges. Nonreturning
+ * or opaque extensions do not prevent indexing. They conservatively pin the
+ * containing function; no complete executable-lifetime claim follows.
+ * Budgets count logical retained numeric bytes and elementary traversals, not
+ * host allocator overhead/RSS. Demand results have independent retry budgets.
+ * @param owner Exact live module owner; a copied module is a foreign owner.
+ * @param work Maximum initialization/traversal work.
+ * @param bytes Maximum logical retained index bytes.
+ */
+index: class
+  _owner = reference .llir..module
+  _revision = .int
+  _schema = .int
+  _identity = .int
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _functions = .int
+  _blocks = .int
+  _operations = .int
+  _values = .int
+  _slots = .int
+  _fnentry = .int[]
+  _fnblockstart = .int[]
+  _fnblockcount = .int[]
+  _fnblocks = .int[]
+  _fnslotstart = .int[]
+  _fnslotcount = .int[]
+  _fnslots = .int[]
+  _fnopstart = .int[]
+  _fnopcount = .int[]
+  _fnops = .int[]
+  _pinned = .int[]
+  _blockfn = .int[]
+  _firstop = .int[]
+  _lastop = .int[]
+  _nextop = .int[]
+  _opblock = .int[]
+  _opposition = .int[]
+  _opcode = .int[]
+  _opslot = .int[]
+  _succstart = .int[]
+  _succcount = .int[]
+  _predhead = .int[]
+  _predcount = .int[]
+  _predstart = .int[]
+  _preds = .int[]
+  _edgefrom = .int[]
+  _edgeto = .int[]
+  _prednext = .int[]
+  _reachable = .int[]
+  _rpo = .int[]
+  _rank = .int[]
+  _idom = .int[]
+  _dompre = .int[]
+  _dompost = .int[]
+  _definition = .int[]
+  _usehead = .int[]
+  _usetail = .int[]
+  _usecount = .int[]
+  _usestart = .int[]
+  _uses = .int[]
+  _useop = .int[]
+  _usenext = .int[]
+  _lastuse = .int[]
+  _slotfn = .int[]
+  _readhead = .int[]
+  _readtail = .int[]
+  _readcount = .int[]
+  _readstart = .int[]
+  _reads = .int[]
+  _readop = .int[]
+  _readnext = .int[]
+  _writehead = .int[]
+  _writetail = .int[]
+  _writecount = .int[]
+  _writestart = .int[]
+  _writes = .int[]
+  _writeop = .int[]
+  _writenext = .int[]
+  *: factory
+    arg owner = reference .llir..module, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _status = 'building'; _message = ''
+    _worklimit = work; _bytelimit = bytes; _work = 0; _bytes = 0
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    work = _worklimit; bytes = _bytelimit; owner = _owner
+    f = .int; b = .int; v = .int; s = .int; op = .int; i = .int; target = .int; link = .int
+    root = .int; top = .int; p = .int; a = .int; c = .int; parent = .int; child = .int
+    if work < 1 | bytes < 1 then do
+      call reject('limit','LL_RESOURCE_LIMIT: ir.graph budgets must be positive'); return
+    end
+    if <refvalid>(owner) = 0 then do
+      call reject('invalid','LL_IR_GRAPH_OWNER: module has expired'); return
+    end
+    graph = dereference owner
+    if graph.error() <> '' then do; call reject('invalid',graph.error()); return; end
+    _revision = graph.identity(); store = dereference graph.storage()
+    contract = dereference store.contract(); _schema = contract.identity(); schema = dereference contract.data()
+    _functions = graph.functions(); _blocks = graph.blocks(); _operations = graph.operations()
+    _values = store.count(4); _slots = store.count(5)
+    /* Charge every retained array before constructing it. The coefficients
+     * include bounded traversal scratch, so low budgets cannot allocate first. */
+    if reserve(_functions,96) = 0 then return
+    if reserve(_blocks,240) = 0 then return
+    if reserve(_operations,112) = 0 then return
+    if reserve(_values,72) = 0 then return
+    if reserve(_slots,104) = 0 then return
+    if reserve(store.count(6),24) = 0 then return
+    if reserve(store.count(7),32) = 0 then return
+    if spend(_functions + _blocks + _operations + _values + _slots) = 0 then return
+    do f = 1 to _functions
+      _fnentry[f] = store.get(1,f,3); _fnblockcount[f] = 0; _fnslotcount[f] = 0; _fnopcount[f] = 0; _pinned[f] = 0
+    end
+    do b = 1 to _blocks
+      _blockfn[b] = store.get(2,b,1); _firstop[b] = store.get(2,b,2); _lastop[b] = store.get(2,b,3)
+      _succcount[b] = 0; _predhead[b] = 0; _predcount[b] = 0
+      _reachable[b] = 0; _rank[b] = 0; _idom[b] = 0; _dompre[b] = 0; _dompost[b] = 0
+      f = _blockfn[b]; _fnblockcount[f] = _fnblockcount[f] + 1
+    end
+    do v = 1 to _values
+      _definition[v] = store.get(4,v,1); _usehead[v] = 0; _usetail[v] = 0; _usecount[v] = 0; _lastuse[v] = 0
+    end
+    do s = 1 to _slots
+      f = store.get(5,s,1); _slotfn[s] = f; _fnslotcount[f] = _fnslotcount[f] + 1
+      _readhead[s] = 0; _readtail[s] = 0; _readcount[s] = 0
+      _writehead[s] = 0; _writetail[s] = 0; _writecount[s] = 0
+    end
+    edges = 0; uses = 0; reads = 0; writes = 0
+    do b = 1 to _blocks
+      f = _blockfn[b]; op = _firstop[b]; position = 0
+      do while op > 0
+        if spend(1) = 0 then return
+        position = position + 1; _opposition[op] = position; _opblock[op] = b
+        _nextop[op] = store.get(3,op,3); opcode = store.get(3,op,1); _opcode[op] = opcode; _opslot[op] = 0
+        _fnopcount[f] = _fnopcount[f] + 1
+        if opcode = 10 then _pinned[f] = 1
+        if opcode > 16 then do
+          if schema.effectvalue(opcode - 16,1) <> 'none' | schema.effectvalue(opcode - 16,3) <> 'returns' then _pinned[f] = 1
+        end
+        do i = 1 to store.get(3,op,5)
+          if spend(1) = 0 then return
+          v = store.operand(op,i); uses = uses + 1; _useop[uses] = op; _usenext[uses] = 0
+          if _usehead[v] = 0 then _usehead[v] = uses
+          else _usenext[_usetail[v]] = uses
+          _usetail[v] = uses; _usecount[v] = _usecount[v] + 1; _lastuse[v] = position
+        end
+        if opcode = 3 | opcode = 4 then do
+          s = store.get(3,op,12); _opslot[op] = s
+          if opcode = 3 then do
+            reads = reads + 1; _readop[reads] = op; _readnext[reads] = 0
+            if _readhead[s] = 0 then _readhead[s] = reads
+            else _readnext[_readtail[s]] = reads
+            _readtail[s] = reads; _readcount[s] = _readcount[s] + 1
+          end
+          else do
+            writes = writes + 1; _writeop[writes] = op; _writenext[writes] = 0
+            if _writehead[s] = 0 then _writehead[s] = writes
+            else _writenext[_writetail[s]] = writes
+            _writetail[s] = writes; _writecount[s] = _writecount[s] + 1
+          end
+        end
+        op = _nextop[op]
+      end
+      op = _lastop[b]; _succstart[b] = edges + 1; _succcount[b] = store.get(3,op,9)
+      do i = 1 to _succcount[b]
+        if spend(1) = 0 then return
+        target = store.successor(op,i); edges = edges + 1
+        _edgefrom[edges] = b; _edgeto[edges] = target
+        _prednext[edges] = _predhead[target]; _predhead[target] = edges; _predcount[target] = _predcount[target] + 1
+      end
+    end
+    /* Flatten the append-only lists once. Ordinal public queries are O(1),
+     * including high-degree predecessor and many-use value queries. */
+    start = 1
+    do b = 1 to _blocks
+      if spend(1) = 0 then return
+      _predstart[b] = start; link = _predhead[b]
+      do while link > 0
+        if spend(1) = 0 then return
+        _preds[start] = _edgefrom[link]; start = start + 1; link = _prednext[link]
+      end
+    end
+    start = 1
+    do v = 1 to _values
+      if spend(1) = 0 then return
+      _usestart[v] = start; link = _usehead[v]
+      do while link > 0
+        if spend(1) = 0 then return
+        _uses[start] = _useop[link]; start = start + 1; link = _usenext[link]
+      end
+    end
+    readstart = 1; writestart = 1
+    do s = 1 to _slots
+      if spend(1) = 0 then return
+      _readstart[s] = readstart; link = _readhead[s]
+      do while link > 0
+        if spend(1) = 0 then return
+        _reads[readstart] = _readop[link]; readstart = readstart + 1; link = _readnext[link]
+      end
+      _writestart[s] = writestart; link = _writehead[s]
+      do while link > 0
+        if spend(1) = 0 then return
+        _writes[writestart] = _writeop[link]; writestart = writestart + 1; link = _writenext[link]
+      end
+    end
+    /* Dense per-function membership avoids compiler-owned repeated module scans. */
+    nb = 1; ns = 1; no = 1; bc = .int[]; sc = .int[]; oc = .int[]
+    do f = 1 to _functions
+      if spend(1) = 0 then return
+      _fnblockstart[f] = nb; nb = nb + _fnblockcount[f]; bc[f] = 0
+      _fnslotstart[f] = ns; ns = ns + _fnslotcount[f]; sc[f] = 0
+      _fnopstart[f] = no; no = no + _fnopcount[f]; oc[f] = 0
+    end
+    do b = 1 to _blocks
+      if spend(1) = 0 then return
+      f = _blockfn[b]; _fnblocks[_fnblockstart[f] + bc[f]] = b; bc[f] = bc[f] + 1
+      op = _firstop[b]
+      do while op > 0
+        if spend(1) = 0 then return
+        _fnops[_fnopstart[f] + oc[f]] = op; oc[f] = oc[f] + 1; op = _nextop[op]
+      end
+    end
+    do s = 1 to _slots
+      if spend(1) = 0 then return
+      f = _slotfn[s]; _fnslots[_fnslotstart[f] + sc[f]] = s; sc[f] = sc[f] + 1
+    end
+    /* Iterative DFS: no native stack growth with graph depth. */
+    stack = .int[]; cursor = .int[]; post = .int[]; count = 0
+    do f = 1 to _functions
+      root = _fnentry[f]
+      if _reachable[root] then iterate
+      top = 1; stack[top] = root; cursor[root] = 0; _reachable[root] = 1
+      do while top > 0
+        if spend(1) = 0 then return
+        b = stack[top]
+        if cursor[b] < _succcount[b] then do
+          cursor[b] = cursor[b] + 1; target = _edgeto[_succstart[b] + cursor[b] - 1]
+          if _reachable[target] = 0 then do
+            _reachable[target] = 1; cursor[target] = 0; top = top + 1; stack[top] = target
+          end
+        end
+        else do
+          count = count + 1; post[count] = b; top = top - 1
+        end
+      end
+    end
+    do i = 1 to count
+      if spend(1) = 0 then return
+      b = post[count - i + 1]; _rpo[i] = b; _rank[b] = i
+    end
+    do f = 1 to _functions; root = _fnentry[f]; _idom[root] = root; end
+    changed = 1
+    do while changed
+      changed = 0
+      do i = 1 to count
+        if spend(1) = 0 then return
+        b = _rpo[i]; f = _blockfn[b]
+        if b = _fnentry[f] then iterate
+        candidate = 0; link = _predhead[b]
+        do while link > 0
+          if spend(1) = 0 then return
+          p = _edgefrom[link]; link = _prednext[link]
+          if _idom[p] = 0 then iterate
+          if candidate = 0 then candidate = p
+          else do
+            a = candidate; c = p
+            do while a <> c
+              if spend(1) = 0 then return
+              if _rank[a] > _rank[c] then a = _idom[a]
+              else c = _idom[c]
+            end
+            candidate = a
+          end
+        end
+        if candidate <> _idom[b] then do; _idom[b] = candidate; changed = 1; end
+      end
+    end
+    /* Dominator-tree entry/exit numbers make each later dominance query O(1). */
+    children = .int[]; sibling = .int[]; cursor = .int[]
+    do b = 1 to _blocks; children[b] = 0; sibling[b] = 0; end
+    do i = 1 to count
+      if spend(1) = 0 then return
+      b = _rpo[i]; parent = _idom[b]
+      if parent <> b then do; sibling[b] = children[parent]; children[parent] = b; end
+    end
+    clock = 0
+    do f = 1 to _functions
+      root = _fnentry[f]; top = 1; stack[top] = root; cursor[root] = children[root]
+      clock = clock + 1; _dompre[root] = clock
+      do while top > 0
+        if spend(1) = 0 then return
+        b = stack[top]; child = cursor[b]
+        if child > 0 then do
+          cursor[b] = sibling[child]; top = top + 1; stack[top] = child; cursor[child] = children[child]
+          clock = clock + 1; _dompre[child] = clock
+        end
+        else do; clock = clock + 1; _dompost[b] = clock; top = top - 1; end
+      end
+    end
+    _status = 'ok'
+    return
+  reject: method = .void
+    arg status = .string, message = .string
+    if _status <> 'building' then return
+    _status = status; _message = message
+    return
+  spend: method = .int
+    arg amount = .int
+    if _status <> 'building' then return 0
+    if amount < 0 | amount > _worklimit - _work then do
+      call reject('limit','LL_RESOURCE_LIMIT: ir.graph.work exhausted'); return 0
+    end
+    _work = _work + amount
+    return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count > (_bytelimit - _bytes) <idiv> width then do
+      call reject('limit','LL_RESOURCE_LIMIT: ir.graph.bytes exhausted'); return 0
+    end
+    _bytes = _bytes + count * width
+    return 1
+  status: method = .string
+    call run(); return _status
+  message: method = .string
+    call run(); return _message
+  valid: method = .int
+    call run()
+    if _status <> 'ok' then return 0
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.identity() = _revision & graph.error() = ''
+  matches: method = .int
+    arg owner = reference .llir..module
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_GRAPH_OWNER: index unavailable, expired or replaced: ' || _message)
+    return
+  owner: method = reference .llir..module
+    call require(); return _owner
+  identity: method = .int
+    return _identity
+  revision: method = .int
+    call require(); return _revision
+  schemaid: method = .int
+    call require(); return _schema
+  usedwork: method = .int
+    call run(); return _work
+  usedbytes: method = .int
+    call run(); return _bytes
+  functions: method = .int
+    call require(); return _functions
+  blocks: method = .int
+    call require(); return _blocks
+  operations: method = .int
+    call require(); return _operations
+  values: method = .int
+    call require(); return _values
+  slots: method = .int
+    call require(); return _slots
+  checkid: method = .void
+    arg id = .int, count = .int
+    call require()
+    if id < 1 | id > count then call bad('LL_IR_GRAPH_ID: entity outside index')
+    return
+  blockfunction: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _blockfn[b]
+  functionentry: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _fnentry[f]
+  functionblocks: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _fnblockcount[f]
+  functionblock: method = .int
+    arg f = .int, i = .int
+    call checkid(f,_functions); call checkid(i,_fnblockcount[f]); return _fnblocks[_fnblockstart[f] + i - 1]
+  functionslots: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _fnslotcount[f]
+  functionslot: method = .int
+    arg f = .int, i = .int
+    call checkid(f,_functions); call checkid(i,_fnslotcount[f]); return _fnslots[_fnslotstart[f] + i - 1]
+  functionoperations: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _fnopcount[f]
+  functionoperation: method = .int
+    arg f = .int, i = .int
+    call checkid(f,_functions); call checkid(i,_fnopcount[f]); return _fnops[_fnopstart[f] + i - 1]
+  opblock: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _opblock[op]
+  opposition: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _opposition[op]
+  opcode: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _opcode[op]
+  opslot: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _opslot[op]
+  firstop: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _firstop[b]
+  nextop: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _nextop[op]
+  successors: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _succcount[b]
+  successor: method = .int
+    arg b = .int, i = .int
+    call checkid(b,_blocks); call checkid(i,_succcount[b]); return _edgeto[_succstart[b] + i - 1]
+  predecessors: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _predcount[b]
+  predecessor: method = .int
+    arg b = .int, i = .int
+    call checkid(b,_blocks); call checkid(i,_predcount[b]); return _preds[_predstart[b] + i - 1]
+  reachable: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _reachable[b]
+  rposize: method = .int
+    call require(); return _rpo[0]
+  rpo: method = .int
+    arg i = .int
+    call checkid(i,_rpo[0]); return _rpo[i]
+  idom: method = .int
+    arg b = .int
+    call checkid(b,_blocks)
+    if _idom[b] = b then return 0
+    return _idom[b]
+  dominates: method = .int
+    arg a = .int, b = .int
+    call checkid(a,_blocks); call checkid(b,_blocks)
+    if _reachable[a] = 0 | _reachable[b] = 0 | _blockfn[a] <> _blockfn[b] then return 0
+    return _dompre[a] <= _dompre[b] & _dompost[b] <= _dompost[a]
+  definition: method = .int
+    arg v = .int
+    call checkid(v,_values); return _definition[v]
+  uses: method = .int
+    arg v = .int
+    call checkid(v,_values); return _usecount[v]
+  use: method = .int
+    arg v = .int, i = .int
+    call checkid(v,_values); call checkid(i,_usecount[v]); return _uses[_usestart[v] + i - 1]
+  lastuse: method = .int
+    arg v = .int
+    call checkid(v,_values); return _lastuse[v]
+  slotfunction: method = .int
+    arg s = .int
+    call checkid(s,_slots); return _slotfn[s]
+  slotreads: method = .int
+    arg s = .int
+    call checkid(s,_slots); return _readcount[s]
+  slotread: method = .int
+    arg s = .int, i = .int
+    call checkid(s,_slots); call checkid(i,_readcount[s]); return _reads[_readstart[s] + i - 1]
+  slotwrites: method = .int
+    arg s = .int
+    call checkid(s,_slots); return _writecount[s]
+  slotwrite: method = .int
+    arg s = .int, i = .int
+    call checkid(s,_slots); call checkid(i,_writecount[s]); return _writes[_writestart[s] + i - 1]
+  pinnedfunction: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _pinned[f]
+  pinnedslot: method = .int
+    arg s = .int
+    call checkid(s,_slots); return _pinned[_slotfn[s]]
+  pinnedvalue: method = .int
+    arg v = .int
+    call checkid(v,_values); return _pinned[_blockfn[_opblock[_definition[v]]]]
+  loops: method = .llirgraph..cycles
+    arg work = 1000000, bytes = 67108864
+    call require(); return .llirgraph..cycles(reference self,work,bytes)
+  liveness: method = .llirgraph..live
+    arg work = 1000000, bytes = 67108864
+    call require(); return .llirgraph..live(reference self,work,bytes)
+
+/** Demanded SCCs and natural-loop memberships. Irreducibility counts distinct
+ * entry blocks (including a function root), not parallel incoming edges.
+ * Natural loops are reverse predecessor closures of dominance backedges.
+ * No nesting forest or single-header claim is made for irreducible SCCs.
+ */
+cycles: class
+  _owner = reference .llirgraph..index
+  _identity = .int
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _component = .int[]
+  _sizes = .int[]
+  _cyclic = .int[]
+  _irreducible = .int[]
+  _headers = .int[]
+  _members = .binary
+  _blocks = .int
+  *: factory
+    arg owner = reference .llirgraph..index, work = 1000000, bytes = 67108864
+    _owner = owner; _status = 'building'; _message = ''; _work = 0; _bytes = 0; _worklimit = work; _bytelimit = bytes
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    work = _worklimit; bytes = _bytelimit; owner = _owner
+    b = .int; p = .int; source = .int; h = .int; top = .int; at = .int; component = .int; i = .int; j = .int
+    if work < 1 | bytes < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: ir.loops budgets must be positive'); return; end
+    if <refvalid>(owner) = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index expired'); return; end
+    graph = dereference owner
+    if graph.valid() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index unavailable'); return; end
+    _identity = graph.identity(); _blocks = graph.blocks()
+    if reserve(_blocks,72) = 0 then return
+    if spend(_blocks) = 0 then return
+    entry = .int[]; stack = .int[]; pending = .int[]; counts = .int[]
+    do b = 1 to _blocks; _component[b] = 0; entry[b] = 0; end
+    components = 0
+    /* Reverse CFG walk in decreasing original finish time (RPO order). */
+    do i = 1 to graph.rposize()
+      b = graph.rpo(i)
+      if _component[b] > 0 then iterate
+      components = components + 1; _sizes[components] = 0; _cyclic[components] = 0; _irreducible[components] = 0; counts[components] = 0
+      top = 1; stack[top] = b; _component[b] = components
+      do while top > 0
+        if spend(1) = 0 then return
+        b = stack[top]; top = top - 1; _sizes[components] = _sizes[components] + 1
+        do p = 1 to graph.predecessors(b)
+          if spend(1) = 0 then return
+          source = graph.predecessor(b,p)
+          if graph.reachable(source) & _component[source] = 0 then do
+            _component[source] = components; top = top + 1; stack[top] = source
+          end
+        end
+      end
+      if _sizes[components] > 1 then _cyclic[components] = 1
+    end
+    do b = 1 to _blocks
+      if spend(1) = 0 then return
+      if graph.reachable(b) = 0 then iterate
+      component = _component[b]
+      if graph.functionentry(graph.blockfunction(b)) = b then entry[b] = 1
+      do p = 1 to graph.predecessors(b)
+        if spend(1) = 0 then return
+        source = graph.predecessor(b,p)
+        if graph.reachable(source) & _component[source] <> component then entry[b] = 1
+      end
+      if entry[b] then counts[component] = counts[component] + 1
+      do j = 1 to graph.successors(b)
+        if spend(1) = 0 then return
+        target = graph.successor(b,j)
+        if target = b then _cyclic[component] = 1
+        if graph.dominates(target,b) then do
+          if pending[target] = 0 then do
+            pending[target] = 1; h = _headers[0] + 1; _headers[h] = target
+          end
+        end
+      end
+    end
+    do c = 1 to components
+      if _cyclic[c] & counts[c] > 1 then _irreducible[c] = 1
+    end
+    if reserve(_headers[0],_blocks) = 0 then return
+    cells = _headers[0] * _blocks
+    if spend(cells) = 0 then return
+    call binresize _members,cells
+    do h = 1 to _headers[0]
+      header = _headers[h]; offset = (h - 1) * _blocks
+      <at..u8>(offset + header - 1) _members = 1
+      top = 0
+      do p = 1 to graph.predecessors(header)
+        if spend(1) = 0 then return
+        source = graph.predecessor(header,p)
+        if graph.dominates(header,source) & source <> header then do
+          at = offset + source - 1
+          if <at..u8>(at) _members = 0 then do
+            <at..u8>(at) _members = 1; top = top + 1; stack[top] = source
+          end
+        end
+      end
+      do while top > 0
+        if spend(1) = 0 then return
+        b = stack[top]; top = top - 1
+        do p = 1 to graph.predecessors(b)
+          if spend(1) = 0 then return
+          source = graph.predecessor(b,p)
+          if graph.reachable(source) = 0 then iterate
+          at = offset + source - 1
+          if <at..u8>(at) _members = 0 then do
+            <at..u8>(at) _members = 1; top = top + 1; stack[top] = source
+          end
+        end
+      end
+    end
+    _status = 'ok'
+    return
+  reject: method = .void
+    arg status = .string, message = .string
+    if _status = 'building' then do; _status = status; _message = message; end
+    return
+  spend: method = .int
+    arg amount = .int
+    if _status <> 'building' then return 0
+    if amount < 0 | amount > _worklimit - _work then do; call reject('limit','LL_RESOURCE_LIMIT: ir.loops.work exhausted'); return 0; end
+    _work = _work + amount; return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if width = 0 then return 1
+    if count > (_bytelimit - _bytes) <idiv> width then do; call reject('limit','LL_RESOURCE_LIMIT: ir.loops.bytes exhausted'); return 0; end
+    _bytes = _bytes + count * width; return 1
+  status: method = .string
+    call run(); return _status
+  message: method = .string
+    call run(); return _message
+  usedwork: method = .int
+    call run(); return _work
+  usedbytes: method = .int
+    call run(); return _bytes
+  valid: method = .int
+    call run()
+    if _status <> 'ok' then return 0
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.valid() & graph.identity() = _identity
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_GRAPH_OWNER: loop result unavailable or expired')
+    return
+  component: method = .int
+    arg b = .int
+    call require(); graph = dereference _owner; call graph.checkid(b,_blocks)
+    return _component[b]
+  components: method = .int
+    call require(); return _sizes[0]
+  cyclic: method = .int
+    arg c = .int
+    call require(); graph = dereference _owner; call graph.checkid(c,_sizes[0]); return _cyclic[c]
+  irreducible: method = .int
+    arg c = .int
+    call require(); graph = dereference _owner; call graph.checkid(c,_sizes[0]); return _irreducible[c]
+  backedge: method = .int
+    arg source = .int, target = .int
+    call require(); graph = dereference _owner; call graph.checkid(source,_blocks); call graph.checkid(target,_blocks)
+    do i = 1 to graph.successors(source)
+      if graph.successor(source,i) = target then return graph.dominates(target,source)
+    end
+    return 0
+  loopheaders: method = .int
+    call require(); return _headers[0]
+  loopheader: method = .int
+    arg i = .int
+    call require(); graph = dereference _owner; call graph.checkid(i,_headers[0]); return _headers[i]
+  loopcontains: method = .int
+    arg header = .int, b = .int
+    call require(); graph = dereference _owner; call graph.checkid(header,_blocks); call graph.checkid(b,_blocks)
+    do h = 1 to _headers[0]
+      if _headers[h] = header then return <at..u8>((h - 1) * _blocks + b - 1) _members
+    end
+    return 0
+
+/** Backwards finite slot liveness, plus block-local value use intervals.
+ * Every slot/value storage in protected or opaque functions is conservatively
+ * live and pinned. complete(function) is false there. This is deliberately an
+ * overapproximation until extent/escape/control contracts can refine it.
+ * Values' storage liveness is distinct from conditional result availability.
+ */
+live: class
+  _owner = reference .llirgraph..index
+  _identity = .int
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _blocks = .int
+  _slots = .int
+  _in = .binary
+  _out = .binary
+  *: factory
+    arg owner = reference .llirgraph..index, work = 1000000, bytes = 67108864
+    _owner = owner; _status = 'building'; _message = ''; _work = 0; _bytes = 0; _worklimit = work
+    _bytelimit = bytes
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    work = _worklimit; bytes = _bytelimit; owner = _owner
+    b = .int; f = .int; offset = .int; i = .int; s = .int; at = .int; op = .int; p = .int; source = .int
+    if work < 1 | bytes < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live budgets must be positive'); return; end
+    if <refvalid>(owner) = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index expired'); return; end
+    graph = dereference owner
+    if graph.valid() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index unavailable'); return; end
+    _identity = graph.identity(); _blocks = graph.blocks(); _slots = graph.slots()
+    if _blocks > bytes <idiv> 24 then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live.bytes exhausted'); return; end
+    _bytes = _blocks * 24
+    if _slots > 0 then do
+      if _blocks > ((bytes - _bytes) <idiv> 4) <idiv> _slots then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live.bytes exhausted'); return; end
+    end
+    cells = _blocks * _slots; _bytes = _bytes + cells * 4
+    if spend(cells * 4 + _blocks) = 0 then return
+    use = .binary; kill = .binary
+    call binresize _in,cells; call binresize _out,cells; call binresize use,cells; call binresize kill,cells
+    pending = .int[]; queued = .int[]; head = 1; tail = 0; waiting = 0
+    do b = 1 to _blocks
+      queued[b] = 0
+      if graph.reachable(b) = 0 then iterate
+      f = graph.blockfunction(b); offset = (b - 1) * _slots
+      if graph.pinnedfunction(f) then do
+        do i = 1 to graph.functionslots(f)
+          if spend(1) = 0 then return
+          s = graph.functionslot(f,i); at = offset + s - 1
+          <at..u8>(at) _in = 1; <at..u8>(at) _out = 1; <at..u8>(at) use = 1
+        end
+      end
+      else do
+        op = graph.firstop(b)
+        do while op > 0
+          if spend(1) = 0 then return
+          s = graph.opslot(op)
+          if s > 0 then do
+            at = offset + s - 1
+            if graph.opcode(op) = 3 then do
+              if <at..u8>(at) kill = 0 then <at..u8>(at) use = 1
+            end
+            else <at..u8>(at) kill = 1
+          end
+          op = graph.nextop(op)
+        end
+      end
+      tail = tail + 1; pending[tail] = b; queued[b] = 1; waiting = waiting + 1
+    end
+    /* Union/kill on a finite Boolean lattice only adds bits. Wake predecessors
+     * when live-in changes; the ring holds at most one pending block. */
+    do while waiting > 0
+      b = pending[head]; head = head + 1
+      if head > _blocks then head = 1
+      waiting = waiting - 1; queued[b] = 0; changed = 0
+      f = graph.blockfunction(b); offset = (b - 1) * _slots
+      do i = 1 to graph.functionslots(f)
+        if spend(1) = 0 then return
+        s = graph.functionslot(f,i); at = offset + s - 1; after = 0
+        if graph.pinnedfunction(f) then after = 1
+        else do j = 1 to graph.successors(b)
+          if spend(1) = 0 then return
+          target = graph.successor(b,j); after = after | <at..u8>((target - 1) * _slots + s - 1) _in
+        end
+        before = <at..u8>(at) use | (after & (<at..u8>(at) kill = 0))
+        <at..u8>(at) _out = after
+        if before <> <at..u8>(at) _in then do; <at..u8>(at) _in = before; changed = 1; end
+      end
+      if changed then do p = 1 to graph.predecessors(b)
+        if spend(1) = 0 then return
+        source = graph.predecessor(b,p)
+        if graph.reachable(source) & queued[source] = 0 then do
+          tail = tail + 1
+          if tail > _blocks then tail = 1
+          pending[tail] = source; queued[source] = 1; waiting = waiting + 1
+        end
+      end
+    end
+    _status = 'ok'
+    return
+  reject: method = .void
+    arg status = .string, message = .string
+    if _status = 'building' then do; _status = status; _message = message; end
+    return
+  spend: method = .int
+    arg amount = .int
+    if _status <> 'building' then return 0
+    if amount < 0 | amount > _worklimit - _work then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live.work exhausted'); return 0; end
+    _work = _work + amount; return 1
+  status: method = .string
+    call run(); return _status
+  message: method = .string
+    call run(); return _message
+  usedwork: method = .int
+    call run(); return _work
+  usedbytes: method = .int
+    call run(); return _bytes
+  valid: method = .int
+    call run()
+    if _status <> 'ok' then return 0
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.valid() & graph.identity() = _identity
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_GRAPH_OWNER: liveness unavailable or expired')
+    return
+  complete: method = .int
+    arg f = .int
+    call require(); graph = dereference _owner; return graph.pinnedfunction(f) = 0
+  pinnedslot: method = .int
+    arg s = .int
+    call require(); graph = dereference _owner; return graph.pinnedslot(s)
+  pinnedvalue: method = .int
+    arg v = .int
+    call require(); graph = dereference _owner; return graph.pinnedvalue(v)
+  slotin: method = .int
+    arg b = .int, s = .int
+    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(s,_slots)
+    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
+    if graph.pinnedslot(s) then return 1
+    return <at..u8>((b - 1) * _slots + s - 1) _in
+  slotout: method = .int
+    arg b = .int, s = .int
+    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(s,_slots)
+    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
+    if graph.pinnedslot(s) then return 1
+    return <at..u8>((b - 1) * _slots + s - 1) _out
+  slotbefore: method = .int
+    arg op = .int, s = .int
+    return slotpoint(op,s,0)
+  slotafter: method = .int
+    arg op = .int, s = .int
+    return slotpoint(op,s,1)
+  slotpoint: method = .int
+    arg op = .int, s = .int, after = .int
+    call require(); graph = dereference _owner; b = graph.opblock(op); call graph.checkid(s,_slots)
+    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
+    if graph.pinnedslot(s) then return 1
+    if graph.reachable(b) = 0 then return 0
+    /* The first subsequent access decides, otherwise the block's live-out.
+     * This bounded scan avoids retaining an operations-by-slots lattice. */
+    current = op
+    if after then current = graph.nextop(current)
+    do while current > 0
+      if graph.opslot(current) = s then return graph.opcode(current) = 3
+      current = graph.nextop(current)
+    end
+    return slotout(b,s)
+  valuebefore: method = .int
+    arg op = .int, v = .int
+    return valuepoint(op,v,0)
+  valueafter: method = .int
+    arg op = .int, v = .int
+    return valuepoint(op,v,1)
+  valuepoint: method = .int
+    arg op = .int, v = .int, after = .int
+    call require(); graph = dereference _owner; b = graph.opblock(op); def = graph.definition(v)
+    if graph.blockfunction(b) <> graph.blockfunction(graph.opblock(def)) then return 0
+    if graph.pinnedvalue(v) then return 1
+    if graph.opblock(def) <> b | graph.reachable(b) = 0 then return 0
+    position = graph.opposition(op); defined = graph.opposition(def); last = graph.lastuse(v)
+    if after then return defined <= position & last > position
+    return defined < position & last >= position

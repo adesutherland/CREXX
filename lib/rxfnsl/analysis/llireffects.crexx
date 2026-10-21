@@ -1,0 +1,462 @@
+/* cREXX License (MIT). Structured effect premises and checked proof results. */
+options levelb
+namespace llireffects expose summary model proof
+import rxfnsb
+import llir
+import llirgraph
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_IR_EFFECT: identities exhausted"
+  serial = serial + 1
+  return serial
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Version 1 trusted semantic premises, with separate state, observation,
+ * lifetime, operand and result fields. Domains are opaque exact names; '*' is
+ * the sole wildcard. Core storage uses reserved core.slot.ID domains and says
+ * nothing about a runtime pool binding. A sealed record cannot be modified.
+ * Inserting this record describes semantics; it does not prove an optimisation.
+ * @param inputs Exact operation operand count.
+ * @param results Exact operation result count.
+ * @param version Structured record version (currently 1).
+ */
+summary: class
+  _inputs = .int
+  _results = .int
+  _version = .int
+  _sealed = .int
+  _opaque = .int
+  _failure = .string
+  _transfer = .string
+  _resume = .string
+  _domains = .string[]
+  _kinds = .string[]
+  _operands = .string[]
+  _availability = .string[]
+  _error = .string
+  _bytes = .int
+  *: factory
+    arg inputs = .int, results = .int, version = 1
+    i = .int
+    _inputs = inputs; _results = results; _version = version; _sealed = 0; _opaque = 0; _error = ''; _bytes = 0
+    _failure = 'unknown'; _transfer = 'unknown'; _resume = 'unknown'
+    if version <> 1 | inputs < 0 | results < 0 | inputs > 1000000 | results > 1000000 then do
+      _error = 'LL_IR_EFFECT: unsupported version or invalid arity'; return
+    end
+    do i = 1 to inputs; _operands[i] = 'unknown'; end
+    do i = 1 to results; _availability[i] = 'unknown'; end
+    _bytes = (inputs + results) * 16 + 64
+    return
+  mutable: method = .int
+    if _sealed then call bad('LL_IR_EFFECT_FROZEN: summary is sealed')
+    return _error = ''
+  add: method = .void
+    arg kind = .string, domain = .string
+    i = .int
+    if mutable() = 0 then return
+    if domain = '' | wordpos(kind,'read write observe allocate release') = 0 then do; _error = 'LL_IR_EFFECT: invalid domain or kind'; return; end
+    do i = 1 to _domains[0]
+      if _kinds[i] = kind & _domains[i] = domain then return
+    end
+    bits = domain as .binary; amount = <blen>(bits) + 32
+    if _domains[0] >= 1000000 | amount > 67108864 - _bytes then do
+      _error = 'LL_RESOURCE_LIMIT: ir.effect.summary exhausted'; return
+    end
+    i = _domains[0] + 1; _domains[i] = domain; _kinds[i] = kind; _bytes = _bytes + amount
+    return
+  read: method = .void
+    arg domain = .string
+    call add('read',domain); return
+  write: method = .void
+    arg domain = .string
+    call add('write',domain); return
+  observe: method = .void
+    arg domain = .string
+    call add('observe',domain); return
+  allocate: method = .void
+    arg domain = .string
+    call add('allocate',domain); return
+  release: method = .void
+    arg domain = .string
+    call add('release',domain); return
+  operand: method = .void
+    arg i = .int, mode = .string
+    if mutable() = 0 then return
+    if i < 1 | i > _inputs | wordpos(mode,'value borrow escape unknown') = 0 then do
+      _error = 'LL_IR_EFFECT: invalid operand mode'; return
+    end
+    _operands[i] = mode
+    return
+  result: method = .void
+    arg i = .int, availability = .string
+    if mutable() = 0 then return
+    if i < 1 | i > _results | wordpos(availability,'normal conditional unknown') = 0 then do
+      _error = 'LL_IR_EFFECT: invalid result availability'; return
+    end
+    _availability[i] = availability
+    return
+  control: method = .void
+    arg failure = 'unknown', transfer = 'unknown', resume = 'unknown'
+    if mutable() = 0 then return
+    if wordpos(failure,'none possible unknown') = 0 | wordpos(transfer,'none possible unknown') = 0 | wordpos(resume,'none possible unknown') = 0 then do
+      _error = 'LL_IR_EFFECT: invalid control summary'; return
+    end
+    _failure = failure; _transfer = transfer; _resume = resume
+    return
+  opaque: method = .void
+    if mutable() then _opaque = 1
+    return
+  seal: method = .int
+    _sealed = 1
+    return _error = ''
+  sealed: method = .int
+    return _sealed & _error = ''
+  error: method = .string
+    return _error
+  version: method = .int
+    return _version
+  inputs: method = .int
+    return _inputs
+  results: method = .int
+    return _results
+  bytes: method = .int
+    return _bytes
+  count: method = .int
+    return _domains[0]
+  kind: method = .string
+    arg i = .int
+    if i < 1 | i > _domains[0] then call bad('LL_IR_EFFECT_ID: domain outside summary')
+    return _kinds[i]
+  domain: method = .string
+    arg i = .int
+    if i < 1 | i > _domains[0] then call bad('LL_IR_EFFECT_ID: domain outside summary')
+    return _domains[i]
+  has: method = .int
+    arg kind = .string, domain = .string
+    do i = 1 to _domains[0]
+      if _kinds[i] = kind & (_domains[i] = domain | _domains[i] = '*' | domain = '*') then return 1
+    end
+    return 0
+  operandmode: method = .string
+    arg i = .int
+    if i < 1 | i > _inputs then call bad('LL_IR_EFFECT_ID: operand outside summary')
+    return _operands[i]
+  availability: method = .string
+    arg i = .int
+    if i < 1 | i > _results then call bad('LL_IR_EFFECT_ID: result outside summary')
+    return _availability[i]
+  failure: method = .string
+    return _failure
+  transfer: method = .string
+    return _transfer
+  resume: method = .string
+    return _resume
+  isopaque: method = .int
+    return _opaque
+  complete: method = .int
+    i = .int
+    if _error <> '' | _sealed = 0 | _opaque then return 0
+    if _failure = 'unknown' | _transfer = 'unknown' | _resume = 'unknown' then return 0
+    do i = 1 to _inputs; if _operands[i] = 'unknown' then return 0; end
+    do i = 1 to _results; if _availability[i] = 'unknown' then return 0; end
+    return 1
+
+/** A sealed profile snapshots effect premises against exact graph/schema and
+ * model identities. Missing extensions are opaque, never inferred pure from a
+ * mnemonic. Core operations receive exact storage/control defaults. Failed
+ * construction publishes no usable model; another attempt is independent.
+ */
+model: class
+  _owner = reference .llir..module
+  _revision = .int
+  _schema = .int
+  _identity = .int
+  _profile = .string
+  _version = .int
+  _sealed = .int
+  _entries = .int
+  _bytes = .int
+  _entrylimit = .int
+  _bytelimit = .int
+  _error = .string
+  _records = .object[]
+  _present = .int[]
+  *: factory
+    arg owner = reference .llir..module, profile = .string, version = 1, entries = 1000000, bytes = 67108864
+    _owner = owner; _profile = profile; _version = version; _identity = nextidentity()
+    _sealed = 0; _entries = 0; _bytes = 0; _entrylimit = entries; _bytelimit = bytes; _error = ''
+    if version <> 1 | profile = '' | entries < 1 | bytes < 1 then do
+      _error = 'LL_IR_EFFECT: invalid model version, profile or budgets'; return
+    end
+    if <refvalid>(owner) = 0 then do; _error = 'LL_IR_EFFECT_OWNER: module expired'; return; end
+    graph = dereference owner; _revision = graph.identity(); _error = graph.error()
+    if _error <> '' then return
+    store = dereference graph.storage(); contract = dereference store.contract(); _schema = contract.identity()
+    /* Preflight the operation index before sparse insertion can resize it. */
+    if graph.operations() > entries | graph.operations() > bytes <idiv> 16 then do
+      _error = 'LL_RESOURCE_LIMIT: ir.effect.model index exhausted'; return
+    end
+    profilebits = profile as .binary
+    if <blen>(profilebits) > bytes - graph.operations() * 16 then do
+      _error = 'LL_RESOURCE_LIMIT: ir.effect.model profile exhausted'; return
+    end
+    _bytes = graph.operations() * 16 + <blen>(profilebits)
+    do op = 1 to graph.operations(); _present[op] = 0; end
+    return
+  ownerlive: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.identity() = _revision & graph.error() = ''
+  valid: method = .int
+    return _sealed & _error = '' & ownerlive()
+  matches: method = .int
+    arg owner = reference .llir..module
+    return valid() & (_owner <refsame> owner)
+  error: method = .string
+    if _error <> '' then return _error
+    if ownerlive() = 0 then return 'LL_IR_EFFECT_OWNER: model owner expired or replaced'
+    return ''
+  identity: method = .int
+    return _identity
+  schemaid: method = .int
+    return _schema
+  profile: method = .string
+    return _profile
+  version: method = .int
+    return _version
+  usedbytes: method = .int
+    return _bytes
+  entries: method = .int
+    return _entries
+  put: method = .void
+    arg op = .int, record = .llireffects..summary
+    if _sealed then call bad('LL_IR_EFFECT_FROZEN: model is sealed')
+    if error() <> '' then return
+    graph = dereference _owner
+    if op < 1 | op > graph.operations() then do; _error = 'LL_IR_EFFECT_ID: operation outside model'; return; end
+    store = dereference graph.storage()
+    if store.get(3,op,1) <= 16 then do
+      _error = 'LL_IR_EFFECT: core operation summaries are canonical'; return
+    end
+    operation = graph.operation(op)
+    if record.sealed() = 0 | record.version() <> _version | record.inputs() <> operation.inputs() | record.results() <> operation.results() then do
+      _error = 'LL_IR_EFFECT: unsealed, version or arity mismatch'; return
+    end
+    /* Single assignment makes profile construction deterministic and removes
+     * replacement accounting/partially overwritten premises. */
+    if _present[op] then do; _error = 'LL_IR_EFFECT: duplicate operation summary'; return; end
+    if _entries >= _entrylimit | record.bytes() > _bytelimit - _bytes then do
+      _error = 'LL_RESOURCE_LIMIT: ir.effect.model exhausted'; return
+    end
+    _records[op] = record as .object; _present[op] = 1; _entries = _entries + 1; _bytes = _bytes + record.bytes()
+    return
+  seal: method = .int
+    if _sealed then return valid()
+    if error() <> '' then do; _sealed = 1; return 0; end
+    graph = dereference _owner; store = dereference graph.storage(); i = .int
+    do op = 1 to graph.operations() while _error = ''
+      if _present[op] then iterate
+      operation = graph.operation(op); opcode = store.get(3,op,1)
+      record = .llireffects..summary(operation.inputs(),operation.results(),_version)
+      if opcode > 16 then call record.opaque()
+      else do
+        do i = 1 to operation.inputs(); call record.operand(i,'value'); end
+        do i = 1 to operation.results(); call record.result(i,'normal'); end
+        call record.control('none','none','none')
+        if opcode = 3 then call record.read('core.slot.' || store.get(3,op,12))
+        if opcode = 4 then call record.write('core.slot.' || store.get(3,op,12))
+        if opcode = 10 then do
+          call record.control('none','possible','possible'); call record.observe('*')
+        end
+      end
+      sealed = record.seal()
+      if sealed = 0 then do; _error = record.error(); leave; end
+      /* Only this canonical construction can insert a core record. There is
+       * no public insertion helper accepting a caller-supplied core premise. */
+      if _entries >= _entrylimit | record.bytes() > _bytelimit - _bytes then do
+        _error = 'LL_RESOURCE_LIMIT: ir.effect.model exhausted'; leave
+      end
+      _records[op] = record as .object; _present[op] = 1; _entries = _entries + 1; _bytes = _bytes + record.bytes()
+    end
+    _sealed = 1
+    return valid()
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_EFFECT_OWNER: model unavailable, expired or replaced: ' || error())
+    return
+  at: method = .llireffects..summary
+    arg op = .int
+    call require(); graph = dereference _owner
+    if op < 1 | op > graph.operations() then call bad('LL_IR_EFFECT_ID: operation outside model')
+    return _records[op] as .llireffects..summary
+  known: method = .int
+    arg op = .int
+    record = at(op); return record.complete()
+  reads: method = .int
+    arg op = .int, domain = .string
+    record = at(op); return record.isopaque() | record.has('read',domain)
+  writes: method = .int
+    arg op = .int, domain = .string
+    record = at(op); return record.isopaque() | record.has('write',domain)
+  observes: method = .int
+    arg op = .int, domain = .string
+    record = at(op); return record.isopaque() | record.has('observe',domain)
+  allocates: method = .int
+    arg op = .int, domain = .string
+    record = at(op); return record.isopaque() | record.has('allocate',domain)
+  releases: method = .int
+    arg op = .int, domain = .string
+    record = at(op); return record.isopaque() | record.has('release',domain)
+  operand: method = .string
+    arg op = .int, i = .int
+    record = at(op); return record.operandmode(i)
+  availability: method = .string
+    arg op = .int, i = .int
+    record = at(op); return record.availability(i)
+  failure: method = .string
+    arg op = .int
+    record = at(op); return record.failure()
+  transfer: method = .string
+    arg op = .int
+    record = at(op); return record.transfer()
+  resume: method = .string
+    arg op = .int
+    record = at(op); return record.resume()
+
+/** Checked conclusions have no arbitrary result setter. The public constructor
+ * executes the selected bounded rule against exact live index/model owners.
+ * Rules deliberately refuse unknown premises. 'preserves' admits only an
+ * ordered interval in one acyclic block; it proves no cross-block/all-path claim.
+ * 'available' checks an actual producer/result input and normal availability.
+ * 'cells' compares static core slots within one function invocation only.
+ */
+proof: class
+  _index = reference .llirgraph..index
+  _effects = reference .llireffects..model
+  _indexid = .int
+  _modelid = .int
+  _schema = .int
+  _profile = .string
+  _status = .string
+  _reason = .string
+  _rule = .string
+  _generator = .int
+  _candidate = .int
+  _domain = .string
+  _result = .int
+  _work = .int
+  *: factory
+    arg index = reference .llirgraph..index, effects = reference .llireffects..model, rule = .string, generator = .int, candidate = .int, domain = '', result = 0, work = 1000000
+    i = .int; amount = .int; record = .llireffects..summary
+    _index = index; _effects = effects; _rule = rule; _generator = generator; _candidate = candidate; _domain = domain; _result = result
+    _status = 'invalid'; _reason = 'owner.unavailable'; _work = 0
+    if <refvalid>(index) = 0 | <refvalid>(effects) = 0 then return
+    graph = dereference index; model = dereference effects
+    if graph.valid() = 0 | model.valid() = 0 then return
+    if model.matches(graph.owner()) = 0 | graph.schemaid() <> model.schemaid() then do; _reason = 'owner.foreign'; return; end
+    _indexid = graph.identity(); _modelid = model.identity(); _schema = model.schemaid(); _profile = model.profile()
+    if work < 1 then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+    _status = 'unknown'
+    if rule = 'cells' then do
+      if generator < 1 | generator > graph.slots() | candidate < 1 | candidate > graph.slots() then do; _status = 'invalid'; _reason = 'slot.outside'; return; end
+      if graph.slotfunction(generator) <> graph.slotfunction(candidate) then do; _reason = 'invocation.unknown'; return; end
+      _work = 1; _status = 'proved'; _reason = 'core.cells.disjoint'
+      if generator = candidate then _reason = 'core.cells.identical'
+      return
+    end
+    if generator < 1 | generator > graph.operations() | candidate < 1 | candidate > graph.operations() then do; _status = 'invalid'; _reason = 'operation.outside'; return; end
+    gb = graph.opblock(generator); cb = graph.opblock(candidate); _work = 1
+    if rule = 'available' then do
+      if result < 1 then do; _status = 'invalid'; _reason = 'result.outside'; return; end
+      owner = dereference graph.owner(); operation = owner.operation(generator)
+      if result > operation.results() then do; _status = 'invalid'; _reason = 'result.outside'; return; end
+      record = model.at(generator)
+      amount = record.inputs() * 2 + record.results() * 2 + record.count() + 4
+      if amount > work - _work then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+      _work = _work + amount
+      if record.complete() = 0 then do; _reason = 'effect.unknown'; return; end
+      if record.availability(result) <> 'normal' then do; _reason = 'result.unavailable'; return; end
+      if record.failure() <> 'none' | record.transfer() <> 'none' | record.resume() <> 'none' then do; _reason = 'completion.edge.unknown'; return; end
+      do i = 1 to record.inputs()
+        if record.operandmode(i) <> 'value' then do; _reason = 'borrow.or.escape.unknown'; return; end
+      end
+      if graph.pinnedfunction(graph.blockfunction(gb)) then do; _reason = 'control.or.lifetime.incomplete'; return; end
+      if gb <> cb then do
+        if graph.dominates(gb,cb) = 0 then do; _reason = 'not.dominated'; return; end
+      end
+      else if graph.opposition(generator) >= graph.opposition(candidate) then do; _reason = 'not.ordered'; return; end
+      value = operation.result(result); use = owner.operation(candidate); found = 0
+      do i = 1 to use.inputs()
+        if _work >= work then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+        _work = _work + 1; input = use.input(i)
+        if input.id() = value.id() then found = 1
+      end
+      if found = 0 then do; _reason = 'result.not.input'; return; end
+      _status = 'proved'; _reason = 'result.normal.and.ordered'; return
+    end
+    if rule <> 'preserves' then do; _status = 'invalid'; _reason = 'rule.unknown'; return; end
+    if domain = '' then do; _status = 'invalid'; _reason = 'domain.empty'; return; end
+    if gb <> cb then do; _reason = 'cross.block.unsupported'; return; end
+    if graph.opposition(generator) >= graph.opposition(candidate) then do; _reason = 'not.ordered'; return; end
+    if graph.pinnedfunction(graph.blockfunction(gb)) then do; _reason = 'control.or.lifetime.incomplete'; return; end
+    loops = graph.loops(work - _work)
+    if loops.status() <> 'ok' then do
+      _status = loops.status(); _reason = loops.message(); return
+    end
+    _work = _work + loops.usedwork()
+    component = loops.component(gb)
+    if component = 0 then do; _reason = 'unreachable'; return; end
+    if loops.cyclic(component) then do; _reason = 'cyclic.block.unsupported'; return; end
+    op = graph.nextop(generator)
+    do while op <> candidate & op > 0
+      if _work >= work then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+      _work = _work + 1; record = model.at(op)
+      amount = record.count() * 4 + record.inputs() * 2 + record.results() + 4
+      if amount > work - _work then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+      _work = _work + amount
+      /* Unknown and lifetime effects refuse the proof even if a domain spelling
+       * appears unrelated. Without an alias contract that relation is unknown. */
+      if record.complete() = 0 then do; _reason = 'effect.unknown'; return; end
+      if record.failure() <> 'none' | record.transfer() <> 'none' | record.resume() <> 'none' then do; _reason = 'control.changed'; return; end
+      if record.has('write',domain) | record.has('observe',domain) | record.has('allocate',domain) | record.has('release',domain) then do; _reason = 'state.or.observation.changed'; return; end
+      do i = 1 to record.inputs()
+        if _work >= work then do; _status = 'limit'; _reason = 'work.exhausted'; return; end
+        _work = _work + 1
+        if record.operandmode(i) <> 'value' then do; _reason = 'borrow.or.escape.unknown'; return; end
+      end
+      op = graph.nextop(op)
+    end
+    if op <> candidate then do; _status = 'invalid'; _reason = 'interval.invalid'; return; end
+    _status = 'proved'; _reason = 'state.preserved.in.acyclic.interval'
+    return
+  valid: method = .int
+    if _status <> 'proved' then return 0
+    if <refvalid>(_index) = 0 | <refvalid>(_effects) = 0 then return 0
+    graph = dereference _index; model = dereference _effects
+    return graph.valid() & model.valid() & graph.identity() = _indexid & model.identity() = _modelid & model.schemaid() = _schema & model.profile() = _profile
+  matches: method = .int
+    arg index = reference .llirgraph..index, effects = reference .llireffects..model
+    return valid() & (_index <refsame> index) & (_effects <refsame> effects)
+  status: method = .string
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if _status = 'proved' & valid() = 0 then return 'owner.expired.or.replaced'
+    return _reason
+  rule: method = .string
+    return _rule
+  generator: method = .int
+    return _generator
+  candidate: method = .int
+    return _candidate
+  domain: method = .string
+    return _domain
+  result: method = .int
+    return _result
+  usedwork: method = .int
+    return _work

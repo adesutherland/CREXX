@@ -10,6 +10,9 @@ import llbinmeta
 import llcompilercontracts
 import llsource
 import llrxastext
+import llrxas
+import llirgraph
+import llceffects
 import llcdoprotocol
 import llcclauseprotocol
 import llcprocedureprotocol
@@ -22,10 +25,12 @@ import llctraceemit
 import llccallemit
 
 /** A compile owns its source graph and emits only a fully checked output.
- * Registers are stable per function; the disjoint call window is never shared
- * with live IR values. Source graph storage is read-only throughout. */
+ * Fixed owners and the disjoint call window retain their identities; explicit
+ * plain scalar candidates use checked target allocation. The graph is read-only. */
 compilation: class
   _graph = .llir..module
+  _index = .llirgraph..index
+  _contextproof = .llceffects..checked
   _store = reference .llir..arena
   _schema = .llir..contract
   _canonical = .llir..contract
@@ -117,7 +122,12 @@ compilation: class
   _selectorsymbols = .llcsymbols..checked
   _doowners = .int[]
   _dofatal = .int[]
-  _records = .object[]
+  _loopheads = .int[]
+  _looplinks = .int[]
+  _commandheads = .int[]
+  _commandlinks = .int[]
+  _target = .llrxas..program
+  _candidates = .int[]
   _recordbytes = .int
   _writer = .llir..writer
   _output = .llir..output
@@ -203,8 +213,7 @@ compilation: class
     if _recordbytes > _limit then do
       call fail('LIMIT: selected output exceeds output.bytes budget'); return
     end
-    n = _records[0] + 1
-    _records[n] = .llrxastext..instruction(mnemonic,operands,_origin) as .object
+    call _target.record(mnemonic,operands,_origin)
     return
   reg: method = .string
     arg index = .int
@@ -780,47 +789,12 @@ compilation: class
       if message <> '' then do; call fail('LOWERING: invalid constant bytes: ' || message); return; end
     end
     return
-  /** The opaque C context is entry-bound, not a general mutable reference
-   * variable. This profile invariant avoids assuming slot definite assignment
-   * from structural IR verification or copying generic dataflow machinery. */
+  /** Canonical C entry binding has one proof owner. Scoped selection retains
+   * its graph/index and consumes only admitted immutable context identities. */
   checkcontextslots: method = .void
-    store = dereference _store; ready = .int[]
-    i = .int; fn = .int; opid = .int; slot = .int; producer = .int; opcode = .int
-    do i = 1 to store.count(5)
-      if typename(store.get(5,i,2)) = 'crexx.c.parseprogram' then do; call fail('LOWERING: PARSE program is an attribute, not a runtime slot'); return; end
-      ready[i] = 0
-    end
-    do fn = 1 to store.count(1)
-      entry = store.get(1,fn,3); opid = store.get(2,entry,2)
-      do while opid > 0
-        opcode = store.get(3,opid,1)
-        if opcode = 3 | opcode = 4 then do
-          slot = store.get(3,opid,12)
-          if typename(store.get(5,slot,2)) = 'crexx.c.context' then do
-            if opcode = 3 & ready[slot] = 0 then do; call fail('LOWERING: unbound context slot'); return; end
-            if opcode = 4 then do
-              if ready[slot] then do; call fail('LOWERING: context slot must be bound once at function entry'); return; end
-              producer = store.get(4,store.operand(opid,1),1)
-              source = store.get(3,producer,1); proven = 0
-              if source = 2 & store.get(3,producer,12) = 1 then proven = 1
-              if source = 3 then proven = ready[store.get(3,producer,12)]
-              if proven = 0 then do; call fail('LOWERING: unsupported context slot binding'); return; end
-              ready[slot] = 1
-            end
-          end
-        end
-        opid = store.get(3,opid,3)
-      end
-    end
-    do opid = 1 to store.count(3)
-      opcode = store.get(3,opid,1)
-      if opcode <> 3 & opcode <> 4 then iterate
-      slot = store.get(3,opid,12)
-      if typename(store.get(5,slot,2)) <> 'crexx.c.context' then iterate
-      if opcode = 3 & ready[slot] = 0 then do; call fail('LOWERING: unbound context slot'); return; end
-      block = store.get(3,opid,2); fn = store.get(2,block,1)
-      if opcode = 4 & block <> store.get(1,fn,3) then do; call fail('LOWERING: context slot must be bound once at function entry'); return; end
-    end
+    _contextproof = .llceffects..checked(reference _graph,reference _index,_limit)
+    if _contextproof.status() then do; _error = _contextproof.error(); return; end
+    if _contextproof.belongs(reference _graph) = 0 then call fail('LOWERING: context identity proof belongs to another graph')
     return
   checkfunctions: method = .void
     f = .int
@@ -1211,7 +1185,7 @@ compilation: class
     if _ready then return
     _ready = 1; _phase = 'admission'
     i = .int; f = .int; op = .llir..opview; origin = .llir..origin; clausekeys = .stem(); clausebytes = 0
-    signature = .llcompilercontracts..signature; j = .int
+    signature = .llcompilercontracts..signature; j = .int; owner = .int; ownerfunction = .int
     key = .string; known = .string; extent = .int
     do
       if _bound then do
@@ -1231,6 +1205,13 @@ compilation: class
 
       if _limit < 1 | _reglimit < 16 | _reglimit > 2147483647 then do; call fail('LIMIT: invalid output or register budget'); return; end
       _store = _graph.storage(); store = dereference _store; contract = dereference store.contract(); _schema = contract
+      _phase = 'graph index'
+      _index = .llirgraph..index(reference _graph,1000000,_limit)
+      if _index.valid() = 0 then do
+        if _index.status() = 'limit' then call fail('LIMIT: ' || _index.message())
+        else call fail('GRAPH: ' || _index.message())
+        return
+      end
       canonical = .llir..schema(); call llcir..registerfamilies(reference canonical); expected = canonical.finish()
       _canonical = expected
       _phase = 'schema admission'
@@ -1294,6 +1275,23 @@ compilation: class
       if _commandprotocol.status() then do
         _error = _commandprotocol.error(); _offset = _commandprotocol.offset(); return
       end
+      _phase = 'function owner index'
+      if loopfacts.owners() > _limit <idiv> 16 | _commandprotocol.owners() > _limit <idiv> 16 then do
+        call fail('LIMIT: function owner index exceeds output.bytes workspace'); return
+      end
+      looptails = .int[]; commandtails = .int[]
+      do i = 1 to loopfacts.owners()
+        owner = loopfacts.cleanup(i); ownerfunction = loopfacts.function(owner)
+        if _loopheads[ownerfunction] = 0 then _loopheads[ownerfunction] = owner
+        else _looplinks[looptails[ownerfunction]] = owner
+        looptails[ownerfunction] = owner; _looplinks[owner] = 0
+      end
+      do i = 1 to _commandprotocol.owners()
+        ownerfunction = _commandprotocol.function(i)
+        if _commandheads[ownerfunction] = 0 then _commandheads[ownerfunction] = i
+        else _commandlinks[commandtails[ownerfunction]] = i
+        commandtails[ownerfunction] = i; _commandlinks[i] = 0
+      end
       _hastrace = _export <> ''
       _phase = 'operation admission'
       _selectorsymbols = .llcsymbols..checked(_limit,_limit)
@@ -1352,6 +1350,8 @@ compilation: class
       call _writer.line('.globals=0')
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 16; _workbase = 1; _callbase = 12; _scratch = 0
+      _target = .llrxas..program(_locals,_reglimit,1000000)
+      call _target.window(_callbase,_locals - _callbase)
       if store.text(store.get(1,1,1)) = '$MAIN' then do
         if _export = '' then do
           call emit('main()','.locals=' || _locals)
@@ -1366,6 +1366,7 @@ compilation: class
           call clearsource(); call providerentry()
         end
         _phase = 'entry flush'; call flush()
+        if _error <> '' then return
       end
       do f = 1 to store.count(1)
         _phase = 'function ' || f; _fn = f; call procedurebody()
@@ -1428,13 +1429,18 @@ compilation: class
     end
     return
   flush: method = .void
+    selected = _target.finish()
+    if selected.valid() = 0 then do
+      if pos('LL_RXAS_LIMIT:',selected.error()) = 1 then call fail('LIMIT: ' || selected.error())
+      else call fail('TARGET: ' || selected.error())
+      return
+    end
     section = _writer.section()
-    do i = 1 to _records[0]
-      record = _records[i] as .llrxastext..instruction
-      call section.line(record.text(),record.origin())
+    do i = 1 to selected.records()
+      call section.line(selected.text(i),selected.origin(i))
     end
     part = section.finish(); call _writer.append(reference part)
-    empty = .object[]; _records = empty; _recordbytes = 0
+    _recordbytes = 0
     if _writer.error() <> '' then _error = _writer.error()
     return
   procedurebody: method = .void
@@ -1445,28 +1451,40 @@ compilation: class
     loop_ref = loopproof(); loopfacts = dereference loop_ref
     clause_ref = clauseproof(); clausefacts = dereference clause_ref
     i = .int; b = .int; id = .int; blockindex = .int; op = .llir..opview
+    slotindex = .int; contextcell = .int; valuetype = .string
     anchor = .int; clause = .int; commandowner = .int; ownerregister = .int; canonicalname = .int; nameid = .int
     store = dereference _store; blocks = .int[]
     _signals = 'CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE'
     if _hasexternal[_fn] then _signals = _signals || ' FUNCTION_NOT_FOUND'
     _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
-    do i = 1 to store.count(5)
-      if store.get(5,i,1) = _fn then do
-        _slots[i] = -1
-        if _signalslots[i] = 0 then do; _slots[i] = next; next = next + 1; end
-      end
+    do slotindex = 1 to _index.functionslots(_fn)
+      i = _index.functionslot(_fn,slotindex)
+      _slots[i] = -1; contextcell = _contextproof.cell(i)
+      if _signalslots[i] = 0 & (contextcell = 0 | contextcell = i) then do; _slots[i] = next; next = next + 1; end
     end
-    _phase = 'value allocation'; hasparse = 0; emptynames = .int[]; _signalcleanup = emptynames
-    do b = 1 to store.count(2)
-      if store.get(2,b,1) <> _fn then iterate
-      blocks[blocks[0] + 1] = b
+    do slotindex = 1 to _index.functionslots(_fn)
+      i = _index.functionslot(_fn,slotindex); contextcell = _contextproof.cell(i)
+      if contextcell > 0 then _slots[i] = _slots[contextcell]
+    end
+    _phase = 'value allocation'; hasparse = 0; emptynames = .int[]; _signalcleanup = emptynames; _candidates = emptynames
+    do blockindex = 1 to _index.functionblocks(_fn)
+      b = _index.functionblock(_fn,blockindex)
+      blocks[blockindex] = b
       id = store.get(2,b,2)
       do while id > 0
         op = _graph.operation(id)
         if op.name() = 'crexx.c.parse.source' then hasparse = 1
         if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
           do r = 1 to op.results()
-            nameid = op.result(r).id(); _registers[nameid] = next; next = next + 1
+            nameid = op.result(r).id()
+            contextcell = _contextproof.loadcell(id)
+            if contextcell = 0 then contextcell = _contextproof.argumentcell(id)
+            if contextcell > 0 then _registers[nameid] = _slots[contextcell]
+            else do
+              _registers[nameid] = next; next = next + 1
+              valuetype = typename(op.result(r).type().id())
+              if valuetype = 'core.boolean' | valuetype = 'crexx.g.int64' then _candidates[_candidates[0] + 1] = _registers[nameid]
+            end
             if op.name() = 'crexx.c.signal.name' then _signalcleanup[_signalcleanup[0] + 1] = nameid
           end
         end
@@ -1499,17 +1517,18 @@ compilation: class
     /* Strong loop storage is not an IR value or a transient call argument.
      * Its address is stable through every helper call and every iteration. */
     _phase = 'DO owner allocation'; cleanuporder = .int[]; _dofatal = cleanuporder
-    do i = 1 to loopfacts.owners()
-      owner = loopfacts.cleanup(i)
-      if loopfacts.function(owner) <> _fn then iterate
+    owner = _loopheads[_fn]
+    do while owner > 0
       _doowners[owner] = next; next = next + 1
       _dofatal[_dofatal[0] + 1] = owner
+      owner = _looplinks[owner]
     end
     _phase = 'command owner allocation'; emptycommands = .int[]; _commandcleanup = emptycommands
-    do i = 1 to _commandprotocol.owners()
-      if _commandprotocol.function(i) <> _fn then iterate
+    i = _commandheads[_fn]
+    do while i > 0
       _commandowners[i] = next; next = next + 1
       _commandcleanup[_commandcleanup[0] + 1] = i
+      i = _commandlinks[i]
     end
     _handlersactive = next; next = next + 1
     _traceactive = -1; _traceoutermode = -1; _traceouterformat = -1; _traceparse = -1
@@ -1554,7 +1573,12 @@ compilation: class
     do; _location = next; next = next + 1; end
     if _maxargs >= 0 then do; _callbase = next; next = next + _maxargs + 1; end
     _locals = next
-    if _locals > _reglimit then do; call fail('LIMIT: function exceeds register budget'); return; end
+    _target = .llrxas..program(_locals,_reglimit,1000000)
+    if _callbase >= 0 then call _target.window(_callbase,_locals - _callbase)
+    do i = 1 to _candidates[0]
+      call _target.candidate(_candidates[i],'integer')
+      if _index.pinnedfunction(_fn) then call _target.pin(_candidates[i])
+    end
     _origin = 0
     declaration = '.locals=' || _locals
     if store.get(1,_fn,6) > 0 then declaration = declaration || ' .expose=' || store.text(store.get(1,_fn,6))
@@ -1870,11 +1894,11 @@ compilation: class
       end
       when name = 'core.load' then do
         slot = store.get(3,id,12)
-        call emit('copy',dest || ',' || reg(_slots[slot]))
+        if dest <> reg(_slots[slot]) then call emit('copy',dest || ',' || reg(_slots[slot]))
       end
       when name = 'core.store' then do
         slot = store.get(3,id,12); dest = reg(_slots[slot])
-        call emit('copy',dest || ',' || input(op))
+        if dest <> input(op) then call emit('copy',dest || ',' || input(op))
       end
       when name = 'core.protect' then do
         do i = 1 to words(_signals)

@@ -5,6 +5,83 @@ read-only views, exact saved forms and a text emitter. `llirservices` supplies
 revision-bound facts, flow analysis, semantic-service dispatch and atomic
 transformations. Both are Level B modules in `rxfnsl`.
 
+The optional `rxfnsl-analysis` package adds `llirgraph` and `llireffects`, with
+no cREXX frontend, runtime or instruction dependency. The separately selected
+[`rxfnsl-rxas` package](rxas-design.md) supplies instruction records and register
+assignment. Neither enters the core image or grammar bootstrap. Source-language
+policy stays in its frontend/adapters. An IR runner remains later feasibility
+work in the [Group 4 architecture](../../research/level-l/compilers/doc/architecture.md#group4-infrastructure-proposal);
+constant evaluators below do not execute effectful programs.
+
+## Optional analysis and proof services
+
+Build `rxfnsl_analysis` and link `rxfnsl-analysis.rxbin` with `rxfnsl.rxbin` and
+`library.rxbin`. Import `llirgraph` for graph analysis and `llireffects` for
+semantic premises and checked conclusions. These services accept any admitted
+Level L family; they do not recognize Classic variable names, BIFs or RXAS.
+Keep the module variable and index alive while using borrowed results:
+
+```rexx
+import llirgraph
+index = .llirgraph..index(reference graph,1000000,67108864)
+if index.status() = 'ok' then do
+  live = index.liveness()
+  loops = index.loops()
+  if live.status() = 'ok' then say live.slotin(block_id,slot_id)
+end
+```
+
+`index` supplies indexed function blocks/slots/operations, block predecessors
+and successors, reachable blocks, RPO, immediate dominators/dominance, value
+definitions/uses and slot read/write lists. IDs belong to the original frozen
+module. `functionblocks(f)`/`functionblock(f,i)` and the corresponding slot and
+operation methods let consumers avoid repeated whole-module filtering.
+`loops(work,bytes)` adds SCCs, cyclic/irreducible classification, backedges and
+natural-loop header/membership queries. It does not claim a nesting forest for
+irreducible control. `liveness(work,bytes)` supplies slot entry/exit and operation
+before/after facts, plus block-local value before/after facts.
+
+Both demands have independent retry budgets. Check `status()` before querying;
+`message()` describes invalid input or resource exhaustion. Failed construction
+publishes no usable facts. `valid()` and `matches(reference graph)` reject an
+expired, copied or replaced owner even when its saved bytes are identical.
+Budgets count declared work and logical retained storage, rather than VM heap
+overhead. Replacing a module or analysis owner invalidates dependent results.
+
+The graph describes declared IR control. Invocation-wide `protect`, incomplete
+continuations and opaque lifetime effects conservatively keep all relevant
+function storage live/pinned; `live.complete(f)` is false there. This permits
+safe consumers to retain a fixed-storage profile. The two setup successors of
+`protect` are not a proof that handler inputs die after setup. AST/source-flow
+roles in `llflow` remain a separate service.
+Liveness is a storage fact for declared control, not a result-availability or
+alias proof. Consumers must also honor structured effect/ownership premises;
+an effect model does not add missing continuation edges to the graph.
+
+`llireffects.summary(inputs,results,version=1)` separates domain reads, writes,
+observations, allocation/release, operand value/borrow/escape modes, result
+normal/conditional/unknown availability, and failure/transfer/resume. Set the
+fields explicitly, then `seal()`. Domains are exact opaque strings with `*` as
+the wildcard. Reserved `core.slot.ID` domains describe IR cells; runtime pools,
+host callbacks and source bindings need their own semantic adapter.
+
+`llireffects.model(reference graph,profile,version,entries,bytes)` snapshots
+sealed, arity-checked extension summaries with `put(operation_id,summary)`, then
+`seal()`. Core overrides are rejected; core operations have canonical built-in
+summaries, and missing extensions are opaque.
+Declarations are trusted semantic premises, not proved optimizations.
+
+`llireffects.proof(reference index,reference model,rule,from,to,domain,result,work)`
+computes a conclusion with no caller setter for a proved payload. `preserves`
+checks an ordered interval in one acyclic block and refuses effect, ownership,
+observation or continuation invalidators. `available` requires a normal,
+non-failing, non-transferring, value-only producer and an ordered actual use;
+conditional results need a language-owned guard proof. `cells` distinguishes
+actual core cells in one invocation, without inventing external alias facts.
+Check `status()='proved'` and exact live `matches` before consuming a proof.
+Unknown is distinct from false; it prohibits the affected rewrite. Arbitrary
+`llirservices.facts.put` entries cannot turn into these checked conclusions.
+
 ## The model
 
 An **intermediate representation**, or IR, describes operations and how their
