@@ -202,6 +202,33 @@ endforeach()
             else: break
         return '\n'.join(body).replace('${{ needs.assurance-gate.outputs.target_sha }}', 'a' * 40)
 
+    @unittest.skipUnless(Path('/bin/bash').is_file(), 'Workflow source contract requires Bash')
+    def test_workflow_source_resolution_preserves_tags_and_explicit_refs(self):
+        bindir = self.root/'source-bin'; bindir.mkdir()
+        output = self.root/'source-output'
+        calls = self.root/'source-calls'
+        gh = bindir/'gh'
+        gh.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$QA_SOURCE_CALLS"\nprintf "%s\\n" development-head\n')
+        gh.chmod(0o755)
+        cases = [('schedule', 'refs/heads/master', '', 'development-head'),
+                 ('workflow_dispatch', 'refs/heads/master', '', 'development-head'),
+                 ('workflow_dispatch', 'refs/heads/hotfix', '', 'selected-head'),
+                 ('workflow_dispatch', 'refs/heads/master', 'explicit-head', 'explicit-head'),
+                 ('push', 'refs/tags/v1.0.0', '', 'selected-head')]
+        for event, ref, requested, expected in cases:
+            with self.subTest(event=event, ref=ref, requested=requested):
+                output.unlink(missing_ok=True); calls.unlink(missing_ok=True)
+                env = {**os.environ, 'PATH': str(bindir)+os.pathsep+os.environ['PATH'],
+                       'GITHUB_OUTPUT': str(output), 'GITHUB_SHA': 'selected-head',
+                       'GITHUB_REPOSITORY': 'fixture/crexx', 'GITHUB_REF': ref,
+                       'GITHUB_EVENT_NAME': event, 'REQUESTED_SOURCE': requested,
+                       'QA_SOURCE_CALLS': str(calls)}
+                result = subprocess.run(['/bin/bash', '-c', self.workflow_block('Resolve source')],
+                                        env=env, text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(output.read_text().strip(), 'target_sha='+expected)
+                self.assertEqual(calls.exists(), expected == 'development-head')
+
     @unittest.skipUnless(Path('/bin/bash').is_file(), 'Workflow shell contract requires Bash')
     def test_workflow_commands_preserve_optional_arguments(self):
         source = self.root/'workflow source'
