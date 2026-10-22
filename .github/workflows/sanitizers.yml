@@ -66,13 +66,12 @@ permissions:
 jobs:
   assurance-gate:
     if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
-    name: Resolve qualified inputs and conservative profile
+    name: Resolve source and scheduled or explicit profile
     runs-on: ubuntu-24.04
     outputs:
       target_sha: ${{ steps.decision.outputs.target_sha }}
       profile: ${{ steps.decision.outputs.profile }}
       matrix: ${{ steps.decision.outputs.matrix }}
-      native_configs: ${{ steps.decision.outputs.native_configs }}
     steps:
       - name: Resolve source
         id: target
@@ -99,14 +98,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ steps.target.outputs.target_sha }}
 
-      - name: Last jointly qualified broad comparison
-        if: github.event_name == 'schedule'
-        uses: actions/cache/restore@v5
-        with:
-          path: .ci-assurance/history.json
-          key: crexx-sanitizer-history-${{ steps.target.outputs.target_sha }}
-          restore-keys: crexx-sanitizer-history-
-
       - name: Select profile and independent platform jobs
         id: decision
         shell: bash
@@ -116,20 +107,16 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PYTHON'
-          import importlib.util, json, os, pathlib, subprocess
+          import importlib.util, json, os, subprocess
           spec=importlib.util.spec_from_file_location('policy','tools/sanitizer-policy.py')
           policy=importlib.util.module_from_spec(spec); spec.loader.exec_module(policy)
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           event='tag' if os.environ['GITHUB_REF'].startswith('refs/tags/') else ('schedule' if os.environ['GITHUB_EVENT_NAME']=='schedule' else 'manual')
-          history=pathlib.Path('.ci-assurance/history.json')
-          previous=json.loads(history.read_text()) if history.exists() else {}
-          base=previous.get('head','')
-          changed=policy.changed_files('.',base,head)
           from datetime import datetime, timezone
           requested='daily' if os.environ.get('REQUESTED_SCOPE')=='daily' else 'full'
-          decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),changed,requested)
-          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile'],'affected':decision.get('affected_tests',[])},
-                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile'],'affected':decision.get('affected_tests',[])}]
+          decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),requested)
+          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile']},
+                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile']}]
           if os.environ.get('REQUESTED_SCOPE')=='candidate':
               rows=[{**rows[0],'name':'Linux original full qualification','profile':'full'},
                     {**rows[0],'name':'Linux separated daily qualification','profile':'daily'},
@@ -142,7 +129,7 @@ jobs:
               assert event=='manual' and os.environ.get('REQUESTED_SCOPE')=='daily', 'Platform selection is only for explicit manual daily retries'
               rows=[row for row in rows if row['platform']==platform]
           with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
-              stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\nnative_configs='+json.dumps(previous.get('native_configs',{}))+'\n')
+              stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
               label='bounded full-profile selection / focused proof' if os.environ.get('REQUESTED_SCOPE')=='continuation-linux' else decision['profile']
               stream.write('Profile: **'+label+'**. '+decision['reason']+'\n')
@@ -155,7 +142,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
     env:
-      CREXX_QA_AFFECTED_TESTS: ${{ toJSON(matrix.affected) }}
+      CREXX_QA_AFFECTED_TESTS: '[]'
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.assurance-gate.outputs.matrix) }}
@@ -174,7 +161,6 @@ jobs:
         env:
           QA_PROFILE: ${{ matrix.profile }}
           QA_PLATFORM: ${{ matrix.platform }}
-          QA_BASELINES: ${{ needs.assurance-gate.outputs.native_configs }}
           QA_QUALIFICATION: ${{ inputs.qualification }}
           QA_CONTINUATION_REGEX: ${{ inputs.runtime_regex }}
           QA_EXPECTED_NATIVE_KEY: ${{ inputs.expected_native_key }}
@@ -199,9 +185,9 @@ jobs:
             -DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address)
           "${configure[@]}" "${native[@]}"
           leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
-          export QA_NATIVE_KEY
-          QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
           if [ "$QA_QUALIFICATION" = continuation-linux ]; then
+            export QA_NATIVE_KEY
+            QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
             python3 - <<'PYTHON'
           import hashlib, json, os, pathlib, subprocess
           assert os.environ['QA_EXPECTED_NATIVE_KEY'] and os.environ['QA_NATIVE_KEY']==os.environ['QA_EXPECTED_NATIVE_KEY'], 'Prior platform/toolchain/dependency configuration differs; reused cells are not qualified'
@@ -218,19 +204,7 @@ jobs:
           print('Matched prior native configuration; bounded selection:',len(selected),'of',len(all_names))
           PYTHON
           fi
-          effective=$(python3 - <<'PYTHON'
-          import importlib.util,json,os
-          spec=importlib.util.spec_from_file_location('p','tools/sanitizer-policy.py'); p=importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
-          baselines=json.loads(os.environ['QA_BASELINES'])
-          print(p.platform_profile(os.environ['QA_PROFILE'],os.environ['GITHUB_EVENT_NAME']=='schedule',baselines.get(os.environ['QA_PLATFORM'],''),os.environ['QA_NATIVE_KEY']))
-          PYTHON
-          )
-          if [ "$effective" != "$QA_PROFILE" ]; then
-            echo 'Missing compatible broad native configuration; restoring full original generation.' >> "$GITHUB_STEP_SUMMARY"
-            python3 -c 'import os,pathlib,shutil; shutil.rmtree(pathlib.Path(os.environ["RUNNER_TEMP"])/"debugasan")'
-            cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}" "${native[@]}"
-          fi
-          echo "profile=$effective" >> "$GITHUB_OUTPUT"
+          echo "profile=$QA_PROFILE" >> "$GITHUB_OUTPUT"
 
       - name: Compute platform/configuration/profile input key
         id: identity
@@ -569,38 +543,3 @@ jobs:
           path: ${{ runner.temp }}/debug/asan-logs
           if-no-files-found: error
           retention-days: 14
-
-  record-assurance:
-    name: Record jointly qualified broad comparison
-    needs: [assurance-gate, sanitizer]
-    if: >-
-      always() && github.event_name == 'schedule' && needs.sanitizer.result == 'success'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/download-artifact@v7
-        with:
-          pattern: sanitizer-proof-*
-          path: .ci-assurance/proofs
-          merge-multiple: true
-      - name: Verify both required broad platforms
-        id: joint
-        shell: bash
-        env:
-          QA_TARGET: ${{ needs.assurance-gate.outputs.target_sha }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PYTHON'
-          import json, os, pathlib
-          proofs=[json.loads(path.read_text()) for path in pathlib.Path('.ci-assurance/proofs').glob('*.json')]
-          assert len(proofs)==2 and {value['platform'] for value in proofs}=={'linux','macos'}
-          assert all(value['complete'] and value['requested_head']==os.environ['QA_TARGET'] for value in proofs)
-          broad=all(value['scope']=='broad' for value in proofs)
-          with open(os.environ['GITHUB_OUTPUT'],'a') as stream: stream.write('broad='+str(broad).lower()+'\n')
-          if broad:
-              pathlib.Path('.ci-assurance/history.json').write_text(json.dumps({'head':os.environ['QA_TARGET'], 'platform_keys':{value['platform']:value['reusable_input_key'] for value in proofs}, 'native_configs':{value['platform']:value['native_configuration_key'] for value in proofs}})+'\n')
-          PYTHON
-      - uses: actions/cache/save@v5
-        if: steps.joint.outputs.broad == 'true'
-        with:
-          path: .ci-assurance/history.json
-          key: crexx-sanitizer-history-${{ needs.assurance-gate.outputs.target_sha }}
