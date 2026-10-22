@@ -46,7 +46,7 @@ the matching maintained sanitizer checks; do not expand into functional QA.
    memory profile, independent of history or changed inputs. Explicit manual
    and version-tag full scope and exact platform/profile-qualified reuse remain.
    Verify actual workflow commands, all weekdays and rejection controls.
-5. **MEMORY-AC05 — todo:** qualify the selected panel in normal Debug, then
+5. **MEMORY-AC05 — done:** qualify the selected panel in normal Debug, then
    maintained Apple ASan and Linux ASan/LSan; inspect preparation/test costs and
    require complete, diagnostic-free selected execution. Reuse unchanged product
    proof and do not rerun the full functional sanitizer matrix. Publish candidate
@@ -62,71 +62,25 @@ the matching maintained sanitizer checks; do not expand into functional QA.
 3. **MEMORY-STEP03 — done (AC02–04), after STEP02:** update policy/workflow and
    owning guides; exercise focused normal, boundary/negative and shell contracts,
    then the matching maintained local sanitizer selection. Freeze tested inputs.
-4. **MEMORY-STEP04 — in progress (AC05), after STEP03:** commit/push hotfix, qualify
+4. **MEMORY-STEP04 — done (AC05), after STEP03:** commit/push hotfix, qualify
    both focused hosted platforms, repair only affected failures, then publish
    develop and the master workflow-only update. Report exact scope and limits;
    delete temporary diagnostics and retain no timing/run archive in Git.
 
-### Earlier daily cadence correction — superseded by component memory assurance
-
-Adrian explicitly replaces the conservative daily escalation policy: scheduled
-Monday–Saturday assurance stays on the approved fixed VM/provider `daily`
-panel. Sunday retains full original-producer `weekly` coverage; explicit full
-requests and version-tag release qualification retain broad scope. Missing
-history, source/build/control changes and changed native configurations must
-never expand scheduled daily membership. Changed inputs invalidate reuse and
-require fresh selected preparation/execution, not a broader profile. Omitted
-producer/semantic histories retain their accepted weekly/release ownership;
-actual SAN findings retain their existing focused repair and broad closure gates.
-This amendment supersedes the affected-change/fallback rules below without
-changing the approved test manifest, fixture ownership or instrumentation.
-
-1. **CADENCE-AC01 — done (amends SCOPE-AC04/07):** schedule chooses `daily`
-   Monday–Saturday and `weekly` Sunday, independently of history, changed paths
-   and native configuration. Check the actual workflow decision/configuration
-   blocks with absent/stale history, native/build changes and both platforms.
-2. **CADENCE-AC02 — done (preserves SCOPE-AC02/03/08):** retain exact daily
-   membership, default-keep new tests, selected donor/native preparation, Linux
-   leak checks, strict completed-scope validation and exact-input per-platform
-   cache reuse. A miss reruns that profile; daily never certifies broad coverage.
-   Reuse existing product qualification and check the miniature scope/cache
-   contracts; no fresh full campaign is required for a scheduling-only change.
-3. **CADENCE-AC03 — done (preserves SCOPE-AC04/06/07):** preserve explicit
-   manual full/daily/candidate/diagnostic routes, version-tag broad assurance
-   and both platforms by default. Reconcile AGENTS and the operator guide;
-   check manual/weekly/tag selection and lint the effective workflow.
-4. **CADENCE-AC04 — done (amends SCOPE-AC07):** commit/push the focused repair
-   on hotfix and develop, then update only the scheduled workflow on master.
-   Verify the remote scheduled definition and source selector; leave running
-   jobs and unrelated local work intact. Report exact publication and limits.
-
-1. **CADENCE-STEP01 — done (AC01–04):** inspect the live fallback, existing
-   policy/fixture contracts and remote branches; record this approved amendment.
-2. **CADENCE-STEP02 — done (AC01–03), after STEP01:** remove automatic broad
-   and affected-family expansion plus the now-unused joint-history service;
-   retain exact per-platform/profile reuse and independent assurance validation.
-3. **CADENCE-STEP03 — done (AC01–03), after STEP02:** run focused policy and
-   actual Bash workflow contracts, CTest miniature inventories and workflow lint;
-   review the coherent diff. Reuse unchanged native product results.
-4. **CADENCE-STEP04 — done (AC04), after STEP03:** publish hotfix/develop and
-   the master workflow-only update; verify effective cadence without dispatching
-   another full run. Normal automatic CI remains a separate hosted result.
-
-**Current status: component memory implementation, normal Debug and focused
-Apple ASan checks are complete. Fresh focused Linux/Apple hosted qualification
-and publication remain required by MEMORY-AC05. Earlier VM-priority platform
-proof does not qualify this new component selection.**
+**Current status: component memory assurance is qualified and published on
+both maintained platforms. The same fixed memory panel runs every scheduled
+day. Full functional QA and explicit full/release/SAN-closure assurance retain
+their separate obligations.**
 
 The current rollout supersedes the earlier activation holds below. The narrow
 `master` exception changes only `.github/workflows/sanitizers.yml`; it does not
 promote product code or cut a release. At 03:47 UTC daily the workflow tests
-current `develop`. After MEMORY-AC05 is green, every scheduled day uses the same
-component memory panel, including known compiler/assembler/linker regressions.
+current `develop`. Every scheduled day uses the same component memory panel,
+including known compiler/assembler/linker regressions.
 There is no Sunday full expansion. Changed inputs or missing proof require fresh
 execution of the same selected profile. Keep Linux leak checks,
 both platforms, scope-qualified reuse and all SAN closure rules intact.
-The existing scheduled policy remains effective until qualification and the
-master workflow-only publication. Current membership and regression ownership
+Current membership and regression ownership
 are in [the component memory panel](../tools/sanitizer-memory-tests.json).
 Implementation uses the existing synchronized hotfix checkout. MEMORY-AC05
 authorizes focused hosted qualification, then develop publication and the
@@ -2068,8 +2022,8 @@ complete; scheduled activation stays disabled.
    Prove which native binaries execute in all selected host/subprocess paths.
    The native-tool profile retains instrumented producer tests, Linux leaks
    stay on, and full-profile selection retains the existing broad set.
-4. **SCOPE-AC04 — amended by CADENCE-AC01/03:** policy fixtures prove fixed
-   daily/weekly/manual/tag decisions, cache-independent scope, platform/profile
+4. **SCOPE-AC04 — amended by MEMORY-AC03/04:** policy fixtures prove the same
+   memory profile every scheduled day, explicit full/tag scope, platform/profile
    reuse, failure propagation and no false broad-success marker. No workflow
    is `continue-on-error`; incomplete execution is reported as incomplete.
 5. **SCOPE-AC05 — done (measurement); the provisional two-hour target remains unmet on Linux:** after profile approval, measure one clean execution
