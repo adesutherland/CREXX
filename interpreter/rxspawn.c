@@ -921,7 +921,7 @@ static char *find_executable_in_path_list(const char *path_list,
             rxspawn_memory_free(directory);
             return NULL;
         }
-        sprintf(candidate, "%s/%s", directory, exe);
+        snprintf(candidate, directory_length + strlen(exe) + 2u, "%s/%s", directory, exe);
         rxspawn_memory_free(directory);
 
         if (ExeFound(candidate)) return candidate;

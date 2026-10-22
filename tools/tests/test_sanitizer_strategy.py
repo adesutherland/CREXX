@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -43,22 +44,24 @@ class Strategy(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.addCleanup(self.temporary.cleanup)
 
-    def test_cadence_and_exact_default_keep(self):
-        self.assertEqual(len(P.DAILY_MOVED), 2010)
-        with patch.object(Path, 'read_text', return_value=json.dumps({'schema':1,'weekly_only':{'one':['duplicate','duplicate']}})):
+    def test_component_memory_cadence_and_regressions(self):
+        self.assertIn('sustained_vm_values_rxtvm', P.MEMORY_TESTS)
+        for name in ('future_functional_contract', 'classic_expression_contract_opt',
+                     'sustained_vm_levell_rxbvm', 'levell_services_opt_rxtvm'):
+            self.assertNotIn(name, P.MEMORY_TESTS)
+        for names in P.MEMORY_REGRESSIONS.values():
+            self.assertTrue(set(names) <= P.MEMORY_TESTS)
+        known=set(re.findall(r'^### (SAN-[0-9]+)\b',
+                            (ROOT/'docs/SANITIZER-WORKLIST.md').read_text(),re.MULTILINE))-{'SAN-009'}
+        self.assertTrue(known <= P.MEMORY_REGRESSIONS.keys())
+        invalid={'schema':1,'panels':{'one':{'boundary':'owned','tests':['duplicate','duplicate']}},'regressions':{}}
+        with patch.object(Path, 'read_text', return_value=json.dumps(invalid)):
             with self.assertRaisesRegex(ValueError, 'duplicate'):
-                P.weekly_groups()
-        for name in P.DAILY_MOVED:
-            self.assertRegex(name, P.excluded('daily'))
-        for name in ('future_native_contract', 'arg_semantics_scalar_run_opt',
-                     'ts_unicode_normalization_rxtvm_opt', 'san002_wide_decimal_extract_rxbvm_opt',
-                     'llist_test_noopt', 'rxvm_memory_contract'):
-            self.assertNotRegex(name, P.excluded('daily'))
+                P.memory_policy()
         for profile in P.BROAD_PROFILES:
-            self.assertEqual(P.excluded(profile), '')
+            self.assertEqual(P.included(profile), '')
         for day in range(1, 8):
-            expected = 'weekly' if day == 7 else 'daily'
-            self.assertEqual(P.decide('schedule', True, day)['profile'], expected)
+            self.assertEqual(P.decide('schedule', True, day)['profile'], 'daily')
             # An explicit manual choice remains independent of the weekday.
             for profile in ('full', 'daily'):
                 self.assertEqual(P.decide('manual', False, day, profile)['profile'], profile)
@@ -67,16 +70,63 @@ class Strategy(unittest.TestCase):
             P.decide('schedule', False, 2)
 
     def test_explicit_affected_scope_and_platform_absence(self):
-        # A platform can omit known reference names; new tests remain default keep.
-        universe={'future_native_contract','binary_global_import_types','arg_semantics_scalar_run_opt'}
-        self.assertEqual(universe-P.DAILY_MOVED, {'future_native_contract','arg_semantics_scalar_run_opt'})
-        restored='binary_global_import_types'
-        with patch.dict(os.environ, {'CREXX_QA_AFFECTED_TESTS':json.dumps([restored])}):
-            self.assertNotRegex(restored, P.excluded('daily'))
-            self.assertRegex('arg_semantics_scalar_opt', P.excluded('daily'))
+        definitions={'tests':[{'name':'memory_compiler_lifecycle','properties':[]},
+                              {'name':'future_functional_contract','properties':[]}]}
+        self.assertEqual(P.profile_names(self.root,'daily',definitions), {'memory_compiler_lifecycle'})
         with patch.dict(os.environ, {'CREXX_QA_AFFECTED_TESTS':'["unknown"]'}):
-            with self.assertRaisesRegex(ValueError, 'unaudited'):
-                P.excluded('daily')
+            with self.assertRaisesRegex(ValueError, 'cannot be expanded'):
+                P.affected_tests()
+
+    def test_missing_known_memory_regression_cannot_qualify(self):
+        definitions={'tests':[{'name':'one','properties':[]}]}
+        with patch.object(P,'ctest_inventory',return_value=(definitions,{'one'})):
+            with self.assertRaisesRegex(ValueError,'required memory contracts are missing'):
+                P.inventory(self.root,'daily',[],self.root/'result.json')
+        self.assertFalse((self.root/'result.json').exists())
+
+    @unittest.skipUnless(os.name != 'nt', 'Stage boundary fixture uses executable scripts')
+    def test_tool_memory_boundaries_and_expected_error_diagnostics(self):
+        bindir=self.root/'stage-tools'; bindir.mkdir()
+        log=self.root/'stage-calls'
+        stub='''#!@PYTHON@
+import os,sys
+from pathlib import Path
+args=sys.argv[1:]
+with open(os.environ['STAGE_LOG'],'a') as stream: stream.write(Path(sys.argv[0]).name+'\\n')
+if 'invalid.rexx' in ' '.join(args) or 'invalid.rxas' in ' '.join(args):
+ print('SYNTAX ERROR',file=sys.stderr)
+ if os.environ.get('STAGE_DIAGNOSTIC'): print('==123==ERROR: LeakSanitizer: detected memory leaks',file=sys.stderr)
+ if os.environ.get('STAGE_ABNORMAL'): os.kill(os.getpid(),15)
+ raise SystemExit(8)
+output=args[args.index('-o')+1]
+name=Path(sys.argv[0]).name
+if name=='rxlink' and output in ('duplicate','invalid'):
+ print('Duplicate providers' if output=='duplicate' else 'signature mismatch',file=sys.stderr); raise SystemExit(8)
+if 'missing.rxpp' in ' '.join(args):
+ print('RXPP_SOURCE_MISSING: Source file is missing',file=sys.stderr); raise SystemExit(8)
+suffix='.rxas' if name in ('rxc','rxc-c') else '.rxbin' if name in ('rxas','rxlink') else ''
+Path(output+suffix).write_text('owned output')
+'''.replace('@PYTHON@',sys.executable)
+        for name in ('rxc','rxc-c','rxas','rxlink','rxdas','rxpp'):
+            tool=bindir/name; tool.write_text(stub); tool.chmod(0o755)
+        trap=bindir/'rxvm'
+        trap.write_text('#!/bin/sh\nprintf "rxvm\\n" >> "$STAGE_LOG"\nexit 37\n'); trap.chmod(0o755)
+        for stage,name in (('compiler','rxc'),('classic','rxc-c'),('assembler','rxas'),
+                           ('linker','rxlink'),('disassembler','rxdas'),('precomp','rxpp')):
+            log.unlink(missing_ok=True)
+            args=['cmake','-DSTAGE='+stage,'-DTOOL='+str(bindir/name),'-DSOURCE='+str(ROOT),
+                  '-DBIN='+str(bindir),'-DINPUT='+str(bindir),'-DWORK='+str(self.root/stage),'-P',str(ROOT/'tests/memory/tool_lifecycle.cmake')]
+            environment={**os.environ,'STAGE_LOG':str(log),'PATH':str(bindir)+os.pathsep+os.environ['PATH']}
+            result=subprocess.run(args,env=environment,text=True,capture_output=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(set(log.read_text().splitlines()),{name})
+            if stage in ('compiler','classic','assembler','disassembler'):
+                result=subprocess.run(args,env={**environment,'STAGE_DIAGNOSTIC':'1'},text=True,capture_output=True)
+                self.assertNotEqual(result.returncode,0)
+                self.assertIn('reported a memory failure',result.stderr)
+                result=subprocess.run(args,env={**environment,'STAGE_ABNORMAL':'1'},text=True,capture_output=True)
+                self.assertNotEqual(result.returncode,0)
+                self.assertIn('terminated abnormally',result.stderr)
 
     @unittest.skipUnless(shutil.which('ninja'), 'Independent CTest fixture requires Ninja')
     def test_real_ctest_daily_fixture_closure(self):
@@ -93,7 +143,10 @@ add_test(NAME arg_semantics_scalar_opt_future COMMAND "${CMAKE_COMMAND}" -E true
 ''')
         build=self.root/'fixture-build'
         command('cmake','-S',source,'-B',build,'-G','Ninja')
-        pattern=P.excluded('daily',build)
+        with patch.object(P,'MEMORY_TESTS',frozenset({'future_native_contract'})):
+            pattern=P.included('daily',build)
+            self.assertEqual(P.profile_names(build,'daily'),
+                             {'future_native_contract','levelc_bif_reference_audit_prepare'})
         # Keep the full expression out of CreateProcess's Windows argument
         # limit. CTest's in-process script handler still compiles/applies it.
         pattern_file=self.root/'exclude.txt'; pattern_file.write_text(pattern)
@@ -103,18 +156,15 @@ set(CTEST_BINARY_DIRECTORY "@BUILD@")
 set(CTEST_CMAKE_GENERATOR "Ninja")
 ctest_start(Experimental)
 file(READ "@PATTERN@" pattern)
-ctest_test(EXCLUDE "${pattern}" OUTPUT_JUNIT "@JUNIT@" RETURN_VALUE status)
+ctest_test(INCLUDE "${pattern}" OUTPUT_JUNIT "@JUNIT@" RETURN_VALUE status)
 if(NOT status EQUAL 0)
  message(FATAL_ERROR "Miniature selected tests failed")
 endif()
 '''.replace('@SOURCE@',source.as_posix()).replace('@BUILD@',build.as_posix()).replace('@PATTERN@',pattern_file.as_posix()).replace('@JUNIT@',junit.as_posix()))
         command('ctest','-S',script,'--output-on-failure')
         actual={case.attrib['name'] for case in ET.parse(junit).getroot().findall('.//testcase')}
-        expected={'future_native_contract','levelc_bif_reference_audit_prepare','arg_semantics_scalar_opt_future'}
+        expected={'future_native_contract','levelc_bif_reference_audit_prepare'}
         self.assertEqual(actual,expected)
-        self.assertEqual(P.profile_names(build,'daily'),expected)
-        for name in P.DAILY_MOVED:
-            if name!='levelc_bif_reference_audit_prepare': self.assertRegex(name,pattern)
         self.assertNotRegex('arg_semantics_scalar_opt_future',pattern)
 
     @unittest.skipUnless(os.name != 'nt' and shutil.which('ninja'), 'Cold producer fixture requires executable scripts and Ninja')
@@ -292,6 +342,7 @@ if name == 'python3': print(os.environ['QA_PROFILE'])
             values=dict(line.split('=',1) for line in output.read_text().splitlines())
             return json.loads(values['matrix'])['include']
 
+        self.assertTrue(all(row['profile']=='daily' for row in execute('','both')))
         for scope in ('full','daily'):
             rows=execute(scope,'both')
             self.assertEqual({row['platform'] for row in rows},{'linux','macos'})
@@ -317,7 +368,7 @@ if name == 'python3': print(os.environ['QA_PROFILE'])
             path = source/name; path.parent.mkdir(exist_ok=True); path.write_text('changed')
         history = source/'.ci-assurance/history.json'; history.parent.mkdir()
         output = source/'output'
-        expected = 'weekly' if datetime.now(timezone.utc).isoweekday() == 7 else 'daily'
+        expected = 'daily'
         for previous in (None, 'invalid stale history', json.dumps({'head':'missing','native_configs':{'linux':'old'}})):
             with self.subTest(history=previous):
                 if previous is not None: history.write_text(previous)
@@ -459,6 +510,7 @@ crexx_add_fixture_command(OUTPUT "${TEST_OUTPUT}"
                 F.runtime_paths(native,Path(sys.executable),[native/'image.rxbin'])
 
     @unittest.skipUnless(shutil.which('ninja') and shutil.which('git'), 'Cold native planning fixture requires Ninja and Git')
+    @patch.object(P,'MEMORY_TESTS',frozenset({'future_native_contract'}))
     def test_cold_and_warm_native_preparation_match(self):
         source=self.root/'cold-source'; source.mkdir(); command('git','init','-q',source)
         build=self.root/'cold-build'
@@ -500,7 +552,7 @@ crexx_finalize_qa_fixtures()
                    {'name':'CREXX_DAILY_PREP_TARGETS','value':'ordinary_image;rxvm'}]},
                {'name':'qa_control','command':['python','contract.py'], 'properties':[
                    {'name':'CREXX_PREP_NONE','value':True}]}]
-        with patch.object(P,'ctest_inventory',return_value=({'tests':tests},set(t['name'] for t in tests))), patch.object(F,'identity',return_value={'source':'same'}), patch.object(P,'fixture_tools',return_value=F):
+        with patch.object(P,'ctest_inventory',return_value=({'tests':tests},set(t['name'] for t in tests))), patch.object(F,'identity',return_value={'source':'same'}), patch.object(P,'fixture_tools',return_value=F), patch.object(P,'MEMORY_TESTS',frozenset({'host','wrapper','qa_control','future_wrapper'})):
             value=P.preparation_plan(build,'daily')
             self.assertIn('owned_host',value['targets'])
             self.assertIn('ordinary_image',value['targets'])
@@ -694,7 +746,7 @@ with m.locked(pathlib.Path(sys.argv[2])):
         with patch.object(P.platform, 'machine', return_value='other-architecture'):
             self.assertNotEqual(key, P.canonical_input(b, 'full', environment))
         self.assertNotEqual(key, P.canonical_input(b, 'full', {**environment,'ASAN_OPTIONS':'detect_leaks=0'}))
-        restored=['binary_global_import_types','ts_unicode_normalization_rxbvm_noopt']
+        restored=[]
         pretty={**environment,'CREXX_QA_AFFECTED_TESTS':json.dumps(list(reversed(restored)),indent=2)}
         with patch.dict(os.environ,pretty):
             direct=P.canonical_input(a,'daily')
@@ -702,7 +754,7 @@ with m.locked(pathlib.Path(sys.argv[2])):
             cli=command(sys.executable,ROOT/'tools/sanitizer-policy.py','key','--build-dir',a,'--profile','daily').stdout.strip()
             self.assertEqual(cli,direct)
             output=self.root/'inventory.json'
-            with patch.object(P,'ctest_inventory',return_value=({'tests':[{'name':'future_test','properties':[]}]},{'future_test'})):
+            with patch.object(P,'ctest_inventory',return_value=({'tests':[{'name':'future_test','properties':[]}]},{'future_test'})), patch.object(P,'MEMORY_TESTS',frozenset({'future_test'})), patch.object(P,'MEMORY_REGRESSIONS',{'synthetic':['future_test']}), patch.object(P,'MEMORY_REQUIRED',frozenset({'future_test'})):
                 P.inventory(a,'daily',[],output)
             self.assertEqual(F.json_read(output)['reusable_input_key'],cli)
         with patch.dict(os.environ,{**environment,'CREXX_QA_AFFECTED_TESTS':''}):
@@ -721,7 +773,7 @@ if script=='sanitizer-fixtures.py':
  if operation=='native':
   count=root/'audits'; value=int(count.read_text())+1 if count.exists() else 1; count.write_text(str(value)); raise SystemExit(0 if value==1 else 23)
  raise SystemExit(0)
-if operation=='exclude': raise SystemExit(0)
+if operation=='include': raise SystemExit(0)
 if operation=='inventory': pathlib.Path(args[args.index('--output')+1]).write_text('{}'); raise SystemExit(0)
 if operation=='complete': (root/'unexpected-complete').touch(); raise SystemExit(0)
 raise SystemExit('unexpected control command')

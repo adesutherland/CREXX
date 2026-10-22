@@ -113,9 +113,11 @@ are compiler auto-expose anchors; the environment owns their command meaning.
    workflow metadata. Keep plans to contracts, known limits and simple todo/done.
 
 The sanitizer profile/preparation strategy belongs to `docs/SANITIZER-WORKLIST.md`
-and `docs/ai-context/CREXX_ASAN_TESTING.md`. Daily assurance cannot certify the
-full weekly/release/SAN-closure scope or replace original instrumented producers.
-Those guides own schedules, conservative fallback and runner details.
+and `docs/ai-context/CREXX_ASAN_TESTING.md`. Daily component memory assurance
+runs every day, including Sunday; compiler/assembler/linker memory producers
+stop at their own output, and VM panels use ordinary producers. Daily assurance
+cannot certify full release/SAN-closure scope or replace original instrumented
+producers. Those guides own schedules, conservative fallback and runner details.
 
 ## Emitted-code quality
 

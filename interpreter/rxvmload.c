@@ -1313,7 +1313,7 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
             if (!full_file_name) RX_PANIC_OOM("build rxpa plugin filename",
                                                full_file_name_size, file_name);
             if (has_ext) strcpy(full_file_name, file_name);
-            else sprintf(full_file_name, "%s.rxplugin", file_name);
+            else snprintf(full_file_name, full_file_name_size, "%s.rxplugin", file_name);
 
             // Create rxpa_context and module for the addfunc callback
             previous_active_context = rxvm_active_context_enter(context);

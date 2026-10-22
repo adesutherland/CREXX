@@ -12,30 +12,37 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
-def weekly_groups():
-    # A reviewed snapshot of exact names, never a live cwd/label/name heuristic.
-    value = json.loads(Path(__file__).with_name('sanitizer-weekly-tests.json').read_text())
+def memory_policy():
+    # Registration alone is not evidence of a new memory boundary. Each exact
+    # selected name has an owning component and an explicit coverage purpose.
+    value = json.loads(Path(__file__).with_name('sanitizer-memory-tests.json').read_text())
     if value.get('schema') != 1:
         raise ValueError('unsupported sanitizer membership policy')
-    raw = value['weekly_only']
-    if not isinstance(raw, dict) or any(not isinstance(tests, list) for tests in raw.values()):
-        raise ValueError('invalid weekly sanitizer groups')
-    flat = [test for tests in raw.values() for test in tests]
+    raw = value['panels']
+    if not isinstance(raw, dict) or any(not panel.get('boundary') or not isinstance(panel.get('tests'), list)
+                                        for panel in raw.values()):
+        raise ValueError('invalid memory sanitizer panels')
+    flat = [test for panel in raw.values() for test in panel['tests']]
     if any(not isinstance(test, str) or not test for test in flat) or len(flat) != len(set(flat)):
-        raise ValueError('duplicate/invalid weekly sanitizer name')
-    return {name: frozenset(tests) for name, tests in raw.items()}
+        raise ValueError('duplicate/invalid memory sanitizer name')
+    regressions = value['regressions']
+    if not regressions or any(not names or not set(names) <= set(flat) for names in regressions.values()):
+        raise ValueError('unmapped memory regression')
+    required = value['required']
+    if not required or not set(required) <= set(flat):
+        raise ValueError('unmapped required memory component')
+    return frozenset(flat), regressions, frozenset(required)
 
 
-WEEKLY_GROUPS = weekly_groups()
-DAILY_MOVED = frozenset(test for tests in WEEKLY_GROUPS.values() for test in tests)
+MEMORY_TESTS, MEMORY_REGRESSIONS, MEMORY_REQUIRED = memory_policy()
 
 
 def parse_affected(value):
     value = json.loads(value or '[]')
     if not isinstance(value, list) or any(not isinstance(name, str) for name in value):
         raise ValueError('affected sanitizer selection must be a list of exact names')
-    if len(value) != len(set(value)) or not set(value) <= DAILY_MOVED:
-        raise ValueError('affected selection contains a duplicate or unaudited weekly name')
+    if value:
+        raise ValueError('the fixed memory panel cannot be expanded by affected selection')
     return frozenset(value)
 
 
@@ -54,37 +61,29 @@ def fixture_tools():
     return module
 
 
-def excluded(profile, build=None):
+def included(profile, build=None, pattern=''):
     if profile != 'daily':
-        return ''
-    names = set(DAILY_MOVED - affected_tests())
-    if build is not None:
-        names.difference_update(profile_names(build, profile))
-    # CMake's regex engine has a compiled-size limit and only nine capture
-    # groups. Factor only exact admitted mode pairs: every generated leaf is
-    # still one reviewed name, with no wildcard/default exclusion of new names.
-    pairs = {name[:-6] for name in names
-             if name.endswith('_noopt') and name[:-6] + '_opt' in names}
-    rest = names - {base + suffix for base in pairs for suffix in ('_noopt', '_opt')}
-    branches = list(map(re.escape, sorted(rest)))
-    if pairs:
-        branches.append('(' + '|'.join(map(re.escape, sorted(pairs))) + ')_(noopt|opt)')
-    return '^(' + '|'.join(branches) + ')$'
+        return pattern
+    names = profile_names(build, profile)
+    if pattern:
+        _, matched = ctest_inventory(['--test-dir', str(build), '-R', pattern])
+        names.intersection_update(matched)
+    if not names:
+        raise ValueError('empty memory sanitizer selection')
+    return '^(' + '|'.join(map(re.escape, sorted(names))) + ')$'
 
 
 def decide(event, activated, weekday, requested='full'):
     if event == 'tag':
         return {'profile': 'full', 'reason': 'version tags retain original broad qualification'}
     if event == 'manual':
-        return {'profile': requested, 'reason': 'explicit manual scope; default is full'}
+        return {'profile': requested, 'reason': 'explicit manual scope'}
     if not activated:
         raise ValueError('scheduled sanitizer cadence is disabled')
-    if weekday == 7:
-        return {'profile': 'weekly', 'reason': 'weekly broad safety net with original instrumented producers'}
     # Scope is a cadence decision. Changed inputs invalidate exact reuse but
     # never expand the approved VM/provider panel into a producer campaign.
     return {'profile': 'daily',
-            'reason': 'fixed VM-priority daily scope; full coverage is weekly or explicitly requested'}
+            'reason': 'fixed component memory suite every scheduled day; broad coverage is explicit/release scope'}
 
 
 def ctest_inventory(args):
@@ -193,10 +192,9 @@ def profile_names(build, profile, definitions=None):
     if definitions is None:
         definitions, _ = ctest_inventory(['--test-dir', str(build), '-LE', '^performance-measurement$'])
     tests = {test['name']: test for test in definitions['tests']}
-    kept = set(tests) if profile != 'daily' else set(tests) - (DAILY_MOVED - affected_tests())
-    # Explicit -E also suppresses setup tests in CTest. Preserve every fixture
-    # owner needed by the default-kept or restored consumers, including future
-    # consumers of an existing weekly fixture. This only adds prerequisites.
+    kept = set(tests) if profile != 'daily' else set(tests).intersection(MEMORY_TESTS)
+    # Setup/cleanup belong to the selected memory contracts even when their
+    # names are not listed as independent memory tests.
     properties = {name: {item['name']: item['value'] for item in test['properties']}
                   for name, test in tests.items()}
     while True:
@@ -258,13 +256,18 @@ def inventory(build, profile, args, output, preparation=None):
     definitions, selected = ctest_inventory(args)
     if not selected:
         raise ValueError('empty sanitizer selection')
+    if profile == 'daily':
+        required = MEMORY_REQUIRED | {name for names in MEMORY_REGRESSIONS.values() for name in names}
+        missing = required - universe
+        if missing:
+            raise ValueError('required memory contracts are missing from discovery: ' + ', '.join(sorted(missing)))
     prepared = None
     if preparation is not None:
         prepared = tools.json_read(preparation)
         if profile != 'daily' or prepared != preparation_plan(build, profile):
             raise ValueError('selected prerequisite build does not match current daily inputs')
-    # Platform-absent known names are legitimate; newly registered names remain
-    # selected. Never require the Apple reference inventory on another platform.
+    # Platform-absent optional boundaries are legitimate, but known memory
+    # regressions must exist. Counts come from this platform's actual discovery.
     tools.json_write(output, {'profile': profile, 'universe': sorted(universe),
                              'selected': sorted(selected), 'profile_selected': sorted(profile_names(build, profile, universe_definitions)), 'affected_tests': sorted(affected_tests()) if profile == 'daily' else [], 'identity': result_identity(build),
                              'selected_definitions': definitions['tests'], 'daily_preparation': prepared,
@@ -306,7 +309,7 @@ def complete(build, selection, junit, output):
     full = set(before['selected']) == set(before['universe'])
     restored = set(before.get('affected_tests', []))
     declared = parse_affected(before['identity']['execution'].get('CREXX_QA_AFFECTED_TESTS', '[]'))
-    if before['profile'] == 'daily' and (not restored <= DAILY_MOVED or restored != declared):
+    if before['profile'] == 'daily' and (restored or restored != declared):
         raise ValueError('affected daily names are not bound to the execution policy')
     expected_daily = profile_names(build, 'daily') if before['profile'] == 'daily' else set()
     if before['profile'] == 'daily' and set(before.get('profile_selected', [])) != expected_daily:
@@ -339,7 +342,7 @@ def complete(build, selection, junit, output):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command', choices=('exclude', 'decide', 'inventory', 'complete', 'key', 'native-key', 'prep'))
+    p.add_argument('command', choices=('include', 'decide', 'inventory', 'complete', 'key', 'native-key', 'prep'))
     p.add_argument('--profile', choices=PROFILES, default='full')
     p.add_argument('--build-dir', type=Path)
     p.add_argument('--output', type=Path)
@@ -352,6 +355,7 @@ def main():
     p.add_argument('--event', choices=('schedule', 'manual', 'tag'), default='manual')
     p.add_argument('--activated', choices=('on', 'off'), default='off')
     p.add_argument('--weekday', type=int, choices=range(1, 8), default=1)
+    p.add_argument('--regex', default='')
     a, extra = p.parse_known_args()
     if extra and extra[0] == '--':
         extra.pop(0)
@@ -363,8 +367,8 @@ def main():
                      'CREXX_QA_BUILD_LEAKS': a.build_leaks, 'CREXX_QA_PHASE': 'full',
                      'CREXX_QA_AFFECTED_TESTS': json.dumps(sorted(affected_tests()))}
         print(canonical_input(a.build_dir, a.profile, execution, native_only=a.command == 'native-key'))
-    elif a.command == 'exclude':
-        print(excluded(a.profile, a.build_dir))
+    elif a.command == 'include':
+        print(included(a.profile, a.build_dir, a.regex))
     elif a.command == 'decide':
         print(json.dumps(decide(a.event, a.activated == 'on', a.weekday, a.profile)))
     elif a.command == 'prep':

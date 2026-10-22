@@ -4215,6 +4215,15 @@ add_test(NAME san007_imported_inline_payload_lifetime
 set_tests_properties(san007_imported_inline_payload_lifetime PROPERTIES
         LABELS "sanitizer;san-007;compiler;imports;inlining;regression"
         TIMEOUT 60)
+crexx_register_test_prep_targets(TESTS import_discovery_snapshot TARGETS test_import_discovery_snapshot)
+crexx_register_test_prep_targets(TESTS import_resolution_report TARGETS test_import_resolution_report)
+crexx_register_test_prep_targets(
+        TESTS san003_inline_scoped_array_actual_compile san004_task_pending_object_result_compile
+        TARGETS rxc library classlib rxfnsg compiler_exit_bin)
+crexx_register_test_prep_targets(TESTS san006_import_context_lifetime
+        TARGETS rxc classlib_native library compiler_exit_bin)
+crexx_register_test_prep_targets(TESTS san007_imported_inline_payload_lifetime
+        TARGETS rxc rxfnsg classlib library compiler_exit_bin)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(call_postfix_surface rexx_src/call_postfix_surface.crexx)
 set_tests_properties(inline_test_computed_receiver_copyback_run_noopt PROPERTIES
@@ -9876,5 +9885,8 @@ crexx_register_test_prep_targets(TESTS rxvml_utf_boundaries TARGETS test_rxvml_u
 crexx_register_test_prep_targets(TESTS address_llm_provider TARGETS rxvm address_llm_fixture_bin)
 crexx_register_test_prep_targets(TESTS address_native_kv_demo TARGETS native_kv_address_demo)
 crexx_register_test_prep_targets(TESTS e2_active_context_isolation TARGETS test_e2_active_context)
+
+crexx_register_test_prep_targets(TESTS syntaxhighlight_root_file syntaxhighlight_syntax_error
+        syntaxhighlight_srcmap_generated syntaxhighlight_empty TARGETS rxc parser_tester)
 
 crexx_finalize_directory_qa_tiers()

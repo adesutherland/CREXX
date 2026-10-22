@@ -384,7 +384,8 @@ int main(int argc, char *argv[]) {
         installed_provider_path = malloc(strlen(exe_path) +
                                          strlen("/providers") + 1u);
         if (installed_provider_path)
-            sprintf(installed_provider_path, "%s/providers", exe_path);
+            snprintf(installed_provider_path, strlen(exe_path) + strlen("/providers") + 1u,
+                     "%s/providers", exe_path);
     }
     if (!application_provider_path ||
         ((exe_path && *exe_path) && !installed_provider_path)) {
@@ -401,11 +402,12 @@ int main(int argc, char *argv[]) {
     /* Add current and executable path to legacy module location. */
     if (context.location) {
         combined_location = malloc(strlen(context.location) + strlen(exe_path) + 5);
-        sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+        snprintf(combined_location, strlen(context.location) + strlen(exe_path) + 5,
+                 ".;%s;%s", context.location, exe_path);
         context.location = combined_location;
     } else {
         combined_location = malloc(strlen(exe_path) + 5);
-        sprintf(combined_location, ".;%s", exe_path);
+        snprintf(combined_location, strlen(exe_path) + 5, ".;%s", exe_path);
         context.location = combined_location;
     }
     free(exe_path);
